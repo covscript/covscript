@@ -1,4 +1,5 @@
 #define DARWIN_FORCE_BUILTIN
+#include "./mozart/timer.hpp"
 #include "./darwin_core.hpp"
 #include <iostream>
 #include <fstream>
@@ -10,6 +11,9 @@ int main(int args,char** argv)
 			std::cout<<it;
 		std::cout<<std::endl;
 		return 0;
+	}));
+	cov_basic::storage.add_var("Time",cov_basic::native_interface([](const std::deque<cov::any>& args)->cov_basic::number{
+		return cov::timer::time(cov::timer::time_unit::milli_sec);
 	}));
 	cov_basic::storage.add_var("Exit",cov_basic::native_interface([](const std::deque<cov::any>& args)->cov_basic::number{
 		exit(0);

@@ -7,8 +7,6 @@ Define byi=True
 While True Do
     darwin_fitwindow()
     darwin_clearpaint()
-    Define wh=darwin_windowheight()
-    Define ww=darwin_windowwidth()
     darwin_drawpoint(bx,by)
     If bx<=0 Then
         bxi=True
@@ -18,11 +16,11 @@ While True Do
         byi=True
     End
 
-    If bx>=ww-1 Then
+    If bx>=darwin_windowwidth()-1 Then
         bxi=False
     End
 
-    If by>=wh-1 Then
+    If by>=darwin_windowheight()-1 Then
         byi=False
     End
 

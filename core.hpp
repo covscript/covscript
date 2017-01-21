@@ -260,7 +260,7 @@ namespace cov_basic {
 			}
 			if(exp[i]=='\"')
 				is_str=is_str?false:true;
-			if (exp[i] == '(') {
+			/*if (exp[i] == '(') {
 				int level(1), pos(++i);
 				for (; pos < exp.size() && level > 0; ++pos) {
 					if (exp[pos] == '(')
@@ -271,13 +271,13 @@ namespace cov_basic {
 				if (level > 0)
 					throw std::logic_error("The lack of corresponding brackets.");
 				if(compute_boolean(exp.substr(i, pos - i - 1))?(reverse?false:true):(reverse?true:false))
-					conditions.push_back("true");
+					conditions.push_back("True");
 				else
-					conditions.push_back("false");
+					conditions.push_back("False");
 				reverse=false;
 				i = pos;
 				continue;
-			}
+			}*/
 			if (is_signal(exp[i])&&(i<exp.size()?(is_signal(exp[i+1])?true:exp[i]!='!'):exp[i]!='!')) {
 				if(!tmp.empty())
 					conditions.push_back(tmp);
