@@ -7,4 +7,7 @@ Function test(a)
     End
 End
 Print("Please enter a intger:")
-test(Input())
+Define in=0
+Input(in)
+test(in)
+Print(in)

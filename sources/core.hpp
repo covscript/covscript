@@ -738,6 +738,7 @@ namespace cov_basic {
 		for(auto& it:mBuf) {
 			parse(it);
 			if(retval!=nullptr) {
+				storage.remove_domain();
 				current_func.pop_front();
 				number ret=*retval;
 				delete retval;
