@@ -1,0 +1,1 @@
+g++ -std=c++11 -O3 ./sources/main.cpp -o CovBasic

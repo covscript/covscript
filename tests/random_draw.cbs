@@ -1,0 +1,9 @@
+darwin_loadmodule("./darwin.module")
+darwin_setpencil("@",True,False,4,1)
+darwin_framelimit(1000)
+darwin_fitwindow()
+darwin_clearpaint()
+While True Do
+    darwin_drawpoint(RandInt(0,darwin_windowwidth()-1),RandInt(0,darwin_windowheight()-1))
+    darwin_updatepaint()
+End
