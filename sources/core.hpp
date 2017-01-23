@@ -597,7 +597,7 @@ namespace cov_basic {
 				arr->val<array>(true).resize(pos+1);
 			arr->val<array>(true).at(compute_number(expr)).assign(infer_value(raw_str.substr(raw_str.find('=')+1)));
 		} else {
-			get_value(name).assign(infer_value(raw_str.substr(raw_str.find('=')+1)),true);
+			get_value(name).assign(infer_value(raw_str.substr(raw_str.find('=')+1)),false);
 		}
 	}
 	void parse_return(const string& str)
