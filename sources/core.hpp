@@ -55,6 +55,12 @@ namespace cov_basic {
 						return true;
 			return false;
 		}
+		bool var_exsist_current(const string& name) {
+			for(auto& var:m_data.front())
+				if(var.get<0>()==name)
+					return true;
+			return false;
+		}
 		bool var_exsist_global(const string& name) {
 			for(auto& var:m_data.back())
 				if(var.get<0>()==name)
@@ -75,13 +81,13 @@ namespace cov_basic {
 			Darwin_Error("Use of undefined variable.");
 		}
 		void add_var(const string& name,const cov::any& var) {
-			if(var_exsist(name))
+			if(var_exsist_current(name))
 				get_var(name)=var;
 			else
 				m_data.front().push_front({name,var});
 		}
 		void add_var_global(const string& name,const cov::any& var) {
-			if(var_exsist(name))
+			if(var_exsist_global(name))
 				get_var_global(name)=var;
 			else
 				m_data.back().push_front({name,var});
@@ -203,7 +209,7 @@ namespace cov_basic {
 	cov::any& get_value(const string& name)
 	{
 		auto pos=name.find("::");
-		if(pos!=string::npos&&name.substr(0,pos)=="global") {
+		if(pos!=string::npos&&name.substr(0,pos)=="Global") {
 			string n=name.substr(pos+2);
 			if(storage.var_exsist_global(n))
 				return storage.get_var_global(n);
@@ -213,7 +219,7 @@ namespace cov_basic {
 	bool exsist(const string& name)
 	{
 		auto pos=name.find("::");
-		if(pos!=string::npos&&name.substr(0,pos)=="global") {
+		if(pos!=string::npos&&name.substr(0,pos)=="Global") {
 			string n=name.substr(pos+2);
 			return storage.var_exsist_global(n);
 		}
