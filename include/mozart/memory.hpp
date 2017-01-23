@@ -25,6 +25,7 @@
 #include "./base.hpp"
 #include "./function.hpp"
 #include <memory>
+#include <atomic>
 
 namespace cov {
 	template<typename _Tp,template<typename>class _alloc>

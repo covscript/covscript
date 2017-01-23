@@ -20,7 +20,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://ldc.atd3.cn
 *
-* Version: 17.1.0
+* Version: 17.1.2
 */
 #include "./base.hpp"
 #include <iostream>
@@ -37,6 +37,32 @@ namespace std {
 }
 
 namespace cov {
+	template < typename _Tp > class compare_helper {
+		template < typename T,typename X=bool >struct matcher;
+		template < typename T > static constexpr bool match(T*) {
+			return false;
+		}
+		template < typename T > static constexpr bool match(matcher < T, decltype(std::declval<T>()==std::declval<T>()) > *) {
+			return true;
+		}
+	public:
+		static constexpr bool value = match < _Tp > (nullptr);
+	};
+	template<typename,bool> struct compare_if;
+	template<typename T>struct compare_if<T,true> {
+		static bool compare(const T& a,const T& b) {
+			return a==b;
+		}
+	};
+	template<typename T>struct compare_if<T,false> {
+		static bool compare(const T& a,const T& b) {
+			return &a==&b;
+		}
+	};
+	template<typename T>bool compare(const T& a,const T& b)
+	{
+		return compare_if<T,compare_helper<T>::value>::compare(a,b);
+	}
 	class any final {
 		class baseHolder {
 		public:
@@ -63,7 +89,7 @@ namespace cov {
 			virtual bool compare(const baseHolder * obj)const override {
 				if (obj->type() == this->type()) {
 					const holder < T > *ptr = dynamic_cast < const holder < T > *>(obj);
-					return ptr!=nullptr?mDat == ptr->data():false;
+					return ptr!=nullptr?cov::compare(mDat,ptr->data()):false;
 				}
 				return false;
 			}
@@ -80,16 +106,48 @@ namespace cov {
 				mDat = dat;
 			}
 		};
-		baseHolder * mDat=nullptr;
+		using size_t=unsigned long;
+		struct proxy {
+			mutable size_t refcount=1;
+			baseHolder* data=nullptr;
+			proxy()=default;
+			proxy(size_t rc,baseHolder* d):refcount(rc),data(d) {}
+			~proxy() {
+				delete data;
+			}
+		};
+		proxy* mDat=nullptr;
+		proxy* duplicate() const noexcept {
+			if(mDat!=nullptr) {
+				++mDat->refcount;
+			}
+			return mDat;
+		}
+		void recycle() noexcept {
+			if(mDat!=nullptr) {
+				--mDat->refcount;
+				if(mDat->refcount==0) {
+					delete mDat;
+					mDat=nullptr;
+				}
+			}
+		}
+		void clone() noexcept {
+			if(mDat!=nullptr) {
+				proxy* dat=new proxy(1,mDat->data->duplicate());
+				recycle();
+				mDat=dat;
+			}
+		}
 	public:
 		static any infer_value(const std::string&);
 		void swap(any& obj) noexcept {
-			baseHolder* tmp=this->mDat;
+			proxy* tmp=this->mDat;
 			this->mDat=obj.mDat;
 			obj.mDat=tmp;
 		}
-		void swap(any&& obj) {
-			baseHolder* tmp=this->mDat;
+		void swap(any&& obj) noexcept {
+			proxy* tmp=this->mDat;
 			this->mDat=obj.mDat;
 			obj.mDat=tmp;
 		}
@@ -97,26 +155,26 @@ namespace cov {
 			return mDat != nullptr;
 		}
 		any()=default;
-		template < typename T > any(const T & dat):mDat(new holder < T > (dat)) {}
-		any(const any & v):mDat(v.usable()?v.mDat->duplicate():nullptr) {}
+		template < typename T > any(const T & dat):mDat(new proxy(1,new holder < T > (dat))) {}
+		any(const any & v):mDat(v.duplicate()) {}
 		any(any&& v) noexcept {
 			swap(std::forward<any>(v));
 		}
 		~any() {
-			delete mDat;
+			recycle();
 		}
 		const std::type_info & type() const {
-			return this->mDat != nullptr?this->mDat->type():typeid(void);
+			return this->mDat != nullptr?this->mDat->data->type():typeid(void);
 		}
 		std::string to_string() const {
 			if(this->mDat == nullptr)
 				throw cov::error("E0005");
-			return std::move(this->mDat->to_string());
+			return std::move(this->mDat->data->to_string());
 		}
 		any & operator=(const any & var) {
 			if(&var!=this) {
-				delete mDat;
-				mDat = var.usable()?var.mDat->duplicate():nullptr;
+				recycle();
+				mDat = var.duplicate();
 			}
 			return *this;
 		}
@@ -126,34 +184,63 @@ namespace cov {
 			return *this;
 		}
 		bool operator==(const any & var) const {
-			return usable()?this->mDat->compare(var.mDat):!var.usable();
+			return usable()?this->mDat->data->compare(var.mDat->data):!var.usable();
 		}
 		bool operator!=(const any & var)const {
-			return usable()?!this->mDat->compare(var.mDat):var.usable();
+			return usable()?!this->mDat->data->compare(var.mDat->data):var.usable();
 		}
-		template < typename T > T & val() {
+		template < typename T > T & val(bool raw=false) {
 			if(typeid(T) != this->type())
 				throw cov::error("E0006");
 			if(this->mDat == nullptr)
 				throw cov::error("E0005");
-			return dynamic_cast < holder < T > *>(this->mDat)->data();
+			if(!raw)
+				clone();
+			return dynamic_cast < holder < T > *>(this->mDat->data)->data();
 		}
-		template < typename T > const T & val() const {
+		template < typename T > const T & val(bool raw=false) const {
 			if(typeid(T) != this->type())
 				throw cov::error("E0006");
 			if(this->mDat == nullptr)
 				throw cov::error("E0005");
-			return dynamic_cast < const holder < T > *>(this->mDat)->data();
+			return dynamic_cast < const holder < T > *>(this->mDat->data)->data();
+		}
+		template < typename T > const T& const_val() const {
+			if(typeid(T) != this->type())
+				throw cov::error("E0006");
+			if(this->mDat == nullptr)
+				throw cov::error("E0005");
+			return dynamic_cast < const holder < T > *>(this->mDat->data)->data();
 		}
 		template < typename T > operator T&() {
 			return this->val<T>();
 		}
 		template < typename T > operator const T&() const {
-			return this->val<T>();
+			return this->const_val<T>();
 		}
-		template < typename T > void assign(const T & dat) {
-			delete mDat;
-			mDat = new holder < T > (dat);
+		void assign(const any& obj,bool raw=false) {
+			if(&obj!=this) {
+				if(mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
+					proxy* ptr=obj.mDat;
+					ptr->refcount+=mDat->refcount;
+					delete mDat->data;
+					*mDat=*ptr;
+				} else {
+					recycle();
+					if(obj.mDat!=nullptr)
+						mDat=new proxy(1,obj.mDat->data->duplicate());
+					else
+						mDat=nullptr;
+				}
+			}
+		}
+		template < typename T > void assign(const T & dat,bool raw=false) {
+			if(raw)
+				mDat->data=new holder < T > (dat);
+			else {
+				recycle();
+				mDat = new proxy(1,new holder < T > (dat));
+			}
 		}
 		template < typename T > any & operator=(const T & dat) {
 			assign(dat);

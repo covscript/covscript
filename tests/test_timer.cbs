@@ -1,11 +1,11 @@
 Define ts=Time()
-          Define fc=0
-                    While True Do
-                    If Time()-ts>=1000 Then
-                    Print(fc)
-                    fc=0
-                       ts=Time()
-                          Else
-                          fc=fc+1
-                             End
-                             End
+Define fc=0
+While True Do
+    If Time()-ts>=1000 Then
+        Print(fc)
+        fc=0
+        ts=Time()
+    Else
+        fc=fc+1
+    End
+End

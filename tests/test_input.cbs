@@ -1,0 +1,12 @@
+Define array={0}
+Function get(a)
+    Define tmp=1
+    Define i=0
+    While tmp!=0 Do
+      Input(tmp)
+      a[i]=tmp
+      i=i+1
+    End
+End
+get(array)
+Print(array)

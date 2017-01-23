@@ -256,5 +256,6 @@ namespace darwin {
 			} else
 				++x;
 		}
+		return true;
 	}
 }

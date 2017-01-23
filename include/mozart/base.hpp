@@ -20,7 +20,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://ldc.atd3.cn
 *
-* Library Version: 17.1.0
+* Library Version: 17.1.1
 */
 #ifndef __cplusplus
 #error E0001
@@ -40,11 +40,11 @@
 
 namespace cov {
 	class warning final:public std::exception {
-		std::string mWhat="Covstdlib Warning";
+		std::string mWhat="Mozart Warning";
 	public:
 		warning()=default;
 	warning(const std::string& str) noexcept:
-		mWhat("Covstdlib Warning:"+str) {}
+		mWhat("Mozart Warning:"+str) {}
 		warning(const warning&)=default;
 		warning(warning&&)=default;
 		virtual ~warning()=default;
@@ -53,11 +53,11 @@ namespace cov {
 		}
 	};
 	class error final:public std::exception {
-		std::string mWhat="Covstdlib Error";
+		std::string mWhat="Mozart Error";
 	public:
 		error()=default;
 	error(const std::string& str) noexcept:
-		mWhat("Covstdlib Error:"+str) {}
+		mWhat("Mozart Error:"+str) {}
 		error(const error&)=default;
 		error(error&&)=default;
 		virtual ~error()=default;

@@ -1,5 +1,6 @@
 #pragma once
 #include "../include/mozart/mozart.hpp"
+#include "../include/darwin/darwin.hpp"
 #include <stdexcept>
 #include <string>
 #include <deque>
@@ -16,26 +17,20 @@ namespace cov_basic {
 		std::deque<string> mArgs;
 		std::deque<string> mBuf;
 	public:
-		number* retval=nullptr;
+		mutable number* retval=nullptr;
 		function()=delete;
 		function(const std::deque<string>& args,const std::deque<string>& buf):mArgs(args),mBuf(buf) {}
 		~function()=default;
-		number call(const array&);
-		bool operator==(const function& f) const {
-			return this==&f;
-		}
+		number call(array&) const;
 	};
 	class native_interface {
-		cov::function<number(const array&)> mFunc;
+		cov::function<number(array&)> mFunc;
 	public:
 		native_interface()=delete;
-		native_interface(const cov::function<number(const array&)>& func):mFunc(func) {}
+		native_interface(const cov::function<number(array&)>& func):mFunc(func) {}
 		~native_interface()=default;
-		number call(const array& args) {
+		number call(array& args) const {
 			return mFunc(args);
-		}
-		bool operator==(const native_interface& n) const {
-			return this==&n;
 		}
 	};
 	class domain_manager {
@@ -71,13 +66,13 @@ namespace cov_basic {
 				for(auto& var:domain)
 					if(var.get<0>()==name)
 						return var.get<1>();
-			throw std::logic_error("Use of undefined variable.");
+			Darwin_Error("Use of undefined variable.");
 		}
 		cov::any& get_var_global(const string& name) {
 			for(auto& var:m_data.back())
 				if(var.get<0>()==name)
 					return var.get<1>();
-			throw std::logic_error("Use of undefined variable.");
+			Darwin_Error("Use of undefined variable.");
 		}
 		void add_var(const string& name,const cov::any& var) {
 			if(var_exsist(name))
@@ -243,7 +238,7 @@ namespace cov_basic {
 		if(str.find('[')!=string::npos) {
 			auto fpos=str.rfind('[')+1;
 			auto spos=str.rfind(']');
-			return infer_value(str.substr(0,fpos-1)).val<array>().at(std::size_t(infer_value(str.substr(fpos,spos-fpos)).val<number>()));
+			return infer_value(str.substr(0,fpos-1)).const_val<array>().at(std::size_t(infer_value(str.substr(fpos,spos-fpos)).const_val<number>()));
 		}
 		if(str.find('\"')!=string::npos)
 			return str.substr(str.find('\"')+1,str.rfind('\"')-str.find('\"')-1);
@@ -301,8 +296,8 @@ namespace cov_basic {
 			if(str[0]=='!') {
 				value=infer_value(str.substr(1));
 				if(value.type()!=typeid(bool))
-					throw std::logic_error("DE0003");
-				value=value.val<bool>()?false:true;
+					Darwin_Error("Can not convert value to boolean.");
+				value=value.const_val<bool>()?false:true;
 			} else
 				value=infer_value(str);
 			return value;
@@ -312,29 +307,32 @@ namespace cov_basic {
 		for(auto &it:conditions) {
 			cov::any v=parse(it);
 			switch(signals.front()) {
+			default:
+				Darwin_Error("Operator does not recognize.");
+				break;
 			case signs::And:
-				val=(v.val<bool>()&&val.val<bool>());
+				val=(v.const_val<bool>()&&val.const_val<bool>());
 				break;
 			case signs::Or:
-				val=(v.val<bool>()||val.val<bool>());
+				val=(v.const_val<bool>()||val.const_val<bool>());
 				break;
 			case signs::Above:
 				if(val.type()==v.type()) {
 					if(val.type()==typeid(number)) {
-						val=(val.val<number>()>v.val<number>());
+						val=(val.const_val<number>()>v.const_val<number>());
 						break;
 					}
 				}
-				throw std::logic_error("DE0003");
+				Darwin_Error("Compare value which have different type.");
 				break;
 			case signs::Under:
 				if(val.type()==v.type()) {
 					if(val.type()==typeid(number)) {
-						val=(val.val<number>()<v.val<number>());
+						val=(val.const_val<number>()<v.const_val<number>());
 						break;
 					}
 				}
-				throw std::logic_error("DE0003");
+				Darwin_Error("Compare value which have different type.");
 				break;
 			case signs::Equ:
 				val=(val==v);
@@ -345,25 +343,25 @@ namespace cov_basic {
 			case signs::AboveEqu:
 				if(val.type()==v.type()) {
 					if(val.type()==typeid(number)) {
-						val=(val.val<number>()>=v.val<number>());
+						val=(val.const_val<number>()>=v.const_val<number>());
 						break;
 					}
 				}
-				throw std::logic_error("DE0003");
+				Darwin_Error("Compare value which have different type.");
 				break;
 			case signs::UnderEqu:
 				if(val.type()==v.type()) {
 					if(val.type()==typeid(number)) {
-						val=(val.val<number>()<=v.val<number>());
+						val=(val.const_val<number>()<=v.const_val<number>());
 						break;
 					}
 				}
-				throw std::logic_error("DE0003");
+				Darwin_Error("Compare value which have different type.");
 				break;
 			}
 			signals.pop_front();
 		}
-		return val.val<bool>();
+		return val.const_val<bool>();
 	}
 	number compute_number(const string& exp)
 	{
@@ -385,7 +383,7 @@ namespace cov_basic {
 						--level;
 				}
 				if (level > 0)
-					throw std::logic_error("The lack of corresponding brackets.");
+					Darwin_Error("The lack of corresponding brackets.");
 				nums.push_back(compute_number(exp.substr(i, pos - i - 1)));
 				i = pos;
 				continue;
@@ -400,7 +398,7 @@ namespace cov_basic {
 						reverse = true;
 						break;
 					default:
-						throw std::logic_error("Operator does not recognize.~~~");
+						Darwin_Error("Operator does not recognize.");
 					}
 					++i;
 					continue;
@@ -430,7 +428,7 @@ namespace cov_basic {
 							--level;
 					}
 					if (level > 0)
-						throw std::logic_error("The lack of corresponding brackets.");
+						Darwin_Error("The lack of corresponding brackets.");
 					std::deque <cov::any> args;
 					if(pos-i>1) {
 						string arglist = exp.substr(i, pos - i - 1);
@@ -454,11 +452,11 @@ namespace cov_basic {
 					}
 					Switch(obj.type()) {
 						Case(typeid(function)) {
-							nums.push_back(obj.val<function>().call(args));
+							nums.push_back(obj.const_val<function>().call(args));
 						}
 						EndCase;
 						Case(typeid(native_interface)) {
-							nums.push_back(obj.val<native_interface>().call(args));
+							nums.push_back(obj.const_val<native_interface>().call(args));
 						}
 						EndCase;
 					}
@@ -466,10 +464,10 @@ namespace cov_basic {
 					i = pos;
 					continue;
 				}
-				nums.push_back(infer_value(tmp).val<number>());
+				nums.push_back(infer_value(tmp).const_val<number>());
 				continue;
 			}
-			throw std::logic_error("Operator does not recognize.-----");
+			Darwin_Error("Operator does not recognize.");
 		}
 		if (nums.empty())
 			return -1;
@@ -524,7 +522,7 @@ namespace cov_basic {
 				break;
 			}
 			default:
-				throw std::logic_error("Operator does not recognize.");
+				Darwin_Error("Operator does not recognize.");
 			}
 			operators.pop_front();
 		}
@@ -545,11 +543,11 @@ namespace cov_basic {
 		return result;
 	}
 	enum class statements {
-	    If,While,For,Function
+	    If,While,Function
 	};
 	std::deque<cov::tuple<statements,std::deque<string>>> buffer;
 	int bracket_count=0;
-	std::deque<function*> current_func;
+	std::deque<const function*> current_func;
 	void parse_define(const string& raw_str)
 	{
 		string str=raw_str.substr(raw_str.find("Define")+6);
@@ -581,24 +579,25 @@ namespace cov_basic {
 			std::string expr=name.substr(fpos+1,spos-fpos-1);
 			while((fpos=name.find('[',spos+1))!=string::npos) {
 				pos=compute_number(expr);
-				if(pos>=arr->val<array>().size())
-					arr->val<array>().resize(pos+1);
-				arr=&arr->val<array>().at(pos);
+				if(pos>=arr->const_val<array>().size())
+					arr->val<array>(true).resize(pos+1);
+				arr=&arr->val<array>(true).at(pos);
 				if((spos=name.find(']',spos+1))==string::npos)
-					throw std::logic_error("lack of brackets.");
+					Darwin_Error("The lack of corresponding brackets.");
 				expr=name.substr(fpos+1,spos-fpos-1);
 			}
 			pos=compute_number(expr);
-			if(pos>=arr->val<array>().size())
-				arr->val<array>().resize(pos+1);
-			arr->val<array>().at(compute_number(expr))=infer_value(raw_str.substr(raw_str.find('=')+1));
-		} else
-			storage.add_var(name,infer_value(raw_str.substr(raw_str.find('=')+1)));
+			if(pos>=arr->const_val<array>().size())
+				arr->val<array>(true).resize(pos+1);
+			arr->val<array>(true).at(compute_number(expr)).assign(infer_value(raw_str.substr(raw_str.find('=')+1)));
+		} else {
+			get_value(name).assign(infer_value(raw_str.substr(raw_str.find('=')+1)),true);
+		}
 	}
 	void parse_return(const string& str)
 	{
 		if(current_func.empty())
-			throw std::logic_error("Return in non-function area.");
+			Darwin_Error("Return in non-function area.");
 		current_func.front()->retval=new number(compute_number(str.substr(str.find("Return")+6)));
 	}
 	void parse_if(const std::deque<string>&);
@@ -667,7 +666,7 @@ namespace cov_basic {
 	void parse_if(const std::deque<string>& raw_buf)
 	{
 		if(raw_buf.empty())
-			throw std::logic_error(__func__);
+			Darwin_Error("Parse empty code body.");
 		storage.add_domain();
 		string head=raw_buf.front();
 		auto if_pos=head.find("If");
@@ -694,7 +693,7 @@ namespace cov_basic {
 	void parse_while(const std::deque<string>& raw_buf)
 	{
 		if(raw_buf.empty())
-			throw std::logic_error(__func__);
+			Darwin_Error("Parse empty code body.");
 		storage.add_domain();
 		string head=raw_buf.front();
 		auto while_pos=head.find("While")+5;
@@ -709,7 +708,7 @@ namespace cov_basic {
 	void parse_function(const std::deque<string>& raw_buf)
 	{
 		if(raw_buf.empty())
-			throw std::logic_error(__func__);
+			Darwin_Error("Parse empty code body.");
 		string head=raw_buf.front();
 		string name;
 		std::deque<string> arglist;
@@ -722,10 +721,10 @@ namespace cov_basic {
 				name+=head.at(i);
 		storage.add_var_global(name,function(arglist,std::deque<string>(raw_buf.begin()+1,raw_buf.end())));
 	}
-	number function::call(const array& args)
+	number function::call(array& args) const
 	{
 		if(args.size()!=mArgs.size())
-			throw std::logic_error("Wrong size of arguments");
+			Darwin_Error("Wrong size of arguments");
 		current_func.push_front(this);
 		storage.add_domain();
 		for(std::size_t i=0; i<args.size(); ++i)
@@ -736,6 +735,7 @@ namespace cov_basic {
 				current_func.pop_front();
 				number ret=*retval;
 				delete retval;
+				retval=nullptr;
 				return ret;
 			}
 		}
