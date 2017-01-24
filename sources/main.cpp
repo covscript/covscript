@@ -65,6 +65,12 @@ namespace cov_basic {
 			return 0;
 		}));
 		storage.add_var("Input", native_interface([](std::deque<cov::any>& args)-> number {
+			if(args.empty())
+			{
+				number in;
+				std::cin>>in;
+				return in;
+			}
 			for(auto& it:args) {
 				string tmp;
 				std::cin>>tmp;

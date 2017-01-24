@@ -20,7 +20,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://ldc.atd3.cn
 *
-* Version: 17.1.2
+* Version: 17.1.3
 */
 #include "./base.hpp"
 #include <iostream>
@@ -168,7 +168,7 @@ namespace cov {
 		}
 		std::string to_string() const {
 			if(this->mDat == nullptr)
-				throw cov::error("E0005");
+				return "Null";
 			return std::move(this->mDat->data->to_string());
 		}
 		any & operator=(const any & var) {

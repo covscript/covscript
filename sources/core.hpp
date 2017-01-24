@@ -558,14 +558,20 @@ namespace cov_basic {
 	{
 		string str=raw_str.substr(raw_str.find("Define")+6);
 		string name;
+		bool have_val=false;
 		for(auto& ch:str) {
 			if(std::isspace(ch))
 				continue;
-			if(ch=='=')
+			if(ch=='='){
+				have_val=true;
 				break;
+			}
 			name+=ch;
 		}
-		storage.add_var(name,infer_value(raw_str.substr(raw_str.find('=')+1)));
+		if(have_val)
+			storage.add_var(name,infer_value(raw_str.substr(raw_str.find('=')+1)));
+		else
+			storage.add_var(name,cov::any(number(0)));
 	}
 	void parse_assign(const string& raw_str)
 	{
@@ -761,6 +767,8 @@ namespace std {
 	}
 	template<>std::string to_string<cov_basic::array>(const cov_basic::array& a)
 	{
+		if(a.empty())
+			return "{}";
 		std::string tmp="{";
 		for(std::size_t i=0; i<a.size()-1; ++i)
 			tmp=tmp+a.at(i).to_string()+",";
