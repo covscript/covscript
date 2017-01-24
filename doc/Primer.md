@@ -29,11 +29,9 @@ Print("Hello world")
 ####第二节：输出问候语句
 在上一节中我们学习了如何输出一个句子，本节中我们将学习如何定义变量以及获取输入。  
 **例程1.2:**  
-``
-Print("Please enter your name:")
-Define name
-Input(name)
-Print("Hello,",name,"!")
-``  
+``Print("Please enter your name:")``  
+``Define name``  
+``Input(name)``  
+``Print("Hello,",name,"!")``  
 效果如下：  
 ![](https://github.com/mikecovlee/covbasic/raw/master/doc/images/Ex1-2.png)
