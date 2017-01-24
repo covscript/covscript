@@ -202,8 +202,13 @@ namespace cov_basic {
 	}
 	bool is_bool_exp(const string& str)
 	{
+		bool inside=false;
 		for(auto& ch:str) {
-			if(is_signal(ch))
+			if(ch=='\"') {
+				inside=inside?false:true;
+				continue;
+			}
+			if(!inside&&is_signal(ch))
 				return true;
 		}
 		return false;
@@ -286,8 +291,12 @@ namespace cov_basic {
 				++i;
 				continue;
 			}
-			if(exp[i]=='\"')
+			if(exp[i]=='\"') {
 				is_str=is_str?false:true;
+				tmp+=exp[i];
+				++i;
+				continue;
+			}
 			if (is_signal(exp[i])&&(i<exp.size()?(is_signal(exp[i+1])?true:exp[i]!='!'):exp[i]!='!')) {
 				if(!tmp.empty())
 					conditions.push_back(tmp);
@@ -454,7 +463,11 @@ namespace cov_basic {
 						Darwin_Error("The lack of corresponding brackets.");
 					std::deque <cov::any> args;
 					if(pos-i>1) {
-						string arglist = exp.substr(i, pos - i - 1);
+						std::deque<string> buf;
+						split_str(',',exp.substr(i, pos - i - 1),buf);
+						for(auto& it:buf)
+							args.push_back(infer_value(it));
+						/*string arglist = exp.substr(i, pos - i - 1);
 						string temp;
 						bool is_str=false;
 						for (int i = 0; i < arglist.size(); ++i) {
@@ -471,7 +484,7 @@ namespace cov_basic {
 								temp.clear();
 							}
 						}
-						args.push_back(infer_value(temp));
+						args.push_back(infer_value(temp));*/
 					}
 					Switch(obj.type()) {
 						Case(typeid(function)) {

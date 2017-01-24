@@ -353,7 +353,7 @@ int main(int args,const char** argv)
 		while(std::getline(in,str))
 			parse(str);
 	} else {
-		std::cout<<"Covariant Basic Parser 17.01\nCopyright (C) 2017 Covariant Studio\nPlease visit https://github.com/mikecovlee/covbasic for help."<<std::endl;
+		std::cout<<"Covariant Basic Parser 17.02\nCopyright (C) 2017 Covariant Studio\nPlease visit https://github.com/mikecovlee/covbasic for help."<<std::endl;
 		while(std::getline(std::cin,str))
 			parse(str);
 	}
