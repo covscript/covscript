@@ -119,6 +119,8 @@ namespace cov_basic {
 				tmp+=c;
 				continue;
 			}
+			if(std::isspace(c))
+				continue;
 			if(c==signal) {
 				if(!tmp.empty()) {
 					data.push_back(tmp);
@@ -206,6 +208,19 @@ namespace cov_basic {
 		}
 		return false;
 	}
+	bool is_str(const string& str)
+	{
+		bool inside=false;
+		for(auto& ch:str) {
+			if(ch=='\"') {
+				inside=inside?false:true;
+				continue;
+			}
+			if(!inside&&!std::isspace(ch))
+				return false;
+		}
+		return true;
+	}
 	cov::any& get_value(const string& name)
 	{
 		auto pos=name.find("::");
@@ -229,6 +244,8 @@ namespace cov_basic {
 	number compute_number(const string&);
 	cov::any infer_value(const string& str)
 	{
+		if(str.empty()||str=="Null")
+			return cov::any();
 		if(exsist(str))
 			return get_value(str);
 		if(str.find('{')!=string::npos) {
@@ -246,7 +263,7 @@ namespace cov_basic {
 			auto spos=str.rfind(']');
 			return infer_value(str.substr(0,fpos-1)).const_val<array>().at(std::size_t(infer_value(str.substr(fpos,spos-fpos)).const_val<number>()));
 		}
-		if(str.find('\"')!=string::npos)
+		if(str.find('\"')!=string::npos&&is_str(str))
 			return str.substr(str.find('\"')+1,str.rfind('\"')-str.find('\"')-1);
 		if(str=="True")
 			return true;
@@ -549,7 +566,7 @@ namespace cov_basic {
 		return result;
 	}
 	enum class statements {
-	    If,While,Function
+	    If,While,For,Function
 	};
 	std::deque<cov::tuple<statements,std::deque<string>>> buffer;
 	int bracket_count=0;
@@ -562,7 +579,7 @@ namespace cov_basic {
 		for(auto& ch:str) {
 			if(std::isspace(ch))
 				continue;
-			if(ch=='='){
+			if(ch=='=') {
 				have_val=true;
 				break;
 			}
@@ -614,11 +631,12 @@ namespace cov_basic {
 	}
 	void parse_if(const std::deque<string>&);
 	void parse_while(const std::deque<string>&);
+	void parse_for(const std::deque<string>&);
 	void parse_function(const std::deque<string>&);
 	void parse(const string& str)
 	{
 		if(bracket_count!=0) {
-			if(str.find("If")!=string::npos||str.find("While")!=string::npos||str.find("Function")!=string::npos)
+			if(str.find("If")!=string::npos||str.find("While")!=string::npos||str.find("For")!=string::npos||str.find("Function")!=string::npos)
 				++bracket_count;
 			else if(str.find("End")!=string::npos) {
 				--bracket_count;
@@ -630,6 +648,10 @@ namespace cov_basic {
 						break;
 					case statements::While:
 						parse_while(buffer.front().get<1>());
+						buffer.pop_front();
+						break;
+					case statements::For:
+						parse_for(buffer.front().get<1>());
 						buffer.pop_front();
 						break;
 					case statements::Function:
@@ -658,6 +680,11 @@ namespace cov_basic {
 		}
 		if(str.find("While")!=string::npos) {
 			buffer.push_front(cov::tuple<statements,std::deque<string>>(statements::While,std::deque<string>({str})));
+			++bracket_count;
+			return;
+		}
+		if(str.find("For")!=string::npos) {
+			buffer.push_front(cov::tuple<statements,std::deque<string>>(statements::For,std::deque<string>({str})));
 			++bracket_count;
 			return;
 		}
@@ -714,6 +741,25 @@ namespace cov_basic {
 		while(compute_boolean(condition)) {
 			for(std::size_t i=1; i<raw_buf.size(); ++i)
 				parse(raw_buf.at(i));
+		}
+		storage.remove_domain();
+	}
+	void parse_for(const std::deque<string>& raw_buf)
+	{
+		if(raw_buf.empty())
+			Darwin_Error("Parse empty code body.");
+		storage.add_domain();
+		string head=raw_buf.front();
+		auto for_pos=head.find("For")+3;
+		std::deque<string> body;
+		split_str(',',head.substr(for_pos),body);
+		if(body.size()!=3)
+			Darwin_Error("Wrong size of arguments.");
+		storage.add_var(body.at(0),infer_value(body.at(1)));
+		while(storage.get_var(body.at(0)).val<number>()<=infer_value(body.at(2)).val<number>()) {
+			for(std::size_t i=1; i<raw_buf.size(); ++i)
+				parse(raw_buf.at(i));
+			++storage.get_var(body.at(0)).val<number>();
 		}
 		storage.remove_domain();
 	}

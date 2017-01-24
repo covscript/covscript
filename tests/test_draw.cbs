@@ -1,24 +1,24 @@
-darwin_loadmodule("./darwin.module")
-darwin_setpencil("@",True,False,4,1)
-darwin_framelimit(30)
+InitGraphics("./darwin.module")
+SetPencil("@",True,False,GetColor("Blue"),GetColor("White"))
+SetFrameLimit(30)
 Define bx=0
 Define by=0
 Define bxi=True
 Define byi=True
 While True Do
-        darwin_fitwindow()
-        darwin_clearpaint()
-        darwin_drawpoint(bx,by)
+        FitDrawable()
+        ClearDrawable()
+        DrawPoint(bx,by)
         If bx<=0 Then
                 bxi=True
         End
         If by<=0 Then
                 byi=True
         End
-        If bx>=darwin_windowwidth()-1 Then
+        If bx>=GetDrawableWidth()-1 Then
                 bxi=False
         End
-        If by>=darwin_windowheight()-1 Then
+        If by>=GetDrawableHeight()-1 Then
                 byi=False
         End
         If bxi Then
@@ -31,5 +31,5 @@ While True Do
         Else
                 by=by-1
         End
-        darwin_updatepaint()
+        UpdateDrawable()
 End
