@@ -97,25 +97,36 @@ namespace cov_basic {
 	void split_str(char signal,const string& str,std::deque<string>& data)
 	{
 		string tmp;
+		int brackets_level=0;
+		int blocks_level=0;
 		bool is_str=false;
-		bool is_block=false;
 		for(auto& c:str) {
 			if(c=='\"') {
 				is_str=is_str?false:true;
 				tmp+=c;
 				continue;
 			}
+			if(c=='(') {
+				++brackets_level;
+				tmp+=c;
+				continue;
+			}
+			if(c==')') {
+				--brackets_level;
+				tmp+=c;
+				continue;
+			}
 			if(c=='{') {
-				is_block=true;
+				++blocks_level;
 				tmp+=c;
 				continue;
 			}
 			if(c=='}') {
-				is_block=false;
+				--blocks_level;
 				tmp+=c;
 				continue;
 			}
-			if(is_str||is_block) {
+			if(is_str||brackets_level>0||blocks_level>0) {
 				tmp+=c;
 				continue;
 			}
@@ -130,6 +141,8 @@ namespace cov_basic {
 			}
 			tmp+=c;
 		}
+		if(brackets_level!=0||blocks_level!=0)
+			Darwin_Error("The lack of corresponding brackets.");
 		if(!tmp.empty())
 			data.push_back(tmp);
 	}
@@ -226,6 +239,9 @@ namespace cov_basic {
 		}
 		return true;
 	}
+	bool compute_boolean(const string&);
+	number compute_number(const string&);
+	cov::any infer_value(const string&);
 	cov::any& get_value(const string& name)
 	{
 		auto pos=name.find("::");
@@ -245,8 +261,6 @@ namespace cov_basic {
 		}
 		return storage.var_exsist(name);
 	}
-	bool compute_boolean(const string&);
-	number compute_number(const string&);
 	cov::any infer_value(const string& str)
 	{
 		if(str.empty()||str=="Null")
@@ -283,18 +297,40 @@ namespace cov_basic {
 	{
 		bool reverse = false;
 		bool is_str = false;
-		std::deque < signs > signals;
-		std::deque < string > conditions;
+		std::deque<signs> signals;
+		std::deque<string> conditions;
 		string tmp;
 		for (int i = 0; i < exp.size();) {
-			if (std::isspace(exp[i])&&!is_str) {
-				++i;
-				continue;
-			}
 			if(exp[i]=='\"') {
 				is_str=is_str?false:true;
 				tmp+=exp[i];
 				++i;
+				continue;
+			}
+			if(is_str) {
+				tmp+=exp[i];
+				++i;
+				continue;
+			}
+			if (std::isspace(exp[i])) {
+				++i;
+				continue;
+			}
+			if (exp[i] == '(') {
+				int level(1), pos(++i);
+				for (; pos < exp.size() && level > 0; ++pos) {
+					if (exp[pos] == '(')
+						++level;
+					if (exp[pos] == ')')
+						--level;
+				}
+				if (level > 0)
+					Darwin_Error("The lack of corresponding brackets.");
+				if(compute_boolean(exp.substr(i, pos - i - 1)))
+					conditions.push_back(reverse?"False":"True");
+				else
+					conditions.push_back(reverse?"True":"False");
+				i = pos;
 				continue;
 			}
 			if (is_signal(exp[i])&&(i<exp.size()?(is_signal(exp[i+1])?true:exp[i]!='!'):exp[i]!='!')) {
@@ -310,6 +346,24 @@ namespace cov_basic {
 				}
 				signals.push_back(match_signal(currentSignal));
 				++i;
+				continue;
+			}
+			if (std::isalpha(exp[i]) || exp[i]==':') {
+				for (; i < exp.size() && (std::isalnum(exp[i]) || exp[i] == '_' || exp[i]==':'); ++i)
+					tmp += exp[i];
+				if(i<exp.size()&&exp[i]=='(') {
+					int level(1);
+					tmp+=exp[i];
+					for (++i; i < exp.size() && level > 0; ++i) {
+						if (exp[i] == '(')
+							++level;
+						if (exp[i] == ')')
+							--level;
+						tmp+=exp[i];
+					}
+					if (level > 0)
+						Darwin_Error("The lack of corresponding brackets.");
+				}
 				continue;
 			}
 			if(i<exp.size()&&exp[i]=='!'&&exp[i+1]=='(') {
@@ -450,7 +504,7 @@ namespace cov_basic {
 				tmp.clear();
 				for (; i < exp.size() && (std::isalnum(exp[i]) || exp[i] == '_' || exp[i]==':'); ++i)
 					tmp += exp[i];
-				cov::any obj=infer_value(tmp);
+				cov::any& obj=get_value(tmp);
 				if (obj.type()==typeid(function)||obj.type()==typeid(native_interface)) {
 					int level(1), pos(++i);
 					for (; pos < exp.size() && level > 0; ++pos) {
@@ -467,24 +521,6 @@ namespace cov_basic {
 						split_str(',',exp.substr(i, pos - i - 1),buf);
 						for(auto& it:buf)
 							args.push_back(infer_value(it));
-						/*string arglist = exp.substr(i, pos - i - 1);
-						string temp;
-						bool is_str=false;
-						for (int i = 0; i < arglist.size(); ++i) {
-							if(arglist[i]=='(')
-								++level;
-							if(arglist[i]==')')
-								--level;
-							if(arglist[i]=='\"')
-								is_str=is_str?false:true;
-							if (is_str || level>0 || arglist[i] != ',') {
-								temp += arglist[i];
-							} else {
-								args.push_back(infer_value(temp));
-								temp.clear();
-							}
-						}
-						args.push_back(infer_value(temp));*/
 					}
 					Switch(obj.type()) {
 						Case(typeid(function)) {

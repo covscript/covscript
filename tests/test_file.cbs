@@ -1,0 +1,8 @@
+Define file0=OpenFile("./test_file.cbs","Read")
+Define file1=OpenFile("./test.txt","Write")
+Define tmp
+While ReadFile(file0,tmp)!=-1 Do
+    WriteFile(file1,tmp)
+End
+CloseFile(file0)
+CloseFile(file1)

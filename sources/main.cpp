@@ -9,6 +9,7 @@ int main(int args,const char** argv);
 namespace cov_basic {
 	darwin::pixel pencil;
 	darwin::sync_clock clock(30);
+	array files;
 	cov::any parse_value(const std::string& str)
 	{
 		if(str=="true"||str=="True"||str=="TRUE")
@@ -129,6 +130,93 @@ namespace cov_basic {
 				darwin::runtime.exit(0);
 			else
 				darwin::runtime.exit(args.at(0).val<number>());
+			return 0;
+		}));
+		// File I/O
+		storage.add_var_global("OpenFile", native_interface([](std::deque<cov::any>& args)-> number {
+			number serial=-1;
+			Switch(args.at(1).const_val<string>()) {
+				Default {
+					Darwin_Error("Uknow file method.");
+				} EndCase;
+				Case("Read") {
+					std::ifstream* ifs=new std::ifstream(args.at(0).const_val<string>());
+					if(*ifs) {
+						files.push_back(ifs);
+						serial=files.size()-1;
+					} else
+						delete ifs;
+				}
+				EndCase;
+				Case("Write") {
+					std::ofstream* ofs=new std::ofstream(args.at(0).const_val<string>());
+					if(*ofs) {
+						files.push_back(ofs);
+						serial=files.size()-1;
+					} else
+						delete ofs;
+				}
+				EndCase;
+			}
+			EndSwitch;
+			return serial;
+		}));
+		storage.add_var_global("CloseFile", native_interface([](std::deque<cov::any>& args)-> number {
+			cov::any& fs=files.at(args.at(0).const_val<number>());
+			Switch(fs.type()) {
+				Case(typeid(std::ifstream*)) {
+					delete fs.val<std::ifstream*>(true);
+				}
+				EndCase;
+				Case(typeid(std::ofstream*)) {
+					delete fs.val<std::ofstream*>(true);
+				}
+				EndCase;
+			}
+			EndSwitch;
+		}));
+		storage.add_var_global("WriteFile", native_interface([](std::deque<cov::any>& args)-> number {
+			cov::any& fs=files.at(args.at(0).const_val<number>());
+			if(fs.type()!=typeid(std::ofstream*))
+				Darwin_Error("Write read-only file.");
+			std::ofstream* ofs=fs.val<std::ofstream*>(true);
+			for(std::size_t i=1; i<args.size(); ++i)
+				*ofs<<args.at(i);
+			*ofs<<std::endl;
+			return 0;
+		}));
+		storage.add_var_global("ReadFile", native_interface([](std::deque<cov::any>& args)-> number {
+			cov::any& fs=files.at(args.at(0).const_val<number>());
+			if(fs.type()!=typeid(std::ifstream*))
+				Darwin_Error("Write write-only file.");
+			std::ifstream* ifs=fs.val<std::ifstream*>(true);
+			for(std::size_t i=1; i<args.size(); ++i) {
+				string tmp;
+				if(!(*ifs>>tmp))
+					return -1;
+				args.at(i).assign(parse_value(tmp),true);
+			}
+			return 0;
+		}));
+		// String
+		storage.add_var_global("SizeOfString", native_interface([](std::deque<cov::any>& args)-> number {
+			return args.at(0).const_val<string>().size();
+		}));
+		storage.add_var_global("AppendString", native_interface([](std::deque<cov::any>& args)-> number {
+			args.at(0).val<string>(true).append(args.at(1).const_val<string>());
+			return 0;
+		}));
+		storage.add_var_global("CutString", native_interface([](std::deque<cov::any>& args)-> number {
+			if(args.empty())
+				args.at(0).val<string>(true).pop_back();
+			else{
+				for(std::size_t i=0; i<args.at(1).const_val<number>(); ++i)
+					args.at(0).val<string>(true).pop_back();
+			}
+			return 0;
+		}));
+		storage.add_var_global("ClearString", native_interface([](std::deque<cov::any>& args)-> number {
+			args.at(0).val<string>(true).clear();
 			return 0;
 		}));
 		// Array
@@ -353,7 +441,7 @@ int main(int args,const char** argv)
 		while(std::getline(in,str))
 			parse(str);
 	} else {
-		std::cout<<"Covariant Basic Parser 17.02\nCopyright (C) 2017 Covariant Studio\nPlease visit https://github.com/mikecovlee/covbasic for help."<<std::endl;
+		std::cout<<"Covariant Basic Parser 17.10\nCopyright (C) 2017 Covariant Studio\nPlease visit https://github.com/mikecovlee/covbasic for help."<<std::endl;
 		while(std::getline(std::cin,str))
 			parse(str);
 	}

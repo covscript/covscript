@@ -6,7 +6,7 @@ Print(arr)
 Define str=arr[1][1]
 Print(str)
 Define i=0
-While i<SizeOf(arr) Do
+While i<SizeOfArray(arr) Do
     PrintType(arr[i])
     i=i+1
 End
