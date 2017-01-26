@@ -174,6 +174,7 @@ namespace cov_basic {
 				EndCase;
 			}
 			EndSwitch;
+			return 0;
 		}));
 		storage.add_var_global("WriteFile", native_interface([](std::deque<cov::any>& args)-> number {
 			cov::any& fs=files.at(args.at(0).const_val<number>());
