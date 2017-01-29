@@ -3,7 +3,7 @@ Function test(a)
     If a>0 Then
         Return test(a-1)
     Else
-        Return a;
+        Return a
     End
 End
 Print("Please enter a intger:")
