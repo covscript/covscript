@@ -23,14 +23,15 @@ namespace darwin {
 			conio::set_title("Covariant Darwin UCGL");
 			conio::reset();
 			conio::clrscr();
-			mReady = true;
 			conio::echo(false);
+			mReady = true;
 			return results::success;
 		}
 		virtual results stop() noexcept override {
 			conio::reset();
-			mReady = false;
+			conio::clrscr();
 			conio::echo(true);
+			mReady = false;
 			return results::success;
 		}
 		virtual results exec_commands(commands c) noexcept override {

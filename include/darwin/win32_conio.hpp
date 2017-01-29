@@ -23,7 +23,7 @@ namespace conio {
 	}
 	static void echo(bool mode)
 	{
-		CONSOLE_CURSOR_INFO cci;
+		static CONSOLE_CURSOR_INFO cci;
 		GetConsoleCursorInfo(StdHandle, &cci);
 		cci.bVisible = mode;
 		SetConsoleCursorInfo(StdHandle, &cci);
@@ -34,11 +34,11 @@ namespace conio {
 	}
 	static void set_title(const char *title)
 	{
-		SetConsoleTitleA(title);
+		SetConsoleTitle(title);
 	}
 	static void reset()
 	{
-		set_color(15,0);
+		set_color(15,8);
 	}
 	static void clrscr()
 	{
