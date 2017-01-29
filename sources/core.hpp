@@ -6,8 +6,8 @@
 #include <deque>
 namespace cov_basic {
 	enum class signs {
-	    Null,And,Or,Not,Above,Under,
-	    Equ,NotEqu,AboveEqu,UnderEqu
+		Null,And,Or,Not,Above,Under,
+		Equ,NotEqu,AboveEqu,UnderEqu
 	};
 	using number=long double;
 	using boolean=bool;
@@ -29,64 +29,75 @@ namespace cov_basic {
 		native_interface()=delete;
 		native_interface(const cov::function<number(array&)>& func):mFunc(func) {}
 		~native_interface()=default;
-		number call(array& args) const {
+		number call(array& args) const
+		{
 			return mFunc(args);
 		}
 	};
 	class domain_manager {
 		std::deque<std::deque<cov::tuple<string,cov::any>>> m_data;
 	public:
-		domain_manager() {
+		domain_manager()
+		{
 			m_data.emplace_front();
 		}
 		domain_manager(const domain_manager&)=delete;
 		~domain_manager()=default;
-		void add_domain() {
+		void add_domain()
+		{
 			m_data.emplace_front();
 		}
-		void remove_domain() {
+		void remove_domain()
+		{
 			if(m_data.size()>1)
 				m_data.pop_front();
 		}
-		bool var_exsist(const string& name) {
+		bool var_exsist(const string& name)
+		{
 			for(auto& domain:m_data)
 				for(auto& var:domain)
 					if(var.get<0>()==name)
 						return true;
 			return false;
 		}
-		bool var_exsist_current(const string& name) {
+		bool var_exsist_current(const string& name)
+		{
 			for(auto& var:m_data.front())
 				if(var.get<0>()==name)
 					return true;
 			return false;
 		}
-		bool var_exsist_global(const string& name) {
+		bool var_exsist_global(const string& name)
+		{
 			for(auto& var:m_data.back())
 				if(var.get<0>()==name)
 					return true;
 			return false;
 		}
-		cov::any& get_var(const string& name) {
+		cov::any& get_var(const string& name)
+		{
 			for(auto& domain:m_data)
 				for(auto& var:domain)
 					if(var.get<0>()==name)
 						return var.get<1>();
 			Darwin_Error("Use of undefined variable.");
 		}
-		cov::any& get_var_global(const string& name) {
+		cov::any& get_var_global(const string& name)
+		{
 			for(auto& var:m_data.back())
 				if(var.get<0>()==name)
 					return var.get<1>();
 			Darwin_Error("Use of undefined variable.");
 		}
-		void add_var(const string& name,const cov::any& var) {
+		void add_var(const string& name,const cov::any& var)
+		{
 			if(var_exsist_current(name))
 				get_var(name)=var;
 			else
 				m_data.front().push_front({name,var});
 		}
-		void add_var_global(const string& name,const cov::any& var) {
+		void add_var_global(const string& name,const cov::any& var)
+		{
 			if(var_exsist_global(name))
 				get_var_global(name)=var;
 			else
@@ -149,48 +160,48 @@ namespace cov_basic {
 	signs match_signal(const string& str)
 	{
 		signs ret;
-		Switch(str) {
-			Default {
+		CovSwitch(str) {
+			CovDefault {
 				ret=signs::Null;
-			} EndCase;
-			Case("&&") {
+			} EndCovCase;
+			CovCase("&&") {
 				ret=signs::And;
 			}
-			EndCase;
-			Case("||") {
+			EndCovCase;
+			CovCase("||") {
 				ret=signs::Or;
 			}
-			EndCase;
-			Case("!") {
+			EndCovCase;
+			CovCase("!") {
 				ret=signs::Not;
 			}
-			EndCase;
-			Case(">") {
+			EndCovCase;
+			CovCase(">") {
 				ret=signs::Above;
 			}
-			EndCase;
-			Case("<") {
+			EndCovCase;
+			CovCase("<") {
 				ret=signs::Under;
 			}
-			EndCase;
-			Case("==") {
+			EndCovCase;
+			CovCase("==") {
 				ret=signs::Equ;
 			}
-			EndCase;
-			Case("!=") {
+			EndCovCase;
+			CovCase("!=") {
 				ret=signs::NotEqu;
 			}
-			EndCase;
-			Case(">=") {
+			EndCovCase;
+			CovCase(">=") {
 				ret=signs::AboveEqu;
 			}
-			EndCase;
-			Case("<=") {
+			EndCovCase;
+			CovCase("<=") {
 				ret=signs::UnderEqu;
 			}
-			EndCase;
+			EndCovCase;
 		}
-		EndSwitch;
+		EndCovSwitch;
 		return ret;
 	}
 	bool is_signal(char signal)
@@ -522,17 +533,17 @@ namespace cov_basic {
 						for(auto& it:buf)
 							args.push_back(infer_value(it));
 					}
-					Switch(obj.type()) {
-						Case(typeid(function)) {
+					CovSwitch(obj.type()) {
+						CovCase(typeid(function)) {
 							nums.push_back(obj.const_val<function>().call(args));
 						}
-						EndCase;
-						Case(typeid(native_interface)) {
+						EndCovCase;
+						CovCase(typeid(native_interface)) {
 							nums.push_back(obj.const_val<native_interface>().call(args));
 						}
-						EndCase;
+						EndCovCase;
 					}
-					EndSwitch;
+					EndCovSwitch;
 					i = pos;
 					continue;
 				}
@@ -615,7 +626,7 @@ namespace cov_basic {
 		return result;
 	}
 	enum class statements {
-	    If,While,For,Function
+		If,While,For,Function
 	};
 	std::deque<cov::tuple<statements,std::deque<string>>> buffer;
 	int bracket_count=0;

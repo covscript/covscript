@@ -17,7 +17,7 @@ namespace cov_basic {
 		if(str=="false"||str=="False"||str=="FALSE")
 			return false;
 		enum types {
-		    interger,floating,other
+			interger,floating,other
 		} type=types::interger;
 		for(auto& it:str) {
 			if(!std::isdigit(it)&&it!='.') {
@@ -68,12 +68,14 @@ namespace cov_basic {
 			return 0;
 		}));
 		storage.add_var_global("Input", native_interface([](std::deque<cov::any>& args)-> number {
-			if(args.empty()) {
+			if(args.empty())
+			{
 				number in;
 				std::cin>>in;
 				return in;
 			}
-			for(auto& it:args) {
+			for(auto& it:args)
+			{
 				string tmp;
 				std::cin>>tmp;
 				it.assign(parse_value(tmp),true);
@@ -81,30 +83,31 @@ namespace cov_basic {
 			return 0;
 		}));
 		storage.add_var_global("PrintType", native_interface([](std::deque<cov::any>& args)-> number {
-			for(auto& it:args) {
-				Switch(it.type()) {
-					Case(typeid(number)) {
+			for(auto& it:args)
+			{
+				CovSwitch(it.type()) {
+					CovCase(typeid(number)) {
 						std::cout<<"Types::Number"<<std::endl;
 					}
-					EndCase;
-					Case(typeid(boolean)) {
+					EndCovCase;
+					CovCase(typeid(boolean)) {
 						std::cout<<"Types::Boolean"<<std::endl;
 					}
-					EndCase;
-					Case(typeid(string)) {
+					EndCovCase;
+					CovCase(typeid(string)) {
 						std::cout<<"Types::String"<<std::endl;
 					}
-					EndCase;
-					Case(typeid(array)) {
+					EndCovCase;
+					CovCase(typeid(array)) {
 						std::cout<<"Types::Array"<<std::endl;
 					}
-					EndCase;
-					Case(typeid(void)) {
+					EndCovCase;
+					CovCase(typeid(void)) {
 						std::cout<<"Types::Null"<<std::endl;
 					}
-					EndCase;
+					EndCovCase;
 				}
-				EndSwitch;
+				EndCovSwitch;
 			}
 			return 0;
 		}));
@@ -135,11 +138,12 @@ namespace cov_basic {
 		// File I/O
 		storage.add_var_global("OpenFile", native_interface([](std::deque<cov::any>& args)-> number {
 			number serial=-1;
-			Switch(args.at(1).const_val<string>()) {
-				Default {
+			CovSwitch(args.at(1).const_val<string>())
+			{
+				CovDefault {
 					Darwin_Error("Uknow file method.");
-				} EndCase;
-				Case("Read") {
+				} EndCovCase;
+				CovCase("Read") {
 					std::ifstream* ifs=new std::ifstream(args.at(0).const_val<string>());
 					if(*ifs) {
 						files.push_back(ifs);
@@ -147,8 +151,8 @@ namespace cov_basic {
 					} else
 						delete ifs;
 				}
-				EndCase;
-				Case("Write") {
+				EndCovCase;
+				CovCase("Write") {
 					std::ofstream* ofs=new std::ofstream(args.at(0).const_val<string>());
 					if(*ofs) {
 						files.push_back(ofs);
@@ -156,24 +160,25 @@ namespace cov_basic {
 					} else
 						delete ofs;
 				}
-				EndCase;
+				EndCovCase;
 			}
-			EndSwitch;
+			EndCovSwitch;
 			return serial;
 		}));
 		storage.add_var_global("CloseFile", native_interface([](std::deque<cov::any>& args)-> number {
 			cov::any& fs=files.at(args.at(0).const_val<number>());
-			Switch(fs.type()) {
-				Case(typeid(std::ifstream*)) {
+			CovSwitch(fs.type())
+			{
+				CovCase(typeid(std::ifstream*)) {
 					delete fs.val<std::ifstream*>(true);
 				}
-				EndCase;
-				Case(typeid(std::ofstream*)) {
+				EndCovCase;
+				CovCase(typeid(std::ofstream*)) {
 					delete fs.val<std::ofstream*>(true);
 				}
-				EndCase;
+				EndCovCase;
 			}
-			EndSwitch;
+			EndCovSwitch;
 			return 0;
 		}));
 		storage.add_var_global("WriteFile", native_interface([](std::deque<cov::any>& args)-> number {
@@ -191,7 +196,8 @@ namespace cov_basic {
 			if(fs.type()!=typeid(std::ifstream*))
 				Darwin_Error("Write write-only file.");
 			std::ifstream* ifs=fs.val<std::ifstream*>(true);
-			for(std::size_t i=1; i<args.size(); ++i) {
+			for(std::size_t i=1; i<args.size(); ++i)
+			{
 				string tmp;
 				if(!(*ifs>>tmp))
 					return -1;
@@ -333,41 +339,42 @@ namespace cov_basic {
 		}));
 		storage.add_var_global("GetColor", native_interface([](std::deque<cov::any>& args)-> number {
 			number color;
-			Switch(args.at(0).val<string>()) {
-				Case("Black") {
+			CovSwitch(args.at(0).val<string>())
+			{
+				CovCase("Black") {
 					color=0;
 				}
-				EndCase;
-				Case("White") {
+				EndCovCase;
+				CovCase("White") {
 					color=1;
 				}
-				EndCase;
-				Case("Red") {
+				EndCovCase;
+				CovCase("Red") {
 					color=2;
 				}
-				EndCase;
-				Case("Green") {
+				EndCovCase;
+				CovCase("Green") {
 					color=3;
 				}
-				EndCase;
-				Case("Blue") {
+				EndCovCase;
+				CovCase("Blue") {
 					color=4;
 				}
-				EndCase;
-				Case("Pink") {
+				EndCovCase;
+				CovCase("Pink") {
 					color=5;
 				}
-				EndCase;
-				Case("Yellow") {
+				EndCovCase;
+				CovCase("Yellow") {
 					color=6;
 				}
-				EndCase;
-				Case("Cyan") {
+				EndCovCase;
+				CovCase("Cyan") {
 					color=7;
 				}
-				EndCase;
+				EndCovCase;
 			}
-			EndSwitch;
+			EndCovSwitch;
 			return color;
 		}));
 		storage.add_var_global("SetPencil", native_interface([](std::deque<cov::any>& args)-> number {
@@ -375,7 +382,8 @@ namespace cov_basic {
 			bool bright=args.at(1).const_val<bool>();
 			bool underline=args.at(2).const_val<bool>();
 			darwin::colors fc,bc;
-			switch(int(args.at(3).const_val<number>())) {
+			switch(int(args.at(3).const_val<number>()))
+			{
 			case 0:
 				fc=darwin::colors::black;
 				break;
@@ -401,7 +409,8 @@ namespace cov_basic {
 				fc=darwin::colors::cyan;
 				break;
 			}
-			switch(int(args.at(4).const_val<number>())) {
+			switch(int(args.at(4).const_val<number>()))
+			{
 			case 0:
 				bc=darwin::colors::black;
 				break;

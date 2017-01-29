@@ -99,8 +99,8 @@ namespace cov {
 	switcher_stack cov_switchers;
 }
 
-#define Switch(obj) cov::cov_switchers.push(obj);
-#define EndSwitch cov::cov_switchers.top().perform();cov::cov_switchers.pop();
-#define Case(obj) cov::cov_switchers.top().add_case(obj,[&]{
-#define Default cov::cov_switchers.top().add_default([&]{
-#define EndCase });
+#define CovSwitch(obj) cov::cov_switchers.push(obj);
+#define EndCovSwitch cov::cov_switchers.top().perform();cov::cov_switchers.pop();
+#define CovCase(obj) cov::cov_switchers.top().add_case(obj,[&]{
+#define CovDefault cov::cov_switchers.top().add_default([&]{
+#define EndCovCase });
