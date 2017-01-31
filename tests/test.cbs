@@ -1,0 +1,5 @@
+InitGraphics("abcd")
+SetPencil("@",True,False,GetColor("Blue"),GetColor("White"))
+FitDrawable()
+DrawPoint(1,1)
+UpdateDrawable()
