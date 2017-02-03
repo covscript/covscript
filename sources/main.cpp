@@ -333,6 +333,19 @@ namespace cov_basic {
 			darwin::runtime.get_drawable()->draw_pixel(args.at(0).const_val< number>(),args.at(1).const_val< number>(),pencil);
 			return 0;
 		}));
+		storage.add_var_global("DrawString", native_interface([](std::deque<cov::any>& args)-> number {
+			string str=args.at(0).const_val<string>();
+			long sx=args.at(1).const_val<number>();
+			long sy=args.at(2).const_val<number>();
+			char raw_ch=pencil.get_char();
+			for(long i=0;i<str.size();++i)
+			{
+				pencil.set_char(str.at(i));
+				darwin::runtime.get_drawable()->draw_pixel(sx+i,sy,pencil);
+			}
+			pencil.set_char(raw_ch);
+			return 0;
+		}));
 		storage.add_var_global("DrawLine", native_interface([](std::deque<cov::any>& args)-> number {
 			darwin::runtime.get_drawable()->draw_line(args.at(0).const_val< number>(),args.at(1).const_val< number>(),args.at(2).const_val< number>(),args.at(3).const_val< number>(),pencil);
 			return 0;

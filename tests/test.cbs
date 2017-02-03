@@ -1,5 +1,6 @@
-InitGraphics("abcd")
-SetPencil("@",True,False,GetColor("Blue"),GetColor("White"))
+InitGraphics("...")
 FitDrawable()
-DrawPoint(1,1)
+SetPencil("@",True,False,GetColor("Blue"),GetColor("White"))
+Define str="Hello,World!"
+DrawString(str,0.5*(GetDrawableWidth()-SizeOfString(str)),0.5*GetDrawableHeight())
 UpdateDrawable()
