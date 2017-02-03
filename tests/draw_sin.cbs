@@ -8,7 +8,7 @@ Function main()
     For x,0,x
         FitDrawable()
         ClearDrawable()
-        For i,0,GetDrawableWidth()
+        For i,0,GetDrawableWidth()-1
             DrawPoint(i,0.5*(GetDrawableHeight()+sin((i+x)/fd)*GetDrawableHeight()))
         End
         UpdateDrawable()
