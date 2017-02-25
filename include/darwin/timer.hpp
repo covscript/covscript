@@ -10,12 +10,14 @@ class darwin::timer final {
 	static std::chrono::time_point < std::chrono::high_resolution_clock > m_timer;
 public:
 	enum class time_unit {
-	    nano_sec, micro_sec, milli_sec, second, minute
+		nano_sec, micro_sec, milli_sec, second, minute
 	};
-	static void reset() {
+	static void reset()
+	{
 		m_timer = std::chrono::high_resolution_clock::now();
 	}
-	static timer_t time(time_unit unit=time_unit::milli_sec) {
+	static timer_t time(time_unit unit=time_unit::milli_sec)
+	{
 		switch (unit) {
 		case time_unit::nano_sec:
 			return std::chrono::duration_cast < std::chrono::nanoseconds >(std::chrono::high_resolution_clock::now() - m_timer).count();
@@ -30,7 +32,8 @@ public:
 		}
 		return 0;
 	}
-	static void delay(timer_t time, time_unit unit=time_unit::milli_sec) {
+	static void delay(timer_t time, time_unit unit=time_unit::milli_sec)
+	{
 		switch (unit) {
 		case time_unit::nano_sec:
 			std::this_thread::sleep_for(std::chrono::nanoseconds(time));
@@ -49,7 +52,8 @@ public:
 			break;
 		}
 	}
-	static timer_t measure(const std::function<void()>& func, time_unit unit=time_unit::milli_sec) {
+	static timer_t measure(const std::function<void()>& func, time_unit unit=time_unit::milli_sec)
+	{
 		timer_t begin(0),end(0);
 		begin=time(unit);
 		func();

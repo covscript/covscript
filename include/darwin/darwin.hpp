@@ -1,10 +1,52 @@
 #pragma once
+/*
+* Covariant Darwin Universal Character Graphics Library
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* Copyright (C) 2017 Michael Lee(李登淳)
+* Email: China-LDC@outlook.com
+* Github: https://github.com/mikecovlee
+* Website: http://ldc.atd3.cn
+*
+* Library Version: 17.2.0
+*
+* Marco List:
+* Library Version: __Darwin
+*
+* See MarcoList.md to learn more about Covariant Darwin UCGL Marcos.
+* See Reference.md to learn more about Covariant Darwin UCGL.
+*/
+
+#ifndef __cplusplus
+#error Darwin UCGL need C++ Compiler
+#endif
+
+#if __cplusplus < 201103L
+#error Darwin UCGL need C++11 or later standard.
+#endif
+
+#define __Darwin 170200L
+
 #include "./timer.hpp"
 #include "./core.hpp"
+#include "./random.hpp"
 #include "./adapter.hpp"
 #include "./graphics.hpp"
 #include <string>
 #include <cstdlib>
+
 namespace darwin {
 	class sync_clock final {
 	private:
@@ -14,16 +56,20 @@ namespace darwin {
 		sync_clock():mBegin(timer::time()),mFreq(60) {}
 		sync_clock(std::size_t freq):mBegin(timer::time()),mFreq(freq) {}
 		~sync_clock()=default;
-		std::size_t get_freq() const {
+		std::size_t get_freq() const
+		{
 			return mFreq;
 		}
-		void set_freq(std::size_t freq) {
+		void set_freq(std::size_t freq)
+		{
 			mFreq=freq;
 		}
-		void reset() {
+		void reset()
+		{
 			mBegin=timer::time();
 		}
-		void sync() {
+		void sync()
+		{
 			timer_t spend=timer::time()-mBegin;
 			timer_t period=1000/mFreq;
 			if(period>spend)
@@ -45,28 +91,40 @@ namespace darwin {
 		~darwin_rt();
 		void load(const std::string&);
 		void exit(int);
-		status get_state() const noexcept {
+		status get_state() const noexcept
+		{
 			if(m_module==nullptr) return status::error;
 			if(m_platform==nullptr) return status::leisure;
 			if(m_module->get_state()==status::busy || m_platform->get_state()==status::busy) return status::busy;
 			if(m_module->get_state()==status::ready&&m_platform->get_state()==status::ready) return status::ready;
 			return status::null;
 		}
-		void set_time_out(timer_t tl) noexcept {
+		void set_time_out(timer_t tl) noexcept
+		{
 			m_time_out=tl;
 		}
-		platform_adapter* get_adapter() noexcept {
-			return m_platform;
+		virtual bool is_kb_hit() noexcept
+		{
+			if(m_platform==nullptr) Darwin_Error("Adapter is not ready.");
+			return m_platform->is_kb_hit();
 		}
-		drawable* get_drawable() noexcept {
-			if(m_platform==nullptr) return nullptr;
-			return m_platform->get_drawable();
+		virtual int get_kb_hit() noexcept
+		{
+			if(m_platform==nullptr) Darwin_Error("Adapter is not ready.");
+			return m_platform->get_kb_hit();
 		}
-		results fit_drawable() noexcept {
+		results fit_drawable() noexcept
+		{
 			if(m_platform==nullptr) return results::failure;
 			return m_platform->fit_drawable();
 		}
-		results update_drawable() noexcept {
+		drawable* get_drawable() noexcept
+		{
+			if(m_platform==nullptr) return nullptr;
+			return m_platform->get_drawable();
+		}
+		results update_drawable() noexcept
+		{
 			if(m_platform==nullptr) return results::failure;
 			return m_platform->update_drawable();
 		}
@@ -117,13 +175,17 @@ void darwin::darwin_rt::exit(int code=0)
 	m_module=nullptr;
 	std::exit(code);
 }
-#if defined(DARWIN_FORCE_UNIX)
+#ifdef DARWIN_FORCE_UNIX
 #include "./unix_module.hpp"
+#else
+#ifdef DARWIN_FORCE_WIN32
+#include "./win32_module.hpp"
 #else
 #if defined(__WIN32__) || defined(WIN32)
 #include "./win32_module.hpp"
 #else
 #include "./unix_module.hpp"
+#endif
 #endif
 #endif
 namespace darwin {

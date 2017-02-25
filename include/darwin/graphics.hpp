@@ -9,7 +9,8 @@ namespace darwin {
 	protected:
 		std::size_t mWidth,mHeight;
 		pixel* mImage=nullptr;
-		void copy(std::size_t w,std::size_t h,pixel* const img) {
+		void copy(std::size_t w,std::size_t h,pixel* const img)
+		{
 			if(img!=nullptr) {
 				delete[] this->mImage;
 				this->mImage=new pixel[w*h];
@@ -22,41 +23,52 @@ namespace darwin {
 	public:
 		picture():mWidth(0),mHeight(0),mImage(nullptr) {}
 		picture(std::size_t w,std::size_t h):mImage(new pixel[h*w]),mWidth(w),mHeight(h) {}
-		picture(std::size_t w,std::size_t h,const pixel& pix):mImage(new pixel[h*w]),mWidth(w),mHeight(h) {
+		picture(std::size_t w,std::size_t h,const pixel& pix):mImage(new pixel[h*w]),mWidth(w),mHeight(h)
+		{
 			for(pixel* it=this->mImage; it!=this->mImage+w*h; ++it) *it=pix;
 		}
-		picture(const picture& img):mWidth(0),mHeight(0),mImage(nullptr) {
+		picture(const picture& img):mWidth(0),mHeight(0),mImage(nullptr)
+		{
 			copy(img.mWidth,img.mHeight,img.mImage);
 		}
-		picture(picture&& img):mWidth(0),mHeight(0),mImage(nullptr) {
+		picture(picture&& img):mWidth(0),mHeight(0),mImage(nullptr)
+		{
 			copy(img.mWidth,img.mHeight,img.mImage);
 		}
-		virtual ~picture() {
+		virtual ~picture()
+		{
 			delete[] this->mImage;
 		}
-		picture& operator=(const picture& img) {
+		picture& operator=(const picture& img)
+		{
 			if(&img!=this)
 				this->copy(img.mWidth,img.mHeight,img.mImage);
 			return *this;
 		}
-		picture& operator=(picture&& img) {
+		picture& operator=(picture&& img)
+		{
 			if(&img!=this)
 				this->copy(img.mWidth,img.mHeight,img.mImage);
 			return *this;
 		}
-		virtual std::shared_ptr<drawable> clone() noexcept override {
+		virtual std::shared_ptr<drawable> clone() noexcept override
+		{
 			return std::make_shared<picture>(*this);
 		}
-		virtual bool usable() const noexcept override {
+		virtual bool usable() const noexcept override
+		{
 			return this->mImage!=nullptr;
 		}
-		virtual std::size_t get_width() const override {
+		virtual std::size_t get_width() const override
+		{
 			return this->mWidth;
 		}
-		virtual std::size_t get_height() const override {
+		virtual std::size_t get_height() const override
+		{
 			return this->mHeight;
 		}
-		virtual void resize(std::size_t w,std::size_t h) override {
+		virtual void resize(std::size_t w,std::size_t h) override
+		{
 			if(w==this->mWidth&&h==this->mHeight)
 				return;
 			delete[] this->mImage;
@@ -64,25 +76,29 @@ namespace darwin {
 			this->mWidth=w;
 			this->mHeight=h;
 		}
-		virtual void fill(const pixel& pix) override {
+		virtual void fill(const pixel& pix) override
+		{
 			if(this->mImage==nullptr)
 				Darwin_Error("Use of not available object.");
 			for(pixel* it=this->mImage; it!=this->mImage+this->mWidth*this->mHeight; ++it) *it=pix;
 		}
-		virtual void clear() override {
+		virtual void clear() override
+		{
 			if(this->mImage!=nullptr) {
 				delete[] this->mImage;
 				this->mImage=new pixel[mHeight*mWidth];
 			}
 		}
-		virtual const pixel& get_pixel(std::size_t x,std::size_t y) const override {
+		virtual const pixel& get_pixel(std::size_t x,std::size_t y) const override
+		{
 			if(this->mImage==nullptr)
 				Darwin_Error("Use of not available object.");
 			if(x>this->mWidth-1||y>this->mHeight-1)
 				Darwin_Error("Out of range.");
 			return this->mImage[y*this->mWidth+x];
 		}
-		virtual void draw_pixel(int x,int y,const pixel& pix) override {
+		virtual void draw_pixel(int x,int y,const pixel& pix) override
+		{
 			if(this->mImage==nullptr)
 				Darwin_Error("Use of not available object.");
 			if(x<0||y<0||x>this->mWidth-1||y>this->mHeight-1) {
@@ -90,6 +106,31 @@ namespace darwin {
 				return;
 			}
 			this->mImage[y*this->mWidth+x]=pix;
+		}
+	};
+	class draw_pad final{
+		private:
+		picture mPic;
+		public:
+		draw_pad()=default;
+		draw_pad(std::size_t w,std::size_t h):mPic(w,h){}
+		draw_pad(std::size_t w,std::size_t h,const pixel& pix):mPic(w,h,pix){}
+		~draw_pad()=default;
+		std::size_t get_width() const
+		{
+			return 2*this->mPic.get_width();
+		}
+		std::size_t get_height() const
+		{
+			return this->mPic.get_height();
+		}
+		drawable* get_drawable()
+		{
+			return &mPic;
+		}
+		const drawable* get_drawable() const
+		{
+			return &mPic;
 		}
 	};
 	bool serial_picture(drawable* pic,std::deque<char>& dat)

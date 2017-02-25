@@ -1,9 +1,6 @@
 #include "./module.hpp"
 #include "./graphics.hpp"
 #include "./unix_conio.hpp"
-#include <functional>
-#include <thread>
-#include <atomic>
 #include <cstdio>
 #include <string>
 namespace darwin {
@@ -13,27 +10,31 @@ namespace darwin {
 	public:
 		unix_adapter()=default;
 		virtual ~unix_adapter()=default;
-		virtual status get_state() const noexcept override {
+		virtual status get_state() const noexcept override
+		{
 			if(mReady)
 				return status::ready;
 			else
 				return status::leisure;
 		}
-		virtual results init() noexcept override {
+		virtual results init() noexcept override
+		{
 			conio::reset();
 			conio::clrscr();
 			conio::echo(false);
 			mReady = true;
 			return results::success;
 		}
-		virtual results stop() noexcept override {
+		virtual results stop() noexcept override
+		{
 			conio::reset();
 			conio::clrscr();
 			conio::echo(true);
 			mReady = false;
 			return results::success;
 		}
-		virtual results exec_commands(commands c) noexcept override {
+		virtual results exec_commands(commands c) noexcept override
+		{
 			switch(c) {
 			case commands::echo_on:
 				conio::echo(true);
@@ -53,20 +54,25 @@ namespace darwin {
 			}
 			return results::success;
 		}
-		virtual bool is_kb_hit() noexcept {
+		virtual bool is_kb_hit() noexcept
+		{
 			return conio::kbhit();
 		}
-		virtual int get_kb_hit() noexcept {
+		virtual int get_kb_hit() noexcept
+		{
 			return conio::getch();
 		}
-		virtual results fit_drawable() noexcept override {
+		virtual results fit_drawable() noexcept override
+		{
 			mDrawable.resize(conio::terminal_width(),conio::terminal_height());
 			return results::success;
 		}
-		virtual drawable* get_drawable() noexcept override {
+		virtual drawable* get_drawable() noexcept override
+		{
 			return &mDrawable;
 		}
-		virtual results update_drawable() noexcept override {
+		virtual results update_drawable() noexcept override
+		{
 			conio::gotoxy(0,0);
 			int sw(conio::terminal_width()),sh(conio::terminal_height());
 			for(std::size_t y=0; y<mDrawable.get_height()&&y<sh; ++y) {
