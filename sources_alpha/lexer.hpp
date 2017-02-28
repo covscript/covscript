@@ -64,8 +64,59 @@ namespace cov_basic
 		std::string tmp;
 		token_types type=token_types::null;
 		bool inside_str=false;
-		for(auto& ch:buff)
+		for(std::size_t i=0;i<buff.size();)
 		{
+			if(inside_str)
+			{
+				if(buff[i]=='\"')
+				{
+					if(!tmp.empty())
+						tokens.push_back(new token_value(tmp));
+					inside_str=false;
+				}else
+					tmp+=buff[i];
+				++i;
+				continue;
+			}
+			switch(type)
+			{
+			case token_types::null:
+				if(issignal(buff[i]))
+				{
+					type=token_types::signal;
+					continue;
+				}
+				if(isdigital(buff[i]))
+				{
+					type=token_types::value;
+					continue;
+				}
+				if(isalpha(buff[i]))
+				{
+					type=token_types::id;
+					continue;
+				}
+				if(buff[i]=='\n')
+				{
+					tokens.push_back(new token_signal(signal_types::endline_));
+					++i;
+					continue;
+				}
+				break;
+			case token_types::id:
+				if(std::isalnum(buff[i]))
+				{
+					tmp+=buff[i];
+					++i;
+					continue;
+				}
+				if(isaction(tmp))
+				{
+					tokens.push_back(new token_action(fitaction(tmp)));
+					tmp.clear();
+					break;
+				}
+			}
 		}
 	}
 }
