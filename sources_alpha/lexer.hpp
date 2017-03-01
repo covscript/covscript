@@ -180,15 +180,26 @@ namespace cov_basic {
 				break;
 			case token_types::signal:
 				if(issignal(buff[i])) {
-					tmp+=buff[i];
+					if(tmp.size()==1)
+					{
+						if(signal_map.exsist(tmp+buff[i]))
+						{
+							tokens.push_back(new token_signal(signal_map.match(tmp+buff[i])));
+							tmp.clear();
+						}else{
+							if(signal_map.exsist(tmp)){
+								tokens.push_back(new token_signal(signal_map.match(tmp)));
+								tmp.clear();
+							}
+							tmp+=buff[i];
+						}
+					}else
+						tmp+=buff[i];
 					++i;
 					continue;
 				}
 				type=token_types::null;
-				if(!signal_map.exsist(tmp))
-				{
-					
-				}else
+				if(!tmp.empty())
 					tokens.push_back(new token_signal(signal_map.match(tmp)));
 				tmp.clear();
 				break;
@@ -234,5 +245,14 @@ namespace cov_basic {
 			tokens.push_back(new token_value(std::stold(tmp)));
 			break;
 		}
+	}
+}
+namespace std {
+	template<>std::string to_string<bool>(const bool& v)
+	{
+		if(v)
+			return "True";
+		else
+			return "False";
 	}
 }

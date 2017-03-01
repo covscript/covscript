@@ -7,18 +7,13 @@ int main()
 	std::deque<char> buff;
 	std::deque<token_base*> token;
 	std::ifstream in("./test.cbs");
-	if(!in)
-		throw;
 	std::string line;
 	while(std::getline(in,line)) {
 		for(auto& c:line)
 			buff.push_back(c);
 		buff.push_back('\n');
 	}
-	for(auto& c:buff)
-		std::cout<<c;
 	lexer(buff,token);
-	std::cout<<token.size()<<std::endl;
 	for(auto& ptr:token) {
 		switch(ptr->get_type()) {
 		case token_types::action:
@@ -28,6 +23,36 @@ int main()
 				break;
 			case action_types::as_:
 				std::cout<<"<action:as>";
+				break;
+			case action_types::if_:
+				std::cout<<"<action:if>";
+				break;
+			case action_types::then_:
+				std::cout<<"<action:then>";
+				break;
+			case action_types::else_:
+				std::cout<<"<action:else>";
+				break;
+			case action_types::while_:
+				std::cout<<"<action:while>";
+				break;
+			case action_types::do_:
+				std::cout<<"<action:do>";
+				break;
+			case action_types::for_:
+				std::cout<<"<action:for>";
+				break;
+			case action_types::break_:
+				std::cout<<"<action:break>";
+				break;
+			case action_types::continue_:
+				std::cout<<"<action:continue>";
+				break;
+			case action_types::function_:
+				std::cout<<"<action:function>";
+				break;
+			case action_types::return_:
+				std::cout<<"<action:return>";
 				break;
 			case action_types::endline_:
 				std::cout<<"<action:endline>";
@@ -39,14 +64,83 @@ int main()
 			case signal_types::add_:
 				std::cout<<"<signal:+>";
 				break;
+			case signal_types::sub_:
+				std::cout<<"<signal:->";
+				break;
+			case signal_types::mul_:
+				std::cout<<"<signal:*>";
+				break;
+			case signal_types::div_:
+				std::cout<<"<signal:/>";
+				break;
+			case signal_types::mod_:
+				std::cout<<"<signal:%>";
+				break;
+			case signal_types::pow_:
+				std::cout<<"<signal:^>";
+				break;
+			case signal_types::com_:
+				std::cout<<"<signal:,>";
+				break;
+			case signal_types::dot_:
+				std::cout<<"<signal:.>";
+				break;
+			case signal_types::und_:
+				std::cout<<"<signal:<>";
+				break;
+			case signal_types::abo_:
+				std::cout<<"<signal:>>";
+				break;
 			case signal_types::asi_:
 				std::cout<<"<signal:=>";
+				break;
+			case signal_types::equ_:
+				std::cout<<"<signal:==>";
+				break;
+			case signal_types::ueq_:
+				std::cout<<"<signal:<=>";
+				break;
+			case signal_types::aeq_:
+				std::cout<<"<signal:>=>";
+				break;
+			case signal_types::neq_:
+				std::cout<<"<signal:!=>";
 				break;
 			case signal_types::and_:
 				std::cout<<"<signal:&&>";
 				break;
-			case signal_types::equ_:
-				std::cout<<"<signal:==>";
+			case signal_types::or_:
+				std::cout<<"<signal:||>";
+				break;
+			case signal_types::not_:
+				std::cout<<"<signal:!>";
+				break;
+			case signal_types::slb_:
+				std::cout<<"<signal:(>";
+				break;
+			case signal_types::srb_:
+				std::cout<<"<signal:)>";
+				break;
+			case signal_types::esb_:
+				std::cout<<"<signal:()>";
+				break;
+			case signal_types::mlb_:
+				std::cout<<"<signal:[>";
+				break;
+			case signal_types::mrb_:
+				std::cout<<"<signal:]>";
+				break;
+			case signal_types::emb_:
+				std::cout<<"<signal:[]>";
+				break;
+			case signal_types::llb_:
+				std::cout<<"<signal:{>";
+				break;
+			case signal_types::lrb_:
+				std::cout<<"<signal:}>";
+				break;
+			case signal_types::elb_:
+				std::cout<<"<signal:{}>";
 				break;
 			}
 			break;
