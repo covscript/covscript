@@ -1,2 +1,11 @@
-Define a="Define a=3.14"&&"Hello"
-Define b As Interger
+InitGraphics("...")
+Define str="Hello,World!"
+While 0 Do
+    FitDrawable()
+    ClearDrawable()
+    SetPencil(" ",True,False,GetColor("White"),GetColor("White"))
+    FillDrawable()
+    SetPencil("@",True,False,GetColor("Blue"),GetColor("White"))
+    DrawString(str,0.5*(GetDrawableWidth()-SizeOfString(str)),0.5*GetDrawableHeight())
+    UpdateDrawable()
+End

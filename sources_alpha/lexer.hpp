@@ -12,7 +12,7 @@ namespace cov_basic {
 		endblock_,endline_,define_,as_,if_,then_,else_,while_,do_,for_,break_,continue_,function_,return_
 	};
 	enum class signal_types {
-		add_,sub_,mul_,div_,mod_,pow_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,slb_,srb_,mlb_,mrb_,llb_,lrb_
+		add_,sub_,mul_,div_,mod_,pow_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,slb_,srb_,mlb_,mrb_,llb_,lrb_,esb_,emb_,elb_
 	};
 	class token_base {
 	public:
@@ -94,16 +94,20 @@ namespace cov_basic {
 		}
 	};
 	mapping<std::string,signal_types> signal_map= {
-		{"+",signal_types::add_},{"=",signal_types::asi_},{"&&",signal_types::and_},{"==",signal_types::equ_}
+		{"+",signal_types::add_},{"-",signal_types::sub_},{"*",signal_types::mul_},{"/",signal_types::div_},{"%",signal_types::mod_},{"^",signal_types::pow_},{">",signal_types::abo_},{"<",signal_types::und_},
+		{"=",signal_types::asi_},{"&&",signal_types::and_},{"||",signal_types::or_},{"!",signal_types::not_},{"==",signal_types::equ_},{"!=",signal_types::neq_},{">=",signal_types::aeq_},{"<=",signal_types::ueq_},
+		{"(",signal_types::slb_},{")",signal_types::srb_},{"[",signal_types::mlb_},{"]",signal_types::mrb_},{"{",signal_types::llb_},{"}",signal_types::lrb_},{",",signal_types::com_},{".",signal_types::dot_},
+		{"()",signal_types::esb_},{"[]",signal_types::emb_},{"{}",signal_types::elb_}
 	};
 	mapping<std::string,action_types> action_map= {
-		{"End",action_types::endblock_},{"Define",action_types::define_},{"As",action_types::as_}
+		{"End",action_types::endblock_},{"Define",action_types::define_},{"As",action_types::as_},{"If",action_types::if_},{"Then",action_types::then_},{"Else",action_types::else_},{"While",action_types::while_},
+		{"Do",action_types::do_},{"For",action_types::for_},{"Break",action_types::break_},{"Continue",action_types::continue_},{"Function",action_types::function_},{"Return",action_types::return_}
 	};
 	mapping<std::string,bool> boolean_map= {
-		{"True",true}
+		{"True",true},{"False",false}
 	};
 	char signals[]= {
-		'+','=','&'
+		'+','-','*','/','%','^',',','.','>','<','=','&','|','!','(',')','[',']','{','}'
 	};
 	bool issignal(char ch)
 	{
@@ -181,7 +185,11 @@ namespace cov_basic {
 					continue;
 				}
 				type=token_types::null;
-				tokens.push_back(new token_signal(signal_map.match(tmp)));
+				if(!signal_map.exsist(tmp))
+				{
+					
+				}else
+					tokens.push_back(new token_signal(signal_map.match(tmp)));
 				tmp.clear();
 				break;
 			case token_types::value:
