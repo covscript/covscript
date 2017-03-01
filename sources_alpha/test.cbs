@@ -1,2 +1,2 @@
-Define a="Define a=3.14"+"Hello"
+Define a="Define a=3.14"&&"Hello"
 Define b As Interger
