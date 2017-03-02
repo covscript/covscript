@@ -142,6 +142,12 @@ int main()
 			case signal_types::elb_:
 				std::cout<<"<signal:{}>";
 				break;
+			case signal_types::inc_:
+				std::cout<<"<signal:++>";
+				break;
+			case signal_types::dec_:
+				std::cout<<"<signal:-->";
+				break;
 			}
 			break;
 		case token_types::id:
