@@ -1,20 +1,15 @@
 #include "./lexer.hpp"
 #include <iostream>
 #include <fstream>
-int main()
+using namespace cov_basic;
+void show_token(std::deque<token_base*>& tokens)
 {
-	using namespace cov_basic;
-	std::deque<char> buff;
-	std::deque<token_base*> token;
-	std::ifstream in("./test.cbs");
-	std::string line;
-	while(std::getline(in,line)) {
-		for(auto& c:line)
-			buff.push_back(c);
-		buff.push_back('\n');
-	}
-	lexer(buff,token);
-	for(auto& ptr:token) {
+	for(auto& ptr:tokens) {
+		if(ptr==nullptr)
+		{
+			std::cout<<"<null>";
+			continue;
+		}
 		switch(ptr->get_type()) {
 		case token_types::action:
 			switch(dynamic_cast<token_action*>(ptr)->get_action()) {
@@ -157,7 +152,26 @@ int main()
 			std::cout<<"<value:"<<dynamic_cast<token_value*>(ptr)->get_value()<<">";
 			break;
 		}
-		delete ptr;
 	}
+	std::cout<<std::endl;
+}
+int main()
+{
+	std::deque<char> buff;
+	std::deque<token_base*> token;
+	std::ifstream in("./test.cbs");
+	std::string line;
+	while(std::getline(in,line)) {
+		for(auto& c:line)
+			buff.push_back(c);
+		buff.push_back('\n');
+	}
+	lexer(buff,token);
+	show_token(token);
+	std::deque<token_base*> signals,objects;
+	token.pop_back();
+	split_token(token,signals,objects);
+	show_token(signals);
+	show_token(objects);
 	return 0;
 }

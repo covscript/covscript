@@ -246,6 +246,27 @@ namespace cov_basic {
 			break;
 		}
 	}
+	void split_token(std::deque<token_base*>& raw,std::deque<token_base*>& signals,std::deque<token_base*>& objects)
+	{
+		bool request_signal=false;
+		for(auto& ptr:raw)
+		{
+			if(ptr->get_type()==token_types::action)
+				throw std::logic_error("Wrong format of expression.");
+			if(ptr->get_type()==token_types::signal)
+			{
+				if(!request_signal)
+					objects.push_back(nullptr);
+				signals.push_back(ptr);
+				request_signal=false;
+			}else{
+				objects.push_back(ptr);
+				request_signal=true;
+			}
+		}
+		if(!request_signal)
+			objects.push_back(nullptr);
+	}
 }
 namespace std {
 	template<>std::string to_string<bool>(const bool& v)
