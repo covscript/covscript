@@ -48,11 +48,16 @@ namespace cov_basic {
 				}
 			}
 			for(typename cov::tree<token_base*>::iterator it=tree.root(); it.usable(); it=it.right()) {
+				if(!it.right().usable())
+				{
+					tree.emplace_root_left(it,signals.at(i));
+					break;
+				}
 				if(get_signal_level(it.data())==get_signal_level(signals.at(i))) {
 					tree.emplace_root_left(it,signals.at(i));
 					break;
 				}
-				if(get_signal_level(it.data())<get_signal_level(signals.at(i))) {
+				if(get_signal_level(it.data())>get_signal_level(signals.at(i))) {
 					tree.emplace_right_left(it,signals.at(i));
 					break;
 				}
