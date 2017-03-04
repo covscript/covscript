@@ -1,12 +1,13 @@
 #pragma once
-#include "../include/mozart/any.hpp"
+#include "./mozart/any.hpp"
+#include "./mozart/tree.hpp"
 #include <stdexcept>
 #include <string>
 #include <deque>
 #include <map>
 namespace cov_basic {
 	enum class token_types {
-		null,action,signal,id,value
+		null,action,signal,id,value,expr
 	};
 	enum class action_types {
 		endblock_,endline_,define_,as_,if_,then_,else_,while_,do_,for_,break_,continue_,function_,return_
@@ -30,7 +31,7 @@ namespace cov_basic {
 		{
 			return token_types::action;
 		}
-		action_types get_action() const noexcept
+		action_types& get_action() noexcept
 		{
 			return this->mType;
 		}
@@ -44,7 +45,7 @@ namespace cov_basic {
 		{
 			return token_types::signal;
 		}
-		signal_types get_signal() const noexcept
+		signal_types& get_signal() noexcept
 		{
 			return this->mType;
 		}
@@ -58,7 +59,7 @@ namespace cov_basic {
 		{
 			return token_types::id;
 		}
-		const std::string& get_id() const noexcept
+		std::string& get_id() noexcept
 		{
 			return this->mId;
 		}
@@ -72,9 +73,23 @@ namespace cov_basic {
 		{
 			return token_types::value;
 		}
-		const cov::any& get_value() const noexcept
+		cov::any& get_value() noexcept
 		{
 			return this->mVal;
+		}
+	};
+	class token_expr final:public token_base {
+		cov::tree<token_base*> mTree;
+	public:
+		token_expr()=delete;
+		token_expr(const cov::tree<token_base*>& tree):mTree(tree) {}
+		virtual token_types get_type() const noexcept
+		{
+			return token_types::expr;
+		}
+		cov::tree<token_base*>& get_tree() noexcept
+		{
+			return this->mTree;
 		}
 	};
 	template<typename Key,typename T>
@@ -245,27 +260,6 @@ namespace cov_basic {
 			tokens.push_back(new token_value(std::stold(tmp)));
 			break;
 		}
-	}
-	void split_token(std::deque<token_base*>& raw,std::deque<token_base*>& signals,std::deque<token_base*>& objects)
-	{
-		bool request_signal=false;
-		for(auto& ptr:raw)
-		{
-			if(ptr->get_type()==token_types::action)
-				throw std::logic_error("Wrong format of expression.");
-			if(ptr->get_type()==token_types::signal)
-			{
-				if(!request_signal)
-					objects.push_back(nullptr);
-				signals.push_back(ptr);
-				request_signal=false;
-			}else{
-				objects.push_back(ptr);
-				request_signal=true;
-			}
-		}
-		if(!request_signal)
-			objects.push_back(nullptr);
 	}
 }
 namespace std {
