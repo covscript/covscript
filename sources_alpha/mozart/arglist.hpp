@@ -31,36 +31,44 @@ namespace cov {
 	private:
 		std::deque<std::type_index> mTypes;
 		std::deque<cov::any> mArgs;
-		template<typename _Tp>void unpack_types() {
+		template<typename _Tp>void unpack_types()
+		{
 			this->mTypes.push_back(typeid(_Tp));
 		}
-		template<typename _Tp,typename _fT,typename...ArgTypes>void unpack_types() {
+		template<typename _Tp,typename _fT,typename...ArgTypes>void unpack_types()
+		{
 			this->mTypes.push_back(typeid(_Tp));
 			unpack_types<_fT,ArgTypes...>();
 		}
-		template<typename _Tp>int count_types(int index=1) const {
+		template<typename _Tp>int count_types(int index=1) const
+		{
 			return index;
 		}
-		template<typename _Tp,typename _fT,typename...ArgTypes>int count_types(int index=1) const {
+		template<typename _Tp,typename _fT,typename...ArgTypes>int count_types(int index=1) const
+		{
 			return count_types<_fT,ArgTypes...>(++index);
 		}
-		template<typename _Tp>std::string get_type(int expect,int index) const {
+		template<typename _Tp>std::string get_type(int expect,int index) const
+		{
 			if(expect==index)
 				return typeid(_Tp).name();
 		}
-		template<typename _Tp,typename _fT,typename...ArgTypes>std::string get_type(int expect,int index) const {
+		template<typename _Tp,typename _fT,typename...ArgTypes>std::string get_type(int expect,int index) const
+		{
 			if(expect==index)
 				return typeid(_Tp).name();
 			else
 				return get_type<_fT,ArgTypes...>(expect,++index);
 		}
-		template<typename _Tp>int check_types(int index,std::deque<std::type_index>::const_iterator it) const {
+		template<typename _Tp>int check_types(int index,std::deque<std::type_index>::const_iterator it) const
+		{
 			if(it!=this->mTypes.end()&&*it==typeid(_Tp))
 				return -1;
 			else
 				return index;
 		}
-		template<typename _Tp,typename _fT,typename...ArgTypes>int check_types(int index,std::deque<std::type_index>::const_iterator it) const {
+		template<typename _Tp,typename _fT,typename...ArgTypes>int check_types(int index,std::deque<std::type_index>::const_iterator it) const
+		{
 			if(it!=this->mTypes.end()&&*it==typeid(_Tp))
 				return check_types<_fT,ArgTypes...>(++index,++it);
 			else
@@ -70,62 +78,78 @@ namespace cov {
 		typedef std::deque<cov::any>::iterator iterator;
 		typedef std::deque<cov::any>::const_iterator const_iterator;
 		argument_list()=delete;
-		template<typename...ArgTypes>argument_list(ArgTypes&&...args):mArgs( {
+		template<typename...ArgTypes>argument_list(ArgTypes&&...args):mArgs(
+		{
 			args...
-		}) {
+		})
+		{
 			unpack_types<ArgTypes...>();
 		}
 		argument_list(const argument_list&)=default;
 		argument_list(argument_list&&)=default;
 		~argument_list()=default;
-		argument_list& operator=(const argument_list& arglist) {
+		argument_list& operator=(const argument_list& arglist)
+		{
 			if(&arglist!=this&&arglist.mTypes==this->mTypes)
 				this->mArgs=arglist.mArgs;
 			return *this;
 		}
-		argument_list& operator=(argument_list&& arglist) {
+		argument_list& operator=(argument_list&& arglist)
+		{
 			if(&arglist!=this&&arglist.mTypes==this->mTypes)
 				this->mArgs=arglist.mArgs;
 			return *this;
 		}
-		bool operator==(const argument_list& arglist) {
+		bool operator==(const argument_list& arglist)
+		{
 			if(&arglist==this)
 				return true;
 			return arglist.mTypes==this->mTypes;
 		}
-		bool operator!=(const argument_list& arglist) {
+		bool operator!=(const argument_list& arglist)
+		{
 			if(&arglist==this)
 				return false;
 			return arglist.mTypes!=this->mTypes;
 		}
-		cov::any& operator[](std::size_t posit) {
+		cov::any& operator[](std::size_t posit)
+		{
 			return this->mArgs.at(posit);
 		}
-		const cov::any& operator[](std::size_t posit) const {
+		const cov::any& operator[](std::size_t posit) const
+		{
 			return this->mArgs.at(posit);
 		}
-		cov::any& at(std::size_t posit) {
+		cov::any& at(std::size_t posit)
+		{
 			return this->mArgs.at(posit);
 		}
-		const cov::any& at(std::size_t posit) const {
+		const cov::any& at(std::size_t posit) const
+		{
 			return this->mArgs.at(posit);
 		}
-		iterator begin() {
+		iterator begin()
+		{
 			return this->mArgs.begin();
 		}
-		const_iterator begin() const {
+		const_iterator begin() const
+		{
 			return this->mArgs.begin();
 		}
-		iterator end() {
+		iterator end()
+		{
 			return this->mArgs.end();
 		}
-		const_iterator end() const {
+		const_iterator end() const
+		{
 			return this->mArgs.end();
 		}
-		std::size_t size() const {
+		std::size_t size() const
+		{
 			return this->mArgs.size();
 		}
-		template<typename...ArgTypes>void check() const {
+		template<typename...ArgTypes>void check() const
+		{
 			if(count_types<ArgTypes...>()==this->mTypes.size()) {
 				int result=check_types<ArgTypes...>(1,this->mTypes.begin());
 				if(result!=-1)

@@ -20,31 +20,36 @@
 * Github: https://github.com/mikecovlee
 * Website: http://ldc.atd3.cn
 *
-* Version: 17.1.1
+* Version: 17.2.1
 */
 #include "./base.hpp"
-namespace cov
-{
+#include <utility>
+namespace cov {
 	template<typename T>
-	class tree final{
-		struct tree_node final{
-			T data;
+	class tree final {
+		struct tree_node final {
 			tree_node* root=nullptr;
 			tree_node* left=nullptr;
 			tree_node* right=nullptr;
+			T data;
+			tree_node()=default;
+			tree_node(const tree_node&)=default;
+			tree_node(tree_node&&) noexcept=default;
+			tree_node(tree_node* a,tree_node* b,tree_node* c,const T& dat):root(a),left(b),right(c),data(dat) {}
+			template<typename...Args_T>tree_node(tree_node* a,tree_node* b,tree_node* c,Args_T&&...args):root(a),left(b),right(c),data(std::forward<Args_T>(args)...) {}
+			~tree_node()=default;
 		};
 		static tree_node* copy(tree_node* raw,tree_node* root=nullptr)
 		{
 			if(raw==nullptr) return nullptr;
-			tree_node* node=new tree_node{raw->data,root,nullptr,nullptr};
+			tree_node* node=new tree_node(root,nullptr,nullptr,raw->data);
 			node->left=copy(raw->left,node);
 			node->right=copy(raw->right,node);
 			return node;
 		}
 		static void destory(tree_node* raw)
 		{
-			if(raw!=nullptr)
-			{
+			if(raw!=nullptr) {
 				destory(raw->left);
 				destory(raw->right);
 				delete raw;
@@ -52,108 +57,233 @@ namespace cov
 		}
 		tree_node* mRoot=nullptr;
 	public:
-		class iterator final{
+		class iterator final {
 			friend class tree;
 			tree_node* mData=nullptr;
 		public:
 			iterator()=default;
-			iterator(tree_node* ptr):mData(ptr){}
+			iterator(tree_node* ptr):mData(ptr) {}
 			iterator(const iterator&)=default;
+			iterator(iterator&&) noexcept=default;
 			~iterator()=default;
-			bool usable() const noexcept{return this->mData!=nullptr;}
+			iterator& operator=(const iterator&)=default;
+			iterator& operator=(iterator&&) noexcept=default;
+			bool usable() const noexcept
+			{
+				return this->mData!=nullptr;
+			}
 			T& data()
 			{
 				if(!this->usable())
-					throw std::logic_error("Use of final tree node.");
+					throw cov::error("E000E");
 				return this->mData->data;
 			}
 			const T& data() const
 			{
 				if(!this->usable())
-					throw std::logic_error("Use of final tree node.");
+					throw cov::error("E000E");
 				return this->mData->data;
 			}
 			iterator root()
 			{
 				if(!this->usable())
-					throw std::logic_error("Use of final tree node.");
+					throw cov::error("E000E");
 				return iterator(this->mData->root);
 			}
 			iterator left()
 			{
 				if(!this->usable())
-					throw std::logic_error("Use of final tree node.");
+					throw cov::error("E000E");
 				return iterator(this->mData->left);
 			}
 			iterator right()
 			{
 				if(!this->usable())
-					throw std::logic_error("Use of final tree node.");
+					throw cov::error("E000E");
 				return iterator(this->mData->right);
 			}
 		};
-		class const_iterator final{
+		class const_iterator final {
 			friend class tree;
 			const tree_node* mData=nullptr;
 		public:
 			const_iterator()=default;
-			const_iterator(const tree_node* ptr):mData(ptr){}
-			const_iterator(const iterator& it):mData(it.mData){}
+			const_iterator(const tree_node* ptr):mData(ptr) {}
+			const_iterator(const iterator& it):mData(it.mData) {}
 			const_iterator(const const_iterator&)=default;
+			const_iterator(const_iterator&&) noexcept=default;
 			~const_iterator()=default;
-			bool usable() const noexcept{return this->mData!=nullptr;}
+			const_iterator& operator=(const const_iterator&)=default;
+			const_iterator& operator=(const_iterator&&) noexcept=default;
+			bool usable() const noexcept
+			{
+				return this->mData!=nullptr;
+			}
 			const T& data() const
 			{
 				if(!this->usable())
-					throw std::logic_error("Use of final tree node.");
+					throw cov::error("E000E");
 				return this->mData->data;
 			}
 			const_iterator root() const
 			{
 				if(!this->usable())
-					throw std::logic_error("Use of final tree node.");
+					throw cov::error("E000E");
 				return const_iterator(this->mData->root);
 			}
 			const_iterator left() const
 			{
 				if(!this->usable())
-					throw std::logic_error("Use of final tree node.");
+					throw cov::error("E000E");
 				return const_iterator(this->mData->left);
 			}
 			const_iterator right() const
 			{
 				if(!this->usable())
-					throw std::logic_error("Use of final tree node.");
+					throw cov::error("E000E");
 				return const_iterator(this->mData->right);
 			}
 		};
-		tree()=default;
-		tree(iterator it):mRoot(copy(it.mData)){}
-		tree(const tree& t):mRoot(copy(t.mRoot)){}
-		~tree(){destory(this->mRoot);}
-		bool empty() const noexcept{return this->mRoot==nullptr;}
-		void clear(){destory(this->mRoot);this->mRoot=nullptr;}
-		iterator root(){return iterator(this->mRoot);}
-		const_iterator root() const{return const_iterator(this->mRoot);}
-		const_iterator croot() const{return const_iterator(this->mRoot);}
-		template<typename...Args>void emplace_root_left(Args&&...args)
+		void swap(tree& t)
 		{
-			mRoot=new tree_node{T(args...),nullptr,mRoot,nullptr};
+			tree_node* ptr=this->mRoot;
+			this->mRoot=t.mRoot;
+			t.mRoot=ptr;
 		}
-		template<typename...Args>void emplace_root_right(Args&&...args)
+		void swap(tree&& t) noexcept
 		{
-			mRoot=new tree_node{T(args...),nullptr,nullptr,mRoot};
+			tree_node* ptr=this->mRoot;
+			this->mRoot=t.mRoot;
+			t.mRoot=ptr;
+		}
+		tree()=default;
+		tree(iterator it):mRoot(copy(it.mData)) {}
+		tree(const tree& t):mRoot(copy(t.mRoot)) {}
+		tree(tree&& t) noexcept:
+			mRoot(nullptr)
+		{
+			swap(t);
+		}
+		~tree()
+		{
+			destory(this->mRoot);
+		}
+		tree& operator=(const tree& t)
+		{
+			destory(this->mRoot);
+			this->mRoot=copy(t.mRoot);
+			return *this;
+		}
+		tree& operator=(tree&& t) noexcept
+		{
+			swap(t);
+			return *this;
+		}
+		void assign(const tree& t)
+		{
+			destory(this->mRoot);
+			this->mRoot=copy(t.mRoot);
+		}
+		bool empty() const noexcept
+		{
+			return this->mRoot==nullptr;
+		}
+		void clear()
+		{
+			destory(this->mRoot);
+			this->mRoot=nullptr;
+		}
+		iterator root()
+		{
+			return iterator(this->mRoot);
+		}
+		const_iterator root() const
+		{
+			return const_iterator(this->mRoot);
+		}
+		const_iterator croot() const
+		{
+			return const_iterator(this->mRoot);
+		}
+		iterator insert_root_left(iterator it,const T& data)
+		{
+			if(it.mData==mRoot) {
+				mRoot=new tree_node(nullptr,mRoot,nullptr,data);
+				return iterator(mRoot);
+			}
+			if(!it.usable())
+				throw cov::error("E000E");
+			tree_node* node=new tree_node(it.mData->root,it.mData,nullptr,data);
+			if(it.mData->root->left==it.mData)
+				it.mData->root->left=node;
+			else
+				it.mData->root->right=node;
+			return iterator(node);
+		}
+		iterator insert_root_right(iterator it,const T& data)
+		{
+			if(it.mData==mRoot) {
+				mRoot=new tree_node(nullptr,nullptr,mRoot,data);
+				return iterator(mRoot);
+			}
+			if(!it.usable())
+				throw cov::error("E000E");
+			tree_node* node=new tree_node(it.mData->root,nullptr,it.mData,data);
+			if(it.mData->root->left==it.mData)
+				it.mData->root->left=node;
+			else
+				it.mData->root->right=node;
+			return iterator(node);
+		}
+		iterator insert_left_left(iterator it,const T& data)
+		{
+			if(!it.usable())
+				throw cov::error("E000E");
+			tree_node* node=new tree_node(it.mData,it.mData->left,nullptr,data);
+			if(it.mData->left!=nullptr)
+				it.mData->left->root=node;
+			it.mData->left=node;
+			return iterator(node);
+		}
+		iterator insert_left_right(iterator it,const T& data)
+		{
+			if(!it.usable())
+				throw cov::error("E000E");
+			tree_node* node=new tree_node(it.mData,nullptr,it.mData->left,data);
+			if(it.mData->left!=nullptr)
+				it.mData->left->root=node;
+			it.mData->left=node;
+			return iterator(node);
+		}
+		iterator insert_right_left(iterator it,const T& data)
+		{
+			if(!it.usable())
+				throw cov::error("E000E");
+			tree_node* node=new tree_node(it.mData,it.mData->right,nullptr,data);
+			if(it.mData->right!=nullptr)
+				it.mData->right->root=node;
+			it.mData->right=node;
+			return iterator(node);
+		}
+		iterator insert_right_right(iterator it,const T& data)
+		{
+			if(!it.usable())
+				throw cov::error("E000E");
+			tree_node* node=new tree_node(it.mData,nullptr,it.mData->right,data);
+			if(it.mData->right!=nullptr)
+				it.mData->right->root=node;
+			it.mData->right=node;
+			return iterator(node);
 		}
 		template<typename...Args>iterator emplace_root_left(iterator it,Args&&...args)
 		{
-			if(!it.usable())
-				throw std::logic_error("Use of final tree node.");
-			if(it.mData==mRoot)
-			{
-				mRoot=new tree_node{T(args...),nullptr,mRoot,nullptr};
+			if(it.mData==mRoot) {
+				mRoot=new tree_node(nullptr,mRoot,nullptr,std::forward<Args>(args)...);
 				return iterator(mRoot);
 			}
-			tree_node* node=new tree_node{T(args...),it.mData->root,it.mData,nullptr};
+			if(!it.usable())
+				throw cov::error("E000E");
+			tree_node* node=new tree_node(it.mData->root,it.mData,nullptr,std::forward<Args>(args)...);
 			if(it.mData->root->left==it.mData)
 				it.mData->root->left=node;
 			else
@@ -162,14 +292,13 @@ namespace cov
 		}
 		template<typename...Args>iterator emplace_root_right(iterator it,Args&&...args)
 		{
-			if(!it.usable())
-				throw std::logic_error("Use of final tree node.");
-			if(it.mData==mRoot)
-			{
-				mRoot=new tree_node{T(args...),nullptr,nullptr,mRoot};
+			if(it.mData==mRoot) {
+				mRoot=new tree_node(nullptr,nullptr,mRoot,std::forward<Args>(args)...);
 				return iterator(mRoot);
 			}
-			tree_node* node=new tree_node{T(args...),it.mData->root,nullptr,it.mData};
+			if(!it.usable())
+				throw cov::error("E000E");
+			tree_node* node=new tree_node(it.mData->root,nullptr,it.mData,std::forward<Args>(args)...);
 			if(it.mData->root->left==it.mData)
 				it.mData->root->left=node;
 			else
@@ -179,8 +308,8 @@ namespace cov
 		template<typename...Args>iterator emplace_left_left(iterator it,Args&&...args)
 		{
 			if(!it.usable())
-				throw std::logic_error("Use of final tree node.");
-			tree_node* node=new tree_node{T(args...),it.mData,it.mData->left,nullptr};
+				throw cov::error("E000E");
+			tree_node* node=new tree_node(it.mData,it.mData->left,nullptr,std::forward<Args>(args)...);
 			if(it.mData->left!=nullptr)
 				it.mData->left->root=node;
 			it.mData->left=node;
@@ -189,8 +318,8 @@ namespace cov
 		template<typename...Args>iterator emplace_left_right(iterator it,Args&&...args)
 		{
 			if(!it.usable())
-				throw std::logic_error("Use of final tree node.");
-			tree_node* node=new tree_node{T(args...),it.mData,nullptr,it.mData->left};
+				throw cov::error("E000E");
+			tree_node* node=new tree_node(it.mData,nullptr,it.mData->left,std::forward<Args>(args)...);
 			if(it.mData->left!=nullptr)
 				it.mData->left->root=node;
 			it.mData->left=node;
@@ -199,8 +328,8 @@ namespace cov
 		template<typename...Args>iterator emplace_right_left(iterator it,Args&&...args)
 		{
 			if(!it.usable())
-				throw std::logic_error("Use of final tree node.");
-			tree_node* node=new tree_node{T(args...),it.mData,it.mData->right,nullptr};
+				throw cov::error("E000E");
+			tree_node* node=new tree_node(it.mData,it.mData->right,nullptr,std::forward<Args>(args)...);
 			if(it.mData->right!=nullptr)
 				it.mData->right->root=node;
 			it.mData->right=node;
@@ -209,33 +338,33 @@ namespace cov
 		template<typename...Args>iterator emplace_right_right(iterator it,Args&&...args)
 		{
 			if(!it.usable())
-				throw std::logic_error("Use of final tree node.");
-			tree_node* node=new tree_node{T(args...),it.mData,nullptr,it.mData->right};
+				throw cov::error("E000E");
+			tree_node* node=new tree_node(it.mData,nullptr,it.mData->right,std::forward<Args>(args)...);
 			if(it.mData->right!=nullptr)
 				it.mData->right->root=node;
 			it.mData->right=node;
 			return iterator(node);
 		}
-		iterator remove(iterator it)
+		iterator erase(iterator it)
 		{
 			if(!it.usable())
-				throw std::logic_error("Use of final tree node.");
+				throw cov::error("E000E");
 			iterator root(it.mData->root);
 			destory(it.mData);
 			return root;
 		}
-		iterator remove_left(iterator it)
+		iterator erase_left(iterator it)
 		{
 			if(!it.usable())
-				throw std::logic_error("Use of final tree node.");
+				throw cov::error("E000E");
 			destory(it.mData->left);
 			it.mData->left=nullptr;
 			return it;
 		}
-		iterator remove_right(iterator it)
+		iterator erase_right(iterator it)
 		{
 			if(!it.usable())
-				throw std::logic_error("Use of final tree node.");
+				throw cov::error("E000E");
 			destory(it.mData->right);
 			it.mData->right=nullptr;
 			return it;

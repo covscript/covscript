@@ -20,17 +20,17 @@
 * Github: https://github.com/mikecovlee
 * Website: http://ldc.atd3.cn
 *
-* Library Version: 17.1.1
+* Library Version: 17.2.1
 */
 #ifndef __cplusplus
 #error E0001
 #endif
 
-#if __cplusplus < 201402L
+#if __cplusplus < 201103L
 #error E0002
 #endif
 
-#define __Mozart 170101L
+#define __Mozart 170201L
 
 #include <exception>
 #include <stdexcept>
@@ -43,12 +43,13 @@ namespace cov {
 		std::string mWhat="Mozart Warning";
 	public:
 		warning()=default;
-	warning(const std::string& str) noexcept:
-		mWhat("Mozart Warning:"+str) {}
+		warning(const std::string& str) noexcept:
+			mWhat("Mozart Warning:"+str) {}
 		warning(const warning&)=default;
 		warning(warning&&)=default;
 		virtual ~warning()=default;
-		virtual const char* what() const noexcept override {
+		virtual const char* what() const noexcept override
+		{
 			return this->mWhat.c_str();
 		}
 	};
@@ -56,14 +57,15 @@ namespace cov {
 		std::string mWhat="Mozart Error";
 	public:
 		error()=default;
-	error(const std::string& str) noexcept:
-		mWhat("Mozart Error:"+str) {}
+		error(const std::string& str) noexcept:
+			mWhat("Mozart Error:"+str) {}
 		error(const error&)=default;
 		error(error&&)=default;
 		virtual ~error()=default;
 		error& operator=(const error&)=default;
 		error& operator=(error&&)=default;
-		virtual const char* what() const noexcept override {
+		virtual const char* what() const noexcept override
+		{
 			return this->mWhat.c_str();
 		}
 	};
@@ -74,16 +76,20 @@ namespace cov {
 		object(object&&) noexcept=default;
 		object(const object&)=default;
 		virtual ~object()=default;
-		virtual std::type_index object_type() const noexcept final {
+		virtual std::type_index object_type() const noexcept final
+		{
 			return typeid(*this);
 		}
-		virtual std::string to_string() const noexcept {
+		virtual std::string to_string() const noexcept
+		{
 			return typeid(*this).name();
 		}
-		virtual object* clone() noexcept {
+		virtual object* clone() noexcept
+		{
 			return nullptr;
 		}
-		virtual bool equals(const object* ptr) const noexcept {
+		virtual bool equals(const object* ptr) const noexcept
+		{
 			return this==ptr;
 		}
 	};

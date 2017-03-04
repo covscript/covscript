@@ -58,21 +58,25 @@ namespace cov {
 		F mFunc;
 		cov::tuple<Args...> mArgs;
 		template<typename...ArgsT,int...S>
-		typename resolver<typename cov::function_parser<F>::type::common_type>::return_type _call(cov::tuple<ArgsT...>& t,sequence<S...>) {
+		typename resolver<typename cov::function_parser<F>::type::common_type>::return_type _call(cov::tuple<ArgsT...>& t,sequence<S...>)
+		{
 			return mFunc(select(get<S>(mArgs),t)...);
 		}
 		template<int...S>
-		typename resolver<typename cov::function_parser<F>::type::common_type>::return_type _call(sequence<S...>) {
+		typename resolver<typename cov::function_parser<F>::type::common_type>::return_type _call(sequence<S...>)
+		{
 			return mFunc(get<S>(mArgs)...);
 		}
 	public:
 		bind_t(F func,Args&&...args):mFunc(func),mArgs(std::forward<Args>(args)...) {}
 		template<typename...ArgsT>
-		typename resolver<typename cov::function_parser<F>::type::common_type>::return_type operator()(ArgsT&&...args) {
+		typename resolver<typename cov::function_parser<F>::type::common_type>::return_type operator()(ArgsT&&...args)
+		{
 			cov::tuple<ArgsT...> t(std::forward<ArgsT>(args)...);
 			return _call(t,make_sequence<cov::type_list::get_size<args_t>::result>::result);
 		}
-		typename resolver<typename cov::function_parser<F>::type::common_type>::return_type operator()() {
+		typename resolver<typename cov::function_parser<F>::type::common_type>::return_type operator()()
+		{
 			return _call(make_sequence<cov::type_list::get_size<args_t>::result>::result);
 		}
 	};

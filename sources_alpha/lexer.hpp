@@ -195,20 +195,18 @@ namespace cov_basic {
 				break;
 			case token_types::signal:
 				if(issignal(buff[i])) {
-					if(tmp.size()==1)
-					{
-						if(signal_map.exsist(tmp+buff[i]))
-						{
+					if(tmp.size()==1) {
+						if(signal_map.exsist(tmp+buff[i])) {
 							tokens.push_back(new token_signal(signal_map.match(tmp+buff[i])));
 							tmp.clear();
-						}else{
-							if(signal_map.exsist(tmp)){
+						} else {
+							if(signal_map.exsist(tmp)) {
 								tokens.push_back(new token_signal(signal_map.match(tmp)));
 								tmp.clear();
 							}
 							tmp+=buff[i];
 						}
-					}else
+					} else
 						tmp+=buff[i];
 					++i;
 					continue;
@@ -260,14 +258,5 @@ namespace cov_basic {
 			tokens.push_back(new token_value(std::stold(tmp)));
 			break;
 		}
-	}
-}
-namespace std {
-	template<>std::string to_string<bool>(const bool& v)
-	{
-		if(v)
-			return "True";
-		else
-			return "False";
 	}
 }

@@ -42,7 +42,8 @@ namespace cov {
 		switcher(switcher&&) noexcept=delete;
 		switcher(const switcher&)=delete;
 		~switcher()=default;
-		void add_case(const cov::any& head,const case_type& body) {
+		void add_case(const cov::any& head,const case_type& body)
+		{
 			if(object::show_warning&&head.type()!=mCondition.type())
 				throw cov::warning("W0001");
 			bool exsist=false;
@@ -59,12 +60,14 @@ namespace cov {
 			if(!exsist)
 				mCases.push_back(tuple<cov::any,cov::function<void()>>(head,body));
 		}
-		void add_default(const case_type& body) {
+		void add_default(const case_type& body)
+		{
 			if(mDefault.callable()&&object::show_warning)
 				throw cov::warning("W0002");
 			mDefault=body;
 		}
-		void perform() {
+		void perform()
+		{
 			for(auto& it:mCases) {
 				if(it.get<0>()==mCondition&&it.get<1>().callable()) {
 					it.get<1>().call();
@@ -81,17 +84,21 @@ namespace cov {
 		switcher_stack()=default;
 		switcher_stack(switcher_stack&&) noexcept=delete;
 		switcher_stack(const switcher_stack&)=delete;
-		~switcher_stack() {
+		~switcher_stack()
+		{
 			for(auto&it:mStack)
 				delete it;
 		}
-		switcher& top() {
+		switcher& top()
+		{
 			return *mStack.front();
 		}
-		void push(const cov::any& val) {
+		void push(const cov::any& val)
+		{
 			mStack.push_front(new switcher(val));
 		}
-		void pop() {
+		void pop()
+		{
 			delete mStack.front();
 			mStack.pop_front();
 		}

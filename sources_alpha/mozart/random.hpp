@@ -1,6 +1,6 @@
 #pragma once
 /*
-* Covariant Mozart Utility Library
+* Covariant Mozart Utility Library: Random
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -20,34 +20,31 @@
 * Github: https://github.com/mikecovlee
 * Website: http://ldc.atd3.cn
 *
-* Library Version: 17.2.1
-*
-* Function List:
-* Function(function.hpp)
-* TypeList(typelist.hpp)
-* Memory(memory.hpp)
-* cov::any(any.hpp)
-* cov::tree(tree.hpp)
-* cov::rand(random.hpp)
-* cov::tuple(tuple.hpp)
-* cov::timer(timer.hpp)
-* cov::switcher(switcher.hpp)
-* cov::argument_list(arglist.hpp)
-*
-* Marco List:
-* Library Version: __Mozart
-*
-* See README.md to learn more about Covariant Mozart Warning and Error Code
-* See Reference.md to learn more about Covariant Mozart Interface
+* Version: 17.2.1
 */
 #include "./base.hpp"
-#include "./function.hpp"
-#include "./typelist.hpp"
-#include "./memory.hpp"
-#include "./any.hpp"
-#include "./tree.hpp"
-#include "./tuple.hpp"
-#include "./timer.hpp"
-#include "./random.hpp"
-#include "./switcher.hpp"
-#include "./arglist.hpp"
+#include <type_traits>
+#include <random>
+#include <ctime>
+namespace cov {
+	namespace random {
+		static std::default_random_engine random_engine(time(nullptr));
+		template<typename T,bool is_integral>struct random_traits;
+		template<typename T>struct random_traits<T,true> {
+			static T rand(T begin,T end)
+			{
+				return std::uniform_int_distribution<T>(begin,end)(random_engine);
+			}
+		};
+		template<typename T>struct random_traits<T,false> {
+			static T rand(T begin,T end)
+			{
+				return std::uniform_real_distribution<T>(begin,end)(random_engine);
+			}
+		};
+	}
+	template<typename T>T rand(T begin,T end)
+	{
+		return random::random_traits<T,std::is_integral<T>::value>::rand(begin,end);
+	}
+}

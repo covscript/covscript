@@ -49,7 +49,8 @@ namespace cov {
 			static void show() {}
 		};
 		template<typename fT,typename sT>struct iterator<tlist_node<fT,sT>> {
-			static void show() {
+			static void show()
+			{
 				printf("%s\t",typeid(fT).name());
 				iterator<sT>::show();
 			}
