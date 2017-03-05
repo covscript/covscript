@@ -1,13 +1,12 @@
 #pragma once
 #include "./mozart/any.hpp"
-#include "./mozart/tree.hpp"
 #include <stdexcept>
 #include <string>
 #include <deque>
 #include <map>
 namespace cov_basic {
 	enum class token_types {
-		null,action,signal,id,value,expr,sblist,mblist,lblist
+		null,action,signal,id,value,sblist,mblist,lblist,fcall,access,array,expr
 	};
 	enum class action_types {
 		endblock_,endline_,define_,as_,if_,then_,else_,while_,do_,for_,break_,continue_,function_,return_
@@ -76,20 +75,6 @@ namespace cov_basic {
 		cov::any& get_value() noexcept
 		{
 			return this->mVal;
-		}
-	};
-	class token_expr final:public token_base {
-		cov::tree<token_base*> mTree;
-	public:
-		token_expr()=delete;
-		token_expr(const cov::tree<token_base*>& tree):mTree(tree) {}
-		virtual token_types get_type() const noexcept
-		{
-			return token_types::expr;
-		}
-		cov::tree<token_base*>& get_tree() noexcept
-		{
-			return this->mTree;
 		}
 	};
 	class token_sblist final:public token_base {
@@ -303,7 +288,8 @@ namespace cov_basic {
 	}
 	void process_brackets(std::deque<token_base*>& tokens)
 	{
-		std::deque<token_base*> oldt=tokens;
+		std::deque<token_base*> oldt;
+		std::swap(tokens,oldt);
 		tokens.clear();
 		std::deque<std::deque<token_base*>> blist;
 		std::deque<token_base*> btokens;

@@ -1,4 +1,4 @@
-#include "./lexer.hpp"
+#include "./parser.hpp"
 #include <iostream>
 #include <fstream>
 using namespace cov_basic;
@@ -9,6 +9,32 @@ void show_token(token_base* ptr)
 		return;
 	}
 	switch(ptr->get_type()) {
+	case token_types::fcall:
+	{
+		std::cout<<"<fcall:";
+		token_fcall* t=dynamic_cast<token_fcall*>(ptr);
+		show_token(t->get_id());
+		show_token(t->get_arg());
+		std::cout<<">";
+		break;
+	}
+	case token_types::access:
+	{
+		std::cout<<"<access:";
+		token_access* t=dynamic_cast<token_access*>(ptr);
+		show_token(t->get_id());
+		show_token(t->get_arg());
+		std::cout<<">";
+		break;
+	}
+	case token_types::array:
+	{
+		std::cout<<"<array:";
+		token_array* t=dynamic_cast<token_array*>(ptr);
+		show_token(t->get_arg());
+		std::cout<<">";
+		break;
+	}
 	case token_types::sblist:
 		std::cout<<"<sblist:";
 		for(auto& list:dynamic_cast<token_sblist*>(ptr)->get_list())
@@ -194,6 +220,7 @@ int main()
 	}
 	translate_into_tokens(buff,token);
 	process_brackets(token);
+	kill_brackets(token);
 	for(auto& ptr:token)
 		show_token(ptr);
 	return 0;
