@@ -173,7 +173,7 @@ namespace cov_basic {
 				return true;
 		return false;
 	}
-	void lexer(const std::deque<char>& buff,std::deque<token_base*>& tokens)
+	void translate_into_tokens(const std::deque<char>& buff,std::deque<token_base*>& tokens)
 	{
 		std::string tmp;
 		token_types type=token_types::null;
@@ -301,7 +301,7 @@ namespace cov_basic {
 			break;
 		}
 	}
-	void reprocess(std::deque<token_base*>& tokens)
+	void process_brackets(std::deque<token_base*>& tokens)
 	{
 		std::deque<token_base*> oldt=tokens;
 		tokens.clear();
@@ -337,7 +337,7 @@ namespace cov_basic {
 						blist_stack.pop_front();
 						if(blist_stack.empty())
 						{
-							reprocess(btokens);
+							process_brackets(btokens);
 							blist.push_back(btokens);
 							tokens.push_back(new token_sblist(blist));
 							blist.clear();
@@ -353,7 +353,7 @@ namespace cov_basic {
 						blist_stack.pop_front();
 						if(blist_stack.empty())
 						{
-							reprocess(btokens);
+							process_brackets(btokens);
 							blist.push_back(btokens);
 							tokens.push_back(new token_mblist(blist));
 							blist.clear();
@@ -369,7 +369,7 @@ namespace cov_basic {
 						blist_stack.pop_front();
 						if(blist_stack.empty())
 						{
-							reprocess(btokens);
+							process_brackets(btokens);
 							blist.push_back(btokens);
 							tokens.push_back(new token_lblist(blist));
 							blist.clear();
@@ -380,7 +380,7 @@ namespace cov_basic {
 					case signal_types::com_:
 						if(blist_stack.size()==1)
 						{
-							reprocess(btokens);
+							process_brackets(btokens);
 							blist.push_back(btokens);
 							btokens.clear();
 							continue;
@@ -394,11 +394,9 @@ namespace cov_basic {
 				}
 			}
 			if(blist_stack.size()==0)
-			{
 				tokens.push_back(ptr);
-			}else{
+			else
 				btokens.push_back(ptr);
-			}
 		}
 	}
 }

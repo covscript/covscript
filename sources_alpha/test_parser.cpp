@@ -1,4 +1,4 @@
-#include "./lexer.hpp"
+#include "./parser.hpp"
 #include <iostream>
 #include <fstream>
 using namespace cov_basic;
@@ -181,11 +181,22 @@ void show_token(token_base* ptr)
 		break;
 	}
 }
+void print_tree(typename cov::tree<token_base*>::iterator it)
+{
+	if(it.usable()) {
+		std::cout<<std::endl<<it.data()<<"->Root:";
+		show_token(it.data());
+		std::cout<<std::endl<<it.data()<<"->Left:";
+		print_tree(it.left());
+		std::cout<<std::endl<<it.data()<<"->Right:";
+		print_tree(it.right());
+	}
+}
 int main()
 {
 	std::deque<char> buff;
 	std::deque<token_base*> token;
-	std::ifstream in("./test_lexer.cbs");
+	std::ifstream in("./test_parser.cbs");
 	std::string line;
 	while(std::getline(in,line)) {
 		for(auto& c:line)
@@ -193,8 +204,11 @@ int main()
 		buff.push_back('\n');
 	}
 	translate_into_tokens(buff,token);
-	process_brackets(token);
-	for(auto& ptr:token)
-		show_token(ptr);
+	std::deque<token_base*> signals,objects;
+	token.pop_back();
+	split_token(token,signals,objects);
+	cov::tree<token_base*> tree;
+	build_tree(tree,signals,objects);
+	print_tree(tree.root());
 	return 0;
 }
