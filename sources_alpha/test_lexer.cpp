@@ -9,6 +9,36 @@ void show_token(token_base* ptr)
 		return;
 	}
 	switch(ptr->get_type()) {
+	case token_types::sblist:
+		std::cout<<"<sblist:";
+		for(auto& list:dynamic_cast<token_sblist*>(ptr)->get_list())
+		{
+			for(auto& t:list)
+				show_token(t);
+			std::cout<<"@";
+		}
+		std::cout<<">";
+		break;
+	case token_types::mblist:
+		std::cout<<"<mblist:";
+		for(auto& list:dynamic_cast<token_mblist*>(ptr)->get_list())
+		{
+			for(auto& t:list)
+				show_token(t);
+			std::cout<<"@";
+		}
+		std::cout<<">";
+		break;
+	case token_types::lblist:
+		std::cout<<"<lblist:";
+		for(auto& list:dynamic_cast<token_lblist*>(ptr)->get_list())
+		{
+			for(auto& t:list)
+				show_token(t);
+			std::cout<<"@";
+		}
+		std::cout<<">";
+		break;
 	case token_types::action:
 		switch(dynamic_cast<token_action*>(ptr)->get_action()) {
 		case action_types::define_:
@@ -176,11 +206,15 @@ int main()
 	lexer(buff,token);
 	for(auto& ptr:token)
 		show_token(ptr);
-	std::deque<token_base*> signals,objects;
+	std::cout<<std::endl;
+	reprocess(token);
+	for(auto& ptr:token)
+		show_token(ptr);
+	/*std::deque<token_base*> signals,objects;
 	token.pop_back();
 	split_token(token,signals,objects);
 	cov::tree<token_base*> tree;
 	build_tree(tree,signals,objects);
-	print_tree(tree.root());
+	print_tree(tree.root());*/
 	return 0;
 }

@@ -308,7 +308,7 @@ namespace cov_basic {
 		std::deque<std::deque<token_base*>> blist;
 		std::deque<token_base*> btokens;
 		std::deque<int> blist_stack;
-		for(auto& ptr:old_tokens)
+		for(auto& ptr:oldt)
 		{
 			if(ptr->get_type()==token_types::signal)
 			{
@@ -316,45 +316,66 @@ namespace cov_basic {
 				{
 					case signal_types::slb_:
 						blist_stack.push_front(1);
+						if(blist_stack.size()==1)
+							continue;
 						break;
 					case signal_types::mlb_:
 						blist_stack.push_front(2);
+						if(blist_stack.size()==1)
+							continue;
 						break;
 					case signal_types::llb_:
 						blist_stack.push_front(3);
+						if(blist_stack.size()==1)
+							continue;
 						break;
 					case signal_types::srb_:
 						if(blist_stack.empty())
 							throw;
 						if(blist_stack.front()!=1)
 							throw;
-						if(blist_stack.size()==1)
-						{
-							
-						}
 						blist_stack.pop_front();
+						if(blist_stack.empty())
+						{
+							reprocess(btokens);
+							blist.push_back(btokens);
+							tokens.push_back(new token_sblist(blist));
+							blist.clear();
+							btokens.clear();
+							continue;
+						}
 						break;
 					case signal_types::mrb_:
 						if(blist_stack.empty())
 							throw;
 						if(blist_stack.front()!=2)
 							throw;
-						if(blist_stack.size()==1)
-						{
-							
-						}
 						blist_stack.pop_front();
+						if(blist_stack.empty())
+						{
+							reprocess(btokens);
+							blist.push_back(btokens);
+							tokens.push_back(new token_mblist(blist));
+							blist.clear();
+							btokens.clear();
+							continue;
+						}
 						break;
 					case signal_types::lrb_:
 						if(blist_stack.empty())
 							throw;
 						if(blist_stack.front()!=3)
 							throw;
-						if(blist_stack.size()==1)
-						{
-							
-						}
 						blist_stack.pop_front();
+						if(blist_stack.empty())
+						{
+							reprocess(btokens);
+							blist.push_back(btokens);
+							tokens.push_back(new token_lblist(blist));
+							blist.clear();
+							btokens.clear();
+							continue;
+						}
 						break;
 					case signal_types::com_:
 						if(blist_stack.size()==1)
@@ -362,11 +383,12 @@ namespace cov_basic {
 							reprocess(btokens);
 							blist.push_back(btokens);
 							btokens.clear();
+							continue;
 						}else{
 							if(blist_stack.size()>1)
 								btokens.push_back(ptr);
 							else
-								throw;
+								throw std::logic_error("Out side com.");
 						}
 						break;
 				}
@@ -374,6 +396,8 @@ namespace cov_basic {
 			if(blist_stack.size()==0)
 			{
 				tokens.push_back(ptr);
+			}else{
+				btokens.push_back(ptr);
 			}
 		}
 	}
