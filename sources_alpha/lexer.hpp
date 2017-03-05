@@ -7,7 +7,7 @@
 #include <map>
 namespace cov_basic {
 	enum class token_types {
-		null,action,signal,id,value,expr
+		null,action,signal,id,value,expr,sblist,mblist,lblist
 	};
 	enum class action_types {
 		endblock_,endline_,define_,as_,if_,then_,else_,while_,do_,for_,break_,continue_,function_,return_
@@ -90,6 +90,48 @@ namespace cov_basic {
 		cov::tree<token_base*>& get_tree() noexcept
 		{
 			return this->mTree;
+		}
+	};
+	class token_sblist final:public token_base {
+		std::deque<std::deque<token_base*>> mList;
+	public:
+		token_sblist()=delete;
+		token_sblist(const std::deque<std::deque<token_base*>>& list):mList(list) {}
+		virtual token_types get_type() const noexcept
+		{
+			return token_types::sblist;
+		}
+		std::deque<std::deque<token_base*>>& get_list() noexcept
+		{
+			return this->mList;
+		}
+	};
+	class token_mblist final:public token_base {
+		std::deque<std::deque<token_base*>> mList;
+	public:
+		token_mblist()=delete;
+		token_mblist(const std::deque<std::deque<token_base*>>& list):mList(list) {}
+		virtual token_types get_type() const noexcept
+		{
+			return token_types::mblist;
+		}
+		std::deque<std::deque<token_base*>>& get_list() noexcept
+		{
+			return this->mList;
+		}
+	};
+	class token_lblist final:public token_base {
+		std::deque<std::deque<token_base*>> mList;
+	public:
+		token_lblist()=delete;
+		token_lblist(const std::deque<std::deque<token_base*>>& list):mList(list) {}
+		virtual token_types get_type() const noexcept
+		{
+			return token_types::lblist;
+		}
+		std::deque<std::deque<token_base*>>& get_list() noexcept
+		{
+			return this->mList;
 		}
 	};
 	template<typename Key,typename T>
@@ -257,6 +299,82 @@ namespace cov_basic {
 		case token_types::value:
 			tokens.push_back(new token_value(std::stold(tmp)));
 			break;
+		}
+	}
+	void reprocess(std::deque<token_base*>& tokens)
+	{
+		std::deque<token_base*> oldt=tokens;
+		tokens.clear();
+		std::deque<std::deque<token_base*>> blist;
+		std::deque<token_base*> btokens;
+		std::deque<int> blist_stack;
+		for(auto& ptr:old_tokens)
+		{
+			if(ptr->get_type()==token_types::signal)
+			{
+				switch(dynamic_cast<token_signal*>(ptr)->get_signal())
+				{
+					case signal_types::slb_:
+						blist_stack.push_front(1);
+						break;
+					case signal_types::mlb_:
+						blist_stack.push_front(2);
+						break;
+					case signal_types::llb_:
+						blist_stack.push_front(3);
+						break;
+					case signal_types::srb_:
+						if(blist_stack.empty())
+							throw;
+						if(blist_stack.front()!=1)
+							throw;
+						if(blist_stack.size()==1)
+						{
+							
+						}
+						blist_stack.pop_front();
+						break;
+					case signal_types::mrb_:
+						if(blist_stack.empty())
+							throw;
+						if(blist_stack.front()!=2)
+							throw;
+						if(blist_stack.size()==1)
+						{
+							
+						}
+						blist_stack.pop_front();
+						break;
+					case signal_types::lrb_:
+						if(blist_stack.empty())
+							throw;
+						if(blist_stack.front()!=3)
+							throw;
+						if(blist_stack.size()==1)
+						{
+							
+						}
+						blist_stack.pop_front();
+						break;
+					case signal_types::com_:
+						if(blist_stack.size()==1)
+						{
+							reprocess(btokens);
+							blist.push_back(btokens);
+							btokens.clear();
+						}else{
+							if(blist_stack.size()>1)
+								btokens.push_back(ptr);
+							else
+								throw;
+						}
+						break;
+				}
+			}
+			if(blist_stack.size()==0)
+			{
+				tokens.push_back(ptr);
+			}
 		}
 	}
 }
