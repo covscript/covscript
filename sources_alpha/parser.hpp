@@ -80,6 +80,21 @@ namespace cov_basic {
 			throw std::logic_error("Get the level of non-signal token.");
 		return signal_level_map.match(dynamic_cast<token_signal*>(ptr)->get_signal());
 	}
+	signal_types signal_left_associative[] = {
+		signal_types::und_,signal_types::abo_,signal_types::asi_,signal_types::equ_,signal_types::ueq_,signal_types::aeq_,signal_types::neq_,signal_types::and_,signal_types::or_
+	};
+	bool is_left_associative(token_base* ptr)
+	{
+		if(ptr==nullptr)
+			throw std::logic_error("Get the level of null token.");
+		if(ptr->get_type()!=token_types::signal)
+			throw std::logic_error("Get the level of non-signal token.");
+		signal_types s=dynamic_cast<token_signal*>(ptr)->get_signal();
+		for(auto& t:signal_left_associative)
+			if(t==s)
+				return true;
+		return false;
+	}
 	void kill_brackets(std::deque<token_base*>& tokens)
 	{
 		std::deque<token_base*> oldt;
@@ -203,7 +218,10 @@ namespace cov_basic {
 					break;
 				}
 				if(get_signal_level(it.data())==get_signal_level(signals.at(i))) {
-					tree.emplace_root_left(it,signals.at(i));
+					if(is_left_associative(it.data()))
+						tree.emplace_right_left(it,signals.at(i));
+					else
+						tree.emplace_root_left(it,signals.at(i));
 					break;
 				}
 				if(get_signal_level(it.data())>get_signal_level(signals.at(i))) {
