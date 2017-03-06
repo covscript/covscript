@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 using namespace cov_basic;
+void print_tree(typename cov::tree<token_base*>::iterator);
 void show_token(token_base* ptr)
 {
 	if(ptr==nullptr) {
@@ -9,10 +10,32 @@ void show_token(token_base* ptr)
 		return;
 	}
 	switch(ptr->get_type()) {
+		case token_types::fcall: {
+			std::cout<<"<fcall:";
+			token_fcall* t=dynamic_cast<token_fcall*>(ptr);
+			show_token(t->get_id());
+			show_token(t->get_arg());
+			std::cout<<">";
+			break;
+		}
+		case token_types::access: {
+			std::cout<<"<access:";
+			token_access* t=dynamic_cast<token_access*>(ptr);
+			show_token(t->get_id());
+			show_token(t->get_arg());
+			std::cout<<">";
+			break;
+		}
+		case token_types::array: {
+			std::cout<<"<array:";
+			token_array* t=dynamic_cast<token_array*>(ptr);
+			show_token(t->get_arg());
+			std::cout<<">";
+			break;
+		}
 	case token_types::sblist:
 		std::cout<<"<sblist:";
-		for(auto& list:dynamic_cast<token_sblist*>(ptr)->get_list())
-		{
+		for(auto& list:dynamic_cast<token_sblist*>(ptr)->get_list()) {
 			for(auto& t:list)
 				show_token(t);
 			std::cout<<"@";
@@ -21,8 +44,7 @@ void show_token(token_base* ptr)
 		break;
 	case token_types::mblist:
 		std::cout<<"<mblist:";
-		for(auto& list:dynamic_cast<token_mblist*>(ptr)->get_list())
-		{
+		for(auto& list:dynamic_cast<token_mblist*>(ptr)->get_list()) {
 			for(auto& t:list)
 				show_token(t);
 			std::cout<<"@";
@@ -31,12 +53,16 @@ void show_token(token_base* ptr)
 		break;
 	case token_types::lblist:
 		std::cout<<"<lblist:";
-		for(auto& list:dynamic_cast<token_lblist*>(ptr)->get_list())
-		{
+		for(auto& list:dynamic_cast<token_lblist*>(ptr)->get_list()) {
 			for(auto& t:list)
 				show_token(t);
 			std::cout<<"@";
 		}
+		std::cout<<">";
+		break;
+	case token_types::expr:
+		std::cout<<"<expr:";
+		print_tree(dynamic_cast<token_expr*>(ptr)->get_tree().root());
 		std::cout<<">";
 		break;
 	case token_types::action:
@@ -196,7 +222,7 @@ int main()
 {
 	std::deque<char> buff;
 	std::deque<token_base*> token;
-	std::ifstream in("./test_parser.cbs");
+	std::ifstream in("./test.cbs");
 	std::string line;
 	while(std::getline(in,line)) {
 		for(auto& c:line)
@@ -204,11 +230,14 @@ int main()
 		buff.push_back('\n');
 	}
 	translate_into_tokens(buff,token);
-	std::deque<token_base*> signals,objects;
-	token.pop_back();
-	split_token(token,signals,objects);
-	cov::tree<token_base*> tree;
-	build_tree(tree,signals,objects);
-	print_tree(tree.root());
+	process_brackets(token);
+	kill_brackets(token);
+	kill_expr(token);
+	for(auto& t:token)
+	{
+		show_token(t);
+		delete t;
+	}
+	std::cout<<std::endl;
 	return 0;
 }

@@ -143,7 +143,7 @@ namespace cov_basic {
 	};
 	mapping<std::string,action_types> action_map= {
 		{"End",action_types::endblock_},{"Define",action_types::define_},{"As",action_types::as_},{"If",action_types::if_},{"Then",action_types::then_},{"Else",action_types::else_},{"While",action_types::while_},
-		{"Do",action_types::do_},{"For",action_types::for_},{"Break",action_types::break_},{"Continue",action_types::continue_},{"Function",action_types::function_},{"Return",action_types::return_}
+		{"Do",action_types::do_},/*{"For",action_types::for_},*/{"Break",action_types::break_},{"Continue",action_types::continue_},{"Function",action_types::function_},{"Return",action_types::return_}
 	};
 	mapping<std::string,bool> boolean_map= {
 		{"True",true},{"False",false}
@@ -294,89 +294,78 @@ namespace cov_basic {
 		std::deque<std::deque<token_base*>> blist;
 		std::deque<token_base*> btokens;
 		std::deque<int> blist_stack;
-		for(auto& ptr:oldt)
-		{
-			if(ptr->get_type()==token_types::signal)
-			{
-				switch(dynamic_cast<token_signal*>(ptr)->get_signal())
-				{
-					case signal_types::slb_:
-						blist_stack.push_front(1);
-						if(blist_stack.size()==1)
-							continue;
-						break;
-					case signal_types::mlb_:
-						blist_stack.push_front(2);
-						if(blist_stack.size()==1)
-							continue;
-						break;
-					case signal_types::llb_:
-						blist_stack.push_front(3);
-						if(blist_stack.size()==1)
-							continue;
-						break;
-					case signal_types::srb_:
-						if(blist_stack.empty())
-							throw;
-						if(blist_stack.front()!=1)
-							throw;
-						blist_stack.pop_front();
-						if(blist_stack.empty())
-						{
-							process_brackets(btokens);
-							blist.push_back(btokens);
-							tokens.push_back(new token_sblist(blist));
-							blist.clear();
-							btokens.clear();
-							continue;
-						}
-						break;
-					case signal_types::mrb_:
-						if(blist_stack.empty())
-							throw;
-						if(blist_stack.front()!=2)
-							throw;
-						blist_stack.pop_front();
-						if(blist_stack.empty())
-						{
-							process_brackets(btokens);
-							blist.push_back(btokens);
-							tokens.push_back(new token_mblist(blist));
-							blist.clear();
-							btokens.clear();
-							continue;
-						}
-						break;
-					case signal_types::lrb_:
-						if(blist_stack.empty())
-							throw;
-						if(blist_stack.front()!=3)
-							throw;
-						blist_stack.pop_front();
-						if(blist_stack.empty())
-						{
-							process_brackets(btokens);
-							blist.push_back(btokens);
-							tokens.push_back(new token_lblist(blist));
-							blist.clear();
-							btokens.clear();
-							continue;
-						}
-						break;
-					case signal_types::com_:
-						if(blist_stack.size()==1)
-						{
-							process_brackets(btokens);
-							blist.push_back(btokens);
-							btokens.clear();
-							continue;
-						}else{
-							if(blist_stack.size()>1)
-								btokens.push_back(ptr);
-							else
-								throw std::logic_error("Out side com.");
-						}
-						break;
+		for(auto& ptr:oldt) {
+			if(ptr->get_type()==token_types::signal) {
+				switch(dynamic_cast<token_signal*>(ptr)->get_signal()) {
+				case signal_types::slb_:
+					blist_stack.push_front(1);
+					if(blist_stack.size()==1)
+						continue;
+					break;
+				case signal_types::mlb_:
+					blist_stack.push_front(2);
+					if(blist_stack.size()==1)
+						continue;
+					break;
+				case signal_types::llb_:
+					blist_stack.push_front(3);
+					if(blist_stack.size()==1)
+						continue;
+					break;
+				case signal_types::srb_:
+					if(blist_stack.empty())
+						throw;
+					if(blist_stack.front()!=1)
+						throw;
+					blist_stack.pop_front();
+					if(blist_stack.empty()) {
+						process_brackets(btokens);
+						blist.push_back(btokens);
+						tokens.push_back(new token_sblist(blist));
+						blist.clear();
+						btokens.clear();
+						continue;
+					}
+					break;
+				case signal_types::mrb_:
+					if(blist_stack.empty())
+						throw;
+					if(blist_stack.front()!=2)
+						throw;
+					blist_stack.pop_front();
+					if(blist_stack.empty()) {
+						process_brackets(btokens);
+						blist.push_back(btokens);
+						tokens.push_back(new token_mblist(blist));
+						blist.clear();
+						btokens.clear();
+						continue;
+					}
+					break;
+				case signal_types::lrb_:
+					if(blist_stack.empty())
+						throw;
+					if(blist_stack.front()!=3)
+						throw;
+					blist_stack.pop_front();
+					if(blist_stack.empty()) {
+						process_brackets(btokens);
+						blist.push_back(btokens);
+						tokens.push_back(new token_lblist(blist));
+						blist.clear();
+						btokens.clear();
+						continue;
+					}
+					break;
+				case signal_types::com_:
+					if(blist_stack.size()==1) {
+						process_brackets(btokens);
+						blist.push_back(btokens);
+						btokens.clear();
+						continue;
+					} else
+						btokens.push_back(ptr);
+					break;
 				}
 			}
 			if(blist_stack.size()==0)
