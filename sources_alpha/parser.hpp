@@ -253,9 +253,14 @@ namespace cov_basic {
 				if(!expr.empty())
 				{
 					cov::tree<token_base*> tree;
-					std::deque<token_base*> signals,objects;
-					split_token(expr,signals,objects);
-					build_tree(tree,signals,objects);
+					if(expr.size()==1)
+					{
+						tree.emplace_root_left(tree.root(),expr.front());
+					}else{
+						std::deque<token_base*> signals,objects;
+						split_token(expr,signals,objects);
+						build_tree(tree,signals,objects);
+					}
 					tokens.push_back(new token_expr(tree));
 					expr.clear();
 				}
