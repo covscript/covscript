@@ -6,13 +6,13 @@
 #include <map>
 namespace cov_basic {
 	enum class token_types {
-		null,action,signal,id,value,sblist,mblist,lblist,fcall,access,array,expr
+		null,action,signal,id,value,sblist,mblist,lblist,expr,arglist,array
 	};
 	enum class action_types {
 		endblock_,endline_,define_,as_,if_,then_,else_,while_,do_,for_,break_,continue_,function_,return_
 	};
 	enum class signal_types {
-		add_,sub_,mul_,div_,mod_,pow_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,inc_,dec_,slb_,srb_,mlb_,mrb_,llb_,lrb_,esb_,emb_,elb_
+		add_,sub_,mul_,div_,mod_,pow_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,inc_,dec_,slb_,srb_,mlb_,mrb_,llb_,lrb_,esb_,emb_,elb_,fcall_,access_
 	};
 	class token_base {
 	public:
@@ -26,7 +26,7 @@ namespace cov_basic {
 	public:
 		token_action()=delete;
 		token_action(action_types t):mType(t) {}
-		virtual token_types get_type() const noexcept
+		virtual token_types get_type() const noexcept override
 		{
 			return token_types::action;
 		}
@@ -40,7 +40,7 @@ namespace cov_basic {
 	public:
 		token_signal()=delete;
 		token_signal(signal_types t):mType(t) {}
-		virtual token_types get_type() const noexcept
+		virtual token_types get_type() const noexcept override
 		{
 			return token_types::signal;
 		}
@@ -54,7 +54,7 @@ namespace cov_basic {
 	public:
 		token_id()=delete;
 		token_id(const std::string& id):mId(id) {}
-		virtual token_types get_type() const noexcept
+		virtual token_types get_type() const noexcept override
 		{
 			return token_types::id;
 		}
@@ -68,7 +68,7 @@ namespace cov_basic {
 	public:
 		token_value()=delete;
 		token_value(const cov::any& val):mVal(val) {}
-		virtual token_types get_type() const noexcept
+		virtual token_types get_type() const noexcept override
 		{
 			return token_types::value;
 		}
@@ -82,7 +82,7 @@ namespace cov_basic {
 	public:
 		token_sblist()=delete;
 		token_sblist(const std::deque<std::deque<token_base*>>& list):mList(list) {}
-		virtual token_types get_type() const noexcept
+		virtual token_types get_type() const noexcept override
 		{
 			return token_types::sblist;
 		}
@@ -96,7 +96,7 @@ namespace cov_basic {
 	public:
 		token_mblist()=delete;
 		token_mblist(const std::deque<std::deque<token_base*>>& list):mList(list) {}
-		virtual token_types get_type() const noexcept
+		virtual token_types get_type() const noexcept override
 		{
 			return token_types::mblist;
 		}
@@ -110,7 +110,7 @@ namespace cov_basic {
 	public:
 		token_lblist()=delete;
 		token_lblist(const std::deque<std::deque<token_base*>>& list):mList(list) {}
-		virtual token_types get_type() const noexcept
+		virtual token_types get_type() const noexcept override
 		{
 			return token_types::lblist;
 		}
