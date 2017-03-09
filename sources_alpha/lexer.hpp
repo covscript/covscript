@@ -356,8 +356,7 @@ namespace cov_basic {
 						blist.push_back(btokens);
 						btokens.clear();
 						continue;
-					} else
-						btokens.push_back(ptr);
+					}
 					break;
 				}
 			}
