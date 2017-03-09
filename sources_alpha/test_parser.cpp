@@ -10,29 +10,26 @@ void show_token(token_base* ptr)
 		return;
 	}
 	switch(ptr->get_type()) {
-		case token_types::fcall: {
-			std::cout<<"<fcall:";
-			token_fcall* t=dynamic_cast<token_fcall*>(ptr);
-			show_token(t->get_id());
-			show_token(t->get_arg());
-			std::cout<<">";
-			break;
+	case token_types::arglist: {
+		std::cout<<"<arglist:";
+		token_arglist* t=dynamic_cast<token_arglist*>(ptr);
+		for(auto& tr:t->get_arglist()) {
+			print_tree(tr.root());
+			std::cout<<"#";
 		}
-		case token_types::access: {
-			std::cout<<"<access:";
-			token_access* t=dynamic_cast<token_access*>(ptr);
-			show_token(t->get_id());
-			show_token(t->get_arg());
-			std::cout<<">";
-			break;
+		std::cout<<">";
+		break;
+	}
+	case token_types::array: {
+		std::cout<<"<array:";
+		token_array* t=dynamic_cast<token_array*>(ptr);
+		for(auto& tr:t->get_array()) {
+			print_tree(tr.root());
+			std::cout<<"#";
 		}
-		case token_types::array: {
-			std::cout<<"<array:";
-			token_array* t=dynamic_cast<token_array*>(ptr);
-			show_token(t->get_arg());
-			std::cout<<">";
-			break;
-		}
+		std::cout<<">";
+		break;
+	}
 	case token_types::sblist:
 		std::cout<<"<sblist:";
 		for(auto& list:dynamic_cast<token_sblist*>(ptr)->get_list()) {
@@ -197,6 +194,12 @@ void show_token(token_base* ptr)
 		case signal_types::dec_:
 			std::cout<<"<signal:-->";
 			break;
+		case signal_types::fcall_:
+			std::cout<<"<signal:fcall>";
+			break;
+		case signal_types::access_:
+			std::cout<<"<signal:access>";
+			break;
 		}
 		break;
 	case token_types::id:
@@ -233,8 +236,7 @@ int main()
 	process_brackets(token);
 	kill_brackets(token);
 	kill_expr(token);
-	for(auto& t:token)
-	{
+	for(auto& t:token) {
 		show_token(t);
 		delete t;
 	}

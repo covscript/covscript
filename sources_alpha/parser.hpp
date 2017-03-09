@@ -10,8 +10,7 @@ namespace cov_basic {
 		{
 			return token_types::expr;
 		}
-		cov::tree<token_base*>& get_tree() noexcept
-		{
+		cov::tree<token_base*>& get_tree() noexcept {
 			return this->mTree;
 		}
 	};
@@ -19,13 +18,12 @@ namespace cov_basic {
 		std::deque<cov::tree<token_base*>> mTreeList;
 	public:
 		token_arglist()=default;
-		token_arglist(const std::deque<cov::tree<token_base*>>& tlist):mTreeList(tlist){}
+		token_arglist(const std::deque<cov::tree<token_base*>>& tlist):mTreeList(tlist) {}
 		virtual token_types get_type() const noexcept override
 		{
 			return token_types::arglist;
 		}
-		std::deque<cov::tree<token_base*>>& get_arglist() noexcept
-		{
+		std::deque<cov::tree<token_base*>>& get_arglist() noexcept {
 			return this->mTreeList;
 		}
 	};
@@ -33,20 +31,19 @@ namespace cov_basic {
 		std::deque<cov::tree<token_base*>> mTreeList;
 	public:
 		token_array()=default;
-		token_array(const std::deque<cov::tree<token_base*>>& tlist):mTreeList(tlist){}
+		token_array(const std::deque<cov::tree<token_base*>>& tlist):mTreeList(tlist) {}
 		virtual token_types get_type() const noexcept override
 		{
 			return token_types::array;
 		}
-		std::deque<cov::tree<token_base*>>& get_array() noexcept
-		{
+		std::deque<cov::tree<token_base*>>& get_array() noexcept {
 			return this->mTreeList;
 		}
 	};
 	mapping<signal_types,int> signal_level_map = {
 		{signal_types::add_,10},{signal_types::sub_,10},{signal_types::mul_,11},{signal_types::div_,11},{signal_types::mod_,12},{signal_types::pow_,12},{signal_types::dot_,14},
 		{signal_types::und_,9},{signal_types::abo_,9},{signal_types::asi_,-2},{signal_types::equ_,9},{signal_types::ueq_,9},{signal_types::aeq_,9},{signal_types::neq_,9},
-		{signal_types::and_,7},{signal_types::or_,7},{signal_types::not_,8},{signal_types::inc_,13},{signal_types::dec_,13},{signal_types::fcall_,0},,{signal_types::access_,-1}
+		{signal_types::and_,7},{signal_types::or_,7},{signal_types::not_,8},{signal_types::inc_,13},{signal_types::dec_,13},{signal_types::fcall_,0},{signal_types::access_,-1}
 	};
 	int get_signal_level(token_base* ptr)
 	{
@@ -81,95 +78,63 @@ namespace cov_basic {
 		std::deque<token_base*> oldt;
 		std::swap(tokens,oldt);
 		tokens.clear();
-		token_base* t=nullptr;
+		bool expected_fcall=false;
 		for(auto& ptr:oldt) {
 			switch(ptr->get_type()) {
-			case token_types::id:
-				t=ptr;
-				continue;
-			case token_types::sblist:
-				if(t!=nullptr) {
-					for(auto& list:dynamic_cast<token_sblist*>(ptr)->get_list())
-						kill_brackets(list);
-					std::deque<cov::tree<token_base*>> tlist;
-					for(auto& list:dynamic_cast<token_sblist*>(ptr)->get_list())
-					{
-						cov::tree<token_base*> tree;
-						gen_tree(tree,list);
-						tlist.push_back(tree);
-					}
-					tokens.push_back(new token_signal(signal_types::fcall_));
-					tokens.push_back(new token_arglist(tlist));
-					t=nullptr;
-					continue;
-				}
-				break;
-			case token_types::mblist:
-				if(t!=nullptr) {
-					token_mblist* mbl=dynamic_cast<token_mblist*>(ptr);
-					if(mbl==nullptr)
-						throw;
-					if(mbl->get_list().size()!=1)
-						throw;
-					kill_brackets(mbl->get_list().front());
+			case token_types::sblist: {
+				for(auto& list:dynamic_cast<token_sblist*>(ptr)->get_list())
+					kill_brackets(list);
+				std::deque<cov::tree<token_base*>> tlist;
+				for(auto& list:dynamic_cast<token_sblist*>(ptr)->get_list()) {
 					cov::tree<token_base*> tree;
 					gen_tree(tree,list);
-					tokens.push_back(new token_signal(signal_types::access_));
-					tokens.push_back(new token_expr(tree));
-					t=nullptr;
-					continue;
-				} else
+					tlist.push_back(tree);
+				}
+				tokens.push_back(new token_signal(signal_types::fcall_));
+				tokens.push_back(new token_arglist(tlist));
+				continue;
+			}
+			case token_types::mblist: {
+				token_mblist* mbl=dynamic_cast<token_mblist*>(ptr);
+				if(mbl==nullptr)
 					throw;
-				break;
-			case token_types::lblist:
+				if(mbl->get_list().size()!=1)
+					throw;
+				kill_brackets(mbl->get_list().front());
+				cov::tree<token_base*> tree;
+				gen_tree(tree,mbl->get_list().front());
+				tokens.push_back(new token_signal(signal_types::access_));
+				tokens.push_back(new token_expr(tree));
+				continue;
+			}
+			case token_types::lblist: {
 				for(auto& list:dynamic_cast<token_lblist*>(ptr)->get_list())
 					kill_brackets(list);
 				std::deque<cov::tree<token_base*>> tlist;
-				for(auto& list:dynamic_cast<token_lblist*>(ptr)->get_list())
-				{
+				for(auto& list:dynamic_cast<token_lblist*>(ptr)->get_list()) {
 					cov::tree<token_base*> tree;
 					gen_tree(tree,list);
 					tlist.push_back(tree);
 				}
 				tokens.push_back(new token_array(tlist));
-				if(t!=nullptr) {
-					tokens.push_back(t);
-					t=nullptr;
-				}
 				continue;
-			case token_types::signal:
+			}
+			case token_types::signal: {
 				switch(dynamic_cast<token_signal*>(ptr)->get_signal()) {
 				case signal_types::esb_:
-					if(t!=nullptr) {
-						tokens.push_back(new token_signal(signal_types::fcall_));
-						tokens.push_back(new token_arglist());
-						t=nullptr;
-						continue;
-					} else
-						throw;
-					break;
+					tokens.push_back(new token_signal(signal_types::fcall_));
+					tokens.push_back(new token_arglist());
+					continue;
 				case signal_types::emb_:
 					throw;
 					break;
 				case signal_types::elb_:
 					tokens.push_back(new token_array());
-					if(t!=nullptr) {
-						tokens.push_back(t);
-						t=nullptr;
-					}
 					continue;
 				}
-				break;
 			}
-			if(t!=nullptr) {
-				tokens.push_back(t);
-				t=nullptr;
 			}
 			tokens.push_back(ptr);
-		}
-		if(t!=nullptr) {
-			tokens.push_back(t);
-			t=nullptr;
 		}
 	}
 	void split_token(std::deque<token_base*>& raw,std::deque<token_base*>& signals,std::deque<token_base*>& objects)
@@ -195,10 +160,8 @@ namespace cov_basic {
 	{
 		if(objects.size()!=signals.size()+1)
 			throw std::logic_error("Symbols do not match the object.");
-		for(auto& obj:objects)
-		{
-			if(obj!=nullptr&&obj->get_type()==token_types::sblist)
-			{
+		for(auto& obj:objects) {
+			if(obj!=nullptr&&obj->get_type()==token_types::sblist) {
 				token_sblist* sbl=dynamic_cast<token_sblist*>(obj);
 				if(sbl->get_list().size()!=1)
 					throw;
@@ -247,35 +210,30 @@ namespace cov_basic {
 	}
 	void gen_tree(cov::tree<token_base*>& tree,std::deque<token_base*>& raw)
 	{
-		std::deque<token_base*> signals,objects;
-		split_token(raw,signals,objects);
-		build_tree(tree,signals,objects);
+		tree.clear();
+		if(raw.size()==1) {
+			tree.emplace_root_left(tree.root(),raw.front());
+		} else {
+			std::deque<token_base*> signals,objects;
+			split_token(raw,signals,objects);
+			build_tree(tree,signals,objects);
+		}
 	}
 	void kill_expr(std::deque<token_base*>& tokens)
 	{
 		std::deque<token_base*> oldt,expr;
 		std::swap(tokens,oldt);
 		tokens.clear();
-		for(auto& ptr:oldt)
-		{
-			if(ptr->get_type()==token_types::action)
-			{
-				if(!expr.empty())
-				{
+		for(auto& ptr:oldt) {
+			if(ptr->get_type()==token_types::action) {
+				if(!expr.empty()) {
 					cov::tree<token_base*> tree;
-					if(expr.size()==1)
-					{
-						tree.emplace_root_left(tree.root(),expr.front());
-					}else{
-						std::deque<token_base*> signals,objects;
-						split_token(expr,signals,objects);
-						build_tree(tree,signals,objects);
-					}
+					gen_tree(tree,expr);
 					tokens.push_back(new token_expr(tree));
 					expr.clear();
 				}
 				tokens.push_back(ptr);
-			}else
+			} else
 				expr.push_back(ptr);
 		}
 	}
