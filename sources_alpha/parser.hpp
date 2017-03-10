@@ -93,8 +93,7 @@ namespace cov_basic {
 			case token_types::sblist: {
 				for(auto& list:dynamic_cast<token_sblist*>(ptr)->get_list())
 					kill_brackets(list);
-				if(expected_fcall)
-				{
+				if(expected_fcall) {
 					std::deque<cov::tree<token_base*>> tlist;
 					for(auto& list:dynamic_cast<token_sblist*>(ptr)->get_list()) {
 						cov::tree<token_base*> tree;
@@ -104,7 +103,7 @@ namespace cov_basic {
 					tokens.push_back(new token_signal(signal_types::fcall_));
 					tokens.push_back(new token_arglist(tlist));
 					continue;
-				}else{
+				} else {
 					expected_fcall=true;
 					break;
 				}
