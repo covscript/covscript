@@ -1,1 +1,12 @@
-((a[0])(SizeOfArray(a),10,b))[0]
+Define arr= {2,{"Hello","World!"},False}
+Print(arr[1][0])
+arr[4]="hshshhs"
+arr[3]=3.14
+Print(arr)
+Define str=arr[1][1]
+Print(str)
+Define i=0
+While i<SizeOfArray(arr) Do
+    PrintType(arr[i])
+    i=i+1
+End
