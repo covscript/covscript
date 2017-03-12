@@ -1,4 +1,4 @@
-#include "./parser.hpp"
+#include "./runtime.hpp"
 #include <iostream>
 #include <fstream>
 using namespace cov_basic;
@@ -60,6 +60,7 @@ void show_token(token_base* ptr)
 	case token_types::expr:
 		std::cout<<"<expr:";
 		print_tree(dynamic_cast<token_expr*>(ptr)->get_tree().root());
+		std::cout<<std::endl<<"@value="<<parse_expr(dynamic_cast<token_expr*>(ptr)->get_tree().root());
 		std::cout<<">";
 		break;
 	case token_types::action:
@@ -221,11 +222,13 @@ void print_tree(typename cov::tree<token_base*>::iterator it)
 		print_tree(it.right());
 	}
 }
-int main()
+int main(int args_size,const char* args[])
 {
+	if(args_size<2)
+		return -1;
 	std::deque<char> buff;
 	std::deque<token_base*> token;
-	std::ifstream in("./test.cbs");
+	std::ifstream in(args[1]);
 	std::string line;
 	while(std::getline(in,line)) {
 		for(auto& c:line)

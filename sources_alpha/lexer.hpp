@@ -1,5 +1,5 @@
 #pragma once
-#include "./mozart/any.hpp"
+#include "./core.hpp"
 #include <stdexcept>
 #include <string>
 #include <deque>
@@ -9,25 +9,35 @@ namespace cov_basic {
 	    null,action,signal,id,value,sblist,mblist,lblist,expr,arglist,array
 	};
 	enum class action_types {
-	    endblock_,endline_,define_,as_,if_,then_,else_,while_,do_,for_,break_,continue_,function_,return_
+	    block_,endblock_,endline_,define_,as_,if_,then_,else_,while_,do_,for_,break_,continue_,function_,return_
 	};
 	enum class signal_types {
 	    add_,sub_,mul_,div_,mod_,pow_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,inc_,dec_,slb_,srb_,mlb_,mrb_,llb_,lrb_,esb_,emb_,elb_,fcall_,access_
 	};
 	class token_base {
+		static garbage_collector<token_base> gc;
 	public:
+		static void* operator new(std::size_t size) {
+			void* ptr=::operator new(size);
+			gc.add(ptr);
+			return ptr;
+		}
+		static void operator delete(void* ptr) {
+			gc.remove(ptr);
+			::operator delete(ptr);
+		}
 		token_base()=default;
 		token_base(const token_base&)=default;
 		virtual ~token_base()=default;
 		virtual token_types get_type() const noexcept=0;
 	};
+	garbage_collector<token_base> token_base::gc;
 	class token_action final:public token_base {
 		action_types mType;
 	public:
 		token_action()=delete;
 		token_action(action_types t):mType(t) {}
-		virtual token_types get_type() const noexcept override
-		{
+		virtual token_types get_type() const noexcept override {
 			return token_types::action;
 		}
 		action_types& get_action() noexcept {
@@ -39,8 +49,7 @@ namespace cov_basic {
 	public:
 		token_signal()=delete;
 		token_signal(signal_types t):mType(t) {}
-		virtual token_types get_type() const noexcept override
-		{
+		virtual token_types get_type() const noexcept override {
 			return token_types::signal;
 		}
 		signal_types& get_signal() noexcept {
@@ -52,8 +61,7 @@ namespace cov_basic {
 	public:
 		token_id()=delete;
 		token_id(const std::string& id):mId(id) {}
-		virtual token_types get_type() const noexcept override
-		{
+		virtual token_types get_type() const noexcept override {
 			return token_types::id;
 		}
 		std::string& get_id() noexcept {
@@ -65,8 +73,7 @@ namespace cov_basic {
 	public:
 		token_value()=delete;
 		token_value(const cov::any& val):mVal(val) {}
-		virtual token_types get_type() const noexcept override
-		{
+		virtual token_types get_type() const noexcept override {
 			return token_types::value;
 		}
 		cov::any& get_value() noexcept {
@@ -78,8 +85,7 @@ namespace cov_basic {
 	public:
 		token_sblist()=delete;
 		token_sblist(const std::deque<std::deque<token_base*>>& list):mList(list) {}
-		virtual token_types get_type() const noexcept override
-		{
+		virtual token_types get_type() const noexcept override {
 			return token_types::sblist;
 		}
 		std::deque<std::deque<token_base*>>& get_list() noexcept {
@@ -91,8 +97,7 @@ namespace cov_basic {
 	public:
 		token_mblist()=delete;
 		token_mblist(const std::deque<std::deque<token_base*>>& list):mList(list) {}
-		virtual token_types get_type() const noexcept override
-		{
+		virtual token_types get_type() const noexcept override {
 			return token_types::mblist;
 		}
 		std::deque<std::deque<token_base*>>& get_list() noexcept {
@@ -104,8 +109,7 @@ namespace cov_basic {
 	public:
 		token_lblist()=delete;
 		token_lblist(const std::deque<std::deque<token_base*>>& list):mList(list) {}
-		virtual token_types get_type() const noexcept override
-		{
+		virtual token_types get_type() const noexcept override {
 			return token_types::lblist;
 		}
 		std::deque<std::deque<token_base*>>& get_list() noexcept {
@@ -117,12 +121,10 @@ namespace cov_basic {
 		std::map<Key,T> mDat;
 	public:
 		mapping(std::initializer_list<std::pair<const Key, T>> l):mDat(l) {}
-		bool exsist(const Key& k)
-		{
+		bool exsist(const Key& k) {
 			return mDat.find(k)!=mDat.end();
 		}
-		T match(const Key& k)
-		{
+		T match(const Key& k) {
 			if(!exsist(k))
 				throw std::logic_error("Undefined Mapping.");
 			return mDat.at(k);
@@ -135,11 +137,11 @@ namespace cov_basic {
 		{"()",signal_types::esb_},{"[]",signal_types::emb_},{"{}",signal_types::elb_},{"++",signal_types::inc_},{"--",signal_types::dec_}
 	};
 	mapping<std::string,action_types> action_map= {
-		{"End",action_types::endblock_},{"Define",action_types::define_},{"As",action_types::as_},{"If",action_types::if_},{"Then",action_types::then_},{"Else",action_types::else_},{"While",action_types::while_},
-		{"Do",action_types::do_},/*{"For",action_types::for_},*/{"Break",action_types::break_},{"Continue",action_types::continue_},{"Function",action_types::function_},{"Return",action_types::return_}
+		{"block",action_types::block_},{"end",action_types::endblock_},{"define",action_types::define_},/*{"as",action_types::as_},*/{"if",action_types::if_},/*{"then",action_types::then_},*/{"else",action_types::else_},{"while",action_types::while_},
+		/*{"do",action_types::do_},{"for",action_types::for_},*/{"break",action_types::break_},{"continue",action_types::continue_},{"function",action_types::function_},{"return",action_types::return_}
 	};
 	mapping<std::string,bool> boolean_map= {
-		{"True",true},{"False",false}
+		{"True",true},{"False",false},{"true",true},{"false",false},{"TRUE",true},{"FALSE",false}
 	};
 	char signals[]= {
 		'+','-','*','/','%','^',',','.','>','<','=','&','|','!','(',')','[',']','{','}'
@@ -191,7 +193,6 @@ namespace cov_basic {
 					type=token_types::id;
 					continue;
 				}
-				throw std::logic_error("Uknown signal.");
 				break;
 			case token_types::id:
 				if(std::isalnum(buff[i])||buff[i]=='_') {
