@@ -6,10 +6,12 @@ namespace cov_basic {
 	public:
 		token_expr()=delete;
 		token_expr(const cov::tree<token_base*>& tree):mTree(tree) {}
-		virtual token_types get_type() const noexcept override {
+		virtual token_types get_type() const noexcept override
+		{
 			return token_types::expr;
 		}
-		cov::tree<token_base*>& get_tree() noexcept {
+		cov::tree<token_base*>& get_tree() noexcept
+		{
 			return this->mTree;
 		}
 	};
@@ -18,10 +20,12 @@ namespace cov_basic {
 	public:
 		token_arglist()=default;
 		token_arglist(const std::deque<cov::tree<token_base*>>& tlist):mTreeList(tlist) {}
-		virtual token_types get_type() const noexcept override {
+		virtual token_types get_type() const noexcept override
+		{
 			return token_types::arglist;
 		}
-		std::deque<cov::tree<token_base*>>& get_arglist() noexcept {
+		std::deque<cov::tree<token_base*>>& get_arglist() noexcept
+		{
 			return this->mTreeList;
 		}
 	};
@@ -30,10 +34,12 @@ namespace cov_basic {
 	public:
 		token_array()=default;
 		token_array(const std::deque<cov::tree<token_base*>>& tlist):mTreeList(tlist) {}
-		virtual token_types get_type() const noexcept override {
+		virtual token_types get_type() const noexcept override
+		{
 			return token_types::array;
 		}
-		std::deque<cov::tree<token_base*>>& get_array() noexcept {
+		std::deque<cov::tree<token_base*>>& get_array() noexcept
+		{
 			return this->mTreeList;
 		}
 	};
@@ -223,7 +229,16 @@ namespace cov_basic {
 	{
 		tree.clear();
 		if(raw.size()==1) {
-			tree.emplace_root_left(tree.root(),raw.front());
+			token_base* obj=raw.front();
+			if(obj!=nullptr&&obj->get_type()==token_types::sblist) {
+				token_sblist* sbl=dynamic_cast<token_sblist*>(obj);
+				if(sbl->get_list().size()!=1)
+					throw;
+				cov::tree<token_base*> t;
+				gen_tree(t,sbl->get_list().front());
+				obj=new token_expr(t);
+			}
+			tree.emplace_root_left(tree.root(),obj);
 		} else {
 			std::deque<token_base*> signals,objects;
 			split_token(raw,signals,objects);
@@ -248,19 +263,20 @@ namespace cov_basic {
 				expr.push_back(ptr);
 		}
 	}
-	cov::any parse_expr(cov::tree<token_base*>::iterator);
 	enum class statement_types {
-	    expression_,block_,define_,if_,while_,for_,break_,continue_,function_,return_
+		expression_,block_,define_,if_,while_,for_,break_,continue_,function_,return_
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;
 	public:
-		static void* operator new(std::size_t size) {
+		static void* operator new(std::size_t size)
+		{
 			void* ptr=::operator new(size);
 			gc.add(ptr);
 			return ptr;
 		}
-		static void operator delete(void* ptr) {
+		static void operator delete(void* ptr)
+		{
 			gc.remove(ptr);
 			::operator delete(ptr);
 		}
@@ -276,84 +292,69 @@ namespace cov_basic {
 	public:
 		statement_expression()=delete;
 		statement_expression(const cov::tree<token_base*>& tree):mTree(tree) {}
-		virtual statement_types get_type() const noexcept override {
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::expression_;
 		}
-		virtual void run() override {
-			parse_expr(mTree.root());
-		}
+		virtual void run() override;
 	};
-	bool define_asi=false;
 	class statement_define final:public statement_base {
 		cov::tree<token_base*> mTree;
 	public:
 		statement_define()=delete;
 		statement_define(const cov::tree<token_base*>& tree):mTree(tree) {}
-		virtual statement_types get_type() const noexcept override {
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::define_;
 		}
-		virtual void run() override {
-			define_asi=true;
-			parse_expr(mTree.root());
-			define_asi=false;
-		}
+		virtual void run() override;
 	};
-	bool break_block=false;
 	class statement_break final:public statement_base {
 	public:
 		statement_break()=default;
-		virtual statement_types get_type() const noexcept override {
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::break_;
 		}
-		virtual void run() override {
-			break_block=true;
-		}
+		virtual void run() override;
 	};
-	bool continue_block=false;
 	class statement_continue final:public statement_base {
 	public:
 		statement_continue()=default;
-		virtual statement_types get_type() const noexcept override {
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::continue_;
 		}
-		virtual void run() override {
-			continue_block=true;
-		}
+		virtual void run() override;
 	};
 	class statement_block final:public statement_base {
 		std::deque<statement_base*> mBlock;
 	public:
 		statement_block()=delete;
 		statement_block(const std::deque<statement_base*>& block):mBlock(block) {}
-		virtual statement_types get_type() const noexcept override {
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::block_;
 		}
-		virtual void run() override {
-			for(auto& ptr:mBlock)
-				ptr->run();
-		}
+		virtual void run() override;
 	};
 	class statement_if final:public statement_base {
 		cov::tree<token_base*> mTree;
-		statement_block* mBlockTrue;
-		statement_block* mBlockFalse;
+		std::deque<statement_base*>* mBlock=nullptr;
+		std::deque<statement_base*>* mElseBlock=nullptr;
 	public:
 		statement_if()=delete;
-		statement_if(const cov::tree<token_base*>& tree,statement_block* btrue,statement_block* bfalse):mTree(tree),mBlockTrue(btrue),mBlockFalse(bfalse) {}
-		virtual statement_types get_type() const noexcept override {
+		statement_if(const cov::tree<token_base*>& tree,std::deque<statement_base*>* btrue,std::deque<statement_base*>* bfalse=nullptr):mTree(tree),mBlock(btrue),mElseBlock(bfalse) {}
+		virtual ~statement_if()
+		{
+			delete mBlock;
+			delete mElseBlock;
+		}
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::if_;
 		}
-		virtual void run() override {
-			if(parse_expr(mTree.root()).const_val<boolean>()) {
-				if(mBlockTrue!=nullptr)
-					mBlockTrue->run();
-				else
-					throw;
-			} else {
-				if(mBlockFalse!=nullptr)
-					mBlockFalse->run();
-			}
-		}
+		virtual void run() override;
 	};
 	class statement_while final:public statement_base {
 		cov::tree<token_base*> mTree;
@@ -361,25 +362,11 @@ namespace cov_basic {
 	public:
 		statement_while()=delete;
 		statement_while(const cov::tree<token_base*>& tree,const std::deque<statement_base*>& b):mTree(tree),mBlock(b) {}
-		virtual statement_types get_type() const noexcept override {
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::while_;
 		}
-		virtual void run() override {
-			while(parse_expr(mTree.root()).const_val<boolean>()) {
-				for(auto& ptr:mBlock) {
-					ptr->run();
-					if(break_block) {
-						break_block=false;
-						return;
-					}
-					if(continue_block) {
-						continue_block=false;
-						break;
-					}
-				}
-			}
-
-		}
+		virtual void run() override;
 	};
 	class statement_function final:public statement_base {
 		std::string mName;
@@ -387,7 +374,8 @@ namespace cov_basic {
 	public:
 		statement_function()=delete;
 		statement_function(std::string name,const std::deque<std::string>& args,const std::deque<statement_base*>& body):mName(name),mFunc(args,body) {}
-		virtual statement_types get_type() const noexcept override {
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::function_;
 		}
 		virtual void run() override;
@@ -397,148 +385,10 @@ namespace cov_basic {
 	public:
 		statement_return()=delete;
 		statement_return(const cov::tree<token_base*>& tree):mTree(tree) {}
-		virtual statement_types get_type() const noexcept override {
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::return_;
 		}
 		virtual void run() override;
 	};
-	void kill_action(std::deque<std::deque<token_base*>>& lines,std::deque<statement_base*>& statements)
-	{
-		std::deque<std::deque<token_base*>> tmp_lines;
-		std::deque<statement_base*> tmp_statements;
-		token_expr* tmp_expr=nullptr;
-		token_action* tmp_action=nullptr;
-		statement_base* tmp_statement=nullptr;
-		int level=0;
-		for(auto& line:lines) {
-			if(line.empty()||line.front()==nullptr)
-				throw syntax_error("Undefined behaviour.");
-			if(level>0) {
-				if(line.front()->get_type()==token_types::action) {
-					switch(dynamic_cast<token_action*>(line.front())->get_action()) {
-					case action_types::block_:
-						++level;
-						break;
-					case action_types::if_:
-						++level;
-						break;
-					case action_types::else_:
-						if(level==1) {
-							kill_action(tmp_lines,tmp_statements);
-							tmp_statement=new statement_block(tmp_statements);
-							tmp_lines.clear();
-							tmp_statements.clear();
-							continue;
-						}
-						break;
-					case action_types::while_:
-						++level;
-						break;
-					case action_types::function_:
-						++level;
-						break;
-					case action_types::endblock_:
-						--level;
-						if(level==0) {
-							kill_action(tmp_lines,tmp_statements);
-							switch(tmp_action->get_action()) {
-							case action_types::block_:
-								statements.push_back(new statement_block(tmp_statements));
-								break;
-							case action_types::if_:
-								if(tmp_statement==nullptr)
-									statements.push_back(new statement_if(tmp_expr->get_tree(),new statement_block(tmp_statements),nullptr));
-								else
-									statements.push_back(new statement_if(tmp_expr->get_tree(),dynamic_cast<statement_block*>(tmp_statement),new statement_block(tmp_statements)));
-								break;
-							case action_types::while_:
-								statements.push_back(new statement_while(tmp_expr->get_tree(),tmp_statements));
-								break;
-							case action_types::function_: {
-								cov::tree<token_base*>& t=tmp_expr->get_tree();
-								std::string name=dynamic_cast<token_id*>(t.root().left().data())->get_id();
-								std::deque<std::string> args;
-								for(auto& it:dynamic_cast<token_arglist*>(t.root().right().data())->get_arglist())
-									args.push_back(dynamic_cast<token_id*>(it.root().data())->get_id());
-								statements.push_back(new statement_function(name,args,tmp_statements));
-								break;
-							}
-							}
-							tmp_lines.clear();
-							tmp_statements.clear();
-							tmp_expr=nullptr;
-							tmp_action=nullptr;
-							tmp_statement=nullptr;
-							continue;
-						}
-						break;
-					}
-				}
-				tmp_lines.push_back(line);
-				continue;
-			}
-			switch(line.front()->get_type()) {
-			case token_types::expr:
-				statements.push_back(new statement_expression(dynamic_cast<token_expr*>(line.front())->get_tree()));
-				break;
-			case token_types::action:
-				tmp_action=dynamic_cast<token_action*>(line.front());
-				switch(tmp_action->get_action()) {
-				case action_types::block_:
-					++level;
-					break;
-				case action_types::if_:
-					++level;
-					tmp_expr=dynamic_cast<token_expr*>(line.at(1));
-					break;
-				case action_types::while_:
-					++level;
-					tmp_expr=dynamic_cast<token_expr*>(line.at(1));
-					break;
-				case action_types::function_:
-					++level;
-					tmp_expr=dynamic_cast<token_expr*>(line.at(1));
-					break;
-				case action_types::define_:
-					statements.push_back(new statement_define(dynamic_cast<token_expr*>(line.at(1))->get_tree()));
-					break;
-				case action_types::return_:
-					statements.push_back(new statement_return(dynamic_cast<token_expr*>(line.at(1))->get_tree()));
-					break;
-				case action_types::break_:
-					statements.push_back(new statement_break);
-					break;
-				case action_types::continue_:
-					statements.push_back(new statement_continue);
-					break;
-				}
-				break;
-			}
-		}
-	}
-	void translate_into_statements(std::deque<token_base*>& tokens,std::deque<statement_base*>& statements)
-	{
-		process_brackets(tokens);
-		kill_brackets(tokens);
-		kill_expr(tokens);
-		std::deque<std::deque<token_base*>> lines;
-		{
-			std::deque<token_base*> tmp;
-			for(auto& ptr:tokens) {
-				if(ptr!=nullptr&&ptr->get_type()==token_types::action&&dynamic_cast<token_action*>(ptr)->get_action()==action_types::endline_) {
-					if(!tmp.empty()) {
-						lines.push_back(tmp);
-						tmp.clear();
-					}
-					continue;
-				} else
-					tmp.push_back(ptr);
-			}
-			if(!tmp.empty()) {
-				lines.push_back(tmp);
-				tmp.clear();
-			}
-		}
-		kill_action(lines,statements);
-	}
 }

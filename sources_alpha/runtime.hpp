@@ -5,57 +5,67 @@ namespace cov_basic {
 	class domain_manager {
 		std::deque<std::deque<cov::tuple<string,cov::any>>> m_data;
 	public:
-		domain_manager() {
+		domain_manager()
+		{
 			m_data.emplace_front();
 		}
 		domain_manager(const domain_manager&)=delete;
 		~domain_manager()=default;
-		void add_domain() {
+		void add_domain()
+		{
 			m_data.emplace_front();
 		}
-		void remove_domain() {
+		void remove_domain()
+		{
 			if(m_data.size()>1)
 				m_data.pop_front();
 		}
-		bool var_exsist(const string& name) {
+		bool var_exsist(const string& name)
+		{
 			for(auto& domain:m_data)
 				for(auto& var:domain)
 					if(var.get<0>()==name)
 						return true;
 			return false;
 		}
-		bool var_exsist_current(const string& name) {
+		bool var_exsist_current(const string& name)
+		{
 			for(auto& var:m_data.front())
 				if(var.get<0>()==name)
 					return true;
 			return false;
 		}
-		bool var_exsist_global(const string& name) {
+		bool var_exsist_global(const string& name)
+		{
 			for(auto& var:m_data.back())
 				if(var.get<0>()==name)
 					return true;
 			return false;
 		}
-		cov::any& get_var(const string& name) {
+		cov::any& get_var(const string& name)
+		{
 			for(auto& domain:m_data)
 				for(auto& var:domain)
 					if(var.get<0>()==name)
 						return var.get<1>();
 			throw syntax_error("Use of undefined variable.");
 		}
-		cov::any& get_var_global(const string& name) {
+		cov::any& get_var_global(const string& name)
+		{
 			for(auto& var:m_data.back())
 				if(var.get<0>()==name)
 					return var.get<1>();
 			throw syntax_error("Use of undefined variable.");
 		}
-		void add_var(const string& name,const cov::any& var) {
+		void add_var(const string& name,const cov::any& var)
+		{
 			if(var_exsist_current(name))
 				get_var(name)=var;
 			else
 				m_data.front().push_front({name,var});
 		}
-		void add_var_global(const string& name,const cov::any& var) {
+		void add_var_global(const string& name,const cov::any& var)
+		{
 			if(var_exsist_global(name))
 				get_var_global(name)=var;
 			else
@@ -63,39 +73,6 @@ namespace cov_basic {
 		}
 	};
 	domain_manager storage;
-	std::deque<const function*> fcall_stack;
-	cov::any function::call(const array& args) const
-	{
-		if(args.size()!=this->mArgs.size())
-			throw syntax_error("Wrong size of arguments.");
-		storage.add_domain();
-		fcall_stack.push_front(this);
-		for(std::size_t i=0; i<args.size(); ++i)
-			storage.add_var(this->mArgs.at(i),args.at(i));
-		for(auto& ptr:this->mBody) {
-			ptr->run();
-			if(this->mRetVal!=nullptr) {
-				storage.remove_domain();
-				fcall_stack.pop_front();
-				cov::any retval=*this->mRetVal;
-				delete this->mRetVal;
-				return retval;
-			}
-		}
-		storage.remove_domain();
-		fcall_stack.pop_front();
-		return number(0);
-	}
-	void statement_function::run()
-	{
-		storage.add_var(this->mName,this->mFunc);
-	}
-	void statement_return::run()
-	{
-		if(fcall_stack.empty())
-			throw syntax_error("Return outside function.");
-		fcall_stack.front()->mRetVal=new cov::any(parse_expr(this->mTree.root()));
-	}
 	cov::any& get_value(const string& name)
 	{
 		auto pos=name.find("::");
@@ -300,6 +277,7 @@ namespace cov_basic {
 		}
 		throw;
 	}
+	bool define_asi=false;
 	cov::any parse_asi(token_base* a,const cov::any& b)
 	{
 		if(a==nullptr)
@@ -380,20 +358,20 @@ namespace cov_basic {
 			if(b->get_type()!=token_types::id)
 				throw;
 			std::string id=dynamic_cast<token_id*>(b)->get_id();
-			cov::any val=get_value(id);
+			cov::any& val=get_value(id);
 			if(val.type()!=typeid(number))
 				throw;
-			return ++val.val<number>(true);
+			return val=val.const_val<number>()+1;
 		} else {
 			if(b!=nullptr)
 				throw;
 			if(a->get_type()!=token_types::id)
 				throw;
 			std::string id=dynamic_cast<token_id*>(a)->get_id();
-			cov::any val=get_value(id);
+			cov::any& val=get_value(id);
 			if(val.type()!=typeid(number))
 				throw;
-			return ++val.val<number>(true);
+			return val=val.const_val<number>()+1;
 		}
 	}
 	cov::any parse_dec(token_base* a,token_base* b)
@@ -404,20 +382,20 @@ namespace cov_basic {
 			if(b->get_type()!=token_types::id)
 				throw;
 			std::string id=dynamic_cast<token_id*>(b)->get_id();
-			cov::any val=get_value(id);
+			cov::any& val=get_value(id);
 			if(val.type()!=typeid(number))
 				throw;
-			return --val.val<number>(true);
+			return val=val.const_val<number>()-1;
 		} else {
 			if(b!=nullptr)
 				throw;
 			if(a->get_type()!=token_types::id)
 				throw;
 			std::string id=dynamic_cast<token_id*>(a)->get_id();
-			cov::any val=get_value(id);
+			cov::any& val=get_value(id);
 			if(val.type()!=typeid(number))
 				throw;
-			return --val.val<number>(true);
+			return val=val.const_val<number>()-1;
 		}
 	}
 	cov::any parse_fcall(const cov::any& a,cov::any b)

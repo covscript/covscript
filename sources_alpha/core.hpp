@@ -21,7 +21,8 @@ namespace cov_basic {
 		native_interface()=delete;
 		native_interface(const native_interface&)=default;
 		native_interface(const function_type& func):mFunc(func) {}
-		cov::any call(array& args) const {
+		cov::any call(array& args) const
+		{
 			return mFunc(args);
 		}
 	};
@@ -40,14 +41,15 @@ namespace cov_basic {
 		std::string mWhat="Covariant Basic Syntax Error";
 	public:
 		syntax_error()=default;
-	syntax_error(const std::string& str) noexcept:
-		mWhat("Covariant Basic Syntax Error:"+str) {}
+		syntax_error(const std::string& str) noexcept:
+			mWhat("Covariant Basic Syntax Error:"+str) {}
 		syntax_error(const syntax_error&)=default;
 		syntax_error(syntax_error&&)=default;
 		virtual ~syntax_error()=default;
 		syntax_error& operator=(const syntax_error&)=default;
 		syntax_error& operator=(syntax_error&&)=default;
-		virtual const char* what() const noexcept override {
+		virtual const char* what() const noexcept override
+		{
 			return this->mWhat.c_str();
 		}
 	};
@@ -57,16 +59,19 @@ namespace cov_basic {
 	public:
 		garbage_collector()=default;
 		garbage_collector(const garbage_collector&)=delete;
-		~garbage_collector() {
+		~garbage_collector()
+		{
 			for(auto& ptr:table_delete)
 				table_new.remove(ptr);
 			for(auto& ptr:table_new)
 				delete ptr;
 		}
-		void add(void* ptr) {
+		void add(void* ptr)
+		{
 			table_new.push_front(static_cast<T*>(ptr));
 		}
-		void remove(void* ptr) {
+		void remove(void* ptr)
+		{
 			table_delete.push_front(static_cast<T*>(ptr));
 		}
 	};

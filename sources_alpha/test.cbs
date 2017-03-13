@@ -1,8 +1,8 @@
 function main(start)
     define i=start
-    while i<100
+    while(i<100)
         println(i)
-        if i>=50
+        if(i>=50)
             break
         else
             ++i
@@ -10,4 +10,5 @@ function main(start)
     end
     return i
 end
-println("Result:",main(0))
+print("Please enter the start:")
+println("Result:",main(input()))
