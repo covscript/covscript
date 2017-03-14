@@ -153,14 +153,6 @@ namespace cov {
 				}
 			}
 		}
-		void clone() noexcept
-		{
-			if(mDat!=nullptr) {
-				proxy* dat=new proxy(1,mDat->data->duplicate());
-				recycle();
-				mDat=dat;
-			}
-		}
 	public:
 		static any infer_value(const std::string&);
 		void swap(any& obj) noexcept
@@ -174,6 +166,14 @@ namespace cov {
 			proxy* tmp=this->mDat;
 			this->mDat=obj.mDat;
 			obj.mDat=tmp;
+		}
+		void clone() noexcept
+		{
+			if(mDat!=nullptr) {
+				proxy* dat=new proxy(1,mDat->data->duplicate());
+				recycle();
+				mDat=dat;
+			}
 		}
 		bool usable() const noexcept
 		{
