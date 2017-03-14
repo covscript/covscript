@@ -1,0 +1,7 @@
+define arr={}
+arr[10]=10
+define i=0
+while(i<sizeof(arr))
+	println(arr[i])
+	++i
+end

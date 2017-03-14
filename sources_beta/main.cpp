@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #define add_function(name) cov_basic::storage.add_var_global(#name,cov_basic::native_interface(name));
+#define add_function_name(name,func) cov_basic::storage.add_var_global(name,cov_basic::native_interface(func));
 namespace cov_basic {
 	cov::any parse_value(const std::string& str)
 	{
@@ -108,6 +109,14 @@ namespace cov_basic {
 			throw syntax_error("Wrong type of arguments.(Request Number)");
 		return number(cov::rand<long>(args.at(0).const_val<number>(),args.at(1).const_val<number>()));
 	}
+	cov::any _sizeof(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.front().type()!=typeid(array))
+			throw syntax_error("Get size of non-array object.");
+		return number(args.front().const_val<array>().size());
+	}
 	void init()
 	{
 		add_function(input);
@@ -118,6 +127,7 @@ namespace cov_basic {
 		add_function(delay);
 		add_function(rand);
 		add_function(randint);
+		add_function_name("sizeof",_sizeof);
 	}
 }
 int main(int args_size,const char* args[])
