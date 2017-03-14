@@ -260,10 +260,7 @@ namespace cov {
 		{
 			if(&obj!=this) {
 				if(mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
-					proxy* ptr=obj.mDat;
-					ptr->refcount+=mDat->refcount;
-					delete mDat->data;
-					*mDat=*ptr;
+					mDat->data=obj.mDat->data->duplicate();
 				} else {
 					recycle();
 					if(obj.mDat!=nullptr)

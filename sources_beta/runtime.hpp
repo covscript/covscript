@@ -279,7 +279,6 @@ namespace cov_basic {
 	}
 	cov::any parse_asi(cov::any a,cov::any b)
 	{
-		b.clone();
 		a.assign(b,true);
 		return b;
 	}
