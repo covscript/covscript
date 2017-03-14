@@ -277,21 +277,10 @@ namespace cov_basic {
 		}
 		throw;
 	}
-	bool define_asi=false;
-	cov::any parse_asi(token_base* a,const cov::any& b)
+	cov::any parse_asi(cov::any a,const cov::any& b)
 	{
-		if(a==nullptr)
-			throw;
-		if(a->get_type()!=token_types::id)
-			throw;
-		std::string id=dynamic_cast<token_id*>(a)->get_id();
-		if(define_asi&&!exsist(id)) {
-			storage.add_var(id,b);
-			return b;
-		} else {
-			storage.get_var(id)=b;
-			return b;
-		}
+		a.assign(b,true);
+		return b;
 	}
 	cov::any parse_equ(const cov::any& a,const cov::any& b)
 	{
@@ -412,6 +401,7 @@ namespace cov_basic {
 	{
 		return a.val<array>(true).at(std::size_t(b.const_val<number>()));
 	}
+	bool define_var=false;
 	cov::any parse_expr(cov::tree<token_base*>::iterator it)
 	{
 		if(!it.usable())
@@ -421,8 +411,18 @@ namespace cov_basic {
 			return cov::any();
 		switch(token->get_type()) {
 		case token_types::id:
-			return get_value(dynamic_cast<token_id*>(token)->get_id());
+		{
+			std::string id=dynamic_cast<token_id*>(token)->get_id();
+			if(!exsist(id))
+			{
+				if(define_var)
+					storage.add_var(id,number(0));
+				else
+					throw syntax_error("Undefined variable.");
+			}
+			return get_value(id);
 			break;
+		}
 		case token_types::value:
 			return dynamic_cast<token_value*>(token)->get_value();
 			break;
@@ -471,7 +471,7 @@ namespace cov_basic {
 				return parse_abo(parse_expr(it.left()),parse_expr(it.right()));
 				break;
 			case signal_types::asi_:
-				return parse_asi(it.left().data(),parse_expr(it.right()));
+				return parse_asi(parse_expr(it.left()),parse_expr(it.right()));
 				break;
 			case signal_types::equ_:
 				return parse_equ(parse_expr(it.left()),parse_expr(it.right()));

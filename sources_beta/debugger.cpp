@@ -1,4 +1,4 @@
-#include "./runtime.hpp"
+#include "./covbasic.hpp"
 #include <iostream>
 #include <fstream>
 using namespace cov_basic;
@@ -60,7 +60,7 @@ void show_token(token_base* ptr)
 	case token_types::expr:
 		std::cout<<"<expr:";
 		print_tree(dynamic_cast<token_expr*>(ptr)->get_tree().root());
-		std::cout<<std::endl<<"@value="<<parse_expr(dynamic_cast<token_expr*>(ptr)->get_tree().root());
+		//std::cout<<std::endl<<"@value="<<parse_expr(dynamic_cast<token_expr*>(ptr)->get_tree().root());
 		std::cout<<">";
 		break;
 	case token_types::action:

@@ -32,9 +32,9 @@ namespace cov_basic {
 	}
 	void statement_define::run()
 	{
-		define_asi=true;
+		define_var=true;
 		parse_expr(mTree.root());
-		define_asi=false;
+		define_var=false;
 	}
 	void statement_break::run()
 	{
