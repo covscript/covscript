@@ -403,6 +403,11 @@ namespace cov_basic {
 			throw syntax_error("Arguments error.");
 		return number(0);
 	}
+	cov::any darwin_log(array& args)
+	{
+		Darwin_Log(args.front().to_string().c_str());
+		return number(0);
+	}
 	cov::any is_kb_hit(array& args)
 	{
 		return darwin::runtime.is_kb_hit();
@@ -569,6 +574,7 @@ namespace cov_basic {
 		add_function(draw_triangle);
 		add_function(fill_triangle);
 		add_function(draw_string);
+		add_function(darwin_log);
 		add_function(is_kb_hit);
 		add_function(get_kb_hit);
 		add_function(get_ascii);
