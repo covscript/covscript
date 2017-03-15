@@ -131,6 +131,32 @@ namespace cov_basic {
 		else
 			throw syntax_error("Get size of non-array or string object.");
 	}
+	cov::any to_integer(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.front().type()==typeid(number))
+			return number(long(args.at(0).const_val<number>()));
+		else if(args.front().type()==typeid(string))
+			return number(std::stold(args.at(0).const_val<string>()));
+		else
+			throw syntax_error("Wrong type of arguments.(Request Number or String)");
+	}
+	cov::any to_number(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.front().type()==typeid(string))
+			return number(std::stold(args.at(0).const_val<string>()));
+		else
+			throw syntax_error("Wrong type of arguments.(Request String)");
+	}
+	cov::any to_string(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		return args.front().to_string();
+	}
 	cov::any clone(array& args)
 	{
 		if(args.size()!=1)
@@ -537,6 +563,9 @@ namespace cov_basic {
 		add_function(delay);
 		add_function(rand);
 		add_function(randint);
+		add_function(to_integer);
+		add_function(to_number);
+		add_function(to_string);
 		add_function(clone);
 		add_function(append_string);
 		add_function(cut_string);

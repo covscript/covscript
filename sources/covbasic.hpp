@@ -1,6 +1,7 @@
 #pragma once
 #include "./runtime.hpp"
 namespace cov_basic {
+	bool return_fcall=false;
 	bool break_block=false;
 	bool continue_block=false;
 	std::deque<const function*> fcall_stack;
@@ -15,6 +16,7 @@ namespace cov_basic {
 		for(auto& ptr:this->mBody) {
 			ptr->run();
 			if(this->mRetVal!=nullptr) {
+				return_fcall=false;
 				storage.remove_domain();
 				fcall_stack.pop_front();
 				cov::any retval=*this->mRetVal;
@@ -28,36 +30,72 @@ namespace cov_basic {
 	}
 	void statement_expression::run()
 	{
+		if(return_fcall)
+		{
+			return;
+		}
 		parse_expr(mTree.root());
 	}
 	void statement_define::run()
 	{
+		if(return_fcall)
+		{
+			return;
+		}
 		define_var=true;
 		parse_expr(mTree.root());
 		define_var=false;
 	}
 	void statement_break::run()
 	{
+		if(return_fcall)
+		{
+			return;
+		}
 		break_block=true;
 	}
 	void statement_continue::run()
 	{
+		if(return_fcall)
+		{
+			return;
+		}
 		continue_block=true;
 	}
 	void statement_block::run()
 	{
+		if(return_fcall)
+		{
+			return;
+		}
 		storage.add_domain();
 		for(auto& ptr:mBlock)
+		{
 			ptr->run();
+			if(return_fcall)
+			{
+				storage.remove_domain();
+				return;
+			}
+		}
 		storage.remove_domain();
 	}
 	void statement_if::run()
 	{
+		if(return_fcall)
+		{
+			return;
+		}
 		storage.add_domain();
 		if(parse_expr(mTree.root()).const_val<boolean>()) {
 			if(mBlock!=nullptr) {
 				for(auto& ptr:*mBlock) {
 					ptr->run();
+					if(return_fcall)
+					{
+						storage.remove_domain();
+						return;
+					}
 					if(break_block||continue_block) {
 						storage.remove_domain();
 						return;
@@ -69,6 +107,11 @@ namespace cov_basic {
 			if(mElseBlock!=nullptr) {
 				for(auto& ptr:*mElseBlock) {
 					ptr->run();
+					if(return_fcall)
+					{
+						storage.remove_domain();
+						return;
+					}
 					if(break_block||continue_block) {
 						storage.remove_domain();
 						return;
@@ -80,10 +123,19 @@ namespace cov_basic {
 	}
 	void statement_while::run()
 	{
+		if(return_fcall)
+		{
+			return;
+		}
 		storage.add_domain();
 		while(parse_expr(mTree.root()).const_val<boolean>()) {
 			for(auto& ptr:mBlock) {
 				ptr->run();
+				if(return_fcall)
+				{
+					storage.remove_domain();
+					return;
+				}
 				if(break_block) {
 					break_block=false;
 					storage.remove_domain();
@@ -99,13 +151,24 @@ namespace cov_basic {
 	}
 	void statement_function::run()
 	{
+		if(return_fcall)
+		{
+			return_fcall=false;
+			return;
+		}
 		storage.add_var(this->mName,this->mFunc);
 	}
 	void statement_return::run()
 	{
+		if(return_fcall)
+		{
+			return_fcall=false;
+			return;
+		}
 		if(fcall_stack.empty())
 			throw syntax_error("Return outside function.");
 		fcall_stack.front()->mRetVal=new cov::any(parse_expr(this->mTree.root()));
+		return_fcall=true;
 	}
 	void kill_action(std::deque<std::deque<token_base*>>& lines,std::deque<statement_base*>& statements)
 	{
