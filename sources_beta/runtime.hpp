@@ -117,6 +117,12 @@ namespace cov_basic {
 	}
 	cov::any parse_sub(const cov::any& a,const cov::any& b)
 	{
+		if(!a.usable()) {
+			if(b.type()==typeid(number))
+				return -b.const_val<number>();
+			else
+				throw;
+		}
 		if(a.type()==typeid(number)) {
 			if(b.type()==typeid(number)) {
 				return a.const_val<number>()-b.const_val<number>();

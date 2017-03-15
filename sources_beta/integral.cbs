@@ -1,0 +1,17 @@
+define precision=pow(10,-4)
+function integral(func,begin,end_)
+    define sum=0
+    define x=begin
+    while(x<=end_)
+        sum=sum+func(x)*precision
+        x=x+precision
+    end
+    return sum
+end
+function f(x)
+    return sqrt(1-pow(x,2))
+end
+define ts=time()
+println(4*integral(f,0,1))
+println(time()-ts)
+input()

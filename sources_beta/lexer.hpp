@@ -188,6 +188,11 @@ namespace cov_basic {
 					++i;
 					continue;
 				}
+				if(buff[i]=='\"') {
+					inside_str=true;
+					++i;
+					continue;
+				}
 				if(std::isspace(buff[i])) {
 					++i;
 					continue;
@@ -204,6 +209,7 @@ namespace cov_basic {
 					type=token_types::id;
 					continue;
 				}
+				throw std::logic_error("Uknown character.");
 				break;
 			case token_types::id:
 				if(std::isalnum(buff[i])||buff[i]=='_') {
@@ -264,11 +270,6 @@ namespace cov_basic {
 				tokens.push_back(new token_value(std::stold(tmp)));
 				tmp.clear();
 				break;
-			}
-			if(buff[i]=='\"') {
-				inside_str=true;
-				++i;
-				continue;
 			}
 		}
 		switch(type) {
