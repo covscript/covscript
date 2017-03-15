@@ -116,9 +116,12 @@ namespace cov_basic {
 	{
 		if(args.size()!=1)
 			throw syntax_error("Wrong size of arguments.");
-		if(args.front().type()!=typeid(array))
-			throw syntax_error("Get size of non-array object.");
-		return number(args.front().const_val<array>().size());
+		if(args.front().type()==typeid(array))
+			return number(args.front().const_val<array>().size());
+		else if(args.front().type()==typeid(string))
+			return number(args.front().const_val<string>().size());
+		else
+			throw syntax_error("Get size of non-array or string object.");
 	}
 	cov::any clone(array& args)
 	{
