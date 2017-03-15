@@ -20,13 +20,15 @@
 * Github: https://github.com/mikecovlee
 * Website: http://ldc.atd3.cn
 *
-* Library Version: 17.1.0
+* Library Version: 17.2.1
 *
 * Function List:
 * Function(function.hpp)
 * TypeList(typelist.hpp)
 * Memory(memory.hpp)
 * cov::any(any.hpp)
+* cov::tree(tree.hpp)
+* cov::rand(random.hpp)
 * cov::tuple(tuple.hpp)
 * cov::timer(timer.hpp)
 * cov::switcher(switcher.hpp)
@@ -43,7 +45,9 @@
 #include "./typelist.hpp"
 #include "./memory.hpp"
 #include "./any.hpp"
+#include "./tree.hpp"
 #include "./tuple.hpp"
 #include "./timer.hpp"
+#include "./random.hpp"
 #include "./switcher.hpp"
 #include "./arglist.hpp"

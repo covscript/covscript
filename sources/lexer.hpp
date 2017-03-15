@@ -17,14 +17,12 @@ namespace cov_basic {
 	class token_base {
 		static garbage_collector<token_base> gc;
 	public:
-		static void* operator new(std::size_t size)
-		{
+		static void* operator new(std::size_t size) {
 			void* ptr=::operator new(size);
 			gc.add(ptr);
 			return ptr;
 		}
-		static void operator delete(void* ptr)
-		{
+		static void operator delete(void* ptr) {
 			gc.remove(ptr);
 			::operator delete(ptr);
 		}
@@ -39,8 +37,7 @@ namespace cov_basic {
 	public:
 		token_action()=delete;
 		token_action(action_types t):mType(t) {}
-		virtual token_types get_type() const noexcept override
-		{
+		virtual token_types get_type() const noexcept override {
 			return token_types::action;
 		}
 		action_types& get_action() noexcept {
@@ -52,8 +49,7 @@ namespace cov_basic {
 	public:
 		token_signal()=delete;
 		token_signal(signal_types t):mType(t) {}
-		virtual token_types get_type() const noexcept override
-		{
+		virtual token_types get_type() const noexcept override {
 			return token_types::signal;
 		}
 		signal_types& get_signal() noexcept {
@@ -65,8 +61,7 @@ namespace cov_basic {
 	public:
 		token_id()=delete;
 		token_id(const std::string& id):mId(id) {}
-		virtual token_types get_type() const noexcept override
-		{
+		virtual token_types get_type() const noexcept override {
 			return token_types::id;
 		}
 		std::string& get_id() noexcept {
@@ -78,8 +73,7 @@ namespace cov_basic {
 	public:
 		token_value()=delete;
 		token_value(const cov::any& val):mVal(val) {}
-		virtual token_types get_type() const noexcept override
-		{
+		virtual token_types get_type() const noexcept override {
 			return token_types::value;
 		}
 		cov::any& get_value() noexcept {
@@ -91,8 +85,7 @@ namespace cov_basic {
 	public:
 		token_sblist()=delete;
 		token_sblist(const std::deque<std::deque<token_base*>>& list):mList(list) {}
-		virtual token_types get_type() const noexcept override
-		{
+		virtual token_types get_type() const noexcept override {
 			return token_types::sblist;
 		}
 		std::deque<std::deque<token_base*>>& get_list() noexcept {
@@ -104,8 +97,7 @@ namespace cov_basic {
 	public:
 		token_mblist()=delete;
 		token_mblist(const std::deque<std::deque<token_base*>>& list):mList(list) {}
-		virtual token_types get_type() const noexcept override
-		{
+		virtual token_types get_type() const noexcept override {
 			return token_types::mblist;
 		}
 		std::deque<std::deque<token_base*>>& get_list() noexcept {
@@ -117,8 +109,7 @@ namespace cov_basic {
 	public:
 		token_lblist()=delete;
 		token_lblist(const std::deque<std::deque<token_base*>>& list):mList(list) {}
-		virtual token_types get_type() const noexcept override
-		{
+		virtual token_types get_type() const noexcept override {
 			return token_types::lblist;
 		}
 		std::deque<std::deque<token_base*>>& get_list() noexcept {
@@ -130,14 +121,12 @@ namespace cov_basic {
 		std::map<Key,T> mDat;
 	public:
 		mapping(std::initializer_list<std::pair<const Key, T>> l):mDat(l) {}
-		bool exsist(const Key& k)
-		{
+		bool exsist(const Key& k) {
 			return mDat.find(k)!=mDat.end();
 		}
-		T match(const Key& k)
-		{
+		T match(const Key& k) {
 			if(!exsist(k))
-				throw std::logic_error("Undefined Mapping.");
+				throw syntax_error("Undefined Mapping.");
 			return mDat.at(k);
 		}
 	};
@@ -151,8 +140,8 @@ namespace cov_basic {
 		{"block",action_types::block_},{"end",action_types::endblock_},{"define",action_types::define_},/*{"as",action_types::as_},*/{"if",action_types::if_},/*{"then",action_types::then_},*/{"else",action_types::else_},{"while",action_types::while_},
 		/*{"do",action_types::do_},{"for",action_types::for_},*/{"break",action_types::break_},{"continue",action_types::continue_},{"function",action_types::function_},{"return",action_types::return_}
 	};
-	mapping<std::string,bool> boolean_map= {
-		{"True",true},{"False",false},{"true",true},{"false",false},{"TRUE",true},{"FALSE",false}
+	mapping<std::string,cov::any> constant_map= {
+		{"pi",number(3.1415926535)},{"e",number(2.7182818284)},{"True",true},{"False",false},{"true",true},{"false",false},{"TRUE",true},{"FALSE",false}
 	};
 	char signals[]= {
 		'+','-','*','/','%','^',',','.','>','<','=','&','|','!','(',')','[',']','{','}'
@@ -205,14 +194,14 @@ namespace cov_basic {
 					type=token_types::value;
 					continue;
 				}
-				if(std::isalpha(buff[i])) {
+				if(std::isalpha(buff[i])||buff[i]=='_'||buff[i]==':') {
 					type=token_types::id;
 					continue;
 				}
-				throw std::logic_error("Uknown character.");
+				throw syntax_error("Uknown character.");
 				break;
 			case token_types::id:
-				if(std::isalnum(buff[i])||buff[i]=='_') {
+				if(std::isalnum(buff[i])||buff[i]=='_'||buff[i]==':') {
 					tmp+=buff[i];
 					++i;
 					continue;
@@ -223,8 +212,8 @@ namespace cov_basic {
 					tmp.clear();
 					break;
 				}
-				if(boolean_map.exsist(tmp)) {
-					tokens.push_back(new token_value(boolean_map.match(tmp)));
+				if(constant_map.exsist(tmp)) {
+					tokens.push_back(new token_value(constant_map.match(tmp)));
 					tmp.clear();
 					break;
 				}
@@ -278,8 +267,9 @@ namespace cov_basic {
 				tokens.push_back(new token_action(action_map.match(tmp)));
 				break;
 			}
-			if(boolean_map.exsist(tmp)) {
-				tokens.push_back(new token_value(boolean_map.match(tmp)));
+			if(constant_map.exsist(tmp)) {
+				tokens.push_back(new token_value(constant_map.match(tmp)));
+				tmp.clear();
 				break;
 			}
 			tokens.push_back(new token_id(tmp));

@@ -1,0 +1,9 @@
+InitGraphics("./darwin.module")
+SetPencil("@",True,False,GetColor("Blue"),GetColor("White"))
+SetFrameLimit(1000)
+FitDrawable()
+ClearDrawable()
+While True Do
+    DrawPoint(RandInt(0,GetDrawableWidth()-1),RandInt(0,GetDrawableHeight()-1))
+    UpdateDrawable()
+End

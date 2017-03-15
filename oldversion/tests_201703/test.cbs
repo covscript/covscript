@@ -1,0 +1,11 @@
+InitGraphics("...")
+Define str="Hello,World!"
+While True Do
+    FitDrawable()
+    ClearDrawable()
+    SetPencil(" ",True,False,GetColor("White"),GetColor("White"))
+    FillDrawable()
+    SetPencil("@",True,False,GetColor("Blue"),GetColor("White"))
+    DrawString(str,0.5*(GetDrawableWidth()-SizeOfString(str)),0.5*GetDrawableHeight())
+    UpdateDrawable()
+End

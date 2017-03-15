@@ -1,17 +1,17 @@
-Define precision=Global::pow(10,-6)
-Function integral(func,begin,end)
-    Define sum=0
-    Define x=begin
-    While x<=end Do
+define precision=pow(10,-6)
+function integral(func,begin,end_)
+    define sum=0
+    define x=begin
+    while(x<=end_)
         sum=sum+func(x)*precision
         x=x+precision
-    End
-    Return sum
-End
-Function f(x)
-    Return Global::sqrt(1-Global::pow(x,2))
-End
-Define ts=Time()
-Print(4*integral(f,0,1))
-Print(Time()-ts)
-Input()
+    end
+    return sum
+end
+function f(x)
+    return sqrt(1-pow(x,2))
+end
+define ts=time()
+println(4*integral(f,0,1))
+println(time()-ts)
+input()

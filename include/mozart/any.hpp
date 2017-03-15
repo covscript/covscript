@@ -20,7 +20,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://ldc.atd3.cn
 *
-* Version: 17.1.3
+* Version: 17.2.1
 */
 #include "./base.hpp"
 #include <iostream>
@@ -34,15 +34,24 @@ namespace std {
 	{
 		return str;
 	}
+	template<> std::string to_string<bool>(const bool& v)
+	{
+		if(v)
+			return "True";
+		else
+			return "False";
+	}
 }
 
 namespace cov {
 	template < typename _Tp > class compare_helper {
 		template < typename T,typename X=bool >struct matcher;
-		template < typename T > static constexpr bool match(T*) {
+		template < typename T > static constexpr bool match(T*)
+		{
 			return false;
 		}
-		template < typename T > static constexpr bool match(matcher < T, decltype(std::declval<T>()==std::declval<T>()) > *) {
+		template < typename T > static constexpr bool match(matcher < T, decltype(std::declval<T>()==std::declval<T>()) > *)
+		{
 			return true;
 		}
 	public:
@@ -50,12 +59,14 @@ namespace cov {
 	};
 	template<typename,bool> struct compare_if;
 	template<typename T>struct compare_if<T,true> {
-		static bool compare(const T& a,const T& b) {
+		static bool compare(const T& a,const T& b)
+		{
 			return a==b;
 		}
 	};
 	template<typename T>struct compare_if<T,false> {
-		static bool compare(const T& a,const T& b) {
+		static bool compare(const T& a,const T& b)
+		{
 			return &a==&b;
 		}
 	};
@@ -80,29 +91,36 @@ namespace cov {
 			holder() = default;
 			holder(const T& dat):mDat(dat) {}
 			virtual ~ holder() = default;
-			virtual const std::type_info & type() const override {
+			virtual const std::type_info & type() const override
+			{
 				return typeid(T);
 			}
-			virtual baseHolder *duplicate() override {
+			virtual baseHolder *duplicate() override
+			{
 				return new holder(mDat);
 			}
-			virtual bool compare(const baseHolder * obj)const override {
+			virtual bool compare(const baseHolder * obj)const override
+			{
 				if (obj->type() == this->type()) {
 					const holder < T > *ptr = dynamic_cast < const holder < T > *>(obj);
 					return ptr!=nullptr?cov::compare(mDat,ptr->data()):false;
 				}
 				return false;
 			}
-			virtual std::string to_string() const override {
+			virtual std::string to_string() const override
+			{
 				return std::move(std::to_string(mDat));
 			}
-			T & data() {
+			T & data()
+			{
 				return mDat;
 			}
-			const T & data() const {
+			const T & data() const
+			{
 				return mDat;
 			}
-			void data(const T & dat) {
+			void data(const T & dat)
+			{
 				mDat = dat;
 			}
 		};
@@ -112,18 +130,21 @@ namespace cov {
 			baseHolder* data=nullptr;
 			proxy()=default;
 			proxy(size_t rc,baseHolder* d):refcount(rc),data(d) {}
-			~proxy() {
+			~proxy()
+			{
 				delete data;
 			}
 		};
 		proxy* mDat=nullptr;
-		proxy* duplicate() const noexcept {
+		proxy* duplicate() const noexcept
+		{
 			if(mDat!=nullptr) {
 				++mDat->refcount;
 			}
 			return mDat;
 		}
-		void recycle() noexcept {
+		void recycle() noexcept
+		{
 			if(mDat!=nullptr) {
 				--mDat->refcount;
 				if(mDat->refcount==0) {
@@ -132,64 +153,77 @@ namespace cov {
 				}
 			}
 		}
-		void clone() noexcept {
+	public:
+		static any infer_value(const std::string&);
+		void swap(any& obj) noexcept
+		{
+			proxy* tmp=this->mDat;
+			this->mDat=obj.mDat;
+			obj.mDat=tmp;
+		}
+		void swap(any&& obj) noexcept
+		{
+			proxy* tmp=this->mDat;
+			this->mDat=obj.mDat;
+			obj.mDat=tmp;
+		}
+		void clone() noexcept
+		{
 			if(mDat!=nullptr) {
 				proxy* dat=new proxy(1,mDat->data->duplicate());
 				recycle();
 				mDat=dat;
 			}
 		}
-	public:
-		static any infer_value(const std::string&);
-		void swap(any& obj) noexcept {
-			proxy* tmp=this->mDat;
-			this->mDat=obj.mDat;
-			obj.mDat=tmp;
-		}
-		void swap(any&& obj) noexcept {
-			proxy* tmp=this->mDat;
-			this->mDat=obj.mDat;
-			obj.mDat=tmp;
-		}
-		bool usable() const noexcept {
+		bool usable() const noexcept
+		{
 			return mDat != nullptr;
 		}
 		any()=default;
 		template < typename T > any(const T & dat):mDat(new proxy(1,new holder < T > (dat))) {}
 		any(const any & v):mDat(v.duplicate()) {}
-		any(any&& v) noexcept {
+		any(any&& v) noexcept
+		{
 			swap(std::forward<any>(v));
 		}
-		~any() {
+		~any()
+		{
 			recycle();
 		}
-		const std::type_info & type() const {
+		const std::type_info & type() const
+		{
 			return this->mDat != nullptr?this->mDat->data->type():typeid(void);
 		}
-		std::string to_string() const {
+		std::string to_string() const
+		{
 			if(this->mDat == nullptr)
 				return "Null";
 			return std::move(this->mDat->data->to_string());
 		}
-		any & operator=(const any & var) {
+		any & operator=(const any & var)
+		{
 			if(&var!=this) {
 				recycle();
 				mDat = var.duplicate();
 			}
 			return *this;
 		}
-		any & operator=(any&& var) noexcept {
+		any & operator=(any&& var) noexcept
+		{
 			if(&var!=this)
 				swap(std::forward<any>(var));
 			return *this;
 		}
-		bool operator==(const any & var) const {
+		bool operator==(const any & var) const
+		{
 			return usable()?this->mDat->data->compare(var.mDat->data):!var.usable();
 		}
-		bool operator!=(const any & var)const {
+		bool operator!=(const any & var)const
+		{
 			return usable()?!this->mDat->data->compare(var.mDat->data):var.usable();
 		}
-		template < typename T > T & val(bool raw=false) {
+		template < typename T > T & val(bool raw=false)
+		{
 			if(typeid(T) != this->type())
 				throw cov::error("E0006");
 			if(this->mDat == nullptr)
@@ -198,33 +232,35 @@ namespace cov {
 				clone();
 			return dynamic_cast < holder < T > *>(this->mDat->data)->data();
 		}
-		template < typename T > const T & val(bool raw=false) const {
+		template < typename T > const T & val(bool raw=false) const
+		{
 			if(typeid(T) != this->type())
 				throw cov::error("E0006");
 			if(this->mDat == nullptr)
 				throw cov::error("E0005");
 			return dynamic_cast < const holder < T > *>(this->mDat->data)->data();
 		}
-		template < typename T > const T& const_val() const {
+		template < typename T > const T& const_val() const
+		{
 			if(typeid(T) != this->type())
 				throw cov::error("E0006");
 			if(this->mDat == nullptr)
 				throw cov::error("E0005");
 			return dynamic_cast < const holder < T > *>(this->mDat->data)->data();
 		}
-		template < typename T > operator T&() {
+		template < typename T > operator T&()
+		{
 			return this->val<T>();
 		}
-		template < typename T > operator const T&() const {
+		template < typename T > operator const T&() const
+		{
 			return this->const_val<T>();
 		}
-		void assign(const any& obj,bool raw=false) {
+		void assign(const any& obj,bool raw=false)
+		{
 			if(&obj!=this) {
 				if(mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
-					proxy* ptr=obj.mDat;
-					ptr->refcount+=mDat->refcount;
-					delete mDat->data;
-					*mDat=*ptr;
+					mDat->data=obj.mDat->data->duplicate();
 				} else {
 					recycle();
 					if(obj.mDat!=nullptr)
@@ -234,7 +270,8 @@ namespace cov {
 				}
 			}
 		}
-		template < typename T > void assign(const T & dat,bool raw=false) {
+		template < typename T > void assign(const T & dat,bool raw=false)
+		{
 			if(raw)
 				mDat->data=new holder < T > (dat);
 			else {
@@ -242,7 +279,8 @@ namespace cov {
 				mDat = new proxy(1,new holder < T > (dat));
 			}
 		}
-		template < typename T > any & operator=(const T & dat) {
+		template < typename T > any & operator=(const T & dat)
+		{
 			assign(dat);
 			return *this;
 		}
@@ -264,7 +302,7 @@ cov::any cov::any::infer_value(const std::string& str)
 	if(str=="false"||str=="False"||str=="FALSE")
 		return false;
 	enum types {
-	    interger,floating,other
+		interger,floating,other
 	} type=types::interger;
 	for(auto& it:str) {
 		if(!std::isdigit(it)&&it!='.') {

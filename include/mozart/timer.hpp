@@ -33,12 +33,14 @@ namespace cov {
 	public:
 		typedef unsigned long timer_t;
 		enum class time_unit {
-		    nano_sec, micro_sec, milli_sec, second, minute
+			nano_sec, micro_sec, milli_sec, second, minute
 		};
-		static void reset() {
+		static void reset()
+		{
 			m_timer = std::chrono::high_resolution_clock::now();
 		}
-		static timer_t time(time_unit unit) {
+		static timer_t time(time_unit unit)
+		{
 			switch (unit) {
 			case time_unit::nano_sec:
 				return std::chrono::duration_cast < std::chrono::nanoseconds >(std::chrono::high_resolution_clock::now() - m_timer).count();
@@ -53,7 +55,8 @@ namespace cov {
 			}
 			return 0;
 		}
-		static void delay(time_unit unit, timer_t time) {
+		static void delay(time_unit unit, timer_t time)
+		{
 			switch (unit) {
 			case time_unit::nano_sec:
 				std::this_thread::sleep_for(std::chrono::nanoseconds(time));
@@ -72,7 +75,8 @@ namespace cov {
 				break;
 			}
 		}
-		static timer_t measure(time_unit unit,const cov::function<void()>& func) {
+		static timer_t measure(time_unit unit,const cov::function<void()>& func)
+		{
 			timer_t begin(0),end(0);
 			begin=time(unit);
 			func();

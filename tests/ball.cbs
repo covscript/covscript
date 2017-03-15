@@ -1,0 +1,35 @@
+init_graphics()
+define pix=darwin_pixel("@",true,false,get_color("blue"),get_color("white"))
+set_frame_limit(60)
+define bx=0
+define by=0
+define bxi=true
+define byi=true
+while(true)
+        fit_drawable()
+        clear_drawable()
+        draw_point(bx,by,pix)
+        if(bx<=0)
+                bxi=true
+        end
+        if(by<=0)
+                byi=true
+        end
+        if(bx>=get_width_drawable()-1)
+                bxi=false
+        end
+        if(by>=get_height_drawable()-1)
+                byi=false
+        end
+        if(bxi)
+                ++bx
+        else
+                --bx
+        end
+        if(byi)
+                ++by
+        else
+                --by
+        end
+        update_drawable()
+end

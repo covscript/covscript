@@ -1,15 +1,12 @@
 #define DARWIN_FORCE_BUILTIN
-#include "./core.hpp"
+#include "../include/darwin/darwin.hpp"
+#include "./covbasic.hpp"
 #include <iostream>
 #include <fstream>
-#include <random>
-#include <cstdlib>
 #include <cmath>
-int main(int args,const char** argv);
+#define add_function(name) cov_basic::storage.add_var_global(#name,cov_basic::native_interface(name));
+#define add_function_name(name,func) cov_basic::storage.add_var_global(name,cov_basic::native_interface(func));
 namespace cov_basic {
-	darwin::pixel pencil;
-	darwin::sync_clock clock(30);
-	array files;
 	cov::any parse_value(const std::string& str)
 	{
 		if(str=="true"||str=="True"||str=="TRUE")
@@ -53,426 +50,545 @@ namespace cov_basic {
 		}
 		return str;
 	}
+	cov::any input(array& args)
+	{
+		if(args.empty()) {
+			std::string str;
+			std::cin>>str;
+			return parse_value(str);
+		}
+		for(auto& it:args) {
+			std::string str;
+			std::cin>>str;
+			it.assign(parse_value(str),true);
+		}
+		return number(0);
+	}
+	cov::any getline(array&)
+	{
+		std::string str;
+		std::getline(std::cin,str);
+		return str;
+	}
+	cov::any print(array& args)
+	{
+		for(auto& it:args)
+			std::cout<<it;
+		return number(0);
+	}
+	cov::any println(array& args)
+	{
+		for(auto& it:args)
+			std::cout<<it;
+		std::cout<<std::endl;
+		return number(0);
+	}
+	cov::any time(array&)
+	{
+		return number(cov::timer::time(cov::timer::time_unit::milli_sec));
+	}
+	cov::any delay(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.front().type()!=typeid(number))
+			throw syntax_error("Wrong type of arguments.(Request Number)");
+		cov::timer::delay(cov::timer::time_unit::milli_sec,cov::timer::timer_t(args.front().const_val<number>()));
+		return number(0);
+	}
+	cov::any rand(array& args)
+	{
+		if(args.size()!=2)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(number)||args.at(1).type()!=typeid(number))
+			throw syntax_error("Wrong type of arguments.(Request Number)");
+		return number(cov::rand<number>(args.at(0).const_val<number>(),args.at(1).const_val<number>()));
+	}
+	cov::any randint(array& args)
+	{
+		if(args.size()!=2)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(number)||args.at(1).type()!=typeid(number))
+			throw syntax_error("Wrong type of arguments.(Request Number)");
+		return number(cov::rand<long>(args.at(0).const_val<number>(),args.at(1).const_val<number>()));
+	}
+	cov::any _sizeof(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.front().type()!=typeid(array))
+			throw syntax_error("Get size of non-array object.");
+		return number(args.front().const_val<array>().size());
+	}
+	cov::any clone(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		args.front().clone();
+		return args.front();
+	}
+// String
+	cov::any append_string(array& args)
+	{
+		if(args.size()!=2)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(string))
+			throw syntax_error("Wrong type of arguments.(Request String)");
+		args.at(0).val<string>(true).append(args.at(1).to_string());
+		return number(0);
+	}
+	cov::any cut_string(array& args)
+	{
+		if(args.size()!=2)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(string)||args.at(1).type()!=typeid(number))
+			throw syntax_error("Wrong type of arguments.(Request String,Number)");
+		for(std::size_t i=0; i<args.at(1).const_val<number>(); ++i)
+			args.at(0).val<string>(true).pop_back();
+		return number(0);
+	}
+	cov::any clear_string(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(string))
+			throw syntax_error("Wrong type of arguments.(Request String)");
+		args.at(0).val<string>(true).clear();
+		return number(0);
+	}
+// Array
+	cov::any push_front_array(array& args)
+	{
+		if(args.size()!=2)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(array))
+			throw syntax_error("Wrong type of arguments.(Request Array)");
+		args.at(0).val<array>(true).push_front(args.at(1));
+		return number(0);
+	}
+	cov::any pop_front_array(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(array))
+			throw syntax_error("Wrong type of arguments.(Request Array)");
+		args.at(0).val<array>(true).pop_front();
+		return number(0);
+	}
+	cov::any push_back_array(array& args)
+	{
+		if(args.size()!=2)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(array))
+			throw syntax_error("Wrong type of arguments.(Request Array)");
+		args.at(0).val<array>(true).push_back(args.at(1));
+		return number(0);
+	}
+	cov::any pop_back_array(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(array))
+			throw syntax_error("Wrong type of arguments.(Request Array)");
+		args.at(0).val<array>(true).pop_back();
+		return number(0);
+	}
+	cov::any clear_array(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(array))
+			throw syntax_error("Wrong type of arguments.(Request Array)");
+		args.at(0).val<array>(true).clear();
+		return number(0);
+	}
+// Mathematics
+	cov::any abs(array& args)
+	{
+		return number(std::abs(args.at(0).const_val<number>()));
+	}
+	cov::any ln(array& args)
+	{
+		return number(std::log(args.at(0).const_val<number>()));
+	}
+	cov::any log(array& args)
+	{
+		if(args.size()==1)
+			return number(std::log10(args.at(0).const_val<number>()));
+		else
+			return number(std::log(args.at(1).const_val<number>()/args.at(0).const_val<number>()));
+	}
+	cov::any sin(array& args)
+	{
+		return number(std::sin(args.at(0).const_val<number>()));
+	}
+	cov::any cos(array& args)
+	{
+		return number(std::cos(args.at(0).const_val<number>()));
+	}
+	cov::any tan(array& args)
+	{
+		return number(std::tan(args.at(0).const_val<number>()));
+	}
+	cov::any asin(array& args)
+	{
+		return number(std::sin(args.at(0).const_val<number>()));
+	}
+	cov::any acos(array& args)
+	{
+		return number(std::cos(args.at(0).const_val<number>()));
+	}
+	cov::any atan(array& args)
+	{
+		return number(std::tan(args.at(0).const_val<number>()));
+	}
+	cov::any sqrt(array& args)
+	{
+		return number(std::sqrt(args.at(0).const_val<number>()));
+	}
+	cov::any root(array& args)
+	{
+		return number(std::pow(args.at(0).const_val<number>(),number(1)/args.at(1).const_val<number>()));
+	}
+	cov::any pow(array& args)
+	{
+		return number(std::pow(args.at(0).const_val<number>(),args.at(1).const_val<number>()));
+	}
+// Graphics
+	darwin::sync_clock clock(30);
+	cov::any init_graphics(array& args)
+	{
+		if(args.empty())
+			darwin::runtime.load("./darwin.module");
+		else
+			darwin::runtime.load(args.at(0).const_val<std::string>());
+		return number(0);
+	}
+	cov::any fit_drawable(array& args)
+	{
+		darwin::runtime.fit_drawable();
+		return number(0);
+	}
+	cov::any set_frame_limit(array& args)
+	{
+		clock.set_freq(args.at(0).const_val<number>());
+		return number(0);
+	}
+	cov::any update_drawable(array& args)
+	{
+		darwin::runtime.update_drawable();
+		clock.sync();
+		clock.reset();
+		return number(0);
+	}
+	cov::any clear_drawable(array& args)
+	{
+		if(args.empty())
+			darwin::runtime.get_drawable()->clear();
+		else
+			args.at(0).val<darwin::picture>(true).clear();
+		return number(0);
+	}
+	cov::any fill_drawable(array& args)
+	{
+		if(args.size()==1&&args.at(0).type()==typeid(darwin::pixel))
+			darwin::runtime.get_drawable()->fill(args.at(0).const_val<darwin::pixel>());
+		else if(args.size()==2&&args.at(0).type()==typeid(darwin::picture)&&args.at(1).type()==typeid(darwin::pixel))
+			args.at(0).val<darwin::picture>(true).fill(args.at(1).const_val<darwin::pixel>());
+		else
+			throw syntax_error("Arguments error.");
+		return number(0);
+	}
+	cov::any get_height_drawable(array& args)
+	{
+		if(args.empty())
+			return number(darwin::runtime.get_drawable()->get_height());
+		else
+			return number(args.at(0).const_val<darwin::picture>().get_height());
+	}
+	cov::any get_width_drawable(array& args)
+	{
+		if(args.empty())
+			return number(darwin::runtime.get_drawable()->get_width());
+		else
+			return number(args.at(0).const_val<darwin::picture>().get_width());
+	}
+	cov::any draw_point(array& args)
+	{
+		if(args.at(0).type()==typeid(number))
+			darwin::runtime.get_drawable()->draw_pixel(args.at(0).const_val<number>(),args.at(1).const_val<number>(),args.at(2).const_val<darwin::pixel>());
+		else if(args.at(0).type()==typeid(darwin::picture))
+			args.at(0).val<darwin::picture>(true).draw_pixel(args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<darwin::pixel>());
+		else
+			throw syntax_error("Arguments error.");
+		return number(0);
+	}
+	cov::any draw_picture(array& args)
+	{
+		if(args.at(0).type()==typeid(number))
+			darwin::runtime.get_drawable()->draw_picture(args.at(0).const_val<number>(),args.at(1).const_val<number>(),args.at(2).const_val<darwin::picture>());
+		else if(args.at(0).type()==typeid(darwin::picture))
+			args.at(0).val<darwin::picture>(true).draw_picture(args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<darwin::picture>());
+		else
+			throw syntax_error("Arguments error.");
+		return number(0);
+	}
+	cov::any draw_line(array& args)
+	{
+		if(args.at(0).type()==typeid(number))
+			darwin::runtime.get_drawable()->draw_line(args.at(0).const_val<number>(),args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<number>(),args.at(4).const_val<darwin::pixel>());
+		else if(args.at(0).type()==typeid(darwin::picture))
+			args.at(0).val<darwin::picture>(true).draw_line(args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<number>(),args.at(4).const_val<number>(),args.at(5).const_val<darwin::pixel>());
+		else
+			throw syntax_error("Arguments error.");
+		return number(0);
+	}
+	cov::any draw_rect(array& args)
+	{
+		if(args.at(0).type()==typeid(number))
+			darwin::runtime.get_drawable()->draw_rect(args.at(0).const_val<number>(),args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<number>(),args.at(4).const_val<darwin::pixel>());
+		else if(args.at(0).type()==typeid(darwin::picture))
+			args.at(0).val<darwin::picture>(true).draw_rect(args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<number>(),args.at(4).const_val<number>(),args.at(5).const_val<darwin::pixel>());
+		else
+			throw syntax_error("Arguments error.");
+		return number(0);
+	}
+	cov::any fill_rect(array& args)
+	{
+		if(args.at(0).type()==typeid(number))
+			darwin::runtime.get_drawable()->fill_rect(args.at(0).const_val<number>(),args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<number>(),args.at(4).const_val<darwin::pixel>());
+		else if(args.at(0).type()==typeid(darwin::picture))
+			args.at(0).val<darwin::picture>(true).fill_rect(args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<number>(),args.at(4).const_val<number>(),args.at(5).const_val<darwin::pixel>());
+		else
+			throw syntax_error("Arguments error.");
+		return number(0);
+	}
+	cov::any draw_triangle(array& args)
+	{
+		if(args.at(0).type()==typeid(number))
+			darwin::runtime.get_drawable()->draw_triangle(args.at(0).const_val<number>(),args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<number>(),args.at(4).const_val<number>(),args.at(5).const_val<number>(),args.at(6).const_val<darwin::pixel>());
+		else if(args.at(0).type()==typeid(darwin::picture))
+			args.at(0).val<darwin::picture>(true).draw_triangle(args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<number>(),args.at(4).const_val<number>(),args.at(5).const_val<number>(),args.at(6).const_val<number>(),args.at(7).const_val<darwin::pixel>());
+		else
+			throw syntax_error("Arguments error.");
+		return number(0);
+	}
+	cov::any fill_triangle(array& args)
+	{
+		if(args.at(0).type()==typeid(number))
+			darwin::runtime.get_drawable()->fill_triangle(args.at(0).const_val<number>(),args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<number>(),args.at(4).const_val<number>(),args.at(5).const_val<number>(),args.at(6).const_val<darwin::pixel>());
+		else if(args.at(0).type()==typeid(darwin::picture))
+			args.at(0).val<darwin::picture>(true).fill_triangle(args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<number>(),args.at(4).const_val<number>(),args.at(5).const_val<number>(),args.at(6).const_val<number>(),args.at(7).const_val<darwin::pixel>());
+		else
+			throw syntax_error("Arguments error.");
+		return number(0);
+	}
+	cov::any draw_string(array& args)
+	{
+		if(args.at(0).type()==typeid(number))
+			darwin::runtime.get_drawable()->draw_string(args.at(0).const_val<number>(),args.at(1).const_val<number>(),args.at(2).const_val<string>(),args.at(3).const_val<darwin::pixel>());
+		else if(args.at(0).type()==typeid(darwin::picture))
+			args.at(0).val<darwin::picture>(true).draw_string(args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<string>(),args.at(4).const_val<darwin::pixel>());
+		else
+			throw syntax_error("Arguments error.");
+		return number(0);
+	}
+	cov::any is_kb_hit(array& args)
+	{
+		return darwin::runtime.is_kb_hit();
+	}
+	cov::any get_kb_hit(array& args)
+	{
+		return number(darwin::runtime.get_kb_hit());
+	}
+	cov::any get_ascii(array& args)
+	{
+		return number(args.at(0).val<string>().at(0));
+	}
+	cov::any get_color(array& args)
+	{
+		number color;
+		CovSwitch(args.at(0).val<string>()) {
+			CovCase("black") {
+				color=0;
+			}
+			EndCovCase;
+			CovCase("white") {
+				color=1;
+			}
+			EndCovCase;
+			CovCase("red") {
+				color=2;
+			}
+			EndCovCase;
+			CovCase("green") {
+				color=3;
+			}
+			EndCovCase;
+			CovCase("blue") {
+				color=4;
+			}
+			EndCovCase;
+			CovCase("pink") {
+				color=5;
+			}
+			EndCovCase;
+			CovCase("yellow") {
+				color=6;
+			}
+			EndCovCase;
+			CovCase("cyan") {
+				color=7;
+			}
+			EndCovCase;
+		}
+		EndCovSwitch;
+		return color;
+	}
+	cov::any darwin_pixel(array& args)
+	{
+		char ch=args.at(0).const_val<std::string>().at(0);
+		bool bright=args.at(1).const_val<bool>();
+		bool underline=args.at(2).const_val<bool>();
+		darwin::colors fc,bc;
+		switch(int(args.at(3).const_val<number>())) {
+		case 0:
+			fc=darwin::colors::black;
+			break;
+		case 1:
+			fc=darwin::colors::white;
+			break;
+		case 2:
+			fc=darwin::colors::red;
+			break;
+		case 3:
+			fc=darwin::colors::green;
+			break;
+		case 4:
+			fc=darwin::colors::blue;
+			break;
+		case 5:
+			fc=darwin::colors::pink;
+			break;
+		case 6:
+			fc=darwin::colors::yellow;
+			break;
+		case 7:
+			fc=darwin::colors::cyan;
+			break;
+		}
+		switch(int(args.at(4).const_val<number>())) {
+		case 0:
+			bc=darwin::colors::black;
+			break;
+		case 1:
+			bc=darwin::colors::white;
+			break;
+		case 2:
+			bc=darwin::colors::red;
+			break;
+		case 3:
+			bc=darwin::colors::green;
+			break;
+		case 4:
+			bc=darwin::colors::blue;
+			break;
+		case 5:
+			bc=darwin::colors::pink;
+			break;
+		case 6:
+			bc=darwin::colors::yellow;
+			break;
+		case 7:
+			bc=darwin::colors::cyan;
+			break;
+		}
+		return darwin::pixel(ch,bright,underline,fc,bc);
+	}
+	cov::any darwin_picture(array& args)
+	{
+		if(args.empty())
+			return darwin::picture();
+		else
+			return darwin::picture(args.at(0).const_val<number>(),args.at(1).const_val<number>());
+	}
 	void init()
 	{
-		// Basic I/O
-		storage.add_var_global("Exec", native_interface([](std::deque<cov::any>& args)->number {
-			string path=args.at(0).const_val<string>();
-			const char* arg[]={"CovBasic",path.c_str()};
-			return ::main(2,arg);
-		}));
-		storage.add_var_global("Print", native_interface([](std::deque<cov::any>& args)->number {
-			for(auto& it:args)
-				std::cout<<it;
-			std::cout<<std::endl;
-			return 0;
-		}));
-		storage.add_var_global("Input", native_interface([](std::deque<cov::any>& args)->number {
-			if(args.empty()) {
-				number in;
-				std::cin>>in;
-				return in;
-			}
-			for(auto& it:args) {
-				string tmp;
-				std::cin>>tmp;
-				it.assign(parse_value(tmp),true);
-			}
-			return 0;
-		}));
-		storage.add_var_global("PrintType", native_interface([](std::deque<cov::any>& args)->number {
-			for(auto& it:args) {
-				CovSwitch(it.type()) {
-					CovCase(typeid(number)) {
-						std::cout<<"Types::Number"<<std::endl;
-					}
-					EndCovCase;
-					CovCase(typeid(boolean)) {
-						std::cout<<"Types::Boolean"<<std::endl;
-					}
-					EndCovCase;
-					CovCase(typeid(string)) {
-						std::cout<<"Types::String"<<std::endl;
-					}
-					EndCovCase;
-					CovCase(typeid(array)) {
-						std::cout<<"Types::Array"<<std::endl;
-					}
-					EndCovCase;
-					CovCase(typeid(void)) {
-						std::cout<<"Types::Null"<<std::endl;
-					}
-					EndCovCase;
-				}
-				EndCovSwitch;
-			}
-			return 0;
-		}));
-		storage.add_var_global("Time", native_interface([](std::deque<cov::any>& args)->number {
-			return cov::timer::time(cov::timer::time_unit::milli_sec);
-		}));
-		storage.add_var_global("Delay", native_interface([](std::deque<cov::any>& args)->number {
-			cov::timer::delay(cov::timer::time_unit::milli_sec,args.at(0).val<number>());
-			return 0;
-		}));
-		storage.add_var_global("Rand", native_interface([](std::deque<cov::any>& args)->number {
-			return darwin::rand<number>(args.at(0).const_val<number>(),args.at(1).const_val<number>());
-		}));
-		storage.add_var_global("RandInt", native_interface([](std::deque<cov::any>& args)->number {
-			return darwin::rand<long>(args.at(0).const_val<number>(),args.at(1).const_val<number>());
-		}));
-		storage.add_var_global("Exit", native_interface([](std::deque<cov::any>& args)->number {
-			if(args.empty())
-				darwin::runtime.exit(0);
-			else
-				darwin::runtime.exit(args.at(0).val<number>());
-			return 0;
-		}));
-		// File I/O
-		storage.add_var_global("OpenFile", native_interface([](std::deque<cov::any>& args)->number {
-			number serial=-1;
-			CovSwitch(args.at(1).const_val<string>()) {
-				CovDefault {
-					Darwin_Error("Uknow file method.");
-				} EndCovCase;
-				CovCase("Read") {
-					std::ifstream* ifs=new std::ifstream(args.at(0).const_val<string>());
-					if(*ifs) {
-						files.push_back(ifs);
-						serial=files.size()-1;
-					} else
-						delete ifs;
-				}
-				EndCovCase;
-				CovCase("Write") {
-					std::ofstream* ofs=new std::ofstream(args.at(0).const_val<string>());
-					if(*ofs) {
-						files.push_back(ofs);
-						serial=files.size()-1;
-					} else
-						delete ofs;
-				}
-				EndCovCase;
-			}
-			EndCovSwitch;
-			return serial;
-		}));
-		storage.add_var_global("CloseFile", native_interface([](std::deque<cov::any>& args)->number {
-			cov::any& fs=files.at(args.at(0).const_val<number>());
-			CovSwitch(fs.type()) {
-				CovCase(typeid(std::ifstream*)) {
-					delete fs.val<std::ifstream*>(true);
-				}
-				EndCovCase;
-				CovCase(typeid(std::ofstream*)) {
-					delete fs.val<std::ofstream*>(true);
-				}
-				EndCovCase;
-			}
-			EndCovSwitch;
-			return 0;
-		}));
-		storage.add_var_global("WriteFile", native_interface([](std::deque<cov::any>& args)->number {
-			cov::any& fs=files.at(args.at(0).const_val<number>());
-			if(fs.type()!=typeid(std::ofstream*))
-				Darwin_Error("Write read-only file.");
-			std::ofstream* ofs=fs.val<std::ofstream*>(true);
-			for(std::size_t i=1; i<args.size(); ++i)
-				*ofs<<args.at(i);
-			*ofs<<std::endl;
-			return 0;
-		}));
-		storage.add_var_global("ReadFile", native_interface([](std::deque<cov::any>& args)->number {
-			cov::any& fs=files.at(args.at(0).const_val<number>());
-			if(fs.type()!=typeid(std::ifstream*))
-				Darwin_Error("Write write-only file.");
-			std::ifstream* ifs=fs.val<std::ifstream*>(true);
-			for(std::size_t i=1; i<args.size(); ++i) {
-				string tmp;
-				if(!(*ifs>>tmp))
-					return -1;
-				args.at(i).assign(parse_value(tmp),true);
-			}
-			return 0;
-		}));
-		// String
-		storage.add_var_global("SizeOfString", native_interface([](std::deque<cov::any>& args)->number {
-			return args.at(0).const_val<string>().size();
-		}));
-		storage.add_var_global("AppendString", native_interface([](std::deque<cov::any>& args)->number {
-			args.at(0).val<string>(true).append(args.at(1).const_val<string>());
-			return 0;
-		}));
-		storage.add_var_global("CutString", native_interface([](std::deque<cov::any>& args)->number {
-			if(args.empty())
-				args.at(0).val<string>(true).pop_back();
-			else{
-				for(std::size_t i=0; i<args.at(1).const_val<number>(); ++i)
-					args.at(0).val<string>(true).pop_back();
-			}
-			return 0;
-		}));
-		storage.add_var_global("ClearString", native_interface([](std::deque<cov::any>& args)->number {
-			args.at(0).val<string>(true).clear();
-			return 0;
-		}));
-		// Array
-		storage.add_var_global("SizeOfArray", native_interface([](std::deque<cov::any>& args)->number {
-			return args.at(0).const_val<array>().size();
-		}));
-		storage.add_var_global("PushFrontArray", native_interface([](std::deque<cov::any>& args)->number {
-			args.at(0).val<array>(true).push_front(args.at(1));
-			return 0;
-		}));
-		storage.add_var_global("PopFrontArray", native_interface([](std::deque<cov::any>& args)->number {
-			args.at(0).val<array>(true).pop_front();
-			return 0;
-		}));
-		storage.add_var_global("PushBackArray", native_interface([](std::deque<cov::any>& args)->number {
-			args.at(0).val<array>(true).push_back(args.at(1));
-			return 0;
-		}));
-		storage.add_var_global("PopBackArray", native_interface([](std::deque<cov::any>& args)->number {
-			args.at(0).val<array>(true).pop_back();
-			return 0;
-		}));
-		storage.add_var_global("ClearArray", native_interface([](std::deque<cov::any>& args)->number {
-			args.at(0).val<array>(true).clear();
-			return 0;
-		}));
-		storage.add_var_global("ResizeArray", native_interface([](std::deque<cov::any>& args)->number {
-			args.at(0).val<array>(true).resize(args.at(1).val<number>());
-			return 0;
-		}));
-		// Mathematics
-		storage.add_var_global("e",number(2.7182818284));
-		storage.add_var_global("pi",number(3.1415926535));
-		storage.add_var_global("abs", native_interface([](std::deque<cov::any>& args)->number {
-			return std::abs(args.at(0).val<number>());
-		}));
-		storage.add_var_global("ln", native_interface([](std::deque<cov::any>& args)->number {
-			return std::log(args.at(0).val<number>());
-		}));
-		storage.add_var_global("log", native_interface([](std::deque<cov::any>& args)->number {
-			if(args.size()==1)
-				return std::log10(args.at(0).val<number>());
-			else
-				return std::log(args.at(1).val<number>()/args.at(0).val<number>());
-		}));
-		storage.add_var_global("sin", native_interface([](std::deque<cov::any>& args)->number {
-			return std::sin(args.at(0).val<number>());
-		}));
-		storage.add_var_global("cos", native_interface([](std::deque<cov::any>& args)->number {
-			return std::cos(args.at(0).val<number>());
-		}));
-		storage.add_var_global("tan", native_interface([](std::deque<cov::any>& args)->number {
-			return std::tan(args.at(0).val<number>());
-		}));
-		storage.add_var_global("asin", native_interface([](std::deque<cov::any>& args)->number {
-			return std::sin(args.at(0).val<number>());
-		}));
-		storage.add_var_global("acos", native_interface([](std::deque<cov::any>& args)->number {
-			return std::cos(args.at(0).val<number>());
-		}));
-		storage.add_var_global("atan", native_interface([](std::deque<cov::any>& args)->number {
-			return std::tan(args.at(0).val<number>());
-		}));
-		storage.add_var_global("sqrt", native_interface([](std::deque<cov::any>& args)->number {
-			return std::sqrt(args.at(0).val<number>());
-		}));
-		storage.add_var_global("root", native_interface([](std::deque<cov::any>& args)->number {
-			return std::pow(args.at(0).val<number>(),number(1)/args.at(1).val<number>());
-		}));
-		storage.add_var_global("pow", native_interface([](std::deque<cov::any>& args)->number {
-			return std::pow(args.at(0).val<number>(),args.at(1).val<number>());
-		}));
-		// Graphics
-		storage.add_var_global("InitGraphics", native_interface([](std::deque<cov::any>& args)->number {
-			darwin::runtime.load(args.at(0).const_val<std::string>());
-			return 0;
-		}));
-		storage.add_var_global("FitDrawable", native_interface([](std::deque<cov::any>& args)->number {
-			darwin::runtime.fit_drawable();
-			return 0;
-		}));
-		storage.add_var_global("SetFrameLimit", native_interface([](std::deque<cov::any>& args)->number {
-			clock.set_freq(args.at(0).const_val<number>());
-			return 0;
-		}));
-		storage.add_var_global("UpdateDrawable", native_interface([](std::deque<cov::any>& args)->number {
-			darwin::runtime.update_drawable();
-			clock.sync();
-			clock.reset();
-			return 0;
-		}));
-		storage.add_var_global("ClearDrawable", native_interface([](std::deque<cov::any>& args)->number {
-			darwin::runtime.get_drawable()->clear();
-			return 0;
-		}));
-		storage.add_var_global("FillDrawable", native_interface([](std::deque<cov::any>& args)->number {
-			darwin::runtime.get_drawable()->fill(pencil);
-			return 0;
-		}));
-		storage.add_var_global("GetDrawableHeight", native_interface([](std::deque<cov::any>& args)->number {
-			return darwin::runtime.get_drawable()->get_height();
-		}));
-		storage.add_var_global("GetDrawableWidth", native_interface([](std::deque<cov::any>& args)->number {
-			return darwin::runtime.get_drawable()->get_width();
-		}));
-		storage.add_var_global("DrawPoint", native_interface([](std::deque<cov::any>& args)->number {
-			darwin::runtime.get_drawable()->draw_pixel(args.at(0).const_val<number>(),args.at(1).const_val<number>(),pencil);
-			return 0;
-		}));
-		storage.add_var_global("DrawLine", native_interface([](std::deque<cov::any>& args)->number {
-			darwin::runtime.get_drawable()->draw_line(args.at(0).const_val<number>(),args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<number>(),pencil);
-			return 0;
-		}));
-		storage.add_var_global("DrawRect", native_interface([](std::deque<cov::any>& args)->number {
-			darwin::runtime.get_drawable()->draw_rect(args.at(0).const_val<number>(),args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<number>(),pencil);
-			return 0;
-		}));
-		storage.add_var_global("FillRect", native_interface([](std::deque<cov::any>& args)->number {
-			darwin::runtime.get_drawable()->fill_rect(args.at(0).const_val<number>(),args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<number>(),pencil);
-			return 0;
-		}));
-		storage.add_var_global("DrawTriangle", native_interface([](std::deque<cov::any>& args)->number {
-			darwin::runtime.get_drawable()->draw_triangle(args.at(0).const_val<number>(),args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<number>(),args.at(4).const_val<number>(),args.at(5).const_val<number>(),pencil);
-			return 0;
-		}));
-		storage.add_var_global("FillTriangle", native_interface([](std::deque<cov::any>& args)->number {
-			darwin::runtime.get_drawable()->fill_triangle(args.at(0).const_val<number>(),args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).const_val<number>(),args.at(4).const_val<number>(),args.at(5).const_val<number>(),pencil);
-			return 0;
-		}));
-		storage.add_var_global("DrawString", native_interface([](std::deque<cov::any>& args)->number {
-			darwin::runtime.get_drawable()->draw_string(args.at(0).const_val<number>(),args.at(1).const_val<number>(),args.at(2).const_val<string>(),pencil);
-			return 0;
-		}));
-		storage.add_var_global("IsKeyboardHit", native_interface([](std::deque<cov::any>& args)->number {
-			if(darwin::runtime.is_kb_hit())
-				return 0;
-			else
-				return -1;
-		}));
-		storage.add_var_global("GetKeyboardHit", native_interface([](std::deque<cov::any>& args)->number {
-			return darwin::runtime.get_kb_hit();
-		}));
-		storage.add_var_global("GetAscii", native_interface([](std::deque<cov::any>& args)->number {
-			return int(args.at(0).val<string>().at(0));
-		}));
-		storage.add_var_global("GetColor", native_interface([](std::deque<cov::any>& args)->number {
-			number color;
-			CovSwitch(args.at(0).val<string>()) {
-				CovCase("Black") {
-					color=0;
-				}
-				EndCovCase;
-				CovCase("White") {
-					color=1;
-				}
-				EndCovCase;
-				CovCase("Red") {
-					color=2;
-				}
-				EndCovCase;
-				CovCase("Green") {
-					color=3;
-				}
-				EndCovCase;
-				CovCase("Blue") {
-					color=4;
-				}
-				EndCovCase;
-				CovCase("Pink") {
-					color=5;
-				}
-				EndCovCase;
-				CovCase("Yellow") {
-					color=6;
-				}
-				EndCovCase;
-				CovCase("Cyan") {
-					color=7;
-				}
-				EndCovCase;
-			}
-			EndCovSwitch;
-			return color;
-		}));
-		storage.add_var_global("SetPencil", native_interface([](std::deque<cov::any>& args)->number {
-			char ch=args.at(0).const_val<std::string>().at(0);
-			bool bright=args.at(1).const_val<bool>();
-			bool underline=args.at(2).const_val<bool>();
-			darwin::colors fc,bc;
-			switch(int(args.at(3).const_val<number>())) {
-			case 0:
-				fc=darwin::colors::black;
-				break;
-			case 1:
-				fc=darwin::colors::white;
-				break;
-			case 2:
-				fc=darwin::colors::red;
-				break;
-			case 3:
-				fc=darwin::colors::green;
-				break;
-			case 4:
-				fc=darwin::colors::blue;
-				break;
-			case 5:
-				fc=darwin::colors::pink;
-				break;
-			case 6:
-				fc=darwin::colors::yellow;
-				break;
-			case 7:
-				fc=darwin::colors::cyan;
-				break;
-			}
-			switch(int(args.at(4).const_val<number>())) {
-			case 0:
-				bc=darwin::colors::black;
-				break;
-			case 1:
-				bc=darwin::colors::white;
-				break;
-			case 2:
-				bc=darwin::colors::red;
-				break;
-			case 3:
-				bc=darwin::colors::green;
-				break;
-			case 4:
-				bc=darwin::colors::blue;
-				break;
-			case 5:
-				bc=darwin::colors::pink;
-				break;
-			case 6:
-				bc=darwin::colors::yellow;
-				break;
-			case 7:
-				bc=darwin::colors::cyan;
-				break;
-			}
-			pencil=darwin::pixel(ch,bright,underline,fc,bc);
-			return 0;
-		}));
+		add_function(input);
+		add_function(getline);
+		add_function(print);
+		add_function(println);
+		add_function(time);
+		add_function(delay);
+		add_function(rand);
+		add_function(randint);
+		add_function(clone);
+		add_function(append_string);
+		add_function(cut_string);
+		add_function(clear_string);
+		add_function(push_front_array);
+		add_function(pop_front_array);
+		add_function(push_back_array);
+		add_function(pop_back_array);
+		add_function(clear_array);
+		add_function(abs);
+		add_function(ln);
+		add_function(log);
+		add_function(sin);
+		add_function(cos);
+		add_function(tan);
+		add_function(asin);
+		add_function(acos);
+		add_function(atan);
+		add_function(sqrt);
+		add_function(root);
+		add_function(pow);
+		add_function(init_graphics);
+		add_function(fit_drawable);
+		add_function(set_frame_limit);
+		add_function(update_drawable);
+		add_function(clear_drawable);
+		add_function(fill_drawable);
+		add_function(get_height_drawable);
+		add_function(get_width_drawable);
+		add_function(draw_point);
+		add_function(draw_picture);
+		add_function(draw_line);
+		add_function(draw_rect);
+		add_function(fill_rect);
+		add_function(draw_triangle);
+		add_function(fill_triangle);
+		add_function(draw_string);
+		add_function(is_kb_hit);
+		add_function(get_kb_hit);
+		add_function(get_ascii);
+		add_function(get_color);
+		add_function(darwin_pixel);
+		add_function(darwin_picture);
+		add_function_name("sizeof",_sizeof);
 	}
 }
-int main(int args,const char** argv)
+int main(int args_size,const char* args[])
 {
 	using namespace cov_basic;
-	init();
-	std::string str;
-	if(args>1) {
-		std::ifstream in(argv[1]);
-		while(std::getline(in,str))
-			parse(str);
+	if(args_size>1) {
+		std::deque<char> buff;
+		std::deque<token_base*> tokens;
+		std::deque<statement_base*> statements;
+		std::ifstream in(args[1]);
+		std::string line;
+		while(std::getline(in,line)) {
+			for(auto& c:line)
+				buff.push_back(c);
+			buff.push_back('\n');
+		}
+		init();
+		translate_into_tokens(buff,tokens);
+		translate_into_statements(tokens,statements);
+		for(auto& s:statements)
+			s->run();
 	} else {
-		std::cout<<"Covariant Basic Parser 17.20\nCopyright (C) 2017 Covariant Studio\nPlease visit https://github.com/mikecovlee/covbasic for help."<<std::endl;
-		while(std::getline(std::cin,str))
-			parse(str);
+		std::cout<<args[0]<<": fatal error: no input files\ncompilation terminated."<<std::endl;
 	}
 	return 0;
 }
