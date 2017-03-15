@@ -1,0 +1,140 @@
+define head_pix=darwin_pixel("#",true,false,get_color("white"),get_color("black"))
+define body_pix=darwin_pixel("+",true,false,get_color("white"),get_color("black"))
+define food_pix=darwin_pixel("@",true,false,get_color("white"),get_color("black"))
+define snake_body={}
+define snake_head= {0,0}
+define food= {0,0}
+define heading=2
+define init_long=5
+define god_mode=false
+define cross_wall=false
+define hard=3
+define score=0
+
+function die()
+	define str0="You die!Your score is "+score
+	define str1="Press any key to continue..."
+	while(true)
+		if(is_kb_hit())
+			get_kb_hit()
+			break
+		end
+		clear_drawable()
+		fill_drawable(darwin_pixel(" ",true,false,get_color("white"),get_color("red")))
+		draw_string(0.5*(get_width()-str0.size()),0.5*pic->get_height(),str0,darwin::pixel(' ',true,false,darwin::colors::white,darwin::colors::red));
+		pic->draw_string(0.5*(get_width_drawable()-sizeof(str1)),get_height_drawable()-1,str1,darwin_pixel(' ',true,false,darwin::colors::white,darwin::colors::red));
+		darwin::runtime.update_drawable();
+		clock.sync();
+	}
+}
+void gen_food()
+{
+	auto pic=darwin::runtime.get_drawable();
+	bool is_fit=true;
+	while(is_fit) {
+		food[0]=darwin::rand<int>(0,pic->get_width()-1);
+		food[1]=darwin::rand<int>(0,pic->get_height()-1);
+		is_fit=false;
+		for(auto& p:snake_body) {
+			if(p[0]==food[0]&&p[1]==food[1])
+				is_fit=true;
+		}
+	}
+}
+void start()
+{
+	auto pic=darwin::runtime.get_drawable();
+	darwin::sync_clock clock(30);
+	snake_head= {init_long,0.5*pic->get_height()};
+	for(int i=0; i<init_long-1; ++i)
+		snake_body.push_back({snake_head[0]-i,snake_head[1]});
+	gen_food();
+	int frame=0;
+	while(true) {
+		clock.reset();
+		if(darwin::runtime.is_kb_hit()) {
+			switch(darwin::runtime.get_kb_hit()) {
+			case 'w':
+				if(god_mode||heading!=-2)
+					heading=-1;
+				break;
+			case 's':
+				if(god_mode||heading!=-1)
+					heading=-2;
+				break;
+			case 'a':
+				if(god_mode||heading!=2)
+					heading=1;
+				break;
+			case 'd':
+				if(god_mode||heading!=1)
+					heading=2;
+				break;
+			}
+		}
+		if(frame==hard) {
+			switch(heading) {
+			case 1:
+				--snake_head[0];
+				break;
+			case 2:
+				++snake_head[0];
+				break;
+			case -1:
+				--snake_head[1];
+				break;
+			case -2:
+				++snake_head[1];
+				break;
+			}
+			if(cross_wall) {
+				if(snake_head[0]<0)
+					snake_head[0]+=pic->get_width()-1;
+				else if(snake_head[0]>pic->get_width()-1)
+					snake_head[0]-=pic->get_width()-1;
+				else if(snake_head[1]<0)
+					snake_head[1]+=pic->get_height()-1;
+				else if(snake_head[1]>pic->get_height()-1)
+					snake_head[1]-=pic->get_height()-1;
+			} else if(snake_head[0]<0||snake_head[0]>pic->get_width()-1||snake_head[1]<0||snake_head[1]>pic->get_height()-1) {
+				die();
+				return;
+			}
+			if(!god_mode) {
+				for(auto& p:snake_body) {
+					if(p[0]==snake_head[0]&&p[1]==snake_head[1]) {
+						die();
+						return;
+					}
+				}
+			}
+			snake_body.push_front(snake_head);
+			if(snake_head[0]==food[0]&&snake_head[1]==food[1]) {
+				gen_food();
+				score+=10*(1.0/hard);
+			} else
+				snake_body.pop_back();
+			frame=0;
+		}
+		pic->clear();
+		for(auto& p:snake_body)
+			pic->draw_pixel(p[0],p[1],body_pix);
+		pic->draw_pixel(snake_head[0],snake_head[1],head_pix);
+		pic->draw_pixel(food[0],food[1],food_pix);
+		darwin::runtime.update_drawable();
+		++frame;
+		clock.sync();
+	}
+}
+int main()
+{
+	darwin::timer::delay(1000);
+	darwin::runtime.load("./darwin.module");
+	darwin::runtime.fit_drawable();
+	while(true) {
+		snake_body.clear();
+		heading=2;
+		start();
+	}
+	return 0;
+}
