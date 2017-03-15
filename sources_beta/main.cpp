@@ -117,6 +117,13 @@ namespace cov_basic {
 			throw syntax_error("Get size of non-array object.");
 		return number(args.front().const_val<array>().size());
 	}
+	cov::any clone(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		args.front().clone();
+		return args.front();
+	}
 	void init()
 	{
 		add_function(input);
@@ -127,6 +134,7 @@ namespace cov_basic {
 		add_function(delay);
 		add_function(rand);
 		add_function(randint);
+		add_function(clone);
 		add_function_name("sizeof",_sizeof);
 	}
 }
