@@ -335,52 +335,28 @@ namespace cov_basic {
 		}
 		throw;
 	}
-	cov::any parse_inc(token_base* a,token_base* b)
+	cov::any parse_inc(cov::any a,cov::any b)
 	{
-		if(a==nullptr) {
-			if(b==nullptr)
+		if(a.usable()) {
+			if(b.usable())
 				throw;
-			if(b->get_type()!=token_types::id)
-				throw;
-			std::string id=dynamic_cast<token_id*>(b)->get_id();
-			cov::any& val=get_value(id);
-			if(val.type()!=typeid(number))
-				throw;
-			return val=val.const_val<number>()+1;
+			return a.val<number>(true)++;
 		} else {
-			if(b!=nullptr)
+			if(!b.usable())
 				throw;
-			if(a->get_type()!=token_types::id)
-				throw;
-			std::string id=dynamic_cast<token_id*>(a)->get_id();
-			cov::any& val=get_value(id);
-			if(val.type()!=typeid(number))
-				throw;
-			return val=val.const_val<number>()+1;
+			return ++b.val<number>(true);
 		}
 	}
-	cov::any parse_dec(token_base* a,token_base* b)
+	cov::any parse_dec(cov::any a,cov::any b)
 	{
-		if(a==nullptr) {
-			if(b==nullptr)
+		if(a.usable()) {
+			if(b.usable())
 				throw;
-			if(b->get_type()!=token_types::id)
-				throw;
-			std::string id=dynamic_cast<token_id*>(b)->get_id();
-			cov::any& val=get_value(id);
-			if(val.type()!=typeid(number))
-				throw;
-			return val=val.const_val<number>()-1;
+			return a.val<number>(true)--;
 		} else {
-			if(b!=nullptr)
+			if(!b.usable())
 				throw;
-			if(a->get_type()!=token_types::id)
-				throw;
-			std::string id=dynamic_cast<token_id*>(a)->get_id();
-			cov::any& val=get_value(id);
-			if(val.type()!=typeid(number))
-				throw;
-			return val=val.const_val<number>()-1;
+			return --b.val<number>(true);
 		}
 	}
 	cov::any parse_fcall(const cov::any& a,cov::any b)
@@ -499,10 +475,10 @@ namespace cov_basic {
 				return parse_not(parse_expr(it.right()));
 				break;
 			case signal_types::inc_:
-				return parse_inc(it.left().data(),it.right().data());
+				return parse_inc(parse_expr(it.left()),parse_expr(it.right()));
 				break;
 			case signal_types::dec_:
-				return parse_dec(it.left().data(),it.right().data());
+				return parse_dec(parse_expr(it.left()),parse_expr(it.right()));
 				break;
 			case signal_types::fcall_:
 				return parse_fcall(parse_expr(it.left()),parse_expr(it.right()));
