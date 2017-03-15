@@ -1,6 +1,7 @@
 #include "./covbasic.hpp"
 #include <iostream>
 #include <fstream>
+#include <cmath>
 #define add_function(name) cov_basic::storage.add_var_global(#name,cov_basic::native_interface(name));
 #define add_function_name(name,func) cov_basic::storage.add_var_global(name,cov_basic::native_interface(func));
 namespace cov_basic {
@@ -124,8 +125,137 @@ namespace cov_basic {
 		args.front().clone();
 		return args.front();
 	}
+	// String
+	cov::any append_string(array& args)
+	{
+		if(args.size()!=2)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(string))
+			throw syntax_error("Wrong type of arguments.(Request String)");
+		args.at(0).val<string>(true).append(args.at(1).to_string());
+		return number(0);
+	}
+	cov::any cut_string(array& args)
+	{
+		if(args.size()!=2)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(string)||args.at(1).type()!=typeid(number))
+			throw syntax_error("Wrong type of arguments.(Request String,Number)");
+		for(std::size_t i=0; i<args.at(1).const_val<number>(); ++i)
+			args.at(0).val<string>(true).pop_back();
+		return number(0);
+	}
+	cov::any clear_string(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(string))
+			throw syntax_error("Wrong type of arguments.(Request String)");
+		args.at(0).val<string>(true).clear();
+		return number(0);
+	}
+	// Array
+	cov::any push_front_array(array& args)
+	{
+		if(args.size()!=2)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(array))
+			throw syntax_error("Wrong type of arguments.(Request Array)");
+		args.at(0).val<array>(true).push_front(args.at(1));
+		return number(0);
+	}
+	cov::any pop_front_array(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(array))
+			throw syntax_error("Wrong type of arguments.(Request Array)");
+		args.at(0).val<array>(true).pop_front();
+		return number(0);
+	}
+	cov::any push_back_array(array& args)
+	{
+		if(args.size()!=2)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(array))
+			throw syntax_error("Wrong type of arguments.(Request Array)");
+		args.at(0).val<array>(true).push_back(args.at(1));
+		return number(0);
+	}
+	cov::any pop_back_array(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(array))
+			throw syntax_error("Wrong type of arguments.(Request Array)");
+		args.at(0).val<array>(true).pop_back();
+		return number(0);
+	}
+	cov::any clear_array(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(array))
+			throw syntax_error("Wrong type of arguments.(Request Array)");
+		args.at(0).val<array>(true).clear();
+		return number(0);
+	}
+	// Mathematics
+	cov::any abs(array& args)
+	{
+		return number(std::abs(args.at(0).const_val<number>()));
+	}
+	cov::any ln(array& args)
+	{
+		return number(std::log(args.at(0).const_val<number>()));
+	}
+	cov::any log(array& args)
+	{
+		if(args.size()==1)
+			return number(std::log10(args.at(0).const_val<number>()));
+		else
+			return number(std::log(args.at(1).const_val<number>()/args.at(0).const_val<number>()));
+	}
+	cov::any sin(array& args)
+	{
+		return number(std::sin(args.at(0).const_val<number>()));
+	}
+	cov::any cos(array& args)
+	{
+		return number(std::cos(args.at(0).const_val<number>()));
+	}
+	cov::any tan(array& args)
+	{
+		return number(std::tan(args.at(0).const_val<number>()));
+	}
+	cov::any asin(array& args)
+	{
+		return number(std::sin(args.at(0).const_val<number>()));
+	}
+	cov::any acos(array& args)
+	{
+		return number(std::cos(args.at(0).const_val<number>()));
+	}
+	cov::any atan(array& args)
+	{
+		return number(std::tan(args.at(0).const_val<number>()));
+	}
+	cov::any sqrt(array& args)
+	{
+		return number(std::sqrt(args.at(0).const_val<number>()));
+	}
+	cov::any root(array& args)
+	{
+		return number(std::pow(args.at(0).const_val<number>(),number(1)/args.at(1).const_val<number>()));
+	}
+	cov::any pow(array& args)
+	{
+		return number(std::pow(args.at(0).const_val<number>(),args.at(1).const_val<number>()));
+	}
 	void init()
 	{
+		storage.add_var_global("e",number(2.7182818284));
+		storage.add_var_global("pi",number(3.1415926535));
 		add_function(input);
 		add_function(getline);
 		add_function(print);
@@ -135,6 +265,26 @@ namespace cov_basic {
 		add_function(rand);
 		add_function(randint);
 		add_function(clone);
+		add_function(append_string);
+		add_function(cut_string);
+		add_function(clear_string);
+		add_function(push_front_array);
+		add_function(pop_front_array);
+		add_function(push_back_array);
+		add_function(pop_back_array);
+		add_function(clear_array);
+		add_function(abs);
+		add_function(ln);
+		add_function(log);
+		add_function(sin);
+		add_function(cos);
+		add_function(tan);
+		add_function(asin);
+		add_function(acos);
+		add_function(atan);
+		add_function(sqrt);
+		add_function(root);
+		add_function(pow);
 		add_function_name("sizeof",_sizeof);
 	}
 }

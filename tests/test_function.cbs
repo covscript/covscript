@@ -1,13 +1,13 @@
-Function test(a)
-    Print(a)
-    If a>0 Then
-        Return test(a-1)
-    Else
-        Return a
-    End
-End
-Print("Please enter a intger:")
-Define in=0
-Input(in)
+function test(a)
+    println(a)
+    if(a>0)
+        return test(a-1)
+    else
+        return a
+    end
+end
+println("Please enter a intger:")
+define in=0
+input(in)
 test(in)
-Print(in)
+println(in)

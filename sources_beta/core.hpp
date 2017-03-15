@@ -41,8 +41,8 @@ namespace cov_basic {
 		std::string mWhat="Covariant Basic Syntax Error";
 	public:
 		syntax_error()=default;
-		syntax_error(const std::string& str) noexcept:
-			mWhat("Covariant Basic Syntax Error:"+str) {}
+	syntax_error(const std::string& str) noexcept:
+		mWhat("Covariant Basic Syntax Error:"+str) {}
 		syntax_error(const syntax_error&)=default;
 		syntax_error(syntax_error&&)=default;
 		virtual ~syntax_error()=default;

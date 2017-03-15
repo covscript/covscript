@@ -1,7 +1,8 @@
 define arr={}
 arr[10]=10
 define i=0
-while(i<sizeof(arr))
+define arr_size=sizeof(arr)
+while(i<arr_size)
 	println(arr[i])
 	++i
 end
