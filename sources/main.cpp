@@ -50,6 +50,14 @@ namespace cov_basic {
 		}
 		return str;
 	}
+	cov::any _clone(cov::any val)
+	{
+		val.clone();
+		if(val.type()==typeid(array))
+			for(cov::any& v:val.val<array>(true))
+				v.clone();
+		return val;
+	}
 	cov::any input(array& args)
 	{
 		if(args.empty()) {
@@ -127,8 +135,7 @@ namespace cov_basic {
 	{
 		if(args.size()!=1)
 			throw syntax_error("Wrong size of arguments.");
-		args.front().clone();
-		return args.front();
+		return _clone(args.front());
 	}
 // String
 	cov::any append_string(array& args)
@@ -166,7 +173,7 @@ namespace cov_basic {
 			throw syntax_error("Wrong size of arguments.");
 		if(args.at(0).type()!=typeid(array))
 			throw syntax_error("Wrong type of arguments.(Request Array)");
-		args.at(0).val<array>(true).push_front(args.at(1));
+		args.at(0).val<array>(true).push_front(_clone(args.at(1)));
 		return number(0);
 	}
 	cov::any pop_front_array(array& args)
@@ -184,7 +191,7 @@ namespace cov_basic {
 			throw syntax_error("Wrong size of arguments.");
 		if(args.at(0).type()!=typeid(array))
 			throw syntax_error("Wrong type of arguments.(Request Array)");
-		args.at(0).val<array>(true).push_back(args.at(1));
+		args.at(0).val<array>(true).push_back(_clone(args.at(1)));
 		return number(0);
 	}
 	cov::any pop_back_array(array& args)
@@ -581,6 +588,8 @@ int main(int args_size,const char* args[])
 		std::ifstream in(args[1]);
 		std::string line;
 		while(std::getline(in,line)) {
+			if(!line.empty()&&line[0]=='#')
+				continue;
 			for(auto& c:line)
 				buff.push_back(c);
 			buff.push_back('\n');

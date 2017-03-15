@@ -2,8 +2,8 @@ define head_pix=darwin_pixel("#",true,false,get_color("white"),get_color("black"
 define body_pix=darwin_pixel("+",true,false,get_color("white"),get_color("black"))
 define food_pix=darwin_pixel("@",true,false,get_color("white"),get_color("black"))
 define snake_body={}
-define snake_head= {0,0}
-define food= {0,0}
+define snake_head={0,0}
+define food={0,0}
 define heading=2
 define init_long=5
 define god_mode=false
@@ -21,120 +21,130 @@ function die()
 		end
 		clear_drawable()
 		fill_drawable(darwin_pixel(" ",true,false,get_color("white"),get_color("red")))
-		draw_string(0.5*(get_width()-str0.size()),0.5*pic->get_height(),str0,darwin::pixel(' ',true,false,darwin::colors::white,darwin::colors::red));
-		pic->draw_string(0.5*(get_width_drawable()-sizeof(str1)),get_height_drawable()-1,str1,darwin_pixel(' ',true,false,darwin::colors::white,darwin::colors::red));
-		darwin::runtime.update_drawable();
-		clock.sync();
-	}
-}
-void gen_food()
-{
-	auto pic=darwin::runtime.get_drawable();
-	bool is_fit=true;
-	while(is_fit) {
-		food[0]=darwin::rand<int>(0,pic->get_width()-1);
-		food[1]=darwin::rand<int>(0,pic->get_height()-1);
-		is_fit=false;
-		for(auto& p:snake_body) {
-			if(p[0]==food[0]&&p[1]==food[1])
-				is_fit=true;
-		}
-	}
-}
-void start()
-{
-	auto pic=darwin::runtime.get_drawable();
-	darwin::sync_clock clock(30);
-	snake_head= {init_long,0.5*pic->get_height()};
-	for(int i=0; i<init_long-1; ++i)
-		snake_body.push_back({snake_head[0]-i,snake_head[1]});
-	gen_food();
-	int frame=0;
-	while(true) {
-		clock.reset();
-		if(darwin::runtime.is_kb_hit()) {
-			switch(darwin::runtime.get_kb_hit()) {
-			case 'w':
+		draw_string(0.5*(get_width_drawable()-sizeof(str0)),0.5*get_height_drawable(),str0,darwin_pixel(" ",true,false,get_color("white"),get_color("red")))
+		draw_string(0.5*(get_width_drawable()-sizeof(str1)),get_height_drawable()-1,str1,darwin_pixel(" ",true,false,get_color("white"),get_color("red")))
+		update_drawable()
+	end
+end
+
+function gen_food()
+	define is_fit=true
+	while(is_fit)
+		food[0]=randint(0,get_width_drawable()-1)
+		food[1]=randint(0,get_height_drawable()-1)
+		is_fit=false
+		block
+			define i=0
+			while(i<sizeof(snake_body))
+				if(snake_body[i][0]==food[0]&&snake_body[i][1]==food[1])
+					is_fit=true
+				end
+				++i
+			end
+		end
+	end
+end
+
+delay(1000)
+init_graphics()
+fit_drawable()
+while(true)
+	clear_array(snake_body)
+	heading=2
+	snake_head={init_long,0.5*get_height_drawable()}
+	block
+		define i=0
+		while(i<init_long-1)
+			push_back_array(snake_body,{snake_head[0]-i,snake_head[1]})
+			++i
+		end
+	end
+	gen_food()
+	define frame=0
+	while(true)
+		if(is_kb_hit())
+			define ch=get_kb_hit()
+			if(ch==get_ascii("w"))
 				if(god_mode||heading!=-2)
-					heading=-1;
-				break;
-			case 's':
+					heading=-1
+				end
+			end
+			if(ch==get_ascii("s"))
 				if(god_mode||heading!=-1)
-					heading=-2;
-				break;
-			case 'a':
+					heading=-2
+				end
+			end
+			if(ch==get_ascii("a"))
 				if(god_mode||heading!=2)
-					heading=1;
-				break;
-			case 'd':
+					heading=1
+				end
+			end
+			if(ch==get_ascii("d"))
 				if(god_mode||heading!=1)
-					heading=2;
-				break;
-			}
-		}
-		if(frame==hard) {
-			switch(heading) {
-			case 1:
-				--snake_head[0];
-				break;
-			case 2:
-				++snake_head[0];
-				break;
-			case -1:
-				--snake_head[1];
-				break;
-			case -2:
-				++snake_head[1];
-				break;
-			}
-			if(cross_wall) {
+					heading=2
+				end
+			end
+		end
+			if(heading==1)
+				--snake_head[0]
+			end
+			if(heading==2)
+				++snake_head[0]
+			end
+			if(heading==-1)
+				--snake_head[1]
+			end
+			if(heading==-2)
+				++snake_head[1]
+			end
+			if(cross_wall)
 				if(snake_head[0]<0)
-					snake_head[0]+=pic->get_width()-1;
-				else if(snake_head[0]>pic->get_width()-1)
-					snake_head[0]-=pic->get_width()-1;
-				else if(snake_head[1]<0)
-					snake_head[1]+=pic->get_height()-1;
-				else if(snake_head[1]>pic->get_height()-1)
-					snake_head[1]-=pic->get_height()-1;
-			} else if(snake_head[0]<0||snake_head[0]>pic->get_width()-1||snake_head[1]<0||snake_head[1]>pic->get_height()-1) {
-				die();
-				return;
-			}
-			if(!god_mode) {
-				for(auto& p:snake_body) {
-					if(p[0]==snake_head[0]&&p[1]==snake_head[1]) {
-						die();
-						return;
-					}
-				}
-			}
-			snake_body.push_front(snake_head);
-			if(snake_head[0]==food[0]&&snake_head[1]==food[1]) {
-				gen_food();
-				score+=10*(1.0/hard);
-			} else
-				snake_body.pop_back();
-			frame=0;
-		}
-		pic->clear();
-		for(auto& p:snake_body)
-			pic->draw_pixel(p[0],p[1],body_pix);
-		pic->draw_pixel(snake_head[0],snake_head[1],head_pix);
-		pic->draw_pixel(food[0],food[1],food_pix);
-		darwin::runtime.update_drawable();
-		++frame;
-		clock.sync();
-	}
-}
-int main()
-{
-	darwin::timer::delay(1000);
-	darwin::runtime.load("./darwin.module");
-	darwin::runtime.fit_drawable();
-	while(true) {
-		snake_body.clear();
-		heading=2;
-		start();
-	}
-	return 0;
-}
+					snake_head[0]=snake_head[0]+get_width_drawable()-1
+				end
+				if(snake_head[0]>get_width_drawable()-1)
+					snake_head[0]=snake_head[0]-get_width_drawable()-1
+				end
+				if(snake_head[1]<0)
+					snake_head[1]=snake_head[1]+get_height_drawable()-1
+				end
+				if(snake_head[1]>get_height_drawable()-1)
+					snake_head[1]=snake_head[1]-get_height_drawable()-1
+				end
+			else
+				if(snake_head[0]<0||snake_head[0]>get_width_drawable()-1||snake_head[1]<0||snake_head[1]>get_height_drawable()-1)
+					die()
+					break
+				end
+			end
+			if(!god_mode)
+				block
+					define i=0
+					while(i<sizeof(snake_body))
+						if(snake_body[i][0]==snake_head[0]&&snake_body[i][1]==snake_head[1])
+							die()
+							break
+						end
+						++i
+					end
+				end
+			end
+			push_front_array(snake_body,snake_head)
+			if(snake_head[0]==food[0]&&snake_head[1]==food[1])
+				gen_food()
+				score=score+10*(1.0/hard)
+			else
+				pop_back_array(snake_body)
+			end
+		clear_drawable()
+		block
+			define i=0
+			while(i<sizeof(snake_body))
+				draw_point(snake_body[i][0],snake_body[i][1],body_pix)
+				++i
+			end
+		end
+		draw_point(snake_head[0],snake_head[1],head_pix)
+		draw_point(food[0],food[1],food_pix)
+		update_drawable()
+	end
+end

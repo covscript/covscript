@@ -412,7 +412,11 @@ namespace cov_basic {
 		case token_types::array: {
 			array arr;
 			for(auto& tree:dynamic_cast<token_array*>(token)->get_array())
-				arr.push_back(parse_expr(tree.root()));
+			{
+				cov::any val=parse_expr(tree.root());
+				val.clone();
+				arr.push_back(val);
+			}
 			return arr;
 		}
 		case token_types::arglist: {
