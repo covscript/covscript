@@ -10,7 +10,8 @@ namespace cov_basic {
 		{
 			return token_types::expr;
 		}
-		cov::tree<token_base*>& get_tree() noexcept {
+		cov::tree<token_base*>& get_tree() noexcept
+		{
 			return this->mTree;
 		}
 	};
@@ -23,7 +24,8 @@ namespace cov_basic {
 		{
 			return token_types::arglist;
 		}
-		std::deque<cov::tree<token_base*>>& get_arglist() noexcept {
+		std::deque<cov::tree<token_base*>>& get_arglist() noexcept
+		{
 			return this->mTreeList;
 		}
 	};
@@ -36,7 +38,8 @@ namespace cov_basic {
 		{
 			return token_types::array;
 		}
-		std::deque<cov::tree<token_base*>>& get_array() noexcept {
+		std::deque<cov::tree<token_base*>>& get_array() noexcept
+		{
 			return this->mTreeList;
 		}
 	};
@@ -111,9 +114,9 @@ namespace cov_basic {
 			case token_types::mblist: {
 				token_mblist* mbl=dynamic_cast<token_mblist*>(ptr);
 				if(mbl==nullptr)
-					throw;
+					throw syntax_error("Internal Error(Nullptr Access).");
 				if(mbl->get_list().size()!=1)
-					throw;
+					throw syntax_error("There are no more elements in middle bracket.");
 				kill_brackets(mbl->get_list().front());
 				cov::tree<token_base*> tree;
 				gen_tree(tree,mbl->get_list().front());
@@ -143,7 +146,7 @@ namespace cov_basic {
 					tokens.push_back(new token_arglist());
 					continue;
 				case signal_types::emb_:
-					throw;
+					throw syntax_error("Do not allow empty parentheses.");
 					break;
 				case signal_types::elb_:
 					tokens.push_back(new token_array());
@@ -181,7 +184,7 @@ namespace cov_basic {
 			if(obj!=nullptr&&obj->get_type()==token_types::sblist) {
 				token_sblist* sbl=dynamic_cast<token_sblist*>(obj);
 				if(sbl->get_list().size()!=1)
-					throw;
+					throw syntax_error("There are no more elements in small bracket.");
 				cov::tree<token_base*> t;
 				gen_tree(t,sbl->get_list().front());
 				obj=new token_expr(t);
@@ -230,7 +233,7 @@ namespace cov_basic {
 			if(obj!=nullptr&&obj->get_type()==token_types::sblist) {
 				token_sblist* sbl=dynamic_cast<token_sblist*>(obj);
 				if(sbl->get_list().size()!=1)
-					throw;
+					throw syntax_error("There are no more elements in small bracket.");
 				cov::tree<token_base*> t;
 				gen_tree(t,sbl->get_list().front());
 				obj=new token_expr(t);
@@ -261,7 +264,7 @@ namespace cov_basic {
 		}
 	}
 	enum class statement_types {
-	    expression_,block_,define_,if_,while_,for_,break_,continue_,function_,return_
+		expression_,block_,define_,if_,while_,for_,break_,continue_,function_,return_
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;

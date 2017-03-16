@@ -1,1 +1,1 @@
-g++ -std=c++11 -O3 ./sources/main.cpp -o CovBasic
+g++ -std=c++11 -static -fPIC -O3 ./sources/main.cpp -o cbs2

@@ -163,6 +163,11 @@ namespace cov_basic {
 			throw syntax_error("Wrong size of arguments.");
 		return _clone(args.front());
 	}
+	cov::any error(array& args)
+	{
+		throw lang_error(args.front().to_string().c_str());
+		return number(0);
+	}
 // String
 	cov::any append_string(array& args)
 	{
@@ -577,6 +582,7 @@ namespace cov_basic {
 		add_function(to_number);
 		add_function(to_string);
 		add_function(clone);
+		add_function(error);
 		add_function(append_string);
 		add_function(cut_string);
 		add_function(clear_string);

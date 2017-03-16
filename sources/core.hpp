@@ -41,13 +41,29 @@ namespace cov_basic {
 		std::string mWhat="Covariant Basic Syntax Error";
 	public:
 		syntax_error()=default;
-	syntax_error(const std::string& str) noexcept:
-		mWhat("Covariant Basic Syntax Error:"+str) {}
+		syntax_error(const std::string& str) noexcept:
+			mWhat("Covariant Basic Syntax Error:"+str) {}
 		syntax_error(const syntax_error&)=default;
 		syntax_error(syntax_error&&)=default;
 		virtual ~syntax_error()=default;
 		syntax_error& operator=(const syntax_error&)=default;
 		syntax_error& operator=(syntax_error&&)=default;
+		virtual const char* what() const noexcept override
+		{
+			return this->mWhat.c_str();
+		}
+	};
+	class lang_error final:public std::exception {
+		std::string mWhat="Covariant Basic Language Error";
+	public:
+		lang_error()=default;
+		lang_error(const std::string& str) noexcept:
+			mWhat("Covariant Basic Language Error:"+str) {}
+		lang_error(const lang_error&)=default;
+		lang_error(lang_error&&)=default;
+		virtual ~lang_error()=default;
+		lang_error& operator=(const lang_error&)=default;
+		lang_error& operator=(lang_error&&)=default;
 		virtual const char* what() const noexcept override
 		{
 			return this->mWhat.c_str();
