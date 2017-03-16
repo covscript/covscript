@@ -21,6 +21,7 @@ namespace cov_basic {
 				fcall_stack.pop_front();
 				cov::any retval=*this->mRetVal;
 				delete this->mRetVal;
+				this->mRetVal=nullptr;
 				return retval;
 			}
 		}
@@ -30,44 +31,24 @@ namespace cov_basic {
 	}
 	void statement_expression::run()
 	{
-		if(return_fcall)
-		{
-			return;
-		}
 		parse_expr(mTree.root());
 	}
 	void statement_define::run()
 	{
-		if(return_fcall)
-		{
-			return;
-		}
 		define_var=true;
 		parse_expr(mTree.root());
 		define_var=false;
 	}
 	void statement_break::run()
 	{
-		if(return_fcall)
-		{
-			return;
-		}
 		break_block=true;
 	}
 	void statement_continue::run()
 	{
-		if(return_fcall)
-		{
-			return;
-		}
 		continue_block=true;
 	}
 	void statement_block::run()
 	{
-		if(return_fcall)
-		{
-			return;
-		}
 		storage.add_domain();
 		for(auto& ptr:mBlock)
 		{
@@ -82,10 +63,6 @@ namespace cov_basic {
 	}
 	void statement_if::run()
 	{
-		if(return_fcall)
-		{
-			return;
-		}
 		storage.add_domain();
 		if(parse_expr(mTree.root()).const_val<boolean>()) {
 			if(mBlock!=nullptr) {
@@ -123,10 +100,6 @@ namespace cov_basic {
 	}
 	void statement_while::run()
 	{
-		if(return_fcall)
-		{
-			return;
-		}
 		storage.add_domain();
 		while(parse_expr(mTree.root()).const_val<boolean>()) {
 			for(auto& ptr:mBlock) {
@@ -151,20 +124,10 @@ namespace cov_basic {
 	}
 	void statement_function::run()
 	{
-		if(return_fcall)
-		{
-			return_fcall=false;
-			return;
-		}
 		storage.add_var(this->mName,this->mFunc);
 	}
 	void statement_return::run()
 	{
-		if(return_fcall)
-		{
-			return_fcall=false;
-			return;
-		}
 		if(fcall_stack.empty())
 			throw syntax_error("Return outside function.");
 		fcall_stack.front()->mRetVal=new cov::any(parse_expr(this->mTree.root()));

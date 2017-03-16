@@ -152,7 +152,6 @@ function start()
 		draw_point(snake_head[0],snake_head[1],head_pix)
 		draw_point(food[0],food[1],food_pix)
 		update_drawable()
-		darwin_log("draw once")
 		++frame
 	end
 end
@@ -161,7 +160,6 @@ delay(500)
 init_graphics()
 fit_drawable()
 while(true)
-	darwin_log("Run once")
 	clear_array(snake_body)
 	heading=2
 	start()
