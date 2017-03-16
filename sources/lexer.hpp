@@ -17,12 +17,14 @@ namespace cov_basic {
 	class token_base {
 		static garbage_collector<token_base> gc;
 	public:
-		static void* operator new(std::size_t size) {
+		static void* operator new(std::size_t size)
+		{
 			void* ptr=::operator new(size);
 			gc.add(ptr);
 			return ptr;
 		}
-		static void operator delete(void* ptr) {
+		static void operator delete(void* ptr)
+		{
 			gc.remove(ptr);
 			::operator delete(ptr);
 		}
@@ -37,7 +39,8 @@ namespace cov_basic {
 	public:
 		token_action()=delete;
 		token_action(action_types t):mType(t) {}
-		virtual token_types get_type() const noexcept override {
+		virtual token_types get_type() const noexcept override
+		{
 			return token_types::action;
 		}
 		action_types& get_action() noexcept {
@@ -49,7 +52,8 @@ namespace cov_basic {
 	public:
 		token_signal()=delete;
 		token_signal(signal_types t):mType(t) {}
-		virtual token_types get_type() const noexcept override {
+		virtual token_types get_type() const noexcept override
+		{
 			return token_types::signal;
 		}
 		signal_types& get_signal() noexcept {
@@ -61,7 +65,8 @@ namespace cov_basic {
 	public:
 		token_id()=delete;
 		token_id(const std::string& id):mId(id) {}
-		virtual token_types get_type() const noexcept override {
+		virtual token_types get_type() const noexcept override
+		{
 			return token_types::id;
 		}
 		std::string& get_id() noexcept {
@@ -73,7 +78,8 @@ namespace cov_basic {
 	public:
 		token_value()=delete;
 		token_value(const cov::any& val):mVal(val) {}
-		virtual token_types get_type() const noexcept override {
+		virtual token_types get_type() const noexcept override
+		{
 			return token_types::value;
 		}
 		cov::any& get_value() noexcept {
@@ -85,7 +91,8 @@ namespace cov_basic {
 	public:
 		token_sblist()=delete;
 		token_sblist(const std::deque<std::deque<token_base*>>& list):mList(list) {}
-		virtual token_types get_type() const noexcept override {
+		virtual token_types get_type() const noexcept override
+		{
 			return token_types::sblist;
 		}
 		std::deque<std::deque<token_base*>>& get_list() noexcept {
@@ -97,7 +104,8 @@ namespace cov_basic {
 	public:
 		token_mblist()=delete;
 		token_mblist(const std::deque<std::deque<token_base*>>& list):mList(list) {}
-		virtual token_types get_type() const noexcept override {
+		virtual token_types get_type() const noexcept override
+		{
 			return token_types::mblist;
 		}
 		std::deque<std::deque<token_base*>>& get_list() noexcept {
@@ -109,7 +117,8 @@ namespace cov_basic {
 	public:
 		token_lblist()=delete;
 		token_lblist(const std::deque<std::deque<token_base*>>& list):mList(list) {}
-		virtual token_types get_type() const noexcept override {
+		virtual token_types get_type() const noexcept override
+		{
 			return token_types::lblist;
 		}
 		std::deque<std::deque<token_base*>>& get_list() noexcept {
@@ -121,10 +130,12 @@ namespace cov_basic {
 		std::map<Key,T> mDat;
 	public:
 		mapping(std::initializer_list<std::pair<const Key, T>> l):mDat(l) {}
-		bool exsist(const Key& k) {
+		bool exsist(const Key& k)
+		{
 			return mDat.find(k)!=mDat.end();
 		}
-		T match(const Key& k) {
+		T match(const Key& k)
+		{
 			if(!exsist(k))
 				throw syntax_error("Undefined Mapping.");
 			return mDat.at(k);

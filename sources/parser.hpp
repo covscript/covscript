@@ -6,7 +6,8 @@ namespace cov_basic {
 	public:
 		token_expr()=delete;
 		token_expr(const cov::tree<token_base*>& tree):mTree(tree) {}
-		virtual token_types get_type() const noexcept override {
+		virtual token_types get_type() const noexcept override
+		{
 			return token_types::expr;
 		}
 		cov::tree<token_base*>& get_tree() noexcept {
@@ -18,7 +19,8 @@ namespace cov_basic {
 	public:
 		token_arglist()=default;
 		token_arglist(const std::deque<cov::tree<token_base*>>& tlist):mTreeList(tlist) {}
-		virtual token_types get_type() const noexcept override {
+		virtual token_types get_type() const noexcept override
+		{
 			return token_types::arglist;
 		}
 		std::deque<cov::tree<token_base*>>& get_arglist() noexcept {
@@ -30,7 +32,8 @@ namespace cov_basic {
 	public:
 		token_array()=default;
 		token_array(const std::deque<cov::tree<token_base*>>& tlist):mTreeList(tlist) {}
-		virtual token_types get_type() const noexcept override {
+		virtual token_types get_type() const noexcept override
+		{
 			return token_types::array;
 		}
 		std::deque<cov::tree<token_base*>>& get_array() noexcept {
@@ -263,12 +266,14 @@ namespace cov_basic {
 	class statement_base {
 		static garbage_collector<statement_base> gc;
 	public:
-		static void* operator new(std::size_t size) {
+		static void* operator new(std::size_t size)
+		{
 			void* ptr=::operator new(size);
 			gc.add(ptr);
 			return ptr;
 		}
-		static void operator delete(void* ptr) {
+		static void operator delete(void* ptr)
+		{
 			gc.remove(ptr);
 			::operator delete(ptr);
 		}
@@ -284,7 +289,8 @@ namespace cov_basic {
 	public:
 		statement_expression()=delete;
 		statement_expression(const cov::tree<token_base*>& tree):mTree(tree) {}
-		virtual statement_types get_type() const noexcept override {
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::expression_;
 		}
 		virtual void run() override;
@@ -294,7 +300,8 @@ namespace cov_basic {
 	public:
 		statement_define()=delete;
 		statement_define(const cov::tree<token_base*>& tree):mTree(tree) {}
-		virtual statement_types get_type() const noexcept override {
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::define_;
 		}
 		virtual void run() override;
@@ -302,7 +309,8 @@ namespace cov_basic {
 	class statement_break final:public statement_base {
 	public:
 		statement_break()=default;
-		virtual statement_types get_type() const noexcept override {
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::break_;
 		}
 		virtual void run() override;
@@ -310,7 +318,8 @@ namespace cov_basic {
 	class statement_continue final:public statement_base {
 	public:
 		statement_continue()=default;
-		virtual statement_types get_type() const noexcept override {
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::continue_;
 		}
 		virtual void run() override;
@@ -320,7 +329,8 @@ namespace cov_basic {
 	public:
 		statement_block()=delete;
 		statement_block(const std::deque<statement_base*>& block):mBlock(block) {}
-		virtual statement_types get_type() const noexcept override {
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::block_;
 		}
 		virtual void run() override;
@@ -332,11 +342,13 @@ namespace cov_basic {
 	public:
 		statement_if()=delete;
 		statement_if(const cov::tree<token_base*>& tree,std::deque<statement_base*>* btrue,std::deque<statement_base*>* bfalse=nullptr):mTree(tree),mBlock(btrue),mElseBlock(bfalse) {}
-		virtual ~statement_if() {
+		virtual ~statement_if()
+		{
 			delete mBlock;
 			delete mElseBlock;
 		}
-		virtual statement_types get_type() const noexcept override {
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::if_;
 		}
 		virtual void run() override;
@@ -347,7 +359,8 @@ namespace cov_basic {
 	public:
 		statement_while()=delete;
 		statement_while(const cov::tree<token_base*>& tree,const std::deque<statement_base*>& b):mTree(tree),mBlock(b) {}
-		virtual statement_types get_type() const noexcept override {
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::while_;
 		}
 		virtual void run() override;
@@ -358,7 +371,8 @@ namespace cov_basic {
 	public:
 		statement_function()=delete;
 		statement_function(std::string name,const std::deque<std::string>& args,const std::deque<statement_base*>& body):mName(name),mFunc(args,body) {}
-		virtual statement_types get_type() const noexcept override {
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::function_;
 		}
 		virtual void run() override;
@@ -368,7 +382,8 @@ namespace cov_basic {
 	public:
 		statement_return()=delete;
 		statement_return(const cov::tree<token_base*>& tree):mTree(tree) {}
-		virtual statement_types get_type() const noexcept override {
+		virtual statement_types get_type() const noexcept override
+		{
 			return statement_types::return_;
 		}
 		virtual void run() override;

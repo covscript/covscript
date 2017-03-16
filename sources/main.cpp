@@ -14,7 +14,7 @@ namespace cov_basic {
 		if(str=="false"||str=="False"||str=="FALSE")
 			return false;
 		enum types {
-		    interger,floating,other
+			interger,floating,other
 		} type=types::interger;
 		for(auto& it:str) {
 			if(!std::isdigit(it)&&it!='.') {

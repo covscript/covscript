@@ -50,11 +50,9 @@ namespace cov_basic {
 	void statement_block::run()
 	{
 		storage.add_domain();
-		for(auto& ptr:mBlock)
-		{
+		for(auto& ptr:mBlock) {
 			ptr->run();
-			if(return_fcall)
-			{
+			if(return_fcall) {
 				storage.remove_domain();
 				return;
 			}
@@ -68,8 +66,7 @@ namespace cov_basic {
 			if(mBlock!=nullptr) {
 				for(auto& ptr:*mBlock) {
 					ptr->run();
-					if(return_fcall)
-					{
+					if(return_fcall) {
 						storage.remove_domain();
 						return;
 					}
@@ -84,8 +81,7 @@ namespace cov_basic {
 			if(mElseBlock!=nullptr) {
 				for(auto& ptr:*mElseBlock) {
 					ptr->run();
-					if(return_fcall)
-					{
+					if(return_fcall) {
 						storage.remove_domain();
 						return;
 					}
@@ -104,8 +100,7 @@ namespace cov_basic {
 		while(parse_expr(mTree.root()).const_val<boolean>()) {
 			for(auto& ptr:mBlock) {
 				ptr->run();
-				if(return_fcall)
-				{
+				if(return_fcall) {
 					storage.remove_domain();
 					return;
 				}

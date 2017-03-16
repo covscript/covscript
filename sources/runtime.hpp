@@ -5,57 +5,67 @@ namespace cov_basic {
 	class domain_manager {
 		std::deque<std::deque<cov::tuple<string,cov::any>>> m_data;
 	public:
-		domain_manager() {
+		domain_manager()
+		{
 			m_data.emplace_front();
 		}
 		domain_manager(const domain_manager&)=delete;
 		~domain_manager()=default;
-		void add_domain() {
+		void add_domain()
+		{
 			m_data.emplace_front();
 		}
-		void remove_domain() {
+		void remove_domain()
+		{
 			if(m_data.size()>1)
 				m_data.pop_front();
 		}
-		bool var_exsist(const string& name) {
+		bool var_exsist(const string& name)
+		{
 			for(auto& domain:m_data)
 				for(auto& var:domain)
 					if(var.get<0>()==name)
 						return true;
 			return false;
 		}
-		bool var_exsist_current(const string& name) {
+		bool var_exsist_current(const string& name)
+		{
 			for(auto& var:m_data.front())
 				if(var.get<0>()==name)
 					return true;
 			return false;
 		}
-		bool var_exsist_global(const string& name) {
+		bool var_exsist_global(const string& name)
+		{
 			for(auto& var:m_data.back())
 				if(var.get<0>()==name)
 					return true;
 			return false;
 		}
-		cov::any& get_var(const string& name) {
+		cov::any& get_var(const string& name)
+		{
 			for(auto& domain:m_data)
 				for(auto& var:domain)
 					if(var.get<0>()==name)
 						return var.get<1>();
 			throw syntax_error("Use of undefined variable.");
 		}
-		cov::any& get_var_global(const string& name) {
+		cov::any& get_var_global(const string& name)
+		{
 			for(auto& var:m_data.back())
 				if(var.get<0>()==name)
 					return var.get<1>();
 			throw syntax_error("Use of undefined variable.");
 		}
-		void add_var(const string& name,const cov::any& var) {
+		void add_var(const string& name,const cov::any& var)
+		{
 			if(var_exsist_current(name))
 				get_var(name)=var;
 			else
 				m_data.front().push_front({name,var});
 		}
-		void add_var_global(const string& name,const cov::any& var) {
+		void add_var_global(const string& name,const cov::any& var)
+		{
 			if(var_exsist_global(name))
 				get_var_global(name)=var;
 			else
@@ -411,8 +421,7 @@ namespace cov_basic {
 			break;
 		case token_types::array: {
 			array arr;
-			for(auto& tree:dynamic_cast<token_array*>(token)->get_array())
-			{
+			for(auto& tree:dynamic_cast<token_array*>(token)->get_array()) {
 				cov::any val=parse_expr(tree.root());
 				val.clone();
 				arr.push_back(val);
