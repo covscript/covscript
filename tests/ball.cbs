@@ -1,5 +1,6 @@
 init_graphics()
 define pix=darwin_pixel("@",true,false,get_color("blue"),get_color("white"))
+define paint=darwin_picture()
 set_frame_limit(60)
 define bx=0
 define by=0
@@ -7,8 +8,9 @@ define bxi=true
 define byi=true
 while(true)
         fit_drawable()
-        clear_drawable()
-        draw_point(bx,by,pix)
+        clear_drawable(paint)
+        resize_drawable(paint,get_width_drawable(),get_height_drawable())
+        draw_point(paint,bx,by,pix)
         if(bx<=0)
                 bxi=true
         end
@@ -31,5 +33,6 @@ while(true)
         else
                 --by
         end
+        draw_picture(0,0,paint)
         update_drawable()
 end

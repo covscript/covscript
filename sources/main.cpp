@@ -335,6 +335,16 @@ namespace cov_basic {
 			throw syntax_error("Arguments error.");
 		return number(0);
 	}
+	cov::any resize_drawable(array& args)
+	{
+		if(args.at(0).type()==typeid(number))
+			darwin::runtime.get_drawable()->resize(args.at(0).const_val<number>(),args.at(1).const_val<number>());
+		else if(args.at(0).type()==typeid(darwin::picture))
+			args.at(0).val<darwin::picture>(true).resize(args.at(1).const_val<number>(),args.at(2).const_val<number>());
+		else
+			throw syntax_error("Arguments error.");
+		return number(0);
+	}
 	cov::any get_height_drawable(array& args)
 	{
 		if(args.empty())
@@ -593,6 +603,7 @@ namespace cov_basic {
 		add_function(update_drawable);
 		add_function(clear_drawable);
 		add_function(fill_drawable);
+		add_function(resize_drawable);
 		add_function(get_height_drawable);
 		add_function(get_width_drawable);
 		add_function(draw_point);
@@ -635,7 +646,7 @@ int main(int args_size,const char* args[])
 		for(auto& s:statements)
 			s->run();
 	} else {
-		std::cout<<args[0]<<": fatal error: no input files\ncompilation terminated."<<std::endl;
+		std::cout<<"Covariant Basic 2.0 Parser\nFatal Error: no input file.\nUsage: "<<args[0]<<" <file>\nCompilation terminated."<<std::endl;
 	}
 	return 0;
 }
