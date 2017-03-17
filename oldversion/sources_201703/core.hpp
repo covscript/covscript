@@ -1,6 +1,6 @@
 #pragma once
-#include "../include/mozart/mozart.hpp"
-#include "../include/darwin/darwin.hpp"
+#include "../../include/mozart/mozart.hpp"
+#include "../../include/darwin/darwin.hpp"
 #include <stdexcept>
 #include <string>
 #include <deque>
@@ -853,13 +853,6 @@ namespace cov_basic {
 	}
 }
 namespace std {
-	template<>std::string to_string<bool>(const bool& v)
-	{
-		if(v)
-			return "True";
-		else
-			return "False";
-	}
 	template<>std::string to_string<cov_basic::array>(const cov_basic::array& a)
 	{
 		if(a.empty())

@@ -7,7 +7,7 @@ define food={0,0}
 define heading=2
 define init_long=5
 define god_mode=false
-define cross_wall=false
+define cross_wall=true
 define hard=3
 define score=0
 
@@ -95,24 +95,16 @@ function start()
 			end
 			if(cross_wall)
 				if(snake_head[0]<0)
-					snake_head[0]=snake_head[0]+get_width_drawable()-1
-					frame=0
-					continue
+					snake_head[0]=snake_head[0]+get_width_drawable()
 				end
 				if(snake_head[0]>get_width_drawable()-1)
-					snake_head[0]=snake_head[0]-get_width_drawable()-1
-					frame=0
-					continue
+					snake_head[0]=snake_head[0]-get_width_drawable()
 				end
 				if(snake_head[1]<0)
-					snake_head[1]=snake_head[1]+get_height_drawable()-1
-					frame=0
-					continue
+					snake_head[1]=snake_head[1]+get_height_drawable()
 				end
 				if(snake_head[1]>get_height_drawable()-1)
-					snake_head[1]=snake_head[1]-get_height_drawable()-1
-					frame=0
-					continue
+					snake_head[1]=snake_head[1]-get_height_drawable()
 				end
 			else
 				if(snake_head[0]<0||snake_head[0]>get_width_drawable()-1||snake_head[1]<0||snake_head[1]>get_height_drawable()-1)
