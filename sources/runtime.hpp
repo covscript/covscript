@@ -3,7 +3,7 @@
 #include <cmath>
 namespace cov_basic {
 	class domain_manager {
-		std::deque<std::deque<cov::tuple<string,cov::any>>> m_data;
+		std::deque<std::unordered_map<string,cov::any>> m_data;
 	public:
 		domain_manager()
 		{
@@ -23,38 +23,33 @@ namespace cov_basic {
 		bool var_exsist(const string& name)
 		{
 			for(auto& domain:m_data)
-				for(auto& var:domain)
-					if(var.get<0>()==name)
-						return true;
+				if(domain.count(name)>0)
+					return true;
 			return false;
 		}
 		bool var_exsist_current(const string& name)
 		{
-			for(auto& var:m_data.front())
-				if(var.get<0>()==name)
-					return true;
+			if(m_data.front().count(name)>0)
+				return true;
 			return false;
 		}
 		bool var_exsist_global(const string& name)
 		{
-			for(auto& var:m_data.back())
-				if(var.get<0>()==name)
-					return true;
+			if(m_data.back().count(name)>0)
+				return true;
 			return false;
 		}
 		cov::any& get_var(const string& name)
 		{
 			for(auto& domain:m_data)
-				for(auto& var:domain)
-					if(var.get<0>()==name)
-						return var.get<1>();
+				if(domain.count(name)>0)
+					return domain.at(name);
 			throw syntax_error("Use of undefined variable.");
 		}
 		cov::any& get_var_global(const string& name)
 		{
-			for(auto& var:m_data.back())
-				if(var.get<0>()==name)
-					return var.get<1>();
+			if(m_data.back().count(name)>0)
+				return m_data.back().at(name);
 			throw syntax_error("Use of undefined variable.");
 		}
 		void add_var(const string& name,const cov::any& var)
@@ -62,14 +57,14 @@ namespace cov_basic {
 			if(var_exsist_current(name))
 				get_var(name)=var;
 			else
-				m_data.front().push_front({name,var});
+				m_data.front().emplace(name,var);
 		}
 		void add_var_global(const string& name,const cov::any& var)
 		{
 			if(var_exsist_global(name))
 				get_var_global(name)=var;
 			else
-				m_data.back().push_front({name,var});
+				m_data.back().emplace(name,var);
 		}
 	};
 	domain_manager storage;
@@ -162,16 +157,18 @@ namespace cov_basic {
 		}
 		throw syntax_error("Unsupported operator operations(Pow).");
 	}
-	cov::any parse_dot(token_base* a,token_base* b)
+	cov::any parse_dot(const cov::any& a,token_base* b)
 	{
-		if(a==nullptr||b==nullptr)
+		if(b==nullptr)
 			throw syntax_error("Internal Error(Null Pointer Accessed).");
-		if(a->get_type()!=token_types::id||b->get_type()!=token_types::id)
+		if(b->get_type()!=token_types::id)
 			throw syntax_error("Unsupported operator operations(Dot).");
-		if(dynamic_cast<token_id*>(a)->get_id()=="global")
+		if(a.type()!=typeid(constant_values))
+			throw syntax_error("Unsupported operator operations(Dot).");
+		if(a.const_val<constant_values>()==constant_values::global_namespace)
 			return storage.get_var_global(dynamic_cast<token_id*>(b)->get_id());
 		else
-			throw syntax_error("Ukown namespace name.");
+			throw syntax_error("Unsupported operator operations(Dot).");
 	}
 	cov::any parse_und(const cov::any& a,const cov::any& b)
 	{
@@ -425,7 +422,7 @@ namespace cov_basic {
 				return parse_pow(parse_expr(it.left()),parse_expr(it.right()));
 				break;
 			case signal_types::dot_:
-				return parse_dot(it.left().data(),it.right().data());
+				return parse_dot(parse_expr(it.left()),it.right().data());
 				break;
 			case signal_types::und_:
 				return parse_und(parse_expr(it.left()),parse_expr(it.right()));

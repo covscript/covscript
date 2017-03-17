@@ -1,9 +1,9 @@
 #pragma once
 #include "./core.hpp"
+#include <unordered_map>
 #include <stdexcept>
 #include <string>
 #include <deque>
-#include <map>
 namespace cov_basic {
 	enum class token_types {
 		null,action,signal,id,value,sblist,mblist,lblist,expr,arglist,array
@@ -134,12 +134,12 @@ namespace cov_basic {
 	};
 	template<typename Key,typename T>
 	class mapping final {
-		std::map<Key,T> mDat;
+		std::unordered_map<Key,T> mDat;
 	public:
 		mapping(std::initializer_list<std::pair<const Key, T>> l):mDat(l) {}
 		bool exsist(const Key& k)
 		{
-			return mDat.find(k)!=mDat.end();
+			return mDat.count(k)>0;
 		}
 		T match(const Key& k)
 		{
@@ -158,8 +158,11 @@ namespace cov_basic {
 		{"block",action_types::block_},{"end",action_types::endblock_},{"define",action_types::define_},/*{"as",action_types::as_},*/{"if",action_types::if_},/*{"then",action_types::then_},*/{"else",action_types::else_},{"while",action_types::while_},
 		/*{"do",action_types::do_},{"for",action_types::for_},*/{"break",action_types::break_},{"continue",action_types::continue_},{"function",action_types::function_},{"return",action_types::return_}
 	};
+	enum class constant_values {
+		global_namespace
+	};
 	mapping<std::string,cov::any> constant_map= {
-		{"pi",number(3.1415926535)},{"e",number(2.7182818284)},{"True",true},{"False",false},{"true",true},{"false",false},{"TRUE",true},{"FALSE",false}
+		{"global",constant_values::global_namespace},{"pi",number(3.1415926535)},{"e",number(2.7182818284)},{"True",true},{"False",false},{"true",true},{"false",false},{"TRUE",true},{"FALSE",false}
 	};
 	char signals[]= {
 		'+','-','*','/','%','^',',','.','>','<','=','&','|','!','(',')','[',']','{','}'
