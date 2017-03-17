@@ -1,5 +1,6 @@
 #define DARWIN_FORCE_BUILTIN
 #include "../include/darwin/darwin.hpp"
+#include "../include/mozart/switcher.hpp"
 #include "./covbasic.hpp"
 #include <iostream>
 #include <fstream>
@@ -634,6 +635,7 @@ int main(int args_size,const char* args[])
 {
 	using namespace cov_basic;
 	if(args_size>1) {
+		std::ios::sync_with_stdio(false);
 		std::deque<char> buff;
 		std::deque<token_base*> tokens;
 		std::deque<statement_base*> statements;

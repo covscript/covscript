@@ -1,10 +1,14 @@
 #pragma once
-#include "../include/mozart/mozart.hpp"
+#include "../include/mozart/random.hpp"
+#include "../include/mozart/timer.hpp"
+#include "../include/mozart/tree.hpp"
+#include "../include/mozart/any.hpp"
 #include <forward_list>
 #include <functional>
 #include <exception>
 #include <stdexcept>
 #include <string>
+#include <deque>
 namespace cov_basic {
 	using number=long double;
 	using boolean=bool;
