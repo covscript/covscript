@@ -73,25 +73,6 @@ namespace cov_basic {
 		}
 	};
 	domain_manager storage;
-	cov::any& get_value(const string& name)
-	{
-		auto pos=name.find("::");
-		if(pos!=string::npos&&name.substr(0,pos)=="global") {
-			string n=name.substr(pos+2);
-			if(storage.var_exsist_global(n))
-				return storage.get_var_global(n);
-		}
-		return storage.get_var(name);
-	}
-	bool exsist(const string& name)
-	{
-		auto pos=name.find("::");
-		if(pos!=string::npos&&name.substr(0,pos)=="global") {
-			string n=name.substr(pos+2);
-			return storage.var_exsist_global(n);
-		}
-		return storage.var_exsist(name);
-	}
 	cov::any parse_add(const cov::any& a,const cov::any& b)
 	{
 		if(a.type()==typeid(number)) {
@@ -181,9 +162,16 @@ namespace cov_basic {
 		}
 		throw syntax_error("Unsupported operator operations(Pow).");
 	}
-	cov::any parse_dot(const cov::any& a,token_base* b)
+	cov::any parse_dot(token_base* a,token_base* b)
 	{
-		throw syntax_error("Unsupported operator operations(Dot).");
+		if(a==nullptr||b==nullptr)
+			throw syntax_error("Internal Error(Null Pointer Accessed).");
+		if(a->get_type()!=token_types::id||b->get_type()!=token_types::id)
+			throw syntax_error("Unsupported operator operations(Dot).");
+		if(dynamic_cast<token_id*>(a)->get_id()=="global")
+			return storage.get_var_global(dynamic_cast<token_id*>(b)->get_id());
+		else
+			throw syntax_error("Ukown namespace name.");
 	}
 	cov::any parse_und(const cov::any& a,const cov::any& b)
 	{
@@ -386,13 +374,13 @@ namespace cov_basic {
 		switch(token->get_type()) {
 		case token_types::id: {
 			std::string id=dynamic_cast<token_id*>(token)->get_id();
-			if(!exsist(id)) {
+			if(!storage.var_exsist(id)) {
 				if(define_var)
 					storage.add_var(id,number(0));
 				else
 					throw syntax_error("Undefined variable.");
 			}
-			return get_value(id);
+			return storage.get_var(id);
 			break;
 		}
 		case token_types::value:
@@ -437,7 +425,7 @@ namespace cov_basic {
 				return parse_pow(parse_expr(it.left()),parse_expr(it.right()));
 				break;
 			case signal_types::dot_:
-				return parse_dot(parse_expr(it.left()),it.right().data());
+				return parse_dot(it.left().data(),it.right().data());
 				break;
 			case signal_types::und_:
 				return parse_und(parse_expr(it.left()),parse_expr(it.right()));
