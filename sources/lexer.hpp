@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <deque>
+#include <map>
 namespace cov_basic {
 	enum class token_types {
 		null,action,signal,id,value,sblist,mblist,lblist,expr,arglist,array
@@ -134,7 +135,7 @@ namespace cov_basic {
 	};
 	template<typename Key,typename T>
 	class mapping final {
-		std::unordered_map<Key,T> mDat;
+		std::map<Key,T> mDat;
 	public:
 		mapping(std::initializer_list<std::pair<const Key, T>> l):mDat(l) {}
 		bool exsist(const Key& k)
