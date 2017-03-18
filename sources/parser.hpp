@@ -10,8 +10,7 @@ namespace cov_basic {
 		{
 			return token_types::expr;
 		}
-		cov::tree<token_base*>& get_tree() noexcept
-		{
+		cov::tree<token_base*>& get_tree() noexcept {
 			return this->mTree;
 		}
 	};
@@ -24,8 +23,7 @@ namespace cov_basic {
 		{
 			return token_types::arglist;
 		}
-		std::deque<cov::tree<token_base*>>& get_arglist() noexcept
-		{
+		std::deque<cov::tree<token_base*>>& get_arglist() noexcept {
 			return this->mTreeList;
 		}
 	};
@@ -38,8 +36,7 @@ namespace cov_basic {
 		{
 			return token_types::array;
 		}
-		std::deque<cov::tree<token_base*>>& get_array() noexcept
-		{
+		std::deque<cov::tree<token_base*>>& get_array() noexcept {
 			return this->mTreeList;
 		}
 	};
@@ -51,9 +48,9 @@ namespace cov_basic {
 	int get_signal_level(token_base* ptr)
 	{
 		if(ptr==nullptr)
-			throw std::logic_error("Get the level of null token.");
+			throw syntax_error("Get the level of null token.");
 		if(ptr->get_type()!=token_types::signal)
-			throw std::logic_error("Get the level of non-signal token.");
+			throw syntax_error("Get the level of non-signal token.");
 		return signal_level_map.match(dynamic_cast<token_signal*>(ptr)->get_signal());
 	}
 	signal_types signal_left_associative[] = {
@@ -62,9 +59,9 @@ namespace cov_basic {
 	bool is_left_associative(token_base* ptr)
 	{
 		if(ptr==nullptr)
-			throw std::logic_error("Get the level of null token.");
+			throw syntax_error("Get the level of null token.");
 		if(ptr->get_type()!=token_types::signal)
-			throw std::logic_error("Get the level of non-signal token.");
+			throw syntax_error("Get the level of non-signal token.");
 		signal_types s=dynamic_cast<token_signal*>(ptr)->get_signal();
 		for(auto& t:signal_left_associative)
 			if(t==s)
@@ -162,7 +159,7 @@ namespace cov_basic {
 		bool request_signal=false;
 		for(auto& ptr:raw) {
 			if(ptr->get_type()==token_types::action)
-				throw std::logic_error("Wrong format of expression.");
+				throw syntax_error("Wrong format of expression.");
 			if(ptr->get_type()==token_types::signal) {
 				if(!request_signal)
 					objects.push_back(nullptr);
@@ -179,7 +176,7 @@ namespace cov_basic {
 	void build_tree(cov::tree<token_base*>& tree,std::deque<token_base*>& signals,std::deque<token_base*>& objects)
 	{
 		if(objects.empty()||signals.empty()||objects.size()!=signals.size()+1)
-			throw std::logic_error("Symbols do not match the object.");
+			throw syntax_error("Symbols do not match the object.");
 		for(auto& obj:objects) {
 			if(obj!=nullptr&&obj->get_type()==token_types::sblist) {
 				token_sblist* sbl=dynamic_cast<token_sblist*>(obj);
@@ -251,7 +248,7 @@ namespace cov_basic {
 		std::swap(tokens,oldt);
 		tokens.clear();
 		for(auto& ptr:oldt) {
-			if(ptr->get_type()==token_types::action) {
+			if(ptr->get_type()==token_types::action||ptr->get_type()==token_types::endline) {
 				if(!expr.empty()) {
 					cov::tree<token_base*> tree;
 					gen_tree(tree,expr);
@@ -264,10 +261,11 @@ namespace cov_basic {
 		}
 	}
 	enum class statement_types {
-		expression_,block_,define_,if_,while_,for_,break_,continue_,function_,return_
+	    expression_,block_,define_,if_,while_,for_,break_,continue_,function_,return_
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;
+		std::size_t mLineNum=0;
 	public:
 		static void* operator new(std::size_t size)
 		{
@@ -282,8 +280,13 @@ namespace cov_basic {
 		}
 		statement_base()=default;
 		statement_base(const statement_base&)=default;
+		statement_base(token_base* ptr):mLineNum(dynamic_cast<token_endline*>(ptr)->get_num()) {}
 		virtual ~statement_base()=default;
 		virtual statement_types get_type() const noexcept=0;
+		virtual std::size_t get_line_num() const noexcept final
+		{
+			return this->mLineNum;
+		}
 		virtual void run()=0;
 	};
 	garbage_collector<statement_base> statement_base::gc;
@@ -291,7 +294,7 @@ namespace cov_basic {
 		cov::tree<token_base*> mTree;
 	public:
 		statement_expression()=delete;
-		statement_expression(const cov::tree<token_base*>& tree):mTree(tree) {}
+		statement_expression(const cov::tree<token_base*>& tree,token_base* ptr):statement_base(ptr),mTree(tree) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::expression_;
@@ -302,7 +305,7 @@ namespace cov_basic {
 		cov::tree<token_base*> mTree;
 	public:
 		statement_define()=delete;
-		statement_define(const cov::tree<token_base*>& tree):mTree(tree) {}
+		statement_define(const cov::tree<token_base*>& tree,token_base* ptr):statement_base(ptr),mTree(tree) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::define_;
@@ -312,6 +315,7 @@ namespace cov_basic {
 	class statement_break final:public statement_base {
 	public:
 		statement_break()=default;
+		statement_break(token_base* ptr):statement_base(ptr) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::break_;
@@ -321,6 +325,7 @@ namespace cov_basic {
 	class statement_continue final:public statement_base {
 	public:
 		statement_continue()=default;
+		statement_continue(token_base* ptr):statement_base(ptr) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::continue_;
@@ -331,7 +336,7 @@ namespace cov_basic {
 		std::deque<statement_base*> mBlock;
 	public:
 		statement_block()=delete;
-		statement_block(const std::deque<statement_base*>& block):mBlock(block) {}
+		statement_block(const std::deque<statement_base*>& block,token_base* ptr):statement_base(ptr),mBlock(block) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::block_;
@@ -344,7 +349,7 @@ namespace cov_basic {
 		std::deque<statement_base*>* mElseBlock=nullptr;
 	public:
 		statement_if()=delete;
-		statement_if(const cov::tree<token_base*>& tree,std::deque<statement_base*>* btrue,std::deque<statement_base*>* bfalse=nullptr):mTree(tree),mBlock(btrue),mElseBlock(bfalse) {}
+		statement_if(const cov::tree<token_base*>& tree,std::deque<statement_base*>* btrue,std::deque<statement_base*>* bfalse,token_base* ptr):statement_base(ptr),mTree(tree),mBlock(btrue),mElseBlock(bfalse) {}
 		virtual ~statement_if()
 		{
 			delete mBlock;
@@ -361,7 +366,7 @@ namespace cov_basic {
 		std::deque<statement_base*> mBlock;
 	public:
 		statement_while()=delete;
-		statement_while(const cov::tree<token_base*>& tree,const std::deque<statement_base*>& b):mTree(tree),mBlock(b) {}
+		statement_while(const cov::tree<token_base*>& tree,const std::deque<statement_base*>& b,token_base* ptr):statement_base(ptr),mTree(tree),mBlock(b) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::while_;
@@ -373,7 +378,7 @@ namespace cov_basic {
 		function mFunc;
 	public:
 		statement_function()=delete;
-		statement_function(std::string name,const std::deque<std::string>& args,const std::deque<statement_base*>& body):mName(name),mFunc(args,body) {}
+		statement_function(std::string name,const std::deque<std::string>& args,const std::deque<statement_base*>& body,token_base* ptr):statement_base(ptr),mName(name),mFunc(args,body) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::function_;
@@ -384,7 +389,7 @@ namespace cov_basic {
 		cov::tree<token_base*> mTree;
 	public:
 		statement_return()=delete;
-		statement_return(const cov::tree<token_base*>& tree):mTree(tree) {}
+		statement_return(const cov::tree<token_base*>& tree,token_base* ptr):statement_base(ptr),mTree(tree) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::return_;

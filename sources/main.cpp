@@ -641,18 +641,36 @@ int main(int args_size,const char* args[])
 		std::deque<statement_base*> statements;
 		std::ifstream in(args[1]);
 		std::string line;
+		std::size_t line_num=0;
 		while(std::getline(in,line)) {
-			if(!line.empty()&&line[0]=='#')
+			++line_num;
+			if(line.empty())
+				continue;
+			if(line[0]=='#')
 				continue;
 			for(auto& c:line)
 				buff.push_back(c);
-			buff.push_back('\n');
+			try {
+				translate_into_tokens(buff,tokens);
+			} catch(const syntax_error& se) {
+				throw syntax_error(line_num,se.what());
+			}
+			tokens.push_back(new token_endline(line_num));
+			buff.clear();
 		}
-		init();
-		translate_into_tokens(buff,tokens);
 		translate_into_statements(tokens,statements);
-		for(auto& s:statements)
-			s->run();
+		init();
+		for(auto& ptr:statements) {
+			try{
+				ptr->run();
+			}catch(const syntax_error& se)
+			{
+				throw syntax_error(ptr->get_line_num(),se.what());
+			}catch(const lang_error& le)
+			{
+				throw lang_error(ptr->get_line_num(),le.what());
+			}
+		}
 	} else {
 		std::cout<<"Covariant Basic 2.0 Parser\nFatal Error: no input file.\nUsage: "<<args[0]<<" <file>\nCompilation terminated."<<std::endl;
 	}
