@@ -57,10 +57,10 @@ namespace cov_basic {
 	void statement_define::run()
 	{
 		define_var=true;
-		if(mType.empty())
+		if(mType==nullptr)
 			parse_expr(mTree.root());
 		else
-			parse_expr(mTree.root()).assign(storage.get_var_type(mType),true);
+			parse_expr(mTree.root()).assign(storage.get_var_type(mType->get_id()),true);
 		define_var=false;
 	}
 	void statement_break::run()
@@ -294,7 +294,7 @@ namespace cov_basic {
 					break;
 				case action_types::define_:
 					if(line.size()>3)
-						statements.push_back(new statement_define(dynamic_cast<token_expr*>(line.at(1))->get_tree(),dynamic_cast<token_id*>(dynamic_cast<token_expr*>(line.at(3))->get_tree().root().data())->get_id(),line.back()));
+						statements.push_back(new statement_define(dynamic_cast<token_expr*>(line.at(1))->get_tree(),dynamic_cast<token_expr*>(line.at(3))->get_tree().root().data(),line.back()));
 					else
 						statements.push_back(new statement_define(dynamic_cast<token_expr*>(line.at(1))->get_tree(),line.back()));
 					break;

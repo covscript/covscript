@@ -407,8 +407,10 @@ namespace cov_basic {
 		switch(token->get_type()) {
 		case token_types::id: {
 			std::string id=dynamic_cast<token_id*>(token)->get_id();
-			if(define_var)
+			if(define_var) {
 				storage.add_var(id,number(0));
+				define_var=false;
+			}
 			return storage.get_var(id);
 			break;
 		}
