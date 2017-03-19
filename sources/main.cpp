@@ -661,13 +661,11 @@ int main(int args_size,const char* args[])
 		translate_into_statements(tokens,statements);
 		init();
 		for(auto& ptr:statements) {
-			try{
+			try {
 				ptr->run();
-			}catch(const syntax_error& se)
-			{
+			} catch(const syntax_error& se) {
 				throw syntax_error(ptr->get_line_num(),se.what());
-			}catch(const lang_error& le)
-			{
+			} catch(const lang_error& le) {
 				throw lang_error(ptr->get_line_num(),le.what());
 			}
 		}

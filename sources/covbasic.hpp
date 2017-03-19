@@ -282,14 +282,12 @@ namespace cov_basic {
 			for(auto& ptr:tokens) {
 				tmp.push_back(ptr);
 				if(ptr!=nullptr&&ptr->get_type()==token_types::endline) {
-					if(tmp.size()>1)
-					{
-						try{
+					if(tmp.size()>1) {
+						try {
 							process_brackets(tmp);
 							kill_brackets(tmp);
 							kill_expr(tmp);
-						}catch(const syntax_error& se)
-						{
+						} catch(const syntax_error& se) {
 							throw syntax_error(dynamic_cast<token_endline*>(ptr)->get_num(),se.what());
 						}
 						lines.push_back(tmp);
