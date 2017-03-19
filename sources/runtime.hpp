@@ -3,6 +3,7 @@
 #include <cmath>
 namespace cov_basic {
 	class domain_manager {
+		std::unordered_map<string,std::function<cov::any()>> m_type;
 		std::deque<std::unordered_map<string,cov::any>> m_data;
 	public:
 		domain_manager()
@@ -11,14 +12,32 @@ namespace cov_basic {
 		}
 		domain_manager(const domain_manager&)=delete;
 		~domain_manager()=default;
+		void add_type(const std::string& name,const std::function<cov::any()>& func)
+		{
+			if(m_type.count(name)>0)
+				throw syntax_error("Redefinition of type \""+name+"\".");
+			else
+				m_type.emplace(name,func);
+		}
 		void add_domain()
 		{
 			m_data.emplace_front();
+		}
+		std::unordered_map<string,cov::any>& get_domain()
+		{
+			return m_data.front();
 		}
 		void remove_domain()
 		{
 			if(m_data.size()>1)
 				m_data.pop_front();
+		}
+		bool type_exsist(const string& name)
+		{
+			if(m_type.count(name)>0)
+				return true;
+			else
+				return false;
 		}
 		bool var_exsist(const string& name)
 		{
@@ -39,18 +58,31 @@ namespace cov_basic {
 				return true;
 			return false;
 		}
+		cov::any get_var_type(const string& type)
+		{
+			if(type_exsist(type))
+				return m_type.at(type)();
+			else
+				throw syntax_error("Use of undefined type \""+type+"\".");
+		}
 		cov::any& get_var(const string& name)
 		{
 			for(auto& domain:m_data)
 				if(domain.count(name)>0)
 					return domain.at(name);
-			throw syntax_error("Use of undefined variable.");
+			throw syntax_error("Use of undefined variable \""+name+"\".");
+		}
+		cov::any& get_var_current(const string& name)
+		{
+			if(m_data.front().count(name)>0)
+				return m_data.front().at(name);
+			throw syntax_error("Use of undefined variable \""+name+"\" in current domain.");
 		}
 		cov::any& get_var_global(const string& name)
 		{
 			if(m_data.back().count(name)>0)
 				return m_data.back().at(name);
-			throw syntax_error("Use of undefined variable.");
+			throw syntax_error("Use of undefined variable \""+name+"\" in global domain.");
 		}
 		void add_var(const string& name,const cov::any& var)
 		{
@@ -163,10 +195,14 @@ namespace cov_basic {
 			throw syntax_error("Internal Error(Null Pointer Accessed).");
 		if(b->get_type()!=token_types::id)
 			throw syntax_error("Unsupported operator operations(Dot).");
+		if(a.type()==typeid(structure))
+			return a.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
 		if(a.type()!=typeid(constant_values))
 			throw syntax_error("Unsupported operator operations(Dot).");
 		if(a.const_val<constant_values>()==constant_values::global_namespace)
 			return storage.get_var_global(dynamic_cast<token_id*>(b)->get_id());
+		else if(a.const_val<constant_values>()==constant_values::this_namespace)
+			return storage.get_var_current(dynamic_cast<token_id*>(b)->get_id());
 		else
 			throw syntax_error("Unsupported operator operations(Dot).");
 	}
@@ -371,12 +407,8 @@ namespace cov_basic {
 		switch(token->get_type()) {
 		case token_types::id: {
 			std::string id=dynamic_cast<token_id*>(token)->get_id();
-			if(!storage.var_exsist(id)) {
-				if(define_var)
-					storage.add_var(id,number(0));
-				else
-					throw syntax_error("Undefined variable.");
-			}
+			if(define_var)
+				storage.add_var(id,number(0));
 			return storage.get_var(id);
 			break;
 		}

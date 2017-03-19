@@ -571,6 +571,9 @@ namespace cov_basic {
 	}
 	void init()
 	{
+		storage.add_type("number",[]()->cov::any {return number(0);});
+		storage.add_type("boolean",[]()->cov::any {return boolean(true);});
+		storage.add_type("string",[]()->cov::any {return string();});
 		add_function(input);
 		add_function(getline);
 		add_function(print);

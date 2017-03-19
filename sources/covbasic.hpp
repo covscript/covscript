@@ -34,6 +34,22 @@ namespace cov_basic {
 		fcall_stack.pop_front();
 		return number(0);
 	}
+	cov::any struct_builder::operator()()
+	{
+		storage.add_domain();
+		for(auto& ptr:this->mMethod) {
+			try {
+				ptr->run();
+			} catch(const syntax_error& se) {
+				throw syntax_error(ptr->get_line_num(),se.what());
+			} catch(const lang_error& le) {
+				throw lang_error(ptr->get_line_num(),le.what());
+			}
+		}
+		structure dat(storage.get_domain());
+		storage.remove_domain();
+		return dat;
+	}
 	void statement_expression::run()
 	{
 		parse_expr(mTree.root());
@@ -41,7 +57,10 @@ namespace cov_basic {
 	void statement_define::run()
 	{
 		define_var=true;
-		parse_expr(mTree.root());
+		if(mType.empty())
+			parse_expr(mTree.root());
+		else
+			parse_expr(mTree.root()).assign(storage.get_var_type(mType),true);
 		define_var=false;
 	}
 	void statement_break::run()
@@ -146,6 +165,10 @@ namespace cov_basic {
 		}
 		storage.remove_domain();
 	}
+	void statement_struct::run()
+	{
+		storage.add_type(this->mName,this->mBuilder);
+	}
 	void statement_function::run()
 	{
 		storage.add_var(this->mName,this->mFunc);
@@ -190,6 +213,9 @@ namespace cov_basic {
 					case action_types::while_:
 						++level;
 						break;
+					case action_types::struct_:
+						++level;
+						break;
 					case action_types::function_:
 						++level;
 						break;
@@ -210,6 +236,12 @@ namespace cov_basic {
 							case action_types::while_:
 								statements.push_back(new statement_while(tmp_expr->get_tree(),tmp_statements,tmp_endline));
 								break;
+							case action_types::struct_: {
+								cov::tree<token_base*>& t=tmp_expr->get_tree();
+								std::string name=dynamic_cast<token_id*>(t.root().data())->get_id();
+								statements.push_back(new statement_struct(name,tmp_statements,tmp_endline));
+								break;
+							}
 							case action_types::function_: {
 								cov::tree<token_base*>& t=tmp_expr->get_tree();
 								std::string name=dynamic_cast<token_id*>(t.root().left().data())->get_id();
@@ -252,12 +284,19 @@ namespace cov_basic {
 					++level;
 					tmp_expr=dynamic_cast<token_expr*>(line.at(1));
 					break;
+				case action_types::struct_:
+					++level;
+					tmp_expr=dynamic_cast<token_expr*>(line.at(1));
+					break;
 				case action_types::function_:
 					++level;
 					tmp_expr=dynamic_cast<token_expr*>(line.at(1));
 					break;
 				case action_types::define_:
-					statements.push_back(new statement_define(dynamic_cast<token_expr*>(line.at(1))->get_tree(),line.back()));
+					if(line.size()>3)
+						statements.push_back(new statement_define(dynamic_cast<token_expr*>(line.at(1))->get_tree(),dynamic_cast<token_id*>(dynamic_cast<token_expr*>(line.at(3))->get_tree().root().data())->get_id(),line.back()));
+					else
+						statements.push_back(new statement_define(dynamic_cast<token_expr*>(line.at(1))->get_tree(),line.back()));
 					break;
 				case action_types::return_:
 					statements.push_back(new statement_return(dynamic_cast<token_expr*>(line.at(1))->get_tree(),line.back()));

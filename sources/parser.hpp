@@ -261,7 +261,7 @@ namespace cov_basic {
 		}
 	}
 	enum class statement_types {
-	    expression_,block_,define_,if_,while_,for_,break_,continue_,function_,return_
+	    expression_,block_,define_,if_,while_,for_,break_,continue_,struct_,function_,return_
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;
@@ -303,9 +303,11 @@ namespace cov_basic {
 	};
 	class statement_define final:public statement_base {
 		cov::tree<token_base*> mTree;
+		string mType;
 	public:
 		statement_define()=delete;
 		statement_define(const cov::tree<token_base*>& tree,token_base* ptr):statement_base(ptr),mTree(tree) {}
+		statement_define(const cov::tree<token_base*>& tree,const string& type,token_base* ptr):statement_base(ptr),mTree(tree),mType(type) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::define_;
@@ -373,12 +375,24 @@ namespace cov_basic {
 		}
 		virtual void run() override;
 	};
+	class statement_struct final:public statement_base {
+		std::string mName;
+		struct_builder mBuilder;
+	public:
+		statement_struct()=delete;
+		statement_struct(const std::string& name,const std::deque<statement_base*>& method,token_base* ptr):statement_base(ptr),mName(name),mBuilder(method) {}
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::struct_;
+		}
+		virtual void run() override;
+	};
 	class statement_function final:public statement_base {
 		std::string mName;
 		function mFunc;
 	public:
 		statement_function()=delete;
-		statement_function(std::string name,const std::deque<std::string>& args,const std::deque<statement_base*>& body,token_base* ptr):statement_base(ptr),mName(name),mFunc(args,body) {}
+		statement_function(const std::string& name,const std::deque<std::string>& args,const std::deque<statement_base*>& body,token_base* ptr):statement_base(ptr),mName(name),mFunc(args,body) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::function_;

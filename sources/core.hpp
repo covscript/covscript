@@ -3,6 +3,7 @@
 #include "../include/mozart/timer.hpp"
 #include "../include/mozart/tree.hpp"
 #include "../include/mozart/any.hpp"
+#include <unordered_map>
 #include <forward_list>
 #include <functional>
 #include <exception>
@@ -10,37 +11,6 @@
 #include <string>
 #include <deque>
 namespace cov_basic {
-	using number=long double;
-	using boolean=bool;
-	using string=std::string;
-	using array=std::deque<cov::any>;
-	class token_base;
-	class statement_base;
-	class native_interface final {
-	public:
-		using function_type=std::function<cov::any(array&)>;
-	private:
-		function_type mFunc;
-	public:
-		native_interface()=delete;
-		native_interface(const native_interface&)=default;
-		native_interface(const function_type& func):mFunc(func) {}
-		cov::any call(array& args) const
-		{
-			return mFunc(args);
-		}
-	};
-	class function final {
-		friend class statement_return;
-		mutable cov::any mRetVal;
-		std::deque<std::string> mArgs;
-		std::deque<statement_base*> mBody;
-	public:
-		function()=delete;
-		function(const std::deque<std::string>& args,const std::deque<statement_base*>& body):mArgs(args),mBody(body) {}
-		~function()=default;
-		cov::any call(const array&) const;
-	};
 	class syntax_error final:public std::exception {
 		std::string mWhat="Covariant Basic Syntax Error";
 	public:
@@ -76,6 +46,59 @@ namespace cov_basic {
 		{
 			return this->mWhat.c_str();
 		}
+	};
+	using number=long double;
+	using boolean=bool;
+	using string=std::string;
+	using array=std::deque<cov::any>;
+	class token_base;
+	class statement_base;
+	class native_interface final {
+	public:
+		using function_type=std::function<cov::any(array&)>;
+	private:
+		function_type mFunc;
+	public:
+		native_interface()=delete;
+		native_interface(const native_interface&)=default;
+		native_interface(const function_type& func):mFunc(func) {}
+		cov::any call(array& args) const
+		{
+			return mFunc(args);
+		}
+	};
+	class function final {
+		friend class statement_return;
+		mutable cov::any mRetVal;
+		std::deque<std::string> mArgs;
+		std::deque<statement_base*> mBody;
+	public:
+		function()=delete;
+		function(const std::deque<std::string>& args,const std::deque<statement_base*>& body):mArgs(args),mBody(body) {}
+		~function()=default;
+		cov::any call(const array&) const;
+	};
+	class structure final {
+		std::unordered_map<std::string,cov::any> m_data;
+	public:
+		structure()=delete;
+		structure(const std::unordered_map<std::string,cov::any>& data):m_data(data) {}
+		~structure()=default;
+		cov::any get_var(const std::string& name) const
+		{
+			if(m_data.count(name)>0)
+				return m_data.at(name);
+			else
+				throw syntax_error("Struct have no member called \""+name+"\".");
+		}
+	};
+	class struct_builder final {
+		std::deque<statement_base*> mMethod;
+	public:
+		struct_builder()=delete;
+		struct_builder(const std::deque<statement_base*>& method):mMethod(method) {}
+		~struct_builder()=default;
+		cov::any operator()();
 	};
 	template<typename T>class garbage_collector final {
 		std::forward_list<T*> table_new;
