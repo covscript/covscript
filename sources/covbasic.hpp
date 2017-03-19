@@ -21,13 +21,12 @@ namespace cov_basic {
 			} catch(const lang_error& le) {
 				throw lang_error(ptr->get_line_num(),le.what());
 			}
-			if(this->mRetVal!=nullptr) {
+			if(this->mRetVal.usable()) {
 				return_fcall=false;
+				cov::any retval=this->mRetVal;
+				this->mRetVal=cov::any();
 				storage.remove_domain();
 				fcall_stack.pop_front();
-				cov::any retval=*this->mRetVal;
-				delete this->mRetVal;
-				this->mRetVal=nullptr;
 				return retval;
 			}
 		}
@@ -155,7 +154,7 @@ namespace cov_basic {
 	{
 		if(fcall_stack.empty())
 			throw syntax_error("Return outside function.");
-		fcall_stack.front()->mRetVal=new cov::any(parse_expr(this->mTree.root()));
+		fcall_stack.front()->mRetVal=parse_expr(this->mTree.root());
 		return_fcall=true;
 	}
 	void kill_action(std::deque<std::deque<token_base*>>& lines,std::deque<statement_base*>& statements)

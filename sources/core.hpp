@@ -32,7 +32,7 @@ namespace cov_basic {
 	};
 	class function final {
 		friend class statement_return;
-		mutable cov::any* mRetVal=nullptr;
+		mutable cov::any mRetVal;
 		std::deque<std::string> mArgs;
 		std::deque<statement_base*> mBody;
 	public:
