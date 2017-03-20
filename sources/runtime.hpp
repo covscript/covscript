@@ -3,12 +3,14 @@
 #include <cmath>
 namespace cov_basic {
 	class domain_manager {
+	public:
+		using domain_t=std::shared_ptr<std::unordered_map<string,cov::any>>;
 		std::unordered_map<string,std::function<cov::any()>> m_type;
-		std::deque<std::unordered_map<string,cov::any>> m_data;
+		std::deque<domain_t> m_data;
 	public:
 		domain_manager()
 		{
-			m_data.emplace_front();
+			m_data.emplace_front(std::make_shared<std::unordered_map<string,cov::any>>());
 		}
 		domain_manager(const domain_manager&)=delete;
 		~domain_manager()=default;
@@ -21,14 +23,19 @@ namespace cov_basic {
 		}
 		void add_domain()
 		{
-			m_data.emplace_front();
+			m_data.emplace_front(std::make_shared<std::unordered_map<string,cov::any>>());
 		}
-		std::unordered_map<string,cov::any>& get_domain()
+		void add_domain(const domain_t& dat)
+		{
+			m_data.emplace_front(dat);
+		}
+		domain_t& get_domain()
 		{
 			return m_data.front();
 		}
 		void remove_domain()
 		{
+			std::cerr<<__func__<<m_data.size()<<std::endl;
 			if(m_data.size()>1)
 				m_data.pop_front();
 		}
@@ -42,19 +49,19 @@ namespace cov_basic {
 		bool var_exsist(const string& name)
 		{
 			for(auto& domain:m_data)
-				if(domain.count(name)>0)
+				if(domain->count(name)>0)
 					return true;
 			return false;
 		}
 		bool var_exsist_current(const string& name)
 		{
-			if(m_data.front().count(name)>0)
+			if(m_data.front()->count(name)>0)
 				return true;
 			return false;
 		}
 		bool var_exsist_global(const string& name)
 		{
-			if(m_data.back().count(name)>0)
+			if(m_data.back()->count(name)>0)
 				return true;
 			return false;
 		}
@@ -68,20 +75,20 @@ namespace cov_basic {
 		cov::any& get_var(const string& name)
 		{
 			for(auto& domain:m_data)
-				if(domain.count(name)>0)
-					return domain.at(name);
+				if(domain->count(name)>0)
+					return domain->at(name);
 			throw syntax_error("Use of undefined variable \""+name+"\".");
 		}
 		cov::any& get_var_current(const string& name)
 		{
-			if(m_data.front().count(name)>0)
-				return m_data.front().at(name);
+			if(m_data.front()->count(name)>0)
+				return m_data.front()->at(name);
 			throw syntax_error("Use of undefined variable \""+name+"\" in current domain.");
 		}
 		cov::any& get_var_global(const string& name)
 		{
-			if(m_data.back().count(name)>0)
-				return m_data.back().at(name);
+			if(m_data.back()->count(name)>0)
+				return m_data.back()->at(name);
 			throw syntax_error("Use of undefined variable \""+name+"\" in global domain.");
 		}
 		void add_var(const string& name,const cov::any& var)
@@ -89,14 +96,14 @@ namespace cov_basic {
 			if(var_exsist_current(name))
 				get_var(name)=var;
 			else
-				m_data.front().emplace(name,var);
+				m_data.front()->emplace(name,var);
 		}
 		void add_var_global(const string& name,const cov::any& var)
 		{
 			if(var_exsist_global(name))
 				get_var_global(name)=var;
 			else
-				m_data.back().emplace(name,var);
+				m_data.back()->emplace(name,var);
 		}
 	};
 	domain_manager storage;

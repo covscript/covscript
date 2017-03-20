@@ -2,6 +2,7 @@
 #include "./runtime.hpp"
 namespace cov_basic {
 	bool return_fcall=false;
+	bool inside_struct=false;
 	bool break_block=false;
 	bool continue_block=false;
 	std::deque<const function*> fcall_stack;
@@ -9,6 +10,8 @@ namespace cov_basic {
 	{
 		if(args.size()!=this->mArgs.size())
 			throw syntax_error("Wrong size of arguments.");
+		if(this->mData.get()!=nullptr)
+			storage.add_domain(this->mData);
 		storage.add_domain();
 		fcall_stack.push_front(this);
 		for(std::size_t i=0; i<args.size(); ++i)
@@ -25,11 +28,15 @@ namespace cov_basic {
 				return_fcall=false;
 				cov::any retval=this->mRetVal;
 				this->mRetVal=cov::any();
+				if(this->mData.get()!=nullptr)
+					storage.remove_domain();
 				storage.remove_domain();
 				fcall_stack.pop_front();
 				return retval;
 			}
 		}
+		if(this->mData.get()!=nullptr)
+			storage.remove_domain();
 		storage.remove_domain();
 		fcall_stack.pop_front();
 		return number(0);
@@ -37,6 +44,7 @@ namespace cov_basic {
 	cov::any struct_builder::operator()()
 	{
 		storage.add_domain();
+		inside_struct=true;
 		for(auto& ptr:this->mMethod) {
 			try {
 				ptr->run();
@@ -46,6 +54,7 @@ namespace cov_basic {
 				throw lang_error(ptr->get_line_num(),le.what());
 			}
 		}
+		inside_struct=false;
 		structure dat(storage.get_domain());
 		storage.remove_domain();
 		return dat;
@@ -170,6 +179,8 @@ namespace cov_basic {
 	}
 	void statement_function::run()
 	{
+		if(inside_struct)
+			this->mFunc.set_data(storage.get_domain());
 		storage.add_var(this->mName,this->mFunc);
 	}
 	void statement_return::run()
