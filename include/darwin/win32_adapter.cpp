@@ -29,7 +29,7 @@ namespace darwin {
 		virtual results stop() noexcept override
 		{
 			conio::reset();
-			conio::clrscr();
+			//conio::clrscr();
 			conio::echo(true);
 			mReady = false;
 			return results::success;

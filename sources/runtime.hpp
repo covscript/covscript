@@ -35,7 +35,6 @@ namespace cov_basic {
 		}
 		void remove_domain()
 		{
-			std::cerr<<__func__<<m_data.size()<<std::endl;
 			if(m_data.size()>1)
 				m_data.pop_front();
 		}
@@ -414,8 +413,10 @@ namespace cov_basic {
 		switch(token->get_type()) {
 		case token_types::id: {
 			std::string id=dynamic_cast<token_id*>(token)->get_id();
-			if(!storage.var_exsist_current(id)&&define_var)
+			if(!storage.var_exsist_current(id)&&define_var) {
 				storage.add_var(id,number(0));
+				define_var=false;
+			}
 			return storage.get_var(id);
 			break;
 		}
@@ -469,9 +470,11 @@ namespace cov_basic {
 			case signal_types::abo_:
 				return parse_abo(parse_expr(it.left()),parse_expr(it.right()));
 				break;
-			case signal_types::asi_:
-				return parse_asi(parse_expr(it.left()),parse_expr(it.right()));
+			case signal_types::asi_: {
+				cov::any left=parse_expr(it.left());
+				return parse_asi(left,parse_expr(it.right()));
 				break;
+			}
 			case signal_types::equ_:
 				return parse_equ(parse_expr(it.left()),parse_expr(it.right()));
 				break;
