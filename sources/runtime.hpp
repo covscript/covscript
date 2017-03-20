@@ -201,7 +201,7 @@ namespace cov_basic {
 			throw syntax_error("Unsupported operator operations(Dot).");
 		if(a.const_val<constant_values>()==constant_values::global_namespace)
 			return storage.get_var_global(dynamic_cast<token_id*>(b)->get_id());
-		else if(a.const_val<constant_values>()==constant_values::this_namespace)
+		else if(a.const_val<constant_values>()==constant_values::current_namespace)
 			return storage.get_var_current(dynamic_cast<token_id*>(b)->get_id());
 		else
 			throw syntax_error("Unsupported operator operations(Dot).");
@@ -407,10 +407,8 @@ namespace cov_basic {
 		switch(token->get_type()) {
 		case token_types::id: {
 			std::string id=dynamic_cast<token_id*>(token)->get_id();
-			if(define_var) {
+			if(!storage.var_exsist_current(id)&&define_var)
 				storage.add_var(id,number(0));
-				define_var=false;
-			}
 			return storage.get_var(id);
 			break;
 		}

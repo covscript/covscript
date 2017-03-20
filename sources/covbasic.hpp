@@ -57,11 +57,10 @@ namespace cov_basic {
 	void statement_define::run()
 	{
 		define_var=true;
-		if(mType==nullptr)
-			parse_expr(mTree.root());
-		else
-			parse_expr(mTree.root()).assign(storage.get_var_type(mType->get_id()),true);
+		cov::any var=parse_expr(mTree.root());
 		define_var=false;
+		if(mType!=nullptr)
+			var.assign(storage.get_var_type(mType->get_id()),true);
 	}
 	void statement_break::run()
 	{
