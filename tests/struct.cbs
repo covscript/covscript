@@ -1,0 +1,13 @@
+struct foo
+    define a=10
+    function test()
+        --a
+        if(a>0)
+            test()
+        end
+    end
+end
+define a as foo
+global.println(current.a.a)
+current.a.test()
+global.println(current.a.a)

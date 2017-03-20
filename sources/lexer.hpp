@@ -6,13 +6,13 @@
 #include <map>
 namespace cov_basic {
 	enum class token_types {
-	    null,endline,action,signal,id,value,sblist,mblist,lblist,expr,arglist,array
+		null,endline,action,signal,id,value,sblist,mblist,lblist,expr,arglist,array
 	};
 	enum class action_types {
-	    struct_,block_,endblock_,define_,as_,if_,then_,else_,while_,do_,for_,break_,continue_,function_,return_
+		struct_,block_,endblock_,define_,as_,if_,then_,else_,while_,do_,for_,break_,continue_,function_,return_
 	};
 	enum class signal_types {
-	    add_,sub_,mul_,div_,mod_,pow_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,inc_,dec_,slb_,srb_,mlb_,mrb_,llb_,lrb_,esb_,emb_,elb_,fcall_,access_
+		add_,sub_,mul_,div_,mod_,pow_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,inc_,dec_,slb_,srb_,mlb_,mrb_,llb_,lrb_,esb_,emb_,elb_,fcall_,access_
 	};
 	class token_base {
 		static garbage_collector<token_base> gc;
@@ -43,7 +43,8 @@ namespace cov_basic {
 		{
 			return token_types::endline;
 		}
-		std::size_t get_num() noexcept {
+		std::size_t get_num() noexcept
+		{
 			return this->mNum;
 		}
 	};
@@ -56,7 +57,8 @@ namespace cov_basic {
 		{
 			return token_types::action;
 		}
-		action_types& get_action() noexcept {
+		action_types& get_action() noexcept
+		{
 			return this->mType;
 		}
 	};
@@ -69,7 +71,8 @@ namespace cov_basic {
 		{
 			return token_types::signal;
 		}
-		signal_types& get_signal() noexcept {
+		signal_types& get_signal() noexcept
+		{
 			return this->mType;
 		}
 	};
@@ -82,7 +85,8 @@ namespace cov_basic {
 		{
 			return token_types::id;
 		}
-		std::string& get_id() noexcept {
+		std::string& get_id() noexcept
+		{
 			return this->mId;
 		}
 	};
@@ -95,7 +99,8 @@ namespace cov_basic {
 		{
 			return token_types::value;
 		}
-		cov::any& get_value() noexcept {
+		cov::any& get_value() noexcept
+		{
 			return this->mVal;
 		}
 	};
@@ -108,7 +113,8 @@ namespace cov_basic {
 		{
 			return token_types::sblist;
 		}
-		std::deque<std::deque<token_base*>>& get_list() noexcept {
+		std::deque<std::deque<token_base*>>& get_list() noexcept
+		{
 			return this->mList;
 		}
 	};
@@ -121,7 +127,8 @@ namespace cov_basic {
 		{
 			return token_types::mblist;
 		}
-		std::deque<std::deque<token_base*>>& get_list() noexcept {
+		std::deque<std::deque<token_base*>>& get_list() noexcept
+		{
 			return this->mList;
 		}
 	};
@@ -134,7 +141,8 @@ namespace cov_basic {
 		{
 			return token_types::lblist;
 		}
-		std::deque<std::deque<token_base*>>& get_list() noexcept {
+		std::deque<std::deque<token_base*>>& get_list() noexcept
+		{
 			return this->mList;
 		}
 	};
@@ -165,10 +173,10 @@ namespace cov_basic {
 		/*{"do",action_types::do_},{"for",action_types::for_},*/{"break",action_types::break_},{"continue",action_types::continue_},{"function",action_types::function_},{"return",action_types::return_}
 	};
 	enum class constant_values {
-	    this_namespace,global_namespace
+		current_namespace,global_namespace
 	};
 	mapping<std::string,cov::any> constant_map= {
-		{"this",constant_values::this_namespace},{"global",constant_values::global_namespace},{"pi",number(3.1415926535)},{"e",number(2.7182818284)},{"True",true},{"False",false},{"true",true},{"false",false},{"TRUE",true},{"FALSE",false}
+		{"current",constant_values::current_namespace},{"global",constant_values::global_namespace},{"pi",number(3.1415926535)},{"e",number(2.7182818284)},{"True",true},{"False",false},{"true",true},{"false",false},{"TRUE",true},{"FALSE",false}
 	};
 	char signals[]= {
 		'+','-','*','/','%','^',',','.','>','<','=','&','|','!','(',')','[',']','{','}'

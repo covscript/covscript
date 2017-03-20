@@ -3,12 +3,14 @@
 #include <cmath>
 namespace cov_basic {
 	class domain_manager {
+	public:
+		using domain_t=std::shared_ptr<std::unordered_map<string,cov::any>>;
 		std::unordered_map<string,std::function<cov::any()>> m_type;
-		std::deque<std::unordered_map<string,cov::any>> m_data;
+		std::deque<domain_t> m_data;
 	public:
 		domain_manager()
 		{
-			m_data.emplace_front();
+			m_data.emplace_front(std::make_shared<std::unordered_map<string,cov::any>>());
 		}
 		domain_manager(const domain_manager&)=delete;
 		~domain_manager()=default;
@@ -21,9 +23,13 @@ namespace cov_basic {
 		}
 		void add_domain()
 		{
-			m_data.emplace_front();
+			m_data.emplace_front(std::make_shared<std::unordered_map<string,cov::any>>());
 		}
-		std::unordered_map<string,cov::any>& get_domain()
+		void add_domain(const domain_t& dat)
+		{
+			m_data.emplace_front(dat);
+		}
+		domain_t& get_domain()
 		{
 			return m_data.front();
 		}
@@ -42,19 +48,19 @@ namespace cov_basic {
 		bool var_exsist(const string& name)
 		{
 			for(auto& domain:m_data)
-				if(domain.count(name)>0)
+				if(domain->count(name)>0)
 					return true;
 			return false;
 		}
 		bool var_exsist_current(const string& name)
 		{
-			if(m_data.front().count(name)>0)
+			if(m_data.front()->count(name)>0)
 				return true;
 			return false;
 		}
 		bool var_exsist_global(const string& name)
 		{
-			if(m_data.back().count(name)>0)
+			if(m_data.back()->count(name)>0)
 				return true;
 			return false;
 		}
@@ -68,20 +74,20 @@ namespace cov_basic {
 		cov::any& get_var(const string& name)
 		{
 			for(auto& domain:m_data)
-				if(domain.count(name)>0)
-					return domain.at(name);
+				if(domain->count(name)>0)
+					return domain->at(name);
 			throw syntax_error("Use of undefined variable \""+name+"\".");
 		}
 		cov::any& get_var_current(const string& name)
 		{
-			if(m_data.front().count(name)>0)
-				return m_data.front().at(name);
+			if(m_data.front()->count(name)>0)
+				return m_data.front()->at(name);
 			throw syntax_error("Use of undefined variable \""+name+"\" in current domain.");
 		}
 		cov::any& get_var_global(const string& name)
 		{
-			if(m_data.back().count(name)>0)
-				return m_data.back().at(name);
+			if(m_data.back()->count(name)>0)
+				return m_data.back()->at(name);
 			throw syntax_error("Use of undefined variable \""+name+"\" in global domain.");
 		}
 		void add_var(const string& name,const cov::any& var)
@@ -89,14 +95,14 @@ namespace cov_basic {
 			if(var_exsist_current(name))
 				get_var(name)=var;
 			else
-				m_data.front().emplace(name,var);
+				m_data.front()->emplace(name,var);
 		}
 		void add_var_global(const string& name,const cov::any& var)
 		{
 			if(var_exsist_global(name))
 				get_var_global(name)=var;
 			else
-				m_data.back().emplace(name,var);
+				m_data.back()->emplace(name,var);
 		}
 	};
 	domain_manager storage;
@@ -201,7 +207,7 @@ namespace cov_basic {
 			throw syntax_error("Unsupported operator operations(Dot).");
 		if(a.const_val<constant_values>()==constant_values::global_namespace)
 			return storage.get_var_global(dynamic_cast<token_id*>(b)->get_id());
-		else if(a.const_val<constant_values>()==constant_values::this_namespace)
+		else if(a.const_val<constant_values>()==constant_values::current_namespace)
 			return storage.get_var_current(dynamic_cast<token_id*>(b)->get_id());
 		else
 			throw syntax_error("Unsupported operator operations(Dot).");
@@ -407,7 +413,7 @@ namespace cov_basic {
 		switch(token->get_type()) {
 		case token_types::id: {
 			std::string id=dynamic_cast<token_id*>(token)->get_id();
-			if(define_var) {
+			if(!storage.var_exsist_current(id)&&define_var) {
 				storage.add_var(id,number(0));
 				define_var=false;
 			}
@@ -464,9 +470,11 @@ namespace cov_basic {
 			case signal_types::abo_:
 				return parse_abo(parse_expr(it.left()),parse_expr(it.right()));
 				break;
-			case signal_types::asi_:
-				return parse_asi(parse_expr(it.left()),parse_expr(it.right()));
+			case signal_types::asi_: {
+				cov::any left=parse_expr(it.left());
+				return parse_asi(left,parse_expr(it.right()));
 				break;
+			}
 			case signal_types::equ_:
 				return parse_equ(parse_expr(it.left()),parse_expr(it.right()));
 				break;

@@ -9,16 +9,17 @@
 #include <exception>
 #include <stdexcept>
 #include <string>
+#include <memory>
 #include <deque>
 namespace cov_basic {
 	class syntax_error final:public std::exception {
 		std::string mWhat="Covariant Basic Syntax Error";
 	public:
 		syntax_error()=default;
-	syntax_error(const std::string& str) noexcept:
-		mWhat("Covariant Basic Syntax Error:"+str) {}
-	syntax_error(std::size_t line,const std::string& str) noexcept:
-		mWhat("In line "+std::to_string(line)+":Covariant Basic Syntax Error:\n"+str) {}
+		syntax_error(const std::string& str) noexcept:
+			mWhat("Covariant Basic Syntax Error:"+str) {}
+		syntax_error(std::size_t line,const std::string& str) noexcept:
+			mWhat("In line "+std::to_string(line)+":Covariant Basic Syntax Error:\n"+str) {}
 		syntax_error(const syntax_error&)=default;
 		syntax_error(syntax_error&&)=default;
 		virtual ~syntax_error()=default;
@@ -33,10 +34,10 @@ namespace cov_basic {
 		std::string mWhat="Covariant Basic Language Error";
 	public:
 		lang_error()=default;
-	lang_error(const std::string& str) noexcept:
-		mWhat("Covariant Basic Language Error:"+str) {}
-	lang_error(std::size_t line,const std::string& str) noexcept:
-		mWhat("In line "+std::to_string(line)+":Covariant Basic Language Error:\n"+str) {}
+		lang_error(const std::string& str) noexcept:
+			mWhat("Covariant Basic Language Error:"+str) {}
+		lang_error(std::size_t line,const std::string& str) noexcept:
+			mWhat("In line "+std::to_string(line)+":Covariant Basic Language Error:\n"+str) {}
 		lang_error(const lang_error&)=default;
 		lang_error(lang_error&&)=default;
 		virtual ~lang_error()=default;
@@ -72,22 +73,31 @@ namespace cov_basic {
 		mutable cov::any mRetVal;
 		std::deque<std::string> mArgs;
 		std::deque<statement_base*> mBody;
+		std::shared_ptr<std::unordered_map<string,cov::any>> mData;
 	public:
 		function()=delete;
 		function(const std::deque<std::string>& args,const std::deque<statement_base*>& body):mArgs(args),mBody(body) {}
 		~function()=default;
 		cov::any call(const array&) const;
+		void set_data(const std::shared_ptr<std::unordered_map<string,cov::any>>& data)
+		{
+			mData=data;
+		}
 	};
 	class structure final {
-		std::unordered_map<std::string,cov::any> m_data;
+		std::shared_ptr<std::unordered_map<string,cov::any>> m_data;
 	public:
 		structure()=delete;
-		structure(const std::unordered_map<std::string,cov::any>& data):m_data(data) {}
+		structure(const std::shared_ptr<std::unordered_map<string,cov::any>>& data):m_data(data) {}
 		~structure()=default;
+		std::shared_ptr<std::unordered_map<string,cov::any>>& get_domain()
+		{
+			return m_data;
+		}
 		cov::any get_var(const std::string& name) const
 		{
-			if(m_data.count(name)>0)
-				return m_data.at(name);
+			if(m_data->count(name)>0)
+				return m_data->at(name);
 			else
 				throw syntax_error("Struct have no member called \""+name+"\".");
 		}

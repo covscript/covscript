@@ -10,7 +10,8 @@ namespace cov_basic {
 		{
 			return token_types::expr;
 		}
-		cov::tree<token_base*>& get_tree() noexcept {
+		cov::tree<token_base*>& get_tree() noexcept
+		{
 			return this->mTree;
 		}
 	};
@@ -23,7 +24,8 @@ namespace cov_basic {
 		{
 			return token_types::arglist;
 		}
-		std::deque<cov::tree<token_base*>>& get_arglist() noexcept {
+		std::deque<cov::tree<token_base*>>& get_arglist() noexcept
+		{
 			return this->mTreeList;
 		}
 	};
@@ -36,7 +38,8 @@ namespace cov_basic {
 		{
 			return token_types::array;
 		}
-		std::deque<cov::tree<token_base*>>& get_array() noexcept {
+		std::deque<cov::tree<token_base*>>& get_array() noexcept
+		{
 			return this->mTreeList;
 		}
 	};
@@ -261,7 +264,7 @@ namespace cov_basic {
 		}
 	}
 	enum class statement_types {
-	    expression_,block_,define_,if_,while_,for_,break_,continue_,struct_,function_,return_
+		expression_,block_,define_,if_,while_,for_,break_,continue_,struct_,function_,return_
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;
