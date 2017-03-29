@@ -1,2 +1,2 @@
-define a
+define a as boolean
 println(a)

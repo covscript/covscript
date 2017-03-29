@@ -190,136 +190,37 @@ namespace cov_basic {
 		fcall_stack.front()->mRetVal=parse_expr(this->mTree.root());
 		return_fcall=true;
 	}
-	void kill_action(std::deque<std::deque<token_base*>>& lines,std::deque<statement_base*>& statements)
+	void kill_action(const std::deque<std::deque<token_base*>>& lines,std::deque<statement_base*>& statements)
 	{
-		std::deque<statement_base*>* tmp_statement=nullptr;
-		std::deque<std::deque<token_base*>> tmp_lines;
-		std::deque<statement_base*> tmp_statements;
-		token_base* tmp_endline=nullptr;
-		token_action* tmp_action=nullptr;
-		token_expr* tmp_expr=nullptr;
+		std::deque<std::deque<token_base*>> tmp;
+		method_type* method=nullptr;
 		int level=0;
 		for(auto& line:lines) {
-			if(line.empty()||line.front()==nullptr)
-				throw syntax_error("Undefined behaviour.");
-			if(level>0) {
-				if(line.front()->get_type()==token_types::action) {
-					switch(dynamic_cast<token_action*>(line.front())->get_action()) {
-					case action_types::block_:
-						++level;
-						break;
-					case action_types::if_:
-						++level;
-						break;
-					case action_types::else_:
-						if(level==1) {
-							kill_action(tmp_lines,tmp_statements);
-							tmp_statement=new std::deque<statement_base*>(tmp_statements);
-							tmp_lines.clear();
-							tmp_statements.clear();
-							continue;
-						}
-						break;
-					case action_types::while_:
-						++level;
-						break;
-					case action_types::struct_:
-						++level;
-						break;
-					case action_types::function_:
-						++level;
-						break;
-					case action_types::endblock_:
+			method_type* m=nullptr;
+			try {
+				m=&translator.match(line);
+			} catch(const syntax_error& se) {
+				throw syntax_error(dynamic_cast<token_endline*>(line.back())->get_num(),se.what());
+			}
+			if(m->type==grammar_type::single) {
+				if(level>0) {
+					if(m->function({line})->get_type()==statement_types::end_)
 						--level;
-						if(level==0) {
-							kill_action(tmp_lines,tmp_statements);
-							switch(tmp_action->get_action()) {
-							case action_types::block_:
-								statements.push_back(new statement_block(tmp_statements,tmp_endline));
-								break;
-							case action_types::if_:
-								if(tmp_statement==nullptr)
-									statements.push_back(new statement_if(tmp_expr->get_tree(),new std::deque<statement_base*>(tmp_statements),nullptr,tmp_endline));
-								else
-									statements.push_back(new statement_if(tmp_expr->get_tree(),tmp_statement,new std::deque<statement_base*>(tmp_statements),tmp_endline));
-								break;
-							case action_types::while_:
-								statements.push_back(new statement_while(tmp_expr->get_tree(),tmp_statements,tmp_endline));
-								break;
-							case action_types::struct_: {
-								cov::tree<token_base*>& t=tmp_expr->get_tree();
-								std::string name=dynamic_cast<token_id*>(t.root().data())->get_id();
-								statements.push_back(new statement_struct(name,tmp_statements,tmp_endline));
-								break;
-							}
-							case action_types::function_: {
-								cov::tree<token_base*>& t=tmp_expr->get_tree();
-								std::string name=dynamic_cast<token_id*>(t.root().left().data())->get_id();
-								std::deque<std::string> args;
-								for(auto& it:dynamic_cast<token_arglist*>(t.root().right().data())->get_arglist())
-									args.push_back(dynamic_cast<token_id*>(it.root().data())->get_id());
-								statements.push_back(new statement_function(name,args,tmp_statements,tmp_endline));
-								break;
-							}
-							}
-							tmp_lines.clear();
-							tmp_statements.clear();
-							tmp_expr=nullptr;
-							tmp_endline=nullptr;
-							tmp_action=nullptr;
-							tmp_statement=nullptr;
-							continue;
-						}
-					}
-				}
-				tmp_lines.push_back(line);
-				continue;
-			}
-			switch(line.front()->get_type()) {
-			case token_types::expr:
-				statements.push_back(new statement_expression(dynamic_cast<token_expr*>(line.front())->get_tree(),line.back()));
-				break;
-			case token_types::action:
-				tmp_endline=line.back();
-				tmp_action=dynamic_cast<token_action*>(line.front());
-				switch(tmp_action->get_action()) {
-				case action_types::block_:
-					++level;
-					break;
-				case action_types::if_:
-					++level;
-					tmp_expr=dynamic_cast<token_expr*>(line.at(1));
-					break;
-				case action_types::while_:
-					++level;
-					tmp_expr=dynamic_cast<token_expr*>(line.at(1));
-					break;
-				case action_types::struct_:
-					++level;
-					tmp_expr=dynamic_cast<token_expr*>(line.at(1));
-					break;
-				case action_types::function_:
-					++level;
-					tmp_expr=dynamic_cast<token_expr*>(line.at(1));
-					break;
-				case action_types::define_:
-					if(line.size()>3)
-						statements.push_back(new statement_define(dynamic_cast<token_expr*>(line.at(1))->get_tree(),dynamic_cast<token_expr*>(line.at(3))->get_tree().root().data(),line.back()));
-					else
-						statements.push_back(new statement_define(dynamic_cast<token_expr*>(line.at(1))->get_tree(),line.back()));
-					break;
-				case action_types::return_:
-					statements.push_back(new statement_return(dynamic_cast<token_expr*>(line.at(1))->get_tree(),line.back()));
-					break;
-				case action_types::break_:
-					statements.push_back(new statement_break(line.back()));
-					break;
-				case action_types::continue_:
-					statements.push_back(new statement_continue(line.back()));
-					break;
-				}
-				break;
-			}
+					if(level==0) {
+						statements.push_back(method->function(tmp));
+						tmp.clear();
+						method=nullptr;
+					} else
+						tmp.push_back(line);
+				} else
+					statements.push_back(m->function({line}));
+			} else if(m->type==grammar_type::block) {
+				if(level==0)
+					method=m;
+				++level;
+				tmp.push_back(line);
+			} else
+				throw syntax_error("Null type of grammar.");
 		}
 	}
 	void translate_into_statements(std::deque<token_base*>& tokens,std::deque<statement_base*>& statements)
@@ -347,8 +248,6 @@ namespace cov_basic {
 				lines.push_back(tmp);
 			tmp.clear();
 		}
-		for(auto& it:lines)
-			statements.push_back(translator.match(it));
-		//kill_action(lines,statements);
+		kill_action(lines,statements);
 	}
 }

@@ -267,7 +267,7 @@ namespace cov_basic {
 		}
 	}
 	enum class statement_types {
-		expression_,block_,define_,if_,while_,for_,break_,continue_,struct_,function_,return_
+		expression_,block_,define_,if_,while_,for_,break_,continue_,struct_,function_,return_,end_
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;
@@ -416,10 +416,25 @@ namespace cov_basic {
 		}
 		virtual void run() override;
 	};
-	class translator_type final
-	{
+	class statement_end final:public statement_base {
 	public:
-		using method_type=std::function<statement_base*(const std::deque<token_base*>&)>;
+		statement_end()=default;
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::end_;
+		}
+		virtual void run() override {}
+	};
+	enum class grammar_type {
+		null,single,block
+	};
+	struct method_type final {
+		using function_type=std::function<statement_base*(const std::deque<std::deque<token_base*>>&)>;
+		grammar_type type=grammar_type::null;
+		function_type function;
+	};
+	class translator_type final {
+	public:
 		using data_type=std::pair<std::deque<token_base*>,method_type>;
 		static bool compare(const token_base* a,const token_base* b)
 		{
@@ -429,10 +444,9 @@ namespace cov_basic {
 				return a==nullptr;
 			if(a->get_type()!=b->get_type())
 				return false;
-			if(a->get_type()==token_types::action)
-			{
+			if(a->get_type()==token_types::action) {
 				return dynamic_cast<const token_action*>(a)->get_action()==dynamic_cast<const token_action*>(b)->get_action();
-			}else
+			} else
 				return true;
 		}
 	private:
@@ -445,7 +459,7 @@ namespace cov_basic {
 		{
 			m_data.emplace_back(std::make_shared<data_type>(grammar,method));
 		}
-		statement_base* match(const std::deque<token_base*>& raw)
+		method_type& match(const std::deque<token_base*>& raw)
 		{
 			if(raw.size()<=1)
 				throw syntax_error("Grammar error.");
@@ -453,24 +467,21 @@ namespace cov_basic {
 			for(auto& it:m_data)
 				if(this->compare(it->first.front(),raw.front()))
 					stack.push_back(it);
+			stack.remove_if([&](const std::shared_ptr<data_type>& dat) {
+				return dat->first.size()!=raw.size();
+			});
+			stack.remove_if([&](const std::shared_ptr<data_type>& dat) {
+				for(std::size_t i=1; i<raw.size()-1; ++i) {
+					if(!compare(raw.at(i),dat->first.at(i)))
+						return true;
+				}
+				return false;
+			});
 			if(stack.empty())
 				throw syntax_error("Uknow grammar.");
-			for(std::size_t i=i;i<raw.size()-1;++i)
-			{
-				stack.remove_if([&](const std::shared_ptr<data_type>& dat){
-					for(auto& ptr:dat->first)
-						if(!compare(ptr,it)) {
-							if(stack.size()>1)
-								return true;
-							else
-								throw syntax_error("Uknown grammar.");
-						}
-					return false;
-				});
-			}
 			if(stack.size()>1)
 				throw syntax_error("Ambiguous grammar.");
-			return stack.front()->second(raw);
+			return stack.front()->second;
 		}
 	};
 	static translator_type translator;

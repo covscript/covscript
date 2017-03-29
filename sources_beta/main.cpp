@@ -571,15 +571,33 @@ namespace cov_basic {
 	}
 	void init()
 	{
-		translator.add_method({new token_expr(cov::tree<token_base*>()),new token_endline(0)},[](const std::deque<token_base*>& raw)->statement_base*{
-			return new statement_expression(dynamic_cast<token_expr*>(raw.front())->get_tree(),raw.back());
-		});
-		translator.add_method({new token_action(action_types::define_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},[](const std::deque<token_base*>& raw)->statement_base*{
-			return new statement_define(dynamic_cast<token_expr*>(raw.at(1))->get_tree(),raw.back());
-		});
-		translator.add_method({new token_action(action_types::define_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::as_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},[](const std::deque<token_base*>& raw)->statement_base*{
-			return new statement_define(dynamic_cast<token_expr*>(raw.at(1))->get_tree(),raw.at(3),raw.back());
-		});
+		// Expression Grammar
+		translator.add_method({new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type{grammar_type::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				return new statement_expression(dynamic_cast<token_expr*>(raw.front().front())->get_tree(),raw.front().back());
+			}});
+		// Define Grammar
+		translator.add_method({new token_action(action_types::define_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type{grammar_type::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				return new statement_define(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),raw.front().back());
+			}});
+		translator.add_method({new token_action(action_types::define_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::as_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type{grammar_type::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				return new statement_define(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),raw.front().at(3),raw.front().back());
+			}});
+		// End Grammar
+		translator.add_method({new token_action(action_types::endblock_),new token_endline(0)},method_type{grammar_type::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				return new statement_end;
+			}});
+		// If Grammar
+		translator.add_method({new token_action(action_types::if_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type{grammar_type::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				std::deque<statement_base*>* body=new std::deque<statement_base*>;
+				kill_action({raw.begin()+1,raw.end()},*body);
+				return new statement_if(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),body,nullptr,raw.front().back());
+			}});
+		// While Grammar
+		translator.add_method({new token_action(action_types::while_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type{grammar_type::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				std::deque<statement_base*> body;
+				kill_action({raw.begin()+1,raw.end()},body);
+				return new statement_while(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),body,raw.front().back());
+			}});
 		storage.add_type("number",[]()->cov::any {return number(0);});
 		storage.add_type("boolean",[]()->cov::any {return boolean(true);});
 		storage.add_type("string",[]()->cov::any {return string();});
