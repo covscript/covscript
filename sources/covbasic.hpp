@@ -10,8 +10,10 @@ namespace cov_basic {
 	{
 		if(args.size()!=this->mArgs.size())
 			throw syntax_error("Wrong size of arguments.");
-		if(this->mData.get()!=nullptr)
+		if(this->mData.get()!=nullptr) {
+			storage.add_this(this->mData);
 			storage.add_domain(this->mData);
+		}
 		storage.add_domain();
 		fcall_stack.push_front(this);
 		for(std::size_t i=0; i<args.size(); ++i)
@@ -28,15 +30,19 @@ namespace cov_basic {
 				return_fcall=false;
 				cov::any retval=this->mRetVal;
 				this->mRetVal=cov::any();
-				if(this->mData.get()!=nullptr)
+				if(this->mData.get()!=nullptr) {
+					storage.remove_this();
 					storage.remove_domain();
+				}
 				storage.remove_domain();
 				fcall_stack.pop_front();
 				return retval;
 			}
 		}
-		if(this->mData.get()!=nullptr)
+		if(this->mData.get()!=nullptr) {
+			storage.remove_this();
 			storage.remove_domain();
+		}
 		storage.remove_domain();
 		fcall_stack.pop_front();
 		return number(0);

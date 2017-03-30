@@ -7,6 +7,7 @@ namespace cov_basic {
 		using domain_t=std::shared_ptr<std::unordered_map<string,cov::any>>;
 		std::unordered_map<string,std::function<cov::any()>> m_type;
 		std::deque<domain_t> m_data;
+		std::deque<domain_t> m_this;
 	public:
 		domain_manager()
 		{
@@ -29,6 +30,10 @@ namespace cov_basic {
 		{
 			m_data.emplace_front(dat);
 		}
+		void add_this(const domain_t& dat)
+		{
+			m_this.emplace_front(dat);
+		}
 		domain_t& get_domain()
 		{
 			return m_data.front();
@@ -37,6 +42,11 @@ namespace cov_basic {
 		{
 			if(m_data.size()>1)
 				m_data.pop_front();
+		}
+		void remove_this()
+		{
+			if(m_this.size()>1)
+				m_this.pop_front();
 		}
 		bool type_exsist(const string& name)
 		{
@@ -61,6 +71,12 @@ namespace cov_basic {
 		bool var_exsist_global(const string& name)
 		{
 			if(m_data.back()->count(name)>0)
+				return true;
+			return false;
+		}
+		bool var_exsist_this(const string& name)
+		{
+			if(m_this.front()->count(name)>0)
 				return true;
 			return false;
 		}
@@ -89,6 +105,12 @@ namespace cov_basic {
 			if(m_data.back()->count(name)>0)
 				return m_data.back()->at(name);
 			throw syntax_error("Use of undefined variable \""+name+"\" in global domain.");
+		}
+		cov::any& get_var_this(const string& name)
+		{
+			if(m_this.front()->count(name)>0)
+				return m_this.front()->at(name);
+			throw syntax_error("Use of undefined variable \""+name+"\" in current object.");
 		}
 		void add_var(const string& name,const cov::any& var)
 		{
@@ -209,6 +231,8 @@ namespace cov_basic {
 			return storage.get_var_global(dynamic_cast<token_id*>(b)->get_id());
 		else if(a.const_val<constant_values>()==constant_values::current_namespace)
 			return storage.get_var_current(dynamic_cast<token_id*>(b)->get_id());
+		else if(a.const_val<constant_values>()==constant_values::this_object)
+			return storage.get_var_this(dynamic_cast<token_id*>(b)->get_id());
 		else
 			throw syntax_error("Unsupported operator operations(Dot).");
 	}

@@ -173,10 +173,10 @@ namespace cov_basic {
 		/*{"do",action_types::do_},{"for",action_types::for_},*/{"break",action_types::break_},{"continue",action_types::continue_},{"function",action_types::function_},{"return",action_types::return_}
 	};
 	enum class constant_values {
-		current_namespace,global_namespace
+		current_namespace,global_namespace,this_object
 	};
 	mapping<std::string,cov::any> constant_map= {
-		{"current",constant_values::current_namespace},{"global",constant_values::global_namespace},{"pi",number(3.1415926535)},{"e",number(2.7182818284)},{"True",true},{"False",false},{"true",true},{"false",false},{"TRUE",true},{"FALSE",false}
+		{"current",constant_values::current_namespace},{"global",constant_values::global_namespace},{"this",constant_values::this_object},{"pi",number(3.1415926535)},{"e",number(2.7182818284)},{"True",true},{"False",false},{"true",true},{"false",false},{"TRUE",true},{"FALSE",false}
 	};
 	char signals[]= {
 		'+','-','*','/','%','^',',','.','>','<','=','&','|','!','(',')','[',']','{','}'
