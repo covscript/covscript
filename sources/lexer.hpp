@@ -57,7 +57,7 @@ namespace cov_basic {
 		{
 			return token_types::action;
 		}
-		action_types& get_action() noexcept
+		action_types get_action() const noexcept
 		{
 			return this->mType;
 		}
@@ -71,7 +71,7 @@ namespace cov_basic {
 		{
 			return token_types::signal;
 		}
-		signal_types& get_signal() noexcept
+		signal_types get_signal() const noexcept
 		{
 			return this->mType;
 		}
@@ -85,7 +85,7 @@ namespace cov_basic {
 		{
 			return token_types::id;
 		}
-		std::string& get_id() noexcept
+		const std::string& get_id() const noexcept
 		{
 			return this->mId;
 		}

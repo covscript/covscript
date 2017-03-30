@@ -1,5 +1,8 @@
 #pragma once
 #include "./lexer.hpp"
+#include <memory>
+#include <utility>
+#include <list>
 namespace cov_basic {
 	class token_expr final:public token_base {
 		cov::tree<token_base*> mTree;
@@ -264,7 +267,7 @@ namespace cov_basic {
 		}
 	}
 	enum class statement_types {
-		expression_,block_,define_,if_,while_,for_,break_,continue_,struct_,function_,return_
+		expression_,block_,define_,if_,else_,while_,for_,break_,continue_,struct_,function_,return_,end_
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;
@@ -366,6 +369,15 @@ namespace cov_basic {
 		}
 		virtual void run() override;
 	};
+	class statement_else final:public statement_base {
+	public:
+		statement_else()=default;
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::else_;
+		}
+		virtual void run() override {}
+	};
 	class statement_while final:public statement_base {
 		cov::tree<token_base*> mTree;
 		std::deque<statement_base*> mBlock;
@@ -413,4 +425,73 @@ namespace cov_basic {
 		}
 		virtual void run() override;
 	};
+	class statement_end final:public statement_base {
+	public:
+		statement_end()=default;
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::end_;
+		}
+		virtual void run() override {}
+	};
+	enum class grammar_type {
+		null,single,block
+	};
+	struct method_type final {
+		using function_type=std::function<statement_base*(const std::deque<std::deque<token_base*>>&)>;
+		grammar_type type=grammar_type::null;
+		function_type function;
+	};
+	class translator_type final {
+	public:
+		using data_type=std::pair<std::deque<token_base*>,method_type>;
+		static bool compare(const token_base* a,const token_base* b)
+		{
+			if(a==nullptr)
+				return b==nullptr;
+			if(b==nullptr)
+				return a==nullptr;
+			if(a->get_type()!=b->get_type())
+				return false;
+			if(a->get_type()==token_types::action) {
+				return dynamic_cast<const token_action*>(a)->get_action()==dynamic_cast<const token_action*>(b)->get_action();
+			} else
+				return true;
+		}
+	private:
+		std::list<std::shared_ptr<data_type>> m_data;
+	public:
+		translator_type()=default;
+		translator_type(const translator_type&)=delete;
+		~translator_type()=default;
+		void add_method(const std::deque<token_base*>& grammar,const method_type& method)
+		{
+			m_data.emplace_back(std::make_shared<data_type>(grammar,method));
+		}
+		method_type& match(const std::deque<token_base*>& raw)
+		{
+			if(raw.size()<=1)
+				throw syntax_error("Grammar error.");
+			std::list<std::shared_ptr<data_type>> stack;
+			for(auto& it:m_data)
+				if(this->compare(it->first.front(),raw.front()))
+					stack.push_back(it);
+			stack.remove_if([&](const std::shared_ptr<data_type>& dat) {
+				return dat->first.size()!=raw.size();
+			});
+			stack.remove_if([&](const std::shared_ptr<data_type>& dat) {
+				for(std::size_t i=1; i<raw.size()-1; ++i) {
+					if(!compare(raw.at(i),dat->first.at(i)))
+						return true;
+				}
+				return false;
+			});
+			if(stack.empty())
+				throw syntax_error("Uknow grammar.");
+			if(stack.size()>1)
+				throw syntax_error("Ambiguous grammar.");
+			return stack.front()->second;
+		}
+	};
+	static translator_type translator;
 }
