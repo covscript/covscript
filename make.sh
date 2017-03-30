@@ -1,1 +1,1 @@
-g++ -std=c++11 -static -fPIC -O3 ./sources/main.cpp -o cbs2
+g++ -std=c++14 -static -fPIC -O3 ./sources/main.cpp -o cbs2
