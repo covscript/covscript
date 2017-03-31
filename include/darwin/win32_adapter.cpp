@@ -76,6 +76,7 @@ namespace darwin {
 		{
 			conio::gotoxy(0,0);
 			int sw(conio::terminal_width()),sh(conio::terminal_height());
+			conio::console buf(sw,sh);
 			for(std::size_t y=0; y<mDrawable.get_height()&&y<sh; ++y) {
 				for(std::size_t x=0; x<mDrawable.get_width()&&x<sw; ++x) {
 					const pixel& pix=mDrawable.get_pixel(x,y);
@@ -138,13 +139,12 @@ namespace darwin {
 						return results::failure;
 						break;
 					}
-					conio::set_color(fcolor,bcolor);
-					printf("%c",pix.get_char());
+					buf.set_color(fcolor,bcolor);
+					buf.put_char(pix.get_char());
 				}
-				conio::reset();
-				printf("\r\n");
+				buf.reset();
 			}
-			fflush(stdout);
+			buf.flush();
 			return results::success;
 		}
 	} dwin32adapter;
