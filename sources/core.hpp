@@ -3,6 +3,7 @@
 #include "../include/mozart/timer.hpp"
 #include "../include/mozart/tree.hpp"
 #include "../include/mozart/any.hpp"
+#include "../include/libdll/dll.hpp"
 #include <unordered_map>
 #include <forward_list>
 #include <functional>
@@ -16,10 +17,10 @@ namespace cov_basic {
 		std::string mWhat="Covariant Basic Syntax Error";
 	public:
 		syntax_error()=default;
-		syntax_error(const std::string& str) noexcept:
-			mWhat("Covariant Basic Syntax Error:"+str) {}
-		syntax_error(std::size_t line,const std::string& str) noexcept:
-			mWhat("In line "+std::to_string(line)+":Covariant Basic Syntax Error:\n"+str) {}
+	syntax_error(const std::string& str) noexcept:
+		mWhat("Covariant Basic Syntax Error:"+str) {}
+	syntax_error(std::size_t line,const std::string& str) noexcept:
+		mWhat("In line "+std::to_string(line)+":Covariant Basic Syntax Error:\n"+str) {}
 		syntax_error(const syntax_error&)=default;
 		syntax_error(syntax_error&&)=default;
 		virtual ~syntax_error()=default;
@@ -34,10 +35,10 @@ namespace cov_basic {
 		std::string mWhat="Covariant Basic Language Error";
 	public:
 		lang_error()=default;
-		lang_error(const std::string& str) noexcept:
-			mWhat("Covariant Basic Language Error:"+str) {}
-		lang_error(std::size_t line,const std::string& str) noexcept:
-			mWhat("In line "+std::to_string(line)+":Covariant Basic Language Error:\n"+str) {}
+	lang_error(const std::string& str) noexcept:
+		mWhat("Covariant Basic Language Error:"+str) {}
+	lang_error(std::size_t line,const std::string& str) noexcept:
+		mWhat("In line "+std::to_string(line)+":Covariant Basic Language Error:\n"+str) {}
 		lang_error(const lang_error&)=default;
 		lang_error(lang_error&&)=default;
 		virtual ~lang_error()=default;
@@ -132,4 +133,48 @@ namespace cov_basic {
 			table_delete.push_front(static_cast<T*>(ptr));
 		}
 	};
+	class extension final {
+		std::unordered_map<string,cov::any> m_data;
+	public:
+		extension()=default;
+		extension(const extension&)=delete;
+		extension(const std::unordered_map<string,cov::any>& dat):m_data(dat) {}
+		~extension()=default;
+		void add_var(const std::string& name,const cov::any& var)
+		{
+			if(m_data.count(name)>0)
+				m_data.at(name)=var;
+			else
+				m_data.emplace(name,var);
+		}
+		cov::any& get_var(const std::string& name)
+		{
+			if(m_data.count(name)>0)
+				return m_data.at(name);
+			else
+				throw syntax_error("Use of undefined variable \""+name+"\" in extension.");
+		}
+	};
+	class extension_manager final {
+		std::deque<cov::dll> m_dll;
+		std::unordered_map<string,extension*> m_data;
+	public:
+		extension_manager()=default;
+		extension_manager(const extension_manager&)=delete;
+		~extension_manager()=default;
+		void add_extension(const std::string& path)
+		{
+			m_dll.emplace_front(cov::dll(path));
+			m_data.emplace(path,reinterpret_cast<extension*(*)()>(m_dll.front().get_address("__CBS_EXTENSION__"))());
+		}
+		void add_extension(const std::string& name,extension* ptr)
+		{
+			m_data.emplace(name,ptr);
+		}
+		cov::any& get_var(const std::string& ext,const std::string& name)
+		{
+			return m_data.at(ext)->get_var(name);
+		}
+	};
+	static extension_manager extensions;
 }

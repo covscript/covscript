@@ -1,5 +1,6 @@
 #pragma once
 #include "./lexer.hpp"
+#include <fstream>
 #include <memory>
 #include <utility>
 #include <list>
@@ -13,8 +14,7 @@ namespace cov_basic {
 		{
 			return token_types::expr;
 		}
-		cov::tree<token_base*>& get_tree() noexcept
-		{
+		cov::tree<token_base*>& get_tree() noexcept {
 			return this->mTree;
 		}
 	};
@@ -27,8 +27,7 @@ namespace cov_basic {
 		{
 			return token_types::arglist;
 		}
-		std::deque<cov::tree<token_base*>>& get_arglist() noexcept
-		{
+		std::deque<cov::tree<token_base*>>& get_arglist() noexcept {
 			return this->mTreeList;
 		}
 	};
@@ -41,8 +40,7 @@ namespace cov_basic {
 		{
 			return token_types::array;
 		}
-		std::deque<cov::tree<token_base*>>& get_array() noexcept
-		{
+		std::deque<cov::tree<token_base*>>& get_array() noexcept {
 			return this->mTreeList;
 		}
 	};
@@ -266,8 +264,9 @@ namespace cov_basic {
 				expr.push_back(ptr);
 		}
 	}
+	void translate_into_statements(std::deque<token_base*>& tokens,std::deque<statement_base*>& statements);
 	enum class statement_types {
-		expression_,block_,define_,if_,else_,while_,for_,break_,continue_,struct_,function_,return_,end_
+	    expression_,import_,block_,define_,if_,else_,while_,for_,break_,continue_,struct_,function_,return_,end_
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;
@@ -304,6 +303,41 @@ namespace cov_basic {
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::expression_;
+		}
+		virtual void run() override;
+	};
+	class statement_import final:public statement_base {
+		std::deque<statement_base*> mBlock;
+	public:
+		statement_import()=delete;
+		statement_import(const std::string& path,token_base* ptr):statement_base(ptr)
+		{
+			std::deque<char> buff;
+			std::deque<token_base*> tokens;
+			std::ifstream in(path);
+			std::string line;
+			std::size_t line_num=0;
+			while(std::getline(in,line)) {
+				++line_num;
+				if(line.empty())
+					continue;
+				if(line[0]=='#')
+					continue;
+				for(auto& c:line)
+					buff.push_back(c);
+				try {
+					translate_into_tokens(buff,tokens);
+				} catch(const syntax_error& se) {
+					throw syntax_error(line_num,se.what());
+				}
+				tokens.push_back(new token_endline(line_num));
+				buff.clear();
+			}
+			translate_into_statements(tokens,mBlock);
+		}
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::import_;
 		}
 		virtual void run() override;
 	};
@@ -435,7 +469,7 @@ namespace cov_basic {
 		virtual void run() override {}
 	};
 	enum class grammar_type {
-		null,single,block
+	    null,single,block
 	};
 	struct method_type final {
 		using function_type=std::function<statement_base*(const std::deque<std::deque<token_base*>>&)>;

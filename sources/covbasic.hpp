@@ -69,6 +69,18 @@ namespace cov_basic {
 	{
 		parse_expr(mTree.root());
 	}
+	void statement_import::run()
+	{
+		for(auto& ptr:mBlock) {
+			try {
+				ptr->run();
+			} catch(const syntax_error& se) {
+				throw syntax_error(ptr->get_line_num(),se.what());
+			} catch(const lang_error& le) {
+				throw lang_error(ptr->get_line_num(),le.what());
+			}
+		}
+	}
 	void statement_define::run()
 	{
 		define_var=true;
