@@ -1,3 +1,4 @@
+import "../headers/darwin.cbh"
 define fd=10
 function main()
     init_graphics()

@@ -1,3 +1,4 @@
+import "../headers/darwin.cbh"
 init_graphics()
 define pix=darwin_pixel("@",true,false,get_color("blue"),get_color("white"))
 define paint=darwin_picture()

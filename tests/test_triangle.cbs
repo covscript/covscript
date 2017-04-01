@@ -1,3 +1,4 @@
+import "../headers/darwin.cbh"
 function main()
 	init_graphics()
 	fit_drawable()

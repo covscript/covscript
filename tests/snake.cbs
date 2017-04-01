@@ -1,3 +1,4 @@
+import "../headers/darwin.cbh"
 define head_pix=darwin_pixel("#",true,false,get_color("white"),get_color("black"))
 define body_pix=darwin_pixel("+",true,false,get_color("white"),get_color("black"))
 define food_pix=darwin_pixel("@",true,false,get_color("white"),get_color("black"))
