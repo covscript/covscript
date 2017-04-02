@@ -10,6 +10,7 @@ namespace cov
 		void* m_handle=nullptr;
 	public:
 		dll()=default;
+		dll(const dll&)=delete;
 		dll(const std::string& path):m_handle(::LoadLibrary(path.c_str())){}
 		~dll(){
 			if(m_handle!=nullptr)
@@ -45,6 +46,7 @@ namespace cov
 		void* m_handle=nullptr;
 	public:
 		dll()=default;
+		dll(const dll&)=delete;
 		dll(const std::string& path):m_handle(::dlopen(path.c_str(),RTLD_LAZY)){}
 		~dll(){
 			if(m_handle!=nullptr)

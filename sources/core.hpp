@@ -164,7 +164,7 @@ namespace cov_basic {
 		~extension_manager()=default;
 		void add_extension(const std::string& path)
 		{
-			m_dll.emplace_front(cov::dll(path));
+			m_dll.emplace_front(path);
 			m_data.emplace(path,reinterpret_cast<extension*(*)()>(m_dll.front().get_address("__CBS_EXTENSION__"))());
 		}
 		void add_extension(const std::string& name,extension* ptr)
