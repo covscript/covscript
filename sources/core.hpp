@@ -173,7 +173,10 @@ namespace cov_basic {
 		}
 		cov::any& get_var(const std::string& ext,const std::string& name)
 		{
-			return m_data.at(ext)->get_var(name);
+			if(m_data.count(ext)>0)
+				return m_data.at(ext)->get_var(name);
+			else
+				throw syntax_error("Uknow extension \""+ext+"\".");
 		}
 	};
 	static extension_manager extensions;
