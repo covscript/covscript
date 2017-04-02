@@ -1,5 +1,5 @@
 # Darwin UCGL Extension for Cov. Basic 2.0
-define darwin_ext="./darwin.cbs_ext"
+define darwin_ext="darwin_ext"
 #load_extension(darwin_ext)
 define init_graphics=get_var_extension(darwin_ext,"init_graphics")
 define fit_drawable=get_var_extension(darwin_ext,"fit_drawable")
