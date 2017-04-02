@@ -17,10 +17,10 @@ namespace cov_basic {
 		std::string mWhat="Covariant Basic Syntax Error";
 	public:
 		syntax_error()=default;
-	syntax_error(const std::string& str) noexcept:
-		mWhat("Covariant Basic Syntax Error:"+str) {}
-	syntax_error(std::size_t line,const std::string& str) noexcept:
-		mWhat("In line "+std::to_string(line)+":Covariant Basic Syntax Error:\n"+str) {}
+		syntax_error(const std::string& str) noexcept:
+			mWhat("Covariant Basic Syntax Error:"+str) {}
+		syntax_error(std::size_t line,const std::string& str) noexcept:
+			mWhat("In line "+std::to_string(line)+":Covariant Basic Syntax Error:\n"+str) {}
 		syntax_error(const syntax_error&)=default;
 		syntax_error(syntax_error&&)=default;
 		virtual ~syntax_error()=default;
@@ -35,10 +35,10 @@ namespace cov_basic {
 		std::string mWhat="Covariant Basic Language Error";
 	public:
 		lang_error()=default;
-	lang_error(const std::string& str) noexcept:
-		mWhat("Covariant Basic Language Error:"+str) {}
-	lang_error(std::size_t line,const std::string& str) noexcept:
-		mWhat("In line "+std::to_string(line)+":Covariant Basic Language Error:\n"+str) {}
+		lang_error(const std::string& str) noexcept:
+			mWhat("Covariant Basic Language Error:"+str) {}
+		lang_error(std::size_t line,const std::string& str) noexcept:
+			mWhat("In line "+std::to_string(line)+":Covariant Basic Language Error:\n"+str) {}
 		lang_error(const lang_error&)=default;
 		lang_error(lang_error&&)=default;
 		virtual ~lang_error()=default;

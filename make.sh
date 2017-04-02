@@ -1,1 +1,1 @@
-g++ -std=c++14 -static -fPIC -s -O3 ./sources/main.cpp -o cbs2
+g++ -std=c++14 -fPIE -s -O3 ./sources/main.cpp -o cbs2 -ldl
