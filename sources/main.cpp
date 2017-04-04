@@ -15,40 +15,10 @@ namespace cov_basic {
 			return true;
 		if(str=="false"||str=="False"||str=="FALSE")
 			return false;
-		enum types {
-			interger,floating,other
-		} type=types::interger;
-		for(auto& it:str) {
-			if(!std::isdigit(it)&&it!='.') {
-				type=other;
-				break;
-			}
-			if(!std::isdigit(it)&&it=='.') {
-				if(type==interger) {
-					type=floating;
-					continue;
-				}
-				if(type==floating) {
-					type=other;
-					break;
-				}
-			}
-		}
-		switch(type) {
-		case interger:
-			try {
-				return number(std::stoi(str));
-			} catch(std::out_of_range) {
-				try {
-					return number(std::stol(str));
-				} catch(std::out_of_range) {
-					return str;
-				}
-			}
-		case floating:
+		try {
 			return number(std::stold(str));
-		case other:
-			break;
+		} catch(std::out_of_range) {
+			return str;
 		}
 		return str;
 	}
