@@ -17,7 +17,7 @@ namespace cov_basic {
 			return false;
 		try {
 			return number(std::stold(str));
-		} catch(std::out_of_range) {
+		} catch(...) {
 			return str;
 		}
 		return str;
