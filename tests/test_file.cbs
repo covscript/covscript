@@ -1,4 +1,7 @@
 define infs=global.open_file("./test_file.cbs","read")
+if(!global.is_open_file(infs))
+  global.error("file is not exsist.")
+end
 define outfs=global.open_file("./test.txt","write")
 global.write_file(outfs,"#Clone of test_file.cbs",endline)
 while(!global.end_of_file(infs))

@@ -494,6 +494,14 @@ namespace cov_basic {
 		else
 			throw syntax_error("Can't recognize the method \""+args.at(1).const_val<string>()+"\".");
 	}
+	cov::any is_open_file(array& args)
+	{
+		if(args.empty())
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(infile))
+			throw syntax_error("Wrong type of arguments.(Request Input File)");
+		return args.at(0).const_val<infile>()->is_open();
+	}
 	cov::any end_of_file(array& args)
 	{
 		if(args.empty())
@@ -806,6 +814,7 @@ namespace cov_basic {
 		add_function(load_extension);
 		add_function(get_var_extension);
 		add_function(open_file);
+		add_function(is_open_file);
 		add_function(end_of_file);
 		add_function(read_file);
 		add_function(write_file);
