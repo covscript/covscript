@@ -441,8 +441,9 @@ namespace cov_basic {
 		switch(token->get_type()) {
 		case token_types::id: {
 			std::string id=dynamic_cast<token_id*>(token)->get_id();
-			if(!runtime->storage.var_exsist_current(id)&&define_var) {
-				runtime->storage.add_var(id,number(0));
+			if(define_var) {
+				if(!runtime->storage.var_exsist_current(id))
+					runtime->storage.add_var(id,number(0));
 				define_var=false;
 			}
 			return runtime->storage.get_var(id);

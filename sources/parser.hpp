@@ -269,7 +269,7 @@ namespace cov_basic {
 	}
 	void translate_into_statements(std::deque<token_base*>& tokens,std::deque<statement_base*>& statements);
 	enum class statement_types {
-		expression_,import_,block_,define_,if_,else_,while_,for_,break_,continue_,struct_,function_,return_,end_
+		expression_,import_,block_,define_,if_,else_,while_,until_,for_,break_,continue_,struct_,function_,return_,end_
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;
@@ -424,6 +424,18 @@ namespace cov_basic {
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::while_;
+		}
+		virtual void run() override;
+	};
+	class statement_until final:public statement_base {
+		cov::tree<token_base*> mTree;
+		std::deque<statement_base*> mBlock;
+	public:
+		statement_until()=delete;
+		statement_until(const cov::tree<token_base*>& tree,const std::deque<statement_base*>& b,token_base* ptr):statement_base(ptr),mTree(tree),mBlock(b) {}
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::until_;
 		}
 		virtual void run() override;
 	};

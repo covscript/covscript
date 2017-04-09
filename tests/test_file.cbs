@@ -1,0 +1,8 @@
+define infs=global.open_file("./test_file.cbs","read")
+define outfs=global.open_file("./test.txt","write")
+global.write_file(outfs,"#Clone of test_file.cbs",endline)
+while(!global.end_of_file(infs))
+  define str=global.getline(infs)
+  println(str)
+  global.write_file(outfs,str,endline)
+end

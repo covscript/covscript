@@ -191,6 +191,35 @@ namespace cov_basic {
 		}
 		runtime->storage.remove_domain();
 	}
+	void statement_until::run()
+	{
+		runtime->storage.add_domain();
+		do {
+			for(auto& ptr:mBlock) {
+				try {
+					ptr->run();
+				} catch(const syntax_error& se) {
+					throw syntax_error(ptr->get_line_num(),se.what());
+				} catch(const lang_error& le) {
+					throw lang_error(ptr->get_line_num(),le.what());
+				}
+				if(return_fcall) {
+					runtime->storage.remove_domain();
+					return;
+				}
+				if(break_block) {
+					break_block=false;
+					runtime->storage.remove_domain();
+					return;
+				}
+				if(continue_block) {
+					continue_block=false;
+					break;
+				}
+			}
+		} while(parse_expr(mTree.root()).const_val<boolean>());
+		runtime->storage.remove_domain();
+	}
 	void statement_struct::run()
 	{
 		runtime->storage.add_type(this->mName,this->mBuilder);
@@ -280,6 +309,8 @@ namespace cov_basic {
 #include "./darwin_extension.cpp"
 #endif
 namespace cov_basic {
+	using infile=std::shared_ptr<std::ifstream>;
+	using outfile=std::shared_ptr<std::ofstream>;
 	cov::any parse_value(const std::string& str)
 	{
 		if(str=="true"||str=="True"||str=="TRUE")
@@ -315,10 +346,15 @@ namespace cov_basic {
 		}
 		return number(0);
 	}
-	cov::any getline(array&)
+	cov::any getline(array& args)
 	{
 		std::string str;
-		std::getline(std::cin,str);
+		if(args.empty())
+			std::getline(std::cin,str);
+		else if(args.front().type()==typeid(infile))
+			std::getline(*args.front().val<infile>(true),str);
+		else
+			throw syntax_error("Wrong type of arguments.(Request Input File)");
 		return str;
 	}
 	cov::any print(array& args)
@@ -426,6 +462,7 @@ namespace cov_basic {
 		throw lang_error(args.front().to_string().c_str());
 		return number(0);
 	}
+// Extensions
 	cov::any load_extension(array& args)
 	{
 		if(args.size()!=1)
@@ -442,6 +479,59 @@ namespace cov_basic {
 		if(args.at(0).type()!=typeid(string)||args.at(1).type()!=typeid(string))
 			throw syntax_error("Wrong type of arguments.(Request String,String)");
 		return runtime->extensions.get_var(args.at(0).const_val<string>(),args.at(1).const_val<string>());
+	}
+// File
+	cov::any open_file(array& args)
+	{
+		if(args.size()!=2)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(string)&&args.at(1).type()!=typeid(string))
+			throw syntax_error("Wrong type of arguments.(Request String and String)");
+		if(args.at(1).const_val<string>()=="read")
+			return infile(std::make_shared<std::ifstream>(args.at(0).const_val<string>()));
+		else if(args.at(1).const_val<string>()=="write")
+			return outfile(std::make_shared<std::ofstream>(args.at(0).const_val<string>()));
+		else
+			throw syntax_error("Can't recognize the method \""+args.at(1).const_val<string>()+"\".");
+	}
+	cov::any end_of_file(array& args)
+	{
+		if(args.empty())
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(infile))
+			throw syntax_error("Wrong type of arguments.(Request Input File)");
+		return args.at(0).const_val<infile>()->eof();
+	}
+	cov::any read_file(array& args)
+	{
+		if(args.empty())
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(infile))
+			throw syntax_error("Wrong type of arguments.(Request Input File)");
+		std::ifstream& infs=*args.at(0).val<infile>(true);
+		if(args.size()==1) {
+			std::string str;
+			infs>>str;
+			return parse_value(str);
+		} else {
+			std::string str;
+			for(std::size_t i=1; i<args.size(); ++i) {
+				infs>>str;
+				args.at(i).assign(parse_value(str),true);
+			}
+		}
+		return number(0);
+	}
+	cov::any write_file(array& args)
+	{
+		if(args.empty())
+			throw syntax_error("Wrong size of arguments.");
+		if(args.at(0).type()!=typeid(outfile))
+			throw syntax_error("Wrong type of arguments.(Request Output File)");
+		std::ofstream& outfs=*args.at(0).val<outfile>(true);
+		for(std::size_t i=1; i<args.size(); ++i)
+			outfs<<args.at(i);
+		return number(0);
 	}
 // String
 	cov::any append_string(array& args)
@@ -650,6 +740,13 @@ namespace cov_basic {
 				return new statement_while(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),body,raw.front().back());
 			}
 		});
+		// Until Grammar
+		translator.add_method({new token_action(action_types::until_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {grammar_type::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				std::deque<statement_base*> body;
+				kill_action({raw.begin()+1,raw.end()},body);
+				return new statement_until(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),body,raw.front().back());
+			}
+		});
 		// Break Grammar
 		translator.add_method({new token_action(action_types::break_),new token_endline(0)},method_type {grammar_type::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				return new statement_break(raw.front().back());
@@ -708,6 +805,10 @@ namespace cov_basic {
 		add_function(error);
 		add_function(load_extension);
 		add_function(get_var_extension);
+		add_function(open_file);
+		add_function(end_of_file);
+		add_function(read_file);
+		add_function(write_file);
 		add_function(append_string);
 		add_function(cut_string);
 		add_function(clear_string);
