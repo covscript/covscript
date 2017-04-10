@@ -291,6 +291,8 @@ namespace cov_basic {
 				break;
 			}
 		}
+		if(inside_str)
+			throw syntax_error("Lack of the \".");
 		if(tmp.empty())
 			return;
 		switch(type) {
