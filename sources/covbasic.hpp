@@ -469,16 +469,7 @@ namespace cov_basic {
 			throw syntax_error("Wrong size of arguments.");
 		if(args.at(0).type()!=typeid(string))
 			throw syntax_error("Wrong type of arguments.(Request String)");
-		runtime->extensions.add_extension(args.front().const_val<string>());
-		return number(0);
-	}
-	cov::any get_var_extension(array& args)
-	{
-		if(args.size()!=2)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(string)||args.at(1).type()!=typeid(string))
-			throw syntax_error("Wrong type of arguments.(Request String,String)");
-		return runtime->extensions.get_var(args.at(0).const_val<string>(),args.at(1).const_val<string>());
+		return extension_t(std::make_shared<extension_holder>(args.front().const_val<string>()));
 	}
 // File
 	cov::any open_file(array& args)
@@ -812,7 +803,6 @@ namespace cov_basic {
 		add_function(clone);
 		add_function(error);
 		add_function(load_extension);
-		add_function(get_var_extension);
 		add_function(open_file);
 		add_function(is_open_file);
 		add_function(end_of_file);
@@ -841,8 +831,12 @@ namespace cov_basic {
 		add_function_name("sizeof",_sizeof);
 #ifdef CBS_DARWIN_EXT
 		darwin_cbs_ext::init();
-		runtime->extensions.add_extension("darwin_ext",&darwin_ext);
+		runtime->storage.add_var("darwin",std::make_shared<extension_holder>(&darwin_ext));
 #endif
+	}
+	void reset()
+	{
+		runtime=std::unique_ptr<runtime_type>(new runtime_type);
 	}
 	void cov_basic(const std::string& path)
 	{
@@ -873,7 +867,6 @@ namespace cov_basic {
 			tokens.push_back(new token_endline(line_num));
 			buff.clear();
 		}
-		runtime=std::unique_ptr<runtime_type>(new runtime_type);
 		init();
 		translate_into_statements(tokens,statements);
 		for(auto& ptr:statements) {

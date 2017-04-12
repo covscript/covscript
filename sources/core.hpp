@@ -188,28 +188,22 @@ namespace cov_basic {
 				throw syntax_error("Use of undefined variable \""+name+"\" in extension.");
 		}
 	};
-	class extension_manager final {
-		std::deque<cov::dll> m_dll;
-		std::unordered_map<string,extension*> m_data;
+	class extension_holder final {
+		extension* m_ext=nullptr;
+		cov::dll m_dll;
 	public:
-		extension_manager()=default;
-		extension_manager(const extension_manager&)=delete;
-		~extension_manager()=default;
-		void add_extension(const std::string& path)
+		extension_holder()=delete;
+		extension_holder(extension* ptr):m_ext(ptr) {}
+		extension_holder(const std::string& path):m_dll(path)
 		{
-			m_dll.emplace_front(path);
-			m_data.emplace(path,reinterpret_cast<extension*(*)()>(m_dll.front().get_address("__CBS_EXTENSION__"))());
+			m_ext=reinterpret_cast<extension*(*)()>(m_dll.get_address("__CBS_EXTENSION__"))();
 		}
-		void add_extension(const std::string& name,extension* ptr)
+		~extension_holder()=default;
+		cov::any& get_var(const std::string& name)
 		{
-			m_data.emplace(name,ptr);
-		}
-		cov::any& get_var(const std::string& ext,const std::string& name)
-		{
-			if(m_data.count(ext)>0)
-				return m_data.at(ext)->get_var(name);
-			else
-				throw syntax_error("Uknow extension \""+ext+"\".");
+			if(m_ext==nullptr)
+				throw internal_error("Use of nullptr of extension.");
+			return m_ext->get_var(name);
 		}
 	};
 }

@@ -127,9 +127,9 @@ namespace cov_basic {
 				m_data.back()->emplace(name,var);
 		}
 	};
+	using extension_t=std::shared_ptr<extension_holder>;
 	struct runtime_type final {
 		domain_manager storage;
-		extension_manager extensions;
 	};
 	std::unique_ptr<runtime_type> runtime=nullptr;
 	cov::any parse_add(const cov::any& a,const cov::any& b)
@@ -229,6 +229,8 @@ namespace cov_basic {
 			throw syntax_error("Unsupported operator operations(Dot).");
 		if(a.type()==typeid(structure))
 			return a.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
+		if(a.type()==typeid(extension_t))
+			return a.val<extension_t>(true)->get_var(dynamic_cast<token_id*>(b)->get_id());
 		if(a.type()!=typeid(constant_values))
 			throw syntax_error("Unsupported operator operations(Dot).");
 		if(a.const_val<constant_values>()==constant_values::global_namespace)
