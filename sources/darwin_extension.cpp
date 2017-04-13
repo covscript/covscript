@@ -10,7 +10,7 @@ namespace darwin_cbs_ext {
 	using namespace cov_basic;
 // Graphics
 	darwin::sync_clock clock(30);
-	cov::any init_graphics(array& args)
+	cov::any load(array& args)
 	{
 		if(args.empty())
 			darwin::runtime.load("./darwin.module");
@@ -63,14 +63,14 @@ namespace darwin_cbs_ext {
 			throw syntax_error("Arguments error.");
 		return number(0);
 	}
-	cov::any get_height_drawable(array& args)
+	cov::any get_height(array& args)
 	{
 		if(args.empty())
 			return number(darwin::runtime.get_drawable()->get_height());
 		else
 			return number(args.at(0).const_val<darwin::picture>().get_height());
 	}
-	cov::any get_width_drawable(array& args)
+	cov::any get_width(array& args)
 	{
 		if(args.empty())
 			return number(darwin::runtime.get_drawable()->get_width());
@@ -174,107 +174,11 @@ namespace darwin_cbs_ext {
 	{
 		return number(args.at(0).val<string>().at(0));
 	}
-	cov::any get_color(array& args)
+	cov::any pixel(array& args)
 	{
-		number color;
-		CovSwitch(args.at(0).val<string>()) {
-			CovCase("black") {
-				color=0;
-			}
-			EndCovCase;
-			CovCase("white") {
-				color=1;
-			}
-			EndCovCase;
-			CovCase("red") {
-				color=2;
-			}
-			EndCovCase;
-			CovCase("green") {
-				color=3;
-			}
-			EndCovCase;
-			CovCase("blue") {
-				color=4;
-			}
-			EndCovCase;
-			CovCase("pink") {
-				color=5;
-			}
-			EndCovCase;
-			CovCase("yellow") {
-				color=6;
-			}
-			EndCovCase;
-			CovCase("cyan") {
-				color=7;
-			}
-			EndCovCase;
-		}
-		EndCovSwitch;
-		return color;
+		return darwin::pixel(args.at(0).const_val<std::string>().at(0),args.at(1).const_val<bool>(),args.at(2).const_val<bool>(),args.at(3).const_val<darwin::colors>(),args.at(4).const_val<darwin::colors>());
 	}
-	cov::any darwin_pixel(array& args)
-	{
-		char ch=args.at(0).const_val<std::string>().at(0);
-		bool bright=args.at(1).const_val<bool>();
-		bool underline=args.at(2).const_val<bool>();
-		darwin::colors fc,bc;
-		switch(int(args.at(3).const_val<number>())) {
-		case 0:
-			fc=darwin::colors::black;
-			break;
-		case 1:
-			fc=darwin::colors::white;
-			break;
-		case 2:
-			fc=darwin::colors::red;
-			break;
-		case 3:
-			fc=darwin::colors::green;
-			break;
-		case 4:
-			fc=darwin::colors::blue;
-			break;
-		case 5:
-			fc=darwin::colors::pink;
-			break;
-		case 6:
-			fc=darwin::colors::yellow;
-			break;
-		case 7:
-			fc=darwin::colors::cyan;
-			break;
-		}
-		switch(int(args.at(4).const_val<number>())) {
-		case 0:
-			bc=darwin::colors::black;
-			break;
-		case 1:
-			bc=darwin::colors::white;
-			break;
-		case 2:
-			bc=darwin::colors::red;
-			break;
-		case 3:
-			bc=darwin::colors::green;
-			break;
-		case 4:
-			bc=darwin::colors::blue;
-			break;
-		case 5:
-			bc=darwin::colors::pink;
-			break;
-		case 6:
-			bc=darwin::colors::yellow;
-			break;
-		case 7:
-			bc=darwin::colors::cyan;
-			break;
-		}
-		return darwin::pixel(ch,bright,underline,fc,bc);
-	}
-	cov::any darwin_picture(array& args)
+	cov::any picture(array& args)
 	{
 		if(args.empty())
 			return darwin::picture();
@@ -283,15 +187,15 @@ namespace darwin_cbs_ext {
 	}
 	void init()
 	{
-		add_function_ext(init_graphics);
+		add_function_ext(load);
 		add_function_ext(fit_drawable);
 		add_function_ext(set_frame_limit);
 		add_function_ext(update_drawable);
 		add_function_ext(clear_drawable);
 		add_function_ext(fill_drawable);
 		add_function_ext(resize_drawable);
-		add_function_ext(get_height_drawable);
-		add_function_ext(get_width_drawable);
+		add_function_ext(get_height);
+		add_function_ext(get_width);
 		add_function_ext(draw_point);
 		add_function_ext(draw_picture);
 		add_function_ext(draw_line);
@@ -304,9 +208,16 @@ namespace darwin_cbs_ext {
 		add_function_ext(is_kb_hit);
 		add_function_ext(get_kb_hit);
 		add_function_ext(get_ascii);
-		add_function_ext(get_color);
-		add_function_ext(darwin_pixel);
-		add_function_ext(darwin_picture);
+		add_function_ext(pixel);
+		add_function_ext(picture);
+		darwin_ext.add_var("black",darwin::colors::black);
+		darwin_ext.add_var("white",darwin::colors::white);
+		darwin_ext.add_var("red",darwin::colors::red);
+		darwin_ext.add_var("green",darwin::colors::green);
+		darwin_ext.add_var("blue",darwin::colors::blue);
+		darwin_ext.add_var("pink",darwin::colors::pink);
+		darwin_ext.add_var("yellow",darwin::colors::yellow);
+		darwin_ext.add_var("cyan",darwin::colors::cyan);
 	}
 }
 #ifndef CBS_DARWIN_EXT

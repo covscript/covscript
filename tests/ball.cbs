@@ -1,7 +1,7 @@
-#import "../headers/darwin.cbh"
-darwin.init_graphics()
-define pix=darwin.darwin_pixel("@",true,false,darwin.get_color("blue"),darwin.get_color("white"))
-define paint=darwin.darwin_picture()
+define darwin=global.load_extension("./darwin.cbs_ext")
+darwin.load()
+define pix=darwin.pixel("@",true,false,darwin.blue,darwin.white)
+define paint=darwin.picture()
 darwin.set_frame_limit(60)
 define bx=0
 define by=0
@@ -10,7 +10,7 @@ define byi=true
 while(true)
         darwin.fit_drawable()
         darwin.clear_drawable(paint)
-        darwin.resize_drawable(paint,darwin.get_width_drawable(),darwin.get_height_drawable())
+        darwin.resize_drawable(paint,darwin.get_width(),darwin.get_height())
         darwin.draw_point(paint,bx,by,pix)
         if(bx<=0)
                 bxi=true
@@ -18,10 +18,10 @@ while(true)
         if(by<=0)
                 byi=true
         end
-        if(bx>=darwin.get_width_drawable()-1)
+        if(bx>=darwin.get_width()-1)
                 bxi=false
         end
-        if(by>=darwin.get_height_drawable()-1)
+        if(by>=darwin.get_height()-1)
                 byi=false
         end
         if(bxi)
