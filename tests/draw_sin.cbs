@@ -1,22 +1,21 @@
-import "../headers/darwin.cbh"
 define fd=10
 function main()
-    init_graphics()
-    set_frame_limit(60)
-    define pix=darwin_pixel("@",true,false,get_color("blue"),get_color("white"))
-    fit_drawable()
-    clear_drawable()
+    darwin.load()
+    darwin.set_frame_limit(60)
+    define pix=darwin.pixel("@",true,false,darwin.blue,darwin.white)
+    darwin.fit_drawable()
+    darwin.clear_drawable()
     define x=0
     define i=0
     while(true)
-        fit_drawable()
-        clear_drawable()
+        darwin.fit_drawable()
+        darwin.clear_drawable()
         i=0
-        while(i<get_width_drawable())
-            draw_point(i,0.5*(get_height_drawable()+sin((i+x)/fd)*get_height_drawable()),pix)
+        while(i<darwin.get_width())
+            darwin.draw_point(i,0.5*(darwin.get_height()+sin((i+x)/fd)*darwin.get_height()),pix)
             ++i
         end
-        update_drawable()
+        darwin.update_drawable()
         ++x
     end
 end

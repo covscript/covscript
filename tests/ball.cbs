@@ -1,4 +1,3 @@
-define darwin=global.load_extension("./darwin.cbs_ext")
 darwin.load()
 define pix=darwin.pixel("@",true,false,darwin.blue,darwin.white)
 define paint=darwin.picture()
