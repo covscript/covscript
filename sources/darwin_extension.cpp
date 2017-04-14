@@ -5,7 +5,6 @@
 #include "./extension.hpp"
 #endif
 static cov_basic::extension darwin_ext;
-#define add_function_ext(name) darwin_ext.add_var(#name,cov_basic::native_interface(name));
 namespace darwin_cbs_ext {
 	using namespace cov_basic;
 // Graphics
@@ -187,29 +186,29 @@ namespace darwin_cbs_ext {
 	}
 	void init()
 	{
-		add_function_ext(load);
-		add_function_ext(fit_drawable);
-		add_function_ext(set_frame_limit);
-		add_function_ext(update_drawable);
-		add_function_ext(clear_drawable);
-		add_function_ext(fill_drawable);
-		add_function_ext(resize_drawable);
-		add_function_ext(get_height);
-		add_function_ext(get_width);
-		add_function_ext(draw_point);
-		add_function_ext(draw_picture);
-		add_function_ext(draw_line);
-		add_function_ext(draw_rect);
-		add_function_ext(fill_rect);
-		add_function_ext(draw_triangle);
-		add_function_ext(fill_triangle);
-		add_function_ext(draw_string);
-		add_function_ext(log);
-		add_function_ext(is_kb_hit);
-		add_function_ext(get_kb_hit);
-		add_function_ext(get_ascii);
-		add_function_ext(pixel);
-		add_function_ext(picture);
+		darwin_ext.add_var("load",native_interface(load));
+		darwin_ext.add_var("fit_drawable",native_interface(fit_drawable));
+		darwin_ext.add_var("set_frame_limit",native_interface(set_frame_limit));
+		darwin_ext.add_var("update_drawable",native_interface(update_drawable));
+		darwin_ext.add_var("clear_drawable",native_interface(clear_drawable));
+		darwin_ext.add_var("fill_drawable",native_interface(fill_drawable));
+		darwin_ext.add_var("resize_drawable",native_interface(resize_drawable));
+		darwin_ext.add_var("get_height",native_interface(get_height));
+		darwin_ext.add_var("get_width",native_interface(get_width));
+		darwin_ext.add_var("draw_point",native_interface(draw_point));
+		darwin_ext.add_var("draw_picture",native_interface(draw_picture));
+		darwin_ext.add_var("draw_line",native_interface(draw_line));
+		darwin_ext.add_var("draw_rect",native_interface(draw_rect));
+		darwin_ext.add_var("fill_rect",native_interface(fill_rect));
+		darwin_ext.add_var("draw_triangle",native_interface(draw_triangle));
+		darwin_ext.add_var("fill_triangle",native_interface(fill_triangle));
+		darwin_ext.add_var("draw_string",native_interface(draw_string));
+		darwin_ext.add_var("log",native_interface(log));
+		darwin_ext.add_var("is_kb_hit",native_interface(is_kb_hit));
+		darwin_ext.add_var("get_kb_hit",native_interface(get_kb_hit));
+		darwin_ext.add_var("get_ascii",native_interface(get_ascii));
+		darwin_ext.add_var("pixel",native_interface(pixel));
+		darwin_ext.add_var("picture",native_interface(picture));
 		darwin_ext.add_var("black",darwin::colors::black);
 		darwin_ext.add_var("white",darwin::colors::white);
 		darwin_ext.add_var("red",darwin::colors::red);
