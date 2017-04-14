@@ -306,25 +306,13 @@ namespace cov_basic {
 #include <cmath>
 #define add_function(name) cov_basic::runtime->storage.add_var_global(#name,cov_basic::native_interface(name));
 #define add_function_name(name,func) cov_basic::runtime->storage.add_var_global(name,cov_basic::native_interface(func));
+#ifdef CBS_FILE_EXT
+#include "./file_extension.cpp"
+#endif
 #ifdef CBS_DARWIN_EXT
 #include "./darwin_extension.cpp"
 #endif
 namespace cov_basic {
-	using infile=std::shared_ptr<std::ifstream>;
-	using outfile=std::shared_ptr<std::ofstream>;
-	cov::any parse_value(const std::string& str)
-	{
-		if(str=="true"||str=="True"||str=="TRUE")
-			return true;
-		if(str=="false"||str=="False"||str=="FALSE")
-			return false;
-		try {
-			return number(std::stold(str));
-		} catch(...) {
-			return str;
-		}
-		return str;
-	}
 	cov::any _clone(cov::any val)
 	{
 		val.clone();
@@ -355,12 +343,7 @@ namespace cov_basic {
 	cov::any getline(array& args)
 	{
 		std::string str;
-		if(args.empty())
-			std::getline(std::cin,str);
-		else {
-			arglist::check<infile>(args);
-			std::getline(*args.front().val<infile>(true),str);
-		}
+		std::getline(std::cin,str);
 		return str;
 	}
 	cov::any print(array& args)
@@ -476,67 +459,6 @@ namespace cov_basic {
 		if(args.at(0).type()!=typeid(string))
 			throw syntax_error("Wrong type of arguments.(Request String)");
 		return extension_t(std::make_shared<extension_holder>(args.front().const_val<string>()));
-	}
-// File
-	cov::any open_file(array& args)
-	{
-		if(args.size()!=2)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(string)&&args.at(1).type()!=typeid(string))
-			throw syntax_error("Wrong type of arguments.(Request String and String)");
-		if(args.at(1).const_val<string>()=="read")
-			return infile(std::make_shared<std::ifstream>(args.at(0).const_val<string>()));
-		else if(args.at(1).const_val<string>()=="write")
-			return outfile(std::make_shared<std::ofstream>(args.at(0).const_val<string>()));
-		else
-			throw syntax_error("Can't recognize the method \""+args.at(1).const_val<string>()+"\".");
-	}
-	cov::any is_open_file(array& args)
-	{
-		if(args.empty())
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(infile))
-			throw syntax_error("Wrong type of arguments.(Request Input File)");
-		return args.at(0).const_val<infile>()->is_open();
-	}
-	cov::any end_of_file(array& args)
-	{
-		if(args.empty())
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(infile))
-			throw syntax_error("Wrong type of arguments.(Request Input File)");
-		return args.at(0).const_val<infile>()->eof();
-	}
-	cov::any read_file(array& args)
-	{
-		if(args.empty())
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(infile))
-			throw syntax_error("Wrong type of arguments.(Request Input File)");
-		std::ifstream& infs=*args.at(0).val<infile>(true);
-		if(args.size()==1) {
-			std::string str;
-			infs>>str;
-			return parse_value(str);
-		} else {
-			std::string str;
-			for(std::size_t i=1; i<args.size(); ++i) {
-				infs>>str;
-				args.at(i).assign(parse_value(str),true);
-			}
-		}
-		return number(0);
-	}
-	cov::any write_file(array& args)
-	{
-		if(args.empty())
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(outfile))
-			throw syntax_error("Wrong type of arguments.(Request Output File)");
-		std::ofstream& outfs=*args.at(0).val<outfile>(true);
-		for(std::size_t i=1; i<args.size(); ++i)
-			outfs<<args.at(i);
-		return number(0);
 	}
 // String
 	cov::any append_string(array& args)
@@ -810,11 +732,6 @@ namespace cov_basic {
 		add_function(clone);
 		add_function(error);
 		add_function(load_extension);
-		add_function(open_file);
-		add_function(is_open_file);
-		add_function(end_of_file);
-		add_function(read_file);
-		add_function(write_file);
 		add_function(append_string);
 		add_function(cut_string);
 		add_function(clear_string);
@@ -836,6 +753,10 @@ namespace cov_basic {
 		add_function(root);
 		add_function(pow);
 		add_function_name("sizeof",_sizeof);
+#ifdef CBS_FILE_EXT
+		file_cbs_ext::init();
+		runtime->storage.add_var("file",std::make_shared<extension_holder>(&file_ext));
+#endif
 #ifdef CBS_DARWIN_EXT
 		darwin_cbs_ext::init();
 		runtime->storage.add_var("darwin",std::make_shared<extension_holder>(&darwin_ext));

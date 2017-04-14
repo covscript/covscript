@@ -206,4 +206,17 @@ namespace cov_basic {
 			return m_ext->get_var(name);
 		}
 	};
+	cov::any parse_value(const std::string& str)
+	{
+		if(str=="true"||str=="True"||str=="TRUE")
+			return true;
+		if(str=="false"||str=="False"||str=="FALSE")
+			return false;
+		try {
+			return number(std::stold(str));
+		} catch(...) {
+			return str;
+		}
+		return str;
+	}
 }

@@ -1,3 +1,4 @@
+#define CBS_FILE_EXT
 #define CBS_DARWIN_EXT
 #include "./covbasic.hpp"
 int main(int args_size,const char* args[])

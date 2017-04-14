@@ -1,11 +1,11 @@
-define infs=global.open_file("./test_file.cbs","read")
-if(!global.is_open_file(infs))
+define infs=file.open("./test_file.cbs",file.read_method)
+if(!file.is_open(infs))
   global.error("file is not exsist.")
 end
-define outfs=global.open_file("./test.txt","write")
-global.write_file(outfs,"#Clone of test_file.cbs",endline)
-while(!global.end_of_file(infs))
-  define str=global.getline(infs)
+define outfs=file.open("./test.txt",file.write_method)
+file.write(outfs,"#Clone of test_file.cbs",endline)
+while(!file.eof(infs))
+  define str=file.getline(infs)
   println(str)
-  global.write_file(outfs,str,endline)
+  file.write(outfs,str,endline)
 end
