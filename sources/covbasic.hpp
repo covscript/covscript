@@ -300,6 +300,7 @@ namespace cov_basic {
 		kill_action(lines,statements);
 	}
 }
+#include "./arglist.hpp"
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -356,10 +357,10 @@ namespace cov_basic {
 		std::string str;
 		if(args.empty())
 			std::getline(std::cin,str);
-		else if(args.front().type()==typeid(infile))
+		else {
+			arglist::check<infile>(args);
 			std::getline(*args.front().val<infile>(true),str);
-		else
-			throw syntax_error("Wrong type of arguments.(Request Input File)");
+		}
 		return str;
 	}
 	cov::any print(array& args)
