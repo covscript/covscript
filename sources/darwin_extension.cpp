@@ -157,7 +157,7 @@ namespace darwin_cbs_ext {
 			throw syntax_error("Arguments error.");
 		return number(0);
 	}
-	cov::any darwin_log(array& args)
+	cov::any log(array& args)
 	{
 		Darwin_Log(args.front().to_string().c_str());
 		return number(0);
@@ -204,7 +204,7 @@ namespace darwin_cbs_ext {
 		add_function_ext(draw_triangle);
 		add_function_ext(fill_triangle);
 		add_function_ext(draw_string);
-		add_function_ext(darwin_log);
+		add_function_ext(log);
 		add_function_ext(is_kb_hit);
 		add_function_ext(get_kb_hit);
 		add_function_ext(get_ascii);
