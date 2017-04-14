@@ -332,6 +332,11 @@ namespace cov_basic {
 				v.clone();
 		return val;
 	}
+	cov::any info(array&)
+	{
+		std::cout<<"Covariant Basic Parser\nVersion:2.0.2.1\nCopyright (C) 2017 Michael Lee"<<std::endl;
+		return number(0);
+	}
 	cov::any input(array& args)
 	{
 		if(args.empty()) {
@@ -786,6 +791,7 @@ namespace cov_basic {
 		runtime->storage.add_type("boolean",[]()->cov::any {return boolean(true);});
 		runtime->storage.add_type("string",[]()->cov::any {return string();});
 		runtime->storage.add_type("array",[]()->cov::any {return array();});
+		add_function(info);
 		add_function(input);
 		add_function(getline);
 		add_function(print);
