@@ -321,11 +321,14 @@ namespace cov_basic {
 	}
 }
 #include "./arglist.hpp"
-#include <iostream>
-#include <fstream>
 #include <cmath>
 #define add_function(name) cov_basic::runtime->storage.add_var_global(#name,cov_basic::native_interface(name));
 #define add_function_name(name,func) cov_basic::runtime->storage.add_var_global(name,cov_basic::native_interface(func));
+#include "./system_extension.hpp"
+#include "./runtime_extension.hpp"
+#ifdef CBS_STRING_EXT
+#include "./string_extension.cpp"
+#endif
 #ifdef CBS_FILE_EXT
 #include "./file_extension.cpp"
 #endif
@@ -340,73 +343,6 @@ namespace cov_basic {
 			for(cov::any& v:val.val<array>(true))
 				v.clone();
 		return val;
-	}
-	cov::any info(array&)
-	{
-		std::cout<<"Covariant Basic Parser\nVersion:2.1.1.1\nCopyright (C) 2017 Michael Lee"<<std::endl;
-		return number(0);
-	}
-	cov::any input(array& args)
-	{
-		if(args.empty()) {
-			std::string str;
-			std::cin>>str;
-			return parse_value(str);
-		}
-		for(auto& it:args) {
-			std::string str;
-			std::cin>>str;
-			it.assign(parse_value(str),true);
-		}
-		return number(0);
-	}
-	cov::any getline(array& args)
-	{
-		std::string str;
-		std::getline(std::cin,str);
-		return str;
-	}
-	cov::any print(array& args)
-	{
-		for(auto& it:args)
-			std::cout<<it;
-		return number(0);
-	}
-	cov::any println(array& args)
-	{
-		for(auto& it:args)
-			std::cout<<it;
-		std::cout<<std::endl;
-		return number(0);
-	}
-	cov::any time(array&)
-	{
-		return number(cov::timer::time(cov::timer::time_unit::milli_sec));
-	}
-	cov::any delay(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.front().type()!=typeid(number))
-			throw syntax_error("Wrong type of arguments.(Request Number)");
-		cov::timer::delay(cov::timer::time_unit::milli_sec,cov::timer::timer_t(args.front().const_val<number>()));
-		return number(0);
-	}
-	cov::any rand(array& args)
-	{
-		if(args.size()!=2)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(number)||args.at(1).type()!=typeid(number))
-			throw syntax_error("Wrong type of arguments.(Request Number)");
-		return number(cov::rand<number>(args.at(0).const_val<number>(),args.at(1).const_val<number>()));
-	}
-	cov::any randint(array& args)
-	{
-		if(args.size()!=2)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(number)||args.at(1).type()!=typeid(number))
-			throw syntax_error("Wrong type of arguments.(Request Number)");
-		return number(cov::rand<long>(args.at(0).const_val<number>(),args.at(1).const_val<number>()));
 	}
 	cov::any _sizeof(array& args)
 	{
@@ -465,49 +401,6 @@ namespace cov_basic {
 		if(args.size()!=1)
 			throw syntax_error("Wrong size of arguments.");
 		return _clone(args.front());
-	}
-	cov::any error(array& args)
-	{
-		throw lang_error(args.front().to_string().c_str());
-		return number(0);
-	}
-// Extensions
-	cov::any load_extension(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(string))
-			throw syntax_error("Wrong type of arguments.(Request String)");
-		return extension_t(std::make_shared<extension_holder>(args.front().const_val<string>()));
-	}
-// String
-	cov::any append_string(array& args)
-	{
-		if(args.size()!=2)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(string))
-			throw syntax_error("Wrong type of arguments.(Request String)");
-		args.at(0).val<string>(true).append(args.at(1).to_string());
-		return number(0);
-	}
-	cov::any cut_string(array& args)
-	{
-		if(args.size()!=2)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(string)||args.at(1).type()!=typeid(number))
-			throw syntax_error("Wrong type of arguments.(Request String,Number)");
-		for(std::size_t i=0; i<args.at(1).const_val<number>(); ++i)
-			args.at(0).val<string>(true).pop_back();
-		return number(0);
-	}
-	cov::any clear_string(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(string))
-			throw syntax_error("Wrong type of arguments.(Request String)");
-		args.at(0).val<string>(true).clear();
-		return number(0);
 	}
 // Array
 	cov::any push_front_array(array& args)
@@ -734,27 +627,14 @@ namespace cov_basic {
 		runtime->storage.add_type("boolean",[]()->cov::any {return boolean(true);});
 		runtime->storage.add_type("string",[]()->cov::any {return string();});
 		runtime->storage.add_type("array",[]()->cov::any {return array();});
-		add_function(info);
-		add_function(input);
-		add_function(getline);
-		add_function(print);
-		add_function(println);
-		add_function(time);
-		add_function(delay);
-		add_function(rand);
-		add_function(randint);
 		add_function(to_integer);
 		add_function(to_string);
 		add_function(is_number);
 		add_function(is_boolean);
 		add_function(is_string);
 		add_function(is_array);
+		add_function_name("sizeof",_sizeof);
 		add_function(clone);
-		add_function(error);
-		add_function(load_extension);
-		add_function(append_string);
-		add_function(cut_string);
-		add_function(clear_string);
 		add_function(push_front_array);
 		add_function(pop_front_array);
 		add_function(push_back_array);
@@ -772,7 +652,14 @@ namespace cov_basic {
 		add_function(sqrt);
 		add_function(root);
 		add_function(pow);
-		add_function_name("sizeof",_sizeof);
+		system_cbs_ext::init();
+		runtime->storage.add_var("system",std::make_shared<extension_holder>(&system_ext));
+		runtime_cbs_ext::init();
+		runtime->storage.add_var("runtime",std::make_shared<extension_holder>(&runtime_ext));
+#ifdef CBS_STRING_EXT
+		string_cbs_ext::init();
+		runtime->storage.add_var("string",std::make_shared<extension_holder>(&string_ext));
+#endif
 #ifdef CBS_FILE_EXT
 		file_cbs_ext::init();
 		runtime->storage.add_var("file",std::make_shared<extension_holder>(&file_ext));

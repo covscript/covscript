@@ -1,7 +1,7 @@
 function main(start)
     define i=start
     while(i<100)
-        global.println(i)
+        system.println(i)
         if(i>=50)
             break
         else
@@ -10,5 +10,6 @@ function main(start)
     end
     return i
 end
-global.print("Please enter the start:")
-global.println("Result:",main(input()))
+runtime.info()
+system.print("Please enter the start:")
+system.println("Result:",main(system.input()))

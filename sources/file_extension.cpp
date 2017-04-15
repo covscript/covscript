@@ -2,6 +2,7 @@
 #include "./extension.hpp"
 #endif
 #include "./arglist.hpp"
+#include <fstream>
 static cov_basic::extension file_ext;
 namespace file_cbs_ext {
 	using namespace cov_basic;
