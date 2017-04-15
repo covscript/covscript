@@ -25,6 +25,8 @@ namespace cov_basic {
 				throw syntax_error(ptr->get_line_num(),se.what());
 			} catch(const lang_error& le) {
 				throw lang_error(ptr->get_line_num(),le.what());
+			} catch(const std::exception& e) {
+				throw internal_error(ptr->get_line_num(),e.what());
 			}
 			if(this->mRetVal.usable()) {
 				return_fcall=false;
@@ -58,6 +60,8 @@ namespace cov_basic {
 				throw syntax_error(ptr->get_line_num(),se.what());
 			} catch(const lang_error& le) {
 				throw lang_error(ptr->get_line_num(),le.what());
+			} catch(const std::exception& e) {
+				throw internal_error(ptr->get_line_num(),e.what());
 			}
 		}
 		inside_struct=false;
@@ -78,6 +82,8 @@ namespace cov_basic {
 				throw syntax_error(ptr->get_line_num(),se.what());
 			} catch(const lang_error& le) {
 				throw lang_error(ptr->get_line_num(),le.what());
+			} catch(const std::exception& e) {
+				throw internal_error(ptr->get_line_num(),e.what());
 			}
 		}
 	}
@@ -107,6 +113,8 @@ namespace cov_basic {
 				throw syntax_error(ptr->get_line_num(),se.what());
 			} catch(const lang_error& le) {
 				throw lang_error(ptr->get_line_num(),le.what());
+			} catch(const std::exception& e) {
+				throw internal_error(ptr->get_line_num(),e.what());
 			}
 			if(return_fcall) {
 				runtime->storage.remove_domain();
@@ -127,6 +135,8 @@ namespace cov_basic {
 						throw syntax_error(ptr->get_line_num(),se.what());
 					} catch(const lang_error& le) {
 						throw lang_error(ptr->get_line_num(),le.what());
+					} catch(const std::exception& e) {
+						throw internal_error(ptr->get_line_num(),e.what());
 					}
 					if(return_fcall) {
 						runtime->storage.remove_domain();
@@ -148,6 +158,8 @@ namespace cov_basic {
 						throw syntax_error(ptr->get_line_num(),se.what());
 					} catch(const lang_error& le) {
 						throw lang_error(ptr->get_line_num(),le.what());
+					} catch(const std::exception& e) {
+						throw internal_error(ptr->get_line_num(),e.what());
 					}
 					if(return_fcall) {
 						runtime->storage.remove_domain();
@@ -173,6 +185,8 @@ namespace cov_basic {
 					throw syntax_error(ptr->get_line_num(),se.what());
 				} catch(const lang_error& le) {
 					throw lang_error(ptr->get_line_num(),le.what());
+				} catch(const std::exception& e) {
+					throw internal_error(ptr->get_line_num(),e.what());
 				}
 				if(return_fcall) {
 					runtime->storage.remove_domain();
@@ -202,6 +216,8 @@ namespace cov_basic {
 					throw syntax_error(ptr->get_line_num(),se.what());
 				} catch(const lang_error& le) {
 					throw lang_error(ptr->get_line_num(),le.what());
+				} catch(const std::exception& e) {
+					throw internal_error(ptr->get_line_num(),e.what());
 				}
 				if(return_fcall) {
 					runtime->storage.remove_domain();
@@ -248,6 +264,8 @@ namespace cov_basic {
 				m=&translator.match(line);
 			} catch(const syntax_error& se) {
 				throw syntax_error(dynamic_cast<token_endline*>(line.back())->get_num(),se.what());
+			} catch(const std::exception& e) {
+				throw internal_error(dynamic_cast<token_endline*>(line.back())->get_num(),e.what());
 			}
 			if(m->type==grammar_type::single) {
 				if(level>0) {
@@ -287,6 +305,8 @@ namespace cov_basic {
 							kill_expr(tmp);
 						} catch(const syntax_error& se) {
 							throw syntax_error(dynamic_cast<token_endline*>(ptr)->get_num(),se.what());
+						} catch(const std::exception& e) {
+							throw internal_error(dynamic_cast<token_endline*>(ptr)->get_num(),e.what());
 						}
 						lines.push_back(tmp);
 					}
@@ -805,7 +825,7 @@ namespace cov_basic {
 			} catch(const lang_error& le) {
 				throw lang_error(ptr->get_line_num(),le.what());
 			} catch(const std::exception& e) {
-				throw internal_error(line_num,e.what());
+				throw internal_error(ptr->get_line_num(),e.what());
 			}
 		}
 		std::ios::sync_with_stdio(true);
