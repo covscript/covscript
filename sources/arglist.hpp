@@ -35,7 +35,7 @@ namespace cov_basic {
 		template<typename _Tp,typename _fT,typename...ArgTypes>
 		static int check_types(int index,const std::deque<cov::any>& args)
 		{
-			if(index<args.size()&&args.at(index).type()==typeid(_Tp))
+			if(index<=args.size()&&args.at(index-1).type()==typeid(_Tp))
 				return check_types<_fT,ArgTypes...>(++index,args);
 			else
 				return index;
