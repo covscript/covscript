@@ -343,7 +343,7 @@ namespace cov_basic {
 	}
 	cov::any info(array&)
 	{
-		std::cout<<"Covariant Basic Parser\nVersion:2.0.2.1\nCopyright (C) 2017 Michael Lee"<<std::endl;
+		std::cout<<"Covariant Basic Parser\nVersion:2.1.1.1\nCopyright (C) 2017 Michael Lee"<<std::endl;
 		return number(0);
 	}
 	cov::any input(array& args)
