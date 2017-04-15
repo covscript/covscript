@@ -1,6 +1,6 @@
 #pragma once
-#include "../../include/mozart/mozart.hpp"
-#include "../../include/darwin/darwin.hpp"
+#include "../include/mozart/mozart.hpp"
+#include "../include/darwin/darwin.hpp"
 #include <stdexcept>
 #include <string>
 #include <deque>
