@@ -12,10 +12,7 @@ namespace file_cbs_ext {
 	};
 	cov::any open(array& args)
 	{
-		if(args.size()!=2)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(string)&&args.at(1).type()!=typeid(file_method))
-			throw syntax_error("Wrong type of arguments.(Request String and File Method)");
+		arglist::check<string,file_method>(args);
 		if(args.at(1).const_val<file_method>()==file_method::read)
 			return infile(std::make_shared<std::ifstream>(args.at(0).const_val<string>()));
 		else if(args.at(1).const_val<file_method>()==file_method::write)
@@ -23,18 +20,12 @@ namespace file_cbs_ext {
 	}
 	cov::any is_open(array& args)
 	{
-		if(args.empty())
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(infile))
-			throw syntax_error("Wrong type of arguments.(Request Input File)");
+		arglist::check<infile>(args);
 		return args.at(0).const_val<infile>()->is_open();
 	}
 	cov::any eof(array& args)
 	{
-		if(args.empty())
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(infile))
-			throw syntax_error("Wrong type of arguments.(Request Input File)");
+		arglist::check<infile>(args);
 		return args.at(0).const_val<infile>()->eof();
 	}
 	cov::any read(array& args)
@@ -70,10 +61,7 @@ namespace file_cbs_ext {
 	}
 	cov::any getline(array& args)
 	{
-		if(args.empty())
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(infile))
-			throw syntax_error("Wrong type of arguments.(Request Input File)");
+		arglist::check<infile>(args);
 		std::string str;
 		std::getline(*args.front().val<infile>(true),str);
 		return str;
