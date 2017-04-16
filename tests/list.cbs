@@ -1,0 +1,36 @@
+struct node
+	define data
+	define next
+end
+function node(data,next)
+	define ret as node
+	ret.data=data
+	ret.next=next
+	return ret
+end
+function push_front(list,data)
+	list=node(data,list)
+end
+function pop_front(list)
+	list=list.next
+end
+function insert_after(list,data)
+	list.next=node(data,list.next)
+end
+function erase_after(list)
+	list.next=list.next.next
+end
+function foreach(node)
+	if(node!=0)
+		system.println(node.data)
+		foreach(node.next)
+	end
+end
+runtime.info()
+define list=node(10,0)
+push_front(list,11)
+push_front(list,12)
+pop_front(list)
+insert_after(list,13)
+erase_after(list.next)
+foreach(list)
