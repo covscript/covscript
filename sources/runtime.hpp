@@ -324,8 +324,17 @@ namespace cov_basic {
 	}
 	cov::any parse_asi(cov::any a,cov::any b)
 	{
-		a.assign(b,true);
+		if(a.type()==typeid(linker))
+			a.val<linker>(true).data.assign(b,true);
+		else
+			a.assign(b,true);
 		return b;
+	}
+	cov::any parse_link(const cov::any& a,const cov::any& b)
+	{
+		if(!a.usable()&&b.usable())
+			return linker{b};
+		throw syntax_error("Unsupported operator operations(Not).");
 	}
 	cov::any parse_equ(const cov::any& a,const cov::any& b)
 	{
@@ -509,6 +518,9 @@ namespace cov_basic {
 				return parse_asi(left,parse_expr(it.right()));
 				break;
 			}
+			case signal_types::link_:
+				return parse_link(parse_expr(it.left()),parse_expr(it.right()));
+				break;
 			case signal_types::equ_:
 				return parse_equ(parse_expr(it.left()),parse_expr(it.right()));
 				break;

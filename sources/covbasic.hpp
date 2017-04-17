@@ -402,6 +402,12 @@ namespace cov_basic {
 			throw syntax_error("Wrong size of arguments.");
 		return _clone(args.front());
 	}
+	cov::any link(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		return linker{args.front()};
+	}
 // Array
 	cov::any push_front_array(array& args)
 	{
@@ -635,6 +641,7 @@ namespace cov_basic {
 		add_function(is_array);
 		add_function_name("sizeof",_sizeof);
 		add_function(clone);
+		add_function(link);
 		add_function(push_front_array);
 		add_function(pop_front_array);
 		add_function(push_back_array);

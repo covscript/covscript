@@ -82,6 +82,9 @@ namespace cov_basic {
 			return this->mWhat.c_str();
 		}
 	};
+	struct linker final {
+		cov::any data;
+	};
 	using number=long double;
 	using boolean=bool;
 	using string=std::string;
@@ -218,5 +221,11 @@ namespace cov_basic {
 			return str;
 		}
 		return str;
+	}
+}
+namespace std {
+	template<> std::string to_string<cov_basic::linker>(const cov_basic::linker& linker)
+	{
+		return linker.data.to_string();
 	}
 }
