@@ -30,8 +30,8 @@ end
 function gen_food()
 	define is_fit=true
 	while(is_fit)
-		food[0]=randint(0,darwin.get_width()-1)
-		food[1]=randint(0,darwin.get_height()-1)
+		food[0]=runtime.randint(0,darwin.get_width()-1)
+		food[1]=runtime.randint(0,darwin.get_height()-1)
 		is_fit=false
 		block
 			define i=0
@@ -148,7 +148,7 @@ function start()
 	end
 end
 
-delay(500)
+runtime.delay(500)
 darwin.load()
 darwin.fit_drawable()
 while(true)
