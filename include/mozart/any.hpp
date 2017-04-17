@@ -260,6 +260,7 @@ namespace cov {
 		{
 			if(&obj!=this) {
 				if(mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
+					delete mDat->data;
 					mDat->data=obj.mDat->data->duplicate();
 				} else {
 					recycle();
@@ -272,9 +273,10 @@ namespace cov {
 		}
 		template < typename T > void assign(const T & dat,bool raw=false)
 		{
-			if(raw)
+			if(raw) {
+				delete mDat->data;
 				mDat->data=new holder < T > (dat);
-			else {
+			} else {
 				recycle();
 				mDat = new proxy(1,new holder < T > (dat));
 			}
