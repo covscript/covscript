@@ -223,9 +223,3 @@ namespace cov_basic {
 		return str;
 	}
 }
-namespace std {
-	template<> std::string to_string<cov_basic::linker>(const cov_basic::linker& linker)
-	{
-		return linker.data.to_string();
-	}
-}

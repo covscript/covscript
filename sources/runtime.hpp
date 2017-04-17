@@ -244,6 +244,15 @@ namespace cov_basic {
 		else
 			throw syntax_error("Unsupported operator operations(Dot).");
 	}
+	cov::any parse_mem(const cov::any& a,token_base* b)
+	{
+		if(b==nullptr)
+			throw syntax_error("Internal Error(Null Pointer Accessed).");
+		if(a.type()!=typeid(linker)||b->get_type()!=token_types::id)
+			throw syntax_error("Unsupported operator operations(Mem).");
+		if(a.const_val<linker>().data.type()==typeid(structure))
+			return a.const_val<linker>().data.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
+	}
 	cov::any parse_und(const cov::any& a,const cov::any& b)
 	{
 		if(a.type()==typeid(number)) {
@@ -505,6 +514,9 @@ namespace cov_basic {
 				break;
 			case signal_types::dot_:
 				return parse_dot(parse_expr(it.left()),it.right().data());
+				break;
+			case signal_types::mem_:
+				return parse_mem(parse_expr(it.left()),it.right().data());
 				break;
 			case signal_types::und_:
 				return parse_und(parse_expr(it.left()),parse_expr(it.right()));

@@ -413,6 +413,11 @@ namespace cov_basic {
 			throw syntax_error("Wrong size of arguments.");
 		return linker{args.front()};
 	}
+	cov::any escape(array& args)
+	{
+		arglist::check<linker>(args);
+		return args.front().val<linker>(true).data;
+	}
 // Array
 	cov::any push_front_array(array& args)
 	{
@@ -638,6 +643,7 @@ namespace cov_basic {
 		runtime->storage.add_type("boolean",[]()->cov::any {return boolean(true);});
 		runtime->storage.add_type("string",[]()->cov::any {return string();});
 		runtime->storage.add_type("array",[]()->cov::any {return array();});
+		runtime->storage.add_type("linker",[]()->cov::any {return linker{0};});
 		add_function(to_integer);
 		add_function(to_string);
 		add_function(is_number);
@@ -647,6 +653,7 @@ namespace cov_basic {
 		add_function_name("sizeof",_sizeof);
 		add_function(clone);
 		add_function(link);
+		add_function(escape);
 		add_function(push_front_array);
 		add_function(pop_front_array);
 		add_function(push_back_array);
