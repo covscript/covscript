@@ -1,7 +1,7 @@
 define a=10
 define b=&a
 b=20
-define c=b
+define c=clone(b)
 c=30
 system.println(a)
 system.println(b)
