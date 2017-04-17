@@ -183,6 +183,8 @@ namespace cov_basic {
 	}
 	cov::any parse_mul(const cov::any& a,const cov::any& b)
 	{
+		if(!a.usable()&&b.type()==typeid(linker))
+			return b.const_val<linker>().data;
 		if(a.type()==typeid(number)) {
 			if(b.type()==typeid(number)) {
 				return number(a.const_val<number>()*b.const_val<number>());
@@ -324,10 +326,7 @@ namespace cov_basic {
 	}
 	cov::any parse_asi(cov::any a,cov::any b)
 	{
-		if(a.type()==typeid(linker))
-			a.val<linker>(true).data.assign(b,true);
-		else
-			a.assign(b,true);
+		a.assign(b,true);
 		return b;
 	}
 	cov::any parse_link(const cov::any& a,const cov::any& b)

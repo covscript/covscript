@@ -1,8 +1,9 @@
 define a=10
 define b=&a
-b=20
+*b=20
 define c=clone(b)
 c=30
+b=0
 system.println(a)
 system.println(b)
 system.println(c)
