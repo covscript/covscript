@@ -338,6 +338,11 @@ namespace cov_basic {
 namespace cov_basic {
 	cov::any _clone(cov::any val)
 	{
+		if(val.type()=typeid(linker)) {
+			cov::any v=val.const_val<linker>().data;
+			v.clone();
+			return v;
+		}
 		val.clone();
 		if(val.type()==typeid(array))
 			for(cov::any& v:val.val<array>(true))
