@@ -11,7 +11,7 @@ end
 function f(x)
     return sqrt(1-pow(x,2))
 end
-define ts=time()
-println(4*integral(f,0,1))
-println(time()-ts)
-input()
+define ts=runtime.time()
+system.println(4*integral(f,0,1))
+system.println(runtime.time()-ts)
+system.input()
