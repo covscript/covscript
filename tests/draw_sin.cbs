@@ -19,9 +19,9 @@ function main()
         ++x
     end
 end
-print("Please input the period:")
-input(fd)
+system.print("Please input the period:")
+system.input(fd)
 if(!is_number(fd))
-  error("Request number.")
+  runtime.error("Request number.")
 end
 main()

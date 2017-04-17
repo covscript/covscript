@@ -8,6 +8,6 @@ struct foo
     end
 end
 define a as foo
-global.println(current.a.a)
-current.a.test()
-global.println(current.a.a)
+system.println(current.a.a)
+a.test()
+system.println(current.a.a)

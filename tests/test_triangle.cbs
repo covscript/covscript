@@ -1,39 +1,38 @@
-import "../headers/darwin.cbh"
 function main()
-	init_graphics()
-	fit_drawable()
-	define points= {{0,0},{get_width_drawable()-1,0},{0.5*get_width_drawable(),0.5*get_height_drawable()}}
+	darwin.load()
+	darwin.fit_drawable()
+	define points= {{0,0},{darwin.get_width()-1,0},{0.5*darwin.get_width(),0.5*darwin.get_height()}}
 	define focus=2
 	while(true)
-		if(is_kb_hit())
-			define ch=get_kb_hit()
-			if(ch==get_ascii("w"))
+		if(darwin.is_kb_hit())
+			define ch=darwin.get_kb_hit()
+			if(ch==darwin.get_ascii("w"))
 				--points[focus][1]
 			end
-			if(ch==get_ascii("s"))
+			if(ch==darwin.get_ascii("s"))
 				++points[focus][1]
 			end
-			if(ch==get_ascii("a"))
+			if(ch==darwin.get_ascii("a"))
 				--points[focus][0]
 			end
-			if(ch==get_ascii("d"))
+			if(ch==darwin.get_ascii("d"))
 				++points[focus][0]
 			end
-			if(ch==get_ascii("1"))
+			if(ch==darwin.get_ascii("1"))
 				focus=0
 			end
-			if(ch==get_ascii("2"))
+			if(ch==darwin.get_ascii("2"))
 				focus=1
 			end
-			if(ch==get_ascii("3"))
+			if(ch==darwin.get_ascii("3"))
 				focus=2
 			end
 		end
-		fit_drawable()
-		clear_drawable()
-		fill_triangle(points[0][0],points[0][1],points[1][0],points[1][1],points[2][0],points[2][1],darwin_pixel(" ",true,false,get_color("black"),get_color("white")))
-		draw_point(points[focus][0],points[focus][1],darwin_pixel("#",true,false,get_color("black"),get_color("white")))
-		update_drawable()
+		darwin.fit_drawable()
+		darwin.clear_drawable()
+		darwin.fill_triangle(points[0][0],points[0][1],points[1][0],points[1][1],points[2][0],points[2][1],darwin.pixel(" ",true,false,darwin.black,darwin.white))
+		darwin.draw_point(points[focus][0],points[focus][1],darwin.pixel("#",true,false,darwin.black,darwin.white))
+		darwin.update_drawable()
 	end
 end
 main()

@@ -3,6 +3,6 @@ arr[10]=10
 define i=0
 define arr_size=sizeof(arr)
 while(i<arr_size)
-	println(arr[i])
+	system.println(arr[i])
 	++i
 end

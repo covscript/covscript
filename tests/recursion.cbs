@@ -1,13 +1,13 @@
 function test(a)
-    println(a)
+    system.println(a)
     if(a>0)
         return test(a-1)
     else
         return a
     end
 end
-println("Please enter a intger:")
+system.println("Please enter a intger:")
 define in=0
-input(in)
+system.input(in)
 test(in)
-println(in)
+system.println(in)
