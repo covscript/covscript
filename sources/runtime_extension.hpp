@@ -5,7 +5,7 @@ namespace runtime_cbs_ext {
 	using namespace cov_basic;
 	cov::any info(array&)
 	{
-		std::cout<<"Covariant Basic Parser\nVersion:2.1.1.1\nCopyright (C) 2017 Michael Lee"<<std::endl;
+		std::cout<<"Covariant Basic Parser\nVersion:2.1.1.2\nCopyright (C) 2017 Michael Lee"<<std::endl;
 		return number(0);
 	}
 	cov::any time(array&)
