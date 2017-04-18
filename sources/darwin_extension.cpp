@@ -1,4 +1,5 @@
 #define DARWIN_FORCE_BUILTIN
+#define DARWIN_IGNORE_WARNING
 #include "../include/darwin/darwin.hpp"
 #include "../include/mozart/switcher.hpp"
 #ifndef CBS_DARWIN_EXT
