@@ -1,0 +1,45 @@
+darwin.load()
+define x_offset=0
+define y_offset=0
+define zoom=1
+define dzoom=0.1
+define center_x=0
+define center_y=0
+define pix=darwin.pixel("#",true,false,darwin.white,darwin.black)
+function f(x)
+  return sqrt(1-x^2)
+end
+while(true)
+  darwin.fit_drawable()
+  darwin.clear_drawable()
+  if(darwin.is_kb_hit())
+    define ch=darwin.get_kb_hit()
+    if(ch==darwin.get_ascii("w"))
+      --y_offset
+    end
+    if(ch==darwin.get_ascii("s"))
+      ++y_offset
+    end
+    if(ch==darwin.get_ascii("a"))
+      --x_offset
+    end
+    if(ch==darwin.get_ascii("d"))
+      ++x_offset
+    end
+    if(ch==darwin.get_ascii("q"))
+      zoom=zoom+dzoom
+    end
+    if(ch==darwin.get_ascii("e"))
+      zoom=zoom-dzoom
+    end
+  end
+  center_x=0.5*darwin.get_width()
+  center_y=0.5*darwin.get_height()
+#  darwin.draw_line(0,center_y,darwin.get_width()-1,center_y,pix)
+  define i=0
+  while(i<darwin.get_width())
+    darwin.draw_point(i,center_y-f((i-center_x-x_offset)/(2*zoom))*zoom+y_offset,pix)
+    ++i
+  end
+  darwin.update_drawable()
+end
