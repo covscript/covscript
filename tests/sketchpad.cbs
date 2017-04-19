@@ -57,9 +57,9 @@ while(true)
 	end
 	++i
   end
-  i=to_integer((darwin.get_height()-center_y-y_offset)/zoom)
+  i=to_integer((center_y-y_offset)/zoom)
   while(center_y+y_offset+i*zoom>0)
-  	if(i!=0)
+	if(i!=0)
   		darwin.draw_point(center_x+x_offset,center_y+y_offset+i*zoom,darwin.pixel("-",true,false,darwin.white,darwin.black))
   		define str=to_string(-i)
   		string.cut(str,7)
