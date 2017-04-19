@@ -178,6 +178,9 @@ namespace cov_basic {
 	mapping<std::string,cov::any> constant_map= {
 		{"current",constant_values::current_namespace},{"global",constant_values::global_namespace},{"this",constant_values::this_object},{"endline",string("\n")},{"pi",number(3.1415926535)},{"e",number(2.7182818284)},{"True",true},{"False",false},{"true",true},{"false",false},{"TRUE",true},{"FALSE",false}
 	};
+	mapping<std::string,token_base*> reserved_map= {
+		{"and",new token_signal(signal_types::and_)},{"or",new token_signal(signal_types::or_)},{"not",new token_signal(signal_types::not_)}
+	};
 	char signals[]= {
 		'+','-','*','/','%','^',',','.','>','<','=','&','|','!','(',')','[',']','{','}'
 	};
@@ -244,6 +247,11 @@ namespace cov_basic {
 				}
 				if(constant_map.exsist(tmp)) {
 					tokens.push_back(new token_value(constant_map.match(tmp)));
+					tmp.clear();
+					break;
+				}
+				if(reserved_map.exsist(tmp)) {
+					tokens.push_back(reserved_map.match(tmp));
 					tmp.clear();
 					break;
 				}
