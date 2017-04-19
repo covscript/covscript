@@ -175,11 +175,10 @@ namespace cov_basic {
 	enum class constant_values {
 		current_namespace,global_namespace,this_object
 	};
-	mapping<std::string,cov::any> constant_map= {
-		{"current",constant_values::current_namespace},{"global",constant_values::global_namespace},{"this",constant_values::this_object},{"endline",string("\n")},{"pi",number(3.1415926535)},{"e",number(2.7182818284)},{"True",true},{"False",false},{"true",true},{"false",false},{"TRUE",true},{"FALSE",false}
-	};
-	mapping<std::string,token_base*> reserved_map= {
-		{"and",new token_signal(signal_types::and_)},{"or",new token_signal(signal_types::or_)},{"not",new token_signal(signal_types::not_)}
+	mapping<std::string,std::function<token_base*()>> reserved_map= {
+		{"and",[]()->token_base*{return new token_signal(signal_types::and_);}},{"or",[]()->token_base*{return new token_signal(signal_types::or_);}},{"not",[]()->token_base*{return new token_signal(signal_types::not_);}},
+		{"current",[]()->token_base*{return new token_value(constant_values::current_namespace);}},{"global",[]()->token_base*{return new token_value(constant_values::global_namespace);}},{"this",[]()->token_base*{return new token_value(constant_values::this_object);}},
+		{"endline",[]()->token_base*{return new token_value(string("\n"));}},{"pi",[]()->token_base*{return new token_value(number(3.1415926535));}},{"e",[]()->token_base*{return new token_value(number(2.7182818284));}},{"true",[]()->token_base*{return new token_value(true);}},{"false",[]()->token_base*{return new token_value(false);}}
 	};
 	char signals[]= {
 		'+','-','*','/','%','^',',','.','>','<','=','&','|','!','(',')','[',']','{','}'
@@ -245,13 +244,8 @@ namespace cov_basic {
 					tmp.clear();
 					break;
 				}
-				if(constant_map.exsist(tmp)) {
-					tokens.push_back(new token_value(constant_map.match(tmp)));
-					tmp.clear();
-					break;
-				}
 				if(reserved_map.exsist(tmp)) {
-					tokens.push_back(reserved_map.match(tmp));
+					tokens.push_back(reserved_map.match(tmp)());
 					tmp.clear();
 					break;
 				}
@@ -309,8 +303,8 @@ namespace cov_basic {
 				tokens.push_back(new token_action(action_map.match(tmp)));
 				break;
 			}
-			if(constant_map.exsist(tmp)) {
-				tokens.push_back(new token_value(constant_map.match(tmp)));
+			if(reserved_map.exsist(tmp)) {
+				tokens.push_back(reserved_map.match(tmp)());
 				tmp.clear();
 				break;
 			}
