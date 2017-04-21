@@ -707,7 +707,15 @@ namespace cov_basic {
 			++line_num;
 			if(line.empty())
 				continue;
-			if(line[0]=='#')
+			bool is_note=false;
+			for(auto& ch:line) {
+				if(!std::isspace(ch)) {
+					if(ch=='#')
+						is_note=true;
+					break;
+				}
+			}
+			if(is_note)
 				continue;
 			for(auto& c:line)
 				buff.push_back(c);
