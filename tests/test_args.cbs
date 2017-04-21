@@ -1,0 +1,6 @@
+runtime.info()
+define i=0
+while(i<sizeof(system.args))
+  system.println(system.args[i])
+  ++i
+end
