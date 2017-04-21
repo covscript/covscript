@@ -286,6 +286,10 @@ namespace cov {
 			assign(dat);
 			return *this;
 		}
+		bool is_same(const any& obj) const
+		{
+			return this->mDat==obj.mDat;
+		}
 	};
 	template<int N> class any::holder<char[N]>:public any::holder<std::string> {
 	public:

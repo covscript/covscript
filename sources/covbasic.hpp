@@ -548,7 +548,7 @@ namespace cov_basic {
 		runtime->storage.add_type("boolean",[]()->cov::any {return boolean(true);});
 		runtime->storage.add_type("string",[]()->cov::any {return string();});
 		runtime->storage.add_type("array",[]()->cov::any {return array();});
-		runtime->storage.add_type("linker",[]()->cov::any {return linker{0};});
+		runtime->storage.add_type("linker",[]()->cov::any {return linker();});
 		add_function(to_integer);
 		add_function(to_string);
 		add_function(to_ascii);

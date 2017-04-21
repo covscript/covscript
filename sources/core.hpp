@@ -84,6 +84,10 @@ namespace cov_basic {
 	};
 	struct linker final {
 		cov::any data;
+		bool operator==(const linker& l) const
+		{
+			return data.is_same(l.data);
+		}
 	};
 	using number=long double;
 	using boolean=bool;
