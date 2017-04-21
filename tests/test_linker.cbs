@@ -1,9 +1,16 @@
-define a=10
-define b=&a
+define a=new number
+*a=10
+define b=a
 *b=20
 define c=clone(b)
 c=30
-b=0
-system.println(a)
+define d=&b
+*d=0
+system.println(*a)
 system.println(b)
 system.println(c)
+system.println(*d)
+function test(ref)
+  system.println(*ref)
+end
+test(new boolean)

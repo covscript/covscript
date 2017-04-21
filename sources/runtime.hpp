@@ -226,7 +226,7 @@ namespace cov_basic {
 	cov::any parse_dot(const cov::any& a,token_base* b)
 	{
 		if(b==nullptr)
-			throw syntax_error("Internal Error(Null Pointer Accessed).");
+			throw internal_error("Null Pointer Accessed.");
 		if(b->get_type()!=token_types::id)
 			throw syntax_error("Unsupported operator operations(Dot).");
 		if(a.type()==typeid(structure))
@@ -247,11 +247,21 @@ namespace cov_basic {
 	cov::any parse_mem(const cov::any& a,token_base* b)
 	{
 		if(b==nullptr)
-			throw syntax_error("Internal Error(Null Pointer Accessed).");
+			throw internal_error("Null Pointer Accessed.");
 		if(a.type()!=typeid(linker)||b->get_type()!=token_types::id)
 			throw syntax_error("Unsupported operator operations(Mem).");
 		if(a.const_val<linker>().data.type()==typeid(structure))
 			return a.const_val<linker>().data.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
+	}
+	cov::any parse_new(token_base* a,token_base* b)
+	{
+		if(a!=nullptr)
+			throw syntax_error("Wrong format of new expression.");
+		if(b==nullptr)
+			throw internal_error("Null Pointer Accessed.");
+		if(b->get_type()!=token_types::id)
+			throw syntax_error("Unsupported operator operations(New).");
+		return linker{runtime->storage.get_var_type(dynamic_cast<token_id*>(b)->get_id())};
 	}
 	cov::any parse_und(const cov::any& a,const cov::any& b)
 	{
@@ -456,7 +466,7 @@ namespace cov_basic {
 	cov::any parse_expr(cov::tree<token_base*>::iterator it)
 	{
 		if(!it.usable())
-			throw syntax_error("Internal Error(The expression tree is not available).");
+			throw internal_error("The expression tree is not available.");
 		token_base* token=it.data();
 		if(token==nullptr)
 			return cov::any();
@@ -521,6 +531,9 @@ namespace cov_basic {
 			case signal_types::mem_:
 				return parse_mem(parse_expr(it.left()),it.right().data());
 				break;
+			case signal_types::new_:
+				return parse_new(it.left().data(),it.right().data());
+				break;
 			case signal_types::und_:
 				return parse_und(parse_expr(it.left()),parse_expr(it.right()));
 				break;
@@ -571,6 +584,6 @@ namespace cov_basic {
 			}
 		}
 		}
-		throw syntax_error("Internal Error(Unrecognized expression).");
+		throw internal_error("Unrecognized expression.");
 	}
 }
