@@ -1,4 +1,4 @@
-define precision=pow(10,-6)
+define precision=10^(-6)
 function integral(func,begin,end_)
     define sum=0
     define x=begin
@@ -9,7 +9,7 @@ function integral(func,begin,end_)
     return sum
 end
 function f(x)
-    return sqrt(1-pow(x,2))
+    return math.sqrt(1-x^2)
 end
 define ts=runtime.time()
 system.println(4*integral(f,0,1))

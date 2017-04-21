@@ -20,7 +20,7 @@ function run()
 		ay=(mass*gravity)/mass
 	end
 	if(speed_y<0)
-		ay=(mass*gravity+abs(air_drop*size*speed_y))/mass
+		ay=(mass*gravity+math.abs(air_drop*size*speed_y))/mass
 	end
 	posit_x=posit_x+speed_x*delta_time+0.5*ax*delta_time^2
 	posit_y=posit_y+speed_y*delta_time+0.5*ay*delta_time^2
@@ -35,16 +35,16 @@ function main()
 		darwin.clear_drawable()
 		darwin.draw_string(0,0,"Simple Sandbox",darwin.pixel(" ", true,false, darwin.black, darwin.white))
 		if(posit_x<0)
-			speed_x=abs(speed_x)
+			speed_x=math.abs(speed_x)
 		end
 		if(posit_y<0)
-			speed_y=abs(speed_y)
+			speed_y=math.abs(speed_y)
 		end
 		if(posit_x>darwin.get_width()-1)
-			speed_x=-abs(speed_x)
+			speed_x=-math.abs(speed_x)
 		end
 		if(posit_y>darwin.get_height()-1)
-			speed_y=-abs(speed_y)
+			speed_y=-math.abs(speed_y)
 		end
 		run()
 		darwin.draw_point(posit_x,posit_y,darwin.pixel("@", true,false, darwin.white, darwin.black))

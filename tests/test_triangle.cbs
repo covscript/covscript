@@ -6,25 +6,25 @@ function main()
 	while(true)
 		if(darwin.is_kb_hit())
 			define ch=darwin.get_kb_hit()
-			if(ch==darwin.get_ascii("w"))
+			if(ch==to_ascii("w"))
 				--points[focus][1]
 			end
-			if(ch==darwin.get_ascii("s"))
+			if(ch==to_ascii("s"))
 				++points[focus][1]
 			end
-			if(ch==darwin.get_ascii("a"))
+			if(ch==to_ascii("a"))
 				--points[focus][0]
 			end
-			if(ch==darwin.get_ascii("d"))
+			if(ch==to_ascii("d"))
 				++points[focus][0]
 			end
-			if(ch==darwin.get_ascii("1"))
+			if(ch==to_ascii("1"))
 				focus=0
 			end
-			if(ch==darwin.get_ascii("2"))
+			if(ch==to_ascii("2"))
 				focus=1
 			end
-			if(ch==darwin.get_ascii("3"))
+			if(ch==to_ascii("3"))
 				focus=2
 			end
 		end

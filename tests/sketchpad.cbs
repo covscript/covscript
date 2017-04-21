@@ -14,22 +14,22 @@ while(true)
   darwin.clear_drawable()
   if(darwin.is_kb_hit())
     define ch=darwin.get_kb_hit()
-    if(ch==darwin.get_ascii("w"))
+    if(ch==to_ascii("w"))
       ++y_offset
     end
-    if(ch==darwin.get_ascii("s"))
+    if(ch==to_ascii("s"))
       --y_offset
     end
-    if(ch==darwin.get_ascii("a"))
+    if(ch==to_ascii("a"))
       ++x_offset
     end
-    if(ch==darwin.get_ascii("d"))
+    if(ch==to_ascii("d"))
       --x_offset
     end
-    if(ch==darwin.get_ascii("q"))
+    if(ch==to_ascii("q"))
       zoom=zoom+dzoom
     end
-    if(ch==darwin.get_ascii("e"))
+    if(ch==to_ascii("e"))
     	if(zoom>2)
     		zoom=zoom-dzoom
     	end

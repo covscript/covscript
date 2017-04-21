@@ -12,7 +12,7 @@ function main()
         darwin.clear_drawable()
         i=0
         while(i<darwin.get_width())
-            darwin.draw_point(i,0.5*(darwin.get_height()+sin((i+x)/fd)*darwin.get_height()),pix)
+            darwin.draw_point(i,0.5*(darwin.get_height()+math.sin((i+x)/fd)*darwin.get_height()),pix)
             ++i
         end
         darwin.update_drawable()
