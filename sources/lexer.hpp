@@ -178,7 +178,7 @@ namespace cov_basic {
 	mapping<std::string,std::function<token_base*()>> reserved_map= {
 		{"and",[]()->token_base*{return new token_signal(signal_types::and_);}},{"or",[]()->token_base*{return new token_signal(signal_types::or_);}},{"not",[]()->token_base*{return new token_signal(signal_types::not_);}},
 		{"current",[]()->token_base*{return new token_value(constant_values::current_namespace);}},{"global",[]()->token_base*{return new token_value(constant_values::global_namespace);}},{"this",[]()->token_base*{return new token_value(constant_values::this_object);}},
-		{"endline",[]()->token_base*{return new token_value(string("\n"));}},{"pi",[]()->token_base*{return new token_value(number(3.1415926535));}},{"e",[]()->token_base*{return new token_value(number(2.7182818284));}},{"true",[]()->token_base*{return new token_value(true);}},{"false",[]()->token_base*{return new token_value(false);}}
+		{"pi",[]()->token_base*{return new token_value(number(3.1415926535));}},{"e",[]()->token_base*{return new token_value(number(2.7182818284));}},{"true",[]()->token_base*{return new token_value(true);}},{"false",[]()->token_base*{return new token_value(false);}}
 	};
 	mapping<char,char> escape_map= {
 		{'a','\a'},{'b','\b'},{'f','\f'},{'n','\n'},{'r','\r'},{'t','\t'},{'v','\v'},{'\\','\\'},{'\"','\"'},{'0','\0'}
