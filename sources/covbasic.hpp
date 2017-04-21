@@ -329,6 +329,9 @@ namespace cov_basic {
 #ifdef CBS_STRING_EXT
 #include "./string_extension.cpp"
 #endif
+#ifdef CBS_ARRAY_EXT
+#include "./array_extension.cpp"
+#endif
 #ifdef CBS_FILE_EXT
 #include "./file_extension.cpp"
 #endif
@@ -336,19 +339,6 @@ namespace cov_basic {
 #include "./darwin_extension.cpp"
 #endif
 namespace cov_basic {
-	cov::any _clone(cov::any val)
-	{
-		if(val.type()==typeid(linker)) {
-			cov::any v=val.const_val<linker>().data;
-			v.clone();
-			return v;
-		}
-		val.clone();
-		if(val.type()==typeid(array))
-			for(cov::any& v:val.val<array>(true))
-				v.clone();
-		return val;
-	}
 	cov::any _sizeof(array& args)
 	{
 		if(args.size()!=1)
@@ -427,52 +417,6 @@ namespace cov_basic {
 	{
 		arglist::check<linker>(args);
 		return args.front().val<linker>(true).data;
-	}
-// Array
-	cov::any push_front_array(array& args)
-	{
-		if(args.size()!=2)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(array))
-			throw syntax_error("Wrong type of arguments.(Request Array)");
-		args.at(0).val<array>(true).push_front(_clone(args.at(1)));
-		return number(0);
-	}
-	cov::any pop_front_array(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(array))
-			throw syntax_error("Wrong type of arguments.(Request Array)");
-		args.at(0).val<array>(true).pop_front();
-		return number(0);
-	}
-	cov::any push_back_array(array& args)
-	{
-		if(args.size()!=2)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(array))
-			throw syntax_error("Wrong type of arguments.(Request Array)");
-		args.at(0).val<array>(true).push_back(_clone(args.at(1)));
-		return number(0);
-	}
-	cov::any pop_back_array(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(array))
-			throw syntax_error("Wrong type of arguments.(Request Array)");
-		args.at(0).val<array>(true).pop_back();
-		return number(0);
-	}
-	cov::any clear_array(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(array))
-			throw syntax_error("Wrong type of arguments.(Request Array)");
-		args.at(0).val<array>(true).clear();
-		return number(0);
 	}
 // Mathematics
 	cov::any abs(array& args)
@@ -666,11 +610,6 @@ namespace cov_basic {
 		add_function(clone);
 		add_function(link);
 		add_function(escape);
-		add_function(push_front_array);
-		add_function(pop_front_array);
-		add_function(push_back_array);
-		add_function(pop_back_array);
-		add_function(clear_array);
 		add_function(abs);
 		add_function(ln);
 		add_function(log);
@@ -690,6 +629,10 @@ namespace cov_basic {
 #ifdef CBS_STRING_EXT
 		string_cbs_ext::init();
 		runtime->storage.add_var("string",std::make_shared<extension_holder>(&string_ext));
+#endif
+#ifdef CBS_ARRAY_EXT
+		array_cbs_ext::init();
+		runtime->storage.add_var("array",std::make_shared<extension_holder>(&array_ext));
 #endif
 #ifdef CBS_FILE_EXT
 		file_cbs_ext::init();
