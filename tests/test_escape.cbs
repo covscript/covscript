@@ -1,1 +1,9 @@
-system.println("\t\"hello\"\n\tworld")
+define str="\t\"hello\"\n\tworld"
+define i=0
+while(i<sizeof(str))
+  if(str[i]==to_ascii("\t"))
+    system.println("Boom!")
+  end
+  system.print(to_char(str[i]))
+  ++i
+end

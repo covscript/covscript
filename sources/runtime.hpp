@@ -437,17 +437,20 @@ namespace cov_basic {
 	}
 	cov::any parse_access(cov::any a,const cov::any& b)
 	{
-		if(a.type()!=typeid(array))
-			throw syntax_error("Access non-array object.");
 		if(b.type()!=typeid(number))
-			throw syntax_error("Array index must be a number.");
-		array& arr=a.val<array>(true);
-		std::size_t posit=b.const_val<number>();
-		if(posit>=arr.size()) {
-			for(std::size_t i=posit-arr.size()+1; i>0; --i)
-				arr.emplace_back(number(0));
+			throw syntax_error("Index must be a number.");
+		if(a.type()==typeid(array)) {
+			array& arr=a.val<array>(true);
+			std::size_t posit=b.const_val<number>();
+			if(posit>=arr.size()) {
+				for(std::size_t i=posit-arr.size()+1; i>0; --i)
+					arr.emplace_back(number(0));
+			}
+			return arr.at(posit);
+		} else if(a.type()==typeid(string)) {
+			return number(a.const_val<string>().at(b.const_val<number>()));
 		}
-		return arr.at(posit);
+		throw syntax_error("Access non-array or string object.");
 	}
 	bool define_var=false;
 	cov::any parse_expr(cov::tree<token_base*>::iterator it)

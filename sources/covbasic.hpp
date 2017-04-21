@@ -377,6 +377,16 @@ namespace cov_basic {
 			throw syntax_error("Wrong size of arguments.");
 		return args.front().to_string();
 	}
+	cov::any to_ascii(array& args)
+	{
+		arglist::check<string>(args);
+		return number(args.at(0).const_val<string>().at(0));
+	}
+	cov::any to_char(array& args)
+	{
+		arglist::check<number>(args);
+		return string(1,args.at(0).const_val<number>());
+	}
 	cov::any is_number(array& args)
 	{
 		if(args.size()!=1)
@@ -646,6 +656,8 @@ namespace cov_basic {
 		runtime->storage.add_type("linker",[]()->cov::any {return linker{0};});
 		add_function(to_integer);
 		add_function(to_string);
+		add_function(to_ascii);
+		add_function(to_char);
 		add_function(is_number);
 		add_function(is_boolean);
 		add_function(is_string);

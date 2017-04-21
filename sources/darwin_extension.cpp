@@ -170,10 +170,6 @@ namespace darwin_cbs_ext {
 	{
 		return number(darwin::runtime.get_kb_hit());
 	}
-	cov::any get_ascii(array& args)
-	{
-		return number(args.at(0).val<string>().at(0));
-	}
 	cov::any pixel(array& args)
 	{
 		return darwin::pixel(args.at(0).const_val<std::string>().at(0),args.at(1).const_val<bool>(),args.at(2).const_val<bool>(),args.at(3).const_val<darwin::colors>(),args.at(4).const_val<darwin::colors>());
@@ -207,7 +203,6 @@ namespace darwin_cbs_ext {
 		darwin_ext.add_var("log",native_interface(log));
 		darwin_ext.add_var("is_kb_hit",native_interface(is_kb_hit));
 		darwin_ext.add_var("get_kb_hit",native_interface(get_kb_hit));
-		darwin_ext.add_var("get_ascii",native_interface(get_ascii));
 		darwin_ext.add_var("pixel",native_interface(pixel));
 		darwin_ext.add_var("picture",native_interface(picture));
 		darwin_ext.add_var("black",darwin::colors::black);
