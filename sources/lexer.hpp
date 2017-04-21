@@ -180,6 +180,9 @@ namespace cov_basic {
 		{"current",[]()->token_base*{return new token_value(constant_values::current_namespace);}},{"global",[]()->token_base*{return new token_value(constant_values::global_namespace);}},{"this",[]()->token_base*{return new token_value(constant_values::this_object);}},
 		{"endline",[]()->token_base*{return new token_value(string("\n"));}},{"pi",[]()->token_base*{return new token_value(number(3.1415926535));}},{"e",[]()->token_base*{return new token_value(number(2.7182818284));}},{"true",[]()->token_base*{return new token_value(true);}},{"false",[]()->token_base*{return new token_value(false);}}
 	};
+	mapping<char,char> escape_map= {
+		{'a','\a'},{'b','\b'},{'f','\f'},{'n','\n'},{'r','\r'},{'t','\t'},{'v','\v'},{'\\','\\'},{'\"','\"'},{'0','\0'}
+	};
 	char signals[]= {
 		'+','-','*','/','%','^',',','.','>','<','=','&','|','!','(',')','[',']','{','}'
 	};
@@ -195,9 +198,15 @@ namespace cov_basic {
 		std::string tmp;
 		token_types type=token_types::null;
 		bool inside_str=false;
+		bool escape=false;
 		for(std::size_t i=0; i<buff.size();) {
 			if(inside_str) {
-				if(buff[i]=='\"') {
+				if(escape) {
+					tmp+=escape_map.match(buff[i]);
+					escape=false;
+				} else if(buff[i]=='\\') {
+					escape=true;
+				} else if(buff[i]=='\"') {
 					tokens.push_back(new token_value(tmp));
 					tmp.clear();
 					inside_str=false;
