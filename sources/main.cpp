@@ -1,5 +1,6 @@
 #define CBS_STRING_EXT
 #define CBS_ARRAY_EXT
+#define CBS_MATH_EXT
 #define CBS_FILE_EXT
 #define CBS_DARWIN_EXT
 #include "./covbasic.hpp"

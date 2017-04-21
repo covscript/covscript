@@ -332,6 +332,9 @@ namespace cov_basic {
 #ifdef CBS_ARRAY_EXT
 #include "./array_extension.cpp"
 #endif
+#ifdef CBS_MATH_EXT
+#include "./math_extension.cpp"
+#endif
 #ifdef CBS_FILE_EXT
 #include "./file_extension.cpp"
 #endif
@@ -417,58 +420,6 @@ namespace cov_basic {
 	{
 		arglist::check<linker>(args);
 		return args.front().val<linker>(true).data;
-	}
-// Mathematics
-	cov::any abs(array& args)
-	{
-		return number(std::abs(args.at(0).const_val<number>()));
-	}
-	cov::any ln(array& args)
-	{
-		return number(std::log(args.at(0).const_val<number>()));
-	}
-	cov::any log(array& args)
-	{
-		if(args.size()==1)
-			return number(std::log10(args.at(0).const_val<number>()));
-		else
-			return number(std::log(args.at(1).const_val<number>()/args.at(0).const_val<number>()));
-	}
-	cov::any sin(array& args)
-	{
-		return number(std::sin(args.at(0).const_val<number>()));
-	}
-	cov::any cos(array& args)
-	{
-		return number(std::cos(args.at(0).const_val<number>()));
-	}
-	cov::any tan(array& args)
-	{
-		return number(std::tan(args.at(0).const_val<number>()));
-	}
-	cov::any asin(array& args)
-	{
-		return number(std::sin(args.at(0).const_val<number>()));
-	}
-	cov::any acos(array& args)
-	{
-		return number(std::cos(args.at(0).const_val<number>()));
-	}
-	cov::any atan(array& args)
-	{
-		return number(std::tan(args.at(0).const_val<number>()));
-	}
-	cov::any sqrt(array& args)
-	{
-		return number(std::sqrt(args.at(0).const_val<number>()));
-	}
-	cov::any root(array& args)
-	{
-		return number(std::pow(args.at(0).const_val<number>(),number(1)/args.at(1).const_val<number>()));
-	}
-	cov::any pow(array& args)
-	{
-		return number(std::pow(args.at(0).const_val<number>(),args.at(1).const_val<number>()));
 	}
 	void init()
 	{
@@ -610,18 +561,6 @@ namespace cov_basic {
 		add_function(clone);
 		add_function(link);
 		add_function(escape);
-		add_function(abs);
-		add_function(ln);
-		add_function(log);
-		add_function(sin);
-		add_function(cos);
-		add_function(tan);
-		add_function(asin);
-		add_function(acos);
-		add_function(atan);
-		add_function(sqrt);
-		add_function(root);
-		add_function(pow);
 		system_cbs_ext::init();
 		runtime->storage.add_var("system",std::make_shared<extension_holder>(&system_ext));
 		runtime_cbs_ext::init();
@@ -633,6 +572,10 @@ namespace cov_basic {
 #ifdef CBS_ARRAY_EXT
 		array_cbs_ext::init();
 		runtime->storage.add_var("array",std::make_shared<extension_holder>(&array_ext));
+#endif
+#ifdef CBS_MATH_EXT
+		math_cbs_ext::init();
+		runtime->storage.add_var("math",std::make_shared<extension_holder>(&math_ext));
 #endif
 #ifdef CBS_FILE_EXT
 		file_cbs_ext::init();
