@@ -183,8 +183,12 @@ namespace cov_basic {
 	}
 	cov::any parse_mul(const cov::any& a,const cov::any& b)
 	{
-		if(!a.usable()&&b.type()==typeid(linker))
-			return b.const_val<linker>().data;
+		if(!a.usable()&&b.type()==typeid(linker)) {
+			if(b.const_val<linker>().data.usable())
+				return b.const_val<linker>().data;
+			else
+				throw syntax_error("Access Null Linker.");
+		}
 		if(a.type()==typeid(number)) {
 			if(b.type()==typeid(number)) {
 				return number(a.const_val<number>()*b.const_val<number>());
@@ -250,6 +254,8 @@ namespace cov_basic {
 			throw internal_error("Null Pointer Accessed.");
 		if(a.type()!=typeid(linker)||b->get_type()!=token_types::id)
 			throw syntax_error("Unsupported operator operations(Mem).");
+		if(!a.const_val<linker>().data.usable())
+			throw syntax_error("Access Null Linker.");
 		if(a.const_val<linker>().data.type()==typeid(structure))
 			return a.const_val<linker>().data.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
 	}
