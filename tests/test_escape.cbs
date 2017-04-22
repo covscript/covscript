@@ -1,6 +1,6 @@
 define str="\t\"hello\"\n\tworld"
 define i=0
-while(i<sizeof(str))
+while(i<size_of(str))
   if(str[i]==to_ascii("\t"))
     system.println("Boom!")
   end

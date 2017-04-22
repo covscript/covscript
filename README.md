@@ -12,7 +12,7 @@
 ### Mac OS ###
 暂时没有测试，应该与Linux无异。
 ## 运行 ##
-`cbs2 <file> <args...>`
+`cbs2.1 <file> <args...>`
 ## 测试 ##
 在`tests`文件夹中包含了数个由CovBasic编写的测试程序。
 ## 版权 ##

@@ -23,8 +23,8 @@ function die()
 		end
 		darwin.clear_drawable()
 		darwin.fill_drawable(darwin.pixel(" ",true,false,darwin.white,darwin.red))
-		darwin.draw_string(0.5*(darwin.get_width()-sizeof(str0)),0.5*darwin.get_height(),str0,darwin.pixel(" ",true,false,darwin.white,darwin.red))
-		darwin.draw_string(0.5*(darwin.get_width()-sizeof(str1)),darwin.get_height()-1,str1,darwin.pixel(" ",true,false,darwin.white,darwin.red))
+		darwin.draw_string(0.5*(darwin.get_width()-size_of(str0)),0.5*darwin.get_height(),str0,darwin.pixel(" ",true,false,darwin.white,darwin.red))
+		darwin.draw_string(0.5*(darwin.get_width()-size_of(str1)),darwin.get_height()-1,str1,darwin.pixel(" ",true,false,darwin.white,darwin.red))
 		darwin.update_drawable()
 	end
 end
@@ -37,7 +37,7 @@ function gen_food()
 		is_fit=false
 		block
 			define i=0
-			while(i<sizeof(snake_body))
+			while(i<size_of(snake_body))
 				if(snake_body[i][0]==food[0]&&snake_body[i][1]==food[1])
 					is_fit=true
 				end
@@ -117,7 +117,7 @@ function start()
 			if(!god_mode)
 				block
 					define i=0
-					while(i<sizeof(snake_body))
+					while(i<size_of(snake_body))
 						if(snake_body[i][0]==snake_head[0]&&snake_body[i][1]==snake_head[1])
 							die()
 							return 0
@@ -138,7 +138,7 @@ function start()
 		darwin.clear_drawable()
 		block
 			define i=0
-			while(i<sizeof(snake_body))
+			while(i<size_of(snake_body))
 				darwin.draw_point(snake_body[i][0],snake_body[i][1],body_pix)
 				++i
 			end

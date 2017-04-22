@@ -11,8 +11,10 @@
 #include <stdexcept>
 #include <string>
 #include <memory>
+#include <cmath>
 #include <deque>
 namespace cov_basic {
+	const std::string version="2.1.2.3";
 	class syntax_error final:public std::exception {
 		std::string mWhat="Covariant Basic Syntax Error";
 	public:

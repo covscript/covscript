@@ -1,6 +1,5 @@
 #pragma once
 #include "./parser.hpp"
-#include <cmath>
 namespace cov_basic {
 	class domain_manager {
 	public:
@@ -141,19 +140,17 @@ namespace cov_basic {
 				return a.const_val<number>()+number(b.const_val<boolean>());
 			} else
 				throw syntax_error("Unsupported operator operations(Add).");
-		}
-		if(a.type()==typeid(boolean)) {
+		} else if(a.type()==typeid(boolean)) {
 			if(b.type()==typeid(number)) {
 				return number(a.const_val<boolean>())+b.const_val<number>();
 			} else if(b.type()==typeid(boolean)) {
 				return number(a.const_val<boolean>())+number(b.const_val<boolean>());
 			} else
 				throw syntax_error("Unsupported operator operations(Add).");
-		}
-		if(a.type()==typeid(string)) {
+		} else if(a.type()==typeid(string)) {
 			return std::string(a.to_string()+b.to_string());
-		}
-		throw syntax_error("Unsupported operator operations(Add).");
+		} else
+			throw syntax_error("Unsupported operator operations(Add).");
 	}
 	cov::any parse_sub(const cov::any& a,const cov::any& b)
 	{
@@ -162,24 +159,22 @@ namespace cov_basic {
 				return -b.const_val<number>();
 			else
 				throw syntax_error("Unsupported operator operations(Sub).");
-		}
-		if(a.type()==typeid(number)) {
+		} else if(a.type()==typeid(number)) {
 			if(b.type()==typeid(number)) {
 				return a.const_val<number>()-b.const_val<number>();
 			} else if(b.type()==typeid(boolean)) {
 				return a.const_val<number>()-number(b.const_val<boolean>());
 			} else
 				throw syntax_error("Unsupported operator operations(Sub).");
-		}
-		if(a.type()==typeid(boolean)) {
+		} else if(a.type()==typeid(boolean)) {
 			if(b.type()==typeid(number)) {
 				return number(a.const_val<boolean>())-b.const_val<number>();
 			} else if(b.type()==typeid(boolean)) {
 				return number(a.const_val<boolean>())-number(b.const_val<boolean>());
 			} else
 				throw syntax_error("Unsupported operator operations(Sub).");
-		}
-		throw syntax_error("Unsupported operator operations(Sub).");
+		} else
+			throw syntax_error("Unsupported operator operations(Sub).");
 	}
 	cov::any parse_mul(const cov::any& a,const cov::any& b)
 	{
@@ -188,14 +183,13 @@ namespace cov_basic {
 				return b.const_val<linker>().data;
 			else
 				throw syntax_error("Access Null Linker.");
-		}
-		if(a.type()==typeid(number)) {
+		} else if(a.type()==typeid(number)) {
 			if(b.type()==typeid(number)) {
 				return number(a.const_val<number>()*b.const_val<number>());
 			} else
 				throw syntax_error("Unsupported operator operations(Mul).");
-		}
-		throw syntax_error("Unsupported operator operations(Mul).");
+		} else
+			throw syntax_error("Unsupported operator operations(Mul).");
 	}
 	cov::any parse_div(const cov::any& a,const cov::any& b)
 	{
@@ -204,8 +198,8 @@ namespace cov_basic {
 				return number(a.const_val<number>()/b.const_val<number>());
 			} else
 				throw syntax_error("Unsupported operator operations(Div).");
-		}
-		throw syntax_error("Unsupported operator operations(Div).");
+		} else
+			throw syntax_error("Unsupported operator operations(Div).");
 	}
 	cov::any parse_mod(const cov::any& a,const cov::any& b)
 	{
@@ -214,8 +208,8 @@ namespace cov_basic {
 				return number(long(a.const_val<number>())%long(b.const_val<number>()));
 			} else
 				throw syntax_error("Unsupported operator operations(Mod).");
-		}
-		throw syntax_error("Unsupported operator operations(Mod).");
+		} else
+			throw syntax_error("Unsupported operator operations(Mod).");
 	}
 	cov::any parse_pow(const cov::any& a,const cov::any& b)
 	{
@@ -224,22 +218,22 @@ namespace cov_basic {
 				return number(std::pow(a.const_val<number>(),b.const_val<number>()));
 			} else
 				throw syntax_error("Unsupported operator operations(Pow).");
-		}
-		throw syntax_error("Unsupported operator operations(Pow).");
+		} else
+			throw syntax_error("Unsupported operator operations(Pow).");
 	}
 	cov::any parse_dot(const cov::any& a,token_base* b)
 	{
 		if(b==nullptr)
 			throw internal_error("Null Pointer Accessed.");
-		if(b->get_type()!=token_types::id)
+		else if(b->get_type()!=token_types::id)
 			throw syntax_error("Unsupported operator operations(Dot).");
-		if(a.type()==typeid(structure))
+		else if(a.type()==typeid(structure))
 			return a.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
-		if(a.type()==typeid(extension_t))
+		else if(a.type()==typeid(extension_t))
 			return a.val<extension_t>(true)->get_var(dynamic_cast<token_id*>(b)->get_id());
-		if(a.type()!=typeid(constant_values))
+		else if(a.type()!=typeid(constant_values))
 			throw syntax_error("Unsupported operator operations(Dot).");
-		if(a.const_val<constant_values>()==constant_values::global_namespace)
+		else if(a.const_val<constant_values>()==constant_values::global_namespace)
 			return runtime->storage.get_var_global(dynamic_cast<token_id*>(b)->get_id());
 		else if(a.const_val<constant_values>()==constant_values::current_namespace)
 			return runtime->storage.get_var_current(dynamic_cast<token_id*>(b)->get_id());
@@ -252,11 +246,11 @@ namespace cov_basic {
 	{
 		if(b==nullptr)
 			throw internal_error("Null Pointer Accessed.");
-		if(a.type()!=typeid(linker)||b->get_type()!=token_types::id)
+		else if(a.type()!=typeid(linker)||b->get_type()!=token_types::id)
 			throw syntax_error("Unsupported operator operations(Mem).");
-		if(!a.const_val<linker>().data.usable())
+		else if(!a.const_val<linker>().data.usable())
 			throw syntax_error("Access Null Linker.");
-		if(a.const_val<linker>().data.type()==typeid(structure))
+		else if(a.const_val<linker>().data.type()==typeid(structure))
 			return a.const_val<linker>().data.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
 		else
 			throw syntax_error("Unsupported operator operations(Mem).");
@@ -265,11 +259,12 @@ namespace cov_basic {
 	{
 		if(a!=nullptr)
 			throw syntax_error("Wrong format of new expression.");
-		if(b==nullptr)
+		else if(b==nullptr)
 			throw internal_error("Null Pointer Accessed.");
-		if(b->get_type()!=token_types::id)
+		else if(b->get_type()!=token_types::id)
 			throw syntax_error("Unsupported operator operations(New).");
-		return linker{runtime->storage.get_var_type(dynamic_cast<token_id*>(b)->get_id())};
+		else
+			return linker{runtime->storage.get_var_type(dynamic_cast<token_id*>(b)->get_id())};
 	}
 	cov::any parse_und(const cov::any& a,const cov::any& b)
 	{
@@ -280,16 +275,15 @@ namespace cov_basic {
 				return boolean(a.const_val<number>()<number(b.const_val<boolean>()));
 			} else
 				throw syntax_error("Unsupported operator operations(Und).");
-		}
-		if(a.type()==typeid(boolean)) {
+		} else if(a.type()==typeid(boolean)) {
 			if(b.type()==typeid(number)) {
 				return boolean(number(a.const_val<boolean>())<b.const_val<number>());
 			} else if(b.type()==typeid(boolean)) {
 				return boolean(number(a.const_val<boolean>())<number(b.const_val<boolean>()));
 			} else
 				throw syntax_error("Unsupported operator operations(Und).");
-		}
-		throw syntax_error("Unsupported operator operations(Und).");
+		} else
+			throw syntax_error("Unsupported operator operations(Und).");
 	}
 	cov::any parse_abo(const cov::any& a,const cov::any& b)
 	{
@@ -300,16 +294,15 @@ namespace cov_basic {
 				return boolean(a.const_val<number>()>number(b.const_val<boolean>()));
 			} else
 				throw syntax_error("Unsupported operator operations(Abo).");
-		}
-		if(a.type()==typeid(boolean)) {
+		} else if(a.type()==typeid(boolean)) {
 			if(b.type()==typeid(number)) {
 				return boolean(number(a.const_val<boolean>())>b.const_val<number>());
 			} else if(b.type()==typeid(boolean)) {
 				return boolean(number(a.const_val<boolean>())>number(b.const_val<boolean>()));
 			} else
 				throw syntax_error("Unsupported operator operations(Abo).");
-		}
-		throw syntax_error("Unsupported operator operations(Abo).");
+		} else
+			throw syntax_error("Unsupported operator operations(Abo).");
 	}
 	cov::any parse_ueq(const cov::any& a,const cov::any& b)
 	{
@@ -320,16 +313,15 @@ namespace cov_basic {
 				return boolean(a.const_val<number>()<=number(b.const_val<boolean>()));
 			} else
 				throw syntax_error("Unsupported operator operations(Ueq).");
-		}
-		if(a.type()==typeid(boolean)) {
+		} else if(a.type()==typeid(boolean)) {
 			if(b.type()==typeid(number)) {
 				return boolean(number(a.const_val<boolean>())<=b.const_val<number>());
 			} else if(b.type()==typeid(boolean)) {
 				return boolean(number(a.const_val<boolean>())<=number(b.const_val<boolean>()));
 			} else
 				throw syntax_error("Unsupported operator operations(Ueq).");
-		}
-		throw syntax_error("Unsupported operator operations(Ueq).");
+		} else
+			throw syntax_error("Unsupported operator operations(Ueq).");
 	}
 	cov::any parse_aeq(const cov::any& a,const cov::any& b)
 	{
@@ -340,16 +332,15 @@ namespace cov_basic {
 				return boolean(a.const_val<number>()>=number(b.const_val<boolean>()));
 			} else
 				throw syntax_error("Unsupported operator operations(Aeq).");
-		}
-		if(a.type()==typeid(boolean)) {
+		} else if(a.type()==typeid(boolean)) {
 			if(b.type()==typeid(number)) {
 				return boolean(number(a.const_val<boolean>())>=b.const_val<number>());
 			} else if(b.type()==typeid(boolean)) {
 				return boolean(number(a.const_val<boolean>())>=number(b.const_val<boolean>()));
 			} else
 				throw syntax_error("Unsupported operator operations(Aeq).");
-		}
-		throw syntax_error("Unsupported operator operations(Aeq).");
+		} else
+			throw syntax_error("Unsupported operator operations(Aeq).");
 	}
 	cov::any parse_asi(cov::any a,cov::any b)
 	{
@@ -360,7 +351,8 @@ namespace cov_basic {
 	{
 		if(!a.usable()&&b.usable())
 			return linker{b};
-		throw syntax_error("Unsupported operator operations(Not).");
+		else
+			throw syntax_error("Unsupported operator operations(Not).");
 	}
 	cov::any parse_equ(const cov::any& a,const cov::any& b)
 	{
@@ -379,16 +371,15 @@ namespace cov_basic {
 				return boolean(a.const_val<boolean>()&&boolean(b.const_val<number>()));
 			} else
 				throw syntax_error("Unsupported operator operations(And).");
-		}
-		if(a.type()==typeid(number)) {
+		} else if(a.type()==typeid(number)) {
 			if(b.type()==typeid(boolean)) {
 				return boolean(boolean(a.const_val<number>())&&b.const_val<boolean>());
 			} else if(b.type()==typeid(number)) {
 				return boolean(number(a.const_val<number>())&&number(b.const_val<number>()));
 			} else
 				throw syntax_error("Unsupported operator operations(And).");
-		}
-		throw syntax_error("Unsupported operator operations(And).");
+		} else
+			throw syntax_error("Unsupported operator operations(And).");
 	}
 	cov::any parse_or(const cov::any& a,const cov::any& b)
 	{
@@ -399,36 +390,39 @@ namespace cov_basic {
 				return boolean(a.const_val<boolean>()||boolean(b.const_val<number>()));
 			} else
 				throw syntax_error("Unsupported operator operations(Or).");
-		}
-		if(a.type()==typeid(number)) {
+		} else if(a.type()==typeid(number)) {
 			if(b.type()==typeid(boolean)) {
 				return boolean(boolean(a.const_val<number>())||b.const_val<boolean>());
 			} else if(b.type()==typeid(number)) {
 				return boolean(number(a.const_val<number>())||number(b.const_val<number>()));
 			} else
 				throw syntax_error("Unsupported operator operations(Or).");
-		}
-		throw syntax_error("Unsupported operator operations(Or).");
+		} else
+			throw syntax_error("Unsupported operator operations(Or).");
 	}
-	cov::any parse_not(const cov::any& b)
+	cov::any parse_not(token_base* a,const cov::any& b)
 	{
-		if(b.type()==typeid(number)) {
+		if(a!=nullptr)
+			throw syntax_error("Wrong format of new expression.");
+		else if(b.type()==typeid(number)) {
 			return boolean(!b.const_val<number>());
 		} else if(b.type()==typeid(boolean)) {
 			return boolean(!b.const_val<boolean>());
-		}
-		throw syntax_error("Unsupported operator operations(Not).");
+		} else
+			throw syntax_error("Unsupported operator operations(Not).");
 	}
 	cov::any parse_inc(cov::any a,cov::any b)
 	{
 		if(a.usable()) {
 			if(b.usable())
 				throw syntax_error("Unsupported operator operations(Inc).");
-			return a.val<number>(true)++;
+			else
+				return a.val<number>(true)++;
 		} else {
 			if(!b.usable())
 				throw syntax_error("Unsupported operator operations(Inc).");
-			return ++b.val<number>(true);
+			else
+				return ++b.val<number>(true);
 		}
 	}
 	cov::any parse_dec(cov::any a,cov::any b)
@@ -436,11 +430,13 @@ namespace cov_basic {
 		if(a.usable()) {
 			if(b.usable())
 				throw syntax_error("Unsupported operator operations(Dec).");
-			return a.val<number>(true)--;
+			else
+				return a.val<number>(true)--;
 		} else {
 			if(!b.usable())
 				throw syntax_error("Unsupported operator operations(Dec).");
-			return --b.val<number>(true);
+			else
+				return --b.val<number>(true);
 		}
 	}
 	cov::any parse_fcall(const cov::any& a,cov::any b)
@@ -467,8 +463,8 @@ namespace cov_basic {
 			return arr.at(posit);
 		} else if(a.type()==typeid(string)) {
 			return number(a.const_val<string>().at(b.const_val<number>()));
-		}
-		throw syntax_error("Access non-array or string object.");
+		} else
+			throw syntax_error("Access non-array or string object.");
 	}
 	bool define_var=false;
 	cov::any parse_expr(cov::tree<token_base*>::iterator it)
@@ -575,7 +571,7 @@ namespace cov_basic {
 				return parse_or(parse_expr(it.left()),parse_expr(it.right()));
 				break;
 			case signal_types::not_:
-				return parse_not(parse_expr(it.right()));
+				return parse_not(it.left().data(),parse_expr(it.right()));
 				break;
 			case signal_types::inc_:
 				return parse_inc(parse_expr(it.left()),parse_expr(it.right()));

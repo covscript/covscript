@@ -1,5 +1,25 @@
 #pragma once
 #include "./runtime.hpp"
+#include "./arglist.hpp"
+#include "./system_extension.hpp"
+#include "./runtime_extension.hpp"
+#ifdef CBS_STRING_EXT
+#include "./string_extension.cpp"
+#endif
+#ifdef CBS_ARRAY_EXT
+#include "./array_extension.cpp"
+#endif
+#ifdef CBS_MATH_EXT
+#include "./math_extension.cpp"
+#endif
+#ifdef CBS_FILE_EXT
+#include "./file_extension.cpp"
+#endif
+#ifdef CBS_DARWIN_EXT
+#include "./darwin_extension.cpp"
+#endif
+#define add_function(name) cov_basic::runtime->storage.add_var_global(#name,cov_basic::native_interface(name));
+#define add_function_name(name,func) cov_basic::runtime->storage.add_var_global(name,cov_basic::native_interface(func));
 namespace cov_basic {
 	bool return_fcall=false;
 	bool inside_struct=false;
@@ -75,15 +95,15 @@ namespace cov_basic {
 	}
 	void statement_import::run()
 	{
-		for(auto& ptr:mBlock) {
+		for(auto& ptr:statements) {
 			try {
 				ptr->run();
 			} catch(const syntax_error& se) {
-				throw syntax_error(ptr->get_line_num(),se.what());
+				throw syntax_error(ptr->get_line_num(),"In file \""+file+"\":"+se.what());
 			} catch(const lang_error& le) {
-				throw lang_error(ptr->get_line_num(),le.what());
+				throw lang_error(ptr->get_line_num(),"In file \""+file+"\":"+le.what());
 			} catch(const std::exception& e) {
-				throw internal_error(ptr->get_line_num(),e.what());
+				throw internal_error(ptr->get_line_num(),"In file \""+file+"\":"+e.what());
 			}
 		}
 	}
@@ -319,30 +339,8 @@ namespace cov_basic {
 		}
 		kill_action(lines,statements);
 	}
-}
-#include "./arglist.hpp"
-#include <cmath>
-#define add_function(name) cov_basic::runtime->storage.add_var_global(#name,cov_basic::native_interface(name));
-#define add_function_name(name,func) cov_basic::runtime->storage.add_var_global(name,cov_basic::native_interface(func));
-#include "./system_extension.hpp"
-#include "./runtime_extension.hpp"
-#ifdef CBS_STRING_EXT
-#include "./string_extension.cpp"
-#endif
-#ifdef CBS_ARRAY_EXT
-#include "./array_extension.cpp"
-#endif
-#ifdef CBS_MATH_EXT
-#include "./math_extension.cpp"
-#endif
-#ifdef CBS_FILE_EXT
-#include "./file_extension.cpp"
-#endif
-#ifdef CBS_DARWIN_EXT
-#include "./darwin_extension.cpp"
-#endif
-namespace cov_basic {
-	cov::any _sizeof(array& args)
+// Internal Functions
+	cov::any size_of(array& args)
 	{
 		if(args.size()!=1)
 			throw syntax_error("Wrong size of arguments.");
@@ -544,11 +542,13 @@ namespace cov_basic {
 				return new statement_struct(name,body,raw.front().back());
 			}
 		});
+		// Internal Types
 		runtime->storage.add_type("number",[]()->cov::any {return number(0);});
 		runtime->storage.add_type("boolean",[]()->cov::any {return boolean(true);});
 		runtime->storage.add_type("string",[]()->cov::any {return string();});
 		runtime->storage.add_type("array",[]()->cov::any {return array();});
 		runtime->storage.add_type("linker",[]()->cov::any {return linker();});
+		// Add Internal Functions to storage
 		add_function(to_integer);
 		add_function(to_string);
 		add_function(to_ascii);
@@ -557,10 +557,11 @@ namespace cov_basic {
 		add_function(is_boolean);
 		add_function(is_string);
 		add_function(is_array);
-		add_function_name("sizeof",_sizeof);
+		add_function(size_of);
 		add_function(clone);
 		add_function(link);
 		add_function(escape);
+		// Init the extensions
 		system_cbs_ext::init();
 		runtime->storage.add_var("system",std::make_shared<extension_holder>(&system_ext));
 		runtime_cbs_ext::init();

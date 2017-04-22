@@ -25,7 +25,7 @@ namespace cov_basic {
 			else
 				return get_type<_fT,ArgTypes...>(expect,++index);
 		}
-		template<typename _Tp>static constexpr int check_types(int index,const std::deque<cov::any>& args)
+		template<typename _Tp>static int check_types(int index,const std::deque<cov::any>& args)
 		{
 			if(index<=args.size()&&args.at(index-1).type()==typeid(_Tp))
 				return -1;

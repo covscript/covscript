@@ -310,33 +310,52 @@ namespace cov_basic {
 		virtual void run() override;
 	};
 	class statement_import final:public statement_base {
-		std::deque<statement_base*> mBlock;
+		std::string file;
+		std::deque<statement_base*> statements;
 	public:
 		statement_import()=delete;
-		statement_import(const std::string& path,token_base* ptr):statement_base(ptr)
+		statement_import(const std::string& path,token_base* ptr):file(path),statement_base(ptr)
 		{
 			std::deque<char> buff;
 			std::deque<token_base*> tokens;
 			std::ifstream in(path);
+			if(!in.is_open())
+				throw fatal_error(path+": No such file or directory");
 			std::string line;
 			std::size_t line_num=0;
 			while(std::getline(in,line)) {
 				++line_num;
 				if(line.empty())
 					continue;
-				if(line[0]=='#')
+				bool is_note=false;
+				for(auto& ch:line) {
+					if(!std::isspace(ch)) {
+						if(ch=='#')
+							is_note=true;
+						break;
+					}
+				}
+				if(is_note)
 					continue;
 				for(auto& c:line)
 					buff.push_back(c);
 				try {
 					translate_into_tokens(buff,tokens);
 				} catch(const syntax_error& se) {
-					throw syntax_error(line_num,se.what());
+					throw syntax_error(line_num,"In file \""+file+"\":"+se.what());
+				} catch(const std::exception& e) {
+					throw internal_error(line_num,"In file \""+file+"\":"+e.what());
 				}
 				tokens.push_back(new token_endline(line_num));
 				buff.clear();
 			}
-			translate_into_statements(tokens,mBlock);
+			try {
+				translate_into_statements(tokens,statements);
+			} catch(const syntax_error& se) {
+				throw syntax_error("In file \""+file+"\":"+se.what());
+			} catch(const std::exception& e) {
+				throw internal_error("In file \""+file+"\":"+e.what());
+			}
 		}
 		virtual statement_types get_type() const noexcept override
 		{
@@ -490,6 +509,7 @@ namespace cov_basic {
 		using function_type=std::function<statement_base*(const std::deque<std::deque<token_base*>>&)>;
 		grammar_type type=grammar_type::null;
 		function_type function;
+		method_type(grammar_type g,const function_type& f):type(g),function(f) {}
 	};
 	class translator_type final {
 	public:
