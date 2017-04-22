@@ -1,36 +1,45 @@
-struct node
-	define data
-	define next
-end
-function node(data,next)
-	define ret as node
-	ret.data=data
-	ret.next=next
-	return ret
-end
-function push_front(list,data)
-	list=node(data,list)
-end
-function pop_front(list)
-	list=list.next
-end
-function insert_after(list,data)
-	list.next=node(data,list.next)
-end
-function erase_after(list)
-	list.next=list.next.next
-end
-function foreach(node)
-	if(node!=0)
-		system.println(node.data)
-		foreach(node.next)
+struct list
+	struct node
+		define data
+		define next
+	end
+	function node(data,next)
+		define ret=new node
+		ret->data=&data
+		ret->next=next
+		return ret
+	end
+	define data=null
+	function push_front(data)
+		this.data=node(data,this.data)
+	end
+	function pop_front()
+		this.data=this.data->next
+	end
+	function begin()
+		return this.data
+	end
+	function _end()
+		return null
+	end
+	function next(it)
+		it=it->next
+	end
+	function insert_after(it,data)
+		it->next=node(data,it->next)
+	end
+	function erase_after(it)
+		it->next=it->next->next
 	end
 end
 runtime.info()
-define list=node(10,0)
-push_front(list,11)
-push_front(list,12)
-pop_front(list)
-insert_after(list,13)
-erase_after(list.next)
-foreach(list)
+define lst as list
+lst.push_front(10)
+lst.push_front(11)
+lst.insert_after(lst.begin(),12)
+lst.pop_front()
+define it=lst.begin()
+while(it!=lst._end())
+	system.println(*it->data)
+	lst.next(it)
+end
