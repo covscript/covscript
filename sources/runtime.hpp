@@ -258,6 +258,8 @@ namespace cov_basic {
 			throw syntax_error("Access Null Linker.");
 		if(a.const_val<linker>().data.type()==typeid(structure))
 			return a.const_val<linker>().data.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
+		else
+			throw syntax_error("Unsupported operator operations(Mem).");
 	}
 	cov::any parse_new(token_base* a,token_base* b)
 	{
