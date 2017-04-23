@@ -1,0 +1,39 @@
+# Covariant Basic Standard Library
+struct forward_list_node
+	define data=0
+	define next=null
+end
+function forward_list_node(dat,nxt)
+	define n=new forward_list_node
+	n->data=current.dat
+	n->next=current.nxt
+	return n
+end
+struct forward_list
+	define begin=null
+	function clear()
+		this.begin=null
+	end
+	function push_front(dat)
+		this.begin=forward_list_node(dat,this.begin)
+	end
+	function pop_front()
+		if(this.begin!=null)
+			this.begin=this.begin->next
+		end
+	end
+	function insert_after(it,dat)
+		if(it==null)
+			runtime.error("Use of null linker")
+		end
+		it->next=forward_list_node(dat,it->next)
+	end
+	function erase_after(it)
+		if(it==null)
+			runtime.error("Use of null linker")
+		end
+		if(it->next!=null)
+			it->next=it->next->next
+		end
+	end
+end
