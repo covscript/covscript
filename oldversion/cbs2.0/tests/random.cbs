@@ -1,4 +1,0 @@
-while(true)
-	println(randint(0,10))
-	delay(500)
-end

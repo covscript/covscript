@@ -1,3 +1,0 @@
-While True Do
-    Print(Rand(0,10),",",RandInt(0,10))
-End
