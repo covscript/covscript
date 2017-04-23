@@ -1,45 +1,15 @@
-struct list
-	struct node
-		define data
-		define next
-	end
-	function node(data,next)
-		define ret=new node
-		ret->data=&data
-		ret->next=next
-		return ret
-	end
-	define data=null
-	function push_front(data)
-		this.data=node(data,this.data)
-	end
-	function pop_front()
-		this.data=this.data->next
-	end
-	function begin()
-		return this.data
-	end
-	function _end()
-		return null
-	end
-	function next(it)
+import "../stdlib/forward_list"
+define list as forward_list
+list.push_front("Hello")
+list.push_front(0)
+list.pop_front()
+list.push_front("Hahaha")
+list.insert_after(list.begin,1)
+list.erase_after(list.begin->next)
+block
+	define it=list.begin
+	while(it!=null)
+		system.println(it->data)
 		it=it->next
 	end
-	function insert_after(it,data)
-		it->next=node(data,it->next)
-	end
-	function erase_after(it)
-		it->next=it->next->next
-	end
-end
-runtime.info()
-define lst as list
-lst.push_front(10)
-lst.push_front(11)
-lst.insert_after(lst.begin(),12)
-lst.pop_front()
-define it=lst.begin()
-while(it!=lst._end())
-	system.println(*it->data)
-	lst.next(it)
 end
