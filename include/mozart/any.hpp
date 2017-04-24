@@ -37,9 +37,9 @@ namespace std {
 	template<> std::string to_string<bool>(const bool& v)
 	{
 		if(v)
-			return "True";
+			return "true";
 		else
-			return "False";
+			return "false";
 	}
 }
 
