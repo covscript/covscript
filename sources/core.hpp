@@ -132,7 +132,7 @@ namespace cov_basic {
 		std::shared_ptr<std::unordered_map<string,cov::any>> m_data;
 	public:
 		structure()=delete;
-		structure(const std::string& name,const std::shared_ptr<std::unordered_map<string,cov::any>>& data):m_name(name),m_data(data) {}
+		structure(const std::string& name,const std::shared_ptr<std::unordered_map<string,cov::any>>& data):m_name(typeid(structure).name()+name),m_data(data) {}
 		~structure()=default;
 		std::shared_ptr<std::unordered_map<string,cov::any>>& get_domain()
 		{
