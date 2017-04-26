@@ -463,7 +463,7 @@ namespace cov_basic {
 		struct_builder mBuilder;
 	public:
 		statement_struct()=delete;
-		statement_struct(const std::string& name,const std::deque<statement_base*>& method,token_base* ptr):statement_base(ptr),mName(name),mBuilder(method) {}
+		statement_struct(const std::string& name,const std::deque<statement_base*>& method,token_base* ptr):statement_base(ptr),mName(name),mBuilder(name,method) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::struct_;

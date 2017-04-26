@@ -128,28 +128,34 @@ namespace cov_basic {
 		}
 	};
 	class structure final {
+		std::string m_name;
 		std::shared_ptr<std::unordered_map<string,cov::any>> m_data;
 	public:
 		structure()=delete;
-		structure(const std::shared_ptr<std::unordered_map<string,cov::any>>& data):m_data(data) {}
+		structure(const std::string& name,const std::shared_ptr<std::unordered_map<string,cov::any>>& data):m_name(name),m_data(data) {}
 		~structure()=default;
 		std::shared_ptr<std::unordered_map<string,cov::any>>& get_domain()
 		{
 			return m_data;
+		}
+		const std::string& get_name() const
+		{
+			return m_name;
 		}
 		cov::any get_var(const std::string& name) const
 		{
 			if(m_data->count(name)>0)
 				return m_data->at(name);
 			else
-				throw syntax_error("Struct have no member called \""+name+"\".");
+				throw syntax_error("Struct \""+m_name+"\" have no member called \""+name+"\".");
 		}
 	};
 	class struct_builder final {
+		std::string mName;
 		std::deque<statement_base*> mMethod;
 	public:
 		struct_builder()=delete;
-		struct_builder(const std::deque<statement_base*>& method):mMethod(method) {}
+		struct_builder(const std::string& name,const std::deque<statement_base*>& method):mName(name),mMethod(method) {}
 		~struct_builder()=default;
 		cov::any operator()();
 	};

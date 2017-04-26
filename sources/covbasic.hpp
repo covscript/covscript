@@ -85,7 +85,7 @@ namespace cov_basic {
 			}
 		}
 		inside_struct=false;
-		structure dat(runtime->storage.get_domain());
+		structure dat(this->mName,runtime->storage.get_domain());
 		runtime->storage.remove_domain();
 		return dat;
 	}
@@ -402,6 +402,15 @@ namespace cov_basic {
 			throw syntax_error("Wrong size of arguments.");
 		return args.front().type()==typeid(array);
 	}
+	cov::any type_id(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.front().type()==typeid(structure))
+			return args.front().const_val<structure>().get_name();
+		else
+			return string(args.front().type().name());
+	}
 	cov::any clone(array& args)
 	{
 		if(args.size()!=1)
@@ -557,6 +566,7 @@ namespace cov_basic {
 		add_function(is_boolean);
 		add_function(is_string);
 		add_function(is_array);
+		add_function(type_id);
 		add_function(size_of);
 		add_function(clone);
 		add_function(link);
