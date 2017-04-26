@@ -20,9 +20,10 @@
 * Github: https://github.com/mikecovlee
 * Website: http://ldc.atd3.cn
 *
-* Version: 17.2.1
+* Version: 17.4.1
 */
 #include "./base.hpp"
+#include <functional>
 #include <iostream>
 
 namespace std {
@@ -74,6 +75,11 @@ namespace cov {
 	{
 		return compare_if<T,compare_helper<T>::value>::compare(a,b);
 	}
+	template<typename T>std::size_t hash(const T& val)
+	{
+		static std::hash<T> gen;
+		return gen(val);
+	}
 	class any final {
 		class baseHolder {
 		public:
@@ -83,6 +89,7 @@ namespace cov {
 			virtual baseHolder *duplicate() = 0;
 			virtual bool compare(const baseHolder *) const = 0;
 			virtual std::string to_string() const = 0;
+			virtual std::size_t hash() const = 0;
 		};
 		template < typename T > class holder:public baseHolder {
 		protected:
@@ -110,6 +117,10 @@ namespace cov {
 			virtual std::string to_string() const override
 			{
 				return std::move(std::to_string(mDat));
+			}
+			virtual std::size_t hash() const override
+			{
+				return cov::hash<T>(mDat);
 			}
 			T & data()
 			{
@@ -199,6 +210,12 @@ namespace cov {
 			if(this->mDat == nullptr)
 				return "Null";
 			return std::move(this->mDat->data->to_string());
+		}
+		std::size_t hash() const
+		{
+			if(this->mDat == nullptr)
+				return cov::hash<void*>(nullptr);
+			return this->mDat->data->hash();
 		}
 		any & operator=(const any & var)
 		{
@@ -361,4 +378,13 @@ std::ostream& operator<<(std::ostream& out,const cov::any& val)
 {
 	out<<val.to_string();
 	return out;
+}
+
+namespace std {
+	template<> struct hash<cov::any> {
+		std::size_t operator()(const cov::any& val) const
+		{
+			return val.hash();
+		}
+	};
 }
