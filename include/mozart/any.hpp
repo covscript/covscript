@@ -75,10 +75,35 @@ namespace cov {
 	{
 		return compare_if<T,compare_helper<T>::value>::compare(a,b);
 	}
+	template < typename _Tp > class hash_helper {
+		template < typename T > static constexpr bool match(...)
+		{
+			return false;
+		}
+		template < typename T > static constexpr bool match(std::hash < T > *)
+		{
+			return true;
+		}
+	public:
+		static constexpr bool value = match < _Tp > (nullptr);
+	};
+	template<typename,bool> struct hash_if;
+	template<typename T>struct hash_if<T,true> {
+		static bool hash(const T& val)
+		{
+			static std::hash<T> gen;
+			return gen(val);
+		}
+	};
+	template<typename T>struct hash_if<T,false> {
+		static bool hash(const T& val)
+		{
+			throw cov::error("E000F");
+		}
+	};
 	template<typename T>std::size_t hash(const T& val)
 	{
-		static std::hash<T> gen;
-		return gen(val);
+		return hash_if<T,hash_helper<T>::value>::hash(val);
 	}
 	class any final {
 		class baseHolder {
