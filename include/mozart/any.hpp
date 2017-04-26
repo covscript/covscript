@@ -76,11 +76,12 @@ namespace cov {
 		return compare_if<T,compare_helper<T>::value>::compare(a,b);
 	}
 	template < typename _Tp > class hash_helper {
-		template < typename T > static constexpr bool match(...)
+		template < typename T,decltype(&std::hash<T>::operator()) X >struct matcher;
+		template < typename T > static constexpr bool match(T*)
 		{
 			return false;
 		}
-		template < typename T > static constexpr bool match(std::hash < T > *)
+		template < typename T > static constexpr bool match(matcher<T,&std::hash<T>::operator()>*)
 		{
 			return true;
 		}
