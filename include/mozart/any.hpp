@@ -90,14 +90,14 @@ namespace cov {
 	};
 	template<typename,bool> struct hash_if;
 	template<typename T>struct hash_if<T,true> {
-		static bool hash(const T& val)
+		static std::size_t hash(const T& val)
 		{
 			static std::hash<T> gen;
 			return gen(val);
 		}
 	};
 	template<typename T>struct hash_if<T,false> {
-		static bool hash(const T& val)
+		static std::size_t hash(const T& val)
 		{
 			throw cov::error("E000F");
 		}
