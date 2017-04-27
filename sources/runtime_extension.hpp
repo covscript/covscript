@@ -48,6 +48,12 @@ namespace runtime_cbs_ext {
 		else
 			return cov::hash<std::string>(args.front().type().name());
 	}
+	cov::any hash(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		return args.front().hash();
+	}
 	void init()
 	{
 		runtime_ext.add_var("info",native_interface(info));
@@ -58,5 +64,6 @@ namespace runtime_cbs_ext {
 		runtime_ext.add_var("error",native_interface(error));
 		runtime_ext.add_var("load_extension",native_interface(load_extension));
 		runtime_ext.add_var("type_hash",native_interface(type_hash));
+		runtime_ext.add_var("hash",native_interface(hash));
 	}
 }
