@@ -12,7 +12,7 @@ namespace cov_basic {
 		import_,struct_,block_,endblock_,define_,as_,if_,then_,else_,while_,until_,do_,for_,break_,continue_,function_,return_
 	};
 	enum class signal_types {
-		add_,sub_,mul_,div_,mod_,pow_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,inc_,dec_,slb_,srb_,mlb_,mrb_,llb_,lrb_,esb_,emb_,elb_,link_,mem_,fcall_,access_,new_
+		add_,sub_,mul_,div_,mod_,pow_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,inc_,dec_,slb_,srb_,mlb_,mrb_,llb_,lrb_,esb_,emb_,elb_,link_,mem_,fcall_,access_,new_,typeid_
 	};
 	class token_base {
 		static garbage_collector<token_base> gc;
@@ -176,7 +176,7 @@ namespace cov_basic {
 		current_namespace,global_namespace,this_object
 	};
 	mapping<std::string,std::function<token_base*()>> reserved_map= {
-		{"and",[]()->token_base*{return new token_signal(signal_types::and_);}},{"or",[]()->token_base*{return new token_signal(signal_types::or_);}},{"not",[]()->token_base*{return new token_signal(signal_types::not_);}},{"new",[]()->token_base*{return new token_signal(signal_types::new_);}},
+		{"and",[]()->token_base*{return new token_signal(signal_types::and_);}},{"or",[]()->token_base*{return new token_signal(signal_types::or_);}},{"not",[]()->token_base*{return new token_signal(signal_types::not_);}},{"new",[]()->token_base*{return new token_signal(signal_types::new_);}},{"typeid",[]()->token_base*{return new token_signal(signal_types::typeid_);}},
 		{"current",[]()->token_base*{return new token_value(constant_values::current_namespace);}},{"global",[]()->token_base*{return new token_value(constant_values::global_namespace);}},{"this",[]()->token_base*{return new token_value(constant_values::this_object);}},
 		{"null",[]()->token_base*{return new token_value(linker());}},{"true",[]()->token_base*{return new token_value(true);}},{"false",[]()->token_base*{return new token_value(false);}}
 	};

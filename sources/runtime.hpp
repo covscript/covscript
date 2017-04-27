@@ -5,6 +5,7 @@ namespace cov_basic {
 	public:
 		using domain_t=std::shared_ptr<std::unordered_map<string,cov::any>>;
 		std::unordered_map<string,std::function<cov::any()>> m_type;
+		std::unordered_map<string,std::size_t> m_hash;
 		std::deque<domain_t> m_data;
 		std::deque<domain_t> m_this;
 	public:
@@ -18,8 +19,19 @@ namespace cov_basic {
 		{
 			if(m_type.count(name)>0)
 				throw syntax_error("Redefinition of type \""+name+"\".");
-			else
+			else {
 				m_type.emplace(name,func);
+				m_hash.emplace(name,cov::hash<std::string>(typeid(structure).name()+name));
+			}
+		}
+		void add_type(const std::string& name,const std::function<cov::any()>& func,std::size_t hash)
+		{
+			if(m_type.count(name)>0)
+				throw syntax_error("Redefinition of type \""+name+"\".");
+			else {
+				m_type.emplace(name,func);
+				m_hash.emplace(name,hash);
+			}
 		}
 		void add_domain()
 		{
@@ -78,6 +90,13 @@ namespace cov_basic {
 			if(m_this.front()->count(name)>0)
 				return true;
 			return false;
+		}
+		std::size_t get_type_hash(const std::string& type)
+		{
+			if(type_exsist(type))
+				return m_hash.at(type);
+			else
+				throw syntax_error("Get hash of undefined type \""+type+"\".");
 		}
 		cov::any get_var_type(const string& type)
 		{
@@ -265,6 +284,17 @@ namespace cov_basic {
 			throw syntax_error("Unsupported operator operations(New).");
 		else
 			return linker{runtime->storage.get_var_type(dynamic_cast<token_id*>(b)->get_id())};
+	}
+	cov::any parse_typeid(token_base* a,token_base* b)
+	{
+		if(a!=nullptr)
+			throw syntax_error("Wrong format of new expression.");
+		else if(b==nullptr)
+			throw internal_error("Null Pointer Accessed.");
+		else if(b->get_type()!=token_types::id)
+			throw syntax_error("Unsupported operator operations(New).");
+		else
+			return runtime->storage.get_type_hash(dynamic_cast<token_id*>(b)->get_id());
 	}
 	cov::any parse_und(const cov::any& a,const cov::any& b)
 	{
@@ -537,6 +567,9 @@ namespace cov_basic {
 				break;
 			case signal_types::new_:
 				return parse_new(it.left().data(),it.right().data());
+				break;
+			case signal_types::typeid_:
+				return parse_typeid(it.left().data(),it.right().data());
 				break;
 			case signal_types::und_:
 				return parse_und(parse_expr(it.left()),parse_expr(it.right()));

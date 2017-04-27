@@ -39,6 +39,15 @@ namespace runtime_cbs_ext {
 		arglist::check<string>(args);
 		return std::make_shared<extension_holder>(args.front().const_val<string>());
 	}
+	cov::any type_hash(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.front().type()==typeid(structure))
+			return cov::hash<std::string>(args.front().const_val<structure>().get_name());
+		else
+			return cov::hash<std::string>(args.front().type().name());
+	}
 	void init()
 	{
 		runtime_ext.add_var("info",native_interface(info));
@@ -48,5 +57,6 @@ namespace runtime_cbs_ext {
 		runtime_ext.add_var("randint",native_interface(randint));
 		runtime_ext.add_var("error",native_interface(error));
 		runtime_ext.add_var("load_extension",native_interface(load_extension));
+		runtime_ext.add_var("type_hash",native_interface(type_hash));
 	}
 }

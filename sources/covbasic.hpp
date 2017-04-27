@@ -402,15 +402,6 @@ namespace cov_basic {
 			throw syntax_error("Wrong size of arguments.");
 		return args.front().type()==typeid(array);
 	}
-	cov::any type_id(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.front().type()==typeid(structure))
-			return args.front().const_val<structure>().get_name();
-		else
-			return string(args.front().type().name());
-	}
 	cov::any clone(array& args)
 	{
 		if(args.size()!=1)
@@ -552,11 +543,11 @@ namespace cov_basic {
 			}
 		});
 		// Internal Types
-		runtime->storage.add_type("number",[]()->cov::any {return number(0);});
-		runtime->storage.add_type("boolean",[]()->cov::any {return boolean(true);});
-		runtime->storage.add_type("string",[]()->cov::any {return string();});
-		runtime->storage.add_type("array",[]()->cov::any {return array();});
-		runtime->storage.add_type("linker",[]()->cov::any {return linker();});
+		runtime->storage.add_type("number",[]()->cov::any {return number(0);},cov::hash<std::string>(typeid(number).name()));
+		runtime->storage.add_type("boolean",[]()->cov::any {return boolean(true);},cov::hash<std::string>(typeid(boolean).name()));
+		runtime->storage.add_type("string",[]()->cov::any {return string();},cov::hash<std::string>(typeid(string).name()));
+		runtime->storage.add_type("array",[]()->cov::any {return array();},cov::hash<std::string>(typeid(array).name()));
+		runtime->storage.add_type("linker",[]()->cov::any {return linker();},cov::hash<std::string>(typeid(linker).name()));
 		// Add Internal Functions to storage
 		add_function(to_integer);
 		add_function(to_string);
@@ -566,7 +557,6 @@ namespace cov_basic {
 		add_function(is_boolean);
 		add_function(is_string);
 		add_function(is_array);
-		add_function(type_id);
 		add_function(size_of);
 		add_function(clone);
 		add_function(link);
