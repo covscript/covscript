@@ -301,8 +301,8 @@ namespace cov {
 		}
 		void assign(const any& obj,bool raw=false)
 		{
-			if(&obj!=this) {
-				if(mDat!=obj.mDat&&mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
+			if(&obj!=this&&obj.mDat!=mDat) {
+				if(mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
 					delete mDat->data;
 					mDat->data=obj.mDat->data->duplicate();
 				} else {
