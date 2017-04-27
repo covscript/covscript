@@ -20,7 +20,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://ldc.atd3.cn
 *
-* Version: 17.4.1
+* Version: 17.4.2
 */
 #include "./base.hpp"
 #include <functional>
@@ -302,7 +302,7 @@ namespace cov {
 		void assign(const any& obj,bool raw=false)
 		{
 			if(&obj!=this) {
-				if(mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
+				if(mDat!=obj.mDat&&mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
 					delete mDat->data;
 					mDat->data=obj.mDat->data->duplicate();
 				} else {
