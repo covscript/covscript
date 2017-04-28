@@ -493,7 +493,7 @@ namespace cov_basic {
 			return arr.at(posit);
 		} else if(a.type()==typeid(hash_map)) {
 			hash_map& map=a.val<hash_map>(true);
-			if(map.count(b)==0){
+			if(map.count(b)==0) {
 				cov::any key=b;
 				key.clone();
 				map.emplace(key,number(0));

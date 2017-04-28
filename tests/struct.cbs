@@ -8,6 +8,9 @@ struct foo
     end
 end
 define a as foo
+define b=a
 system.println(current.a.a)
+system.println(current.b.a)
 a.test()
 system.println(current.a.a)
+system.println(current.b.a)

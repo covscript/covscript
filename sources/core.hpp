@@ -14,7 +14,7 @@
 #include <cmath>
 #include <deque>
 namespace cov_basic {
-	const std::string version="2.1.2.4";
+	const std::string version="2.1.2.5";
 	class syntax_error final:public std::exception {
 		std::string mWhat="Covariant Basic Syntax Error";
 	public:
@@ -134,6 +134,14 @@ namespace cov_basic {
 	public:
 		structure()=delete;
 		structure(const std::string& name,const std::shared_ptr<std::unordered_map<string,cov::any>>& data):m_name(typeid(structure).name()+name),m_data(data) {}
+		structure(const structure& s):m_name(s.m_name),m_data(std::make_shared<std::unordered_map<string,cov::any>>(*s.m_data))
+		{
+			for(auto& it:*m_data) {
+				it.second.clone();
+				if(it.second.type()==typeid(function))
+					it.second.val<function>(true).set_data(m_data);
+			}
+		}
 		~structure()=default;
 		std::shared_ptr<std::unordered_map<string,cov::any>>& get_domain()
 		{
@@ -143,7 +151,7 @@ namespace cov_basic {
 		{
 			return m_name;
 		}
-		cov::any get_var(const std::string& name) const
+		cov::any& get_var(const std::string& name) const
 		{
 			if(m_data->count(name)>0)
 				return m_data->at(name);
