@@ -1,0 +1,4 @@
+define a as hash_map
+a["Hello"]=10
+a["World"]=20
+system.println(a[system.input()])

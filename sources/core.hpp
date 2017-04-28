@@ -95,6 +95,7 @@ namespace cov_basic {
 	using boolean=bool;
 	using string=std::string;
 	using array=std::deque<cov::any>;
+	using hash_map=std::unordered_map<cov::any,cov::any>;
 	class token_base;
 	class statement_base;
 	class native_interface final {
@@ -242,9 +243,15 @@ namespace cov_basic {
 			return v;
 		}
 		val.clone();
-		if(val.type()==typeid(array))
-			for(cov::any& v:val.val<array>(true))
-				v.clone();
+		if(val.type()==typeid(array)) {
+			for(auto& it:val.val<array>(true)) {
+				it.clone();
+			}
+		} else if(val.type()==typeid(hash_map)) {
+			for(auto& it:val.val<hash_map>(true)) {
+				it.second.clone();
+			}
+		}
 		return val;
 	}
 }

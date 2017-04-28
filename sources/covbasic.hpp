@@ -346,6 +346,8 @@ namespace cov_basic {
 			throw syntax_error("Wrong size of arguments.");
 		if(args.front().type()==typeid(array))
 			return number(args.front().const_val<array>().size());
+		else if(args.front().type()==typeid(hash_map))
+			return number(args.front().const_val<hash_map>().size());
 		else if(args.front().type()==typeid(string))
 			return number(args.front().const_val<string>().size());
 		else
@@ -401,6 +403,18 @@ namespace cov_basic {
 		if(args.size()!=1)
 			throw syntax_error("Wrong size of arguments.");
 		return args.front().type()==typeid(array);
+	}
+	cov::any is_linker(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		return args.front().type()==typeid(linker);
+	}
+	cov::any is_hash_map(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		return args.front().type()==typeid(hash_map);
 	}
 	cov::any clone(array& args)
 	{
@@ -548,6 +562,7 @@ namespace cov_basic {
 		runtime->storage.add_type("string",[]()->cov::any {return string();},cov::hash<std::string>(typeid(string).name()));
 		runtime->storage.add_type("array",[]()->cov::any {return array();},cov::hash<std::string>(typeid(array).name()));
 		runtime->storage.add_type("linker",[]()->cov::any {return linker();},cov::hash<std::string>(typeid(linker).name()));
+		runtime->storage.add_type("hash_map",[]()->cov::any {return hash_map();},cov::hash<std::string>(typeid(hash_map).name()));
 		// Add Internal Functions to storage
 		add_function(to_integer);
 		add_function(to_string);

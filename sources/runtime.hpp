@@ -481,9 +481,9 @@ namespace cov_basic {
 	}
 	cov::any parse_access(cov::any a,const cov::any& b)
 	{
-		if(b.type()!=typeid(number))
-			throw syntax_error("Index must be a number.");
 		if(a.type()==typeid(array)) {
+			if(b.type()!=typeid(number))
+				throw syntax_error("Index must be a number.");
 			array& arr=a.val<array>(true);
 			std::size_t posit=b.const_val<number>();
 			if(posit>=arr.size()) {
@@ -491,7 +491,17 @@ namespace cov_basic {
 					arr.emplace_back(number(0));
 			}
 			return arr.at(posit);
+		} else if(a.type()==typeid(hash_map)) {
+			hash_map& map=a.val<hash_map>(true);
+			if(map.count(b)==0){
+				cov::any key=b;
+				key.clone();
+				map.emplace(key,number(0));
+			}
+			return map.at(b);
 		} else if(a.type()==typeid(string)) {
+			if(b.type()!=typeid(number))
+				throw syntax_error("Index must be a number.");
 			return number(a.const_val<string>().at(b.const_val<number>()));
 		} else
 			throw syntax_error("Access non-array or string object.");
