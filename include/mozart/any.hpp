@@ -15,7 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Copyright (C) 2016 Michael Lee(李登淳)
+* Copyright (C) 2017 Michael Lee(李登淳)
 * Email: China-LDC@outlook.com
 * Github: https://github.com/mikecovlee
 * Website: http://ldc.atd3.cn
@@ -45,13 +45,13 @@ namespace std {
 }
 
 namespace cov {
-	template < typename _Tp > class compare_helper {
-		template < typename T,typename X=bool >struct matcher;
-		template < typename T > static constexpr bool match(T*)
+	template<typename _Tp> class compare_helper {
+		template<typename T,typename X=bool>struct matcher;
+		template<typename T> static constexpr bool match(T*)
 		{
 			return false;
 		}
-		template < typename T > static constexpr bool match(matcher < T, decltype(std::declval<T>()==std::declval<T>()) > *)
+		template<typename T> static constexpr bool match(matcher < T, decltype(std::declval<T>()==std::declval<T>()) > *)
 		{
 			return true;
 		}
@@ -75,13 +75,13 @@ namespace cov {
 	{
 		return compare_if<T,compare_helper<T>::value>::compare(a,b);
 	}
-	template < typename _Tp > class hash_helper {
-		template < typename T,decltype(&std::hash<T>::operator()) X >struct matcher;
-		template < typename T > static constexpr bool match(T*)
+	template<typename _Tp> class hash_helper {
+		template<typename T,decltype(&std::hash<T>::operator()) X>struct matcher;
+		template<typename T> static constexpr bool match(T*)
 		{
 			return false;
 		}
-		template < typename T > static constexpr bool match(matcher<T,&std::hash<T>::operator()>*)
+		template<typename T> static constexpr bool match(matcher<T,&std::hash<T>::operator()>*)
 		{
 			return true;
 		}
@@ -111,8 +111,8 @@ namespace cov {
 		public:
 			baseHolder() = default;
 			virtual ~ baseHolder() = default;
-			virtual const std::type_info & type() const = 0;
-			virtual baseHolder *duplicate() = 0;
+			virtual const std::type_info& type() const = 0;
+			virtual baseHolder* duplicate() = 0;
 			virtual bool compare(const baseHolder *) const = 0;
 			virtual std::string to_string() const = 0;
 			virtual std::size_t hash() const = 0;
@@ -124,46 +124,46 @@ namespace cov {
 			holder() = default;
 			holder(const T& dat):mDat(dat) {}
 			virtual ~ holder() = default;
-			virtual const std::type_info & type() const override
+			virtual const std::type_info& type() const override
 			{
 				return typeid(T);
 			}
-			virtual baseHolder *duplicate() override
+			virtual baseHolder* duplicate() override
 			{
 				return new holder(mDat);
 			}
-			virtual bool compare(const baseHolder * obj)const override
+			virtual bool compare(const baseHolder* obj) const override
 			{
-				if (obj->type() == this->type()) {
-					const holder < T > *ptr = dynamic_cast < const holder < T > *>(obj);
+				if (obj->type()==this->type()) {
+					const holder<T>* ptr=dynamic_cast<const holder<T>*>(obj);
 					return ptr!=nullptr?cov::compare(mDat,ptr->data()):false;
 				}
 				return false;
 			}
 			virtual std::string to_string() const override
 			{
-				return std::move(std::to_string(mDat));
+				return std::to_string(mDat);
 			}
 			virtual std::size_t hash() const override
 			{
 				return cov::hash<T>(mDat);
 			}
-			T & data()
+			T& data()
 			{
 				return mDat;
 			}
-			const T & data() const
+			const T& data() const
 			{
 				return mDat;
 			}
-			void data(const T & dat)
+			void data(const T& dat)
 			{
 				mDat = dat;
 			}
 		};
 		using size_t=unsigned long;
 		struct proxy {
-			mutable size_t refcount=1;
+			size_t refcount=1;
 			baseHolder* data=nullptr;
 			proxy()=default;
 			proxy(size_t rc,baseHolder* d):refcount(rc),data(d) {}
@@ -191,7 +191,6 @@ namespace cov {
 			}
 		}
 	public:
-		static any infer_value(const std::string&);
 		void swap(any& obj) noexcept
 		{
 			proxy* tmp=this->mDat;
@@ -214,10 +213,10 @@ namespace cov {
 		}
 		bool usable() const noexcept
 		{
-			return mDat != nullptr;
+			return mDat!=nullptr;
 		}
 		any()=default;
-		template < typename T > any(const T & dat):mDat(new proxy(1,new holder < T > (dat))) {}
+		template<typename T> any(const T & dat):mDat(new proxy(1,new holder < T > (dat))) {}
 		any(const any & v):mDat(v.duplicate()) {}
 		any(any&& v) noexcept
 		{
@@ -227,75 +226,75 @@ namespace cov {
 		{
 			recycle();
 		}
-		const std::type_info & type() const
+		const std::type_info& type() const
 		{
-			return this->mDat != nullptr?this->mDat->data->type():typeid(void);
+			return this->mDat!=nullptr?this->mDat->data->type():typeid(void);
 		}
 		std::string to_string() const
 		{
-			if(this->mDat == nullptr)
+			if(this->mDat==nullptr)
 				return "Null";
-			return std::move(this->mDat->data->to_string());
+			return this->mDat->data->to_string();
 		}
 		std::size_t hash() const
 		{
-			if(this->mDat == nullptr)
+			if(this->mDat==nullptr)
 				return cov::hash<void*>(nullptr);
 			return this->mDat->data->hash();
 		}
-		any & operator=(const any & var)
+		bool is_same(const any& obj) const
+		{
+			return this->mDat==obj.mDat;
+		}
+		any& operator=(const any& var)
 		{
 			if(&var!=this) {
 				recycle();
-				mDat = var.duplicate();
+				mDat=var.duplicate();
 			}
 			return *this;
 		}
-		any & operator=(any&& var) noexcept
+		any& operator=(any&& var) noexcept
 		{
 			if(&var!=this)
 				swap(std::forward<any>(var));
 			return *this;
 		}
-		bool operator==(const any & var) const
+		bool operator==(const any& var) const
 		{
 			return usable()?this->mDat->data->compare(var.mDat->data):!var.usable();
 		}
-		bool operator!=(const any & var)const
+		bool operator!=(const any& var)const
 		{
 			return usable()?!this->mDat->data->compare(var.mDat->data):var.usable();
 		}
-		template < typename T > T & val(bool raw=false)
+		template<typename T> T& val(bool raw=false)
 		{
-			if(typeid(T) != this->type())
+			if(typeid(T)!=this->type())
 				throw cov::error("E0006");
-			if(this->mDat == nullptr)
+			if(this->mDat==nullptr)
 				throw cov::error("E0005");
 			if(!raw)
 				clone();
-			return dynamic_cast < holder < T > *>(this->mDat->data)->data();
+			return dynamic_cast<holder<T>*>(this->mDat->data)->data();
 		}
-		template < typename T > const T & val(bool raw=false) const
+		template<typename T> const T& val(bool raw=false) const
 		{
-			if(typeid(T) != this->type())
+			if(typeid(T)!=this->type())
 				throw cov::error("E0006");
-			if(this->mDat == nullptr)
+			if(this->mDat==nullptr)
 				throw cov::error("E0005");
-			return dynamic_cast < const holder < T > *>(this->mDat->data)->data();
+			return dynamic_cast<const holder<T>*>(this->mDat->data)->data();
 		}
-		template < typename T > const T& const_val() const
+		template<typename T> const T& const_val() const
 		{
-			if(typeid(T) != this->type())
+			if(typeid(T)!=this->type())
 				throw cov::error("E0006");
-			if(this->mDat == nullptr)
+			if(this->mDat==nullptr)
 				throw cov::error("E0005");
-			return dynamic_cast < const holder < T > *>(this->mDat->data)->data();
+			return dynamic_cast<const holder<T>*>(this->mDat->data)->data();
 		}
-		template < typename T > operator T&()
-		{
-			return this->val<T>();
-		}
-		template < typename T > operator const T&() const
+		template<typename T> operator const T&() const
 		{
 			return this->const_val<T>();
 		}
@@ -314,24 +313,20 @@ namespace cov {
 				}
 			}
 		}
-		template < typename T > void assign(const T & dat,bool raw=false)
+		template<typename T> void assign(const T& dat,bool raw=false)
 		{
 			if(raw) {
 				delete mDat->data;
-				mDat->data=new holder < T > (dat);
+				mDat->data=new holder<T>(dat);
 			} else {
 				recycle();
-				mDat = new proxy(1,new holder < T > (dat));
+				mDat=new proxy(1,new holder<T>(dat));
 			}
 		}
-		template < typename T > any & operator=(const T & dat)
+		template<typename T> any & operator=(const T& dat)
 		{
 			assign(dat);
 			return *this;
-		}
-		bool is_same(const any& obj) const
-		{
-			return this->mDat==obj.mDat;
 		}
 	};
 	template<int N> class any::holder<char[N]>:public any::holder<std::string> {
@@ -342,62 +337,6 @@ namespace cov {
 	public:
 		using holder<std::type_index>::holder;
 	};
-}
-
-cov::any cov::any::infer_value(const std::string& str)
-{
-	if(str=="true"||str=="True"||str=="TRUE")
-		return true;
-	if(str=="false"||str=="False"||str=="FALSE")
-		return false;
-	enum types {
-		interger,floating,other
-	} type=types::interger;
-	for(auto& it:str) {
-		if(!std::isdigit(it)&&it!='.') {
-			type=other;
-			break;
-		}
-		if(!std::isdigit(it)&&it=='.') {
-			if(type==interger) {
-				type=floating;
-				continue;
-			}
-			if(type==floating) {
-				type=other;
-				break;
-			}
-		}
-	}
-	switch(type) {
-	case interger:
-		try {
-			return std::stoi(str);
-		} catch(std::out_of_range) {
-			try {
-				return std::stol(str);
-			} catch(std::out_of_range) {
-				try {
-					return std::stoll(str);
-				} catch(std::out_of_range) {
-					return str;
-				}
-			}
-		}
-	case floating:
-		return std::stod(str);
-	case other:
-		break;
-	}
-	return str;
-}
-
-std::istream& operator>>(std::istream& in,cov::any& val)
-{
-	static std::string str;
-	in>>str;
-	val=cov::any::infer_value(str);
-	return in;
 }
 
 std::ostream& operator<<(std::ostream& out,const cov::any& val)
