@@ -20,20 +20,21 @@
 * Github: https://github.com/mikecovlee
 * Website: http://ldc.atd3.cn
 *
-* Version: 17.1.0
+* Version: 17.4.1
 */
 #include "./base.hpp"
 #include "./any.hpp"
 #include "./function.hpp"
 #include "./tuple.hpp"
-#include <deque>
+#include <unordered_map>
+#include <forward_list>
 
 namespace cov {
 	class switcher final {
 	public:
 		typedef cov::function<void()> case_type;
 	private:
-		std::deque<cov::tuple<cov::any,cov::function<void()>>> mCases;
+		std::unordered_map<cov::any,cov::function<void()>> mCases;
 		cov::function<void()> mDefault;
 		const cov::any mCondition;
 	public:
@@ -46,19 +47,10 @@ namespace cov {
 		{
 			if(object::show_warning&&head.type()!=mCondition.type())
 				throw cov::warning("W0001");
-			bool exsist=false;
-			for(auto& it:mCases) {
-				if(it.get<0>()==head) {
-					exsist=true;
-					if(object::show_warning)
-						throw cov::warning("W0002");
-					else
-						it.get<1>()=body;
-					break;
-				}
-			}
-			if(!exsist)
-				mCases.push_back(tuple<cov::any,cov::function<void()>>(head,body));
+			if(mCases.count(head)==0)
+				mCases.emplace(head,body);
+			else if(object::show_warning)
+				throw cov::warning("W0002");
 		}
 		void add_default(const case_type& body)
 		{
@@ -68,18 +60,14 @@ namespace cov {
 		}
 		void perform()
 		{
-			for(auto& it:mCases) {
-				if(it.get<0>()==mCondition&&it.get<1>().callable()) {
-					it.get<1>().call();
-					return;
-				}
-			}
-			if(mDefault.callable())
+			if(mCases.count(mCondition)>0&&mCases.at(mCondition).callable())
+				mCases.at(mCondition)();
+			else if(mDefault.callable())
 				mDefault.call();
 		}
 	};
 	class switcher_stack final {
-		std::deque<switcher*> mStack;
+		std::forward_list<switcher*> mStack;
 	public:
 		switcher_stack()=default;
 		switcher_stack(switcher_stack&&) noexcept=delete;
