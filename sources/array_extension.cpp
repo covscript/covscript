@@ -50,6 +50,11 @@ namespace array_cbs_ext {
 		args.at(0).val<array>(true).clear();
 		return number(0);
 	}
+	cov::any at(array& args)
+	{
+		arglist::check<array,number>(args);
+		return args.at(0).val<array>(true).at(args.at(1).const_val<number>());
+	}
 	void init()
 	{
 		array_ext.add_var("push_front",native_interface(push_front));
@@ -57,6 +62,7 @@ namespace array_cbs_ext {
 		array_ext.add_var("push_back",native_interface(push_back));
 		array_ext.add_var("pop_back",native_interface(pop_back));
 		array_ext.add_var("clear",native_interface(clear));
+		array_ext.add_var("at",native_interface(at));
 	}
 }
 #ifndef CBS_ARRAY_EXT

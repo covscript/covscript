@@ -1,4 +1,15 @@
 define a as hash_map
+a[10]=3.14
 a["Hello"]=10
-a["World"]=20
-system.println(a[system.input()])
+a["Hello"]=1
+hash_map.insert(a,"World",20)
+hash_map.at(a,"World")=2
+system.println("Size=",size_of(a))
+hash_map.erase(a,10)
+define input=system.input()
+if(hash_map.exist(a,input))
+    system.println(a[input])
+else
+    system.println("Key is not exist.")
+end
+system.println("Size=",size_of(a))

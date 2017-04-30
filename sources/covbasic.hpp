@@ -9,6 +9,9 @@
 #ifdef CBS_ARRAY_EXT
 #include "./array_extension.cpp"
 #endif
+#ifdef CBS_HASH_MAP_EXT
+#include "./hash_map_extension.cpp"
+#endif
 #ifdef CBS_MATH_EXT
 #include "./math_extension.cpp"
 #endif
@@ -588,6 +591,10 @@ namespace cov_basic {
 #ifdef CBS_ARRAY_EXT
 		array_cbs_ext::init();
 		runtime->storage.add_var("array",std::make_shared<extension_holder>(&array_ext));
+#endif
+#ifdef CBS_HASH_MAP_EXT
+		hash_map_cbs_ext::init();
+		runtime->storage.add_var("hash_map",std::make_shared<extension_holder>(&hash_map_ext));
 #endif
 #ifdef CBS_MATH_EXT
 		math_cbs_ext::init();
