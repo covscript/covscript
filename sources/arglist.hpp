@@ -16,6 +16,8 @@ namespace cov_basic {
 		{
 			if(expect==index)
 				return typeid(_Tp).name();
+			else
+				throw internal_error("Wrong index of arglist.");
 		}
 		template<typename _Tp,typename _fT,typename...ArgTypes>
 		static std::string get_type(int expect,int index)

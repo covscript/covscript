@@ -251,15 +251,19 @@ namespace cov_basic {
 			return v;
 		}
 		val.clone();
-		if(val.type()==typeid(array)) {
-			for(auto& it:val.val<array>(true)) {
-				it.clone();
-			}
-		} else if(val.type()==typeid(hash_map)) {
-			for(auto& it:val.val<hash_map>(true)) {
-				it.second.clone();
-			}
-		}
+		val.detach();
 		return val;
+	}
+}
+namespace cov {
+	template<>void detach<cov_basic::array>(cov_basic::array& val)
+	{
+		for(auto& it:val)
+			it.clone();
+	}
+	template<>void detach<cov_basic::hash_map>(cov_basic::hash_map& val)
+	{
+		for(auto& it:val)
+			it.second.clone();
 	}
 }

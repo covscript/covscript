@@ -20,7 +20,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://ldc.atd3.cn
 *
-* Version: 17.4.2
+* Version: 17.4.3
 */
 #include "./base.hpp"
 #include <functional>
@@ -106,6 +106,10 @@ namespace cov {
 	{
 		return hash_if<T,hash_helper<T>::value>::hash(val);
 	}
+	template<typename T>void detach(T& val)
+	{
+		// Do something if you want when data is copying.
+	}
 	class any final {
 		class baseHolder {
 		public:
@@ -116,13 +120,14 @@ namespace cov {
 			virtual bool compare(const baseHolder *) const = 0;
 			virtual std::string to_string() const = 0;
 			virtual std::size_t hash() const = 0;
+			virtual void detach() = 0;
 		};
 		template < typename T > class holder:public baseHolder {
 		protected:
 			T mDat;
 		public:
 			holder() = default;
-			holder(const T& dat):mDat(dat) {}
+			template<typename...ArgsT>holder(ArgsT&&...args):mDat(std::forward<ArgsT>(args)...) {}
 			virtual ~ holder() = default;
 			virtual const std::type_info& type() const override
 			{
@@ -147,6 +152,10 @@ namespace cov {
 			virtual std::size_t hash() const override
 			{
 				return cov::hash<T>(mDat);
+			}
+			virtual void detach() override
+			{
+				cov::detach(mDat);
 			}
 			T& data()
 			{
@@ -190,6 +199,7 @@ namespace cov {
 				}
 			}
 		}
+		any(proxy* dat):mDat(dat) {}
 	public:
 		void swap(any& obj) noexcept
 		{
@@ -215,8 +225,12 @@ namespace cov {
 		{
 			return mDat!=nullptr;
 		}
+		template<typename T,typename...ArgsT>static any make(ArgsT&&...args)
+		{
+			return any(new proxy(1,new holder<T>(std::forward<ArgsT>(args)...)));
+		}
 		any()=default;
-		template<typename T> any(const T & dat):mDat(new proxy(1,new holder < T > (dat))) {}
+		template<typename T> any(const T & dat):mDat(new proxy(1,new holder<T> (dat))) {}
 		any(const any & v):mDat(v.duplicate()) {}
 		any(any&& v) noexcept
 		{
@@ -241,6 +255,11 @@ namespace cov {
 			if(this->mDat==nullptr)
 				return cov::hash<void*>(nullptr);
 			return this->mDat->data->hash();
+		}
+		void detach()
+		{
+			if(this->mDat!=nullptr)
+				this->mDat->data->detach();
 		}
 		bool is_same(const any& obj) const
 		{

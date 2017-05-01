@@ -101,7 +101,7 @@ namespace cov_basic {
 		cov::any get_var_type(const string& type)
 		{
 			if(type_exsist(type))
-				return m_type.at(type)();
+				return std::move(m_type.at(type)());
 			else
 				throw syntax_error("Use of undefined type \""+type+"\".");
 		}
@@ -375,6 +375,7 @@ namespace cov_basic {
 	cov::any parse_asi(cov::any a,cov::any b)
 	{
 		a.assign(b,true);
+		a.detach();
 		return b;
 	}
 	cov::any parse_link(const cov::any& a,const cov::any& b)

@@ -18,6 +18,8 @@ namespace file_cbs_ext {
 			return infile(std::make_shared<std::ifstream>(args.at(0).const_val<string>()));
 		else if(args.at(1).const_val<file_method>()==file_method::write)
 			return outfile(std::make_shared<std::ofstream>(args.at(0).const_val<string>()));
+		else
+			throw syntax_error("Unknown method.");
 	}
 	cov::any is_open(array& args)
 	{

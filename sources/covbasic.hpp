@@ -88,9 +88,9 @@ namespace cov_basic {
 			}
 		}
 		inside_struct=false;
-		structure dat(this->mName,runtime->storage.get_domain());
+		cov::any dat=cov::any::make<structure>(this->mName,runtime->storage.get_domain());
 		runtime->storage.remove_domain();
-		return dat;
+		return std::move(dat);
 	}
 	void statement_expression::run()
 	{
@@ -388,7 +388,7 @@ namespace cov_basic {
 	cov::any to_char(array& args)
 	{
 		arglist::check<number>(args);
-		return string(1,args.at(0).const_val<number>());
+		return cov::any::make<string>(1,args.at(0).const_val<number>());
 	}
 	cov::any is_number(array& args)
 	{
@@ -430,13 +430,13 @@ namespace cov_basic {
 	{
 		if(args.size()!=1)
 			throw syntax_error("Wrong size of arguments.");
-		return _clone(args.front());
+		return std::move(_clone(args.front()));
 	}
 	cov::any link(array& args)
 	{
 		if(args.size()!=1)
 			throw syntax_error("Wrong size of arguments.");
-		return linker{args.front()};
+		return std::move(cov::any::make<linker>(args.front()));
 	}
 	cov::any escape(array& args)
 	{
@@ -610,12 +610,12 @@ namespace cov_basic {
 			}
 		});
 		// Internal Types
-		runtime->storage.add_type("number",[]()->cov::any {return number(0);},cov::hash<std::string>(typeid(number).name()));
-		runtime->storage.add_type("boolean",[]()->cov::any {return boolean(true);},cov::hash<std::string>(typeid(boolean).name()));
-		runtime->storage.add_type("string",[]()->cov::any {return string();},cov::hash<std::string>(typeid(string).name()));
-		runtime->storage.add_type("array",[]()->cov::any {return array();},cov::hash<std::string>(typeid(array).name()));
-		runtime->storage.add_type("linker",[]()->cov::any {return linker();},cov::hash<std::string>(typeid(linker).name()));
-		runtime->storage.add_type("hash_map",[]()->cov::any {return hash_map();},cov::hash<std::string>(typeid(hash_map).name()));
+		runtime->storage.add_type("number",[]()->cov::any {return cov::any::make<number>(0);},cov::hash<std::string>(typeid(number).name()));
+		runtime->storage.add_type("boolean",[]()->cov::any {return cov::any::make<boolean>(true);},cov::hash<std::string>(typeid(boolean).name()));
+		runtime->storage.add_type("string",[]()->cov::any {return cov::any::make<string>();},cov::hash<std::string>(typeid(string).name()));
+		runtime->storage.add_type("array",[]()->cov::any {return cov::any::make<array>();},cov::hash<std::string>(typeid(array).name()));
+		runtime->storage.add_type("linker",[]()->cov::any {return cov::any::make<linker>();},cov::hash<std::string>(typeid(linker).name()));
+		runtime->storage.add_type("hash_map",[]()->cov::any {return cov::any::make<hash_map>();},cov::hash<std::string>(typeid(hash_map).name()));
 		// Add Internal Functions to storage
 		add_function(to_integer);
 		add_function(to_string);
