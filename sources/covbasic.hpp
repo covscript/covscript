@@ -197,6 +197,14 @@ namespace cov_basic {
 		}
 		runtime->storage.remove_domain();
 	}
+	void statement_switch::run()
+	{
+		cov::any key=parse_expr(mTree.root());
+		if(mCases.count(key)>0)
+			mCases.at(key)->run();
+		else if(mDefault!=nullptr)
+			mDefault->run();
+	}
 	void statement_while::run()
 	{
 		runtime->storage.add_domain();
@@ -282,33 +290,32 @@ namespace cov_basic {
 		method_type* method=nullptr;
 		int level=0;
 		for(auto& line:lines) {
-			method_type* m=nullptr;
 			try {
-				m=&translator.match(line);
+				method_type* m=&translator.match(line);
+				if(m->type==grammar_type::single) {
+					if(level>0) {
+						if(m->function({line})->get_type()==statement_types::end_)
+							--level;
+						if(level==0) {
+							statements.push_back(method->function(tmp));
+							tmp.clear();
+							method=nullptr;
+						} else
+							tmp.push_back(line);
+					} else
+						statements.push_back(m->function({line}));
+				} else if(m->type==grammar_type::block) {
+					if(level==0)
+						method=m;
+					++level;
+					tmp.push_back(line);
+				} else
+					throw syntax_error("Null type of grammar.");
 			} catch(const syntax_error& se) {
 				throw syntax_error(dynamic_cast<token_endline*>(line.back())->get_num(),se.what());
 			} catch(const std::exception& e) {
 				throw internal_error(dynamic_cast<token_endline*>(line.back())->get_num(),e.what());
 			}
-			if(m->type==grammar_type::single) {
-				if(level>0) {
-					if(m->function({line})->get_type()==statement_types::end_)
-						--level;
-					if(level==0) {
-						statements.push_back(method->function(tmp));
-						tmp.clear();
-						method=nullptr;
-					} else
-						tmp.push_back(line);
-				} else
-					statements.push_back(m->function({line}));
-			} else if(m->type==grammar_type::block) {
-				if(level==0)
-					method=m;
-				++level;
-				tmp.push_back(line);
-			} else
-				throw syntax_error("Null type of grammar.");
 		}
 		if(level!=0)
 			throw syntax_error("Lack of the \"end\" signal.");
@@ -507,6 +514,49 @@ namespace cov_basic {
 		// Else Grammar
 		translator.add_method({new token_action(action_types::else_),new token_endline(0)},method_type {grammar_type::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				return new statement_else;
+			}
+		});
+		// Switch Grammar
+		translator.add_method({new token_action(action_types::switch_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {grammar_type::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				std::deque<statement_base*> body;
+				kill_action({raw.begin()+1,raw.end()},body);
+				statement_block* dptr=nullptr;
+				std::unordered_map<cov::any,statement_block*> cases;
+				for(auto& it:body)
+				{
+					if(it==nullptr)
+						throw internal_error("Access Null Pointer.");
+					else if(it->get_type()==statement_types::case_) {
+						statement_case* scptr=dynamic_cast<statement_case*>(it);
+						if(cases.count(scptr->get_tag())>0)
+							throw syntax_error("Redefinition of case.");
+						cases.emplace(scptr->get_tag(),scptr->get_block());
+					} else if(it->get_type()==statement_types::default_) {
+						statement_default* sdptr=dynamic_cast<statement_default*>(it);
+						if(dptr!=nullptr)
+							throw syntax_error("Redefinition of default case.");
+						dptr=sdptr->get_block();
+					} else
+						throw syntax_error("Wrong format of switch statement.");
+				}
+				return new statement_switch(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),cases,dptr,raw.front().back());
+			}
+		});
+		// Case Grammar
+		translator.add_method({new token_action(action_types::case_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {grammar_type::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				cov::tree<token_base*>& tree=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
+				if(tree.root().data()->get_type()!=token_types::value)
+					throw syntax_error("Case Tag must be a constant value.");
+				std::deque<statement_base*> body;
+				kill_action({raw.begin()+1,raw.end()},body);
+				return new statement_case(dynamic_cast<token_value*>(tree.root().data())->get_value(),body,raw.front().back());
+			}
+		});
+		// Default Grammar
+		translator.add_method({new token_action(action_types::default_),new token_endline(0)},method_type {grammar_type::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				std::deque<statement_base*> body;
+				kill_action({raw.begin()+1,raw.end()},body);
+				return new statement_default(body,raw.front().back());
 			}
 		});
 		// While Grammar

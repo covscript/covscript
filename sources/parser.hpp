@@ -269,7 +269,7 @@ namespace cov_basic {
 	}
 	void translate_into_statements(std::deque<token_base*>& tokens,std::deque<statement_base*>& statements);
 	enum class statement_types {
-		expression_,import_,block_,define_,if_,else_,while_,until_,for_,break_,continue_,struct_,function_,return_,end_
+		expression_,import_,block_,define_,if_,else_,switch_,case_,default_,while_,until_,for_,break_,continue_,struct_,function_,return_,end_
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;
@@ -433,6 +433,60 @@ namespace cov_basic {
 			return statement_types::else_;
 		}
 		virtual void run() override {}
+	};
+	class statement_switch final:public statement_base {
+		cov::tree<token_base*> mTree;
+		statement_block* mDefault=nullptr;
+		std::unordered_map<cov::any,statement_block*> mCases;
+	public:
+		statement_switch()=delete;
+		statement_switch(const cov::tree<token_base*>& tree,const std::unordered_map<cov::any,statement_block*>& cases,statement_block* dptr,token_base* ptr):statement_base(ptr),mTree(tree),mCases(cases),mDefault(dptr) {}
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::switch_;
+		}
+		virtual void run() override;
+	};
+	class statement_case final:public statement_base {
+		cov::any mTag;
+		statement_block* mBlock;
+	public:
+		statement_case()=delete;
+		statement_case(const cov::any& tag,const std::deque<statement_base*>& b,token_base* ptr):statement_base(ptr),mTag(tag),mBlock(new statement_block(b,ptr)) {}
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::case_;
+		}
+		virtual void run() override
+		{
+			throw syntax_error("Can not run case outside the switch.");
+		}
+		const cov::any& get_tag() const
+		{
+			return this->mTag;
+		}
+		statement_block* get_block() const
+		{
+			return this->mBlock;
+		}
+	};
+	class statement_default final:public statement_base {
+		statement_block* mBlock;
+	public:
+		statement_default()=delete;
+		statement_default(const std::deque<statement_base*>& b,token_base* ptr):statement_base(ptr),mBlock(new statement_block(b,ptr)) {}
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::default_;
+		}
+		virtual void run() override
+		{
+			throw syntax_error("Can not run case outside the switch.");
+		}
+		statement_block* get_block() const
+		{
+			return this->mBlock;
+		}
 	};
 	class statement_while final:public statement_base {
 		cov::tree<token_base*> mTree;

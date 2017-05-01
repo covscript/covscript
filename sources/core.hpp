@@ -14,7 +14,7 @@
 #include <cmath>
 #include <deque>
 namespace cov_basic {
-	const std::string version="2.1.2.5";
+	const std::string version="2.1.3.1";
 	class syntax_error final:public std::exception {
 		std::string mWhat="Covariant Basic Syntax Error";
 	public:
@@ -232,9 +232,9 @@ namespace cov_basic {
 	};
 	cov::any parse_value(const std::string& str)
 	{
-		if(str=="true"||str=="True"||str=="TRUE")
+		if(str=="true")
 			return true;
-		if(str=="false"||str=="False"||str=="FALSE")
+		if(str=="false")
 			return false;
 		try {
 			return number(std::stold(str));
