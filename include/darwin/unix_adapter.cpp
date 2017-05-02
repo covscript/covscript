@@ -20,7 +20,7 @@ namespace darwin {
 		virtual results init() noexcept override
 		{
 			conio::reset();
-			conio::clrscr();
+			//conio::clrscr();
 			conio::echo(false);
 			mReady = true;
 			return results::success;

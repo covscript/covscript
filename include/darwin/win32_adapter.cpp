@@ -21,7 +21,7 @@ namespace darwin {
 		{
 			conio::set_title("Covariant Darwin UCGL");
 			conio::reset();
-			conio::clrscr();
+			//conio::clrscr();
 			conio::echo(false);
 			mReady = true;
 			return results::success;

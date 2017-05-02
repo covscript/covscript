@@ -1,3 +1,4 @@
+#define DARWIN_DISABLE_LOG
 #define CBS_STRING_EXT
 #define CBS_ARRAY_EXT
 #define CBS_HASH_MAP_EXT
@@ -15,6 +16,6 @@ int main(int args_size,const char* args[])
 		cov_basic::reset();
 		cov_basic::cov_basic(args[1]);
 	} else
-		throw cov_basic::fatal_error("no input file.\nUsage: cbs2.1 <file>");
+		throw cov_basic::fatal_error("no input file.\nUsage: cbs2.1 <file> <args...>");
 	return 0;
 }
