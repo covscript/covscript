@@ -4,7 +4,7 @@
 **Covariant Basic**是一种开源的跨平台编程语言
 ## 下载与安装 ##
 ### Microsoft Windows ###
-请访问[Covariant Basic Programming Language Main Page](http://ldc.atd3.cn/cbs)下载预编译的可执行文件。你也可以使用MinGW或合适的工具直接编译源码，如你的系统中已经安装了G++编译器你可以直接执行`make.bat`，你需要确保编译器支持C++11标准。  
+请在[Release页面](https://github.com/mikecovlee/covbasic/releases)下载预编译的可执行文件。你也可以使用MinGW或合适的工具直接编译源码，如你的系统中已经安装了G++编译器你可以直接执行`make.bat`，你需要确保编译器支持C++11标准。  
 **注意！Covariant Basic不支持使用Microsoft CL编译，具体原因目前还不清楚，可能是因为其对C++11标准的支持并不完全。**
 ### Linux ###
 下载源码后，如果你的系统中已安装G++编译器你可以直接在终端中输入`sh ./make.sh`来编译，你需要确保编译器支持C++11标准。  
