@@ -1,38 +1,140 @@
-darwin.load()
-define pix=darwin.pixel("@",true,false,darwin.blue,darwin.white)
-define paint=darwin.picture()
-darwin.set_frame_limit(60)
-define bx=0
-define by=0
-define bxi=true
-define byi=true
-while(true)
-        darwin.fit_drawable()
-        darwin.clear_drawable(paint)
-        darwin.resize_drawable(paint,darwin.get_width(),darwin.get_height())
-        darwin.draw_point(paint,bx,by,pix)
-        if(bx<=0)
-                bxi=true
-        end
-        if(by<=0)
-                byi=true
-        end
-        if(bx>=darwin.get_width()-1)
-                bxi=false
-        end
-        if(by>=darwin.get_height()-1)
-                byi=false
-        end
-        if(bxi)
-                ++bx
-        else
-                --bx
-        end
-        if(byi)
-                ++by
-        else
-                --by
-        end
-        darwin.draw_picture(0,0,paint)
-        darwin.update_drawable()
-end
+function main()
+#初始化和设置
+	system.println("Console Pinball Game")
+	system.println("Please set the difficulty.\nThe smaller your Settings,game play will be more difficult.")
+	define jump_frame=system.input()
+	darwin.load()
+	system.println("Please set the \"up\" key.Default key is 'A'.Press enter to skip.")
+	define key_up=darwin.getbbhit()
+	if(key_up==to_ascii("\n"))
+		key_up=to_ascii("a")
+	end
+	system.println("Please set the \"down\" key.Default key is 'Z'.Press enter to skip.")
+	define key_down=darwin.gekbhit()
+	if(key_down==to_ascii("\n"))
+		key_down=to_ascii("z")
+	end
+	define num3={1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1}
+	define num2={1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1}
+	define num1={0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0}
+	define chG={1,1,1,1,1,1,1,1,0,0,0,0,1,1,0,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1}
+	define chO={1,1,1,1,1,1,1,1,0,0,1,1,1,1,0,0,1,1,1,1,0,0,1,1,1,1,1,1,1,1}
+	define chExc={0,1,1,1,1,0,0,1,1,1,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0}
+#显示开始的倒计时
+	darwin.set_frame_limit(1)
+	darwin.fit_drawable()
+	function draw_ch(ch,w,h,x,y)
+		define r=0
+		while(r<h)
+			define c=0
+			while(c<w)
+				if(ch[r*6+c]==1)
+					darwin.draw_point(c+x,r+y,darwin.pixel(" ",true,false,darwin.red,darwin.red))
+				end
+				++c
+			end
+			++r
+		end
+	end
+	darwin.fill_drawable(darwin.pixel(" ",true,false, darwin.white,darwin.white))
+	draw_ch(num3,6,5,0.5*img.width()-3,0.5*img.height()-2.5)
+	darwin.update_drawable()
+	darwin.fill_drawable(darwin.pixel(" ",true,false, darwin.white,darwin.white))
+	draw_ch(num2,6,5,0.5*img.width()-3,0.5*img.height()-2.5)
+	darwin.update_drawable()
+	darwin.fill_drawable(darwin.pixel(" ",true,false, darwin.white,darwin.white))
+	draw_ch(num1,6,5,0.5*img.width()-3,0.5*img.height()-2.5)
+	darwin.update_drawable()
+	darwin.fill_drawable(darwin.pixel(" ",true,false, darwin.white,darwin.white))
+	draw_ch(chG,6,5,0.5*img.width()-10,0.5*img.height()-2.5)
+	draw_ch(chO,6,5,0.5*img.width()-2,0.5*img.height()-2.5)
+	draw_ch(chExc,6,5,0.5*img.width()+5,0.5*img.height()-2.5)
+	img.render();
+	ioctrl.update_image(img);
+	// 主循环
+	ioctrl.frame_limit(60);
+	int score=0;
+	int zkh=0.5*img.height();
+	int x(2),y(0),z1(0.5*img.height()-0.5*zkh),z2(0.5*img.height()-0.5*zkh);
+	bool xj(true),yj(true);
+	int delay_frame(0);
+	while(true) {
+		img.fill(pixel({true,false}, {colors::white,colors::blue},' '));
+		for(int i=z1; i<=z1+zkh; ++i)
+			img.draw({0,i},pixel({true,false}, {colors::cyan,colors::cyan},'#'));
+		for(int i=z2; i<=z2+zkh; ++i)
+			img.draw({img.width()-1,i},pixel({true,false}, {colors::magenta,colors::magenta},'#'));
+		if(delay_frame>jump_frame) {
+			delay_frame=0;
+			if(x<=1) {
+				if(y<z1 || y>z1+zkh)
+					break;
+				xj=true;
+				x=1;
+				++score;
+			}
+			if(y<=0) {
+				yj=true;
+				y=0;
+			}
+			if(x>=img.width()-2) {
+				if(y<z2 || y>z2+zkh)
+					break;
+				xj=false;
+				x=img.width()-2;
+				++score;
+			}
+			if(y>=img.height()-1) {
+				yj=false;
+				y=img.height()-1;
+			}
+			if(xj)
+				++x;
+			else
+				--x;
+			if(yj)
+				++y;
+			else
+				--y;
+		} else
+			++delay_frame;
+		if(KbHit()) {
+			char in=GetKbHit();
+			if(in==key_up) {
+				if(xj) {
+					if(z2>0) --z2;
+				} else {
+					if(z1>0) --z1;
+				}
+			}
+			if(in==key_down) {
+				if(xj) {
+					if(z2+zkh<img.height()-1) ++z2;
+				} else {
+					if(z1+zkh<img.height()-1)++z1;
+				}
+			}
+		}
+		img.draw({x,y},pixel({true,false}, {colors::red,colors::yellow},'@'));
+		std::string info="FPS:"+toString(ioctrl.fps())+" Score:"+toString(score);
+		for(int i=0; i<info.size(); ++i) {
+			img.draw({i,0},pixel({true,false}, {colors::white,colors::black},info[i]));
+		}
+		img.render();
+		ioctrl.update_image(img.surface());
+	}
+	// 结束后处理得分
+	ioctrl.stop_output_method();
+	std::cout<<"You Die!Your Score is "<<score<<'.'<<std::endl;
+	if(score<5)
+		std::cout<<"Very Bad.Just try lower difficulty."<<std::endl;
+	if(score>=5&&score<10)
+		std::cout<<"Not Bad.You can get higher score."<<std::endl;
+	if(score>=10&&score<50)
+		std::cout<<"Good."<<std::endl;
+	if(score>=50&&score<100)
+		std::cout<<"Very Great!"<<std::endl;
+	if(score>=100)
+		std::cout<<"So Amazing!"<<std::endl;
+	return 0;
+}
