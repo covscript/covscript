@@ -5,13 +5,13 @@ function main()
 	define jump_frame=system.input()
 	darwin.load()
 	system.println("Please set the \"up\" key.Default key is 'A'.Press enter to skip.")
-	define key_up=darwin.getbbhit()
-	if(key_up==to_ascii("\n"))
+	define key_up=darwin.get_kb_hit()
+	if(key_up==to_ascii("\n")||key_up==to_ascii("\r"))
 		key_up=to_ascii("a")
 	end
 	system.println("Please set the \"down\" key.Default key is 'Z'.Press enter to skip.")
-	define key_down=darwin.gekbhit()
-	if(key_down==to_ascii("\n"))
+	define key_down=darwin.get_kb_hit()
+	if(key_down==to_ascii("\n")||key_down==to_ascii("\r"))
 		key_down=to_ascii("z")
 	end
 	define num3={1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1}
@@ -36,105 +36,125 @@ function main()
 			++r
 		end
 	end
-	darwin.fill_drawable(darwin.pixel(" ",true,false, darwin.white,darwin.white))
-	draw_ch(num3,6,5,0.5*img.width()-3,0.5*img.height()-2.5)
 	darwin.update_drawable()
 	darwin.fill_drawable(darwin.pixel(" ",true,false, darwin.white,darwin.white))
-	draw_ch(num2,6,5,0.5*img.width()-3,0.5*img.height()-2.5)
+	draw_ch(num3,6,5,0.5*darwin.get_width()-3,0.5*darwin.get_height()-2.5)
 	darwin.update_drawable()
 	darwin.fill_drawable(darwin.pixel(" ",true,false, darwin.white,darwin.white))
-	draw_ch(num1,6,5,0.5*img.width()-3,0.5*img.height()-2.5)
+	draw_ch(num2,6,5,0.5*darwin.get_width()-3,0.5*darwin.get_height()-2.5)
 	darwin.update_drawable()
 	darwin.fill_drawable(darwin.pixel(" ",true,false, darwin.white,darwin.white))
-	draw_ch(chG,6,5,0.5*img.width()-10,0.5*img.height()-2.5)
-	draw_ch(chO,6,5,0.5*img.width()-2,0.5*img.height()-2.5)
-	draw_ch(chExc,6,5,0.5*img.width()+5,0.5*img.height()-2.5)
-	img.render();
-	ioctrl.update_image(img);
-	// 主循环
-	ioctrl.frame_limit(60);
-	int score=0;
-	int zkh=0.5*img.height();
-	int x(2),y(0),z1(0.5*img.height()-0.5*zkh),z2(0.5*img.height()-0.5*zkh);
-	bool xj(true),yj(true);
-	int delay_frame(0);
-	while(true) {
-		img.fill(pixel({true,false}, {colors::white,colors::blue},' '));
-		for(int i=z1; i<=z1+zkh; ++i)
-			img.draw({0,i},pixel({true,false}, {colors::cyan,colors::cyan},'#'));
-		for(int i=z2; i<=z2+zkh; ++i)
-			img.draw({img.width()-1,i},pixel({true,false}, {colors::magenta,colors::magenta},'#'));
-		if(delay_frame>jump_frame) {
-			delay_frame=0;
-			if(x<=1) {
-				if(y<z1 || y>z1+zkh)
-					break;
-				xj=true;
-				x=1;
-				++score;
-			}
-			if(y<=0) {
-				yj=true;
-				y=0;
-			}
-			if(x>=img.width()-2) {
-				if(y<z2 || y>z2+zkh)
-					break;
-				xj=false;
-				x=img.width()-2;
-				++score;
-			}
-			if(y>=img.height()-1) {
-				yj=false;
-				y=img.height()-1;
-			}
+	draw_ch(num1,6,5,0.5*darwin.get_width()-3,0.5*darwin.get_height()-2.5)
+	darwin.update_drawable()
+	darwin.fill_drawable(darwin.pixel(" ",true,false, darwin.white,darwin.white))
+	draw_ch(chG,6,5,0.5*darwin.get_width()-10,0.5*darwin.get_height()-2.5)
+	draw_ch(chO,6,5,0.5*darwin.get_width()-2,0.5*darwin.get_height()-2.5)
+	draw_ch(chExc,6,5,0.5*darwin.get_width()+5,0.5*darwin.get_height()-2.5)
+	darwin.update_drawable()
+#主循环
+	darwin.set_frame_limit(60)
+	define score=0
+	define zkh=0.5*darwin.get_height()
+	define x=2
+	define y=0
+	define z1=0.5*darwin.get_height()-0.5*zkh
+	define z2=z1
+	define xj=true
+	define yj=true
+	define delay_frame=0
+	while(true)
+		darwin.fill_drawable(darwin.pixel(" ",true,false,darwin.white,darwin.blue))
+		darwin.draw_line(0,z1,0,z1+zkh,darwin.pixel("#",true,false,darwin.cyan,darwin.cyan))
+		darwin.draw_line(darwin.get_width()-1,z2,darwin.get_width()-1,z2+zkh,darwin.pixel("#",true,false,darwin.pink,darwin.pink))
+		if(delay_frame>jump_frame)
+			delay_frame=0
+			if(x<=1)
+				if(y<z1||y>z1+zkh)
+					break
+				end
+				xj=true
+				x=1
+				++score
+			end
+			if(y<=0)
+				yj=true
+				y=0
+			end
+			if(x>=darwin.get_width()-2)
+				if(y<z2||y>z2+zkh)
+					break
+				end
+				xj=false
+				x=darwin.get_width()-2
+				++score
+			end
+			if(y>=darwin.get_height()-1)
+				yj=false
+				y=darwin.get_height()-1
+			end
 			if(xj)
-				++x;
+				++x
 			else
-				--x;
+				--x
+			end
 			if(yj)
-				++y;
+				++y
 			else
-				--y;
-		} else
-			++delay_frame;
-		if(KbHit()) {
-			char in=GetKbHit();
-			if(in==key_up) {
-				if(xj) {
-					if(z2>0) --z2;
-				} else {
-					if(z1>0) --z1;
-				}
-			}
-			if(in==key_down) {
-				if(xj) {
-					if(z2+zkh<img.height()-1) ++z2;
-				} else {
-					if(z1+zkh<img.height()-1)++z1;
-				}
-			}
-		}
-		img.draw({x,y},pixel({true,false}, {colors::red,colors::yellow},'@'));
-		std::string info="FPS:"+toString(ioctrl.fps())+" Score:"+toString(score);
-		for(int i=0; i<info.size(); ++i) {
-			img.draw({i,0},pixel({true,false}, {colors::white,colors::black},info[i]));
-		}
-		img.render();
-		ioctrl.update_image(img.surface());
-	}
-	// 结束后处理得分
-	ioctrl.stop_output_method();
-	std::cout<<"You Die!Your Score is "<<score<<'.'<<std::endl;
+				--y
+			end
+		else
+			++delay_frame
+		end
+		if(darwin.is_kb_hit())
+			define in=darwin.get_kb_hit()
+			if(in==key_up)
+				if(xj)
+					if(z2>0)
+						--z2
+					end
+				else
+					if(z1>0)
+						--z1
+					end
+				end
+			end
+			if(in==key_down)
+				if(xj)
+					if(z2+zkh<darwin.get_height()-1)
+						++z2
+					end
+				else
+					if(z1+zkh<darwin.get_height()-1)
+						++z1
+					end
+				end
+			end
+		end
+		darwin.draw_point(x,y,darwin.pixel("@",true,false,darwin.red,darwin.yellow))
+		define info=to_string(score)
+		string.cut(info,7)
+		info="Score:"+info
+		darwin.draw_string(0,0,info,darwin.pixel(" ",true,false,darwin.white,darwin.black))
+		darwin.update_drawable()
+	end
+#结束后处理得分
+	define str=to_string(score)
+	string.cut(str,7)
+	system.println("You Die!Your Score is ",str,".")
 	if(score<5)
-		std::cout<<"Very Bad.Just try lower difficulty."<<std::endl;
+		system.println("Very Bad.Just try lower difficulty.")
+	end
 	if(score>=5&&score<10)
-		std::cout<<"Not Bad.You can get higher score."<<std::endl;
+		system.println("Not Bad.You can get higher score.")
+	end
 	if(score>=10&&score<50)
-		std::cout<<"Good."<<std::endl;
+		system.println("Good.")
+	end
 	if(score>=50&&score<100)
-		std::cout<<"Very Great!"<<std::endl;
+		system.println("Very Great!")
+	end
 	if(score>=100)
-		std::cout<<"So Amazing!"<<std::endl;
-	return 0;
-}
+		system.println("So Amazing!")
+	end
+end
+main()
