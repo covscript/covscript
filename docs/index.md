@@ -1,4 +1,3 @@
-![](https://github.com/mikecovlee/covbasic/blob/master/icon/basic2.1.jpg)
 # Covariant Basic Programming Language #
 **欢迎使用Covariant Basic编程语言！**  
 **Covariant Basic**是一种开源的跨平台编程语言
