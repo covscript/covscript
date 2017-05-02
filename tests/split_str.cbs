@@ -3,9 +3,11 @@ function split(str)
 	define tmp as string
 	define i=0
 	while(i<size_of(str))
-		if(str[i]==to_ascii(" ")&&size_of(tmp)!=0)
-			array.push_back(arr,tmp)
-			string.clear(tmp)
+		if(str[i]==to_ascii(" "))
+			if(size_of(tmp)!=0)
+				array.push_back(arr,tmp)
+				string.clear(tmp)
+			end
 			++i
 			continue
 		end
