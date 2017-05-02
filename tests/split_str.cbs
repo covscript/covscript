@@ -1,0 +1,27 @@
+function split(str)
+	define arr as array
+	define tmp as string
+	define i=0
+	while(i<size_of(str))
+		if(str[i]==to_ascii(" ")&&size_of(tmp)!=0)
+			array.push_back(arr,tmp)
+			string.clear(tmp)
+			++i
+			continue
+		end
+		string.append(tmp,to_char(str[i]))
+		++i
+	end
+	if(size_of(tmp)!=0)
+		array.push_back(arr,tmp)
+		string.clear(tmp)
+	end
+	return arr
+end
+define r=split(system.getline())
+define i=0
+while(i<size_of(r))
+	system.print("#",r[i],"#")
+	++i
+end
+system.println()
