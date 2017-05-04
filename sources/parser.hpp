@@ -554,7 +554,10 @@ namespace cov_basic {
 		{
 			return statement_types::end_;
 		}
-		virtual void run() override {}
+		virtual void run() override
+		{
+			throw syntax_error("Standalone end is not support.");
+		}
 	};
 	enum class grammar_type {
 		null,single,block
