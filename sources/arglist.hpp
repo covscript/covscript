@@ -50,7 +50,8 @@ namespace cov_basic {
 				int result=check_types<ArgTypes...>(1,args);
 				if(result!=-1)
 					throw syntax_error("Invalid Argument.At "+std::to_string(result)+".Expected "+get_type<ArgTypes...>(result,1));
-			} else
+			}
+			else
 				throw syntax_error("Wrong size of the arguments.Expected "+std::to_string(count_types<ArgTypes...>()));
 		}
 	};

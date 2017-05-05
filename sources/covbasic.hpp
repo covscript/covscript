@@ -44,11 +44,14 @@ namespace cov_basic {
 		for(auto& ptr:this->mBody) {
 			try {
 				ptr->run();
-			} catch(const syntax_error& se) {
+			}
+			catch(const syntax_error& se) {
 				throw syntax_error(ptr->get_line_num(),se.what());
-			} catch(const lang_error& le) {
+			}
+			catch(const lang_error& le) {
 				throw lang_error(ptr->get_line_num(),le.what());
-			} catch(const std::exception& e) {
+			}
+			catch(const std::exception& e) {
 				throw internal_error(ptr->get_line_num(),e.what());
 			}
 			if(this->mRetVal.usable()) {
@@ -79,11 +82,14 @@ namespace cov_basic {
 		for(auto& ptr:this->mMethod) {
 			try {
 				ptr->run();
-			} catch(const syntax_error& se) {
+			}
+			catch(const syntax_error& se) {
 				throw syntax_error(ptr->get_line_num(),se.what());
-			} catch(const lang_error& le) {
+			}
+			catch(const lang_error& le) {
 				throw lang_error(ptr->get_line_num(),le.what());
-			} catch(const std::exception& e) {
+			}
+			catch(const std::exception& e) {
 				throw internal_error(ptr->get_line_num(),e.what());
 			}
 		}
@@ -101,11 +107,14 @@ namespace cov_basic {
 		for(auto& ptr:statements) {
 			try {
 				ptr->run();
-			} catch(const syntax_error& se) {
+			}
+			catch(const syntax_error& se) {
 				throw syntax_error(ptr->get_line_num(),"In file \""+file+"\":"+se.what());
-			} catch(const lang_error& le) {
+			}
+			catch(const lang_error& le) {
 				throw lang_error(ptr->get_line_num(),"In file \""+file+"\":"+le.what());
-			} catch(const std::exception& e) {
+			}
+			catch(const std::exception& e) {
 				throw internal_error(ptr->get_line_num(),"In file \""+file+"\":"+e.what());
 			}
 		}
@@ -132,11 +141,14 @@ namespace cov_basic {
 		for(auto& ptr:mBlock) {
 			try {
 				ptr->run();
-			} catch(const syntax_error& se) {
+			}
+			catch(const syntax_error& se) {
 				throw syntax_error(ptr->get_line_num(),se.what());
-			} catch(const lang_error& le) {
+			}
+			catch(const lang_error& le) {
 				throw lang_error(ptr->get_line_num(),le.what());
-			} catch(const std::exception& e) {
+			}
+			catch(const std::exception& e) {
 				throw internal_error(ptr->get_line_num(),e.what());
 			}
 			if(return_fcall) {
@@ -154,11 +166,14 @@ namespace cov_basic {
 				for(auto& ptr:*mBlock) {
 					try {
 						ptr->run();
-					} catch(const syntax_error& se) {
+					}
+					catch(const syntax_error& se) {
 						throw syntax_error(ptr->get_line_num(),se.what());
-					} catch(const lang_error& le) {
+					}
+					catch(const lang_error& le) {
 						throw lang_error(ptr->get_line_num(),le.what());
-					} catch(const std::exception& e) {
+					}
+					catch(const std::exception& e) {
 						throw internal_error(ptr->get_line_num(),e.what());
 					}
 					if(return_fcall) {
@@ -170,18 +185,23 @@ namespace cov_basic {
 						return;
 					}
 				}
-			} else
+			}
+			else
 				throw syntax_error("Empty If body.");
-		} else {
+		}
+		else {
 			if(mElseBlock!=nullptr) {
 				for(auto& ptr:*mElseBlock) {
 					try {
 						ptr->run();
-					} catch(const syntax_error& se) {
+					}
+					catch(const syntax_error& se) {
 						throw syntax_error(ptr->get_line_num(),se.what());
-					} catch(const lang_error& le) {
+					}
+					catch(const lang_error& le) {
 						throw lang_error(ptr->get_line_num(),le.what());
-					} catch(const std::exception& e) {
+					}
+					catch(const std::exception& e) {
 						throw internal_error(ptr->get_line_num(),e.what());
 					}
 					if(return_fcall) {
@@ -212,11 +232,14 @@ namespace cov_basic {
 			for(auto& ptr:mBlock) {
 				try {
 					ptr->run();
-				} catch(const syntax_error& se) {
+				}
+				catch(const syntax_error& se) {
 					throw syntax_error(ptr->get_line_num(),se.what());
-				} catch(const lang_error& le) {
+				}
+				catch(const lang_error& le) {
 					throw lang_error(ptr->get_line_num(),le.what());
-				} catch(const std::exception& e) {
+				}
+				catch(const std::exception& e) {
 					throw internal_error(ptr->get_line_num(),e.what());
 				}
 				if(return_fcall) {
@@ -243,11 +266,14 @@ namespace cov_basic {
 			for(auto& ptr:mBlock) {
 				try {
 					ptr->run();
-				} catch(const syntax_error& se) {
+				}
+				catch(const syntax_error& se) {
 					throw syntax_error(ptr->get_line_num(),se.what());
-				} catch(const lang_error& le) {
+				}
+				catch(const lang_error& le) {
 					throw lang_error(ptr->get_line_num(),le.what());
-				} catch(const std::exception& e) {
+				}
+				catch(const std::exception& e) {
 					throw internal_error(ptr->get_line_num(),e.what());
 				}
 				if(return_fcall) {
@@ -264,7 +290,8 @@ namespace cov_basic {
 					break;
 				}
 			}
-		} while(parse_expr(mTree.root()).const_val<boolean>());
+		}
+		while(parse_expr(mTree.root()).const_val<boolean>());
 		runtime->storage.remove_domain();
 	}
 	void statement_struct::run()
@@ -300,20 +327,26 @@ namespace cov_basic {
 							statements.push_back(method->function(tmp));
 							tmp.clear();
 							method=nullptr;
-						} else
+						}
+						else
 							tmp.push_back(line);
-					} else
+					}
+					else
 						statements.push_back(m->function({line}));
-				} else if(m->type==grammar_type::block) {
+				}
+				else if(m->type==grammar_type::block) {
 					if(level==0)
 						method=m;
 					++level;
 					tmp.push_back(line);
-				} else
+				}
+				else
 					throw syntax_error("Null type of grammar.");
-			} catch(const syntax_error& se) {
+			}
+			catch(const syntax_error& se) {
 				throw syntax_error(dynamic_cast<token_endline*>(line.back())->get_num(),se.what());
-			} catch(const std::exception& e) {
+			}
+			catch(const std::exception& e) {
 				throw internal_error(dynamic_cast<token_endline*>(line.back())->get_num(),e.what());
 			}
 		}
@@ -333,9 +366,11 @@ namespace cov_basic {
 							process_brackets(tmp);
 							kill_brackets(tmp);
 							kill_expr(tmp);
-						} catch(const syntax_error& se) {
+						}
+						catch(const syntax_error& se) {
 							throw syntax_error(dynamic_cast<token_endline*>(ptr)->get_num(),se.what());
-						} catch(const std::exception& e) {
+						}
+						catch(const std::exception& e) {
 							throw internal_error(dynamic_cast<token_endline*>(ptr)->get_num(),e.what());
 						}
 						lines.push_back(tmp);
@@ -507,7 +542,8 @@ namespace cov_basic {
 					}
 					delete body;
 					return new statement_if(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),body_true,body_false,raw.front().back());
-				} else
+				}
+				else
 					return new statement_if(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),body,nullptr,raw.front().back());
 			}
 		});
@@ -531,12 +567,14 @@ namespace cov_basic {
 						if(cases.count(scptr->get_tag())>0)
 							throw syntax_error("Redefinition of case.");
 						cases.emplace(scptr->get_tag(),scptr->get_block());
-					} else if(it->get_type()==statement_types::default_) {
+					}
+					else if(it->get_type()==statement_types::default_) {
 						statement_default* sdptr=dynamic_cast<statement_default*>(it);
 						if(dptr!=nullptr)
 							throw syntax_error("Redefinition of default case.");
 						dptr=sdptr->get_block();
-					} else
+					}
+					else
 						throw syntax_error("Wrong format of switch statement.");
 				}
 				return new statement_switch(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),cases,dptr,raw.front().back());
@@ -692,9 +730,11 @@ namespace cov_basic {
 				buff.push_back(c);
 			try {
 				translate_into_tokens(buff,tokens);
-			} catch(const syntax_error& se) {
+			}
+			catch(const syntax_error& se) {
 				throw syntax_error(line_num,se.what());
-			} catch(const std::exception& e) {
+			}
+			catch(const std::exception& e) {
 				throw internal_error(line_num,e.what());
 			}
 			tokens.push_back(new token_endline(line_num));
@@ -705,11 +745,14 @@ namespace cov_basic {
 		for(auto& ptr:statements) {
 			try {
 				ptr->run();
-			} catch(const syntax_error& se) {
+			}
+			catch(const syntax_error& se) {
 				throw syntax_error(ptr->get_line_num(),se.what());
-			} catch(const lang_error& le) {
+			}
+			catch(const lang_error& le) {
 				throw lang_error(ptr->get_line_num(),le.what());
-			} catch(const std::exception& e) {
+			}
+			catch(const std::exception& e) {
 				throw internal_error(ptr->get_line_num(),e.what());
 			}
 		}
