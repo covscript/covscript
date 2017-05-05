@@ -412,8 +412,8 @@ namespace cov_basic {
 				tokens.push_back(ptr);
 			else
 				btokens.push_back(ptr);
-			if(!blist_stack.empty())
-				throw syntax_error("Parentheses do not match.");
 		}
+		if(!blist_stack.empty())
+			throw syntax_error("Parentheses do not match.");
 	}
 }
