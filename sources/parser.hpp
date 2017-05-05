@@ -110,7 +110,8 @@ namespace cov_basic {
 					tokens.push_back(new token_signal(signal_types::fcall_));
 					tokens.push_back(new token_arglist(tlist));
 					continue;
-				} else {
+				}
+				else {
 					expected_fcall=true;
 					break;
 				}
@@ -172,7 +173,8 @@ namespace cov_basic {
 					objects.push_back(nullptr);
 				signals.push_back(ptr);
 				request_signal=false;
-			} else {
+			}
+			else {
 				objects.push_back(ptr);
 				request_signal=true;
 			}
@@ -243,7 +245,8 @@ namespace cov_basic {
 				obj=new token_expr(t);
 			}
 			tree.emplace_root_left(tree.root(),obj);
-		} else {
+		}
+		else {
 			std::deque<token_base*> signals,objects;
 			split_token(raw,signals,objects);
 			build_tree(tree,signals,objects);
@@ -263,7 +266,8 @@ namespace cov_basic {
 					expr.clear();
 				}
 				tokens.push_back(ptr);
-			} else
+			}
+			else
 				expr.push_back(ptr);
 		}
 	}
@@ -341,9 +345,11 @@ namespace cov_basic {
 					buff.push_back(c);
 				try {
 					translate_into_tokens(buff,tokens);
-				} catch(const syntax_error& se) {
+				}
+				catch(const syntax_error& se) {
 					throw syntax_error(line_num,"In file \""+file+"\":"+se.what());
-				} catch(const std::exception& e) {
+				}
+				catch(const std::exception& e) {
 					throw internal_error(line_num,"In file \""+file+"\":"+e.what());
 				}
 				tokens.push_back(new token_endline(line_num));
@@ -351,9 +357,11 @@ namespace cov_basic {
 			}
 			try {
 				translate_into_statements(tokens,statements);
-			} catch(const syntax_error& se) {
+			}
+			catch(const syntax_error& se) {
 				throw syntax_error("In file \""+file+"\":"+se.what());
-			} catch(const std::exception& e) {
+			}
+			catch(const std::exception& e) {
 				throw internal_error("In file \""+file+"\":"+e.what());
 			}
 		}
@@ -581,7 +589,8 @@ namespace cov_basic {
 				return false;
 			if(a->get_type()==token_types::action) {
 				return dynamic_cast<const token_action*>(a)->get_action()==dynamic_cast<const token_action*>(b)->get_action();
-			} else
+			}
+			else
 				return true;
 		}
 	private:

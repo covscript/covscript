@@ -15,7 +15,8 @@ int main(int args_size,const char* args[])
 		system_ext.add_var("args",arg);
 		cov_basic::reset();
 		cov_basic::cov_basic(args[1]);
-	} else
+	}
+	else
 		throw cov_basic::fatal_error("no input file.\nUsage: cbs2.1 <file> <args...>");
 	return 0;
 }

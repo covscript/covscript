@@ -238,7 +238,8 @@ namespace cov_basic {
 			return false;
 		try {
 			return number(std::stold(str));
-		} catch(...) {
+		}
+		catch(...) {
 			return str;
 		}
 		return str;

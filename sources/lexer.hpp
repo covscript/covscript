@@ -204,13 +204,16 @@ namespace cov_basic {
 				if(escape) {
 					tmp+=escape_map.match(buff[i]);
 					escape=false;
-				} else if(buff[i]=='\\') {
+				}
+				else if(buff[i]=='\\') {
 					escape=true;
-				} else if(buff[i]=='\"') {
+				}
+				else if(buff[i]=='\"') {
 					tokens.push_back(new token_value(tmp));
 					tmp.clear();
 					inside_str=false;
-				} else {
+				}
+				else {
 					tmp+=buff[i];
 				}
 				++i;
@@ -267,14 +270,16 @@ namespace cov_basic {
 						if(signal_map.exsist(tmp+buff[i])) {
 							tokens.push_back(new token_signal(signal_map.match(tmp+buff[i])));
 							tmp.clear();
-						} else {
+						}
+						else {
 							if(signal_map.exsist(tmp)) {
 								tokens.push_back(new token_signal(signal_map.match(tmp)));
 								tmp.clear();
 							}
 							tmp+=buff[i];
 						}
-					} else
+					}
+					else
 						tmp+=buff[i];
 					++i;
 					continue;

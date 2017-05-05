@@ -42,7 +42,8 @@ namespace file_cbs_ext {
 			std::string str;
 			infs>>str;
 			return parse_value(str);
-		} else {
+		}
+		else {
 			std::string str;
 			for(std::size_t i=1; i<args.size(); ++i) {
 				infs>>str;
