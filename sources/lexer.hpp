@@ -195,6 +195,8 @@ namespace cov_basic {
 	}
 	void translate_into_tokens(const std::deque<char>& buff,std::deque<token_base*>& tokens)
 	{
+		if(buff.empty())
+			throw syntax_error("Received empty character buffer.");
 		std::string tmp;
 		token_types type=token_types::null;
 		bool inside_str=false;
@@ -332,8 +334,92 @@ namespace cov_basic {
 			break;
 		}
 	}
+	void process_empty_brackets(std::deque<token_base*>& tokens)
+	{
+		if(tokens.empty())
+			throw syntax_error("Received empty token buffer.");
+		std::deque<token_base*> oldt;
+		std::swap(tokens,oldt);
+		tokens.clear();
+		std::deque<int> blist_stack;
+		bool empty_bracket=false;
+		for(auto& ptr:oldt) {
+			if(ptr->get_type()==token_types::signal) {
+				switch(dynamic_cast<token_signal*>(ptr)->get_signal()) {
+				case signal_types::slb_:
+					blist_stack.push_front(1);
+					empty_bracket=true;
+					continue;
+				case signal_types::mlb_:
+					blist_stack.push_front(2);
+					empty_bracket=true;
+					continue;
+				case signal_types::llb_:
+					blist_stack.push_front(3);
+					empty_bracket=true;
+					continue;
+				case signal_types::srb_:
+					if(blist_stack.empty())
+						throw syntax_error("Parentheses do not match.");
+					if(blist_stack.front()!=1)
+						throw syntax_error("The parentheses type does not match.(Request Small Bracket)");
+					blist_stack.pop_front();
+					if(empty_bracket) {
+						empty_bracket=false;
+						tokens.push_back(new token_signal(signal_types::esb_));
+						continue;
+					}
+					break;
+				case signal_types::mrb_:
+					if(blist_stack.empty())
+						throw syntax_error("Parentheses do not match.");
+					if(blist_stack.front()!=2)
+						throw syntax_error("The parentheses type does not match.(Request Middle Bracket)");
+					blist_stack.pop_front();
+					if(empty_bracket) {
+						empty_bracket=false;
+						tokens.push_back(new token_signal(signal_types::emb_));
+						continue;
+					}
+					break;
+				case signal_types::lrb_:
+					if(blist_stack.empty())
+						throw syntax_error("Parentheses do not match.");
+					if(blist_stack.front()!=3)
+						throw syntax_error("The parentheses type does not match.(Request Large Bracket)");
+					blist_stack.pop_front();
+					if(empty_bracket) {
+						empty_bracket=false;
+						tokens.push_back(new token_signal(signal_types::elb_));
+						continue;
+					}
+					break;
+				}
+			}
+			if(empty_bracket&&!blist_stack.empty()) {
+				empty_bracket=false;
+				switch (blist_stack.front()) {
+				case 1:
+					tokens.push_back(new token_signal(signal_types::slb_));
+					break;
+				case 2:
+					tokens.push_back(new token_signal(signal_types::mlb_));
+					break;
+				case 3:
+					tokens.push_back(new token_signal(signal_types::llb_));
+					break;
+				}
+			}
+			tokens.push_back(ptr);
+		}
+		if(!blist_stack.empty())
+			throw syntax_error("Parentheses do not match.");
+	}
 	void process_brackets(std::deque<token_base*>& tokens)
 	{
+		if(tokens.empty())
+			throw syntax_error("Received empty token buffer.");
+		process_empty_brackets(tokens);
 		std::deque<token_base*> oldt;
 		std::swap(tokens,oldt);
 		tokens.clear();
@@ -413,7 +499,7 @@ namespace cov_basic {
 					break;
 				}
 			}
-			if(blist_stack.size()==0)
+			if(blist_stack.empty())
 				tokens.push_back(ptr);
 			else
 				btokens.push_back(ptr);

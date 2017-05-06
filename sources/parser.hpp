@@ -144,19 +144,26 @@ namespace cov_basic {
 				continue;
 			}
 			case token_types::signal: {
-				expected_fcall=false;
 				switch(dynamic_cast<token_signal*>(ptr)->get_signal()) {
 				case signal_types::esb_:
-					tokens.push_back(new token_signal(signal_types::fcall_));
-					tokens.push_back(new token_arglist());
+					if(expected_fcall) {
+						tokens.push_back(new token_signal(signal_types::fcall_));
+						tokens.push_back(new token_arglist());
+					}
+					else
+						throw syntax_error("Do not allow standalone empty small parentheses.");
+					expected_fcall=false;
 					continue;
 				case signal_types::emb_:
-					throw syntax_error("Do not allow empty parentheses.");
+					throw syntax_error("Do not allow empty middle parentheses.");
 					break;
 				case signal_types::elb_:
 					tokens.push_back(new token_array());
+					expected_fcall=false;
 					continue;
 				}
+				expected_fcall=false;
+				break;
 			}
 			}
 			tokens.push_back(ptr);
