@@ -14,7 +14,7 @@
 #include <cmath>
 #include <deque>
 namespace cov_basic {
-	const std::string version="2.1.3.2b";
+	const std::string version="2.1.3.3";
 	class syntax_error final:public std::exception {
 		std::string mWhat="Covariant Basic Syntax Error";
 	public:
@@ -126,6 +126,29 @@ namespace cov_basic {
 		void set_data(const std::shared_ptr<std::unordered_map<string,cov::any>>& data)
 		{
 			mData=data;
+		}
+	};
+	class object_method final {
+		cov::any mObj;
+		cov::any mCallable;
+	public:
+		object_method()=delete;
+		object_method(const cov::any& obj,const cov::any& callable):mObj(obj),mCallable(callable) {}
+		~object_method()=default;
+		cov::any call(array& args) const
+		{
+			args.push_front(mObj);
+			cov::any retval;
+			if(mCallable.type()==typeid(function)) {
+				retval=mCallable.val<function>(true).call(args);
+			}
+			else if(mCallable.type()==typeid(native_interface)) {
+				retval=mCallable.val<native_interface>(true).call(args);
+			}
+			else
+				throw syntax_error("Call non-function object.");
+			args.pop_front();
+			return std::move(retval);
 		}
 	};
 	class structure final {

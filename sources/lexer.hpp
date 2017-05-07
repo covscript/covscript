@@ -343,7 +343,7 @@ namespace cov_basic {
 		tokens.clear();
 		std::deque<int> blist_stack;
 		bool empty_bracket=false;
-		auto insert_bracket=[&](){
+		auto insert_bracket=[&]() {
 			switch (blist_stack.front()) {
 			case 1:
 				tokens.push_back(new token_signal(signal_types::slb_));

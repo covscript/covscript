@@ -269,6 +269,12 @@ namespace cov_basic {
 			throw internal_error("Null Pointer Accessed.");
 		else if(b->get_type()!=token_types::id)
 			throw syntax_error("Unsupported operator operations(Dot).");
+		else if(a.type()==typeid(string))
+			return object_method(a,runtime->storage.get_var_global("string").val<extension_t>(true)->get_var(dynamic_cast<token_id*>(b)->get_id()));
+		else if(a.type()==typeid(array))
+			return object_method(a,runtime->storage.get_var_global("array").val<extension_t>(true)->get_var(dynamic_cast<token_id*>(b)->get_id()));
+		else if(a.type()==typeid(hash_map))
+			return object_method(a,runtime->storage.get_var_global("hash_map").val<extension_t>(true)->get_var(dynamic_cast<token_id*>(b)->get_id()));
 		else if(a.type()==typeid(structure))
 			return a.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
 		else if(a.type()==typeid(extension_t))
@@ -541,6 +547,9 @@ namespace cov_basic {
 		}
 		else if(a.type()==typeid(native_interface)) {
 			return a.val<native_interface>(true).call(args);
+		}
+		else if(a.type()==typeid(object_method)) {
+			return a.val<object_method>(true).call(args);
 		}
 		else
 			throw syntax_error("Call non-function object.");
