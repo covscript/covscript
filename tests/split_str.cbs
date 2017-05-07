@@ -5,18 +5,18 @@ function split(str)
 	while(i<size_of(str))
 		if(str[i]==to_ascii(" "))
 			if(size_of(tmp)!=0)
-				array.push_back(arr,tmp)
-				string.clear(tmp)
+				arr.push_back(tmp)
+				tmp.clear()
 			end
 			++i
 			continue
 		end
-		string.append(tmp,to_char(str[i]))
+		tmp.append(to_char(str[i]))
 		++i
 	end
 	if(size_of(tmp)!=0)
-		array.push_back(arr,tmp)
-		string.clear(tmp)
+		arr.push_back(tmp)
+		tmp.clear()
 	end
 	return arr
 end

@@ -13,8 +13,8 @@ define score=0
 
 function die()
 	define str0="You die!Your score is "+score
-	string.cut(str0,7)
-	str0=str0+"."
+	str0.cut(7)
+	str0.append(".")
 	define str1="Press any key to continue..."
 	while(true)
 		if(darwin.is_kb_hit())
@@ -52,7 +52,7 @@ function start()
 	block
 		define i=0
 		while(i<init_long-1)
-			array.push_back(snake_body,{snake_head[0]-i,snake_head[1]})
+			snake_body.push_back({snake_head[0]-i,snake_head[1]})
 			++i
 		end
 	end
@@ -126,12 +126,12 @@ function start()
 					end
 				end
 			end
-			array.push_front(snake_body,snake_head)
+			snake_body.push_front(snake_head)
 			if(snake_head[0]==food[0]&&snake_head[1]==food[1])
 				gen_food()
 				score=score+to_integer(10*(1.0/hard))
 			else
-				array.pop_back(snake_body)
+				snake_body.pop_back()
 			end
 			frame=0
 		end
@@ -154,7 +154,7 @@ runtime.delay(500)
 darwin.load()
 darwin.fit_drawable()
 while(true)
-	array.clear(snake_body)
+	snake_body.clear()
 	heading=2
 	start()
 end
