@@ -52,7 +52,7 @@ while(true)
   	if(i!=0)
   		darwin.draw_point(center_x+x_offset+2*i*zoom,center_y+y_offset,darwin.pixel("|",true,false,darwin.white,darwin.black))
   		define str=to_string(i)
-  		string.cut(str,7)
+  		str.cut(7)
   		darwin.draw_string(center_x+x_offset+2*i*zoom-0.5*size_of(str),center_y+y_offset+1,str,darwin.pixel(" ",true,false,darwin.white,darwin.black))
 	end
 	++i
@@ -62,7 +62,7 @@ while(true)
 	if(i!=0)
   		darwin.draw_point(center_x+x_offset,center_y+y_offset+i*zoom,darwin.pixel("-",true,false,darwin.white,darwin.black))
   		define str=to_string(-i)
-  		string.cut(str,7)
+  		str.cut(7)
   		darwin.draw_string(center_x+x_offset-size_of(str),center_y+y_offset+i*zoom,str,darwin.pixel(" ",true,false,darwin.white,darwin.black))
 	end
 	--i

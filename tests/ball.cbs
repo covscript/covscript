@@ -132,14 +132,14 @@ function main()
 		end
 		darwin.draw_point(x,y,darwin.pixel("@",true,false,darwin.red,darwin.yellow))
 		define info=to_string(score)
-		string.cut(info,7)
+		info.cut(7)
 		info="Score:"+info
 		darwin.draw_string(0,0,info,darwin.pixel(" ",true,false,darwin.white,darwin.black))
 		darwin.update_drawable()
 	end
 #结束后处理得分
 	define str=to_string(score)
-	string.cut(str,7)
+	str.cut(7)
 	system.println("You Die!Your Score is ",str,".")
 	if(score<5)
 		system.println("Very Bad.Just try lower difficulty.")
