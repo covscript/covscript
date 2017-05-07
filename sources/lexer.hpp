@@ -343,18 +343,37 @@ namespace cov_basic {
 		tokens.clear();
 		std::deque<int> blist_stack;
 		bool empty_bracket=false;
+		auto insert_bracket=[&](){
+			switch (blist_stack.front()) {
+			case 1:
+				tokens.push_back(new token_signal(signal_types::slb_));
+				break;
+			case 2:
+				tokens.push_back(new token_signal(signal_types::mlb_));
+				break;
+			case 3:
+				tokens.push_back(new token_signal(signal_types::llb_));
+				break;
+			}
+		};
 		for(auto& ptr:oldt) {
 			if(ptr->get_type()==token_types::signal) {
 				switch(dynamic_cast<token_signal*>(ptr)->get_signal()) {
 				case signal_types::slb_:
+					if(empty_bracket)
+						insert_bracket();
 					blist_stack.push_front(1);
 					empty_bracket=true;
 					continue;
 				case signal_types::mlb_:
+					if(empty_bracket)
+						insert_bracket();
 					blist_stack.push_front(2);
 					empty_bracket=true;
 					continue;
 				case signal_types::llb_:
+					if(empty_bracket)
+						insert_bracket();
 					blist_stack.push_front(3);
 					empty_bracket=true;
 					continue;
@@ -398,17 +417,7 @@ namespace cov_basic {
 			}
 			if(empty_bracket&&!blist_stack.empty()) {
 				empty_bracket=false;
-				switch (blist_stack.front()) {
-				case 1:
-					tokens.push_back(new token_signal(signal_types::slb_));
-					break;
-				case 2:
-					tokens.push_back(new token_signal(signal_types::mlb_));
-					break;
-				case 3:
-					tokens.push_back(new token_signal(signal_types::llb_));
-					break;
-				}
+				insert_bracket();
 			}
 			tokens.push_back(ptr);
 		}
