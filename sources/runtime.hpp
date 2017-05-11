@@ -559,6 +559,8 @@ namespace cov_basic {
 		if(a.type()==typeid(array)) {
 			if(b.type()!=typeid(number))
 				throw syntax_error("Index must be a number.");
+			if(b.const_val<number>()<0)
+				throw syntax_error("Index must above zero.");
 			array& arr=a.val<array>(true);
 			std::size_t posit=b.const_val<number>();
 			if(posit>=arr.size()) {
