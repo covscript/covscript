@@ -656,6 +656,14 @@ namespace cov_basic {
 				return new statement_for(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),dynamic_cast<token_expr*>(raw.front().at(3))->get_tree(),dynamic_cast<token_expr*>(raw.front().at(5))->get_tree(),body,raw.front().back());
 			}
 		});
+		translator.add_method({new token_action(action_types::for_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::to_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {grammar_type::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				std::deque<statement_base*> body;
+				kill_action({raw.begin()+1,raw.end()},body);
+				cov::tree<token_base*> tree_step;
+				tree_step.emplace_root_left(tree_step.root(),new token_value(number(1)));
+				return new statement_for(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),dynamic_cast<token_expr*>(raw.front().at(3))->get_tree(),tree_step,body,raw.front().back());
+			}
+		});
 		// Break Grammar
 		translator.add_method({new token_action(action_types::break_),new token_endline(0)},method_type {grammar_type::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				return new statement_break(raw.front().back());
