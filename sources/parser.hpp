@@ -527,6 +527,20 @@ namespace cov_basic {
 		}
 		virtual void run() override;
 	};
+	class statement_for final:public statement_base {
+		cov::tree<token_base*> mInit;
+		cov::tree<token_base*> mEnd;
+		cov::tree<token_base*> mStep;
+		std::deque<statement_base*> mBlock;
+	public:
+		statement_for()=delete;
+		statement_for(const cov::tree<token_base*>& tree0,const cov::tree<token_base*>& tree1,const cov::tree<token_base*>& tree2,const std::deque<statement_base*>& b,token_base* ptr):statement_base(ptr),mInit(tree0),mEnd(tree1),mStep(tree2),mBlock(b) {}
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::for_;
+		}
+		virtual void run() override;
+	};
 	class statement_struct final:public statement_base {
 		std::string mName;
 		struct_builder mBuilder;

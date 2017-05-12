@@ -14,7 +14,7 @@
 #include <cmath>
 #include <deque>
 namespace cov_basic {
-	const std::string version="2.1.3.3";
+	const std::string version="2.1.4.1";
 	class syntax_error final:public std::exception {
 		std::string mWhat="Covariant Basic Syntax Error";
 	public:

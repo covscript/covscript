@@ -294,6 +294,44 @@ namespace cov_basic {
 		while(parse_expr(mTree.root()).const_val<boolean>());
 		runtime->storage.remove_domain();
 	}
+	void statement_for::run()
+	{
+		runtime->storage.add_domain();
+		define_var=true;
+		cov::any var=parse_expr(mInit.root());
+		define_var=false;
+		while(var.const_val<number>()<=parse_expr(mEnd.root()).const_val<number>()) {
+			for(auto& ptr:mBlock) {
+				try {
+					ptr->run();
+				}
+				catch(const syntax_error& se) {
+					throw syntax_error(ptr->get_line_num(),se.what());
+				}
+				catch(const lang_error& le) {
+					throw lang_error(ptr->get_line_num(),le.what());
+				}
+				catch(const std::exception& e) {
+					throw internal_error(ptr->get_line_num(),e.what());
+				}
+				if(return_fcall) {
+					runtime->storage.remove_domain();
+					return;
+				}
+				if(break_block) {
+					break_block=false;
+					runtime->storage.remove_domain();
+					return;
+				}
+				if(continue_block) {
+					continue_block=false;
+					break;
+				}
+			}
+			var.val<number>(true)+=parse_expr(mStep.root()).const_val<number>();
+		}
+		runtime->storage.remove_domain();
+	}
 	void statement_struct::run()
 	{
 		runtime->storage.add_type(this->mName,this->mBuilder);
@@ -609,6 +647,13 @@ namespace cov_basic {
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
 				return new statement_until(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),body,raw.front().back());
+			}
+		});
+		// For Grammar
+		translator.add_method({new token_action(action_types::for_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::to_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::step_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {grammar_type::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				std::deque<statement_base*> body;
+				kill_action({raw.begin()+1,raw.end()},body);
+				return new statement_for(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),dynamic_cast<token_expr*>(raw.front().at(3))->get_tree(),dynamic_cast<token_expr*>(raw.front().at(5))->get_tree(),body,raw.front().back());
 			}
 		});
 		// Break Grammar

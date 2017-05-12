@@ -9,7 +9,7 @@ namespace cov_basic {
 		null,endline,action,signal,id,value,sblist,mblist,lblist,expr,arglist,array
 	};
 	enum class action_types {
-		import_,struct_,block_,endblock_,define_,as_,if_,then_,else_,switch_,case_,default_,while_,until_,do_,for_,break_,continue_,function_,return_
+		import_,struct_,block_,endblock_,define_,as_,if_,then_,else_,switch_,case_,default_,while_,until_,do_,for_,to_,step_,break_,continue_,function_,return_
 	};
 	enum class signal_types {
 		add_,sub_,mul_,div_,mod_,pow_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,inc_,dec_,slb_,srb_,mlb_,mrb_,llb_,lrb_,esb_,emb_,elb_,link_,mem_,fcall_,access_,new_,typeid_
@@ -170,7 +170,7 @@ namespace cov_basic {
 	};
 	mapping<std::string,action_types> action_map= {
 		{"import",action_types::import_},{"struct",action_types::struct_},{"block",action_types::block_},{"end",action_types::endblock_},{"define",action_types::define_},{"as",action_types::as_},{"if",action_types::if_},/*{"then",action_types::then_},*/{"else",action_types::else_},{"switch",action_types::switch_},{"case",action_types::case_},{"default",action_types::default_},
-		{"while",action_types::while_},{"until",action_types::until_},/*{"do",action_types::do_},{"for",action_types::for_},*/{"break",action_types::break_},{"continue",action_types::continue_},{"function",action_types::function_},{"return",action_types::return_}
+		{"while",action_types::while_},{"until",action_types::until_},/*{"do",action_types::do_},*/{"for",action_types::for_},{"to",action_types::to_},{"step",action_types::step_},{"break",action_types::break_},{"continue",action_types::continue_},{"function",action_types::function_},{"return",action_types::return_}
 	};
 	enum class constant_values {
 		current_namespace,global_namespace,this_object
