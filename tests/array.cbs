@@ -1,8 +1,5 @@
 define arr={}
 arr[10]=10
-define i=0
-define arr_size=size_of(arr)
-while(i<arr_size)
+for i=0 to size_of(arr)-1 step 1
 	system.println(arr[i])
-	++i
 end
