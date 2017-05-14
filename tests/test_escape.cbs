@@ -1,9 +1,7 @@
 define str="\t\"hello\"\n\tworld"
-define i=0
-while(i<size_of(str))
+for i=0 to size_of(str)-1
   if(str[i]==to_ascii("\t"))
     system.println("Boom!")
   end
   system.print(to_char(str[i]))
-  ++i
 end

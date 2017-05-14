@@ -3,7 +3,7 @@ function main()
 	darwin.fit_drawable()
 	define points= {{0,0},{darwin.get_width()-1,0},{0.5*darwin.get_width(),0.5*darwin.get_height()}}
 	define focus=2
-	while(true)
+	loop
 		if(darwin.is_kb_hit())
 			define ch=darwin.get_kb_hit()
 			if(ch==to_ascii("w"))

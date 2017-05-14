@@ -62,7 +62,7 @@ function main()
 	define xj=true
 	define yj=true
 	define delay_frame=0
-	while(true)
+	loop
 		darwin.fill_drawable(darwin.pixel(" ",true,false,darwin.white,darwin.blue))
 		darwin.draw_line(0,z1,0,z1+zkh,darwin.pixel("#",true,false,darwin.cyan,darwin.cyan))
 		darwin.draw_line(darwin.get_width()-1,z2,darwin.get_width()-1,z2+zkh,darwin.pixel("#",true,false,darwin.pink,darwin.pink))

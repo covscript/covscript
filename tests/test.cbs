@@ -10,6 +10,5 @@ function main(start)
     end
     return i
 end
-runtime.info()
 system.print("Please enter the start:")
 system.println("Result:",main(system.input()))

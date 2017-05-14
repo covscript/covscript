@@ -30,7 +30,7 @@ end
 
 function main()
 	darwin.load()
-	while(true)
+	loop
 		darwin.fit_drawable()
 		darwin.clear_drawable()
 		darwin.draw_string(0,0,"Simple Sandbox",darwin.pixel(" ", true,false, darwin.black, darwin.white))

@@ -259,7 +259,7 @@ namespace cov_basic {
 		}
 		runtime->storage.remove_domain();
 	}
-	void statement_until::run()
+	void statement_loop::run()
 	{
 		runtime->storage.add_domain();
 		do {
@@ -291,7 +291,7 @@ namespace cov_basic {
 				}
 			}
 		}
-		while(parse_expr(mTree.root()).const_val<boolean>());
+		while(!(mExpr!=nullptr&&parse_expr(mExpr->get_tree().root()).const_val<boolean>()));
 		runtime->storage.remove_domain();
 	}
 	void statement_for::run()
@@ -643,10 +643,22 @@ namespace cov_basic {
 			}
 		});
 		// Until Grammar
-		translator.add_method({new token_action(action_types::until_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {grammar_type::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+		translator.add_method({new token_action(action_types::until_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {grammar_type::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				return new statement_until(dynamic_cast<token_expr*>(raw.front().at(1)),raw.front().back());
+			}
+		});
+		// Loop Grammar
+		translator.add_method({new token_action(action_types::loop_),new token_endline(0)},method_type {grammar_type::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
-				return new statement_until(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),body,raw.front().back());
+				if(body.back()->get_type()==statement_types::until_)
+				{
+					token_expr* expr=dynamic_cast<statement_until*>(body.back())->get_expr();
+					body.pop_back();
+					return new statement_loop(expr,body,raw.front().back());
+				}
+				else
+					return new statement_loop(nullptr,body,raw.front().back());
 			}
 		});
 		// For Grammar

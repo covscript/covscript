@@ -16,7 +16,7 @@ function die()
 	str0.cut(7)
 	str0.append(".")
 	define str1="Press any key to continue..."
-	while(true)
+	loop
 		if(darwin.is_kb_hit())
 			darwin.get_kb_hit()
 			break
@@ -35,13 +35,9 @@ function gen_food()
 		food[0]=runtime.randint(0,darwin.get_width()-1)
 		food[1]=runtime.randint(0,darwin.get_height()-1)
 		is_fit=false
-		block
-			define i=0
-			while(i<size_of(snake_body))
-				if(snake_body[i][0]==food[0]&&snake_body[i][1]==food[1])
-					is_fit=true
-				end
-				++i
+		for i=0 to size_of(snake_body)-1
+			if(snake_body[i][0]==food[0]&&snake_body[i][1]==food[1])
+				is_fit=true
 			end
 		end
 	end
@@ -49,16 +45,12 @@ end
 
 function start()
 	snake_head={init_long,to_integer(0.5*darwin.get_height())}
-	block
-		define i=0
-		while(i<init_long-1)
-			snake_body.push_back({snake_head[0]-i,snake_head[1]})
-			++i
-		end
+	for i=0 to init_long-2
+		snake_body.push_back({snake_head[0]-i,snake_head[1]})
 	end
 	gen_food()
 	define frame=0
-	while(true)
+	loop
 		if(darwin.is_kb_hit())
 			define ch=darwin.get_kb_hit()
 			if(ch==to_ascii("w"))
@@ -115,14 +107,10 @@ function start()
 				end
 			end
 			if(!god_mode)
-				block
-					define i=0
-					while(i<size_of(snake_body))
-						if(snake_body[i][0]==snake_head[0]&&snake_body[i][1]==snake_head[1])
-							die()
-							return 0
-						end
-						++i
+				for i=0 to size_of(snake_body)-1
+					if(snake_body[i][0]==snake_head[0]&&snake_body[i][1]==snake_head[1])
+						die()
+						return 0
 					end
 				end
 			end
@@ -136,12 +124,8 @@ function start()
 			frame=0
 		end
 		darwin.clear_drawable()
-		block
-			define i=0
-			while(i<size_of(snake_body))
-				darwin.draw_point(snake_body[i][0],snake_body[i][1],body_pix)
-				++i
-			end
+		for i=0 to size_of(snake_body)-1
+			darwin.draw_point(snake_body[i][0],snake_body[i][1],body_pix)
 		end
 		darwin.draw_point(snake_head[0],snake_head[1],head_pix)
 		darwin.draw_point(food[0],food[1],food_pix)
@@ -153,7 +137,7 @@ end
 runtime.delay(500)
 darwin.load()
 darwin.fit_drawable()
-while(true)
+loop
 	snake_body.clear()
 	heading=2
 	start()
