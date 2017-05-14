@@ -798,6 +798,8 @@ namespace cov_basic {
 		for(auto& ptr:statements) {
 			try {
 				ptr->run();
+				if(break_block||continue_block)
+					throw syntax_error("Can not run break or continue outside the loop.");
 			}
 			catch(const syntax_error& se) {
 				throw syntax_error(ptr->get_line_num(),se.what());
