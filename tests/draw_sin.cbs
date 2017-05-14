@@ -7,7 +7,7 @@ function main()
     darwin.clear_drawable()
     define x=0
     define i=0
-    while(true)
+    loop
         darwin.fit_drawable()
         darwin.clear_drawable()
         i=0

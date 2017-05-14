@@ -1,18 +1,15 @@
 function split(str)
 	define arr as array
 	define tmp as string
-	define i=0
-	while(i<size_of(str))
+	for i=0 to size_of(str)-1
 		if(str[i]==to_ascii(" "))
 			if(size_of(tmp)!=0)
 				arr.push_back(tmp)
 				tmp.clear()
 			end
-			++i
 			continue
 		end
 		tmp.append(to_char(str[i]))
-		++i
 	end
 	if(size_of(tmp)!=0)
 		arr.push_back(tmp)
@@ -21,9 +18,7 @@ function split(str)
 	return arr
 end
 define r=split(system.getline())
-define i=0
-while(i<size_of(r))
+for i=0 to size_of(r)-1
 	system.print("#",r[i],"#")
-	++i
 end
 system.println()

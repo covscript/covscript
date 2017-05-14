@@ -280,7 +280,7 @@ namespace cov_basic {
 	}
 	void translate_into_statements(std::deque<token_base*>& tokens,std::deque<statement_base*>& statements);
 	enum class statement_types {
-		expression_,import_,block_,define_,if_,else_,switch_,case_,default_,while_,until_,for_,break_,continue_,struct_,function_,return_,end_
+		expression_,import_,block_,define_,if_,else_,switch_,case_,default_,while_,until_,loop_,for_,break_,continue_,struct_,function_,return_,end_
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;
@@ -516,14 +516,32 @@ namespace cov_basic {
 		virtual void run() override;
 	};
 	class statement_until final:public statement_base {
-		cov::tree<token_base*> mTree;
-		std::deque<statement_base*> mBlock;
+		token_expr* mExpr=nullptr;
 	public:
 		statement_until()=delete;
-		statement_until(const cov::tree<token_base*>& tree,const std::deque<statement_base*>& b,token_base* ptr):statement_base(ptr),mTree(tree),mBlock(b) {}
+		statement_until(token_expr* expr,token_base* ptr):statement_base(ptr),mExpr(expr) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::until_;
+		}
+		token_expr* get_expr() const
+		{
+			return mExpr;
+		}
+		virtual void run() override
+		{
+			throw syntax_error("Standalone until is not support.");
+		}
+	};
+	class statement_loop final:public statement_base {
+		token_expr* mExpr=nullptr;
+		std::deque<statement_base*> mBlock;
+	public:
+		statement_loop()=delete;
+		statement_loop(token_expr* expr,const std::deque<statement_base*>& b,token_base* ptr):statement_base(ptr),mExpr(expr),mBlock(b) {}
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::loop_;
 		}
 		virtual void run() override;
 	};

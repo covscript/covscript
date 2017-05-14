@@ -9,7 +9,7 @@ define pix=darwin.pixel("+",true,false,darwin.blue,darwin.black)
 function f(x)
   return x^2
 end
-while(true)
+loop
   darwin.fit_drawable()
   darwin.clear_drawable()
   if(darwin.is_kb_hit())

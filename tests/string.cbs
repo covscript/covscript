@@ -2,7 +2,7 @@ system.print("Please enter a string:")
 define str=system.getline()
 darwin.load()
 define pix=darwin.pixel(" ",true,false,darwin.white,darwin.black)
-while(true)
+loop
 	darwin.fit_drawable()
 	darwin.clear_drawable()
 	darwin.draw_string(0.5*(darwin.get_width()-size_of(str)),0.5*darwin.get_height(),str,pix)

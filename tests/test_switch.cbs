@@ -1,4 +1,4 @@
-while(true)
+loop
     switch(system.input())
         case 10
             system.println("10!")
