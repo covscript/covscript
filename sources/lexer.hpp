@@ -181,7 +181,7 @@ namespace cov_basic {
 		{"null",[]()->token_base*{return new token_value(linker());}},{"true",[]()->token_base*{return new token_value(true);}},{"false",[]()->token_base*{return new token_value(false);}}
 	};
 	mapping<char,char> escape_map= {
-		{'a','\a'},{'b','\b'},{'f','\f'},{'n','\n'},{'r','\r'},{'t','\t'},{'v','\v'},{'\\','\\'},{'\"','\"'},{'0','\0'}
+		{'a','\a'},{'b','\b'},{'f','\f'},{'n','\n'},{'r','\r'},{'t','\t'},{'v','\v'},{'\\','\\'},{'\'','\''},{'\"','\"'},{'0','\0'}
 	};
 	char signals[]= {
 		'+','-','*','/','%','^',',','.','>','<','=','&','|','!','(',')','[',']','{','}'
@@ -199,9 +199,33 @@ namespace cov_basic {
 			throw syntax_error("Received empty character buffer.");
 		std::string tmp;
 		token_types type=token_types::null;
+		bool inside_char=false;
 		bool inside_str=false;
 		bool escape=false;
 		for(std::size_t i=0; i<buff.size();) {
+			if(inside_char) {
+				if(escape) {
+					tmp+=escape_map.match(buff[i]);
+					escape=false;
+				}
+				else if(buff[i]=='\\') {
+					escape=true;
+				}
+				else if(buff[i]=='\'') {
+					if(tmp.empty())
+						throw syntax_error("Do not allow empty character.");
+					if(tmp.size()>1)
+						throw syntax_error("Char must be a single character.");
+					tokens.push_back(new token_value(tmp[0]));
+					tmp.clear();
+					inside_char=false;
+				}
+				else {
+					tmp+=buff[i];
+				}
+				++i;
+				continue;
+			}
 			if(inside_str) {
 				if(escape) {
 					tmp+=escape_map.match(buff[i]);
@@ -225,6 +249,11 @@ namespace cov_basic {
 			case token_types::null:
 				if(buff[i]=='\"') {
 					inside_str=true;
+					++i;
+					continue;
+				}
+				if(buff[i]=='\'') {
+					inside_char=true;
 					++i;
 					continue;
 				}
@@ -309,6 +338,8 @@ namespace cov_basic {
 				break;
 			}
 		}
+		if(inside_char)
+			throw syntax_error("Lack of the \'.");
 		if(inside_str)
 			throw syntax_error("Lack of the \".");
 		if(tmp.empty())
