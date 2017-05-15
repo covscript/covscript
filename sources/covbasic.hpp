@@ -453,16 +453,6 @@ namespace cov_basic {
 			throw syntax_error("Wrong size of arguments.");
 		return args.front().to_string();
 	}
-	cov::any to_ascii(array& args)
-	{
-		arglist::check<string>(args);
-		return number(args.at(0).const_val<string>().at(0));
-	}
-	cov::any to_char(array& args)
-	{
-		arglist::check<number>(args);
-		return cov::any::make<string>(1,args.at(0).const_val<number>());
-	}
 	cov::any is_number(array& args)
 	{
 		if(args.size()!=1)
@@ -713,6 +703,7 @@ namespace cov_basic {
 			}
 		});
 		// Internal Types
+		runtime->storage.add_type("char",[]()->cov::any {return cov::any::make<char>('\0');},cov::hash<std::string>(typeid(char).name()));
 		runtime->storage.add_type("number",[]()->cov::any {return cov::any::make<number>(0);},cov::hash<std::string>(typeid(number).name()));
 		runtime->storage.add_type("boolean",[]()->cov::any {return cov::any::make<boolean>(true);},cov::hash<std::string>(typeid(boolean).name()));
 		runtime->storage.add_type("string",[]()->cov::any {return cov::any::make<string>();},cov::hash<std::string>(typeid(string).name()));
@@ -722,8 +713,6 @@ namespace cov_basic {
 		// Add Internal Functions to storage
 		add_function(to_integer);
 		add_function(to_string);
-		add_function(to_ascii);
-		add_function(to_char);
 		add_function(is_number);
 		add_function(is_boolean);
 		add_function(is_string);

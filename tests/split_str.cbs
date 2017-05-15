@@ -1,15 +1,34 @@
+function isspace(ch)
+	switch ch
+		case ' '
+			return true
+		end
+		case '\t'
+			return true
+		end
+		case '\r'
+			return true
+		end
+		case '\n'
+			return true
+		end
+		default
+			return false
+		end
+	end
+end
 function split(str)
 	define arr as array
 	define tmp as string
 	for i=0 to size_of(str)-1
-		if(str[i]==to_ascii(" "))
+		if(isspace(str[i]))
 			if(size_of(tmp)!=0)
 				arr.push_back(tmp)
 				tmp.clear()
 			end
 			continue
 		end
-		tmp.append(to_char(str[i]))
+		tmp.append(str[i])
 	end
 	if(size_of(tmp)!=0)
 		arr.push_back(tmp)

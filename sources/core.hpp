@@ -14,7 +14,7 @@
 #include <cmath>
 #include <deque>
 namespace cov_basic {
-	const std::string version="2.1.4.2";
+	const std::string version="2.1.4.3";
 	class syntax_error final:public std::exception {
 		std::string mWhat="Covariant Basic Syntax Error";
 	public:
@@ -289,5 +289,11 @@ namespace cov {
 	{
 		for(auto& it:val)
 			it.second.clone();
+	}
+}
+namespace std {
+	template<>std::string to_string<char>(const char& c)
+	{
+		return std::move(std::string(1,c));
 	}
 }

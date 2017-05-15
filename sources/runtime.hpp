@@ -581,7 +581,7 @@ namespace cov_basic {
 		else if(a.type()==typeid(string)) {
 			if(b.type()!=typeid(number))
 				throw syntax_error("Index must be a number.");
-			return number(a.const_val<string>().at(b.const_val<number>()));
+			return a.const_val<string>().at(b.const_val<number>());
 		}
 		else
 			throw syntax_error("Access non-array or string object.");
