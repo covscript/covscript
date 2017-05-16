@@ -6,13 +6,13 @@ function main()
 	darwin.load()
 	system.println("Please set the \"up\" key.Default key is 'A'.Press enter to skip.")
 	define key_up=darwin.get_kb_hit()
-	if(key_up==to_ascii("\n")||key_up==to_ascii("\r"))
-		key_up=to_ascii("a")
+	if(key_up=='\n'||key_up=='\r')
+		key_up='a'
 	end
 	system.println("Please set the \"down\" key.Default key is 'Z'.Press enter to skip.")
 	define key_down=darwin.get_kb_hit()
-	if(key_down==to_ascii("\n")||key_down==to_ascii("\r"))
-		key_down=to_ascii("z")
+	if(key_down=='\n'||key_down=='\r')
+		key_down='z'
 	end
 	define num3={1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1}
 	define num2={1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1}
@@ -29,7 +29,7 @@ function main()
 			define c=0
 			while(c<w)
 				if(ch[r*6+c]==1)
-					darwin.draw_point(c+x,r+y,darwin.pixel(" ",true,false,darwin.red,darwin.red))
+					darwin.draw_point(c+x,r+y,darwin.pixel(' ',true,false,darwin.red,darwin.red))
 				end
 				++c
 			end
@@ -37,16 +37,16 @@ function main()
 		end
 	end
 	darwin.update_drawable()
-	darwin.fill_drawable(darwin.pixel(" ",true,false, darwin.white,darwin.white))
+	darwin.fill_drawable(darwin.pixel(' ',true,false, darwin.white,darwin.white))
 	draw_ch(num3,6,5,0.5*darwin.get_width()-3,0.5*darwin.get_height()-2.5)
 	darwin.update_drawable()
-	darwin.fill_drawable(darwin.pixel(" ",true,false, darwin.white,darwin.white))
+	darwin.fill_drawable(darwin.pixel(' ',true,false, darwin.white,darwin.white))
 	draw_ch(num2,6,5,0.5*darwin.get_width()-3,0.5*darwin.get_height()-2.5)
 	darwin.update_drawable()
-	darwin.fill_drawable(darwin.pixel(" ",true,false, darwin.white,darwin.white))
+	darwin.fill_drawable(darwin.pixel(' ',true,false, darwin.white,darwin.white))
 	draw_ch(num1,6,5,0.5*darwin.get_width()-3,0.5*darwin.get_height()-2.5)
 	darwin.update_drawable()
-	darwin.fill_drawable(darwin.pixel(" ",true,false, darwin.white,darwin.white))
+	darwin.fill_drawable(darwin.pixel(' ',true,false, darwin.white,darwin.white))
 	draw_ch(chG,6,5,0.5*darwin.get_width()-10,0.5*darwin.get_height()-2.5)
 	draw_ch(chO,6,5,0.5*darwin.get_width()-2,0.5*darwin.get_height()-2.5)
 	draw_ch(chExc,6,5,0.5*darwin.get_width()+5,0.5*darwin.get_height()-2.5)
@@ -63,9 +63,9 @@ function main()
 	define yj=true
 	define delay_frame=0
 	loop
-		darwin.fill_drawable(darwin.pixel(" ",true,false,darwin.white,darwin.blue))
-		darwin.draw_line(0,z1,0,z1+zkh,darwin.pixel("#",true,false,darwin.cyan,darwin.cyan))
-		darwin.draw_line(darwin.get_width()-1,z2,darwin.get_width()-1,z2+zkh,darwin.pixel("#",true,false,darwin.pink,darwin.pink))
+		darwin.fill_drawable(darwin.pixel(' ',true,false,darwin.white,darwin.blue))
+		darwin.draw_line(0,z1,0,z1+zkh,darwin.pixel('#',true,false,darwin.cyan,darwin.cyan))
+		darwin.draw_line(darwin.get_width()-1,z2,darwin.get_width()-1,z2+zkh,darwin.pixel('#',true,false,darwin.pink,darwin.pink))
 		if(delay_frame>jump_frame)
 			delay_frame=0
 			if(x<=1)
@@ -130,11 +130,11 @@ function main()
 				end
 			end
 		end
-		darwin.draw_point(x,y,darwin.pixel("@",true,false,darwin.red,darwin.yellow))
+		darwin.draw_point(x,y,darwin.pixel('@',true,false,darwin.red,darwin.yellow))
 		define info=to_string(score)
 		info.cut(7)
 		info="Score:"+info
-		darwin.draw_string(0,0,info,darwin.pixel(" ",true,false,darwin.white,darwin.black))
+		darwin.draw_string(0,0,info,darwin.pixel(' ',true,false,darwin.white,darwin.black))
 		darwin.update_drawable()
 	end
 #结束后处理得分

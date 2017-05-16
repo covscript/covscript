@@ -1,6 +1,6 @@
-define head_pix=darwin.pixel("#",true,false,darwin.white,darwin.black)
-define body_pix=darwin.pixel("+",true,false,darwin.white,darwin.black)
-define food_pix=darwin.pixel("@",true,false,darwin.white,darwin.black)
+define head_pix=darwin.pixel('#',true,false,darwin.white,darwin.black)
+define body_pix=darwin.pixel('+',true,false,darwin.white,darwin.black)
+define food_pix=darwin.pixel('@',true,false,darwin.white,darwin.black)
 define snake_body={}
 define snake_head={0,0}
 define food={0,0}
@@ -22,9 +22,9 @@ function die()
 			break
 		end
 		darwin.clear_drawable()
-		darwin.fill_drawable(darwin.pixel(" ",true,false,darwin.white,darwin.red))
-		darwin.draw_string(0.5*(darwin.get_width()-size_of(str0)),0.5*darwin.get_height(),str0,darwin.pixel(" ",true,false,darwin.white,darwin.red))
-		darwin.draw_string(0.5*(darwin.get_width()-size_of(str1)),darwin.get_height()-1,str1,darwin.pixel(" ",true,false,darwin.white,darwin.red))
+		darwin.fill_drawable(darwin.pixel(' ',true,false,darwin.white,darwin.red))
+		darwin.draw_string(0.5*(darwin.get_width()-size_of(str0)),0.5*darwin.get_height(),str0,darwin.pixel(' ',true,false,darwin.white,darwin.red))
+		darwin.draw_string(0.5*(darwin.get_width()-size_of(str1)),darwin.get_height()-1,str1,darwin.pixel(' ',true,false,darwin.white,darwin.red))
 		darwin.update_drawable()
 	end
 end
@@ -52,40 +52,43 @@ function start()
 	define frame=0
 	loop
 		if(darwin.is_kb_hit())
-			define ch=darwin.get_kb_hit()
-			if(ch==to_ascii("w"))
-				if(god_mode||heading!=-2)
-					heading=-1
+			switch darwin.get_kb_hit()
+				case 'w'
+					if(god_mode||heading!=-2)
+						heading=3
+					end
 				end
-			end
-			if(ch==to_ascii("s"))
-				if(god_mode||heading!=-1)
-					heading=-2
+				case 's'
+					if(god_mode||heading!=-1)
+						heading=4
+					end
 				end
-			end
-			if(ch==to_ascii("a"))
-				if(god_mode||heading!=2)
-					heading=1
+				case 'a'
+					if(god_mode||heading!=2)
+						heading=1
+					end
 				end
-			end
-			if(ch==to_ascii("d"))
-				if(god_mode||heading!=1)
-					heading=2
+				case 'd'
+					if(god_mode||heading!=1)
+						heading=2
+					end
 				end
 			end
 		end
 		if(frame==hard)
-			if(heading==1)
-				--snake_head[0]
-			end
-			if(heading==2)
-				++snake_head[0]
-			end
-			if(heading==-1)
-				--snake_head[1]
-			end
-			if(heading==-2)
-				++snake_head[1]
+			switch heading
+				case 1
+					--snake_head[0]
+				end
+				case 2
+					++snake_head[0]
+				end
+				case 3
+					--snake_head[1]
+				end
+				case 4
+					++snake_head[1]
+				end
 			end
 			if(cross_wall)
 				if(snake_head[0]<0)

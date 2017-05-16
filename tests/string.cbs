@@ -1,7 +1,7 @@
 system.print("Please enter a string:")
 define str=system.getline()
 darwin.load()
-define pix=darwin.pixel(" ",true,false,darwin.white,darwin.black)
+define pix=darwin.pixel(' ',true,false,darwin.white,darwin.black)
 loop
 	darwin.fit_drawable()
 	darwin.clear_drawable()
