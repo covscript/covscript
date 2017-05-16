@@ -33,7 +33,7 @@ function main()
 	loop
 		darwin.fit_drawable()
 		darwin.clear_drawable()
-		darwin.draw_string(0,0,"Simple Sandbox",darwin.pixel(" ", true,false, darwin.black, darwin.white))
+		darwin.draw_string(0,0,"Simple Sandbox",darwin.pixel(' ', true,false, darwin.black, darwin.white))
 		if(posit_x<0)
 			speed_x=math.abs(speed_x)
 		end
@@ -47,7 +47,7 @@ function main()
 			speed_y=-math.abs(speed_y)
 		end
 		run()
-		darwin.draw_point(posit_x,posit_y,darwin.pixel("@", true,false, darwin.white, darwin.black))
+		darwin.draw_point(posit_x,posit_y,darwin.pixel('@', true,false, darwin.white, darwin.black))
 		darwin.update_drawable()
 	end
 end

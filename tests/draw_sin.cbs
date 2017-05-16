@@ -2,18 +2,15 @@ define fd=10
 function main()
     darwin.load()
     darwin.set_frame_limit(60)
-    define pix=darwin.pixel("@",true,false,darwin.blue,darwin.white)
+    define pix=darwin.pixel('@',true,false,darwin.blue,darwin.white)
     darwin.fit_drawable()
     darwin.clear_drawable()
     define x=0
-    define i=0
     loop
         darwin.fit_drawable()
         darwin.clear_drawable()
-        i=0
-        while(i<darwin.get_width())
+        for i=0 to darwin.get_width()-1
             darwin.draw_point(i,0.5*(darwin.get_height()+math.sin((i+x)/fd)*darwin.get_height()),pix)
-            ++i
         end
         darwin.update_drawable()
         ++x

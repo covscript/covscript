@@ -5,7 +5,7 @@ define zoom=5
 define dzoom=1
 define center_x=0
 define center_y=0
-define pix=darwin.pixel("+",true,false,darwin.blue,darwin.black)
+define pix=darwin.pixel('+',true,false,darwin.blue,darwin.black)
 function f(x)
   return x^2
 end
@@ -13,60 +13,59 @@ loop
   darwin.fit_drawable()
   darwin.clear_drawable()
   if(darwin.is_kb_hit())
-    define ch=darwin.get_kb_hit()
-    if(ch==to_ascii("w"))
-      ++y_offset
-    end
-    if(ch==to_ascii("s"))
-      --y_offset
-    end
-    if(ch==to_ascii("a"))
-      ++x_offset
-    end
-    if(ch==to_ascii("d"))
-      --x_offset
-    end
-    if(ch==to_ascii("q"))
-      zoom=zoom+dzoom
-    end
-    if(ch==to_ascii("e"))
-    	if(zoom>2)
-    		zoom=zoom-dzoom
+    switch darwin.get_kb_hit()
+    	case 'w'
+			++y_offset
+    	end
+    	case 's'
+    	  --y_offset
+    	end
+    	case 'a'
+    	  ++x_offset
+    	end
+    	case 'd'
+    	  --x_offset
+    	end
+    	case 'q'
+    	  zoom=zoom+dzoom
+    	end
+    	case 'e'
+    		if(zoom>2)
+    			zoom=zoom-dzoom
+    		end
     	end
     end
   end
   center_x=0.5*darwin.get_width()
   center_y=0.5*darwin.get_height()
-  define i=0
-  while(i<darwin.get_width()-1)
+  for i=0 to darwin.get_width()-2
     darwin.draw_line(i,center_y-f((i-center_x-x_offset)/(2*zoom))*zoom+y_offset,i+1,center_y-f((i+1-center_x-x_offset)/(2*zoom))*zoom+y_offset,pix)
-    ++i
   end
-  darwin.draw_line(0,center_y+y_offset,darwin.get_width()-1,center_y+y_offset,darwin.pixel("-",true,false,darwin.white,darwin.black))
-  darwin.draw_line(center_x+x_offset,0,center_x+x_offset,darwin.get_height()-1,darwin.pixel("|",true,false,darwin.white,darwin.black))
-  darwin.draw_point(center_x+x_offset,center_y+y_offset,darwin.pixel("+",true,false,darwin.white,darwin.black))
-  darwin.draw_point(center_x+x_offset,0,darwin.pixel("^",true,false,darwin.white,darwin.black))
-  darwin.draw_point(darwin.get_width()-1,center_y+y_offset,darwin.pixel(">",true,false,darwin.white,darwin.black))
-  i=-to_integer((center_x+x_offset)/(zoom*2))
+  darwin.draw_line(0,center_y+y_offset,darwin.get_width()-1,center_y+y_offset,darwin.pixel('-',true,false,darwin.white,darwin.black))
+  darwin.draw_line(center_x+x_offset,0,center_x+x_offset,darwin.get_height()-1,darwin.pixel('|',true,false,darwin.white,darwin.black))
+  darwin.draw_point(center_x+x_offset,center_y+y_offset,darwin.pixel('+',true,false,darwin.white,darwin.black))
+  darwin.draw_point(center_x+x_offset,0,darwin.pixel('^',true,false,darwin.white,darwin.black))
+  darwin.draw_point(darwin.get_width()-1,center_y+y_offset,darwin.pixel('>',true,false,darwin.white,darwin.black))
+  define i=-to_integer((center_x+x_offset)/(zoom*2))
   while(center_x+x_offset+2*i*zoom<darwin.get_width()-1)
   	if(i!=0)
-  		darwin.draw_point(center_x+x_offset+2*i*zoom,center_y+y_offset,darwin.pixel("|",true,false,darwin.white,darwin.black))
+  		darwin.draw_point(center_x+x_offset+2*i*zoom,center_y+y_offset,darwin.pixel('|',true,false,darwin.white,darwin.black))
   		define str=to_string(i)
   		str.cut(7)
-  		darwin.draw_string(center_x+x_offset+2*i*zoom-0.5*size_of(str),center_y+y_offset+1,str,darwin.pixel(" ",true,false,darwin.white,darwin.black))
+  		darwin.draw_string(center_x+x_offset+2*i*zoom-0.5*size_of(str),center_y+y_offset+1,str,darwin.pixel(' ',true,false,darwin.white,darwin.black))
 	end
 	++i
   end
-  i=to_integer((center_y-y_offset)/zoom)
+  define i=to_integer((center_y-y_offset)/zoom)
   while(center_y+y_offset+i*zoom>0)
 	if(i!=0)
-  		darwin.draw_point(center_x+x_offset,center_y+y_offset+i*zoom,darwin.pixel("-",true,false,darwin.white,darwin.black))
+  		darwin.draw_point(center_x+x_offset,center_y+y_offset+i*zoom,darwin.pixel('-',true,false,darwin.white,darwin.black))
   		define str=to_string(-i)
   		str.cut(7)
-  		darwin.draw_string(center_x+x_offset-size_of(str),center_y+y_offset+i*zoom,str,darwin.pixel(" ",true,false,darwin.white,darwin.black))
+  		darwin.draw_string(center_x+x_offset-size_of(str),center_y+y_offset+i*zoom,str,darwin.pixel(' ',true,false,darwin.white,darwin.black))
 	end
 	--i
   end
-  darwin.draw_string(0,0,"Sketchpad",darwin.pixel(" ",true,false,darwin.black,darwin.white))
+  darwin.draw_string(0,0,"Sketchpad",darwin.pixel(' ',true,false,darwin.black,darwin.white))
   darwin.update_drawable()
 end

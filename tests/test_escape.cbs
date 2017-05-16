@@ -1,7 +1,8 @@
 define str="\t\"hello\"\n\tworld"
 for i=0 to size_of(str)-1
-  if(str[i]==to_ascii("\t"))
+  if(str[i]=='\t')
     system.println("Boom!")
   end
-  system.print(to_char(str[i]))
+  system.print(str[i])
 end
+system.println()

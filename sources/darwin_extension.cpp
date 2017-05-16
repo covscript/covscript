@@ -168,11 +168,11 @@ namespace darwin_cbs_ext {
 	}
 	cov::any get_kb_hit(array& args)
 	{
-		return number(darwin::runtime.get_kb_hit());
+		return char(darwin::runtime.get_kb_hit());
 	}
 	cov::any pixel(array& args)
 	{
-		return darwin::pixel(args.at(0).const_val<std::string>().at(0),args.at(1).const_val<bool>(),args.at(2).const_val<bool>(),args.at(3).const_val<darwin::colors>(),args.at(4).const_val<darwin::colors>());
+		return darwin::pixel(args.at(0).const_val<char>(),args.at(1).const_val<bool>(),args.at(2).const_val<bool>(),args.at(3).const_val<darwin::colors>(),args.at(4).const_val<darwin::colors>());
 	}
 	cov::any picture(array& args)
 	{
