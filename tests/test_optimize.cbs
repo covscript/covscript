@@ -1,0 +1,8 @@
+switch system.input()
+	case "Hello"+"!"
+		system.println("Ok")
+	end
+	case (2*(3+2))^2
+		system.println("100")
+	end
+end

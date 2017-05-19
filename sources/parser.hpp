@@ -79,6 +79,7 @@ namespace cov_basic {
 	void kill_brackets(std::deque<token_base*>&);
 	void gen_tree(cov::tree<token_base*>&,std::deque<token_base*>&);
 	void kill_expr(std::deque<token_base*>&);
+	void optimize_expression(cov::tree<token_base*>&);
 
 	void kill_brackets(std::deque<token_base*>& tokens)
 	{
@@ -257,6 +258,7 @@ namespace cov_basic {
 			std::deque<token_base*> signals,objects;
 			split_token(raw,signals,objects);
 			build_tree(tree,signals,objects);
+			optimize_expression(tree);
 		}
 	}
 	void kill_expr(std::deque<token_base*>& tokens)
