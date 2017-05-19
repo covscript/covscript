@@ -5,4 +5,7 @@ switch system.input()
 	case (2*(3+2))^2
 		system.println("100")
 	end
+	case -1
+		system.println("-1")
+	end
 end
