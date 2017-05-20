@@ -154,7 +154,8 @@ namespace cov {
 				int result=check_types<ArgTypes...>(1,this->mTypes.begin());
 				if(result!=-1)
 					throw std::invalid_argument("E0008.At "+std::to_string(result)+".Expected "+get_type<ArgTypes...>(result,1));
-			} else
+			}
+			else
 				throw cov::error("E0009.Expected "+std::to_string(count_types<ArgTypes...>()));
 		}
 	};
