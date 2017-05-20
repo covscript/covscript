@@ -258,8 +258,8 @@ namespace cov_basic {
 			std::deque<token_base*> signals,objects;
 			split_token(raw,signals,objects);
 			build_tree(tree,signals,objects);
-			optimize_expression(tree);
 		}
+		optimize_expression(tree);
 	}
 	void kill_expr(std::deque<token_base*>& tokens)
 	{
