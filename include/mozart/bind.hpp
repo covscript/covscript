@@ -39,13 +39,14 @@ namespace cov {
 		return dat;
 	}
 	template<int N,typename...Args>
-	auto select(placeholder<N>& ph,cov::tuple<Args...>& t)->typename cov::add_reference<typename cov::tuple_random_iterator<N-1,Args...>::type>::type {
+	auto select(placeholder<N>& ph,cov::tuple<Args...>& t)->typename cov::add_reference<typename cov::tuple_random_iterator<N-1,Args...>::type>::type
+	{
 		return cov::tuple_random_iterator<N-1,Args...>::get(t);
 	}
 	template<typename T>struct resolver;
 	template<typename rT,typename...ArgsT>struct resolver<rT(*)(ArgsT...)> {
-	    using return_type=rT;
-	    using args_type=cov::tuple<ArgsT...>;
+		using return_type=rT;
+		using args_type=cov::tuple<ArgsT...>;
 	};
 	template<int N,typename...Args>typename cov::add_reference<typename cov::tuple_random_iterator<N,Args...>::type>::type get(cov::tuple<Args...>& t)
 	{

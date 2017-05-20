@@ -323,7 +323,8 @@ namespace cov {
 				if(mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
 					delete mDat->data;
 					mDat->data=obj.mDat->data->duplicate();
-				} else {
+				}
+				else {
 					recycle();
 					if(obj.mDat!=nullptr)
 						mDat=new proxy(1,obj.mDat->data->duplicate());
@@ -337,7 +338,8 @@ namespace cov {
 			if(raw) {
 				delete mDat->data;
 				mDat->data=new holder<T>(dat);
-			} else {
+			}
+			else {
 				recycle();
 				mDat=new proxy(1,new holder<T>(dat));
 			}
