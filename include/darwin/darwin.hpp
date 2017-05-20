@@ -158,7 +158,8 @@ void darwin::darwin_rt::load(const std::string& file)
 	if(get_state()!=status::leisure) Darwin_Error("Adapter Busy.");
 	if(wait_for_module()&&m_module->get_state()==status::leisure) {
 		if(m_module->load_module(file)==results::failure) Darwin_Error("Adapter returns failure.");
-	} else
+	}
+	else
 		Darwin_Error("Adapter Busy.");
 	m_platform=m_module->get_platform_adapter();
 	m_platform->init();

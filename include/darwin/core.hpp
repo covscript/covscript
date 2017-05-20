@@ -189,11 +189,13 @@ namespace darwin {
 				double k1(double(x3-x1)/double(y3-y1)),k2(double(x3-x2)/double(y3-y2));
 				for(int y=0; y<=y3-y2; ++y)
 					this->draw_line(x1+k1*y,y1+y,x2+k2*y,y2+y,pix);
-			} else if(y2==y3) {
+			}
+			else if(y2==y3) {
 				double k1(double(x3-x1)/double(y3-y1)),k2(double(x2-x1)/double(y2-y1));
 				for(int y=0; y<=y2-y1; ++y)
 					this->draw_line(x1+k1*y,y1+y,x1+k2*y,y1+y,pix);
-			} else {
+			}
+			else {
 				double k1(double(x3-x1)/double(y3-y1)),k2(double(x3-x2)/double(y3-y2)),k3(double(x2-x1)/double(y2-y1));
 				for(int y=0; y<=y3-y1; ++y) {
 					if(y<y2-y1)
