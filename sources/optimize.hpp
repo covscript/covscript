@@ -20,13 +20,42 @@ namespace cov_basic {
 	{
 		if(!it.usable())
 			return;
-		if(it.data()!=nullptr&&it.data()->get_type()==token_types::expr) {
+		token_base* token=it.data();
+		if(token==nullptr)
+			return;
+		switch(token->get_type()) {
+		case token_types::expr: {
 			cov::tree<token_base*>& t=dynamic_cast<token_expr*>(it.data())->get_tree();
 			optimize_expression(t);
 			if(optimizable(t.root())) {
 				it.data()=t.root().data();
 			}
 			return;
+			break;
+		}
+		case token_types::array: {
+			bool is_optimizable=true;
+			for(auto& tree:dynamic_cast<token_array*>(token)->get_array()) {
+				optimize_expression(tree);
+				if(is_optimizable&&!optimizable(tree.root()))
+					is_optimizable=false;
+			}
+			if(is_optimizable) {
+				array arr;
+				for(auto& tree:dynamic_cast<token_array*>(token)->get_array())
+					arr.push_back(parse_expr(tree.root()));
+				token_value* token=new token_value(arr);
+				it.data()=token;
+			}
+			return;
+			break;
+		}
+		case token_types::arglist: {
+			for(auto& tree:dynamic_cast<token_arglist*>(token)->get_arglist())
+				optimize_expression(tree);
+			return;
+			break;
+		}
 		}
 		opt_expr(tree,it.left());
 		opt_expr(tree,it.right());

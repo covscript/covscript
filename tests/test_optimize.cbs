@@ -8,4 +8,7 @@ switch system.input()
 	case -1
 		system.println("-1")
 	end
+	case {0,1,2}[2]
+		system.println("2")
+	end
 end
