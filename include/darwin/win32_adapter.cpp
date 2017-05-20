@@ -55,11 +55,11 @@ namespace darwin {
 			}
 			return results::success;
 		}
-		virtual bool is_kb_hit() noexcept
+		virtual bool is_kb_hit() noexcept override
 		{
 			return conio::kbhit();
 		}
-		virtual int get_kb_hit() noexcept
+		virtual int get_kb_hit() noexcept override
 		{
 			return conio::getch();
 		}

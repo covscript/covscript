@@ -30,7 +30,8 @@ namespace conio {
 			printf("\33[?25h");
 			newt.c_lflag |= ECHO;
 			newt.c_lflag |= ICANON;
-		} else {
+		}
+		else {
 			printf("\33[?25l");
 			newt.c_lflag &= ~ECHO;
 			newt.c_lflag &= ~ICANON;

@@ -108,31 +108,6 @@ namespace darwin {
 			this->mImage[y*this->mWidth+x]=pix;
 		}
 	};
-	class draw_pad final{
-		private:
-		picture mPic;
-		public:
-		draw_pad()=default;
-		draw_pad(std::size_t w,std::size_t h):mPic(w,h){}
-		draw_pad(std::size_t w,std::size_t h,const pixel& pix):mPic(w,h,pix){}
-		~draw_pad()=default;
-		std::size_t get_width() const
-		{
-			return 2*this->mPic.get_width();
-		}
-		std::size_t get_height() const
-		{
-			return this->mPic.get_height();
-		}
-		drawable* get_drawable()
-		{
-			return &mPic;
-		}
-		const drawable* get_drawable() const
-		{
-			return &mPic;
-		}
-	};
 	bool serial_picture(drawable* pic,std::deque<char>& dat)
 	{
 		if(pic==nullptr) return false;
@@ -294,7 +269,8 @@ namespace darwin {
 			if(x==w-1) {
 				x=0;
 				++y;
-			} else
+			}
+			else
 				++x;
 		}
 		return true;
