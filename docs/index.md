@@ -1,6 +1,14 @@
 # Covariant Basic Programming Language #
 **欢迎使用Covariant Basic编程语言！**  
 **Covariant Basic**是一种开源的跨平台编程语言
+## 语言特性 ##
+1. 完整的编译器前端
+2. 动态类型
+3. 编译期优化
+4. 语法，函数可扩展
+5. 引用计数垃圾回收器
+## 使用Covariant Basic编程语言 ##
+请访问[Covariant Basic Wiki](https://github.com/mikecovlee/covbasic/wiki)
 ## 下载与安装 ##
 ### Microsoft Windows ###
 请在[Release页面](https://github.com/mikecovlee/covbasic/releases/latest)下载预编译的可执行文件。你也可以使用MinGW或合适的工具直接编译源码，如你的系统中已经安装了G++编译器你可以直接执行`make.bat`，你需要确保编译器支持C++11标准。  
