@@ -427,8 +427,9 @@ namespace cov_basic {
 	}
 	cov::any parse_asi(cov::any a,cov::any b)
 	{
+		b.clone();
+		b.detach();
 		a.assign(b,true);
-		a.detach();
 		return a;
 	}
 	cov::any parse_link(const cov::any& a,const cov::any& b)
