@@ -1,0 +1,49 @@
+function swap(a,b)
+	define c=a
+	a=b
+	b=c
+end
+function quicksort(a,m,n)
+	if n<=m
+		return 0
+	end
+	define i=m-1
+	define j=n
+	define v=a[n]
+	loop
+		loop
+			++i
+			if i>=size_of(a)
+				break
+			end
+		until a[i]>=v
+		end
+		loop
+			--j
+			if j<0
+				break
+			end
+		until a[j]<=v
+		end
+		if i>=j
+			break
+		end
+		swap(a[i],a[j])
+		#system.println("Once")
+	end
+	swap(a[i],a[n])
+	quicksort(a,m,j)
+	quicksort(a,i+1,n)
+end
+loop
+	define a={}
+	for i=0 to 100
+		a.push_back(runtime.randint(0,100))
+	end
+	define ts=runtime.time()
+	quicksort(a,0,size_of(a)-1)
+	system.println("Time spend:",runtime.time()-ts)
+end
+#for i=0 to size_of(a)-1
+#	system.println(a[i])
+#end
