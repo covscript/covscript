@@ -617,15 +617,16 @@ namespace cov_basic {
 			for(auto& tree:dynamic_cast<token_array*>(token)->get_array()) {
 				cov::any val=parse_expr(tree.root());
 				val.clone();
+				val.detach();
 				arr.push_back(val);
 			}
-			return arr;
+			return cov::any::make<array>(std::move(arr));
 		}
 		case token_types::arglist: {
 			array arr;
 			for(auto& tree:dynamic_cast<token_arglist*>(token)->get_arglist())
 				arr.push_back(parse_expr(tree.root()));
-			return arr;
+			return cov::any::make<array>(std::move(arr));
 		}
 		case token_types::signal: {
 			token_signal* ps=dynamic_cast<token_signal*>(token);

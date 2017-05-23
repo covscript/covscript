@@ -272,6 +272,7 @@ namespace cov_basic {
 		if(val.type()==typeid(linker)) {
 			cov::any v=val.const_val<linker>().data;
 			v.clone();
+			v.detach();
 			return v;
 		}
 		val.clone();
@@ -283,12 +284,18 @@ namespace cov {
 	template<>void detach<cov_basic::array>(cov_basic::array& val)
 	{
 		for(auto& it:val)
+		{
 			it.clone();
+			it.detach();
+		}
 	}
 	template<>void detach<cov_basic::hash_map>(cov_basic::hash_map& val)
 	{
 		for(auto& it:val)
+		{
 			it.second.clone();
+			it.second.detach();
+		}
 	}
 }
 namespace std {
