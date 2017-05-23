@@ -1,7 +1,7 @@
 #ifndef CBS_STRING_EXT
-#include "./extension.hpp"
+#include "../extension.hpp"
 #endif
-#include "./arglist.hpp"
+#include "../arglist.hpp"
 static cov_basic::extension string_ext;
 namespace string_cbs_ext {
 	using namespace cov_basic;

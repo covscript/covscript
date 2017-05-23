@@ -1,9 +1,9 @@
 #define DARWIN_FORCE_BUILTIN
 #define DARWIN_IGNORE_WARNING
-#include "../include/darwin/darwin.hpp"
-#include "../include/mozart/switcher.hpp"
+#include "../../include/darwin/darwin.hpp"
+#include "../../include/mozart/switcher.hpp"
 #ifndef CBS_DARWIN_EXT
-#include "./extension.hpp"
+#include "../extension.hpp"
 #endif
 static cov_basic::extension darwin_ext;
 namespace darwin_cbs_ext {

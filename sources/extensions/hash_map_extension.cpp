@@ -1,7 +1,7 @@
 #ifndef CBS_HASH_MAP_EXT
-#include "./extension.hpp"
+#include "../extension.hpp"
 #endif
-#include "./arglist.hpp"
+#include "../arglist.hpp"
 static cov_basic::extension hash_map_ext;
 namespace hash_map_cbs_ext {
 	using namespace cov_basic;
