@@ -1,8 +1,3 @@
-function swap(a,b)
-	define c=a
-	a=b
-	b=c
-end
 function quicksort(a,m,n)
 	if n<=m
 		return 0
@@ -29,21 +24,18 @@ function quicksort(a,m,n)
 			break
 		end
 		swap(a[i],a[j])
-		#system.println("Once")
 	end
 	swap(a[i],a[n])
 	quicksort(a,m,j)
 	quicksort(a,i+1,n)
 end
-loop
-	define a={}
-	for i=0 to 100
-		a.push_back(runtime.randint(0,100))
-	end
-	define ts=runtime.time()
-	quicksort(a,0,size_of(a)-1)
-	system.println("Time spend:",runtime.time()-ts)
+define a={}
+for i=0 to 100
+	a.push_back(runtime.randint(0,100))
 end
-#for i=0 to size_of(a)-1
-#	system.println(a[i])
-#end
+define ts=runtime.time()
+quicksort(a,0,size_of(a)-1)
+system.println("Time spend:",runtime.time()-ts)
+for i=0 to size_of(a)-1
+	system.println(a[i])
+end

@@ -495,6 +495,13 @@ namespace cov_basic {
 			throw syntax_error("Wrong size of arguments.");
 		return std::move(_clone(args.front()));
 	}
+	cov::any swap(array& args)
+	{
+		if(args.size()!=2)
+			throw syntax_error("Wrong size of arguments.");
+		args.at(0).swap(args.at(1),true);
+		return number(0);
+	}
 	cov::any link(array& args)
 	{
 		if(args.size()!=1)
@@ -719,6 +726,7 @@ namespace cov_basic {
 		add_function(is_array);
 		add_function(size_of);
 		add_function(clone);
+		add_function(swap);
 		add_function(link);
 		add_function(escape);
 		// Init the extensions

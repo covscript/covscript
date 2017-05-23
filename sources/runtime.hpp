@@ -429,7 +429,7 @@ namespace cov_basic {
 	{
 		b.clone();
 		b.detach();
-		a.assign(b,true);
+		a.swap(b,true);
 		return a;
 	}
 	cov::any parse_link(const cov::any& a,const cov::any& b)
