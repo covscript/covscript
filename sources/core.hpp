@@ -283,16 +283,14 @@ namespace cov_basic {
 namespace cov {
 	template<>void detach<cov_basic::array>(cov_basic::array& val)
 	{
-		for(auto& it:val)
-		{
+		for(auto& it:val) {
 			it.clone();
 			it.detach();
 		}
 	}
 	template<>void detach<cov_basic::hash_map>(cov_basic::hash_map& val)
 	{
-		for(auto& it:val)
-		{
+		for(auto& it:val) {
 			it.second.clone();
 			it.second.detach();
 		}
