@@ -17,7 +17,11 @@ namespace hash_map_cbs_ext {
 			throw syntax_error("Wrong size of arguments.");
 		if(args.at(0).type()!=typeid(hash_map))
 			throw syntax_error("Wrong type of arguments.(Request Hash Map)");
-		args.at(0).val<hash_map>(true)[_clone(args.at(1))]=_clone(args.at(2));
+		hash_map& map=args.at(0).val<hash_map>(true);
+		if(map.count(args.at(1))>0)
+			map.at(args.at(1)).swap(copy(args.at(2)),true);
+		else
+			map.emplace(copy(args.at(1)),copy(args.at(2)));
 		return number(0);
 	}
 	cov::any erase(array& args)

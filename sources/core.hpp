@@ -267,7 +267,12 @@ namespace cov_basic {
 		}
 		return str;
 	}
-	cov::any _clone(cov::any val)
+	void copy_no_return(cov::any& val)
+	{
+		val.clone();
+		val.detach();
+	}
+	cov::any copy(cov::any val)
 	{
 		val.clone();
 		val.detach();
