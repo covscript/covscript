@@ -269,12 +269,6 @@ namespace cov_basic {
 	}
 	cov::any _clone(cov::any val)
 	{
-		if(val.type()==typeid(linker)) {
-			cov::any v=val.const_val<linker>().data;
-			v.clone();
-			v.detach();
-			return v;
-		}
 		val.clone();
 		val.detach();
 		return val;
