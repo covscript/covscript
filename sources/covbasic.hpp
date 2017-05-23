@@ -493,7 +493,10 @@ namespace cov_basic {
 	{
 		if(args.size()!=1)
 			throw syntax_error("Wrong size of arguments.");
-		return std::move(_clone(args.front()));
+		if(args.front().type()==typeid(linker))
+			return copy(args.front().const_val<linker>().data);
+		else
+			return copy(args.front());
 	}
 	cov::any swap(array& args)
 	{

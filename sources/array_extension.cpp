@@ -11,7 +11,7 @@ namespace array_cbs_ext {
 			throw syntax_error("Wrong size of arguments.");
 		if(args.at(0).type()!=typeid(array))
 			throw syntax_error("Wrong type of arguments.(Request Array)");
-		args.at(0).val<array>(true).push_front(_clone(args.at(1)));
+		args.at(0).val<array>(true).push_front(copy(args.at(1)));
 		return number(0);
 	}
 	cov::any pop_front(array& args)
@@ -29,7 +29,7 @@ namespace array_cbs_ext {
 			throw syntax_error("Wrong size of arguments.");
 		if(args.at(0).type()!=typeid(array))
 			throw syntax_error("Wrong type of arguments.(Request Array)");
-		args.at(0).val<array>(true).push_back(_clone(args.at(1)));
+		args.at(0).val<array>(true).push_back(copy(args.at(1)));
 		return number(0);
 	}
 	cov::any pop_back(array& args)

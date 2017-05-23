@@ -214,11 +214,18 @@ namespace cov {
 				obj.mDat=tmp;
 			}
 		}
-		void swap(any&& obj) noexcept
+		void swap(any&& obj,bool raw=false) noexcept
 		{
-			proxy* tmp=this->mDat;
-			this->mDat=obj.mDat;
-			obj.mDat=tmp;
+			if(this->mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
+				baseHolder* tmp=this->mDat->data;
+				this->mDat->data=obj.mDat->data;
+				obj.mDat->data=tmp;
+			}
+			else {
+				proxy* tmp=this->mDat;
+				this->mDat=obj.mDat;
+				obj.mDat=tmp;
+			}
 		}
 		void clone() noexcept
 		{
