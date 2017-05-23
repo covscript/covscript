@@ -4,93 +4,16 @@
 #include "../include/mozart/tree.hpp"
 #include "../include/mozart/any.hpp"
 #include "../include/libdll/dll.hpp"
+#include "./exceptions.hpp"
 #include <unordered_map>
 #include <forward_list>
 #include <functional>
-#include <exception>
-#include <stdexcept>
 #include <string>
 #include <memory>
 #include <cmath>
 #include <deque>
 namespace cov_basic {
 	const std::string version="2.1.4.5";
-	class syntax_error final:public std::exception {
-		std::string mWhat="Covariant Basic Syntax Error";
-	public:
-		syntax_error()=default;
-		syntax_error(const std::string& str) noexcept:
-			mWhat("\nCovariant Basic Syntax Error:\n"+str) {}
-		syntax_error(std::size_t line,const std::string& str) noexcept:
-			mWhat("\nIn line "+std::to_string(line)+":"+str) {}
-		syntax_error(const syntax_error&)=default;
-		syntax_error(syntax_error&&)=default;
-		virtual ~syntax_error()=default;
-		syntax_error& operator=(const syntax_error&)=default;
-		syntax_error& operator=(syntax_error&&)=default;
-		virtual const char* what() const noexcept override
-		{
-			return this->mWhat.c_str();
-		}
-	};
-	class internal_error final:public std::exception {
-		std::string mWhat="Covariant Basic Internal Error";
-	public:
-		internal_error()=default;
-		internal_error(const std::string& str) noexcept:
-			mWhat("\nCovariant Basic Internal Error:\n"+str) {}
-		internal_error(std::size_t line,const std::string& str) noexcept:
-			mWhat("\nIn line "+std::to_string(line)+":"+str) {}
-		internal_error(const internal_error&)=default;
-		internal_error(internal_error&&)=default;
-		virtual ~internal_error()=default;
-		internal_error& operator=(const internal_error&)=default;
-		internal_error& operator=(internal_error&&)=default;
-		virtual const char* what() const noexcept override
-		{
-			return this->mWhat.c_str();
-		}
-	};
-	class lang_error final:public std::exception {
-		std::string mWhat="Covariant Basic Language Error";
-	public:
-		lang_error()=default;
-		lang_error(const std::string& str) noexcept:
-			mWhat("\nCovariant Basic Language Error:\n"+str) {}
-		lang_error(std::size_t line,const std::string& str) noexcept:
-			mWhat("\nIn line "+std::to_string(line)+":"+str) {}
-		lang_error(const lang_error&)=default;
-		lang_error(lang_error&&)=default;
-		virtual ~lang_error()=default;
-		lang_error& operator=(const lang_error&)=default;
-		lang_error& operator=(lang_error&&)=default;
-		virtual const char* what() const noexcept override
-		{
-			return this->mWhat.c_str();
-		}
-	};
-	class fatal_error final:public std::exception {
-		std::string mWhat="Covariant Basic Fatal Error";
-	public:
-		fatal_error()=default;
-		fatal_error(const std::string& str) noexcept:mWhat("\nCovariant Basic Fatal Error:\n"+str+"\nCompilation terminated.") {}
-		fatal_error(const fatal_error&)=default;
-		fatal_error(fatal_error&&)=default;
-		virtual ~fatal_error()=default;
-		fatal_error& operator=(const fatal_error&)=default;
-		fatal_error& operator=(fatal_error&&)=default;
-		virtual const char* what() const noexcept override
-		{
-			return this->mWhat.c_str();
-		}
-	};
-	struct linker final {
-		cov::any data;
-		bool operator==(const linker& l) const
-		{
-			return data.is_same(l.data);
-		}
-	};
 	using number=long double;
 	using boolean=bool;
 	using string=std::string;
@@ -98,6 +21,13 @@ namespace cov_basic {
 	using hash_map=std::unordered_map<cov::any,cov::any>;
 	class token_base;
 	class statement_base;
+	struct linker final {
+		cov::any data;
+		bool operator==(const linker& l) const
+		{
+			return data.is_same(l.data);
+		}
+	};
 	class native_interface final {
 	public:
 		using function_type=std::function<cov::any(array&)>;
@@ -267,12 +197,12 @@ namespace cov_basic {
 		}
 		return str;
 	}
-	void copy_no_return(cov::any& val)
+	inline void copy_no_return(cov::any& val)
 	{
 		val.clone();
 		val.detach();
 	}
-	cov::any copy(cov::any val)
+	inline cov::any copy(cov::any val)
 	{
 		val.clone();
 		val.detach();
@@ -282,17 +212,13 @@ namespace cov_basic {
 namespace cov {
 	template<>void detach<cov_basic::array>(cov_basic::array& val)
 	{
-		for(auto& it:val) {
-			it.clone();
-			it.detach();
-		}
+		for(auto& it:val)
+			cov_basic::copy_no_return(it);
 	}
 	template<>void detach<cov_basic::hash_map>(cov_basic::hash_map& val)
 	{
-		for(auto& it:val) {
-			it.second.clone();
-			it.second.detach();
-		}
+		for(auto& it:val)
+			cov_basic::copy_no_return(it.second);
 	}
 }
 namespace std {

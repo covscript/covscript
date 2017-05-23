@@ -1,7 +1,7 @@
 #ifndef CBS_MATH_EXT
-#include "./extension.hpp"
+#include "../extension.hpp"
 #endif
-#include "./arglist.hpp"
+#include "../arglist.hpp"
 static cov_basic::extension math_ext;
 namespace math_cbs_ext {
 	using namespace cov_basic;

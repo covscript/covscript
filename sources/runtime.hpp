@@ -425,11 +425,9 @@ namespace cov_basic {
 		else
 			throw syntax_error("Unsupported operator operations(Aeq).");
 	}
-	cov::any parse_asi(cov::any a,cov::any b)
+	cov::any parse_asi(cov::any a,const cov::any& b)
 	{
-		b.clone();
-		b.detach();
-		a.swap(b,true);
+		a.swap(copy(b),true);
 		return a;
 	}
 	cov::any parse_link(const cov::any& a,const cov::any& b)
@@ -614,12 +612,8 @@ namespace cov_basic {
 			break;
 		case token_types::array: {
 			array arr;
-			for(auto& tree:dynamic_cast<token_array*>(token)->get_array()) {
-				cov::any val=parse_expr(tree.root());
-				val.clone();
-				val.detach();
-				arr.push_back(val);
-			}
+			for(auto& tree:dynamic_cast<token_array*>(token)->get_array())
+				arr.push_back(copy(parse_expr(tree.root())));
 			return cov::any::make<array>(std::move(arr));
 		}
 		case token_types::arglist: {

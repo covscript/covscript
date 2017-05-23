@@ -1,7 +1,7 @@
 #ifndef CBS_ARRAY_EXT
-#include "./extension.hpp"
+#include "../extension.hpp"
 #endif
-#include "./arglist.hpp"
+#include "../arglist.hpp"
 static cov_basic::extension array_ext;
 namespace array_cbs_ext {
 	using namespace cov_basic;
