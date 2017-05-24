@@ -181,6 +181,69 @@ namespace darwin_cbs_ext {
 		else
 			return darwin::picture(args.at(0).const_val<number>(),args.at(1).const_val<number>());
 	}
+	cov::any message_box(array& args)
+	{
+		arglist::check<string,string,string>(args);
+		const std::string& title=args.at(0).to_string();
+		const std::string& message=args.at(1).to_string();
+		const std::string& button=args.at(2).to_string();
+		std::size_t width=std::max(title.size(),std::max(message.size(),button.size()))+4;
+		darwin::sync_clock c(10);
+		while(true) {
+			c.reset();
+			if(darwin::runtime.is_kb_hit()) {
+				darwin::runtime.get_kb_hit();
+				break;
+			}
+			darwin::runtime.fit_drawable();
+			std::size_t x(0.5*(darwin::runtime.get_drawable()->get_width()-width)),y(0.5*(darwin::runtime.get_drawable()->get_height()-6));
+			darwin::runtime.get_drawable()->clear();
+			darwin::runtime.get_drawable()->fill_rect(x,y,width,6,darwin::pixel(' ',true,false,darwin::colors::white,darwin::colors::white));
+			darwin::runtime.get_drawable()->fill_rect(x,y,width,1,darwin::pixel(' ',true,false,darwin::colors::white,darwin::colors::cyan));
+			darwin::runtime.get_drawable()->fill_rect(x+0.5*(width-button.size()-2),y+4,button.size()+2,1,darwin::pixel(' ',true,false,darwin::colors::white,darwin::colors::cyan));
+			darwin::runtime.get_drawable()->draw_string(x+0.5*(width-title.size()),y,title,darwin::pixel(' ',true,false,darwin::colors::black,darwin::colors::cyan));
+			darwin::runtime.get_drawable()->draw_string(x+0.5*(width-message.size()),y+2,message,darwin::pixel(' ',true,false,darwin::colors::black,darwin::colors::white));
+			darwin::runtime.get_drawable()->draw_string(x+0.5*(width-button.size()),y+4,button,darwin::pixel(' ',true,false,darwin::colors::white,darwin::colors::cyan));
+			darwin::runtime.update_drawable();
+			c.sync();
+		}
+		return number(0);
+	}
+	cov::any input_box(array& args)
+	{
+		arglist::check<string,string,string>(args);
+		const std::string& title=args.at(0).to_string();
+		const std::string& message=args.at(1).to_string();
+		std::string buff=args.at(2).to_string();
+		darwin::sync_clock c(10);
+		while(true) {
+			c.reset();
+			if(darwin::runtime.is_kb_hit()) {
+				char ch=darwin::runtime.get_kb_hit();
+				if(ch=='\n'||ch=='\r')
+					break;
+				else if(ch==127) {
+					if(!buff.empty())
+						buff.pop_back();
+				}
+				else
+					buff+=ch;
+			}
+			darwin::runtime.fit_drawable();
+			std::size_t width=std::max(title.size(),std::max(message.size(),buff.size()))+4;
+			std::size_t x(0.5*(darwin::runtime.get_drawable()->get_width()-width)),y(0.5*(darwin::runtime.get_drawable()->get_height()-6));
+			darwin::runtime.get_drawable()->clear();
+			darwin::runtime.get_drawable()->fill_rect(x,y,width,6,darwin::pixel(' ',true,false,darwin::colors::white,darwin::colors::white));
+			darwin::runtime.get_drawable()->fill_rect(x,y,width,1,darwin::pixel(' ',true,false,darwin::colors::white,darwin::colors::cyan));
+			darwin::runtime.get_drawable()->fill_rect(x+2,y+4,width-4,1,darwin::pixel(' ',true,false,darwin::colors::white,darwin::colors::black));
+			darwin::runtime.get_drawable()->draw_string(x+0.5*(width-title.size()),y,title,darwin::pixel(' ',true,false,darwin::colors::black,darwin::colors::cyan));
+			darwin::runtime.get_drawable()->draw_string(x+0.5*(width-message.size()),y+2,message,darwin::pixel(' ',true,false,darwin::colors::black,darwin::colors::white));
+			darwin::runtime.get_drawable()->draw_string(x+2,y+4,buff,darwin::pixel(' ',true,false,darwin::colors::white,darwin::colors::black));
+			darwin::runtime.update_drawable();
+			c.sync();
+		}
+		return parse_value(buff);
+	}
 	void init()
 	{
 		darwin_ext.add_var("load",native_interface(load));
@@ -205,6 +268,8 @@ namespace darwin_cbs_ext {
 		darwin_ext.add_var("get_kb_hit",native_interface(get_kb_hit));
 		darwin_ext.add_var("pixel",native_interface(pixel));
 		darwin_ext.add_var("picture",native_interface(picture));
+		darwin_ext.add_var("message_box",native_interface(message_box));
+		darwin_ext.add_var("input_box",native_interface(input_box));
 		darwin_ext.add_var("black",darwin::colors::black);
 		darwin_ext.add_var("white",darwin::colors::white);
 		darwin_ext.add_var("red",darwin::colors::red);
