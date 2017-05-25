@@ -222,7 +222,7 @@ namespace darwin_cbs_ext {
 				char ch=darwin::runtime.get_kb_hit();
 				if(ch=='\n'||ch=='\r')
 					break;
-				else if(ch==127) {
+				else if(ch=='\b'||ch==127) {
 					if(!buff.empty())
 						buff.pop_back();
 				}
