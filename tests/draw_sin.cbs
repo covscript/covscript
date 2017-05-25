@@ -1,6 +1,5 @@
 define fd=10
 function main()
-    darwin.load()
     darwin.set_frame_limit(60)
     define pix=darwin.pixel('@',true,false,darwin.blue,darwin.white)
     darwin.fit_drawable()
@@ -16,8 +15,8 @@ function main()
         ++x
     end
 end
-system.print("Please input the period:")
-system.input(fd)
+darwin.load()
+fd=darwin.input_box("","Please input the period:",string.cut(to_string(fd),7))
 if(!is_number(fd))
   runtime.error("Request number.")
 end

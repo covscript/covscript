@@ -1,19 +1,7 @@
 function main()
 #初始化和设置
-	system.println("Console Pinball Game")
-	system.println("Please set the difficulty.\nThe smaller your Settings,game play will be more difficult.")
-	define jump_frame=system.input()
 	darwin.load()
-	system.println("Please set the \"up\" key.Default key is 'A'.Press enter to skip.")
-	define key_up=darwin.get_kb_hit()
-	if(key_up=='\n'||key_up=='\r')
-		key_up='a'
-	end
-	system.println("Please set the \"down\" key.Default key is 'Z'.Press enter to skip.")
-	define key_down=darwin.get_kb_hit()
-	if(key_down=='\n'||key_down=='\r')
-		key_down='z'
-	end
+	define jump_frame=darwin.input_box("Console Pinball Game","Please set the difficulty:","3")
 	define num3={1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1}
 	define num2={1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1}
 	define num1={0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0}
@@ -106,8 +94,8 @@ function main()
 			++delay_frame
 		end
 		if(darwin.is_kb_hit())
-			define in=darwin.get_kb_hit()
-			if(in==key_up)
+			switch darwin.get_kb_hit()
+			case 'a'
 				if(xj)
 					if(z2>0)
 						--z2
@@ -118,7 +106,7 @@ function main()
 					end
 				end
 			end
-			if(in==key_down)
+			case 'z'
 				if(xj)
 					if(z2+zkh<darwin.get_height()-1)
 						++z2
@@ -128,6 +116,7 @@ function main()
 						++z1
 					end
 				end
+			end
 			end
 		end
 		darwin.draw_point(x,y,darwin.pixel('@',true,false,darwin.red,darwin.yellow))
