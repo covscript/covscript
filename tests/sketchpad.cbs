@@ -1,4 +1,5 @@
 darwin.load()
+define expr=runtime.build(darwin.input_box("Sketchpad","Please enter a expression:",""))
 define x_offset=0
 define y_offset=0
 define zoom=5
@@ -7,7 +8,7 @@ define center_x=0
 define center_y=0
 define pix=darwin.pixel('+',true,false,darwin.blue,darwin.black)
 function f(x)
-  return x^2
+  return runtime.solve(expr)
 end
 loop
   darwin.fit_drawable()
