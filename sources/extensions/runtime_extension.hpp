@@ -54,6 +54,26 @@ namespace runtime_cbs_ext {
 			throw syntax_error("Wrong size of arguments.");
 		return args.front().hash();
 	}
+	using expression_t=cov::tree<token_base*>;
+	cov::any build(array& args)
+	{
+		arglist::check<string>(args);
+		std::deque<char> buff;
+		std::deque<token_base*> tokens;
+		expression_t tree;
+		for(auto& ch:args.at(0).const_val<string>())
+			buff.push_back(ch);
+		translate_into_tokens(buff,tokens);
+		process_brackets(tokens);
+		kill_brackets(tokens);
+		gen_tree(tree,tokens);
+		return cov::any::make<expression_t>(tree);
+	}
+	cov::any solve(array& args)
+	{
+		arglist::check<expression_t>(args);
+		return parse_expr(args.at(0).val<expression_t>(true).root());
+	}
 	void init()
 	{
 		runtime_ext.add_var("info",native_interface(info));
@@ -65,5 +85,7 @@ namespace runtime_cbs_ext {
 		runtime_ext.add_var("load_extension",native_interface(load_extension));
 		runtime_ext.add_var("type_hash",native_interface(type_hash));
 		runtime_ext.add_var("hash",native_interface(hash));
+		runtime_ext.add_var("build",native_interface(build));
+		runtime_ext.add_var("solve",native_interface(solve));
 	}
 }
