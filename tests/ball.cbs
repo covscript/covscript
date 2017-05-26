@@ -1,7 +1,7 @@
 function main()
 #初始化和设置
 	darwin.load()
-	define jump_frame=darwin.input_box("Console Pinball Game","Please set the difficulty:","3")
+	define jump_frame=darwin.input_box("Console Pinball Game","Please set the difficulty:","3",true)
 	define num3={1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1}
 	define num2={1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1}
 	define num1={0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0}
