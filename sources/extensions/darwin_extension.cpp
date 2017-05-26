@@ -184,9 +184,9 @@ namespace darwin_cbs_ext {
 	cov::any message_box(array& args)
 	{
 		arglist::check<string,string,string>(args);
-		const std::string& title=args.at(0).to_string();
-		const std::string& message=args.at(1).to_string();
-		const std::string& button=args.at(2).to_string();
+		const std::string& title=args.at(0).const_val<string>();
+		const std::string& message=args.at(1).const_val<string>();
+		const std::string& button=args.at(2).const_val<string>();
 		std::size_t width=std::max(title.size(),std::max(message.size(),button.size()))+4;
 		darwin::sync_clock c(10);
 		while(true) {
@@ -211,10 +211,10 @@ namespace darwin_cbs_ext {
 	}
 	cov::any input_box(array& args)
 	{
-		arglist::check<string,string,string>(args);
-		const std::string& title=args.at(0).to_string();
-		const std::string& message=args.at(1).to_string();
-		std::string buff=args.at(2).to_string();
+		arglist::check<string,string,string,bool>(args);
+		const std::string& title=args.at(0).const_val<string>();
+		const std::string& message=args.at(1).const_val<string>();
+		std::string buff=args.at(2).const_val<string>();
 		darwin::sync_clock c(10);
 		while(true) {
 			c.reset();
@@ -242,7 +242,10 @@ namespace darwin_cbs_ext {
 			darwin::runtime.update_drawable();
 			c.sync();
 		}
-		return parse_value(buff);
+		if(args.at(3).const_val<bool>())
+			return parse_value(buff);
+		else
+			return buff;
 	}
 	void init()
 	{

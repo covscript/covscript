@@ -1,5 +1,5 @@
 darwin.load()
-define expr=runtime.build(darwin.input_box("Sketchpad","Please enter a expression:",""))
+define expr=runtime.build(darwin.input_box("Sketchpad","Please enter a expression:","",false))
 define x_offset=0
 define y_offset=0
 define zoom=5
