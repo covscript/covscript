@@ -586,6 +586,12 @@ namespace cov_basic {
 				return new statement_return(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),raw.front().back());
 			}
 		});
+		translator.add_method({new token_action(action_types::return_),new token_endline(0)},method_type {grammar_type::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				cov::tree<token_base*> tree;
+				tree.emplace_root_left(tree.root(),new token_value(number(0)));
+				return new statement_return(tree,raw.front().back());
+			}
+		});
 		// Struct Grammar
 		translator.add_method({new token_action(action_types::struct_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {grammar_type::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				cov::tree<token_base*>& t=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();

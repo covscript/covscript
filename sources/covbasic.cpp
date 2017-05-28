@@ -19,7 +19,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://covbasic.org
 *
-* Version: 2.1.4.6
+* Version: 2.1.4.7
 */
 #define DARWIN_DISABLE_LOG
 #define CBS_STRING_EXT
