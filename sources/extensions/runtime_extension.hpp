@@ -1,5 +1,6 @@
 #pragma once
 #include "../arglist.hpp"
+#include <cstdlib>
 static cov_basic::extension runtime_ext;
 namespace runtime_cbs_ext {
 	using namespace cov_basic;
@@ -74,6 +75,12 @@ namespace runtime_cbs_ext {
 		arglist::check<expression_t>(args);
 		return parse_expr(args.at(0).val<expression_t>(true).root());
 	}
+	cov::any exit(array& args)
+	{
+		arglist::check<number>(args);
+		std::exit(args.at(0).const_val<number>());
+		return number(0);
+	}
 	void init()
 	{
 		runtime_ext.add_var("info",native_interface(info));
@@ -87,5 +94,6 @@ namespace runtime_cbs_ext {
 		runtime_ext.add_var("hash",native_interface(hash));
 		runtime_ext.add_var("build",native_interface(build));
 		runtime_ext.add_var("solve",native_interface(solve));
+		runtime_ext.add_var("exit",native_interface(exit));
 	}
 }
