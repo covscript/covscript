@@ -572,10 +572,28 @@ namespace cov_basic {
 		// Function Grammar
 		translator.add_method({new token_action(action_types::function_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {grammar_type::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				cov::tree<token_base*>& t=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
+				if(t.root().data()==nullptr)
+					throw internal_error("Null pointer accessed.");
+				if(t.root().data()->get_type()!=token_types::signal||dynamic_cast<token_signal*>(t.root().data())->get_signal()!=signal_types::fcall_)
+					throw syntax_error("Wrong grammar for function definition.");
+				if(t.root().left().data()==nullptr)
+					throw internal_error("Null pointer accessed.");
+				if(t.root().left().data()->get_type()!=token_types::id)
+					throw syntax_error("Wrong grammar for function definition.");
+				if(t.root().right().data()==nullptr)
+					throw internal_error("Null pointer accessed.");
+				if(t.root().right().data()->get_type()!=token_types::arglist)
+					throw syntax_error("Wrong grammar for function definition.");
 				std::string name=dynamic_cast<token_id*>(t.root().left().data())->get_id();
 				std::deque<std::string> args;
 				for(auto& it:dynamic_cast<token_arglist*>(t.root().right().data())->get_arglist())
+				{
+					if(it.root().data()==nullptr)
+						throw internal_error("Null pointer accessed.");
+					if(it.root().data()->get_type()!=token_types::id)
+						throw syntax_error("Wrong grammar for function definition.");
 					args.push_back(dynamic_cast<token_id*>(it.root().data())->get_id());
+				}
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
 				return new statement_function(name,args,body,raw.front().back());
@@ -595,6 +613,10 @@ namespace cov_basic {
 		// Struct Grammar
 		translator.add_method({new token_action(action_types::struct_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {grammar_type::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				cov::tree<token_base*>& t=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
+				if(t.root().data()==nullptr)
+					throw internal_error("Null pointer accessed.");
+				if(t.root().data()->get_type()!=token_types::id)
+					throw syntax_error("Wrong grammar for struct definition.");
 				std::string name=dynamic_cast<token_id*>(t.root().data())->get_id();
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
