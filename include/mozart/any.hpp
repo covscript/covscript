@@ -20,9 +20,10 @@
 * Github: https://github.com/mikecovlee
 * Website: http://ldc.atd3.cn
 *
-* Version: 17.4.4
+* Version: 17.5.1
 */
 #include "./base.hpp"
+#include "./memory.hpp"
 #include <functional>
 #include <iostream>
 
@@ -43,7 +44,7 @@ namespace std {
 			return "false";
 	}
 }
-
+#define COV_ANY_POOL_SIZE 128
 namespace cov {
 	template<typename _Tp> class compare_helper {
 		template<typename T,typename X=bool>struct matcher;
@@ -121,11 +122,13 @@ namespace cov {
 			virtual std::string to_string() const = 0;
 			virtual std::size_t hash() const = 0;
 			virtual void detach() = 0;
+			virtual void kill() = 0;
 		};
 		template < typename T > class holder:public baseHolder {
 		protected:
 			T mDat;
 		public:
+			static cov::allocator<holder<T>,COV_ANY_POOL_SIZE> allocator;
 			holder() = default;
 			template<typename...ArgsT>holder(ArgsT&&...args):mDat(std::forward<ArgsT>(args)...) {}
 			virtual ~ holder() = default;
@@ -135,7 +138,7 @@ namespace cov {
 			}
 			virtual baseHolder* duplicate() override
 			{
-				return new holder(mDat);
+				return allocator.alloc(mDat);
 			}
 			virtual bool compare(const baseHolder* obj) const override
 			{
@@ -156,6 +159,10 @@ namespace cov {
 			virtual void detach() override
 			{
 				cov::detach(mDat);
+			}
+			virtual void kill() override
+			{
+				allocator.free(this);
 			}
 			T& data()
 			{
@@ -178,9 +185,11 @@ namespace cov {
 			proxy(size_t rc,baseHolder* d):refcount(rc),data(d) {}
 			~proxy()
 			{
-				delete data;
+				if(data!=nullptr)
+					data->kill();
 			}
 		};
+		static cov::allocator<proxy,COV_ANY_POOL_SIZE> allocator;
 		proxy* mDat=nullptr;
 		proxy* duplicate() const noexcept
 		{
@@ -194,7 +203,7 @@ namespace cov {
 			if(mDat!=nullptr) {
 				--mDat->refcount;
 				if(mDat->refcount==0) {
-					delete mDat;
+					allocator.free(mDat);
 					mDat=nullptr;
 				}
 			}
@@ -230,7 +239,7 @@ namespace cov {
 		void clone() noexcept
 		{
 			if(mDat!=nullptr) {
-				proxy* dat=new proxy(1,mDat->data->duplicate());
+				proxy* dat=allocator.alloc(1,mDat->data->duplicate());
 				recycle();
 				mDat=dat;
 			}
@@ -241,10 +250,10 @@ namespace cov {
 		}
 		template<typename T,typename...ArgsT>static any make(ArgsT&&...args)
 		{
-			return any(new proxy(1,new holder<T>(std::forward<ArgsT>(args)...)));
+			return any(allocator.alloc(1,holder<T>::allocator.alloc(std::forward<ArgsT>(args)...)));
 		}
 		any()=default;
-		template<typename T> any(const T & dat):mDat(new proxy(1,new holder<T> (dat))) {}
+		template<typename T> any(const T & dat):mDat(allocator.alloc(1,holder<T>::allocator.alloc(dat))) {}
 		any(const any & v):mDat(v.duplicate()) {}
 		any(any&& v) noexcept
 		{
@@ -335,13 +344,13 @@ namespace cov {
 		{
 			if(&obj!=this&&obj.mDat!=mDat) {
 				if(mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
-					delete mDat->data;
+					mDat->data->kill();
 					mDat->data=obj.mDat->data->duplicate();
 				}
 				else {
 					recycle();
 					if(obj.mDat!=nullptr)
-						mDat=new proxy(1,obj.mDat->data->duplicate());
+						mDat=allocator.alloc(1,obj.mDat->data->duplicate());
 					else
 						mDat=nullptr;
 				}
@@ -350,12 +359,12 @@ namespace cov {
 		template<typename T> void assign(const T& dat,bool raw=false)
 		{
 			if(raw) {
-				delete mDat->data;
-				mDat->data=new holder<T>(dat);
+				mDat->data->kill();
+				mDat->data=holder<T>::allocator.alloc(dat);
 			}
 			else {
 				recycle();
-				mDat=new proxy(1,new holder<T>(dat));
+				mDat=allocator.alloc(1,holder<T>::allocator.alloc(dat));
 			}
 		}
 		template<typename T> any & operator=(const T& dat)
@@ -364,6 +373,8 @@ namespace cov {
 			return *this;
 		}
 	};
+	template<typename T> cov::allocator<any::holder<T>,COV_ANY_POOL_SIZE> any::holder<T>::allocator;
+	cov::allocator<any::proxy,COV_ANY_POOL_SIZE> any::allocator;
 	template<int N> class any::holder<char[N]>:public any::holder<std::string> {
 	public:
 		using holder<std::string>::holder;
