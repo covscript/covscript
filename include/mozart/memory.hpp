@@ -15,12 +15,12 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Copyright (C) 2016 Michael Lee(李登淳)
-* Email: China-LDC@outlook.com
+* Copyright (C) 2017 Michael Lee(李登淳)
+* Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 * Website: http://ldc.atd3.cn
 *
-* Version: 17.1.0
+* Version: 17.1.1
 */
 #include "./base.hpp"
 #include "./function.hpp"
@@ -162,10 +162,12 @@ namespace cov {
 		void enable_buffer()
 		{
 			mActived=true;
+			blance();
 		}
 		void disable_buffer()
 		{
 			mActived=false;
+			clean();
 		}
 		allocator()
 		{
@@ -180,7 +182,7 @@ namespace cov {
 		T* alloc(ArgsT&&...args)
 		{
 			T* ptr=nullptr;
-			if(mActived&&mOffset>0) {
+			if(mActived&&mOffset>=0) {
 				ptr=mPool.at(mOffset);
 				--mOffset;
 			}
