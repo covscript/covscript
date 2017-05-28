@@ -26,6 +26,7 @@
 #include "./function.hpp"
 #include <memory>
 #include <atomic>
+#include <array>
 
 namespace cov {
 	template<typename _Tp,template<typename>class _alloc>
@@ -131,6 +132,72 @@ namespace cov {
 		const raw_type operator->() const
 		{
 			return mProxy->data;
+		}
+	};
+	template<typename T,long blck_size>
+	class allocator final {
+		std::allocator<T> mAlloc;
+		std::array<T*,blck_size> mPool;
+		long mOffset=-1;
+		bool mActived=true;
+	public:
+		void blance()
+		{
+			if(mOffset!=0.5*blck_size) {
+				if(mOffset<0.5*blck_size) {
+					for(; mOffset<0.5*blck_size; ++mOffset)
+						mPool.at(mOffset+1)=mAlloc.allocate(1);
+				}
+				else {
+					for(; mOffset>0.5*blck_size; --mOffset)
+						mAlloc.deallocate(mPool.at(mOffset),1);
+				}
+			}
+		}
+		void clean()
+		{
+			for(; mOffset>=0; --mOffset)
+				mAlloc.deallocate(mPool.at(mOffset),1);
+		}
+		void enable_buffer()
+		{
+			mActived=true;
+		}
+		void disable_buffer()
+		{
+			mActived=false;
+		}
+		allocator()
+		{
+			blance();
+		}
+		allocator(const allocator&)=delete;
+		~allocator()
+		{
+			clean();
+		}
+		template<typename...ArgsT>
+		T* alloc(ArgsT&&...args)
+		{
+			T* ptr=nullptr;
+			if(mActived&&mOffset>0) {
+				ptr=mPool.at(mOffset);
+				--mOffset;
+			}
+			else
+				ptr=mAlloc.allocate(1);
+			mAlloc.construct(ptr,std::forward<ArgsT>(args)...);
+			return ptr;
+		}
+		void free(T* ptr)
+		{
+			mAlloc.destroy(ptr);
+			if(mActived&&mOffset<blck_size-1) {
+				++mOffset;
+				mPool.at(mOffset)=ptr;
+			}
+			else
+				mAlloc.deallocate(ptr,1);
 		}
 	};
 }
