@@ -44,7 +44,7 @@ namespace std {
 			return "false";
 	}
 }
-#define COV_ANY_POOL_SIZE 128
+#define COV_ANY_POOL_SIZE 96
 namespace cov {
 	template<typename _Tp> class compare_helper {
 		template<typename T,typename X=bool>struct matcher;
