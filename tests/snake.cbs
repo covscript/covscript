@@ -54,12 +54,12 @@ function start()
 		if(darwin.is_kb_hit())
 			switch darwin.get_kb_hit()
 				case 'w'
-					if(god_mode||heading!=-2)
+					if(god_mode||heading!=4)
 						heading=3
 					end
 				end
 				case 's'
-					if(god_mode||heading!=-1)
+					if(god_mode||heading!=3)
 						heading=4
 					end
 				end
