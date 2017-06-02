@@ -212,7 +212,7 @@ namespace cov {
 		}
 		any(proxy* dat):mDat(dat) {}
 	public:
-		void swap(any& obj,bool raw=false) noexcept
+		void swap(any& obj,bool raw=false)
 		{
 			if(this->mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
 				if(this->mDat->constant||obj.mDat->constant)
@@ -231,7 +231,7 @@ namespace cov {
 		{
 			if(this->mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
 				if(this->mDat->constant||obj.mDat->constant)
-					throw cov::error("E000G");
+					std::terminate();
 				baseHolder* tmp=this->mDat->data;
 				this->mDat->data=obj.mDat->data;
 				obj.mDat->data=tmp;
@@ -242,7 +242,7 @@ namespace cov {
 				obj.mDat=tmp;
 			}
 		}
-		void clone() noexcept
+		void clone()
 		{
 			if(mDat!=nullptr) {
 				if(mDat->constant)
