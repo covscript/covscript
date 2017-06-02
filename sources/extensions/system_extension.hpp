@@ -39,9 +39,9 @@ namespace system_cbs_ext {
 	}
 	void init()
 	{
-		system_ext.add_var("input",native_interface(input));
-		system_ext.add_var("getline",native_interface(getline));
-		system_ext.add_var("print",native_interface(print));
-		system_ext.add_var("println",native_interface(println));
+		system_ext.add_var("input",cov::any::make_constant<native_interface>(input));
+		system_ext.add_var("getline",cov::any::make_constant<native_interface>(getline));
+		system_ext.add_var("print",cov::any::make_constant<native_interface>(print));
+		system_ext.add_var("println",cov::any::make_constant<native_interface>(println));
 	}
 }

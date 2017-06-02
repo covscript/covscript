@@ -21,8 +21,8 @@
 #ifdef CBS_DARWIN_EXT
 #include "./extensions/darwin_extension.cpp"
 #endif
-#define add_function(name) cov_basic::runtime->storage.add_var_global(#name,cov_basic::native_interface(name));
-#define add_function_name(name,func) cov_basic::runtime->storage.add_var_global(name,cov_basic::native_interface(func));
+#define add_function(name) cov_basic::runtime->storage.add_var_global(#name,cov::any::make_constant<cov_basic::native_interface>(name));
+#define add_function_name(name,func) cov_basic::runtime->storage.add_var_global(name,cov::any::make_constant<cov_basic::native_interface>(func));
 namespace cov_basic {
 // Internal Functions
 	cov::any size_of(array& args)
@@ -143,32 +143,32 @@ namespace cov_basic {
 		add_function(escape);
 		// Init the extensions
 		system_cbs_ext::init();
-		runtime->storage.add_var("system",std::make_shared<extension_holder>(&system_ext));
+		runtime->storage.add_var("system",cov::any::make_constant<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));
 		runtime_cbs_ext::init();
-		runtime->storage.add_var("runtime",std::make_shared<extension_holder>(&runtime_ext));
+		runtime->storage.add_var("runtime",cov::any::make_constant<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
 #ifdef CBS_STRING_EXT
 		string_cbs_ext::init();
-		runtime->storage.add_var("string",std::make_shared<extension_holder>(&string_ext));
+		runtime->storage.add_var("string",cov::any::make_constant<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&string_ext)));
 #endif
 #ifdef CBS_ARRAY_EXT
 		array_cbs_ext::init();
-		runtime->storage.add_var("array",std::make_shared<extension_holder>(&array_ext));
+		runtime->storage.add_var("array",cov::any::make_constant<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&array_ext)));
 #endif
 #ifdef CBS_HASH_MAP_EXT
 		hash_map_cbs_ext::init();
-		runtime->storage.add_var("hash_map",std::make_shared<extension_holder>(&hash_map_ext));
+		runtime->storage.add_var("hash_map",cov::any::make_constant<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&hash_map_ext)));
 #endif
 #ifdef CBS_MATH_EXT
 		math_cbs_ext::init();
-		runtime->storage.add_var("math",std::make_shared<extension_holder>(&math_ext));
+		runtime->storage.add_var("math",cov::any::make_constant<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&math_ext)));
 #endif
 #ifdef CBS_FILE_EXT
 		file_cbs_ext::init();
-		runtime->storage.add_var("file",std::make_shared<extension_holder>(&file_ext));
+		runtime->storage.add_var("file",cov::any::make_constant<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&file_ext)));
 #endif
 #ifdef CBS_DARWIN_EXT
 		darwin_cbs_ext::init();
-		runtime->storage.add_var("darwin",std::make_shared<extension_holder>(&darwin_ext));
+		runtime->storage.add_var("darwin",cov::any::make_constant<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&darwin_ext)));
 #endif
 	}
 	void reset()

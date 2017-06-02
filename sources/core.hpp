@@ -13,7 +13,7 @@
 #include <cmath>
 #include <deque>
 namespace cov_basic {
-	const std::string version="2.1.4.7";
+	const std::string version="2.1.5.0";
 	using number=long double;
 	using boolean=bool;
 	using string=std::string;

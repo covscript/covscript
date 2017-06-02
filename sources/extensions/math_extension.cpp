@@ -74,19 +74,19 @@ namespace math_cbs_ext {
 	{
 		math_ext.add_var("pi",number(3.1415926535));
 		math_ext.add_var("e",number(2.7182818284));
-		math_ext.add_var("abs",native_interface(abs));
-		math_ext.add_var("ln",native_interface(ln));
-		math_ext.add_var("log10",native_interface(log10));
-		math_ext.add_var("log",native_interface(log));
-		math_ext.add_var("sin",native_interface(sin));
-		math_ext.add_var("cos",native_interface(cos));
-		math_ext.add_var("tan",native_interface(tan));
-		math_ext.add_var("asin",native_interface(asin));
-		math_ext.add_var("acos",native_interface(acos));
-		math_ext.add_var("atan",native_interface(atan));
-		math_ext.add_var("sqrt",native_interface(sqrt));
-		math_ext.add_var("root",native_interface(root));
-		math_ext.add_var("pow",native_interface(pow));
+		math_ext.add_var("abs",cov::any::make_constant<native_interface>(abs));
+		math_ext.add_var("ln",cov::any::make_constant<native_interface>(ln));
+		math_ext.add_var("log10",cov::any::make_constant<native_interface>(log10));
+		math_ext.add_var("log",cov::any::make_constant<native_interface>(log));
+		math_ext.add_var("sin",cov::any::make_constant<native_interface>(sin));
+		math_ext.add_var("cos",cov::any::make_constant<native_interface>(cos));
+		math_ext.add_var("tan",cov::any::make_constant<native_interface>(tan));
+		math_ext.add_var("asin",cov::any::make_constant<native_interface>(asin));
+		math_ext.add_var("acos",cov::any::make_constant<native_interface>(acos));
+		math_ext.add_var("atan",cov::any::make_constant<native_interface>(atan));
+		math_ext.add_var("sqrt",cov::any::make_constant<native_interface>(sqrt));
+		math_ext.add_var("root",cov::any::make_constant<native_interface>(root));
+		math_ext.add_var("pow",cov::any::make_constant<native_interface>(pow));
 	}
 }
 #ifndef CBS_MATH_EXT

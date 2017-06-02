@@ -51,11 +51,11 @@ namespace hash_map_cbs_ext {
 	}
 	void init()
 	{
-		hash_map_ext.add_var("clear",native_interface(clear));
-		hash_map_ext.add_var("insert",native_interface(insert));
-		hash_map_ext.add_var("erase",native_interface(erase));
-		hash_map_ext.add_var("exist",native_interface(exist));
-		hash_map_ext.add_var("at",native_interface(at));
+		hash_map_ext.add_var("clear",cov::any::make_constant<native_interface>(clear));
+		hash_map_ext.add_var("insert",cov::any::make_constant<native_interface>(insert));
+		hash_map_ext.add_var("erase",cov::any::make_constant<native_interface>(erase));
+		hash_map_ext.add_var("exist",cov::any::make_constant<native_interface>(exist));
+		hash_map_ext.add_var("at",cov::any::make_constant<native_interface>(at));
 	}
 }
 #ifndef CBS_HASH_MAP_EXT
