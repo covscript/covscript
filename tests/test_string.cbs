@@ -2,7 +2,7 @@ define str="abcdHelloefgh"
 system.println(str.append(3.14))
 system.println(str.cut(8))
 system.println(str.substr(str.find("Hello",0),5))
-system.println(str.substr(str.rfind("Hello",string.npos),5))
+system.println(str.substr(str.rfind("Hello",-1),5))
 system.println(str.replace(str.find("Hello",0),5,"FUCK"))
 system.println(str.erase(str.find("FUCK",0),4))
 system.println(str.insert(str.find('d',0)+1,"Hello"))
