@@ -16,7 +16,7 @@ function main()
     end
 end
 darwin.load()
-fd=darwin.input_box("","Please input the period:",string.cut(to_string(fd),7),true)
+fd=darwin.input_box("","Please input the period:",(to_string(fd)).cut(7),true)
 if(!is_number(fd))
   runtime.error("Request number.")
 end
