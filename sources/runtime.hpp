@@ -148,6 +148,9 @@ namespace cov_basic {
 	using extension_t=std::shared_ptr<extension_holder>;
 	struct runtime_type final {
 		domain_manager storage;
+		extension_t string_ext;
+		extension_t array_ext;
+		extension_t hash_map_ext;
 	};
 	std::unique_ptr<runtime_type> runtime=nullptr;
 	cov::any parse_add(const cov::any& a,const cov::any& b)
@@ -270,11 +273,11 @@ namespace cov_basic {
 		else if(b->get_type()!=token_types::id)
 			throw syntax_error("Unsupported operator operations(Dot).");
 		else if(a.type()==typeid(string))
-			return object_method(a,runtime->storage.get_var_global("string").val<extension_t>(true)->get_var(dynamic_cast<token_id*>(b)->get_id()));
+			return object_method(a,runtime->string_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
 		else if(a.type()==typeid(array))
-			return object_method(a,runtime->storage.get_var_global("array").val<extension_t>(true)->get_var(dynamic_cast<token_id*>(b)->get_id()));
+			return object_method(a,runtime->array_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
 		else if(a.type()==typeid(hash_map))
-			return object_method(a,runtime->storage.get_var_global("hash_map").val<extension_t>(true)->get_var(dynamic_cast<token_id*>(b)->get_id()));
+			return object_method(a,runtime->hash_map_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
 		else if(a.type()==typeid(structure))
 			return a.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
 		else if(a.type()==typeid(extension_t))

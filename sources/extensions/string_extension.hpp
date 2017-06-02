@@ -1,6 +1,4 @@
-#ifndef CBS_STRING_EXT
-#include "../extension.hpp"
-#endif
+#pragma once
 #include "../arglist.hpp"
 static cov_basic::extension string_ext;
 namespace string_cbs_ext {
@@ -100,10 +98,3 @@ namespace string_cbs_ext {
 		string_ext.add_var("clear",cov::any::make_constant<native_interface>(clear));
 	}
 }
-#ifndef CBS_STRING_EXT
-cov_basic::extension* cbs_extension()
-{
-	string_cbs_ext::init();
-	return &string_ext;
-}
-#endif
