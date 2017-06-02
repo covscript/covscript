@@ -86,7 +86,7 @@ namespace string_cbs_ext {
 	}
 	void init()
 	{
-		string_ext.add_var("npos",number(-1));
+		string_ext.add_var("npos",cov::any::make_constant<number>(-1));
 		string_ext.add_var("append",cov::any::make_constant<native_interface>(append));
 		string_ext.add_var("insert",cov::any::make_constant<native_interface>(insert));
 		string_ext.add_var("erase",cov::any::make_constant<native_interface>(erase));

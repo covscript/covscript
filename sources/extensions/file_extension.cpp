@@ -72,8 +72,8 @@ namespace file_cbs_ext {
 	}
 	void init()
 	{
-		file_ext.add_var("read_method",file_method::read);
-		file_ext.add_var("write_method",file_method::write);
+		file_ext.add_var("read_method",cov::any::make_constant<file_method>(file_method::read));
+		file_ext.add_var("write_method",cov::any::make_constant<file_method>(file_method::write));
 		file_ext.add_var("open",cov::any::make_constant<native_interface>(open));
 		file_ext.add_var("is_open",cov::any::make_constant<native_interface>(is_open));
 		file_ext.add_var("eof",cov::any::make_constant<native_interface>(eof));

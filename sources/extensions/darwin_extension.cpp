@@ -273,14 +273,14 @@ namespace darwin_cbs_ext {
 		darwin_ext.add_var("picture",cov::any::make_constant<native_interface>(picture));
 		darwin_ext.add_var("message_box",cov::any::make_constant<native_interface>(message_box));
 		darwin_ext.add_var("input_box",cov::any::make_constant<native_interface>(input_box));
-		darwin_ext.add_var("black",darwin::colors::black);
-		darwin_ext.add_var("white",darwin::colors::white);
-		darwin_ext.add_var("red",darwin::colors::red);
-		darwin_ext.add_var("green",darwin::colors::green);
-		darwin_ext.add_var("blue",darwin::colors::blue);
-		darwin_ext.add_var("pink",darwin::colors::pink);
-		darwin_ext.add_var("yellow",darwin::colors::yellow);
-		darwin_ext.add_var("cyan",darwin::colors::cyan);
+		darwin_ext.add_var("black",cov::any::make_constant<darwin::colors>(darwin::colors::black));
+		darwin_ext.add_var("white",cov::any::make_constant<darwin::colors>(darwin::colors::white));
+		darwin_ext.add_var("red",cov::any::make_constant<darwin::colors>(darwin::colors::red));
+		darwin_ext.add_var("green",cov::any::make_constant<darwin::colors>(darwin::colors::green));
+		darwin_ext.add_var("blue",cov::any::make_constant<darwin::colors>(darwin::colors::blue));
+		darwin_ext.add_var("pink",cov::any::make_constant<darwin::colors>(darwin::colors::pink));
+		darwin_ext.add_var("yellow",cov::any::make_constant<darwin::colors>(darwin::colors::yellow));
+		darwin_ext.add_var("cyan",cov::any::make_constant<darwin::colors>(darwin::colors::cyan));
 	}
 }
 #ifndef CBS_DARWIN_EXT
