@@ -321,7 +321,7 @@ namespace cov_basic {
 		else if(b==nullptr)
 			throw internal_error("Null Pointer Accessed.");
 		else if(b->get_type()!=token_types::id)
-			throw syntax_error("Unsupported operator operations(New).");
+			throw syntax_error("Unsupported operator operations(Typeid).");
 		else
 			return runtime->storage.get_type_hash(dynamic_cast<token_id*>(b)->get_id());
 	}
