@@ -3,15 +3,9 @@
 #include "./arglist.hpp"
 #include "./extensions/system_extension.hpp"
 #include "./extensions/runtime_extension.hpp"
-#ifdef CBS_STRING_EXT
-#include "./extensions/string_extension.cpp"
-#endif
-#ifdef CBS_ARRAY_EXT
-#include "./extensions/array_extension.cpp"
-#endif
-#ifdef CBS_HASH_MAP_EXT
-#include "./extensions/hash_map_extension.cpp"
-#endif
+#include "./extensions/string_extension.hpp"
+#include "./extensions/array_extension.hpp"
+#include "./extensions/hash_map_extension.hpp"
 #ifdef CBS_MATH_EXT
 #include "./extensions/math_extension.cpp"
 #endif
@@ -146,18 +140,12 @@ namespace cov_basic {
 		runtime->storage.add_var("system",cov::any::make_constant<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));
 		runtime_cbs_ext::init();
 		runtime->storage.add_var("runtime",cov::any::make_constant<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
-#ifdef CBS_STRING_EXT
 		string_cbs_ext::init();
-		runtime->storage.add_var("string",cov::any::make_constant<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&string_ext)));
-#endif
-#ifdef CBS_ARRAY_EXT
+		runtime->string_ext=std::make_shared<extension_holder>(&string_ext);
 		array_cbs_ext::init();
-		runtime->storage.add_var("array",cov::any::make_constant<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&array_ext)));
-#endif
-#ifdef CBS_HASH_MAP_EXT
+		runtime->array_ext=std::make_shared<extension_holder>(&array_ext);
 		hash_map_cbs_ext::init();
-		runtime->storage.add_var("hash_map",cov::any::make_constant<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&hash_map_ext)));
-#endif
+		runtime->hash_map_ext=std::make_shared<extension_holder>(&hash_map_ext);
 #ifdef CBS_MATH_EXT
 		math_cbs_ext::init();
 		runtime->storage.add_var("math",cov::any::make_constant<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&math_ext)));

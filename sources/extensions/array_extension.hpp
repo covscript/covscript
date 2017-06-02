@@ -1,6 +1,4 @@
-#ifndef CBS_ARRAY_EXT
-#include "../extension.hpp"
-#endif
+#pragma once
 #include "../arglist.hpp"
 static cov_basic::extension array_ext;
 namespace array_cbs_ext {
@@ -65,10 +63,3 @@ namespace array_cbs_ext {
 		array_ext.add_var("at",cov::any::make_constant<native_interface>(at));
 	}
 }
-#ifndef CBS_ARRAY_EXT
-cov_basic::extension* cbs_extension()
-{
-	array_cbs_ext::init();
-	return &array_ext;
-}
-#endif

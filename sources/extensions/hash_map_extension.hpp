@@ -1,6 +1,4 @@
-#ifndef CBS_HASH_MAP_EXT
-#include "../extension.hpp"
-#endif
+#pragma once
 #include "../arglist.hpp"
 static cov_basic::extension hash_map_ext;
 namespace hash_map_cbs_ext {
@@ -58,10 +56,3 @@ namespace hash_map_cbs_ext {
 		hash_map_ext.add_var("at",cov::any::make_constant<native_interface>(at));
 	}
 }
-#ifndef CBS_HASH_MAP_EXT
-cov_basic::extension* cbs_extension()
-{
-	hash_map_cbs_ext::init();
-	return &hash_map_ext;
-}
-#endif
