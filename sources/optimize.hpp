@@ -24,6 +24,13 @@ namespace cov_basic {
 		if(token==nullptr)
 			return;
 		switch(token->get_type()) {
+		case token_types::id: {
+			const std::string& id=dynamic_cast<token_id*>(token)->get_id();
+			if(runtime->storage.var_exsist(id)&&runtime->storage.get_var(id).is_constant())
+				it.data()=new token_value(runtime->storage.get_var(id));
+			return;
+			break;
+		}
 		case token_types::expr: {
 			cov::tree<token_base*>& t=dynamic_cast<token_expr*>(it.data())->get_tree();
 			optimize_expression(t);

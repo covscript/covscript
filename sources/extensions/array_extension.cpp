@@ -57,12 +57,12 @@ namespace array_cbs_ext {
 	}
 	void init()
 	{
-		array_ext.add_var("push_front",native_interface(push_front));
-		array_ext.add_var("pop_front",native_interface(pop_front));
-		array_ext.add_var("push_back",native_interface(push_back));
-		array_ext.add_var("pop_back",native_interface(pop_back));
-		array_ext.add_var("clear",native_interface(clear));
-		array_ext.add_var("at",native_interface(at));
+		array_ext.add_var("push_front",cov::any::make_constant<native_interface>(push_front));
+		array_ext.add_var("pop_front",cov::any::make_constant<native_interface>(pop_front));
+		array_ext.add_var("push_back",cov::any::make_constant<native_interface>(push_back));
+		array_ext.add_var("pop_back",cov::any::make_constant<native_interface>(pop_back));
+		array_ext.add_var("clear",cov::any::make_constant<native_interface>(clear));
+		array_ext.add_var("at",cov::any::make_constant<native_interface>(at));
 	}
 }
 #ifndef CBS_ARRAY_EXT

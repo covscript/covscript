@@ -20,7 +20,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://ldc.atd3.cn
 *
-* Version: 17.5.1
+* Version: 17.5.2
 */
 #include "./base.hpp"
 #include "./memory.hpp"
@@ -179,10 +179,12 @@ namespace cov {
 		};
 		using size_t=unsigned long;
 		struct proxy {
+			bool constant=false;
 			size_t refcount=1;
 			baseHolder* data=nullptr;
 			proxy()=default;
 			proxy(size_t rc,baseHolder* d):refcount(rc),data(d) {}
+			proxy(bool c,size_t rc,baseHolder* d):constant(c),refcount(rc),data(d) {}
 			~proxy()
 			{
 				if(data!=nullptr)
@@ -213,6 +215,8 @@ namespace cov {
 		void swap(any& obj,bool raw=false) noexcept
 		{
 			if(this->mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
+				if(this->mDat->constant||obj.mDat->constant)
+					throw cov::error("E000G");
 				baseHolder* tmp=this->mDat->data;
 				this->mDat->data=obj.mDat->data;
 				obj.mDat->data=tmp;
@@ -226,6 +230,8 @@ namespace cov {
 		void swap(any&& obj,bool raw=false) noexcept
 		{
 			if(this->mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
+				if(this->mDat->constant||obj.mDat->constant)
+					throw cov::error("E000G");
 				baseHolder* tmp=this->mDat->data;
 				this->mDat->data=obj.mDat->data;
 				obj.mDat->data=tmp;
@@ -239,6 +245,8 @@ namespace cov {
 		void clone() noexcept
 		{
 			if(mDat!=nullptr) {
+				if(mDat->constant)
+					throw cov::error("E000H");
 				proxy* dat=allocator.alloc(1,mDat->data->duplicate());
 				recycle();
 				mDat=dat;
@@ -251,6 +259,10 @@ namespace cov {
 		template<typename T,typename...ArgsT>static any make(ArgsT&&...args)
 		{
 			return any(allocator.alloc(1,holder<T>::allocator.alloc(std::forward<ArgsT>(args)...)));
+		}
+		template<typename T,typename...ArgsT>static any make_constant(ArgsT&&...args)
+		{
+			return any(allocator.alloc(true,1,holder<T>::allocator.alloc(std::forward<ArgsT>(args)...)));
 		}
 		any()=default;
 		template<typename T> any(const T & dat):mDat(allocator.alloc(1,holder<T>::allocator.alloc(dat))) {}
@@ -281,12 +293,19 @@ namespace cov {
 		}
 		void detach()
 		{
-			if(this->mDat!=nullptr)
+			if(this->mDat!=nullptr) {
+				if(this->mDat->constant)
+					throw cov::error("E000I");
 				this->mDat->data->detach();
+			}
 		}
 		bool is_same(const any& obj) const
 		{
 			return this->mDat==obj.mDat;
+		}
+		bool is_constant() const
+		{
+			return this->mDat!=nullptr&&this->mDat->constant;
 		}
 		any& operator=(const any& var)
 		{
@@ -344,6 +363,8 @@ namespace cov {
 		{
 			if(&obj!=this&&obj.mDat!=mDat) {
 				if(mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
+					if(this->mDat->constant||obj.mDat->constant)
+						throw cov::error("E000G");
 					mDat->data->kill();
 					mDat->data=obj.mDat->data->duplicate();
 				}
@@ -358,7 +379,9 @@ namespace cov {
 		}
 		template<typename T> void assign(const T& dat,bool raw=false)
 		{
-			if(raw) {
+			if(mDat!=nullptr&&raw) {
+				if(this->mDat->constant)
+					throw cov::error("E000G");
 				mDat->data->kill();
 				mDat->data=holder<T>::allocator.alloc(dat);
 			}
