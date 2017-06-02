@@ -22,9 +22,6 @@
 * Version: 2.1.5.0
 */
 #define DARWIN_DISABLE_LOG
-#define CBS_STRING_EXT
-#define CBS_ARRAY_EXT
-#define CBS_HASH_MAP_EXT
 #define CBS_MATH_EXT
 #define CBS_FILE_EXT
 #define CBS_DARWIN_EXT

@@ -72,8 +72,8 @@ namespace math_cbs_ext {
 	}
 	void init()
 	{
-		math_ext.add_var("pi",number(3.1415926535));
-		math_ext.add_var("e",number(2.7182818284));
+		math_ext.add_var("pi",cov::any::make_constant<number>(3.1415926535));
+		math_ext.add_var("e",cov::any::make_constant<number>(2.7182818284));
 		math_ext.add_var("abs",cov::any::make_constant<native_interface>(abs));
 		math_ext.add_var("ln",cov::any::make_constant<native_interface>(ln));
 		math_ext.add_var("log10",cov::any::make_constant<native_interface>(log10));
