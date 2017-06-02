@@ -63,6 +63,20 @@ namespace cov_basic {
 			return;
 			break;
 		}
+		case token_types::signal: {
+			switch(dynamic_cast<token_signal*>(token)->get_signal()) {
+			case signal_types::dot_: {
+				opt_expr(tree,it.left());
+				opt_expr(tree,it.right());
+				token_base* lptr=it.left().data();
+				token_base* rptr=it.right().data();
+				if(lptr!=nullptr&&lptr->get_type()==token_types::value&&dynamic_cast<token_value*>(lptr)->get_value().type()==typeid(extension_t)&&rptr!=nullptr&&rptr->get_type()==token_types::id)
+					it.data()=new token_value(dynamic_cast<token_value*>(lptr)->get_value().val<extension_t>(true)->get_var(dynamic_cast<token_id*>(rptr)->get_id()));
+				return;
+				break;
+			}
+			}
+		}
 		}
 		opt_expr(tree,it.left());
 		opt_expr(tree,it.right());
