@@ -7,13 +7,14 @@
 #include "./exceptions.hpp"
 #include <unordered_map>
 #include <forward_list>
+#include <sstream>
 #include <functional>
 #include <string>
 #include <memory>
 #include <cmath>
 #include <deque>
 namespace cov_basic {
-	const std::string version="2.1.5.0";
+	const std::string version="2.1.5.1";
 	using number=long double;
 	using boolean=bool;
 	using string=std::string;
@@ -220,8 +221,14 @@ namespace cov {
 		for(auto& it:val)
 			cov_basic::copy_no_return(it.second);
 	}
-}
-namespace std {
+	template<>std::string to_string<cov_basic::number>(const cov_basic::number& val)
+	{
+		std::stringstream ss;
+		std::string str;
+		ss<<val;
+		ss>>str;
+		return std::move(str);
+	}
 	template<>std::string to_string<char>(const char& c)
 	{
 		return std::move(std::string(1,c));

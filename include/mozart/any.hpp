@@ -20,7 +20,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://ldc.atd3.cn
 *
-* Version: 17.5.2
+* Version: 17.5.3
 */
 #include "./base.hpp"
 #include "./memory.hpp"
@@ -46,6 +46,10 @@ namespace std {
 }
 #define COV_ANY_POOL_SIZE 96
 namespace cov {
+	template<typename T>std::string to_string(const T& val)
+	{
+		return std::to_string(val);
+	}
 	template<typename _Tp> class compare_helper {
 		template<typename T,typename X=bool>struct matcher;
 		template<typename T> static constexpr bool match(T*)
@@ -150,7 +154,7 @@ namespace cov {
 			}
 			virtual std::string to_string() const override
 			{
-				return std::to_string(mDat);
+				return cov::to_string(mDat);
 			}
 			virtual std::size_t hash() const override
 			{
