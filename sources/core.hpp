@@ -7,14 +7,16 @@
 #include "./exceptions.hpp"
 #include <unordered_map>
 #include <forward_list>
-#include <sstream>
 #include <functional>
+#include <sstream>
+#include <iomanip>
 #include <string>
 #include <memory>
 #include <cmath>
 #include <deque>
 namespace cov_basic {
 	const std::string version="2.1.5.1";
+	static int output_precision=8;
 	using number=long double;
 	using boolean=bool;
 	using string=std::string;
@@ -225,7 +227,7 @@ namespace cov {
 	{
 		std::stringstream ss;
 		std::string str;
-		ss<<val;
+		ss<<std::setprecision(cov_basic::output_precision)<<val;
 		ss>>str;
 		return std::move(str);
 	}
