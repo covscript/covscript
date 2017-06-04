@@ -1,3 +1,4 @@
+system.setprecision(10)
 define s=0
 define n=0
 loop

@@ -37,11 +37,18 @@ namespace system_cbs_ext {
 		std::cout<<std::endl;
 		return number(0);
 	}
+	cov::any setprecision(array& args)
+	{
+		arglist::check<number>(args);
+		output_precision=args.front().const_val<number>();
+		return number(0);
+	}
 	void init()
 	{
 		system_ext.add_var("input",cov::any::make_constant<native_interface>(input));
 		system_ext.add_var("getline",cov::any::make_constant<native_interface>(getline));
 		system_ext.add_var("print",cov::any::make_constant<native_interface>(print));
 		system_ext.add_var("println",cov::any::make_constant<native_interface>(println));
+		system_ext.add_var("setprecision",cov::any::make_constant<native_interface>(setprecision));
 	}
 }
