@@ -9,7 +9,7 @@ function step1(n)
     	end
     	score=score+fc
 	end
-	return score/n
+	return to_integer(score/n)
 end
 function step2(n,k)
 	function recursion(n)
@@ -25,7 +25,7 @@ function step2(n,k)
 		recursion(n)
 		score=score+runtime.time()-ts
 	end
-	return score/k
+	return to_integer(score/k)
 end
 function step3(n,k)
 	define precision=10^(-n)
@@ -47,7 +47,7 @@ function step3(n,k)
 		integral(f,0,1)
 		score=score+runtime.time()-ts
 	end
-	return score/k
+	return to_integer(score/k)
 end
 function quicksort(a,m,n)
 	if n<=m
@@ -91,14 +91,14 @@ function step4(n,k)
 		quicksort(a,0,size_of(a)-1)
 		score=score+runtime.time()-ts
 	end
-	return score/k
-end	
+	return to_integer(score/k)
+end
 system.println("Covariant Basic Performance Benchmark")
 system.println("Step 1:Speed of simple statement execution")
-system.println("Result:",(to_string(step1(5))).cut(7))
+system.println("Result:",to_string(step1(5)))
 system.println("Step 2:Speed of function recursion")
-system.println("Result:",(to_string(step2(1000,5))).cut(7))
+system.println("Result:",to_string(step2(1000,5)))
 system.println("Step 3:Speed of integral")
-system.println("Result:",(to_string(step3(5,5))).cut(7))
+system.println("Result:",to_string(step3(5,5)))
 system.println("Step 4:Speed of quick sort(10000 Data)")
-system.println("Result:",(to_string(step4(10000,5))).cut(7))
+system.println("Result:",to_string(step4(10000,5)))

@@ -13,7 +13,6 @@ define score=0
 
 function die()
 	define str0="You die!Your score is "+score
-	str0.cut(7)
 	str0.append(".")
 	define str1="Press any key to continue..."
 	loop
