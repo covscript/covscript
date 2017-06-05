@@ -54,22 +54,22 @@ function start()
 		if(darwin.is_kb_hit())
 			switch darwin.get_kb_hit()
 				case 'w'
-					if(god_mode||heading!=4)
+					if(!pause&&(god_mode||heading!=4))
 						heading=3
 					end
 				end
 				case 's'
-					if(god_mode||heading!=3)
+					if(!pause&&(god_mode||heading!=3))
 						heading=4
 					end
 				end
 				case 'a'
-					if(god_mode||heading!=2)
+					if(!pause&&(god_mode||heading!=2))
 						heading=1
 					end
 				end
 				case 'd'
-					if(god_mode||heading!=1)
+					if(!pause&&(god_mode||heading!=1))
 						heading=2
 					end
 				end
@@ -155,6 +155,7 @@ function start()
 		end
 	end
 end
+
 for i=1 to size_of(system.args)-1
 	switch system.args.at(i)
 		case "--god-mode"
@@ -168,8 +169,8 @@ for i=1 to size_of(system.args)-1
 		end
 	end
 end
-runtime.delay(500)
 darwin.load()
+darwin.message_box("Greedy Snake","Press any key to start","OK")
 darwin.fit_drawable()
 loop
 	snake_body.clear()
