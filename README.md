@@ -8,7 +8,7 @@
 3. 编译期优化
 4. 语法，函数可扩展
 5. 引用计数垃圾回收器
-  
+
 ## 使用Covariant Basic编程语言 ##
 请访问[Covariant Basic Wiki](https://github.com/mikecovlee/covbasic/wiki)
 ## 下载与安装 ##
@@ -25,4 +25,4 @@
 ## 测试 ##
 在`tests`文件夹中包含了数个由CovBasic编写的测试程序。
 ## 版权 ##
-**Covariant Basic编程语言**的作者是李登淳(Michael Lee,mikecovlee@github.com)
+**Covariant Basic编程语言**的作者是李登淳(Michael Lee,mikecovlee@163.com)
