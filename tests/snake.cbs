@@ -7,8 +7,8 @@ define food={0,0}
 define heading=2
 define init_long=5
 define god_mode=false
-define cross_wall=true
-define hard=3
+define cross_wall=false
+define hard=2
 define score=0
 
 function die()
@@ -49,6 +49,7 @@ function start()
 	end
 	gen_food()
 	define frame=0
+	define pause=false
 	loop
 		if(darwin.is_kb_hit())
 			switch darwin.get_kb_hit()
@@ -72,9 +73,16 @@ function start()
 						heading=2
 					end
 				end
+				case '\t'
+					if(pause)
+						pause=false
+					else
+						pause=true
+					end
+				end
 			end
 		end
-		if(frame==hard)
+		if(!pause&&frame==hard)
 			switch heading
 				case 1
 					--snake_head[0]
@@ -126,16 +134,40 @@ function start()
 			frame=0
 		end
 		darwin.clear_drawable()
+		darwin.draw_string(0,0,"Score:"+to_string(score),darwin.pixel(' ',true,false,darwin.black,darwin.white))
+		if(cross_wall)
+			darwin.draw_string(0,1,"Cross Wall",darwin.pixel(' ',true,false,darwin.white,darwin.blue))
+		end
+		if(god_mode)
+			darwin.draw_string(0,2,"God Mode",darwin.pixel(' ',true,false,darwin.white,darwin.red))
+		end
+		if(pause)
+			darwin.draw_string(0,3,"Pause",darwin.pixel(' ',true,false,darwin.white,darwin.yellow))
+		end
 		for i=0 to size_of(snake_body)-1
 			darwin.draw_point(snake_body[i][0],snake_body[i][1],body_pix)
 		end
 		darwin.draw_point(snake_head[0],snake_head[1],head_pix)
 		darwin.draw_point(food[0],food[1],food_pix)
 		darwin.update_drawable()
-		++frame
+		if(!pause)
+			++frame
+		end
 	end
 end
-
+for i=1 to size_of(system.args)-1
+	switch system.args.at(i)
+		case "--god-mode"
+			god_mode=true
+		end
+		case "--cross-wall"
+			cross_wall=true
+		end
+		default
+			runtime.error("Unknown arguments")
+		end
+	end
+end
 runtime.delay(500)
 darwin.load()
 darwin.fit_drawable()
