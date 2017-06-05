@@ -592,7 +592,11 @@ namespace cov_basic {
 						throw internal_error("Null pointer accessed.");
 					if(it.root().data()->get_type()!=token_types::id)
 						throw syntax_error("Wrong grammar for function definition.");
-					args.push_back(dynamic_cast<token_id*>(it.root().data())->get_id());
+					const std::string& str=dynamic_cast<token_id*>(it.root().data())->get_id();
+					for(auto& it:args)
+						if(it==str)
+							throw syntax_error("Redefinition of function argument.");
+					args.push_back(str);
 				}
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);

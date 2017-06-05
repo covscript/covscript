@@ -15,10 +15,9 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Copyright (C) 2016 Michael Lee(李登淳)
-* Email: China-LDC@outlook.com
+* Copyright (C) 2017 Michael Lee(李登淳)
+* Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
-* Website: http://ldc.atd3.cn
 *
 * Library Version: 17.2.1
 */
@@ -30,7 +29,7 @@
 #error E0002
 #endif
 
-#define __Mozart 170201L
+#define __Mozart 170601L
 
 #include <exception>
 #include <stdexcept>

@@ -38,8 +38,6 @@ namespace cov_basic {
 			throw syntax_error("Wrong size of arguments.");
 		if(args.front().type()==typeid(number))
 			return number(long(args.at(0).const_val<number>()));
-		else if(args.front().type()==typeid(string))
-			return number(std::stold(args.at(0).const_val<string>()));
 		else
 			throw syntax_error("Wrong type of arguments.(Request Number or String)");
 	}
