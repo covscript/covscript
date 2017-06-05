@@ -22,9 +22,13 @@
 * Version: 2.1.5.1
 */
 #define DARWIN_DISABLE_LOG
+#ifndef CBS_MINIMAL
 #define CBS_MATH_EXT
 #define CBS_FILE_EXT
 #define CBS_DARWIN_EXT
+#else
+#define CBS_STATIC
+#endif
 #include "./covbasic.hpp"
 int main(int args_size,const char* args[])
 {

@@ -1,9 +1,11 @@
 #pragma once
+#ifndef CBS_STATIC
+#include "../include/libdll/dll.hpp"
+#endif
 #include "../include/mozart/random.hpp"
 #include "../include/mozart/timer.hpp"
 #include "../include/mozart/tree.hpp"
 #include "../include/mozart/any.hpp"
-#include "../include/libdll/dll.hpp"
 #include "./exceptions.hpp"
 #include <unordered_map>
 #include <forward_list>
@@ -170,14 +172,23 @@ namespace cov_basic {
 	};
 	class extension_holder final {
 		extension* m_ext=nullptr;
+#ifndef CBS_STATIC
 		cov::dll m_dll;
+#endif
 	public:
 		extension_holder()=delete;
 		extension_holder(extension* ptr):m_ext(ptr) {}
+#ifndef CBS_STATIC
 		extension_holder(const std::string& path):m_dll(path)
 		{
 			m_ext=reinterpret_cast<extension*(*)()>(m_dll.get_address("__CBS_EXTENSION__"))();
 		}
+#else
+		extension_holder(const std::string&)
+		{
+			throw internal_error("Can not load extension because covbasic is static version.");
+		}
+#endif
 		~extension_holder()=default;
 		cov::any& get_var(const std::string& name)
 		{
