@@ -211,12 +211,12 @@ namespace cov_basic {
 		}
 		return str;
 	}
-	inline void copy_no_return(cov::any& val)
+	void copy_no_return(cov::any& val)
 	{
 		val.clone();
 		val.detach();
 	}
-	inline cov::any copy(cov::any val)
+	cov::any copy(cov::any val)
 	{
 		val.clone();
 		val.detach();

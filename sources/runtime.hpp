@@ -223,14 +223,20 @@ namespace cov_basic {
 			return a.val<extension_t>(true)->get_var(dynamic_cast<token_id*>(b)->get_id());
 		else if(a.type()!=typeid(constant_values))
 			throw syntax_error("Unsupported operator operations(Dot).");
-		else if(a.const_val<constant_values>()==constant_values::global_namespace)
-			return runtime->storage.get_var_global(dynamic_cast<token_id*>(b)->get_id());
-		else if(a.const_val<constant_values>()==constant_values::current_namespace)
-			return runtime->storage.get_var_current(dynamic_cast<token_id*>(b)->get_id());
-		else if(a.const_val<constant_values>()==constant_values::this_object)
-			return runtime->storage.get_var_this(dynamic_cast<token_id*>(b)->get_id());
-		else
-			throw syntax_error("Unsupported operator operations(Dot).");
+		else switch (a.const_val<constant_values>()) {
+			case constant_values::global_namespace:
+				return runtime->storage.get_var_global(dynamic_cast<token_id*>(b)->get_id());
+				break;
+			case constant_values::current_namespace:
+				return runtime->storage.get_var_current(dynamic_cast<token_id*>(b)->get_id());
+				break;
+			case constant_values::this_object:
+				return runtime->storage.get_var_this(dynamic_cast<token_id*>(b)->get_id());
+				break;
+			default:
+				throw syntax_error("Unsupported operator operations(Dot).");
+				break;
+			}
 	}
 	cov::any parse_mem(const cov::any& a,token_base* b)
 	{

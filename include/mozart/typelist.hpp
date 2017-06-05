@@ -15,10 +15,9 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Copyright (C) 2016 Michael Lee(李登淳)
-* Email: China-LDC@outlook.com
+* Copyright (C) 2017 Michael Lee(李登淳)
+* Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
-* Website: http://ldc.atd3.cn
 *
 * Version: 17.1.0
 */

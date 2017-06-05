@@ -18,7 +18,6 @@
 * Copyright (C) 2017 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
-* Website: http://ldc.atd3.cn
 *
 * Version: 17.1.1
 */
