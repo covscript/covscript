@@ -1,28 +1,28 @@
 ![](https://github.com/mikecovlee/covbasic/blob/master/icon/basic2.1.jpg)
 # Covariant Basic Programming Language #
-**欢迎使用Covariant Basic编程语言！**  
-**Covariant Basic**是一种开源的跨平台编程语言
-## 语言特性 ##
-1. 完整的编译器前端
-2. 动态类型
-3. 编译期优化
-4. 语法，函数可扩展
-5. 引用计数垃圾回收器
+**Welcome to the Covariant Basic programming language!**  
+**Covariant Basic** is an open source,cross-platform programming language.
+## Language features ##
+1. Complete compiler front end
+2. Dynamic type
+3. Compile-time optimization
+4. Grammar and function can be extended
+5. Reference count garbage collector
 
-## 使用Covariant Basic编程语言 ##
-请访问[Covariant Basic Wiki](https://github.com/mikecovlee/covbasic/wiki)
-## 下载与安装 ##
+## Use the Covariant Basic programming language ##
+Please visit [Covariant Basic Wiki](https://github.com/mikecovlee/covbasic/wiki)
+## Download and install ##
 ### Microsoft Windows ###
-请在[Release页面](https://github.com/mikecovlee/covbasic/releases/latest)下载预编译的可执行文件。你也可以使用MinGW或合适的工具直接编译源码，如你的系统中已经安装了G++编译器你可以直接执行`make.bat`，你需要确保编译器支持C++11标准。  
-**注意！Covariant Basic不支持使用Microsoft CL编译，具体原因目前还不清楚，可能是因为其对C++11标准的支持并不完全。**
+Please download the precompiled executable on the [Latest Release](https://github.com/mikecovlee/covbasic/releases/latest). You can also use MinGW or the appropriate tools to compile the source code directly. If you already have a G++ compiler installed on your system, you can execute `make.bat` directly. You need to make sure that the compiler supports the C++11 standard.  
+**Attention! Covariant Basic does not support the use of Microsoft CL compiler, the specific reason is not yet clear, probably because of its support for the C++ standard is not complete.**
 ### Linux ###
-下载源码后，如果你的系统中已安装G++编译器你可以直接在终端中输入`sh ./make.sh`来编译，你需要确保编译器支持C++11标准。  
-**注意！有些发行版的G++版本太老，不支持C++11标准，请一定下载最新版G++编译器。**
+After downloading the source code, if you have installed the G++ compiler on your system, you can type `sh. / Make.sh` directly in the terminal. You need to make sure that the compiler supports the C ++ 11 standard.  
+**Attention! Some distributions of the G++ version are too old to support the C++11 standard, please download the latest version of the G++ compiler.**
 ### Mac OS ###
-暂时没有测试，应该与Linux无异。
-## 运行 ##
+There is no test, it should be the same with Linux.
+## Run ##
 `cbs2.1 <file> <args...>`
-## 测试 ##
-在`tests`文件夹中包含了数个由CovBasic编写的测试程序。
-## 版权 ##
-**Covariant Basic编程语言**的作者是李登淳(Michael Lee,mikecovlee@163.com)
+## Test ##
+The `tests` folder contains several test programs written by CovBasic.
+## Copyright ##
+**The author of the Covariant Basic programming language is Michael Lee(mikecovlee@163.com).**
