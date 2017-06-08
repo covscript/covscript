@@ -306,6 +306,13 @@ namespace cov_basic {
 		a.swap(copy(b),true);
 		return a;
 	}
+	cov::any parse_pair(const cov::any& a,const cov::any& b)
+	{
+		if(a.type()!=typeid(pair)&&b.type()!=typeid(pair))
+			return cov::any::make<pair>(copy(a),copy(b));
+		else
+			throw syntax_error("Unsupported operator operations(Pair).");
+	}
 	cov::any parse_link(const cov::any& a,const cov::any& b)
 	{
 		if(!a.usable()&&b.usable())
@@ -406,11 +413,8 @@ namespace cov_basic {
 		}
 		else if(a.type()==typeid(hash_map)) {
 			hash_map& map=a.val<hash_map>(true);
-			if(map.count(b)==0) {
-				cov::any key=b;
-				key.clone();
-				map.emplace(key,number(0));
-			}
+			if(map.count(b)==0)
+				map.emplace(copy(b),number(0));
 			return map.at(b);
 		}
 		else if(a.type()==typeid(string)) {
@@ -448,9 +452,28 @@ namespace cov_basic {
 			break;
 		case token_types::array: {
 			array arr;
-			for(auto& tree:dynamic_cast<token_array*>(token)->get_array())
-				arr.push_back(copy(parse_expr(tree.root())));
-			return cov::any::make<array>(std::move(arr));
+			bool is_map=true;
+			for(auto& tree:dynamic_cast<token_array*>(token)->get_array()) {
+				const cov::any& val=parse_expr(tree.root());
+				if(is_map&&val.type()!=typeid(pair))
+					is_map=false;
+				arr.push_back(copy(val));
+			}
+			if(arr.empty())
+				is_map=false;
+			if(is_map) {
+				hash_map map;
+				for(auto& it:arr) {
+					pair& p=it.val<pair>(true);
+					if(map.count(p.first)==0)
+						map.emplace(copy(p.first),copy(p.second));
+					else
+						map.at(p.first)=copy(p.second);
+				}
+				return cov::any::make<hash_map>(std::move(map));
+			}
+			else
+				return cov::any::make<array>(std::move(arr));
 		}
 		case token_types::arglist: {
 			array arr;
@@ -504,6 +527,9 @@ namespace cov_basic {
 				return parse_asi(left,parse_expr(it.right()));
 				break;
 			}
+			case signal_types::pair_:
+				return parse_pair(parse_expr(it.left()),parse_expr(it.right()));
+				break;
 			case signal_types::link_:
 				return parse_link(parse_expr(it.left()),parse_expr(it.right()));
 				break;

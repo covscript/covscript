@@ -1,6 +1,4 @@
-define a as hash_map
-a[10]=3.14
-a["Hello"]=10
+define a={10:3.14,"Hello":10,2:6.28}
 a["Hello"]=1
 a.insert("World",20)
 a.at("World")=2

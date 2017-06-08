@@ -17,12 +17,13 @@
 #include <cmath>
 #include <deque>
 namespace cov_basic {
-	const std::string version="2.1.5.1";
+	const std::string version="2.1.5.2";
 	static int output_precision=8;
 	using number=long double;
 	using boolean=bool;
 	using string=std::string;
 	using array=std::deque<cov::any>;
+	using pair=std::pair<cov::any,cov::any>;
 	using hash_map=std::unordered_map<cov::any,cov::any>;
 	class token_base;
 	class statement_base;
@@ -224,6 +225,11 @@ namespace cov_basic {
 	}
 }
 namespace cov {
+	template<>void detach<cov_basic::pair>(cov_basic::pair& val)
+	{
+		cov_basic::copy_no_return(val.first);
+		cov_basic::copy_no_return(val.second);
+	}
 	template<>void detach<cov_basic::array>(cov_basic::array& val)
 	{
 		for(auto& it:val)
