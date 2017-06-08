@@ -49,10 +49,30 @@ namespace cov_basic {
 			}
 			if(is_optimizable) {
 				array arr;
-				for(auto& tree:dynamic_cast<token_array*>(token)->get_array())
-					arr.push_back(parse_expr(tree.root()));
-				token_value* token=new token_value(arr);
-				it.data()=token;
+				bool is_map=true;
+				token_value* t=nullptr;
+				for(auto& tree:dynamic_cast<token_array*>(token)->get_array()) {
+					const cov::any& val=parse_expr(tree.root());
+					if(is_map&&val.type()!=typeid(pair))
+						is_map=false;
+					arr.push_back(copy(val));
+				}
+				if(arr.empty())
+					is_map=false;
+				if(is_map) {
+					hash_map map;
+					for(auto& it:arr) {
+						pair& p=it.val<pair>(true);
+						if(map.count(p.first)==0)
+							map.emplace(copy(p.first),copy(p.second));
+						else
+							map.at(p.first)=copy(p.second);
+					}
+					t=new token_value(cov::any::make<hash_map>(std::move(map)));
+				}
+				else
+					t=new token_value(cov::any::make<array>(std::move(arr)));
+				it.data()=t;
 			}
 			return;
 			break;
