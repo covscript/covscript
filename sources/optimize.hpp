@@ -95,6 +95,30 @@ namespace cov_basic {
 				return;
 				break;
 			}
+			case signal_types::fcall_: {
+				opt_expr(tree,it.left());
+				opt_expr(tree,it.right());
+				token_base* lptr=it.left().data();
+				token_base* rptr=it.right().data();
+				if(lptr!=nullptr&&lptr->get_type()==token_types::value&&dynamic_cast<token_value*>(lptr)->get_value().type()==typeid(native_interface)&&rptr!=nullptr&&rptr->get_type()==token_types::arglist) {
+					cov::any& ni=dynamic_cast<token_value*>(lptr)->get_value();
+					if(ni.const_val<native_interface>().is_constant()) {
+						bool is_optimizable=true;
+						for(auto& tree:dynamic_cast<token_arglist*>(rptr)->get_arglist()) {
+							if(is_optimizable&&!optimizable(tree.root()))
+								is_optimizable=false;
+						}
+						if(is_optimizable) {
+							array arr;
+							for(auto& tree:dynamic_cast<token_arglist*>(rptr)->get_arglist())
+								arr.push_back(parse_expr(tree.root()));
+							it.data()=new token_value(ni.val<native_interface>(true).call(arr));
+						}
+					}
+				}
+				return;
+				break;
+			}
 			}
 		}
 		}

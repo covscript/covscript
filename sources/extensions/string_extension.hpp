@@ -86,14 +86,14 @@ namespace string_cbs_ext {
 	}
 	void init()
 	{
-		string_ext.add_var("append",cov::any::make_constant<native_interface>(append));
-		string_ext.add_var("insert",cov::any::make_constant<native_interface>(insert));
-		string_ext.add_var("erase",cov::any::make_constant<native_interface>(erase));
-		string_ext.add_var("replace",cov::any::make_constant<native_interface>(replace));
-		string_ext.add_var("substr",cov::any::make_constant<native_interface>(substr));
-		string_ext.add_var("find",cov::any::make_constant<native_interface>(find));
-		string_ext.add_var("rfind",cov::any::make_constant<native_interface>(rfind));
-		string_ext.add_var("cut",cov::any::make_constant<native_interface>(cut));
-		string_ext.add_var("clear",cov::any::make_constant<native_interface>(clear));
+		string_ext.add_var("append",cov::any::make_constant<native_interface>(append,true));
+		string_ext.add_var("insert",cov::any::make_constant<native_interface>(insert,true));
+		string_ext.add_var("erase",cov::any::make_constant<native_interface>(erase,true));
+		string_ext.add_var("replace",cov::any::make_constant<native_interface>(replace,true));
+		string_ext.add_var("substr",cov::any::make_constant<native_interface>(substr,true));
+		string_ext.add_var("find",cov::any::make_constant<native_interface>(find,true));
+		string_ext.add_var("rfind",cov::any::make_constant<native_interface>(rfind,true));
+		string_ext.add_var("cut",cov::any::make_constant<native_interface>(cut,true));
+		string_ext.add_var("clear",cov::any::make_constant<native_interface>(clear,true));
 	}
 }

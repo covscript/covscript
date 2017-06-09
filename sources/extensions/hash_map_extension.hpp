@@ -49,10 +49,10 @@ namespace hash_map_cbs_ext {
 	}
 	void init()
 	{
-		hash_map_ext.add_var("clear",cov::any::make_constant<native_interface>(clear));
-		hash_map_ext.add_var("insert",cov::any::make_constant<native_interface>(insert));
-		hash_map_ext.add_var("erase",cov::any::make_constant<native_interface>(erase));
-		hash_map_ext.add_var("exist",cov::any::make_constant<native_interface>(exist));
-		hash_map_ext.add_var("at",cov::any::make_constant<native_interface>(at));
+		hash_map_ext.add_var("clear",cov::any::make_constant<native_interface>(clear,true));
+		hash_map_ext.add_var("insert",cov::any::make_constant<native_interface>(insert,true));
+		hash_map_ext.add_var("erase",cov::any::make_constant<native_interface>(erase,true));
+		hash_map_ext.add_var("exist",cov::any::make_constant<native_interface>(exist,true));
+		hash_map_ext.add_var("at",cov::any::make_constant<native_interface>(at,true));
 	}
 }

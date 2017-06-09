@@ -16,6 +16,7 @@
 #include "./extensions/darwin_extension.cpp"
 #endif
 #define add_function(name) cov_basic::runtime->storage.add_var_global(#name,cov::any::make_constant<cov_basic::native_interface>(name));
+#define add_function_const(name) cov_basic::runtime->storage.add_var_global(#name,cov::any::make_constant<cov_basic::native_interface>(name,true));
 #define add_function_name(name,func) cov_basic::runtime->storage.add_var_global(name,cov::any::make_constant<cov_basic::native_interface>(func));
 namespace cov_basic {
 // Internal Functions
@@ -122,13 +123,13 @@ namespace cov_basic {
 		runtime->storage.add_type("linker",[]()->cov::any {return cov::any::make<linker>();},cov::hash<std::string>(typeid(linker).name()));
 		runtime->storage.add_type("hash_map",[]()->cov::any {return cov::any::make<hash_map>();},cov::hash<std::string>(typeid(hash_map).name()));
 		// Add Internal Functions to storage
-		add_function(to_integer);
-		add_function(to_string);
-		add_function(is_number);
-		add_function(is_boolean);
-		add_function(is_string);
-		add_function(is_array);
-		add_function(size_of);
+		add_function_const(to_integer);
+		add_function_const(to_string);
+		add_function_const(is_number);
+		add_function_const(is_boolean);
+		add_function_const(is_string);
+		add_function_const(is_array);
+		add_function_const(size_of);
 		add_function(clone);
 		add_function(swap);
 		add_function(link);
