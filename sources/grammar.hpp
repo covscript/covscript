@@ -1,11 +1,12 @@
 #pragma once
 #include "./optimize.hpp"
+#define CBS_STACK_SIZE 1024
 namespace cov_basic {
 	bool return_fcall=false;
 	bool inside_struct=false;
 	bool break_block=false;
 	bool continue_block=false;
-	std::deque<const function*> fcall_stack;
+	cov::static_stack<const function*,CBS_STACK_SIZE> fcall_stack;
 	cov::any function::call(const array& args) const
 	{
 		if(args.size()!=this->mArgs.size())
@@ -15,7 +16,7 @@ namespace cov_basic {
 			runtime->storage.add_domain(this->mData);
 		}
 		runtime->storage.add_domain();
-		fcall_stack.push_front(this);
+		fcall_stack.push(this);
 		for(std::size_t i=0; i<args.size(); ++i)
 			runtime->storage.add_var(this->mArgs.at(i),args.at(i));
 		for(auto& ptr:this->mBody) {
@@ -40,7 +41,7 @@ namespace cov_basic {
 					runtime->storage.remove_domain();
 				}
 				runtime->storage.remove_domain();
-				fcall_stack.pop_front();
+				fcall_stack.pop();
 				return retval;
 			}
 		}
@@ -49,7 +50,7 @@ namespace cov_basic {
 			runtime->storage.remove_domain();
 		}
 		runtime->storage.remove_domain();
-		fcall_stack.pop_front();
+		fcall_stack.pop();
 		return number(0);
 	}
 	cov::any struct_builder::operator()()
@@ -323,7 +324,7 @@ namespace cov_basic {
 	{
 		if(fcall_stack.empty())
 			throw syntax_error("Return outside function.");
-		fcall_stack.front()->mRetVal=parse_expr(this->mTree.root());
+		fcall_stack.top()->mRetVal=parse_expr(this->mTree.root());
 		return_fcall=true;
 	}
 	void kill_action(const std::deque<std::deque<token_base*>>& lines,std::deque<statement_base*>& statements)
