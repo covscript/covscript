@@ -2,7 +2,7 @@
 #include "./runtime.hpp"
 namespace cov_basic {
 	void opt_expr(cov::tree<token_base*>&,cov::tree<token_base*>::iterator);
-	bool optimizable(cov::tree<token_base*>::iterator it)
+	bool optimizable(const cov::tree<token_base*>::iterator& it)
 	{
 		if(!it.usable())
 			return false;
@@ -64,9 +64,9 @@ namespace cov_basic {
 					for(auto& it:arr) {
 						pair& p=it.val<pair>(true);
 						if(map.count(p.first)==0)
-							map.emplace(copy(p.first),copy(p.second));
+							map.emplace(p.first,p.second);
 						else
-							map.at(p.first)=copy(p.second);
+							map.at(p.first)=p.second;
 					}
 					t=new token_value(cov::any::make<hash_map>(std::move(map)));
 				}

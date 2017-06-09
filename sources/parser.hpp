@@ -60,7 +60,7 @@ namespace cov_basic {
 			throw syntax_error("Get the level of non-signal token.");
 		return signal_level_map.match(dynamic_cast<token_signal*>(ptr)->get_signal());
 	}
-	signal_types signal_left_associative[] = {
+	constexpr signal_types signal_left_associative[] = {
 		signal_types::und_,signal_types::abo_,signal_types::asi_,signal_types::equ_,signal_types::ueq_,signal_types::aeq_,signal_types::neq_,signal_types::and_,signal_types::or_
 	};
 	bool is_left_associative(token_base* ptr)
