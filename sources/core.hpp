@@ -2,6 +2,7 @@
 #ifndef CBS_STATIC
 #include "../include/libdll/dll.hpp"
 #endif
+#include "../include/mozart/static_stack.hpp"
 #include "../include/mozart/random.hpp"
 #include "../include/mozart/timer.hpp"
 #include "../include/mozart/tree.hpp"
