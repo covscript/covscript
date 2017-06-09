@@ -211,19 +211,8 @@ namespace cov_basic {
 			throw internal_error("Null Pointer Accessed.");
 		else if(b->get_type()!=token_types::id)
 			throw syntax_error("Unsupported operator operations(Dot).");
-		else if(a.type()==typeid(string))
-			return object_method(a,runtime->string_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
-		else if(a.type()==typeid(array))
-			return object_method(a,runtime->array_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
-		else if(a.type()==typeid(hash_map))
-			return object_method(a,runtime->hash_map_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
-		else if(a.type()==typeid(structure))
-			return a.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
-		else if(a.type()==typeid(extension_t))
-			return a.val<extension_t>(true)->get_var(dynamic_cast<token_id*>(b)->get_id());
-		else if(a.type()!=typeid(constant_values))
-			throw syntax_error("Unsupported operator operations(Dot).");
-		else switch (a.const_val<constant_values>()) {
+		else if(a.type()==typeid(constant_values)) {
+			switch (a.const_val<constant_values>()) {
 			case constant_values::global_namespace:
 				return runtime->storage.get_var_global(dynamic_cast<token_id*>(b)->get_id());
 				break;
@@ -237,6 +226,19 @@ namespace cov_basic {
 				throw syntax_error("Unsupported operator operations(Dot).");
 				break;
 			}
+		}
+		else if(a.type()==typeid(extension_t))
+			return a.val<extension_t>(true)->get_var(dynamic_cast<token_id*>(b)->get_id());
+		else if(a.type()==typeid(structure))
+			return a.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
+		else if(a.type()==typeid(string))
+			return object_method(a,runtime->string_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
+		else if(a.type()==typeid(array))
+			return object_method(a,runtime->array_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
+		else if(a.type()==typeid(hash_map))
+			return object_method(a,runtime->hash_map_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
+		else
+			throw syntax_error("Unsupported operator operations(Dot).");
 	}
 	cov::any parse_mem(const cov::any& a,token_base* b)
 	{
@@ -246,10 +248,14 @@ namespace cov_basic {
 			throw syntax_error("Unsupported operator operations(Mem).");
 		else if(!a.const_val<linker>().data.usable())
 			throw syntax_error("Access Null Linker.");
-		else if(a.const_val<linker>().data.type()==typeid(structure))
-			return a.const_val<linker>().data.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
-		else
-			throw syntax_error("Unsupported operator operations(Mem).");
+		else {
+			try {
+				return parse_dot(a.const_val<linker>().data,b);
+			}
+			catch(const syntax_error& se) {
+				throw syntax_error("Unsupported operator operations(Mem).");
+			}
+		}
 	}
 	cov::any parse_new(token_base* a,token_base* b)
 	{
@@ -426,7 +432,7 @@ namespace cov_basic {
 			throw syntax_error("Access non-array or string object.");
 	}
 	bool define_var=false;
-	cov::any parse_expr(cov::tree<token_base*>::iterator it)
+	cov::any parse_expr(const cov::tree<token_base*>::iterator& it)
 	{
 		if(!it.usable())
 			throw internal_error("The expression tree is not available.");
@@ -435,7 +441,7 @@ namespace cov_basic {
 			return cov::any();
 		switch(token->get_type()) {
 		case token_types::id: {
-			std::string id=dynamic_cast<token_id*>(token)->get_id();
+			const std::string& id=dynamic_cast<token_id*>(token)->get_id();
 			if(define_var) {
 				if(!runtime->storage.var_exsist_current(id))
 					runtime->storage.add_var(id,number(0));
@@ -466,9 +472,9 @@ namespace cov_basic {
 				for(auto& it:arr) {
 					pair& p=it.val<pair>(true);
 					if(map.count(p.first)==0)
-						map.emplace(copy(p.first),copy(p.second));
+						map.emplace(p.first,p.second);
 					else
-						map.at(p.first)=copy(p.second);
+						map.at(p.first)=p.second;
 				}
 				return cov::any::make<hash_map>(std::move(map));
 			}

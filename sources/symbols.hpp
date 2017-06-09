@@ -180,7 +180,7 @@ namespace cov_basic {
 	mapping<char,char> escape_map= {
 		{'a','\a'},{'b','\b'},{'f','\f'},{'n','\n'},{'r','\r'},{'t','\t'},{'v','\v'},{'\\','\\'},{'\'','\''},{'\"','\"'},{'0','\0'}
 	};
-	char signals[]= {
+	constexpr char signals[]= {
 		'+','-','*','/','%','^',',','.','>','<','=','&','|','!','(',')','[',']','{','}',':'
 	};
 	bool issignal(char ch)

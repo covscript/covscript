@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 *
-* Version: 17.2.1
+* Version: 17.6.1
 */
 #include "./base.hpp"
 #include <utility>
@@ -83,23 +83,23 @@ namespace cov {
 					throw cov::error("E000E");
 				return this->mData->data;
 			}
-			iterator root()
+			iterator root() const
 			{
 				if(!this->usable())
 					throw cov::error("E000E");
-				return iterator(this->mData->root);
+				return this->mData->root;
 			}
-			iterator left()
+			iterator left() const
 			{
 				if(!this->usable())
 					throw cov::error("E000E");
-				return iterator(this->mData->left);
+				return this->mData->left;
 			}
-			iterator right()
+			iterator right() const
 			{
 				if(!this->usable())
 					throw cov::error("E000E");
-				return iterator(this->mData->right);
+				return this->mData->right;
 			}
 		};
 		class const_iterator final {
@@ -128,19 +128,19 @@ namespace cov {
 			{
 				if(!this->usable())
 					throw cov::error("E000E");
-				return const_iterator(this->mData->root);
+				return this->mData->root;
 			}
 			const_iterator left() const
 			{
 				if(!this->usable())
 					throw cov::error("E000E");
-				return const_iterator(this->mData->left);
+				return this->mData->left;
 			}
 			const_iterator right() const
 			{
 				if(!this->usable())
 					throw cov::error("E000E");
-				return const_iterator(this->mData->right);
+				return this->mData->right;
 			}
 		};
 		void swap(tree& t)
@@ -194,21 +194,21 @@ namespace cov {
 		}
 		iterator root()
 		{
-			return iterator(this->mRoot);
+			return this->mRoot;
 		}
 		const_iterator root() const
 		{
-			return const_iterator(this->mRoot);
+			return this->mRoot;
 		}
 		const_iterator croot() const
 		{
-			return const_iterator(this->mRoot);
+			return this->mRoot;
 		}
 		iterator insert_root_left(iterator it,const T& data)
 		{
 			if(it.mData==mRoot) {
 				mRoot=new tree_node(nullptr,mRoot,nullptr,data);
-				return iterator(mRoot);
+				return mRoot;
 			}
 			if(!it.usable())
 				throw cov::error("E000E");
@@ -217,13 +217,13 @@ namespace cov {
 				it.mData->root->left=node;
 			else
 				it.mData->root->right=node;
-			return iterator(node);
+			return node;
 		}
 		iterator insert_root_right(iterator it,const T& data)
 		{
 			if(it.mData==mRoot) {
 				mRoot=new tree_node(nullptr,nullptr,mRoot,data);
-				return iterator(mRoot);
+				return mRoot;
 			}
 			if(!it.usable())
 				throw cov::error("E000E");
@@ -232,7 +232,7 @@ namespace cov {
 				it.mData->root->left=node;
 			else
 				it.mData->root->right=node;
-			return iterator(node);
+			return node;
 		}
 		iterator insert_left_left(iterator it,const T& data)
 		{
@@ -242,7 +242,7 @@ namespace cov {
 			if(it.mData->left!=nullptr)
 				it.mData->left->root=node;
 			it.mData->left=node;
-			return iterator(node);
+			return node;
 		}
 		iterator insert_left_right(iterator it,const T& data)
 		{
@@ -252,7 +252,7 @@ namespace cov {
 			if(it.mData->left!=nullptr)
 				it.mData->left->root=node;
 			it.mData->left=node;
-			return iterator(node);
+			return node;
 		}
 		iterator insert_right_left(iterator it,const T& data)
 		{
@@ -262,7 +262,7 @@ namespace cov {
 			if(it.mData->right!=nullptr)
 				it.mData->right->root=node;
 			it.mData->right=node;
-			return iterator(node);
+			return node;
 		}
 		iterator insert_right_right(iterator it,const T& data)
 		{
@@ -272,13 +272,13 @@ namespace cov {
 			if(it.mData->right!=nullptr)
 				it.mData->right->root=node;
 			it.mData->right=node;
-			return iterator(node);
+			return node;
 		}
 		template<typename...Args>iterator emplace_root_left(iterator it,Args&&...args)
 		{
 			if(it.mData==mRoot) {
 				mRoot=new tree_node(nullptr,mRoot,nullptr,std::forward<Args>(args)...);
-				return iterator(mRoot);
+				return mRoot;
 			}
 			if(!it.usable())
 				throw cov::error("E000E");
@@ -287,13 +287,13 @@ namespace cov {
 				it.mData->root->left=node;
 			else
 				it.mData->root->right=node;
-			return iterator(node);
+			return node;
 		}
 		template<typename...Args>iterator emplace_root_right(iterator it,Args&&...args)
 		{
 			if(it.mData==mRoot) {
 				mRoot=new tree_node(nullptr,nullptr,mRoot,std::forward<Args>(args)...);
-				return iterator(mRoot);
+				return mRoot;
 			}
 			if(!it.usable())
 				throw cov::error("E000E");
@@ -302,7 +302,7 @@ namespace cov {
 				it.mData->root->left=node;
 			else
 				it.mData->root->right=node;
-			return iterator(node);
+			return node;
 		}
 		template<typename...Args>iterator emplace_left_left(iterator it,Args&&...args)
 		{
@@ -312,7 +312,7 @@ namespace cov {
 			if(it.mData->left!=nullptr)
 				it.mData->left->root=node;
 			it.mData->left=node;
-			return iterator(node);
+			return node;
 		}
 		template<typename...Args>iterator emplace_left_right(iterator it,Args&&...args)
 		{
@@ -322,7 +322,7 @@ namespace cov {
 			if(it.mData->left!=nullptr)
 				it.mData->left->root=node;
 			it.mData->left=node;
-			return iterator(node);
+			return node;
 		}
 		template<typename...Args>iterator emplace_right_left(iterator it,Args&&...args)
 		{
@@ -332,7 +332,7 @@ namespace cov {
 			if(it.mData->right!=nullptr)
 				it.mData->right->root=node;
 			it.mData->right=node;
-			return iterator(node);
+			return node;
 		}
 		template<typename...Args>iterator emplace_right_right(iterator it,Args&&...args)
 		{
@@ -342,7 +342,7 @@ namespace cov {
 			if(it.mData->right!=nullptr)
 				it.mData->right->root=node;
 			it.mData->right=node;
-			return iterator(node);
+			return node;
 		}
 		iterator erase(iterator it)
 		{
