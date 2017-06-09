@@ -77,6 +77,10 @@ namespace cov_basic {
 		object_method()=delete;
 		object_method(const cov::any& obj,const cov::any& callable):mObj(obj),mCallable(callable) {}
 		~object_method()=default;
+		const cov::any& get_callable() const
+		{
+			return mCallable;
+		}
 		cov::any call(array& args) const
 		{
 			args.push_front(mObj);
