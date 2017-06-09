@@ -40,10 +40,15 @@ namespace cov_basic {
 		using function_type=std::function<cov::any(array&)>;
 	private:
 		function_type mFunc;
+		bool mConstant=false;
 	public:
 		native_interface()=delete;
 		native_interface(const native_interface&)=default;
-		native_interface(const function_type& func):mFunc(func) {}
+		native_interface(const function_type& func,bool constant=false):mFunc(func),mConstant(constant) {}
+		bool is_constant() const
+		{
+			return mConstant;
+		}
 		cov::any call(array& args) const
 		{
 			return mFunc(args);

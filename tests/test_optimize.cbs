@@ -11,4 +11,10 @@ switch system.input()
 	case {0,1,2}[2]
 		system.println("2")
 	end
+	case {to_integer(3.14),2}[0]
+		system.println("3")
+	end
+	case {darwin.pixel(' ',true,false,darwin.white,darwin.black),"Darwin"}[1]
+		system.println("Darwin")
+	end
 end

@@ -269,8 +269,8 @@ namespace darwin_cbs_ext {
 		darwin_ext.add_var("log",cov::any::make_constant<native_interface>(log));
 		darwin_ext.add_var("is_kb_hit",cov::any::make_constant<native_interface>(is_kb_hit));
 		darwin_ext.add_var("get_kb_hit",cov::any::make_constant<native_interface>(get_kb_hit));
-		darwin_ext.add_var("pixel",cov::any::make_constant<native_interface>(pixel));
-		darwin_ext.add_var("picture",cov::any::make_constant<native_interface>(picture));
+		darwin_ext.add_var("pixel",cov::any::make_constant<native_interface>(pixel,true));
+		darwin_ext.add_var("picture",cov::any::make_constant<native_interface>(picture,true));
 		darwin_ext.add_var("message_box",cov::any::make_constant<native_interface>(message_box));
 		darwin_ext.add_var("input_box",cov::any::make_constant<native_interface>(input_box));
 		darwin_ext.add_var("black",cov::any::make_constant<darwin::colors>(darwin::colors::black));
