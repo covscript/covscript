@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 *
-* Version: 17.6.1
+* Version: 17.6.2
 */
 #include "./base.hpp"
 #include "./memory.hpp"
@@ -318,6 +318,11 @@ namespace cov {
 		bool is_constant() const
 		{
 			return this->mDat!=nullptr&&this->mDat->constant;
+		}
+		void protect(bool constant)
+		{
+			if(this->mDat!=nullptr)
+				this->mDat->constant=constant;
 		}
 		any& operator=(const any& var)
 		{

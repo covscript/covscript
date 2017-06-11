@@ -307,9 +307,11 @@ namespace cov_basic {
 		else
 			throw syntax_error("Unsupported operator operations(Aeq).");
 	}
+	bool constant=false;
 	cov::any parse_asi(cov::any a,const cov::any& b)
 	{
 		a.swap(copy(b),true);
+		a.protect(constant);
 		return a;
 	}
 	cov::any parse_pair(const cov::any& a,const cov::any& b)
