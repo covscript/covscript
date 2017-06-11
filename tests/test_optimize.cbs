@@ -1,3 +1,4 @@
+constant a=10
 switch system.input()
 	case "Hello"+"!"
 		system.println("Hello!")
@@ -19,5 +20,7 @@ switch system.input()
 	end
 	case "x"+(to_string(math.pi)).cut(5)
 		system.println("x3.14")
+	end
+	case a
 	end
 end
