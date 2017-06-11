@@ -257,8 +257,6 @@ namespace cov {
 		void clone()
 		{
 			if(mDat!=nullptr) {
-				if(mDat->constant)
-					throw cov::error("E000G");
 				proxy* dat=allocator.alloc(1,mDat->data->duplicate());
 				recycle();
 				mDat=dat;
@@ -305,11 +303,8 @@ namespace cov {
 		}
 		void detach()
 		{
-			if(this->mDat!=nullptr) {
-				if(this->mDat->constant)
-					throw cov::error("E000G");
+			if(this->mDat!=nullptr)
 				this->mDat->data->detach();
-			}
 		}
 		bool is_same(const any& obj) const
 		{
@@ -319,10 +314,10 @@ namespace cov {
 		{
 			return this->mDat!=nullptr&&this->mDat->constant;
 		}
-		void protect(bool constant)
+		void protect()
 		{
 			if(this->mDat!=nullptr)
-				this->mDat->constant=constant;
+				this->mDat->constant=true;
 		}
 		any& operator=(const any& var)
 		{

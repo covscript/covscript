@@ -148,6 +148,7 @@ namespace cov_basic {
 	using extension_t=std::shared_ptr<extension_holder>;
 	struct runtime_type final {
 		domain_manager storage;
+		domain_manager constant_storage;
 		extension_t string_ext;
 		extension_t array_ext;
 		extension_t hash_map_ext;
@@ -307,11 +308,9 @@ namespace cov_basic {
 		else
 			throw syntax_error("Unsupported operator operations(Aeq).");
 	}
-	bool constant=false;
 	cov::any parse_asi(cov::any a,const cov::any& b)
 	{
 		a.swap(copy(b),true);
-		a.protect(constant);
 		return a;
 	}
 	cov::any parse_pair(const cov::any& a,const cov::any& b)

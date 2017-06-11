@@ -16,6 +16,7 @@ namespace cov_basic {
 		}
 		return false;
 	}
+	bool constant_var=false;
 	void opt_expr(cov::tree<token_base*>& tree,cov::tree<token_base*>::iterator it)
 	{
 		if(!it.usable())
@@ -26,7 +27,9 @@ namespace cov_basic {
 		switch(token->get_type()) {
 		case token_types::id: {
 			const std::string& id=dynamic_cast<token_id*>(token)->get_id();
-			if(runtime->storage.var_exsist(id)&&runtime->storage.get_var(id).is_constant())
+			if(runtime->constant_storage.var_exsist(id))
+				it.data()=new token_value(runtime->constant_storage.get_var(id));
+			else if(runtime->storage.var_exsist(id)&&runtime->storage.get_var(id).is_constant())
 				it.data()=new token_value(runtime->storage.get_var(id));
 			return;
 			break;
@@ -137,6 +140,18 @@ namespace cov_basic {
 							it.data()=new token_value(a.val<object_method>(true).call(arr));
 						}
 					}
+				}
+				return;
+				break;
+			}
+			case signal_types::asi_: {
+				opt_expr(tree,it.left());
+				opt_expr(tree,it.right());
+				token_base* lptr=it.left().data();
+				token_base* rptr=it.right().data();
+				if(constant_var&&lptr!=nullptr&&lptr->get_type()==token_types::id&&rptr!=nullptr&&rptr->get_type()==token_types::value) {
+					runtime->constant_storage.add_var(dynamic_cast<token_id*>(lptr)->get_id(),dynamic_cast<token_value*>(rptr)->get_value());
+					it.data()=rptr;
 				}
 				return;
 				break;
