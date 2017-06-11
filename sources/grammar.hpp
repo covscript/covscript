@@ -327,16 +327,18 @@ namespace cov_basic {
 		fcall_stack.top()->mRetVal=parse_expr(this->mTree.root());
 		return_fcall=true;
 	}
-	void kill_action(std::deque<std::deque<token_base*>> lines,std::deque<statement_base*>& statements)
+	void kill_action(std::deque<std::deque<token_base*>> lines,std::deque<statement_base*>& statements,bool raw=false)
 	{
 		std::deque<std::deque<token_base*>> tmp;
 		method_type* method=nullptr;
 		int level=0;
 		for(auto& line:lines) {
 			try {
-				process_brackets(line);
-				kill_brackets(line);
-				kill_expr(line);
+				if(raw) {
+					process_brackets(line);
+					kill_brackets(line);
+					kill_expr(line);
+				}
 				method_type* m=&translator.match(line);
 				if(m->type==grammar_type::single) {
 					if(level>0) {
@@ -387,7 +389,7 @@ namespace cov_basic {
 		if(tmp.size()>1)
 			lines.push_back(tmp);
 		tmp.clear();
-		kill_action(lines,statements);
+		kill_action(lines,statements,true);
 	}
 	void init_grammar()
 	{
