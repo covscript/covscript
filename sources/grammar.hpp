@@ -412,11 +412,14 @@ namespace cov_basic {
 		});
 		// Constant Grammar
 		translator.add_method({new token_action(action_types::constant_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {grammar_type::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
-				define_var=true;
-				constant=true;
-				parse_expr(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root());
-				define_var=false;
-				constant=false;
+				cov::tree<token_base*>& tree=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
+				constant_var=true;
+				optimize_expression(tree);
+				constant_var=false;
+				if(tree.root().data()==nullptr)
+					throw syntax_error("Wrong format of expression.");
+				if(tree.root().data()->get_type()!=token_types::value)
+					throw syntax_error("Constant variable must have an constant value.");
 				return new statement_constant(raw.front().back());
 			}
 		});

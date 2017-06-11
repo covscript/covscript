@@ -479,7 +479,7 @@ namespace cov_basic {
 		statement_block* mBlock;
 	public:
 		statement_case()=delete;
-		statement_case(const cov::any& tag,const std::deque<statement_base*>& b,token_base* ptr):statement_base(ptr),mTag(tag),mBlock(new statement_block(b,ptr)) {}
+		statement_case(const cov::any& tag,const std::deque<statement_base*>& b,token_base* ptr):statement_base(ptr),mTag(copy(tag)),mBlock(new statement_block(b,ptr)) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::case_;

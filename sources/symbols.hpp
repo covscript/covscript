@@ -107,7 +107,10 @@ namespace cov_basic {
 		cov::any mVal;
 	public:
 		token_value()=delete;
-		token_value(const cov::any& val):mVal(val) {}
+		token_value(const cov::any& val):mVal(val)
+		{
+			mVal.protect();
+		}
 		virtual token_types get_type() const noexcept override
 		{
 			return token_types::value;
