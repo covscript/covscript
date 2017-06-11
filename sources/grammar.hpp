@@ -327,13 +327,16 @@ namespace cov_basic {
 		fcall_stack.top()->mRetVal=parse_expr(this->mTree.root());
 		return_fcall=true;
 	}
-	void kill_action(const std::deque<std::deque<token_base*>>& lines,std::deque<statement_base*>& statements)
+	void kill_action(std::deque<std::deque<token_base*>> lines,std::deque<statement_base*>& statements)
 	{
 		std::deque<std::deque<token_base*>> tmp;
 		method_type* method=nullptr;
 		int level=0;
 		for(auto& line:lines) {
 			try {
+				process_brackets(line);
+				kill_brackets(line);
+				kill_expr(line);
 				method_type* m=&translator.match(line);
 				if(m->type==grammar_type::single) {
 					if(level>0) {
@@ -372,32 +375,18 @@ namespace cov_basic {
 	void translate_into_statements(std::deque<token_base*>& tokens,std::deque<statement_base*>& statements)
 	{
 		std::deque<std::deque<token_base*>> lines;
-		{
-			std::deque<token_base*> tmp;
-			for(auto& ptr:tokens) {
-				tmp.push_back(ptr);
-				if(ptr!=nullptr&&ptr->get_type()==token_types::endline) {
-					if(tmp.size()>1) {
-						try {
-							process_brackets(tmp);
-							kill_brackets(tmp);
-							kill_expr(tmp);
-						}
-						catch(const syntax_error& se) {
-							throw syntax_error(dynamic_cast<token_endline*>(ptr)->get_num(),se.what());
-						}
-						catch(const std::exception& e) {
-							throw internal_error(dynamic_cast<token_endline*>(ptr)->get_num(),e.what());
-						}
-						lines.push_back(tmp);
-					}
-					tmp.clear();
-				}
+		std::deque<token_base*> tmp;
+		for(auto& ptr:tokens) {
+			tmp.push_back(ptr);
+			if(ptr!=nullptr&&ptr->get_type()==token_types::endline) {
+				if(tmp.size()>1)
+					lines.push_back(tmp);
+				tmp.clear();
 			}
-			if(tmp.size()>1)
-				lines.push_back(tmp);
-			tmp.clear();
 		}
+		if(tmp.size()>1)
+			lines.push_back(tmp);
+		tmp.clear();
 		kill_action(lines,statements);
 	}
 	void init_grammar()
@@ -419,6 +408,14 @@ namespace cov_basic {
 		});
 		translator.add_method({new token_action(action_types::define_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::as_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {grammar_type::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				return new statement_define(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),dynamic_cast<token_expr*>(raw.front().at(3))->get_tree().root().data(),raw.front().back());
+			}
+		});
+		// Constant Grammar
+		translator.add_method({new token_action(action_types::constant_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {grammar_type::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				define_var=true;
+				parse_expr(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root());
+				define_var=false;
+				return new statement_constant(raw.front().back());
 			}
 		});
 		// End Grammar
