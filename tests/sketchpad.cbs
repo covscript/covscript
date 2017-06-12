@@ -6,7 +6,7 @@ define zoom=5
 define dzoom=1
 define center_x=0
 define center_y=0
-define pix=darwin.pixel('+',true,false,darwin.blue,darwin.black)
+constant pix=darwin.pixel('+',true,false,darwin.blue,darwin.black)
 function f(x)
   return runtime.solve(expr)
 end
