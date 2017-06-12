@@ -1,6 +1,7 @@
 #pragma once
 #include "../arglist.hpp"
 #include <iostream>
+#include <cstdlib>
 static cov_basic::extension system_ext;
 namespace system_cbs_ext {
 	using namespace cov_basic;
@@ -43,6 +44,19 @@ namespace system_cbs_ext {
 		output_precision=args.front().const_val<number>();
 		return number(0);
 	}
+	cov::any run(array& args)
+	{
+		arglist::check<string>(args);
+		return number(std::system(args.at(0).const_val<string>().c_str()));
+	}
+	cov::any getenv(array& args)
+	{
+		arglist::check<string>(args);
+		const char* str=std::getenv(args.at(0).const_val<string>().c_str());
+		if(str==nullptr)
+			throw lang_error("Environment variable \""+args.at(0).const_val<string>()+"\" is not exist.");
+		return string(str);
+	}
 	void init()
 	{
 		system_ext.add_var("input",cov::any::make_constant<native_interface>(input));
@@ -50,5 +64,7 @@ namespace system_cbs_ext {
 		system_ext.add_var("print",cov::any::make_constant<native_interface>(print));
 		system_ext.add_var("println",cov::any::make_constant<native_interface>(println));
 		system_ext.add_var("setprecision",cov::any::make_constant<native_interface>(setprecision));
+		system_ext.add_var("run",cov::any::make_constant<native_interface>(run));
+		system_ext.add_var("getenv",cov::any::make_constant<native_interface>(getenv));
 	}
 }
