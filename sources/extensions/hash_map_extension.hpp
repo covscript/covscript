@@ -47,6 +47,16 @@ namespace hash_map_cbs_ext {
 			throw syntax_error("Wrong type of arguments.(Request Hash Map)");
 		return args.at(0).val<hash_map>(true).at(args.at(1));
 	}
+	cov::any for_each(array& args)
+	{
+		arglist::check<hash_map,function>(args);
+		const function& f=args.at(1).const_val<function>();
+		for(auto& pair:args.at(0).val<hash_map>(true)) {
+			array arr= {pair.first,pair.second};
+			f.call(arr);
+		}
+		return number(0);
+	}
 	void init()
 	{
 		hash_map_ext.add_var("clear",cov::any::make_constant<native_interface>(clear,true));
@@ -54,5 +64,6 @@ namespace hash_map_cbs_ext {
 		hash_map_ext.add_var("erase",cov::any::make_constant<native_interface>(erase,true));
 		hash_map_ext.add_var("exist",cov::any::make_constant<native_interface>(exist,true));
 		hash_map_ext.add_var("at",cov::any::make_constant<native_interface>(at,true));
+		hash_map_ext.add_var("for_each",cov::any::make_constant<native_interface>(for_each));
 	}
 }
