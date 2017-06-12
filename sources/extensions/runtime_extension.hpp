@@ -6,7 +6,9 @@ namespace runtime_cbs_ext {
 	using namespace cov_basic;
 	cov::any info(array&)
 	{
-		std::cout<<"Covariant Basic Parser\nVersion:"<<cov_basic::version<<"\nCopyright (C) 2017 Michael Lee"<<std::endl;
+		std::cout<<"Covariant Basic Programming Language Interpreter Version "<<cov_basic::version<<"\n"
+		         "Copyright (C) 2017 Michael Lee.All rights reserved.\nThis program comes with ABSOLUTELY NO WARRANTY; for details see <http://www.gnu.org/licenses/>.\n"
+		         "This is free software, and you are welcome to redistribute it under certain conditions.\nPlease visit <http://covbasic.org/> for more information."<<std::endl;
 		return number(0);
 	}
 	cov::any time(array&)

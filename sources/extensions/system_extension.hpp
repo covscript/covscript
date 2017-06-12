@@ -75,6 +75,6 @@ namespace system_cbs_ext {
 		system_ext.add_var("setprecision",cov::any::make_constant<native_interface>(setprecision));
 		system_ext.add_var("run",cov::any::make_constant<native_interface>(run));
 		system_ext.add_var("getenv",cov::any::make_constant<native_interface>(getenv));
-		runtime_ext.add_var("exit",cov::any::make_constant<native_interface>(exit));
+		system_ext.add_var("exit",cov::any::make_constant<native_interface>(exit));
 	}
 }

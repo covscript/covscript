@@ -1,8 +1,8 @@
-define gravity=10
-define air_drop=5
-define delta_time=0.1
-define mass=0.5
-define size=0.01
+constant gravity=10
+constant air_drop=5
+constant delta_time=0.1
+constant mass=0.5
+constant size=0.01
 define speed_x=15
 define speed_y=0
 define posit_x=0
