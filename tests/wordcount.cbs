@@ -1,0 +1,12 @@
+define in=file.open("./wordcount.cbs",file.read_method)
+if !file.is_open(in)
+    runtime.error("File is not exist")
+end
+define table as hash_map
+while !file.eof(in)
+    ++table[file.read(in)]
+end
+function for_each(key,value)
+    system.println(key,":",value)
+end
+table.for_each(for_each)
