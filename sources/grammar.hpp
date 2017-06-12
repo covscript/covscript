@@ -332,7 +332,9 @@ namespace cov_basic {
 		std::deque<std::deque<token_base*>> tmp;
 		method_type* method=nullptr;
 		int level=0;
+		std::size_t line_num=0;
 		for(auto& line:lines) {
+			line_num=dynamic_cast<token_endline*>(line.back())->get_num();
 			try {
 				if(raw) {
 					process_brackets(line);
@@ -365,10 +367,10 @@ namespace cov_basic {
 					throw syntax_error("Null type of grammar.");
 			}
 			catch(const syntax_error& se) {
-				throw syntax_error(dynamic_cast<token_endline*>(line.back())->get_num(),se.what());
+				throw syntax_error(line_num,se.what());
 			}
 			catch(const std::exception& e) {
-				throw internal_error(dynamic_cast<token_endline*>(line.back())->get_num(),e.what());
+				throw internal_error(line_num,e.what());
 			}
 		}
 		if(level!=0)
