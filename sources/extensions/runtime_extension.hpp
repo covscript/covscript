@@ -75,12 +75,6 @@ namespace runtime_cbs_ext {
 		arglist::check<expression_t>(args);
 		return parse_expr(args.at(0).val<expression_t>(true).root());
 	}
-	cov::any exit(array& args)
-	{
-		arglist::check<number>(args);
-		std::exit(args.at(0).const_val<number>());
-		return number(0);
-	}
 	void init()
 	{
 		runtime_ext.add_var("info",cov::any::make_constant<native_interface>(info));
@@ -94,6 +88,5 @@ namespace runtime_cbs_ext {
 		runtime_ext.add_var("hash",cov::any::make_constant<native_interface>(hash,true));
 		runtime_ext.add_var("build",cov::any::make_constant<native_interface>(build));
 		runtime_ext.add_var("solve",cov::any::make_constant<native_interface>(solve));
-		runtime_ext.add_var("exit",cov::any::make_constant<native_interface>(exit));
 	}
 }
