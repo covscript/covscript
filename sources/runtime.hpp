@@ -144,6 +144,12 @@ namespace cov_basic {
 			else
 				m_data.back()->emplace(name,var);
 		}
+		void lock()
+		{
+			for(auto& domain:m_data)
+				for(auto& it:*domain)
+					it.second.constant();
+		}
 	};
 	using extension_t=std::shared_ptr<extension_holder>;
 	struct runtime_type final {

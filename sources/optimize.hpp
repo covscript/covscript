@@ -127,17 +127,20 @@ namespace cov_basic {
 							it.data()=new token_value(a.val<native_interface>(true).call(arr));
 						}
 					}
-					if(a.type()==typeid(object_method)&&a.const_val<object_method>().get_callable().is_protect()) {
-						bool is_optimizable=true;
-						for(auto& tree:dynamic_cast<token_arglist*>(rptr)->get_arglist()) {
-							if(is_optimizable&&!optimizable(tree.root()))
-								is_optimizable=false;
-						}
-						if(is_optimizable) {
-							array arr;
-							for(auto& tree:dynamic_cast<token_arglist*>(rptr)->get_arglist())
-								arr.push_back(parse_expr(tree.root()));
-							it.data()=new token_value(a.val<object_method>(true).call(arr));
+					if(a.type()==typeid(object_method)) {
+						const cov::any& callable=a.const_val<object_method>().get_callable();
+						if(callable.is_protect()&&callable.type()==typeid(native_interface)&&callable.const_val<native_interface>().is_constant()) {
+							bool is_optimizable=true;
+							for(auto& tree:dynamic_cast<token_arglist*>(rptr)->get_arglist()) {
+								if(is_optimizable&&!optimizable(tree.root()))
+									is_optimizable=false;
+							}
+							if(is_optimizable) {
+								array arr;
+								for(auto& tree:dynamic_cast<token_arglist*>(rptr)->get_arglist())
+									arr.push_back(parse_expr(tree.root()));
+								it.data()=new token_value(a.val<object_method>(true).call(arr));
+							}
 						}
 					}
 				}
