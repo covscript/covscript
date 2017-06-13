@@ -29,7 +29,7 @@ namespace cov_basic {
 			const std::string& id=dynamic_cast<token_id*>(token)->get_id();
 			if(runtime->constant_storage.var_exsist(id))
 				it.data()=new token_value(runtime->constant_storage.get_var(id));
-			else if(runtime->storage.var_exsist(id)&&runtime->storage.get_var(id).is_constant())
+			else if(runtime->storage.var_exsist(id)&&runtime->storage.get_var(id).is_protect())
 				it.data()=new token_value(runtime->storage.get_var(id));
 			return;
 			break;
@@ -127,7 +127,7 @@ namespace cov_basic {
 							it.data()=new token_value(a.val<native_interface>(true).call(arr));
 						}
 					}
-					if(a.type()==typeid(object_method)&&a.const_val<object_method>().get_callable().is_constant()) {
+					if(a.type()==typeid(object_method)&&a.const_val<object_method>().get_callable().is_protect()) {
 						bool is_optimizable=true;
 						for(auto& tree:dynamic_cast<token_arglist*>(rptr)->get_arglist()) {
 							if(is_optimizable&&!optimizable(tree.root()))

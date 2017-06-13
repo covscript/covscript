@@ -79,16 +79,16 @@ namespace runtime_cbs_ext {
 	}
 	void init()
 	{
-		runtime_ext.add_var("info",cov::any::make_constant<native_interface>(info));
-		runtime_ext.add_var("time",cov::any::make_constant<native_interface>(time));
-		runtime_ext.add_var("delay",cov::any::make_constant<native_interface>(delay));
-		runtime_ext.add_var("rand",cov::any::make_constant<native_interface>(rand));
-		runtime_ext.add_var("randint",cov::any::make_constant<native_interface>(randint));
-		runtime_ext.add_var("error",cov::any::make_constant<native_interface>(error));
-		runtime_ext.add_var("load_extension",cov::any::make_constant<native_interface>(load_extension));
-		runtime_ext.add_var("type_hash",cov::any::make_constant<native_interface>(type_hash,true));
-		runtime_ext.add_var("hash",cov::any::make_constant<native_interface>(hash,true));
-		runtime_ext.add_var("build",cov::any::make_constant<native_interface>(build));
-		runtime_ext.add_var("solve",cov::any::make_constant<native_interface>(solve));
+		runtime_ext.add_var("info",cov::any::make_protect<native_interface>(info));
+		runtime_ext.add_var("time",cov::any::make_protect<native_interface>(time));
+		runtime_ext.add_var("delay",cov::any::make_protect<native_interface>(delay));
+		runtime_ext.add_var("rand",cov::any::make_protect<native_interface>(rand));
+		runtime_ext.add_var("randint",cov::any::make_protect<native_interface>(randint));
+		runtime_ext.add_var("error",cov::any::make_protect<native_interface>(error));
+		runtime_ext.add_var("load_extension",cov::any::make_protect<native_interface>(load_extension));
+		runtime_ext.add_var("type_hash",cov::any::make_protect<native_interface>(type_hash,true));
+		runtime_ext.add_var("hash",cov::any::make_protect<native_interface>(hash,true));
+		runtime_ext.add_var("build",cov::any::make_protect<native_interface>(build));
+		runtime_ext.add_var("solve",cov::any::make_protect<native_interface>(solve));
 	}
 }
