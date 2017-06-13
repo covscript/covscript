@@ -203,6 +203,7 @@ namespace cov_basic {
 		}
 		init();
 		translate_into_statements(tokens,statements);
+		runtime->constant_storage.lock();
 		for(auto& ptr:statements) {
 			try {
 				ptr->run();
