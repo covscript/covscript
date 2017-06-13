@@ -55,11 +55,11 @@ namespace array_cbs_ext {
 	}
 	void init()
 	{
-		array_ext.add_var("push_front",cov::any::make_constant<native_interface>(push_front,true));
-		array_ext.add_var("pop_front",cov::any::make_constant<native_interface>(pop_front,true));
-		array_ext.add_var("push_back",cov::any::make_constant<native_interface>(push_back,true));
-		array_ext.add_var("pop_back",cov::any::make_constant<native_interface>(pop_back,true));
-		array_ext.add_var("clear",cov::any::make_constant<native_interface>(clear,true));
-		array_ext.add_var("at",cov::any::make_constant<native_interface>(at,true));
+		array_ext.add_var("push_front",cov::any::make_protect<native_interface>(push_front,true));
+		array_ext.add_var("pop_front",cov::any::make_protect<native_interface>(pop_front,true));
+		array_ext.add_var("push_back",cov::any::make_protect<native_interface>(push_back,true));
+		array_ext.add_var("pop_back",cov::any::make_protect<native_interface>(pop_back,true));
+		array_ext.add_var("clear",cov::any::make_protect<native_interface>(clear,true));
+		array_ext.add_var("at",cov::any::make_protect<native_interface>(at,true));
 	}
 }

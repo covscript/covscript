@@ -59,11 +59,11 @@ namespace hash_map_cbs_ext {
 	}
 	void init()
 	{
-		hash_map_ext.add_var("clear",cov::any::make_constant<native_interface>(clear,true));
-		hash_map_ext.add_var("insert",cov::any::make_constant<native_interface>(insert,true));
-		hash_map_ext.add_var("erase",cov::any::make_constant<native_interface>(erase,true));
-		hash_map_ext.add_var("exist",cov::any::make_constant<native_interface>(exist,true));
-		hash_map_ext.add_var("at",cov::any::make_constant<native_interface>(at,true));
-		hash_map_ext.add_var("for_each",cov::any::make_constant<native_interface>(for_each));
+		hash_map_ext.add_var("clear",cov::any::make_protect<native_interface>(clear,true));
+		hash_map_ext.add_var("insert",cov::any::make_protect<native_interface>(insert,true));
+		hash_map_ext.add_var("erase",cov::any::make_protect<native_interface>(erase,true));
+		hash_map_ext.add_var("exist",cov::any::make_protect<native_interface>(exist,true));
+		hash_map_ext.add_var("at",cov::any::make_protect<native_interface>(at,true));
+		hash_map_ext.add_var("for_each",cov::any::make_protect<native_interface>(for_each));
 	}
 }

@@ -74,19 +74,19 @@ namespace math_cbs_ext {
 	{
 		math_ext.add_var("pi",cov::any::make_constant<number>(3.1415926535));
 		math_ext.add_var("e",cov::any::make_constant<number>(2.7182818284));
-		math_ext.add_var("abs",cov::any::make_constant<native_interface>(abs,true));
-		math_ext.add_var("ln",cov::any::make_constant<native_interface>(ln,true));
-		math_ext.add_var("log10",cov::any::make_constant<native_interface>(log10,true));
-		math_ext.add_var("log",cov::any::make_constant<native_interface>(log,true));
-		math_ext.add_var("sin",cov::any::make_constant<native_interface>(sin,true));
-		math_ext.add_var("cos",cov::any::make_constant<native_interface>(cos,true));
-		math_ext.add_var("tan",cov::any::make_constant<native_interface>(tan,true));
-		math_ext.add_var("asin",cov::any::make_constant<native_interface>(asin,true));
-		math_ext.add_var("acos",cov::any::make_constant<native_interface>(acos,true));
-		math_ext.add_var("atan",cov::any::make_constant<native_interface>(atan,true));
-		math_ext.add_var("sqrt",cov::any::make_constant<native_interface>(sqrt,true));
-		math_ext.add_var("root",cov::any::make_constant<native_interface>(root,true));
-		math_ext.add_var("pow",cov::any::make_constant<native_interface>(pow,true));
+		math_ext.add_var("abs",cov::any::make_protect<native_interface>(abs,true));
+		math_ext.add_var("ln",cov::any::make_protect<native_interface>(ln,true));
+		math_ext.add_var("log10",cov::any::make_protect<native_interface>(log10,true));
+		math_ext.add_var("log",cov::any::make_protect<native_interface>(log,true));
+		math_ext.add_var("sin",cov::any::make_protect<native_interface>(sin,true));
+		math_ext.add_var("cos",cov::any::make_protect<native_interface>(cos,true));
+		math_ext.add_var("tan",cov::any::make_protect<native_interface>(tan,true));
+		math_ext.add_var("asin",cov::any::make_protect<native_interface>(asin,true));
+		math_ext.add_var("acos",cov::any::make_protect<native_interface>(acos,true));
+		math_ext.add_var("atan",cov::any::make_protect<native_interface>(atan,true));
+		math_ext.add_var("sqrt",cov::any::make_protect<native_interface>(sqrt,true));
+		math_ext.add_var("root",cov::any::make_protect<native_interface>(root,true));
+		math_ext.add_var("pow",cov::any::make_protect<native_interface>(pow,true));
 	}
 }
 #ifndef CBS_MATH_EXT

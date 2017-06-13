@@ -74,12 +74,12 @@ namespace file_cbs_ext {
 	{
 		file_ext.add_var("read_method",cov::any::make_constant<file_method>(file_method::read));
 		file_ext.add_var("write_method",cov::any::make_constant<file_method>(file_method::write));
-		file_ext.add_var("open",cov::any::make_constant<native_interface>(open));
-		file_ext.add_var("is_open",cov::any::make_constant<native_interface>(is_open));
-		file_ext.add_var("eof",cov::any::make_constant<native_interface>(eof));
-		file_ext.add_var("read",cov::any::make_constant<native_interface>(read));
-		file_ext.add_var("write",cov::any::make_constant<native_interface>(write));
-		file_ext.add_var("getline",cov::any::make_constant<native_interface>(getline));
+		file_ext.add_var("open",cov::any::make_protect<native_interface>(open));
+		file_ext.add_var("is_open",cov::any::make_protect<native_interface>(is_open));
+		file_ext.add_var("eof",cov::any::make_protect<native_interface>(eof));
+		file_ext.add_var("read",cov::any::make_protect<native_interface>(read));
+		file_ext.add_var("write",cov::any::make_protect<native_interface>(write));
+		file_ext.add_var("getline",cov::any::make_protect<native_interface>(getline));
 	}
 }
 #ifndef CBS_FILE_EXT
