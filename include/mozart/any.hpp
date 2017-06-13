@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 *
-* Version: 17.6.2
+* Version: 17.6.3
 */
 #include "./base.hpp"
 #include "./memory.hpp"
@@ -191,12 +191,12 @@ namespace cov {
 		};
 		using size_t=unsigned long;
 		struct proxy {
-			bool constant=false;
+			short protect_level=0;
 			size_t refcount=1;
 			baseHolder* data=nullptr;
 			proxy()=default;
 			proxy(size_t rc,baseHolder* d):refcount(rc),data(d) {}
-			proxy(bool c,size_t rc,baseHolder* d):constant(c),refcount(rc),data(d) {}
+			proxy(short pl,size_t rc,baseHolder* d):protect_level(pl),refcount(rc),data(d) {}
 			~proxy()
 			{
 				if(data!=nullptr)
@@ -227,8 +227,8 @@ namespace cov {
 		void swap(any& obj,bool raw=false)
 		{
 			if(this->mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
-				if(this->mDat->constant||obj.mDat->constant)
-					throw cov::error("E000G");
+				if(this->mDat->protect_level>0||obj.mDat->protect_level>0)
+					throw cov::error("E000J");
 				baseHolder* tmp=this->mDat->data;
 				this->mDat->data=obj.mDat->data;
 				obj.mDat->data=tmp;
@@ -242,7 +242,7 @@ namespace cov {
 		void swap(any&& obj,bool raw=false) noexcept
 		{
 			if(this->mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
-				if(this->mDat->constant||obj.mDat->constant)
+				if(this->mDat->protect_level>0||obj.mDat->protect_level>0)
 					std::terminate();
 				baseHolder* tmp=this->mDat->data;
 				this->mDat->data=obj.mDat->data;
@@ -257,6 +257,8 @@ namespace cov {
 		void clone()
 		{
 			if(mDat!=nullptr) {
+				if(mDat->protect_level>2)
+					throw cov::error("E000L");
 				proxy* dat=allocator.alloc(1,mDat->data->duplicate());
 				recycle();
 				mDat=dat;
@@ -270,9 +272,17 @@ namespace cov {
 		{
 			return any(allocator.alloc(1,holder<T>::allocator.alloc(std::forward<ArgsT>(args)...)));
 		}
+		template<typename T,typename...ArgsT>static any make_protect(ArgsT&&...args)
+		{
+			return any(allocator.alloc(1,1,holder<T>::allocator.alloc(std::forward<ArgsT>(args)...)));
+		}
 		template<typename T,typename...ArgsT>static any make_constant(ArgsT&&...args)
 		{
-			return any(allocator.alloc(true,1,holder<T>::allocator.alloc(std::forward<ArgsT>(args)...)));
+			return any(allocator.alloc(2,1,holder<T>::allocator.alloc(std::forward<ArgsT>(args)...)));
+		}
+		template<typename T,typename...ArgsT>static any make_single(ArgsT&&...args)
+		{
+			return any(allocator.alloc(3,1,holder<T>::allocator.alloc(std::forward<ArgsT>(args)...)));
 		}
 		any()=default;
 		template<typename T> any(const T & dat):mDat(allocator.alloc(1,holder<T>::allocator.alloc(dat))) {}
@@ -303,21 +313,51 @@ namespace cov {
 		}
 		void detach()
 		{
-			if(this->mDat!=nullptr)
+			if(this->mDat!=nullptr) {
+				if(this->mDat->protect_level>2)
+					throw cov::error("E000L");
 				this->mDat->data->detach();
+			}
 		}
 		bool is_same(const any& obj) const
 		{
 			return this->mDat==obj.mDat;
 		}
+		bool is_protect() const
+		{
+			return this->mDat!=nullptr&&this->mDat->protect_level>0;
+		}
 		bool is_constant() const
 		{
-			return this->mDat!=nullptr&&this->mDat->constant;
+			return this->mDat!=nullptr&&this->mDat->protect_level>1;
+		}
+		bool is_single() const
+		{
+			return this->mDat!=nullptr&&this->mDat->protect_level>2;
 		}
 		void protect()
 		{
-			if(this->mDat!=nullptr)
-				this->mDat->constant=true;
+			if(this->mDat!=nullptr) {
+				if(this->mDat->protect_level>1)
+					throw cov::error("E000G");
+				this->mDat->protect_level=1;
+			}
+		}
+		void constant()
+		{
+			if(this->mDat!=nullptr) {
+				if(this->mDat->protect_level>2)
+					throw cov::error("E000G");
+				this->mDat->protect_level=2;
+			}
+		}
+		void single()
+		{
+			if(this->mDat!=nullptr) {
+				if(this->mDat->protect_level>3)
+					throw cov::error("E000G");
+				this->mDat->protect_level=3;
+			}
 		}
 		any& operator=(const any& var)
 		{
@@ -347,6 +387,8 @@ namespace cov {
 				throw cov::error("E0006");
 			if(this->mDat==nullptr)
 				throw cov::error("E0005");
+			if(this->mDat->protect_level>1)
+				throw cov::error("E000K");
 			if(!raw)
 				clone();
 			return dynamic_cast<holder<T>*>(this->mDat->data)->data();
@@ -375,8 +417,8 @@ namespace cov {
 		{
 			if(&obj!=this&&obj.mDat!=mDat) {
 				if(mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
-					if(this->mDat->constant||obj.mDat->constant)
-						throw cov::error("E000G");
+					if(this->mDat->protect_level>0||obj.mDat->protect_level>0)
+						throw cov::error("E000J");
 					mDat->data->kill();
 					mDat->data=obj.mDat->data->duplicate();
 				}
@@ -392,8 +434,8 @@ namespace cov {
 		template<typename T> void assign(const T& dat,bool raw=false)
 		{
 			if(mDat!=nullptr&&raw) {
-				if(this->mDat->constant)
-					throw cov::error("E000G");
+				if(this->mDat->protect_level>0)
+					throw cov::error("E000J");
 				mDat->data->kill();
 				mDat->data=holder<T>::allocator.alloc(dat);
 			}
