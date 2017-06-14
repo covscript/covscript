@@ -416,19 +416,20 @@ namespace cov_basic {
 				throw syntax_error("Index must be a number.");
 			if(b.const_val<number>()<0)
 				throw syntax_error("Index must above zero.");
-			array& arr=a.val<array>(true);
+			const array& carr=a.const_val<array>();
 			std::size_t posit=b.const_val<number>();
-			if(posit>=arr.size()) {
+			if(posit>=carr.size()) {
+				array& arr=a.val<array>(true);
 				for(std::size_t i=posit-arr.size()+1; i>0; --i)
 					arr.emplace_back(number(0));
 			}
-			return arr.at(posit);
+			return carr.at(posit);
 		}
 		else if(a.type()==typeid(hash_map)) {
-			hash_map& map=a.val<hash_map>(true);
-			if(map.count(b)==0)
-				map.emplace(copy(b),number(0));
-			return map.at(b);
+			const hash_map& cmap=a.const_val<hash_map>();
+			if(cmap.count(b)==0)
+				a.val<hash_map>(true).emplace(copy(b),number(0));
+			return cmap.at(b);
 		}
 		else if(a.type()==typeid(string)) {
 			if(b.type()!=typeid(number))
