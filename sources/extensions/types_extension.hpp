@@ -1,0 +1,16 @@
+#pragma once
+#include "./char_extension.hpp"
+#include "./string_extension.hpp"
+#include "./array_extension.hpp"
+#include "./hash_map_extension.hpp"
+static cov_basic::extension types_ext;
+namespace types_cbs_ext {
+	using namespace cov_basic;
+	void init()
+	{
+		types_ext.add_var("char",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&char_ext)));
+		types_ext.add_var("string",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&string_ext)));
+		types_ext.add_var("array",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&array_ext)));
+		types_ext.add_var("hash_map",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&hash_map_ext)));
+	}
+}

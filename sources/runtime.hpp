@@ -155,6 +155,7 @@ namespace cov_basic {
 	struct runtime_type final {
 		domain_manager storage;
 		domain_manager constant_storage;
+		extension_t char_ext;
 		extension_t string_ext;
 		extension_t array_ext;
 		extension_t hash_map_ext;
@@ -238,6 +239,8 @@ namespace cov_basic {
 			return a.val<extension_t>(true)->get_var(dynamic_cast<token_id*>(b)->get_id());
 		else if(a.type()==typeid(structure))
 			return a.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
+		else if(a.type()==typeid(char))
+			return object_method(a,runtime->char_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
 		else if(a.type()==typeid(string))
 			return object_method(a,runtime->string_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
 		else if(a.type()==typeid(array))
