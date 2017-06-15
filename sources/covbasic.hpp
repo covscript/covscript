@@ -3,9 +3,7 @@
 #include "./arglist.hpp"
 #include "./extensions/system_extension.hpp"
 #include "./extensions/runtime_extension.hpp"
-#include "./extensions/string_extension.hpp"
-#include "./extensions/array_extension.hpp"
-#include "./extensions/hash_map_extension.hpp"
+#include "./extensions/types_extension.hpp"
 #ifdef CBS_MATH_EXT
 #include "./extensions/math_extension.cpp"
 #endif
@@ -139,6 +137,10 @@ namespace cov_basic {
 		runtime->storage.add_var("system",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));
 		runtime_cbs_ext::init();
 		runtime->storage.add_var("runtime",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
+		types_cbs_ext::init();
+		runtime->storage.add_var("types",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&types_ext)));
+		char_cbs_ext::init();
+		runtime->char_ext=std::make_shared<extension_holder>(&char_ext);
 		string_cbs_ext::init();
 		runtime->string_ext=std::make_shared<extension_holder>(&string_ext);
 		array_cbs_ext::init();
