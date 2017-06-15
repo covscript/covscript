@@ -1,10 +1,20 @@
+function tolower(str)
+    define s=str
+    for i=0 to size_of(s)-1
+        s.replace(i,1,(s[i]).tolower())
+    end
+    return s
+end
 define in=file.open("./wordcount.cbs",file.read_method)
 if !file.is_open(in)
     runtime.error("File is not exist")
 end
 define table as hash_map
 while !file.eof(in)
-    ++table[file.read(in)]
+    define str=tolower(file.read(in))
+    if(str!="")
+        ++table[str]
+    end
 end
 function for_each(key,value)
     system.println(key,":",value)
