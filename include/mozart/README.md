@@ -38,6 +38,11 @@ E000D Does not support conversion of the specified type to `std::string`
 E000E Tree node is empty  
 E000F Does not support the specified type of hash operation  
 E000G Constant tagged objects can not be copied  
+E000H Stack is empty  
+E000I Stack overflow  
+E000J The variable has been protected.  
+E000K It is not allowed to change the value of a constant.  
+E000L Duplicate singleton objects are not allowed.  
 
 ##### 简体中文:
 W0001 标签类型与条件类型不同  
@@ -57,4 +62,9 @@ E000B 类型匹配失败。
 E000D 不支持指定类型向`std::string`的转换  
 E000E 树节点为空  
 E000F 不支持指定类型的hash操作  
-E000G 常量标记的对象不可复制  
+E000G 不允许降低变量的保护级别  
+E000H 栈为空  
+E000I 栈溢出  
+E000J 变量已被保护  
+E000K 不允许更改常量的值  
+E000L 不允许复制单例对象  
