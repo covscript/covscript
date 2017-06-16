@@ -105,12 +105,14 @@ namespace cov_basic {
 	};
 	class token_value final:public token_base {
 		cov::any mVal;
+		static std::forward_list<token_value*> mList;
 	public:
 		token_value()=delete;
 		token_value(const cov::any& val):mVal(val)
 		{
 			if(!mVal.is_protect())
 				mVal.protect();
+			mList.push_front(this);
 		}
 		virtual token_types get_type() const noexcept override
 		{
@@ -120,7 +122,17 @@ namespace cov_basic {
 		{
 			return this->mVal;
 		}
+		static void clean_all()
+		{
+			mList.clear();
+		}
+		static void mark_all()
+		{
+			for(auto& it:mList)
+				it->mVal.constant();
+		}
 	};
+	std::forward_list<token_value*> token_value::mList;
 	class token_sblist final:public token_base {
 		std::deque<std::deque<token_base*>> mList;
 	public:
