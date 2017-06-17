@@ -119,6 +119,7 @@ namespace cov_basic {
 		runtime->storage.add_type("string",[]()->cov::any {return cov::any::make<string>();},cov::hash<std::string>(typeid(string).name()));
 		runtime->storage.add_type("array",[]()->cov::any {return cov::any::make<array>();},cov::hash<std::string>(typeid(array).name()));
 		runtime->storage.add_type("linker",[]()->cov::any {return cov::any::make<linker>();},cov::hash<std::string>(typeid(linker).name()));
+		runtime->storage.add_type("pair",[]()->cov::any {return cov::any::make<pair>(number(0),number(0));},cov::hash<std::string>(typeid(pair).name()));
 		runtime->storage.add_type("hash_map",[]()->cov::any {return cov::any::make<hash_map>();},cov::hash<std::string>(typeid(hash_map).name()));
 		// Add Internal Functions to storage
 		add_function_const(to_integer);
@@ -145,6 +146,8 @@ namespace cov_basic {
 		runtime->string_ext=std::make_shared<extension_holder>(&string_ext);
 		array_cbs_ext::init();
 		runtime->array_ext=std::make_shared<extension_holder>(&array_ext);
+		pair_cbs_ext::init();
+		runtime->pair_ext=std::make_shared<extension_holder>(&pair_ext);
 		hash_map_cbs_ext::init();
 		runtime->hash_map_ext=std::make_shared<extension_holder>(&hash_map_ext);
 #ifdef CBS_MATH_EXT

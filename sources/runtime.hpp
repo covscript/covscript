@@ -152,6 +152,7 @@ namespace cov_basic {
 		extension_t char_ext;
 		extension_t string_ext;
 		extension_t array_ext;
+		extension_t pair_ext;
 		extension_t hash_map_ext;
 	};
 	std::unique_ptr<runtime_type> runtime=nullptr;
@@ -239,6 +240,8 @@ namespace cov_basic {
 			return object_method(a,runtime->string_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
 		else if(a.type()==typeid(array))
 			return object_method(a,runtime->array_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
+		else if(a.type()==typeid(pair))
+			return object_method(a,runtime->pair_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
 		else if(a.type()==typeid(hash_map))
 			return object_method(a,runtime->hash_map_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
 		else
