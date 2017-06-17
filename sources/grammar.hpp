@@ -310,6 +310,53 @@ namespace cov_basic {
 		}
 		runtime->storage.remove_domain();
 	}
+	template<typename T,typename X>void foreach_helper(const string& iterator,const cov::any& obj,std::deque<statement_base*>& body)
+	{
+		runtime->storage.add_domain();
+		for(auto& it:obj.const_val<T>()) {
+			runtime->storage.add_var(iterator,X(it));
+			for(auto& ptr:body) {
+				try {
+					ptr->run();
+				}
+				catch(const syntax_error& se) {
+					throw syntax_error(ptr->get_line_num(),se.what());
+				}
+				catch(const lang_error& le) {
+					throw lang_error(ptr->get_line_num(),le.what());
+				}
+				catch(const std::exception& e) {
+					throw internal_error(ptr->get_line_num(),e.what());
+				}
+				if(return_fcall) {
+					runtime->storage.remove_domain();
+					return;
+				}
+				if(break_block) {
+					break_block=false;
+					runtime->storage.remove_domain();
+					return;
+				}
+				if(continue_block) {
+					continue_block=false;
+					break;
+				}
+			}
+		}
+		runtime->storage.remove_domain();
+	}
+	void statement_foreach::run()
+	{
+		const cov::any& obj=parse_expr(this->mObj.root());
+		if(obj.type()==typeid(string))
+			foreach_helper<string,char>(this->mIt,obj,this->mBlock);
+		else if(obj.type()==typeid(array))
+			foreach_helper<array,cov::any>(this->mIt,obj,this->mBlock);
+		else if(obj.type()==typeid(hash_map))
+			foreach_helper<hash_map,pair>(this->mIt,obj,this->mBlock);
+		else
+			throw syntax_error("Unsupported type(foreach)");
+	}
 	void statement_struct::run()
 	{
 		runtime->storage.add_type(this->mName,this->mBuilder);
@@ -564,6 +611,19 @@ namespace cov_basic {
 				cov::tree<token_base*> tree_step;
 				tree_step.emplace_root_left(tree_step.root(),new token_value(number(1)));
 				return new statement_for(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),dynamic_cast<token_expr*>(raw.front().at(3))->get_tree(),tree_step,body,raw.front().back());
+			}
+		});
+		// Foreach Grammar
+		translator.add_method({new token_action(action_types::foreach_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::iterate_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {grammar_type::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				cov::tree<token_base*>& t=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
+				if(t.root().data()==nullptr)
+					throw internal_error("Null pointer accessed.");
+				if(t.root().data()->get_type()!=token_types::id)
+					throw syntax_error("Wrong grammar(foreach)");
+				const std::string& it=dynamic_cast<token_id*>(t.root().data())->get_id();
+				std::deque<statement_base*> body;
+				kill_action({raw.begin()+1,raw.end()},body);
+				return new statement_foreach(it,dynamic_cast<token_expr*>(raw.front().at(3))->get_tree(),body,raw.front().back());
 			}
 		});
 		// Break Grammar
