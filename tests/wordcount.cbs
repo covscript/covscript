@@ -16,7 +16,6 @@ while !file.eof(in)
         ++table[str]
     end
 end
-function for_each(key,value)
-    system.println(key,":",value)
+foreach it iterate table
+    system.println(it.first(),":",it.second())
 end
-table.for_each(for_each)
