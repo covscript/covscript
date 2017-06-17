@@ -18,19 +18,6 @@
 #define add_function_name(name,func) cov_basic::runtime->storage.add_var_global(name,cov::any::make_protect<cov_basic::native_interface>(func));
 namespace cov_basic {
 // Internal Functions
-	cov::any size_of(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.front().type()==typeid(array))
-			return number(args.front().const_val<array>().size());
-		else if(args.front().type()==typeid(hash_map))
-			return number(args.front().const_val<hash_map>().size());
-		else if(args.front().type()==typeid(string))
-			return number(args.front().const_val<string>().size());
-		else
-			throw syntax_error("Get size of non-array or string object.");
-	}
 	cov::any to_integer(array& args)
 	{
 		if(args.size()!=1)
@@ -45,6 +32,12 @@ namespace cov_basic {
 		if(args.size()!=1)
 			throw syntax_error("Wrong size of arguments.");
 		return args.front().to_string();
+	}
+	cov::any is_char(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		return args.front().type()==typeid(char);
 	}
 	cov::any is_number(array& args)
 	{
@@ -76,11 +69,30 @@ namespace cov_basic {
 			throw syntax_error("Wrong size of arguments.");
 		return args.front().type()==typeid(linker);
 	}
+	cov::any is_pair(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		return args.front().type()==typeid(pair);
+	}
 	cov::any is_hash_map(array& args)
 	{
 		if(args.size()!=1)
 			throw syntax_error("Wrong size of arguments.");
 		return args.front().type()==typeid(hash_map);
+	}
+	cov::any size_of(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		if(args.front().type()==typeid(array))
+			return number(args.front().const_val<array>().size());
+		else if(args.front().type()==typeid(hash_map))
+			return number(args.front().const_val<hash_map>().size());
+		else if(args.front().type()==typeid(string))
+			return number(args.front().const_val<string>().size());
+		else
+			throw syntax_error("Get size of non-array or string object.");
 	}
 	cov::any clone(array& args)
 	{
@@ -124,10 +136,14 @@ namespace cov_basic {
 		// Add Internal Functions to storage
 		add_function_const(to_integer);
 		add_function_const(to_string);
+		add_function_const(is_char);
 		add_function_const(is_number);
 		add_function_const(is_boolean);
 		add_function_const(is_string);
 		add_function_const(is_array);
+		add_function_const(is_linker);
+		add_function_const(is_pair);
+		add_function_const(is_hash_map);
 		add_function_const(size_of);
 		add_function(clone);
 		add_function(swap);
@@ -166,11 +182,11 @@ namespace cov_basic {
 	void reset()
 	{
 		runtime=std::unique_ptr<runtime_type>(new runtime_type);
-		token_value::clean_all();
 	}
 	void cov_basic(const std::string& path)
 	{
 		std::ios::sync_with_stdio(false);
+		token_value::clean();
 		std::deque<char> buff;
 		std::deque<token_base*> tokens;
 		std::deque<statement_base*> statements;
@@ -209,7 +225,7 @@ namespace cov_basic {
 		}
 		init();
 		translate_into_statements(tokens,statements);
-		token_value::mark_all();
+		token_value::mark();
 		for(auto& ptr:statements) {
 			try {
 				ptr->run();
