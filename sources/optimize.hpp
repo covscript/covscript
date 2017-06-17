@@ -58,7 +58,7 @@ namespace cov_basic {
 					const cov::any& val=parse_expr(tree.root());
 					if(is_map&&val.type()!=typeid(pair))
 						is_map=false;
-					arr.push_back(copy(val));
+					arr.push_back((new token_value(copy(val)))->get_value());
 				}
 				if(arr.empty())
 					is_map=false;
