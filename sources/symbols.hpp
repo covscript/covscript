@@ -122,11 +122,11 @@ namespace cov_basic {
 		{
 			return this->mVal;
 		}
-		static void clean_all()
+		static void clean()
 		{
 			mList.clear();
 		}
-		static void mark_all()
+		static void mark()
 		{
 			for(auto& it:mList)
 				it->mVal.constant();
