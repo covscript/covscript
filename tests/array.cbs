@@ -1,5 +1,5 @@
 define arr={}
 arr[10]=10
-for i=0 to size_of(arr)-1
-	system.println(arr[i])
+foreach it iterate arr
+	system.println(it)
 end
