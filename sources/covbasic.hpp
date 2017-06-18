@@ -57,6 +57,12 @@ namespace cov_basic {
 			throw syntax_error("Wrong size of arguments.");
 		return args.front().type()==typeid(string);
 	}
+	cov::any is_list(array& args)
+	{
+		if(args.size()!=1)
+			throw syntax_error("Wrong size of arguments.");
+		return args.front().type()==typeid(list);
+	}
 	cov::any is_array(array& args)
 	{
 		if(args.size()!=1)
@@ -85,7 +91,9 @@ namespace cov_basic {
 	{
 		if(args.size()!=1)
 			throw syntax_error("Wrong size of arguments.");
-		if(args.front().type()==typeid(array))
+		if(args.front().type()==typeid(list))
+			return number(args.front().const_val<list>().size());
+		else if(args.front().type()==typeid(array))
 			return number(args.front().const_val<array>().size());
 		else if(args.front().type()==typeid(hash_map))
 			return number(args.front().const_val<hash_map>().size());
@@ -129,6 +137,7 @@ namespace cov_basic {
 		runtime->storage.add_type("number",[]()->cov::any {return cov::any::make<number>(0);},cov::hash<std::string>(typeid(number).name()));
 		runtime->storage.add_type("boolean",[]()->cov::any {return cov::any::make<boolean>(true);},cov::hash<std::string>(typeid(boolean).name()));
 		runtime->storage.add_type("string",[]()->cov::any {return cov::any::make<string>();},cov::hash<std::string>(typeid(string).name()));
+		runtime->storage.add_type("list",[]()->cov::any {return cov::any::make<list>();},cov::hash<std::string>(typeid(list).name()));
 		runtime->storage.add_type("array",[]()->cov::any {return cov::any::make<array>();},cov::hash<std::string>(typeid(array).name()));
 		runtime->storage.add_type("linker",[]()->cov::any {return cov::any::make<linker>();},cov::hash<std::string>(typeid(linker).name()));
 		runtime->storage.add_type("pair",[]()->cov::any {return cov::any::make<pair>(number(0),number(0));},cov::hash<std::string>(typeid(pair).name()));
@@ -160,6 +169,8 @@ namespace cov_basic {
 		runtime->char_ext=std::make_shared<extension_holder>(&char_ext);
 		string_cbs_ext::init();
 		runtime->string_ext=std::make_shared<extension_holder>(&string_ext);
+		list_cbs_ext::init();
+		runtime->list_ext=std::make_shared<extension_holder>(&list_ext);
 		array_cbs_ext::init();
 		runtime->array_ext=std::make_shared<extension_holder>(&array_ext);
 		pair_cbs_ext::init();

@@ -1,15 +1,16 @@
-import "../stdlib/forward_list"
-define list as forward_list
+define list as list
 list.push_front("Hello")
 list.push_front(0)
+list.front()=2
+foreach it iterate list
+	system.println(it)
+end
 list.pop_front()
 list.push_front("Hahaha")
-list.insert_after(list.begin,1)
-list.erase_after(list.begin->next)
-block
-	define it=list.begin
-	while(it!=null)
-		system.println(it->data)
-		it=it->next
-	end
+foreach it iterate list
+	system.println(it)
+end
+list.reverse()
+foreach it iterate list
+	system.println(it)
 end

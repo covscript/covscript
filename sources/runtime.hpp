@@ -151,6 +151,7 @@ namespace cov_basic {
 		domain_manager constant_storage;
 		extension_t char_ext;
 		extension_t string_ext;
+		extension_t list_ext;
 		extension_t array_ext;
 		extension_t pair_ext;
 		extension_t hash_map_ext;
@@ -238,6 +239,8 @@ namespace cov_basic {
 			return object_method(a,runtime->char_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
 		else if(a.type()==typeid(string))
 			return object_method(a,runtime->string_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
+		else if(a.type()==typeid(list))
+			return object_method(a,runtime->list_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
 		else if(a.type()==typeid(array))
 			return object_method(a,runtime->array_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
 		else if(a.type()==typeid(pair))
