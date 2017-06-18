@@ -80,23 +80,6 @@ namespace cov_basic {
 	{
 		parse_expr(mTree.root());
 	}
-	void statement_import::run()
-	{
-		for(auto& ptr:statements) {
-			try {
-				ptr->run();
-			}
-			catch(const syntax_error& se) {
-				throw syntax_error(ptr->get_line_num(),"In file \""+file+"\":"+se.what());
-			}
-			catch(const lang_error& le) {
-				throw lang_error(ptr->get_line_num(),"In file \""+file+"\":"+le.what());
-			}
-			catch(const std::exception& e) {
-				throw internal_error(ptr->get_line_num(),"In file \""+file+"\":"+e.what());
-			}
-		}
-	}
 	void statement_define::run()
 	{
 		define_var=true;

@@ -193,11 +193,10 @@ namespace cov_basic {
 	void reset()
 	{
 		runtime=std::unique_ptr<runtime_type>(new runtime_type);
+		token_value::clean();
 	}
 	void cov_basic(const std::string& path)
 	{
-		std::ios::sync_with_stdio(false);
-		token_value::clean();
 		std::deque<char> buff;
 		std::deque<token_base*> tokens;
 		std::deque<statement_base*> statements;
@@ -253,6 +252,5 @@ namespace cov_basic {
 				throw internal_error(ptr->get_line_num(),e.what());
 			}
 		}
-		std::ios::sync_with_stdio(true);
 	}
 }

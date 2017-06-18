@@ -323,62 +323,17 @@ namespace cov_basic {
 		virtual void run() override;
 	};
 	class statement_import final:public statement_base {
-		std::string file;
-		std::deque<statement_base*> statements;
 	public:
 		statement_import()=delete;
-		statement_import(const std::string& path,token_base* ptr):file(path),statement_base(ptr)
+		statement_import(const std::string& path,token_base* ptr):statement_base(ptr)
 		{
-			std::deque<char> buff;
-			std::deque<token_base*> tokens;
-			std::ifstream in(path);
-			if(!in.is_open())
-				throw fatal_error(path+": No such file or directory");
-			std::string line;
-			std::size_t line_num=0;
-			while(std::getline(in,line)) {
-				++line_num;
-				if(line.empty())
-					continue;
-				bool is_note=false;
-				for(auto& ch:line) {
-					if(!std::isspace(ch)) {
-						if(ch=='#')
-							is_note=true;
-						break;
-					}
-				}
-				if(is_note)
-					continue;
-				for(auto& c:line)
-					buff.push_back(c);
-				try {
-					translate_into_tokens(buff,tokens);
-				}
-				catch(const syntax_error& se) {
-					throw syntax_error(line_num,"In file \""+file+"\":"+se.what());
-				}
-				catch(const std::exception& e) {
-					throw internal_error(line_num,"In file \""+file+"\":"+e.what());
-				}
-				tokens.push_back(new token_endline(line_num));
-				buff.clear();
-			}
-			try {
-				translate_into_statements(tokens,statements);
-			}
-			catch(const syntax_error& se) {
-				throw syntax_error("In file \""+file+"\":"+se.what());
-			}
-			catch(const std::exception& e) {
-				throw internal_error("In file \""+file+"\":"+e.what());
-			}
+			cov_basic(path);
 		}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::import_;
 		}
-		virtual void run() override;
+		virtual void run() override {}
 	};
 	class statement_define final:public statement_base {
 		cov::tree<token_base*> mTree;

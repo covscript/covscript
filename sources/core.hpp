@@ -243,6 +243,7 @@ namespace cov_basic {
 		val.detach();
 		return val;
 	}
+	void cov_basic(const std::string&);
 }
 namespace cov {
 	template<>void detach<cov_basic::pair>(cov_basic::pair& val)
