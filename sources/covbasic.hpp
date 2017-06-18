@@ -15,7 +15,6 @@
 #endif
 #define add_function(name) cov_basic::runtime->storage.add_var_global(#name,cov::any::make_protect<cov_basic::native_interface>(name));
 #define add_function_const(name) cov_basic::runtime->storage.add_var_global(#name,cov::any::make_protect<cov_basic::native_interface>(name,true));
-#define add_function_name(name,func) cov_basic::runtime->storage.add_var_global(name,cov::any::make_protect<cov_basic::native_interface>(func));
 namespace cov_basic {
 // Internal Functions
 	cov::any to_integer(array& args)
@@ -193,11 +192,11 @@ namespace cov_basic {
 	void reset()
 	{
 		runtime=std::unique_ptr<runtime_type>(new runtime_type);
-		token_value::clean();
 		init();
 	}
 	void cov_basic(const std::string& path)
 	{
+		token_value::clean();
 		std::deque<char> buff;
 		std::deque<token_base*> tokens;
 		std::deque<statement_base*> statements;

@@ -1,0 +1,3 @@
+import "./constant.cbs"
+constant s=str+"!!!"
+system.println(s)
