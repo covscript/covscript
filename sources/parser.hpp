@@ -282,7 +282,7 @@ namespace cov_basic {
 	}
 	void translate_into_statements(std::deque<token_base*>& tokens,std::deque<statement_base*>& statements);
 	enum class statement_types {
-		expression_,import_,block_,define_,constant_,if_,else_,switch_,case_,default_,while_,until_,loop_,for_,foreach_,break_,continue_,struct_,function_,return_,end_
+		null,expression_,import_,block_,define_,constant_,if_,else_,switch_,case_,default_,while_,until_,loop_,for_,foreach_,break_,continue_,struct_,function_,return_,end_
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;
@@ -586,14 +586,15 @@ namespace cov_basic {
 			throw syntax_error("Standalone end is not support.");
 		}
 	};
-	enum class grammar_type {
+	enum class grammar_types {
 		null,single,block
 	};
 	struct method_type final {
 		using function_type=std::function<statement_base*(const std::deque<std::deque<token_base*>>&)>;
-		grammar_type type=grammar_type::null;
+		grammar_types type=grammar_types::null;
+		statement_types stype=statement_types::null;
 		function_type function;
-		method_type(grammar_type g,const function_type& f):type(g),function(f) {}
+		method_type(statement_types s,grammar_types g,const function_type& f):stype(s),type(g),function(f) {}
 	};
 	class translator_type final {
 	public:
