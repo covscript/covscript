@@ -1,15 +1,15 @@
 function split(str)
 	define arr as array
 	define tmp as string
-	for i=0 to size_of(str)-1
-		if(types.char.isspace(str[i]))
+	foreach ch iterate str
+		if(ch.isspace())
 			if(size_of(tmp)!=0)
 				arr.push_back(tmp)
 				tmp.clear()
 			end
 			continue
 		end
-		tmp.append(str[i])
+		tmp.append(ch)
 	end
 	if(size_of(tmp)!=0)
 		arr.push_back(tmp)

@@ -1,0 +1,5 @@
+define str0=system.getline()
+define str1=system.getline()
+define str2=system.getline()
+str0.replace(str0.find(str1,0),size_of(str1),str2)
+system.println(str0)

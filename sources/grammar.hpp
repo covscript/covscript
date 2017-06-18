@@ -313,8 +313,8 @@ namespace cov_basic {
 	template<typename T,typename X>void foreach_helper(const string& iterator,const cov::any& obj,std::deque<statement_base*>& body)
 	{
 		runtime->storage.add_domain();
-		for(auto& it:obj.const_val<T>()) {
-			runtime->storage.add_var(iterator,X(it));
+		for(const X& it:obj.const_val<T>()) {
+			runtime->storage.add_var(iterator,it);
 			for(auto& ptr:body) {
 				try {
 					ptr->run();
