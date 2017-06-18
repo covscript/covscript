@@ -194,6 +194,7 @@ namespace cov_basic {
 	{
 		runtime=std::unique_ptr<runtime_type>(new runtime_type);
 		token_value::clean();
+		init();
 	}
 	void cov_basic(const std::string& path)
 	{
@@ -233,7 +234,6 @@ namespace cov_basic {
 			tokens.push_back(new token_endline(line_num));
 			buff.clear();
 		}
-		init();
 		translate_into_statements(tokens,statements);
 		token_value::mark();
 		for(auto& ptr:statements) {
