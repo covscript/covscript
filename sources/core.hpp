@@ -17,6 +17,7 @@
 #include <memory>
 #include <cmath>
 #include <deque>
+#include <list>
 namespace cov_basic {
 #ifndef CBS_STATIC
 	const std::string version="2.1.5.3";
@@ -31,6 +32,7 @@ namespace cov_basic {
 	using number=long double;
 	using boolean=bool;
 	using string=std::string;
+	using list=std::list<cov::any>;
 	using array=std::deque<cov::any>;
 	using pair=std::pair<cov::any,cov::any>;
 	using hash_map=std::unordered_map<cov::any,cov::any>;
@@ -247,6 +249,11 @@ namespace cov {
 	{
 		cov_basic::copy_no_return(val.first);
 		cov_basic::copy_no_return(val.second);
+	}
+	template<>void detach<cov_basic::list>(cov_basic::list& val)
+	{
+		for(auto& it:val)
+			cov_basic::copy_no_return(it);
 	}
 	template<>void detach<cov_basic::array>(cov_basic::array& val)
 	{

@@ -350,6 +350,8 @@ namespace cov_basic {
 		const cov::any& obj=parse_expr(this->mObj.root());
 		if(obj.type()==typeid(string))
 			foreach_helper<string,char>(this->mIt,obj,this->mBlock);
+		else if(obj.type()==typeid(list))
+			foreach_helper<list,cov::any>(this->mIt,obj,this->mBlock);
 		else if(obj.type()==typeid(array))
 			foreach_helper<array,cov::any>(this->mIt,obj,this->mBlock);
 		else if(obj.type()==typeid(hash_map))
