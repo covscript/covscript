@@ -322,19 +322,6 @@ namespace cov_basic {
 		}
 		virtual void run() override;
 	};
-	class statement_import final:public statement_base {
-	public:
-		statement_import()=delete;
-		statement_import(const std::string& path,token_base* ptr):statement_base(ptr)
-		{
-			cov_basic(path);
-		}
-		virtual statement_types get_type() const noexcept override
-		{
-			return statement_types::import_;
-		}
-		virtual void run() override {}
-	};
 	class statement_define final:public statement_base {
 		cov::tree<token_base*> mTree;
 		token_id* mType=nullptr;
@@ -347,16 +334,6 @@ namespace cov_basic {
 			return statement_types::define_;
 		}
 		virtual void run() override;
-	};
-	class statement_constant final:public statement_base {
-	public:
-		statement_constant()=delete;
-		statement_constant(token_base* ptr):statement_base(ptr) {}
-		virtual statement_types get_type() const noexcept override
-		{
-			return statement_types::constant_;
-		}
-		virtual void run() override {}
 	};
 	class statement_break final:public statement_base {
 	public:
@@ -586,15 +563,22 @@ namespace cov_basic {
 			throw syntax_error("Standalone end is not support.");
 		}
 	};
+	/*
+	* Grammar Types
+	* Null: Do not use!
+	* Single: Single Line Statement.
+	* Block: Statement with code block.
+	* Jit Command: Statement whitch execute in compile time.
+	*/
 	enum class grammar_types {
-		null,single,block
+		null,single,block,jit_command
 	};
 	struct method_type final {
 		using function_type=std::function<statement_base*(const std::deque<std::deque<token_base*>>&)>;
 		grammar_types type=grammar_types::null;
-		statement_types stype=statement_types::null;
+		statement_types statement_type=statement_types::null;
 		function_type function;
-		method_type(statement_types s,grammar_types g,const function_type& f):stype(s),type(g),function(f) {}
+		method_type(statement_types s,grammar_types g,const function_type& f):statement_type(s),type(g),function(f) {}
 	};
 	class translator_type final {
 	public:
