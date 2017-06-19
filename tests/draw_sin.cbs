@@ -1,7 +1,7 @@
 define fd=10
-constant pix=darwin.pixel('@',true,false,darwin.blue,darwin.white)
 function main()
     darwin.set_frame_limit(60)
+    constant pix=darwin.pixel('@',true,false,darwin.blue,darwin.white)
     darwin.fit_drawable()
     darwin.clear_drawable()
     define x=0

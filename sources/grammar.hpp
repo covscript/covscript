@@ -374,9 +374,13 @@ namespace cov_basic {
 					kill_expr(line);
 				}
 				method_type* m=&translator.match(line);
-				if(m->type==grammar_types::single) {
+				switch(m->type) {
+				case grammar_types::null:
+					throw syntax_error("Null type of grammar.");
+					break;
+				case grammar_types::single: {
 					if(level>0) {
-						if(m->stype==statement_types::end_)
+						if(m->statement_type==statement_types::end_)
 							--level;
 						if(level==0) {
 							statements.push_back(method->function(tmp));
@@ -389,14 +393,18 @@ namespace cov_basic {
 					else
 						statements.push_back(m->function({line}));
 				}
-				else if(m->type==grammar_types::block) {
+				break;
+				case grammar_types::block: {
 					if(level==0)
 						method=m;
 					++level;
 					tmp.push_back(line);
 				}
-				else
-					throw syntax_error("Null type of grammar.");
+				break;
+				case grammar_types::jit_command:
+					m->function({line});
+					break;
+				}
 			}
 			catch(const syntax_error& se) {
 				throw syntax_error(line_num,se.what());
@@ -433,8 +441,9 @@ namespace cov_basic {
 			}
 		});
 		// Import Grammar
-		translator.add_method({new token_action(action_types::import_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::import_,grammar_types::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
-				return new statement_import(dynamic_cast<token_value*>(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data())->get_value().const_val<string>(),raw.front().back());
+		translator.add_method({new token_action(action_types::import_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::import_,grammar_types::jit_command,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				cov_basic(dynamic_cast<token_value*>(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data())->get_value().const_val<string>());
+				return nullptr;
 			}
 		});
 		// Define Grammar
@@ -447,7 +456,7 @@ namespace cov_basic {
 			}
 		});
 		// Constant Grammar
-		translator.add_method({new token_action(action_types::constant_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::constant_,grammar_types::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+		translator.add_method({new token_action(action_types::constant_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::constant_,grammar_types::jit_command,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				cov::tree<token_base*>& tree=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
 				constant_var=true;
 				optimize_expression(tree);
@@ -456,7 +465,7 @@ namespace cov_basic {
 					throw syntax_error("Wrong format of expression.");
 				if(tree.root().data()->get_type()!=token_types::value)
 					throw syntax_error("Constant variable must have an constant value.");
-				return new statement_constant(raw.front().back());
+				return nullptr;
 			}
 		});
 		// End Grammar
