@@ -1,13 +1,13 @@
-function main()
-#初始化和设置
-	darwin.load()
-	define jump_frame=darwin.input_box("Console Pinball Game","Please set the difficulty:","3",true)
-	constant num3={1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1}
+constant num3={1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1}
 	constant num2={1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1}
 	constant num1={0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0}
 	constant chG={1,1,1,1,1,1,1,1,0,0,0,0,1,1,0,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1}
 	constant chO={1,1,1,1,1,1,1,1,0,0,1,1,1,1,0,0,1,1,1,1,0,0,1,1,1,1,1,1,1,1}
 	constant chExc={0,1,1,1,1,0,0,1,1,1,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0}
+function main()
+#初始化和设置
+	darwin.load()
+	define jump_frame=darwin.input_box("Console Pinball Game","Please set the difficulty:","3",true)
 #显示开始的倒计时
 	darwin.set_frame_limit(1)
 	darwin.fit_drawable()
