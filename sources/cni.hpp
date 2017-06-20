@@ -1,3 +1,4 @@
+#pragma once
 #include "../include/mozart/bind.hpp"
 #include "./core.hpp"
 #include "./arglist.hpp"
