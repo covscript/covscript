@@ -225,10 +225,10 @@ namespace cov_basic {
 				translate_into_tokens(buff,tokens);
 			}
 			catch(const syntax_error& se) {
-				throw syntax_error(line_num,se.what());
+				throw syntax_error(path,line_num,se.what());
 			}
 			catch(const std::exception& e) {
-				throw internal_error(line_num,e.what());
+				throw internal_error(path,line_num,e.what());
 			}
 			tokens.push_back(new token_endline(line_num,path));
 			buff.clear();

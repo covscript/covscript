@@ -24,13 +24,13 @@ namespace cov_basic {
 				ptr->run();
 			}
 			catch(const syntax_error& se) {
-				throw syntax_error(ptr->get_line_num(),se.what());
+				throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
 			}
 			catch(const lang_error& le) {
-				throw lang_error(ptr->get_line_num(),le.what());
+				throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
 			}
 			catch(const std::exception& e) {
-				throw internal_error(ptr->get_line_num(),e.what());
+				throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
 			}
 			if(this->mRetVal.usable()) {
 				return_fcall=false;
@@ -62,13 +62,13 @@ namespace cov_basic {
 				ptr->run();
 			}
 			catch(const syntax_error& se) {
-				throw syntax_error(ptr->get_line_num(),se.what());
+				throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
 			}
 			catch(const lang_error& le) {
-				throw lang_error(ptr->get_line_num(),le.what());
+				throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
 			}
 			catch(const std::exception& e) {
-				throw internal_error(ptr->get_line_num(),e.what());
+				throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
 			}
 		}
 		inside_struct=false;
@@ -104,13 +104,13 @@ namespace cov_basic {
 				ptr->run();
 			}
 			catch(const syntax_error& se) {
-				throw syntax_error(ptr->get_line_num(),se.what());
+				throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
 			}
 			catch(const lang_error& le) {
-				throw lang_error(ptr->get_line_num(),le.what());
+				throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
 			}
 			catch(const std::exception& e) {
-				throw internal_error(ptr->get_line_num(),e.what());
+				throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
 			}
 			if(return_fcall) {
 				runtime->storage.remove_domain();
@@ -129,13 +129,13 @@ namespace cov_basic {
 						ptr->run();
 					}
 					catch(const syntax_error& se) {
-						throw syntax_error(ptr->get_line_num(),se.what());
+						throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
 					}
 					catch(const lang_error& le) {
-						throw lang_error(ptr->get_line_num(),le.what());
+						throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
 					}
 					catch(const std::exception& e) {
-						throw internal_error(ptr->get_line_num(),e.what());
+						throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
 					}
 					if(return_fcall) {
 						runtime->storage.remove_domain();
@@ -157,13 +157,13 @@ namespace cov_basic {
 						ptr->run();
 					}
 					catch(const syntax_error& se) {
-						throw syntax_error(ptr->get_line_num(),se.what());
+						throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
 					}
 					catch(const lang_error& le) {
-						throw lang_error(ptr->get_line_num(),le.what());
+						throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
 					}
 					catch(const std::exception& e) {
-						throw internal_error(ptr->get_line_num(),e.what());
+						throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
 					}
 					if(return_fcall) {
 						runtime->storage.remove_domain();
@@ -195,7 +195,7 @@ namespace cov_basic {
 					ptr->run();
 				}
 				catch(const syntax_error& se) {
-					throw syntax_error(ptr->get_line_num(),se.what());
+					throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
 				}
 				catch(const lang_error& le) {
 					throw lang_error(ptr->get_line_num(),le.what());
@@ -229,13 +229,13 @@ namespace cov_basic {
 					ptr->run();
 				}
 				catch(const syntax_error& se) {
-					throw syntax_error(ptr->get_line_num(),se.what());
+					throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
 				}
 				catch(const lang_error& le) {
-					throw lang_error(ptr->get_line_num(),le.what());
+					throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
 				}
 				catch(const std::exception& e) {
-					throw internal_error(ptr->get_line_num(),e.what());
+					throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
 				}
 				if(return_fcall) {
 					runtime->storage.remove_domain();
@@ -267,13 +267,13 @@ namespace cov_basic {
 					ptr->run();
 				}
 				catch(const syntax_error& se) {
-					throw syntax_error(ptr->get_line_num(),se.what());
+					throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
 				}
 				catch(const lang_error& le) {
-					throw lang_error(ptr->get_line_num(),le.what());
+					throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
 				}
 				catch(const std::exception& e) {
-					throw internal_error(ptr->get_line_num(),e.what());
+					throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
 				}
 				if(return_fcall) {
 					runtime->storage.remove_domain();
@@ -303,13 +303,13 @@ namespace cov_basic {
 					ptr->run();
 				}
 				catch(const syntax_error& se) {
-					throw syntax_error(ptr->get_line_num(),se.what());
+					throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
 				}
 				catch(const lang_error& le) {
-					throw lang_error(ptr->get_line_num(),le.what());
+					throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
 				}
 				catch(const std::exception& e) {
-					throw internal_error(ptr->get_line_num(),e.what());
+					throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
 				}
 				if(return_fcall) {
 					runtime->storage.remove_domain();
@@ -363,10 +363,10 @@ namespace cov_basic {
 	{
 		std::deque<std::deque<token_base*>> tmp;
 		method_type* method=nullptr;
+		token_endline* endsig=nullptr;
 		int level=0;
-		std::size_t line_num=0;
 		for(auto& line:lines) {
-			line_num=dynamic_cast<token_endline*>(line.back())->get_num();
+			endsig=dynamic_cast<token_endline*>(line.back());
 			try {
 				if(raw) {
 					process_brackets(line);
@@ -407,10 +407,10 @@ namespace cov_basic {
 				}
 			}
 			catch(const syntax_error& se) {
-				throw syntax_error(line_num,se.what());
+				throw syntax_error(endsig->get_file(),endsig->get_num(),se.what());
 			}
 			catch(const std::exception& e) {
-				throw internal_error(line_num,e.what());
+				throw internal_error(endsig->get_file(),endsig->get_num(),e.what());
 			}
 		}
 		if(level!=0)
