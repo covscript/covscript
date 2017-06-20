@@ -230,7 +230,7 @@ namespace cov_basic {
 			catch(const std::exception& e) {
 				throw internal_error(line_num,e.what());
 			}
-			tokens.push_back(new token_endline(line_num));
+			tokens.push_back(new token_endline(line_num,path));
 			buff.clear();
 		}
 		translate_into_statements(tokens,statements);
@@ -242,13 +242,13 @@ namespace cov_basic {
 					throw syntax_error("Can not run break or continue outside the loop.");
 			}
 			catch(const syntax_error& se) {
-				throw syntax_error(ptr->get_line_num(),se.what());
+				throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
 			}
 			catch(const lang_error& le) {
-				throw lang_error(ptr->get_line_num(),le.what());
+				throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
 			}
 			catch(const std::exception& e) {
-				throw internal_error(ptr->get_line_num(),e.what());
+				throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
 			}
 		}
 	}

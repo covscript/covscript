@@ -286,7 +286,9 @@ namespace cov_basic {
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;
+	protected:
 		std::size_t mLineNum=0;
+		std::string mFilePath="<Uknown>";
 	public:
 		static void* operator new(std::size_t size)
 		{
@@ -301,12 +303,16 @@ namespace cov_basic {
 		}
 		statement_base()=default;
 		statement_base(const statement_base&)=default;
-		statement_base(token_base* ptr):mLineNum(dynamic_cast<token_endline*>(ptr)->get_num()) {}
+		statement_base(token_base* ptr):mLineNum(dynamic_cast<token_endline*>(ptr)->get_num()),mFilePath(dynamic_cast<token_endline*>(ptr)->get_file()) {}
 		virtual ~statement_base()=default;
 		virtual statement_types get_type() const noexcept=0;
 		virtual std::size_t get_line_num() const noexcept final
 		{
 			return this->mLineNum;
+		}
+		virtual const std::string& get_file_path() const noexcept final
+		{
+			return this->mFilePath;
 		}
 		virtual void run()=0;
 	};

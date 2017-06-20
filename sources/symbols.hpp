@@ -48,17 +48,23 @@ namespace cov_basic {
 	};
 	garbage_collector<token_base> token_base::gc;
 	class token_endline final:public token_base {
-		std::size_t mNum;
+		std::size_t mNum=0;
+		std::string mFile="<Uknown>";
 	public:
-		token_endline()=delete;
+		token_endline()=default;
 		token_endline(std::size_t num):mNum(num) {}
+		token_endline(std::size_t num,const std::string& file):mNum(num),mFile(file) {}
 		virtual token_types get_type() const noexcept override
 		{
 			return token_types::endline;
 		}
-		std::size_t get_num() noexcept
+		std::size_t get_num() const noexcept
 		{
 			return this->mNum;
+		}
+		const std::string& get_file() const noexcept
+		{
+			return this->mFile;
 		}
 	};
 	class token_action final:public token_base {
