@@ -1,5 +1,5 @@
 #pragma once
-#include "./covbasic.hpp"
+#include "./core.hpp"
 cov_basic::extension* cbs_extension();
 extern "C"
 {
