@@ -85,7 +85,7 @@ namespace runtime_cbs_ext {
 		runtime_ext.add_var("rand",cov::any::make_protect<native_interface>(rand));
 		runtime_ext.add_var("randint",cov::any::make_protect<native_interface>(randint));
 		runtime_ext.add_var("error",cov::any::make_protect<native_interface>(error));
-		runtime_ext.add_var("load_extension",cov::any::make_protect<native_interface>(load_extension));
+		runtime_ext.add_var("load_extension",cov::any::make_protect<native_interface>(load_extension,true));
 		runtime_ext.add_var("type_hash",cov::any::make_protect<native_interface>(type_hash,true));
 		runtime_ext.add_var("hash",cov::any::make_protect<native_interface>(hash,true));
 		runtime_ext.add_var("build",cov::any::make_protect<native_interface>(build));
