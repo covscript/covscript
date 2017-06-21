@@ -13,120 +13,72 @@
 #ifdef CBS_DARWIN_EXT
 #include "./extensions/darwin_extension.cpp"
 #endif
-#define add_function(name) cov_basic::runtime->storage.add_var_global(#name,cov::any::make_protect<cov_basic::native_interface>(name));
-#define add_function_const(name) cov_basic::runtime->storage.add_var_global(#name,cov::any::make_protect<cov_basic::native_interface>(name,true));
+#define add_function(name) cov_basic::runtime->storage.add_var_global(#name,cov::any::make_protect<cov_basic::native_interface>(cov_basic::cni(name)));
+#define add_function_const(name) cov_basic::runtime->storage.add_var_global(#name,cov::any::make_protect<cov_basic::native_interface>(cov_basic::cni(name),true));
 namespace cov_basic {
 // Internal Functions
-	cov::any to_integer(array& args)
+	number to_integer(number n)
 	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.front().type()==typeid(number))
-			return number(long(args.at(0).const_val<number>()));
+		return long(n);
+	}
+	string to_string(const cov::any& val)
+	{
+		return val.to_string();
+	}
+	bool is_char(const cov::any& val)
+	{
+		return val.type()==typeid(char);
+	}
+	bool is_number(const cov::any& val)
+	{
+		return val.type()==typeid(number);
+	}
+	bool is_boolean(const cov::any& val)
+	{
+		return val.type()==typeid(boolean);
+	}
+	bool is_string(const cov::any& val)
+	{
+		return val.type()==typeid(string);
+	}
+	bool is_list(const cov::any& val)
+	{
+		return val.type()==typeid(list);
+	}
+	bool is_array(const cov::any& val)
+	{
+		return val.type()==typeid(array);
+	}
+	bool is_linker(const cov::any& val)
+	{
+		return val.type()==typeid(linker);
+	}
+	bool is_pair(const cov::any& val)
+	{
+		return val.type()==typeid(pair);
+	}
+	bool is_hash_map(const cov::any& val)
+	{
+		return val.type()==typeid(hash_map);
+	}
+	cov::any clone(const cov::any& val)
+	{
+		if(val.type()==typeid(linker))
+			return copy(val.const_val<linker>().data);
 		else
-			throw syntax_error("Wrong type of arguments.(Request Number or String)");
+			return copy(val);
 	}
-	cov::any to_string(array& args)
+	void swap(cov::any& a,cov::any& b)
 	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		return args.front().to_string();
+		a.swap(b,true);
 	}
-	cov::any is_char(array& args)
+	cov::any link(const cov::any& val)
 	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		return args.front().type()==typeid(char);
+		return cov::any::make<linker>(val);
 	}
-	cov::any is_number(array& args)
+	cov::any escape(const cov::any& val)
 	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		return args.front().type()==typeid(number);
-	}
-	cov::any is_boolean(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		return args.front().type()==typeid(boolean);
-	}
-	cov::any is_string(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		return args.front().type()==typeid(string);
-	}
-	cov::any is_list(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		return args.front().type()==typeid(list);
-	}
-	cov::any is_array(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		return args.front().type()==typeid(array);
-	}
-	cov::any is_linker(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		return args.front().type()==typeid(linker);
-	}
-	cov::any is_pair(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		return args.front().type()==typeid(pair);
-	}
-	cov::any is_hash_map(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		return args.front().type()==typeid(hash_map);
-	}
-	cov::any size_of(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.front().type()==typeid(list))
-			return number(args.front().const_val<list>().size());
-		else if(args.front().type()==typeid(array))
-			return number(args.front().const_val<array>().size());
-		else if(args.front().type()==typeid(hash_map))
-			return number(args.front().const_val<hash_map>().size());
-		else if(args.front().type()==typeid(string))
-			return number(args.front().const_val<string>().size());
-		else
-			throw syntax_error("Get size of non-array or string object.");
-	}
-	cov::any clone(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.front().type()==typeid(linker))
-			return copy(args.front().const_val<linker>().data);
-		else
-			return copy(args.front());
-	}
-	cov::any swap(array& args)
-	{
-		if(args.size()!=2)
-			throw syntax_error("Wrong size of arguments.");
-		args.at(0).swap(args.at(1),true);
-		return number(0);
-	}
-	cov::any link(array& args)
-	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		return std::move(cov::any::make<linker>(args.front()));
-	}
-	cov::any escape(array& args)
-	{
-		arglist::check<linker>(args);
-		return args.front().val<linker>(true).data;
+		return val.const_val<linker>().data;
 	}
 	void init()
 	{
@@ -152,7 +104,6 @@ namespace cov_basic {
 		add_function_const(is_linker);
 		add_function_const(is_pair);
 		add_function_const(is_hash_map);
-		add_function_const(size_of);
 		add_function(clone);
 		add_function(swap);
 		add_function(link);
