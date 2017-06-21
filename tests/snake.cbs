@@ -6,8 +6,8 @@ define snake_head={0,0}
 define food={0,0}
 define heading=2
 constant init_long=5
-constant god_mode=false
-constant cross_wall=false
+define god_mode=false
+define cross_wall=false
 constant hard=2
 define score=0
 

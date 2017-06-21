@@ -1,5 +1,5 @@
 #pragma once
-#include "../arglist.hpp"
+#include "../cni.hpp"
 static cov_basic::extension array_ext;
 namespace array_cbs_ext {
 	using namespace cov_basic;
@@ -48,10 +48,9 @@ namespace array_cbs_ext {
 		args.at(0).val<array>(true).clear();
 		return number(0);
 	}
-	cov::any at(array& args)
+	cov::any at(const array& arr,number posit)
 	{
-		arglist::check<array,number>(args);
-		return args.at(0).val<array>(true).at(args.at(1).const_val<number>());
+		return arr.at(posit);
 	}
 	void init()
 	{
@@ -60,6 +59,6 @@ namespace array_cbs_ext {
 		array_ext.add_var("push_back",cov::any::make_protect<native_interface>(push_back,true));
 		array_ext.add_var("pop_back",cov::any::make_protect<native_interface>(pop_back,true));
 		array_ext.add_var("clear",cov::any::make_protect<native_interface>(clear,true));
-		array_ext.add_var("at",cov::any::make_protect<native_interface>(at,true));
+		array_ext.add_var("at",cov::any::make_protect<native_interface>(cni(at),true));
 	}
 }
