@@ -20,12 +20,12 @@
 #include <list>
 namespace cov_basic {
 #ifndef CBS_STATIC
-	const std::string version="2.1.5.3";
+	const std::string version="2.1.5.4";
 #else
 #ifndef CBS_MINIMAL
-	const std::string version="2.1.5.3 (Static Build)";
+	const std::string version="2.1.5.4 (Static Build)";
 #else
-	const std::string version="2.1.5.3 (Minimal Build)";
+	const std::string version="2.1.5.4 (Minimal Build)";
 #endif
 #endif
 	static int output_precision=8;

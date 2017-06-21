@@ -19,7 +19,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://covbasic.org
 *
-* Version: 2.1.5.3
+* Version: 2.1.5.4
 */
 #define DARWIN_DISABLE_LOG
 #ifndef CBS_MINIMAL
