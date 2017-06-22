@@ -399,6 +399,63 @@ namespace cov_basic {
 		extension_t pair_ext;
 		extension_t hash_map_ext;
 	};
+	class thread final {
+	public:
+		enum class status {
+			ready,idle,busy,finish
+		};
+	private:
+		static std::forward_list<const thread*> mPool;
+		static std::forward_list<const thread*> mGarbage;
+		status mStatus=status::ready;
+		std::size_t mProgress=0;
+		std::deque<std::string> mArgs;
+		std::deque<statement_base*> mBody;
+		std::unique_ptr<runtime_type> mData;
+		void run();
+	public:
+		thread()=delete;
+		thread(const std::deque<std::string>& args,const std::deque<statement_base*>& body):mArgs(args),mBody(body) {}
+		~thread()
+		{
+			mGarbage.push_front(this);
+		}
+		status get_status() const
+		{
+			return mStatus;
+		}
+		void idle()
+		{
+			mStatus=status::idle;
+		}
+		void kill()
+		{
+			mStatus=status::finish;
+		}
+		void join(const array&);
+		static void gc()
+		{
+			if(!mGarbage.empty()) {
+				for(auto& ptr:mGarbage)
+					mPool.remove(ptr);
+				mGarbage.clear();
+			}
+		}
+		static void exec()
+		{
+			gc();
+			for(auto& ptr:mPool) {
+				if(ptr->get_status()==status::idle) {
+					ptr->mStatus=status::busy;
+					continue;
+				}
+				if(ptr->get_status()!=status::finish)
+					ptr->run();
+			}
+		}
+	};
+	std::forward_list<const thread*> thread::mPool;
+	std::forward_list<const thread*> thread::mGarbage;
 	void cov_basic(const std::string&);
 }
 namespace cov {
