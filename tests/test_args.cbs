@@ -1,4 +1,4 @@
 runtime.info()
-for i=0 to size_of(system.args)-1
-  system.println(system.args[i])
+foreach it iterate system.args
+  system.println(it)
 end

@@ -1,8 +1,8 @@
 define str="\t\"hello\"\n\tworld"
-for i=0 to size_of(str)-1
-  if(str[i]=='\t')
+foreach ch iterate str
+  if(ch=='\t')
     system.println("Boom!")
   end
-  system.print(str[i])
+  system.print(ch)
 end
 system.println()

@@ -59,7 +59,7 @@ function quicksort(a,m,n)
 	loop
 		loop
 			++i
-			if i>=size_of(a)
+			if i>=a.size()
 				break
 			end
 		until a[i]>=v
@@ -88,7 +88,7 @@ function step4(n,k)
 			a.push_back(runtime.randint(0,n))
 		end
 		define ts=runtime.time()
-		quicksort(a,0,size_of(a)-1)
+		quicksort(a,0,a.size()-1)
 		score=score+runtime.time()-ts
 	end
 	return to_integer(score/k)
