@@ -282,7 +282,7 @@ namespace cov_basic {
 	}
 	void translate_into_statements(std::deque<token_base*>& tokens,std::deque<statement_base*>& statements);
 	enum class statement_types {
-		null,expression_,import_,block_,define_,constant_,if_,else_,switch_,case_,default_,while_,until_,loop_,for_,foreach_,break_,continue_,struct_,function_,return_,end_
+		null,expression_,import_,block_,define_,constant_,if_,else_,switch_,case_,default_,while_,until_,loop_,for_,foreach_,break_,continue_,struct_,function_,return_,thread_,end_
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;
@@ -536,10 +536,11 @@ namespace cov_basic {
 	};
 	class statement_function final:public statement_base {
 		std::string mName;
-		function mFunc;
+		std::deque<std::string> mArgs;
+		std::deque<statement_base*> mBody;
 	public:
 		statement_function()=delete;
-		statement_function(const std::string& name,const std::deque<std::string>& args,const std::deque<statement_base*>& body,token_base* ptr):statement_base(ptr),mName(name),mFunc(args,body) {}
+		statement_function(const std::string& name,const std::deque<std::string>& args,const std::deque<statement_base*>& body,token_base* ptr):statement_base(ptr),mName(name),mArgs(args),mBody(body) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::function_;
@@ -554,6 +555,19 @@ namespace cov_basic {
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::return_;
+		}
+		virtual void run() override;
+	};
+	class statement_thread final:public statement_base {
+		std::string mName;
+		std::deque<std::string> mArgs;
+		std::deque<statement_base*> mBody;
+	public:
+		statement_thread()=delete;
+		statement_thread(const std::string& name,const std::deque<std::string>& args,const std::deque<statement_base*>& body,token_base* ptr):statement_base(ptr),mName(name),mArgs(args),mBody(body) {}
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::thread_;
 		}
 		virtual void run() override;
 	};
