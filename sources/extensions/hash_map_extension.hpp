@@ -3,49 +3,28 @@
 static cov_basic::extension hash_map_ext;
 namespace hash_map_cbs_ext {
 	using namespace cov_basic;
-	cov::any clear(array& args)
+	void clear(hash_map& map)
 	{
-		arglist::check<hash_map>(args);
-		args.at(0).val<hash_map>(true).clear();
-		return number(0);
+		map.clear();
 	}
-	cov::any insert(array& args)
+	void insert(hash_map& map,const cov::any& key,const cov::any& val)
 	{
-		if(args.size()!=3)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(hash_map))
-			throw syntax_error("Wrong type of arguments.(Request Hash Map)");
-		hash_map& map=args.at(0).val<hash_map>(true);
-		if(map.count(args.at(1))>0)
-			map.at(args.at(1)).swap(copy(args.at(2)),true);
+		if(map.count(key)>0)
+			map.at(key).swap(copy(val),true);
 		else
-			map.emplace(copy(args.at(1)),copy(args.at(2)));
-		return number(0);
+			map.emplace(copy(key),copy(val));
 	}
-	cov::any erase(array& args)
+	void erase(hash_map& map,const cov::any& key)
 	{
-		if(args.size()!=2)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(hash_map))
-			throw syntax_error("Wrong type of arguments.(Request Hash Map)");
-		args.at(0).val<hash_map>(true).erase(args.at(1));
-		return number(0);
+		map.erase(key);
 	}
-	cov::any exist(array& args)
+	bool exist(hash_map& map,const cov::any& key)
 	{
-		if(args.size()!=2)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(hash_map))
-			throw syntax_error("Wrong type of arguments.(Request Hash Map)");
-		return bool(args.at(0).val<hash_map>(true).count(args.at(1))>0);
+		return map.count(key)>0;
 	}
-	cov::any at(array& args)
+	cov::any at(hash_map& map,const cov::any& key)
 	{
-		if(args.size()!=2)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(hash_map))
-			throw syntax_error("Wrong type of arguments.(Request Hash Map)");
-		return args.at(0).val<hash_map>(true).at(args.at(1));
+		return map.at(key);
 	}
 	number size(const hash_map& map)
 	{
@@ -53,11 +32,11 @@ namespace hash_map_cbs_ext {
 	}
 	void init()
 	{
-		hash_map_ext.add_var("clear",cov::any::make_protect<native_interface>(clear,true));
-		hash_map_ext.add_var("insert",cov::any::make_protect<native_interface>(insert,true));
-		hash_map_ext.add_var("erase",cov::any::make_protect<native_interface>(erase,true));
-		hash_map_ext.add_var("exist",cov::any::make_protect<native_interface>(exist,true));
-		hash_map_ext.add_var("at",cov::any::make_protect<native_interface>(at,true));
+		hash_map_ext.add_var("clear",cov::any::make_protect<native_interface>(cni(clear),true));
+		hash_map_ext.add_var("insert",cov::any::make_protect<native_interface>(cni(insert),true));
+		hash_map_ext.add_var("erase",cov::any::make_protect<native_interface>(cni(erase),true));
+		hash_map_ext.add_var("exist",cov::any::make_protect<native_interface>(cni(exist),true));
+		hash_map_ext.add_var("at",cov::any::make_protect<native_interface>(cni(at),true));
 		hash_map_ext.add_var("size",cov::any::make_protect<native_interface>(cni(size),true));
 	}
 }

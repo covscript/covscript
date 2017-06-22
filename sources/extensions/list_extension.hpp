@@ -3,71 +3,45 @@
 static cov_basic::extension list_ext;
 namespace list_cbs_ext {
 	using namespace cov_basic;
-	cov::any push_front(array& args)
+	void push_front(list& lst,const cov::any& val)
 	{
-		if(args.size()!=2)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(list))
-			throw syntax_error("Wrong type of arguments.(Request list)");
-		args.front().val<list>(true).push_front(copy(args.at(1)));
-		return number(0);
+		lst.push_front(copy(val));
 	}
-	cov::any pop_front(array& args)
+	void pop_front(list& lst)
 	{
-		arglist::check<list>(args);
-		args.front().val<list>(true).pop_front();
-		return number(0);
+		lst.pop_front();
 	}
-	cov::any push_back(array& args)
+	void push_back(list& lst,const cov::any& val)
 	{
-		if(args.size()!=2)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(list))
-			throw syntax_error("Wrong type of arguments.(Request list)");
-		args.front().val<list>(true).push_back(copy(args.at(1)));
-		return number(0);
+		lst.push_back(copy(val));
 	}
-	cov::any pop_back(array& args)
+	void pop_back(list& lst)
 	{
-		arglist::check<list>(args);
-		args.front().val<list>(true).pop_back();
-		return number(0);
+		lst.pop_back();
 	}
-	cov::any remove(array& args)
+	void remove(list& lst,const cov::any& val)
 	{
-		if(args.size()!=2)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(list))
-			throw syntax_error("Wrong type of arguments.(Request list)");
-		args.front().val<list>(true).remove(args.at(1));
-		return number(0);
+		lst.remove(val);
 	}
-	cov::any front(array& args)
+	cov::any front(const list& lst)
 	{
-		arglist::check<list>(args);
-		return args.front().const_val<list>().front();
+		return lst.front();
 	}
-	cov::any back(array& args)
+	cov::any back(const list& lst)
 	{
-		arglist::check<list>(args);
-		return args.front().const_val<list>().back();
+		return lst.back();
 	}
-	cov::any empty(array& args)
+	bool empty(const list& lst)
 	{
-		arglist::check<list>(args);
-		return args.front().const_val<list>().empty();
+		return lst.empty();
 	}
-	cov::any reverse(array& args)
+	void reverse(list& lst)
 	{
-		arglist::check<list>(args);
-		args.front().val<list>(true).reverse();
-		return number(0);
+		lst.reverse();
 	}
-	cov::any clear(array& args)
+	void clear(list& lst)
 	{
-		arglist::check<list>(args);
-		args.front().val<list>(true).clear();
-		return number(0);
+		lst.clear();
 	}
 	number size(const list& lst)
 	{
@@ -75,16 +49,16 @@ namespace list_cbs_ext {
 	}
 	void init()
 	{
-		list_ext.add_var("push_front",cov::any::make_protect<native_interface>(push_front,true));
-		list_ext.add_var("pop_front",cov::any::make_protect<native_interface>(pop_front,true));
-		list_ext.add_var("push_back",cov::any::make_protect<native_interface>(push_back,true));
-		list_ext.add_var("pop_back",cov::any::make_protect<native_interface>(pop_back,true));
-		list_ext.add_var("remove",cov::any::make_protect<native_interface>(remove,true));
-		list_ext.add_var("front",cov::any::make_protect<native_interface>(front,true));
-		list_ext.add_var("back",cov::any::make_protect<native_interface>(back,true));
-		list_ext.add_var("empty",cov::any::make_protect<native_interface>(empty,true));
-		list_ext.add_var("reverse",cov::any::make_protect<native_interface>(reverse,true));
-		list_ext.add_var("clear",cov::any::make_protect<native_interface>(clear,true));
+		list_ext.add_var("push_front",cov::any::make_protect<native_interface>(cni(push_front),true));
+		list_ext.add_var("pop_front",cov::any::make_protect<native_interface>(cni(pop_front),true));
+		list_ext.add_var("push_back",cov::any::make_protect<native_interface>(cni(push_back),true));
+		list_ext.add_var("pop_back",cov::any::make_protect<native_interface>(cni(pop_back),true));
+		list_ext.add_var("remove",cov::any::make_protect<native_interface>(cni(remove),true));
+		list_ext.add_var("front",cov::any::make_protect<native_interface>(cni(front),true));
+		list_ext.add_var("back",cov::any::make_protect<native_interface>(cni(back),true));
+		list_ext.add_var("empty",cov::any::make_protect<native_interface>(cni(empty),true));
+		list_ext.add_var("reverse",cov::any::make_protect<native_interface>(cni(reverse),true));
+		list_ext.add_var("clear",cov::any::make_protect<native_interface>(cni(clear),true));
 		list_ext.add_var("size",cov::any::make_protect<native_interface>(cni(size),true));
 	}
 }

@@ -11,25 +11,30 @@ namespace file_cbs_ext {
 	enum class file_method {
 		read,write
 	};
-	cov::any open(array& args)
+	cov::any open(const string& path,file_method method)
 	{
-		arglist::check<string,file_method>(args);
-		if(args.at(1).const_val<file_method>()==file_method::read)
-			return infile(std::make_shared<std::ifstream>(args.at(0).const_val<string>()));
-		else if(args.at(1).const_val<file_method>()==file_method::write)
-			return outfile(std::make_shared<std::ofstream>(args.at(0).const_val<string>()));
-		else
-			throw syntax_error("Unknown method.");
+		switch (method) {
+		case file_method::read:
+			return std::make_shared<std::ifstream>(path);
+			break;
+		case file_method::write:
+			return std::make_shared<std::ofstream>(path);
+			break;
+		}
 	}
-	cov::any is_open(array& args)
+	bool is_open(const infile& infs)
 	{
-		arglist::check<infile>(args);
-		return args.at(0).const_val<infile>()->is_open();
+		return infs->is_open();
 	}
-	cov::any eof(array& args)
+	bool eof(const infile& infs)
 	{
-		arglist::check<infile>(args);
-		return args.at(0).const_val<infile>()->eof();
+		return infs->eof();
+	}
+	string getline(const infile& infs)
+	{
+		std::string str;
+		std::getline(*infs,str);
+		return str;
 	}
 	cov::any read(array& args)
 	{
@@ -63,23 +68,16 @@ namespace file_cbs_ext {
 			outfs<<args.at(i);
 		return number(0);
 	}
-	cov::any getline(array& args)
-	{
-		arglist::check<infile>(args);
-		std::string str;
-		std::getline(*args.front().val<infile>(true),str);
-		return str;
-	}
 	void init()
 	{
 		file_ext.add_var("read_method",cov::any::make_constant<file_method>(file_method::read));
 		file_ext.add_var("write_method",cov::any::make_constant<file_method>(file_method::write));
-		file_ext.add_var("open",cov::any::make_protect<native_interface>(open));
-		file_ext.add_var("is_open",cov::any::make_protect<native_interface>(is_open));
-		file_ext.add_var("eof",cov::any::make_protect<native_interface>(eof));
+		file_ext.add_var("open",cov::any::make_protect<native_interface>(cni(open)));
+		file_ext.add_var("is_open",cov::any::make_protect<native_interface>(cni(is_open)));
+		file_ext.add_var("eof",cov::any::make_protect<native_interface>(cni(eof)));
+		file_ext.add_var("getline",cov::any::make_protect<native_interface>(cni(getline)));
 		file_ext.add_var("read",cov::any::make_protect<native_interface>(read));
 		file_ext.add_var("write",cov::any::make_protect<native_interface>(write));
-		file_ext.add_var("getline",cov::any::make_protect<native_interface>(getline));
 	}
 }
 #ifndef CBS_FILE_EXT
