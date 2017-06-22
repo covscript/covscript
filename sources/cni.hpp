@@ -128,7 +128,7 @@ namespace cov_basic {
 	public:
 		cni()=delete;
 		cni(const cni& c):mCni(c.mCni->clone()) {}
-		template<typename T>cni(T func):mCni(new cni_holder<T>(func)) {}
+		template<typename T>explicit cni(T func):mCni(new cni_holder<T>(func)) {}
 		~cni()
 		{
 			delete mCni;
