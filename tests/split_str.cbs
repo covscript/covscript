@@ -3,7 +3,7 @@ function split(str)
 	define tmp as string
 	foreach ch iterate str
 		if(ch.isspace())
-			if(size_of(tmp)!=0)
+			if(tmp.size()!=0)
 				arr.push_back(tmp)
 				tmp.clear()
 			end
@@ -11,14 +11,14 @@ function split(str)
 		end
 		tmp.append(ch)
 	end
-	if(size_of(tmp)!=0)
+	if(tmp.size()!=0)
 		arr.push_back(tmp)
 		tmp.clear()
 	end
 	return arr
 end
 define r=split(system.getline())
-for i=0 to size_of(r)-1
-	system.print("#",r[i],"#")
+foreach it iterate r
+	system.print("#",it,"#")
 end
 system.println()

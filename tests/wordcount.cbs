@@ -1,6 +1,6 @@
 function tolower(str)
     define s=str
-    for i=0 to size_of(s)-1
+    for i=0 to s.size()-1
         s.replace(i,1,(s[i]).tolower())
     end
     return s
