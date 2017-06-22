@@ -1,5 +1,5 @@
 #pragma once
-#include "../arglist.hpp"
+#include "../cni.hpp"
 static cov_basic::extension hash_map_ext;
 namespace hash_map_cbs_ext {
 	using namespace cov_basic;
@@ -47,6 +47,10 @@ namespace hash_map_cbs_ext {
 			throw syntax_error("Wrong type of arguments.(Request Hash Map)");
 		return args.at(0).val<hash_map>(true).at(args.at(1));
 	}
+	number size(const hash_map& map)
+	{
+		return map.size();
+	}
 	void init()
 	{
 		hash_map_ext.add_var("clear",cov::any::make_protect<native_interface>(clear,true));
@@ -54,5 +58,6 @@ namespace hash_map_cbs_ext {
 		hash_map_ext.add_var("erase",cov::any::make_protect<native_interface>(erase,true));
 		hash_map_ext.add_var("exist",cov::any::make_protect<native_interface>(exist,true));
 		hash_map_ext.add_var("at",cov::any::make_protect<native_interface>(at,true));
+		hash_map_ext.add_var("size",cov::any::make_protect<native_interface>(cni(size),true));
 	}
 }

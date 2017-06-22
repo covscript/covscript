@@ -1,5 +1,5 @@
 #pragma once
-#include "../arglist.hpp"
+#include "../cni.hpp"
 static cov_basic::extension list_ext;
 namespace list_cbs_ext {
 	using namespace cov_basic;
@@ -69,6 +69,10 @@ namespace list_cbs_ext {
 		args.front().val<list>(true).clear();
 		return number(0);
 	}
+	number size(const list& lst)
+	{
+		return lst.size();
+	}
 	void init()
 	{
 		list_ext.add_var("push_front",cov::any::make_protect<native_interface>(push_front,true));
@@ -81,5 +85,6 @@ namespace list_cbs_ext {
 		list_ext.add_var("empty",cov::any::make_protect<native_interface>(empty,true));
 		list_ext.add_var("reverse",cov::any::make_protect<native_interface>(reverse,true));
 		list_ext.add_var("clear",cov::any::make_protect<native_interface>(clear,true));
+		list_ext.add_var("size",cov::any::make_protect<native_interface>(cni(size),true));
 	}
 }
