@@ -1,5 +1,5 @@
 #pragma once
-#include "../arglist.hpp"
+#include "../cni.hpp"
 static cov_basic::extension string_ext;
 namespace string_cbs_ext {
 	using namespace cov_basic;
@@ -84,6 +84,10 @@ namespace string_cbs_ext {
 		args.at(0).val<string>(true).clear();
 		return number(0);
 	}
+	number size(const string& str)
+	{
+		return str.size();
+	}
 	void init()
 	{
 		string_ext.add_var("append",cov::any::make_protect<native_interface>(append,true));
@@ -95,5 +99,6 @@ namespace string_cbs_ext {
 		string_ext.add_var("rfind",cov::any::make_protect<native_interface>(rfind,true));
 		string_ext.add_var("cut",cov::any::make_protect<native_interface>(cut,true));
 		string_ext.add_var("clear",cov::any::make_protect<native_interface>(clear,true));
+		string_ext.add_var("size",cov::any::make_protect<native_interface>(cni(size),true));
 	}
 }

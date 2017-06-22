@@ -1,88 +1,75 @@
 #pragma once
-#include "../arglist.hpp"
+#include "../cni.hpp"
 #include <cctype>
 static cov_basic::extension char_ext;
 namespace char_cbs_ext {
 	using namespace cov_basic;
-	cov::any isalnum(array& args)
+	bool isalnum(char c)
 	{
-		arglist::check<char>(args);
-		return bool(std::isalnum(args.at(0).const_val<char>()));
+		return std::isalnum(c);
 	}
-	cov::any isalpha(array& args)
+	bool isalpha(char c)
 	{
-		arglist::check<char>(args);
-		return bool(std::isalpha(args.at(0).const_val<char>()));
+		return std::isalpha(c);
 	}
-	cov::any islower(array& args)
+	bool islower(char c)
 	{
-		arglist::check<char>(args);
-		return bool(std::islower(args.at(0).const_val<char>()));
+		return std::islower(c);
 	}
-	cov::any isupper(array& args)
+	bool isupper(char c)
 	{
-		arglist::check<char>(args);
-		return bool(std::isupper(args.at(0).const_val<char>()));
+		return std::isupper(c);
 	}
-	cov::any isdigit(array& args)
+	bool isdigit(char c)
 	{
-		arglist::check<char>(args);
-		return bool(std::isdigit(args.at(0).const_val<char>()));
+		return std::isdigit(c);
 	}
-	cov::any iscntrl(array& args)
+	bool iscntrl(char c)
 	{
-		arglist::check<char>(args);
-		return bool(std::iscntrl(args.at(0).const_val<char>()));
+		return std::iscntrl(c);
 	}
-	cov::any isgraph(array& args)
+	bool isgraph(char c)
 	{
-		arglist::check<char>(args);
-		return bool(std::isgraph(args.at(0).const_val<char>()));
+		return std::isgraph(c);
 	}
-	cov::any isspace(array& args)
+	bool isspace(char c)
 	{
-		arglist::check<char>(args);
-		return bool(std::isspace(args.at(0).const_val<char>()));
+		return std::isspace(c);
 	}
-	cov::any isblank(array& args)
+	bool isblank(char c)
 	{
-		arglist::check<char>(args);
-		return bool(std::isblank(args.at(0).const_val<char>()));
+		return std::isblank(c);
 	}
-	cov::any isprint(array& args)
+	bool isprint(char c)
 	{
-		arglist::check<char>(args);
-		return bool(std::isprint(args.at(0).const_val<char>()));
+		return std::isprint(c);
 	}
-	cov::any ispunct(array& args)
+	bool ispunct(char c)
 	{
-		arglist::check<char>(args);
-		return bool(std::ispunct(args.at(0).const_val<char>()));
+		return std::ispunct(c);
 	}
-	cov::any tolower(array& args)
+	char tolower(char c)
 	{
-		arglist::check<char>(args);
-		return char(std::tolower(args.at(0).const_val<char>()));
+		return std::tolower(c);
 	}
-	cov::any toupper(array& args)
+	char toupper(char c)
 	{
-		arglist::check<char>(args);
-		return char(std::toupper(args.at(0).const_val<char>()));
+		return std::toupper(c);
 	}
 	void init()
 	{
-		char_ext.add_var("isalnum",cov::any::make_protect<native_interface>(isalnum,true));
-		char_ext.add_var("isalpha",cov::any::make_protect<native_interface>(isalpha,true));
-		char_ext.add_var("islower",cov::any::make_protect<native_interface>(islower,true));
-		char_ext.add_var("isupper",cov::any::make_protect<native_interface>(isupper,true));
-		char_ext.add_var("isdigit",cov::any::make_protect<native_interface>(isdigit,true));
-		char_ext.add_var("iscntrl",cov::any::make_protect<native_interface>(iscntrl,true));
-		char_ext.add_var("isgraph",cov::any::make_protect<native_interface>(isgraph,true));
-		char_ext.add_var("isspace",cov::any::make_protect<native_interface>(isspace,true));
-		char_ext.add_var("isblank",cov::any::make_protect<native_interface>(isblank,true));
-		char_ext.add_var("isprint",cov::any::make_protect<native_interface>(isprint,true));
-		char_ext.add_var("ispunct",cov::any::make_protect<native_interface>(ispunct,true));
-		char_ext.add_var("tolower",cov::any::make_protect<native_interface>(tolower,true));
-		char_ext.add_var("toupper",cov::any::make_protect<native_interface>(toupper,true));
+		char_ext.add_var("isalnum",cov::any::make_protect<native_interface>(cni(isalnum),true));
+		char_ext.add_var("isalpha",cov::any::make_protect<native_interface>(cni(isalpha),true));
+		char_ext.add_var("islower",cov::any::make_protect<native_interface>(cni(islower),true));
+		char_ext.add_var("isupper",cov::any::make_protect<native_interface>(cni(isupper),true));
+		char_ext.add_var("isdigit",cov::any::make_protect<native_interface>(cni(isdigit),true));
+		char_ext.add_var("iscntrl",cov::any::make_protect<native_interface>(cni(iscntrl),true));
+		char_ext.add_var("isgraph",cov::any::make_protect<native_interface>(cni(isgraph),true));
+		char_ext.add_var("isspace",cov::any::make_protect<native_interface>(cni(isspace),true));
+		char_ext.add_var("isblank",cov::any::make_protect<native_interface>(cni(isblank),true));
+		char_ext.add_var("isprint",cov::any::make_protect<native_interface>(cni(isprint),true));
+		char_ext.add_var("ispunct",cov::any::make_protect<native_interface>(cni(ispunct),true));
+		char_ext.add_var("tolower",cov::any::make_protect<native_interface>(cni(tolower),true));
+		char_ext.add_var("toupper",cov::any::make_protect<native_interface>(cni(toupper),true));
 	}
 }
