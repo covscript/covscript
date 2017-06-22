@@ -5,7 +5,7 @@ namespace array_cbs_ext {
 	using namespace cov_basic;
 	void push_front(array& arr,const cov::any& val)
 	{
-		arr.push_front(val);
+		arr.push_front(copy(val));
 	}
 	void pop_front(array& arr)
 	{
@@ -13,7 +13,7 @@ namespace array_cbs_ext {
 	}
 	void push_back(array& arr,const cov::any& val)
 	{
-		arr.push_back(val);
+		arr.push_back(copy(val));
 	}
 	void pop_back(array& arr)
 	{

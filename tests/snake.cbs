@@ -22,8 +22,8 @@ function die()
 		end
 		darwin.clear_drawable()
 		darwin.fill_drawable(darwin.pixel(' ',true,false,darwin.white,darwin.red))
-		darwin.draw_string(0.5*(darwin.get_width()-size_of(str0)),0.5*darwin.get_height(),str0,darwin.pixel(' ',true,false,darwin.white,darwin.red))
-		darwin.draw_string(0.5*(darwin.get_width()-size_of(str1)),darwin.get_height()-1,str1,darwin.pixel(' ',true,false,darwin.white,darwin.red))
+		darwin.draw_string(0.5*(darwin.get_width()-str0.size()),0.5*darwin.get_height(),str0,darwin.pixel(' ',true,false,darwin.white,darwin.red))
+		darwin.draw_string(0.5*(darwin.get_width()-str1.size()),darwin.get_height()-1,str1,darwin.pixel(' ',true,false,darwin.white,darwin.red))
 		darwin.update_drawable()
 	end
 end
