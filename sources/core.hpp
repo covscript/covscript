@@ -45,7 +45,7 @@ namespace cov_basic {
 			return data.is_same(l.data);
 		}
 	};
-	static const linker null_linker;
+	static const linker null_linker=linker();
 	class native_interface final {
 	public:
 		using function_type=std::function<cov::any(array&)>;
