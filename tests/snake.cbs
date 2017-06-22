@@ -34,8 +34,8 @@ function gen_food()
 		food[0]=runtime.randint(0,darwin.get_width()-1)
 		food[1]=runtime.randint(0,darwin.get_height()-1)
 		is_fit=false
-		for i=0 to size_of(snake_body)-1
-			if(snake_body[i][0]==food[0]&&snake_body[i][1]==food[1])
+		foreach it iterate snake_body
+			if(it[0]==food[0]&&it[1]==food[1])
 				is_fit=true
 			end
 		end
@@ -117,8 +117,8 @@ function start()
 				end
 			end
 			if(!god_mode)
-				for i=0 to size_of(snake_body)-1
-					if(snake_body[i][0]==snake_head[0]&&snake_body[i][1]==snake_head[1])
+				foreach it iterate snake_body
+					if(it[0]==snake_head[0]&&it[1]==snake_head[1])
 						die()
 						return 0
 					end
@@ -144,8 +144,8 @@ function start()
 		if(pause)
 			darwin.draw_string(0,3,"Pause",darwin.pixel(' ',true,false,darwin.white,darwin.yellow))
 		end
-		for i=0 to size_of(snake_body)-1
-			darwin.draw_point(snake_body[i][0],snake_body[i][1],body_pix)
+		foreach it iterate snake_body
+			darwin.draw_point(it[0],it[1],body_pix)
 		end
 		darwin.draw_point(snake_head[0],snake_head[1],head_pix)
 		darwin.draw_point(food[0],food[1],food_pix)
@@ -156,7 +156,7 @@ function start()
 	end
 end
 
-for i=1 to size_of(system.args)-1
+for i=1 to system.args.size()-1
 	switch system.args.at(i)
 		case "--god-mode"
 			god_mode=true
