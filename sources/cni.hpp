@@ -1,4 +1,15 @@
 #pragma once
+/*
+* Covariant Basic C/C++ Native Interface
+* CNI's effect is to forward CovBasic function call to C/C++ function and need to cooperate with cov_basic::native_interface to use.
+* Please do not bind a CNI directly to CovBasic. CovBasic can not directly identify a CNI.
+* CNI can recognize any form of C/C++ functions, but please note that CNI does not support implicit conversion of parameter types.
+* To avoid compatibility issues, use CovBasic built-in types as much as possible.
+* You can use the reference to modify the value of the CovBasic passed parameters, but please note that this may cause an error because some of the variables in CovBasic are protected.
+* To improve the efficiency of a function, you can use constant references instead of values. Please note that CNI does not currently support forwarding right-value references.
+* If you want to receive a variable parameter, just use cov::any as the argument type.
+* This program was written by Micheal Lee(mikecovlee@163.com)。
+*/
 #include "../include/mozart/bind.hpp"
 #include "./core.hpp"
 #include "./arglist.hpp"

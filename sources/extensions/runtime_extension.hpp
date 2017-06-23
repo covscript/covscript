@@ -1,70 +1,57 @@
 #pragma once
-#include "../arglist.hpp"
+#include "../cni.hpp"
 #include <cstdlib>
 static cov_basic::extension runtime_ext;
 namespace runtime_cbs_ext {
 	using namespace cov_basic;
-	cov::any info(array&)
+	void info()
 	{
 		std::cout<<"Covariant Basic Programming Language Interpreter Version "<<cov_basic::version<<"\n"
 		         "Copyright (C) 2017 Michael Lee.All rights reserved.\nThis program comes with ABSOLUTELY NO WARRANTY; for details see <http://www.gnu.org/licenses/>.\n"
 		         "This is free software, and you are welcome to redistribute it under certain conditions.\nPlease visit <http://covbasic.org/> for more information."<<std::endl;
-		return number(0);
 	}
-	cov::any time(array&)
+	number time()
 	{
-		return number(cov::timer::time(cov::timer::time_unit::milli_sec));
+		return cov::timer::time(cov::timer::time_unit::milli_sec);
 	}
-	cov::any delay(array& args)
+	void delay(number time)
 	{
-		arglist::check<number>(args);
-		cov::timer::delay(cov::timer::time_unit::milli_sec,cov::timer::timer_t(args.front().const_val<number>()));
-		return number(0);
+		cov::timer::delay(cov::timer::time_unit::milli_sec,time);
 	}
-	cov::any rand(array& args)
+	number rand(number b,number e)
 	{
-		arglist::check<number,number>(args);
-		return number(cov::rand<number>(args.at(0).const_val<number>(),args.at(1).const_val<number>()));
+		return cov::rand<number>(b,e);
 	}
-	cov::any randint(array& args)
+	number randint(number b,number e)
 	{
-		arglist::check<number,number>(args);
-		return number(cov::rand<long>(args.at(0).const_val<number>(),args.at(1).const_val<number>()));
+		return cov::rand<long>(b,e);
 	}
-	cov::any error(array& args)
+	void error(const string& str)
 	{
-		arglist::check<string>(args);
-		throw lang_error(args.front().const_val<string>());
-		return number(0);
+		throw lang_error(str);
 	}
-	cov::any load_extension(array& args)
+	extension_t load_extension(const string& path)
 	{
-		arglist::check<string>(args);
-		return std::make_shared<extension_holder>(args.front().const_val<string>());
+		return std::make_shared<extension_holder>(path);
 	}
-	cov::any type_hash(array& args)
+	std::size_t type_hash(const cov::any& val)
 	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.front().type()==typeid(structure))
-			return cov::hash<std::string>(args.front().const_val<structure>().get_name());
+		if(val.type()==typeid(structure))
+			return cov::hash<std::string>(val.const_val<structure>().get_name());
 		else
-			return cov::hash<std::string>(args.front().type().name());
+			return cov::hash<std::string>(val.type().name());
 	}
-	cov::any hash(array& args)
+	std::size_t hash(const cov::any& val)
 	{
-		if(args.size()!=1)
-			throw syntax_error("Wrong size of arguments.");
-		return args.front().hash();
+		return val.hash();
 	}
 	using expression_t=cov::tree<token_base*>;
-	cov::any build(array& args)
+	cov::any build(const string& expr)
 	{
-		arglist::check<string>(args);
 		std::deque<char> buff;
 		std::deque<token_base*> tokens;
 		expression_t tree;
-		for(auto& ch:args.at(0).const_val<string>())
+		for(auto& ch:expr)
 			buff.push_back(ch);
 		translate_into_tokens(buff,tokens);
 		process_brackets(tokens);
@@ -72,23 +59,22 @@ namespace runtime_cbs_ext {
 		gen_tree(tree,tokens);
 		return cov::any::make<expression_t>(tree);
 	}
-	cov::any solve(array& args)
+	cov::any solve(expression_t& tree)
 	{
-		arglist::check<expression_t>(args);
-		return parse_expr(args.at(0).val<expression_t>(true).root());
+		return parse_expr(tree.root());
 	}
 	void init()
 	{
-		runtime_ext.add_var("info",cov::any::make_protect<native_interface>(info));
-		runtime_ext.add_var("time",cov::any::make_protect<native_interface>(time));
-		runtime_ext.add_var("delay",cov::any::make_protect<native_interface>(delay));
-		runtime_ext.add_var("rand",cov::any::make_protect<native_interface>(rand));
-		runtime_ext.add_var("randint",cov::any::make_protect<native_interface>(randint));
-		runtime_ext.add_var("error",cov::any::make_protect<native_interface>(error));
-		runtime_ext.add_var("load_extension",cov::any::make_protect<native_interface>(load_extension,true));
-		runtime_ext.add_var("type_hash",cov::any::make_protect<native_interface>(type_hash,true));
-		runtime_ext.add_var("hash",cov::any::make_protect<native_interface>(hash,true));
-		runtime_ext.add_var("build",cov::any::make_protect<native_interface>(build));
-		runtime_ext.add_var("solve",cov::any::make_protect<native_interface>(solve));
+		runtime_ext.add_var("info",cov::any::make_protect<native_interface>(cni(info)));
+		runtime_ext.add_var("time",cov::any::make_protect<native_interface>(cni(time)));
+		runtime_ext.add_var("delay",cov::any::make_protect<native_interface>(cni(delay)));
+		runtime_ext.add_var("rand",cov::any::make_protect<native_interface>(cni(rand)));
+		runtime_ext.add_var("randint",cov::any::make_protect<native_interface>(cni(randint)));
+		runtime_ext.add_var("error",cov::any::make_protect<native_interface>(cni(error)));
+		runtime_ext.add_var("load_extension",cov::any::make_protect<native_interface>(cni(load_extension),true));
+		runtime_ext.add_var("type_hash",cov::any::make_protect<native_interface>(cni(type_hash),true));
+		runtime_ext.add_var("hash",cov::any::make_protect<native_interface>(cni(hash),true));
+		runtime_ext.add_var("build",cov::any::make_protect<native_interface>(cni(build)));
+		runtime_ext.add_var("solve",cov::any::make_protect<native_interface>(cni(solve)));
 	}
 }

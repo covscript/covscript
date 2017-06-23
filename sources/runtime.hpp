@@ -145,7 +145,6 @@ namespace cov_basic {
 				m_data.back()->emplace(name,var);
 		}
 	};
-	using extension_t=std::shared_ptr<extension_holder>;
 	struct runtime_type final {
 		domain_manager storage;
 		domain_manager constant_storage;

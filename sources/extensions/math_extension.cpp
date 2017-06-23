@@ -1,92 +1,79 @@
 #ifndef CBS_MATH_EXT
 #include "../extension.hpp"
 #endif
-#include "../arglist.hpp"
+#include "../cni.hpp"
 static cov_basic::extension math_ext;
 namespace math_cbs_ext {
 	using namespace cov_basic;
-	cov::any abs(array& args)
+	number abs(number n)
 	{
-		arglist::check<number>(args);
-		return number(std::abs(args.at(0).const_val<number>()));
+		return std::abs(n);
 	}
-	cov::any ln(array& args)
+	number ln(number n)
 	{
-		arglist::check<number>(args);
-		return number(std::log(args.at(0).const_val<number>()));
+		return std::log(n);
 	}
-	cov::any log10(array& args)
+	number log10(number n)
 	{
-		arglist::check<number>(args);
-		return number(std::log10(args.at(0).const_val<number>()));
+		return std::log10(n);
 	}
-	cov::any log(array& args)
+	number log(number a,number b)
 	{
-		arglist::check<number,number>(args);
-		return number(std::log(args.at(1).const_val<number>()/args.at(0).const_val<number>()));
+		return std::log(b/a);
 	}
-	cov::any sin(array& args)
+	number sin(number n)
 	{
-		arglist::check<number>(args);
-		return number(std::sin(args.at(0).const_val<number>()));
+		return std::sin(n);
 	}
-	cov::any cos(array& args)
+	number cos(number n)
 	{
-		arglist::check<number>(args);
-		return number(std::cos(args.at(0).const_val<number>()));
+		return std::cos(n);
 	}
-	cov::any tan(array& args)
+	number tan(number n)
 	{
-		arglist::check<number>(args);
-		return number(std::tan(args.at(0).const_val<number>()));
+		return std::tan(n);
 	}
-	cov::any asin(array& args)
+	number asin(number n)
 	{
-		arglist::check<number>(args);
-		return number(std::sin(args.at(0).const_val<number>()));
+		return std::asin(n);
 	}
-	cov::any acos(array& args)
+	number acos(number n)
 	{
-		arglist::check<number>(args);
-		return number(std::cos(args.at(0).const_val<number>()));
+		return std::acos(n);
 	}
-	cov::any atan(array& args)
+	number atan(number n)
 	{
-		arglist::check<number>(args);
-		return number(std::tan(args.at(0).const_val<number>()));
+		return std::atan(n);
 	}
-	cov::any sqrt(array& args)
+	number sqrt(number n)
 	{
-		arglist::check<number>(args);
-		return number(std::sqrt(args.at(0).const_val<number>()));
+		return std::sqrt(n);
 	}
-	cov::any root(array& args)
+	number root(number a,number b)
 	{
-		arglist::check<number,number>(args);
-		return number(std::pow(args.at(0).const_val<number>(),number(1)/args.at(1).const_val<number>()));
+		return std::pow(a,number(1)/b);
 	}
-	cov::any pow(array& args)
+	number pow(number a,number b)
 	{
-		arglist::check<number,number>(args);
-		return number(std::pow(args.at(0).const_val<number>(),args.at(1).const_val<number>()));
+		return std::pow(a,b);
 	}
 	void init()
 	{
 		math_ext.add_var("pi",cov::any::make_constant<number>(3.1415926535));
 		math_ext.add_var("e",cov::any::make_constant<number>(2.7182818284));
-		math_ext.add_var("abs",cov::any::make_protect<native_interface>(abs,true));
-		math_ext.add_var("ln",cov::any::make_protect<native_interface>(ln,true));
-		math_ext.add_var("log10",cov::any::make_protect<native_interface>(log10,true));
-		math_ext.add_var("log",cov::any::make_protect<native_interface>(log,true));
-		math_ext.add_var("sin",cov::any::make_protect<native_interface>(sin,true));
-		math_ext.add_var("cos",cov::any::make_protect<native_interface>(cos,true));
-		math_ext.add_var("tan",cov::any::make_protect<native_interface>(tan,true));
-		math_ext.add_var("asin",cov::any::make_protect<native_interface>(asin,true));
-		math_ext.add_var("acos",cov::any::make_protect<native_interface>(acos,true));
-		math_ext.add_var("atan",cov::any::make_protect<native_interface>(atan,true));
-		math_ext.add_var("sqrt",cov::any::make_protect<native_interface>(sqrt,true));
-		math_ext.add_var("root",cov::any::make_protect<native_interface>(root,true));
-		math_ext.add_var("pow",cov::any::make_protect<native_interface>(pow,true));
+		math_ext.add_var("abs",cov::any::make_protect<native_interface>(cni(abs),true));
+		math_ext.add_var("ln",cov::any::make_protect<native_interface>(cni(ln),true));
+		math_ext.add_var("log10",cov::any::make_protect<native_interface>(cni(log10),true));
+		math_ext.add_var("log",cov::any::make_protect<native_interface>(cni(log),true));
+		math_ext.add_var("sin",cov::any::make_protect<native_interface>(cni(sin),true));
+		math_ext.add_var("cos",cov::any::make_protect<native_interface>(cni(cos),true));
+		math_ext.add_var("tan",cov::any::make_protect<native_interface>(cni(tan),true));
+		math_ext.add_var("asin",cov::any::make_protect<native_interface>(cni(asin),true));
+		math_ext.add_var("acos",cov::any::make_protect<native_interface>(cni(acos),true));
+		math_ext.add_var("atan",cov::any::make_protect<native_interface>(cni(atan),true));
+		math_ext.add_var("sqrt",cov::any::make_protect<native_interface>(cni(sqrt),true));
+		math_ext.add_var("root",cov::any::make_protect<native_interface>(cni(root),true));
+		math_ext.add_var("pow",cov::any::make_protect<native_interface>(cni(pow),true));
 	}
 }
 #ifndef CBS_MATH_EXT
