@@ -1,6 +1,161 @@
 #pragma once
 #include "./parser.hpp"
 namespace cov_basic {
+	class domain_manager {
+	public:
+		using domain_t=std::shared_ptr<std::unordered_map<string,cov::any>>;
+		std::unordered_map<string,std::function<cov::any()>> m_type;
+		std::unordered_map<string,std::size_t> m_hash;
+		std::deque<domain_t> m_data;
+		std::deque<domain_t> m_this;
+	public:
+		domain_manager()
+		{
+			m_data.emplace_front(std::make_shared<std::unordered_map<string,cov::any>>());
+		}
+		domain_manager(const domain_manager&)=delete;
+		~domain_manager()=default;
+		void add_type(const std::string& name,const std::function<cov::any()>& func)
+		{
+			if(m_type.count(name)>0)
+				throw syntax_error("Redefinition of type \""+name+"\".");
+			else {
+				m_type.emplace(name,func);
+				m_hash.emplace(name,cov::hash<std::string>(typeid(structure).name()+name));
+			}
+		}
+		void add_type(const std::string& name,const std::function<cov::any()>& func,std::size_t hash)
+		{
+			if(m_type.count(name)>0)
+				throw syntax_error("Redefinition of type \""+name+"\".");
+			else {
+				m_type.emplace(name,func);
+				m_hash.emplace(name,hash);
+			}
+		}
+		void add_domain()
+		{
+			m_data.emplace_front(std::make_shared<std::unordered_map<string,cov::any>>());
+		}
+		void add_domain(const domain_t& dat)
+		{
+			m_data.emplace_front(dat);
+		}
+		void add_this(const domain_t& dat)
+		{
+			m_this.emplace_front(dat);
+		}
+		domain_t& get_domain()
+		{
+			return m_data.front();
+		}
+		void remove_domain()
+		{
+			if(m_data.size()>1)
+				m_data.pop_front();
+		}
+		void remove_this()
+		{
+			if(m_this.size()>1)
+				m_this.pop_front();
+		}
+		bool type_exsist(const string& name)
+		{
+			if(m_type.count(name)>0)
+				return true;
+			else
+				return false;
+		}
+		bool var_exsist(const string& name)
+		{
+			for(auto& domain:m_data)
+				if(domain->count(name)>0)
+					return true;
+			return false;
+		}
+		bool var_exsist_current(const string& name)
+		{
+			if(m_data.front()->count(name)>0)
+				return true;
+			return false;
+		}
+		bool var_exsist_global(const string& name)
+		{
+			if(m_data.back()->count(name)>0)
+				return true;
+			return false;
+		}
+		bool var_exsist_this(const string& name)
+		{
+			if(m_this.front()->count(name)>0)
+				return true;
+			return false;
+		}
+		std::size_t get_type_hash(const std::string& type)
+		{
+			if(type_exsist(type))
+				return m_hash.at(type);
+			else
+				throw syntax_error("Get hash of undefined type \""+type+"\".");
+		}
+		cov::any get_var_type(const string& type)
+		{
+			if(type_exsist(type))
+				return std::move(m_type.at(type)());
+			else
+				throw syntax_error("Use of undefined type \""+type+"\".");
+		}
+		cov::any& get_var(const string& name)
+		{
+			for(auto& domain:m_data)
+				if(domain->count(name)>0)
+					return domain->at(name);
+			throw syntax_error("Use of undefined variable \""+name+"\".");
+		}
+		cov::any& get_var_current(const string& name)
+		{
+			if(m_data.front()->count(name)>0)
+				return m_data.front()->at(name);
+			throw syntax_error("Use of undefined variable \""+name+"\" in current domain.");
+		}
+		cov::any& get_var_global(const string& name)
+		{
+			if(m_data.back()->count(name)>0)
+				return m_data.back()->at(name);
+			throw syntax_error("Use of undefined variable \""+name+"\" in global domain.");
+		}
+		cov::any& get_var_this(const string& name)
+		{
+			if(m_this.front()->count(name)>0)
+				return m_this.front()->at(name);
+			throw syntax_error("Use of undefined variable \""+name+"\" in current object.");
+		}
+		void add_var(const string& name,const cov::any& var)
+		{
+			if(var_exsist_current(name))
+				get_var(name)=var;
+			else
+				m_data.front()->emplace(name,var);
+		}
+		void add_var_global(const string& name,const cov::any& var)
+		{
+			if(var_exsist_global(name))
+				get_var_global(name)=var;
+			else
+				m_data.back()->emplace(name,var);
+		}
+	};
+	using extension_t=std::shared_ptr<extension_holder>;
+	struct runtime_type final {
+		domain_manager storage;
+		domain_manager constant_storage;
+		extension_t char_ext;
+		extension_t string_ext;
+		extension_t list_ext;
+		extension_t array_ext;
+		extension_t pair_ext;
+		extension_t hash_map_ext;
+	};
 	std::unique_ptr<runtime_type> runtime=nullptr;
 	cov::any parse_add(const cov::any& a,const cov::any& b)
 	{
