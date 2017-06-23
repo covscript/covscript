@@ -64,22 +64,6 @@ namespace system_cbs_ext {
 		std::exit(args.at(0).const_val<number>());
 		return number(0);
 	}
-	cov::any join(array& args)
-	{
-		if(args.at(0).type()!=typeid(thread))
-			throw syntax_error("Arguments error.");
-		array args0(args.begin()+1,args.end());
-		args.at(0).val<thread>(true).join(args0);
-		return number(0);
-	}
-	void idle(thread& th)
-	{
-		th.idle();
-	}
-	void kill(thread& th)
-	{
-		th.kill();
-	}
 	void init()
 	{
 		system_ext.add_var("max",cov::any::make_constant<number>(std::numeric_limits<number>::max()));
@@ -92,8 +76,5 @@ namespace system_cbs_ext {
 		system_ext.add_var("run",cov::any::make_protect<native_interface>(run));
 		system_ext.add_var("getenv",cov::any::make_protect<native_interface>(getenv));
 		system_ext.add_var("exit",cov::any::make_protect<native_interface>(exit));
-		system_ext.add_var("join",cov::any::make_protect<native_interface>(join));
-		system_ext.add_var("idle",cov::any::make_protect<native_interface>(cni(idle)));
-		system_ext.add_var("kill",cov::any::make_protect<native_interface>(cni(kill)));
 	}
 }
