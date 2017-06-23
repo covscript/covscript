@@ -256,7 +256,7 @@ namespace cov_basic {
 		{
 			m_data.emplace_front(std::make_shared<std::unordered_map<string,cov::any>>());
 		}
-		domain_manager(const domain_manager&)=default;
+		domain_manager(const domain_manager&)=delete;
 		~domain_manager()=default;
 		void add_type(const std::string& name,const std::function<cov::any()>& func)
 		{
@@ -405,17 +405,21 @@ namespace cov_basic {
 			ready,idle,busy,finish
 		};
 	private:
-		static std::forward_list<thread*> mPool;
-		static std::forward_list<thread*> mGarbage;
+		static std::forward_list<const thread*> mPool;
+		static std::forward_list<const thread*> mGarbage;
 		status mStatus=status::ready;
 		std::size_t mProgress=0;
 		std::deque<std::string> mArgs;
 		std::deque<statement_base*> mBody;
-		std::shared_ptr<runtime_type> mData;
+		std::unique_ptr<runtime_type> mData;
 		void run();
 	public:
 		thread()=delete;
 		thread(const std::deque<std::string>& args,const std::deque<statement_base*>& body):mArgs(args),mBody(body) {}
+		~thread()
+		{
+			mGarbage.push_front(this);
+		}
 		status get_status() const
 		{
 			return mStatus;
@@ -426,15 +430,7 @@ namespace cov_basic {
 		}
 		void kill()
 		{
-			if(mStatus!=status::ready&&mStatus!=status::finish)
-			{
-				mStatus=status::finish;
-				mGarbage.push_front(this);
-			}
-		}
-		~thread()
-		{
-			kill();
+			mStatus=status::finish;
 		}
 		void join(const array&);
 		static void gc()
@@ -458,8 +454,8 @@ namespace cov_basic {
 			}
 		}
 	};
-	std::forward_list<thread*> thread::mPool;
-	std::forward_list<thread*> thread::mGarbage;
+	std::forward_list<const thread*> thread::mPool;
+	std::forward_list<const thread*> thread::mGarbage;
 	void cov_basic(const std::string&);
 }
 namespace cov {

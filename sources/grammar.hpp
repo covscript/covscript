@@ -79,10 +79,10 @@ namespace cov_basic {
 	void thread::join(const array& args)
 	{
 		if(args.size()!=this->mArgs.size())
-			throw syntax_error("Wrong size of arguments."+std::to_string(args.size())+std::to_string(mArgs.size()));
+			throw syntax_error("Wrong size of arguments.");
 		if(this->mStatus!=status::ready)
 			throw lang_error("Thread can not start again.");
-		mData=std::make_shared<runtime_type>(*runtime);
+		mData=std::unique_ptr<runtime_type>(new runtime_type(*runtime));
 		mData->storage.add_domain();
 		mPool.push_front(this);
 		mStatus=status::busy;
@@ -92,7 +92,6 @@ namespace cov_basic {
 	void thread::run()
 	{
 		statement_base* ptr=mBody.at(mProgress);
-		std::swap(mData,runtime);
 		try {
 			ptr->run();
 		}
@@ -106,8 +105,7 @@ namespace cov_basic {
 			throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
 		}
 		if(++mProgress>=mBody.size())
-			this->kill();
-		std::swap(mData,runtime);
+			mStatus=status::finish;
 	}
 	void statement_expression::run()
 	{

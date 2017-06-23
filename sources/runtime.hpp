@@ -1,7 +1,7 @@
 #pragma once
 #include "./parser.hpp"
 namespace cov_basic {
-	std::shared_ptr<runtime_type> runtime=nullptr;
+	std::unique_ptr<runtime_type> runtime=nullptr;
 	cov::any parse_add(const cov::any& a,const cov::any& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
