@@ -4,7 +4,6 @@
 #include "./extensions/system_extension.hpp"
 #include "./extensions/runtime_extension.hpp"
 #include "./extensions/types_extension.hpp"
-#include "./extensions/thread_extension.hpp"
 #ifdef CBS_MATH_EXT
 #include "./extensions/math_extension.cpp"
 #endif
@@ -116,8 +115,6 @@ namespace cov_basic {
 		runtime->storage.add_var("runtime",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
 		types_cbs_ext::init();
 		runtime->storage.add_var("types",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&types_ext)));
-		thread_cbs_ext::init();
-		runtime->storage.add_var("thread",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&thread_ext)));
 		char_cbs_ext::init();
 		runtime->char_ext=std::make_shared<extension_holder>(&char_ext);
 		string_cbs_ext::init();
