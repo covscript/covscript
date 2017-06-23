@@ -219,6 +219,7 @@ namespace cov_basic {
 			return m_ext->get_var(name);
 		}
 	};
+	using extension_t=std::shared_ptr<extension_holder>;
 	cov::any parse_value(const std::string& str)
 	{
 		if(str=="true")

@@ -3,86 +3,59 @@
 static cov_basic::extension string_ext;
 namespace string_cbs_ext {
 	using namespace cov_basic;
-	cov::any append(array& args)
+	string append(string& str,const cov::any& val)
 	{
-		if(args.size()!=2)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(string))
-			throw syntax_error("Wrong type of arguments.(Request String)");
-		args.at(0).val<string>(true).append(args.at(1).to_string());
-		return args.at(0);
+		str.append(val.to_string());
+		return str;
 	}
-	cov::any insert(array& args)
+	string insert(string& str,number posit,const cov::any& val)
 	{
-		if(args.size()!=3)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(string)||args.at(1).type()!=typeid(number))
-			throw syntax_error("Wrong type of arguments.(Request String and Number)");
-		args.at(0).val<string>(true).insert(args.at(1).const_val<number>(),args.at(2).to_string());
-		return args.at(0);
+		str.insert(posit,val.to_string());
+		return str;
 	}
-	cov::any erase(array& args)
+	string erase(string& str,number b,number e)
 	{
-		if(args.size()!=3)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(string)||args.at(1).type()!=typeid(number)||args.at(2).type()!=typeid(number))
-			throw syntax_error("Wrong type of arguments.(Request String and Number)");
-		args.at(0).val<string>(true).erase(args.at(1).const_val<number>(),args.at(2).const_val<number>());
-		return args.at(0);
+		str.erase(b,e);
+		return str;
 	}
-	cov::any replace(array& args)
+	string replace(string& str,number posit,number count,const cov::any& val)
 	{
-		if(args.size()!=4)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(string)||args.at(1).type()!=typeid(number)||args.at(2).type()!=typeid(number))
-			throw syntax_error("Wrong type of arguments.(Request String and Number)");
-		args.at(0).val<string>(true).replace(args.at(1).const_val<number>(),args.at(2).const_val<number>(),args.at(3).to_string());
-		return args.at(0);
+		str.replace(posit,count,val.to_string());
+		return str;
 	}
-	cov::any substr(array& args)
+	string substr(string& str,number b,number e)
 	{
-		if(args.size()!=3)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(string)||args.at(1).type()!=typeid(number)||args.at(2).type()!=typeid(number))
-			throw syntax_error("Wrong type of arguments.(Request String and Number)");
-		return args.at(0).val<string>(true).substr(args.at(1).const_val<number>(),args.at(2).const_val<number>());
+		return str.substr(b,e);
 	}
-	cov::any find(array& args)
+	number find(string& str,const string& s,number posit)
 	{
-		if(args.size()!=3)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(string)||args.at(2).type()!=typeid(number))
-			throw syntax_error("Wrong type of arguments.(Request String and Number)");
-		auto pos=args.at(0).val<string>(true).find(args.at(1).to_string(),args.at(2).const_val<number>());
+		auto pos=str.find(s,posit);
 		if(pos==std::string::npos)
-			return number(-1);
+			return -1;
 		else
-			return number(pos);
+			return pos;
 	}
-	cov::any rfind(array& args)
+	number rfind(string& str,const string& s,number posit)
 	{
-		if(args.size()!=3)
-			throw syntax_error("Wrong size of arguments.");
-		if(args.at(0).type()!=typeid(string)||args.at(2).type()!=typeid(number))
-			throw syntax_error("Wrong type of arguments.(Request String and Number)");
-		auto pos=args.at(0).val<string>(true).rfind(args.at(1).to_string(),args.at(2).const_val<number>());
+		std::size_t pos=0;
+		if(posit==-1)
+			pos=str.rfind(s,std::string::npos);
+		else
+			pos=str.rfind(s,posit);
 		if(pos==std::string::npos)
-			return number(-1);
+			return -1;
 		else
-			return number(pos);
+			return pos;
 	}
-	cov::any cut(array& args)
+	string cut(string& str,number n)
 	{
-		arglist::check<string,number>(args);
-		for(std::size_t i=0; i<args.at(1).const_val<number>(); ++i)
-			args.at(0).val<string>(true).pop_back();
-		return args.at(0);
+		for(std::size_t i=0; i<n; ++i)
+			str.pop_back();
+		return str;
 	}
-	cov::any clear(array& args)
+	void clear(string& str)
 	{
-		arglist::check<string>(args);
-		args.at(0).val<string>(true).clear();
-		return number(0);
+		str.clear();
 	}
 	number size(const string& str)
 	{
@@ -90,15 +63,15 @@ namespace string_cbs_ext {
 	}
 	void init()
 	{
-		string_ext.add_var("append",cov::any::make_protect<native_interface>(append,true));
-		string_ext.add_var("insert",cov::any::make_protect<native_interface>(insert,true));
-		string_ext.add_var("erase",cov::any::make_protect<native_interface>(erase,true));
-		string_ext.add_var("replace",cov::any::make_protect<native_interface>(replace,true));
-		string_ext.add_var("substr",cov::any::make_protect<native_interface>(substr,true));
-		string_ext.add_var("find",cov::any::make_protect<native_interface>(find,true));
-		string_ext.add_var("rfind",cov::any::make_protect<native_interface>(rfind,true));
-		string_ext.add_var("cut",cov::any::make_protect<native_interface>(cut,true));
-		string_ext.add_var("clear",cov::any::make_protect<native_interface>(clear,true));
+		string_ext.add_var("append",cov::any::make_protect<native_interface>(cni(append),true));
+		string_ext.add_var("insert",cov::any::make_protect<native_interface>(cni(insert),true));
+		string_ext.add_var("erase",cov::any::make_protect<native_interface>(cni(erase),true));
+		string_ext.add_var("replace",cov::any::make_protect<native_interface>(cni(replace),true));
+		string_ext.add_var("substr",cov::any::make_protect<native_interface>(cni(substr),true));
+		string_ext.add_var("find",cov::any::make_protect<native_interface>(cni(find),true));
+		string_ext.add_var("rfind",cov::any::make_protect<native_interface>(cni(rfind),true));
+		string_ext.add_var("cut",cov::any::make_protect<native_interface>(cni(cut),true));
+		string_ext.add_var("clear",cov::any::make_protect<native_interface>(cni(clear),true));
 		string_ext.add_var("size",cov::any::make_protect<native_interface>(cni(size),true));
 	}
 }

@@ -1,5 +1,5 @@
 #pragma once
-#include "../arglist.hpp"
+#include "../cni.hpp"
 #include <iostream>
 #include <cstdlib>
 #include <limits>
@@ -20,12 +20,6 @@ namespace system_cbs_ext {
 		}
 		return number(0);
 	}
-	cov::any getline(array& args)
-	{
-		std::string str;
-		std::getline(std::cin,str);
-		return str;
-	}
 	cov::any print(array& args)
 	{
 		for(auto& it:args)
@@ -39,42 +33,42 @@ namespace system_cbs_ext {
 		std::cout<<std::endl;
 		return number(0);
 	}
-	cov::any setprecision(array& args)
+	string getline()
 	{
-		arglist::check<number>(args);
-		output_precision=args.front().const_val<number>();
-		return number(0);
+		std::string str;
+		std::getline(std::cin,str);
+		return str;
 	}
-	cov::any run(array& args)
+	void setprecision(number pre)
 	{
-		arglist::check<string>(args);
-		return number(std::system(args.at(0).const_val<string>().c_str()));
+		output_precision=pre;
 	}
-	cov::any getenv(array& args)
+	number run(const string& str)
 	{
-		arglist::check<string>(args);
-		const char* str=std::getenv(args.at(0).const_val<string>().c_str());
+		return std::system(str.c_str());
+	}
+	string getenv(const string& name)
+	{
+		const char* str=std::getenv(name.c_str());
 		if(str==nullptr)
-			throw lang_error("Environment variable \""+args.at(0).const_val<string>()+"\" is not exist.");
-		return string(str);
+			throw lang_error("Environment variable \""+name+"\" is not exist.");
+		return str;
 	}
-	cov::any exit(array& args)
+	void exit(number code)
 	{
-		arglist::check<number>(args);
-		std::exit(args.at(0).const_val<number>());
-		return number(0);
+		std::exit(code);
 	}
 	void init()
 	{
 		system_ext.add_var("max",cov::any::make_constant<number>(std::numeric_limits<number>::max()));
 		system_ext.add_var("inf",cov::any::make_constant<number>(std::numeric_limits<number>::infinity()));
 		system_ext.add_var("input",cov::any::make_protect<native_interface>(input));
-		system_ext.add_var("getline",cov::any::make_protect<native_interface>(getline));
 		system_ext.add_var("print",cov::any::make_protect<native_interface>(print));
 		system_ext.add_var("println",cov::any::make_protect<native_interface>(println));
-		system_ext.add_var("setprecision",cov::any::make_protect<native_interface>(setprecision));
-		system_ext.add_var("run",cov::any::make_protect<native_interface>(run));
-		system_ext.add_var("getenv",cov::any::make_protect<native_interface>(getenv));
-		system_ext.add_var("exit",cov::any::make_protect<native_interface>(exit));
+		system_ext.add_var("getline",cov::any::make_protect<native_interface>(cni(getline)));
+		system_ext.add_var("setprecision",cov::any::make_protect<native_interface>(cni(setprecision)));
+		system_ext.add_var("run",cov::any::make_protect<native_interface>(cni(run)));
+		system_ext.add_var("getenv",cov::any::make_protect<native_interface>(cni(getenv)));
+		system_ext.add_var("exit",cov::any::make_protect<native_interface>(cni(exit)));
 	}
 }
