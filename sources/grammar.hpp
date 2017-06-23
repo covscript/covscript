@@ -76,37 +76,6 @@ namespace cov_basic {
 		runtime->storage.remove_domain();
 		return std::move(dat);
 	}
-	void thread::join(const array& args)
-	{
-		if(args.size()!=this->mArgs.size())
-			throw syntax_error("Wrong size of arguments.");
-		if(this->mStatus!=status::ready)
-			throw lang_error("Thread can not start again.");
-		mData=std::unique_ptr<runtime_type>(new runtime_type(*runtime));
-		mData->storage.add_domain();
-		mPool.push_front(this);
-		mStatus=status::busy;
-		for(std::size_t i=0; i<args.size(); ++i)
-			mData->storage.add_var(this->mArgs.at(i),args.at(i));
-	}
-	void thread::run()
-	{
-		statement_base* ptr=mBody.at(mProgress);
-		try {
-			ptr->run();
-		}
-		catch(const syntax_error& se) {
-			throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-		}
-		catch(const lang_error& le) {
-			throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
-		}
-		catch(const std::exception& e) {
-			throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
-		}
-		if(++mProgress>=mBody.size())
-			mStatus=status::finish;
-	}
 	void statement_expression::run()
 	{
 		parse_expr(mTree.root());
@@ -379,10 +348,9 @@ namespace cov_basic {
 	}
 	void statement_function::run()
 	{
-		function func(mArgs,mBody);
 		if(inside_struct)
-			func.set_data(runtime->storage.get_domain());
-		runtime->storage.add_var(this->mName,func);
+			this->mFunc.set_data(runtime->storage.get_domain());
+		runtime->storage.add_var(this->mName,this->mFunc);
 	}
 	void statement_return::run()
 	{
@@ -390,10 +358,6 @@ namespace cov_basic {
 			throw syntax_error("Return outside function.");
 		fcall_stack.top()->mRetVal=parse_expr(this->mTree.root());
 		return_fcall=true;
-	}
-	void statement_thread::run()
-	{
-		runtime->storage.add_var(this->mName,cov::any::make<thread>(mArgs,mBody));
 	}
 	void kill_action(std::deque<std::deque<token_base*>> lines,std::deque<statement_base*>& statements,bool raw=false)
 	{
@@ -709,40 +673,6 @@ namespace cov_basic {
 				cov::tree<token_base*> tree;
 				tree.emplace_root_left(tree.root(),new token_value(number(0)));
 				return new statement_return(tree,raw.front().back());
-			}
-		});
-		// Thread Grammar
-		translator.add_method({new token_action(action_types::thread_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::thread_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
-				cov::tree<token_base*>& t=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
-				if(t.root().data()==nullptr)
-					throw internal_error("Null pointer accessed.");
-				if(t.root().data()->get_type()!=token_types::signal||dynamic_cast<token_signal*>(t.root().data())->get_signal()!=signal_types::fcall_)
-					throw syntax_error("Wrong grammar for thread definition.");
-				if(t.root().left().data()==nullptr)
-					throw internal_error("Null pointer accessed.");
-				if(t.root().left().data()->get_type()!=token_types::id)
-					throw syntax_error("Wrong grammar for thread definition.");
-				if(t.root().right().data()==nullptr)
-					throw internal_error("Null pointer accessed.");
-				if(t.root().right().data()->get_type()!=token_types::arglist)
-					throw syntax_error("Wrong grammar for thread definition.");
-				std::string name=dynamic_cast<token_id*>(t.root().left().data())->get_id();
-				std::deque<std::string> args;
-				for(auto& it:dynamic_cast<token_arglist*>(t.root().right().data())->get_arglist())
-				{
-					if(it.root().data()==nullptr)
-						throw internal_error("Null pointer accessed.");
-					if(it.root().data()->get_type()!=token_types::id)
-						throw syntax_error("Wrong grammar for thread definition.");
-					const std::string& str=dynamic_cast<token_id*>(it.root().data())->get_id();
-					for(auto& it:args)
-						if(it==str)
-							throw syntax_error("Redefinition of thread argument.");
-					args.push_back(str);
-				}
-				std::deque<statement_base*> body;
-				kill_action({raw.begin()+1,raw.end()},body);
-				return new statement_thread(name,args,body,raw.front().back());
 			}
 		});
 		// Struct Grammar
