@@ -7,7 +7,7 @@ namespace cov_basic {
 	bool break_block=false;
 	bool continue_block=false;
 	cov::static_stack<const function*,CBS_STACK_SIZE> fcall_stack;
-	cov::any function::call(const array& args) const
+	cov::any function::operator()(array& args) const
 	{
 		if(args.size()!=this->mArgs.size())
 			throw syntax_error("Wrong size of arguments.");
@@ -350,7 +350,7 @@ namespace cov_basic {
 	{
 		if(inside_struct)
 			this->mFunc.set_data(runtime->storage.get_domain());
-		runtime->storage.add_var(this->mName,this->mFunc);
+		runtime->storage.add_var(this->mName,callable(this->mFunc));
 	}
 	void statement_return::run()
 	{

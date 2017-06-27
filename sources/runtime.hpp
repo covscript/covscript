@@ -235,17 +235,17 @@ namespace cov_basic {
 		else if(a.type()==typeid(structure))
 			return a.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
 		else if(a.type()==typeid(char))
-			return object_method(a,runtime->char_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
+			return cov::any::make<callable>(object_method(a,runtime->char_ext->get_var(dynamic_cast<token_id*>(b)->get_id())));
 		else if(a.type()==typeid(string))
-			return object_method(a,runtime->string_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
+			return cov::any::make<callable>(object_method(a,runtime->string_ext->get_var(dynamic_cast<token_id*>(b)->get_id())));
 		else if(a.type()==typeid(list))
-			return object_method(a,runtime->list_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
+			return cov::any::make<callable>(object_method(a,runtime->list_ext->get_var(dynamic_cast<token_id*>(b)->get_id())));
 		else if(a.type()==typeid(array))
-			return object_method(a,runtime->array_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
+			return cov::any::make<callable>(object_method(a,runtime->array_ext->get_var(dynamic_cast<token_id*>(b)->get_id())));
 		else if(a.type()==typeid(pair))
-			return object_method(a,runtime->pair_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
+			return cov::any::make<callable>(object_method(a,runtime->pair_ext->get_var(dynamic_cast<token_id*>(b)->get_id())));
 		else if(a.type()==typeid(hash_map))
-			return object_method(a,runtime->hash_map_ext->get_var(dynamic_cast<token_id*>(b)->get_id()));
+			return cov::any::make<callable>(object_method(a,runtime->hash_map_ext->get_var(dynamic_cast<token_id*>(b)->get_id())));
 		else
 			throw syntax_error("Unsupported operator operations(Dot).");
 	}
@@ -398,18 +398,10 @@ namespace cov_basic {
 	}
 	cov::any parse_fcall(const cov::any& a,cov::any b)
 	{
-		array& args=b.val<array>(true);
-		if(a.type()==typeid(function)) {
-			return a.val<function>(true).call(args);
-		}
-		else if(a.type()==typeid(native_interface)) {
-			return a.val<native_interface>(true).call(args);
-		}
-		else if(a.type()==typeid(object_method)) {
-			return a.val<object_method>(true).call(args);
-		}
+		if(a.type()==typeid(callable)&&b.type()==typeid(array))
+			return a.const_val<callable>().call(b.val<array>(true));
 		else
-			throw syntax_error("Call non-function object.");
+			throw syntax_error("Unsupported operator operations(Fcall).");
 	}
 	cov::any parse_access(cov::any a,const cov::any& b)
 	{
