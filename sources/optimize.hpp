@@ -98,13 +98,13 @@ namespace cov_basic {
 					if(a.type()==typeid(extension_t))
 						it.data()=new token_value(a.val<extension_t>(true)->get_var(dynamic_cast<token_id*>(rptr)->get_id()));
 					else if(a.type()==typeid(char))
-						it.data()=new token_value(object_method(a,runtime->char_ext->get_var(dynamic_cast<token_id*>(rptr)->get_id())));
+						it.data()=new token_value(cov::any::make<callable>(object_method(a,runtime->char_ext->get_var(dynamic_cast<token_id*>(rptr)->get_id()))));
 					else if(a.type()==typeid(string))
-						it.data()=new token_value(object_method(a,runtime->string_ext->get_var(dynamic_cast<token_id*>(rptr)->get_id())));
+						it.data()=new token_value(cov::any::make<callable>(object_method(a,runtime->string_ext->get_var(dynamic_cast<token_id*>(rptr)->get_id()))));
 					else if(a.type()==typeid(array))
-						it.data()=new token_value(object_method(a,runtime->array_ext->get_var(dynamic_cast<token_id*>(rptr)->get_id())));
+						it.data()=new token_value(cov::any::make<callable>(object_method(a,runtime->array_ext->get_var(dynamic_cast<token_id*>(rptr)->get_id()))));
 					else if(a.type()==typeid(hash_map))
-						it.data()=new token_value(object_method(a,runtime->hash_map_ext->get_var(dynamic_cast<token_id*>(rptr)->get_id())));
+						it.data()=new token_value(cov::any::make<callable>(object_method(a,runtime->hash_map_ext->get_var(dynamic_cast<token_id*>(rptr)->get_id()))));
 				}
 				return;
 				break;
@@ -116,7 +116,7 @@ namespace cov_basic {
 				token_base* rptr=it.right().data();
 				if(lptr!=nullptr&&lptr->get_type()==token_types::value&&rptr!=nullptr&&rptr->get_type()==token_types::arglist) {
 					cov::any& a=dynamic_cast<token_value*>(lptr)->get_value();
-					if(a.type()==typeid(native_interface)&&a.const_val<native_interface>().is_constant()) {
+					if(a.type()==typeid(callable)&&a.const_val<callable>().is_constant()) {
 						bool is_optimizable=true;
 						for(auto& tree:dynamic_cast<token_arglist*>(rptr)->get_arglist()) {
 							if(is_optimizable&&!optimizable(tree.root()))
@@ -126,23 +126,7 @@ namespace cov_basic {
 							array arr;
 							for(auto& tree:dynamic_cast<token_arglist*>(rptr)->get_arglist())
 								arr.push_back(parse_expr(tree.root()));
-							it.data()=new token_value(a.val<native_interface>(true).call(arr));
-						}
-					}
-					if(a.type()==typeid(object_method)) {
-						const cov::any& callable=a.const_val<object_method>().get_callable();
-						if(callable.is_protect()&&callable.type()==typeid(native_interface)&&callable.const_val<native_interface>().is_constant()) {
-							bool is_optimizable=true;
-							for(auto& tree:dynamic_cast<token_arglist*>(rptr)->get_arglist()) {
-								if(is_optimizable&&!optimizable(tree.root()))
-									is_optimizable=false;
-							}
-							if(is_optimizable) {
-								array arr;
-								for(auto& tree:dynamic_cast<token_arglist*>(rptr)->get_arglist())
-									arr.push_back(parse_expr(tree.root()));
-								it.data()=new token_value(a.val<object_method>(true).call(arr));
-							}
+							it.data()=new token_value(a.val<callable>(true).call(arr));
 						}
 					}
 				}

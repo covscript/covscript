@@ -20,42 +20,33 @@
 #include <list>
 namespace cov_basic {
 #ifndef CBS_STATIC
-	const std::string version="2.1.5.4";
+	const std::string version="2.1.5.5";
 #else
 #ifndef CBS_MINIMAL
-	const std::string version="2.1.5.4 (Static Build)";
+	const std::string version="2.1.5.5 (Static Build)";
 #else
-	const std::string version="2.1.5.4 (Minimal Build)";
+	const std::string version="2.1.5.5 (Minimal Build)";
 #endif
 #endif
 	static int output_precision=8;
+	using var=cov::any;
 	using number=long double;
 	using boolean=bool;
 	using string=std::string;
-	using list=std::list<cov::any>;
-	using array=std::deque<cov::any>;
-	using pair=std::pair<cov::any,cov::any>;
-	using hash_map=std::unordered_map<cov::any,cov::any>;
-	class token_base;
-	class statement_base;
-	struct linker final {
-		cov::any data;
-		bool operator==(const linker& l) const
-		{
-			return data.is_same(l.data);
-		}
-	};
-	static const linker null_linker=linker();
-	class native_interface final {
+	using list=std::list<var>;
+	using array=std::deque<var>;
+	using pair=std::pair<var,var>;
+	using hash_map=std::unordered_map<var,var>;
+	class callable final {
 	public:
 		using function_type=std::function<cov::any(array&)>;
 	private:
 		function_type mFunc;
 		bool mConstant=false;
 	public:
-		native_interface()=delete;
-		native_interface(const native_interface&)=default;
-		native_interface(const function_type& func,bool constant=false):mFunc(func),mConstant(constant) {}
+		callable()=delete;
+		callable(const callable&)=default;
+		callable(const function_type& func,bool constant=false):mFunc(func),mConstant(constant) {}
 		bool is_constant() const
 		{
 			return mConstant;
@@ -63,6 +54,16 @@ namespace cov_basic {
 		cov::any call(array& args) const
 		{
 			return mFunc(args);
+		}
+	};
+	using native_interface=callable;
+	class token_base;
+	class statement_base;
+	struct linker final {
+		cov::any data;
+		bool operator==(const linker& l) const
+		{
+			return data.is_same(l.data);
 		}
 	};
 	class function final {
@@ -75,7 +76,7 @@ namespace cov_basic {
 		function()=delete;
 		function(const std::deque<std::string>& args,const std::deque<statement_base*>& body):mArgs(args),mBody(body) {}
 		~function()=default;
-		cov::any call(const array&) const;
+		cov::any operator()(array&) const;
 		void set_data(const std::shared_ptr<std::unordered_map<string,cov::any>>& data)
 		{
 			mData=data;
@@ -92,20 +93,12 @@ namespace cov_basic {
 		{
 			return mCallable;
 		}
-		cov::any call(array& args) const
+		cov::any operator()(array& args) const
 		{
 			args.push_front(mObj);
-			cov::any retval;
-			if(mCallable.type()==typeid(function)) {
-				retval=mCallable.val<function>(true).call(args);
-			}
-			else if(mCallable.type()==typeid(native_interface)) {
-				retval=mCallable.val<native_interface>(true).call(args);
-			}
-			else
-				throw syntax_error("Call non-function object.");
+			cov::any retval=mCallable.const_val<callable>().call(args);
 			args.pop_front();
-			return std::move(retval);
+			return retval;
 		}
 	};
 	class structure final {
