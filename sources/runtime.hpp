@@ -194,13 +194,7 @@ namespace cov_basic {
 	}
 	cov::any parse_mul(const cov::any& a,const cov::any& b)
 	{
-		if(!a.usable()&&b.type()==typeid(linker)) {
-			if(b.const_val<linker>().data.usable())
-				return b.const_val<linker>().data;
-			else
-				throw syntax_error("Access Null Linker.");
-		}
-		else if(a.type()==typeid(number)&&b.type()==typeid(number))
+		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return a.const_val<number>()*b.const_val<number>();
 		else
 			throw syntax_error("Unsupported operator operations(Mul).");
@@ -255,34 +249,6 @@ namespace cov_basic {
 		else
 			return get_type_ext(a,dynamic_cast<token_id*>(b)->get_id());
 	}
-	cov::any parse_mem(const cov::any& a,token_base* b)
-	{
-		if(b==nullptr)
-			throw internal_error("Null Pointer Accessed.");
-		else if(a.type()!=typeid(linker)||b->get_type()!=token_types::id)
-			throw syntax_error("Unsupported operator operations(Mem).");
-		else if(!a.const_val<linker>().data.usable())
-			throw syntax_error("Access Null Linker.");
-		else {
-			try {
-				return parse_dot(a.const_val<linker>().data,b);
-			}
-			catch(const syntax_error& se) {
-				throw syntax_error("Unsupported operator operations(Mem).");
-			}
-		}
-	}
-	cov::any parse_new(token_base* a,token_base* b)
-	{
-		if(a!=nullptr)
-			throw syntax_error("Wrong format of new expression.");
-		else if(b==nullptr)
-			throw internal_error("Null Pointer Accessed.");
-		else if(b->get_type()!=token_types::id)
-			throw syntax_error("Unsupported operator operations(New).");
-		else
-			return linker{runtime->storage.get_var_type(dynamic_cast<token_id*>(b)->get_id())};
-	}
 	cov::any parse_typeid(token_base* a,token_base* b)
 	{
 		if(a!=nullptr)
@@ -333,13 +299,6 @@ namespace cov_basic {
 			return cov::any::make<pair>(copy(a),copy(b));
 		else
 			throw syntax_error("Unsupported operator operations(Pair).");
-	}
-	cov::any parse_link(const cov::any& a,const cov::any& b)
-	{
-		if(!a.usable()&&b.usable())
-			return linker{b};
-		else
-			throw syntax_error("Unsupported operator operations(Not).");
 	}
 	cov::any parse_equ(const cov::any& a,const cov::any& b)
 	{
@@ -521,12 +480,6 @@ namespace cov_basic {
 			case signal_types::dot_:
 				return parse_dot(parse_expr(it.left()),it.right().data());
 				break;
-			case signal_types::mem_:
-				return parse_mem(parse_expr(it.left()),it.right().data());
-				break;
-			case signal_types::new_:
-				return parse_new(it.left().data(),it.right().data());
-				break;
 			case signal_types::typeid_:
 				return parse_typeid(it.left().data(),it.right().data());
 				break;
@@ -543,9 +496,6 @@ namespace cov_basic {
 			}
 			case signal_types::pair_:
 				return parse_pair(parse_expr(it.left()),parse_expr(it.right()));
-				break;
-			case signal_types::link_:
-				return parse_link(parse_expr(it.left()),parse_expr(it.right()));
 				break;
 			case signal_types::equ_:
 				return parse_equ(parse_expr(it.left()),parse_expr(it.right()));
