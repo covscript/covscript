@@ -363,8 +363,10 @@ namespace cov_basic {
 	}
 	cov::any parse_fcall(const cov::any& a,cov::any b)
 	{
-		if(a.type()==typeid(callable)&&b.type()==typeid(array))
+		if(a.type()==typeid(callable))
 			return a.const_val<callable>().call(b.val<array>(true));
+		else if(a.type()==typeid(function))
+			return a.const_val<function>().call(b.val<array>(true));
 		else
 			throw syntax_error("Unsupported operator operations(Fcall).");
 	}
