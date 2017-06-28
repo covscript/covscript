@@ -155,7 +155,25 @@ namespace cov_basic {
 		extension_t pair_ext;
 		extension_t hash_map_ext;
 	};
+
 	std::unique_ptr<runtime_type> runtime=nullptr;
+	var get_type_ext(const var& a,const string& name)
+	{
+		if(a.type()==typeid(char))
+			return cov::any::make<callable>(object_method(a,runtime->char_ext->get_var(name)));
+		else if(a.type()==typeid(string))
+			return cov::any::make<callable>(object_method(a,runtime->string_ext->get_var(name)));
+		else if(a.type()==typeid(list))
+			return cov::any::make<callable>(object_method(a,runtime->list_ext->get_var(name)));
+		else if(a.type()==typeid(array))
+			return cov::any::make<callable>(object_method(a,runtime->array_ext->get_var(name)));
+		else if(a.type()==typeid(pair))
+			return cov::any::make<callable>(object_method(a,runtime->pair_ext->get_var(name)));
+		else if(a.type()==typeid(hash_map))
+			return cov::any::make<callable>(object_method(a,runtime->hash_map_ext->get_var(name)));
+		else
+			throw syntax_error("Unsupported type.");
+	}
 	cov::any parse_add(const cov::any& a,const cov::any& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
@@ -234,20 +252,8 @@ namespace cov_basic {
 			return a.val<extension_t>(true)->get_var(dynamic_cast<token_id*>(b)->get_id());
 		else if(a.type()==typeid(structure))
 			return a.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
-		else if(a.type()==typeid(char))
-			return cov::any::make<callable>(object_method(a,runtime->char_ext->get_var(dynamic_cast<token_id*>(b)->get_id())));
-		else if(a.type()==typeid(string))
-			return cov::any::make<callable>(object_method(a,runtime->string_ext->get_var(dynamic_cast<token_id*>(b)->get_id())));
-		else if(a.type()==typeid(list))
-			return cov::any::make<callable>(object_method(a,runtime->list_ext->get_var(dynamic_cast<token_id*>(b)->get_id())));
-		else if(a.type()==typeid(array))
-			return cov::any::make<callable>(object_method(a,runtime->array_ext->get_var(dynamic_cast<token_id*>(b)->get_id())));
-		else if(a.type()==typeid(pair))
-			return cov::any::make<callable>(object_method(a,runtime->pair_ext->get_var(dynamic_cast<token_id*>(b)->get_id())));
-		else if(a.type()==typeid(hash_map))
-			return cov::any::make<callable>(object_method(a,runtime->hash_map_ext->get_var(dynamic_cast<token_id*>(b)->get_id())));
 		else
-			throw syntax_error("Unsupported operator operations(Dot).");
+			return get_type_ext(a,dynamic_cast<token_id*>(b)->get_id());
 	}
 	cov::any parse_mem(const cov::any& a,token_base* b)
 	{
