@@ -97,14 +97,8 @@ namespace cov_basic {
 					cov::any& a=dynamic_cast<token_value*>(lptr)->get_value();
 					if(a.type()==typeid(extension_t))
 						it.data()=new token_value(a.val<extension_t>(true)->get_var(dynamic_cast<token_id*>(rptr)->get_id()));
-					else if(a.type()==typeid(char))
-						it.data()=new token_value(cov::any::make<callable>(object_method(a,runtime->char_ext->get_var(dynamic_cast<token_id*>(rptr)->get_id()))));
-					else if(a.type()==typeid(string))
-						it.data()=new token_value(cov::any::make<callable>(object_method(a,runtime->string_ext->get_var(dynamic_cast<token_id*>(rptr)->get_id()))));
-					else if(a.type()==typeid(array))
-						it.data()=new token_value(cov::any::make<callable>(object_method(a,runtime->array_ext->get_var(dynamic_cast<token_id*>(rptr)->get_id()))));
-					else if(a.type()==typeid(hash_map))
-						it.data()=new token_value(cov::any::make<callable>(object_method(a,runtime->hash_map_ext->get_var(dynamic_cast<token_id*>(rptr)->get_id()))));
+					else
+						it.data()=new token_value(get_type_ext(a,dynamic_cast<token_id*>(rptr)->get_id()));
 				}
 				return;
 				break;
