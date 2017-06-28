@@ -69,7 +69,7 @@ namespace cov_basic {
 		function()=delete;
 		function(const std::deque<std::string>& args,const std::deque<statement_base*>& body):mArgs(args),mBody(body) {}
 		~function()=default;
-		cov::any operator()(array&) const;
+		cov::any call(array&) const;
 		void set_data(const std::shared_ptr<std::unordered_map<string,cov::any>>& data)
 		{
 			mData=data;
