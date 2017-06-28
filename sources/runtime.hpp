@@ -160,17 +160,17 @@ namespace cov_basic {
 	var get_type_ext(const var& a,const string& name)
 	{
 		if(a.type()==typeid(char))
-			return cov::any::make<callable>(object_method(a,runtime->char_ext->get_var(name)));
+			return cov::any::make<callable>(object_method(a,runtime->char_ext->get_var(name)),true);
 		else if(a.type()==typeid(string))
-			return cov::any::make<callable>(object_method(a,runtime->string_ext->get_var(name)));
+			return cov::any::make<callable>(object_method(a,runtime->string_ext->get_var(name)),true);
 		else if(a.type()==typeid(list))
-			return cov::any::make<callable>(object_method(a,runtime->list_ext->get_var(name)));
+			return cov::any::make<callable>(object_method(a,runtime->list_ext->get_var(name)),true);
 		else if(a.type()==typeid(array))
-			return cov::any::make<callable>(object_method(a,runtime->array_ext->get_var(name)));
+			return cov::any::make<callable>(object_method(a,runtime->array_ext->get_var(name)),true);
 		else if(a.type()==typeid(pair))
-			return cov::any::make<callable>(object_method(a,runtime->pair_ext->get_var(name)));
+			return cov::any::make<callable>(object_method(a,runtime->pair_ext->get_var(name)),true);
 		else if(a.type()==typeid(hash_map))
-			return cov::any::make<callable>(object_method(a,runtime->hash_map_ext->get_var(name)));
+			return cov::any::make<callable>(object_method(a,runtime->hash_map_ext->get_var(name)),true);
 		else
 			throw syntax_error("Unsupported type.");
 	}
