@@ -97,8 +97,16 @@ namespace cov_basic {
 					cov::any& a=dynamic_cast<token_value*>(lptr)->get_value();
 					if(a.type()==typeid(extension_t))
 						it.data()=new token_value(a.val<extension_t>(true)->get_var(dynamic_cast<token_id*>(rptr)->get_id()));
-					else
-						it.data()=new token_value(get_type_ext(a,dynamic_cast<token_id*>(rptr)->get_id()));
+					else {
+						token_base* orig_ptr=it.data();
+						try {
+							it.data()=new token_value(get_type_ext(a,dynamic_cast<token_id*>(rptr)->get_id()));
+						}
+						catch(const syntax_error& se) {
+							it.data()=orig_ptr;
+						}
+					}
+
 				}
 				return;
 				break;
