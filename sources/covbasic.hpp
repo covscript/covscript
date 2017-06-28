@@ -49,10 +49,6 @@ namespace cov_basic {
 	{
 		return val.type()==typeid(array);
 	}
-	bool is_linker(const cov::any& val)
-	{
-		return val.type()==typeid(linker);
-	}
 	bool is_pair(const cov::any& val)
 	{
 		return val.type()==typeid(pair);
@@ -63,22 +59,11 @@ namespace cov_basic {
 	}
 	cov::any clone(const cov::any& val)
 	{
-		if(val.type()==typeid(linker))
-			return copy(val.const_val<linker>().data);
-		else
-			return copy(val);
+		return copy(val);
 	}
 	void swap(cov::any& a,cov::any& b)
 	{
 		a.swap(b,true);
-	}
-	cov::any link(const cov::any& val)
-	{
-		return cov::any::make<linker>(val);
-	}
-	cov::any escape(const cov::any& val)
-	{
-		return val.const_val<linker>().data;
 	}
 	void init()
 	{
@@ -90,7 +75,6 @@ namespace cov_basic {
 		runtime->storage.add_type("string",[]()->cov::any {return cov::any::make<string>();},cov::hash<std::string>(typeid(string).name()));
 		runtime->storage.add_type("list",[]()->cov::any {return cov::any::make<list>();},cov::hash<std::string>(typeid(list).name()));
 		runtime->storage.add_type("array",[]()->cov::any {return cov::any::make<array>();},cov::hash<std::string>(typeid(array).name()));
-		runtime->storage.add_type("linker",[]()->cov::any {return cov::any::make<linker>();},cov::hash<std::string>(typeid(linker).name()));
 		runtime->storage.add_type("pair",[]()->cov::any {return cov::any::make<pair>(number(0),number(0));},cov::hash<std::string>(typeid(pair).name()));
 		runtime->storage.add_type("hash_map",[]()->cov::any {return cov::any::make<hash_map>();},cov::hash<std::string>(typeid(hash_map).name()));
 		// Add Internal Functions to storage
@@ -101,13 +85,10 @@ namespace cov_basic {
 		add_function_const(is_boolean);
 		add_function_const(is_string);
 		add_function_const(is_array);
-		add_function_const(is_linker);
 		add_function_const(is_pair);
 		add_function_const(is_hash_map);
 		add_function(clone);
 		add_function(swap);
-		add_function(link);
-		add_function(escape);
 		// Init the extensions
 		system_cbs_ext::init();
 		runtime->storage.add_var("system",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));

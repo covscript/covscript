@@ -59,13 +59,6 @@ namespace cov_basic {
 	using native_interface=callable;
 	class token_base;
 	class statement_base;
-	struct linker final {
-		cov::any data;
-		bool operator==(const linker& l) const
-		{
-			return data.is_same(l.data);
-		}
-	};
 	class function final {
 		friend class statement_return;
 		mutable cov::any mRetVal;
