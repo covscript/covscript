@@ -101,12 +101,13 @@ namespace cov_basic {
 		type(const std::function<cov::any()>& c,std::size_t i):constructor(c),id(i) {}
 	};
 	class structure final {
+		std::size_t m_hash;
 		std::string m_name;
 		std::shared_ptr<std::unordered_map<string,cov::any>> m_data;
 	public:
 		structure()=delete;
-		structure(const std::string& name,const std::shared_ptr<std::unordered_map<string,cov::any>>& data):m_name(typeid(structure).name()+name),m_data(data) {}
-		structure(const structure& s):m_name(s.m_name),m_data(std::make_shared<std::unordered_map<string,cov::any>>(*s.m_data))
+		structure(std::size_t hash,const std::string& name,const std::shared_ptr<std::unordered_map<string,cov::any>>& data):m_hash(hash),m_name(typeid(structure).name()+name),m_data(data) {}
+		structure(const structure& s):m_hash(s.m_hash),m_name(s.m_name),m_data(std::make_shared<std::unordered_map<string,cov::any>>(*s.m_data))
 		{
 			for(auto& it:*m_data) {
 				it.second.clone();
@@ -119,9 +120,9 @@ namespace cov_basic {
 		{
 			return m_data;
 		}
-		const std::string& get_name() const
+		std::size_t get_hash() const
 		{
-			return m_name;
+			return m_hash;
 		}
 		cov::any& get_var(const std::string& name) const
 		{
@@ -132,14 +133,22 @@ namespace cov_basic {
 		}
 	};
 	class struct_builder final {
+		static std::size_t mCount;
+		std::size_t mHash;
 		std::string mName;
 		std::deque<statement_base*> mMethod;
 	public:
 		struct_builder()=delete;
-		struct_builder(const std::string& name,const std::deque<statement_base*>& method):mName(name),mMethod(method) {}
+		struct_builder(const std::string& name,const std::deque<statement_base*>& method):mHash(++mCount),mName(name),mMethod(method) {}
+		struct_builder(const struct_builder&)=default;
 		~struct_builder()=default;
+		std::size_t get_hash() const
+		{
+			return mHash;
+		}
 		cov::any operator()();
 	};
+	std::size_t struct_builder::mCount=0;
 	template<typename T>class garbage_collector final {
 		std::forward_list<T*> table_new;
 		std::forward_list<T*> table_delete;
