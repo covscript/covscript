@@ -86,7 +86,7 @@ namespace cov_basic {
 		cov::any var=parse_expr(mTree.root());
 		define_var=false;
 		if(mType!=nullptr)
-			var.assign(runtime->storage.get_var_type(mType->get_id()),true);
+			var.assign(parse_expr(mType->get_tree().root()).const_val<type>().constructor(),true);
 	}
 	void statement_break::run()
 	{

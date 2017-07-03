@@ -94,6 +94,12 @@ namespace cov_basic {
 			return retval;
 		}
 	};
+	struct type final {
+		std::function<cov::any()> constructor;
+		std::size_t id;
+		type()=delete;
+		type(const std::function<cov::any()>& c,std::size_t i):constructor(c),id(i) {}
+	};
 	class structure final {
 		std::string m_name;
 		std::shared_ptr<std::unordered_map<string,cov::any>> m_data;
@@ -156,13 +162,13 @@ namespace cov_basic {
 			table_delete.push_front(static_cast<T*>(ptr));
 		}
 	};
-	class extension final {
+	class name_space final {
 		std::unordered_map<string,cov::any> m_data;
 	public:
-		extension()=default;
-		extension(const extension&)=delete;
-		extension(const std::unordered_map<string,cov::any>& dat):m_data(dat) {}
-		~extension()=default;
+		name_space()=default;
+		name_space(const name_space&)=delete;
+		name_space(const std::unordered_map<string,cov::any>& dat):m_data(dat) {}
+		~name_space()=default;
 		void add_var(const std::string& name,const cov::any& var)
 		{
 			if(m_data.count(name)>0)
@@ -178,34 +184,36 @@ namespace cov_basic {
 				throw syntax_error("Use of undefined variable \""+name+"\" in extension.");
 		}
 	};
-	class extension_holder final {
-		extension* m_ext=nullptr;
+	class name_space_holder final {
+		name_space* m_ns=nullptr;
 #ifndef CBS_STATIC
 		cov::dll m_dll;
 #endif
 	public:
-		extension_holder()=delete;
-		extension_holder(extension* ptr):m_ext(ptr) {}
+		name_space_holder()=delete;
+		name_space_holder(name_space* ptr):m_ns(ptr) {}
 #ifndef CBS_STATIC
-		extension_holder(const std::string& path):m_dll(path)
+		name_space_holder(const std::string& path):m_dll(path)
 		{
-			m_ext=reinterpret_cast<extension*(*)()>(m_dll.get_address("__CBS_EXTENSION__"))();
+			m_ns=reinterpret_cast<name_space*(*)()>(m_dll.get_address("__CBS_EXTENSION__"))();
 		}
 #else
-		extension_holder(const std::string&)
+		name_space_holder(const std::string&)
 		{
 			throw internal_error("Can not load extension because covbasic is static version.");
 		}
 #endif
-		~extension_holder()=default;
+		~name_space_holder()=default;
 		cov::any& get_var(const std::string& name)
 		{
-			if(m_ext==nullptr)
+			if(m_ns==nullptr)
 				throw internal_error("Use of nullptr of extension.");
-			return m_ext->get_var(name);
+			return m_ns->get_var(name);
 		}
 	};
-	using extension_t=std::shared_ptr<extension_holder>;
+	using extension=name_space;
+	using extension_holder=name_space_holder;
+	using extension_t=std::shared_ptr<name_space_holder>;
 	cov::any parse_value(const std::string& str)
 	{
 		if(str=="true")
