@@ -39,6 +39,11 @@ int main(int args_size,const char* args[])
 		system_ext.add_var("args",arg);
 		std::ios::sync_with_stdio(false);
 		cov_basic::reset();
+		try {
+			cov_basic::cov_basic("./.cbs_config");
+		}
+		catch(const cov_basic::fatal_error& fe) {
+		}
 		cov_basic::cov_basic(args[1]);
 	}
 	else
