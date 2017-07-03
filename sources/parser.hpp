@@ -362,16 +362,20 @@ namespace cov_basic {
 		virtual void run() override;
 	};
 	class statement_block final:public statement_base {
+		static std::deque<name_space> mNamespaces;
+		token_id* mName=nullptr;
 		std::deque<statement_base*> mBlock;
 	public:
 		statement_block()=delete;
 		statement_block(const std::deque<statement_base*>& block,token_base* ptr):statement_base(ptr),mBlock(block) {}
+		statement_block(token_base* tbp,const std::deque<statement_base*>& block,token_base* ptr):statement_base(ptr),mName(dynamic_cast<token_id*>(tbp)),mBlock(block) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::block_;
 		}
 		virtual void run() override;
 	};
+	std::deque<name_space> statement_block::mNamespaces;
 	class statement_if final:public statement_base {
 		cov::tree<token_base*> mTree;
 		std::deque<statement_base*>* mBlock=nullptr;
