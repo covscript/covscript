@@ -34,13 +34,6 @@ namespace runtime_cbs_ext {
 	{
 		return std::make_shared<extension_holder>(path);
 	}
-	std::size_t type_hash(const cov::any& val)
-	{
-		if(val.type()==typeid(structure))
-			return cov::hash<std::string>(val.const_val<structure>().get_name());
-		else
-			return cov::hash<std::string>(val.type().name());
-	}
 	std::size_t hash(const cov::any& val)
 	{
 		return val.hash();
@@ -72,7 +65,6 @@ namespace runtime_cbs_ext {
 		runtime_ext.add_var("randint",cov::any::make_protect<native_interface>(cni(randint)));
 		runtime_ext.add_var("error",cov::any::make_protect<native_interface>(cni(error)));
 		runtime_ext.add_var("load_extension",cov::any::make_protect<native_interface>(cni(load_extension),true));
-		runtime_ext.add_var("type_hash",cov::any::make_protect<native_interface>(cni(type_hash),true));
 		runtime_ext.add_var("hash",cov::any::make_protect<native_interface>(cni(hash),true));
 		runtime_ext.add_var("build",cov::any::make_protect<native_interface>(cni(build)));
 		runtime_ext.add_var("solve",cov::any::make_protect<native_interface>(cni(solve)));

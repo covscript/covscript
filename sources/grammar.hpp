@@ -72,9 +72,9 @@ namespace cov_basic {
 			}
 		}
 		inside_struct=false;
-		cov::any dat=cov::any::make<structure>(this->mName,runtime->storage.get_domain());
+		cov::any dat=cov::any::make<structure>(this->mHash,this->mName,runtime->storage.get_domain());
 		runtime->storage.remove_domain();
-		return std::move(dat);
+		return dat;
 	}
 	void statement_expression::run()
 	{
@@ -344,7 +344,7 @@ namespace cov_basic {
 	}
 	void statement_struct::run()
 	{
-		runtime->storage.add_type(this->mName,this->mBuilder);
+		runtime->storage.add_struct(this->mName,this->mBuilder);
 	}
 	void statement_function::run()
 	{
@@ -452,7 +452,7 @@ namespace cov_basic {
 			}
 		});
 		translator.add_method({new token_action(action_types::define_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::as_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::define_,grammar_types::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
-				return new statement_define(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),dynamic_cast<token_expr*>(raw.front().at(3))->get_tree().root().data(),raw.front().back());
+				return new statement_define(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),raw.front().at(3),raw.front().back());
 			}
 		});
 		// Constant Grammar

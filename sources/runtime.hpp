@@ -103,13 +103,13 @@ namespace cov_basic {
 			else
 				m_data.back()->emplace(name,var);
 		}
-		void add_type(const std::string& name,const std::function<cov::any()>& func)
+		void add_struct(const std::string& name,const struct_builder& builder)
 		{
-			add_var(name,type(func,cov::hash<std::string>(typeid(structure).name()+name)));
+			add_var(name,cov::any::make_protect<type>(builder,builder.get_hash()));
 		}
 		void add_type(const std::string& name,const std::function<cov::any()>& func,std::size_t hash)
 		{
-			add_var(name,type(func,hash));
+			add_var(name,cov::any::make_protect<type>(func,hash));
 		}
 	};
 	struct runtime_type final {
@@ -122,7 +122,6 @@ namespace cov_basic {
 		extension_t pair_ext;
 		extension_t hash_map_ext;
 	};
-
 	std::unique_ptr<runtime_type> runtime=nullptr;
 	var get_type_ext(const var& a,const string& name)
 	{
@@ -220,10 +219,12 @@ namespace cov_basic {
 	{
 		if(a!=nullptr)
 			throw syntax_error("Wrong format of new expression.");
-		else if(b.type()!=typeid(type))
-			throw syntax_error("Unsupported operator operations(Typeid).");
-		else
+		else if(b.type()==typeid(type))
 			return b.const_val<type>().id;
+		else if(b.type()==typeid(structure))
+			return b.const_val<structure>().get_hash();
+		else
+			return cov::hash<std::string>(b.type().name());
 	}
 	cov::any parse_und(const cov::any& a,const cov::any& b)
 	{
@@ -448,7 +449,7 @@ namespace cov_basic {
 				return parse_dot(parse_expr(it.left()),it.right().data());
 				break;
 			case signal_types::typeid_:
-				return parse_typeid(it.left().data(),it.right().data());
+				return parse_typeid(it.left().data(),parse_expr(it.right()));
 				break;
 			case signal_types::und_:
 				return parse_und(parse_expr(it.left()),parse_expr(it.right()));
