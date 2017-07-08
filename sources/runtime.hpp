@@ -4,6 +4,7 @@ namespace cov_basic {
 	class domain_manager {
 	public:
 		using domain_t=std::shared_ptr<std::unordered_map<string,cov::any>>;
+	private:
 		std::deque<domain_t> m_data;
 		std::deque<domain_t> m_this;
 	public:
