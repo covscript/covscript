@@ -68,6 +68,24 @@ namespace cov {
 	template < typename _Tp > struct add_constant_reference<const _Tp*> {
 		typedef const _Tp* type;
 	};
+	template<typename T>struct remove_reference {
+		using type=T;
+	};
+	template<typename T>struct remove_reference<T&> {
+		using type=T;
+	};
+	template<typename T>struct remove_reference<T&&> {
+		using type=T;
+	};
+	template<typename T>struct remove_reference<const T&> {
+		using type=const T;
+	};
+	template<typename T>struct remove_constant {
+		using type=T;
+	};
+	template<typename T>struct remove_constant<const T> {
+		using type=T;
+	};
 	template<bool factor,typename Tx,typename Ty>struct replace_if;
 	template<typename Tx,typename Ty>struct replace_if<true,Tx,Ty> {
 		using result=Ty;
