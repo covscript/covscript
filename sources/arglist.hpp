@@ -1,58 +1,36 @@
 #pragma once
 #include "../include/mozart/any.hpp"
+#include "../include/mozart/traits.hpp"
 #include "./core.hpp"
 namespace cov_basic {
 	class arglist final {
-		template<typename _Tp>static int count_types(int index=1)
+		template<typename T,int index>struct check_arg {
+			static inline short check(const cov::any& val)
+			{
+				if(typeid(T)!=val.type())
+					throw syntax_error("Invalid Argument.At "+std::to_string(index+1)+".Expected "+typeid(T).name());
+				else
+					return 0;
+			}
+		};
+		static inline void result_container(short...) {}
+		template<typename...ArgsT,int...Seq>static inline void check_helper(const std::deque<cov::any>& args,const cov::sequence<Seq...>&)
 		{
-			return index;
-		}
-		template<typename _Tp,typename _fT,typename...ArgTypes>
-		static int count_types(int index=1)
-		{
-			return count_types<_fT,ArgTypes...>(++index);
-		}
-		template<typename _Tp>static std::string get_type(int expect,int index)
-		{
-			if(expect==index)
-				return typeid(_Tp).name();
-			else
-				throw internal_error("Wrong index of arglist.");
-		}
-		template<typename _Tp,typename _fT,typename...ArgTypes>
-		static std::string get_type(int expect,int index)
-		{
-			if(expect==index)
-				return typeid(_Tp).name();
-			else
-				return get_type<_fT,ArgTypes...>(expect,++index);
-		}
-		template<typename _Tp>static int check_types(int index,const std::deque<cov::any>& args)
-		{
-			if(index<=args.size()&&(typeid(_Tp)==typeid(cov::any)||args.at(index-1).type()==typeid(_Tp)))
-				return -1;
-			else
-				return index;
-		}
-		template<typename _Tp,typename _fT,typename...ArgTypes>
-		static int check_types(int index,const std::deque<cov::any>& args)
-		{
-			if(index<=args.size()&&(typeid(_Tp)==typeid(cov::any)||args.at(index-1).type()==typeid(_Tp)))
-				return check_types<_fT,ArgTypes...>(++index,args);
-			else
-				return index;
+			result_container(check_arg<typename cov::remove_constant<typename cov::remove_reference<ArgsT>::type>::type,Seq>::check(args.at(Seq))...);
 		}
 	public:
-		template<typename...ArgTypes>
-		static void check(const std::deque<cov::any>& args)
+		template<typename...ArgTypes>static inline void check(const std::deque<cov::any>& args)
 		{
-			if(count_types<ArgTypes...>()==args.size()) {
-				int result=check_types<ArgTypes...>(1,args);
-				if(result!=-1)
-					throw syntax_error("Invalid Argument.At "+std::to_string(result)+".Expected "+get_type<ArgTypes...>(result,1));
-			}
+			if(sizeof...(ArgTypes)==args.size())
+				check_helper<ArgTypes...>(args,cov::make_sequence<sizeof...(ArgTypes)>::result);
 			else
-				throw syntax_error("Wrong size of the arguments.Expected "+std::to_string(count_types<ArgTypes...>()));
+				throw syntax_error("Wrong size of the arguments.Expected "+std::to_string(sizeof...(ArgTypes)));
+		}
+	};
+	template<int index>struct arglist::check_arg<cov::any,index> {
+		static inline short check(const cov::any&)
+		{
+			return 0;
 		}
 	};
 }

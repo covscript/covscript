@@ -11,6 +11,7 @@
 * This program was written by Micheal Lee(mikecovlee@163.com)。
 */
 #include "../include/mozart/bind.hpp"
+#include "../include/mozart/traits.hpp"
 #include "./core.hpp"
 #include "./arglist.hpp"
 #include <functional>
@@ -57,7 +58,7 @@ namespace cov_basic {
 			if(!args.empty())
 				throw syntax_error("Wrong size of the arguments.Expected 0");
 			mFunc();
-			return number(0);
+			return cov::any::make<number>(0);
 		}
 	};
 	template<typename RetT>class cni_helper<RetT(*)()> {
@@ -70,14 +71,14 @@ namespace cov_basic {
 		{
 			if(!args.empty())
 				throw syntax_error("Wrong size of the arguments.Expected 0");
-			return mFunc();
+			return cov::any::make<RetT>(mFunc());
 		}
 	};
 	template<typename...ArgsT>
 	class cni_helper<void(*)(ArgsT...)> {
 		using args_t=typename cov::type_list::make<ArgsT...>::result;
 		std::function<void(ArgsT...)> mFunc;
-		template<int...S>void _call(array& args,cov::sequence<S...>) const
+		template<int...S>void _call(array& args,const cov::sequence<S...>&) const
 		{
 			mFunc(convert<ArgsT>::get_val(args.at(S))...);
 		}
@@ -89,16 +90,16 @@ namespace cov_basic {
 		{
 			arglist::check<ArgsT...>(args);
 			_call(args,cov::make_sequence<cov::type_list::get_size<args_t>::result>::result);
-			return number(0);
+			return cov::any::make<number>(0);
 		}
 	};
 	template<typename RetT,typename...ArgsT>
 	class cni_helper<RetT(*)(ArgsT...)> {
 		using args_t=typename cov::type_list::make<ArgsT...>::result;
 		std::function<RetT(ArgsT...)> mFunc;
-		template<int...S>RetT _call(array& args,cov::sequence<S...>) const
+		template<int...S>RetT _call(array& args,const cov::sequence<S...>&) const
 		{
-			return mFunc(convert<ArgsT>::get_val(args.at(S))...);
+			return std::move(mFunc(convert<ArgsT>::get_val(args.at(S))...));
 		}
 	public:
 		cni_helper()=delete;
@@ -107,8 +108,14 @@ namespace cov_basic {
 		cov::any call(array& args) const
 		{
 			arglist::check<ArgsT...>(args);
-			return _call(args,cov::make_sequence<cov::type_list::get_size<args_t>::result>::result);
+			return cov::any::make<RetT>(_call(args,cov::make_sequence<cov::type_list::get_size<args_t>::result>::result));
 		}
+	};
+	template<typename T>struct cni_modify {
+		using type=T;
+	};
+	template<typename RetT,typename...ArgsT>struct cni_modify<RetT(ArgsT...)> {
+		using type=RetT(*)(ArgsT...);
 	};
 	class cni final {
 		class cni_base {
@@ -124,7 +131,7 @@ namespace cov_basic {
 		public:
 			cni_holder()=delete;
 			cni_holder(const cni_holder&)=default;
-			cni_holder(T func):mCni(func) {}
+			cni_holder(const T& func):mCni(func) {}
 			virtual ~cni_holder()=default;
 			virtual cni_base* clone() override
 			{
@@ -135,11 +142,16 @@ namespace cov_basic {
 				return mCni.call(args);
 			}
 		};
+		template<typename T>struct construct_helper {
+			template<typename X>static cni_base* construct(X&& val)
+			{
+				return new cni_holder<T>(std::forward<X>(val));
+			}
+		};
 		cni_base* mCni=nullptr;
 	public:
 		cni()=delete;
-		cni(const cni& c):mCni(c.mCni->clone()) {}
-		template<typename T>explicit cni(T func):mCni(new cni_holder<T>(func)) {}
+		template<typename T>cni(T&& val):mCni(construct_helper<typename cni_modify<typename cov::remove_reference<T>::type>::type>::construct(std::forward<T>(val))) {}
 		~cni()
 		{
 			delete mCni;
@@ -147,6 +159,18 @@ namespace cov_basic {
 		cov::any operator()(array& args) const
 		{
 			return mCni->call(args);
+		}
+	};
+	template<>struct cni::construct_helper<const cni> {
+		static cni_base* construct(const cni& c)
+		{
+			return c.mCni->clone();
+		}
+	};
+	template<>struct cni::construct_helper<cni> {
+		static cni_base* construct(const cni& c)
+		{
+			return c.mCni->clone();
 		}
 	};
 }
