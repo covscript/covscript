@@ -1,20 +1,20 @@
 function main()
 #初始化和设置
 	darwin.load()
-	define jump_frame=darwin.input_box("Console Pinball Game","Please set the difficulty:","3",true)
-	constant num3={1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1}
-	constant num2={1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1}
-	constant num1={0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0}
-	constant chG={1,1,1,1,1,1,1,1,0,0,0,0,1,1,0,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1}
-	constant chO={1,1,1,1,1,1,1,1,0,0,1,1,1,1,0,0,1,1,1,1,0,0,1,1,1,1,1,1,1,1}
-	constant chExc={0,1,1,1,1,0,0,1,1,1,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0}
+	var jump_frame=darwin.input_box("Console Pinball Game","Please set the difficulty:","3",true)
+	const var num3={1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1}
+	const var num2={1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1}
+	const var num1={0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0}
+	const var chG={1,1,1,1,1,1,1,1,0,0,0,0,1,1,0,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1}
+	const var chO={1,1,1,1,1,1,1,1,0,0,1,1,1,1,0,0,1,1,1,1,0,0,1,1,1,1,1,1,1,1}
+	const var chExc={0,1,1,1,1,0,0,1,1,1,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0}
 #显示开始的倒计时
 	darwin.set_frame_limit(1)
 	darwin.fit_drawable()
 	function draw_ch(ch,w,h,x,y)
-		define r=0
+		var r=0
 		while(r<h)
-			define c=0
+			var c=0
 			while(c<w)
 				if(ch[r*6+c]==1)
 					darwin.draw_point(c+x,r+y,darwin.pixel(' ',true,false,darwin.red,darwin.red))
@@ -41,15 +41,15 @@ function main()
 	darwin.update_drawable()
 #主循环
 	darwin.set_frame_limit(60)
-	define score=0
-	define zkh=0.5*darwin.get_height()
-	define x=2
-	define y=0
-	define z1=0.5*darwin.get_height()-0.5*zkh
-	define z2=z1
-	define xj=true
-	define yj=true
-	define delay_frame=0
+	var score=0
+	var zkh=0.5*darwin.get_height()
+	var x=2
+	var y=0
+	var z1=0.5*darwin.get_height()-0.5*zkh
+	var z2=z1
+	var xj=true
+	var yj=true
+	var delay_frame=0
 	loop
 		darwin.fill_drawable(darwin.pixel(' ',true,false,darwin.white,darwin.blue))
 		darwin.draw_line(0,z1,0,z1+zkh,darwin.pixel('#',true,false,darwin.cyan,darwin.cyan))
@@ -120,13 +120,13 @@ function main()
 			end
 		end
 		darwin.draw_point(x,y,darwin.pixel('@',true,false,darwin.red,darwin.yellow))
-		define info=to_string(score)
+		var info=to_string(score)
 		info="Score:"+info
 		darwin.draw_string(0,0,info,darwin.pixel(' ',true,false,darwin.white,darwin.black))
 		darwin.update_drawable()
 	end
 #结束后处理得分
-	define str=to_string(score)
+	var str=to_string(score)
 	system.println("You Die!Your Score is ",str,".")
 	if(score<5)
 		system.println("Very Bad.Just try lower difficulty.")

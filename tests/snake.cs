@@ -1,20 +1,20 @@
-constant head_pix=darwin.pixel('#',true,false,darwin.white,darwin.black)
-constant body_pix=darwin.pixel('+',true,false,darwin.white,darwin.black)
-constant food_pix=darwin.pixel('@',true,false,darwin.white,darwin.black)
-define snake_body={}
-define snake_head={0,0}
-define food={0,0}
-define heading=2
-constant init_long=5
-define god_mode=false
-define cross_wall=false
-constant hard=2
-define score=0
+const var head_pix=darwin.pixel('#',true,false,darwin.white,darwin.black)
+const var body_pix=darwin.pixel('+',true,false,darwin.white,darwin.black)
+const var food_pix=darwin.pixel('@',true,false,darwin.white,darwin.black)
+var snake_body={}
+var snake_head={0,0}
+var food={0,0}
+var heading=2
+const var init_long=5
+var god_mode=false
+var cross_wall=false
+const var hard=2
+var score=0
 
 function die()
-	define str0="You die!Your score is "+score
+	var str0="You die!Your score is "+score
 	str0.append(".")
-	define str1="Press any key to continue..."
+	var str1="Press any key to continue..."
 	loop
 		if(darwin.is_kb_hit())
 			darwin.get_kb_hit()
@@ -29,7 +29,7 @@ function die()
 end
 
 function gen_food()
-	define is_fit=true
+	var is_fit=true
 	while(is_fit)
 		food[0]=runtime.randint(0,darwin.get_width()-1)
 		food[1]=runtime.randint(0,darwin.get_height()-1)
@@ -48,8 +48,8 @@ function start()
 		snake_body.push_back({snake_head[0]-i,snake_head[1]})
 	end
 	gen_food()
-	define frame=0
-	define pause=false
+	var frame=0
+	var pause=false
 	loop
 		if(darwin.is_kb_hit())
 			switch darwin.get_kb_hit()

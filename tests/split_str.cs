@@ -1,6 +1,6 @@
 function split(str)
-	define arr as array
-	define tmp as string
+	var arr as array
+	var tmp as string
 	foreach ch iterate str
 		if(ch.isspace())
 			if(tmp.size()!=0)
@@ -17,7 +17,7 @@ function split(str)
 	end
 	return arr
 end
-define r=split(system.getline())
+var r=split(system.getline())
 foreach it iterate r
 	system.print("#",it,"#")
 end

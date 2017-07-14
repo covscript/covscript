@@ -1,12 +1,12 @@
 darwin.load()
-define expr=runtime.build(darwin.input_box("Sketchpad","Please enter a expression:","",false))
-define x_offset=0
-define y_offset=0
-define zoom=5
-define dzoom=1
-define center_x=0
-define center_y=0
-constant pix=darwin.pixel('+',true,false,darwin.blue,darwin.black)
+var expr=runtime.build(darwin.input_box("Sketchpad","Please enter a expression:","",false))
+var x_offset=0
+var y_offset=0
+var zoom=5
+var dzoom=1
+var center_x=0
+var center_y=0
+const var pix=darwin.pixel('+',true,false,darwin.blue,darwin.black)
 function f(x)
   return runtime.solve(expr)
 end
@@ -47,20 +47,20 @@ loop
   darwin.draw_point(center_x+x_offset,center_y+y_offset,darwin.pixel('+',true,false,darwin.white,darwin.black))
   darwin.draw_point(center_x+x_offset,0,darwin.pixel('^',true,false,darwin.white,darwin.black))
   darwin.draw_point(darwin.get_width()-1,center_y+y_offset,darwin.pixel('>',true,false,darwin.white,darwin.black))
-  define i=-to_integer((center_x+x_offset)/(zoom*2))
+  var i=-to_integer((center_x+x_offset)/(zoom*2))
   while(center_x+x_offset+2*i*zoom<darwin.get_width()-1)
   	if(i!=0)
   		darwin.draw_point(center_x+x_offset+2*i*zoom,center_y+y_offset,darwin.pixel('|',true,false,darwin.white,darwin.black))
-  		define str=to_string(i)
+  		var str=to_string(i)
   		darwin.draw_string(center_x+x_offset+2*i*zoom-0.5*str.size(),center_y+y_offset+1,str,darwin.pixel(' ',true,false,darwin.white,darwin.black))
 	end
 	++i
   end
-  define i=to_integer((center_y-y_offset)/zoom)
+  var i=to_integer((center_y-y_offset)/zoom)
   while(center_y+y_offset+i*zoom>0)
 	if(i!=0)
   		darwin.draw_point(center_x+x_offset,center_y+y_offset+i*zoom,darwin.pixel('-',true,false,darwin.white,darwin.black))
-  		define str=to_string(-i)
+  		var str=to_string(-i)
   		darwin.draw_string(center_x+x_offset-str.size(),center_y+y_offset+i*zoom,str,darwin.pixel(' ',true,false,darwin.white,darwin.black))
 	end
 	--i

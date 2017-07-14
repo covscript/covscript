@@ -1,6 +1,6 @@
 darwin.load()
-define str=darwin.input_box("","Please enter a string:","",false)
-define pix=darwin.pixel(' ',true,false,darwin.white,darwin.black)
+var str=darwin.input_box("","Please enter a string:","",false)
+var pix=darwin.pixel(' ',true,false,darwin.white,darwin.black)
 loop
 	darwin.fit_drawable()
 	darwin.clear_drawable()

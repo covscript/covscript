@@ -1,5 +1,5 @@
 function main(start)
-    define i=start
+    var i=start
     while(i<100)
         system.println(i)
         if(i>=50)

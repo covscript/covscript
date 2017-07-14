@@ -1,15 +1,15 @@
-constant gravity=10
-constant air_drop=5
-constant delta_time=0.1
-constant mass=0.5
-constant size=0.01
-define speed_x=15
-define speed_y=0
-define posit_x=0
-define posit_y=0
+const var gravity=10
+const var air_drop=5
+const var delta_time=0.1
+const var mass=0.5
+const var size=0.01
+var speed_x=15
+var speed_y=0
+var posit_x=0
+var posit_y=0
 function run()
-	define ax=0
-	define ay=0
+	var ax=0
+	var ay=0
 	if(speed_x>0)
 		ax=ax-(air_drop*size*speed_x)/mass
 	end

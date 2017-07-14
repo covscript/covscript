@@ -7,7 +7,7 @@ function test(a)
     end
 end
 system.println("Please enter a intger:")
-define in=0
+var in=0
 system.input(in)
 test(in)
 system.println(in)

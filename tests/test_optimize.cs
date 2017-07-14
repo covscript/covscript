@@ -1,4 +1,4 @@
-constant a=10
+const var a=10
 switch system.input()
 	case "Hello"+"!"
 		system.println("Hello!")
