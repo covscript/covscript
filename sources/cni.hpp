@@ -71,7 +71,7 @@ namespace cs {
 		{
 			if(!args.empty())
 				throw syntax_error("Wrong size of the arguments.Expected 0");
-			return cov::any::make<RetT>(mFunc());
+			return std::move(mFunc());
 		}
 	};
 	template<typename...ArgsT>
@@ -108,7 +108,7 @@ namespace cs {
 		cov::any call(array& args) const
 		{
 			arglist::check<ArgsT...>(args);
-			return cov::any::make<RetT>(_call(args,cov::make_sequence<cov::type_list::get_size<args_t>::result>::result));
+			return std::move(_call(args,cov::make_sequence<cov::type_list::get_size<args_t>::result>::result));
 		}
 	};
 	template<typename T>struct cni_modify {
