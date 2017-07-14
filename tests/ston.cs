@@ -55,7 +55,7 @@ function ston(str)
 	var ipart as string
 	var fpart as string
 	var dot_count=0
-	foreach ch iterate str
+	for ch iterate str
 		if ch!='.'
 			if !ch.isdigit()
 				runtime.error("Illegal string")

@@ -1,7 +1,7 @@
 function split(str)
 	var arr as array
 	var tmp as string
-	foreach ch iterate str
+	for ch iterate str
 		if(ch.isspace())
 			if(tmp.size()!=0)
 				arr.push_back(tmp)
@@ -18,7 +18,7 @@ function split(str)
 	return arr
 end
 var r=split(system.getline())
-foreach it iterate r
+for it iterate r
 	system.print("#",it,"#")
 end
 system.println()
