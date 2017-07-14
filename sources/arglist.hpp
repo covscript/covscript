@@ -2,7 +2,7 @@
 #include "../include/mozart/any.hpp"
 #include "../include/mozart/traits.hpp"
 #include "./core.hpp"
-namespace cov_basic {
+namespace cs {
 	class arglist final {
 		template<typename T,int index>struct check_arg {
 			static inline short check(const cov::any& val)

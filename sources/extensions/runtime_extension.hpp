@@ -1,12 +1,12 @@
 #pragma once
 #include "../cni.hpp"
 #include <cstdlib>
-static cov_basic::extension runtime_ext;
-namespace runtime_cbs_ext {
-	using namespace cov_basic;
+static cs::extension runtime_ext;
+namespace runtime_cs_ext {
+	using namespace cs;
 	void info()
 	{
-		std::cout<<"Covariant Basic Programming Language Interpreter Version "<<cov_basic::version<<"\n"
+		std::cout<<"Covariant Script Programming Language Interpreter Version "<<cs::version<<"\n"
 		         "Copyright (C) 2017 Michael Lee.All rights reserved.\nThis program comes with ABSOLUTELY NO WARRANTY; for details see <http://www.gnu.org/licenses/>.\n"
 		         "This is free software, and you are welcome to redistribute it under certain conditions.\nPlease visit <http://covbasic.org/> for more information."<<std::endl;
 	}

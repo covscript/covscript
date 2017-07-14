@@ -1,6 +1,6 @@
 #pragma once
 #include "./runtime.hpp"
-namespace cov_basic {
+namespace cs {
 	void opt_expr(cov::tree<token_base*>&,cov::tree<token_base*>::iterator);
 	bool optimizable(const cov::tree<token_base*>::iterator& it)
 	{

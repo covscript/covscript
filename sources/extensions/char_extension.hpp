@@ -1,9 +1,9 @@
 #pragma once
 #include "../cni.hpp"
 #include <cctype>
-static cov_basic::extension char_ext;
-namespace char_cbs_ext {
-	using namespace cov_basic;
+static cs::extension char_ext;
+namespace char_cs_ext {
+	using namespace cs;
 	bool isalnum(char c)
 	{
 		return std::isalnum(c);

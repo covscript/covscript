@@ -1,10 +1,10 @@
 #pragma once
 #include "./core.hpp"
-cov_basic::extension* cbs_extension();
+cs::extension* cs_extension();
 extern "C"
 {
-	cov_basic::extension* __CBS_EXTENSION__()
+	cs::extension* __CS_EXTENSION__()
 	{
-		return cbs_extension();
+		return cs_extension();
 	}
 }

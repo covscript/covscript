@@ -4,18 +4,18 @@
 #include "./extensions/system_extension.hpp"
 #include "./extensions/runtime_extension.hpp"
 #include "./extensions/types_extension.hpp"
-#ifdef CBS_MATH_EXT
+#ifdef CS_MATH_EXT
 #include "./extensions/math_extension.cpp"
 #endif
-#ifdef CBS_FILE_EXT
+#ifdef CS_FILE_EXT
 #include "./extensions/file_extension.cpp"
 #endif
-#ifdef CBS_DARWIN_EXT
+#ifdef CS_DARWIN_EXT
 #include "./extensions/darwin_extension.cpp"
 #endif
-#define add_function(name) cov_basic::runtime->storage.add_var_global(#name,cov::any::make_protect<cov_basic::native_interface>(cov_basic::cni(name)));
-#define add_function_const(name) cov_basic::runtime->storage.add_var_global(#name,cov::any::make_protect<cov_basic::native_interface>(cov_basic::cni(name),true));
-namespace cov_basic {
+#define add_function(name) cs::runtime->storage.add_var_global(#name,cov::any::make_protect<cs::native_interface>(cs::cni(name)));
+#define add_function_const(name) cs::runtime->storage.add_var_global(#name,cov::any::make_protect<cs::native_interface>(cs::cni(name),true));
+namespace cs {
 // Internal Functions
 	number to_integer(number n)
 	{
@@ -90,34 +90,34 @@ namespace cov_basic {
 		add_function(clone);
 		add_function(swap);
 		// Init the extensions
-		system_cbs_ext::init();
+		system_cs_ext::init();
 		runtime->storage.add_var("system",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));
-		runtime_cbs_ext::init();
+		runtime_cs_ext::init();
 		runtime->storage.add_var("runtime",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
-		types_cbs_ext::init();
+		types_cs_ext::init();
 		runtime->storage.add_var("types",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&types_ext)));
-		char_cbs_ext::init();
+		char_cs_ext::init();
 		runtime->char_ext=std::make_shared<extension_holder>(&char_ext);
-		string_cbs_ext::init();
+		string_cs_ext::init();
 		runtime->string_ext=std::make_shared<extension_holder>(&string_ext);
-		list_cbs_ext::init();
+		list_cs_ext::init();
 		runtime->list_ext=std::make_shared<extension_holder>(&list_ext);
-		array_cbs_ext::init();
+		array_cs_ext::init();
 		runtime->array_ext=std::make_shared<extension_holder>(&array_ext);
-		pair_cbs_ext::init();
+		pair_cs_ext::init();
 		runtime->pair_ext=std::make_shared<extension_holder>(&pair_ext);
-		hash_map_cbs_ext::init();
+		hash_map_cs_ext::init();
 		runtime->hash_map_ext=std::make_shared<extension_holder>(&hash_map_ext);
-#ifdef CBS_MATH_EXT
-		math_cbs_ext::init();
+#ifdef CS_MATH_EXT
+		math_cs_ext::init();
 		runtime->storage.add_var("math",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&math_ext)));
 #endif
-#ifdef CBS_FILE_EXT
-		file_cbs_ext::init();
+#ifdef CS_FILE_EXT
+		file_cs_ext::init();
 		runtime->storage.add_var("file",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&file_ext)));
 #endif
-#ifdef CBS_DARWIN_EXT
-		darwin_cbs_ext::init();
+#ifdef CS_DARWIN_EXT
+		darwin_cs_ext::init();
 		runtime->storage.add_var("darwin",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&darwin_ext)));
 #endif
 	}
@@ -126,7 +126,7 @@ namespace cov_basic {
 		runtime=std::unique_ptr<runtime_type>(new runtime_type);
 		init();
 	}
-	void cov_basic(const std::string& path)
+	void cs(const std::string& path)
 	{
 		token_value::clean();
 		std::deque<char> buff;

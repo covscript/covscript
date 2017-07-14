@@ -1,6 +1,6 @@
 #pragma once
 #include "./parser.hpp"
-namespace cov_basic {
+namespace cs {
 	class domain_manager {
 	public:
 		using domain_t=std::shared_ptr<std::unordered_map<string,cov::any>>;

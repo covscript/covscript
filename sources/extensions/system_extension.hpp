@@ -3,9 +3,9 @@
 #include <iostream>
 #include <cstdlib>
 #include <limits>
-static cov_basic::extension system_ext;
-namespace system_cbs_ext {
-	using namespace cov_basic;
+static cs::extension system_ext;
+namespace system_cs_ext {
+	using namespace cs;
 	cov::any input(array& args)
 	{
 		if(args.empty()) {

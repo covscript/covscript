@@ -1,10 +1,10 @@
-#ifndef CBS_MATH_EXT
+#ifndef CS_MATH_EXT
 #include "../extension.hpp"
 #endif
 #include "../cni.hpp"
-static cov_basic::extension math_ext;
-namespace math_cbs_ext {
-	using namespace cov_basic;
+static cs::extension math_ext;
+namespace math_cs_ext {
+	using namespace cs;
 	number abs(number n)
 	{
 		return std::abs(n);
@@ -76,10 +76,10 @@ namespace math_cbs_ext {
 		math_ext.add_var("pow",cov::any::make_protect<native_interface>(cni(pow),true));
 	}
 }
-#ifndef CBS_MATH_EXT
-cov_basic::extension* cbs_extension()
+#ifndef CS_MATH_EXT
+cs::extension* cs_extension()
 {
-	math_cbs_ext::init();
+	math_cs_ext::init();
 	return &math_ext;
 }
 #endif

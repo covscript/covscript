@@ -2,12 +2,12 @@
 #define DARWIN_IGNORE_WARNING
 #include "../../include/darwin/darwin.hpp"
 #include "../../include/mozart/switcher.hpp"
-#ifndef CBS_DARWIN_EXT
+#ifndef CS_DARWIN_EXT
 #include "../extension.hpp"
 #endif
-static cov_basic::extension darwin_ext;
-namespace darwin_cbs_ext {
-	using namespace cov_basic;
+static cs::extension darwin_ext;
+namespace darwin_cs_ext {
+	using namespace cs;
 // Graphics
 	darwin::sync_clock clock(30);
 	cov::any load(array& args)
@@ -283,10 +283,10 @@ namespace darwin_cbs_ext {
 		darwin_ext.add_var("cyan",cov::any::make_constant<darwin::colors>(darwin::colors::cyan));
 	}
 }
-#ifndef CBS_DARWIN_EXT
-cov_basic::extension* cbs_extension()
+#ifndef CS_DARWIN_EXT
+cs::extension* cs_extension()
 {
-	darwin_cbs_ext::init();
+	darwin_cs_ext::init();
 	return &darwin_ext;
 }
 #endif

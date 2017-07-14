@@ -1,13 +1,13 @@
 #pragma once
 #include <exception>
 #include <stdexcept>
-namespace cov_basic {
+namespace cs {
 	class syntax_error final:public std::exception {
-		std::string mWhat="Covariant Basic Syntax Error";
+		std::string mWhat="Covariant Script Syntax Error";
 	public:
 		syntax_error()=default;
 		syntax_error(const std::string& str) noexcept:
-			mWhat("\nCovariant Basic Syntax Error:\n"+str) {}
+			mWhat("\nCovariant Script Syntax Error:\n"+str) {}
 		syntax_error(std::size_t line,const std::string& str) noexcept:
 			mWhat("\nIn line "+std::to_string(line)+":"+str) {}
 		syntax_error(const std::string& file,std::size_t line,const std::string& str) noexcept:
@@ -23,11 +23,11 @@ namespace cov_basic {
 		}
 	};
 	class internal_error final:public std::exception {
-		std::string mWhat="Covariant Basic Internal Error";
+		std::string mWhat="Covariant Script Internal Error";
 	public:
 		internal_error()=default;
 		internal_error(const std::string& str) noexcept:
-			mWhat("\nCovariant Basic Internal Error:\n"+str) {}
+			mWhat("\nCovariant Script Internal Error:\n"+str) {}
 		internal_error(std::size_t line,const std::string& str) noexcept:
 			mWhat("\nIn line "+std::to_string(line)+":"+str) {}
 		internal_error(const std::string& file,std::size_t line,const std::string& str) noexcept:
@@ -43,11 +43,11 @@ namespace cov_basic {
 		}
 	};
 	class lang_error final:public std::exception {
-		std::string mWhat="Covariant Basic Language Error";
+		std::string mWhat="Covariant Script Language Error";
 	public:
 		lang_error()=default;
 		lang_error(const std::string& str) noexcept:
-			mWhat("\nCovariant Basic Language Error:\n"+str) {}
+			mWhat("\nCovariant Script Language Error:\n"+str) {}
 		lang_error(std::size_t line,const std::string& str) noexcept:
 			mWhat("\nIn line "+std::to_string(line)+":"+str) {}
 		lang_error(const std::string& file,std::size_t line,const std::string& str) noexcept:
@@ -63,10 +63,10 @@ namespace cov_basic {
 		}
 	};
 	class fatal_error final:public std::exception {
-		std::string mWhat="Covariant Basic Fatal Error";
+		std::string mWhat="Covariant Script Fatal Error";
 	public:
 		fatal_error()=default;
-		fatal_error(const std::string& str) noexcept:mWhat("\nCovariant Basic Fatal Error:\n"+str+"\nCompilation terminated.") {}
+		fatal_error(const std::string& str) noexcept:mWhat("\nCovariant Script Fatal Error:\n"+str+"\nCompilation terminated.") {}
 		fatal_error(const fatal_error&)=default;
 		fatal_error(fatal_error&&)=default;
 		virtual ~fatal_error()=default;

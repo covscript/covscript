@@ -1,5 +1,5 @@
 /*
-* Covariant Basic Programming Language
+* Covariant Script Programming Language
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -17,36 +17,36 @@
 * Copyright (C) 2017 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
-* Website: http://covbasic.org
+* Website: http://covariant.cn/cs
 *
-* Version: 2.1.5.5
+* Version: 1.0.0
 */
 #define DARWIN_DISABLE_LOG
-#ifndef CBS_MINIMAL
-#define CBS_MATH_EXT
-#define CBS_FILE_EXT
-#define CBS_DARWIN_EXT
+#ifndef CS_MINIMAL
+#define CS_MATH_EXT
+#define CS_FILE_EXT
+#define CS_DARWIN_EXT
 #else
-#define CBS_STATIC
+#define CS_STATIC
 #endif
-#include "./covbasic.hpp"
+#include "./covscript.hpp"
 int main(int args_size,const char* args[])
 {
 	if(args_size>1) {
-		cov_basic::array arg;
+		cs::array arg;
 		for(int i=1; i<args_size; ++i)
 			arg.push_back(std::string(args[i]));
 		system_ext.add_var("args",arg);
 		std::ios::sync_with_stdio(false);
-		cov_basic::reset();
+		cs::reset();
 		try {
-			cov_basic::cov_basic("./.cbs_config");
+			cs::cs("./.cs_config");
 		}
-		catch(const cov_basic::fatal_error& fe) {
+		catch(const cs::fatal_error& fe) {
 		}
-		cov_basic::cov_basic(args[1]);
+		cs::cs(args[1]);
 	}
 	else
-		throw cov_basic::fatal_error("no input file.\nUsage: cbs2.1 <file> <args...>");
+		throw cs::fatal_error("no input file.\nUsage: cs <file> <args...>");
 	return 0;
 }

@@ -5,9 +5,9 @@
 #include "./array_extension.hpp"
 #include "./pair_extension.hpp"
 #include "./hash_map_extension.hpp"
-static cov_basic::extension types_ext;
-namespace types_cbs_ext {
-	using namespace cov_basic;
+static cs::extension types_ext;
+namespace types_cs_ext {
+	using namespace cs;
 	void init()
 	{
 		types_ext.add_var("char",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&char_ext)));

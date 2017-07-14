@@ -4,7 +4,7 @@
 #include <memory>
 #include <utility>
 #include <list>
-namespace cov_basic {
+namespace cs {
 	class token_expr final:public token_base {
 		cov::tree<token_base*> mTree;
 	public:

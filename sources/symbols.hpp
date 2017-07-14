@@ -1,7 +1,7 @@
 #pragma once
 #include "./core.hpp"
 #include <map>
-namespace cov_basic {
+namespace cs {
 	enum class token_types {
 		null,endline,action,signal,id,value,sblist,mblist,lblist,expr,arglist,array
 	};
