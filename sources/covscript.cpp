@@ -32,21 +32,23 @@
 #include "./covscript.hpp"
 int main(int args_size,const char* args[])
 {
+	std::ios::sync_with_stdio(false);
+	cs::reset();
+	bool executed=true;
+	try {
+		cs::cs("./.cs_config");
+	}
+	catch(const cs::fatal_error& fe) {
+		executed=false;
+	}
 	if(args_size>1) {
 		cs::array arg;
 		for(int i=1; i<args_size; ++i)
 			arg.push_back(std::string(args[i]));
 		system_ext.add_var("args",arg);
-		std::ios::sync_with_stdio(false);
-		cs::reset();
-		try {
-			cs::cs("./.cs_config");
-		}
-		catch(const cs::fatal_error& fe) {
-		}
 		cs::cs(args[1]);
 	}
-	else
+	else if(!executed)
 		throw cs::fatal_error("no input file.\nUsage: cs <file> <args...>");
 	return 0;
 }
