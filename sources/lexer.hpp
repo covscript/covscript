@@ -1,6 +1,6 @@
 #pragma once
 #include "./symbols.hpp"
-namespace cov_basic {
+namespace cs {
 	void translate_into_tokens(const std::deque<char>& buff,std::deque<token_base*>& tokens)
 	{
 		if(buff.empty())

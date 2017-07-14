@@ -1,11 +1,11 @@
-#ifndef CBS_FILE_EXT
+#ifndef CS_FILE_EXT
 #include "../extension.hpp"
 #endif
 #include "../arglist.hpp"
 #include <fstream>
-static cov_basic::extension file_ext;
-namespace file_cbs_ext {
-	using namespace cov_basic;
+static cs::extension file_ext;
+namespace file_cs_ext {
+	using namespace cs;
 	using infile=std::shared_ptr<std::ifstream>;
 	using outfile=std::shared_ptr<std::ofstream>;
 	enum class file_method {
@@ -80,10 +80,10 @@ namespace file_cbs_ext {
 		file_ext.add_var("write",cov::any::make_protect<native_interface>(write));
 	}
 }
-#ifndef CBS_FILE_EXT
-cov_basic::extension* cbs_extension()
+#ifndef CS_FILE_EXT
+cs::extension* cs_extension()
 {
-	file_cbs_ext::init();
+	file_cs_ext::init();
 	return &file_ext;
 }
 #endif

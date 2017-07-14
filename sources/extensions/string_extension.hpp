@@ -1,8 +1,8 @@
 #pragma once
 #include "../cni.hpp"
-static cov_basic::extension string_ext;
-namespace string_cbs_ext {
-	using namespace cov_basic;
+static cs::extension string_ext;
+namespace string_cs_ext {
+	using namespace cs;
 	string append(string& str,const cov::any& val)
 	{
 		str.append(val.to_string());

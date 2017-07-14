@@ -93,7 +93,7 @@ function step4(n,k)
 	end
 	return to_integer(score/k)
 end
-system.println("Covariant Basic Performance Benchmark")
+system.println("Covariant Script Performance Benchmark")
 system.println("Step 1:Speed of simple statement execution")
 system.println("Result:",to_string(step1(5)))
 system.println("Step 2:Speed of function recursion")

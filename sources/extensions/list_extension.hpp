@@ -1,8 +1,8 @@
 #pragma once
 #include "../cni.hpp"
-static cov_basic::extension list_ext;
-namespace list_cbs_ext {
-	using namespace cov_basic;
+static cs::extension list_ext;
+namespace list_cs_ext {
+	using namespace cs;
 	void push_front(list& lst,const cov::any& val)
 	{
 		lst.push_front(copy(val));

@@ -1,4 +1,0 @@
-darwin.load()
-darwin.message_box("CovBasic Installer","Thanks for downloading the covbasic.","Next")
-define in=darwin.input_box("CovBasic Installer","Please input the install path:","/usr/bin",false)
-system.println(in)

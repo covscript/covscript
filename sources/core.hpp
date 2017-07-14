@@ -1,5 +1,5 @@
 #pragma once
-#ifndef CBS_STATIC
+#ifndef CS_STATIC
 #include "../include/libdll/dll.hpp"
 #endif
 #include "../include/mozart/static_stack.hpp"
@@ -18,14 +18,14 @@
 #include <cmath>
 #include <deque>
 #include <list>
-namespace cov_basic {
-#ifndef CBS_STATIC
-	const std::string version="2.1.5.5";
+namespace cs {
+#ifndef CS_STATIC
+	const std::string version="1.0.0";
 #else
-#ifndef CBS_MINIMAL
-	const std::string version="2.1.5.5 (Static Build)";
+#ifndef CS_MINIMAL
+	const std::string version="1.0.0 (Static Build)";
 #else
-	const std::string version="2.1.5.5 (Minimal Build)";
+	const std::string version="1.0.0 (Minimal Build)";
 #endif
 #endif
 	static int output_precision=8;
@@ -195,21 +195,21 @@ namespace cov_basic {
 	};
 	class name_space_holder final {
 		name_space* m_ns=nullptr;
-#ifndef CBS_STATIC
+#ifndef CS_STATIC
 		cov::dll m_dll;
 #endif
 	public:
 		name_space_holder()=delete;
 		name_space_holder(name_space* ptr):m_ns(ptr) {}
-#ifndef CBS_STATIC
+#ifndef CS_STATIC
 		name_space_holder(const std::string& path):m_dll(path)
 		{
-			m_ns=reinterpret_cast<name_space*(*)()>(m_dll.get_address("__CBS_EXTENSION__"))();
+			m_ns=reinterpret_cast<name_space*(*)()>(m_dll.get_address("__CS_EXTENSION__"))();
 		}
 #else
 		name_space_holder(const std::string&)
 		{
-			throw internal_error("Can not load extension because covbasic is static version.");
+			throw internal_error("Can not load extension because covscript is static version.");
 		}
 #endif
 		~name_space_holder()=default;
@@ -249,34 +249,34 @@ namespace cov_basic {
 		val.detach();
 		return val;
 	}
-	void cov_basic(const std::string&);
+	void cs(const std::string&);
 }
 namespace cov {
-	template<>void detach<cov_basic::pair>(cov_basic::pair& val)
+	template<>void detach<cs::pair>(cs::pair& val)
 	{
-		cov_basic::copy_no_return(val.first);
-		cov_basic::copy_no_return(val.second);
+		cs::copy_no_return(val.first);
+		cs::copy_no_return(val.second);
 	}
-	template<>void detach<cov_basic::list>(cov_basic::list& val)
-	{
-		for(auto& it:val)
-			cov_basic::copy_no_return(it);
-	}
-	template<>void detach<cov_basic::array>(cov_basic::array& val)
+	template<>void detach<cs::list>(cs::list& val)
 	{
 		for(auto& it:val)
-			cov_basic::copy_no_return(it);
+			cs::copy_no_return(it);
 	}
-	template<>void detach<cov_basic::hash_map>(cov_basic::hash_map& val)
+	template<>void detach<cs::array>(cs::array& val)
 	{
 		for(auto& it:val)
-			cov_basic::copy_no_return(it.second);
+			cs::copy_no_return(it);
 	}
-	template<>std::string to_string<cov_basic::number>(const cov_basic::number& val)
+	template<>void detach<cs::hash_map>(cs::hash_map& val)
+	{
+		for(auto& it:val)
+			cs::copy_no_return(it.second);
+	}
+	template<>std::string to_string<cs::number>(const cs::number& val)
 	{
 		std::stringstream ss;
 		std::string str;
-		ss<<std::setprecision(cov_basic::output_precision)<<val;
+		ss<<std::setprecision(cs::output_precision)<<val;
 		ss>>str;
 		return std::move(str);
 	}

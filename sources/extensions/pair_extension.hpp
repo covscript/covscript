@@ -1,8 +1,8 @@
 #pragma once
 #include "../cni.hpp"
-static cov_basic::extension pair_ext;
-namespace pair_cbs_ext {
-	using namespace cov_basic;
+static cs::extension pair_ext;
+namespace pair_cs_ext {
+	using namespace cs;
 	cov::any first(const pair& p)
 	{
 		return p.first;

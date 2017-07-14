@@ -1,8 +1,8 @@
 #pragma once
 #include "../cni.hpp"
-static cov_basic::extension array_ext;
-namespace array_cbs_ext {
-	using namespace cov_basic;
+static cs::extension array_ext;
+namespace array_cs_ext {
+	using namespace cs;
 	void push_front(array& arr,const cov::any& val)
 	{
 		arr.push_front(copy(val));

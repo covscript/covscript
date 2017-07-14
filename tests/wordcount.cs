@@ -5,7 +5,7 @@ function tolower(str)
     end
     return s
 end
-define in=file.open("./wordcount.cbs",file.read_method)
+define in=file.open("./wordcount.cs",file.read_method)
 if !file.is_open(in)
     runtime.error("File is not exist")
 end

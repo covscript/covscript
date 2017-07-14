@@ -1,12 +1,12 @@
 #pragma once
 #include "./optimize.hpp"
-#define CBS_STACK_SIZE 1024
-namespace cov_basic {
+#define CS_STACK_SIZE 1024
+namespace cs {
 	bool return_fcall=false;
 	bool inside_struct=false;
 	bool break_block=false;
 	bool continue_block=false;
-	cov::static_stack<const function*,CBS_STACK_SIZE> fcall_stack;
+	cov::static_stack<const function*,CS_STACK_SIZE> fcall_stack;
 	cov::any function::call(array& args) const
 	{
 		if(args.size()!=this->mArgs.size())
@@ -448,7 +448,7 @@ namespace cov_basic {
 		});
 		// Import Grammar
 		translator.add_method({new token_action(action_types::import_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::import_,grammar_types::jit_command,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
-				cov_basic(dynamic_cast<token_value*>(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data())->get_value().const_val<string>());
+				cs(dynamic_cast<token_value*>(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data())->get_value().const_val<string>());
 				return nullptr;
 			}
 		});
