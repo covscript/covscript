@@ -1,1 +1,1 @@
-system.println("This message is printed by cs config file.")
+system.println("This message is printed by CScript config file.")

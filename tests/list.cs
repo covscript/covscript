@@ -1,16 +1,16 @@
-var list as list
-list.push_front("Hello")
-list.push_front(0)
-list.front()=2
-for it iterate list
+var lst as list
+lst.push_front("Hello")
+lst.push_front(0)
+lst.front()=2
+for it iterate lst
 	system.println(it)
 end
-list.pop_front()
-list.push_front("Hahaha")
-for it iterate list
+lst.pop_front()
+lst.push_front("Hahaha")
+for it iterate lst
 	system.println(it)
 end
-list.reverse()
-for it iterate list
+lst.reverse()
+for it iterate lst
 	system.println(it)
 end
