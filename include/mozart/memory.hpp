@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 *
-* Version: 17.1.1
+* Version: 17.2.1
 */
 #include "./base.hpp"
 #include "./function.hpp"
@@ -199,6 +199,75 @@ namespace cov {
 			}
 			else
 				mAlloc.deallocate(ptr,1);
+		}
+	};
+	template<typename T,std::size_t pool_size=10240,template<typename>class allocator_t=std::allocator,template<typename,std::size_t>class array_t=std::array>
+	class storage final {
+		struct mem_unit {
+			T* ptr=nullptr;
+			bool raw=true;
+		};
+		allocator_t<T> allocator;
+		array_t<mem_unit,pool_size> pool;
+	public:
+		class pointer final {
+			friend class storage;
+			std::size_t posit;
+			pointer(std::size_t p):posit(p) {}
+		public:
+			pointer()=delete;
+			pointer(const pointer&)=default;
+			~pointer()=default;
+			pointer& operator=(const pointer&)=default;
+		};
+		storage()
+		{
+			for(auto& unit:pool)
+				unit.ptr=allocator.allocate(1);
+		}
+		storage(const storage&)=delete;
+		~storage()
+		{
+			for(auto& unit:pool) {
+				if(!unit.raw)
+					allocator.destroy(unit.ptr);
+				allocator.deallocate(unit.ptr,1);
+			}
+		}
+		template<typename...ArgsT>
+		pointer alloc(ArgsT...args)
+		{
+			for(std::size_t i=0; i<pool_size; ++i) {
+				if(pool[i].raw) {
+					allocator.construct(pool[i].ptr,std::forward<ArgsT>(args)...);
+					pool[i].raw=false;
+					return i;
+				}
+			}
+			throw cov::error("E000M");
+		}
+		void free(const pointer& p)
+		{
+			if(p.posit>=pool_size)
+				throw cov::error("E000N");
+			if(!pool[p.posit].raw) {
+				allocator.destroy(pool[p.posit].ptr);
+				pool[p.posit].raw=true;
+			}
+		}
+		bool usable(const pointer& p)
+		{
+			if(p.posit>=pool_size)
+				throw cov::error("E000N");
+			return !pool[p.posit].raw;
+		}
+		T& get(const pointer& p)
+		{
+			if(p.posit>=pool_size)
+				throw cov::error("E000N");
+			if(pool[p.posit].raw)
+				throw cov::error("E000P");
+			return *pool[p.posit].ptr;
 		}
 	};
 }
