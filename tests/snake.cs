@@ -34,7 +34,7 @@ function gen_food()
 		food[0]=runtime.randint(0,darwin.get_width()-1)
 		food[1]=runtime.randint(0,darwin.get_height()-1)
 		is_fit=false
-		foreach it iterate snake_body
+		for it iterate snake_body
 			if(it[0]==food[0]&&it[1]==food[1])
 				is_fit=true
 			end
@@ -117,7 +117,7 @@ function start()
 				end
 			end
 			if(!god_mode)
-				foreach it iterate snake_body
+				for it iterate snake_body
 					if(it[0]==snake_head[0]&&it[1]==snake_head[1])
 						die()
 						return 0
@@ -144,7 +144,7 @@ function start()
 		if(pause)
 			darwin.draw_string(0,3,"Pause",darwin.pixel(' ',true,false,darwin.white,darwin.yellow))
 		end
-		foreach it iterate snake_body
+		for it iterate snake_body
 			darwin.draw_point(it[0],it[1],body_pix)
 		end
 		darwin.draw_point(snake_head[0],snake_head[1],head_pix)

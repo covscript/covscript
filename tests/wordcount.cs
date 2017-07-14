@@ -16,6 +16,6 @@ while !file.eof(in)
         ++table[str]
     end
 end
-foreach it iterate table
+for it iterate table
     system.println(it.first(),":",it.second())
 end
