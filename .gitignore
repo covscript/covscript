@@ -30,4 +30,9 @@
 
 # Logs
 *.log
-*.cbs_ext
+
+# CScript executable file
+cs
+
+# CScript intermediate file
+*.cs_ext
