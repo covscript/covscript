@@ -1,5 +1,5 @@
-define arr={}
+var arr={}
 arr[10]=10
-foreach it iterate arr
+for it iterate arr
 	system.println(it)
 end

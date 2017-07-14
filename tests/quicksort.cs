@@ -2,9 +2,9 @@ function quicksort(a,m,n)
 	if n<=m
 		return 0
 	end
-	define i=m-1
-	define j=n
-	define v=a[n]
+	var i=m-1
+	var j=n
+	var v=a[n]
 	loop
 		loop
 			++i
@@ -29,11 +29,11 @@ function quicksort(a,m,n)
 	quicksort(a,m,j)
 	quicksort(a,i+1,n)
 end
-define a={}
+var a={}
 for i=0 to 100
 	a.push_back(runtime.randint(0,100))
 end
-define ts=runtime.time()
+var ts=runtime.time()
 quicksort(a,0,a.size()-1)
 system.println("Time spend:",runtime.time()-ts)
 foreach it iterate a

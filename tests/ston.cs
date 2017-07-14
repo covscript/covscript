@@ -33,8 +33,8 @@ function cton(ch)
 	end
 end
 function reverse_str(str)
-	define s as string
-	define i=str.size()-1
+	var s as string
+	var i=str.size()-1
 	while i>=0
 		s.append(str[i])
 		--i
@@ -46,15 +46,15 @@ function ston(str)
 		runtime.error("Receive empty string")
 	end
 	if str[0]=='-'
-		define tmp as string
+		var tmp as string
 		for i=1 to size_of(str)-1
 			tmp.append(str[i])
 		end
 		return -ston(tmp)
 	end
-	define ipart as string
-	define fpart as string
-	define dot_count=0
+	var ipart as string
+	var fpart as string
+	var dot_count=0
 	foreach ch iterate str
 		if ch!='.'
 			if !ch.isdigit()
@@ -71,7 +71,7 @@ function ston(str)
 			end
 		end
 	end
-	define result=0
+	var result=0
 	ipart=reverse_str(ipart)
 	for i=0 to ipart.size()-1
 		result=result+cton(ipart[i])*10^i
@@ -81,6 +81,6 @@ function ston(str)
 	end
 	return result
 end
-define result=ston(system.getline())
+var result=ston(system.getline())
 system.println(result)
 system.println(result*2)

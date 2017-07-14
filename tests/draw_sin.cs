@@ -1,10 +1,10 @@
-define fd=10
+var fd=10
 function main()
     darwin.set_frame_limit(60)
-    constant pix=darwin.pixel('@',true,false,darwin.blue,darwin.white)
+    const var pix=darwin.pixel('@',true,false,darwin.blue,darwin.white)
     darwin.fit_drawable()
     darwin.clear_drawable()
-    define x=0
+    var x=0
     loop
         darwin.fit_drawable()
         darwin.clear_drawable()

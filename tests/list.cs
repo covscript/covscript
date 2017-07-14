@@ -1,4 +1,4 @@
-define list as list
+var list as list
 list.push_front("Hello")
 list.push_front(0)
 list.front()=2

@@ -5,7 +5,7 @@ function test(a)
 		runtime.error("oh")
 	end
 end
-define a as foo
+var a as foo
 system.println(typeid a)
 test(a)
 system.println("ok")

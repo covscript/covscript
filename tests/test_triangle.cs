@@ -1,8 +1,8 @@
 function main()
 	darwin.load()
 	darwin.fit_drawable()
-	define points= {{0,0},{darwin.get_width()-1,0},{0.5*darwin.get_width(),0.5*darwin.get_height()}}
-	define focus=2
+	var points= {{0,0},{darwin.get_width()-1,0},{0.5*darwin.get_width(),0.5*darwin.get_height()}}
+	var focus=2
 	loop
 		if(darwin.is_kb_hit())
 			switch darwin.get_kb_hit()

@@ -1,5 +1,5 @@
 struct foo
-    define a=10
+    var a=10
     function test()
         --this.a
         if(this.a>0)
@@ -7,8 +7,8 @@ struct foo
         end
     end
 end
-define a as foo
-define b=a
+var a as foo
+var b=a
 system.println(current.a.a)
 system.println(current.b.a)
 a.test()

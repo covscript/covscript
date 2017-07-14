@@ -1,8 +1,8 @@
 function step1(n)
-	define score=0
+	var score=0
 	for i=1 to n
-		define ts=runtime.time()
-		define fc=0
+		var ts=runtime.time()
+		var fc=0
 		loop
     		fc++
     	until runtime.time()-ts>=1000
@@ -19,19 +19,19 @@ function step2(n,k)
 			return
 		end
 	end
-	define score=0
+	var score=0
 	for i=1 to k
-		define ts=runtime.time()
+		var ts=runtime.time()
 		recursion(n)
 		score=score+runtime.time()-ts
 	end
 	return to_integer(score/k)
 end
 function step3(n,k)
-	define precision=10^(-n)
+	var precision=10^(-n)
 	function integral(func,begin,end_)
-	    define sum=0
-	    define x=begin
+	    var sum=0
+	    var x=begin
 	    while x<=end_
 	        sum=sum+func(x)*precision
 	        x=x+precision
@@ -41,9 +41,9 @@ function step3(n,k)
 	function f(x)
 	    return math.sqrt(1-x^2)
 	end
-	define score=0
+	var score=0
 	for i=1 to k
-		define ts=runtime.time()
+		var ts=runtime.time()
 		integral(f,0,1)
 		score=score+runtime.time()-ts
 	end
@@ -53,9 +53,9 @@ function quicksort(a,m,n)
 	if n<=m
 		return 0
 	end
-	define i=m-1
-	define j=n
-	define v=a[n]
+	var i=m-1
+	var j=n
+	var v=a[n]
 	loop
 		loop
 			++i
@@ -81,13 +81,13 @@ function quicksort(a,m,n)
 	quicksort(a,i+1,n)
 end
 function step4(n,k)
-	define score=0
+	var score=0
 	for i=1 to k
-		define a={}
+		var a={}
 		for i=0 to n
 			a.push_back(runtime.randint(0,n))
 		end
-		define ts=runtime.time()
+		var ts=runtime.time()
 		quicksort(a,0,a.size()-1)
 		score=score+runtime.time()-ts
 	end

@@ -1,4 +1,4 @@
-define str="abcdHelloefgh"
+var str="abcdHelloefgh"
 system.println(str.append(3.14))
 system.println(str.cut(4))
 system.println(str.substr(str.find("Hello",0),5))

@@ -1,3 +1,3 @@
 import "./constant.cs"
-constant s=str+"!!!"
+const var s=str+"!!!"
 system.println(s)

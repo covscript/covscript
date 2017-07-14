@@ -1,5 +1,5 @@
-define ts=runtime.time()
-define fc=0
+var ts=runtime.time()
+var fc=0
 loop
     if(runtime.time()-ts>=1000)
         system.println(fc)
