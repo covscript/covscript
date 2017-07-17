@@ -29,25 +29,26 @@ function run()
 end
 
 function main()
-	darwin.load()
+	darwin.load("./darwin.module")
+	var pic=darwin.get_drawable()
 	loop
 		darwin.fit_drawable()
-		darwin.clear_drawable()
-		darwin.draw_string(0,0,"Simple Sandbox",darwin.pixel(' ', true,false, darwin.black, darwin.white))
+		darwin.clear_drawable(pic)
+		darwin.draw_string(pic,0,0,"Simple Sandbox",darwin.pixel(' ',darwin.black,darwin.white))
 		if(posit_x<0)
 			speed_x=math.abs(speed_x)
 		end
 		if(posit_y<0)
 			speed_y=math.abs(speed_y)
 		end
-		if(posit_x>darwin.get_width()-1)
+		if(posit_x>darwin.get_width(pic)-1)
 			speed_x=-math.abs(speed_x)
 		end
-		if(posit_y>darwin.get_height()-1)
+		if(posit_y>darwin.get_height(pic)-1)
 			speed_y=-math.abs(speed_y)
 		end
 		run()
-		darwin.draw_point(posit_x,posit_y,darwin.pixel('@', true,false, darwin.white, darwin.black))
+		darwin.draw_pixel(pic,posit_x,posit_y,darwin.pixel('@',darwin.white,darwin.black))
 		darwin.update_drawable()
 	end
 end
