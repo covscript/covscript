@@ -5,6 +5,7 @@
 #include <memory>
 #include <typeinfo>
 #include <typeindex>
+#include <algorithm>
 #include "./debugger.hpp"
 namespace darwin {
 	enum class status {

@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <forward_list>
 #include <functional>
+#include <algorithm>
 #include <sstream>
 #include <iomanip>
 #include <string>

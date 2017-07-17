@@ -18,9 +18,9 @@
 * Copyright (C) 2017 Michael Lee(李登淳)
 * Email: China-LDC@outlook.com
 * Github: https://github.com/mikecovlee
-* Website: http://ldc.atd3.cn
+* Website: http://covariant.cn/darwin/
 *
-* Library Version: 17.2.0
+* Library Version: 17.7.1
 *
 * Marco List:
 * Library Version: __Darwin
@@ -37,7 +37,7 @@
 #error Darwin UCGL need C++11 or later standard.
 #endif
 
-#define __Darwin 170200L
+#define __Darwin 170701L
 
 #include "./timer.hpp"
 #include "./core.hpp"
