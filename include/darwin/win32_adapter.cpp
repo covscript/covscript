@@ -75,10 +75,10 @@ namespace darwin {
 		virtual results update_drawable() noexcept override
 		{
 			conio::gotoxy(0,0);
-			int sw(conio::terminal_width()),sh(conio::terminal_height());
+			std::size_t sw(std::min<std::size_t>(mDrawable.get_width(),conio::terminal_width())),sh(std::min<std::size_t>(mDrawable.get_height(),conio::terminal_height()));
 			conio::console buf(sw,sh);
-			for(std::size_t y=0; y<mDrawable.get_height()&&y<sh; ++y) {
-				for(std::size_t x=0; x<mDrawable.get_width()&&x<sw; ++x) {
+			for(std::size_t y=0; y<sh; ++y) {
+				for(std::size_t x=0; x<sw; ++x) {
 					const pixel& pix=mDrawable.get_pixel(x,y);
 					int fcolor,bcolor;
 					switch(pix.get_front_color()) {
