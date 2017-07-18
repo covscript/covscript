@@ -1,1 +1,1 @@
-define test_configure= {"path":"pic.jpg","width":1024,"height":768,"format":"rgba"}
+var test_configure= {"path":"pic.jpg","width":1024,"height":768,"format":"rgba"}

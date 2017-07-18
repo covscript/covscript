@@ -8,7 +8,7 @@ namespace runtime_cs_ext {
 	{
 		std::cout<<"Covariant Script Programming Language Interpreter Version "<<cs::version<<"\n"
 		         "Copyright (C) 2017 Michael Lee.All rights reserved.\nThis program comes with ABSOLUTELY NO WARRANTY; for details see <http://www.gnu.org/licenses/>.\n"
-		         "This is free software, and you are welcome to redistribute it under certain conditions.\nPlease visit <http://covbasic.org/> for more information."<<std::endl;
+		         "This is free software, and you are welcome to redistribute it under certain conditions.\nPlease visit <http://covscript.org/> for more information."<<std::endl;
 	}
 	number time()
 	{
