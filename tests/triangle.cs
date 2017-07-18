@@ -1,7 +1,8 @@
 function main()
-	darwin.load()
+	darwin.load("./darwin.module")
+	var pic=darwin.get_drawable()
 	darwin.fit_drawable()
-	var points= {{0,0},{darwin.get_width()-1,0},{0.5*darwin.get_width(),0.5*darwin.get_height()}}
+	var points={{0,0},{darwin.get_width(pic)-1,0},{0.5*darwin.get_width(pic),0.5*darwin.get_height(pic)}}
 	var focus=2
 	loop
 		if(darwin.is_kb_hit())
@@ -30,9 +31,9 @@ function main()
 			end
 		end
 		darwin.fit_drawable()
-		darwin.clear_drawable()
-		darwin.fill_triangle(points[0][0],points[0][1],points[1][0],points[1][1],points[2][0],points[2][1],darwin.pixel(' ',true,false,darwin.black,darwin.white))
-		darwin.draw_point(points[focus][0],points[focus][1],darwin.pixel('#',true,false,darwin.black,darwin.white))
+		darwin.clear_drawable(pic)
+		darwin.fill_triangle(pic,points[0][0],points[0][1],points[1][0],points[1][1],points[2][0],points[2][1],darwin.pixel(' ',darwin.black,darwin.white))
+		darwin.draw_pixel(pic,points[focus][0],points[focus][1],darwin.pixel('#',darwin.black,darwin.white))
 		darwin.update_drawable()
 	end
 end
