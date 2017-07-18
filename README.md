@@ -21,7 +21,9 @@ After downloading the source code, if you have installed the G++ compiler on you
 There is no test, it should be the same with Linux.
 ## Run ##
 `cs <file> <args...>`
-## Test ##
-The `tests` folder contains several test programs written by CScript.
+## Examples ##
+The `examples` folder contains several example programs written by CovScript.
+## Tests ##
+The `tests` folder contains several test programs written by CovScript.
 ## Copyright ##
-**The author of the Covariant Script programming language is Michael Lee(mikecovlee@163.com).**
+**The author of the Covariant Script Programming Language is Michael Lee(mikecovlee@163.com).**
