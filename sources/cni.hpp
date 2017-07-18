@@ -151,6 +151,7 @@ namespace cs {
 		cni_base* mCni=nullptr;
 	public:
 		cni()=delete;
+		cni(const cni& c):mCni(c.mCni->clone()) {}
 		template<typename T>cni(T&& val):mCni(construct_helper<typename cni_modify<typename cov::remove_reference<T>::type>::type>::construct(std::forward<T>(val))) {}
 		~cni()
 		{
