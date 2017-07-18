@@ -1,4 +1,4 @@
-constant my=runtime.load_extension("./my.ext")
-constant a=10
-constant b=my.test(a)
+const var my=runtime.load_extension("./my.ext")
+const var a=10
+const var b=my.test(a)
 system.println(a,b)
