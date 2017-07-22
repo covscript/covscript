@@ -1,7 +1,7 @@
 #ifndef CS_FILE_EXT
 #include "../extension.hpp"
 #endif
-#include "../arglist.hpp"
+#include "../cni.hpp"
 #include <fstream>
 static cs::extension file_ext;
 namespace file_cs_ext {

@@ -1,10 +1,10 @@
 #define DARWIN_FORCE_BUILTIN
 #define DARWIN_IGNORE_WARNING
-#include "../../include/darwin/darwin.hpp"
-#include "../../include/mozart/switcher.hpp"
 #ifndef CS_DARWIN_EXT
 #include "../extension.hpp"
 #endif
+#include "../../include/darwin/darwin.hpp"
+#include "../cni.hpp"
 static cs::extension darwin_ext;
 namespace darwin_cs_ext {
 	using namespace cs;
