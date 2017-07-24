@@ -1,5 +1,5 @@
 #define DARWIN_FORCE_BUILTIN
-#define DARWIN_IGNORE_WARNING
+#define DARWIN_DISABLE_LOG
 #ifndef CS_DARWIN_EXT
 #include "../extension.hpp"
 #endif

@@ -19,9 +19,8 @@
 * Github: https://github.com/mikecovlee
 * Website: http://covariant.cn/cs
 *
-* Version: 1.0.0
+* Version: 1.0.1
 */
-#define DARWIN_DISABLE_LOG
 #ifndef CS_MINIMAL
 #define CS_MATH_EXT
 #define CS_FILE_EXT
@@ -36,7 +35,7 @@ int main(int args_size,const char* args[])
 	cs::reset();
 	bool executed=true;
 	try {
-		cs::cs("./.cs_config");
+		cs::cs("./init.cs");
 	}
 	catch(const cs::fatal_error& fe) {
 		executed=false;

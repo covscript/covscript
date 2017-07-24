@@ -80,7 +80,7 @@ namespace cs {
 	{
 		parse_expr(mTree.root());
 	}
-	void statement_define::run()
+	void statement_var::run()
 	{
 		define_var=true;
 		cov::any var=parse_expr(mTree.root());
@@ -452,17 +452,16 @@ namespace cs {
 				return nullptr;
 			}
 		});
-		// Define Grammar
-		translator.add_method({new token_action(action_types::define_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::define_,grammar_types::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
-				return new statement_define(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),raw.front().back());
+		// Var Grammar
+		translator.add_method({new token_action(action_types::var_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::var_,grammar_types::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				return new statement_var(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),raw.front().back());
 			}
 		});
-		translator.add_method({new token_action(action_types::define_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::as_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::define_,grammar_types::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
-				return new statement_define(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),raw.front().at(3),raw.front().back());
+		translator.add_method({new token_action(action_types::var_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::as_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::var_,grammar_types::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				return new statement_var(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),raw.front().at(3),raw.front().back());
 			}
 		});
-		// Constant Grammar
-		translator.add_method({new token_action(action_types::constant_),new token_action(action_types::define_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::constant_,grammar_types::jit_command,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+		translator.add_method({new token_action(action_types::constant_),new token_action(action_types::var_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::constant_,grammar_types::jit_command,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				cov::tree<token_base*>& tree=dynamic_cast<token_expr*>(raw.front().at(2))->get_tree();
 				constant_var=true;
 				optimize_expression(tree);
