@@ -14,7 +14,6 @@
 #include "../include/mozart/traits.hpp"
 #include "./core.hpp"
 #include "./arglist.hpp"
-#include <functional>
 namespace cs {
 	template<typename T>struct convert {
 		static const T& get_val(cov::any& val)
@@ -46,13 +45,13 @@ namespace cs {
 			return val;
 		}
 	};
-	template<typename T>class cni_helper;
-	template<>class cni_helper<void(*)()> {
-		std::function<void()> mFunc;
+	template<typename T,typename X>class cni_helper;
+	template<typename X>class cni_helper<void(*)(),X> {
+		X mFunc;
 	public:
 		cni_helper()=delete;
 		cni_helper(const cni_helper&)=default;
-		cni_helper(const std::function<void()>& func):mFunc(func) {}
+		cni_helper(const X& func):mFunc(func) {}
 		cov::any call(array& args) const
 		{
 			if(!args.empty())
@@ -61,12 +60,12 @@ namespace cs {
 			return cov::any::make<number>(0);
 		}
 	};
-	template<typename RetT>class cni_helper<RetT(*)()> {
-		std::function<RetT()> mFunc;
+	template<typename RetT,typename X>class cni_helper<RetT(*)(),X> {
+		X mFunc;
 	public:
 		cni_helper()=delete;
 		cni_helper(const cni_helper&)=default;
-		cni_helper(const std::function<RetT()>& func):mFunc(func) {}
+		cni_helper(const X& func):mFunc(func) {}
 		cov::any call(array& args) const
 		{
 			if(!args.empty())
@@ -74,10 +73,10 @@ namespace cs {
 			return std::move(mFunc());
 		}
 	};
-	template<typename...ArgsT>
-	class cni_helper<void(*)(ArgsT...)> {
+	template<typename...ArgsT,typename X>
+	class cni_helper<void(*)(ArgsT...),X> {
 		using args_t=typename cov::type_list::make<ArgsT...>::result;
-		std::function<void(ArgsT...)> mFunc;
+		X mFunc;
 		template<int...S>void _call(array& args,const cov::sequence<S...>&) const
 		{
 			mFunc(convert<ArgsT>::get_val(args.at(S))...);
@@ -85,7 +84,7 @@ namespace cs {
 	public:
 		cni_helper()=delete;
 		cni_helper(const cni_helper&)=default;
-		cni_helper(const std::function<void(ArgsT...)>& func):mFunc(func) {}
+		cni_helper(const X& func):mFunc(func) {}
 		cov::any call(array& args) const
 		{
 			arglist::check<ArgsT...>(args);
@@ -93,10 +92,10 @@ namespace cs {
 			return cov::any::make<number>(0);
 		}
 	};
-	template<typename RetT,typename...ArgsT>
-	class cni_helper<RetT(*)(ArgsT...)> {
+	template<typename RetT,typename...ArgsT,typename X>
+	class cni_helper<RetT(*)(ArgsT...),X> {
 		using args_t=typename cov::type_list::make<ArgsT...>::result;
-		std::function<RetT(ArgsT...)> mFunc;
+		X mFunc;
 		template<int...S>RetT _call(array& args,const cov::sequence<S...>&) const
 		{
 			return std::move(mFunc(convert<ArgsT>::get_val(args.at(S))...));
@@ -104,7 +103,7 @@ namespace cs {
 	public:
 		cni_helper()=delete;
 		cni_helper(const cni_helper&)=default;
-		cni_helper(const std::function<RetT(ArgsT...)>& func):mFunc(func) {}
+		cni_helper(const X& func):mFunc(func) {}
 		cov::any call(array& args) const
 		{
 			arglist::check<ArgsT...>(args);
@@ -127,7 +126,7 @@ namespace cs {
 			virtual cov::any call(array&) const=0;
 		};
 		template<typename T>class cni_holder final:public cni_base {
-			cni_helper<typename cov::function_parser<T>::type::common_type> mCni;
+			cni_helper<typename cov::function_parser<T>::type::common_type,T> mCni;
 		public:
 			cni_holder()=delete;
 			cni_holder(const cni_holder&)=default;
