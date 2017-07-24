@@ -426,7 +426,7 @@ namespace cs {
 		case token_types::signal: {
 			token_signal* ps=dynamic_cast<token_signal*>(token);
 			if(define_var&&ps->get_signal()!=signal_types::asi_)
-				throw syntax_error("Use of other signal in define.");
+				throw syntax_error("Use of other signal in var definition.");
 			switch(ps->get_signal()) {
 			case signal_types::add_:
 				return parse_add(parse_expr(it.left()),parse_expr(it.right()));

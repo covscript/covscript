@@ -282,7 +282,7 @@ namespace cs {
 	}
 	void translate_into_statements(std::deque<token_base*>& tokens,std::deque<statement_base*>& statements);
 	enum class statement_types {
-		null,expression_,import_,block_,define_,constant_,if_,else_,switch_,case_,default_,while_,until_,loop_,for_,foreach_,break_,continue_,struct_,function_,return_,end_
+		null,expression_,import_,block_,var_,constant_,if_,else_,switch_,case_,default_,while_,until_,loop_,for_,foreach_,break_,continue_,struct_,function_,return_,end_
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;
@@ -328,16 +328,16 @@ namespace cs {
 		}
 		virtual void run() override;
 	};
-	class statement_define final:public statement_base {
+	class statement_var final:public statement_base {
 		cov::tree<token_base*> mTree;
 		token_expr* mType=nullptr;
 	public:
-		statement_define()=delete;
-		statement_define(const cov::tree<token_base*>& tree,token_base* ptr):statement_base(ptr),mTree(tree) {}
-		statement_define(const cov::tree<token_base*>& tree,token_base* typ,token_base* ptr):statement_base(ptr),mTree(tree),mType(dynamic_cast<token_expr*>(typ)) {}
+		statement_var()=delete;
+		statement_var(const cov::tree<token_base*>& tree,token_base* ptr):statement_base(ptr),mTree(tree) {}
+		statement_var(const cov::tree<token_base*>& tree,token_base* typ,token_base* ptr):statement_base(ptr),mTree(tree),mType(dynamic_cast<token_expr*>(typ)) {}
 		virtual statement_types get_type() const noexcept override
 		{
-			return statement_types::define_;
+			return statement_types::var_;
 		}
 		virtual void run() override;
 	};
