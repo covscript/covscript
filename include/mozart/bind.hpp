@@ -29,9 +29,9 @@ namespace cov {
 	template<int...S>struct sequence {};
 	template<int N,int...S>struct make_sequence:make_sequence<N-1,N-1,S...> {};
 	template<int...S>struct make_sequence<0,S...> {
-		static sequence<S...> result;
+		static constexpr sequence<S...> result=sequence<S...>();
 	};
-	template<int...S>sequence<S...> make_sequence<0,S...>::result;
+	template<int...S>constexpr sequence<S...> make_sequence<0,S...>::result;
 	template<int N>struct placeholder {};
 	template<typename T,typename...Args>
 	T& select(T& dat,cov::tuple<Args...>& t)

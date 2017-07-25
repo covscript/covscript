@@ -16,31 +16,31 @@
 #include "./arglist.hpp"
 namespace cs {
 	template<typename T>struct convert {
-		static const T& get_val(cov::any& val)
+		static inline const T& get_val(cov::any& val)
 		{
 			return val.const_val<T>();
 		}
 	};
 	template<typename T>struct convert<const T&> {
-		static const T& get_val(cov::any& val)
+		static inline const T& get_val(cov::any& val)
 		{
 			return val.const_val<T>();
 		}
 	};
 	template<typename T>struct convert<T&> {
-		static T& get_val(cov::any& val)
+		static inline T& get_val(cov::any& val)
 		{
 			return val.val<T>(true);
 		}
 	};
 	template<>struct convert<const cov::any&> {
-		static const cov::any& get_val(const cov::any& val)
+		static inline const cov::any& get_val(const cov::any& val)
 		{
 			return val;
 		}
 	};
 	template<>struct convert<cov::any&> {
-		static cov::any& get_val(cov::any& val)
+		static inline cov::any& get_val(cov::any& val)
 		{
 			return val;
 		}
