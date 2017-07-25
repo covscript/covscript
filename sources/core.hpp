@@ -21,12 +21,12 @@
 #include <list>
 namespace cs {
 #ifndef CS_STATIC
-	const std::string version="1.0.0";
+	const std::string version="1.0.1";
 #else
 #ifndef CS_MINIMAL
-	const std::string version="1.0.0 (Static Build)";
+	const std::string version="1.0.1 (Static Build)";
 #else
-	const std::string version="1.0.0 (Minimal Build)";
+	const std::string version="1.0.1 (Minimal Build)";
 #endif
 #endif
 	static int output_precision=8;
