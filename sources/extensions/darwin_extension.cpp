@@ -93,7 +93,7 @@ namespace darwin_cs_ext {
 	{
 		pic->fill_triangle(x1,y1,x2,y2,x3,y3,pix);
 	}
-	cov::any draw_string(const drawable_t& pic,number x,number y,const string& str,const darwin::pixel& pix)
+	void draw_string(const drawable_t& pic,number x,number y,const string& str,const darwin::pixel& pix)
 	{
 		pic->draw_string(x,y,str,pix);
 	}
