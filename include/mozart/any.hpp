@@ -26,7 +26,7 @@
 #include <functional>
 #include <ostream>
 
-#define COV_ANY_POOL_SIZE 96
+#define COV_ANY_POOL_SIZE 10
 namespace cov {
 	template<typename _Tp> class compare_helper {
 		template<typename T,typename X=bool>struct matcher;
