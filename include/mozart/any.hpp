@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 *
-* Version: 17.6.3
+* Version: 17.7.1
 */
 #include "./base.hpp"
 #include "./memory.hpp"
@@ -71,6 +71,23 @@ namespace cov {
 	public:
 		static constexpr bool value = match<_Tp>(nullptr);
 	};
+	template<typename,bool> struct to_integer_if;
+	template<typename T>struct to_integer_if<T,true> {
+		static long to_integer(const T& val)
+		{
+			return static_cast<long>(val);
+		}
+	};
+	template<typename T>struct to_integer_if<T,false> {
+		static long to_integer(const T&)
+		{
+			throw cov::error("E000M");
+		}
+	};
+	template<typename T>long to_integer(const T& val)
+	{
+		return to_integer_if<T,cov::castable<T,long>::value>::to_integer(val);
+	}
 	template<typename,bool> struct to_string_if;
 	template<typename T>struct to_string_if<T,true> {
 		static std::string to_string(const T& val)
@@ -131,6 +148,7 @@ namespace cov {
 			virtual const std::type_info& type() const = 0;
 			virtual baseHolder* duplicate() = 0;
 			virtual bool compare(const baseHolder *) const = 0;
+			virtual long to_integer() const = 0;
 			virtual std::string to_string() const = 0;
 			virtual std::size_t hash() const = 0;
 			virtual void detach() = 0;
@@ -159,6 +177,10 @@ namespace cov {
 					return ptr!=nullptr?cov::compare(mDat,ptr->data()):false;
 				}
 				return false;
+			}
+			virtual long to_integer() const override
+			{
+				return cov::to_integer(mDat);
 			}
 			virtual std::string to_string() const override
 			{
@@ -298,6 +320,12 @@ namespace cov {
 		const std::type_info& type() const
 		{
 			return this->mDat!=nullptr?this->mDat->data->type():typeid(void);
+		}
+		long to_integer() const
+		{
+			if(this->mDat==nullptr)
+				return 0;
+			return this->mDat->data->to_integer();
 		}
 		std::string to_string() const
 		{

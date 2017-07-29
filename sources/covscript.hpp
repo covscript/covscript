@@ -17,9 +17,9 @@
 #define add_function_const(name) cs::runtime->storage.add_var_global(#name,cov::any::make_protect<cs::native_interface>(cs::cni(name),true));
 namespace cs {
 // Internal Functions
-	number to_integer(number n)
+	number to_integer(const cov::any& val)
 	{
-		return long(n);
+		return val.to_integer();
 	}
 	string to_string(const cov::any& val)
 	{
