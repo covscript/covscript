@@ -695,6 +695,9 @@ namespace cs {
 				std::string name=dynamic_cast<token_id*>(t.root().data())->get_id();
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
+				for(auto& ptr:body)
+					if(ptr->get_type()!=statement_types::var_&&ptr->get_type()!=statement_types::function_)
+						throw syntax_error("Wrong grammar for struct definition.");
 				return new statement_struct(name,body,raw.front().back());
 			}
 		});
