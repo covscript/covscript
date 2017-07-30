@@ -31,8 +31,8 @@
 # Logs
 *.log
 
-# CScript executable file
+# CovScript executable file
 cs
 
-# CScript intermediate file
+# CovScript intermediate file
 *.cs_ext
