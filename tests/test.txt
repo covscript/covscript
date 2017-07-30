@@ -1,3 +1,4 @@
+#Clone of test_file.cs
 var infs=file.open("./file.csc",file.read_method)
 if(!file.is_open(infs))
   runtime.error("file is not exsist.")
@@ -9,3 +10,4 @@ while(!file.eof(infs))
   system.println(str)
   file.write(outfs,str,"\n")
 end
+

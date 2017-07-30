@@ -5,7 +5,7 @@ function tolower(str)
     end
     return s
 end
-var in=file.open("./wordcount.cs",file.read_method)
+var in=file.open("./wordcount.csc",file.read_method)
 if !file.is_open(in)
     runtime.error("File is not exist")
 end
