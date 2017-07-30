@@ -7,9 +7,10 @@
 2. Dynamic type
 3. Compile-time optimization
 4. Reference count garbage collector
+5. C/C++ Native Interface
 
 ## Use the Covariant Script programming language ##
-Please visit [Covariant Script Wiki](https://github.com/mikecovlee/covscript/wiki)
+The `docs` folder contains several documents for the CovScript programming language.
 ## Download and install ##
 ### Microsoft Windows ###
 Please download the precompiled executable on the [Latest Release](https://github.com/mikecovlee/covscript/releases/latest). You can also use MinGW or the appropriate tools to compile the source code directly. If you already have a G++ compiler installed in your system, you can execute `make.bat` directly. You need to make sure that the compiler supports the C++11 standard.  
