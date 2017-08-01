@@ -69,7 +69,7 @@ namespace cs {
 						if(map.count(p.first)==0)
 							map.emplace(p.first,p.second);
 						else
-							map.at(p.first)=p.second;
+							map[p.first]=p.second;
 					}
 					t=new token_value(cov::any::make<hash_map>(std::move(map)));
 				}

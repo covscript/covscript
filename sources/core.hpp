@@ -128,7 +128,7 @@ namespace cs {
 		cov::any& get_var(const std::string& name) const
 		{
 			if(m_data->count(name)>0)
-				return m_data->at(name);
+				return (*m_data)[name];
 			else
 				throw syntax_error("Struct \""+m_name+"\" have no member called \""+name+"\".");
 		}
@@ -182,14 +182,14 @@ namespace cs {
 		void add_var(const std::string& name,const cov::any& var)
 		{
 			if(m_data.count(name)>0)
-				m_data.at(name)=var;
+				m_data[name]=var;
 			else
 				m_data.emplace(name,var);
 		}
 		cov::any& get_var(const std::string& name)
 		{
 			if(m_data.count(name)>0)
-				return m_data.at(name);
+				return m_data[name];
 			else
 				throw syntax_error("Use of undefined variable \""+name+"\" in extension.");
 		}
