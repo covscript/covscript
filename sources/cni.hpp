@@ -80,7 +80,7 @@ namespace cs {
 		std::function<void(ArgsT...)> mFunc;
 		template<int...S>void _call(array& args,const cov::sequence<S...>&) const
 		{
-			mFunc(convert<ArgsT>::get_val(args.at(S))...);
+			mFunc(convert<ArgsT>::get_val(args[S])...);
 		}
 	public:
 		cni_helper()=delete;
@@ -99,7 +99,7 @@ namespace cs {
 		std::function<RetT(ArgsT...)> mFunc;
 		template<int...S>RetT _call(array& args,const cov::sequence<S...>&) const
 		{
-			return std::move(mFunc(convert<ArgsT>::get_val(args.at(S))...));
+			return std::move(mFunc(convert<ArgsT>::get_val(args[S])...));
 		}
 	public:
 		cni_helper()=delete;

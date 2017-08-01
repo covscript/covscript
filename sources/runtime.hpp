@@ -69,25 +69,25 @@ namespace cs {
 		{
 			for(auto& domain:m_data)
 				if(domain->count(name)>0)
-					return domain->at(name);
+					return (*domain)[name];
 			throw syntax_error("Use of undefined variable \""+name+"\".");
 		}
 		cov::any& get_var_current(const string& name)
 		{
 			if(m_data.front()->count(name)>0)
-				return m_data.front()->at(name);
+				return (*m_data.front())[name];
 			throw syntax_error("Use of undefined variable \""+name+"\" in current domain.");
 		}
 		cov::any& get_var_global(const string& name)
 		{
 			if(m_data.back()->count(name)>0)
-				return m_data.back()->at(name);
+				return (*m_data.back())[name];
 			throw syntax_error("Use of undefined variable \""+name+"\" in global domain.");
 		}
 		cov::any& get_var_this(const string& name)
 		{
 			if(m_this.front()->count(name)>0)
-				return m_this.front()->at(name);
+				return (*m_this.front())[name];
 			throw syntax_error("Use of undefined variable \""+name+"\" in current object.");
 		}
 		void add_var(const string& name,const cov::any& var)
@@ -410,7 +410,7 @@ namespace cs {
 					if(map.count(p.first)==0)
 						map.emplace(p.first,p.second);
 					else
-						map.at(p.first)=p.second;
+						map[p.first]=p.second;
 				}
 				return cov::any::make<hash_map>(std::move(map));
 			}

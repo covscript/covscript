@@ -18,7 +18,7 @@ namespace cs {
 		runtime->storage.add_domain();
 		fcall_stack.push(this);
 		for(std::size_t i=0; i<args.size(); ++i)
-			runtime->storage.add_var(this->mArgs.at(i),args.at(i));
+			runtime->storage.add_var(this->mArgs[i],args[i]);
 		for(auto& ptr:this->mBody) {
 			try {
 				ptr->run();
@@ -188,7 +188,7 @@ namespace cs {
 	{
 		cov::any key=parse_expr(mTree.root());
 		if(mCases.count(key)>0)
-			mCases.at(key)->run();
+			mCases[key]->run();
 		else if(mDefault!=nullptr)
 			mDefault->run();
 	}
