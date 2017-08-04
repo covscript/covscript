@@ -47,10 +47,7 @@ int main(int args_size,const char* args[])
 		system_ext.add_var("args",arg);
 		cs::cs(args[1]);
 	}
-	else if(!executed) {
-		// throw cs::fatal_error("no input file.\nUsage: cs <file> <args...>");
-        std::cerr << "cs: no input files." << std::endl;
-        std::cerr << "Usage: cs <file> []<args...>]" << std::endl;
-    }
+	else if(!executed)
+		throw cs::fatal_error("no input file.\nUsage: cs <file> <args...>");
 	return 0;
 }
