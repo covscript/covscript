@@ -19,7 +19,7 @@ Please download the precompiled executable on the [Latest Release](https://githu
 After downloading the source code, if you have installed the G++ compiler on your system, you can type `sh./make.sh` directly in the terminal. You need to make sure that the compiler supports the C++11 standard.  
 **Attention! Some distributions of the G++ version are too old to support the C++11 standard, please download the latest version of the G++ compiler.**
 ### Mac OS ###
-There is no test, it should be the same with Linux.
+Building Covariant Script is the same as Linux. And now Covariant Script has been tested on macOS Sierra 10.12.5.
 ## Run ##
 `cs <file> <args...>`
 ## Examples ##
