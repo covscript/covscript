@@ -49,8 +49,8 @@ int main(int args_size,const char* args[])
 	}
 	else if(!executed) {
 		// throw cs::fatal_error("no input file.\nUsage: cs <file> <args...>");
-        std::cout << "cs: no input files." << std::endl;
-        std::cout << "Usage: cs <file> []<args...>]" << std::endl;
+        std::cerr << "cs: no input files." << std::endl;
+        std::cerr << "Usage: cs <file> []<args...>]" << std::endl;
     }
 	return 0;
 }
