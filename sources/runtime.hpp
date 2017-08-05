@@ -116,31 +116,8 @@ namespace cs {
 	struct runtime_type final {
 		domain_manager storage;
 		domain_manager constant_storage;
-		extension_t char_ext;
-		extension_t string_ext;
-		extension_t list_ext;
-		extension_t array_ext;
-		extension_t pair_ext;
-		extension_t hash_map_ext;
 	};
 	std::unique_ptr<runtime_type> runtime=nullptr;
-	var get_type_ext(const var& a,const string& name)
-	{
-		if(a.type()==typeid(char))
-			return cs::any::make<callable>(object_method(a,runtime->char_ext->get_var(name)),true);
-		else if(a.type()==typeid(string))
-			return cs::any::make<callable>(object_method(a,runtime->string_ext->get_var(name)),true);
-		else if(a.type()==typeid(list))
-			return cs::any::make<callable>(object_method(a,runtime->list_ext->get_var(name)),true);
-		else if(a.type()==typeid(array))
-			return cs::any::make<callable>(object_method(a,runtime->array_ext->get_var(name)),true);
-		else if(a.type()==typeid(pair))
-			return cs::any::make<callable>(object_method(a,runtime->pair_ext->get_var(name)),true);
-		else if(a.type()==typeid(hash_map))
-			return cs::any::make<callable>(object_method(a,runtime->hash_map_ext->get_var(name)),true);
-		else
-			throw syntax_error("Unsupported type.");
-	}
 	cs::any parse_add(const cs::any& a,const cs::any& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
@@ -214,7 +191,7 @@ namespace cs {
 		else if(a.type()==typeid(structure))
 			return a.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
 		else
-			return get_type_ext(a,dynamic_cast<token_id*>(b)->get_id());
+			return cs::any::make<callable>(object_method(a,a.get_ext()->get_var(dynamic_cast<token_id*>(b)->get_id())),true);
 	}
 	cs::any parse_typeid(token_base* a,const cs::any& b)
 	{
@@ -225,7 +202,7 @@ namespace cs {
 		else if(b.type()==typeid(structure))
 			return b.const_val<structure>().get_hash();
 		else
-			return cov::hash<std::string>(b.type().name());
+			return cs_any::hash<std::string>(b.type().name());
 	}
 	cs::any parse_und(const cs::any& a,const cs::any& b)
 	{

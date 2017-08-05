@@ -34,12 +34,12 @@ namespace runtime_cs_ext {
 	{
 		return std::make_shared<extension_holder>(path);
 	}
-	std::size_t hash(const cov::any& val)
+	std::size_t hash(const cs::any& val)
 	{
 		return val.hash();
 	}
 	using expression_t=cov::tree<token_base*>;
-	cov::any build(const string& expr)
+	cs::any build(const string& expr)
 	{
 		std::deque<char> buff;
 		std::deque<token_base*> tokens;
@@ -50,23 +50,23 @@ namespace runtime_cs_ext {
 		process_brackets(tokens);
 		kill_brackets(tokens);
 		gen_tree(tree,tokens);
-		return cov::any::make<expression_t>(tree);
+		return cs::any::make<expression_t>(tree);
 	}
-	cov::any solve(expression_t& tree)
+	cs::any solve(expression_t& tree)
 	{
 		return parse_expr(tree.root());
 	}
 	void init()
 	{
-		runtime_ext.add_var("info",cov::any::make_protect<native_interface>(cni(info)));
-		runtime_ext.add_var("time",cov::any::make_protect<native_interface>(cni(time)));
-		runtime_ext.add_var("delay",cov::any::make_protect<native_interface>(cni(delay)));
-		runtime_ext.add_var("rand",cov::any::make_protect<native_interface>(cni(rand)));
-		runtime_ext.add_var("randint",cov::any::make_protect<native_interface>(cni(randint)));
-		runtime_ext.add_var("error",cov::any::make_protect<native_interface>(cni(error)));
-		runtime_ext.add_var("load_extension",cov::any::make_protect<native_interface>(cni(load_extension),true));
-		runtime_ext.add_var("hash",cov::any::make_protect<native_interface>(cni(hash),true));
-		runtime_ext.add_var("build",cov::any::make_protect<native_interface>(cni(build)));
-		runtime_ext.add_var("solve",cov::any::make_protect<native_interface>(cni(solve)));
+		runtime_ext.add_var("info",cs::any::make_protect<native_interface>(cni(info)));
+		runtime_ext.add_var("time",cs::any::make_protect<native_interface>(cni(time)));
+		runtime_ext.add_var("delay",cs::any::make_protect<native_interface>(cni(delay)));
+		runtime_ext.add_var("rand",cs::any::make_protect<native_interface>(cni(rand)));
+		runtime_ext.add_var("randint",cs::any::make_protect<native_interface>(cni(randint)));
+		runtime_ext.add_var("error",cs::any::make_protect<native_interface>(cni(error)));
+		runtime_ext.add_var("load_extension",cs::any::make_protect<native_interface>(cni(load_extension),true));
+		runtime_ext.add_var("hash",cs::any::make_protect<native_interface>(cni(hash),true));
+		runtime_ext.add_var("build",cs::any::make_protect<native_interface>(cni(build)));
+		runtime_ext.add_var("solve",cs::any::make_protect<native_interface>(cni(solve)));
 	}
 }

@@ -138,6 +138,10 @@ namespace cs_any {
 	{
 		// Do something if you want when data is copying.
 	}
+	template<typename T>cs::extension_t& get_ext()
+	{
+		throw cs::syntax_error("Target type does not support extensions.");
+	}
 	class any final {
 		class baseHolder {
 		public:
@@ -151,6 +155,7 @@ namespace cs_any {
 			virtual std::size_t hash() const = 0;
 			virtual void detach() = 0;
 			virtual void kill() = 0;
+			virtual cs::extension_t& get_ext() const=0;
 		};
 		template<typename T>class holder:public baseHolder {
 		protected:
@@ -195,6 +200,10 @@ namespace cs_any {
 			virtual void kill() override
 			{
 				allocator.free(this);
+			}
+			virtual cs::extension_t& get_ext() const override
+			{
+				return cs_any::get_ext<T>();
 			}
 			T& data()
 			{
@@ -344,6 +353,12 @@ namespace cs_any {
 					throw cov::error("E000L");
 				this->mDat->data->detach();
 			}
+		}
+		cs::extension_t& get_ext() const
+		{
+			if(this->mDat==nullptr)
+				throw cs::syntax_error("Target type does not support extensions.");
+			return this->mDat->data->get_ext();
 		}
 		bool is_same(const any& obj) const
 		{

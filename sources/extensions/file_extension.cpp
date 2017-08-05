@@ -11,7 +11,7 @@ namespace file_cs_ext {
 	enum class file_method {
 		read,write
 	};
-	cov::any open(const string& path,file_method method)
+	cs::any open(const string& path,file_method method)
 	{
 		switch (method) {
 		case file_method::read:
@@ -36,7 +36,7 @@ namespace file_cs_ext {
 		std::getline(*infs,str);
 		return str;
 	}
-	cov::any read(array& args)
+	cs::any read(array& args)
 	{
 		if(args.empty())
 			throw syntax_error("Wrong size of arguments.");
@@ -57,7 +57,7 @@ namespace file_cs_ext {
 		}
 		return number(0);
 	}
-	cov::any write(array& args)
+	cs::any write(array& args)
 	{
 		if(args.empty())
 			throw syntax_error("Wrong size of arguments.");
@@ -70,14 +70,14 @@ namespace file_cs_ext {
 	}
 	void init()
 	{
-		file_ext.add_var("read_method",cov::any::make_constant<file_method>(file_method::read));
-		file_ext.add_var("write_method",cov::any::make_constant<file_method>(file_method::write));
-		file_ext.add_var("open",cov::any::make_protect<native_interface>(cni(open)));
-		file_ext.add_var("is_open",cov::any::make_protect<native_interface>(cni(is_open)));
-		file_ext.add_var("eof",cov::any::make_protect<native_interface>(cni(eof)));
-		file_ext.add_var("getline",cov::any::make_protect<native_interface>(cni(getline)));
-		file_ext.add_var("read",cov::any::make_protect<native_interface>(read));
-		file_ext.add_var("write",cov::any::make_protect<native_interface>(write));
+		file_ext.add_var("read_method",cs::any::make_constant<file_method>(file_method::read));
+		file_ext.add_var("write_method",cs::any::make_constant<file_method>(file_method::write));
+		file_ext.add_var("open",cs::any::make_protect<native_interface>(cni(open)));
+		file_ext.add_var("is_open",cs::any::make_protect<native_interface>(cni(is_open)));
+		file_ext.add_var("eof",cs::any::make_protect<native_interface>(cni(eof)));
+		file_ext.add_var("getline",cs::any::make_protect<native_interface>(cni(getline)));
+		file_ext.add_var("read",cs::any::make_protect<native_interface>(read));
+		file_ext.add_var("write",cs::any::make_protect<native_interface>(write));
 	}
 }
 #ifndef CS_FILE_EXT

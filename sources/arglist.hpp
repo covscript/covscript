@@ -1,5 +1,4 @@
 #pragma once
-#include "../include/mozart/any.hpp"
 #include "../include/mozart/traits.hpp"
 #include "./core.hpp"
 namespace cs {
