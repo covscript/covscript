@@ -1,6 +1,13 @@
 #pragma once
 #include "../cni.hpp"
 static cs::extension string_ext;
+static cs::extension_t string_ext_shared=std::make_shared<cs::extension_holder>(&string_ext);
+namespace cs_any {
+	template<>cs::extension_t& get_ext<cs::string>()
+	{
+		return string_ext_shared;
+	}
+}
 namespace string_cs_ext {
 	using namespace cs;
 	string append(string& str,const cs::any& val)
