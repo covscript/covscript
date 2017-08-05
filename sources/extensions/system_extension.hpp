@@ -6,7 +6,7 @@
 static cs::extension system_ext;
 namespace system_cs_ext {
 	using namespace cs;
-	cov::any input(array& args)
+	cs::any input(array& args)
 	{
 		if(args.empty()) {
 			std::string str;
@@ -20,13 +20,13 @@ namespace system_cs_ext {
 		}
 		return number(0);
 	}
-	cov::any print(array& args)
+	cs::any print(array& args)
 	{
 		for(auto& it:args)
 			std::cout<<it;
 		return number(0);
 	}
-	cov::any println(array& args)
+	cs::any println(array& args)
 	{
 		for(auto& it:args)
 			std::cout<<it;
@@ -60,15 +60,15 @@ namespace system_cs_ext {
 	}
 	void init()
 	{
-		system_ext.add_var("max",cov::any::make_constant<number>(std::numeric_limits<number>::max()));
-		system_ext.add_var("inf",cov::any::make_constant<number>(std::numeric_limits<number>::infinity()));
-		system_ext.add_var("input",cov::any::make_protect<native_interface>(input));
-		system_ext.add_var("print",cov::any::make_protect<native_interface>(print));
-		system_ext.add_var("println",cov::any::make_protect<native_interface>(println));
-		system_ext.add_var("getline",cov::any::make_protect<native_interface>(cni(getline)));
-		system_ext.add_var("setprecision",cov::any::make_protect<native_interface>(cni(setprecision)));
-		system_ext.add_var("run",cov::any::make_protect<native_interface>(cni(run)));
-		system_ext.add_var("getenv",cov::any::make_protect<native_interface>(cni(getenv)));
-		system_ext.add_var("exit",cov::any::make_protect<native_interface>(cni(exit)));
+		system_ext.add_var("max",cs::any::make_constant<number>(std::numeric_limits<number>::max()));
+		system_ext.add_var("inf",cs::any::make_constant<number>(std::numeric_limits<number>::infinity()));
+		system_ext.add_var("input",cs::any::make_protect<native_interface>(input));
+		system_ext.add_var("print",cs::any::make_protect<native_interface>(print));
+		system_ext.add_var("println",cs::any::make_protect<native_interface>(println));
+		system_ext.add_var("getline",cs::any::make_protect<native_interface>(cni(getline)));
+		system_ext.add_var("setprecision",cs::any::make_protect<native_interface>(cni(setprecision)));
+		system_ext.add_var("run",cs::any::make_protect<native_interface>(cni(run)));
+		system_ext.add_var("getenv",cs::any::make_protect<native_interface>(cni(getenv)));
+		system_ext.add_var("exit",cs::any::make_protect<native_interface>(cni(exit)));
 	}
 }

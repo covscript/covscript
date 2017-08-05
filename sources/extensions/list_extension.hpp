@@ -3,7 +3,7 @@
 static cs::extension list_ext;
 namespace list_cs_ext {
 	using namespace cs;
-	void push_front(list& lst,const cov::any& val)
+	void push_front(list& lst,const cs::any& val)
 	{
 		lst.push_front(copy(val));
 	}
@@ -11,7 +11,7 @@ namespace list_cs_ext {
 	{
 		lst.pop_front();
 	}
-	void push_back(list& lst,const cov::any& val)
+	void push_back(list& lst,const cs::any& val)
 	{
 		lst.push_back(copy(val));
 	}
@@ -19,15 +19,15 @@ namespace list_cs_ext {
 	{
 		lst.pop_back();
 	}
-	void remove(list& lst,const cov::any& val)
+	void remove(list& lst,const cs::any& val)
 	{
 		lst.remove(val);
 	}
-	cov::any front(const list& lst)
+	cs::any front(const list& lst)
 	{
 		return lst.front();
 	}
-	cov::any back(const list& lst)
+	cs::any back(const list& lst)
 	{
 		return lst.back();
 	}
@@ -49,16 +49,16 @@ namespace list_cs_ext {
 	}
 	void init()
 	{
-		list_ext.add_var("push_front",cov::any::make_protect<native_interface>(cni(push_front),true));
-		list_ext.add_var("pop_front",cov::any::make_protect<native_interface>(cni(pop_front),true));
-		list_ext.add_var("push_back",cov::any::make_protect<native_interface>(cni(push_back),true));
-		list_ext.add_var("pop_back",cov::any::make_protect<native_interface>(cni(pop_back),true));
-		list_ext.add_var("remove",cov::any::make_protect<native_interface>(cni(remove),true));
-		list_ext.add_var("front",cov::any::make_protect<native_interface>(cni(front),true));
-		list_ext.add_var("back",cov::any::make_protect<native_interface>(cni(back),true));
-		list_ext.add_var("empty",cov::any::make_protect<native_interface>(cni(empty),true));
-		list_ext.add_var("reverse",cov::any::make_protect<native_interface>(cni(reverse),true));
-		list_ext.add_var("clear",cov::any::make_protect<native_interface>(cni(clear),true));
-		list_ext.add_var("size",cov::any::make_protect<native_interface>(cni(size),true));
+		list_ext.add_var("push_front",cs::any::make_protect<native_interface>(cni(push_front),true));
+		list_ext.add_var("pop_front",cs::any::make_protect<native_interface>(cni(pop_front),true));
+		list_ext.add_var("push_back",cs::any::make_protect<native_interface>(cni(push_back),true));
+		list_ext.add_var("pop_back",cs::any::make_protect<native_interface>(cni(pop_back),true));
+		list_ext.add_var("remove",cs::any::make_protect<native_interface>(cni(remove),true));
+		list_ext.add_var("front",cs::any::make_protect<native_interface>(cni(front),true));
+		list_ext.add_var("back",cs::any::make_protect<native_interface>(cni(back),true));
+		list_ext.add_var("empty",cs::any::make_protect<native_interface>(cni(empty),true));
+		list_ext.add_var("reverse",cs::any::make_protect<native_interface>(cni(reverse),true));
+		list_ext.add_var("clear",cs::any::make_protect<native_interface>(cni(clear),true));
+		list_ext.add_var("size",cs::any::make_protect<native_interface>(cni(size),true));
 	}
 }

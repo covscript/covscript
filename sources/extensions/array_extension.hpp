@@ -1,9 +1,16 @@
 #pragma once
 #include "../cni.hpp"
 static cs::extension array_ext;
+static cs::extension_t array_ext_shared=std::make_shared<cs::extension_holder>(&array_ext);
+namespace cs_any {
+	template<>cs::extension_t& get_ext<cs::array>()
+	{
+		return array_ext_shared;
+	}
+}
 namespace array_cs_ext {
 	using namespace cs;
-	void push_front(array& arr,const cov::any& val)
+	void push_front(array& arr,const cs::any& val)
 	{
 		arr.push_front(copy(val));
 	}
@@ -11,7 +18,7 @@ namespace array_cs_ext {
 	{
 		arr.pop_front();
 	}
-	void push_back(array& arr,const cov::any& val)
+	void push_back(array& arr,const cs::any& val)
 	{
 		arr.push_back(copy(val));
 	}
@@ -23,7 +30,7 @@ namespace array_cs_ext {
 	{
 		arr.clear();
 	}
-	cov::any at(const array& arr,number posit)
+	cs::any at(const array& arr,number posit)
 	{
 		return arr.at(posit);
 	}
@@ -33,12 +40,12 @@ namespace array_cs_ext {
 	}
 	void init()
 	{
-		array_ext.add_var("push_front",cov::any::make_protect<native_interface>(cni(push_front),true));
-		array_ext.add_var("pop_front",cov::any::make_protect<native_interface>(cni(pop_front),true));
-		array_ext.add_var("push_back",cov::any::make_protect<native_interface>(cni(push_back),true));
-		array_ext.add_var("pop_back",cov::any::make_protect<native_interface>(cni(pop_back),true));
-		array_ext.add_var("clear",cov::any::make_protect<native_interface>(cni(clear),true));
-		array_ext.add_var("at",cov::any::make_protect<native_interface>(cni(at),true));
-		array_ext.add_var("size",cov::any::make_protect<native_interface>(cni(size),true));
+		array_ext.add_var("push_front",cs::any::make_protect<native_interface>(cni(push_front),true));
+		array_ext.add_var("pop_front",cs::any::make_protect<native_interface>(cni(pop_front),true));
+		array_ext.add_var("push_back",cs::any::make_protect<native_interface>(cni(push_back),true));
+		array_ext.add_var("pop_back",cs::any::make_protect<native_interface>(cni(pop_back),true));
+		array_ext.add_var("clear",cs::any::make_protect<native_interface>(cni(clear),true));
+		array_ext.add_var("at",cs::any::make_protect<native_interface>(cni(at),true));
+		array_ext.add_var("size",cs::any::make_protect<native_interface>(cni(size),true));
 	}
 }

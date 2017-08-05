@@ -10,11 +10,11 @@ namespace types_cs_ext {
 	using namespace cs;
 	void init()
 	{
-		types_ext.add_var("char",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&char_ext)));
-		types_ext.add_var("string",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&string_ext)));
-		types_ext.add_var("list",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&list_ext)));
-		types_ext.add_var("array",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&array_ext)));
-		types_ext.add_var("pair",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&pair_ext)));
-		types_ext.add_var("hash_map",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&hash_map_ext)));
+		types_ext.add_var("char",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&char_ext)));
+		types_ext.add_var("string",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&string_ext)));
+		types_ext.add_var("list",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&list_ext)));
+		types_ext.add_var("array",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&array_ext)));
+		types_ext.add_var("pair",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&pair_ext)));
+		types_ext.add_var("hash_map",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&hash_map_ext)));
 	}
 }

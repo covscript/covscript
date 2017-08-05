@@ -100,7 +100,7 @@ namespace cs {
 					else {
 						token_base* orig_ptr=it.data();
 						try {
-							it.data()=new token_value(get_type_ext(a,dynamic_cast<token_id*>(rptr)->get_id()));
+							it.data()=new token_value(cs::any::make<callable>(object_method(a,a.get_ext()->get_var(dynamic_cast<token_id*>(rptr)->get_id())),true));
 						}
 						catch(const syntax_error& se) {
 							it.data()=orig_ptr;

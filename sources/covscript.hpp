@@ -69,14 +69,14 @@ namespace cs {
 	{
 		init_grammar();
 		// Internal Types
-		runtime->storage.add_type("char",[]()->cs::any {return cs::any::make<char>('\0');},cov::hash<std::string>(typeid(char).name()));
-		runtime->storage.add_type("number",[]()->cs::any {return cs::any::make<number>(0);},cov::hash<std::string>(typeid(number).name()));
-		runtime->storage.add_type("boolean",[]()->cs::any {return cs::any::make<boolean>(true);},cov::hash<std::string>(typeid(boolean).name()));
-		runtime->storage.add_type("string",[]()->cs::any {return cs::any::make<string>();},cov::hash<std::string>(typeid(string).name()));
-		runtime->storage.add_type("list",[]()->cs::any {return cs::any::make<list>();},cov::hash<std::string>(typeid(list).name()));
-		runtime->storage.add_type("array",[]()->cs::any {return cs::any::make<array>();},cov::hash<std::string>(typeid(array).name()));
-		runtime->storage.add_type("pair",[]()->cs::any {return cs::any::make<pair>(number(0),number(0));},cov::hash<std::string>(typeid(pair).name()));
-		runtime->storage.add_type("hash_map",[]()->cs::any {return cs::any::make<hash_map>();},cov::hash<std::string>(typeid(hash_map).name()));
+		runtime->storage.add_type("char",[]()->cs::any {return cs::any::make<char>('\0');},cs_any::hash<std::string>(typeid(char).name()));
+		runtime->storage.add_type("number",[]()->cs::any {return cs::any::make<number>(0);},cs_any::hash<std::string>(typeid(number).name()));
+		runtime->storage.add_type("boolean",[]()->cs::any {return cs::any::make<boolean>(true);},cs_any::hash<std::string>(typeid(boolean).name()));
+		runtime->storage.add_type("string",[]()->cs::any {return cs::any::make<string>();},cs_any::hash<std::string>(typeid(string).name()));
+		runtime->storage.add_type("list",[]()->cs::any {return cs::any::make<list>();},cs_any::hash<std::string>(typeid(list).name()));
+		runtime->storage.add_type("array",[]()->cs::any {return cs::any::make<array>();},cs_any::hash<std::string>(typeid(array).name()));
+		runtime->storage.add_type("pair",[]()->cs::any {return cs::any::make<pair>(number(0),number(0));},cs_any::hash<std::string>(typeid(pair).name()));
+		runtime->storage.add_type("hash_map",[]()->cs::any {return cs::any::make<hash_map>();},cs_any::hash<std::string>(typeid(hash_map).name()));
 		// Add Internal Functions to storage
 		add_function_const(to_integer);
 		add_function_const(to_string);
@@ -97,17 +97,11 @@ namespace cs {
 		types_cs_ext::init();
 		runtime->storage.add_var("types",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&types_ext)));
 		char_cs_ext::init();
-		runtime->char_ext=std::make_shared<extension_holder>(&char_ext);
 		string_cs_ext::init();
-		runtime->string_ext=std::make_shared<extension_holder>(&string_ext);
 		list_cs_ext::init();
-		runtime->list_ext=std::make_shared<extension_holder>(&list_ext);
 		array_cs_ext::init();
-		runtime->array_ext=std::make_shared<extension_holder>(&array_ext);
 		pair_cs_ext::init();
-		runtime->pair_ext=std::make_shared<extension_holder>(&pair_ext);
 		hash_map_cs_ext::init();
-		runtime->hash_map_ext=std::make_shared<extension_holder>(&hash_map_ext);
 #ifdef CS_MATH_EXT
 		math_cs_ext::init();
 		runtime->storage.add_var("math",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&math_ext)));

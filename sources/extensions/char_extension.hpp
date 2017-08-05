@@ -58,18 +58,18 @@ namespace char_cs_ext {
 	}
 	void init()
 	{
-		char_ext.add_var("isalnum",cov::any::make_protect<native_interface>(cni(isalnum),true));
-		char_ext.add_var("isalpha",cov::any::make_protect<native_interface>(cni(isalpha),true));
-		char_ext.add_var("islower",cov::any::make_protect<native_interface>(cni(islower),true));
-		char_ext.add_var("isupper",cov::any::make_protect<native_interface>(cni(isupper),true));
-		char_ext.add_var("isdigit",cov::any::make_protect<native_interface>(cni(isdigit),true));
-		char_ext.add_var("iscntrl",cov::any::make_protect<native_interface>(cni(iscntrl),true));
-		char_ext.add_var("isgraph",cov::any::make_protect<native_interface>(cni(isgraph),true));
-		char_ext.add_var("isspace",cov::any::make_protect<native_interface>(cni(isspace),true));
-		char_ext.add_var("isblank",cov::any::make_protect<native_interface>(cni(isblank),true));
-		char_ext.add_var("isprint",cov::any::make_protect<native_interface>(cni(isprint),true));
-		char_ext.add_var("ispunct",cov::any::make_protect<native_interface>(cni(ispunct),true));
-		char_ext.add_var("tolower",cov::any::make_protect<native_interface>(cni(tolower),true));
-		char_ext.add_var("toupper",cov::any::make_protect<native_interface>(cni(toupper),true));
+		char_ext.add_var("isalnum",cs::any::make_protect<native_interface>(cni(isalnum),true));
+		char_ext.add_var("isalpha",cs::any::make_protect<native_interface>(cni(isalpha),true));
+		char_ext.add_var("islower",cs::any::make_protect<native_interface>(cni(islower),true));
+		char_ext.add_var("isupper",cs::any::make_protect<native_interface>(cni(isupper),true));
+		char_ext.add_var("isdigit",cs::any::make_protect<native_interface>(cni(isdigit),true));
+		char_ext.add_var("iscntrl",cs::any::make_protect<native_interface>(cni(iscntrl),true));
+		char_ext.add_var("isgraph",cs::any::make_protect<native_interface>(cni(isgraph),true));
+		char_ext.add_var("isspace",cs::any::make_protect<native_interface>(cni(isspace),true));
+		char_ext.add_var("isblank",cs::any::make_protect<native_interface>(cni(isblank),true));
+		char_ext.add_var("isprint",cs::any::make_protect<native_interface>(cni(isprint),true));
+		char_ext.add_var("ispunct",cs::any::make_protect<native_interface>(cni(ispunct),true));
+		char_ext.add_var("tolower",cs::any::make_protect<native_interface>(cni(tolower),true));
+		char_ext.add_var("toupper",cs::any::make_protect<native_interface>(cni(toupper),true));
 	}
 }
