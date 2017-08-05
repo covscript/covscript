@@ -19,7 +19,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://covariant.cn/cs
 *
-* Version: 1.0.1
+* Version: 1.0.2
 */
 #ifndef CS_MINIMAL
 #define CS_MATH_EXT

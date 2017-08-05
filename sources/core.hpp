@@ -22,12 +22,12 @@
 #include "./any.hpp"
 namespace cs {
 #ifndef CS_STATIC
-	const std::string version="1.0.1";
+	const std::string version="1.0.2";
 #else
 #ifndef CS_MINIMAL
-	const std::string version="1.0.1 (Static Build)";
+	const std::string version="1.0.2 (Static Build)";
 #else
-	const std::string version="1.0.1 (Minimal Build)";
+	const std::string version="1.0.2 (Minimal Build)";
 #endif
 #endif
 	static int output_precision=8;
