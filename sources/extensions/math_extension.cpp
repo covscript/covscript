@@ -2,6 +2,7 @@
 #include "../extension.hpp"
 #endif
 #include "../cni.hpp"
+#include <algorithm>
 static cs::extension math_ext;
 namespace math_cs_ext {
 	using namespace cs;
@@ -57,6 +58,14 @@ namespace math_cs_ext {
 	{
 		return std::pow(a,b);
 	}
+	number min(number a,number b)
+	{
+		return std::min(a,b);
+	}
+	number max(number a,number b)
+	{
+		return std::max(a,b);
+	}
 	void init()
 	{
 		math_ext.add_var("pi",cov::any::make_constant<number>(3.1415926535));
@@ -74,6 +83,8 @@ namespace math_cs_ext {
 		math_ext.add_var("sqrt",cov::any::make_protect<native_interface>(cni(sqrt),true));
 		math_ext.add_var("root",cov::any::make_protect<native_interface>(cni(root),true));
 		math_ext.add_var("pow",cov::any::make_protect<native_interface>(cni(pow),true));
+		math_ext.add_var("min",cov::any::make_protect<native_interface>(cni(min),true));
+		math_ext.add_var("max",cov::any::make_protect<native_interface>(cni(max),true));
 	}
 }
 #ifndef CS_MATH_EXT
