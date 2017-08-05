@@ -3,20 +3,20 @@
 namespace cs {
 	class domain_manager {
 	public:
-		using domain_t=std::shared_ptr<std::unordered_map<string,cov::any>>;
+		using domain_t=std::shared_ptr<std::unordered_map<string,cs::any>>;
 	private:
 		std::deque<domain_t> m_data;
 		std::deque<domain_t> m_this;
 	public:
 		domain_manager()
 		{
-			m_data.emplace_front(std::make_shared<std::unordered_map<string,cov::any>>());
+			m_data.emplace_front(std::make_shared<std::unordered_map<string,cs::any>>());
 		}
 		domain_manager(const domain_manager&)=delete;
 		~domain_manager()=default;
 		void add_domain()
 		{
-			m_data.emplace_front(std::make_shared<std::unordered_map<string,cov::any>>());
+			m_data.emplace_front(std::make_shared<std::unordered_map<string,cs::any>>());
 		}
 		void add_domain(const domain_t& dat)
 		{
@@ -65,39 +65,39 @@ namespace cs {
 				return true;
 			return false;
 		}
-		cov::any& get_var(const string& name)
+		cs::any& get_var(const string& name)
 		{
 			for(auto& domain:m_data)
 				if(domain->count(name)>0)
 					return (*domain)[name];
 			throw syntax_error("Use of undefined variable \""+name+"\".");
 		}
-		cov::any& get_var_current(const string& name)
+		cs::any& get_var_current(const string& name)
 		{
 			if(m_data.front()->count(name)>0)
 				return (*m_data.front())[name];
 			throw syntax_error("Use of undefined variable \""+name+"\" in current domain.");
 		}
-		cov::any& get_var_global(const string& name)
+		cs::any& get_var_global(const string& name)
 		{
 			if(m_data.back()->count(name)>0)
 				return (*m_data.back())[name];
 			throw syntax_error("Use of undefined variable \""+name+"\" in global domain.");
 		}
-		cov::any& get_var_this(const string& name)
+		cs::any& get_var_this(const string& name)
 		{
 			if(m_this.front()->count(name)>0)
 				return (*m_this.front())[name];
 			throw syntax_error("Use of undefined variable \""+name+"\" in current object.");
 		}
-		void add_var(const string& name,const cov::any& var)
+		void add_var(const string& name,const cs::any& var)
 		{
 			if(var_exsist_current(name))
 				get_var(name)=var;
 			else
 				m_data.front()->emplace(name,var);
 		}
-		void add_var_global(const string& name,const cov::any& var)
+		void add_var_global(const string& name,const cs::any& var)
 		{
 			if(var_exsist_global(name))
 				get_var_global(name)=var;
@@ -106,11 +106,11 @@ namespace cs {
 		}
 		void add_struct(const std::string& name,const struct_builder& builder)
 		{
-			add_var(name,cov::any::make_protect<type>(builder,builder.get_hash()));
+			add_var(name,cs::any::make_protect<type>(builder,builder.get_hash()));
 		}
-		void add_type(const std::string& name,const std::function<cov::any()>& func,std::size_t hash)
+		void add_type(const std::string& name,const std::function<cs::any()>& func,std::size_t hash)
 		{
-			add_var(name,cov::any::make_protect<type>(func,hash));
+			add_var(name,cs::any::make_protect<type>(func,hash));
 		}
 	};
 	struct runtime_type final {
@@ -127,30 +127,30 @@ namespace cs {
 	var get_type_ext(const var& a,const string& name)
 	{
 		if(a.type()==typeid(char))
-			return cov::any::make<callable>(object_method(a,runtime->char_ext->get_var(name)),true);
+			return cs::any::make<callable>(object_method(a,runtime->char_ext->get_var(name)),true);
 		else if(a.type()==typeid(string))
-			return cov::any::make<callable>(object_method(a,runtime->string_ext->get_var(name)),true);
+			return cs::any::make<callable>(object_method(a,runtime->string_ext->get_var(name)),true);
 		else if(a.type()==typeid(list))
-			return cov::any::make<callable>(object_method(a,runtime->list_ext->get_var(name)),true);
+			return cs::any::make<callable>(object_method(a,runtime->list_ext->get_var(name)),true);
 		else if(a.type()==typeid(array))
-			return cov::any::make<callable>(object_method(a,runtime->array_ext->get_var(name)),true);
+			return cs::any::make<callable>(object_method(a,runtime->array_ext->get_var(name)),true);
 		else if(a.type()==typeid(pair))
-			return cov::any::make<callable>(object_method(a,runtime->pair_ext->get_var(name)),true);
+			return cs::any::make<callable>(object_method(a,runtime->pair_ext->get_var(name)),true);
 		else if(a.type()==typeid(hash_map))
-			return cov::any::make<callable>(object_method(a,runtime->hash_map_ext->get_var(name)),true);
+			return cs::any::make<callable>(object_method(a,runtime->hash_map_ext->get_var(name)),true);
 		else
 			throw syntax_error("Unsupported type.");
 	}
-	cov::any parse_add(const cov::any& a,const cov::any& b)
+	cs::any parse_add(const cs::any& a,const cs::any& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return a.const_val<number>()+b.const_val<number>();
 		else if(a.type()==typeid(string))
-			return cov::any::make<std::string>(a.const_val<string>()+b.to_string());
+			return cs::any::make<std::string>(a.const_val<string>()+b.to_string());
 		else
 			throw syntax_error("Unsupported operator operations(Add).");
 	}
-	cov::any parse_sub(const cov::any& a,const cov::any& b)
+	cs::any parse_sub(const cs::any& a,const cs::any& b)
 	{
 		if(!a.usable()&&b.type()==typeid(number))
 			return -b.const_val<number>();
@@ -159,35 +159,35 @@ namespace cs {
 		else
 			throw syntax_error("Unsupported operator operations(Sub).");
 	}
-	cov::any parse_mul(const cov::any& a,const cov::any& b)
+	cs::any parse_mul(const cs::any& a,const cs::any& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return a.const_val<number>()*b.const_val<number>();
 		else
 			throw syntax_error("Unsupported operator operations(Mul).");
 	}
-	cov::any parse_div(const cov::any& a,const cov::any& b)
+	cs::any parse_div(const cs::any& a,const cs::any& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return a.const_val<number>()/b.const_val<number>();
 		else
 			throw syntax_error("Unsupported operator operations(Div).");
 	}
-	cov::any parse_mod(const cov::any& a,const cov::any& b)
+	cs::any parse_mod(const cs::any& a,const cs::any& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return number(long(a.const_val<number>())%long(b.const_val<number>()));
 		else
 			throw syntax_error("Unsupported operator operations(Mod).");
 	}
-	cov::any parse_pow(const cov::any& a,const cov::any& b)
+	cs::any parse_pow(const cs::any& a,const cs::any& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return number(std::pow(a.const_val<number>(),b.const_val<number>()));
 		else
 			throw syntax_error("Unsupported operator operations(Pow).");
 	}
-	cov::any parse_dot(const cov::any& a,token_base* b)
+	cs::any parse_dot(const cs::any& a,token_base* b)
 	{
 		if(b==nullptr)
 			throw internal_error("Null Pointer Accessed.");
@@ -216,7 +216,7 @@ namespace cs {
 		else
 			return get_type_ext(a,dynamic_cast<token_id*>(b)->get_id());
 	}
-	cov::any parse_typeid(token_base* a,const cov::any& b)
+	cs::any parse_typeid(token_base* a,const cs::any& b)
 	{
 		if(a!=nullptr)
 			throw syntax_error("Wrong format of new expression.");
@@ -227,69 +227,69 @@ namespace cs {
 		else
 			return cov::hash<std::string>(b.type().name());
 	}
-	cov::any parse_und(const cov::any& a,const cov::any& b)
+	cs::any parse_und(const cs::any& a,const cs::any& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return boolean(a.const_val<number>()<b.const_val<number>());
 		else
 			throw syntax_error("Unsupported operator operations(Und).");
 	}
-	cov::any parse_abo(const cov::any& a,const cov::any& b)
+	cs::any parse_abo(const cs::any& a,const cs::any& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return boolean(a.const_val<number>()>b.const_val<number>());
 		else
 			throw syntax_error("Unsupported operator operations(Abo).");
 	}
-	cov::any parse_ueq(const cov::any& a,const cov::any& b)
+	cs::any parse_ueq(const cs::any& a,const cs::any& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return boolean(a.const_val<number>()<=b.const_val<number>());
 		else
 			throw syntax_error("Unsupported operator operations(Ueq).");
 	}
-	cov::any parse_aeq(const cov::any& a,const cov::any& b)
+	cs::any parse_aeq(const cs::any& a,const cs::any& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return boolean(a.const_val<number>()>=b.const_val<number>());
 		else
 			throw syntax_error("Unsupported operator operations(Aeq).");
 	}
-	cov::any parse_asi(cov::any a,const cov::any& b)
+	cs::any parse_asi(cs::any a,const cs::any& b)
 	{
 		a.swap(copy(b),true);
 		return a;
 	}
-	cov::any parse_pair(const cov::any& a,const cov::any& b)
+	cs::any parse_pair(const cs::any& a,const cs::any& b)
 	{
 		if(a.type()!=typeid(pair)&&b.type()!=typeid(pair))
-			return cov::any::make<pair>(copy(a),copy(b));
+			return cs::any::make<pair>(copy(a),copy(b));
 		else
 			throw syntax_error("Unsupported operator operations(Pair).");
 	}
-	cov::any parse_equ(const cov::any& a,const cov::any& b)
+	cs::any parse_equ(const cs::any& a,const cs::any& b)
 	{
 		return boolean(a==b);
 	}
-	cov::any parse_neq(const cov::any& a,const cov::any& b)
+	cs::any parse_neq(const cs::any& a,const cs::any& b)
 	{
 		return boolean(a!=b);
 	}
-	cov::any parse_and(const cov::any& a,const cov::any& b)
+	cs::any parse_and(const cs::any& a,const cs::any& b)
 	{
 		if(a.type()==typeid(boolean)&&b.type()==typeid(boolean))
 			return boolean(a.const_val<boolean>()&&b.const_val<boolean>());
 		else
 			throw syntax_error("Unsupported operator operations(And).");
 	}
-	cov::any parse_or(const cov::any& a,const cov::any& b)
+	cs::any parse_or(const cs::any& a,const cs::any& b)
 	{
 		if(a.type()==typeid(boolean)&&b.type()==typeid(boolean))
 			return boolean(a.const_val<boolean>()||b.const_val<boolean>());
 		else
 			throw syntax_error("Unsupported operator operations(Or).");
 	}
-	cov::any parse_not(token_base* a,const cov::any& b)
+	cs::any parse_not(token_base* a,const cs::any& b)
 	{
 		if(a!=nullptr)
 			throw syntax_error("Wrong format of not expression.");
@@ -298,7 +298,7 @@ namespace cs {
 		else
 			throw syntax_error("Unsupported operator operations(Not).");
 	}
-	cov::any parse_inc(cov::any a,cov::any b)
+	cs::any parse_inc(cs::any a,cs::any b)
 	{
 		if(a.usable()) {
 			if(b.usable())
@@ -313,7 +313,7 @@ namespace cs {
 				return ++b.val<number>(true);
 		}
 	}
-	cov::any parse_dec(cov::any a,cov::any b)
+	cs::any parse_dec(cs::any a,cs::any b)
 	{
 		if(a.usable()) {
 			if(b.usable())
@@ -328,7 +328,7 @@ namespace cs {
 				return --b.val<number>(true);
 		}
 	}
-	cov::any parse_fcall(const cov::any& a,cov::any b)
+	cs::any parse_fcall(const cs::any& a,cs::any b)
 	{
 		if(a.type()==typeid(callable))
 			return a.const_val<callable>().call(b.val<array>(true));
@@ -337,7 +337,7 @@ namespace cs {
 		else
 			throw syntax_error("Unsupported operator operations(Fcall).");
 	}
-	cov::any parse_access(cov::any a,const cov::any& b)
+	cs::any parse_access(cs::any a,const cs::any& b)
 	{
 		if(a.type()==typeid(array)) {
 			if(b.type()!=typeid(number))
@@ -368,13 +368,13 @@ namespace cs {
 			throw syntax_error("Access non-array or string object.");
 	}
 	bool define_var=false;
-	cov::any parse_expr(const cov::tree<token_base*>::iterator& it)
+	cs::any parse_expr(const cov::tree<token_base*>::iterator& it)
 	{
 		if(!it.usable())
 			throw internal_error("The expression tree is not available.");
 		token_base* token=it.data();
 		if(token==nullptr)
-			return cov::any();
+			return cs::any();
 		switch(token->get_type()) {
 		case token_types::id: {
 			const std::string& id=dynamic_cast<token_id*>(token)->get_id();
@@ -396,7 +396,7 @@ namespace cs {
 			array arr;
 			bool is_map=true;
 			for(auto& tree:dynamic_cast<token_array*>(token)->get_array()) {
-				const cov::any& val=parse_expr(tree.root());
+				const cs::any& val=parse_expr(tree.root());
 				if(is_map&&val.type()!=typeid(pair))
 					is_map=false;
 				arr.push_back(copy(val));
@@ -412,16 +412,16 @@ namespace cs {
 					else
 						map[p.first]=p.second;
 				}
-				return cov::any::make<hash_map>(std::move(map));
+				return cs::any::make<hash_map>(std::move(map));
 			}
 			else
-				return cov::any::make<array>(std::move(arr));
+				return cs::any::make<array>(std::move(arr));
 		}
 		case token_types::arglist: {
 			array arr;
 			for(auto& tree:dynamic_cast<token_arglist*>(token)->get_arglist())
 				arr.push_back(parse_expr(tree.root()));
-			return cov::any::make<array>(std::move(arr));
+			return cs::any::make<array>(std::move(arr));
 		}
 		case token_types::signal: {
 			token_signal* ps=dynamic_cast<token_signal*>(token);
@@ -459,7 +459,7 @@ namespace cs {
 				return parse_abo(parse_expr(it.left()),parse_expr(it.right()));
 				break;
 			case signal_types::asi_: {
-				cov::any left=parse_expr(it.left());
+				cs::any left=parse_expr(it.left());
 				return parse_asi(left,parse_expr(it.right()));
 				break;
 			}

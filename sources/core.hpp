@@ -6,8 +6,6 @@
 #include "../include/mozart/random.hpp"
 #include "../include/mozart/timer.hpp"
 #include "../include/mozart/tree.hpp"
-#include "../include/mozart/any.hpp"
-#include "./exceptions.hpp"
 #include <unordered_map>
 #include <forward_list>
 #include <functional>
@@ -19,6 +17,9 @@
 #include <cmath>
 #include <deque>
 #include <list>
+#include "./exceptions.hpp"
+#include "./typedef.hpp"
+#include "./any.hpp"
 namespace cs {
 #ifndef CS_STATIC
 	const std::string version="1.0.1";
@@ -30,7 +31,7 @@ namespace cs {
 #endif
 #endif
 	static int output_precision=8;
-	using var=cov::any;
+	using var=cs::any;
 	using number=long double;
 	using boolean=bool;
 	using string=std::string;
@@ -40,7 +41,7 @@ namespace cs {
 	using hash_map=std::unordered_map<var,var>;
 	class callable final {
 	public:
-		using function_type=std::function<cov::any(array&)>;
+		using function_type=std::function<cs::any(array&)>;
 	private:
 		function_type mFunc;
 		bool mConstant=false;
@@ -52,7 +53,7 @@ namespace cs {
 		{
 			return mConstant;
 		}
-		cov::any call(array& args) const
+		cs::any call(array& args) const
 		{
 			return mFunc(args);
 		}
@@ -62,53 +63,53 @@ namespace cs {
 	class statement_base;
 	class function final {
 		friend class statement_return;
-		mutable cov::any mRetVal;
+		mutable cs::any mRetVal;
 		std::deque<std::string> mArgs;
 		std::deque<statement_base*> mBody;
-		std::shared_ptr<std::unordered_map<string,cov::any>> mData;
+		std::shared_ptr<std::unordered_map<string,cs::any>> mData;
 	public:
 		function()=delete;
 		function(const std::deque<std::string>& args,const std::deque<statement_base*>& body):mArgs(args),mBody(body) {}
 		~function()=default;
-		cov::any call(array&) const;
-		void set_data(const std::shared_ptr<std::unordered_map<string,cov::any>>& data)
+		cs::any call(array&) const;
+		void set_data(const std::shared_ptr<std::unordered_map<string,cs::any>>& data)
 		{
 			mData=data;
 		}
 	};
 	class object_method final {
-		cov::any mObj;
-		cov::any mCallable;
+		cs::any mObj;
+		cs::any mCallable;
 	public:
 		object_method()=delete;
-		object_method(const cov::any& obj,const cov::any& callable):mObj(obj),mCallable(callable) {}
+		object_method(const cs::any& obj,const cs::any& callable):mObj(obj),mCallable(callable) {}
 		~object_method()=default;
-		const cov::any& get_callable() const
+		const cs::any& get_callable() const
 		{
 			return mCallable;
 		}
-		cov::any operator()(array& args) const
+		cs::any operator()(array& args) const
 		{
 			args.push_front(mObj);
-			cov::any retval=mCallable.const_val<callable>().call(args);
+			cs::any retval=mCallable.const_val<callable>().call(args);
 			args.pop_front();
 			return retval;
 		}
 	};
 	struct type final {
-		std::function<cov::any()> constructor;
+		std::function<cs::any()> constructor;
 		std::size_t id;
 		type()=delete;
-		type(const std::function<cov::any()>& c,std::size_t i):constructor(c),id(i) {}
+		type(const std::function<cs::any()>& c,std::size_t i):constructor(c),id(i) {}
 	};
 	class structure final {
 		std::size_t m_hash;
 		std::string m_name;
-		std::shared_ptr<std::unordered_map<string,cov::any>> m_data;
+		std::shared_ptr<std::unordered_map<string,cs::any>> m_data;
 	public:
 		structure()=delete;
-		structure(std::size_t hash,const std::string& name,const std::shared_ptr<std::unordered_map<string,cov::any>>& data):m_hash(hash),m_name(typeid(structure).name()+name),m_data(data) {}
-		structure(const structure& s):m_hash(s.m_hash),m_name(s.m_name),m_data(std::make_shared<std::unordered_map<string,cov::any>>(*s.m_data))
+		structure(std::size_t hash,const std::string& name,const std::shared_ptr<std::unordered_map<string,cs::any>>& data):m_hash(hash),m_name(typeid(structure).name()+name),m_data(data) {}
+		structure(const structure& s):m_hash(s.m_hash),m_name(s.m_name),m_data(std::make_shared<std::unordered_map<string,cs::any>>(*s.m_data))
 		{
 			for(auto& it:*m_data) {
 				it.second.clone();
@@ -117,7 +118,7 @@ namespace cs {
 			}
 		}
 		~structure()=default;
-		std::shared_ptr<std::unordered_map<string,cov::any>>& get_domain()
+		std::shared_ptr<std::unordered_map<string,cs::any>>& get_domain()
 		{
 			return m_data;
 		}
@@ -125,7 +126,7 @@ namespace cs {
 		{
 			return m_hash;
 		}
-		cov::any& get_var(const std::string& name) const
+		cs::any& get_var(const std::string& name) const
 		{
 			if(m_data->count(name)>0)
 				return (*m_data)[name];
@@ -147,7 +148,7 @@ namespace cs {
 		{
 			return mHash;
 		}
-		cov::any operator()();
+		cs::any operator()();
 	};
 	std::size_t struct_builder::mCount=0;
 	template<typename T>class garbage_collector final {
@@ -173,20 +174,20 @@ namespace cs {
 		}
 	};
 	class name_space final {
-		std::unordered_map<string,cov::any> m_data;
+		std::unordered_map<string,cs::any> m_data;
 	public:
 		name_space()=default;
 		name_space(const name_space&)=delete;
-		name_space(const std::unordered_map<string,cov::any>& dat):m_data(dat) {}
+		name_space(const std::unordered_map<string,cs::any>& dat):m_data(dat) {}
 		~name_space()=default;
-		void add_var(const std::string& name,const cov::any& var)
+		void add_var(const std::string& name,const cs::any& var)
 		{
 			if(m_data.count(name)>0)
 				m_data[name]=var;
 			else
 				m_data.emplace(name,var);
 		}
-		cov::any& get_var(const std::string& name)
+		cs::any& get_var(const std::string& name)
 		{
 			if(m_data.count(name)>0)
 				return m_data[name];
@@ -214,7 +215,7 @@ namespace cs {
 		}
 #endif
 		~name_space_holder()=default;
-		cov::any& get_var(const std::string& name)
+		cs::any& get_var(const std::string& name)
 		{
 			if(m_ns==nullptr)
 				throw internal_error("Use of nullptr of extension.");
@@ -225,7 +226,7 @@ namespace cs {
 	using extension_holder=name_space_holder;
 	using name_space_t=std::shared_ptr<name_space_holder>;
 	using extension_t=std::shared_ptr<extension_holder>;
-	cov::any parse_value(const std::string& str)
+	cs::any parse_value(const std::string& str)
 	{
 		if(str=="true")
 			return true;
@@ -239,12 +240,12 @@ namespace cs {
 		}
 		return str;
 	}
-	void copy_no_return(cov::any& val)
+	void copy_no_return(cs::any& val)
 	{
 		val.clone();
 		val.detach();
 	}
-	cov::any copy(cov::any val)
+	cs::any copy(cs::any val)
 	{
 		val.clone();
 		val.detach();
@@ -252,7 +253,7 @@ namespace cs {
 	}
 	void cs(const std::string&);
 }
-namespace cov {
+namespace cs_any {
 	template<>void detach<cs::pair>(cs::pair& val)
 	{
 		cs::copy_no_return(val.first);
