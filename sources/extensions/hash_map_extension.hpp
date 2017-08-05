@@ -1,6 +1,13 @@
 #pragma once
 #include "../cni.hpp"
 static cs::extension hash_map_ext;
+static cs::extension_t hash_map_ext_shared=std::make_shared<cs::extension_holder>(&hash_map_ext);
+namespace cs_any {
+	template<>cs::extension_t& get_ext<cs::hash_map>()
+	{
+		return hash_map_ext_shared;
+	}
+}
 namespace hash_map_cs_ext {
 	using namespace cs;
 	void clear(hash_map& map)

@@ -1,6 +1,13 @@
 #pragma once
 #include "../cni.hpp"
 static cs::extension list_ext;
+static cs::extension_t list_ext_shared=std::make_shared<cs::extension_holder>(&list_ext);
+namespace cs_any {
+	template<>cs::extension_t& get_ext<cs::list>()
+	{
+		return list_ext_shared;
+	}
+}
 namespace list_cs_ext {
 	using namespace cs;
 	void push_front(list& lst,const cs::any& val)

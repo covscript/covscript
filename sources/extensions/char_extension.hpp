@@ -2,6 +2,13 @@
 #include "../cni.hpp"
 #include <cctype>
 static cs::extension char_ext;
+static cs::extension_t char_ext_shared=std::make_shared<cs::extension_holder>(&char_ext);
+namespace cs_any {
+	template<>cs::extension_t& get_ext<char>()
+	{
+		return char_ext_shared;
+	}
+}
 namespace char_cs_ext {
 	using namespace cs;
 	bool isalnum(char c)
