@@ -7,7 +7,7 @@ namespace cs {
 	bool break_block=false;
 	bool continue_block=false;
 	cov::static_stack<const function*,CS_STACK_SIZE> fcall_stack;
-	cov::any function::call(array& args) const
+	cs::any function::call(array& args) const
 	{
 		if(args.size()!=this->mArgs.size())
 			throw syntax_error("Wrong size of arguments.");
@@ -34,8 +34,8 @@ namespace cs {
 			}
 			if(this->mRetVal.usable()) {
 				return_fcall=false;
-				cov::any retval=this->mRetVal;
-				this->mRetVal=cov::any();
+				cs::any retval=this->mRetVal;
+				this->mRetVal=cs::any();
 				if(this->mData.get()!=nullptr) {
 					runtime->storage.remove_this();
 					runtime->storage.remove_domain();
@@ -53,7 +53,7 @@ namespace cs {
 		fcall_stack.pop();
 		return number(0);
 	}
-	cov::any struct_builder::operator()()
+	cs::any struct_builder::operator()()
 	{
 		runtime->storage.add_domain();
 		inside_struct=true;
@@ -72,7 +72,7 @@ namespace cs {
 			}
 		}
 		inside_struct=false;
-		cov::any dat=cov::any::make<structure>(this->mHash,this->mName,runtime->storage.get_domain());
+		cs::any dat=cs::any::make<structure>(this->mHash,this->mName,runtime->storage.get_domain());
 		runtime->storage.remove_domain();
 		return dat;
 	}
@@ -83,7 +83,7 @@ namespace cs {
 	void statement_var::run()
 	{
 		define_var=true;
-		cov::any var=parse_expr(mTree.root());
+		cs::any var=parse_expr(mTree.root());
 		define_var=false;
 		if(mType!=nullptr)
 			var.assign(parse_expr(mType->get_tree().root()).const_val<type>().constructor(),true);
@@ -120,7 +120,7 @@ namespace cs {
 		if(this->mName!=nullptr) {
 			mNamespaces.emplace_back(*runtime->storage.get_domain());
 			runtime->storage.remove_domain();
-			runtime->storage.add_var(this->mName->get_id(),cov::any::make_protect<name_space_t>(std::make_shared<name_space_holder>(&mNamespaces.back())));
+			runtime->storage.add_var(this->mName->get_id(),cs::any::make_protect<name_space_t>(std::make_shared<name_space_holder>(&mNamespaces.back())));
 		}
 		else
 			runtime->storage.remove_domain();
@@ -186,7 +186,7 @@ namespace cs {
 	}
 	void statement_switch::run()
 	{
-		cov::any key=parse_expr(mTree.root());
+		cs::any key=parse_expr(mTree.root());
 		if(mCases.count(key)>0)
 			mCases[key]->run();
 		else if(mDefault!=nullptr)
@@ -265,7 +265,7 @@ namespace cs {
 	{
 		runtime->storage.add_domain();
 		define_var=true;
-		cov::any var=parse_expr(mInit.root());
+		cs::any var=parse_expr(mInit.root());
 		define_var=false;
 		while(var.const_val<number>()<=parse_expr(mEnd.root()).const_val<number>()) {
 			for(auto& ptr:mBlock) {
@@ -299,7 +299,7 @@ namespace cs {
 		}
 		runtime->storage.remove_domain();
 	}
-	template<typename T,typename X>void foreach_helper(const string& iterator,const cov::any& obj,std::deque<statement_base*>& body)
+	template<typename T,typename X>void foreach_helper(const string& iterator,const cs::any& obj,std::deque<statement_base*>& body)
 	{
 		runtime->storage.add_domain();
 		for(const X& it:obj.const_val<T>()) {
@@ -336,13 +336,13 @@ namespace cs {
 	}
 	void statement_foreach::run()
 	{
-		const cov::any& obj=parse_expr(this->mObj.root());
+		const cs::any& obj=parse_expr(this->mObj.root());
 		if(obj.type()==typeid(string))
 			foreach_helper<string,char>(this->mIt,obj,this->mBlock);
 		else if(obj.type()==typeid(list))
-			foreach_helper<list,cov::any>(this->mIt,obj,this->mBlock);
+			foreach_helper<list,cs::any>(this->mIt,obj,this->mBlock);
 		else if(obj.type()==typeid(array))
-			foreach_helper<array,cov::any>(this->mIt,obj,this->mBlock);
+			foreach_helper<array,cs::any>(this->mIt,obj,this->mBlock);
 		else if(obj.type()==typeid(hash_map))
 			foreach_helper<hash_map,pair>(this->mIt,obj,this->mBlock);
 		else
@@ -537,7 +537,7 @@ namespace cs {
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
 				statement_block* dptr=nullptr;
-				std::unordered_map<cov::any,statement_block*> cases;
+				std::unordered_map<cs::any,statement_block*> cases;
 				for(auto& it:body)
 				{
 					if(it==nullptr)

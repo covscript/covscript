@@ -1,14 +1,23 @@
 #pragma once
 /*
 * Covariant Script C/C++ Native Interface
-* CNI's effect is to forward CovScript function call to C/C++ function and need to cooperate with cs::native_interface to use.
-* Please do not bind a CNI directly to CovScript. CovScript can not directly identify a CNI.
-* CNI can recognize any form of C/C++ functions, but please note that CNI does not support implicit conversion of parameter types.
-* To avoid compatibility issues, use CovScript built-in types as much as possible.
-* You can use the reference to modify the value of the CovScript passed parameters, but please note that this may cause an error because some of the variables in CovScript are protected.
-* To improve the efficiency of a function, you can use constant references instead of values. Please note that CNI does not currently support forwarding right-value references.
-* If you want to receive a variable parameter, just use cov::any as the argument type.
-* This program was written by Micheal Lee(mikecovlee@163.com)。
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* Copyright (C) 2017 Michael Lee(李登淳)
+* Email: mikecovlee@163.com
+* Github: https://github.com/mikecovlee
 */
 #include "../include/mozart/bind.hpp"
 #include "../include/mozart/traits.hpp"
@@ -17,31 +26,31 @@
 #include <functional>
 namespace cs {
 	template<typename T>struct convert {
-		static inline const T& get_val(cov::any& val)
+		static inline const T& get_val(cs::any& val)
 		{
 			return val.const_val<T>();
 		}
 	};
 	template<typename T>struct convert<const T&> {
-		static inline const T& get_val(cov::any& val)
+		static inline const T& get_val(cs::any& val)
 		{
 			return val.const_val<T>();
 		}
 	};
 	template<typename T>struct convert<T&> {
-		static inline T& get_val(cov::any& val)
+		static inline T& get_val(cs::any& val)
 		{
 			return val.val<T>(true);
 		}
 	};
-	template<>struct convert<const cov::any&> {
-		static inline const cov::any& get_val(const cov::any& val)
+	template<>struct convert<const cs::any&> {
+		static inline const cs::any& get_val(const cs::any& val)
 		{
 			return val;
 		}
 	};
-	template<>struct convert<cov::any&> {
-		static inline cov::any& get_val(cov::any& val)
+	template<>struct convert<cs::any&> {
+		static inline cs::any& get_val(cs::any& val)
 		{
 			return val;
 		}
@@ -53,12 +62,12 @@ namespace cs {
 		cni_helper()=delete;
 		cni_helper(const cni_helper&)=default;
 		cni_helper(const std::function<void()>& func):mFunc(func) {}
-		cov::any call(array& args) const
+		cs::any call(array& args) const
 		{
 			if(!args.empty())
 				throw syntax_error("Wrong size of the arguments.Expected 0");
 			mFunc();
-			return cov::any::make<number>(0);
+			return cs::any::make<number>(0);
 		}
 	};
 	template<typename RetT>class cni_helper<RetT(*)()> {
@@ -67,7 +76,7 @@ namespace cs {
 		cni_helper()=delete;
 		cni_helper(const cni_helper&)=default;
 		cni_helper(const std::function<RetT()>& func):mFunc(func) {}
-		cov::any call(array& args) const
+		cs::any call(array& args) const
 		{
 			if(!args.empty())
 				throw syntax_error("Wrong size of the arguments.Expected 0");
@@ -86,11 +95,11 @@ namespace cs {
 		cni_helper()=delete;
 		cni_helper(const cni_helper&)=default;
 		cni_helper(const std::function<void(ArgsT...)>& func):mFunc(func) {}
-		cov::any call(array& args) const
+		cs::any call(array& args) const
 		{
 			arglist::check<ArgsT...>(args);
 			_call(args,cov::make_sequence<cov::type_list::get_size<args_t>::result>::result);
-			return cov::any::make<number>(0);
+			return cs::any::make<number>(0);
 		}
 	};
 	template<typename RetT,typename...ArgsT>
@@ -105,7 +114,7 @@ namespace cs {
 		cni_helper()=delete;
 		cni_helper(const cni_helper&)=default;
 		cni_helper(const std::function<RetT(ArgsT...)>& func):mFunc(func) {}
-		cov::any call(array& args) const
+		cs::any call(array& args) const
 		{
 			arglist::check<ArgsT...>(args);
 			return std::move(_call(args,cov::make_sequence<cov::type_list::get_size<args_t>::result>::result));
@@ -124,7 +133,7 @@ namespace cs {
 			cni_base(const cni_base&)=default;
 			virtual ~cni_base()=default;
 			virtual cni_base* clone()=0;
-			virtual cov::any call(array&) const=0;
+			virtual cs::any call(array&) const=0;
 		};
 		template<typename T>class cni_holder final:public cni_base {
 			cni_helper<typename cov::function_parser<T>::type::common_type> mCni;
@@ -137,7 +146,7 @@ namespace cs {
 			{
 				return new cni_holder(*this);
 			}
-			virtual cov::any call(array& args) const override
+			virtual cs::any call(array& args) const override
 			{
 				return mCni.call(args);
 			}
@@ -157,7 +166,7 @@ namespace cs {
 		{
 			delete mCni;
 		}
-		cov::any operator()(array& args) const
+		cs::any operator()(array& args) const
 		{
 			return mCni->call(args);
 		}

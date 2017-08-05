@@ -13,55 +13,55 @@
 #ifdef CS_DARWIN_EXT
 #include "./extensions/darwin_extension.cpp"
 #endif
-#define add_function(name) cs::runtime->storage.add_var_global(#name,cov::any::make_protect<cs::native_interface>(cs::cni(name)));
-#define add_function_const(name) cs::runtime->storage.add_var_global(#name,cov::any::make_protect<cs::native_interface>(cs::cni(name),true));
+#define add_function(name) cs::runtime->storage.add_var_global(#name,cs::any::make_protect<cs::native_interface>(cs::cni(name)));
+#define add_function_const(name) cs::runtime->storage.add_var_global(#name,cs::any::make_protect<cs::native_interface>(cs::cni(name),true));
 namespace cs {
 // Internal Functions
-	number to_integer(const cov::any& val)
+	number to_integer(const cs::any& val)
 	{
 		return val.to_integer();
 	}
-	string to_string(const cov::any& val)
+	string to_string(const cs::any& val)
 	{
 		return val.to_string();
 	}
-	bool is_char(const cov::any& val)
+	bool is_char(const cs::any& val)
 	{
 		return val.type()==typeid(char);
 	}
-	bool is_number(const cov::any& val)
+	bool is_number(const cs::any& val)
 	{
 		return val.type()==typeid(number);
 	}
-	bool is_boolean(const cov::any& val)
+	bool is_boolean(const cs::any& val)
 	{
 		return val.type()==typeid(boolean);
 	}
-	bool is_string(const cov::any& val)
+	bool is_string(const cs::any& val)
 	{
 		return val.type()==typeid(string);
 	}
-	bool is_list(const cov::any& val)
+	bool is_list(const cs::any& val)
 	{
 		return val.type()==typeid(list);
 	}
-	bool is_array(const cov::any& val)
+	bool is_array(const cs::any& val)
 	{
 		return val.type()==typeid(array);
 	}
-	bool is_pair(const cov::any& val)
+	bool is_pair(const cs::any& val)
 	{
 		return val.type()==typeid(pair);
 	}
-	bool is_hash_map(const cov::any& val)
+	bool is_hash_map(const cs::any& val)
 	{
 		return val.type()==typeid(hash_map);
 	}
-	cov::any clone(const cov::any& val)
+	cs::any clone(const cs::any& val)
 	{
 		return copy(val);
 	}
-	void swap(cov::any& a,cov::any& b)
+	void swap(cs::any& a,cs::any& b)
 	{
 		a.swap(b,true);
 	}
@@ -69,14 +69,14 @@ namespace cs {
 	{
 		init_grammar();
 		// Internal Types
-		runtime->storage.add_type("char",[]()->cov::any {return cov::any::make<char>('\0');},cov::hash<std::string>(typeid(char).name()));
-		runtime->storage.add_type("number",[]()->cov::any {return cov::any::make<number>(0);},cov::hash<std::string>(typeid(number).name()));
-		runtime->storage.add_type("boolean",[]()->cov::any {return cov::any::make<boolean>(true);},cov::hash<std::string>(typeid(boolean).name()));
-		runtime->storage.add_type("string",[]()->cov::any {return cov::any::make<string>();},cov::hash<std::string>(typeid(string).name()));
-		runtime->storage.add_type("list",[]()->cov::any {return cov::any::make<list>();},cov::hash<std::string>(typeid(list).name()));
-		runtime->storage.add_type("array",[]()->cov::any {return cov::any::make<array>();},cov::hash<std::string>(typeid(array).name()));
-		runtime->storage.add_type("pair",[]()->cov::any {return cov::any::make<pair>(number(0),number(0));},cov::hash<std::string>(typeid(pair).name()));
-		runtime->storage.add_type("hash_map",[]()->cov::any {return cov::any::make<hash_map>();},cov::hash<std::string>(typeid(hash_map).name()));
+		runtime->storage.add_type("char",[]()->cs::any {return cs::any::make<char>('\0');},cov::hash<std::string>(typeid(char).name()));
+		runtime->storage.add_type("number",[]()->cs::any {return cs::any::make<number>(0);},cov::hash<std::string>(typeid(number).name()));
+		runtime->storage.add_type("boolean",[]()->cs::any {return cs::any::make<boolean>(true);},cov::hash<std::string>(typeid(boolean).name()));
+		runtime->storage.add_type("string",[]()->cs::any {return cs::any::make<string>();},cov::hash<std::string>(typeid(string).name()));
+		runtime->storage.add_type("list",[]()->cs::any {return cs::any::make<list>();},cov::hash<std::string>(typeid(list).name()));
+		runtime->storage.add_type("array",[]()->cs::any {return cs::any::make<array>();},cov::hash<std::string>(typeid(array).name()));
+		runtime->storage.add_type("pair",[]()->cs::any {return cs::any::make<pair>(number(0),number(0));},cov::hash<std::string>(typeid(pair).name()));
+		runtime->storage.add_type("hash_map",[]()->cs::any {return cs::any::make<hash_map>();},cov::hash<std::string>(typeid(hash_map).name()));
 		// Add Internal Functions to storage
 		add_function_const(to_integer);
 		add_function_const(to_string);
@@ -91,11 +91,11 @@ namespace cs {
 		add_function(swap);
 		// Init the extensions
 		system_cs_ext::init();
-		runtime->storage.add_var("system",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));
+		runtime->storage.add_var("system",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));
 		runtime_cs_ext::init();
-		runtime->storage.add_var("runtime",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
+		runtime->storage.add_var("runtime",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
 		types_cs_ext::init();
-		runtime->storage.add_var("types",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&types_ext)));
+		runtime->storage.add_var("types",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&types_ext)));
 		char_cs_ext::init();
 		runtime->char_ext=std::make_shared<extension_holder>(&char_ext);
 		string_cs_ext::init();
@@ -110,15 +110,15 @@ namespace cs {
 		runtime->hash_map_ext=std::make_shared<extension_holder>(&hash_map_ext);
 #ifdef CS_MATH_EXT
 		math_cs_ext::init();
-		runtime->storage.add_var("math",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&math_ext)));
+		runtime->storage.add_var("math",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&math_ext)));
 #endif
 #ifdef CS_FILE_EXT
 		file_cs_ext::init();
-		runtime->storage.add_var("file",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&file_ext)));
+		runtime->storage.add_var("file",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&file_ext)));
 #endif
 #ifdef CS_DARWIN_EXT
 		darwin_cs_ext::init();
-		runtime->storage.add_var("darwin",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&darwin_ext)));
+		runtime->storage.add_var("darwin",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&darwin_ext)));
 #endif
 	}
 	void reset()
