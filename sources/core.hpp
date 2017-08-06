@@ -36,17 +36,21 @@
 #include <forward_list>
 #include <functional>
 #include <algorithm>
+#include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <utility>
 #include <string>
 #include <memory>
 #include <cmath>
 #include <deque>
 #include <list>
+#include <map>
 // CovScript Headers
 #include "./exceptions.hpp"
 #include "./any.hpp"
 #include "./typedef.hpp"
+
 namespace cs {
 // Version
 	const std::string version="1.0.2";
