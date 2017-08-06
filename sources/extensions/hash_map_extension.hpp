@@ -10,6 +10,16 @@ namespace cs_any {
 }
 namespace hash_map_cs_ext {
 	using namespace cs;
+// Capacity
+	bool empty(const hash_map& map)
+	{
+		return map.empty();
+	}
+	number size(const hash_map& map)
+	{
+		return map.size();
+	}
+// Modifiers
 	void clear(hash_map& map)
 	{
 		map.clear();
@@ -25,25 +35,23 @@ namespace hash_map_cs_ext {
 	{
 		map.erase(key);
 	}
-	bool exist(hash_map& map,const cs::any& key)
-	{
-		return map.count(key)>0;
-	}
+// Lookup
 	cs::any at(hash_map& map,const cs::any& key)
 	{
 		return map.at(key);
 	}
-	number size(const hash_map& map)
+	bool exist(hash_map& map,const cs::any& key)
 	{
-		return map.size();
+		return map.count(key)>0;
 	}
 	void init()
 	{
+		hash_map_ext.add_var("empty",cs::any::make_protect<native_interface>(cni(empty),true));
+		hash_map_ext.add_var("size",cs::any::make_protect<native_interface>(cni(size),true));
 		hash_map_ext.add_var("clear",cs::any::make_protect<native_interface>(cni(clear),true));
 		hash_map_ext.add_var("insert",cs::any::make_protect<native_interface>(cni(insert),true));
 		hash_map_ext.add_var("erase",cs::any::make_protect<native_interface>(cni(erase),true));
-		hash_map_ext.add_var("exist",cs::any::make_protect<native_interface>(cni(exist),true));
 		hash_map_ext.add_var("at",cs::any::make_protect<native_interface>(cni(at),true));
-		hash_map_ext.add_var("size",cs::any::make_protect<native_interface>(cni(size),true));
+		hash_map_ext.add_var("exist",cs::any::make_protect<native_interface>(cni(exist),true));
 	}
 }
