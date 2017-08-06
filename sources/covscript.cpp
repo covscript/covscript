@@ -19,13 +19,6 @@
 * Github: https://github.com/mikecovlee
 * Website: http://covariant.cn/cs
 */
-#ifndef CS_MINIMAL
-#define CS_MATH_EXT
-#define CS_FILE_EXT
-#define CS_DARWIN_EXT
-#else
-#define CS_STATIC
-#endif
 #include "./covscript.hpp"
 int main(int args_size,const char* args[])
 {

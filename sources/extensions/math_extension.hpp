@@ -1,6 +1,4 @@
-#ifndef CS_MATH_EXT
-#include "../extension.hpp"
-#endif
+#pragma once
 #include "../cni.hpp"
 #include <algorithm>
 static cs::extension math_ext;
@@ -87,10 +85,3 @@ namespace math_cs_ext {
 		math_ext.add_var("max",var::make_protect<native_interface>(cni(max),true));
 	}
 }
-#ifndef CS_MATH_EXT
-cs::extension* cs_extension()
-{
-	math_cs_ext::init();
-	return &math_ext;
-}
-#endif
