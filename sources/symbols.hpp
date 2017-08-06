@@ -110,11 +110,11 @@ namespace cs {
 		}
 	};
 	class token_value final:public token_base {
-		cs::any mVal;
+		var mVal;
 		static std::deque<std::deque<token_value*>> mList;
 	public:
 		token_value()=delete;
-		token_value(const cs::any& val):mVal(val)
+		token_value(const var& val):mVal(val)
 		{
 			if(!mVal.is_protect()) {
 				mVal.protect();
@@ -125,7 +125,7 @@ namespace cs {
 		{
 			return token_types::value;
 		}
-		cs::any& get_value() noexcept
+		var& get_value() noexcept
 		{
 			return this->mVal;
 		}

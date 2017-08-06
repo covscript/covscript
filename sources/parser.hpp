@@ -406,10 +406,10 @@ namespace cs {
 	class statement_switch final:public statement_base {
 		cov::tree<token_base*> mTree;
 		statement_block* mDefault=nullptr;
-		std::unordered_map<cs::any,statement_block*> mCases;
+		std::unordered_map<var,statement_block*> mCases;
 	public:
 		statement_switch()=delete;
-		statement_switch(const cov::tree<token_base*>& tree,const std::unordered_map<cs::any,statement_block*>& cases,statement_block* dptr,token_base* ptr):statement_base(ptr),mTree(tree),mCases(cases),mDefault(dptr) {}
+		statement_switch(const cov::tree<token_base*>& tree,const std::unordered_map<var,statement_block*>& cases,statement_block* dptr,token_base* ptr):statement_base(ptr),mTree(tree),mCases(cases),mDefault(dptr) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::switch_;
@@ -417,11 +417,11 @@ namespace cs {
 		virtual void run() override;
 	};
 	class statement_case final:public statement_base {
-		cs::any mTag;
+		var mTag;
 		statement_block* mBlock;
 	public:
 		statement_case()=delete;
-		statement_case(const cs::any& tag,const std::deque<statement_base*>& b,token_base* ptr):statement_base(ptr),mTag(copy(tag)),mBlock(new statement_block(b,ptr)) {}
+		statement_case(const var& tag,const std::deque<statement_base*>& b,token_base* ptr):statement_base(ptr),mTag(copy(tag)),mBlock(new statement_block(b,ptr)) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::case_;
@@ -430,7 +430,7 @@ namespace cs {
 		{
 			throw syntax_error("Can not run case outside the switch.");
 		}
-		const cs::any& get_tag() const
+		const var& get_tag() const
 		{
 			return this->mTag;
 		}

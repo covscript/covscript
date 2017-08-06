@@ -25,7 +25,7 @@
 #include <ostream>
 
 #define CS_ANY_POOL_SIZE 10
-namespace cs_any {
+namespace cs_impl {
 	template<typename _Tp> class compare_helper {
 		template<typename T,typename X=bool>struct matcher;
 		template<typename T> static constexpr bool match(T*)
@@ -177,25 +177,25 @@ namespace cs_any {
 			{
 				if (obj->type()==this->type()) {
 					const holder<T>* ptr=dynamic_cast<const holder<T>*>(obj);
-					return ptr!=nullptr?cs_any::compare(mDat,ptr->data()):false;
+					return ptr!=nullptr?cs_impl::compare(mDat,ptr->data()):false;
 				}
 				return false;
 			}
 			virtual long to_integer() const override
 			{
-				return cs_any::to_integer(mDat);
+				return cs_impl::to_integer(mDat);
 			}
 			virtual std::string to_string() const override
 			{
-				return cs_any::to_string(mDat);
+				return cs_impl::to_string(mDat);
 			}
 			virtual std::size_t hash() const override
 			{
-				return cs_any::hash<T>(mDat);
+				return cs_impl::hash<T>(mDat);
 			}
 			virtual void detach() override
 			{
-				cs_any::detach(mDat);
+				cs_impl::detach(mDat);
 			}
 			virtual void kill() override
 			{
@@ -203,7 +203,7 @@ namespace cs_any {
 			}
 			virtual cs::extension_t& get_ext() const override
 			{
-				return cs_any::get_ext<T>();
+				return cs_impl::get_ext<T>();
 			}
 			T& data()
 			{
@@ -343,7 +343,7 @@ namespace cs_any {
 		std::size_t hash() const
 		{
 			if(this->mDat==nullptr)
-				return cs_any::hash<void*>(nullptr);
+				return cs_impl::hash<void*>(nullptr);
 			return this->mDat->data->hash();
 		}
 		void detach()
@@ -514,19 +514,15 @@ namespace cs_any {
 	};
 }
 
-namespace cs {
-	using any=cs_any::any;
-}
-
-std::ostream& operator<<(std::ostream& out,const cs::any& val)
+std::ostream& operator<<(std::ostream& out,const cs_impl::any& val)
 {
 	out<<val.to_string();
 	return out;
 }
 
 namespace std {
-	template<> struct hash<cs::any> {
-		std::size_t operator()(const cs::any& val) const
+	template<> struct hash<cs_impl::any> {
+		std::size_t operator()(const cs_impl::any& val) const
 		{
 			return val.hash();
 		}

@@ -68,23 +68,23 @@ namespace math_cs_ext {
 	}
 	void init()
 	{
-		math_ext.add_var("pi",cs::any::make_constant<number>(3.1415926535));
-		math_ext.add_var("e",cs::any::make_constant<number>(2.7182818284));
-		math_ext.add_var("abs",cs::any::make_protect<native_interface>(cni(abs),true));
-		math_ext.add_var("ln",cs::any::make_protect<native_interface>(cni(ln),true));
-		math_ext.add_var("log10",cs::any::make_protect<native_interface>(cni(log10),true));
-		math_ext.add_var("log",cs::any::make_protect<native_interface>(cni(log),true));
-		math_ext.add_var("sin",cs::any::make_protect<native_interface>(cni(sin),true));
-		math_ext.add_var("cos",cs::any::make_protect<native_interface>(cni(cos),true));
-		math_ext.add_var("tan",cs::any::make_protect<native_interface>(cni(tan),true));
-		math_ext.add_var("asin",cs::any::make_protect<native_interface>(cni(asin),true));
-		math_ext.add_var("acos",cs::any::make_protect<native_interface>(cni(acos),true));
-		math_ext.add_var("atan",cs::any::make_protect<native_interface>(cni(atan),true));
-		math_ext.add_var("sqrt",cs::any::make_protect<native_interface>(cni(sqrt),true));
-		math_ext.add_var("root",cs::any::make_protect<native_interface>(cni(root),true));
-		math_ext.add_var("pow",cs::any::make_protect<native_interface>(cni(pow),true));
-		math_ext.add_var("min",cs::any::make_protect<native_interface>(cni(min),true));
-		math_ext.add_var("max",cs::any::make_protect<native_interface>(cni(max),true));
+		math_ext.add_var("pi",var::make_constant<number>(3.1415926535));
+		math_ext.add_var("e",var::make_constant<number>(2.7182818284));
+		math_ext.add_var("abs",var::make_protect<native_interface>(cni(abs),true));
+		math_ext.add_var("ln",var::make_protect<native_interface>(cni(ln),true));
+		math_ext.add_var("log10",var::make_protect<native_interface>(cni(log10),true));
+		math_ext.add_var("log",var::make_protect<native_interface>(cni(log),true));
+		math_ext.add_var("sin",var::make_protect<native_interface>(cni(sin),true));
+		math_ext.add_var("cos",var::make_protect<native_interface>(cni(cos),true));
+		math_ext.add_var("tan",var::make_protect<native_interface>(cni(tan),true));
+		math_ext.add_var("asin",var::make_protect<native_interface>(cni(asin),true));
+		math_ext.add_var("acos",var::make_protect<native_interface>(cni(acos),true));
+		math_ext.add_var("atan",var::make_protect<native_interface>(cni(atan),true));
+		math_ext.add_var("sqrt",var::make_protect<native_interface>(cni(sqrt),true));
+		math_ext.add_var("root",var::make_protect<native_interface>(cni(root),true));
+		math_ext.add_var("pow",var::make_protect<native_interface>(cni(pow),true));
+		math_ext.add_var("min",var::make_protect<native_interface>(cni(min),true));
+		math_ext.add_var("max",var::make_protect<native_interface>(cni(max),true));
 	}
 }
 #ifndef CS_MATH_EXT
