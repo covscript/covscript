@@ -1,8 +1,6 @@
+#pragma once
 #define DARWIN_FORCE_BUILTIN
 #define DARWIN_DISABLE_LOG
-#ifndef CS_DARWIN_EXT
-#include "../extension.hpp"
-#endif
 #include "../../include/darwin/darwin.hpp"
 #include "../cni.hpp"
 static cs::extension darwin_ext;
@@ -199,10 +197,3 @@ namespace darwin_cs_ext {
 		darwin_ext.add_var("cyan",var::make_constant<darwin::colors>(darwin::colors::cyan));
 	}
 }
-#ifndef CS_DARWIN_EXT
-cs::extension* cs_extension()
-{
-	darwin_cs_ext::init();
-	return &darwin_ext;
-}
-#endif

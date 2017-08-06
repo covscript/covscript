@@ -1,6 +1,4 @@
-#ifndef CS_FILE_EXT
-#include "../extension.hpp"
-#endif
+#pragma once
 #include "../cni.hpp"
 #include <fstream>
 static cs::extension file_ext;
@@ -80,10 +78,3 @@ namespace file_cs_ext {
 		file_ext.add_var("write",var::make_protect<native_interface>(write));
 	}
 }
-#ifndef CS_FILE_EXT
-cs::extension* cs_extension()
-{
-	file_cs_ext::init();
-	return &file_ext;
-}
-#endif
