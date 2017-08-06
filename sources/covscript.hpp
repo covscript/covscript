@@ -32,7 +32,6 @@ namespace cs {
 	}
 	void init()
 	{
-		init_grammar();
 		// Internal Types
 		runtime->storage.add_type("char",[]()->var {return var::make<char>('\0');},cs_impl::hash<std::string>(typeid(char).name()),char_ext_shared);
 		runtime->storage.add_type("number",[]()->var {return var::make<number>(0);},cs_impl::hash<std::string>(typeid(number).name()));
@@ -66,14 +65,11 @@ namespace cs {
 		runtime->storage.add_var("file",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&file_ext)));
 		runtime->storage.add_var("darwin",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&darwin_ext)));
 	}
-	void reset()
-	{
-		runtime=std::unique_ptr<runtime_type>(new runtime_type);
-		init();
-	}
-	void cs(const std::string& path)
+	std::shared_ptr<runtime_type> covscript(const std::string& path)
 	{
 		token_value::clean();
+		runtime.new_instance();
+		init();
 		std::deque<char> buff;
 		std::deque<token_base*> tokens;
 		std::deque<statement_base*> statements;
@@ -128,5 +124,6 @@ namespace cs {
 				throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
 			}
 		}
+		return runtime.pop_instance();
 	}
 }

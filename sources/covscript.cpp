@@ -23,22 +23,15 @@
 int main(int args_size,const char* args[])
 {
 	std::ios::sync_with_stdio(false);
-	cs::reset();
-	bool executed=true;
-	try {
-		cs::cs("./init.csc");
-	}
-	catch(const cs::fatal_error& fe) {
-		executed=false;
-	}
 	if(args_size>1) {
 		cs::array arg;
 		for(int i=1; i<args_size; ++i)
 			arg.push_back(std::string(args[i]));
 		system_ext.add_var("args",arg);
-		cs::cs(args[1]);
+		cs::init_grammar();
+		cs::covscript(args[1]);
 	}
-	else if(!executed)
+	else
 		throw cs::fatal_error("no input file.\nUsage: cs <file> <args...>");
 	return 0;
 }

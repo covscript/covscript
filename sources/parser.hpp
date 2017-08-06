@@ -282,7 +282,7 @@ namespace cs {
 	}
 	void translate_into_statements(std::deque<token_base*>& tokens,std::deque<statement_base*>& statements);
 	enum class statement_types {
-		null,expression_,import_,block_,var_,constant_,if_,else_,switch_,case_,default_,while_,until_,loop_,for_,foreach_,break_,continue_,struct_,function_,return_,end_
+		null,expression_,import_,package_,block_,var_,constant_,if_,else_,switch_,case_,default_,while_,until_,loop_,for_,foreach_,break_,continue_,struct_,function_,return_,end_
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;

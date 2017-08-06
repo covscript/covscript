@@ -32,13 +32,11 @@ namespace cs {
 		}
 		void remove_domain()
 		{
-			if(m_data.size()>1)
-				m_data.pop_front();
+			m_data.pop_front();
 		}
 		void remove_this()
 		{
-			if(m_this.size()>1)
-				m_this.pop_front();
+			m_this.pop_front();
 		}
 		bool var_exsist(const string& name)
 		{
@@ -117,11 +115,35 @@ namespace cs {
 			add_var(name,var::make_protect<type>(func,hash,ext));
 		}
 	};
-	struct runtime_type final {
+	class runtime_type final {
+	public:
+		string package_name;
 		domain_manager storage;
 		domain_manager constant_storage;
 	};
-	std::unique_ptr<runtime_type> runtime=nullptr;
+	class runtime_manager final {
+		std::deque<runtime_t> m_data;
+	public:
+		runtime_manager()=default;
+		runtime_manager(const runtime_manager&)=delete;
+		~runtime_manager()=default;
+		void new_instance()
+		{
+			m_data.emplace_front(std::make_shared<runtime_type>());
+		}
+		runtime_t pop_instance()
+		{
+			runtime_t front=m_data.front();
+			m_data.pop_front();
+			return front;
+		}
+		runtime_type* operator->()
+		{
+			return m_data.front().get();
+		}
+	};
+	std::shared_ptr<runtime_type> covscript(const std::string&);
+	static runtime_manager runtime;
 	var parse_add(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))

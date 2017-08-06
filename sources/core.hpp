@@ -259,7 +259,6 @@ namespace cs {
 		val.detach();
 		return val;
 	}
-	void cs(const std::string&);
 }
 namespace cs_impl {
 	template<>void detach<cs::pair>(cs::pair& val)

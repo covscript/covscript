@@ -1,0 +1,2 @@
+package cs_package
+var str=system.input()

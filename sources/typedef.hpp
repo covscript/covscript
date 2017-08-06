@@ -8,6 +8,7 @@ namespace cs {
 	class callable;
 	class name_space;
 	class name_space_holder;
+	class runtime_type;
 	using var=cs_impl::any;
 	using number=long double;
 	using boolean=bool;
@@ -21,4 +22,5 @@ namespace cs {
 	using extension_holder=name_space_holder;
 	using name_space_t=std::shared_ptr<name_space_holder>;
 	using extension_t=std::shared_ptr<extension_holder>;
+	using runtime_t=std::shared_ptr<runtime_type>;
 }
