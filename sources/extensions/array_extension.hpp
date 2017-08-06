@@ -90,6 +90,11 @@ namespace array_cs_ext {
 	{
 		arr.pop_back();
 	}
+// Operations
+	cs::any to_list(const array& arr)
+	{
+		return cs::any::make<list>(arr.begin(),arr.end());
+	}
 	void init()
 	{
 		array_ext.add_var("at",cs::any::make_protect<native_interface>(cni(at),true));
@@ -109,5 +114,6 @@ namespace array_cs_ext {
 		array_ext.add_var("pop_front",cs::any::make_protect<native_interface>(cni(pop_front),true));
 		array_ext.add_var("push_back",cs::any::make_protect<native_interface>(cni(push_back),true));
 		array_ext.add_var("pop_back",cs::any::make_protect<native_interface>(cni(pop_back),true));
+		array_ext.add_var("to_list",cs::any::make_protect<native_interface>(cni(to_list),true));
 	}
 }
