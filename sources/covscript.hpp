@@ -18,55 +18,55 @@
 #ifdef CS_DARWIN_EXT
 #include "./extensions/darwin_extension.cpp"
 #endif
-#define add_function(name) cs::runtime->storage.add_var_global(#name,cs::any::make_protect<cs::native_interface>(cs::cni(name)));
-#define add_function_const(name) cs::runtime->storage.add_var_global(#name,cs::any::make_protect<cs::native_interface>(cs::cni(name),true));
+#define add_function(name) cs::runtime->storage.add_var_global(#name,cs::var::make_protect<cs::native_interface>(cs::cni(name)));
+#define add_function_const(name) cs::runtime->storage.add_var_global(#name,cs::var::make_protect<cs::native_interface>(cs::cni(name),true));
 namespace cs {
 // Internal Functions
-	number to_integer(const cs::any& val)
+	number to_integer(const var& val)
 	{
 		return val.to_integer();
 	}
-	string to_string(const cs::any& val)
+	string to_string(const var& val)
 	{
 		return val.to_string();
 	}
-	bool is_char(const cs::any& val)
+	bool is_char(const var& val)
 	{
 		return val.type()==typeid(char);
 	}
-	bool is_number(const cs::any& val)
+	bool is_number(const var& val)
 	{
 		return val.type()==typeid(number);
 	}
-	bool is_boolean(const cs::any& val)
+	bool is_boolean(const var& val)
 	{
 		return val.type()==typeid(boolean);
 	}
-	bool is_string(const cs::any& val)
+	bool is_string(const var& val)
 	{
 		return val.type()==typeid(string);
 	}
-	bool is_list(const cs::any& val)
+	bool is_list(const var& val)
 	{
 		return val.type()==typeid(list);
 	}
-	bool is_array(const cs::any& val)
+	bool is_array(const var& val)
 	{
 		return val.type()==typeid(array);
 	}
-	bool is_pair(const cs::any& val)
+	bool is_pair(const var& val)
 	{
 		return val.type()==typeid(pair);
 	}
-	bool is_hash_map(const cs::any& val)
+	bool is_hash_map(const var& val)
 	{
 		return val.type()==typeid(hash_map);
 	}
-	cs::any clone(const cs::any& val)
+	var clone(const var& val)
 	{
 		return copy(val);
 	}
-	void swap(cs::any& a,cs::any& b)
+	void swap(var& a,var& b)
 	{
 		a.swap(b,true);
 	}
@@ -74,14 +74,14 @@ namespace cs {
 	{
 		init_grammar();
 		// Internal Types
-		runtime->storage.add_type("char",[]()->cs::any {return cs::any::make<char>('\0');},cs_any::hash<std::string>(typeid(char).name()),char_ext_shared);
-		runtime->storage.add_type("number",[]()->cs::any {return cs::any::make<number>(0);},cs_any::hash<std::string>(typeid(number).name()));
-		runtime->storage.add_type("boolean",[]()->cs::any {return cs::any::make<boolean>(true);},cs_any::hash<std::string>(typeid(boolean).name()));
-		runtime->storage.add_type("string",[]()->cs::any {return cs::any::make<string>();},cs_any::hash<std::string>(typeid(string).name()),string_ext_shared);
-		runtime->storage.add_type("list",[]()->cs::any {return cs::any::make<list>();},cs_any::hash<std::string>(typeid(list).name()),list_ext_shared);
-		runtime->storage.add_type("array",[]()->cs::any {return cs::any::make<array>();},cs_any::hash<std::string>(typeid(array).name()),array_ext_shared);
-		runtime->storage.add_type("pair",[]()->cs::any {return cs::any::make<pair>(number(0),number(0));},cs_any::hash<std::string>(typeid(pair).name()),pair_ext_shared);
-		runtime->storage.add_type("hash_map",[]()->cs::any {return cs::any::make<hash_map>();},cs_any::hash<std::string>(typeid(hash_map).name()),hash_map_ext_shared);
+		runtime->storage.add_type("char",[]()->var {return var::make<char>('\0');},cs_impl::hash<std::string>(typeid(char).name()),char_ext_shared);
+		runtime->storage.add_type("number",[]()->var {return var::make<number>(0);},cs_impl::hash<std::string>(typeid(number).name()));
+		runtime->storage.add_type("boolean",[]()->var {return var::make<boolean>(true);},cs_impl::hash<std::string>(typeid(boolean).name()));
+		runtime->storage.add_type("string",[]()->var {return var::make<string>();},cs_impl::hash<std::string>(typeid(string).name()),string_ext_shared);
+		runtime->storage.add_type("list",[]()->var {return var::make<list>();},cs_impl::hash<std::string>(typeid(list).name()),list_ext_shared);
+		runtime->storage.add_type("array",[]()->var {return var::make<array>();},cs_impl::hash<std::string>(typeid(array).name()),array_ext_shared);
+		runtime->storage.add_type("pair",[]()->var {return var::make<pair>(number(0),number(0));},cs_impl::hash<std::string>(typeid(pair).name()),pair_ext_shared);
+		runtime->storage.add_type("hash_map",[]()->var {return var::make<hash_map>();},cs_impl::hash<std::string>(typeid(hash_map).name()),hash_map_ext_shared);
 		// Add Internal Functions to storage
 		add_function_const(to_integer);
 		add_function_const(to_string);
@@ -96,9 +96,9 @@ namespace cs {
 		add_function(swap);
 		// Init the extensions
 		system_cs_ext::init();
-		runtime->storage.add_var("system",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));
+		runtime->storage.add_var("system",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));
 		runtime_cs_ext::init();
-		runtime->storage.add_var("runtime",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
+		runtime->storage.add_var("runtime",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
 		char_cs_ext::init();
 		string_cs_ext::init();
 		list_cs_ext::init();
@@ -107,15 +107,15 @@ namespace cs {
 		hash_map_cs_ext::init();
 #ifdef CS_MATH_EXT
 		math_cs_ext::init();
-		runtime->storage.add_var("math",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&math_ext)));
+		runtime->storage.add_var("math",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&math_ext)));
 #endif
 #ifdef CS_FILE_EXT
 		file_cs_ext::init();
-		runtime->storage.add_var("file",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&file_ext)));
+		runtime->storage.add_var("file",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&file_ext)));
 #endif
 #ifdef CS_DARWIN_EXT
 		darwin_cs_ext::init();
-		runtime->storage.add_var("darwin",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&darwin_ext)));
+		runtime->storage.add_var("darwin",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&darwin_ext)));
 #endif
 	}
 	void reset()

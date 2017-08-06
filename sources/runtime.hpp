@@ -3,20 +3,20 @@
 namespace cs {
 	class domain_manager {
 	public:
-		using domain_t=std::shared_ptr<std::unordered_map<string,cs::any>>;
+		using domain_t=std::shared_ptr<std::unordered_map<string,var>>;
 	private:
 		std::deque<domain_t> m_data;
 		std::deque<domain_t> m_this;
 	public:
 		domain_manager()
 		{
-			m_data.emplace_front(std::make_shared<std::unordered_map<string,cs::any>>());
+			m_data.emplace_front(std::make_shared<std::unordered_map<string,var>>());
 		}
 		domain_manager(const domain_manager&)=delete;
 		~domain_manager()=default;
 		void add_domain()
 		{
-			m_data.emplace_front(std::make_shared<std::unordered_map<string,cs::any>>());
+			m_data.emplace_front(std::make_shared<std::unordered_map<string,var>>());
 		}
 		void add_domain(const domain_t& dat)
 		{
@@ -65,39 +65,39 @@ namespace cs {
 				return true;
 			return false;
 		}
-		cs::any& get_var(const string& name)
+		var& get_var(const string& name)
 		{
 			for(auto& domain:m_data)
 				if(domain->count(name)>0)
 					return (*domain)[name];
 			throw syntax_error("Use of undefined variable \""+name+"\".");
 		}
-		cs::any& get_var_current(const string& name)
+		var& get_var_current(const string& name)
 		{
 			if(m_data.front()->count(name)>0)
 				return (*m_data.front())[name];
 			throw syntax_error("Use of undefined variable \""+name+"\" in current domain.");
 		}
-		cs::any& get_var_global(const string& name)
+		var& get_var_global(const string& name)
 		{
 			if(m_data.back()->count(name)>0)
 				return (*m_data.back())[name];
 			throw syntax_error("Use of undefined variable \""+name+"\" in global domain.");
 		}
-		cs::any& get_var_this(const string& name)
+		var& get_var_this(const string& name)
 		{
 			if(m_this.front()->count(name)>0)
 				return (*m_this.front())[name];
 			throw syntax_error("Use of undefined variable \""+name+"\" in current object.");
 		}
-		void add_var(const string& name,const cs::any& var)
+		void add_var(const string& name,const var& var)
 		{
 			if(var_exsist_current(name))
 				get_var(name)=var;
 			else
 				m_data.front()->emplace(name,var);
 		}
-		void add_var_global(const string& name,const cs::any& var)
+		void add_var_global(const string& name,const var& var)
 		{
 			if(var_exsist_global(name))
 				get_var_global(name)=var;
@@ -106,15 +106,15 @@ namespace cs {
 		}
 		void add_struct(const std::string& name,const struct_builder& builder)
 		{
-			add_var(name,cs::any::make_protect<type>(builder,builder.get_hash()));
+			add_var(name,var::make_protect<type>(builder,builder.get_hash()));
 		}
-		void add_type(const std::string& name,const std::function<cs::any()>& func,std::size_t hash)
+		void add_type(const std::string& name,const std::function<var()>& func,std::size_t hash)
 		{
-			add_var(name,cs::any::make_protect<type>(func,hash));
+			add_var(name,var::make_protect<type>(func,hash));
 		}
-		void add_type(const std::string& name,const std::function<cs::any()>& func,std::size_t hash,extension_t ext)
+		void add_type(const std::string& name,const std::function<var()>& func,std::size_t hash,extension_t ext)
 		{
-			add_var(name,cs::any::make_protect<type>(func,hash,ext));
+			add_var(name,var::make_protect<type>(func,hash,ext));
 		}
 	};
 	struct runtime_type final {
@@ -122,16 +122,16 @@ namespace cs {
 		domain_manager constant_storage;
 	};
 	std::unique_ptr<runtime_type> runtime=nullptr;
-	cs::any parse_add(const cs::any& a,const cs::any& b)
+	var parse_add(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return a.const_val<number>()+b.const_val<number>();
 		else if(a.type()==typeid(string))
-			return cs::any::make<std::string>(a.const_val<string>()+b.to_string());
+			return var::make<std::string>(a.const_val<string>()+b.to_string());
 		else
 			throw syntax_error("Unsupported operator operations(Add).");
 	}
-	cs::any parse_sub(const cs::any& a,const cs::any& b)
+	var parse_sub(const var& a,const var& b)
 	{
 		if(!a.usable()&&b.type()==typeid(number))
 			return -b.const_val<number>();
@@ -140,35 +140,35 @@ namespace cs {
 		else
 			throw syntax_error("Unsupported operator operations(Sub).");
 	}
-	cs::any parse_mul(const cs::any& a,const cs::any& b)
+	var parse_mul(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return a.const_val<number>()*b.const_val<number>();
 		else
 			throw syntax_error("Unsupported operator operations(Mul).");
 	}
-	cs::any parse_div(const cs::any& a,const cs::any& b)
+	var parse_div(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return a.const_val<number>()/b.const_val<number>();
 		else
 			throw syntax_error("Unsupported operator operations(Div).");
 	}
-	cs::any parse_mod(const cs::any& a,const cs::any& b)
+	var parse_mod(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return number(long(a.const_val<number>())%long(b.const_val<number>()));
 		else
 			throw syntax_error("Unsupported operator operations(Mod).");
 	}
-	cs::any parse_pow(const cs::any& a,const cs::any& b)
+	var parse_pow(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return number(std::pow(a.const_val<number>(),b.const_val<number>()));
 		else
 			throw syntax_error("Unsupported operator operations(Pow).");
 	}
-	cs::any parse_dot(const cs::any& a,token_base* b)
+	var parse_dot(const var& a,token_base* b)
 	{
 		if(b==nullptr)
 			throw internal_error("Null Pointer Accessed.");
@@ -197,9 +197,9 @@ namespace cs {
 		else if(a.type()==typeid(type))
 			return a.val<type>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
 		else
-			return cs::any::make<callable>(object_method(a,a.get_ext()->get_var(dynamic_cast<token_id*>(b)->get_id())),true);
+			return var::make<callable>(object_method(a,a.get_ext()->get_var(dynamic_cast<token_id*>(b)->get_id())),true);
 	}
-	cs::any parse_typeid(token_base* a,const cs::any& b)
+	var parse_typeid(token_base* a,const var& b)
 	{
 		if(a!=nullptr)
 			throw syntax_error("Wrong format of new expression.");
@@ -208,71 +208,71 @@ namespace cs {
 		else if(b.type()==typeid(structure))
 			return b.const_val<structure>().get_hash();
 		else
-			return cs_any::hash<std::string>(b.type().name());
+			return cs_impl::hash<std::string>(b.type().name());
 	}
-	cs::any parse_und(const cs::any& a,const cs::any& b)
+	var parse_und(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return boolean(a.const_val<number>()<b.const_val<number>());
 		else
 			throw syntax_error("Unsupported operator operations(Und).");
 	}
-	cs::any parse_abo(const cs::any& a,const cs::any& b)
+	var parse_abo(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return boolean(a.const_val<number>()>b.const_val<number>());
 		else
 			throw syntax_error("Unsupported operator operations(Abo).");
 	}
-	cs::any parse_ueq(const cs::any& a,const cs::any& b)
+	var parse_ueq(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return boolean(a.const_val<number>()<=b.const_val<number>());
 		else
 			throw syntax_error("Unsupported operator operations(Ueq).");
 	}
-	cs::any parse_aeq(const cs::any& a,const cs::any& b)
+	var parse_aeq(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return boolean(a.const_val<number>()>=b.const_val<number>());
 		else
 			throw syntax_error("Unsupported operator operations(Aeq).");
 	}
-	cs::any parse_asi(cs::any a,const cs::any& b)
+	var parse_asi(var a,const var& b)
 	{
 		a.swap(copy(b),true);
 		return a;
 	}
-	cs::any parse_pair(const cs::any& a,const cs::any& b)
+	var parse_pair(const var& a,const var& b)
 	{
 		if(a.type()!=typeid(pair)&&b.type()!=typeid(pair))
-			return cs::any::make<pair>(copy(a),copy(b));
+			return var::make<pair>(copy(a),copy(b));
 		else
 			throw syntax_error("Unsupported operator operations(Pair).");
 	}
-	cs::any parse_equ(const cs::any& a,const cs::any& b)
+	var parse_equ(const var& a,const var& b)
 	{
 		return boolean(a==b);
 	}
-	cs::any parse_neq(const cs::any& a,const cs::any& b)
+	var parse_neq(const var& a,const var& b)
 	{
 		return boolean(a!=b);
 	}
-	cs::any parse_and(const cs::any& a,const cs::any& b)
+	var parse_and(const var& a,const var& b)
 	{
 		if(a.type()==typeid(boolean)&&b.type()==typeid(boolean))
 			return boolean(a.const_val<boolean>()&&b.const_val<boolean>());
 		else
 			throw syntax_error("Unsupported operator operations(And).");
 	}
-	cs::any parse_or(const cs::any& a,const cs::any& b)
+	var parse_or(const var& a,const var& b)
 	{
 		if(a.type()==typeid(boolean)&&b.type()==typeid(boolean))
 			return boolean(a.const_val<boolean>()||b.const_val<boolean>());
 		else
 			throw syntax_error("Unsupported operator operations(Or).");
 	}
-	cs::any parse_not(token_base* a,const cs::any& b)
+	var parse_not(token_base* a,const var& b)
 	{
 		if(a!=nullptr)
 			throw syntax_error("Wrong format of not expression.");
@@ -281,7 +281,7 @@ namespace cs {
 		else
 			throw syntax_error("Unsupported operator operations(Not).");
 	}
-	cs::any parse_inc(cs::any a,cs::any b)
+	var parse_inc(var a,var b)
 	{
 		if(a.usable()) {
 			if(b.usable())
@@ -296,7 +296,7 @@ namespace cs {
 				return ++b.val<number>(true);
 		}
 	}
-	cs::any parse_dec(cs::any a,cs::any b)
+	var parse_dec(var a,var b)
 	{
 		if(a.usable()) {
 			if(b.usable())
@@ -311,7 +311,7 @@ namespace cs {
 				return --b.val<number>(true);
 		}
 	}
-	cs::any parse_fcall(const cs::any& a,cs::any b)
+	var parse_fcall(const var& a,var b)
 	{
 		if(a.type()==typeid(callable))
 			return a.const_val<callable>().call(b.val<array>(true));
@@ -320,7 +320,7 @@ namespace cs {
 		else
 			throw syntax_error("Unsupported operator operations(Fcall).");
 	}
-	cs::any parse_access(cs::any a,const cs::any& b)
+	var parse_access(var a,const var& b)
 	{
 		if(a.type()==typeid(array)) {
 			if(b.type()!=typeid(number))
@@ -351,13 +351,13 @@ namespace cs {
 			throw syntax_error("Access non-array or string object.");
 	}
 	bool define_var=false;
-	cs::any parse_expr(const cov::tree<token_base*>::iterator& it)
+	var parse_expr(const cov::tree<token_base*>::iterator& it)
 	{
 		if(!it.usable())
 			throw internal_error("The expression tree is not available.");
 		token_base* token=it.data();
 		if(token==nullptr)
-			return cs::any();
+			return var();
 		switch(token->get_type()) {
 		case token_types::id: {
 			const std::string& id=dynamic_cast<token_id*>(token)->get_id();
@@ -379,7 +379,7 @@ namespace cs {
 			array arr;
 			bool is_map=true;
 			for(auto& tree:dynamic_cast<token_array*>(token)->get_array()) {
-				const cs::any& val=parse_expr(tree.root());
+				const var& val=parse_expr(tree.root());
 				if(is_map&&val.type()!=typeid(pair))
 					is_map=false;
 				arr.push_back(copy(val));
@@ -395,16 +395,16 @@ namespace cs {
 					else
 						map[p.first]=p.second;
 				}
-				return cs::any::make<hash_map>(std::move(map));
+				return var::make<hash_map>(std::move(map));
 			}
 			else
-				return cs::any::make<array>(std::move(arr));
+				return var::make<array>(std::move(arr));
 		}
 		case token_types::arglist: {
 			array arr;
 			for(auto& tree:dynamic_cast<token_arglist*>(token)->get_arglist())
 				arr.push_back(parse_expr(tree.root()));
-			return cs::any::make<array>(std::move(arr));
+			return var::make<array>(std::move(arr));
 		}
 		case token_types::signal: {
 			token_signal* ps=dynamic_cast<token_signal*>(token);
@@ -442,7 +442,7 @@ namespace cs {
 				return parse_abo(parse_expr(it.left()),parse_expr(it.right()));
 				break;
 			case signal_types::asi_: {
-				cs::any left=parse_expr(it.left());
+				var left=parse_expr(it.left());
 				return parse_asi(left,parse_expr(it.right()));
 				break;
 			}

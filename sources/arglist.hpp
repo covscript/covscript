@@ -40,7 +40,7 @@ namespace cs {
 	}
 	class arglist final {
 		template<typename T,int index>struct check_arg {
-			static inline short check(const cs::any& val)
+			static inline short check(const var& val)
 			{
 				if(typeid(T)!=val.type())
 					throw syntax_error("Invalid Argument.At "+std::to_string(index+1)+".Expected "+get_name_of_type<T>());
@@ -49,12 +49,12 @@ namespace cs {
 			}
 		};
 		static inline void result_container(short...) {}
-		template<typename...ArgsT,int...Seq>static inline void check_helper(const std::deque<cs::any>& args,const cov::sequence<Seq...>&)
+		template<typename...ArgsT,int...Seq>static inline void check_helper(const std::deque<var>& args,const cov::sequence<Seq...>&)
 		{
 			result_container(check_arg<typename cov::remove_constant<typename cov::remove_reference<ArgsT>::type>::type,Seq>::check(args[Seq])...);
 		}
 	public:
-		template<typename...ArgTypes>static inline void check(const std::deque<cs::any>& args)
+		template<typename...ArgTypes>static inline void check(const std::deque<var>& args)
 		{
 			if(sizeof...(ArgTypes)==args.size())
 				check_helper<ArgTypes...>(args,cov::make_sequence<sizeof...(ArgTypes)>::result);
@@ -62,8 +62,8 @@ namespace cs {
 				throw syntax_error("Wrong size of the arguments.Expected "+std::to_string(sizeof...(ArgTypes)));
 		}
 	};
-	template<int index>struct arglist::check_arg<cs::any,index> {
-		static inline short check(const cs::any&)
+	template<int index>struct arglist::check_arg<var,index> {
+		static inline short check(const var&)
 		{
 			return 0;
 		}

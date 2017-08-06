@@ -2,7 +2,7 @@
 #include "../cni.hpp"
 static cs::extension array_ext;
 static cs::extension_t array_ext_shared=std::make_shared<cs::extension_holder>(&array_ext);
-namespace cs_any {
+namespace cs_impl {
 	template<>cs::extension_t& get_ext<cs::array>()
 	{
 		return array_ext_shared;
@@ -10,7 +10,7 @@ namespace cs_any {
 }
 static cs::extension array_iterator_ext;
 static cs::extension_t array_iterator_ext_shared=std::make_shared<cs::extension_holder>(&array_iterator_ext);
-namespace cs_any {
+namespace cs_impl {
 	template<>cs::extension_t& get_ext<cs::array::iterator>()
 	{
 		return array_iterator_ext_shared;
@@ -19,15 +19,15 @@ namespace cs_any {
 namespace array_cs_ext {
 	using namespace cs;
 // Element access
-	cs::any at(const array& arr,number posit)
+	var at(const array& arr,number posit)
 	{
 		return arr.at(posit);
 	}
-	cs::any front(const array& arr)
+	var front(const array& arr)
 	{
 		return arr.front();
 	}
-	cs::any back(const array& arr)
+	var back(const array& arr)
 	{
 		return arr.back();
 	}
@@ -48,7 +48,7 @@ namespace array_cs_ext {
 	{
 		return --it;
 	}
-	cs::any data(array::iterator& it)
+	var data(array::iterator& it)
 	{
 		return *it;
 	}
@@ -66,7 +66,7 @@ namespace array_cs_ext {
 	{
 		arr.clear();
 	}
-	array::iterator insert(array& arr,array::iterator& pos,const cs::any& val)
+	array::iterator insert(array& arr,array::iterator& pos,const var& val)
 	{
 		return arr.insert(pos,copy(val));
 	}
@@ -74,7 +74,7 @@ namespace array_cs_ext {
 	{
 		return arr.erase(pos);
 	}
-	void push_front(array& arr,const cs::any& val)
+	void push_front(array& arr,const var& val)
 	{
 		arr.push_front(copy(val));
 	}
@@ -82,7 +82,7 @@ namespace array_cs_ext {
 	{
 		arr.pop_front();
 	}
-	void push_back(array& arr,const cs::any& val)
+	void push_back(array& arr,const var& val)
 	{
 		arr.push_back(copy(val));
 	}
@@ -91,29 +91,29 @@ namespace array_cs_ext {
 		arr.pop_back();
 	}
 // Operations
-	cs::any to_list(const array& arr)
+	var to_list(const array& arr)
 	{
-		return cs::any::make<list>(arr.begin(),arr.end());
+		return var::make<list>(arr.begin(),arr.end());
 	}
 	void init()
 	{
-		array_ext.add_var("at",cs::any::make_protect<native_interface>(cni(at),true));
-		array_ext.add_var("front",cs::any::make_protect<native_interface>(cni(front),true));
-		array_ext.add_var("back",cs::any::make_protect<native_interface>(cni(back),true));
-		array_ext.add_var("begin",cs::any::make_protect<native_interface>(cni(begin),true));
-		array_ext.add_var("term",cs::any::make_protect<native_interface>(cni(term),true));
-		array_iterator_ext.add_var("forward",cs::any::make_protect<native_interface>(cni(forward),true));
-		array_iterator_ext.add_var("backward",cs::any::make_protect<native_interface>(cni(backward),true));
-		array_iterator_ext.add_var("data",cs::any::make_protect<native_interface>(cni(data),true));
-		array_ext.add_var("empty",cs::any::make_protect<native_interface>(cni(empty),true));
-		array_ext.add_var("size",cs::any::make_protect<native_interface>(cni(size),true));
-		array_ext.add_var("clear",cs::any::make_protect<native_interface>(cni(clear),true));
-		array_ext.add_var("insert",cs::any::make_protect<native_interface>(cni(insert),true));
-		array_ext.add_var("erase",cs::any::make_protect<native_interface>(cni(erase),true));
-		array_ext.add_var("push_front",cs::any::make_protect<native_interface>(cni(push_front),true));
-		array_ext.add_var("pop_front",cs::any::make_protect<native_interface>(cni(pop_front),true));
-		array_ext.add_var("push_back",cs::any::make_protect<native_interface>(cni(push_back),true));
-		array_ext.add_var("pop_back",cs::any::make_protect<native_interface>(cni(pop_back),true));
-		array_ext.add_var("to_list",cs::any::make_protect<native_interface>(cni(to_list),true));
+		array_ext.add_var("at",var::make_protect<native_interface>(cni(at),true));
+		array_ext.add_var("front",var::make_protect<native_interface>(cni(front),true));
+		array_ext.add_var("back",var::make_protect<native_interface>(cni(back),true));
+		array_ext.add_var("begin",var::make_protect<native_interface>(cni(begin),true));
+		array_ext.add_var("term",var::make_protect<native_interface>(cni(term),true));
+		array_iterator_ext.add_var("forward",var::make_protect<native_interface>(cni(forward),true));
+		array_iterator_ext.add_var("backward",var::make_protect<native_interface>(cni(backward),true));
+		array_iterator_ext.add_var("data",var::make_protect<native_interface>(cni(data),true));
+		array_ext.add_var("empty",var::make_protect<native_interface>(cni(empty),true));
+		array_ext.add_var("size",var::make_protect<native_interface>(cni(size),true));
+		array_ext.add_var("clear",var::make_protect<native_interface>(cni(clear),true));
+		array_ext.add_var("insert",var::make_protect<native_interface>(cni(insert),true));
+		array_ext.add_var("erase",var::make_protect<native_interface>(cni(erase),true));
+		array_ext.add_var("push_front",var::make_protect<native_interface>(cni(push_front),true));
+		array_ext.add_var("pop_front",var::make_protect<native_interface>(cni(pop_front),true));
+		array_ext.add_var("push_back",var::make_protect<native_interface>(cni(push_back),true));
+		array_ext.add_var("pop_back",var::make_protect<native_interface>(cni(pop_back),true));
+		array_ext.add_var("to_list",var::make_protect<native_interface>(cni(to_list),true));
 	}
 }

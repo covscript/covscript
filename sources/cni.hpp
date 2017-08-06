@@ -26,31 +26,31 @@
 #include <functional>
 namespace cs {
 	template<typename T>struct convert {
-		static inline const T& get_val(cs::any& val)
+		static inline const T& get_val(var& val)
 		{
 			return val.const_val<T>();
 		}
 	};
 	template<typename T>struct convert<const T&> {
-		static inline const T& get_val(cs::any& val)
+		static inline const T& get_val(var& val)
 		{
 			return val.const_val<T>();
 		}
 	};
 	template<typename T>struct convert<T&> {
-		static inline T& get_val(cs::any& val)
+		static inline T& get_val(var& val)
 		{
 			return val.val<T>(true);
 		}
 	};
-	template<>struct convert<const cs::any&> {
-		static inline const cs::any& get_val(const cs::any& val)
+	template<>struct convert<const var&> {
+		static inline const var& get_val(const var& val)
 		{
 			return val;
 		}
 	};
-	template<>struct convert<cs::any&> {
-		static inline cs::any& get_val(cs::any& val)
+	template<>struct convert<var&> {
+		static inline var& get_val(var& val)
 		{
 			return val;
 		}
@@ -62,12 +62,12 @@ namespace cs {
 		cni_helper()=delete;
 		cni_helper(const cni_helper&)=default;
 		cni_helper(const std::function<void()>& func):mFunc(func) {}
-		cs::any call(array& args) const
+		var call(array& args) const
 		{
 			if(!args.empty())
 				throw syntax_error("Wrong size of the arguments.Expected 0");
 			mFunc();
-			return cs::any::make<number>(0);
+			return var::make<number>(0);
 		}
 	};
 	template<typename RetT>class cni_helper<RetT(*)()> {
@@ -76,7 +76,7 @@ namespace cs {
 		cni_helper()=delete;
 		cni_helper(const cni_helper&)=default;
 		cni_helper(const std::function<RetT()>& func):mFunc(func) {}
-		cs::any call(array& args) const
+		var call(array& args) const
 		{
 			if(!args.empty())
 				throw syntax_error("Wrong size of the arguments.Expected 0");
@@ -95,11 +95,11 @@ namespace cs {
 		cni_helper()=delete;
 		cni_helper(const cni_helper&)=default;
 		cni_helper(const std::function<void(ArgsT...)>& func):mFunc(func) {}
-		cs::any call(array& args) const
+		var call(array& args) const
 		{
 			arglist::check<ArgsT...>(args);
 			_call(args,cov::make_sequence<cov::type_list::get_size<args_t>::result>::result);
-			return cs::any::make<number>(0);
+			return var::make<number>(0);
 		}
 	};
 	template<typename RetT,typename...ArgsT>
@@ -114,7 +114,7 @@ namespace cs {
 		cni_helper()=delete;
 		cni_helper(const cni_helper&)=default;
 		cni_helper(const std::function<RetT(ArgsT...)>& func):mFunc(func) {}
-		cs::any call(array& args) const
+		var call(array& args) const
 		{
 			arglist::check<ArgsT...>(args);
 			return std::move(_call(args,cov::make_sequence<cov::type_list::get_size<args_t>::result>::result));
@@ -133,7 +133,7 @@ namespace cs {
 			cni_base(const cni_base&)=default;
 			virtual ~cni_base()=default;
 			virtual cni_base* clone()=0;
-			virtual cs::any call(array&) const=0;
+			virtual var call(array&) const=0;
 		};
 		template<typename T>class cni_holder final:public cni_base {
 			cni_helper<typename cov::function_parser<T>::type::common_type> mCni;
@@ -146,7 +146,7 @@ namespace cs {
 			{
 				return new cni_holder(*this);
 			}
-			virtual cs::any call(array& args) const override
+			virtual var call(array& args) const override
 			{
 				return mCni.call(args);
 			}
@@ -166,7 +166,7 @@ namespace cs {
 		{
 			delete mCni;
 		}
-		cs::any operator()(array& args) const
+		var operator()(array& args) const
 		{
 			return mCni->call(args);
 		}

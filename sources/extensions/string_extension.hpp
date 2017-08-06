@@ -2,7 +2,7 @@
 #include "../cni.hpp"
 static cs::extension string_ext;
 static cs::extension_t string_ext_shared=std::make_shared<cs::extension_holder>(&string_ext);
-namespace cs_any {
+namespace cs_impl {
 	template<>cs::extension_t& get_ext<cs::string>()
 	{
 		return string_ext_shared;
@@ -10,12 +10,12 @@ namespace cs_any {
 }
 namespace string_cs_ext {
 	using namespace cs;
-	string append(string& str,const cs::any& val)
+	string append(string& str,const var& val)
 	{
 		str.append(val.to_string());
 		return str;
 	}
-	string insert(string& str,number posit,const cs::any& val)
+	string insert(string& str,number posit,const var& val)
 	{
 		str.insert(posit,val.to_string());
 		return str;
@@ -25,7 +25,7 @@ namespace string_cs_ext {
 		str.erase(b,e);
 		return str;
 	}
-	string replace(string& str,number posit,number count,const cs::any& val)
+	string replace(string& str,number posit,number count,const var& val)
 	{
 		str.replace(posit,count,val.to_string());
 		return str;
@@ -70,15 +70,15 @@ namespace string_cs_ext {
 	}
 	void init()
 	{
-		string_ext.add_var("append",cs::any::make_protect<native_interface>(cni(append),true));
-		string_ext.add_var("insert",cs::any::make_protect<native_interface>(cni(insert),true));
-		string_ext.add_var("erase",cs::any::make_protect<native_interface>(cni(erase),true));
-		string_ext.add_var("replace",cs::any::make_protect<native_interface>(cni(replace),true));
-		string_ext.add_var("substr",cs::any::make_protect<native_interface>(cni(substr),true));
-		string_ext.add_var("find",cs::any::make_protect<native_interface>(cni(find),true));
-		string_ext.add_var("rfind",cs::any::make_protect<native_interface>(cni(rfind),true));
-		string_ext.add_var("cut",cs::any::make_protect<native_interface>(cni(cut),true));
-		string_ext.add_var("clear",cs::any::make_protect<native_interface>(cni(clear),true));
-		string_ext.add_var("size",cs::any::make_protect<native_interface>(cni(size),true));
+		string_ext.add_var("append",var::make_protect<native_interface>(cni(append),true));
+		string_ext.add_var("insert",var::make_protect<native_interface>(cni(insert),true));
+		string_ext.add_var("erase",var::make_protect<native_interface>(cni(erase),true));
+		string_ext.add_var("replace",var::make_protect<native_interface>(cni(replace),true));
+		string_ext.add_var("substr",var::make_protect<native_interface>(cni(substr),true));
+		string_ext.add_var("find",var::make_protect<native_interface>(cni(find),true));
+		string_ext.add_var("rfind",var::make_protect<native_interface>(cni(rfind),true));
+		string_ext.add_var("cut",var::make_protect<native_interface>(cni(cut),true));
+		string_ext.add_var("clear",var::make_protect<native_interface>(cni(clear),true));
+		string_ext.add_var("size",var::make_protect<native_interface>(cni(size),true));
 	}
 }

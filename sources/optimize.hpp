@@ -55,7 +55,7 @@ namespace cs {
 				bool is_map=true;
 				token_value* t=nullptr;
 				for(auto& tree:dynamic_cast<token_array*>(token)->get_array()) {
-					const cs::any& val=parse_expr(tree.root());
+					const var& val=parse_expr(tree.root());
 					if(is_map&&val.type()!=typeid(pair))
 						is_map=false;
 					arr.push_back((new token_value(copy(val)))->get_value());
@@ -71,10 +71,10 @@ namespace cs {
 						else
 							map[p.first]=p.second;
 					}
-					t=new token_value(cs::any::make<hash_map>(std::move(map)));
+					t=new token_value(var::make<hash_map>(std::move(map)));
 				}
 				else
-					t=new token_value(cs::any::make<array>(std::move(arr)));
+					t=new token_value(var::make<array>(std::move(arr)));
 				it.data()=t;
 			}
 			return;
@@ -94,13 +94,13 @@ namespace cs {
 				token_base* lptr=it.left().data();
 				token_base* rptr=it.right().data();
 				if(lptr!=nullptr&&lptr->get_type()==token_types::value&&rptr!=nullptr&&rptr->get_type()==token_types::id) {
-					cs::any& a=dynamic_cast<token_value*>(lptr)->get_value();
+					var& a=dynamic_cast<token_value*>(lptr)->get_value();
 					if(a.type()==typeid(extension_t))
 						it.data()=new token_value(a.val<extension_t>(true)->get_var(dynamic_cast<token_id*>(rptr)->get_id()));
 					else {
 						token_base* orig_ptr=it.data();
 						try {
-							it.data()=new token_value(cs::any::make<callable>(object_method(a,a.get_ext()->get_var(dynamic_cast<token_id*>(rptr)->get_id())),true));
+							it.data()=new token_value(var::make<callable>(object_method(a,a.get_ext()->get_var(dynamic_cast<token_id*>(rptr)->get_id())),true));
 						}
 						catch(const syntax_error& se) {
 							it.data()=orig_ptr;
@@ -117,7 +117,7 @@ namespace cs {
 				token_base* lptr=it.left().data();
 				token_base* rptr=it.right().data();
 				if(lptr!=nullptr&&lptr->get_type()==token_types::value&&rptr!=nullptr&&rptr->get_type()==token_types::arglist) {
-					cs::any& a=dynamic_cast<token_value*>(lptr)->get_value();
+					var& a=dynamic_cast<token_value*>(lptr)->get_value();
 					if(a.type()==typeid(callable)&&a.const_val<callable>().is_constant()) {
 						bool is_optimizable=true;
 						for(auto& tree:dynamic_cast<token_arglist*>(rptr)->get_arglist()) {
