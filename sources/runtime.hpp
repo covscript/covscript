@@ -112,6 +112,10 @@ namespace cs {
 		{
 			add_var(name,cs::any::make_protect<type>(func,hash));
 		}
+		void add_type(const std::string& name,const std::function<cs::any()>& func,std::size_t hash,extension_t ext)
+		{
+			add_var(name,cs::any::make_protect<type>(func,hash,ext));
+		}
 	};
 	struct runtime_type final {
 		domain_manager storage;
@@ -190,6 +194,8 @@ namespace cs {
 			return a.val<extension_t>(true)->get_var(dynamic_cast<token_id*>(b)->get_id());
 		else if(a.type()==typeid(structure))
 			return a.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
+		else if(a.type()==typeid(type))
+			return a.val<type>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
 		else
 			return cs::any::make<callable>(object_method(a,a.get_ext()->get_var(dynamic_cast<token_id*>(b)->get_id())),true);
 	}
