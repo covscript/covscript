@@ -439,6 +439,20 @@ namespace cs {
 		tmp.clear();
 		kill_action(lines,statements,true);
 	}
+	class statement_import final {
+		static std::deque<name_space> mPackages;
+	public:
+		statement_import()=delete;
+		~statement_import()=delete;
+		static void import(runtime_t rt)
+		{
+			if(rt->package_name.empty())
+				throw syntax_error("Only packages are allowed to import.");
+			mPackages.emplace_back(*rt->storage.get_domain());
+			runtime->storage.add_var(rt->package_name,var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&mPackages.back())));
+		}
+	};
+	std::deque<name_space> statement_import::mPackages;
 	void init_grammar()
 	{
 		// Expression Grammar
@@ -448,7 +462,15 @@ namespace cs {
 		});
 		// Import Grammar
 		translator.add_method({new token_action(action_types::import_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::import_,grammar_types::jit_command,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
-				cs(dynamic_cast<token_value*>(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data())->get_value().const_val<string>());
+				statement_import::import(covscript(dynamic_cast<token_value*>(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data())->get_value().const_val<string>()));
+				return nullptr;
+			}
+		});
+		// Package Grammar
+		translator.add_method({new token_action(action_types::package_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::package_,grammar_types::jit_command,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				if(!runtime->package_name.empty())
+					throw syntax_error("Redefinition of package");
+				runtime->package_name=dynamic_cast<token_id*>(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data())->get_id();
 				return nullptr;
 			}
 		});

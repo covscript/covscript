@@ -1,3 +1,3 @@
-import "./constant.csc"
-const var s=str+"!!!"
+import "./package.csp"
+var s=cs_package.str+"!!!"
 system.println(s)
