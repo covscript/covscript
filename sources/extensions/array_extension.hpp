@@ -93,7 +93,9 @@ namespace array_cs_ext {
 // Operations
 	var to_list(const array& arr)
 	{
-		return var::make<list>(arr.begin(),arr.end());
+		var lst=var::make<list>(arr.begin(),arr.end());
+		lst.detach();
+		return std::move(lst);
 	}
 	void init()
 	{
