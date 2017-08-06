@@ -20,6 +20,7 @@
 * Website: http://covariant.cn/cs
 */
 #include "./covscript.hpp"
+
 int main(int args_size,const char* args[])
 {
 	std::ios::sync_with_stdio(false);

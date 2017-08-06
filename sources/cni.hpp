@@ -23,7 +23,7 @@
 #include "../include/mozart/traits.hpp"
 #include "./core.hpp"
 #include "./arglist.hpp"
-#include <functional>
+
 namespace cs {
 	template<typename T>struct convert {
 		static inline const T& get_val(var& val)
