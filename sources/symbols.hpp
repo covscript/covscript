@@ -136,7 +136,7 @@ namespace cs {
 		token_value()=delete;
 		token_value(const var& val):mVal(val)
 		{
-			if(!mVal.is_protect()) {
+			if(!mList.empty()&&!mVal.is_protect()) {
 				mVal.protect();
 				mList.front().push_back(this);
 			}
