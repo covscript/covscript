@@ -99,8 +99,11 @@ namespace cs {
 	struct type final {
 		std::function<cs::any()> constructor;
 		std::size_t id;
+		extension_t extensions;
 		type()=delete;
 		type(const std::function<cs::any()>& c,std::size_t i):constructor(c),id(i) {}
+		type(const std::function<cs::any()>& c,std::size_t i,extension_t ext):constructor(c),id(i),extensions(ext) {}
+		cs::any& get_var(const std::string&) const;
 	};
 	class structure final {
 		std::size_t m_hash;
@@ -222,6 +225,13 @@ namespace cs {
 			return m_ns->get_var(name);
 		}
 	};
+	cs::any& type::get_var(const std::string& name) const
+	{
+		if(extensions.get()!=nullptr)
+			return extensions->get_var(name);
+		else
+			throw syntax_error("Type does not support the extension");
+	}
 	cs::any parse_value(const std::string& str)
 	{
 		if(str=="true")

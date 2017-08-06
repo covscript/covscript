@@ -3,7 +3,12 @@
 #include "./grammar.hpp"
 #include "./extensions/system_extension.hpp"
 #include "./extensions/runtime_extension.hpp"
-#include "./extensions/types_extension.hpp"
+#include "./extensions/char_extension.hpp"
+#include "./extensions/string_extension.hpp"
+#include "./extensions/list_extension.hpp"
+#include "./extensions/array_extension.hpp"
+#include "./extensions/pair_extension.hpp"
+#include "./extensions/hash_map_extension.hpp"
 #ifdef CS_MATH_EXT
 #include "./extensions/math_extension.cpp"
 #endif
@@ -69,14 +74,14 @@ namespace cs {
 	{
 		init_grammar();
 		// Internal Types
-		runtime->storage.add_type("char",[]()->cs::any {return cs::any::make<char>('\0');},cs_any::hash<std::string>(typeid(char).name()));
+		runtime->storage.add_type("char",[]()->cs::any {return cs::any::make<char>('\0');},cs_any::hash<std::string>(typeid(char).name()),char_ext_shared);
 		runtime->storage.add_type("number",[]()->cs::any {return cs::any::make<number>(0);},cs_any::hash<std::string>(typeid(number).name()));
 		runtime->storage.add_type("boolean",[]()->cs::any {return cs::any::make<boolean>(true);},cs_any::hash<std::string>(typeid(boolean).name()));
-		runtime->storage.add_type("string",[]()->cs::any {return cs::any::make<string>();},cs_any::hash<std::string>(typeid(string).name()));
-		runtime->storage.add_type("list",[]()->cs::any {return cs::any::make<list>();},cs_any::hash<std::string>(typeid(list).name()));
-		runtime->storage.add_type("array",[]()->cs::any {return cs::any::make<array>();},cs_any::hash<std::string>(typeid(array).name()));
-		runtime->storage.add_type("pair",[]()->cs::any {return cs::any::make<pair>(number(0),number(0));},cs_any::hash<std::string>(typeid(pair).name()));
-		runtime->storage.add_type("hash_map",[]()->cs::any {return cs::any::make<hash_map>();},cs_any::hash<std::string>(typeid(hash_map).name()));
+		runtime->storage.add_type("string",[]()->cs::any {return cs::any::make<string>();},cs_any::hash<std::string>(typeid(string).name()),string_ext_shared);
+		runtime->storage.add_type("list",[]()->cs::any {return cs::any::make<list>();},cs_any::hash<std::string>(typeid(list).name()),list_ext_shared);
+		runtime->storage.add_type("array",[]()->cs::any {return cs::any::make<array>();},cs_any::hash<std::string>(typeid(array).name()),array_ext_shared);
+		runtime->storage.add_type("pair",[]()->cs::any {return cs::any::make<pair>(number(0),number(0));},cs_any::hash<std::string>(typeid(pair).name()),pair_ext_shared);
+		runtime->storage.add_type("hash_map",[]()->cs::any {return cs::any::make<hash_map>();},cs_any::hash<std::string>(typeid(hash_map).name()),hash_map_ext_shared);
 		// Add Internal Functions to storage
 		add_function_const(to_integer);
 		add_function_const(to_string);
@@ -94,8 +99,6 @@ namespace cs {
 		runtime->storage.add_var("system",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));
 		runtime_cs_ext::init();
 		runtime->storage.add_var("runtime",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
-		types_cs_ext::init();
-		runtime->storage.add_var("types",cs::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&types_ext)));
 		char_cs_ext::init();
 		string_cs_ext::init();
 		list_cs_ext::init();
