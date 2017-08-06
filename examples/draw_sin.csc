@@ -16,7 +16,7 @@ function main()
 end
 darwin.load("./darwin.module")
 fd=darwin.input_box("","Please input the period:",to_string(fd),true)
-if(!is_number(fd))
+if(typeid fd!=typeid number)
   runtime.error("Request number.")
 end
 main()
