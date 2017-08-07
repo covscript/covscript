@@ -6,16 +6,16 @@ function main()
     var x=0
     loop
         darwin.fit_drawable()
-        darwin.clear_drawable(pic)
-        for i=0 to darwin.get_width(pic)-1
-            darwin.draw_pixel(pic,i,0.5*(darwin.get_height(pic)+math.sin((i+x)/fd)*darwin.get_height(pic)),pix)
+        pic.clear()
+        for i=0 to pic.get_width()-1
+            pic.draw_pixel(i,0.5*(pic.get_height()+math.sin((i+x)/fd)*pic.get_height()),pix)
         end
         darwin.update_drawable()
         ++x
     end
 end
-darwin.load("./darwin.module")
-fd=darwin.input_box("","Please input the period:",to_string(fd),true)
+darwin.load()
+fd=darwin.ui.input_box("","Please input the period:",to_string(fd),true)
 if(typeid fd!=typeid number)
   runtime.error("Request number.")
 end
