@@ -2,6 +2,20 @@
 #include "../cni.hpp"
 #include <fstream>
 static cs::extension file_ext;
+static cs::extension infile_ext;
+static cs::extension outfile_ext;
+static cs::extension_t infile_ext_shared=std::make_shared<cs::extension_holder>(&infile_ext);
+static cs::extension_t outfile_ext_shared=std::make_shared<cs::extension_holder>(&outfile_ext);
+namespace cs_impl {
+	template<>cs::extension_t& get_ext<std::shared_ptr<std::ifstream>>()
+	{
+		return infile_ext_shared;
+	}
+	template<>cs::extension_t& get_ext<std::shared_ptr<std::ofstream>>()
+	{
+		return outfile_ext_shared;
+	}
+}
 namespace file_cs_ext {
 	using namespace cs;
 	using infile=std::shared_ptr<std::ifstream>;
@@ -76,5 +90,10 @@ namespace file_cs_ext {
 		file_ext.add_var("getline",var::make_protect<native_interface>(cni(getline)));
 		file_ext.add_var("read",var::make_protect<native_interface>(read));
 		file_ext.add_var("write",var::make_protect<native_interface>(write));
+		infile_ext.add_var("is_open",var::make_protect<native_interface>(cni(is_open)));
+		infile_ext.add_var("eof",var::make_protect<native_interface>(cni(eof)));
+		infile_ext.add_var("getline",var::make_protect<native_interface>(cni(getline)));
+		infile_ext.add_var("read",var::make_protect<native_interface>(read));
+		outfile_ext.add_var("write",var::make_protect<native_interface>(write));
 	}
 }
