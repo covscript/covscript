@@ -20,8 +20,10 @@
 * Website: http://covariant.cn/cs
 */
 #include "./covscript.hpp"
+#include <iostream>
+#include <fstream>
 
-int main(int args_size,const char* args[])
+void covscript_main(int args_size,const char* args[])
 {
 	std::ios::sync_with_stdio(false);
 	if(args_size>1) {
@@ -33,6 +35,21 @@ int main(int args_size,const char* args[])
 		cs::covscript(args[1]);
 	}
 	else
-		throw cs::fatal_error("no input file.\nUsage: cs <file> <args...>");
+		throw cs::fatal_error("no input file.");
+}
+
+const char* log_path="./cs_runtime.log";
+int main(int args_size,const char* args[])
+{
+	try {
+		covscript_main(args_size,args);
+	}
+	catch(const std::exception& e) {
+		std::ofstream out(::log_path);
+		out<<args[0]<<":"<<e.what();
+		out.flush();
+		std::cerr<<args[0]<<":"<<e.what()<<std::endl;
+		return -1;
+	}
 	return 0;
 }
