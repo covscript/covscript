@@ -425,6 +425,8 @@ namespace cs {
 		if(token==nullptr)
 			return var();
 		switch(token->get_type()) {
+		default:
+			break;
 		case token_types::id: {
 			const std::string& id=dynamic_cast<token_id*>(token)->get_id();
 			if(define_var) {
@@ -477,6 +479,8 @@ namespace cs {
 			if(define_var&&ps->get_signal()!=signal_types::asi_)
 				throw syntax_error("Use of other signal in var definition.");
 			switch(ps->get_signal()) {
+			default:
+				break;
 			case signal_types::add_:
 				return parse_add(parse_expr(it.left()),parse_expr(it.right()));
 				break;

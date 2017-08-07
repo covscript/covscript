@@ -75,6 +75,8 @@ namespace cs {
 				continue;
 			}
 			switch(type) {
+			default:
+				break;
 			case token_types::null:
 				if(buff[i]=='\"') {
 					inside_str=true;
@@ -174,6 +176,8 @@ namespace cs {
 		if(tmp.empty())
 			return;
 		switch(type) {
+		default:
+			break;
 		case token_types::id:
 			if(action_map.exsist(tmp)) {
 				tokens.push_back(new token_action(action_map.match(tmp)));
@@ -219,6 +223,8 @@ namespace cs {
 		for(auto& ptr:oldt) {
 			if(ptr->get_type()==token_types::signal) {
 				switch(dynamic_cast<token_signal*>(ptr)->get_signal()) {
+				default:
+					break;
 				case signal_types::slb_:
 					if(empty_bracket)
 						insert_bracket();
@@ -298,6 +304,8 @@ namespace cs {
 		for(auto& ptr:oldt) {
 			if(ptr->get_type()==token_types::signal) {
 				switch(dynamic_cast<token_signal*>(ptr)->get_signal()) {
+				default:
+					break;
 				case signal_types::slb_:
 					blist_stack.push_front(1);
 					if(blist_stack.size()==1)

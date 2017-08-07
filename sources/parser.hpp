@@ -106,6 +106,8 @@ namespace cs {
 		bool expected_fcall=false;
 		for(auto& ptr:oldt) {
 			switch(ptr->get_type()) {
+			default:
+				break;
 			case token_types::action:
 				expected_fcall=false;
 				break;
@@ -163,6 +165,8 @@ namespace cs {
 			}
 			case token_types::signal: {
 				switch(dynamic_cast<token_signal*>(ptr)->get_signal()) {
+				default:
+					break;
 				case signal_types::esb_:
 					if(expected_fcall) {
 						tokens.push_back(new token_signal(signal_types::fcall_));
