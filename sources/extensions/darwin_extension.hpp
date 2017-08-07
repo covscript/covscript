@@ -1,17 +1,36 @@
 #pragma once
 #define DARWIN_FORCE_BUILTIN
-#define DARWIN_DISABLE_LOG
 #include "../../include/darwin/darwin.hpp"
 #include "../cni.hpp"
+#include <fstream>
 static cs::extension darwin_ext;
+static cs::extension darwin_ui_ext;
+static cs::extension darwin_drawable_ext;
+static cs::extension_t darwin_ui_ext_shared=std::make_shared<cs::extension_holder>(&darwin_ui_ext);
+static cs::extension_t darwin_drawable_ext_shared=std::make_shared<cs::extension_holder>(&darwin_drawable_ext);
+namespace cs_impl {
+	template<>cs::extension_t& get_ext<std::shared_ptr<darwin::drawable>>()
+	{
+		return darwin_drawable_ext_shared;
+	}
+}
 namespace darwin_cs_ext {
 	using namespace cs;
-// Graphics
 	using drawable_t=std::shared_ptr<darwin::drawable>;
 	darwin::sync_clock clock(30);
-	void load(const string& str)
+// Type Constructor
+	var pixel(char ch,darwin::colors fc,darwin::colors bc)
 	{
-		darwin::runtime.load(str);
+		return var::make_protect<darwin::pixel>(ch,true,false,fc,bc);
+	}
+	var picture(number w,number h)
+	{
+		return var::make_protect<drawable_t>(new darwin::picture(w,h));
+	}
+// Darwin Main Function
+	void load()
+	{
+		darwin::runtime.load("./darwin.module");
 	}
 	void exit(number code)
 	{
@@ -43,66 +62,11 @@ namespace darwin_cs_ext {
 	{
 		clock.set_freq(freq);
 	}
-	void clear_drawable(const drawable_t& pic)
+	void set_draw_line_precision(number prec)
 	{
-		pic->clear();
+		darwin::drawable::draw_line_precision=prec;
 	}
-	void fill_drawable(const drawable_t& pic,const darwin::pixel& pix)
-	{
-		pic->fill(pix);
-	}
-	void resize_drawable(const drawable_t& pic,number w,number h)
-	{
-		pic->resize(w,h);
-	}
-	number get_height(const drawable_t& pic)
-	{
-		return pic->get_height();
-	}
-	number get_width(const drawable_t& pic)
-	{
-		return pic->get_width();
-	}
-	void draw_pixel(const drawable_t& pic,number x,number y,const darwin::pixel& pix)
-	{
-		pic->draw_pixel(x,y,pix);
-	}
-	void draw_picture(const drawable_t& pic,number x,number y,const drawable_t& p)
-	{
-		pic->draw_picture(x,y,*p);
-	}
-	void draw_line(const drawable_t& pic,number x1,number y1,number x2,number y2,const darwin::pixel& pix)
-	{
-		pic->draw_line(x1,y1,x2,y2,pix);
-	}
-	void draw_rect(const drawable_t& pic,number x,number y,number w,number h,const darwin::pixel& pix)
-	{
-		pic->draw_rect(x,y,w,h,pix);
-	}
-	void fill_rect(const drawable_t& pic,number x,number y,number w,number h,const darwin::pixel& pix)
-	{
-		pic->fill_rect(x,y,w,h,pix);
-	}
-	void draw_triangle(const drawable_t& pic,number x1,number y1,number x2,number y2,number x3,number y3,const darwin::pixel& pix)
-	{
-		pic->draw_triangle(x1,y1,x2,y2,x3,y3,pix);
-	}
-	void fill_triangle(const drawable_t& pic,number x1,number y1,number x2,number y2,number x3,number y3,const darwin::pixel& pix)
-	{
-		pic->fill_triangle(x1,y1,x2,y2,x3,y3,pix);
-	}
-	void draw_string(const drawable_t& pic,number x,number y,const string& str,const darwin::pixel& pix)
-	{
-		pic->draw_string(x,y,str,pix);
-	}
-	var pixel(char ch,darwin::colors fc,darwin::colors bc)
-	{
-		return var::make_protect<darwin::pixel>(ch,true,false,fc,bc);
-	}
-	var picture(number w,number h)
-	{
-		return var::make_protect<drawable_t>(new darwin::picture(w,h));
-	}
+// Darwin UI Function
 	void message_box(const string& title,const string& message,const string& button)
 	{
 		std::size_t width=std::max(title.size(),std::max(message.size(),button.size()))+4;
@@ -160,33 +124,89 @@ namespace darwin_cs_ext {
 		else
 			return buff;
 	}
+// Drawable Function
+	void load_from_file(const drawable_t& pic,const string& path)
+	{
+		std::ifstream infs(path);
+		if(!infs.is_open())
+			throw lang_error("File is not exist.");
+		std::deque<char> buff;
+		while(!infs.eof())
+			buff.push_back(infs.get());
+		darwin::unserial_picture(pic.get(),buff);
+	}
+	void save_to_file(const drawable_t& pic,const string& path)
+	{
+		std::ofstream outfs(path);
+		if(!outfs.is_open())
+			throw lang_error("Write file failed.");
+		std::deque<char> buff;
+		darwin::serial_picture(pic.get(),buff);
+		for(auto& ch:buff)
+			outfs.put(ch);
+	}
+	void clear(const drawable_t& pic)
+	{
+		pic->clear();
+	}
+	void fill(const drawable_t& pic,const darwin::pixel& pix)
+	{
+		pic->fill(pix);
+	}
+	void resize(const drawable_t& pic,number w,number h)
+	{
+		pic->resize(w,h);
+	}
+	number get_height(const drawable_t& pic)
+	{
+		return pic->get_height();
+	}
+	number get_width(const drawable_t& pic)
+	{
+		return pic->get_width();
+	}
+	darwin::pixel get_pixel(const drawable_t& pic,number x,number y)
+	{
+		return pic->get_pixel(x,y);
+	}
+	void draw_pixel(const drawable_t& pic,number x,number y,const darwin::pixel& pix)
+	{
+		pic->draw_pixel(x,y,pix);
+	}
+	void draw_line(const drawable_t& pic,number x1,number y1,number x2,number y2,const darwin::pixel& pix)
+	{
+		pic->draw_line(x1,y1,x2,y2,pix);
+	}
+	void draw_rect(const drawable_t& pic,number x,number y,number w,number h,const darwin::pixel& pix)
+	{
+		pic->draw_rect(x,y,w,h,pix);
+	}
+	void fill_rect(const drawable_t& pic,number x,number y,number w,number h,const darwin::pixel& pix)
+	{
+		pic->fill_rect(x,y,w,h,pix);
+	}
+	void draw_triangle(const drawable_t& pic,number x1,number y1,number x2,number y2,number x3,number y3,const darwin::pixel& pix)
+	{
+		pic->draw_triangle(x1,y1,x2,y2,x3,y3,pix);
+	}
+	void fill_triangle(const drawable_t& pic,number x1,number y1,number x2,number y2,number x3,number y3,const darwin::pixel& pix)
+	{
+		pic->fill_triangle(x1,y1,x2,y2,x3,y3,pix);
+	}
+	void draw_string(const drawable_t& pic,number x,number y,const string& str,const darwin::pixel& pix)
+	{
+		pic->draw_string(x,y,str,pix);
+	}
+	void draw_picture(const drawable_t& pic,number x,number y,const drawable_t& p)
+	{
+		pic->draw_picture(x,y,*p);
+	}
 	void init()
 	{
-		darwin_ext.add_var("load",var::make_protect<native_interface>(cni(load)));
-		darwin_ext.add_var("exit",var::make_protect<native_interface>(cni(exit)));
-		darwin_ext.add_var("is_kb_hit",var::make_protect<native_interface>(cni(is_kb_hit)));
-		darwin_ext.add_var("get_kb_hit",var::make_protect<native_interface>(cni(get_kb_hit)));
-		darwin_ext.add_var("fit_drawable",var::make_protect<native_interface>(cni(fit_drawable)));
-		darwin_ext.add_var("get_drawable",var::make_protect<native_interface>(cni(get_drawable)));
-		darwin_ext.add_var("update_drawable",var::make_protect<native_interface>(cni(update_drawable)));
-		darwin_ext.add_var("set_frame_limit",var::make_protect<native_interface>(cni(set_frame_limit)));
-		darwin_ext.add_var("clear_drawable",var::make_protect<native_interface>(cni(clear_drawable)));
-		darwin_ext.add_var("fill_drawable",var::make_protect<native_interface>(cni(fill_drawable)));
-		darwin_ext.add_var("resize_drawable",var::make_protect<native_interface>(cni(resize_drawable)));
-		darwin_ext.add_var("get_height",var::make_protect<native_interface>(cni(get_height)));
-		darwin_ext.add_var("get_width",var::make_protect<native_interface>(cni(get_width)));
-		darwin_ext.add_var("draw_pixel",var::make_protect<native_interface>(cni(draw_pixel)));
-		darwin_ext.add_var("draw_picture",var::make_protect<native_interface>(cni(draw_picture)));
-		darwin_ext.add_var("draw_line",var::make_protect<native_interface>(cni(draw_line)));
-		darwin_ext.add_var("draw_rect",var::make_protect<native_interface>(cni(draw_rect)));
-		darwin_ext.add_var("fill_rect",var::make_protect<native_interface>(cni(fill_rect)));
-		darwin_ext.add_var("draw_triangle",var::make_protect<native_interface>(cni(draw_triangle)));
-		darwin_ext.add_var("fill_triangle",var::make_protect<native_interface>(cni(fill_triangle)));
-		darwin_ext.add_var("draw_string",var::make_protect<native_interface>(cni(draw_string)));
-		darwin_ext.add_var("pixel",var::make_protect<native_interface>(cni(pixel),true));
-		darwin_ext.add_var("picture",var::make_protect<native_interface>(cni(picture),true));
-		darwin_ext.add_var("message_box",var::make_protect<native_interface>(cni(message_box)));
-		darwin_ext.add_var("input_box",var::make_protect<native_interface>(cni(input_box)));
+		// Namespaces
+		darwin_ext.add_var("ui",var::make_protect<extension_t>(darwin_ui_ext_shared));
+		darwin_ext.add_var("drawable",var::make_protect<extension_t>(darwin_drawable_ext_shared));
+		// Colors
 		darwin_ext.add_var("black",var::make_constant<darwin::colors>(darwin::colors::black));
 		darwin_ext.add_var("white",var::make_constant<darwin::colors>(darwin::colors::white));
 		darwin_ext.add_var("red",var::make_constant<darwin::colors>(darwin::colors::red));
@@ -195,5 +215,38 @@ namespace darwin_cs_ext {
 		darwin_ext.add_var("pink",var::make_constant<darwin::colors>(darwin::colors::pink));
 		darwin_ext.add_var("yellow",var::make_constant<darwin::colors>(darwin::colors::yellow));
 		darwin_ext.add_var("cyan",var::make_constant<darwin::colors>(darwin::colors::cyan));
+		// Type Constructor
+		darwin_ext.add_var("pixel",var::make_protect<native_interface>(cni(pixel),true));
+		darwin_ext.add_var("picture",var::make_protect<native_interface>(cni(picture),true));
+		// Darwin Main Function
+		darwin_ext.add_var("load",var::make_protect<native_interface>(cni(load)));
+		darwin_ext.add_var("exit",var::make_protect<native_interface>(cni(exit)));
+		darwin_ext.add_var("is_kb_hit",var::make_protect<native_interface>(cni(is_kb_hit)));
+		darwin_ext.add_var("get_kb_hit",var::make_protect<native_interface>(cni(get_kb_hit)));
+		darwin_ext.add_var("fit_drawable",var::make_protect<native_interface>(cni(fit_drawable)));
+		darwin_ext.add_var("get_drawable",var::make_protect<native_interface>(cni(get_drawable)));
+		darwin_ext.add_var("update_drawable",var::make_protect<native_interface>(cni(update_drawable)));
+		darwin_ext.add_var("set_frame_limit",var::make_protect<native_interface>(cni(set_frame_limit)));
+		darwin_ext.add_var("set_draw_line_precision",var::make_protect<native_interface>(cni(set_draw_line_precision)));
+		// Darwin UI Function
+		darwin_ui_ext.add_var("message_box",var::make_protect<native_interface>(cni(message_box)));
+		darwin_ui_ext.add_var("input_box",var::make_protect<native_interface>(cni(input_box)));
+		// Drawable Function
+		darwin_drawable_ext.add_var("load_from_file",var::make_protect<native_interface>(cni(load_from_file)));
+		darwin_drawable_ext.add_var("save_to_file",var::make_protect<native_interface>(cni(save_to_file)));
+		darwin_drawable_ext.add_var("clear",var::make_protect<native_interface>(cni(clear)));
+		darwin_drawable_ext.add_var("fill",var::make_protect<native_interface>(cni(fill)));
+		darwin_drawable_ext.add_var("resize",var::make_protect<native_interface>(cni(resize)));
+		darwin_drawable_ext.add_var("get_height",var::make_protect<native_interface>(cni(get_height)));
+		darwin_drawable_ext.add_var("get_width",var::make_protect<native_interface>(cni(get_width)));
+		darwin_drawable_ext.add_var("get_pixel",var::make_protect<native_interface>(cni(get_pixel)));
+		darwin_drawable_ext.add_var("draw_pixel",var::make_protect<native_interface>(cni(draw_pixel)));
+		darwin_drawable_ext.add_var("draw_line",var::make_protect<native_interface>(cni(draw_line)));
+		darwin_drawable_ext.add_var("draw_rect",var::make_protect<native_interface>(cni(draw_rect)));
+		darwin_drawable_ext.add_var("fill_rect",var::make_protect<native_interface>(cni(fill_rect)));
+		darwin_drawable_ext.add_var("draw_triangle",var::make_protect<native_interface>(cni(draw_triangle)));
+		darwin_drawable_ext.add_var("fill_triangle",var::make_protect<native_interface>(cni(fill_triangle)));
+		darwin_drawable_ext.add_var("draw_string",var::make_protect<native_interface>(cni(draw_string)));
+		darwin_drawable_ext.add_var("draw_picture",var::make_protect<native_interface>(cni(draw_picture)));
 	}
 }
