@@ -203,7 +203,7 @@ namespace darwin {
 		pic->resize(w,h);
 		pixel pix;
 		int x(0),y(0);
-		for(std::size_t i=8; i<dat.size(); i+=5) {
+		for(std::size_t i=8; i<dat.size()&&y<h; i+=5) {
 			pix.set_char(dat[i]);
 			if(dat[i+1]=='0')
 				pix.set_bright(true);
@@ -266,7 +266,7 @@ namespace darwin {
 				break;
 			}
 			pic->draw_pixel(x,y,pix);
-			if(x==w-1) {
+			if(x>=w-1) {
 				x=0;
 				++y;
 			}
