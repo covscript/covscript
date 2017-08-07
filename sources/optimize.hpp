@@ -31,6 +31,8 @@ namespace cs {
 		if(token==nullptr)
 			return true;
 		switch(token->get_type()) {
+		default:
+			break;
 		case token_types::value:
 			return true;
 			break;
@@ -46,6 +48,8 @@ namespace cs {
 		if(token==nullptr)
 			return;
 		switch(token->get_type()) {
+		default:
+			break;
 		case token_types::id: {
 			const std::string& id=dynamic_cast<token_id*>(token)->get_id();
 			if(runtime->constant_storage.var_exsist(id))
@@ -109,6 +113,8 @@ namespace cs {
 		}
 		case token_types::signal: {
 			switch(dynamic_cast<token_signal*>(token)->get_signal()) {
+			default:
+				break;
 			case signal_types::dot_: {
 				opt_expr(tree,it.left());
 				opt_expr(tree,it.right());
