@@ -1,11 +1,11 @@
 var infs=file.open("./file.csc",file.read_method)
-if(!file.is_open(infs))
+if(!infs.is_open())
   runtime.error("file is not exsist.")
 end
 var outfs=file.open("./test.txt",file.write_method)
-file.write(outfs,"#Clone of test_file.cs","\n")
-while(!file.eof(infs))
-  var str=file.getline(infs)
+outfs.write("#Clone of file.csc","\n")
+while(!infs.eof())
+  var str=infs.getline()
   system.println(str)
-  file.write(outfs,str,"\n")
+  outfs.write(str,"\n")
 end
