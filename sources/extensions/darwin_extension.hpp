@@ -1,4 +1,7 @@
 #pragma once
+#ifndef CS_DEBUG
+#define DARWIN_DISABLE_LOG
+#endif
 #define DARWIN_FORCE_BUILTIN
 #include "../../include/darwin/darwin.hpp"
 #include "../cni.hpp"
