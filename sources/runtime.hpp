@@ -185,7 +185,14 @@ namespace cs {
 	}
 	var parse_mul(const var& a,const var& b)
 	{
-		if(a.type()==typeid(number)&&b.type()==typeid(number))
+		if(!a.usable()&&b.type()==typeid(pointer)) {
+			const pointer& ptr=b.const_val<pointer>();
+			if(ptr.data.usable())
+				return ptr.data;
+			else
+				throw syntax_error("Escape from null pointer.");
+		}
+		else if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return a.const_val<number>()*b.const_val<number>();
 		else
 			throw syntax_error("Unsupported operator operations(Mul).");
@@ -242,16 +249,32 @@ namespace cs {
 		else
 			return var::make<callable>(object_method(a,a.get_ext()->get_var(dynamic_cast<token_id*>(b)->get_id())),true);
 	}
+	var parse_arraw(const var& a,token_base* b)
+	{
+		if(a.type()==typeid(pointer))
+			return parse_dot(a.const_val<pointer>().data,b);
+		else
+			throw syntax_error("Unsupported operator operations(Arraw).");
+	}
 	var parse_typeid(token_base* a,const var& b)
 	{
 		if(a!=nullptr)
-			throw syntax_error("Wrong format of new expression.");
+			throw syntax_error("Wrong format of typeid expression.");
 		else if(b.type()==typeid(type))
 			return b.const_val<type>().id;
 		else if(b.type()==typeid(structure))
 			return b.const_val<structure>().get_hash();
 		else
 			return cs_impl::hash<std::string>(b.type().name());
+	}
+	var parse_new(token_base* a,const var& b)
+	{
+		if(a!=nullptr)
+			throw syntax_error("Wrong format of new expression.");
+		else if(b.type()==typeid(type))
+			return var::make<pointer>(b.const_val<type>().constructor());
+		else
+			throw syntax_error("Unsupported operator operations(New).");
 	}
 	var parse_und(const var& a,const var& b)
 	{
@@ -475,8 +498,14 @@ namespace cs {
 			case signal_types::dot_:
 				return parse_dot(parse_expr(it.left()),it.right().data());
 				break;
+			case signal_types::arraw_:
+				return parse_arraw(parse_expr(it.left()),it.right().data());
+				break;
 			case signal_types::typeid_:
 				return parse_typeid(it.left().data(),parse_expr(it.right()));
+				break;
+			case signal_types::new_:
+				return parse_new(it.left().data(),parse_expr(it.right()));
 				break;
 			case signal_types::und_:
 				return parse_und(parse_expr(it.left()),parse_expr(it.right()));
