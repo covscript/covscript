@@ -68,12 +68,16 @@ namespace darwin {
 #endif
 		static void log(const char* file,int line,const char* func,const char* msg)
 		{
+			if(!out.usable())
+				out.open("./darwin_runtime.log");
 			out.printf("[Darwin Log(%ums)]:In function \"%s\"(%s:%d):%s\n",timer::time(),func,file,line,msg);
 		}
 		static void warning(const char* file,int line,const char* func,const char* msg)
 		{
 			if(ignore)
 				return;
+			if(!out.usable())
+				out.open("./darwin_runtime.log");
 			out.printf("[Darwin Warning(%ums)]:In function \"%s\"(%s:%d):%s\n",timer::time(),func,file,line,msg);
 			if(strict) {
 				out.flush();
@@ -92,7 +96,7 @@ namespace darwin {
 			out.open(path);
 		}
 	};
-	outfs debugger::out("./darwin_runtime.log");
+	outfs debugger::out;
 }
 #define Darwin_Log(msg) darwin::debugger::log(__FILE__,__LINE__,__func__,msg);
 #define Darwin_Warning(msg) darwin::debugger::warning(__FILE__,__LINE__,__func__,msg);
