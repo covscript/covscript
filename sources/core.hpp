@@ -111,6 +111,17 @@ namespace cs {
 			return retval;
 		}
 	};
+// Type and struct
+	struct pointer final {
+		var data;
+		pointer()=default;
+		pointer(const var& v):data(v) {}
+		bool operator==(const pointer& ptr) const
+		{
+			return data.is_same(ptr.data);
+		}
+	};
+	static const pointer null_pointer= {};
 	struct type final {
 		std::function<var()> constructor;
 		std::size_t id;
@@ -169,6 +180,7 @@ namespace cs {
 		var operator()();
 	};
 	std::size_t struct_builder::mCount=0;
+// Internal Garbage Collection
 	template<typename T>class garbage_collector final {
 		std::forward_list<T*> table_new;
 		std::forward_list<T*> table_delete;
@@ -191,6 +203,7 @@ namespace cs {
 			table_delete.push_front(static_cast<T*>(ptr));
 		}
 	};
+// Namespace and extensions
 	class name_space final {
 		std::unordered_map<string,var> m_data;
 	public:
@@ -231,6 +244,7 @@ namespace cs {
 			return m_ns->get_var(name);
 		}
 	};
+// Implement
 	var& type::get_var(const std::string& name) const
 	{
 		if(extensions.get()!=nullptr)
@@ -238,6 +252,7 @@ namespace cs {
 		else
 			throw syntax_error("Type does not support the extension");
 	}
+// literal format
 	var parse_value(const std::string& str)
 	{
 		if(str=="true")
@@ -252,6 +267,7 @@ namespace cs {
 		}
 		return str;
 	}
+// Copy
 	void copy_no_return(var& val)
 	{
 		val.clone();
