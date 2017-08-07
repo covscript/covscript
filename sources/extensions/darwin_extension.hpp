@@ -144,6 +144,7 @@ namespace darwin_cs_ext {
 		darwin::serial_picture(pic.get(),buff);
 		for(auto& ch:buff)
 			outfs.put(ch);
+		outfs.flush();
 	}
 	void clear(const drawable_t& pic)
 	{
