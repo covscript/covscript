@@ -101,6 +101,7 @@ namespace list_cs_ext {
 	}
 	void init()
 	{
+		list_ext.add_var("iterator",var::make_protect<extension_t>(list_iterator_ext_shared));
 		list_ext.add_var("front",var::make_protect<native_interface>(cni(front),true));
 		list_ext.add_var("back",var::make_protect<native_interface>(cni(back),true));
 		list_ext.add_var("begin",var::make_protect<native_interface>(cni(begin),true));

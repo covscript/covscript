@@ -99,6 +99,7 @@ namespace array_cs_ext {
 	}
 	void init()
 	{
+		array_ext.add_var("iterator",var::make_protect<extension_t>(array_iterator_ext_shared));
 		array_ext.add_var("at",var::make_protect<native_interface>(cni(at),true));
 		array_ext.add_var("front",var::make_protect<native_interface>(cni(front),true));
 		array_ext.add_var("back",var::make_protect<native_interface>(cni(back),true));
