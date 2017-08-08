@@ -24,7 +24,7 @@
 #include <functional>
 #include <ostream>
 
-#define CS_ANY_POOL_SIZE 10
+#define CS_ANY_POOL_SIZE 96
 namespace cs_impl {
 	template<typename _Tp> class compare_helper {
 		template<typename T,typename X=bool>struct matcher;
