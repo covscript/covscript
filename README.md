@@ -27,4 +27,6 @@ The `examples` folder contains several example programs written by CovScript.
 ## Tests ##
 The `tests` folder contains several test programs written by CovScript.
 ## Copyright ##
-**The author of the Covariant Script Programming Language is Michael Lee(mikecovlee@163.com).**
+**The author of the Covariant Script Programming Language is Michael Lee(mikecovlee@github.com,mikecovlee@163.com).**  
+**Copyright (C) 2017 Michael Lee(李登淳)**  
+**Thanks my friend Kiva(zt515@github.com,kiva515@foxmail.com) and my students who is working for the tutorial.**
