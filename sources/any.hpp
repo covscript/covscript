@@ -176,10 +176,11 @@ namespace cs_impl {
 			virtual bool compare(const baseHolder* obj) const override
 			{
 				if (obj->type()==this->type()) {
-					const holder<T>* ptr=dynamic_cast<const holder<T>*>(obj);
-					return ptr!=nullptr?cs_impl::compare(mDat,ptr->data()):false;
+					const holder<T>* ptr=static_cast<const holder<T>*>(obj);
+					return cs_impl::compare(mDat,ptr->data());
 				}
-				return false;
+				else
+					return false;
 			}
 			virtual long to_integer() const override
 			{
@@ -218,14 +219,13 @@ namespace cs_impl {
 				mDat = dat;
 			}
 		};
-		using size_t=unsigned long;
 		struct proxy {
 			short protect_level=0;
-			size_t refcount=1;
+			std::size_t refcount=1;
 			baseHolder* data=nullptr;
 			proxy()=default;
-			proxy(size_t rc,baseHolder* d):refcount(rc),data(d) {}
-			proxy(short pl,size_t rc,baseHolder* d):protect_level(pl),refcount(rc),data(d) {}
+			proxy(std::size_t rc,baseHolder* d):refcount(rc),data(d) {}
+			proxy(short pl,std::size_t rc,baseHolder* d):protect_level(pl),refcount(rc),data(d) {}
 			~proxy()
 			{
 				if(data!=nullptr)
@@ -314,7 +314,7 @@ namespace cs_impl {
 			return any(allocator.alloc(3,1,holder<T>::allocator.alloc(std::forward<ArgsT>(args)...)));
 		}
 		any()=default;
-		template<typename T> any(const T & dat):mDat(allocator.alloc(1,holder<T>::allocator.alloc(dat))) {}
+		template<typename T> any(const T& dat):mDat(allocator.alloc(1,holder<T>::allocator.alloc(dat))) {}
 		any(const any & v):mDat(v.duplicate()) {}
 		any(any&& v) noexcept
 		{
@@ -432,7 +432,7 @@ namespace cs_impl {
 				throw cov::error("E000K");
 			if(!raw)
 				clone();
-			return dynamic_cast<holder<T>*>(this->mDat->data)->data();
+			return static_cast<holder<T>*>(this->mDat->data)->data();
 		}
 		template<typename T> const T& val(bool raw=false) const
 		{
@@ -440,7 +440,7 @@ namespace cs_impl {
 				throw cov::error("E0006");
 			if(this->mDat==nullptr)
 				throw cov::error("E0005");
-			return dynamic_cast<const holder<T>*>(this->mDat->data)->data();
+			return static_cast<const holder<T>*>(this->mDat->data)->data();
 		}
 		template<typename T> const T& const_val() const
 		{
@@ -448,7 +448,7 @@ namespace cs_impl {
 				throw cov::error("E0006");
 			if(this->mDat==nullptr)
 				throw cov::error("E0005");
-			return dynamic_cast<const holder<T>*>(this->mDat->data)->data();
+			return static_cast<const holder<T>*>(this->mDat->data)->data();
 		}
 		template<typename T> operator const T&() const
 		{
