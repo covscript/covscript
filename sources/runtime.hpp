@@ -227,13 +227,13 @@ namespace cs {
 		else if(a.type()==typeid(constant_values)) {
 			switch (a.const_val<constant_values>()) {
 			case constant_values::global_namespace:
-				return runtime->storage.get_var_global(dynamic_cast<token_id*>(b)->get_id());
+				return runtime->storage.get_var_global(static_cast<token_id*>(b)->get_id());
 				break;
 			case constant_values::current_namespace:
-				return runtime->storage.get_var_current(dynamic_cast<token_id*>(b)->get_id());
+				return runtime->storage.get_var_current(static_cast<token_id*>(b)->get_id());
 				break;
 			case constant_values::this_object:
-				return runtime->storage.get_var_this(dynamic_cast<token_id*>(b)->get_id());
+				return runtime->storage.get_var_this(static_cast<token_id*>(b)->get_id());
 				break;
 			default:
 				throw syntax_error("Unsupported operator operations(Dot).");
@@ -241,13 +241,13 @@ namespace cs {
 			}
 		}
 		else if(a.type()==typeid(extension_t))
-			return a.val<extension_t>(true)->get_var(dynamic_cast<token_id*>(b)->get_id());
+			return a.val<extension_t>(true)->get_var(static_cast<token_id*>(b)->get_id());
 		else if(a.type()==typeid(structure))
-			return a.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
+			return a.val<structure>(true).get_var(static_cast<token_id*>(b)->get_id());
 		else if(a.type()==typeid(type))
-			return a.val<type>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
+			return a.val<type>(true).get_var(static_cast<token_id*>(b)->get_id());
 		else
-			return var::make<callable>(object_method(a,a.get_ext()->get_var(dynamic_cast<token_id*>(b)->get_id())),true);
+			return var::make<callable>(object_method(a,a.get_ext()->get_var(static_cast<token_id*>(b)->get_id())),true);
 	}
 	var parse_arraw(const var& a,token_base* b)
 	{
@@ -428,7 +428,7 @@ namespace cs {
 		default:
 			break;
 		case token_types::id: {
-			const std::string& id=dynamic_cast<token_id*>(token)->get_id();
+			const std::string& id=static_cast<token_id*>(token)->get_id();
 			if(define_var) {
 				if(!runtime->storage.var_exsist_current(id))
 					runtime->storage.add_var(id,number(0));
@@ -438,15 +438,15 @@ namespace cs {
 			break;
 		}
 		case token_types::value:
-			return dynamic_cast<token_value*>(token)->get_value();
+			return static_cast<token_value*>(token)->get_value();
 			break;
 		case token_types::expr:
-			return parse_expr(dynamic_cast<token_expr*>(token)->get_tree().root());
+			return parse_expr(static_cast<token_expr*>(token)->get_tree().root());
 			break;
 		case token_types::array: {
 			array arr;
 			bool is_map=true;
-			for(auto& tree:dynamic_cast<token_array*>(token)->get_array()) {
+			for(auto& tree:static_cast<token_array*>(token)->get_array()) {
 				const var& val=parse_expr(tree.root());
 				if(is_map&&val.type()!=typeid(pair))
 					is_map=false;
@@ -470,12 +470,12 @@ namespace cs {
 		}
 		case token_types::arglist: {
 			array arr;
-			for(auto& tree:dynamic_cast<token_arglist*>(token)->get_arglist())
+			for(auto& tree:static_cast<token_arglist*>(token)->get_arglist())
 				arr.push_back(parse_expr(tree.root()));
 			return var::make<array>(std::move(arr));
 		}
 		case token_types::signal: {
-			token_signal* ps=dynamic_cast<token_signal*>(token);
+			token_signal* ps=static_cast<token_signal*>(token);
 			if(define_var&&ps->get_signal()!=signal_types::asi_)
 				throw syntax_error("Use of other signal in var definition.");
 			switch(ps->get_signal()) {

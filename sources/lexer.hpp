@@ -222,7 +222,7 @@ namespace cs {
 		};
 		for(auto& ptr:oldt) {
 			if(ptr->get_type()==token_types::signal) {
-				switch(dynamic_cast<token_signal*>(ptr)->get_signal()) {
+				switch(static_cast<token_signal*>(ptr)->get_signal()) {
 				default:
 					break;
 				case signal_types::slb_:
@@ -303,7 +303,7 @@ namespace cs {
 		std::deque<int> blist_stack;
 		for(auto& ptr:oldt) {
 			if(ptr->get_type()==token_types::signal) {
-				switch(dynamic_cast<token_signal*>(ptr)->get_signal()) {
+				switch(static_cast<token_signal*>(ptr)->get_signal()) {
 				default:
 					break;
 				case signal_types::slb_:

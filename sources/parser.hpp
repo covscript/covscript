@@ -75,7 +75,7 @@ namespace cs {
 			throw syntax_error("Get the level of null token.");
 		if(ptr->get_type()!=token_types::signal)
 			throw syntax_error("Get the level of non-signal token.");
-		return signal_level_map.match(dynamic_cast<token_signal*>(ptr)->get_signal());
+		return signal_level_map.match(static_cast<token_signal*>(ptr)->get_signal());
 	}
 	constexpr signal_types signal_left_associative[] = {
 		signal_types::und_,signal_types::abo_,signal_types::asi_,signal_types::equ_,signal_types::ueq_,signal_types::aeq_,signal_types::neq_,signal_types::and_,signal_types::or_
@@ -86,7 +86,7 @@ namespace cs {
 			throw syntax_error("Get the level of null token.");
 		if(ptr->get_type()!=token_types::signal)
 			throw syntax_error("Get the level of non-signal token.");
-		signal_types s=dynamic_cast<token_signal*>(ptr)->get_signal();
+		signal_types s=static_cast<token_signal*>(ptr)->get_signal();
 		for(auto& t:signal_left_associative)
 			if(t==s)
 				return true;
@@ -118,11 +118,11 @@ namespace cs {
 				expected_fcall=false;
 				break;
 			case token_types::sblist: {
-				for(auto& list:dynamic_cast<token_sblist*>(ptr)->get_list())
+				for(auto& list:static_cast<token_sblist*>(ptr)->get_list())
 					kill_brackets(list);
 				if(expected_fcall) {
 					std::deque<cov::tree<token_base*>> tlist;
-					for(auto& list:dynamic_cast<token_sblist*>(ptr)->get_list()) {
+					for(auto& list:static_cast<token_sblist*>(ptr)->get_list()) {
 						cov::tree<token_base*> tree;
 						gen_tree(tree,list);
 						tlist.push_back(tree);
@@ -137,7 +137,7 @@ namespace cs {
 				}
 			}
 			case token_types::mblist: {
-				token_mblist* mbl=dynamic_cast<token_mblist*>(ptr);
+				token_mblist* mbl=static_cast<token_mblist*>(ptr);
 				if(mbl==nullptr)
 					throw syntax_error("Internal Error(Nullptr Access).");
 				if(mbl->get_list().size()!=1)
@@ -151,10 +151,10 @@ namespace cs {
 				continue;
 			}
 			case token_types::lblist: {
-				for(auto& list:dynamic_cast<token_lblist*>(ptr)->get_list())
+				for(auto& list:static_cast<token_lblist*>(ptr)->get_list())
 					kill_brackets(list);
 				std::deque<cov::tree<token_base*>> tlist;
-				for(auto& list:dynamic_cast<token_lblist*>(ptr)->get_list()) {
+				for(auto& list:static_cast<token_lblist*>(ptr)->get_list()) {
 					cov::tree<token_base*> tree;
 					gen_tree(tree,list);
 					tlist.push_back(tree);
@@ -164,7 +164,7 @@ namespace cs {
 				continue;
 			}
 			case token_types::signal: {
-				switch(dynamic_cast<token_signal*>(ptr)->get_signal()) {
+				switch(static_cast<token_signal*>(ptr)->get_signal()) {
 				default:
 					break;
 				case signal_types::esb_:
@@ -217,7 +217,7 @@ namespace cs {
 			throw syntax_error("Symbols do not match the object.");
 		for(auto& obj:objects) {
 			if(obj!=nullptr&&obj->get_type()==token_types::sblist) {
-				token_sblist* sbl=dynamic_cast<token_sblist*>(obj);
+				token_sblist* sbl=static_cast<token_sblist*>(obj);
 				if(sbl->get_list().size()!=1)
 					throw syntax_error("There are no more elements in small bracket.");
 				cov::tree<token_base*> t;
@@ -266,7 +266,7 @@ namespace cs {
 		if(raw.size()==1) {
 			token_base* obj=raw.front();
 			if(obj!=nullptr&&obj->get_type()==token_types::sblist) {
-				token_sblist* sbl=dynamic_cast<token_sblist*>(obj);
+				token_sblist* sbl=static_cast<token_sblist*>(obj);
 				if(sbl->get_list().size()!=1)
 					throw syntax_error("There are no more elements in small bracket.");
 				cov::tree<token_base*> t;
@@ -324,7 +324,7 @@ namespace cs {
 		}
 		statement_base()=default;
 		statement_base(const statement_base&)=default;
-		statement_base(token_base* ptr):mLineNum(dynamic_cast<token_endline*>(ptr)->get_num()),mFilePath(dynamic_cast<token_endline*>(ptr)->get_file()) {}
+		statement_base(token_base* ptr):mLineNum(static_cast<token_endline*>(ptr)->get_num()),mFilePath(static_cast<token_endline*>(ptr)->get_file()) {}
 		virtual ~statement_base()=default;
 		virtual statement_types get_type() const noexcept=0;
 		virtual std::size_t get_line_num() const noexcept final
@@ -355,7 +355,7 @@ namespace cs {
 	public:
 		statement_var()=delete;
 		statement_var(const cov::tree<token_base*>& tree,token_base* ptr):statement_base(ptr),mTree(tree) {}
-		statement_var(const cov::tree<token_base*>& tree,token_base* typ,token_base* ptr):statement_base(ptr),mTree(tree),mType(dynamic_cast<token_expr*>(typ)) {}
+		statement_var(const cov::tree<token_base*>& tree,token_base* typ,token_base* ptr):statement_base(ptr),mTree(tree),mType(static_cast<token_expr*>(typ)) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::var_;
@@ -389,7 +389,7 @@ namespace cs {
 	public:
 		statement_block()=delete;
 		statement_block(const std::deque<statement_base*>& block,token_base* ptr):statement_base(ptr),mBlock(block) {}
-		statement_block(token_base* tbp,const std::deque<statement_base*>& block,token_base* ptr):statement_base(ptr),mName(dynamic_cast<token_id*>(tbp)),mBlock(block) {}
+		statement_block(token_base* tbp,const std::deque<statement_base*>& block,token_base* ptr):statement_base(ptr),mName(static_cast<token_id*>(tbp)),mBlock(block) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::block_;
@@ -623,7 +623,7 @@ namespace cs {
 			if(a->get_type()!=b->get_type())
 				return false;
 			if(a->get_type()==token_types::action) {
-				return dynamic_cast<const token_action*>(a)->get_action()==dynamic_cast<const token_action*>(b)->get_action();
+				return static_cast<const token_action*>(a)->get_action()==static_cast<const token_action*>(b)->get_action();
 			}
 			else
 				return true;
