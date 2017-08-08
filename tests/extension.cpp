@@ -10,6 +10,6 @@ number test(number a)
 }
 extension* cs_extension()
 {
-	my_ext.add_var("test",cov::any::make_protect<native_interface>(cni(test),true));
+	my_ext.add_var("test",var::make_protect<native_interface>(cni(test),true));
 	return &my_ext;
 }
