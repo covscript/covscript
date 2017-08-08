@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 *
-* Version: 17.2.1
+* Version: 17.8.1
 */
 #include "./base.hpp"
 #include "./function.hpp"
@@ -138,35 +138,24 @@ namespace cov {
 		std::allocator<T> mAlloc;
 		std::array<T*,blck_size> mPool;
 		long mOffset=-1;
-		bool mActived=true;
 	public:
 		void blance()
 		{
 			if(mOffset!=0.5*blck_size) {
 				if(mOffset<0.5*blck_size) {
 					for(; mOffset<0.5*blck_size; ++mOffset)
-						mPool.at(mOffset+1)=mAlloc.allocate(1);
+						mPool[mOffset+1]=mAlloc.allocate(1);
 				}
 				else {
 					for(; mOffset>0.5*blck_size; --mOffset)
-						mAlloc.deallocate(mPool.at(mOffset),1);
+						mAlloc.deallocate(mPool[mOffset],1);
 				}
 			}
 		}
 		void clean()
 		{
 			for(; mOffset>=0; --mOffset)
-				mAlloc.deallocate(mPool.at(mOffset),1);
-		}
-		void enable_buffer()
-		{
-			mActived=true;
-			blance();
-		}
-		void disable_buffer()
-		{
-			mActived=false;
-			clean();
+				mAlloc.deallocate(mPool[mOffset],1);
 		}
 		allocator()
 		{
@@ -181,10 +170,8 @@ namespace cov {
 		T* alloc(ArgsT&&...args)
 		{
 			T* ptr=nullptr;
-			if(mActived&&mOffset>=0) {
-				ptr=mPool.at(mOffset);
-				--mOffset;
-			}
+			if(mOffset>=0)
+				ptr=mPool[mOffset--];
 			else
 				ptr=mAlloc.allocate(1);
 			mAlloc.construct(ptr,std::forward<ArgsT>(args)...);
@@ -193,10 +180,8 @@ namespace cov {
 		void free(T* ptr)
 		{
 			mAlloc.destroy(ptr);
-			if(mActived&&mOffset<blck_size-1) {
-				++mOffset;
-				mPool.at(mOffset)=ptr;
-			}
+			if(mOffset<blck_size-1)
+				mPool[++mOffset]=ptr;
 			else
 				mAlloc.deallocate(ptr,1);
 		}
