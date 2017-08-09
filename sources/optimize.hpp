@@ -174,6 +174,40 @@ namespace cs {
 				return;
 				break;
 			}
+			case signal_types::lambda_: {
+				opt_expr(tree,it.left());
+				opt_expr(tree,it.right());
+				token_base* lptr=it.left().data();
+				token_base* rptr=it.right().data();
+				if(lptr!=nullptr||rptr==nullptr||rptr->get_type()!=token_types::arglist)
+					throw syntax_error("Wrong grammar for lambda expression.");
+				it.data()=rptr;
+				return;
+				break;
+			}
+			case signal_types::at_: {
+				opt_expr(tree,it.left());
+				opt_expr(tree,it.right());
+				token_base* lptr=it.left().data();
+				token_base* rptr=it.right().data();
+				if(lptr==nullptr||rptr==nullptr||lptr->get_type()!=token_types::arglist)
+					throw syntax_error("Wrong grammar for lambda expression.");
+				std::deque<std::string> args;
+				for(auto& it:dynamic_cast<token_arglist*>(lptr)->get_arglist()) {
+					if(it.root().data()==nullptr)
+						throw internal_error("Null pointer accessed.");
+					if(it.root().data()->get_type()!=token_types::id)
+						throw syntax_error("Wrong grammar for function definition.");
+					const std::string& str=dynamic_cast<token_id*>(it.root().data())->get_id();
+					for(auto& it:args)
+						if(it==str)
+							throw syntax_error("Redefinition of function argument.");
+					args.push_back(str);
+				}
+				it.data()=new token_value(var::make_protect<function>(args,std::deque<statement_base*> {new statement_return(cov::tree<token_base*>{it.right()},new token_endline(0))}));
+				return;
+				break;
+			}
 			}
 		}
 		}

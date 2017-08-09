@@ -66,8 +66,8 @@ namespace cs {
 	};
 	mapping<signal_types,int> signal_level_map = {
 		{signal_types::add_,10},{signal_types::sub_,10},{signal_types::mul_,11},{signal_types::div_,11},{signal_types::mod_,12},{signal_types::pow_,12},{signal_types::dot_,16},{signal_types::arraw_,16},
-		{signal_types::und_,9},{signal_types::abo_,9},{signal_types::asi_,0},{signal_types::pair_,1},{signal_types::equ_,9},{signal_types::ueq_,9},{signal_types::aeq_,9},{signal_types::neq_,9},
-		{signal_types::and_,7},{signal_types::or_,7},{signal_types::not_,8},{signal_types::inc_,13},{signal_types::dec_,13},{signal_types::fcall_,14},{signal_types::access_,15},{signal_types::typeid_,17},{signal_types::new_,17}
+		{signal_types::und_,9},{signal_types::abo_,9},{signal_types::asi_,0},{signal_types::pair_,2},{signal_types::equ_,9},{signal_types::ueq_,9},{signal_types::aeq_,9},{signal_types::neq_,9},{signal_types::at_,1},
+		{signal_types::and_,7},{signal_types::or_,7},{signal_types::not_,8},{signal_types::inc_,13},{signal_types::dec_,13},{signal_types::fcall_,14},{signal_types::lambda_,14},{signal_types::access_,15},{signal_types::typeid_,17},{signal_types::new_,17}
 	};
 	int get_signal_level(token_base* ptr)
 	{
@@ -104,6 +104,7 @@ namespace cs {
 		std::swap(tokens,oldt);
 		tokens.clear();
 		bool expected_fcall=false;
+		bool expected_lambda=false;
 		for(auto& ptr:oldt) {
 			switch(ptr->get_type()) {
 			default:
@@ -127,7 +128,10 @@ namespace cs {
 						gen_tree(tree,list);
 						tlist.push_back(tree);
 					}
-					tokens.push_back(new token_signal(signal_types::fcall_));
+					if(!expected_lambda) {
+						tokens.push_back(new token_signal(signal_types::fcall_));
+						expected_lambda=false;
+					}
 					tokens.push_back(new token_arglist(tlist));
 					continue;
 				}
@@ -167,6 +171,10 @@ namespace cs {
 				switch(static_cast<token_signal*>(ptr)->get_signal()) {
 				default:
 					break;
+				case signal_types::lambda_:
+					expected_fcall=true;
+					expected_lambda=true;
+					continue;
 				case signal_types::esb_:
 					if(expected_fcall) {
 						tokens.push_back(new token_signal(signal_types::fcall_));
