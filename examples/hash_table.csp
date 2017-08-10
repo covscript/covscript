@@ -4,7 +4,7 @@ struct type
 	var table as array
 end
 function create(bc)
-	var ht=new(hash_table.type)
+	var ht=new hash_table.type
 	ht->bucket_count=bc
 	for i=1 to bc
 		ht->table.push_back(null)
@@ -12,7 +12,7 @@ function create(bc)
 	return ht
 end
 function insert(ht,dat)
-	var bucket=to_integer(runtime.hash(dat.first()))%ht->bucket_count
+	var bucket=math.abs(to_integer(runtime.hash(dat.first())))%ht->bucket_count
 	if ht->table.at(bucket)==null
 		ht->table.at(bucket)=new list
 	end
@@ -26,7 +26,7 @@ function insert(ht,dat)
 	lst->push_back(dat)
 end
 function get(ht,key)
-	var bucket=to_integer(runtime.hash(key))%ht->bucket_count
+	var bucket=math.abs(to_integer(runtime.hash(key)))%ht->bucket_count
 	var lst=ht->table.at(bucket)
 	if lst==null
 		return null
