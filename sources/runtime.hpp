@@ -502,7 +502,7 @@ namespace cs {
 			case signal_types::dot_:
 				return parse_dot(parse_expr(it.left()),it.right().data());
 				break;
-			case signal_types::arraw_:
+			case signal_types::arrow_:
 				return parse_arraw(parse_expr(it.left()),it.right().data());
 				break;
 			case signal_types::typeid_:
