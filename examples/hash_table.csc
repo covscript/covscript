@@ -1,5 +1,7 @@
 import "./hash_table.csp"
 var ht=hash_table.create(20)
-hash_table.insert(ht,"Hello":2)
-++hash_table.get(ht,"Hello")
-hash_table.print(ht)
+ht->insert("Hello":2)
+ht->insert("World":4)
+ht->insert("Hahaha":5)
+++ht->get("Hello")
+ht->print()
