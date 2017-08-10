@@ -20,6 +20,7 @@
 * Github: https://github.com/mikecovlee
 */
 #include "./lexer.hpp"
+#include <iostream>
 
 namespace cs {
 	class token_expr final:public token_base {
@@ -128,10 +129,10 @@ namespace cs {
 						gen_tree(tree,list);
 						tlist.push_back(tree);
 					}
-					if(!expected_lambda) {
+					if(!expected_lambda)
 						tokens.push_back(new token_signal(signal_types::fcall_));
+					else
 						expected_lambda=false;
-					}
 					tokens.push_back(new token_arglist(tlist));
 					continue;
 				}
@@ -174,10 +175,14 @@ namespace cs {
 				case signal_types::lambda_:
 					expected_fcall=true;
 					expected_lambda=true;
+					tokens.push_back(ptr);
 					continue;
 				case signal_types::esb_:
 					if(expected_fcall) {
-						tokens.push_back(new token_signal(signal_types::fcall_));
+						if(!expected_lambda)
+							tokens.push_back(new token_signal(signal_types::fcall_));
+						else
+							expected_lambda=false;
 						tokens.push_back(new token_arglist());
 					}
 					else
@@ -192,6 +197,7 @@ namespace cs {
 					expected_fcall=false;
 					continue;
 				}
+				expected_lambda=false;
 				expected_fcall=false;
 				break;
 			}

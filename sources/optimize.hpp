@@ -40,6 +40,7 @@ namespace cs {
 		return false;
 	}
 	bool constant_var=false;
+	bool inside_lambda=false;
 	void opt_expr(cov::tree<token_base*>& tree,cov::tree<token_base*>::iterator it)
 	{
 		if(!it.usable())
@@ -179,14 +180,16 @@ namespace cs {
 				opt_expr(tree,it.right());
 				token_base* lptr=it.left().data();
 				token_base* rptr=it.right().data();
-				if(lptr!=nullptr||rptr==nullptr||rptr->get_type()!=token_types::arglist)
+				if(!inside_lambda||lptr!=nullptr||rptr==nullptr||rptr->get_type()!=token_types::arglist)
 					throw syntax_error("Wrong grammar for lambda expression.");
 				it.data()=rptr;
 				return;
 				break;
 			}
 			case signal_types::at_: {
+				inside_lambda=true;
 				opt_expr(tree,it.left());
+				inside_lambda=false;
 				opt_expr(tree,it.right());
 				token_base* lptr=it.left().data();
 				token_base* rptr=it.right().data();
