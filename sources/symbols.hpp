@@ -207,7 +207,7 @@ namespace cs {
 		{"+",signal_types::add_},{"-",signal_types::sub_},{"*",signal_types::mul_},{"/",signal_types::div_},{"%",signal_types::mod_},{"^",signal_types::pow_},{">",signal_types::abo_},{"<",signal_types::und_},
 		{"=",signal_types::asi_},{"&&",signal_types::and_},{"||",signal_types::or_},{"!",signal_types::not_},{"==",signal_types::equ_},{"!=",signal_types::neq_},{">=",signal_types::aeq_},{"<=",signal_types::ueq_},
 		{"(",signal_types::slb_},{")",signal_types::srb_},{"[",signal_types::mlb_},{"]",signal_types::mrb_},{"{",signal_types::llb_},{"}",signal_types::lrb_},{",",signal_types::com_},{".",signal_types::dot_},
-		{"()",signal_types::esb_},{"[]",signal_types::emb_},{"{}",signal_types::elb_},{"++",signal_types::inc_},{"--",signal_types::dec_},{":",signal_types::pair_},{"->",signal_types::arraw_},{"@",signal_types::at_}
+		{"()",signal_types::esb_},{"[]",signal_types::emb_},{"{}",signal_types::elb_},{"++",signal_types::inc_},{"--",signal_types::dec_},{":",signal_types::pair_},{"->",signal_types::arraw_}
 	};
 	mapping<std::string,action_types> action_map= {
 		{"import",action_types::import_},{"package",action_types::package_},{"struct",action_types::struct_},{"block",action_types::block_},{"end",action_types::endblock_},{"var",action_types::var_},{"const",action_types::constant_},{"as",action_types::as_},{"if",action_types::if_},{"else",action_types::else_},{"switch",action_types::switch_},{"case",action_types::case_},{"default",action_types::default_},
@@ -225,7 +225,7 @@ namespace cs {
 		{'a','\a'},{'b','\b'},{'f','\f'},{'n','\n'},{'r','\r'},{'t','\t'},{'v','\v'},{'\\','\\'},{'\'','\''},{'\"','\"'},{'0','\0'}
 	};
 	constexpr char signals[]= {
-		'+','-','*','/','%','^',',','.','>','<','=','&','|','!','(',')','[',']','{','}',':','@'
+		'+','-','*','/','%','^',',','.','>','<','=','&','|','!','(',')','[',']','{','}',':'
 	};
 	bool issignal(char ch)
 	{
