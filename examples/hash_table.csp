@@ -1,0 +1,49 @@
+package hash_table
+struct type
+	var bucket_count as number
+	var table as array
+end
+function create(bc)
+	var ht=new(hash_table.type)
+	ht->bucket_count=bc
+	for i=1 to bc
+		ht->table.push_back(null)
+	end
+	return ht
+end
+function insert(ht,dat)
+	var bucket=to_integer(runtime.hash(dat.first()))%ht->bucket_count
+	if ht->table.at(bucket)==null
+		ht->table.at(bucket)=new list
+	end
+	var lst=ht->table.at(bucket)
+	for it iterate *lst
+		if it.first()==dat.first()
+			it.second()=dat.second()
+			return
+		end
+	end
+	lst->push_back(dat)
+end
+function get(ht,key)
+	var bucket=to_integer(runtime.hash(key))%ht->bucket_count
+	var lst=ht->table.at(bucket)
+	if lst==null
+		return null
+	end
+	for it iterate *lst
+		if it.first()==key
+			return it.second()
+		end
+	end
+	return null
+end
+function print(ht)
+	for lst iterate ht->table
+		if lst!=null
+			for p iterate *lst
+				system.println(p.first(),":",p.second())
+			end
+		end
+	end
+end
