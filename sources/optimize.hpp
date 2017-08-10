@@ -191,7 +191,7 @@ namespace cs {
 				return;
 				break;
 			}
-			case signal_types::at_: {
+			case signal_types::lambda_: {
 				inside_lambda=true;
 				opt_expr(tree,it.left());
 				inside_lambda=false;
