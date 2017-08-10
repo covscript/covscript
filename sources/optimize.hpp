@@ -116,6 +116,11 @@ namespace cs {
 			switch(static_cast<token_signal*>(token)->get_signal()) {
 			default:
 				break;
+			case signal_types::new_:
+				opt_expr(tree,it.left());
+				opt_expr(tree,it.right());
+				return;
+				break;
 			case signal_types::dot_: {
 				opt_expr(tree,it.left());
 				opt_expr(tree,it.right());
