@@ -2,7 +2,7 @@ package hash_table
 struct type
 	var bucket_count as number
 	var table as array
-	var bucket_func=[](val)@math.abs(to_integer(runtime.hash(val)))%this.bucket_count
+	var bucket_func=[](val)->math.abs(to_integer(runtime.hash(val)))%this.bucket_count
 	function insert(dat)
 		var bucket=bucket_func(dat.first())
 		if this.table.at(bucket)==null

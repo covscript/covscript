@@ -131,8 +131,6 @@ namespace cs {
 					}
 					if(!expected_lambda)
 						tokens.push_back(new token_signal(signal_types::fcall_));
-					else
-						expected_lambda=false;
 					tokens.push_back(new token_arglist(tlist));
 					continue;
 				}
@@ -172,12 +170,18 @@ namespace cs {
 				switch(static_cast<token_signal*>(ptr)->get_signal()) {
 				default:
 					break;
+				case signal_types::arraw_:
+					if(expected_lambda) {
+						tokens.push_back(new token_signal(signal_types::at_));
+						expected_lambda=false;
+						continue;
+					}
+					else
+						break;
 				case signal_types::esb_:
 					if(expected_fcall) {
 						if(!expected_lambda)
 							tokens.push_back(new token_signal(signal_types::fcall_));
-						else
-							expected_lambda=false;
 						tokens.push_back(new token_arglist());
 					}
 					else
