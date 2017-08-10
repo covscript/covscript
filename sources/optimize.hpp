@@ -175,7 +175,7 @@ namespace cs {
 				return;
 				break;
 			}
-			case signal_types::lambda_: {
+			case signal_types::emb_: {
 				opt_expr(tree,it.left());
 				opt_expr(tree,it.right());
 				token_base* lptr=it.left().data();
