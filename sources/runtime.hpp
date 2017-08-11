@@ -441,6 +441,8 @@ namespace cs {
 			if(define_var) {
 				if(!runtime->storage.var_exsist_current(id))
 					runtime->storage.add_var(id,number(0));
+				else
+					throw syntax_error("Redefination of variable.");
 				define_var=false;
 			}
 			return runtime->storage.get_var(id);
