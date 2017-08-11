@@ -366,11 +366,9 @@ namespace cs {
 	};
 	class statement_var final:public statement_base {
 		cov::tree<token_base*> mTree;
-		token_expr* mType=nullptr;
 	public:
 		statement_var()=delete;
 		statement_var(const cov::tree<token_base*>& tree,token_base* ptr):statement_base(ptr),mTree(tree) {}
-		statement_var(const cov::tree<token_base*>& tree,token_base* typ,token_base* ptr):statement_base(ptr),mTree(tree),mType(static_cast<token_expr*>(typ)) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::var_;
