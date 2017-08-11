@@ -29,7 +29,7 @@ namespace cs {
 		import_,package_,struct_,block_,endblock_,var_,constant_,as_,if_,else_,switch_,case_,default_,while_,loop_,until_,for_,to_,step_,iterate_,break_,continue_,function_,return_
 	};
 	enum class signal_types {
-		add_,sub_,mul_,div_,mod_,pow_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,inc_,dec_,pair_,slb_,srb_,mlb_,mrb_,llb_,lrb_,esb_,emb_,elb_,fcall_,access_,typeid_,new_,arrow_,lambda_
+		add_,sub_,mul_,div_,mod_,pow_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,inc_,dec_,pair_,slb_,srb_,mlb_,mrb_,llb_,lrb_,esb_,emb_,elb_,fcall_,access_,typeid_,new_,gcnew_,arrow_,lambda_
 	};
 	template<typename Key,typename T>
 	class mapping final {
@@ -217,7 +217,7 @@ namespace cs {
 		current_namespace,global_namespace,this_object
 	};
 	mapping<std::string,std::function<token_base*()>> reserved_map= {
-		{"and",[]()->token_base*{return new token_signal(signal_types::and_);}},{"or",[]()->token_base*{return new token_signal(signal_types::or_);}},{"not",[]()->token_base*{return new token_signal(signal_types::not_);}},{"typeid",[]()->token_base*{return new token_signal(signal_types::typeid_);}},{"new",[]()->token_base*{return new token_signal(signal_types::new_);}},
+		{"and",[]()->token_base*{return new token_signal(signal_types::and_);}},{"or",[]()->token_base*{return new token_signal(signal_types::or_);}},{"not",[]()->token_base*{return new token_signal(signal_types::not_);}},{"typeid",[]()->token_base*{return new token_signal(signal_types::typeid_);}},{"new",[]()->token_base*{return new token_signal(signal_types::new_);}},{"gcnew",[]()->token_base*{return new token_signal(signal_types::gcnew_);}},
 		{"current",[]()->token_base*{return new token_value(constant_values::current_namespace);}},{"global",[]()->token_base*{return new token_value(constant_values::global_namespace);}},{"this",[]()->token_base*{return new token_value(constant_values::this_object);}},{"null",[]()->token_base*{return new token_value(null_pointer);}},
 		{"true",[]()->token_base*{return new token_value(true);}},{"false",[]()->token_base*{return new token_value(false);}}
 	};

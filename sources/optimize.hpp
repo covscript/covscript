@@ -121,6 +121,11 @@ namespace cs {
 				opt_expr(tree,it.right());
 				return;
 				break;
+			case signal_types::gcnew_:
+				opt_expr(tree,it.left());
+				opt_expr(tree,it.right());
+				return;
+				break;
 			case signal_types::dot_: {
 				opt_expr(tree,it.left());
 				opt_expr(tree,it.right());
