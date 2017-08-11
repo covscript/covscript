@@ -272,9 +272,18 @@ namespace cs {
 		if(a!=nullptr)
 			throw syntax_error("Wrong format of new expression.");
 		else if(b.type()==typeid(type))
-			return var::make<pointer>(b.const_val<type>().constructor());
+			return b.const_val<type>().constructor();
 		else
 			throw syntax_error("Unsupported operator operations(New).");
+	}
+	var parse_gcnew(token_base* a,const var& b)
+	{
+		if(a!=nullptr)
+			throw syntax_error("Wrong format of new expression.");
+		else if(b.type()==typeid(type))
+			return var::make<pointer>(b.const_val<type>().constructor());
+		else
+			throw syntax_error("Unsupported operator operations(GcNew).");
 	}
 	var parse_und(const var& a,const var& b)
 	{
@@ -510,6 +519,9 @@ namespace cs {
 				break;
 			case signal_types::new_:
 				return parse_new(it.left().data(),parse_expr(it.right()));
+				break;
+			case signal_types::gcnew_:
+				return parse_gcnew(it.left().data(),parse_expr(it.right()));
 				break;
 			case signal_types::und_:
 				return parse_und(parse_expr(it.left()),parse_expr(it.right()));

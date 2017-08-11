@@ -68,7 +68,7 @@ namespace cs {
 	mapping<signal_types,int> signal_level_map = {
 		{signal_types::add_,10},{signal_types::sub_,10},{signal_types::mul_,11},{signal_types::div_,11},{signal_types::mod_,12},{signal_types::pow_,12},{signal_types::dot_,17},{signal_types::arrow_,17},
 		{signal_types::und_,9},{signal_types::abo_,9},{signal_types::asi_,0},{signal_types::pair_,2},{signal_types::equ_,9},{signal_types::ueq_,9},{signal_types::aeq_,9},{signal_types::neq_,9},{signal_types::lambda_,1},
-		{signal_types::and_,7},{signal_types::or_,7},{signal_types::not_,8},{signal_types::inc_,13},{signal_types::dec_,13},{signal_types::fcall_,14},{signal_types::emb_,14},{signal_types::access_,15},{signal_types::typeid_,16},{signal_types::new_,16}
+		{signal_types::and_,7},{signal_types::or_,7},{signal_types::not_,8},{signal_types::inc_,13},{signal_types::dec_,13},{signal_types::fcall_,14},{signal_types::emb_,14},{signal_types::access_,15},{signal_types::typeid_,16},{signal_types::new_,16},{signal_types::gcnew_,16}
 	};
 	int get_signal_level(token_base* ptr)
 	{
