@@ -106,8 +106,6 @@ namespace cs {
 		define_var=true;
 		var var=parse_expr(mTree.root());
 		define_var=false;
-		if(mType!=nullptr)
-			var.assign(parse_expr(mType->get_tree().root()).const_val<type>().constructor(),true);
 	}
 	void statement_break::run()
 	{
@@ -498,10 +496,6 @@ namespace cs {
 		// Var Grammar
 		translator.add_method({new token_action(action_types::var_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::var_,grammar_types::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				return new statement_var(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),raw.front().back());
-			}
-		});
-		translator.add_method({new token_action(action_types::var_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::as_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::var_,grammar_types::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
-				return new statement_var(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),raw.front().at(3),raw.front().back());
 			}
 		});
 		translator.add_method({new token_action(action_types::constant_),new token_action(action_types::var_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::constant_,grammar_types::jit_command,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
