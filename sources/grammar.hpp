@@ -409,8 +409,10 @@ namespace cs {
 					break;
 				case grammar_types::single: {
 					if(level>0) {
-						if(m->statement_type==statement_types::end_)
+						if(m->statement_type==statement_types::end_) {
+							runtime->storage.remove_domain();
 							--level;
+						}
 						if(level==0) {
 							statements.push_back(method->function(tmp));
 							tmp.clear();
@@ -427,6 +429,7 @@ namespace cs {
 					if(level==0)
 						method=m;
 					++level;
+					runtime->storage.add_domain();
 					tmp.push_back(line);
 				}
 				break;
@@ -476,6 +479,7 @@ namespace cs {
 		}
 	};
 	std::deque<name_space> statement_import::mPackages;
+	void breakpoint() {}
 	void init_grammar()
 	{
 		// Expression Grammar
@@ -503,6 +507,7 @@ namespace cs {
 			}
 		});
 		translator.add_method({new token_action(action_types::constant_),new token_action(action_types::var_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::constant_,grammar_types::jit_command,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				breakpoint();
 				cov::tree<token_base*>& tree=dynamic_cast<token_expr*>(raw.front().at(2))->get_tree();
 				const auto& it=tree.root();
 				token_base* root=it.data();
