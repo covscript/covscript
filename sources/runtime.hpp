@@ -59,6 +59,10 @@ namespace cs {
 		{
 			m_this.pop_front();
 		}
+		void clear_domain()
+		{
+			m_data.front()->clear();
+		}
 		bool var_exsist(const string& name)
 		{
 			for(auto& domain:m_data)

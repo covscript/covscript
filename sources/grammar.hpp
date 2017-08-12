@@ -215,6 +215,7 @@ namespace cs {
 	{
 		runtime->storage.add_domain();
 		while(parse_expr(mTree.root()).const_val<boolean>()) {
+			runtime->storage.clear_domain();
 			for(auto& ptr:mBlock) {
 				try {
 					ptr->run();
@@ -249,6 +250,7 @@ namespace cs {
 	{
 		runtime->storage.add_domain();
 		do {
+			runtime->storage.clear_domain();
 			for(auto& ptr:mBlock) {
 				try {
 					ptr->run();
@@ -280,6 +282,7 @@ namespace cs {
 		while(!(mExpr!=nullptr&&parse_expr(mExpr->get_tree().root()).const_val<boolean>()));
 		runtime->storage.remove_domain();
 	}
+// Unfinished
 	void statement_for::run()
 	{
 		runtime->storage.add_domain();
@@ -287,6 +290,7 @@ namespace cs {
 		var var=parse_expr(mInit.root());
 		define_var=false;
 		while(var.const_val<number>()<=parse_expr(mEnd.root()).const_val<number>()) {
+			runtime->storage.clear_domain();
 			for(auto& ptr:mBlock) {
 				try {
 					ptr->run();
@@ -322,6 +326,7 @@ namespace cs {
 	{
 		runtime->storage.add_domain();
 		for(const X& it:obj.const_val<T>()) {
+			runtime->storage.clear_domain();
 			runtime->storage.add_var(iterator,it);
 			for(auto& ptr:body) {
 				try {
