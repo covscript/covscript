@@ -57,7 +57,7 @@ loop
 	end
 	++i
   end
-  var i=to_integer((center_y-y_offset)/zoom)
+  i=to_integer((center_y-y_offset)/zoom)
   while(center_y+y_offset+i*zoom>0)
 	if(i!=0)
   		pic.draw_pixel(center_x+x_offset,center_y+y_offset+i*zoom,darwin.pixel('-',darwin.white,darwin.black))
