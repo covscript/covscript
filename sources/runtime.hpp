@@ -144,7 +144,6 @@ namespace cs {
 	public:
 		string package_name;
 		domain_manager storage;
-		domain_manager constant_storage;
 	};
 	class runtime_manager final {
 		std::deque<runtime_t> m_data;
@@ -429,7 +428,6 @@ namespace cs {
 		else
 			throw syntax_error("Access non-array or string object.");
 	}
-	bool define_var=false;
 	var parse_expr(const cov::tree<token_base*>::iterator& it)
 	{
 		if(!it.usable())
@@ -440,18 +438,9 @@ namespace cs {
 		switch(token->get_type()) {
 		default:
 			break;
-		case token_types::id: {
-			const std::string& id=static_cast<token_id*>(token)->get_id();
-			if(define_var) {
-				if(!runtime->storage.var_exsist_current(id))
-					runtime->storage.add_var(id,number(0));
-				else
-					throw syntax_error("Redefination of variable.");
-				define_var=false;
-			}
-			return runtime->storage.get_var(id);
+		case token_types::id:
+			return runtime->storage.get_var(static_cast<token_id*>(token)->get_id());
 			break;
-		}
 		case token_types::value:
 			return static_cast<token_value*>(token)->get_value();
 			break;
@@ -490,10 +479,7 @@ namespace cs {
 			return var::make<array>(std::move(arr));
 		}
 		case token_types::signal: {
-			token_signal* ps=static_cast<token_signal*>(token);
-			if(define_var&&ps->get_signal()!=signal_types::asi_)
-				throw syntax_error("Use of other signal in var definition.");
-			switch(ps->get_signal()) {
+			switch(static_cast<token_signal*>(token)->get_signal()) {
 			default:
 				break;
 			case signal_types::add_:
@@ -535,11 +521,9 @@ namespace cs {
 			case signal_types::abo_:
 				return parse_abo(parse_expr(it.left()),parse_expr(it.right()));
 				break;
-			case signal_types::asi_: {
-				var left=parse_expr(it.left());
-				return parse_asi(left,parse_expr(it.right()));
+			case signal_types::asi_:
+				return parse_asi(parse_expr(it.left()),parse_expr(it.right()));
 				break;
-			}
 			case signal_types::pair_:
 				return parse_pair(parse_expr(it.left()),parse_expr(it.right()));
 				break;
@@ -580,5 +564,21 @@ namespace cs {
 		}
 		}
 		throw internal_error("Unrecognized expression.");
+	}
+	var define_var(cov::tree<token_base*>& tree)
+	{
+		const auto& it=tree.root();
+		token_base* root=it.data();
+		token_base* left=it.left().data();
+		const auto& right=it.right();
+		if(root==nullptr||left==nullptr||right.data()==nullptr||root->get_type()!=token_types::signal||static_cast<token_signal*>(root)->get_signal()!=signal_types::asi_||left->get_type()!=token_types::id)
+			throw syntax_error("Wrong grammar for variable definition.");
+		const std::string& id=static_cast<token_id*>(left)->get_id();
+		if(runtime->storage.var_exsist_current(id))
+			throw syntax_error("Redefination of variable.");
+		var obj=parse_expr(right);
+		copy_no_return(obj);
+		runtime->storage.add_var(id,obj);
+		return obj;
 	}
 }

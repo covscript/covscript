@@ -53,9 +53,7 @@ namespace cs {
 			break;
 		case token_types::id: {
 			const std::string& id=static_cast<token_id*>(token)->get_id();
-			if(runtime->constant_storage.var_exsist(id))
-				it.data()=new token_value(runtime->constant_storage.get_var(id));
-			else if(runtime->storage.var_exsist(id)&&runtime->storage.get_var(id).is_protect())
+			if(runtime->storage.var_exsist(id)&&runtime->storage.get_var(id).is_protect())
 				it.data()=new token_value(runtime->storage.get_var(id));
 			return;
 			break;
@@ -179,7 +177,10 @@ namespace cs {
 				token_base* lptr=it.left().data();
 				token_base* rptr=it.right().data();
 				if(constant_var&&lptr!=nullptr&&lptr->get_type()==token_types::id&&rptr!=nullptr&&rptr->get_type()==token_types::value) {
-					runtime->constant_storage.add_var(static_cast<token_id*>(lptr)->get_id(),static_cast<token_value*>(rptr)->get_value());
+					const std::string& id=static_cast<token_id*>(lptr)->get_id();
+					if(runtime->storage.var_exsist_current(id))
+						throw syntax_error("Redefinition of constant variable.");
+					runtime->storage.add_var(id,static_cast<token_value*>(rptr)->get_value());
 					it.data()=rptr;
 				}
 				return;

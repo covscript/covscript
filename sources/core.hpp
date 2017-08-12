@@ -270,15 +270,11 @@ namespace cs {
 // Copy
 	void copy_no_return(var& val)
 	{
-		if(!val.usable())
-			throw syntax_error("Use of null object.");
 		val.clone();
 		val.detach();
 	}
 	var copy(var val)
 	{
-		if(!val.usable())
-			throw syntax_error("Use of null object.");
 		val.clone();
 		val.detach();
 		return val;

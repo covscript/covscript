@@ -1,12 +1,12 @@
 package hash_table
 struct type
-	var bucket_count as number
-	var table as array
+	var bucket_count=new number
+	var table=new array
 	var bucket_func=[](val)->math.abs(to_integer(runtime.hash(val)))%this.bucket_count
 	function insert(dat)
 		var bucket=bucket_func(dat.first())
 		if this.table.at(bucket)==null
-			this.table.at(bucket)=new list
+			this.table.at(bucket)=gcnew list
 		end
 		var lst=this.table.at(bucket)
 		for it iterate *lst
@@ -41,7 +41,7 @@ struct type
 	end
 end
 function create(bc)
-	var ht=new hash_table.type
+	var ht=gcnew hash_table.type
 	ht->bucket_count=bc
 	for i=1 to bc
 		ht->table.push_back(null)

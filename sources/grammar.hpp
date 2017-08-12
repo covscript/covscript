@@ -103,9 +103,7 @@ namespace cs {
 	}
 	void statement_var::run()
 	{
-		define_var=true;
-		var var=parse_expr(mTree.root());
-		define_var=false;
+		define_var(mTree);
 	}
 	void statement_break::run()
 	{
@@ -282,14 +280,12 @@ namespace cs {
 		while(!(mExpr!=nullptr&&parse_expr(mExpr->get_tree().root()).const_val<boolean>()));
 		runtime->storage.remove_domain();
 	}
-// Unfinished
 	void statement_for::run()
 	{
 		runtime->storage.add_domain();
-		define_var=true;
-		var var=parse_expr(mInit.root());
-		define_var=false;
-		while(var.const_val<number>()<=parse_expr(mEnd.root()).const_val<number>()) {
+		var val=define_var(mInit);
+		runtime->storage.add_domain();
+		while(val.const_val<number>()<=parse_expr(mEnd.root()).const_val<number>()) {
 			runtime->storage.clear_domain();
 			for(auto& ptr:mBlock) {
 				try {
@@ -306,10 +302,12 @@ namespace cs {
 				}
 				if(return_fcall) {
 					runtime->storage.remove_domain();
+					runtime->storage.remove_domain();
 					return;
 				}
 				if(break_block) {
 					break_block=false;
+					runtime->storage.remove_domain();
 					runtime->storage.remove_domain();
 					return;
 				}
@@ -318,8 +316,9 @@ namespace cs {
 					break;
 				}
 			}
-			var.val<number>(true)+=parse_expr(mStep.root()).const_val<number>();
+			val.val<number>(true)+=parse_expr(mStep.root()).const_val<number>();
 		}
+		runtime->storage.remove_domain();
 		runtime->storage.remove_domain();
 	}
 	template<typename T,typename X>void foreach_helper(const string& iterator,const var& obj,std::deque<statement_base*>& body)
