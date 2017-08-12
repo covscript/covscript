@@ -244,6 +244,12 @@ namespace cs {
 			return m_ns->get_var(name);
 		}
 	};
+// Var definition
+	struct define_var_profile {
+		std::string id;
+		cov::tree<token_base*> expr;
+	};
+	void parse_define_var(cov::tree<token_base*>&,define_var_profile&);
 // Implement
 	var& type::get_var(const std::string& name) const
 	{
