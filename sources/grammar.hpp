@@ -504,13 +504,20 @@ namespace cs {
 		});
 		translator.add_method({new token_action(action_types::constant_),new token_action(action_types::var_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::constant_,grammar_types::jit_command,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				cov::tree<token_base*>& tree=dynamic_cast<token_expr*>(raw.front().at(2))->get_tree();
-				constant_var=true;
-				optimize_expression(tree);
-				constant_var=false;
-				if(tree.root().data()==nullptr)
-					throw syntax_error("Wrong format of expression.");
-				if(tree.root().data()->get_type()!=token_types::value)
+				const auto& it=tree.root();
+				token_base* root=it.data();
+				token_base* left=it.left().data();
+				const auto& right=it.right();
+				if(root==nullptr||left==nullptr||right.data()==nullptr||root->get_type()!=token_types::signal||static_cast<token_signal*>(root)->get_signal()!=signal_types::asi_||left->get_type()!=token_types::id)
+					throw syntax_error("Wrong grammar for variable definition.");
+				const std::string& id=static_cast<token_id*>(left)->get_id();
+				if(runtime->storage.var_exsist_current(id))
+					throw syntax_error("Redefination of variable.");
+				opt_expr(tree,right);
+				token_base* vptr=right.data();
+				if(vptr->get_type()!=token_types::value)
 					throw syntax_error("Constant variable must have an constant value.");
+				runtime->storage.add_var(id,static_cast<token_value*>(vptr)->get_value());
 				return nullptr;
 			}
 		});
