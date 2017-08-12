@@ -39,7 +39,6 @@ namespace cs {
 		}
 		return false;
 	}
-	bool constant_var=false;
 	bool inside_lambda=false;
 	void opt_expr(cov::tree<token_base*>& tree,cov::tree<token_base*>::iterator it)
 	{
@@ -114,6 +113,10 @@ namespace cs {
 			switch(static_cast<token_signal*>(token)->get_signal()) {
 			default:
 				break;
+			case signal_types::asi_:
+				opt_expr(tree,it.right());
+				return;
+				break;
 			case signal_types::new_:
 				opt_expr(tree,it.left());
 				opt_expr(tree,it.right());
@@ -167,21 +170,6 @@ namespace cs {
 							it.data()=new token_value(a.val<callable>(true).call(arr));
 						}
 					}
-				}
-				return;
-				break;
-			}
-			case signal_types::asi_: {
-				opt_expr(tree,it.left());
-				opt_expr(tree,it.right());
-				token_base* lptr=it.left().data();
-				token_base* rptr=it.right().data();
-				if(constant_var&&lptr!=nullptr&&lptr->get_type()==token_types::id&&rptr!=nullptr&&rptr->get_type()==token_types::value) {
-					const std::string& id=static_cast<token_id*>(lptr)->get_id();
-					if(runtime->storage.var_exsist_current(id))
-						throw syntax_error("Redefinition of constant variable.");
-					runtime->storage.add_var(id,static_cast<token_value*>(rptr)->get_value());
-					it.data()=rptr;
 				}
 				return;
 				break;
