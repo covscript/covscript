@@ -103,7 +103,7 @@ namespace cs {
 	}
 	void statement_var::run()
 	{
-		define_var(mTree);
+		runtime->storage.add_var(mDvp.id,copy(parse_expr(mDvp.expr.root())));
 	}
 	void statement_break::run()
 	{
@@ -283,10 +283,10 @@ namespace cs {
 	void statement_for::run()
 	{
 		runtime->storage.add_domain();
-		var val=define_var(mInit);
-		runtime->storage.add_domain();
+		var val=copy(parse_expr(mDvp.expr.root()));
 		while(val.const_val<number>()<=parse_expr(mEnd.root()).const_val<number>()) {
 			runtime->storage.clear_domain();
+			runtime->storage.add_var(mDvp.id,val);
 			for(auto& ptr:mBlock) {
 				try {
 					ptr->run();
@@ -302,12 +302,10 @@ namespace cs {
 				}
 				if(return_fcall) {
 					runtime->storage.remove_domain();
-					runtime->storage.remove_domain();
 					return;
 				}
 				if(break_block) {
 					break_block=false;
-					runtime->storage.remove_domain();
 					runtime->storage.remove_domain();
 					return;
 				}
@@ -318,7 +316,6 @@ namespace cs {
 			}
 			val.val<number>(true)+=parse_expr(mStep.root()).const_val<number>();
 		}
-		runtime->storage.remove_domain();
 		runtime->storage.remove_domain();
 	}
 	template<typename T,typename X>void foreach_helper(const string& iterator,const var& obj,std::deque<statement_base*>& body)
@@ -479,7 +476,6 @@ namespace cs {
 		}
 	};
 	std::deque<name_space> statement_import::mPackages;
-	void breakpoint() {}
 	void init_grammar()
 	{
 		// Expression Grammar
@@ -507,22 +503,14 @@ namespace cs {
 			}
 		});
 		translator.add_method({new token_action(action_types::constant_),new token_action(action_types::var_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::constant_,grammar_types::jit_command,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
-				breakpoint();
 				cov::tree<token_base*>& tree=dynamic_cast<token_expr*>(raw.front().at(2))->get_tree();
-				const auto& it=tree.root();
-				token_base* root=it.data();
-				token_base* left=it.left().data();
-				const auto& right=it.right();
-				if(root==nullptr||left==nullptr||right.data()==nullptr||root->get_type()!=token_types::signal||static_cast<token_signal*>(root)->get_signal()!=signal_types::asi_||left->get_type()!=token_types::id)
-					throw syntax_error("Wrong grammar for variable definition.");
-				const std::string& id=static_cast<token_id*>(left)->get_id();
-				if(runtime->storage.var_exsist_current(id))
-					throw syntax_error("Redefination of variable.");
-				opt_expr(tree,right);
-				token_base* vptr=right.data();
+				define_var_profile dvp;
+				parse_define_var(tree,dvp);
+				opt_expr(tree,dvp.expr.root());
+				token_base* vptr=dvp.expr.root().data();
 				if(vptr->get_type()!=token_types::value)
 					throw syntax_error("Constant variable must have an constant value.");
-				runtime->storage.add_var(id,static_cast<token_value*>(vptr)->get_value());
+				runtime->storage.add_var(dvp.id,static_cast<token_value*>(vptr)->get_value());
 				return nullptr;
 			}
 		});

@@ -565,7 +565,7 @@ namespace cs {
 		}
 		throw internal_error("Unrecognized expression.");
 	}
-	var define_var(cov::tree<token_base*>& tree)
+	void parse_define_var(cov::tree<token_base*>& tree,define_var_profile& dvp)
 	{
 		const auto& it=tree.root();
 		token_base* root=it.data();
@@ -576,9 +576,7 @@ namespace cs {
 		const std::string& id=static_cast<token_id*>(left)->get_id();
 		if(runtime->storage.var_exsist_current(id))
 			throw syntax_error("Redefination of variable.");
-		var obj=parse_expr(right);
-		copy_no_return(obj);
-		runtime->storage.add_var(id,obj);
-		return obj;
+		dvp.id=id;
+		dvp.expr=right;
 	}
 }
