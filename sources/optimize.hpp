@@ -133,6 +133,14 @@ namespace cs {
 				if(it.left().data()!=nullptr)
 					throw syntax_error("Wrong grammar for not expression.");
 				break;
+			case signal_types::sub_:
+				if(it.left().data()==nullptr)
+					it.data()=new token_signal(signal_types::minus_);
+				break;
+			case signal_types::mul_:
+				if(it.left().data()==nullptr)
+					it.data()=new token_signal(signal_types::escape_);
+				break;
 			case signal_types::asi_:
 				if(it.left().data()==nullptr)
 					throw syntax_error("Wrong grammar for assign expression.");
