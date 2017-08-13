@@ -109,6 +109,8 @@ namespace cs {
 		}
 		var& get_var_this(const string& name)
 		{
+			if(m_this.empty())
+				throw syntax_error("Access this outside structure.");
 			if(m_this.front()->count(name)>0)
 				return (*m_this.front())[name];
 			throw syntax_error("Use of undefined variable \""+name+"\" in current object.");
