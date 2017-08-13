@@ -8,7 +8,7 @@ function push(lst,val)
     end
     lst.insert(it,val)
 end
-var lst as list
+var lst=new list
 for i=1 to 100
     push(lst,runtime.randint(1,100))
 end

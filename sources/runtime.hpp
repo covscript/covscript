@@ -225,11 +225,7 @@ namespace cs {
 	}
 	var parse_dot(const var& a,token_base* b)
 	{
-		if(b==nullptr)
-			throw internal_error("Null Pointer Accessed.");
-		else if(b->get_type()!=token_types::id)
-			throw syntax_error("Unsupported operator operations(Dot).");
-		else if(a.type()==typeid(constant_values)) {
+		if(a.type()==typeid(constant_values)) {
 			switch (a.const_val<constant_values>()) {
 			case constant_values::global_namespace:
 				return runtime->storage.get_var_global(static_cast<token_id*>(b)->get_id());
@@ -263,9 +259,7 @@ namespace cs {
 	}
 	var parse_typeid(token_base* a,const var& b)
 	{
-		if(a!=nullptr)
-			throw syntax_error("Wrong format of typeid expression.");
-		else if(b.type()==typeid(type))
+		if(b.type()==typeid(type))
 			return b.const_val<type>().id;
 		else if(b.type()==typeid(structure))
 			return b.const_val<structure>().get_hash();
@@ -274,18 +268,14 @@ namespace cs {
 	}
 	var parse_new(token_base* a,const var& b)
 	{
-		if(a!=nullptr)
-			throw syntax_error("Wrong format of new expression.");
-		else if(b.type()==typeid(type))
+		if(b.type()==typeid(type))
 			return b.const_val<type>().constructor();
 		else
 			throw syntax_error("Unsupported operator operations(New).");
 	}
 	var parse_gcnew(token_base* a,const var& b)
 	{
-		if(a!=nullptr)
-			throw syntax_error("Wrong format of new expression.");
-		else if(b.type()==typeid(type))
+		if(b.type()==typeid(type))
 			return var::make<pointer>(b.const_val<type>().constructor());
 		else
 			throw syntax_error("Unsupported operator operations(GcNew).");
@@ -354,9 +344,7 @@ namespace cs {
 	}
 	var parse_not(token_base* a,const var& b)
 	{
-		if(a!=nullptr)
-			throw syntax_error("Wrong format of not expression.");
-		else if(b.type()==typeid(boolean))
+		if(b.type()==typeid(boolean))
 			return boolean(!b.const_val<boolean>());
 		else
 			throw syntax_error("Unsupported operator operations(Not).");

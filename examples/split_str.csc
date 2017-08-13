@@ -1,6 +1,6 @@
 function split(str)
-	var arr as array
-	var tmp as string
+	var arr=new array
+	var tmp=new string
 	for ch iterate str
 		if(ch.isspace())
 			if(tmp.size()!=0)
