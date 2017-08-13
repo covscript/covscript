@@ -7,7 +7,7 @@ struct foo
         end
     end
 end
-var a as foo
+var a=new foo
 var b=a
 system.println(current.a.a)
 system.println(current.b.a)

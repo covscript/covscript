@@ -1,5 +1,6 @@
+const var a={"World"}
 const var str="Hello"
-const var a={str,"World"}
+a.push_front(str)
 switch system.input()
     case a[0]
         system.println("Hello")
