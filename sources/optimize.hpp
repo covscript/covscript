@@ -123,38 +123,29 @@ namespace cs {
 				opt_expr(tree,it.right());
 				return;
 				break;
-			case signal_types::asi_: {
-				token_base* lptr=it.left().data();
-				if(lptr==nullptr)
+			case signal_types::asi_:
+				if(it.left().data()==nullptr)
 					throw syntax_error("Wrong grammar for assign expression.");
-				if(lptr->get_type()==token_types::id) {
-					const std::string& id=static_cast<token_id*>(lptr)->get_id();
-					if(runtime->storage.var_exsist(id)&&runtime->storage.get_var(id).is_protect())
-						throw syntax_error("Rewrite the constant value.");
-				}
 				opt_expr(tree,it.right());
 				return;
 				break;
-			}
 			case signal_types::dot_: {
 				opt_expr(tree,it.left());
-				opt_expr(tree,it.right());
 				token_base* lptr=it.left().data();
 				token_base* rptr=it.right().data();
-				if(lptr!=nullptr&&lptr->get_type()==token_types::value&&rptr!=nullptr&&rptr->get_type()==token_types::id) {
+				if(rptr==nullptr||rptr->get_type()!=token_types::id)
+					throw syntax_error("Wrong grammar for dot expression.");
+				if(lptr!=nullptr&&lptr->get_type()==token_types::value) {
 					var& a=static_cast<token_value*>(lptr)->get_value();
-					if(a.type()==typeid(extension_t))
-						it.data()=new token_value(a.val<extension_t>(true)->get_var(static_cast<token_id*>(rptr)->get_id()));
-					else {
-						token_base* orig_ptr=it.data();
-						try {
-							it.data()=new token_value(var::make<callable>(object_method(a,a.get_ext()->get_var(static_cast<token_id*>(rptr)->get_id())),true));
-						}
-						catch(const syntax_error& se) {
-							it.data()=orig_ptr;
-						}
+					token_base* orig_ptr=it.data();
+					try {
+						var v=parse_dot(a,rptr);
+						if(v.is_protect())
+							it.data()=new token_value(v);
 					}
-
+					catch(const syntax_error& se) {
+						it.data()=orig_ptr;
+					}
 				}
 				return;
 				break;
