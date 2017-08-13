@@ -113,10 +113,6 @@ namespace cs {
 			switch(static_cast<token_signal*>(token)->get_signal()) {
 			default:
 				break;
-			case signal_types::asi_:
-				opt_expr(tree,it.right());
-				return;
-				break;
 			case signal_types::new_:
 				opt_expr(tree,it.left());
 				opt_expr(tree,it.right());
@@ -127,6 +123,19 @@ namespace cs {
 				opt_expr(tree,it.right());
 				return;
 				break;
+			case signal_types::asi_: {
+				token_base* lptr=it.left().data();
+				if(lptr==nullptr)
+					throw syntax_error("Wrong grammar for assign expression.");
+				if(lptr->get_type()==token_types::id) {
+					const std::string& id=static_cast<token_id*>(lptr)->get_id();
+					if(runtime->storage.var_exsist(id)&&runtime->storage.get_var(id).is_protect())
+						throw syntax_error("Rewrite the constant value.");
+				}
+				opt_expr(tree,it.right());
+				return;
+				break;
+			}
 			case signal_types::dot_: {
 				opt_expr(tree,it.left());
 				opt_expr(tree,it.right());
