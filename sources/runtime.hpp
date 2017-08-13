@@ -181,26 +181,36 @@ namespace cs {
 	}
 	var parse_sub(const var& a,const var& b)
 	{
-		if(!a.usable()&&b.type()==typeid(number))
-			return -b.const_val<number>();
-		else if(a.type()==typeid(number)&&b.type()==typeid(number))
+		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return a.const_val<number>()-b.const_val<number>();
 		else
 			throw syntax_error("Unsupported operator operations(Sub).");
 	}
+	var parse_minus(const var& b)
+	{
+		if(b.type()==typeid(number))
+			return -b.const_val<number>();
+		else
+			throw syntax_error("Unsupported operator operations(Minus).");
+	}
 	var parse_mul(const var& a,const var& b)
 	{
-		if(!a.usable()&&b.type()==typeid(pointer)) {
+		if(a.type()==typeid(number)&&b.type()==typeid(number))
+			return a.const_val<number>()*b.const_val<number>();
+		else
+			throw syntax_error("Unsupported operator operations(Mul).");
+	}
+	var parse_escape(const var& b)
+	{
+		if(b.type()==typeid(pointer)) {
 			const pointer& ptr=b.const_val<pointer>();
 			if(ptr.data.usable())
 				return ptr.data;
 			else
 				throw syntax_error("Escape from null pointer.");
 		}
-		else if(a.type()==typeid(number)&&b.type()==typeid(number))
-			return a.const_val<number>()*b.const_val<number>();
 		else
-			throw syntax_error("Unsupported operator operations(Mul).");
+			throw syntax_error("Unsupported operator operations(Escape).");
 	}
 	var parse_div(const var& a,const var& b)
 	{
@@ -257,7 +267,7 @@ namespace cs {
 		else
 			throw syntax_error("Unsupported operator operations(Arraw).");
 	}
-	var parse_typeid(token_base* a,const var& b)
+	var parse_typeid(const var& b)
 	{
 		if(b.type()==typeid(type))
 			return b.const_val<type>().id;
@@ -266,14 +276,14 @@ namespace cs {
 		else
 			return cs_impl::hash<std::string>(b.type().name());
 	}
-	var parse_new(token_base* a,const var& b)
+	var parse_new(const var& b)
 	{
 		if(b.type()==typeid(type))
 			return b.const_val<type>().constructor();
 		else
 			throw syntax_error("Unsupported operator operations(New).");
 	}
-	var parse_gcnew(token_base* a,const var& b)
+	var parse_gcnew(const var& b)
 	{
 		if(b.type()==typeid(type))
 			return var::make<pointer>(b.const_val<type>().constructor());
@@ -342,7 +352,7 @@ namespace cs {
 		else
 			throw syntax_error("Unsupported operator operations(Or).");
 	}
-	var parse_not(token_base* a,const var& b)
+	var parse_not(const var& b)
 	{
 		if(b.type()==typeid(boolean))
 			return boolean(!b.const_val<boolean>());
@@ -478,8 +488,14 @@ namespace cs {
 			case signal_types::sub_:
 				return parse_sub(parse_expr(it.left()),parse_expr(it.right()));
 				break;
+			case signal_types::minus_:
+				return parse_minus(parse_expr(it.right()));
+				break;
 			case signal_types::mul_:
 				return parse_mul(parse_expr(it.left()),parse_expr(it.right()));
+				break;
+			case signal_types::escape_:
+				return parse_escape(parse_expr(it.right()));
 				break;
 			case signal_types::div_:
 				return parse_div(parse_expr(it.left()),parse_expr(it.right()));
@@ -497,13 +513,13 @@ namespace cs {
 				return parse_arraw(parse_expr(it.left()),it.right().data());
 				break;
 			case signal_types::typeid_:
-				return parse_typeid(it.left().data(),parse_expr(it.right()));
+				return parse_typeid(parse_expr(it.right()));
 				break;
 			case signal_types::new_:
-				return parse_new(it.left().data(),parse_expr(it.right()));
+				return parse_new(parse_expr(it.right()));
 				break;
 			case signal_types::gcnew_:
-				return parse_gcnew(it.left().data(),parse_expr(it.right()));
+				return parse_gcnew(parse_expr(it.right()));
 				break;
 			case signal_types::und_:
 				return parse_und(parse_expr(it.left()),parse_expr(it.right()));
@@ -536,7 +552,7 @@ namespace cs {
 				return parse_or(parse_expr(it.left()),parse_expr(it.right()));
 				break;
 			case signal_types::not_:
-				return parse_not(it.left().data(),parse_expr(it.right()));
+				return parse_not(parse_expr(it.right()));
 				break;
 			case signal_types::inc_:
 				return parse_inc(parse_expr(it.left()),parse_expr(it.right()));
