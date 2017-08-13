@@ -6,12 +6,12 @@ function tolower(str)
     return s
 end
 var in=file.open("./wordcount.csc",file.read_method)
-if !file.is_open(in)
+if !in.is_open()
     runtime.error("File is not exist")
 end
-var table as hash_map
-while !file.eof(in)
-    var str=tolower(file.read(in))
+var table=new hash_map
+while !in.eof()
+    var str=tolower(in.read())
     if(str!="")
         ++table[str]
     end

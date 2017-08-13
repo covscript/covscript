@@ -1,9 +1,8 @@
 var arr={}
-var it
 arr[6]=6
 arr[8]=8
 arr[10]=10
-it=arr.begin()
+var it=arr.begin()
 while it!=arr.term()
 	if(it.data()==6)
 		it=arr.insert(it.forward(),7)
@@ -28,3 +27,4 @@ while it!=(arr.begin()).backward()
 	system.print(it.data()," ")
 	it.backward()
 end
+system.println()

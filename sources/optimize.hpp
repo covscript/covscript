@@ -114,14 +114,24 @@ namespace cs {
 			default:
 				break;
 			case signal_types::new_:
-				opt_expr(tree,it.left());
+				if(it.left().data()!=nullptr)
+					throw syntax_error("Wrong grammar for new expression.");
 				opt_expr(tree,it.right());
 				return;
 				break;
 			case signal_types::gcnew_:
-				opt_expr(tree,it.left());
+				if(it.left().data()!=nullptr)
+					throw syntax_error("Wrong grammar for gcnew expression.");
 				opt_expr(tree,it.right());
 				return;
+				break;
+			case signal_types::typeid_:
+				if(it.left().data()!=nullptr)
+					throw syntax_error("Wrong grammar for typeid expression.");
+				break;
+			case signal_types::not_:
+				if(it.left().data()!=nullptr)
+					throw syntax_error("Wrong grammar for not expression.");
 				break;
 			case signal_types::asi_:
 				if(it.left().data()==nullptr)

@@ -53,7 +53,7 @@
 
 namespace cs {
 // Version
-	const std::string version="1.0.2";
+	const std::string version="1.0.3";
 // Output Precision
 	static int output_precision=8;
 // Callable and Function

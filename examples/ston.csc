@@ -33,7 +33,7 @@ function cton(ch)
 	end
 end
 function reverse_str(str)
-	var s as string
+	var s=new string
 	var i=str.size()-1
 	while i>=0
 		s.append(str[i])
@@ -46,14 +46,14 @@ function ston(str)
 		runtime.error("Receive empty string")
 	end
 	if str[0]=='-'
-		var tmp as string
-		for i=1 to size_of(str)-1
+		var tmp=new string
+		for i=1 to str.size()-1
 			tmp.append(str[i])
 		end
 		return -ston(tmp)
 	end
-	var ipart as string
-	var fpart as string
+	var ipart=new string
+	var fpart=new string
 	var dot_count=0
 	for ch iterate str
 		if ch!='.'
