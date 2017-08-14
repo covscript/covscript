@@ -513,7 +513,7 @@ namespace cs {
 			}
 		});
 		translator.add_method({new token_action(action_types::constant_),new token_action(action_types::var_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::constant_,grammar_types::jit_command,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
-				token_base* root=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data();
+				token_base* root=dynamic_cast<token_expr*>(raw.front().at(2))->get_tree().root().data();
 				if(root==nullptr||root->get_type()!=token_types::value)
 					throw syntax_error("Wrong grammar for variable definition.");
 				const var& dvp=static_cast<token_value*>(root)->get_value();
