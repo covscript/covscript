@@ -144,19 +144,18 @@ namespace cs {
 			case signal_types::asi_:
 				if(it.left().data()==nullptr||it.right().data()==nullptr)
 					throw syntax_error("Wrong grammar for assign expression.");
-				if(it.left().data()->get_type()!=token_types::id)
-					opt_expr(tree,it.left());
+				opt_expr(tree,it.left());
 				opt_expr(tree,it.right());
 				return;
 				break;
 			case signal_types::vardef_: {
 				if(it.left().data()!=nullptr)
-					throw syntax_error("Wrong grammar for var definition.");
-				opt_expr(tree,it.right());
-				define_var_profile dvp;
-				cov::tree<token_base*> tree(it.right());
-				parse_define_var(tree,dvp);
-				it.data()=new token_value(dvp);
+					throw syntax_error("Wrong grammar for variable definition.");
+				token_base* rptr=it.right().data();
+				if(rptr==nullptr||rptr->get_type()!=token_types::id)
+					throw syntax_error("Wrong grammar for variable definition.");
+				runtime->storage.add_record(static_cast<token_id*>(rptr)->get_id());
+				it.data()=rptr;
 				return;
 				break;
 			}
