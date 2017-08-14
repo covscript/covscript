@@ -32,6 +32,7 @@ namespace cs {
 	public:
 		domain_manager()
 		{
+			m_set.emplace_front();
 			m_data.emplace_front(std::make_shared<std::unordered_map<string,var>>());
 		}
 		domain_manager(const domain_manager&)=delete;
