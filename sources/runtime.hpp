@@ -26,6 +26,7 @@ namespace cs {
 	public:
 		using domain_t=std::shared_ptr<std::unordered_map<string,var>>;
 	private:
+		std::deque<std::unordered_set<string>> m_set;
 		std::deque<domain_t> m_data;
 		std::deque<domain_t> m_this;
 	public:
@@ -35,6 +36,10 @@ namespace cs {
 		}
 		domain_manager(const domain_manager&)=delete;
 		~domain_manager()=default;
+		void add_set()
+		{
+			m_set.emplace_front();
+		}
 		void add_domain()
 		{
 			m_data.emplace_front(std::make_shared<std::unordered_map<string,var>>());
@@ -51,6 +56,10 @@ namespace cs {
 		{
 			return m_data.front();
 		}
+		void remove_set()
+		{
+			m_set.pop_front();
+		}
 		void remove_domain()
 		{
 			m_data.pop_front();
@@ -62,6 +71,10 @@ namespace cs {
 		void clear_domain()
 		{
 			m_data.front()->clear();
+		}
+		bool exsist_record(const string& name)
+		{
+			return m_set.front().count(name)>0;
 		}
 		bool var_exsist(const string& name)
 		{
@@ -114,6 +127,13 @@ namespace cs {
 			if(m_this.front()->count(name)>0)
 				return (*m_this.front())[name];
 			throw syntax_error("Use of undefined variable \""+name+"\" in current object.");
+		}
+		void add_record(const string& name)
+		{
+			if(exsist_record(name))
+				throw syntax_error("Redefinition of variable.");
+			else
+				m_set.front().emplace(name);
 		}
 		void add_var(const string& name,const var& var)
 		{
@@ -575,9 +595,11 @@ namespace cs {
 	{
 		const auto& it=tree.root();
 		token_base* root=it.data();
+		if(root==nullptr||root->get_type()!=token_types::signal||static_cast<token_signal*>(root)->get_signal()!=signal_types::asi_)
+			throw syntax_error("Wrong grammar for variable definition.");
 		token_base* left=it.left().data();
 		const auto& right=it.right();
-		if(root==nullptr||left==nullptr||right.data()==nullptr||root->get_type()!=token_types::signal||static_cast<token_signal*>(root)->get_signal()!=signal_types::asi_||left->get_type()!=token_types::id)
+		if(left==nullptr||right.data()==nullptr||left->get_type()!=token_types::id)
 			throw syntax_error("Wrong grammar for variable definition.");
 		const std::string& id=static_cast<token_id*>(left)->get_id();
 		if(runtime->storage.var_exsist_current(id))

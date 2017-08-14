@@ -67,7 +67,7 @@ namespace cs {
 	};
 	mapping<signal_types,int> signal_level_map = {
 		{signal_types::add_,10},{signal_types::sub_,10},{signal_types::mul_,11},{signal_types::div_,11},{signal_types::mod_,12},{signal_types::pow_,12},{signal_types::dot_,17},{signal_types::arrow_,17},
-		{signal_types::und_,9},{signal_types::abo_,9},{signal_types::asi_,0},{signal_types::pair_,2},{signal_types::equ_,9},{signal_types::ueq_,9},{signal_types::aeq_,9},{signal_types::neq_,9},{signal_types::lambda_,1},
+		{signal_types::und_,9},{signal_types::abo_,9},{signal_types::asi_,1},{signal_types::pair_,3},{signal_types::equ_,9},{signal_types::ueq_,9},{signal_types::aeq_,9},{signal_types::neq_,9},{signal_types::lambda_,2},{signal_types::vardef_,0},
 		{signal_types::and_,7},{signal_types::or_,7},{signal_types::not_,8},{signal_types::inc_,13},{signal_types::dec_,13},{signal_types::fcall_,14},{signal_types::emb_,14},{signal_types::access_,15},{signal_types::typeid_,16},{signal_types::new_,16},{signal_types::gcnew_,16}
 	};
 	int get_signal_level(token_base* ptr)
@@ -112,6 +112,14 @@ namespace cs {
 				break;
 			case token_types::action:
 				expected_fcall=false;
+				switch(static_cast<token_action*>(ptr)->get_action()) {
+				default:
+					break;
+				case action_types::var_:
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::vardef_));
+					continue;
+				}
 				break;
 			case token_types::id:
 				expected_fcall=true;
@@ -368,10 +376,7 @@ namespace cs {
 		define_var_profile mDvp;
 	public:
 		statement_var()=delete;
-		statement_var(cov::tree<token_base*>& tree,token_base* ptr):statement_base(ptr)
-		{
-			parse_define_var(tree,mDvp);
-		}
+		statement_var(const define_var_profile& dvp,token_base* ptr):statement_base(ptr),mDvp(dvp) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::var_;

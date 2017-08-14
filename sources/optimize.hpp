@@ -142,11 +142,24 @@ namespace cs {
 					it.data()=new token_signal(signal_types::escape_);
 				break;
 			case signal_types::asi_:
-				if(it.left().data()==nullptr)
+				if(it.left().data()==nullptr||it.right().data()==nullptr)
 					throw syntax_error("Wrong grammar for assign expression.");
+				if(it.left().data()->get_type()!=token_types::id)
+					opt_expr(tree,it.left());
 				opt_expr(tree,it.right());
 				return;
 				break;
+			case signal_types::vardef_: {
+				if(it.left().data()!=nullptr)
+					throw syntax_error("Wrong grammar for var definition.");
+				opt_expr(tree,it.right());
+				define_var_profile dvp;
+				cov::tree<token_base*> tree(it.right());
+				parse_define_var(tree,dvp);
+				it.data()=new token_value(dvp);
+				return;
+				break;
+			}
 			case signal_types::dot_: {
 				opt_expr(tree,it.left());
 				token_base* lptr=it.left().data();
