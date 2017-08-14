@@ -602,10 +602,7 @@ namespace cs {
 		const auto& right=it.right();
 		if(left==nullptr||right.data()==nullptr||left->get_type()!=token_types::id)
 			throw syntax_error("Wrong grammar for variable definition.");
-		const std::string& id=static_cast<token_id*>(left)->get_id();
-		if(runtime->storage.var_exsist_current(id))
-			throw syntax_error("Redefination of variable.");
-		dvp.id=id;
+		dvp.id=static_cast<token_id*>(left)->get_id();
 		dvp.expr=right;
 	}
 }
