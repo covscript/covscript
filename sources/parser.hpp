@@ -119,6 +119,22 @@ namespace cs {
 					tokens.push_back(ptr);
 					tokens.push_back(new token_signal(signal_types::vardef_));
 					continue;
+				case action_types::for_:
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::vardef_));
+					continue;
+				case action_types::struct_:
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::vardef_));
+					continue;
+				case action_types::function_:
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::vardef_));
+					continue;
+				case action_types::namespace_:
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::vardef_));
+					continue;
 				}
 				break;
 			case token_types::id:

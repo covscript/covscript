@@ -529,7 +529,8 @@ namespace cs {
 				return new statement_block(body,raw.front().back());
 			}
 		});
-		translator.add_method({new token_action(action_types::block_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::block_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+		// Namespace Grammar
+		translator.add_method({new token_action(action_types::namespace_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::block_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
 				return new statement_block(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data(),body,raw.front().back());
