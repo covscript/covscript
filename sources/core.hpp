@@ -33,6 +33,7 @@
 #include "../include/libdll/dll.hpp"
 // STL
 #include <unordered_map>
+#include <unordered_set>
 #include <forward_list>
 #include <functional>
 #include <algorithm>

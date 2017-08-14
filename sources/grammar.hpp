@@ -407,6 +407,7 @@ namespace cs {
 				case grammar_types::single: {
 					if(level>0) {
 						if(m->statement_type==statement_types::end_) {
+							runtime->storage.remove_set();
 							runtime->storage.remove_domain();
 							--level;
 						}
@@ -427,6 +428,7 @@ namespace cs {
 						method=m;
 					++level;
 					runtime->storage.add_domain();
+					runtime->storage.add_set();
 					tmp.push_back(line);
 				}
 				break;
@@ -499,18 +501,29 @@ namespace cs {
 		});
 		// Var Grammar
 		translator.add_method({new token_action(action_types::var_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::var_,grammar_types::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
-				return new statement_var(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),raw.front().back());
+				token_base* root=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data();
+				if(root==nullptr||root->get_type()!=token_types::value)
+					throw syntax_error("Wrong grammar for variable definition.");
+				const var& dvp=static_cast<token_value*>(root)->get_value();
+				if(dvp.type()!=typeid(define_var_profile))
+					throw syntax_error("Wrong grammar for variable definition.");
+				const define_var_profile& cdvp=dvp.const_val<define_var_profile>();
+				runtime->storage.add_record(cdvp.id);
+				return new statement_var(cdvp,raw.front().back());
 			}
 		});
 		translator.add_method({new token_action(action_types::constant_),new token_action(action_types::var_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::constant_,grammar_types::jit_command,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
-				cov::tree<token_base*>& tree=dynamic_cast<token_expr*>(raw.front().at(2))->get_tree();
-				define_var_profile dvp;
-				parse_define_var(tree,dvp);
-				opt_expr(tree,dvp.expr.root());
-				token_base* vptr=dvp.expr.root().data();
-				if(vptr->get_type()!=token_types::value)
+				token_base* root=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data();
+				if(root==nullptr||root->get_type()!=token_types::value)
+					throw syntax_error("Wrong grammar for variable definition.");
+				const var& dvp=static_cast<token_value*>(root)->get_value();
+				if(dvp.type()!=typeid(define_var_profile))
+					throw syntax_error("Wrong grammar for variable definition.");
+				const define_var_profile& cdvp=dvp.const_val<define_var_profile>();
+				runtime->storage.add_record(cdvp.id);
+				if(cdvp.expr.root().data()->get_type()!=token_types::value)
 					throw syntax_error("Constant variable must have an constant value.");
-				runtime->storage.add_var(dvp.id,static_cast<token_value*>(vptr)->get_value());
+				runtime->storage.add_var(cdvp.id,static_cast<token_value*>(cdvp.expr.root().data())->get_value());
 				return nullptr;
 			}
 		});

@@ -29,7 +29,7 @@ namespace cs {
 		import_,package_,struct_,block_,endblock_,var_,constant_,if_,else_,switch_,case_,default_,while_,loop_,until_,for_,to_,step_,iterate_,break_,continue_,function_,return_
 	};
 	enum class signal_types {
-		add_,sub_,mul_,div_,mod_,pow_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,inc_,dec_,pair_,slb_,srb_,mlb_,mrb_,llb_,lrb_,esb_,emb_,elb_,fcall_,access_,typeid_,new_,gcnew_,arrow_,lambda_,escape_,minus_
+		add_,sub_,mul_,div_,mod_,pow_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,inc_,dec_,pair_,slb_,srb_,mlb_,mrb_,llb_,lrb_,esb_,emb_,elb_,fcall_,access_,typeid_,new_,gcnew_,arrow_,lambda_,escape_,minus_,vardef_
 	};
 	template<typename Key,typename T>
 	class mapping final {
