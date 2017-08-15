@@ -20,7 +20,6 @@
 * Github: https://github.com/mikecovlee
 */
 #include "./lexer.hpp"
-#include <iostream>
 
 namespace cs {
 	class token_expr final:public token_base {
