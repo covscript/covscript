@@ -119,10 +119,6 @@ namespace cs {
 					tokens.push_back(ptr);
 					tokens.push_back(new token_signal(signal_types::vardef_));
 					continue;
-				case action_types::for_:
-					tokens.push_back(ptr);
-					tokens.push_back(new token_signal(signal_types::vardef_));
-					continue;
 				case action_types::struct_:
 					tokens.push_back(ptr);
 					tokens.push_back(new token_signal(signal_types::vardef_));
@@ -648,8 +644,13 @@ namespace cs {
 		using function_type=std::function<statement_base*(const std::deque<std::deque<token_base*>>&)>;
 		grammar_types type=grammar_types::null;
 		statement_types statement_type=statement_types::null;
+		function_type init;
 		function_type function;
-		method_type(statement_types s,grammar_types g,const function_type& f):statement_type(s),type(g),function(f) {}
+		method_type(statement_types s,grammar_types g,const function_type& f):statement_type(s),type(g),init([](const std::deque<std::deque<token_base*>>&)->statement_base*
+		{
+			return nullptr;
+		}),function(f) {}
+		method_type(statement_types s,grammar_types g,const function_type& i,const function_type& f):statement_type(s),type(g),init(i),function(f) {}
 	};
 	class translator_type final {
 	public:

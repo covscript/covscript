@@ -429,6 +429,7 @@ namespace cs {
 					++level;
 					runtime->storage.add_domain();
 					runtime->storage.add_set();
+					m->init({line});
 					tmp.push_back(line);
 				}
 				break;
@@ -650,12 +651,24 @@ namespace cs {
 		});
 		// For Grammar
 		translator.add_method({new token_action(action_types::for_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::to_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::step_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::for_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				cov::tree<token_base*>& tree=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
+				define_var_profile dvp;
+				parse_define_var(tree,dvp);
+				runtime->storage.add_record(dvp.id);
+				return nullptr;
+			},[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
 				return new statement_for(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),dynamic_cast<token_expr*>(raw.front().at(3))->get_tree(),dynamic_cast<token_expr*>(raw.front().at(5))->get_tree(),body,raw.front().back());
 			}
 		});
 		translator.add_method({new token_action(action_types::for_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::to_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::for_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				cov::tree<token_base*>& tree=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
+				define_var_profile dvp;
+				parse_define_var(tree,dvp);
+				runtime->storage.add_record(dvp.id);
+				return nullptr;
+			},[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
 				cov::tree<token_base*> tree_step;
@@ -664,6 +677,14 @@ namespace cs {
 			}
 		});
 		translator.add_method({new token_action(action_types::for_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::iterate_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::foreach_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				cov::tree<token_base*>& t=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
+				if(t.root().data()==nullptr)
+					throw internal_error("Null pointer accessed.");
+				if(t.root().data()->get_type()!=token_types::id)
+					throw syntax_error("Wrong grammar(foreach)");
+				runtime->storage.add_record(dynamic_cast<token_id*>(t.root().data())->get_id());
+				return nullptr;
+			},[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				cov::tree<token_base*>& t=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
 				if(t.root().data()==nullptr)
 					throw internal_error("Null pointer accessed.");
