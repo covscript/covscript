@@ -40,6 +40,8 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <istream>
+#include <ostream>
 #include <utility>
 #include <string>
 #include <memory>
