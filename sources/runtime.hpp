@@ -278,8 +278,13 @@ namespace cs {
 			return a.val<structure>(true).get_var(static_cast<token_id*>(b)->get_id());
 		else if(a.type()==typeid(type))
 			return a.val<type>(true).get_var(static_cast<token_id*>(b)->get_id());
-		else
-			return var::make_protect<callable>(object_method(a,a.get_ext()->get_var(static_cast<token_id*>(b)->get_id())),true);
+		else {
+			var& val=a.get_ext()->get_var(static_cast<token_id*>(b)->get_id());
+			if(val.type()==typeid(callable))
+				return var::make_protect<callable>(object_method(a,val),val.const_val<callable>().is_constant());
+			else
+				return val;
+		}
 	}
 	var parse_arraw(const var& a,token_base* b)
 	{

@@ -6,10 +6,6 @@
 static cs::extension system_ext;
 namespace system_cs_ext {
 	using namespace cs;
-	void setprecision(number pre)
-	{
-		output_precision=pre;
-	}
 	number run(const string& str)
 	{
 		return std::system(str.c_str());
@@ -31,7 +27,6 @@ namespace system_cs_ext {
 		system_ext.add_var("inf",var::make_constant<number>(std::numeric_limits<number>::infinity()));
 		system_ext.add_var("in",var::make_protect<istream>(&std::cin,[](std::istream*) {}));
 		system_ext.add_var("out",var::make_protect<ostream>(&std::cout,[](std::ostream*) {}));
-		system_ext.add_var("setprecision",var::make_protect<native_interface>(cni(setprecision)));
 		system_ext.add_var("run",var::make_protect<native_interface>(cni(run)));
 		system_ext.add_var("getenv",var::make_protect<native_interface>(cni(getenv)));
 		system_ext.add_var("exit",var::make_protect<native_interface>(cni(exit)));
