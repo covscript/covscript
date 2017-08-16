@@ -44,4 +44,6 @@ namespace cs {
 	using name_space_t=std::shared_ptr<name_space_holder>;
 	using extension_t=std::shared_ptr<extension_holder>;
 	using runtime_t=std::shared_ptr<runtime_type>;
+	using istream=std::shared_ptr<std::istream>;
+	using ostream=std::shared_ptr<std::ostream>;
 }

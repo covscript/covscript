@@ -21,6 +21,7 @@
 */
 #include "./cni.hpp"
 #include "./grammar.hpp"
+#include "./extensions/iostream_extension.hpp"
 #include "./extensions/system_extension.hpp"
 #include "./extensions/runtime_extension.hpp"
 #include "./extensions/char_extension.hpp"
@@ -69,6 +70,8 @@ namespace cs {
 		runtime->storage.add_var_global("clone",cs::var::make_protect<cs::native_interface>(cs::cni(clone)));
 		runtime->storage.add_var_global("swap",cs::var::make_protect<cs::native_interface>(cs::cni(swap)));
 		// Init the extensions
+		istream_cs_ext::init();
+		ostream_cs_ext::init();
 		system_cs_ext::init();
 		runtime_cs_ext::init();
 		char_cs_ext::init();
