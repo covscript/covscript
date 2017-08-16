@@ -1,11 +1,13 @@
-var infs=file.open("./file.csc",file.read_method)
-if(!infs.is_open())
+var infs=iostream.filestream("./file.csc",iostream.openmode.in)
+if !infs.good()
   runtime.error("file is not exsist.")
 end
-var outfs=file.open("./test.txt",file.write_method)
-outfs.write("#Clone of file.csc","\n")
-while(!infs.eof())
+var outfs=iostream.filestream("./test.txt",iostream.openmode.out)
+outfs.println("#Clone of file.csc")
+while !infs.eof()
   var str=infs.getline()
-  system.println(str)
-  outfs.write(str,"\n")
+  if str!=""
+    system.out.println(str)
+    outfs.println(str)
+  end
 end

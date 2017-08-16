@@ -76,15 +76,6 @@ namespace istream_cs_ext {
 		std::getline(*in,str);
 		return std::move(str);
 	}
-	string read(istream& in,number n)
-	{
-		if(n<0)
-			throw lang_error("The number of the character can not minus zero.");
-		std::size_t buff_size=n+1;
-		char buff[buff_size];
-		buff[in->readsome(buff,n)]='\0';
-		return buff;
-	}
 	number tell(istream& in)
 	{
 		return in->tellg();
@@ -92,6 +83,10 @@ namespace istream_cs_ext {
 	void seek(istream& in,number pos)
 	{
 		in->seekg(pos);
+	}
+	void seek_from(istream& in,std::ios_base::seekdir dir,number offset)
+	{
+		in->seekg(offset,dir);
 	}
 	bool good(const istream& in)
 	{
@@ -113,9 +108,9 @@ namespace istream_cs_ext {
 		istream_ext.add_var("peek",var::make_protect<callable>(cni(peek)));
 		istream_ext.add_var("unget",var::make_protect<callable>(cni(unget)));
 		istream_ext.add_var("getline",var::make_protect<callable>(cni(getline)));
-		istream_ext.add_var("read",var::make_protect<callable>(cni(read)));
 		istream_ext.add_var("tell",var::make_protect<callable>(cni(tell)));
 		istream_ext.add_var("seek",var::make_protect<callable>(cni(seek)));
+		istream_ext.add_var("seek_from",var::make_protect<callable>(cni(seek_from)));
 		istream_ext.add_var("good",var::make_protect<callable>(cni(good)));
 		istream_ext.add_var("eof",var::make_protect<callable>(cni(eof)));
 		istream_ext.add_var("input",var::make_protect<callable>(cni(input)));
@@ -128,10 +123,6 @@ namespace ostream_cs_ext {
 	{
 		out->put(c);
 	}
-	void write(ostream& out,const string& str)
-	{
-		out->write(str.c_str(),str.size());
-	}
 	number tell(ostream& out)
 	{
 		return out->tellp();
@@ -139,6 +130,10 @@ namespace ostream_cs_ext {
 	void seek(ostream& out,number pos)
 	{
 		out->seekp(pos);
+	}
+	void seek_from(ostream& out,std::ios_base::seekdir dir,number offset)
+	{
+		out->seekp(offset,dir);
 	}
 	void flush(ostream& out)
 	{
@@ -159,9 +154,9 @@ namespace ostream_cs_ext {
 	void init()
 	{
 		ostream_ext.add_var("put",var::make_protect<callable>(cni(put)));
-		ostream_ext.add_var("write",var::make_protect<callable>(cni(write)));
 		ostream_ext.add_var("tell",var::make_protect<callable>(cni(tell)));
 		ostream_ext.add_var("seek",var::make_protect<callable>(cni(seek)));
+		ostream_ext.add_var("seek_from",var::make_protect<callable>(cni(seek_from)));
 		ostream_ext.add_var("flush",var::make_protect<callable>(cni(flush)));
 		ostream_ext.add_var("good",var::make_protect<callable>(cni(good)));
 		ostream_ext.add_var("print",var::make_protect<callable>(cni(print)));
