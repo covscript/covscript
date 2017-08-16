@@ -31,7 +31,6 @@
 #include "./extensions/pair_extension.hpp"
 #include "./extensions/hash_map_extension.hpp"
 #include "./extensions/math_extension.hpp"
-#include "./extensions/file_extension.hpp"
 #include "./extensions/darwin_extension.hpp"
 
 namespace cs {
@@ -70,6 +69,7 @@ namespace cs {
 		runtime->storage.add_var_global("clone",cs::var::make_protect<cs::native_interface>(cs::cni(clone)));
 		runtime->storage.add_var_global("swap",cs::var::make_protect<cs::native_interface>(cs::cni(swap)));
 		// Init the extensions
+		iostream_cs_ext::init();
 		istream_cs_ext::init();
 		ostream_cs_ext::init();
 		system_cs_ext::init();
@@ -81,13 +81,12 @@ namespace cs {
 		pair_cs_ext::init();
 		hash_map_cs_ext::init();
 		math_cs_ext::init();
-		file_cs_ext::init();
 		darwin_cs_ext::init();
 		// Add extensions to storage
+		runtime->storage.add_var("io",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&iostream_ext)));
 		runtime->storage.add_var("system",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));
 		runtime->storage.add_var("runtime",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
 		runtime->storage.add_var("math",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&math_ext)));
-		runtime->storage.add_var("file",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&file_ext)));
 		runtime->storage.add_var("darwin",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&darwin_ext)));
 	}
 	std::shared_ptr<runtime_type> covscript(const std::string& path)

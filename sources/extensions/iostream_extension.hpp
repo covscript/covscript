@@ -1,5 +1,44 @@
 #pragma once
 #include "../cni.hpp"
+static cs::extension iostream_ext;
+static cs::extension seekdir_ext;
+static cs::extension openmode_ext;
+namespace iostream_cs_ext {
+	using namespace cs;
+	var filestream(const string& path,std::ios_base::openmode openmode)
+	{
+		switch(openmode) {
+		case std::ios_base::in:
+			return var::make<istream>(new std::ifstream(path,std::ios_base::in));
+			break;
+		case std::ios_base::out:
+			return var::make<ostream>(new std::ofstream(path,std::ios_base::out));
+			break;
+		case std::ios_base::app:
+			return var::make<ostream>(new std::ofstream(path,std::ios_base::app));
+			break;
+		default:
+			throw lang_error("Unsupported openmode.");
+		}
+	}
+	void setprecision(number pre)
+	{
+		output_precision=pre;
+	}
+	void init()
+	{
+		iostream_ext.add_var("seekdir",var::make_protect<extension_t>(std::make_shared<cs::extension_holder>(&seekdir_ext)));
+		iostream_ext.add_var("openmode",var::make_protect<extension_t>(std::make_shared<cs::extension_holder>(&openmode_ext)));
+		seekdir_ext.add_var("start",var::make_constant<std::ios_base::seekdir>(std::ios_base::beg));
+		seekdir_ext.add_var("finish",var::make_constant<std::ios_base::seekdir>(std::ios_base::end));
+		seekdir_ext.add_var("present",var::make_constant<std::ios_base::seekdir>(std::ios_base::cur));
+		openmode_ext.add_var("in",var::make_constant<std::ios_base::openmode>(std::ios_base::in));
+		openmode_ext.add_var("out",var::make_constant<std::ios_base::openmode>(std::ios_base::out));
+		openmode_ext.add_var("app",var::make_constant<std::ios_base::openmode>(std::ios_base::app));
+		iostream_ext.add_var("filestream",var::make_protect<native_interface>(cni(filestream)));
+		iostream_ext.add_var("setprecision",var::make_protect<callable>(cni(setprecision)));
+	}
+}
 static cs::extension istream_ext;
 static cs::extension_t istream_ext_shared=std::make_shared<cs::extension_holder>(&istream_ext);
 namespace cs_impl {
@@ -39,10 +78,11 @@ namespace istream_cs_ext {
 	}
 	string read(istream& in,number n)
 	{
-		long _n=n;
-		char buff[_n+1];
-		in->read(buff,n);
-		buff[_n]='\0';
+		if(n<0)
+			throw lang_error("The number of the character can not minus zero.");
+		std::size_t buff_size=n+1;
+		char buff[buff_size];
+		buff[in->readsome(buff,n)]='\0';
 		return buff;
 	}
 	number tell(istream& in)
@@ -53,11 +93,11 @@ namespace istream_cs_ext {
 	{
 		in->seekg(pos);
 	}
-	boolean good(const istream& in)
+	bool good(const istream& in)
 	{
-		return in->operator bool();
+		return static_cast<bool>(*in);
 	}
-	boolean eof(const istream& in)
+	bool eof(const istream& in)
 	{
 		return in->eof();
 	}
@@ -104,17 +144,17 @@ namespace ostream_cs_ext {
 	{
 		out->flush();
 	}
-	boolean good(const ostream& out)
+	bool good(const ostream& out)
 	{
-		return out->operator bool();
+		return static_cast<bool>(*out);
 	}
-	void print(ostream& out,const string& str)
+	void print(ostream& out,const var& val)
 	{
-		*out<<str;
+		*out<<val;
 	}
-	void println(ostream& out,const string& str)
+	void println(ostream& out,const var& val)
 	{
-		*out<<str<<std::endl;
+		*out<<val<<std::endl;
 	}
 	void init()
 	{
