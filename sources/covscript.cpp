@@ -46,9 +46,9 @@ int main(int args_size,const char* args[])
 	}
 	catch(const std::exception& e) {
 		std::ofstream out(::log_path);
-		out<<args[0]<<":"<<e.what();
+		out<<e.what();
 		out.flush();
-		std::cerr<<args[0]<<":"<<e.what()<<std::endl;
+		std::cerr<<e.what()<<std::endl;
 		return -1;
 	}
 	return 0;

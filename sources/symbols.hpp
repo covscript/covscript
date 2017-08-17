@@ -69,11 +69,13 @@ namespace cs {
 	garbage_collector<token_base> token_base::gc;
 	class token_endline final:public token_base {
 		std::size_t mNum=0;
-		std::string mFile="<Uknown>";
+		std::string mFile="<Unknown>";
+		std::string mCode="<Unknown>";
 	public:
 		token_endline()=default;
 		token_endline(std::size_t num):mNum(num) {}
 		token_endline(std::size_t num,const std::string& file):mNum(num),mFile(file) {}
+		token_endline(std::size_t num,const std::string& file,const std::string& code):mNum(num),mFile(file),mCode(code) {}
 		virtual token_types get_type() const noexcept override
 		{
 			return token_types::endline;
@@ -85,6 +87,10 @@ namespace cs {
 		const std::string& get_file() const noexcept
 		{
 			return this->mFile;
+		}
+		const std::string& get_code() const noexcept
+		{
+			return this->mCode;
 		}
 	};
 	class token_action final:public token_base {

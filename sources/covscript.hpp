@@ -121,13 +121,13 @@ namespace cs {
 			try {
 				translate_into_tokens(buff,tokens);
 			}
-			catch(const syntax_error& se) {
-				throw syntax_error(path,line_num,se.what());
+			catch(const cs::exception& e) {
+				throw e;
 			}
 			catch(const std::exception& e) {
-				throw internal_error(path,line_num,e.what());
+				throw exception(line_num,path,line,e.what());
 			}
-			tokens.push_back(new token_endline(line_num,path));
+			tokens.push_back(new token_endline(line_num,path,line));
 			buff.clear();
 		}
 		translate_into_statements(tokens,statements);
@@ -138,14 +138,11 @@ namespace cs {
 				if(break_block||continue_block)
 					throw syntax_error("Can not run break or continue outside the loop.");
 			}
-			catch(const syntax_error& se) {
-				throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-			}
-			catch(const lang_error& le) {
-				throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
+			catch(const cs::exception& e) {
+				throw e;
 			}
 			catch(const std::exception& e) {
-				throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
+				throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 			}
 		}
 		return runtime.pop_instance();

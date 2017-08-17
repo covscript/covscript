@@ -23,16 +23,28 @@
 #include <stdexcept>
 
 namespace cs {
+	class exception final:public std::exception {
+		std::string mWhat;
+	public:
+		exception()=delete;
+		exception(std::size_t line,const std::string& file,const std::string& code,const std::string& what) noexcept:
+			mWhat("  File \""+file+"\", line "+std::to_string(line)+"\n    "+code+"\n    ^\n"+what) {}
+		exception(const exception&)=default;
+		exception(exception&&)=default;
+		virtual ~exception()=default;
+		exception& operator=(const exception&)=default;
+		exception& operator=(exception&&)=default;
+		virtual const char* what() const noexcept override
+		{
+			return this->mWhat.c_str();
+		}
+	};
 	class syntax_error final:public std::exception {
-		std::string mWhat="Covariant Script Syntax Error";
+		std::string mWhat="Syntax Error";
 	public:
 		syntax_error()=default;
 		syntax_error(const std::string& str) noexcept:
-			mWhat("\nCovariant Script Syntax Error:\n"+str) {}
-		syntax_error(std::size_t line,const std::string& str) noexcept:
-			mWhat("\nIn line "+std::to_string(line)+":"+str) {}
-		syntax_error(const std::string& file,std::size_t line,const std::string& str) noexcept:
-			mWhat("\nIn file \""+file+"\",line "+std::to_string(line)+":"+str) {}
+			mWhat("Syntax Error: "+str) {}
 		syntax_error(const syntax_error&)=default;
 		syntax_error(syntax_error&&)=default;
 		virtual ~syntax_error()=default;
@@ -44,15 +56,11 @@ namespace cs {
 		}
 	};
 	class internal_error final:public std::exception {
-		std::string mWhat="Covariant Script Internal Error";
+		std::string mWhat="Internal Error";
 	public:
 		internal_error()=default;
 		internal_error(const std::string& str) noexcept:
-			mWhat("\nCovariant Script Internal Error:\n"+str) {}
-		internal_error(std::size_t line,const std::string& str) noexcept:
-			mWhat("\nIn line "+std::to_string(line)+":"+str) {}
-		internal_error(const std::string& file,std::size_t line,const std::string& str) noexcept:
-			mWhat("\nIn file \""+file+"\",line "+std::to_string(line)+":"+str) {}
+			mWhat("Internal Error: "+str) {}
 		internal_error(const internal_error&)=default;
 		internal_error(internal_error&&)=default;
 		virtual ~internal_error()=default;
@@ -64,15 +72,11 @@ namespace cs {
 		}
 	};
 	class lang_error final:public std::exception {
-		std::string mWhat="Covariant Script Language Error";
+		std::string mWhat="Language Error";
 	public:
 		lang_error()=default;
 		lang_error(const std::string& str) noexcept:
-			mWhat("\nCovariant Script Language Error:\n"+str) {}
-		lang_error(std::size_t line,const std::string& str) noexcept:
-			mWhat("\nIn line "+std::to_string(line)+":"+str) {}
-		lang_error(const std::string& file,std::size_t line,const std::string& str) noexcept:
-			mWhat("\nIn file \""+file+"\",line "+std::to_string(line)+":"+str) {}
+			mWhat("Language Error: "+str) {}
 		lang_error(const lang_error&)=default;
 		lang_error(lang_error&&)=default;
 		virtual ~lang_error()=default;
@@ -84,10 +88,11 @@ namespace cs {
 		}
 	};
 	class fatal_error final:public std::exception {
-		std::string mWhat="Covariant Script Fatal Error";
+		std::string mWhat="Fatal Error";
 	public:
 		fatal_error()=default;
-		fatal_error(const std::string& str) noexcept:mWhat("\nCovariant Script Fatal Error:\n"+str+"\nCompilation terminated.") {}
+		fatal_error(const std::string& str) noexcept:
+			mWhat("Fatal Error: "+str) {}
 		fatal_error(const fatal_error&)=default;
 		fatal_error(fatal_error&&)=default;
 		virtual ~fatal_error()=default;
