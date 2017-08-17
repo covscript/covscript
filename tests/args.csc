@@ -1,4 +1,4 @@
 runtime.info()
 for it iterate system.args
-  system.println(it)
+  system.out.println(it)
 end
