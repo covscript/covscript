@@ -268,11 +268,11 @@ namespace cs_impl {
 				obj.mDat=tmp;
 			}
 		}
-		void swap(any&& obj,bool raw=false) noexcept
+		void swap(any&& obj,bool raw=false)
 		{
 			if(this->mDat!=nullptr&&obj.mDat!=nullptr&&raw) {
 				if(this->mDat->protect_level>0||obj.mDat->protect_level>0)
-					std::terminate();
+					throw cov::error("E000J");
 				baseHolder* tmp=this->mDat->data;
 				this->mDat->data=obj.mDat->data;
 				obj.mDat->data=tmp;
