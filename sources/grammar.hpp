@@ -44,14 +44,11 @@ namespace cs {
 			try {
 				ptr->run();
 			}
-			catch(const syntax_error& se) {
-				throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-			}
-			catch(const lang_error& le) {
-				throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
+			catch(const cs::exception& e) {
+				throw e;
 			}
 			catch(const std::exception& e) {
-				throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
+				throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 			}
 			if(this->mRetVal.usable()) {
 				return_fcall=false;
@@ -82,14 +79,11 @@ namespace cs {
 			try {
 				ptr->run();
 			}
-			catch(const syntax_error& se) {
-				throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-			}
-			catch(const lang_error& le) {
-				throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
+			catch(const cs::exception& e) {
+				throw e;
 			}
 			catch(const std::exception& e) {
-				throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
+				throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 			}
 		}
 		inside_struct=false;
@@ -120,14 +114,11 @@ namespace cs {
 			try {
 				ptr->run();
 			}
-			catch(const syntax_error& se) {
-				throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-			}
-			catch(const lang_error& le) {
-				throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
+			catch(const cs::exception& e) {
+				throw e;
 			}
 			catch(const std::exception& e) {
-				throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
+				throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 			}
 			if(return_fcall) {
 				runtime->storage.remove_domain();
@@ -151,14 +142,11 @@ namespace cs {
 					try {
 						ptr->run();
 					}
-					catch(const syntax_error& se) {
-						throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-					}
-					catch(const lang_error& le) {
-						throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
+					catch(const cs::exception& e) {
+						throw e;
 					}
 					catch(const std::exception& e) {
-						throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
+						throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 					}
 					if(return_fcall) {
 						runtime->storage.remove_domain();
@@ -179,14 +167,11 @@ namespace cs {
 					try {
 						ptr->run();
 					}
-					catch(const syntax_error& se) {
-						throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-					}
-					catch(const lang_error& le) {
-						throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
+					catch(const cs::exception& e) {
+						throw e;
 					}
 					catch(const std::exception& e) {
-						throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
+						throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 					}
 					if(return_fcall) {
 						runtime->storage.remove_domain();
@@ -218,14 +203,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch(const syntax_error& se) {
-					throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-				}
-				catch(const lang_error& le) {
-					throw lang_error(ptr->get_line_num(),le.what());
+				catch(const cs::exception& e) {
+					throw e;
 				}
 				catch(const std::exception& e) {
-					throw internal_error(ptr->get_line_num(),e.what());
+					throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 				}
 				if(return_fcall) {
 					runtime->storage.remove_domain();
@@ -253,14 +235,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch(const syntax_error& se) {
-					throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-				}
-				catch(const lang_error& le) {
-					throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
+				catch(const cs::exception& e) {
+					throw e;
 				}
 				catch(const std::exception& e) {
-					throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
+					throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 				}
 				if(return_fcall) {
 					runtime->storage.remove_domain();
@@ -291,14 +270,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch(const syntax_error& se) {
-					throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-				}
-				catch(const lang_error& le) {
-					throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
+				catch(const cs::exception& e) {
+					throw e;
 				}
 				catch(const std::exception& e) {
-					throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
+					throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 				}
 				if(return_fcall) {
 					runtime->storage.remove_domain();
@@ -328,14 +304,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch(const syntax_error& se) {
-					throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-				}
-				catch(const lang_error& le) {
-					throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
+				catch(const cs::exception& e) {
+					throw e;
 				}
 				catch(const std::exception& e) {
-					throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
+					throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 				}
 				if(return_fcall) {
 					runtime->storage.remove_domain();
@@ -438,11 +411,11 @@ namespace cs {
 					break;
 				}
 			}
-			catch(const syntax_error& se) {
-				throw syntax_error(endsig->get_file(),endsig->get_num(),se.what());
+			catch(const cs::exception& e) {
+				throw e;
 			}
 			catch(const std::exception& e) {
-				throw internal_error(endsig->get_file(),endsig->get_num(),e.what());
+				throw exception(endsig->get_num(),endsig->get_file(),endsig->get_code(),e.what());
 			}
 		}
 		if(level!=0)
