@@ -13,18 +13,18 @@ while it!=arr.term()
 	it.forward()
 end
 for it iterate arr
-	system.print(it," ")
+	system.out.print(to_string(it)+" ")
 end
-system.println()
+system.out.println("")
 it=arr.begin()
 while it!=arr.term()
-	system.print(it.data()," ")
+	system.out.print(to_string(it.data())+" ")
 	it.forward()
 end
-system.println()
+system.out.println("")
 it=(arr.term()).backward()
 while it!=(arr.begin()).backward()
-	system.print(it.data()," ")
+	system.out.print(to_string(it.data())+" ")
 	it.backward()
 end
-system.println()
+system.out.println("")
