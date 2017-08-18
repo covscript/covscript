@@ -60,6 +60,10 @@ namespace string_cs_ext {
 			str.pop_back();
 		return str;
 	}
+	bool empty(const string& str)
+	{
+		return str.empty();
+	}
 	void clear(string& str)
 	{
 		str.clear();
@@ -78,6 +82,7 @@ namespace string_cs_ext {
 		string_ext.add_var("find",var::make_protect<native_interface>(cni(find),true));
 		string_ext.add_var("rfind",var::make_protect<native_interface>(cni(rfind),true));
 		string_ext.add_var("cut",var::make_protect<native_interface>(cni(cut),true));
+		string_ext.add_var("empty",var::make_protect<native_interface>(cni(empty),true));
 		string_ext.add_var("clear",var::make_protect<native_interface>(cni(clear),true));
 		string_ext.add_var("size",var::make_protect<native_interface>(cni(size),true));
 	}

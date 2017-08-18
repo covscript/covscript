@@ -7,7 +7,7 @@ var table=new hash_map
 while !in.eof()
     var str_arr=str_tools.split(str_tools.tolower(in.getline()))
     for str iterate str_arr
-        if(str!="")
+        if(!str.empty())
             ++table[str]
         end
     end
