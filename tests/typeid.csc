@@ -6,7 +6,7 @@ function test(a)
 	end
 end
 var a=new foo
-system.println(typeid a)
+system.out.println(typeid a)
 test(a)
-system.println("ok")
+system.out.println("ok")
 test(1)

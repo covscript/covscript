@@ -34,7 +34,7 @@ struct type
 		for lst iterate this.table
 			if lst!=null
 				for p iterate *lst
-					system.println(p.first(),":",p.second())
+					system.out.println(to_string(p.first())+":"+to_string(p.second()))
 				end
 			end
 		end

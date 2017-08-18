@@ -1,36 +1,6 @@
+package str_tools
 function cton(ch)
-	switch ch
-		case '0'
-			return 0
-		end
-		case '1'
-			return 1
-		end
-		case '2'
-			return 2
-		end
-		case '3'
-			return 3
-		end
-		case '4'
-			return 4
-		end
-		case '5'
-			return 5
-		end
-		case '6'
-			return 6
-		end
-		case '7'
-			return 7
-		end
-		case '8'
-			return 8
-		end
-		case '9'
-			return 9
-		end
-	end
+	return to_integer(ch)-to_integer('0')
 end
 function reverse_str(str)
 	var s=new string
@@ -50,7 +20,7 @@ function ston(str)
 		for i=1 to str.size()-1
 			tmp.append(str[i])
 		end
-		return -ston(tmp)
+		return -str_tools.ston(tmp)
 	end
 	var ipart=new string
 	var fpart=new string
@@ -72,15 +42,38 @@ function ston(str)
 		end
 	end
 	var result=0
-	ipart=reverse_str(ipart)
+	ipart=str_tools.reverse_str(ipart)
 	for i=0 to ipart.size()-1
-		result=result+cton(ipart[i])*10^i
+		result=result+str_tools.cton(ipart[i])*10^i
 	end
 	for i=0 to fpart.size()-1
-		result=result+cton(fpart[i])*10^(-i-1)
+		result=result+str_tools.cton(fpart[i])*10^(-i-1)
 	end
 	return result
 end
-var result=ston(system.getline())
-system.println(result)
-system.println(result*2)
+function split(str)
+	var arr=new array
+	var tmp=new string
+	for ch iterate str
+		if(ch.isspace())
+			if(tmp.size()!=0)
+				arr.push_back(tmp)
+				tmp.clear()
+			end
+			continue
+		end
+		tmp.append(ch)
+	end
+	if(tmp.size()!=0)
+		arr.push_back(tmp)
+		tmp.clear()
+	end
+	return arr
+end
+function tolower(str)
+    var s=str
+    for i=0 to s.size()-1
+        s.replace(i,1,(s[i]).tolower())
+    end
+    return s
+end

@@ -1,21 +1,17 @@
-function tolower(str)
-    var s=str
-    for i=0 to s.size()-1
-        s.replace(i,1,(s[i]).tolower())
-    end
-    return s
-end
-var in=file.open("./wordcount.csc",file.read_method)
-if !in.is_open()
+import "str_tools.csp"
+var in=iostream.filestream("../LICENSE",iostream.openmode.in)
+if !in.good()
     runtime.error("File is not exist")
 end
 var table=new hash_map
 while !in.eof()
-    var str=tolower(in.read())
-    if(str!="")
-        ++table[str]
+    var str_arr=str_tools.split(str_tools.tolower(in.getline()))
+    for str iterate str_arr
+        if(str!="")
+            ++table[str]
+        end
     end
 end
 for it iterate table
-    system.println(it.first(),":",it.second())
+    system.out.println(it.first()+":"+it.second())
 end
