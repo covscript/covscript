@@ -1,2 +1,2 @@
-system.println(system.max)
-system.println(system.inf)
+system.out.println(system.max)
+system.out.println(system.inf)

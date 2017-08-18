@@ -1,3 +1,3 @@
 loop
-	system.println(runtime.hash(system.input()))
+	system.out.println(runtime.hash(system.in.input()))
 end

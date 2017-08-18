@@ -9,8 +9,8 @@ struct foo
 end
 var a=new foo
 var b=a
-system.println(current.a.a)
-system.println(current.b.a)
+system.out.println(current.a.a)
+system.out.println(current.b.a)
 a.test()
-system.println(current.a.a)
-system.println(current.b.a)
+system.out.println(current.a.a)
+system.out.println(current.b.a)

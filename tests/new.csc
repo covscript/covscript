@@ -3,8 +3,8 @@ struct foo
 end
 var a=new pointer
 if a==null
-    system.println("Null")
+    system.out.println("Null")
 end
 a=gcnew foo
 ++a->a
-system.println((*a).a)
+system.out.println((*a).a)

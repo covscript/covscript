@@ -128,21 +128,21 @@ function main()
 	end
 #结束后处理得分
 	var str=to_string(score)
-	system.println("You Die!Your Score is ",str,".")
+	system.out.println("You Die!Your Score is "+str+".")
 	if(score<5)
-		system.println("Very Bad.Just try lower difficulty.")
+		system.out.println("Very Bad.Just try lower difficulty.")
 	end
 	if(score>=5&&score<10)
-		system.println("Not Bad.You can get higher score.")
+		system.out.println("Not Bad.You can get higher score.")
 	end
 	if(score>=10&&score<50)
-		system.println("Good.")
+		system.out.println("Good.")
 	end
 	if(score>=50&&score<100)
-		system.println("Very Great!")
+		system.out.println("Very Great!")
 	end
 	if(score>=100)
-		system.println("So Amazing!")
+		system.out.println("So Amazing!")
 	end
 end
 main()
