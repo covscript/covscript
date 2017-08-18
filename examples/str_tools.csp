@@ -12,7 +12,7 @@ function reverse_str(str)
 	return s
 end
 function ston(str)
-	if str.size()==0
+	if str.empty()
 		runtime.error("Receive empty string")
 	end
 	if str[0]=='-'
@@ -56,7 +56,7 @@ function split(str)
 	var tmp=new string
 	for ch iterate str
 		if(ch.isspace())
-			if(tmp.size()!=0)
+			if(!tmp.empty())
 				arr.push_back(tmp)
 				tmp.clear()
 			end
@@ -64,7 +64,7 @@ function split(str)
 		end
 		tmp.append(ch)
 	end
-	if(tmp.size()!=0)
+	if(!tmp.empty())
 		arr.push_back(tmp)
 		tmp.clear()
 	end
