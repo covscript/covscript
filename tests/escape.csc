@@ -5,4 +5,4 @@ for ch iterate str
   end
   system.out.print(ch)
 end
-system.out.println()
+system.out.println("")
