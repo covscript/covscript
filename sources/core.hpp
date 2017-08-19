@@ -43,6 +43,7 @@
 #include <istream>
 #include <ostream>
 #include <utility>
+#include <cctype>
 #include <string>
 #include <memory>
 #include <cmath>
