@@ -1,5 +1,5 @@
 import "str_tools.csp"
-var in=iostream.filestream("../LICENSE",iostream.openmode.in)
+var in=iostream.fstream("../LICENSE",iostream.openmode.in)
 if !in.good()
     runtime.error("File is not exist")
 end
