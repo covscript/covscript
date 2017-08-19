@@ -2,7 +2,7 @@
 #include "../sources/cni.hpp"
 #include <iostream>
 using namespace cs;
-extension my_ext;
+static extension my_ext;
 number test(number a)
 {
 	std::cout<<a<<std::endl;
@@ -10,6 +10,6 @@ number test(number a)
 }
 extension* cs_extension()
 {
-	my_ext.add_var("test",var::make_protect<native_interface>(cni(test),true));
+	my_ext.add_var("test",var::make_protect<callable>(cni(test),true));
 	return &my_ext;
 }
