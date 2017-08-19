@@ -3,9 +3,25 @@
 static cs::extension iostream_ext;
 static cs::extension seekdir_ext;
 static cs::extension openmode_ext;
+static cs::extension istream_ext;
+static cs::extension_t istream_ext_shared=std::make_shared<cs::extension_holder>(&istream_ext);
+namespace cs_impl {
+	template<>cs::extension_t& get_ext<cs::istream>()
+	{
+		return istream_ext_shared;
+	}
+}
+static cs::extension ostream_ext;
+static cs::extension_t ostream_ext_shared=std::make_shared<cs::extension_holder>(&ostream_ext);
+namespace cs_impl {
+	template<>cs::extension_t& get_ext<cs::ostream>()
+	{
+		return ostream_ext_shared;
+	}
+}
 namespace iostream_cs_ext {
 	using namespace cs;
-	var filestream(const string& path,std::ios_base::openmode openmode)
+	var fstream(const string& path,std::ios_base::openmode openmode)
 	{
 		switch(openmode) {
 		case std::ios_base::in:
@@ -27,6 +43,8 @@ namespace iostream_cs_ext {
 	}
 	void init()
 	{
+		iostream_ext.add_var("istream",var::make_protect<extension_t>(istream_ext_shared));
+		iostream_ext.add_var("ostream",var::make_protect<extension_t>(ostream_ext_shared));
 		iostream_ext.add_var("seekdir",var::make_protect<extension_t>(std::make_shared<cs::extension_holder>(&seekdir_ext)));
 		iostream_ext.add_var("openmode",var::make_protect<extension_t>(std::make_shared<cs::extension_holder>(&openmode_ext)));
 		seekdir_ext.add_var("start",var::make_constant<std::ios_base::seekdir>(std::ios_base::beg));
@@ -35,24 +53,8 @@ namespace iostream_cs_ext {
 		openmode_ext.add_var("in",var::make_constant<std::ios_base::openmode>(std::ios_base::in));
 		openmode_ext.add_var("out",var::make_constant<std::ios_base::openmode>(std::ios_base::out));
 		openmode_ext.add_var("app",var::make_constant<std::ios_base::openmode>(std::ios_base::app));
-		iostream_ext.add_var("filestream",var::make_protect<native_interface>(cni(filestream)));
+		iostream_ext.add_var("fstream",var::make_protect<native_interface>(cni(fstream)));
 		iostream_ext.add_var("setprecision",var::make_protect<callable>(cni(setprecision)));
-	}
-}
-static cs::extension istream_ext;
-static cs::extension_t istream_ext_shared=std::make_shared<cs::extension_holder>(&istream_ext);
-namespace cs_impl {
-	template<>cs::extension_t& get_ext<cs::istream>()
-	{
-		return istream_ext_shared;
-	}
-}
-static cs::extension ostream_ext;
-static cs::extension_t ostream_ext_shared=std::make_shared<cs::extension_holder>(&ostream_ext);
-namespace cs_impl {
-	template<>cs::extension_t& get_ext<cs::ostream>()
-	{
-		return ostream_ext_shared;
 	}
 }
 namespace istream_cs_ext {
