@@ -358,11 +358,11 @@ namespace cs {
 	}
 	var parse_equ(const var& a,const var& b)
 	{
-		return boolean(a==b);
+		return boolean(a.compare(b));
 	}
 	var parse_neq(const var& a,const var& b)
 	{
-		return boolean(a!=b);
+		return boolean(!a.compare(b));
 	}
 	var parse_and(const var& a,const var& b)
 	{

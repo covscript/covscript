@@ -414,13 +414,17 @@ namespace cs_impl {
 				swap(std::forward<any>(var));
 			return *this;
 		}
+		bool compare(const any& var) const
+		{
+			return usable()&&var.usable()?this->mDat->data->compare(var.mDat->data):!usable()&&!var.usable();
+		}
 		bool operator==(const any& var) const
 		{
-			return usable()?this->mDat->data->compare(var.mDat->data):!var.usable();
+			return this->compare(var);
 		}
 		bool operator!=(const any& var)const
 		{
-			return usable()?!this->mDat->data->compare(var.mDat->data):var.usable();
+			return !this->compare(var);
 		}
 		template<typename T> T& val(bool raw=false)
 		{
