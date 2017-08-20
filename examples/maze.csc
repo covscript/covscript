@@ -3,17 +3,16 @@ darwin.load()
 darwin.fit_drawable()
 var pic=darwin.get_drawable()
 # variable definition
-var xsize=10
-var ysize=10
+var xsize=to_integer(pic.get_width()/4)
+var ysize=to_integer(pic.get_height()/2)
 var findroad=false
 var xlong=2*xsize-1
 var ylong=2*ysize-1
-var mapstyle=1
 var map=new array
 var cango={{1,2},{1,4},{2,3},{3,4}}
 
-const var redpixel=darwin.pixel('#',darwin.red,darwin.red)
-const var whitepixel=darwin.pixel('@',darwin.white,darwin.white)
+const var redpixel=darwin.pixel(' ',darwin.red,darwin.red)
+const var whitepixel=darwin.pixel(' ',darwin.white,darwin.white)
 
 function addvoidmap()
 	map.clear()
@@ -77,11 +76,17 @@ function adraw()
 			end
 		end
 	end
+	pic.draw_pixel(2,1,redpixel)
+	pic.draw_pixel(3,1,redpixel)
+	pic.draw_pixel(xlong*2-3,ylong-2,redpixel)
+	pic.draw_pixel(xlong*2-4,ylong-2,redpixel)
 end
 
 function resize()
-	xsize=math.max(2,darwin.ui.input_box("change size","input x_size","10",true))
-	ysize=math.max(2,darwin.ui.input_box("change size","input y_size","10",true))
+	xsize=math.max(2,to_integer(darwin.ui.input_box("change size","input x_size",to_string(xsize),true)))
+	ysize=math.max(2,to_integer(darwin.ui.input_box("change size","input y_size",to_string(ysize),true)))
+	xlong=2*xsize-1
+	ylong=2*ysize-1
 	addmap()
 end
 
@@ -96,9 +101,6 @@ addmap()
 loop
 	if darwin.is_kb_hit()==true
 		switch darwin.get_kb_hit()
-			case 'f'
-				findroad=not findroad
-			end
 			case 'n'
 				addmap()
 			end
