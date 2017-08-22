@@ -420,7 +420,6 @@ namespace cs {
 		virtual void run() override;
 	};
 	class statement_block final:public statement_base {
-		static std::deque<name_space> mNamespaces;
 		token_id* mName=nullptr;
 		std::deque<statement_base*> mBlock;
 	public:
@@ -433,7 +432,6 @@ namespace cs {
 		}
 		virtual void run() override;
 	};
-	std::deque<name_space> statement_block::mNamespaces;
 	class statement_if final:public statement_base {
 		cov::tree<token_base*> mTree;
 		std::deque<statement_base*>* mBlock=nullptr;

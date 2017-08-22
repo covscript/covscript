@@ -23,9 +23,6 @@
 
 namespace cs {
 	class domain_manager {
-	public:
-		using domain_t=std::shared_ptr<std::unordered_map<string,var>>;
-	private:
 		std::deque<std::unordered_set<string>> m_set;
 		std::deque<domain_t> m_data;
 		std::deque<domain_t> m_this;
@@ -56,6 +53,10 @@ namespace cs {
 		domain_t& get_domain()
 		{
 			return m_data.front();
+		}
+		domain_t& get_global()
+		{
+			return m_data.back();
 		}
 		void remove_set()
 		{
