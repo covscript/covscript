@@ -1,5 +1,6 @@
 ![](https://github.com/mikecovlee/covscript/raw/master/icon/covariant_script_wide.png)
 # Covariant Script Programming Language #
+[![](https://img.shields.io/badge/build-passing-blue.svg)](https://github.com/mikecovlee/covscript/releases/latest) [![](https://img.shields.io/badge/GUI%20build-passing-blue.svg)](https://github.com/mikecovlee/covscript-gui/releases/latest) [![](https://img.shields.io/badge/language-C%2B%2B-blue.svg)](http://www.cplusplus.com/) [![](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://github.com/mikecovlee/covscript/blob/master/LICENSE)  
 **Welcome to the Covariant Script programming language!**  
 **Covariant Script** is an open source,cross-platform programming language.
 ## Switch language ##
