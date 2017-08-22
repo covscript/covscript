@@ -57,7 +57,7 @@
 
 namespace cs {
 // Version
-	const std::string version="1.0.3";
+	const std::string version="1.0.4";
 // Output Precision
 	static int output_precision=8;
 // Callable and Function
@@ -209,38 +209,45 @@ namespace cs {
 	};
 // Namespace and extensions
 	class name_space final {
-		std::unordered_map<string,var> m_data;
+		domain_t m_data;
 	public:
-		name_space()=default;
+		name_space():m_data(std::make_shared<std::unordered_map<string,var>>()) {}
 		name_space(const name_space&)=delete;
-		name_space(const std::unordered_map<string,var>& dat):m_data(dat) {}
+		name_space(const domain_t& dat):m_data(dat) {}
 		~name_space()=default;
 		void add_var(const std::string& name,const var& var)
 		{
-			if(m_data.count(name)>0)
-				m_data[name]=var;
+			if(m_data->count(name)>0)
+				(*m_data)[name]=var;
 			else
-				m_data.emplace(name,var);
+				m_data->emplace(name,var);
 		}
 		var& get_var(const std::string& name)
 		{
-			if(m_data.count(name)>0)
-				return m_data[name];
+			if(m_data->count(name)>0)
+				return (*m_data)[name];
 			else
-				throw syntax_error("Use of undefined variable \""+name+"\" in extension.");
+				throw syntax_error("Use of undefined variable \""+name+"\".");
 		}
 	};
 	class name_space_holder final {
+		bool m_local;
 		name_space* m_ns=nullptr;
 		cov::dll m_dll;
 	public:
 		name_space_holder()=delete;
-		name_space_holder(name_space* ptr):m_ns(ptr) {}
-		name_space_holder(const std::string& path):m_dll(path)
+		name_space_holder(const name_space_holder&)=delete;
+		name_space_holder(const domain_t& dat):m_local(true),m_ns(new name_space(dat)) {}
+		name_space_holder(name_space* ptr):m_local(false),m_ns(ptr) {}
+		name_space_holder(const std::string& path):m_local(false),m_dll(path)
 		{
 			m_ns=reinterpret_cast<name_space*(*)()>(m_dll.get_address("__CS_EXTENSION__"))();
 		}
-		~name_space_holder()=default;
+		~name_space_holder()
+		{
+			if(m_local)
+				delete m_ns;
+		}
 		var& get_var(const std::string& name)
 		{
 			if(m_ns==nullptr)

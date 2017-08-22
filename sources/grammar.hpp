@@ -126,9 +126,9 @@ namespace cs {
 			}
 		}
 		if(this->mName!=nullptr) {
-			mNamespaces.emplace_back(*runtime->storage.get_domain());
+			domain_t domain=runtime->storage.get_domain();
 			runtime->storage.remove_domain();
-			runtime->storage.add_var(this->mName->get_id(),var::make_protect<name_space_t>(std::make_shared<name_space_holder>(&mNamespaces.back())));
+			runtime->storage.add_var(this->mName->get_id(),var::make_protect<name_space_t>(std::make_shared<name_space_holder>(domain)));
 		}
 		else
 			runtime->storage.remove_domain();
@@ -438,20 +438,6 @@ namespace cs {
 		tmp.clear();
 		kill_action(lines,statements,true);
 	}
-	class statement_import final {
-		static std::deque<name_space> mPackages;
-	public:
-		statement_import()=delete;
-		~statement_import()=delete;
-		static void import(runtime_t rt)
-		{
-			if(rt->package_name.empty())
-				throw syntax_error("Only packages are allowed to import.");
-			mPackages.emplace_back(*rt->storage.get_domain());
-			runtime->storage.add_var(rt->package_name,var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&mPackages.back())));
-		}
-	};
-	std::deque<name_space> statement_import::mPackages;
 	void init_grammar()
 	{
 		// Expression Grammar
@@ -461,7 +447,10 @@ namespace cs {
 		});
 		// Import Grammar
 		translator.add_method({new token_action(action_types::import_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::import_,grammar_types::jit_command,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
-				statement_import::import(covscript(dynamic_cast<token_value*>(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data())->get_value().const_val<string>()));
+				runtime_t rt=covscript(dynamic_cast<token_value*>(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data())->get_value().const_val<string>());
+				if(rt->package_name.empty())
+					throw syntax_error("Only packages are allowed to import.");
+				runtime->storage.add_var(rt->package_name,var::make_protect<extension_t>(std::make_shared<extension_holder>(rt->storage.get_global())));
 				return nullptr;
 			}
 		});
@@ -470,6 +459,7 @@ namespace cs {
 				if(!runtime->package_name.empty())
 					throw syntax_error("Redefinition of package");
 				runtime->package_name=dynamic_cast<token_id*>(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data())->get_id();
+				runtime->storage.add_var_global(runtime->package_name,var::make_protect<extension_t>(std::make_shared<extension_holder>(runtime->storage.get_global())));
 				return nullptr;
 			}
 		});
