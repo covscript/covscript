@@ -116,8 +116,6 @@ namespace cs {
 			case signal_types::new_:
 				if(it.left().data()!=nullptr)
 					throw syntax_error("Wrong grammar for new expression.");
-				opt_expr(tree,it.right());
-				return;
 				break;
 			case signal_types::gcnew_:
 				if(it.left().data()!=nullptr)

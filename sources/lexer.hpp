@@ -100,14 +100,14 @@ namespace cs {
 					type=token_types::value;
 					continue;
 				}
-				if(std::isalpha(buff[i])||buff[i]=='_'||buff[i]==':') {
+				if(std::isalpha(buff[i])||buff[i]=='_') {
 					type=token_types::id;
 					continue;
 				}
 				throw syntax_error("Uknown character.");
 				break;
 			case token_types::id:
-				if(std::isalnum(buff[i])||buff[i]=='_'||buff[i]==':') {
+				if(std::isalnum(buff[i])||buff[i]=='_') {
 					tmp+=buff[i];
 					++i;
 					continue;
