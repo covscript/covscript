@@ -1,6 +1,6 @@
 #pragma once
 /*
-* Covariant Script C/C++ Parser
+* Covariant Script Parser
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -337,7 +337,7 @@ namespace cs {
 	}
 	void translate_into_statements(std::deque<token_base*>& tokens,std::deque<statement_base*>& statements);
 	enum class statement_types {
-		null,expression_,import_,package_,block_,var_,constant_,if_,else_,switch_,case_,default_,while_,until_,loop_,for_,foreach_,break_,continue_,struct_,function_,return_,end_
+		null,expression_,import_,package_,block_,namespace_,var_,constant_,if_,else_,switch_,case_,default_,while_,until_,loop_,for_,foreach_,break_,continue_,struct_,function_,return_,end_
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;
@@ -420,30 +420,47 @@ namespace cs {
 		virtual void run() override;
 	};
 	class statement_block final:public statement_base {
-		token_id* mName=nullptr;
 		std::deque<statement_base*> mBlock;
 	public:
 		statement_block()=delete;
 		statement_block(const std::deque<statement_base*>& block,token_base* ptr):statement_base(ptr),mBlock(block) {}
-		statement_block(token_base* tbp,const std::deque<statement_base*>& block,token_base* ptr):statement_base(ptr),mName(static_cast<token_id*>(tbp)),mBlock(block) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::block_;
 		}
 		virtual void run() override;
 	};
+	class statement_namespace final:public statement_base {
+		std::string mName;
+		std::deque<statement_base*> mBlock;
+	public:
+		statement_namespace()=delete;
+		statement_namespace(token_base* tbp,const std::deque<statement_base*>& block,token_base* ptr):statement_base(ptr),mName(static_cast<token_id*>(tbp)->get_id()),mBlock(block) {}
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::namespace_;
+		}
+		virtual void run() override;
+	};
 	class statement_if final:public statement_base {
 		cov::tree<token_base*> mTree;
-		std::deque<statement_base*>* mBlock=nullptr;
-		std::deque<statement_base*>* mElseBlock=nullptr;
+		std::deque<statement_base*> mBlock;
 	public:
 		statement_if()=delete;
-		statement_if(const cov::tree<token_base*>& tree,std::deque<statement_base*>* btrue,std::deque<statement_base*>* bfalse,token_base* ptr):statement_base(ptr),mTree(tree),mBlock(btrue),mElseBlock(bfalse) {}
-		virtual ~statement_if()
+		statement_if(const cov::tree<token_base*>& tree,const std::deque<statement_base*>& block,token_base* ptr):statement_base(ptr),mTree(tree),mBlock(block) {}
+		virtual statement_types get_type() const noexcept override
 		{
-			delete mBlock;
-			delete mElseBlock;
+			return statement_types::if_;
 		}
+		virtual void run() override;
+	};
+	class statement_ifelse final:public statement_base {
+		cov::tree<token_base*> mTree;
+		std::deque<statement_base*> mBlock;
+		std::deque<statement_base*> mElseBlock;
+	public:
+		statement_ifelse()=delete;
+		statement_ifelse(const cov::tree<token_base*>& tree,const std::deque<statement_base*>& btrue,const std::deque<statement_base*>& bfalse,token_base* ptr):statement_base(ptr),mTree(tree),mBlock(btrue),mElseBlock(bfalse) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::if_;

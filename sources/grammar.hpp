@@ -120,71 +120,85 @@ namespace cs {
 			catch(const std::exception& e) {
 				throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 			}
-			if(return_fcall) {
-				runtime->storage.remove_domain();
-				return;
+			if(return_fcall||break_block||continue_block)
+				break;
+		}
+		runtime->storage.remove_domain();
+	}
+	void statement_namespace::run()
+	{
+		runtime->storage.add_domain();
+		for(auto& ptr:mBlock) {
+			try {
+				ptr->run();
+			}
+			catch(const cs::exception& e) {
+				throw e;
+			}
+			catch(const std::exception& e) {
+				throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 			}
 		}
-		if(this->mName!=nullptr) {
-			domain_t domain=runtime->storage.get_domain();
-			runtime->storage.remove_domain();
-			runtime->storage.add_var(this->mName->get_id(),var::make_protect<name_space_t>(std::make_shared<name_space_holder>(domain)));
-		}
-		else
-			runtime->storage.remove_domain();
+		domain_t domain=runtime->storage.get_domain();
+		runtime->storage.remove_domain();
+		runtime->storage.add_var(this->mName,var::make_protect<name_space_t>(std::make_shared<name_space_holder>(domain)));
 	}
 	void statement_if::run()
 	{
-		runtime->storage.add_domain();
 		if(parse_expr(mTree.root()).const_val<boolean>()) {
-			if(mBlock!=nullptr) {
-				for(auto& ptr:*mBlock) {
-					try {
-						ptr->run();
-					}
-					catch(const cs::exception& e) {
-						throw e;
-					}
-					catch(const std::exception& e) {
-						throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
-					}
-					if(return_fcall) {
-						runtime->storage.remove_domain();
-						return;
-					}
-					if(break_block||continue_block) {
-						runtime->storage.remove_domain();
-						return;
-					}
+			runtime->storage.add_domain();
+			for(auto& ptr:mBlock) {
+				try {
+					ptr->run();
 				}
+				catch(const cs::exception& e) {
+					throw e;
+				}
+				catch(const std::exception& e) {
+					throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
+				}
+				if(return_fcall||break_block||continue_block)
+					break;
 			}
-			else
-				throw syntax_error("Empty If body.");
+			runtime->storage.remove_domain();
+		}
+	}
+	void statement_ifelse::run()
+	{
+		if(parse_expr(mTree.root()).const_val<boolean>()) {
+			runtime->storage.add_domain();
+			for(auto& ptr:mBlock) {
+				try {
+					ptr->run();
+				}
+				catch(const cs::exception& e) {
+					throw e;
+				}
+				catch(const std::exception& e) {
+					throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
+				}
+				if(return_fcall||break_block||continue_block)
+					break;
+			}
+			runtime->storage.remove_domain();
 		}
 		else {
-			if(mElseBlock!=nullptr) {
-				for(auto& ptr:*mElseBlock) {
-					try {
-						ptr->run();
-					}
-					catch(const cs::exception& e) {
-						throw e;
-					}
-					catch(const std::exception& e) {
-						throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
-					}
-					if(return_fcall) {
-						runtime->storage.remove_domain();
-						return;
-					}
-					if(break_block||continue_block) {
-						runtime->storage.remove_domain();
-						return;
-					}
+			runtime->storage.add_domain();
+			for(auto& ptr:mElseBlock) {
+				try {
+					ptr->run();
 				}
+				catch(const cs::exception& e) {
+					throw e;
+				}
+				catch(const std::exception& e) {
+					throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
+				}
+				if(return_fcall||break_block||continue_block)
+					break;
 			}
+			runtime->storage.remove_domain();
 		}
-		runtime->storage.remove_domain();
 	}
 	void statement_switch::run()
 	{
@@ -196,6 +210,8 @@ namespace cs {
 	}
 	void statement_while::run()
 	{
+		break_block=false;
+		continue_block=false;
 		runtime->storage.add_domain();
 		while(parse_expr(mTree.root()).const_val<boolean>()) {
 			runtime->storage.clear_domain();
@@ -228,6 +244,8 @@ namespace cs {
 	}
 	void statement_loop::run()
 	{
+		break_block=false;
+		continue_block=false;
 		runtime->storage.add_domain();
 		do {
 			runtime->storage.clear_domain();
@@ -261,6 +279,8 @@ namespace cs {
 	}
 	void statement_for::run()
 	{
+		break_block=false;
+		continue_block=false;
 		runtime->storage.add_domain();
 		var val=copy(parse_expr(mDvp.expr.root()));
 		while(val.const_val<number>()<=parse_expr(mEnd.root()).const_val<number>()) {
@@ -296,6 +316,10 @@ namespace cs {
 	}
 	template<typename T,typename X>void foreach_helper(const string& iterator,const var& obj,std::deque<statement_base*>& body)
 	{
+		if(obj.const_val<T>().empty())
+			return;
+		break_block=false;
+		continue_block=false;
 		runtime->storage.add_domain();
 		for(const X& it:obj.const_val<T>()) {
 			runtime->storage.clear_domain();
@@ -494,18 +518,21 @@ namespace cs {
 			}
 		});
 		// Namespace Grammar
-		translator.add_method({new token_action(action_types::namespace_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::block_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+		translator.add_method({new token_action(action_types::namespace_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::namespace_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
-				return new statement_block(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data(),body,raw.front().back());
+				for(auto& ptr:body)
+					if(ptr->get_type()!=statement_types::var_&&ptr->get_type()!=statement_types::function_)
+						throw syntax_error("Wrong grammar for namespace definition.");
+				return new statement_namespace(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data(),body,raw.front().back());
 			}
 		});
 		// If Grammar
 		translator.add_method({new token_action(action_types::if_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::if_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				bool have_else=false;
-				std::deque<statement_base*>* body=new std::deque<statement_base*>;
-				kill_action({raw.begin()+1,raw.end()},*body);
-				for(auto& ptr:*body)
+				std::deque<statement_base*> body;
+				kill_action({raw.begin()+1,raw.end()},body);
+				for(auto& ptr:body)
 				{
 					if(ptr->get_type()==statement_types::else_) {
 						if(!have_else)
@@ -516,24 +543,23 @@ namespace cs {
 				}
 				if(have_else)
 				{
-					std::deque<statement_base*>* body_true=new std::deque<statement_base*>;
-					std::deque<statement_base*>* body_false=new std::deque<statement_base*>;
+					std::deque<statement_base*> body_true;
+					std::deque<statement_base*> body_false;
 					bool now_place=true;
-					for(auto& ptr:*body) {
+					for(auto& ptr:body) {
 						if(ptr->get_type()==statement_types::else_) {
 							now_place=false;
 							continue;
 						}
 						if(now_place)
-							body_true->push_back(ptr);
+							body_true.push_back(ptr);
 						else
-							body_false->push_back(ptr);
+							body_false.push_back(ptr);
 					}
-					delete body;
-					return new statement_if(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),body_true,body_false,raw.front().back());
+					return new statement_ifelse(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),body_true,body_false,raw.front().back());
 				}
 				else
-					return new statement_if(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),body,nullptr,raw.front().back());
+					return new statement_if(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),body,raw.front().back());
 			}
 		});
 		// Else Grammar

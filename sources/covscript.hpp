@@ -135,8 +135,6 @@ namespace cs {
 		for(auto& ptr:statements) {
 			try {
 				ptr->run();
-				if(break_block||continue_block)
-					throw syntax_error("Can not run break or continue outside the loop.");
 			}
 			catch(const cs::exception& e) {
 				throw e;
