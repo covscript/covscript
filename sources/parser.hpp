@@ -337,7 +337,7 @@ namespace cs {
 	}
 	void translate_into_statements(std::deque<token_base*>& tokens,std::deque<statement_base*>& statements);
 	enum class statement_types {
-		null,expression_,import_,package_,block_,namespace_,var_,constant_,if_,else_,switch_,case_,default_,while_,until_,loop_,for_,foreach_,break_,continue_,struct_,function_,return_,end_
+		null,expression_,import_,package_,block_,namespace_,var_,constant_,if_,else_,switch_,case_,default_,while_,until_,loop_,for_,foreach_,break_,continue_,struct_,function_,return_,end_,try_,catch_,throw_
 	};
 	class statement_base {
 		static garbage_collector<statement_base> gc;
@@ -474,7 +474,10 @@ namespace cs {
 		{
 			return statement_types::else_;
 		}
-		virtual void run() override {}
+		virtual void run() override
+		{
+			throw syntax_error("Do not allowed standalone else statement.");
+		}
 	};
 	class statement_switch final:public statement_base {
 		cov::tree<token_base*> mTree;
@@ -648,6 +651,48 @@ namespace cs {
 		{
 			throw syntax_error("Standalone end is not support.");
 		}
+	};
+	class statement_try final:public statement_base {
+		std::string mName;
+		std::deque<statement_base*> mTryBody;
+		std::deque<statement_base*> mCatchBody;
+	public:
+		statement_try()=delete;
+		statement_try(const std::string& name,const std::deque<statement_base*>& tbody,const std::deque<statement_base*>& cbody,token_base* ptr):statement_base(ptr),mName(name),mTryBody(tbody),mCatchBody(cbody) {}
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::try_;
+		}
+		virtual void run() override;
+	};
+	class statement_catch final:public statement_base {
+		std::string mName;
+	public:
+		statement_catch()=delete;
+		statement_catch(const std::string& name,token_base* ptr):statement_base(ptr),mName(name) {}
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::catch_;
+		}
+		const std::string& get_name() const
+		{
+			return this->mName;
+		}
+		virtual void run() override
+		{
+			throw syntax_error("Do not allowed standalone catch statement.");
+		}
+	};
+	class statement_throw final:public statement_base {
+		cov::tree<token_base*> mTree;
+	public:
+		statement_throw()=delete;
+		statement_throw(const cov::tree<token_base*>& tree,token_base* ptr):statement_base(ptr),mTree(tree) {}
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::throw_;
+		}
+		virtual void run() override;
 	};
 	/*
 	* Grammar Types

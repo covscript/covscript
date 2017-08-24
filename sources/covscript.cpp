@@ -32,6 +32,7 @@ void covscript_main(int args_size,const char* args[])
 			arg.push_back(std::string(args[i]));
 		system_ext.add_var("args",arg);
 		cs::init_grammar();
+		cs::init_ext();
 		cs::covscript(args[1]);
 	}
 	else

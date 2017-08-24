@@ -26,9 +26,9 @@ namespace runtime_cs_ext {
 	{
 		return cov::rand<long>(b,e);
 	}
-	void error(const string& str)
+	var exception(const string& str)
 	{
-		throw lang_error(str);
+		return var::make<lang_error>(str);
 	}
 	extension_t load_extension(const string& path)
 	{
@@ -63,7 +63,7 @@ namespace runtime_cs_ext {
 		runtime_ext.add_var("delay",var::make_protect<native_interface>(cni(delay)));
 		runtime_ext.add_var("rand",var::make_protect<native_interface>(cni(rand)));
 		runtime_ext.add_var("randint",var::make_protect<native_interface>(cni(randint)));
-		runtime_ext.add_var("error",var::make_protect<native_interface>(cni(error)));
+		runtime_ext.add_var("exception",var::make_protect<native_interface>(cni(exception)));
 		runtime_ext.add_var("load_extension",var::make_protect<native_interface>(cni(load_extension),true));
 		runtime_ext.add_var("hash",var::make_protect<native_interface>(cni(hash),true));
 		runtime_ext.add_var("build",var::make_protect<native_interface>(cni(build)));

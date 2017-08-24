@@ -71,18 +71,18 @@ namespace cs {
 			return this->mWhat.c_str();
 		}
 	};
-	class lang_error final:public std::exception {
-		std::string mWhat="Language Error";
+	class lang_error final {
+		std::string mWhat;
 	public:
 		lang_error()=default;
 		lang_error(const std::string& str) noexcept:
-			mWhat("Language Error: "+str) {}
+			mWhat(str) {}
 		lang_error(const lang_error&)=default;
 		lang_error(lang_error&&)=default;
-		virtual ~lang_error()=default;
+		~lang_error()=default;
 		lang_error& operator=(const lang_error&)=default;
 		lang_error& operator=(lang_error&&)=default;
-		virtual const char* what() const noexcept override
+		const char* what() const noexcept
 		{
 			return this->mWhat.c_str();
 		}
