@@ -102,24 +102,24 @@ namespace list_cs_ext {
 	void init()
 	{
 		list_ext.add_var("iterator",var::make_protect<extension_t>(list_iterator_ext_shared));
-		list_ext.add_var("front",var::make_protect<native_interface>(cni(front),true));
-		list_ext.add_var("back",var::make_protect<native_interface>(cni(back),true));
-		list_ext.add_var("begin",var::make_protect<native_interface>(cni(begin),true));
-		list_ext.add_var("term",var::make_protect<native_interface>(cni(term),true));
-		list_iterator_ext.add_var("forward",var::make_protect<native_interface>(cni(forward),true));
-		list_iterator_ext.add_var("backward",var::make_protect<native_interface>(cni(backward),true));
-		list_iterator_ext.add_var("data",var::make_protect<native_interface>(cni(data),true));
-		list_ext.add_var("empty",var::make_protect<native_interface>(cni(empty),true));
-		list_ext.add_var("size",var::make_protect<native_interface>(cni(size),true));
-		list_ext.add_var("clear",var::make_protect<native_interface>(cni(clear),true));
-		list_ext.add_var("insert",var::make_protect<native_interface>(cni(insert),true));
-		list_ext.add_var("erase",var::make_protect<native_interface>(cni(erase),true));
-		list_ext.add_var("push_front",var::make_protect<native_interface>(cni(push_front),true));
-		list_ext.add_var("pop_front",var::make_protect<native_interface>(cni(pop_front),true));
-		list_ext.add_var("push_back",var::make_protect<native_interface>(cni(push_back),true));
-		list_ext.add_var("pop_back",var::make_protect<native_interface>(cni(pop_back),true));
-		list_ext.add_var("remove",var::make_protect<native_interface>(cni(remove),true));
-		list_ext.add_var("reverse",var::make_protect<native_interface>(cni(reverse),true));
-		list_ext.add_var("unique",var::make_protect<native_interface>(cni(unique),true));
+		list_ext.add_var("front",var::make_protect<callable>(cni(front),true));
+		list_ext.add_var("back",var::make_protect<callable>(cni(back),true));
+		list_ext.add_var("begin",var::make_protect<callable>(cni(begin),true));
+		list_ext.add_var("term",var::make_protect<callable>(cni(term),true));
+		list_iterator_ext.add_var("forward",var::make_protect<callable>(cni(forward),true));
+		list_iterator_ext.add_var("backward",var::make_protect<callable>(cni(backward),true));
+		list_iterator_ext.add_var("data",var::make_protect<callable>(cni(data),true));
+		list_ext.add_var("empty",var::make_protect<callable>(cni(empty),true));
+		list_ext.add_var("size",var::make_protect<callable>(cni(size),true));
+		list_ext.add_var("clear",var::make_protect<callable>(cni(clear),true));
+		list_ext.add_var("insert",var::make_protect<callable>(cni(insert),true));
+		list_ext.add_var("erase",var::make_protect<callable>(cni(erase),true));
+		list_ext.add_var("push_front",var::make_protect<callable>(cni(push_front),true));
+		list_ext.add_var("pop_front",var::make_protect<callable>(cni(pop_front),true));
+		list_ext.add_var("push_back",var::make_protect<callable>(cni(push_back),true));
+		list_ext.add_var("pop_back",var::make_protect<callable>(cni(pop_back),true));
+		list_ext.add_var("remove",var::make_protect<callable>(cni(remove),true));
+		list_ext.add_var("reverse",var::make_protect<callable>(cni(reverse),true));
+		list_ext.add_var("unique",var::make_protect<callable>(cni(unique),true));
 	}
 }

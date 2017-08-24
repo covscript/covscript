@@ -220,37 +220,37 @@ namespace darwin_cs_ext {
 		darwin_ext.add_var("yellow",var::make_constant<darwin::colors>(darwin::colors::yellow));
 		darwin_ext.add_var("cyan",var::make_constant<darwin::colors>(darwin::colors::cyan));
 		// Type Constructor
-		darwin_ext.add_var("pixel",var::make_protect<native_interface>(cni(pixel),true));
-		darwin_ext.add_var("picture",var::make_protect<native_interface>(cni(picture),true));
+		darwin_ext.add_var("pixel",var::make_protect<callable>(cni(pixel),true));
+		darwin_ext.add_var("picture",var::make_protect<callable>(cni(picture),true));
 		// Darwin Main Function
-		darwin_ext.add_var("load",var::make_protect<native_interface>(cni(load)));
-		darwin_ext.add_var("exit",var::make_protect<native_interface>(cni(exit)));
-		darwin_ext.add_var("is_kb_hit",var::make_protect<native_interface>(cni(is_kb_hit)));
-		darwin_ext.add_var("get_kb_hit",var::make_protect<native_interface>(cni(get_kb_hit)));
-		darwin_ext.add_var("fit_drawable",var::make_protect<native_interface>(cni(fit_drawable)));
-		darwin_ext.add_var("get_drawable",var::make_protect<native_interface>(cni(get_drawable)));
-		darwin_ext.add_var("update_drawable",var::make_protect<native_interface>(cni(update_drawable)));
-		darwin_ext.add_var("set_frame_limit",var::make_protect<native_interface>(cni(set_frame_limit)));
-		darwin_ext.add_var("set_draw_line_precision",var::make_protect<native_interface>(cni(set_draw_line_precision)));
+		darwin_ext.add_var("load",var::make_protect<callable>(cni(load)));
+		darwin_ext.add_var("exit",var::make_protect<callable>(cni(exit)));
+		darwin_ext.add_var("is_kb_hit",var::make_protect<callable>(cni(is_kb_hit)));
+		darwin_ext.add_var("get_kb_hit",var::make_protect<callable>(cni(get_kb_hit)));
+		darwin_ext.add_var("fit_drawable",var::make_protect<callable>(cni(fit_drawable)));
+		darwin_ext.add_var("get_drawable",var::make_protect<callable>(cni(get_drawable)));
+		darwin_ext.add_var("update_drawable",var::make_protect<callable>(cni(update_drawable)));
+		darwin_ext.add_var("set_frame_limit",var::make_protect<callable>(cni(set_frame_limit)));
+		darwin_ext.add_var("set_draw_line_precision",var::make_protect<callable>(cni(set_draw_line_precision)));
 		// Darwin UI Function
-		darwin_ui_ext.add_var("message_box",var::make_protect<native_interface>(cni(message_box)));
-		darwin_ui_ext.add_var("input_box",var::make_protect<native_interface>(cni(input_box)));
+		darwin_ui_ext.add_var("message_box",var::make_protect<callable>(cni(message_box)));
+		darwin_ui_ext.add_var("input_box",var::make_protect<callable>(cni(input_box)));
 		// Drawable Function
-		darwin_drawable_ext.add_var("load_from_file",var::make_protect<native_interface>(cni(load_from_file)));
-		darwin_drawable_ext.add_var("save_to_file",var::make_protect<native_interface>(cni(save_to_file)));
-		darwin_drawable_ext.add_var("clear",var::make_protect<native_interface>(cni(clear)));
-		darwin_drawable_ext.add_var("fill",var::make_protect<native_interface>(cni(fill)));
-		darwin_drawable_ext.add_var("resize",var::make_protect<native_interface>(cni(resize)));
-		darwin_drawable_ext.add_var("get_height",var::make_protect<native_interface>(cni(get_height)));
-		darwin_drawable_ext.add_var("get_width",var::make_protect<native_interface>(cni(get_width)));
-		darwin_drawable_ext.add_var("get_pixel",var::make_protect<native_interface>(cni(get_pixel)));
-		darwin_drawable_ext.add_var("draw_pixel",var::make_protect<native_interface>(cni(draw_pixel)));
-		darwin_drawable_ext.add_var("draw_line",var::make_protect<native_interface>(cni(draw_line)));
-		darwin_drawable_ext.add_var("draw_rect",var::make_protect<native_interface>(cni(draw_rect)));
-		darwin_drawable_ext.add_var("fill_rect",var::make_protect<native_interface>(cni(fill_rect)));
-		darwin_drawable_ext.add_var("draw_triangle",var::make_protect<native_interface>(cni(draw_triangle)));
-		darwin_drawable_ext.add_var("fill_triangle",var::make_protect<native_interface>(cni(fill_triangle)));
-		darwin_drawable_ext.add_var("draw_string",var::make_protect<native_interface>(cni(draw_string)));
-		darwin_drawable_ext.add_var("draw_picture",var::make_protect<native_interface>(cni(draw_picture)));
+		darwin_drawable_ext.add_var("load_from_file",var::make_protect<callable>(cni(load_from_file)));
+		darwin_drawable_ext.add_var("save_to_file",var::make_protect<callable>(cni(save_to_file)));
+		darwin_drawable_ext.add_var("clear",var::make_protect<callable>(cni(clear)));
+		darwin_drawable_ext.add_var("fill",var::make_protect<callable>(cni(fill)));
+		darwin_drawable_ext.add_var("resize",var::make_protect<callable>(cni(resize)));
+		darwin_drawable_ext.add_var("get_height",var::make_protect<callable>(cni(get_height)));
+		darwin_drawable_ext.add_var("get_width",var::make_protect<callable>(cni(get_width)));
+		darwin_drawable_ext.add_var("get_pixel",var::make_protect<callable>(cni(get_pixel)));
+		darwin_drawable_ext.add_var("draw_pixel",var::make_protect<callable>(cni(draw_pixel)));
+		darwin_drawable_ext.add_var("draw_line",var::make_protect<callable>(cni(draw_line)));
+		darwin_drawable_ext.add_var("draw_rect",var::make_protect<callable>(cni(draw_rect)));
+		darwin_drawable_ext.add_var("fill_rect",var::make_protect<callable>(cni(fill_rect)));
+		darwin_drawable_ext.add_var("draw_triangle",var::make_protect<callable>(cni(draw_triangle)));
+		darwin_drawable_ext.add_var("fill_triangle",var::make_protect<callable>(cni(fill_triangle)));
+		darwin_drawable_ext.add_var("draw_string",var::make_protect<callable>(cni(draw_string)));
+		darwin_drawable_ext.add_var("draw_picture",var::make_protect<callable>(cni(draw_picture)));
 	}
 }

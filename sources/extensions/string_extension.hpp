@@ -74,16 +74,16 @@ namespace string_cs_ext {
 	}
 	void init()
 	{
-		string_ext.add_var("append",var::make_protect<native_interface>(cni(append),true));
-		string_ext.add_var("insert",var::make_protect<native_interface>(cni(insert),true));
-		string_ext.add_var("erase",var::make_protect<native_interface>(cni(erase),true));
-		string_ext.add_var("replace",var::make_protect<native_interface>(cni(replace),true));
-		string_ext.add_var("substr",var::make_protect<native_interface>(cni(substr),true));
-		string_ext.add_var("find",var::make_protect<native_interface>(cni(find),true));
-		string_ext.add_var("rfind",var::make_protect<native_interface>(cni(rfind),true));
-		string_ext.add_var("cut",var::make_protect<native_interface>(cni(cut),true));
-		string_ext.add_var("empty",var::make_protect<native_interface>(cni(empty),true));
-		string_ext.add_var("clear",var::make_protect<native_interface>(cni(clear),true));
-		string_ext.add_var("size",var::make_protect<native_interface>(cni(size),true));
+		string_ext.add_var("append",var::make_protect<callable>(cni(append),true));
+		string_ext.add_var("insert",var::make_protect<callable>(cni(insert),true));
+		string_ext.add_var("erase",var::make_protect<callable>(cni(erase),true));
+		string_ext.add_var("replace",var::make_protect<callable>(cni(replace),true));
+		string_ext.add_var("substr",var::make_protect<callable>(cni(substr),true));
+		string_ext.add_var("find",var::make_protect<callable>(cni(find),true));
+		string_ext.add_var("rfind",var::make_protect<callable>(cni(rfind),true));
+		string_ext.add_var("cut",var::make_protect<callable>(cni(cut),true));
+		string_ext.add_var("empty",var::make_protect<callable>(cni(empty),true));
+		string_ext.add_var("clear",var::make_protect<callable>(cni(clear),true));
+		string_ext.add_var("size",var::make_protect<callable>(cni(size),true));
 	}
 }

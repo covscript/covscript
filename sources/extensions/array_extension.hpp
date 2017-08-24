@@ -100,23 +100,23 @@ namespace array_cs_ext {
 	void init()
 	{
 		array_ext.add_var("iterator",var::make_protect<extension_t>(array_iterator_ext_shared));
-		array_ext.add_var("at",var::make_protect<native_interface>(cni(at),true));
-		array_ext.add_var("front",var::make_protect<native_interface>(cni(front),true));
-		array_ext.add_var("back",var::make_protect<native_interface>(cni(back),true));
-		array_ext.add_var("begin",var::make_protect<native_interface>(cni(begin),true));
-		array_ext.add_var("term",var::make_protect<native_interface>(cni(term),true));
-		array_iterator_ext.add_var("forward",var::make_protect<native_interface>(cni(forward),true));
-		array_iterator_ext.add_var("backward",var::make_protect<native_interface>(cni(backward),true));
-		array_iterator_ext.add_var("data",var::make_protect<native_interface>(cni(data),true));
-		array_ext.add_var("empty",var::make_protect<native_interface>(cni(empty),true));
-		array_ext.add_var("size",var::make_protect<native_interface>(cni(size),true));
-		array_ext.add_var("clear",var::make_protect<native_interface>(cni(clear),true));
-		array_ext.add_var("insert",var::make_protect<native_interface>(cni(insert),true));
-		array_ext.add_var("erase",var::make_protect<native_interface>(cni(erase),true));
-		array_ext.add_var("push_front",var::make_protect<native_interface>(cni(push_front),true));
-		array_ext.add_var("pop_front",var::make_protect<native_interface>(cni(pop_front),true));
-		array_ext.add_var("push_back",var::make_protect<native_interface>(cni(push_back),true));
-		array_ext.add_var("pop_back",var::make_protect<native_interface>(cni(pop_back),true));
-		array_ext.add_var("to_list",var::make_protect<native_interface>(cni(to_list),true));
+		array_ext.add_var("at",var::make_protect<callable>(cni(at),true));
+		array_ext.add_var("front",var::make_protect<callable>(cni(front),true));
+		array_ext.add_var("back",var::make_protect<callable>(cni(back),true));
+		array_ext.add_var("begin",var::make_protect<callable>(cni(begin),true));
+		array_ext.add_var("term",var::make_protect<callable>(cni(term),true));
+		array_iterator_ext.add_var("forward",var::make_protect<callable>(cni(forward),true));
+		array_iterator_ext.add_var("backward",var::make_protect<callable>(cni(backward),true));
+		array_iterator_ext.add_var("data",var::make_protect<callable>(cni(data),true));
+		array_ext.add_var("empty",var::make_protect<callable>(cni(empty),true));
+		array_ext.add_var("size",var::make_protect<callable>(cni(size),true));
+		array_ext.add_var("clear",var::make_protect<callable>(cni(clear),true));
+		array_ext.add_var("insert",var::make_protect<callable>(cni(insert),true));
+		array_ext.add_var("erase",var::make_protect<callable>(cni(erase),true));
+		array_ext.add_var("push_front",var::make_protect<callable>(cni(push_front),true));
+		array_ext.add_var("pop_front",var::make_protect<callable>(cni(pop_front),true));
+		array_ext.add_var("push_back",var::make_protect<callable>(cni(push_back),true));
+		array_ext.add_var("pop_back",var::make_protect<callable>(cni(pop_back),true));
+		array_ext.add_var("to_list",var::make_protect<callable>(cni(to_list),true));
 	}
 }

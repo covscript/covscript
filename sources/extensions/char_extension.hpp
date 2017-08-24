@@ -65,18 +65,18 @@ namespace char_cs_ext {
 	}
 	void init()
 	{
-		char_ext.add_var("isalnum",var::make_protect<native_interface>(cni(isalnum),true));
-		char_ext.add_var("isalpha",var::make_protect<native_interface>(cni(isalpha),true));
-		char_ext.add_var("islower",var::make_protect<native_interface>(cni(islower),true));
-		char_ext.add_var("isupper",var::make_protect<native_interface>(cni(isupper),true));
-		char_ext.add_var("isdigit",var::make_protect<native_interface>(cni(isdigit),true));
-		char_ext.add_var("iscntrl",var::make_protect<native_interface>(cni(iscntrl),true));
-		char_ext.add_var("isgraph",var::make_protect<native_interface>(cni(isgraph),true));
-		char_ext.add_var("isspace",var::make_protect<native_interface>(cni(isspace),true));
-		char_ext.add_var("isblank",var::make_protect<native_interface>(cni(isblank),true));
-		char_ext.add_var("isprint",var::make_protect<native_interface>(cni(isprint),true));
-		char_ext.add_var("ispunct",var::make_protect<native_interface>(cni(ispunct),true));
-		char_ext.add_var("tolower",var::make_protect<native_interface>(cni(tolower),true));
-		char_ext.add_var("toupper",var::make_protect<native_interface>(cni(toupper),true));
+		char_ext.add_var("isalnum",var::make_protect<callable>(cni(isalnum),true));
+		char_ext.add_var("isalpha",var::make_protect<callable>(cni(isalpha),true));
+		char_ext.add_var("islower",var::make_protect<callable>(cni(islower),true));
+		char_ext.add_var("isupper",var::make_protect<callable>(cni(isupper),true));
+		char_ext.add_var("isdigit",var::make_protect<callable>(cni(isdigit),true));
+		char_ext.add_var("iscntrl",var::make_protect<callable>(cni(iscntrl),true));
+		char_ext.add_var("isgraph",var::make_protect<callable>(cni(isgraph),true));
+		char_ext.add_var("isspace",var::make_protect<callable>(cni(isspace),true));
+		char_ext.add_var("isblank",var::make_protect<callable>(cni(isblank),true));
+		char_ext.add_var("isprint",var::make_protect<callable>(cni(isprint),true));
+		char_ext.add_var("ispunct",var::make_protect<callable>(cni(ispunct),true));
+		char_ext.add_var("tolower",var::make_protect<callable>(cni(tolower),true));
+		char_ext.add_var("toupper",var::make_protect<callable>(cni(toupper),true));
 	}
 }

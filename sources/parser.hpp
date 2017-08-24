@@ -130,6 +130,10 @@ namespace cs {
 					tokens.push_back(ptr);
 					tokens.push_back(new token_signal(signal_types::vardef_));
 					continue;
+				case action_types::catch_:
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::vardef_));
+					continue;
 				}
 				break;
 			case token_types::id:
@@ -504,7 +508,7 @@ namespace cs {
 		}
 		virtual void run() override
 		{
-			throw syntax_error("Can not run case outside the switch.");
+			throw syntax_error("Do not allowed standalone case statement.");
 		}
 		const var& get_tag() const
 		{
@@ -526,7 +530,7 @@ namespace cs {
 		}
 		virtual void run() override
 		{
-			throw syntax_error("Can not run case outside the switch.");
+			throw syntax_error("Do not allowed standalone default statement.");
 		}
 		statement_block* get_block() const
 		{
@@ -560,7 +564,7 @@ namespace cs {
 		}
 		virtual void run() override
 		{
-			throw syntax_error("Standalone until is not support.");
+			throw syntax_error("Do not allowed standalone until statement.");
 		}
 	};
 	class statement_loop final:public statement_base {
@@ -649,7 +653,7 @@ namespace cs {
 		}
 		virtual void run() override
 		{
-			throw syntax_error("Standalone end is not support.");
+			throw syntax_error("Do not allowed standalone end statement.");
 		}
 	};
 	class statement_try final:public statement_base {

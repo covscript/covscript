@@ -53,7 +53,7 @@ namespace iostream_cs_ext {
 		openmode_ext.add_var("in",var::make_constant<std::ios_base::openmode>(std::ios_base::in));
 		openmode_ext.add_var("out",var::make_constant<std::ios_base::openmode>(std::ios_base::out));
 		openmode_ext.add_var("app",var::make_constant<std::ios_base::openmode>(std::ios_base::app));
-		iostream_ext.add_var("fstream",var::make_protect<native_interface>(cni(fstream)));
+		iostream_ext.add_var("fstream",var::make_protect<callable>(cni(fstream)));
 		iostream_ext.add_var("setprecision",var::make_protect<callable>(cni(setprecision)));
 	}
 }
