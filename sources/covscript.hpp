@@ -24,6 +24,7 @@
 #include "./extensions/iostream_extension.hpp"
 #include "./extensions/system_extension.hpp"
 #include "./extensions/runtime_extension.hpp"
+#include "./extensions/except_extension.hpp"
 #include "./extensions/char_extension.hpp"
 #include "./extensions/string_extension.hpp"
 #include "./extensions/list_extension.hpp"
@@ -51,6 +52,24 @@ namespace cs {
 	{
 		a.swap(b,true);
 	}
+	void init_ext()
+	{
+		// Init the extensions
+		iostream_cs_ext::init();
+		istream_cs_ext::init();
+		ostream_cs_ext::init();
+		system_cs_ext::init();
+		runtime_cs_ext::init();
+		except_cs_ext::init();
+		char_cs_ext::init();
+		string_cs_ext::init();
+		list_cs_ext::init();
+		array_cs_ext::init();
+		pair_cs_ext::init();
+		hash_map_cs_ext::init();
+		math_cs_ext::init();
+		darwin_cs_ext::init();
+	}
 	void init()
 	{
 		// Internal Types
@@ -68,21 +87,8 @@ namespace cs {
 		runtime->storage.add_var_global("to_string",cs::var::make_protect<cs::native_interface>(cs::cni(to_string),true));
 		runtime->storage.add_var_global("clone",cs::var::make_protect<cs::native_interface>(cs::cni(clone)));
 		runtime->storage.add_var_global("swap",cs::var::make_protect<cs::native_interface>(cs::cni(swap)));
-		// Init the extensions
-		iostream_cs_ext::init();
-		istream_cs_ext::init();
-		ostream_cs_ext::init();
-		system_cs_ext::init();
-		runtime_cs_ext::init();
-		char_cs_ext::init();
-		string_cs_ext::init();
-		list_cs_ext::init();
-		array_cs_ext::init();
-		pair_cs_ext::init();
-		hash_map_cs_ext::init();
-		math_cs_ext::init();
-		darwin_cs_ext::init();
 		// Add extensions to storage
+		runtime->storage.add_var("exception",var::make_protect<std::shared_ptr<extension_holder>>(except_ext_shared));
 		runtime->storage.add_var("iostream",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&iostream_ext)));
 		runtime->storage.add_var("system",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));
 		runtime->storage.add_var("runtime",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
@@ -135,6 +141,9 @@ namespace cs {
 		for(auto& ptr:statements) {
 			try {
 				ptr->run();
+			}
+			catch(const lang_error& le) {
+				throw fatal_error("Uncaught exception.");
 			}
 			catch(const cs::exception& e) {
 				throw e;
