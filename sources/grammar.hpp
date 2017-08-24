@@ -242,8 +242,10 @@ namespace cs {
 	}
 	void statement_while::run()
 	{
-		break_block=false;
-		continue_block=false;
+		if(break_block)
+			break_block=false;
+		if(continue_block)
+			continue_block=false;
 		runtime->storage.add_domain();
 		while(parse_expr(mTree.root()).const_val<boolean>()) {
 			runtime->storage.clear_domain();
@@ -280,8 +282,10 @@ namespace cs {
 	}
 	void statement_loop::run()
 	{
-		break_block=false;
-		continue_block=false;
+		if(break_block)
+			break_block=false;
+		if(continue_block)
+			continue_block=false;
 		runtime->storage.add_domain();
 		do {
 			runtime->storage.clear_domain();
@@ -319,8 +323,10 @@ namespace cs {
 	}
 	void statement_for::run()
 	{
-		break_block=false;
-		continue_block=false;
+		if(break_block)
+			break_block=false;
+		if(continue_block)
+			continue_block=false;
 		runtime->storage.add_domain();
 		var val=copy(parse_expr(mDvp.expr.root()));
 		while(val.const_val<number>()<=parse_expr(mEnd.root()).const_val<number>()) {
@@ -362,8 +368,10 @@ namespace cs {
 	{
 		if(obj.const_val<T>().empty())
 			return;
-		break_block=false;
-		continue_block=false;
+		if(break_block)
+			break_block=false;
+		if(continue_block)
+			continue_block=false;
 		runtime->storage.add_domain();
 		for(const X& it:obj.const_val<T>()) {
 			runtime->storage.clear_domain();
