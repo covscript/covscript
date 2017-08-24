@@ -446,8 +446,7 @@ namespace cs {
 				ptr->run();
 			}
 			catch(const lang_error& le) {
-				runtime->storage.remove_domain();
-				runtime->storage.add_domain();
+				runtime->storage.clear_domain();
 				runtime->storage.add_var(mName,le);
 				for(auto& ptr:mCatchBody) {
 					try {
