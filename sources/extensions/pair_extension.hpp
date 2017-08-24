@@ -20,7 +20,7 @@ namespace pair_cs_ext {
 	}
 	void init()
 	{
-		pair_ext.add_var("first",var::make_protect<native_interface>(cni(first),true));
-		pair_ext.add_var("second",var::make_protect<native_interface>(cni(second),true));
+		pair_ext.add_var("first",var::make_protect<callable>(cni(first),true));
+		pair_ext.add_var("second",var::make_protect<callable>(cni(second),true));
 	}
 }

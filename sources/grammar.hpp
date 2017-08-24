@@ -858,22 +858,22 @@ namespace cs {
 		translator.add_method({new token_action(action_types::try_),new token_endline(0)},method_type {statement_types::try_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
-std:string name;
+				std::string name;
 				std::deque<statement_base*> tbody,cbody;
-				bool found=false;
+				bool founded=false;
 				for(auto& ptr:body)
 				{
 					if(ptr->get_type()==statement_types::catch_) {
 						name=static_cast<statement_catch*>(ptr)->get_name();
-						found=true;
+						founded=true;
 						continue;
 					}
-					if(found)
+					if(founded)
 						cbody.push_back(ptr);
 					else
 						tbody.push_back(ptr);
 				}
-				if(!found)
+				if(!founded)
 					throw syntax_error("Wrong grammar for try statement.");
 				return new statement_try(name,tbody,cbody,raw.front().back());
 			}

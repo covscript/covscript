@@ -38,7 +38,6 @@ namespace cs {
 	using array=std::deque<var>;
 	using pair=std::pair<var,var>;
 	using hash_map=std::unordered_map<var,var>;
-	using native_interface=callable;
 	using extension=name_space;
 	using extension_holder=name_space_holder;
 	using domain_t=std::shared_ptr<std::unordered_map<string,var>>;

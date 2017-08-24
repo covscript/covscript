@@ -58,15 +58,15 @@ namespace runtime_cs_ext {
 	}
 	void init()
 	{
-		runtime_ext.add_var("info",var::make_protect<native_interface>(cni(info)));
-		runtime_ext.add_var("time",var::make_protect<native_interface>(cni(time)));
-		runtime_ext.add_var("delay",var::make_protect<native_interface>(cni(delay)));
-		runtime_ext.add_var("rand",var::make_protect<native_interface>(cni(rand)));
-		runtime_ext.add_var("randint",var::make_protect<native_interface>(cni(randint)));
-		runtime_ext.add_var("exception",var::make_protect<native_interface>(cni(exception)));
-		runtime_ext.add_var("load_extension",var::make_protect<native_interface>(cni(load_extension),true));
-		runtime_ext.add_var("hash",var::make_protect<native_interface>(cni(hash),true));
-		runtime_ext.add_var("build",var::make_protect<native_interface>(cni(build)));
-		runtime_ext.add_var("solve",var::make_protect<native_interface>(cni(solve)));
+		runtime_ext.add_var("info",var::make_protect<callable>(cni(info)));
+		runtime_ext.add_var("time",var::make_protect<callable>(cni(time)));
+		runtime_ext.add_var("delay",var::make_protect<callable>(cni(delay)));
+		runtime_ext.add_var("rand",var::make_protect<callable>(cni(rand)));
+		runtime_ext.add_var("randint",var::make_protect<callable>(cni(randint)));
+		runtime_ext.add_var("exception",var::make_protect<callable>(cni(exception)));
+		runtime_ext.add_var("load_extension",var::make_protect<callable>(cni(load_extension),true));
+		runtime_ext.add_var("hash",var::make_protect<callable>(cni(hash),true));
+		runtime_ext.add_var("build",var::make_protect<callable>(cni(build)));
+		runtime_ext.add_var("solve",var::make_protect<callable>(cni(solve)));
 	}
 }

@@ -83,10 +83,10 @@ namespace cs {
 		runtime->storage.add_type("pair",[]()->var {return var::make<pair>(number(0),number(0));},cs_impl::hash<std::string>(typeid(pair).name()),pair_ext_shared);
 		runtime->storage.add_type("hash_map",[]()->var {return var::make<hash_map>();},cs_impl::hash<std::string>(typeid(hash_map).name()),hash_map_ext_shared);
 		// Add Internal Functions to storage
-		runtime->storage.add_var_global("to_integer",cs::var::make_protect<cs::native_interface>(cs::cni(to_integer),true));
-		runtime->storage.add_var_global("to_string",cs::var::make_protect<cs::native_interface>(cs::cni(to_string),true));
-		runtime->storage.add_var_global("clone",cs::var::make_protect<cs::native_interface>(cs::cni(clone)));
-		runtime->storage.add_var_global("swap",cs::var::make_protect<cs::native_interface>(cs::cni(swap)));
+		runtime->storage.add_var_global("to_integer",cs::var::make_protect<cs::callable>(cs::cni(to_integer),true));
+		runtime->storage.add_var_global("to_string",cs::var::make_protect<cs::callable>(cs::cni(to_string),true));
+		runtime->storage.add_var_global("clone",cs::var::make_protect<cs::callable>(cs::cni(clone)));
+		runtime->storage.add_var_global("swap",cs::var::make_protect<cs::callable>(cs::cni(swap)));
 		// Add extensions to storage
 		runtime->storage.add_var("exception",var::make_protect<std::shared_ptr<extension_holder>>(except_ext_shared));
 		runtime->storage.add_var("iostream",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&iostream_ext)));
