@@ -24,7 +24,6 @@
 #define CS_STACK_SIZE 1024
 namespace cs {
 	bool return_fcall=false;
-	bool inside_struct=false;
 	bool break_block=false;
 	bool continue_block=false;
 	cov::static_stack<var,CS_STACK_SIZE> fcall_stack;
@@ -66,7 +65,6 @@ namespace cs {
 	var struct_builder::operator()()
 	{
 		runtime->storage.add_domain();
-		inside_struct=true;
 		for(auto& ptr:this->mMethod) {
 			try {
 				ptr->run();
@@ -82,7 +80,6 @@ namespace cs {
 				throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 			}
 		}
-		inside_struct=false;
 		var dat=var::make<structure>(this->mHash,this->mName,runtime->storage.get_domain());
 		runtime->storage.remove_domain();
 		return dat;
@@ -411,10 +408,8 @@ namespace cs {
 	}
 	void statement_function::run()
 	{
-		if(inside_struct) {
-			this->mFunc.add_this();
+		if(this->mIsMemFn)
 			runtime->storage.add_var(this->mName,var::make_protect<callable>(this->mFunc,callable::types::member_fn));
-		}
 		else
 			runtime->storage.add_var(this->mName,var::make_protect<callable>(this->mFunc));
 	}
@@ -843,8 +838,17 @@ namespace cs {
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
 				for(auto& ptr:body)
-					if(ptr->get_type()!=statement_types::var_&&ptr->get_type()!=statement_types::function_)
+				{
+					switch(ptr->get_type()) {
+					default:
 						throw syntax_error("Wrong grammar for struct definition.");
+					case statement_types::var_:
+						break;
+					case statement_types::function_:
+						static_cast<statement_function*>(ptr)->set_mem_fn();
+						break;
+					}
+				}
 				return new statement_struct(name,body,raw.front().back());
 			}
 		});

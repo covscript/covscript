@@ -624,12 +624,18 @@ namespace cs {
 	class statement_function final:public statement_base {
 		std::string mName;
 		function mFunc;
+		bool mIsMemFn=false;
 	public:
 		statement_function()=delete;
 		statement_function(const std::string& name,const std::deque<std::string>& args,const std::deque<statement_base*>& body,token_base* ptr):statement_base(ptr),mName(name),mFunc(args,body) {}
 		virtual statement_types get_type() const noexcept override
 		{
 			return statement_types::function_;
+		}
+		void set_mem_fn()
+		{
+			mFunc.add_this();
+			mIsMemFn=true;
 		}
 		virtual void run() override;
 	};
