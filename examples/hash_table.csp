@@ -4,7 +4,7 @@ struct type
 	var table=new array
 	var bucket_func=[](val)->math.abs(to_integer(runtime.hash(val)))%this.bucket_count
 	function insert(dat)
-		var bucket=(this.bucket_func)(dat.first())
+		var bucket=this.bucket_func(dat.first())
 		if this.table.at(bucket)==null
 			this.table.at(bucket)=gcnew list
 		end
@@ -18,7 +18,7 @@ struct type
 		lst->push_back(dat)
 	end
 	function get(key)
-		var bucket=(this.bucket_func)(key)
+		var bucket=this.bucket_func(key)
 		var lst=this.table.at(bucket)
 		if lst==null
 			return null
