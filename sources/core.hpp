@@ -138,19 +138,22 @@ namespace cs {
 	class structure final {
 		std::size_t m_hash;
 		std::string m_name;
-		std::shared_ptr<std::unordered_map<string,var>> m_data;
+		domain_t m_data;
 	public:
 		structure()=delete;
-		structure(std::size_t hash,const std::string& name,const std::shared_ptr<std::unordered_map<string,var>>& data):m_hash(hash),m_name(typeid(structure).name()+name),m_data(data) {}
-		structure(const structure& s):m_hash(s.m_hash),m_name(s.m_name),m_data(std::make_shared<std::unordered_map<string,var>>(*s.m_data))
+		structure(std::size_t hash,const std::string& name,const domain_t& data):m_hash(hash),m_name(typeid(structure).name()+name),m_data(data) {}
+		structure(const structure&)=default;
+		~structure()=default;
+		void detach()
 		{
+			m_data=std::make_shared<std::unordered_map<string,var>>(*m_data);
 			for(auto& it:*m_data) {
 				it.second.clone();
 				if(it.second.type()==typeid(function))
 					it.second.val<function>(true).set_data(m_data);
 			}
+			(*m_data)["this"].val<structure>(true).m_data=m_data;
 		}
-		~structure()=default;
 		std::shared_ptr<std::unordered_map<string,var>>& get_domain()
 		{
 			return m_data;
@@ -317,6 +320,10 @@ namespace cs_impl {
 	{
 		for(auto& it:val)
 			cs::copy_no_return(it.second);
+	}
+	template<>void detach<cs::structure>(cs::structure& s)
+	{
+		s.detach();
 	}
 	template<>std::string to_string<cs::number>(const cs::number& val)
 	{
