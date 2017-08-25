@@ -64,16 +64,24 @@ namespace cs {
 	class callable final {
 	public:
 		using function_type=std::function<var(array&)>;
+		enum class types {
+			normal,constant,member_fn
+		};
 	private:
 		function_type mFunc;
-		bool mConstant=false;
+		types mType=types::normal;
 	public:
 		callable()=delete;
 		callable(const callable&)=default;
-		callable(const function_type& func,bool constant=false):mFunc(func),mConstant(constant) {}
+		callable(const function_type& func,bool constant=false):mFunc(func),mType(constant?types::constant:types::normal) {}
+		callable(const function_type& func,types type):mFunc(func),mType(type) {}
 		bool is_constant() const
 		{
-			return mConstant;
+			return mType==types::constant;
+		}
+		bool is_member_fn() const
+		{
+			return mType==types::member_fn;
 		}
 		var call(array& args) const
 		{

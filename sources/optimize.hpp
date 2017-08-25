@@ -238,7 +238,7 @@ namespace cs {
 							throw syntax_error("Redefinition of function argument.");
 					args.push_back(str);
 				}
-				it.data()=new token_value(var::make_protect<function>(args,std::deque<statement_base*> {new statement_return(cov::tree<token_base*>{it.right()},new token_endline(0))}));
+				it.data()=new token_value(var::make_protect<callable>(function(args,std::deque<statement_base*> {new statement_return(cov::tree<token_base*>{it.right()},new token_endline(0))})));
 				return;
 				break;
 			}
