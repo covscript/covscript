@@ -27,13 +27,13 @@ namespace cs {
 	bool inside_struct=false;
 	bool break_block=false;
 	bool continue_block=false;
-	cov::static_stack<const function*,CS_STACK_SIZE> fcall_stack;
+	cov::static_stack<var,CS_STACK_SIZE> fcall_stack;
 	var function::call(array& args) const
 	{
 		if(args.size()!=this->mArgs.size())
 			throw syntax_error("Wrong size of arguments.");
 		runtime->storage.add_domain();
-		fcall_stack.push(this);
+		fcall_stack.push(number(0));
 		for(std::size_t i=0; i<args.size(); ++i)
 			runtime->storage.add_var(this->mArgs[i],args[i]);
 		for(auto& ptr:this->mBody) {
@@ -50,18 +50,18 @@ namespace cs {
 			catch(const std::exception& e) {
 				throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 			}
-			if(this->mRetVal.usable()) {
+			if(return_fcall) {
 				return_fcall=false;
-				var retval=this->mRetVal;
-				this->mRetVal=var();
 				runtime->storage.remove_domain();
+				var retval=fcall_stack.top();
 				fcall_stack.pop();
 				return retval;
 			}
 		}
 		runtime->storage.remove_domain();
+		var retval=fcall_stack.top();
 		fcall_stack.pop();
-		return number(0);
+		return retval;
 	}
 	var struct_builder::operator()()
 	{
@@ -419,7 +419,7 @@ namespace cs {
 	{
 		if(fcall_stack.empty())
 			throw syntax_error("Return outside function.");
-		fcall_stack.top()->mRetVal=parse_expr(this->mTree.root());
+		fcall_stack.top()=parse_expr(this->mTree.root());
 		return_fcall=true;
 	}
 	void statement_try::run()
