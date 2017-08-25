@@ -249,10 +249,15 @@ namespace cs {
 		}
 		else if(a.type()==typeid(extension_t))
 			return a.val<extension_t>(true)->get_var(static_cast<token_id*>(b)->get_id());
-		else if(a.type()==typeid(structure))
-			return a.val<structure>(true).get_var(static_cast<token_id*>(b)->get_id());
 		else if(a.type()==typeid(type))
 			return a.val<type>(true).get_var(static_cast<token_id*>(b)->get_id());
+		else if(a.type()==typeid(structure)) {
+			var& val=a.val<structure>(true).get_var(static_cast<token_id*>(b)->get_id());
+			if(val.type()==typeid(callable))
+				return var::make_protect<callable>(object_method(a,val));
+			else
+				return val;
+		}
 		else {
 			var& val=a.get_ext()->get_var(static_cast<token_id*>(b)->get_id());
 			if(val.type()==typeid(callable))
@@ -394,8 +399,6 @@ namespace cs {
 	{
 		if(a.type()==typeid(callable))
 			return a.const_val<callable>().call(b.val<array>(true));
-		else if(a.type()==typeid(function))
-			return a.const_val<function>().call(b.val<array>(true));
 		else
 			throw syntax_error("Unsupported operator operations(Fcall).");
 	}
