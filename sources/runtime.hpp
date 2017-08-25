@@ -253,7 +253,7 @@ namespace cs {
 			return a.val<type>(true).get_var(static_cast<token_id*>(b)->get_id());
 		else if(a.type()==typeid(structure)) {
 			var& val=a.val<structure>(true).get_var(static_cast<token_id*>(b)->get_id());
-			if(val.type()==typeid(callable))
+			if(val.type()==typeid(callable)&&val.const_val<callable>().is_member_fn())
 				return var::make_protect<callable>(object_method(a,val));
 			else
 				return val;

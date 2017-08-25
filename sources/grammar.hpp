@@ -411,9 +411,12 @@ namespace cs {
 	}
 	void statement_function::run()
 	{
-		if(inside_struct)
+		if(inside_struct) {
 			this->mFunc.add_this();
-		runtime->storage.add_var(this->mName,var::make_protect<callable>(this->mFunc));
+			runtime->storage.add_var(this->mName,var::make_protect<callable>(this->mFunc,callable::types::member_fn));
+		}
+		else
+			runtime->storage.add_var(this->mName,var::make_protect<callable>(this->mFunc));
 	}
 	void statement_return::run()
 	{
