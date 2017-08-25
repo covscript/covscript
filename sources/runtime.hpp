@@ -25,7 +25,6 @@ namespace cs {
 	class domain_manager {
 		std::deque<std::unordered_set<string>> m_set;
 		std::deque<domain_t> m_data;
-		std::deque<domain_t> m_this;
 	public:
 		domain_manager()
 		{
@@ -46,10 +45,6 @@ namespace cs {
 		{
 			m_data.emplace_front(dat);
 		}
-		void add_this(const domain_t& dat)
-		{
-			m_this.emplace_front(dat);
-		}
 		domain_t& get_domain()
 		{
 			return m_data.front();
@@ -65,10 +60,6 @@ namespace cs {
 		void remove_domain()
 		{
 			m_data.pop_front();
-		}
-		void remove_this()
-		{
-			m_this.pop_front();
 		}
 		void clear_domain()
 		{
@@ -97,12 +88,6 @@ namespace cs {
 				return true;
 			return false;
 		}
-		bool var_exsist_this(const string& name)
-		{
-			if(m_this.front()->count(name)>0)
-				return true;
-			return false;
-		}
 		var& get_var(const string& name)
 		{
 			for(auto& domain:m_data)
@@ -121,14 +106,6 @@ namespace cs {
 			if(m_data.back()->count(name)>0)
 				return (*m_data.back())[name];
 			throw syntax_error("Use of undefined variable \""+name+"\" in global domain.");
-		}
-		var& get_var_this(const string& name)
-		{
-			if(m_this.empty())
-				throw syntax_error("Access this outside structure.");
-			if(m_this.front()->count(name)>0)
-				return (*m_this.front())[name];
-			throw syntax_error("Use of undefined variable \""+name+"\" in current object.");
 		}
 		void add_record(const string& name)
 		{
@@ -264,9 +241,6 @@ namespace cs {
 				break;
 			case constant_values::current_namespace:
 				return runtime->storage.get_var_current(static_cast<token_id*>(b)->get_id());
-				break;
-			case constant_values::this_object:
-				return runtime->storage.get_var_this(static_cast<token_id*>(b)->get_id());
 				break;
 			default:
 				throw syntax_error("Unsupported operator operations(Dot).");

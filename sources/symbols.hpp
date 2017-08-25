@@ -220,11 +220,11 @@ namespace cs {
 		{"while",action_types::while_},{"until",action_types::until_},{"loop",action_types::loop_},{"for",action_types::for_},{"to",action_types::to_},{"step",action_types::step_},{"iterate",action_types::iterate_},{"break",action_types::break_},{"continue",action_types::continue_},{"function",action_types::function_},{"return",action_types::return_},{"try",action_types::try_},{"catch",action_types::catch_},{"throw",action_types::throw_}
 	};
 	enum class constant_values {
-		current_namespace,global_namespace,this_object
+		current_namespace,global_namespace
 	};
 	mapping<std::string,std::function<token_base*()>> reserved_map= {
 		{"and",[]()->token_base*{return new token_signal(signal_types::and_);}},{"or",[]()->token_base*{return new token_signal(signal_types::or_);}},{"not",[]()->token_base*{return new token_signal(signal_types::not_);}},{"typeid",[]()->token_base*{return new token_signal(signal_types::typeid_);}},{"new",[]()->token_base*{return new token_signal(signal_types::new_);}},{"gcnew",[]()->token_base*{return new token_signal(signal_types::gcnew_);}},
-		{"current",[]()->token_base*{return new token_value(constant_values::current_namespace);}},{"global",[]()->token_base*{return new token_value(constant_values::global_namespace);}},{"this",[]()->token_base*{return new token_value(constant_values::this_object);}},{"null",[]()->token_base*{return new token_value(null_pointer);}},
+		{"current",[]()->token_base*{return new token_value(constant_values::current_namespace);}},{"global",[]()->token_base*{return new token_value(constant_values::global_namespace);}},{"null",[]()->token_base*{return new token_value(null_pointer);}},
 		{"true",[]()->token_base*{return new token_value(true);}},{"false",[]()->token_base*{return new token_value(false);}}
 	};
 	mapping<char,char> escape_map= {

@@ -32,10 +32,8 @@ namespace cs {
 	{
 		if(args.size()!=this->mArgs.size())
 			throw syntax_error("Wrong size of arguments.");
-		if(this->mData.get()!=nullptr) {
-			runtime->storage.add_this(this->mData);
+		if(this->mData.get()!=nullptr)
 			runtime->storage.add_domain(this->mData);
-		}
 		runtime->storage.add_domain();
 		fcall_stack.push(this);
 		for(std::size_t i=0; i<args.size(); ++i)
@@ -45,10 +43,8 @@ namespace cs {
 				ptr->run();
 			}
 			catch(const lang_error& le) {
-				if(this->mData.get()!=nullptr) {
-					runtime->storage.remove_this();
+				if(this->mData.get()!=nullptr)
 					runtime->storage.remove_domain();
-				}
 				runtime->storage.remove_domain();
 				throw le;
 			}
@@ -62,19 +58,15 @@ namespace cs {
 				return_fcall=false;
 				var retval=this->mRetVal;
 				this->mRetVal=var();
-				if(this->mData.get()!=nullptr) {
-					runtime->storage.remove_this();
+				if(this->mData.get()!=nullptr)
 					runtime->storage.remove_domain();
-				}
 				runtime->storage.remove_domain();
 				fcall_stack.pop();
 				return retval;
 			}
 		}
-		if(this->mData.get()!=nullptr) {
-			runtime->storage.remove_this();
+		if(this->mData.get()!=nullptr)
 			runtime->storage.remove_domain();
-		}
 		runtime->storage.remove_domain();
 		fcall_stack.pop();
 		return number(0);
@@ -82,6 +74,8 @@ namespace cs {
 	var struct_builder::operator()()
 	{
 		runtime->storage.add_domain();
+		var dat=var::make<structure>(this->mHash,this->mName,runtime->storage.get_domain());
+		runtime->storage.add_var("this",dat);
 		inside_struct=true;
 		for(auto& ptr:this->mMethod) {
 			try {
@@ -99,7 +93,6 @@ namespace cs {
 			}
 		}
 		inside_struct=false;
-		var dat=var::make<structure>(this->mHash,this->mName,runtime->storage.get_domain());
 		runtime->storage.remove_domain();
 		return dat;
 	}
@@ -847,6 +840,9 @@ namespace cs {
 		});
 		// Struct Grammar
 		translator.add_method({new token_action(action_types::struct_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::struct_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				runtime->storage.add_record("this");
+				return nullptr;
+			},[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				cov::tree<token_base*>& t=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
 				if(t.root().data()==nullptr)
 					throw internal_error("Null pointer accessed.");
