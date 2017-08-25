@@ -81,8 +81,6 @@ namespace cs {
 		}
 	};
 	class function final {
-		friend class statement_return;
-		mutable var mRetVal;
 		std::deque<std::string> mArgs;
 		std::deque<statement_base*> mBody;
 	public:
