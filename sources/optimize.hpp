@@ -52,7 +52,11 @@ namespace cs {
 			break;
 		case token_types::id: {
 			const std::string& id=static_cast<token_id*>(token)->get_id();
-			if(runtime->storage.var_exsist(id)&&runtime->storage.get_var(id).is_protect())
+			if(runtime->storage.exsist_record(id)) {
+				if(runtime->storage.var_exsist_current(id))
+					it.data()=new token_value(runtime->storage.get_var(id));
+			}
+			else if(runtime->storage.var_exsist(id)&&runtime->storage.get_var(id).is_protect())
 				it.data()=new token_value(runtime->storage.get_var(id));
 			return;
 			break;
