@@ -54,6 +54,9 @@ function start()
 	loop
 		if(darwin.is_kb_hit())
 			switch darwin.get_kb_hit()
+				case 'p'
+					pic.save_to_file("./screen_shot.cdpf")
+				end
 				case 'w'
 					if(!pause&&(god_mode||heading!=4))
 						heading=3
