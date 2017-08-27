@@ -178,12 +178,22 @@ namespace cs {
 		else
 			throw syntax_error("Unsupported operator operations(Add).");
 	}
+	var parse_addasi(var a,const var& b)
+	{
+		a.swap(parse_add(a,b),true);
+		return a;
+	}
 	var parse_sub(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return a.const_val<number>()-b.const_val<number>();
 		else
 			throw syntax_error("Unsupported operator operations(Sub).");
+	}
+	var parse_subasi(var a,const var& b)
+	{
+		a.swap(parse_sub(a,b),true);
+		return a;
 	}
 	var parse_minus(const var& b)
 	{
@@ -198,6 +208,11 @@ namespace cs {
 			return a.const_val<number>()*b.const_val<number>();
 		else
 			throw syntax_error("Unsupported operator operations(Mul).");
+	}
+	var parse_mulasi(var a,const var& b)
+	{
+		a.swap(parse_mul(a,b),true);
+		return a;
 	}
 	var parse_escape(const var& b)
 	{
@@ -218,6 +233,11 @@ namespace cs {
 		else
 			throw syntax_error("Unsupported operator operations(Div).");
 	}
+	var parse_divasi(var a,const var& b)
+	{
+		a.swap(parse_div(a,b),true);
+		return a;
+	}
 	var parse_mod(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
@@ -225,12 +245,22 @@ namespace cs {
 		else
 			throw syntax_error("Unsupported operator operations(Mod).");
 	}
+	var parse_modasi(var a,const var& b)
+	{
+		a.swap(parse_mod(a,b),true);
+		return a;
+	}
 	var parse_pow(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return number(std::pow(a.const_val<number>(),b.const_val<number>()));
 		else
 			throw syntax_error("Unsupported operator operations(Pow).");
+	}
+	var parse_powasi(var a,const var& b)
+	{
+		a.swap(parse_pow(a,b),true);
+		return a;
 	}
 	var parse_dot(const var& a,token_base* b)
 	{
@@ -489,8 +519,14 @@ namespace cs {
 			case signal_types::add_:
 				return parse_add(parse_expr(it.left()),parse_expr(it.right()));
 				break;
+			case signal_types::addasi_:
+				return parse_addasi(parse_expr(it.left()),parse_expr(it.right()));
+				break;
 			case signal_types::sub_:
 				return parse_sub(parse_expr(it.left()),parse_expr(it.right()));
+				break;
+			case signal_types::subasi_:
+				return parse_subasi(parse_expr(it.left()),parse_expr(it.right()));
 				break;
 			case signal_types::minus_:
 				return parse_minus(parse_expr(it.right()));
@@ -498,17 +534,29 @@ namespace cs {
 			case signal_types::mul_:
 				return parse_mul(parse_expr(it.left()),parse_expr(it.right()));
 				break;
+			case signal_types::mulasi_:
+				return parse_mulasi(parse_expr(it.left()),parse_expr(it.right()));
+				break;
 			case signal_types::escape_:
 				return parse_escape(parse_expr(it.right()));
 				break;
 			case signal_types::div_:
 				return parse_div(parse_expr(it.left()),parse_expr(it.right()));
 				break;
+			case signal_types::divasi_:
+				return parse_divasi(parse_expr(it.left()),parse_expr(it.right()));
+				break;
 			case signal_types::mod_:
 				return parse_mod(parse_expr(it.left()),parse_expr(it.right()));
 				break;
+			case signal_types::modasi_:
+				return parse_modasi(parse_expr(it.left()),parse_expr(it.right()));
+				break;
 			case signal_types::pow_:
 				return parse_pow(parse_expr(it.left()),parse_expr(it.right()));
+				break;
+			case signal_types::powasi_:
+				return parse_powasi(parse_expr(it.left()),parse_expr(it.right()));
 				break;
 			case signal_types::dot_:
 				return parse_dot(parse_expr(it.left()),it.right().data());
