@@ -15,4 +15,3 @@ end
 var ts=runtime.time()
 system.out.println(4*integral(f,0,1))
 system.out.println(runtime.time()-ts)
-system.in.input()
