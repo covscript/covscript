@@ -17,6 +17,11 @@ function save()
 						buff.cut(1)
 					end
 				end
+				case to_integer('\b')
+					if !buff.empty()
+						buff.cut(1)
+					end
+				end
 				case to_integer('\n')
 					dpic.save_to_file(buff)
 					run=false
