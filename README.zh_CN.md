@@ -33,4 +33,7 @@
 ## 版权 ##
 **Covariant Script编程语言的作者是Michael Lee(mikecovlee@github.com,mikecovlee@163.com).**  
 **版权所有 (C) 2017 Michael Lee(李登淳)**  
-**感谢我的朋友Kiva(zt515@github.com,kiva515@foxmail.com)和正在编写教材的学生。**
+## 感谢 ##
+**按贡献排名。**  
+测试：史为成，Kiva(zt515)  
+教程：枣庄八中（北校区）计算机社团教学组（李辉，潘昱光，史为成）  
