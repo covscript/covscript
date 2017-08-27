@@ -10,7 +10,7 @@ function save()
 			var ch=darwin.get_kb_hit()
 			switch to_integer(ch)
 				default
-					buff.append(ch)
+					buff+=ch
 				end
 				case 127
 					if !buff.empty()
@@ -70,7 +70,7 @@ function open_exsist()
 			var ch=darwin.get_kb_hit()
 			switch to_integer(ch)
 				default
-					buff.append(ch)
+					buff+=ch
 				end
 				case 127
 					if !buff.empty()
@@ -201,12 +201,12 @@ function new_picture()
 					switch select
 						case 0
 							if to_integer(ch)>47&&to_integer(ch)<58&&buff0.size()<limit
-								buff0.append(ch)
+								buff0+=ch
 							end
 						end
 						case 1
 							if to_integer(ch)>47&&to_integer(ch)<58&&buff1.size()<limit
-								buff1.append(ch)
+								buff1+=ch
 							end
 						end
 						default
@@ -440,7 +440,7 @@ function main()
 				var ch=darwin.get_kb_hit()
 				switch to_integer(ch)
 				default
-					buff.append(ch)
+					buff+=ch
 				end
 				case 127
 					if !buff.empty()
