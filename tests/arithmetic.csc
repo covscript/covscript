@@ -1,0 +1,13 @@
+var a=11
+system.out.println(a+3)
+system.out.println(a+=3)
+system.out.println(a-3)
+system.out.println(a-=3)
+system.out.println(a*3)
+system.out.println(a*=3)
+system.out.println(a/3)
+system.out.println(a/=3)
+system.out.println(a%3)
+system.out.println(a%=3)
+system.out.println(a^3)
+system.out.println(a^=3)

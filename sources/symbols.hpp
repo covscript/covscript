@@ -29,7 +29,7 @@ namespace cs {
 		import_,package_,namespace_,struct_,block_,endblock_,var_,constant_,if_,else_,switch_,case_,default_,while_,loop_,until_,for_,to_,step_,iterate_,break_,continue_,function_,return_,try_,catch_,throw_
 	};
 	enum class signal_types {
-		add_,sub_,mul_,div_,mod_,pow_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,inc_,dec_,pair_,slb_,srb_,mlb_,mrb_,llb_,lrb_,esb_,emb_,elb_,fcall_,access_,typeid_,new_,gcnew_,arrow_,lambda_,escape_,minus_,vardef_
+		add_,addasi_,sub_,subasi_,mul_,mulasi_,div_,divasi_,mod_,modasi_,pow_,powasi_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,inc_,dec_,pair_,slb_,srb_,mlb_,mrb_,llb_,lrb_,esb_,emb_,elb_,fcall_,access_,typeid_,new_,gcnew_,arrow_,lambda_,escape_,minus_,vardef_
 	};
 	template<typename Key,typename T>
 	class mapping final {
@@ -210,8 +210,8 @@ namespace cs {
 		}
 	};
 	mapping<std::string,signal_types> signal_map= {
-		{"+",signal_types::add_},{"-",signal_types::sub_},{"*",signal_types::mul_},{"/",signal_types::div_},{"%",signal_types::mod_},{"^",signal_types::pow_},{">",signal_types::abo_},{"<",signal_types::und_},
-		{"=",signal_types::asi_},{"&&",signal_types::and_},{"||",signal_types::or_},{"!",signal_types::not_},{"==",signal_types::equ_},{"!=",signal_types::neq_},{">=",signal_types::aeq_},{"<=",signal_types::ueq_},
+		{"+",signal_types::add_},{"+=",signal_types::addasi_},{"-",signal_types::sub_},{"-=",signal_types::subasi_},{"*",signal_types::mul_},{"*=",signal_types::mulasi_},{"/",signal_types::div_},{"/=",signal_types::divasi_},{"%",signal_types::mod_},{"%=",signal_types::modasi_},{"^",signal_types::pow_},{"^=",signal_types::powasi_},
+		{">",signal_types::abo_},{"<",signal_types::und_},{"=",signal_types::asi_},{"&&",signal_types::and_},{"||",signal_types::or_},{"!",signal_types::not_},{"==",signal_types::equ_},{"!=",signal_types::neq_},{">=",signal_types::aeq_},{"<=",signal_types::ueq_},
 		{"(",signal_types::slb_},{")",signal_types::srb_},{"[",signal_types::mlb_},{"]",signal_types::mrb_},{"{",signal_types::llb_},{"}",signal_types::lrb_},{",",signal_types::com_},{".",signal_types::dot_},
 		{"()",signal_types::esb_},{"[]",signal_types::emb_},{"{}",signal_types::elb_},{"++",signal_types::inc_},{"--",signal_types::dec_},{":",signal_types::pair_},{"->",signal_types::arrow_}
 	};
