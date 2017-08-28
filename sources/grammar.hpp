@@ -715,7 +715,7 @@ namespace cs {
 		translator.add_method({new token_action(action_types::loop_),new token_endline(0)},method_type {statement_types::loop_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
-				if(body.back()->get_type()==statement_types::until_)
+				if(!body.empty()&&body.back()->get_type()==statement_types::until_)
 				{
 					token_expr* expr=dynamic_cast<statement_until*>(body.back())->get_expr();
 					body.pop_back();
