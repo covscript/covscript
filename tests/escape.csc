@@ -1,8 +1,8 @@
 var str="\t\"hello\"\n\tworld"
 for ch iterate str
   if(ch=='\t')
-    system.println("Boom!")
+    system.out.println("Boom!")
   end
-  system.print(ch)
+  system.out.print(ch)
 end
-system.println()
+system.out.println("")

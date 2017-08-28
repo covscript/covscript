@@ -36,3 +36,6 @@ cs
 
 # CovScript intermediate file
 *.cs_ext
+
+# Darwin Picture File
+*.cdpf

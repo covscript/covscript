@@ -1,16 +1,16 @@
 loop
-    switch(system.input())
+    switch(system.in.input())
         case 10
-            system.println("10!")
+            system.out.println("10!")
         end
         case "Hello"
-            system.println("Hello!")
+            system.out.println("Hello!")
         end
         case "World"
-            system.println("World!")
+            system.out.println("World!")
         end
         default
-            system.println("default!")
+            system.out.println("default!")
         end
     end
 end

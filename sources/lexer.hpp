@@ -1,5 +1,26 @@
 #pragma once
+/*
+* Covariant Script Lexer
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* Copyright (C) 2017 Michael Lee(李登淳)
+* Email: mikecovlee@163.com
+* Github: https://github.com/mikecovlee
+*/
 #include "./symbols.hpp"
+
 namespace cs {
 	void translate_into_tokens(const std::deque<char>& buff,std::deque<token_base*>& tokens)
 	{
@@ -54,6 +75,8 @@ namespace cs {
 				continue;
 			}
 			switch(type) {
+			default:
+				break;
 			case token_types::null:
 				if(buff[i]=='\"') {
 					inside_str=true;
@@ -77,14 +100,14 @@ namespace cs {
 					type=token_types::value;
 					continue;
 				}
-				if(std::isalpha(buff[i])||buff[i]=='_'||buff[i]==':') {
+				if(std::isalpha(buff[i])||buff[i]=='_') {
 					type=token_types::id;
 					continue;
 				}
 				throw syntax_error("Uknown character.");
 				break;
 			case token_types::id:
-				if(std::isalnum(buff[i])||buff[i]=='_'||buff[i]==':') {
+				if(std::isalnum(buff[i])||buff[i]=='_') {
 					tmp+=buff[i];
 					++i;
 					continue;
@@ -153,6 +176,8 @@ namespace cs {
 		if(tmp.empty())
 			return;
 		switch(type) {
+		default:
+			break;
 		case token_types::id:
 			if(action_map.exsist(tmp)) {
 				tokens.push_back(new token_action(action_map.match(tmp)));
@@ -197,7 +222,9 @@ namespace cs {
 		};
 		for(auto& ptr:oldt) {
 			if(ptr->get_type()==token_types::signal) {
-				switch(dynamic_cast<token_signal*>(ptr)->get_signal()) {
+				switch(static_cast<token_signal*>(ptr)->get_signal()) {
+				default:
+					break;
 				case signal_types::slb_:
 					if(empty_bracket)
 						insert_bracket();
@@ -276,7 +303,9 @@ namespace cs {
 		std::deque<int> blist_stack;
 		for(auto& ptr:oldt) {
 			if(ptr->get_type()==token_types::signal) {
-				switch(dynamic_cast<token_signal*>(ptr)->get_signal()) {
+				switch(static_cast<token_signal*>(ptr)->get_signal()) {
+				default:
+					break;
 				case signal_types::slb_:
 					blist_stack.push_front(1);
 					if(blist_stack.size()==1)

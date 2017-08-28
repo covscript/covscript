@@ -18,36 +18,39 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 * Website: http://covariant.cn/cs
-*
-* Version: 1.0.1
 */
-#ifndef CS_MINIMAL
-#define CS_MATH_EXT
-#define CS_FILE_EXT
-#define CS_DARWIN_EXT
-#else
-#define CS_STATIC
-#endif
 #include "./covscript.hpp"
-int main(int args_size,const char* args[])
+#include <iostream>
+#include <fstream>
+
+void covscript_main(int args_size,const char* args[])
 {
 	std::ios::sync_with_stdio(false);
-	cs::reset();
-	bool executed=true;
-	try {
-		cs::cs("./init.csc");
-	}
-	catch(const cs::fatal_error& fe) {
-		executed=false;
-	}
 	if(args_size>1) {
 		cs::array arg;
 		for(int i=1; i<args_size; ++i)
 			arg.push_back(std::string(args[i]));
 		system_ext.add_var("args",arg);
-		cs::cs(args[1]);
+		cs::init_grammar();
+		cs::init_ext();
+		cs::covscript(args[1]);
 	}
-	else if(!executed)
-		throw cs::fatal_error("no input file.\nUsage: cs <file> <args...>");
+	else
+		throw cs::fatal_error("no input file.");
+}
+
+const char* log_path="./cs_runtime.log";
+int main(int args_size,const char* args[])
+{
+	try {
+		covscript_main(args_size,args);
+	}
+	catch(const std::exception& e) {
+		std::ofstream out(::log_path);
+		out<<e.what();
+		out.flush();
+		std::cerr<<e.what()<<std::endl;
+		return -1;
+	}
 	return 0;
 }

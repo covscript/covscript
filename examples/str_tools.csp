@@ -1,0 +1,79 @@
+package str_tools
+function cton(ch)
+	return to_integer(ch)-to_integer('0')
+end
+function reverse_str(str)
+	var s=new string
+	var i=str.size()-1
+	while i>=0
+		s.append(str[i])
+		--i
+	end
+	return s
+end
+function ston(str)
+	if str.empty()
+		runtime.error("Receive empty string")
+	end
+	if str[0]=='-'
+		var tmp=new string
+		for i=1 to str.size()-1
+			tmp.append(str[i])
+		end
+		return -str_tools.ston(tmp)
+	end
+	var ipart=new string
+	var fpart=new string
+	var dot_count=0
+	for ch iterate str
+		if ch!='.'
+			if !ch.isdigit()
+				runtime.error("Illegal string")
+			end
+			if dot_count==0
+				ipart.append(ch)
+			else
+				fpart.append(ch)
+			end
+		else
+			if ++dot_count>1
+				runtime.error("Illegal string")
+			end
+		end
+	end
+	var result=0
+	ipart=str_tools.reverse_str(ipart)
+	for i=0 to ipart.size()-1
+		result=result+str_tools.cton(ipart[i])*10^i
+	end
+	for i=0 to fpart.size()-1
+		result=result+str_tools.cton(fpart[i])*10^(-i-1)
+	end
+	return result
+end
+function split(str)
+	var arr=new array
+	var tmp=new string
+	for ch iterate str
+		if(ch.isspace())
+			if(!tmp.empty())
+				arr.push_back(tmp)
+				tmp.clear()
+			end
+			continue
+		end
+		tmp.append(ch)
+	end
+	if(!tmp.empty())
+		arr.push_back(tmp)
+		tmp.clear()
+	end
+	return arr
+end
+function tolower(str)
+    var s=str
+    for i=0 to s.size()-1
+        s.replace(i,1,(s[i]).tolower())
+    end
+    return s
+end

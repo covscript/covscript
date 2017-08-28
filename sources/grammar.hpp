@@ -1,78 +1,86 @@
 #pragma once
+/*
+* Covariant Script Grammar Implement
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* Copyright (C) 2017 Michael Lee(李登淳)
+* Email: mikecovlee@163.com
+* Github: https://github.com/mikecovlee
+*/
 #include "./optimize.hpp"
+
 #define CS_STACK_SIZE 1024
 namespace cs {
 	bool return_fcall=false;
-	bool inside_struct=false;
 	bool break_block=false;
 	bool continue_block=false;
-	cov::static_stack<const function*,CS_STACK_SIZE> fcall_stack;
-	cov::any function::call(array& args) const
+	cov::static_stack<var,CS_STACK_SIZE> fcall_stack;
+	var function::call(array& args) const
 	{
 		if(args.size()!=this->mArgs.size())
 			throw syntax_error("Wrong size of arguments.");
-		if(this->mData.get()!=nullptr) {
-			runtime->storage.add_this(this->mData);
-			runtime->storage.add_domain(this->mData);
-		}
 		runtime->storage.add_domain();
-		fcall_stack.push(this);
+		fcall_stack.push(number(0));
 		for(std::size_t i=0; i<args.size(); ++i)
 			runtime->storage.add_var(this->mArgs[i],args[i]);
 		for(auto& ptr:this->mBody) {
 			try {
 				ptr->run();
 			}
-			catch(const syntax_error& se) {
-				throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-			}
 			catch(const lang_error& le) {
-				throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
+				runtime->storage.remove_domain();
+				throw le;
+			}
+			catch(const cs::exception& e) {
+				throw e;
 			}
 			catch(const std::exception& e) {
-				throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
+				throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 			}
-			if(this->mRetVal.usable()) {
+			if(return_fcall) {
 				return_fcall=false;
-				cov::any retval=this->mRetVal;
-				this->mRetVal=cov::any();
-				if(this->mData.get()!=nullptr) {
-					runtime->storage.remove_this();
-					runtime->storage.remove_domain();
-				}
 				runtime->storage.remove_domain();
+				var retval=fcall_stack.top();
 				fcall_stack.pop();
 				return retval;
 			}
 		}
-		if(this->mData.get()!=nullptr) {
-			runtime->storage.remove_this();
-			runtime->storage.remove_domain();
-		}
 		runtime->storage.remove_domain();
+		var retval=fcall_stack.top();
 		fcall_stack.pop();
-		return number(0);
+		return retval;
 	}
-	cov::any struct_builder::operator()()
+	var struct_builder::operator()()
 	{
 		runtime->storage.add_domain();
-		inside_struct=true;
 		for(auto& ptr:this->mMethod) {
 			try {
 				ptr->run();
 			}
-			catch(const syntax_error& se) {
-				throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-			}
 			catch(const lang_error& le) {
-				throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
+				runtime->storage.remove_domain();
+				throw le;
+			}
+			catch(const cs::exception& e) {
+				throw e;
 			}
 			catch(const std::exception& e) {
-				throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
+				throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 			}
 		}
-		inside_struct=false;
-		cov::any dat=cov::any::make<structure>(this->mHash,this->mName,runtime->storage.get_domain());
+		var dat=var::make<structure>(this->mHash,this->mName,runtime->storage.get_domain());
 		runtime->storage.remove_domain();
 		return dat;
 	}
@@ -82,11 +90,7 @@ namespace cs {
 	}
 	void statement_var::run()
 	{
-		define_var=true;
-		cov::any var=parse_expr(mTree.root());
-		define_var=false;
-		if(mType!=nullptr)
-			var.assign(parse_expr(mType->get_tree().root()).const_val<type>().constructor(),true);
+		runtime->storage.add_var(mDvp.id,copy(parse_expr(mDvp.expr.root())));
 	}
 	void statement_break::run()
 	{
@@ -103,90 +107,115 @@ namespace cs {
 			try {
 				ptr->run();
 			}
-			catch(const syntax_error& se) {
-				throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-			}
 			catch(const lang_error& le) {
-				throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
+				runtime->storage.remove_domain();
+				throw le;
+			}
+			catch(const cs::exception& e) {
+				throw e;
 			}
 			catch(const std::exception& e) {
-				throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
+				throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 			}
-			if(return_fcall) {
-				runtime->storage.remove_domain();
-				return;
-			}
-		}
-		if(this->mName!=nullptr) {
-			mNamespaces.emplace_back(*runtime->storage.get_domain());
-			runtime->storage.remove_domain();
-			runtime->storage.add_var(this->mName->get_id(),cov::any::make_protect<name_space_t>(std::make_shared<name_space_holder>(&mNamespaces.back())));
-		}
-		else
-			runtime->storage.remove_domain();
-	}
-	void statement_if::run()
-	{
-		runtime->storage.add_domain();
-		if(parse_expr(mTree.root()).const_val<boolean>()) {
-			if(mBlock!=nullptr) {
-				for(auto& ptr:*mBlock) {
-					try {
-						ptr->run();
-					}
-					catch(const syntax_error& se) {
-						throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-					}
-					catch(const lang_error& le) {
-						throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
-					}
-					catch(const std::exception& e) {
-						throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
-					}
-					if(return_fcall) {
-						runtime->storage.remove_domain();
-						return;
-					}
-					if(break_block||continue_block) {
-						runtime->storage.remove_domain();
-						return;
-					}
-				}
-			}
-			else
-				throw syntax_error("Empty If body.");
-		}
-		else {
-			if(mElseBlock!=nullptr) {
-				for(auto& ptr:*mElseBlock) {
-					try {
-						ptr->run();
-					}
-					catch(const syntax_error& se) {
-						throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-					}
-					catch(const lang_error& le) {
-						throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
-					}
-					catch(const std::exception& e) {
-						throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
-					}
-					if(return_fcall) {
-						runtime->storage.remove_domain();
-						return;
-					}
-					if(break_block||continue_block) {
-						runtime->storage.remove_domain();
-						return;
-					}
-				}
-			}
+			if(return_fcall||break_block||continue_block)
+				break;
 		}
 		runtime->storage.remove_domain();
 	}
+	void statement_namespace::run()
+	{
+		runtime->storage.add_domain();
+		for(auto& ptr:mBlock) {
+			try {
+				ptr->run();
+			}
+			catch(const lang_error& le) {
+				runtime->storage.remove_domain();
+				throw le;
+			}
+			catch(const cs::exception& e) {
+				throw e;
+			}
+			catch(const std::exception& e) {
+				throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
+			}
+		}
+		domain_t domain=runtime->storage.get_domain();
+		runtime->storage.remove_domain();
+		runtime->storage.add_var(this->mName,var::make_protect<name_space_t>(std::make_shared<name_space_holder>(domain)));
+	}
+	void statement_if::run()
+	{
+		if(parse_expr(mTree.root()).const_val<boolean>()) {
+			runtime->storage.add_domain();
+			for(auto& ptr:mBlock) {
+				try {
+					ptr->run();
+				}
+				catch(const lang_error& le) {
+					runtime->storage.remove_domain();
+					throw le;
+				}
+				catch(const cs::exception& e) {
+					throw e;
+				}
+				catch(const std::exception& e) {
+					throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
+				}
+				if(return_fcall||break_block||continue_block)
+					break;
+			}
+			runtime->storage.remove_domain();
+		}
+	}
+	void statement_ifelse::run()
+	{
+		if(parse_expr(mTree.root()).const_val<boolean>()) {
+			runtime->storage.add_domain();
+			for(auto& ptr:mBlock) {
+				try {
+					ptr->run();
+				}
+				catch(const lang_error& le) {
+					runtime->storage.remove_domain();
+					throw le;
+				}
+				catch(const cs::exception& e) {
+					throw e;
+				}
+				catch(const std::exception& e) {
+					throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
+				}
+				if(return_fcall||break_block||continue_block)
+					break;
+			}
+			runtime->storage.remove_domain();
+		}
+		else {
+			runtime->storage.add_domain();
+			for(auto& ptr:mElseBlock) {
+				try {
+					ptr->run();
+				}
+				catch(const lang_error& le) {
+					runtime->storage.remove_domain();
+					throw le;
+				}
+				catch(const cs::exception& e) {
+					throw e;
+				}
+				catch(const std::exception& e) {
+					throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
+				}
+				if(return_fcall||break_block||continue_block)
+					break;
+			}
+			runtime->storage.remove_domain();
+		}
+	}
 	void statement_switch::run()
 	{
-		cov::any key=parse_expr(mTree.root());
+		var key=parse_expr(mTree.root());
 		if(mCases.count(key)>0)
 			mCases[key]->run();
 		else if(mDefault!=nullptr)
@@ -194,20 +223,26 @@ namespace cs {
 	}
 	void statement_while::run()
 	{
+		if(break_block)
+			break_block=false;
+		if(continue_block)
+			continue_block=false;
 		runtime->storage.add_domain();
 		while(parse_expr(mTree.root()).const_val<boolean>()) {
+			runtime->storage.clear_domain();
 			for(auto& ptr:mBlock) {
 				try {
 					ptr->run();
 				}
-				catch(const syntax_error& se) {
-					throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-				}
 				catch(const lang_error& le) {
-					throw lang_error(ptr->get_line_num(),le.what());
+					runtime->storage.remove_domain();
+					throw le;
+				}
+				catch(const cs::exception& e) {
+					throw e;
 				}
 				catch(const std::exception& e) {
-					throw internal_error(ptr->get_line_num(),e.what());
+					throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 				}
 				if(return_fcall) {
 					runtime->storage.remove_domain();
@@ -228,20 +263,26 @@ namespace cs {
 	}
 	void statement_loop::run()
 	{
+		if(break_block)
+			break_block=false;
+		if(continue_block)
+			continue_block=false;
 		runtime->storage.add_domain();
 		do {
+			runtime->storage.clear_domain();
 			for(auto& ptr:mBlock) {
 				try {
 					ptr->run();
 				}
-				catch(const syntax_error& se) {
-					throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-				}
 				catch(const lang_error& le) {
-					throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
+					runtime->storage.remove_domain();
+					throw le;
+				}
+				catch(const cs::exception& e) {
+					throw e;
 				}
 				catch(const std::exception& e) {
-					throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
+					throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 				}
 				if(return_fcall) {
 					runtime->storage.remove_domain();
@@ -263,23 +304,28 @@ namespace cs {
 	}
 	void statement_for::run()
 	{
+		if(break_block)
+			break_block=false;
+		if(continue_block)
+			continue_block=false;
 		runtime->storage.add_domain();
-		define_var=true;
-		cov::any var=parse_expr(mInit.root());
-		define_var=false;
-		while(var.const_val<number>()<=parse_expr(mEnd.root()).const_val<number>()) {
+		var val=copy(parse_expr(mDvp.expr.root()));
+		while(val.const_val<number>()<=parse_expr(mEnd.root()).const_val<number>()) {
+			runtime->storage.clear_domain();
+			runtime->storage.add_var(mDvp.id,val);
 			for(auto& ptr:mBlock) {
 				try {
 					ptr->run();
 				}
-				catch(const syntax_error& se) {
-					throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-				}
 				catch(const lang_error& le) {
-					throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
+					runtime->storage.remove_domain();
+					throw le;
+				}
+				catch(const cs::exception& e) {
+					throw e;
 				}
 				catch(const std::exception& e) {
-					throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
+					throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 				}
 				if(return_fcall) {
 					runtime->storage.remove_domain();
@@ -295,27 +341,35 @@ namespace cs {
 					break;
 				}
 			}
-			var.val<number>(true)+=parse_expr(mStep.root()).const_val<number>();
+			val.val<number>(true)+=parse_expr(mStep.root()).const_val<number>();
 		}
 		runtime->storage.remove_domain();
 	}
-	template<typename T,typename X>void foreach_helper(const string& iterator,const cov::any& obj,std::deque<statement_base*>& body)
+	template<typename T,typename X>void foreach_helper(const string& iterator,const var& obj,std::deque<statement_base*>& body)
 	{
+		if(obj.const_val<T>().empty())
+			return;
+		if(break_block)
+			break_block=false;
+		if(continue_block)
+			continue_block=false;
 		runtime->storage.add_domain();
 		for(const X& it:obj.const_val<T>()) {
+			runtime->storage.clear_domain();
 			runtime->storage.add_var(iterator,it);
 			for(auto& ptr:body) {
 				try {
 					ptr->run();
 				}
-				catch(const syntax_error& se) {
-					throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
-				}
 				catch(const lang_error& le) {
-					throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
+					runtime->storage.remove_domain();
+					throw le;
+				}
+				catch(const cs::exception& e) {
+					throw e;
 				}
 				catch(const std::exception& e) {
-					throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
+					throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 				}
 				if(return_fcall) {
 					runtime->storage.remove_domain();
@@ -336,13 +390,13 @@ namespace cs {
 	}
 	void statement_foreach::run()
 	{
-		const cov::any& obj=parse_expr(this->mObj.root());
+		const var& obj=parse_expr(this->mObj.root());
 		if(obj.type()==typeid(string))
 			foreach_helper<string,char>(this->mIt,obj,this->mBlock);
 		else if(obj.type()==typeid(list))
-			foreach_helper<list,cov::any>(this->mIt,obj,this->mBlock);
+			foreach_helper<list,var>(this->mIt,obj,this->mBlock);
 		else if(obj.type()==typeid(array))
-			foreach_helper<array,cov::any>(this->mIt,obj,this->mBlock);
+			foreach_helper<array,var>(this->mIt,obj,this->mBlock);
 		else if(obj.type()==typeid(hash_map))
 			foreach_helper<hash_map,pair>(this->mIt,obj,this->mBlock);
 		else
@@ -354,16 +408,66 @@ namespace cs {
 	}
 	void statement_function::run()
 	{
-		if(inside_struct)
-			this->mFunc.set_data(runtime->storage.get_domain());
-		runtime->storage.add_var(this->mName,this->mFunc);
+		if(this->mIsMemFn)
+			runtime->storage.add_var(this->mName,var::make_protect<callable>(this->mFunc,callable::types::member_fn));
+		else
+			runtime->storage.add_var(this->mName,var::make_protect<callable>(this->mFunc));
 	}
 	void statement_return::run()
 	{
 		if(fcall_stack.empty())
 			throw syntax_error("Return outside function.");
-		fcall_stack.top()->mRetVal=parse_expr(this->mTree.root());
+		fcall_stack.top()=parse_expr(this->mTree.root());
 		return_fcall=true;
+	}
+	void statement_try::run()
+	{
+		runtime->storage.add_domain();
+		for(auto& ptr:mTryBody) {
+			try {
+				ptr->run();
+			}
+			catch(const lang_error& le) {
+				runtime->storage.clear_domain();
+				runtime->storage.add_var(mName,le);
+				for(auto& ptr:mCatchBody) {
+					try {
+						ptr->run();
+					}
+					catch(const lang_error& le) {
+						runtime->storage.remove_domain();
+						throw le;
+					}
+					catch(const cs::exception& e) {
+						throw e;
+					}
+					catch(const std::exception& e) {
+						throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
+					}
+					if(return_fcall||break_block||continue_block)
+						break;
+				}
+				runtime->storage.remove_domain();
+				return;
+			}
+			catch(const cs::exception& e) {
+				throw e;
+			}
+			catch(const std::exception& e) {
+				throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
+			}
+			if(return_fcall||break_block||continue_block)
+				break;
+		}
+		runtime->storage.remove_domain();
+	}
+	void statement_throw::run()
+	{
+		var e=parse_expr(this->mTree.root());
+		if(e.type()!=typeid(lang_error))
+			throw syntax_error("Throwing unsupported exception.");
+		else
+			throw e.const_val<lang_error>();
 	}
 	void kill_action(std::deque<std::deque<token_base*>> lines,std::deque<statement_base*>& statements,bool raw=false)
 	{
@@ -386,8 +490,11 @@ namespace cs {
 					break;
 				case grammar_types::single: {
 					if(level>0) {
-						if(m->statement_type==statement_types::end_)
+						if(m->statement_type==statement_types::end_) {
+							runtime->storage.remove_set();
+							runtime->storage.remove_domain();
 							--level;
+						}
 						if(level==0) {
 							statements.push_back(method->function(tmp));
 							tmp.clear();
@@ -404,6 +511,9 @@ namespace cs {
 					if(level==0)
 						method=m;
 					++level;
+					runtime->storage.add_domain();
+					runtime->storage.add_set();
+					m->init({line});
 					tmp.push_back(line);
 				}
 				break;
@@ -412,11 +522,11 @@ namespace cs {
 					break;
 				}
 			}
-			catch(const syntax_error& se) {
-				throw syntax_error(endsig->get_file(),endsig->get_num(),se.what());
+			catch(const cs::exception& e) {
+				throw e;
 			}
 			catch(const std::exception& e) {
-				throw internal_error(endsig->get_file(),endsig->get_num(),e.what());
+				throw exception(endsig->get_num(),endsig->get_file(),endsig->get_code(),e.what());
 			}
 		}
 		if(level!=0)
@@ -448,28 +558,37 @@ namespace cs {
 		});
 		// Import Grammar
 		translator.add_method({new token_action(action_types::import_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::import_,grammar_types::jit_command,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
-				cs(dynamic_cast<token_value*>(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data())->get_value().const_val<string>());
+				runtime_t rt=covscript(dynamic_cast<token_value*>(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data())->get_value().const_val<string>());
+				if(rt->package_name.empty())
+					throw syntax_error("Only packages are allowed to import.");
+				runtime->storage.add_var(rt->package_name,var::make_protect<extension_t>(std::make_shared<extension_holder>(rt->storage.get_global())));
+				return nullptr;
+			}
+		});
+		// Package Grammar
+		translator.add_method({new token_action(action_types::package_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::package_,grammar_types::jit_command,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				if(!runtime->package_name.empty())
+					throw syntax_error("Redefinition of package");
+				runtime->package_name=dynamic_cast<token_id*>(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data())->get_id();
+				runtime->storage.add_var_global(runtime->package_name,var::make_protect<extension_t>(std::make_shared<extension_holder>(runtime->storage.get_global())));
 				return nullptr;
 			}
 		});
 		// Var Grammar
 		translator.add_method({new token_action(action_types::var_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::var_,grammar_types::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
-				return new statement_var(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),raw.front().back());
-			}
-		});
-		translator.add_method({new token_action(action_types::var_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::as_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::var_,grammar_types::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
-				return new statement_var(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),raw.front().at(3),raw.front().back());
+				cov::tree<token_base*>& tree=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
+				define_var_profile dvp;
+				parse_define_var(tree,dvp);
+				return new statement_var(dvp,raw.front().back());
 			}
 		});
 		translator.add_method({new token_action(action_types::constant_),new token_action(action_types::var_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::constant_,grammar_types::jit_command,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				cov::tree<token_base*>& tree=dynamic_cast<token_expr*>(raw.front().at(2))->get_tree();
-				constant_var=true;
-				optimize_expression(tree);
-				constant_var=false;
-				if(tree.root().data()==nullptr)
-					throw syntax_error("Wrong format of expression.");
-				if(tree.root().data()->get_type()!=token_types::value)
+				define_var_profile dvp;
+				parse_define_var(tree,dvp);
+				if(dvp.expr.root().data()->get_type()!=token_types::value)
 					throw syntax_error("Constant variable must have an constant value.");
+				runtime->storage.add_var(dvp.id,static_cast<token_value*>(dvp.expr.root().data())->get_value());
 				return nullptr;
 			}
 		});
@@ -485,18 +604,22 @@ namespace cs {
 				return new statement_block(body,raw.front().back());
 			}
 		});
-		translator.add_method({new token_action(action_types::block_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::block_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+		// Namespace Grammar
+		translator.add_method({new token_action(action_types::namespace_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::namespace_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
-				return new statement_block(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data(),body,raw.front().back());
+				for(auto& ptr:body)
+					if(ptr->get_type()!=statement_types::var_&&ptr->get_type()!=statement_types::function_&&ptr->get_type()!=statement_types::namespace_&&ptr->get_type()!=statement_types::struct_)
+						throw syntax_error("Wrong grammar for namespace definition.");
+				return new statement_namespace(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree().root().data(),body,raw.front().back());
 			}
 		});
 		// If Grammar
 		translator.add_method({new token_action(action_types::if_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::if_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				bool have_else=false;
-				std::deque<statement_base*>* body=new std::deque<statement_base*>;
-				kill_action({raw.begin()+1,raw.end()},*body);
-				for(auto& ptr:*body)
+				std::deque<statement_base*> body;
+				kill_action({raw.begin()+1,raw.end()},body);
+				for(auto& ptr:body)
 				{
 					if(ptr->get_type()==statement_types::else_) {
 						if(!have_else)
@@ -507,24 +630,23 @@ namespace cs {
 				}
 				if(have_else)
 				{
-					std::deque<statement_base*>* body_true=new std::deque<statement_base*>;
-					std::deque<statement_base*>* body_false=new std::deque<statement_base*>;
+					std::deque<statement_base*> body_true;
+					std::deque<statement_base*> body_false;
 					bool now_place=true;
-					for(auto& ptr:*body) {
+					for(auto& ptr:body) {
 						if(ptr->get_type()==statement_types::else_) {
 							now_place=false;
 							continue;
 						}
 						if(now_place)
-							body_true->push_back(ptr);
+							body_true.push_back(ptr);
 						else
-							body_false->push_back(ptr);
+							body_false.push_back(ptr);
 					}
-					delete body;
-					return new statement_if(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),body_true,body_false,raw.front().back());
+					return new statement_ifelse(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),body_true,body_false,raw.front().back());
 				}
 				else
-					return new statement_if(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),body,nullptr,raw.front().back());
+					return new statement_if(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),body,raw.front().back());
 			}
 		});
 		// Else Grammar
@@ -537,7 +659,7 @@ namespace cs {
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
 				statement_block* dptr=nullptr;
-				std::unordered_map<cov::any,statement_block*> cases;
+				std::unordered_map<var,statement_block*> cases;
 				for(auto& it:body)
 				{
 					if(it==nullptr)
@@ -593,7 +715,7 @@ namespace cs {
 		translator.add_method({new token_action(action_types::loop_),new token_endline(0)},method_type {statement_types::loop_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
-				if(body.back()->get_type()==statement_types::until_)
+				if(!body.empty()&&body.back()->get_type()==statement_types::until_)
 				{
 					token_expr* expr=dynamic_cast<statement_until*>(body.back())->get_expr();
 					body.pop_back();
@@ -605,12 +727,24 @@ namespace cs {
 		});
 		// For Grammar
 		translator.add_method({new token_action(action_types::for_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::to_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::step_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::for_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				cov::tree<token_base*>& tree=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
+				define_var_profile dvp;
+				parse_define_var(tree,dvp);
+				runtime->storage.add_record(dvp.id);
+				return nullptr;
+			},[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
 				return new statement_for(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),dynamic_cast<token_expr*>(raw.front().at(3))->get_tree(),dynamic_cast<token_expr*>(raw.front().at(5))->get_tree(),body,raw.front().back());
 			}
 		});
 		translator.add_method({new token_action(action_types::for_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::to_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::for_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				cov::tree<token_base*>& tree=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
+				define_var_profile dvp;
+				parse_define_var(tree,dvp);
+				runtime->storage.add_record(dvp.id);
+				return nullptr;
+			},[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
 				cov::tree<token_base*> tree_step;
@@ -619,6 +753,14 @@ namespace cs {
 			}
 		});
 		translator.add_method({new token_action(action_types::for_),new token_expr(cov::tree<token_base*>()),new token_action(action_types::iterate_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::foreach_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				cov::tree<token_base*>& t=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
+				if(t.root().data()==nullptr)
+					throw internal_error("Null pointer accessed.");
+				if(t.root().data()->get_type()!=token_types::id)
+					throw syntax_error("Wrong grammar(foreach)");
+				runtime->storage.add_record(dynamic_cast<token_id*>(t.root().data())->get_id());
+				return nullptr;
+			},[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
 				cov::tree<token_base*>& t=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
 				if(t.root().data()==nullptr)
 					throw internal_error("Null pointer accessed.");
@@ -696,9 +838,57 @@ namespace cs {
 				std::deque<statement_base*> body;
 				kill_action({raw.begin()+1,raw.end()},body);
 				for(auto& ptr:body)
-					if(ptr->get_type()!=statement_types::var_&&ptr->get_type()!=statement_types::function_)
+				{
+					switch(ptr->get_type()) {
+					default:
 						throw syntax_error("Wrong grammar for struct definition.");
+					case statement_types::var_:
+						break;
+					case statement_types::function_:
+						static_cast<statement_function*>(ptr)->set_mem_fn();
+						break;
+					}
+				}
 				return new statement_struct(name,body,raw.front().back());
+			}
+		});
+		// Try Grammar
+		translator.add_method({new token_action(action_types::try_),new token_endline(0)},method_type {statement_types::try_,grammar_types::block,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				std::deque<statement_base*> body;
+				kill_action({raw.begin()+1,raw.end()},body);
+				std::string name;
+				std::deque<statement_base*> tbody,cbody;
+				bool founded=false;
+				for(auto& ptr:body)
+				{
+					if(ptr->get_type()==statement_types::catch_) {
+						name=static_cast<statement_catch*>(ptr)->get_name();
+						founded=true;
+						continue;
+					}
+					if(founded)
+						cbody.push_back(ptr);
+					else
+						tbody.push_back(ptr);
+				}
+				if(!founded)
+					throw syntax_error("Wrong grammar for try statement.");
+				return new statement_try(name,tbody,cbody,raw.front().back());
+			}
+		});
+		// Catch Grammar
+		translator.add_method({new token_action(action_types::catch_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::catch_,grammar_types::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				cov::tree<token_base*>& t=dynamic_cast<token_expr*>(raw.front().at(1))->get_tree();
+				if(t.root().data()==nullptr)
+					throw internal_error("Null pointer accessed.");
+				if(t.root().data()->get_type()!=token_types::id)
+					throw syntax_error("Wrong grammar for catch statement.");
+				return new statement_catch(dynamic_cast<token_id*>(t.root().data())->get_id(),raw.front().back());
+			}
+		});
+		// Throw Grammar
+		translator.add_method({new token_action(action_types::throw_),new token_expr(cov::tree<token_base*>()),new token_endline(0)},method_type {statement_types::throw_,grammar_types::single,[](const std::deque<std::deque<token_base*>>& raw)->statement_base* {
+				return new statement_throw(dynamic_cast<token_expr*>(raw.front().at(1))->get_tree(),raw.front().back());
 			}
 		});
 	}
