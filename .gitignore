@@ -39,3 +39,7 @@ cs
 
 # Darwin Picture File
 *.cdpf
+.idea/covscript.iml
+.idea/modules.xml
+.idea/workspace.xml
+cmake-build-debug/
