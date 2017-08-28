@@ -20,7 +20,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://covariant.cn/darwin/
 *
-* Library Version: 17.7.1
+* Library Version: 17.8.1
 *
 * Marco List:
 * Library Version: __Darwin
@@ -37,7 +37,7 @@
 #error Darwin UCGL need C++11 or later standard.
 #endif
 
-#define __Darwin 170701L
+#define __Darwin 170801L
 
 #include "./timer.hpp"
 #include "./core.hpp"

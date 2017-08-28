@@ -1,3 +1,3 @@
-system.println(to_integer('\t'))
-system.println(to_integer(3.14))
-system.println(to_integer(false))
+system.out.println(to_integer('\t'))
+system.out.println(to_integer(3.14))
+system.out.println(to_integer(false))

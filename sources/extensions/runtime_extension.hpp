@@ -26,20 +26,20 @@ namespace runtime_cs_ext {
 	{
 		return cov::rand<long>(b,e);
 	}
-	void error(const string& str)
+	var exception(const string& str)
 	{
-		throw lang_error(str);
+		return var::make<lang_error>(str);
 	}
 	extension_t load_extension(const string& path)
 	{
 		return std::make_shared<extension_holder>(path);
 	}
-	std::size_t hash(const cov::any& val)
+	std::size_t hash(const var& val)
 	{
 		return val.hash();
 	}
 	using expression_t=cov::tree<token_base*>;
-	cov::any build(const string& expr)
+	var build(const string& expr)
 	{
 		std::deque<char> buff;
 		std::deque<token_base*> tokens;
@@ -50,23 +50,23 @@ namespace runtime_cs_ext {
 		process_brackets(tokens);
 		kill_brackets(tokens);
 		gen_tree(tree,tokens);
-		return cov::any::make<expression_t>(tree);
+		return var::make<expression_t>(tree);
 	}
-	cov::any solve(expression_t& tree)
+	var solve(expression_t& tree)
 	{
 		return parse_expr(tree.root());
 	}
 	void init()
 	{
-		runtime_ext.add_var("info",cov::any::make_protect<native_interface>(cni(info)));
-		runtime_ext.add_var("time",cov::any::make_protect<native_interface>(cni(time)));
-		runtime_ext.add_var("delay",cov::any::make_protect<native_interface>(cni(delay)));
-		runtime_ext.add_var("rand",cov::any::make_protect<native_interface>(cni(rand)));
-		runtime_ext.add_var("randint",cov::any::make_protect<native_interface>(cni(randint)));
-		runtime_ext.add_var("error",cov::any::make_protect<native_interface>(cni(error)));
-		runtime_ext.add_var("load_extension",cov::any::make_protect<native_interface>(cni(load_extension),true));
-		runtime_ext.add_var("hash",cov::any::make_protect<native_interface>(cni(hash),true));
-		runtime_ext.add_var("build",cov::any::make_protect<native_interface>(cni(build)));
-		runtime_ext.add_var("solve",cov::any::make_protect<native_interface>(cni(solve)));
+		runtime_ext.add_var("info",var::make_protect<callable>(cni(info)));
+		runtime_ext.add_var("time",var::make_protect<callable>(cni(time)));
+		runtime_ext.add_var("delay",var::make_protect<callable>(cni(delay)));
+		runtime_ext.add_var("rand",var::make_protect<callable>(cni(rand)));
+		runtime_ext.add_var("randint",var::make_protect<callable>(cni(randint)));
+		runtime_ext.add_var("exception",var::make_protect<callable>(cni(exception)));
+		runtime_ext.add_var("load_extension",var::make_protect<callable>(cni(load_extension),true));
+		runtime_ext.add_var("hash",var::make_protect<callable>(cni(hash),true));
+		runtime_ext.add_var("build",var::make_protect<callable>(cni(build)));
+		runtime_ext.add_var("solve",var::make_protect<callable>(cni(solve)));
 	}
 }

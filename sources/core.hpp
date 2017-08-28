@@ -1,123 +1,164 @@
 #pragma once
-#ifndef CS_STATIC
-#include "../include/libdll/dll.hpp"
-#endif
+/*
+* Covariant Script Programming Language
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* Copyright (C) 2017 Michael Lee(李登淳)
+* Email: mikecovlee@163.com
+* Github: https://github.com/mikecovlee
+* Website: http://covariant.cn/cs
+*
+* Namespaces:
+* cs: Main Namespace
+* cs_impl: Implement Namespace
+*/
+// Mozart
 #include "../include/mozart/static_stack.hpp"
 #include "../include/mozart/random.hpp"
 #include "../include/mozart/timer.hpp"
 #include "../include/mozart/tree.hpp"
-#include "../include/mozart/any.hpp"
-#include "./exceptions.hpp"
+// LibDLL
+#include "../include/libdll/dll.hpp"
+// STL
 #include <unordered_map>
+#include <unordered_set>
 #include <forward_list>
 #include <functional>
 #include <algorithm>
+#include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <istream>
+#include <ostream>
+#include <utility>
+#include <cctype>
 #include <string>
 #include <memory>
 #include <cmath>
 #include <deque>
 #include <list>
+#include <map>
+// CovScript Headers
+#include "./exceptions.hpp"
+#include "./any.hpp"
+#include "./typedef.hpp"
+
 namespace cs {
-#ifndef CS_STATIC
-	const std::string version="1.0.1";
-#else
-#ifndef CS_MINIMAL
-	const std::string version="1.0.1 (Static Build)";
-#else
-	const std::string version="1.0.1 (Minimal Build)";
-#endif
-#endif
+// Version
+	const std::string version="1.0.4";
+// Output Precision
 	static int output_precision=8;
-	using var=cov::any;
-	using number=long double;
-	using boolean=bool;
-	using string=std::string;
-	using list=std::list<var>;
-	using array=std::deque<var>;
-	using pair=std::pair<var,var>;
-	using hash_map=std::unordered_map<var,var>;
+// Callable and Function
 	class callable final {
 	public:
-		using function_type=std::function<cov::any(array&)>;
+		using function_type=std::function<var(array&)>;
+		enum class types {
+			normal,constant,member_fn
+		};
 	private:
 		function_type mFunc;
-		bool mConstant=false;
+		types mType=types::normal;
 	public:
 		callable()=delete;
 		callable(const callable&)=default;
-		callable(const function_type& func,bool constant=false):mFunc(func),mConstant(constant) {}
+		callable(const function_type& func,bool constant=false):mFunc(func),mType(constant?types::constant:types::normal) {}
+		callable(const function_type& func,types type):mFunc(func),mType(type) {}
 		bool is_constant() const
 		{
-			return mConstant;
+			return mType==types::constant;
 		}
-		cov::any call(array& args) const
+		bool is_member_fn() const
+		{
+			return mType==types::member_fn;
+		}
+		var call(array& args) const
 		{
 			return mFunc(args);
 		}
 	};
-	using native_interface=callable;
-	class token_base;
-	class statement_base;
 	class function final {
-		friend class statement_return;
-		mutable cov::any mRetVal;
 		std::deque<std::string> mArgs;
 		std::deque<statement_base*> mBody;
-		std::shared_ptr<std::unordered_map<string,cov::any>> mData;
 	public:
 		function()=delete;
+		function(const function&)=default;
 		function(const std::deque<std::string>& args,const std::deque<statement_base*>& body):mArgs(args),mBody(body) {}
 		~function()=default;
-		cov::any call(array&) const;
-		void set_data(const std::shared_ptr<std::unordered_map<string,cov::any>>& data)
+		var call(array&) const;
+		var operator()(array& args) const
 		{
-			mData=data;
+			return call(args);
+		}
+		void add_this()
+		{
+			mArgs.push_front("this");
 		}
 	};
 	class object_method final {
-		cov::any mObj;
-		cov::any mCallable;
+		var mObj;
+		var mCallable;
 	public:
 		object_method()=delete;
-		object_method(const cov::any& obj,const cov::any& callable):mObj(obj),mCallable(callable) {}
+		object_method(const var& obj,const var& callable):mObj(obj),mCallable(callable) {}
 		~object_method()=default;
-		const cov::any& get_callable() const
+		const var& get_callable() const
 		{
 			return mCallable;
 		}
-		cov::any operator()(array& args) const
+		var operator()(array& args) const
 		{
 			args.push_front(mObj);
-			cov::any retval=mCallable.const_val<callable>().call(args);
+			var retval=mCallable.const_val<callable>().call(args);
 			args.pop_front();
 			return retval;
 		}
 	};
+// Type and struct
+	struct pointer final {
+		var data;
+		pointer()=default;
+		pointer(const var& v):data(v) {}
+		bool operator==(const pointer& ptr) const
+		{
+			return data.is_same(ptr.data);
+		}
+	};
+	static const pointer null_pointer= {};
 	struct type final {
-		std::function<cov::any()> constructor;
+		std::function<var()> constructor;
 		std::size_t id;
+		extension_t extensions;
 		type()=delete;
-		type(const std::function<cov::any()>& c,std::size_t i):constructor(c),id(i) {}
+		type(const std::function<var()>& c,std::size_t i):constructor(c),id(i) {}
+		type(const std::function<var()>& c,std::size_t i,extension_t ext):constructor(c),id(i),extensions(ext) {}
+		var& get_var(const std::string&) const;
 	};
 	class structure final {
 		std::size_t m_hash;
 		std::string m_name;
-		std::shared_ptr<std::unordered_map<string,cov::any>> m_data;
+		std::shared_ptr<std::unordered_map<string,var>> m_data;
 	public:
 		structure()=delete;
-		structure(std::size_t hash,const std::string& name,const std::shared_ptr<std::unordered_map<string,cov::any>>& data):m_hash(hash),m_name(typeid(structure).name()+name),m_data(data) {}
-		structure(const structure& s):m_hash(s.m_hash),m_name(s.m_name),m_data(std::make_shared<std::unordered_map<string,cov::any>>(*s.m_data))
+		structure(std::size_t hash,const std::string& name,const std::shared_ptr<std::unordered_map<string,var>>& data):m_hash(hash),m_name(typeid(structure).name()+name),m_data(data) {}
+		structure(const structure& s):m_hash(s.m_hash),m_name(s.m_name),m_data(std::make_shared<std::unordered_map<string,var>>(*s.m_data))
 		{
-			for(auto& it:*m_data) {
+			for(auto& it:*m_data)
 				it.second.clone();
-				if(it.second.type()==typeid(function))
-					it.second.val<function>(true).set_data(m_data);
-			}
 		}
 		~structure()=default;
-		std::shared_ptr<std::unordered_map<string,cov::any>>& get_domain()
+		std::shared_ptr<std::unordered_map<string,var>>& get_domain()
 		{
 			return m_data;
 		}
@@ -125,7 +166,7 @@ namespace cs {
 		{
 			return m_hash;
 		}
-		cov::any& get_var(const std::string& name) const
+		var& get_var(const std::string& name) const
 		{
 			if(m_data->count(name)>0)
 				return (*m_data)[name];
@@ -147,9 +188,10 @@ namespace cs {
 		{
 			return mHash;
 		}
-		cov::any operator()();
+		var operator()();
 	};
 	std::size_t struct_builder::mCount=0;
+// Internal Garbage Collection
 	template<typename T>class garbage_collector final {
 		std::forward_list<T*> table_new;
 		std::forward_list<T*> table_delete;
@@ -172,60 +214,70 @@ namespace cs {
 			table_delete.push_front(static_cast<T*>(ptr));
 		}
 	};
+// Namespace and extensions
 	class name_space final {
-		std::unordered_map<string,cov::any> m_data;
+		domain_t m_data;
 	public:
-		name_space()=default;
+		name_space():m_data(std::make_shared<std::unordered_map<string,var>>()) {}
 		name_space(const name_space&)=delete;
-		name_space(const std::unordered_map<string,cov::any>& dat):m_data(dat) {}
+		name_space(const domain_t& dat):m_data(dat) {}
 		~name_space()=default;
-		void add_var(const std::string& name,const cov::any& var)
+		void add_var(const std::string& name,const var& var)
 		{
-			if(m_data.count(name)>0)
-				m_data[name]=var;
+			if(m_data->count(name)>0)
+				(*m_data)[name]=var;
 			else
-				m_data.emplace(name,var);
+				m_data->emplace(name,var);
 		}
-		cov::any& get_var(const std::string& name)
+		var& get_var(const std::string& name)
 		{
-			if(m_data.count(name)>0)
-				return m_data[name];
+			if(m_data->count(name)>0)
+				return (*m_data)[name];
 			else
-				throw syntax_error("Use of undefined variable \""+name+"\" in extension.");
+				throw syntax_error("Use of undefined variable \""+name+"\".");
 		}
 	};
 	class name_space_holder final {
+		bool m_local;
 		name_space* m_ns=nullptr;
-#ifndef CS_STATIC
 		cov::dll m_dll;
-#endif
 	public:
 		name_space_holder()=delete;
-		name_space_holder(name_space* ptr):m_ns(ptr) {}
-#ifndef CS_STATIC
-		name_space_holder(const std::string& path):m_dll(path)
+		name_space_holder(const name_space_holder&)=delete;
+		name_space_holder(const domain_t& dat):m_local(true),m_ns(new name_space(dat)) {}
+		name_space_holder(name_space* ptr):m_local(false),m_ns(ptr) {}
+		name_space_holder(const std::string& path):m_local(false),m_dll(path)
 		{
 			m_ns=reinterpret_cast<name_space*(*)()>(m_dll.get_address("__CS_EXTENSION__"))();
 		}
-#else
-		name_space_holder(const std::string&)
+		~name_space_holder()
 		{
-			throw internal_error("Can not load extension because covscript is static version.");
+			if(m_local)
+				delete m_ns;
 		}
-#endif
-		~name_space_holder()=default;
-		cov::any& get_var(const std::string& name)
+		var& get_var(const std::string& name)
 		{
 			if(m_ns==nullptr)
 				throw internal_error("Use of nullptr of extension.");
 			return m_ns->get_var(name);
 		}
 	};
-	using extension=name_space;
-	using extension_holder=name_space_holder;
-	using name_space_t=std::shared_ptr<name_space_holder>;
-	using extension_t=std::shared_ptr<extension_holder>;
-	cov::any parse_value(const std::string& str)
+// Var definition
+	struct define_var_profile {
+		std::string id;
+		cov::tree<token_base*> expr;
+	};
+	void parse_define_var(cov::tree<token_base*>&,define_var_profile&);
+// Implement
+	var& type::get_var(const std::string& name) const
+	{
+		if(extensions.get()!=nullptr)
+			return extensions->get_var(name);
+		else
+			throw syntax_error("Type does not support the extension");
+	}
+// literal format
+	var parse_value(const std::string& str)
 	{
 		if(str=="true")
 			return true;
@@ -239,20 +291,20 @@ namespace cs {
 		}
 		return str;
 	}
-	void copy_no_return(cov::any& val)
+// Copy
+	void copy_no_return(var& val)
 	{
 		val.clone();
 		val.detach();
 	}
-	cov::any copy(cov::any val)
+	var copy(var val)
 	{
 		val.clone();
 		val.detach();
 		return val;
 	}
-	void cs(const std::string&);
 }
-namespace cov {
+namespace cs_impl {
 	template<>void detach<cs::pair>(cs::pair& val)
 	{
 		cs::copy_no_return(val.first);

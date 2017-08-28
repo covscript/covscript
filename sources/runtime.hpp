@@ -1,44 +1,73 @@
 #pragma once
+/*
+* Covariant Script Runtime
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* Copyright (C) 2017 Michael Lee(李登淳)
+* Email: mikecovlee@163.com
+* Github: https://github.com/mikecovlee
+*/
 #include "./parser.hpp"
+
 namespace cs {
 	class domain_manager {
-	public:
-		using domain_t=std::shared_ptr<std::unordered_map<string,cov::any>>;
-	private:
+		std::deque<std::unordered_set<string>> m_set;
 		std::deque<domain_t> m_data;
-		std::deque<domain_t> m_this;
 	public:
 		domain_manager()
 		{
-			m_data.emplace_front(std::make_shared<std::unordered_map<string,cov::any>>());
+			m_set.emplace_front();
+			m_data.emplace_front(std::make_shared<std::unordered_map<string,var>>());
 		}
 		domain_manager(const domain_manager&)=delete;
 		~domain_manager()=default;
+		void add_set()
+		{
+			m_set.emplace_front();
+		}
 		void add_domain()
 		{
-			m_data.emplace_front(std::make_shared<std::unordered_map<string,cov::any>>());
+			m_data.emplace_front(std::make_shared<std::unordered_map<string,var>>());
 		}
 		void add_domain(const domain_t& dat)
 		{
 			m_data.emplace_front(dat);
 		}
-		void add_this(const domain_t& dat)
-		{
-			m_this.emplace_front(dat);
-		}
 		domain_t& get_domain()
 		{
 			return m_data.front();
 		}
+		domain_t& get_global()
+		{
+			return m_data.back();
+		}
+		void remove_set()
+		{
+			m_set.pop_front();
+		}
 		void remove_domain()
 		{
-			if(m_data.size()>1)
-				m_data.pop_front();
+			m_data.pop_front();
 		}
-		void remove_this()
+		void clear_domain()
 		{
-			if(m_this.size()>1)
-				m_this.pop_front();
+			m_data.front()->clear();
+		}
+		bool exsist_record(const string& name)
+		{
+			return m_set.front().count(name)>0;
 		}
 		bool var_exsist(const string& name)
 		{
@@ -59,45 +88,40 @@ namespace cs {
 				return true;
 			return false;
 		}
-		bool var_exsist_this(const string& name)
-		{
-			if(m_this.front()->count(name)>0)
-				return true;
-			return false;
-		}
-		cov::any& get_var(const string& name)
+		var& get_var(const string& name)
 		{
 			for(auto& domain:m_data)
 				if(domain->count(name)>0)
 					return (*domain)[name];
 			throw syntax_error("Use of undefined variable \""+name+"\".");
 		}
-		cov::any& get_var_current(const string& name)
+		var& get_var_current(const string& name)
 		{
 			if(m_data.front()->count(name)>0)
 				return (*m_data.front())[name];
 			throw syntax_error("Use of undefined variable \""+name+"\" in current domain.");
 		}
-		cov::any& get_var_global(const string& name)
+		var& get_var_global(const string& name)
 		{
 			if(m_data.back()->count(name)>0)
 				return (*m_data.back())[name];
 			throw syntax_error("Use of undefined variable \""+name+"\" in global domain.");
 		}
-		cov::any& get_var_this(const string& name)
+		void add_record(const string& name)
 		{
-			if(m_this.front()->count(name)>0)
-				return (*m_this.front())[name];
-			throw syntax_error("Use of undefined variable \""+name+"\" in current object.");
+			if(exsist_record(name))
+				throw syntax_error("Redefinition of variable.");
+			else
+				m_set.front().emplace(name);
 		}
-		void add_var(const string& name,const cov::any& var)
+		void add_var(const string& name,const var& var)
 		{
 			if(var_exsist_current(name))
 				get_var(name)=var;
 			else
 				m_data.front()->emplace(name,var);
 		}
-		void add_var_global(const string& name,const cov::any& var)
+		void add_var_global(const string& name,const var& var)
 		{
 			if(var_exsist_global(name))
 				get_var_global(name)=var;
@@ -106,103 +130,147 @@ namespace cs {
 		}
 		void add_struct(const std::string& name,const struct_builder& builder)
 		{
-			add_var(name,cov::any::make_protect<type>(builder,builder.get_hash()));
+			add_var(name,var::make_protect<type>(builder,builder.get_hash()));
 		}
-		void add_type(const std::string& name,const std::function<cov::any()>& func,std::size_t hash)
+		void add_type(const std::string& name,const std::function<var()>& func,std::size_t hash)
 		{
-			add_var(name,cov::any::make_protect<type>(func,hash));
+			add_var(name,var::make_protect<type>(func,hash));
+		}
+		void add_type(const std::string& name,const std::function<var()>& func,std::size_t hash,extension_t ext)
+		{
+			add_var(name,var::make_protect<type>(func,hash,ext));
 		}
 	};
-	struct runtime_type final {
+	class runtime_type final {
+	public:
+		string package_name;
 		domain_manager storage;
-		domain_manager constant_storage;
-		extension_t char_ext;
-		extension_t string_ext;
-		extension_t list_ext;
-		extension_t array_ext;
-		extension_t pair_ext;
-		extension_t hash_map_ext;
 	};
-	std::unique_ptr<runtime_type> runtime=nullptr;
-	var get_type_ext(const var& a,const string& name)
-	{
-		if(a.type()==typeid(char))
-			return cov::any::make<callable>(object_method(a,runtime->char_ext->get_var(name)),true);
-		else if(a.type()==typeid(string))
-			return cov::any::make<callable>(object_method(a,runtime->string_ext->get_var(name)),true);
-		else if(a.type()==typeid(list))
-			return cov::any::make<callable>(object_method(a,runtime->list_ext->get_var(name)),true);
-		else if(a.type()==typeid(array))
-			return cov::any::make<callable>(object_method(a,runtime->array_ext->get_var(name)),true);
-		else if(a.type()==typeid(pair))
-			return cov::any::make<callable>(object_method(a,runtime->pair_ext->get_var(name)),true);
-		else if(a.type()==typeid(hash_map))
-			return cov::any::make<callable>(object_method(a,runtime->hash_map_ext->get_var(name)),true);
-		else
-			throw syntax_error("Unsupported type.");
-	}
-	cov::any parse_add(const cov::any& a,const cov::any& b)
+	class runtime_manager final {
+		std::deque<runtime_t> m_data;
+	public:
+		runtime_manager()=default;
+		runtime_manager(const runtime_manager&)=delete;
+		~runtime_manager()=default;
+		void new_instance()
+		{
+			m_data.emplace_front(std::make_shared<runtime_type>());
+		}
+		runtime_t pop_instance()
+		{
+			runtime_t front=m_data.front();
+			m_data.pop_front();
+			return front;
+		}
+		runtime_type* operator->()
+		{
+			return m_data.front().get();
+		}
+	};
+	std::shared_ptr<runtime_type> covscript(const std::string&);
+	static runtime_manager runtime;
+	var parse_add(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return a.const_val<number>()+b.const_val<number>();
 		else if(a.type()==typeid(string))
-			return cov::any::make<std::string>(a.const_val<string>()+b.to_string());
+			return var::make<std::string>(a.const_val<string>()+b.to_string());
 		else
 			throw syntax_error("Unsupported operator operations(Add).");
 	}
-	cov::any parse_sub(const cov::any& a,const cov::any& b)
+	var parse_addasi(var a,const var& b)
 	{
-		if(!a.usable()&&b.type()==typeid(number))
-			return -b.const_val<number>();
-		else if(a.type()==typeid(number)&&b.type()==typeid(number))
+		a.swap(parse_add(a,b),true);
+		return a;
+	}
+	var parse_sub(const var& a,const var& b)
+	{
+		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return a.const_val<number>()-b.const_val<number>();
 		else
 			throw syntax_error("Unsupported operator operations(Sub).");
 	}
-	cov::any parse_mul(const cov::any& a,const cov::any& b)
+	var parse_subasi(var a,const var& b)
+	{
+		a.swap(parse_sub(a,b),true);
+		return a;
+	}
+	var parse_minus(const var& b)
+	{
+		if(b.type()==typeid(number))
+			return -b.const_val<number>();
+		else
+			throw syntax_error("Unsupported operator operations(Minus).");
+	}
+	var parse_mul(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return a.const_val<number>()*b.const_val<number>();
 		else
 			throw syntax_error("Unsupported operator operations(Mul).");
 	}
-	cov::any parse_div(const cov::any& a,const cov::any& b)
+	var parse_mulasi(var a,const var& b)
+	{
+		a.swap(parse_mul(a,b),true);
+		return a;
+	}
+	var parse_escape(const var& b)
+	{
+		if(b.type()==typeid(pointer)) {
+			const pointer& ptr=b.const_val<pointer>();
+			if(ptr.data.usable())
+				return ptr.data;
+			else
+				throw syntax_error("Escape from null pointer.");
+		}
+		else
+			throw syntax_error("Unsupported operator operations(Escape).");
+	}
+	var parse_div(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return a.const_val<number>()/b.const_val<number>();
 		else
 			throw syntax_error("Unsupported operator operations(Div).");
 	}
-	cov::any parse_mod(const cov::any& a,const cov::any& b)
+	var parse_divasi(var a,const var& b)
+	{
+		a.swap(parse_div(a,b),true);
+		return a;
+	}
+	var parse_mod(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return number(long(a.const_val<number>())%long(b.const_val<number>()));
 		else
 			throw syntax_error("Unsupported operator operations(Mod).");
 	}
-	cov::any parse_pow(const cov::any& a,const cov::any& b)
+	var parse_modasi(var a,const var& b)
+	{
+		a.swap(parse_mod(a,b),true);
+		return a;
+	}
+	var parse_pow(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return number(std::pow(a.const_val<number>(),b.const_val<number>()));
 		else
 			throw syntax_error("Unsupported operator operations(Pow).");
 	}
-	cov::any parse_dot(const cov::any& a,token_base* b)
+	var parse_powasi(var a,const var& b)
 	{
-		if(b==nullptr)
-			throw internal_error("Null Pointer Accessed.");
-		else if(b->get_type()!=token_types::id)
-			throw syntax_error("Unsupported operator operations(Dot).");
-		else if(a.type()==typeid(constant_values)) {
+		a.swap(parse_pow(a,b),true);
+		return a;
+	}
+	var parse_dot(const var& a,token_base* b)
+	{
+		if(a.type()==typeid(constant_values)) {
 			switch (a.const_val<constant_values>()) {
 			case constant_values::global_namespace:
-				return runtime->storage.get_var_global(dynamic_cast<token_id*>(b)->get_id());
+				return runtime->storage.get_var_global(static_cast<token_id*>(b)->get_id());
 				break;
 			case constant_values::current_namespace:
-				return runtime->storage.get_var_current(dynamic_cast<token_id*>(b)->get_id());
-				break;
-			case constant_values::this_object:
-				return runtime->storage.get_var_this(dynamic_cast<token_id*>(b)->get_id());
+				return runtime->storage.get_var_current(static_cast<token_id*>(b)->get_id());
 				break;
 			default:
 				throw syntax_error("Unsupported operator operations(Dot).");
@@ -210,95 +278,124 @@ namespace cs {
 			}
 		}
 		else if(a.type()==typeid(extension_t))
-			return a.val<extension_t>(true)->get_var(dynamic_cast<token_id*>(b)->get_id());
-		else if(a.type()==typeid(structure))
-			return a.val<structure>(true).get_var(dynamic_cast<token_id*>(b)->get_id());
-		else
-			return get_type_ext(a,dynamic_cast<token_id*>(b)->get_id());
+			return a.val<extension_t>(true)->get_var(static_cast<token_id*>(b)->get_id());
+		else if(a.type()==typeid(type))
+			return a.val<type>(true).get_var(static_cast<token_id*>(b)->get_id());
+		else if(a.type()==typeid(structure)) {
+			var& val=a.val<structure>(true).get_var(static_cast<token_id*>(b)->get_id());
+			if(val.type()==typeid(callable)&&val.const_val<callable>().is_member_fn())
+				return var::make_protect<callable>(object_method(a,val));
+			else
+				return val;
+		}
+		else {
+			var& val=a.get_ext()->get_var(static_cast<token_id*>(b)->get_id());
+			if(val.type()==typeid(callable))
+				return var::make_protect<callable>(object_method(a,val),val.const_val<callable>().is_constant());
+			else
+				return val;
+		}
 	}
-	cov::any parse_typeid(token_base* a,const cov::any& b)
+	var parse_arraw(const var& a,token_base* b)
 	{
-		if(a!=nullptr)
-			throw syntax_error("Wrong format of new expression.");
-		else if(b.type()==typeid(type))
+		if(a.type()==typeid(pointer))
+			return parse_dot(a.const_val<pointer>().data,b);
+		else
+			throw syntax_error("Unsupported operator operations(Arraw).");
+	}
+	var parse_typeid(const var& b)
+	{
+		if(b.type()==typeid(type))
 			return b.const_val<type>().id;
 		else if(b.type()==typeid(structure))
 			return b.const_val<structure>().get_hash();
 		else
-			return cov::hash<std::string>(b.type().name());
+			return cs_impl::hash<std::string>(b.type().name());
 	}
-	cov::any parse_und(const cov::any& a,const cov::any& b)
+	var parse_new(const var& b)
+	{
+		if(b.type()==typeid(type))
+			return b.const_val<type>().constructor();
+		else
+			throw syntax_error("Unsupported operator operations(New).");
+	}
+	var parse_gcnew(const var& b)
+	{
+		if(b.type()==typeid(type))
+			return var::make<pointer>(b.const_val<type>().constructor());
+		else
+			throw syntax_error("Unsupported operator operations(GcNew).");
+	}
+	var parse_und(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return boolean(a.const_val<number>()<b.const_val<number>());
 		else
 			throw syntax_error("Unsupported operator operations(Und).");
 	}
-	cov::any parse_abo(const cov::any& a,const cov::any& b)
+	var parse_abo(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return boolean(a.const_val<number>()>b.const_val<number>());
 		else
 			throw syntax_error("Unsupported operator operations(Abo).");
 	}
-	cov::any parse_ueq(const cov::any& a,const cov::any& b)
+	var parse_ueq(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return boolean(a.const_val<number>()<=b.const_val<number>());
 		else
 			throw syntax_error("Unsupported operator operations(Ueq).");
 	}
-	cov::any parse_aeq(const cov::any& a,const cov::any& b)
+	var parse_aeq(const var& a,const var& b)
 	{
 		if(a.type()==typeid(number)&&b.type()==typeid(number))
 			return boolean(a.const_val<number>()>=b.const_val<number>());
 		else
 			throw syntax_error("Unsupported operator operations(Aeq).");
 	}
-	cov::any parse_asi(cov::any a,const cov::any& b)
+	var parse_asi(var a,const var& b)
 	{
 		a.swap(copy(b),true);
 		return a;
 	}
-	cov::any parse_pair(const cov::any& a,const cov::any& b)
+	var parse_pair(const var& a,const var& b)
 	{
 		if(a.type()!=typeid(pair)&&b.type()!=typeid(pair))
-			return cov::any::make<pair>(copy(a),copy(b));
+			return var::make<pair>(copy(a),copy(b));
 		else
 			throw syntax_error("Unsupported operator operations(Pair).");
 	}
-	cov::any parse_equ(const cov::any& a,const cov::any& b)
+	var parse_equ(const var& a,const var& b)
 	{
-		return boolean(a==b);
+		return boolean(a.compare(b));
 	}
-	cov::any parse_neq(const cov::any& a,const cov::any& b)
+	var parse_neq(const var& a,const var& b)
 	{
-		return boolean(a!=b);
+		return boolean(!a.compare(b));
 	}
-	cov::any parse_and(const cov::any& a,const cov::any& b)
+	var parse_and(const var& a,const var& b)
 	{
 		if(a.type()==typeid(boolean)&&b.type()==typeid(boolean))
 			return boolean(a.const_val<boolean>()&&b.const_val<boolean>());
 		else
 			throw syntax_error("Unsupported operator operations(And).");
 	}
-	cov::any parse_or(const cov::any& a,const cov::any& b)
+	var parse_or(const var& a,const var& b)
 	{
 		if(a.type()==typeid(boolean)&&b.type()==typeid(boolean))
 			return boolean(a.const_val<boolean>()||b.const_val<boolean>());
 		else
 			throw syntax_error("Unsupported operator operations(Or).");
 	}
-	cov::any parse_not(token_base* a,const cov::any& b)
+	var parse_not(const var& b)
 	{
-		if(a!=nullptr)
-			throw syntax_error("Wrong format of not expression.");
-		else if(b.type()==typeid(boolean))
+		if(b.type()==typeid(boolean))
 			return boolean(!b.const_val<boolean>());
 		else
 			throw syntax_error("Unsupported operator operations(Not).");
 	}
-	cov::any parse_inc(cov::any a,cov::any b)
+	var parse_inc(var a,var b)
 	{
 		if(a.usable()) {
 			if(b.usable())
@@ -313,7 +410,7 @@ namespace cs {
 				return ++b.val<number>(true);
 		}
 	}
-	cov::any parse_dec(cov::any a,cov::any b)
+	var parse_dec(var a,var b)
 	{
 		if(a.usable()) {
 			if(b.usable())
@@ -328,16 +425,14 @@ namespace cs {
 				return --b.val<number>(true);
 		}
 	}
-	cov::any parse_fcall(const cov::any& a,cov::any b)
+	var parse_fcall(const var& a,var b)
 	{
 		if(a.type()==typeid(callable))
 			return a.const_val<callable>().call(b.val<array>(true));
-		else if(a.type()==typeid(function))
-			return a.const_val<function>().call(b.val<array>(true));
 		else
 			throw syntax_error("Unsupported operator operations(Fcall).");
 	}
-	cov::any parse_access(cov::any a,const cov::any& b)
+	var parse_access(var a,const var& b)
 	{
 		if(a.type()==typeid(array)) {
 			if(b.type()!=typeid(number))
@@ -367,36 +462,30 @@ namespace cs {
 		else
 			throw syntax_error("Access non-array or string object.");
 	}
-	bool define_var=false;
-	cov::any parse_expr(const cov::tree<token_base*>::iterator& it)
+	var parse_expr(const cov::tree<token_base*>::iterator& it)
 	{
 		if(!it.usable())
 			throw internal_error("The expression tree is not available.");
 		token_base* token=it.data();
 		if(token==nullptr)
-			return cov::any();
+			return var();
 		switch(token->get_type()) {
-		case token_types::id: {
-			const std::string& id=dynamic_cast<token_id*>(token)->get_id();
-			if(define_var) {
-				if(!runtime->storage.var_exsist_current(id))
-					runtime->storage.add_var(id,number(0));
-				define_var=false;
-			}
-			return runtime->storage.get_var(id);
+		default:
 			break;
-		}
+		case token_types::id:
+			return runtime->storage.get_var(static_cast<token_id*>(token)->get_id());
+			break;
 		case token_types::value:
-			return dynamic_cast<token_value*>(token)->get_value();
+			return static_cast<token_value*>(token)->get_value();
 			break;
 		case token_types::expr:
-			return parse_expr(dynamic_cast<token_expr*>(token)->get_tree().root());
+			return parse_expr(static_cast<token_expr*>(token)->get_tree().root());
 			break;
 		case token_types::array: {
 			array arr;
 			bool is_map=true;
-			for(auto& tree:dynamic_cast<token_array*>(token)->get_array()) {
-				const cov::any& val=parse_expr(tree.root());
+			for(auto& tree:static_cast<token_array*>(token)->get_array()) {
+				const var& val=parse_expr(tree.root());
 				if(is_map&&val.type()!=typeid(pair))
 					is_map=false;
 				arr.push_back(copy(val));
@@ -412,45 +501,77 @@ namespace cs {
 					else
 						map[p.first]=p.second;
 				}
-				return cov::any::make<hash_map>(std::move(map));
+				return var::make<hash_map>(std::move(map));
 			}
 			else
-				return cov::any::make<array>(std::move(arr));
+				return var::make<array>(std::move(arr));
 		}
 		case token_types::arglist: {
 			array arr;
-			for(auto& tree:dynamic_cast<token_arglist*>(token)->get_arglist())
+			for(auto& tree:static_cast<token_arglist*>(token)->get_arglist())
 				arr.push_back(parse_expr(tree.root()));
-			return cov::any::make<array>(std::move(arr));
+			return var::make<array>(std::move(arr));
 		}
 		case token_types::signal: {
-			token_signal* ps=dynamic_cast<token_signal*>(token);
-			if(define_var&&ps->get_signal()!=signal_types::asi_)
-				throw syntax_error("Use of other signal in var definition.");
-			switch(ps->get_signal()) {
+			switch(static_cast<token_signal*>(token)->get_signal()) {
+			default:
+				break;
 			case signal_types::add_:
 				return parse_add(parse_expr(it.left()),parse_expr(it.right()));
+				break;
+			case signal_types::addasi_:
+				return parse_addasi(parse_expr(it.left()),parse_expr(it.right()));
 				break;
 			case signal_types::sub_:
 				return parse_sub(parse_expr(it.left()),parse_expr(it.right()));
 				break;
+			case signal_types::subasi_:
+				return parse_subasi(parse_expr(it.left()),parse_expr(it.right()));
+				break;
+			case signal_types::minus_:
+				return parse_minus(parse_expr(it.right()));
+				break;
 			case signal_types::mul_:
 				return parse_mul(parse_expr(it.left()),parse_expr(it.right()));
+				break;
+			case signal_types::mulasi_:
+				return parse_mulasi(parse_expr(it.left()),parse_expr(it.right()));
+				break;
+			case signal_types::escape_:
+				return parse_escape(parse_expr(it.right()));
 				break;
 			case signal_types::div_:
 				return parse_div(parse_expr(it.left()),parse_expr(it.right()));
 				break;
+			case signal_types::divasi_:
+				return parse_divasi(parse_expr(it.left()),parse_expr(it.right()));
+				break;
 			case signal_types::mod_:
 				return parse_mod(parse_expr(it.left()),parse_expr(it.right()));
+				break;
+			case signal_types::modasi_:
+				return parse_modasi(parse_expr(it.left()),parse_expr(it.right()));
 				break;
 			case signal_types::pow_:
 				return parse_pow(parse_expr(it.left()),parse_expr(it.right()));
 				break;
+			case signal_types::powasi_:
+				return parse_powasi(parse_expr(it.left()),parse_expr(it.right()));
+				break;
 			case signal_types::dot_:
 				return parse_dot(parse_expr(it.left()),it.right().data());
 				break;
+			case signal_types::arrow_:
+				return parse_arraw(parse_expr(it.left()),it.right().data());
+				break;
 			case signal_types::typeid_:
-				return parse_typeid(it.left().data(),parse_expr(it.right()));
+				return parse_typeid(parse_expr(it.right()));
+				break;
+			case signal_types::new_:
+				return parse_new(parse_expr(it.right()));
+				break;
+			case signal_types::gcnew_:
+				return parse_gcnew(parse_expr(it.right()));
 				break;
 			case signal_types::und_:
 				return parse_und(parse_expr(it.left()),parse_expr(it.right()));
@@ -458,11 +579,9 @@ namespace cs {
 			case signal_types::abo_:
 				return parse_abo(parse_expr(it.left()),parse_expr(it.right()));
 				break;
-			case signal_types::asi_: {
-				cov::any left=parse_expr(it.left());
-				return parse_asi(left,parse_expr(it.right()));
+			case signal_types::asi_:
+				return parse_asi(parse_expr(it.left()),parse_expr(it.right()));
 				break;
-			}
 			case signal_types::pair_:
 				return parse_pair(parse_expr(it.left()),parse_expr(it.right()));
 				break;
@@ -485,7 +604,7 @@ namespace cs {
 				return parse_or(parse_expr(it.left()),parse_expr(it.right()));
 				break;
 			case signal_types::not_:
-				return parse_not(it.left().data(),parse_expr(it.right()));
+				return parse_not(parse_expr(it.right()));
 				break;
 			case signal_types::inc_:
 				return parse_inc(parse_expr(it.left()),parse_expr(it.right()));
@@ -503,5 +622,18 @@ namespace cs {
 		}
 		}
 		throw internal_error("Unrecognized expression.");
+	}
+	void parse_define_var(cov::tree<token_base*>& tree,define_var_profile& dvp)
+	{
+		const auto& it=tree.root();
+		token_base* root=it.data();
+		if(root==nullptr||root->get_type()!=token_types::signal||static_cast<token_signal*>(root)->get_signal()!=signal_types::asi_)
+			throw syntax_error("Wrong grammar for variable definition.");
+		token_base* left=it.left().data();
+		const auto& right=it.right();
+		if(left==nullptr||right.data()==nullptr||left->get_type()!=token_types::id)
+			throw syntax_error("Wrong grammar for variable definition.");
+		dvp.id=static_cast<token_id*>(left)->get_id();
+		dvp.expr=right;
 	}
 }

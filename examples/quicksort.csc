@@ -35,7 +35,7 @@ for i=0 to 100
 end
 var ts=runtime.time()
 quicksort(a,0,a.size()-1)
-system.println("Time spend:",runtime.time()-ts)
+system.out.println("Time spend:"+to_string(runtime.time()-ts))
 for it iterate a
-	system.println(it)
+	system.out.println(it)
 end

@@ -1,0 +1,50 @@
+package hash_table
+struct type
+	var bucket_count=new number
+	var table=new array
+	var bucket_func=[](val)->math.abs(to_integer(runtime.hash(val)))%this.bucket_count
+	function insert(dat)
+		var bucket=this.bucket_func(dat.first())
+		if this.table.at(bucket)==null
+			this.table.at(bucket)=gcnew list
+		end
+		var lst=this.table.at(bucket)
+		for it iterate *lst
+			if it.first()==dat.first()
+				it.second()=dat.second()
+				return
+			end
+		end
+		lst->push_back(dat)
+	end
+	function get(key)
+		var bucket=this.bucket_func(key)
+		var lst=this.table.at(bucket)
+		if lst==null
+			return null
+		end
+		for it iterate *lst
+			if it.first()==key
+				return it.second()
+			end
+		end
+		return null
+	end
+	function print()
+		for lst iterate this.table
+			if lst!=null
+				for p iterate *lst
+					system.out.println(to_string(p.first())+":"+to_string(p.second()))
+				end
+			end
+		end
+	end
+end
+function create(bc)
+	var ht=gcnew hash_table.type
+	ht->bucket_count=bc
+	for i=1 to bc
+		ht->table.push_back(null)
+	end
+	return ht
+end

@@ -1,134 +1,105 @@
 #pragma once
+/*
+* Covariant Script Programming Language
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* Copyright (C) 2017 Michael Lee(李登淳)
+* Email: mikecovlee@163.com
+* Github: https://github.com/mikecovlee
+*/
 #include "./cni.hpp"
 #include "./grammar.hpp"
+#include "./extensions/iostream_extension.hpp"
 #include "./extensions/system_extension.hpp"
 #include "./extensions/runtime_extension.hpp"
-#include "./extensions/types_extension.hpp"
-#ifdef CS_MATH_EXT
-#include "./extensions/math_extension.cpp"
-#endif
-#ifdef CS_FILE_EXT
-#include "./extensions/file_extension.cpp"
-#endif
-#ifdef CS_DARWIN_EXT
-#include "./extensions/darwin_extension.cpp"
-#endif
-#define add_function(name) cs::runtime->storage.add_var_global(#name,cov::any::make_protect<cs::native_interface>(cs::cni(name)));
-#define add_function_const(name) cs::runtime->storage.add_var_global(#name,cov::any::make_protect<cs::native_interface>(cs::cni(name),true));
+#include "./extensions/except_extension.hpp"
+#include "./extensions/char_extension.hpp"
+#include "./extensions/string_extension.hpp"
+#include "./extensions/list_extension.hpp"
+#include "./extensions/array_extension.hpp"
+#include "./extensions/pair_extension.hpp"
+#include "./extensions/hash_map_extension.hpp"
+#include "./extensions/math_extension.hpp"
+#include "./extensions/darwin_extension.hpp"
+
 namespace cs {
 // Internal Functions
-	number to_integer(const cov::any& val)
+	number to_integer(const var& val)
 	{
 		return val.to_integer();
 	}
-	string to_string(const cov::any& val)
+	string to_string(const var& val)
 	{
 		return val.to_string();
 	}
-	bool is_char(const cov::any& val)
-	{
-		return val.type()==typeid(char);
-	}
-	bool is_number(const cov::any& val)
-	{
-		return val.type()==typeid(number);
-	}
-	bool is_boolean(const cov::any& val)
-	{
-		return val.type()==typeid(boolean);
-	}
-	bool is_string(const cov::any& val)
-	{
-		return val.type()==typeid(string);
-	}
-	bool is_list(const cov::any& val)
-	{
-		return val.type()==typeid(list);
-	}
-	bool is_array(const cov::any& val)
-	{
-		return val.type()==typeid(array);
-	}
-	bool is_pair(const cov::any& val)
-	{
-		return val.type()==typeid(pair);
-	}
-	bool is_hash_map(const cov::any& val)
-	{
-		return val.type()==typeid(hash_map);
-	}
-	cov::any clone(const cov::any& val)
+	var clone(const var& val)
 	{
 		return copy(val);
 	}
-	void swap(cov::any& a,cov::any& b)
+	void swap(var& a,var& b)
 	{
 		a.swap(b,true);
 	}
+	void init_ext()
+	{
+		// Init the extensions
+		iostream_cs_ext::init();
+		istream_cs_ext::init();
+		ostream_cs_ext::init();
+		system_cs_ext::init();
+		runtime_cs_ext::init();
+		except_cs_ext::init();
+		char_cs_ext::init();
+		string_cs_ext::init();
+		list_cs_ext::init();
+		array_cs_ext::init();
+		pair_cs_ext::init();
+		hash_map_cs_ext::init();
+		math_cs_ext::init();
+		darwin_cs_ext::init();
+	}
 	void init()
 	{
-		init_grammar();
 		// Internal Types
-		runtime->storage.add_type("char",[]()->cov::any {return cov::any::make<char>('\0');},cov::hash<std::string>(typeid(char).name()));
-		runtime->storage.add_type("number",[]()->cov::any {return cov::any::make<number>(0);},cov::hash<std::string>(typeid(number).name()));
-		runtime->storage.add_type("boolean",[]()->cov::any {return cov::any::make<boolean>(true);},cov::hash<std::string>(typeid(boolean).name()));
-		runtime->storage.add_type("string",[]()->cov::any {return cov::any::make<string>();},cov::hash<std::string>(typeid(string).name()));
-		runtime->storage.add_type("list",[]()->cov::any {return cov::any::make<list>();},cov::hash<std::string>(typeid(list).name()));
-		runtime->storage.add_type("array",[]()->cov::any {return cov::any::make<array>();},cov::hash<std::string>(typeid(array).name()));
-		runtime->storage.add_type("pair",[]()->cov::any {return cov::any::make<pair>(number(0),number(0));},cov::hash<std::string>(typeid(pair).name()));
-		runtime->storage.add_type("hash_map",[]()->cov::any {return cov::any::make<hash_map>();},cov::hash<std::string>(typeid(hash_map).name()));
+		runtime->storage.add_type("char",[]()->var {return var::make<char>('\0');},cs_impl::hash<std::string>(typeid(char).name()),char_ext_shared);
+		runtime->storage.add_type("number",[]()->var {return var::make<number>(0);},cs_impl::hash<std::string>(typeid(number).name()));
+		runtime->storage.add_type("boolean",[]()->var {return var::make<boolean>(true);},cs_impl::hash<std::string>(typeid(boolean).name()));
+		runtime->storage.add_type("pointer",[]()->var {return var::make<pointer>(null_pointer);},cs_impl::hash<std::string>(typeid(pointer).name()));
+		runtime->storage.add_type("string",[]()->var {return var::make<string>();},cs_impl::hash<std::string>(typeid(string).name()),string_ext_shared);
+		runtime->storage.add_type("list",[]()->var {return var::make<list>();},cs_impl::hash<std::string>(typeid(list).name()),list_ext_shared);
+		runtime->storage.add_type("array",[]()->var {return var::make<array>();},cs_impl::hash<std::string>(typeid(array).name()),array_ext_shared);
+		runtime->storage.add_type("pair",[]()->var {return var::make<pair>(number(0),number(0));},cs_impl::hash<std::string>(typeid(pair).name()),pair_ext_shared);
+		runtime->storage.add_type("hash_map",[]()->var {return var::make<hash_map>();},cs_impl::hash<std::string>(typeid(hash_map).name()),hash_map_ext_shared);
 		// Add Internal Functions to storage
-		add_function_const(to_integer);
-		add_function_const(to_string);
-		add_function_const(is_char);
-		add_function_const(is_number);
-		add_function_const(is_boolean);
-		add_function_const(is_string);
-		add_function_const(is_array);
-		add_function_const(is_pair);
-		add_function_const(is_hash_map);
-		add_function(clone);
-		add_function(swap);
-		// Init the extensions
-		system_cs_ext::init();
-		runtime->storage.add_var("system",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));
-		runtime_cs_ext::init();
-		runtime->storage.add_var("runtime",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
-		types_cs_ext::init();
-		runtime->storage.add_var("types",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&types_ext)));
-		char_cs_ext::init();
-		runtime->char_ext=std::make_shared<extension_holder>(&char_ext);
-		string_cs_ext::init();
-		runtime->string_ext=std::make_shared<extension_holder>(&string_ext);
-		list_cs_ext::init();
-		runtime->list_ext=std::make_shared<extension_holder>(&list_ext);
-		array_cs_ext::init();
-		runtime->array_ext=std::make_shared<extension_holder>(&array_ext);
-		pair_cs_ext::init();
-		runtime->pair_ext=std::make_shared<extension_holder>(&pair_ext);
-		hash_map_cs_ext::init();
-		runtime->hash_map_ext=std::make_shared<extension_holder>(&hash_map_ext);
-#ifdef CS_MATH_EXT
-		math_cs_ext::init();
-		runtime->storage.add_var("math",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&math_ext)));
-#endif
-#ifdef CS_FILE_EXT
-		file_cs_ext::init();
-		runtime->storage.add_var("file",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&file_ext)));
-#endif
-#ifdef CS_DARWIN_EXT
-		darwin_cs_ext::init();
-		runtime->storage.add_var("darwin",cov::any::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&darwin_ext)));
-#endif
+		runtime->storage.add_var_global("to_integer",cs::var::make_protect<cs::callable>(cs::cni(to_integer),true));
+		runtime->storage.add_var_global("to_string",cs::var::make_protect<cs::callable>(cs::cni(to_string),true));
+		runtime->storage.add_var_global("clone",cs::var::make_protect<cs::callable>(cs::cni(clone)));
+		runtime->storage.add_var_global("swap",cs::var::make_protect<cs::callable>(cs::cni(swap)));
+		// Add extensions to storage
+		runtime->storage.add_var("exception",var::make_protect<std::shared_ptr<extension_holder>>(except_ext_shared));
+		runtime->storage.add_var("iostream",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&iostream_ext)));
+		runtime->storage.add_var("system",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));
+		runtime->storage.add_var("runtime",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
+		runtime->storage.add_var("math",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&math_ext)));
+		runtime->storage.add_var("darwin",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&darwin_ext)));
 	}
-	void reset()
-	{
-		runtime=std::unique_ptr<runtime_type>(new runtime_type);
-		init();
-	}
-	void cs(const std::string& path)
+	std::shared_ptr<runtime_type> covscript(const std::string& path)
 	{
 		token_value::clean();
+		runtime.new_instance();
+		init();
 		std::deque<char> buff;
 		std::deque<token_base*> tokens;
 		std::deque<statement_base*> statements;
@@ -156,13 +127,13 @@ namespace cs {
 			try {
 				translate_into_tokens(buff,tokens);
 			}
-			catch(const syntax_error& se) {
-				throw syntax_error(path,line_num,se.what());
+			catch(const cs::exception& e) {
+				throw e;
 			}
 			catch(const std::exception& e) {
-				throw internal_error(path,line_num,e.what());
+				throw exception(line_num,path,line,e.what());
 			}
-			tokens.push_back(new token_endline(line_num,path));
+			tokens.push_back(new token_endline(line_num,path,line));
 			buff.clear();
 		}
 		translate_into_statements(tokens,statements);
@@ -170,18 +141,17 @@ namespace cs {
 		for(auto& ptr:statements) {
 			try {
 				ptr->run();
-				if(break_block||continue_block)
-					throw syntax_error("Can not run break or continue outside the loop.");
-			}
-			catch(const syntax_error& se) {
-				throw syntax_error(ptr->get_file_path(),ptr->get_line_num(),se.what());
 			}
 			catch(const lang_error& le) {
-				throw lang_error(ptr->get_file_path(),ptr->get_line_num(),le.what());
+				throw fatal_error("Uncaught exception.");
+			}
+			catch(const cs::exception& e) {
+				throw e;
 			}
 			catch(const std::exception& e) {
-				throw internal_error(ptr->get_file_path(),ptr->get_line_num(),e.what());
+				throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
 			}
 		}
+		return runtime.pop_instance();
 	}
 }

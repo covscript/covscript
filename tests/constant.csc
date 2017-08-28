@@ -1,8 +1,9 @@
+package test_constant
 const var a={"World"}
 const var str="Hello"
 a.push_front(str)
-switch system.input()
+switch system.in.input()
     case a[0]
-        system.println("Hello")
+        system.out.println("Hello")
     end
 end

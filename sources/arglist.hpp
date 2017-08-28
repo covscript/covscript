@@ -1,7 +1,27 @@
 #pragma once
-#include "../include/mozart/any.hpp"
+/*
+* Covariant Script Argument List
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* Copyright (C) 2017 Michael Lee(李登淳)
+* Email: mikecovlee@163.com
+* Github: https://github.com/mikecovlee
+*/
 #include "../include/mozart/traits.hpp"
 #include "./core.hpp"
+
 namespace cs {
 	template<typename T>constexpr const char* get_name_of_type()
 	{
@@ -41,7 +61,7 @@ namespace cs {
 	}
 	class arglist final {
 		template<typename T,int index>struct check_arg {
-			static inline short check(const cov::any& val)
+			static inline short check(const var& val)
 			{
 				if(typeid(T)!=val.type())
 					throw syntax_error("Invalid Argument.At "+std::to_string(index+1)+".Expected "+get_name_of_type<T>());
@@ -50,12 +70,12 @@ namespace cs {
 			}
 		};
 		static inline void result_container(short...) {}
-		template<typename...ArgsT,int...Seq>static inline void check_helper(const std::deque<cov::any>& args,const cov::sequence<Seq...>&)
+		template<typename...ArgsT,int...Seq>static inline void check_helper(const std::deque<var>& args,const cov::sequence<Seq...>&)
 		{
 			result_container(check_arg<typename cov::remove_constant<typename cov::remove_reference<ArgsT>::type>::type,Seq>::check(args[Seq])...);
 		}
 	public:
-		template<typename...ArgTypes>static inline void check(const std::deque<cov::any>& args)
+		template<typename...ArgTypes>static inline void check(const std::deque<var>& args)
 		{
 			if(sizeof...(ArgTypes)==args.size())
 				check_helper<ArgTypes...>(args,cov::make_sequence<sizeof...(ArgTypes)>::result);
@@ -63,8 +83,8 @@ namespace cs {
 				throw syntax_error("Wrong size of the arguments.Expected "+std::to_string(sizeof...(ArgTypes)));
 		}
 	};
-	template<int index>struct arglist::check_arg<cov::any,index> {
-		static inline short check(const cov::any&)
+	template<int index>struct arglist::check_arg<var,index> {
+		static inline short check(const var&)
 		{
 			return 0;
 		}

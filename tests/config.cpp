@@ -1,11 +1,10 @@
-#define CS_STATIC
 #include "../sources/covscript.hpp"
 #include <iostream>
 int main()
 {
 	using namespace cs;
-	cs::reset();
-	cs::cs("./config.csc");
+	init_grammar();
+	auto runtime=covscript("./config.csc");
 	const hash_map& config=runtime->storage.get_var("test_configure").const_val<hash_map>();
 	std::cout<<"File Path:"<<config.at("path")<<std::endl;
 	std::cout<<"File Info:"<<std::endl;;

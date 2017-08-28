@@ -1,4 +1,4 @@
-system.setprecision(10)
+iostream.setprecision(10)
 var s=0
 var n=0
 loop
@@ -11,5 +11,5 @@ loop
     ++n
 until r<10^(-6)
 end
-system.println(s)
-system.println(math.pi/4)
+system.out.println(s)
+system.out.println(math.pi/4)

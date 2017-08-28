@@ -1,3 +1,3 @@
 import "./constant.csc"
-const var s=str+"!!!"
-system.println(s)
+const var s=test_constant.str+"!!!"
+system.out.println(s)

@@ -1,15 +1,35 @@
 #pragma once
+/*
+* Covariant Script Symbols
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* Copyright (C) 2017 Michael Lee(李登淳)
+* Email: mikecovlee@163.com
+* Github: https://github.com/mikecovlee
+*/
 #include "./core.hpp"
-#include <map>
+
 namespace cs {
 	enum class token_types {
 		null,endline,action,signal,id,value,sblist,mblist,lblist,expr,arglist,array
 	};
 	enum class action_types {
-		import_,struct_,block_,endblock_,var_,constant_,as_,if_,else_,switch_,case_,default_,while_,loop_,until_,for_,to_,step_,iterate_,break_,continue_,function_,return_
+		import_,package_,namespace_,struct_,block_,endblock_,var_,constant_,if_,else_,switch_,case_,default_,while_,loop_,until_,for_,to_,step_,iterate_,break_,continue_,function_,return_,try_,catch_,throw_
 	};
 	enum class signal_types {
-		add_,sub_,mul_,div_,mod_,pow_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,inc_,dec_,pair_,slb_,srb_,mlb_,mrb_,llb_,lrb_,esb_,emb_,elb_,fcall_,access_,typeid_
+		add_,addasi_,sub_,subasi_,mul_,mulasi_,div_,divasi_,mod_,modasi_,pow_,powasi_,com_,dot_,und_,abo_,asi_,equ_,ueq_,aeq_,neq_,and_,or_,not_,inc_,dec_,pair_,slb_,srb_,mlb_,mrb_,llb_,lrb_,esb_,emb_,elb_,fcall_,access_,typeid_,new_,gcnew_,arrow_,lambda_,escape_,minus_,vardef_
 	};
 	template<typename Key,typename T>
 	class mapping final {
@@ -49,11 +69,13 @@ namespace cs {
 	garbage_collector<token_base> token_base::gc;
 	class token_endline final:public token_base {
 		std::size_t mNum=0;
-		std::string mFile="<Uknown>";
+		std::string mFile="<Unknown>";
+		std::string mCode="<Unknown>";
 	public:
 		token_endline()=default;
 		token_endline(std::size_t num):mNum(num) {}
 		token_endline(std::size_t num,const std::string& file):mNum(num),mFile(file) {}
+		token_endline(std::size_t num,const std::string& file,const std::string& code):mNum(num),mFile(file),mCode(code) {}
 		virtual token_types get_type() const noexcept override
 		{
 			return token_types::endline;
@@ -65,6 +87,10 @@ namespace cs {
 		const std::string& get_file() const noexcept
 		{
 			return this->mFile;
+		}
+		const std::string& get_code() const noexcept
+		{
+			return this->mCode;
 		}
 	};
 	class token_action final:public token_base {
@@ -110,13 +136,13 @@ namespace cs {
 		}
 	};
 	class token_value final:public token_base {
-		cov::any mVal;
+		var mVal;
 		static std::deque<std::deque<token_value*>> mList;
 	public:
 		token_value()=delete;
-		token_value(const cov::any& val):mVal(val)
+		token_value(const var& val):mVal(val)
 		{
-			if(!mVal.is_protect()) {
+			if(!mList.empty()&&!mVal.is_protect()) {
 				mVal.protect();
 				mList.front().push_back(this);
 			}
@@ -125,7 +151,7 @@ namespace cs {
 		{
 			return token_types::value;
 		}
-		cov::any& get_value() noexcept
+		var& get_value() noexcept
 		{
 			return this->mVal;
 		}
@@ -184,21 +210,21 @@ namespace cs {
 		}
 	};
 	mapping<std::string,signal_types> signal_map= {
-		{"+",signal_types::add_},{"-",signal_types::sub_},{"*",signal_types::mul_},{"/",signal_types::div_},{"%",signal_types::mod_},{"^",signal_types::pow_},{">",signal_types::abo_},{"<",signal_types::und_},
-		{"=",signal_types::asi_},{"&&",signal_types::and_},{"||",signal_types::or_},{"!",signal_types::not_},{"==",signal_types::equ_},{"!=",signal_types::neq_},{">=",signal_types::aeq_},{"<=",signal_types::ueq_},
+		{"+",signal_types::add_},{"+=",signal_types::addasi_},{"-",signal_types::sub_},{"-=",signal_types::subasi_},{"*",signal_types::mul_},{"*=",signal_types::mulasi_},{"/",signal_types::div_},{"/=",signal_types::divasi_},{"%",signal_types::mod_},{"%=",signal_types::modasi_},{"^",signal_types::pow_},{"^=",signal_types::powasi_},
+		{">",signal_types::abo_},{"<",signal_types::und_},{"=",signal_types::asi_},{"&&",signal_types::and_},{"||",signal_types::or_},{"!",signal_types::not_},{"==",signal_types::equ_},{"!=",signal_types::neq_},{">=",signal_types::aeq_},{"<=",signal_types::ueq_},
 		{"(",signal_types::slb_},{")",signal_types::srb_},{"[",signal_types::mlb_},{"]",signal_types::mrb_},{"{",signal_types::llb_},{"}",signal_types::lrb_},{",",signal_types::com_},{".",signal_types::dot_},
-		{"()",signal_types::esb_},{"[]",signal_types::emb_},{"{}",signal_types::elb_},{"++",signal_types::inc_},{"--",signal_types::dec_},{":",signal_types::pair_}
+		{"()",signal_types::esb_},{"[]",signal_types::emb_},{"{}",signal_types::elb_},{"++",signal_types::inc_},{"--",signal_types::dec_},{":",signal_types::pair_},{"->",signal_types::arrow_}
 	};
 	mapping<std::string,action_types> action_map= {
-		{"import",action_types::import_},{"struct",action_types::struct_},{"block",action_types::block_},{"end",action_types::endblock_},{"var",action_types::var_},{"const",action_types::constant_},{"as",action_types::as_},{"if",action_types::if_},{"else",action_types::else_},{"switch",action_types::switch_},{"case",action_types::case_},{"default",action_types::default_},
-		{"while",action_types::while_},{"until",action_types::until_},{"loop",action_types::loop_},{"for",action_types::for_},{"to",action_types::to_},{"step",action_types::step_},{"iterate",action_types::iterate_},{"break",action_types::break_},{"continue",action_types::continue_},{"function",action_types::function_},{"return",action_types::return_}
+		{"import",action_types::import_},{"package",action_types::package_},{"namespace",action_types::namespace_},{"struct",action_types::struct_},{"block",action_types::block_},{"end",action_types::endblock_},{"var",action_types::var_},{"const",action_types::constant_},{"if",action_types::if_},{"else",action_types::else_},{"switch",action_types::switch_},{"case",action_types::case_},{"default",action_types::default_},
+		{"while",action_types::while_},{"until",action_types::until_},{"loop",action_types::loop_},{"for",action_types::for_},{"to",action_types::to_},{"step",action_types::step_},{"iterate",action_types::iterate_},{"break",action_types::break_},{"continue",action_types::continue_},{"function",action_types::function_},{"return",action_types::return_},{"try",action_types::try_},{"catch",action_types::catch_},{"throw",action_types::throw_}
 	};
 	enum class constant_values {
-		current_namespace,global_namespace,this_object
+		current_namespace,global_namespace
 	};
 	mapping<std::string,std::function<token_base*()>> reserved_map= {
-		{"and",[]()->token_base*{return new token_signal(signal_types::and_);}},{"or",[]()->token_base*{return new token_signal(signal_types::or_);}},{"not",[]()->token_base*{return new token_signal(signal_types::not_);}},{"typeid",[]()->token_base*{return new token_signal(signal_types::typeid_);}},
-		{"current",[]()->token_base*{return new token_value(constant_values::current_namespace);}},{"global",[]()->token_base*{return new token_value(constant_values::global_namespace);}},{"this",[]()->token_base*{return new token_value(constant_values::this_object);}},
+		{"and",[]()->token_base*{return new token_signal(signal_types::and_);}},{"or",[]()->token_base*{return new token_signal(signal_types::or_);}},{"not",[]()->token_base*{return new token_signal(signal_types::not_);}},{"typeid",[]()->token_base*{return new token_signal(signal_types::typeid_);}},{"new",[]()->token_base*{return new token_signal(signal_types::new_);}},{"gcnew",[]()->token_base*{return new token_signal(signal_types::gcnew_);}},
+		{"current",[]()->token_base*{return new token_value(constant_values::current_namespace);}},{"global",[]()->token_base*{return new token_value(constant_values::global_namespace);}},{"null",[]()->token_base*{return new token_value(null_pointer);}},
 		{"true",[]()->token_base*{return new token_value(true);}},{"false",[]()->token_base*{return new token_value(false);}}
 	};
 	mapping<char,char> escape_map= {

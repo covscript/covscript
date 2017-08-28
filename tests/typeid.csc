@@ -2,11 +2,15 @@ struct foo
 end
 function test(a)
 	if(typeid a!=typeid foo)
-		runtime.error("oh")
+		throw runtime.exception("oh")
 	end
 end
-var a as foo
-system.println(typeid a)
-test(a)
-system.println("ok")
-test(1)
+try
+	var a=new foo
+	system.out.println(typeid a)
+	test(a)
+	system.out.println("ok")
+	test(1)
+catch e
+	system.out.println(e.what())
+end
