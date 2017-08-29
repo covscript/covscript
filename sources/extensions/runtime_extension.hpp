@@ -58,6 +58,7 @@ namespace runtime_cs_ext {
 	}
 	void init()
 	{
+		runtime_ext.add_var("std_version",var::make_constant<number>(std_version));
 		runtime_ext.add_var("info",var::make_protect<callable>(cni(info)));
 		runtime_ext.add_var("time",var::make_protect<callable>(cni(time)));
 		runtime_ext.add_var("delay",var::make_protect<callable>(cni(delay)));
