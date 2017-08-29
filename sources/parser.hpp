@@ -78,7 +78,7 @@ namespace cs {
 		return signal_level_map.match(static_cast<token_signal*>(ptr)->get_signal());
 	}
 	constexpr signal_types signal_left_associative[] = {
-		signal_types::und_,signal_types::abo_,signal_types::asi_,signal_types::equ_,signal_types::ueq_,signal_types::aeq_,signal_types::neq_,signal_types::and_,signal_types::or_
+		signal_types::asi_,signal_types::addasi_,signal_types::subasi_,signal_types::mulasi_,signal_types::divasi_,signal_types::modasi_,signal_types::powasi_,signal_types::equ_,signal_types::und_,signal_types::abo_,signal_types::ueq_,signal_types::aeq_,signal_types::neq_,signal_types::and_,signal_types::or_
 	};
 	bool is_left_associative(token_base* ptr)
 	{
