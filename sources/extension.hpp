@@ -21,10 +21,11 @@
 */
 #include "./core.hpp"
 
-cs::extension* cs_extension();
+cs::extension *cs_extension();
+
 extern "C"
 {
-	cs::extension* __CS_EXTENSION__()
+	cs::extension *__CS_EXTENSION__()
 	{
 		return cs_extension();
 	}

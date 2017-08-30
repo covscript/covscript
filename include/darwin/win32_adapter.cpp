@@ -3,20 +3,24 @@
 #include "./win32_conio.hpp"
 #include <cstdio>
 #include <string>
+
 namespace darwin {
-	class win32_adapter:public platform_adapter {
-		bool mReady=false;
+	class win32_adapter : public platform_adapter {
+		bool mReady = false;
 		picture mDrawable;
 	public:
-		win32_adapter()=default;
-		virtual ~win32_adapter()=default;
+		win32_adapter() = default;
+
+		virtual ~win32_adapter() = default;
+
 		virtual status get_state() const noexcept override
 		{
-			if(mReady)
+			if (mReady)
 				return status::ready;
 			else
 				return status::leisure;
 		}
+
 		virtual results init() noexcept override
 		{
 			conio::set_title("Covariant Darwin UCGL");
@@ -26,6 +30,7 @@ namespace darwin {
 			mReady = true;
 			return results::success;
 		}
+
 		virtual results stop() noexcept override
 		{
 			conio::reset();
@@ -34,9 +39,10 @@ namespace darwin {
 			mReady = false;
 			return results::success;
 		}
+
 		virtual results exec_commands(commands c) noexcept override
 		{
-			switch(c) {
+			switch (c) {
 			case commands::echo_on:
 				conio::echo(true);
 				break;
@@ -44,7 +50,7 @@ namespace darwin {
 				conio::echo(false);
 				break;
 			case commands::reset_cursor:
-				conio::gotoxy(0,0);
+				conio::gotoxy(0, 0);
 				break;
 			case commands::reset_attri:
 				conio::reset();
@@ -55,91 +61,96 @@ namespace darwin {
 			}
 			return results::success;
 		}
+
 		virtual bool is_kb_hit() noexcept override
 		{
 			return conio::kbhit();
 		}
+
 		virtual int get_kb_hit() noexcept override
 		{
 			return conio::getch();
 		}
+
 		virtual results fit_drawable() noexcept override
 		{
-			mDrawable.resize(conio::terminal_width(),conio::terminal_height());
+			mDrawable.resize(conio::terminal_width(), conio::terminal_height());
 			return results::success;
 		}
-		virtual drawable* get_drawable() noexcept override
+
+		virtual drawable *get_drawable() noexcept override
 		{
 			return &mDrawable;
 		}
+
 		virtual results update_drawable() noexcept override
 		{
-			conio::gotoxy(0,0);
-			std::size_t sw(std::min<std::size_t>(mDrawable.get_width(),conio::terminal_width())),sh(std::min<std::size_t>(mDrawable.get_height(),conio::terminal_height()));
-			conio::console buf(sw,sh);
-			for(std::size_t y=0; y<sh; ++y) {
-				for(std::size_t x=0; x<sw; ++x) {
-					const pixel& pix=mDrawable.get_pixel(x,y);
-					int fcolor,bcolor;
-					switch(pix.get_front_color()) {
+			conio::gotoxy(0, 0);
+			std::size_t sw(std::min<std::size_t>(mDrawable.get_width(), conio::terminal_width())), sh(std::min<std::size_t>(mDrawable.get_height(), conio::terminal_height()));
+			conio::console buf(sw, sh);
+			for (std::size_t y = 0; y < sh; ++y) {
+				for (std::size_t x = 0; x < sw; ++x) {
+					const pixel &pix = mDrawable.get_pixel(x, y);
+					int fcolor, bcolor;
+					switch (pix.get_front_color()) {
 					case colors::white:
-						fcolor=15;
+						fcolor = 15;
 						break;
 					case colors::black:
-						fcolor=0;
+						fcolor = 0;
 						break;
 					case colors::red:
-						fcolor=12;
+						fcolor = 12;
 						break;
 					case colors::green:
-						fcolor=10;
+						fcolor = 10;
 						break;
 					case colors::blue:
-						fcolor=9;
+						fcolor = 9;
 						break;
 					case colors::pink:
-						fcolor=13;
+						fcolor = 13;
 						break;
 					case colors::yellow:
-						fcolor=14;
+						fcolor = 14;
 						break;
 					case colors::cyan:
-						fcolor=11;
+						fcolor = 11;
 						break;
 					default:
 						return results::failure;
 						break;
 					}
-					switch(pix.get_back_color()) {
+					switch (pix.get_back_color()) {
 					case colors::white:
-						bcolor=15;
+						bcolor = 15;
 						break;
 					case colors::black:
-						bcolor=8;
+						bcolor = 8;
 						break;
 					case colors::red:
-						bcolor=12;
+						bcolor = 12;
 						break;
 					case colors::green:
-						bcolor=10;
+						bcolor = 10;
 						break;
 					case colors::blue:
-						bcolor=9;
+						bcolor = 9;
 						break;
 					case colors::pink:
-						bcolor=13;
+						bcolor = 13;
 						break;
 					case colors::yellow:
-						bcolor=14;
+						bcolor = 14;
 						break;
 					case colors::cyan:
-						bcolor=11;
+						bcolor = 11;
 						break;
 					default:
 						return results::failure;
 						break;
 					}
-					buf.set_color(fcolor,bcolor);
+					buf.set_color(fcolor, bcolor);
 					buf.put_char(pix.get_char());
 				}
 				buf.reset();
@@ -148,7 +159,8 @@ namespace darwin {
 			return results::success;
 		}
 	} dwin32adapter;
-	platform_adapter* module_resource()
+
+	platform_adapter *module_resource()
 	{
 		return &dwin32adapter;
 	}

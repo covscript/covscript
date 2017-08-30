@@ -20,17 +20,15 @@
 * Website: http://covariant.cn/cs
 */
 #include "./covscript.hpp"
-#include <iostream>
-#include <fstream>
 
-void covscript_main(int args_size,const char* args[])
+void covscript_main(int args_size, const char *args[])
 {
 	std::ios::sync_with_stdio(false);
-	if(args_size>1) {
+	if (args_size > 1) {
 		cs::array arg;
-		for(int i=1; i<args_size; ++i)
+		for (int i = 1; i < args_size; ++i)
 			arg.push_back(std::string(args[i]));
-		system_ext.add_var("args",arg);
+		system_ext.add_var("args", arg);
 		cs::init_grammar();
 		cs::init_ext();
 		cs::covscript(args[1]);
@@ -39,17 +37,18 @@ void covscript_main(int args_size,const char* args[])
 		throw cs::fatal_error("no input file.");
 }
 
-const char* log_path="./cs_runtime.log";
-int main(int args_size,const char* args[])
+const char *log_path = "./cs_runtime.log";
+
+int main(int args_size, const char *args[])
 {
 	try {
-		covscript_main(args_size,args);
+		covscript_main(args_size, args);
 	}
-	catch(const std::exception& e) {
+	catch (const std::exception &e) {
 		std::ofstream out(::log_path);
-		out<<e.what();
+		out << e.what();
 		out.flush();
-		std::cerr<<e.what()<<std::endl;
+		std::cerr << e.what() << std::endl;
 		return -1;
 	}
 	return 0;
