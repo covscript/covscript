@@ -33,10 +33,12 @@ set(SOURCE_FILES
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS " -fPIE -s -O3")
-if (UNIX OR APPLE)
-    set(CMAKE_LINK_LIBRARY_FLAG "-ldl")
-endif ()
 
 add_executable(cs ${SOURCE_FILES})
 add_executable(test-config tests/config.cpp)
 add_library(test-extension SHARED tests/extension.cpp)
+
+if (UNIX OR APPLE)
+    target_link_libraries(cs dl)
+    target_link_libraries(test-config dl)
+endif ()

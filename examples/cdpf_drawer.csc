@@ -756,6 +756,10 @@ function main()
 end
 darwin.load()
 darwin.set_frame_limit(60)
-start()
-main()
+try
+	start()
+	main()
+catch e
+	system.out.println(e.what())
+end
 darwin.exit(0)
