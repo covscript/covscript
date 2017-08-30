@@ -28,7 +28,7 @@ function ston(str)
 	for ch iterate str
 		if ch!='.'
 			if !ch.isdigit()
-				runtime.error("Illegal string")
+				throw runtime.exception("Illegal string")
 			end
 			if dot_count==0
 				ipart.append(ch)
@@ -37,7 +37,7 @@ function ston(str)
 			end
 		else
 			if ++dot_count>1
-				runtime.error("Illegal string")
+				throw runtime.exception("Illegal string")
 			end
 		end
 	end

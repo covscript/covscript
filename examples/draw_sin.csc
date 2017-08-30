@@ -17,6 +17,6 @@ end
 darwin.load()
 fd=darwin.ui.input_box("","Please input the period:",to_string(fd),true)
 if(typeid fd!=typeid number)
-  runtime.error("Request number.")
+  throw runtime.exception("Request number.")
 end
 main()

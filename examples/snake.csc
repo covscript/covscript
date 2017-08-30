@@ -169,7 +169,7 @@ for i=1 to system.args.size()-1
 			cross_wall=true
 		end
 		default
-			runtime.error("Unknown arguments")
+			throw runtime.exception("Unknown arguments")
 		end
 	end
 end
