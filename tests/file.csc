@@ -1,6 +1,6 @@
 var infs=iostream.fstream("./file.csc",iostream.openmode.in)
 if !infs.good()
-  runtime.error("file is not exsist.")
+  throw runtime.exception("file is not exsist.")
 end
 var outfs=iostream.fstream("./test.txt",iostream.openmode.out)
 outfs.println("#Clone of file.csc")

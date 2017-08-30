@@ -1,7 +1,7 @@
 import "str_tools.csp"
 var in=iostream.fstream("../LICENSE",iostream.openmode.in)
 if !in.good()
-    runtime.error("File is not exist")
+    throw runtime.exception("File is not exist")
 end
 var table=new hash_map
 while !in.eof()
