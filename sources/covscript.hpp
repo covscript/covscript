@@ -36,22 +36,26 @@
 
 namespace cs {
 // Internal Functions
-	number to_integer(const var& val)
+	number to_integer(const var &val)
 	{
 		return val.to_integer();
 	}
-	string to_string(const var& val)
+
+	string to_string(const var &val)
 	{
 		return val.to_string();
 	}
-	var clone(const var& val)
+
+	var clone(const var &val)
 	{
 		return copy(val);
 	}
-	void swap(var& a,var& b)
+
+	void swap(var &a, var &b)
 	{
-		a.swap(b,true);
+		a.swap(b, true);
 	}
+
 	void init_ext()
 	{
 		// Init the extensions
@@ -70,86 +74,88 @@ namespace cs {
 		math_cs_ext::init();
 		darwin_cs_ext::init();
 	}
+
 	void init()
 	{
 		// Internal Types
-		runtime->storage.add_type("char",[]()->var {return var::make<char>('\0');},cs_impl::hash<std::string>(typeid(char).name()),char_ext_shared);
-		runtime->storage.add_type("number",[]()->var {return var::make<number>(0);},cs_impl::hash<std::string>(typeid(number).name()));
-		runtime->storage.add_type("boolean",[]()->var {return var::make<boolean>(true);},cs_impl::hash<std::string>(typeid(boolean).name()));
-		runtime->storage.add_type("pointer",[]()->var {return var::make<pointer>(null_pointer);},cs_impl::hash<std::string>(typeid(pointer).name()));
-		runtime->storage.add_type("string",[]()->var {return var::make<string>();},cs_impl::hash<std::string>(typeid(string).name()),string_ext_shared);
-		runtime->storage.add_type("list",[]()->var {return var::make<list>();},cs_impl::hash<std::string>(typeid(list).name()),list_ext_shared);
-		runtime->storage.add_type("array",[]()->var {return var::make<array>();},cs_impl::hash<std::string>(typeid(array).name()),array_ext_shared);
-		runtime->storage.add_type("pair",[]()->var {return var::make<pair>(number(0),number(0));},cs_impl::hash<std::string>(typeid(pair).name()),pair_ext_shared);
-		runtime->storage.add_type("hash_map",[]()->var {return var::make<hash_map>();},cs_impl::hash<std::string>(typeid(hash_map).name()),hash_map_ext_shared);
+		runtime->storage.add_type("char", []() -> var { return var::make<char>('\0'); }, cs_impl::hash<std::string>(typeid(char).name()), char_ext_shared);
+		runtime->storage.add_type("number", []() -> var { return var::make<number>(0); }, cs_impl::hash<std::string>(typeid(number).name()));
+		runtime->storage.add_type("boolean", []() -> var { return var::make<boolean>(true); }, cs_impl::hash<std::string>(typeid(boolean).name()));
+		runtime->storage.add_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, cs_impl::hash<std::string>(typeid(pointer).name()));
+		runtime->storage.add_type("string", []() -> var { return var::make<string>(); }, cs_impl::hash<std::string>(typeid(string).name()), string_ext_shared);
+		runtime->storage.add_type("list", []() -> var { return var::make<list>(); }, cs_impl::hash<std::string>(typeid(list).name()), list_ext_shared);
+		runtime->storage.add_type("array", []() -> var { return var::make<array>(); }, cs_impl::hash<std::string>(typeid(array).name()), array_ext_shared);
+		runtime->storage.add_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, cs_impl::hash<std::string>(typeid(pair).name()), pair_ext_shared);
+		runtime->storage.add_type("hash_map", []() -> var { return var::make<hash_map>(); }, cs_impl::hash<std::string>(typeid(hash_map).name()), hash_map_ext_shared);
 		// Add Internal Functions to storage
-		runtime->storage.add_var_global("to_integer",cs::var::make_protect<cs::callable>(cs::cni(to_integer),true));
-		runtime->storage.add_var_global("to_string",cs::var::make_protect<cs::callable>(cs::cni(to_string),true));
-		runtime->storage.add_var_global("clone",cs::var::make_protect<cs::callable>(cs::cni(clone)));
-		runtime->storage.add_var_global("swap",cs::var::make_protect<cs::callable>(cs::cni(swap)));
+		runtime->storage.add_var_global("to_integer", cs::var::make_protect<cs::callable>(cs::cni(to_integer), true));
+		runtime->storage.add_var_global("to_string", cs::var::make_protect<cs::callable>(cs::cni(to_string), true));
+		runtime->storage.add_var_global("clone", cs::var::make_protect<cs::callable>(cs::cni(clone)));
+		runtime->storage.add_var_global("swap", cs::var::make_protect<cs::callable>(cs::cni(swap)));
 		// Add extensions to storage
-		runtime->storage.add_var("exception",var::make_protect<std::shared_ptr<extension_holder>>(except_ext_shared));
-		runtime->storage.add_var("iostream",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&iostream_ext)));
-		runtime->storage.add_var("system",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));
-		runtime->storage.add_var("runtime",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
-		runtime->storage.add_var("math",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&math_ext)));
-		runtime->storage.add_var("darwin",var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&darwin_ext)));
+		runtime->storage.add_var("exception", var::make_protect<std::shared_ptr<extension_holder>>(except_ext_shared));
+		runtime->storage.add_var("iostream", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&iostream_ext)));
+		runtime->storage.add_var("system", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));
+		runtime->storage.add_var("runtime", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
+		runtime->storage.add_var("math", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&math_ext)));
+		runtime->storage.add_var("darwin", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&darwin_ext)));
 	}
-	std::shared_ptr<runtime_type> covscript(const std::string& path)
+
+	std::shared_ptr<runtime_type> covscript(const std::string &path)
 	{
 		token_value::clean();
 		runtime.new_instance();
 		init();
 		std::deque<char> buff;
-		std::deque<token_base*> tokens;
-		std::deque<statement_base*> statements;
+		std::deque<token_base *> tokens;
+		std::deque<statement_base *> statements;
 		std::ifstream in(path);
-		if(!in.is_open())
-			throw fatal_error(path+": No such file or directory");
+		if (!in.is_open())
+			throw fatal_error(path + ": No such file or directory");
 		std::string line;
-		std::size_t line_num=0;
-		while(std::getline(in,line)) {
+		std::size_t line_num = 0;
+		while (std::getline(in, line)) {
 			++line_num;
-			if(line.empty())
+			if (line.empty())
 				continue;
-			bool is_note=false;
-			for(auto& ch:line) {
-				if(!std::isspace(ch)) {
-					if(ch=='#')
-						is_note=true;
+			bool is_note = false;
+			for (auto &ch:line) {
+				if (!std::isspace(ch)) {
+					if (ch == '#')
+						is_note = true;
 					break;
 				}
 			}
-			if(is_note)
+			if (is_note)
 				continue;
-			for(auto& c:line)
+			for (auto &c:line)
 				buff.push_back(c);
 			try {
-				translate_into_tokens(buff,tokens);
+				translate_into_tokens(buff, tokens);
 			}
-			catch(const cs::exception& e) {
+			catch (const cs::exception &e) {
 				throw e;
 			}
-			catch(const std::exception& e) {
-				throw exception(line_num,path,line,e.what());
+			catch (const std::exception &e) {
+				throw exception(line_num, path, line, e.what());
 			}
-			tokens.push_back(new token_endline(line_num,path,line));
+			tokens.push_back(new token_endline(line_num, path, line));
 			buff.clear();
 		}
-		translate_into_statements(tokens,statements);
+		translate_into_statements(tokens, statements);
 		token_value::mark();
-		for(auto& ptr:statements) {
+		for (auto &ptr:statements) {
 			try {
 				ptr->run();
 			}
-			catch(const lang_error& le) {
+			catch (const lang_error &le) {
 				throw fatal_error("Uncaught exception.");
 			}
-			catch(const cs::exception& e) {
+			catch (const cs::exception &e) {
 				throw e;
 			}
-			catch(const std::exception& e) {
-				throw exception(ptr->get_line_num(),ptr->get_file_path(),ptr->get_code(),e.what());
+			catch (const std::exception &e) {
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_code(), e.what());
 			}
 		}
 		return runtime.pop_instance();

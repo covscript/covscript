@@ -24,46 +24,56 @@
 #include "./base.hpp"
 #include <utility>
 #include <array>
+
 namespace cov {
-	template<typename T,long Size>
+	template<typename T, long Size>
 	class static_stack final {
-		std::array<T,Size> mData;
-		long mOffset=-1;
+		std::array<T, Size> mData;
+		long mOffset = -1;
 	public:
-		static_stack()=default;
-		static_stack(const static_stack&)=default;
-		static_stack(static_stack&&) noexcept=default;
-		~static_stack()=default;
+		static_stack() = default;
+
+		static_stack(const static_stack &) = default;
+
+		static_stack(static_stack &&) noexcept = default;
+
+		~static_stack() = default;
+
 		bool empty() const
 		{
-			return mOffset==-1;
+			return mOffset == -1;
 		}
+
 		bool full() const
 		{
-			return mOffset==Size-1;
+			return mOffset == Size - 1;
 		}
-		T& top()
+
+		T &top()
 		{
-			if(mOffset<0)
+			if (mOffset < 0)
 				throw cov::error("E000H");
 			return mData[mOffset];
 		}
-		const T& top() const
+
+		const T &top() const
 		{
-			if(mOffset<0)
+			if (mOffset < 0)
 				throw cov::error("E000H");
 			return mData[mOffset];
 		}
-		void push(const T& data)
+
+		void push(const T &data)
 		{
-			if(mOffset<Size-1)
-				mData[++mOffset]=data;
+			if (mOffset < Size - 1)
+				mData[++mOffset] = data;
 			else
 				throw cov::error("E000I");
 		}
+
 		void pop()
 		{
-			if(mOffset>=0)
+			if (mOffset >= 0)
 				--mOffset;
 			else
 				throw cov::error("E000H");

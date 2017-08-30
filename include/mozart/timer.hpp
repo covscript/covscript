@@ -28,32 +28,35 @@
 
 namespace cov {
 	class timer final {
-		static std::chrono::time_point < std::chrono::high_resolution_clock > m_timer;
+		static std::chrono::time_point<std::chrono::high_resolution_clock> m_timer;
 	public:
 		typedef unsigned long timer_t;
 		enum class time_unit {
 			nano_sec, micro_sec, milli_sec, second, minute
 		};
+
 		static void reset()
 		{
 			m_timer = std::chrono::high_resolution_clock::now();
 		}
+
 		static timer_t time(time_unit unit)
 		{
 			switch (unit) {
 			case time_unit::nano_sec:
-				return std::chrono::duration_cast < std::chrono::nanoseconds >(std::chrono::high_resolution_clock::now() - m_timer).count();
+				return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_timer).count();
 			case time_unit::micro_sec:
-				return std::chrono::duration_cast < std::chrono::microseconds >(std::chrono::high_resolution_clock::now() - m_timer).count();
+				return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_timer).count();
 			case time_unit::milli_sec:
-				return std::chrono::duration_cast < std::chrono::milliseconds >(std::chrono::high_resolution_clock::now() - m_timer).count();
+				return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - m_timer).count();
 			case time_unit::second:
-				return std::chrono::duration_cast < std::chrono::seconds >(std::chrono::high_resolution_clock::now() - m_timer).count();
+				return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - m_timer).count();
 			case time_unit::minute:
-				return std::chrono::duration_cast < std::chrono::minutes >(std::chrono::high_resolution_clock::now() - m_timer).count();
+				return std::chrono::duration_cast<std::chrono::minutes>(std::chrono::high_resolution_clock::now() - m_timer).count();
 			}
 			return 0;
 		}
+
 		static void delay(time_unit unit, timer_t time)
 		{
 			switch (unit) {
@@ -74,14 +77,16 @@ namespace cov {
 				break;
 			}
 		}
-		static timer_t measure(time_unit unit,const cov::function<void()>& func)
+
+		static timer_t measure(time_unit unit, const cov::function<void()> &func)
 		{
-			timer_t begin(0),end(0);
-			begin=time(unit);
+			timer_t begin(0), end(0);
+			begin = time(unit);
 			func();
-			end=time(unit);
-			return end-begin;
+			end = time(unit);
+			return end - begin;
 		}
 	};
-	std::chrono::time_point < std::chrono::high_resolution_clock > timer::m_timer(std::chrono::high_resolution_clock::now());
+
+	std::chrono::time_point<std::chrono::high_resolution_clock> timer::m_timer(std::chrono::high_resolution_clock::now());
 }

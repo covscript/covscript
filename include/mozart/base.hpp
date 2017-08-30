@@ -38,59 +38,82 @@
 #include <string>
 
 namespace cov {
-	class warning final:public std::exception {
-		std::string mWhat="Mozart Warning";
+	class warning final : public std::exception {
+		std::string mWhat = "Mozart Warning";
 	public:
-		warning()=default;
-		warning(const std::string& str) noexcept:
-			mWhat("Mozart Warning:"+str) {}
-		warning(const warning&)=default;
-		warning(warning&&)=default;
-		virtual ~warning()=default;
-		virtual const char* what() const noexcept override
+		warning() = default;
+
+		warning(const std::string &str) noexcept:
+			mWhat("Mozart Warning:" + str) {}
+
+		warning(const warning &) = default;
+
+		warning(warning &&) = default;
+
+		virtual ~warning() = default;
+
+		virtual const char *what() const noexcept override
 		{
 			return this->mWhat.c_str();
 		}
 	};
-	class error final:public std::exception {
-		std::string mWhat="Mozart Error";
+
+	class error final : public std::exception {
+		std::string mWhat = "Mozart Error";
 	public:
-		error()=default;
-		error(const std::string& str) noexcept:
-			mWhat("Mozart Error:"+str) {}
-		error(const error&)=default;
-		error(error&&)=default;
-		virtual ~error()=default;
-		error& operator=(const error&)=default;
-		error& operator=(error&&)=default;
-		virtual const char* what() const noexcept override
+		error() = default;
+
+		error(const std::string &str) noexcept:
+			mWhat("Mozart Error:" + str) {}
+
+		error(const error &) = default;
+
+		error(error &&) = default;
+
+		virtual ~error() = default;
+
+		error &operator=(const error &)= default;
+
+		error &operator=(error &&)= default;
+
+		virtual const char *what() const noexcept override
 		{
 			return this->mWhat.c_str();
 		}
 	};
+
 	class object {
 	public:
 		static bool show_warning;
-		object()=default;
-		object(object&&) noexcept=default;
-		object(const object&)=default;
-		virtual ~object()=default;
+
+		object() = default;
+
+		object(object &&) noexcept = default;
+
+		object(const object &) = default;
+
+		virtual ~object() = default;
+
 		virtual std::type_index object_type() const noexcept final
 		{
 			return typeid(*this);
 		}
+
 		virtual std::string to_string() const noexcept
 		{
 			return typeid(*this).name();
 		}
-		virtual object* clone() noexcept
+
+		virtual object *clone() noexcept
 		{
 			return nullptr;
 		}
-		virtual bool equals(const object* ptr) const noexcept
+
+		virtual bool equals(const object *ptr) const noexcept
 		{
-			return this==ptr;
+			return this == ptr;
 		}
 	};
-	bool object::show_warning=true;
+
+	bool object::show_warning = true;
 }

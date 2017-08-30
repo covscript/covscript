@@ -57,247 +57,315 @@
 
 namespace cs {
 // Version
-	const std::string version="1.0.4";
-	const number std_version=20170805;
+	const std::string version = "1.0.4";
+	const number std_version = 20170805;
 // Output Precision
-	static int output_precision=8;
+	static int output_precision = 8;
+
 // Callable and Function
 	class callable final {
 	public:
-		using function_type=std::function<var(array&)>;
+		using function_type=std::function<var(array &)>;
 		enum class types {
-			normal,constant,member_fn
+			normal, constant, member_fn
 		};
 	private:
 		function_type mFunc;
-		types mType=types::normal;
+		types mType = types::normal;
 	public:
-		callable()=delete;
-		callable(const callable&)=default;
-		callable(const function_type& func,bool constant=false):mFunc(func),mType(constant?types::constant:types::normal) {}
-		callable(const function_type& func,types type):mFunc(func),mType(type) {}
+		callable() = delete;
+
+		callable(const callable &) = default;
+
+		callable(const function_type &func, bool constant = false) : mFunc(func), mType(constant ? types::constant : types::normal) {}
+
+		callable(const function_type &func, types type) : mFunc(func), mType(type) {}
+
 		bool is_constant() const
 		{
-			return mType==types::constant;
+			return mType == types::constant;
 		}
+
 		bool is_member_fn() const
 		{
-			return mType==types::member_fn;
+			return mType == types::member_fn;
 		}
-		var call(array& args) const
+
+		var call(array &args) const
 		{
 			return mFunc(args);
 		}
 	};
+
 	class function final {
 		std::deque<std::string> mArgs;
-		std::deque<statement_base*> mBody;
+		std::deque<statement_base *> mBody;
 	public:
-		function()=delete;
-		function(const function&)=default;
-		function(const std::deque<std::string>& args,const std::deque<statement_base*>& body):mArgs(args),mBody(body) {}
-		~function()=default;
-		var call(array&) const;
-		var operator()(array& args) const
+		function() = delete;
+
+		function(const function &) = default;
+
+		function(const std::deque<std::string> &args, const std::deque<statement_base *> &body) : mArgs(args), mBody(body) {}
+
+		~function() = default;
+
+		var call(array &) const;
+
+		var operator()(array &args) const
 		{
 			return call(args);
 		}
+
 		void add_this()
 		{
 			mArgs.push_front("this");
 		}
 	};
+
 	class object_method final {
 		var mObj;
 		var mCallable;
 	public:
-		object_method()=delete;
-		object_method(const var& obj,const var& callable):mObj(obj),mCallable(callable) {}
-		~object_method()=default;
-		const var& get_callable() const
+		object_method() = delete;
+
+		object_method(const var &obj, const var &callable) : mObj(obj), mCallable(callable) {}
+
+		~object_method() = default;
+
+		const var &get_callable() const
 		{
 			return mCallable;
 		}
-		var operator()(array& args) const
+
+		var operator()(array &args) const
 		{
 			args.push_front(mObj);
-			var retval=mCallable.const_val<callable>().call(args);
+			var retval = mCallable.const_val<callable>().call(args);
 			args.pop_front();
 			return retval;
 		}
 	};
+
 // Type and struct
 	struct pointer final {
 		var data;
-		pointer()=default;
-		pointer(const var& v):data(v) {}
-		bool operator==(const pointer& ptr) const
+
+		pointer() = default;
+
+		pointer(const var &v) : data(v) {}
+
+		bool operator==(const pointer &ptr) const
 		{
 			return data.is_same(ptr.data);
 		}
 	};
-	static const pointer null_pointer= {};
+
+	static const pointer null_pointer = {};
+
 	struct type final {
 		std::function<var()> constructor;
 		std::size_t id;
 		extension_t extensions;
-		type()=delete;
-		type(const std::function<var()>& c,std::size_t i):constructor(c),id(i) {}
-		type(const std::function<var()>& c,std::size_t i,extension_t ext):constructor(c),id(i),extensions(ext) {}
-		var& get_var(const std::string&) const;
+
+		type() = delete;
+
+		type(const std::function<var()> &c, std::size_t i) : constructor(c), id(i) {}
+
+		type(const std::function<var()> &c, std::size_t i, extension_t ext) : constructor(c), id(i), extensions(ext) {}
+
+		var &get_var(const std::string &) const;
 	};
+
 	class structure final {
 		std::size_t m_hash;
 		std::string m_name;
-		std::shared_ptr<std::unordered_map<string,var>> m_data;
+		std::shared_ptr<std::unordered_map<string, var>> m_data;
 	public:
-		structure()=delete;
-		structure(std::size_t hash,const std::string& name,const std::shared_ptr<std::unordered_map<string,var>>& data):m_hash(hash),m_name(typeid(structure).name()+name),m_data(data) {}
-		structure(const structure& s):m_hash(s.m_hash),m_name(s.m_name),m_data(std::make_shared<std::unordered_map<string,var>>(*s.m_data))
+		structure() = delete;
+
+		structure(std::size_t hash, const std::string &name, const std::shared_ptr<std::unordered_map<string, var>> &data) : m_hash(hash), m_name(typeid(structure).name() + name), m_data(data) {}
+
+		structure(const structure &s) : m_hash(s.m_hash), m_name(s.m_name), m_data(std::make_shared<std::unordered_map<string, var>>(*s.m_data))
 		{
-			for(auto& it:*m_data)
+			for (auto &it:*m_data)
 				it.second.clone();
 		}
-		~structure()=default;
-		std::shared_ptr<std::unordered_map<string,var>>& get_domain()
+
+		~structure() = default;
+
+		std::shared_ptr<std::unordered_map<string, var>> &get_domain()
 		{
 			return m_data;
 		}
+
 		std::size_t get_hash() const
 		{
 			return m_hash;
 		}
-		var& get_var(const std::string& name) const
+
+		var &get_var(const std::string &name) const
 		{
-			if(m_data->count(name)>0)
+			if (m_data->count(name) > 0)
 				return (*m_data)[name];
 			else
-				throw syntax_error("Struct \""+m_name+"\" have no member called \""+name+"\".");
+				throw syntax_error("Struct \"" + m_name + "\" have no member called \"" + name + "\".");
 		}
 	};
+
 	class struct_builder final {
 		static std::size_t mCount;
 		std::size_t mHash;
 		std::string mName;
-		std::deque<statement_base*> mMethod;
+		std::deque<statement_base *> mMethod;
 	public:
-		struct_builder()=delete;
-		struct_builder(const std::string& name,const std::deque<statement_base*>& method):mHash(++mCount),mName(name),mMethod(method) {}
-		struct_builder(const struct_builder&)=default;
-		~struct_builder()=default;
+		struct_builder() = delete;
+
+		struct_builder(const std::string &name, const std::deque<statement_base *> &method) : mHash(++mCount), mName(name), mMethod(method) {}
+
+		struct_builder(const struct_builder &) = default;
+
+		~struct_builder() = default;
+
 		std::size_t get_hash() const
 		{
 			return mHash;
 		}
+
 		var operator()();
 	};
-	std::size_t struct_builder::mCount=0;
+
+	std::size_t struct_builder::mCount = 0;
+
 // Internal Garbage Collection
-	template<typename T>class garbage_collector final {
-		std::forward_list<T*> table_new;
-		std::forward_list<T*> table_delete;
+	template<typename T>
+	class garbage_collector final {
+		std::forward_list<T *> table_new;
+		std::forward_list<T *> table_delete;
 	public:
-		garbage_collector()=default;
-		garbage_collector(const garbage_collector&)=delete;
+		garbage_collector() = default;
+
+		garbage_collector(const garbage_collector &) = delete;
+
 		~garbage_collector()
 		{
-			for(auto& ptr:table_delete)
+			for (auto &ptr:table_delete)
 				table_new.remove(ptr);
-			for(auto& ptr:table_new)
+			for (auto &ptr:table_new)
 				delete ptr;
 		}
-		void add(void* ptr)
+
+		void add(void *ptr)
 		{
-			table_new.push_front(static_cast<T*>(ptr));
+			table_new.push_front(static_cast<T *>(ptr));
 		}
-		void remove(void* ptr)
+
+		void remove(void *ptr)
 		{
-			table_delete.push_front(static_cast<T*>(ptr));
+			table_delete.push_front(static_cast<T *>(ptr));
 		}
 	};
+
 // Namespace and extensions
 	class name_space final {
 		domain_t m_data;
 	public:
-		name_space():m_data(std::make_shared<std::unordered_map<string,var>>()) {}
-		name_space(const name_space&)=delete;
-		name_space(const domain_t& dat):m_data(dat) {}
-		~name_space()=default;
-		void add_var(const std::string& name,const var& var)
+		name_space() : m_data(std::make_shared<std::unordered_map<string, var>>()) {}
+
+		name_space(const name_space &) = delete;
+
+		name_space(const domain_t &dat) : m_data(dat) {}
+
+		~name_space() = default;
+
+		void add_var(const std::string &name, const var &var)
 		{
-			if(m_data->count(name)>0)
-				(*m_data)[name]=var;
+			if (m_data->count(name) > 0)
+				(*m_data)[name] = var;
 			else
-				m_data->emplace(name,var);
+				m_data->emplace(name, var);
 		}
-		var& get_var(const std::string& name)
+
+		var &get_var(const std::string &name)
 		{
-			if(m_data->count(name)>0)
+			if (m_data->count(name) > 0)
 				return (*m_data)[name];
 			else
-				throw syntax_error("Use of undefined variable \""+name+"\".");
+				throw syntax_error("Use of undefined variable \"" + name + "\".");
 		}
 	};
+
 	class name_space_holder final {
 		bool m_local;
-		name_space* m_ns=nullptr;
+		name_space *m_ns = nullptr;
 		cov::dll m_dll;
 	public:
-		name_space_holder()=delete;
-		name_space_holder(const name_space_holder&)=delete;
-		name_space_holder(const domain_t& dat):m_local(true),m_ns(new name_space(dat)) {}
-		name_space_holder(name_space* ptr):m_local(false),m_ns(ptr) {}
-		name_space_holder(const std::string& path):m_local(false),m_dll(path)
+		name_space_holder() = delete;
+
+		name_space_holder(const name_space_holder &) = delete;
+
+		name_space_holder(const domain_t &dat) : m_local(true), m_ns(new name_space(dat)) {}
+
+		name_space_holder(name_space *ptr) : m_local(false), m_ns(ptr) {}
+
+		name_space_holder(const std::string &path) : m_local(false), m_dll(path)
 		{
-			m_ns=reinterpret_cast<name_space*(*)()>(m_dll.get_address("__CS_EXTENSION__"))();
+			m_ns = reinterpret_cast<name_space *(*)()>(m_dll.get_address("__CS_EXTENSION__"))();
 		}
+
 		~name_space_holder()
 		{
-			if(m_local)
+			if (m_local)
 				delete m_ns;
 		}
-		var& get_var(const std::string& name)
+
+		var &get_var(const std::string &name)
 		{
-			if(m_ns==nullptr)
+			if (m_ns == nullptr)
 				throw internal_error("Use of nullptr of extension.");
 			return m_ns->get_var(name);
 		}
 	};
+
 // Var definition
 	struct define_var_profile {
 		std::string id;
-		cov::tree<token_base*> expr;
+		cov::tree<token_base *> expr;
 	};
-	void parse_define_var(cov::tree<token_base*>&,define_var_profile&);
+
+	void parse_define_var(cov::tree<token_base *> &, define_var_profile &);
+
 // Implement
-	var& type::get_var(const std::string& name) const
+	var &type::get_var(const std::string &name) const
 	{
-		if(extensions.get()!=nullptr)
+		if (extensions.get() != nullptr)
 			return extensions->get_var(name);
 		else
 			throw syntax_error("Type does not support the extension");
 	}
+
 // literal format
-	var parse_value(const std::string& str)
+	var parse_value(const std::string &str)
 	{
-		if(str=="true")
+		if (str == "true")
 			return true;
-		if(str=="false")
+		if (str == "false")
 			return false;
 		try {
 			return number(std::stold(str));
 		}
-		catch(...) {
+		catch (...) {
 			return str;
 		}
 		return str;
 	}
+
 // Copy
-	void copy_no_return(var& val)
+	void copy_no_return(var &val)
 	{
 		val.clone();
 		val.detach();
 	}
+
 	var copy(var val)
 	{
 		val.clone();
@@ -306,36 +374,47 @@ namespace cs {
 	}
 }
 namespace cs_impl {
-	template<>void detach<cs::pair>(cs::pair& val)
+	template<>
+	void detach<cs::pair>(cs::pair &val)
 	{
 		cs::copy_no_return(val.first);
 		cs::copy_no_return(val.second);
 	}
-	template<>void detach<cs::list>(cs::list& val)
+
+	template<>
+	void detach<cs::list>(cs::list &val)
 	{
-		for(auto& it:val)
+		for (auto &it:val)
 			cs::copy_no_return(it);
 	}
-	template<>void detach<cs::array>(cs::array& val)
+
+	template<>
+	void detach<cs::array>(cs::array &val)
 	{
-		for(auto& it:val)
+		for (auto &it:val)
 			cs::copy_no_return(it);
 	}
-	template<>void detach<cs::hash_map>(cs::hash_map& val)
+
+	template<>
+	void detach<cs::hash_map>(cs::hash_map &val)
 	{
-		for(auto& it:val)
+		for (auto &it:val)
 			cs::copy_no_return(it.second);
 	}
-	template<>std::string to_string<cs::number>(const cs::number& val)
+
+	template<>
+	std::string to_string<cs::number>(const cs::number &val)
 	{
 		std::stringstream ss;
 		std::string str;
-		ss<<std::setprecision(cs::output_precision)<<val;
-		ss>>str;
+		ss << std::setprecision(cs::output_precision) << val;
+		ss >> str;
 		return std::move(str);
 	}
-	template<>std::string to_string<char>(const char& c)
+
+	template<>
+	std::string to_string<char>(const char &c)
 	{
-		return std::move(std::string(1,c));
+		return std::move(std::string(1, c));
 	}
 }

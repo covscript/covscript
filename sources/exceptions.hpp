@@ -23,82 +23,121 @@
 #include <stdexcept>
 
 namespace cs {
-	class exception final:public std::exception {
+	class exception final : public std::exception {
 		std::string mWhat;
 	public:
-		exception()=delete;
-		exception(std::size_t line,const std::string& file,const std::string& code,const std::string& what) noexcept:
-			mWhat("  File \""+file+"\", line "+std::to_string(line)+"\n    "+code+"\n    ^\n"+what) {}
-		exception(const exception&)=default;
-		exception(exception&&)=default;
-		virtual ~exception()=default;
-		exception& operator=(const exception&)=default;
-		exception& operator=(exception&&)=default;
-		virtual const char* what() const noexcept override
+		exception() = delete;
+
+		exception(std::size_t line, const std::string &file, const std::string &code, const std::string &what) noexcept:
+			mWhat("  File \"" + file + "\", line " + std::to_string(line) + "\n    " + code + "\n    ^\n" + what) {}
+
+		exception(const exception &) = default;
+
+		exception(exception &&) = default;
+
+		virtual ~exception() = default;
+
+		exception &operator=(const exception &)= default;
+
+		exception &operator=(exception &&)= default;
+
+		virtual const char *what() const noexcept override
 		{
 			return this->mWhat.c_str();
 		}
 	};
-	class syntax_error final:public std::exception {
-		std::string mWhat="Syntax Error";
+
+	class syntax_error final : public std::exception {
+		std::string mWhat = "Syntax Error";
 	public:
-		syntax_error()=default;
-		syntax_error(const std::string& str) noexcept:
-			mWhat("Syntax Error: "+str) {}
-		syntax_error(const syntax_error&)=default;
-		syntax_error(syntax_error&&)=default;
-		virtual ~syntax_error()=default;
-		syntax_error& operator=(const syntax_error&)=default;
-		syntax_error& operator=(syntax_error&&)=default;
-		virtual const char* what() const noexcept override
+		syntax_error() = default;
+
+		syntax_error(const std::string &str) noexcept:
+			mWhat("Syntax Error: " + str) {}
+
+		syntax_error(const syntax_error &) = default;
+
+		syntax_error(syntax_error &&) = default;
+
+		virtual ~syntax_error() = default;
+
+		syntax_error &operator=(const syntax_error &)= default;
+
+		syntax_error &operator=(syntax_error &&)= default;
+
+		virtual const char *what() const noexcept override
 		{
 			return this->mWhat.c_str();
 		}
 	};
-	class internal_error final:public std::exception {
-		std::string mWhat="Internal Error";
+
+	class internal_error final : public std::exception {
+		std::string mWhat = "Internal Error";
 	public:
-		internal_error()=default;
-		internal_error(const std::string& str) noexcept:
-			mWhat("Internal Error: "+str) {}
-		internal_error(const internal_error&)=default;
-		internal_error(internal_error&&)=default;
-		virtual ~internal_error()=default;
-		internal_error& operator=(const internal_error&)=default;
-		internal_error& operator=(internal_error&&)=default;
-		virtual const char* what() const noexcept override
+		internal_error() = default;
+
+		internal_error(const std::string &str) noexcept:
+			mWhat("Internal Error: " + str) {}
+
+		internal_error(const internal_error &) = default;
+
+		internal_error(internal_error &&) = default;
+
+		virtual ~internal_error() = default;
+
+		internal_error &operator=(const internal_error &)= default;
+
+		internal_error &operator=(internal_error &&)= default;
+
+		virtual const char *what() const noexcept override
 		{
 			return this->mWhat.c_str();
 		}
 	};
+
 	class lang_error final {
 		std::string mWhat;
 	public:
-		lang_error()=default;
-		lang_error(const std::string& str) noexcept:
+		lang_error() = default;
+
+		lang_error(const std::string &str) noexcept:
 			mWhat(str) {}
-		lang_error(const lang_error&)=default;
-		lang_error(lang_error&&)=default;
-		~lang_error()=default;
-		lang_error& operator=(const lang_error&)=default;
-		lang_error& operator=(lang_error&&)=default;
-		const char* what() const noexcept
+
+		lang_error(const lang_error &) = default;
+
+		lang_error(lang_error &&) = default;
+
+		~lang_error() = default;
+
+		lang_error &operator=(const lang_error &)= default;
+
+		lang_error &operator=(lang_error &&)= default;
+
+		const char *what() const noexcept
 		{
 			return this->mWhat.c_str();
 		}
 	};
-	class fatal_error final:public std::exception {
-		std::string mWhat="Fatal Error";
+
+	class fatal_error final : public std::exception {
+		std::string mWhat = "Fatal Error";
 	public:
-		fatal_error()=default;
-		fatal_error(const std::string& str) noexcept:
-			mWhat("Fatal Error: "+str) {}
-		fatal_error(const fatal_error&)=default;
-		fatal_error(fatal_error&&)=default;
-		virtual ~fatal_error()=default;
-		fatal_error& operator=(const fatal_error&)=default;
-		fatal_error& operator=(fatal_error&&)=default;
-		virtual const char* what() const noexcept override
+		fatal_error() = default;
+
+		fatal_error(const std::string &str) noexcept:
+			mWhat("Fatal Error: " + str) {}
+
+		fatal_error(const fatal_error &) = default;
+
+		fatal_error(fatal_error &&) = default;
+
+		virtual ~fatal_error() = default;
+
+		fatal_error &operator=(const fatal_error &)= default;
+
+		fatal_error &operator=(fatal_error &&)= default;
+
+		virtual const char *what() const noexcept override
 		{
 			return this->mWhat.c_str();
 		}
