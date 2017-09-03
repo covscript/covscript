@@ -1,5 +1,5 @@
 # Maze Program
-# This program is writen by Big_true any modified by Michael Lee
+# This program is written by Big_True any modified by Michael Lee
 
 darwin.load()
 darwin.fit_drawable()
@@ -7,6 +7,8 @@ var dpic=darwin.get_drawable()
 
 var xsize=10
 var ysize=10
+var xposition=0
+var yposition=0
 var pic=darwin.picture(xsize*4-2,ysize*2-1)
 var find=false
 var xlong=2*xsize-1
@@ -20,9 +22,7 @@ const var cyanpixel=darwin.pixel(' ',darwin.cyan,darwin.cyan)
 
 function addvoidmap()
 	map.clear()
-	for i=0 to xlong*ylong-1
-		map.push_back(0)
-	end
+	map[xlong*ylong-1]=0
 end
 
 function findroad()
@@ -336,13 +336,22 @@ loop
 			case 'q'
 				darwin.exit(0)
 			end
+			case 'i'
+				yposition++
+			end
+			case 'k'
+				yposition--
+			end
+			case 'j'
+				xposition++
+			end
+			case 'l'
+				xposition--
+			end
 		end
 	end
 	darwin.fit_drawable()
 	dpic.clear()
-	dpic.draw_picture(0.5*(dpic.get_width()-pic.get_width()),0.5*(dpic.get_height()-pic.get_height()),pic)
-	if dpic.get_width()<pic.get_width()||dpic.get_height()<pic.get_height()
-		dpic.draw_string(0,0,"Out of range!",redpixel)
-	end
+	dpic.draw_picture(0.5*(dpic.get_width()-pic.get_width())+xposition,0.5*(dpic.get_height()-pic.get_height())+yposition,pic)
 	darwin.update_drawable()
 end
