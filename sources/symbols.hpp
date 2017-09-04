@@ -29,7 +29,7 @@ namespace cs {
 		import_, package_, namespace_, struct_, block_, endblock_, var_, constant_, if_, else_, switch_, case_, default_, while_, loop_, until_, for_, to_, step_, iterate_, break_, continue_, function_, return_, try_, catch_, throw_
 	};
 	enum class signal_types {
-		add_, addasi_, sub_, subasi_, mul_, mulasi_, div_, divasi_, mod_, modasi_, pow_, powasi_, com_, dot_, und_, abo_, asi_, equ_, ueq_, aeq_, neq_, and_, or_, not_, inc_, dec_, pair_, slb_, srb_, mlb_, mrb_, llb_, lrb_, esb_, emb_, elb_, fcall_, access_, typeid_, new_, gcnew_, arrow_, lambda_, escape_, minus_, vardef_
+		add_, addasi_, sub_, subasi_, mul_, mulasi_, div_, divasi_, mod_, modasi_, pow_, powasi_, com_, dot_, und_, abo_, asi_, equ_, ueq_, aeq_, neq_, and_, or_, not_, inc_, dec_, pair_, choice_, slb_, srb_, mlb_, mrb_, llb_, lrb_, esb_, emb_, elb_, fcall_, access_, typeid_, new_, gcnew_, arrow_, lambda_, escape_, minus_, vardef_
 	};
 
 	template<typename Key, typename T>
@@ -296,6 +296,7 @@ namespace cs {
 		{"++", signal_types::inc_},
 		{"--", signal_types::dec_},
 		{":",  signal_types::pair_},
+		{"?",  signal_types::choice_},
 		{"->", signal_types::arrow_}
 	};
 	mapping<std::string, action_types> action_map = {
@@ -357,7 +358,7 @@ namespace cs {
 		{'0',  '\0'}
 	};
 	constexpr char signals[] = {
-		'+', '-', '*', '/', '%', '^', ',', '.', '>', '<', '=', '&', '|', '!', '(', ')', '[', ']', '{', '}', ':'
+		'+', '-', '*', '/', '%', '^', ',', '.', '>', '<', '=', '&', '|', '!', '(', ')', '[', ']', '{', '}', ':', '?'
 	};
 
 	bool issignal(char ch)

@@ -416,6 +416,19 @@ namespace cs {
 		return a;
 	}
 
+	var parse_choice(const var &a, const var &b)
+	{
+		if (a.type() == typeid(boolean) && b.type() == typeid(pair)) {
+			const pair& p=b.const_val<pair>();
+			if(a.const_val<boolean>())
+				return p.first;
+			else
+				return p.second;
+		}
+		else
+			throw syntax_error("Unsupported operator operations(Choice).");
+	}
+
 	var parse_pair(const var &a, const var &b)
 	{
 		if (a.type() != typeid(pair) && b.type() != typeid(pair))
@@ -648,6 +661,9 @@ namespace cs {
 				break;
 			case signal_types::asi_:
 				return parse_asi(parse_expr(it.left()), parse_expr(it.right()));
+				break;
+			case signal_types::choice_:
+				return parse_choice(parse_expr(it.left()), parse_expr(it.right()));
 				break;
 			case signal_types::pair_:
 				return parse_pair(parse_expr(it.left()), parse_expr(it.right()));
