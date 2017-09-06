@@ -46,11 +46,6 @@ namespace cs {
 			m_data.emplace_front(std::make_shared<std::unordered_map<string, var>>());
 		}
 
-		void add_domain(const domain_t &dat)
-		{
-			m_data.emplace_front(dat);
-		}
-
 		domain_t &get_domain()
 		{
 			return m_data.front();
