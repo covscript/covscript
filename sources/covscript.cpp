@@ -23,7 +23,6 @@
 
 void covscript_main(int args_size, const char *args[])
 {
-	std::ios::sync_with_stdio(false);
 	if (args_size > 1) {
 		cs::array arg;
 		for (int i = 1; i < args_size; ++i)

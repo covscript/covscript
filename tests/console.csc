@@ -1,8 +1,11 @@
 system.console.echo(false)
+system.console.clrscr()
 system.out.println("Width:"+to_string(system.console.terminal_width()))
 system.out.println("Height:"+to_string(system.console.terminal_height()))
+system.out.println("Hello,")
+system.console.gotoxy(7,3)
+system.out.println("World")
 system.out.println("Press q to exit.")
-system.console.gotoxy(2,2)
 loop
 	if system.console.kbhit()
 		var ch=system.console.getch()
