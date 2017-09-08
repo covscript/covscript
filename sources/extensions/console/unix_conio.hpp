@@ -24,7 +24,7 @@ namespace cs_impl {
 
 		static void gotoxy(int x, int y)
 		{
-			printf("\x1B[%d;%df", y, x);
+			printf("\x1B[%d;%df", y + 1, x + 1);
 		}
 
 		static void echo(bool in)
