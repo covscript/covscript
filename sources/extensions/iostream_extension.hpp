@@ -172,7 +172,7 @@ namespace ostream_cs_ext {
 
 	void print(ostream &out, const var &val)
 	{
-		*out << val;
+		*out << val << std::flush;
 	}
 
 	void println(ostream &out, const var &val)
