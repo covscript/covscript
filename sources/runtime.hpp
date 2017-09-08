@@ -414,8 +414,8 @@ namespace cs {
 	var parse_choice(const var &a, const var &b)
 	{
 		if (a.type() == typeid(boolean) && b.type() == typeid(pair)) {
-			const pair& p=b.const_val<pair>();
-			if(a.const_val<boolean>())
+			const pair &p = b.const_val<pair>();
+			if (a.const_val<boolean>())
 				return p.first;
 			else
 				return p.second;

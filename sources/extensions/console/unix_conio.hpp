@@ -44,11 +44,12 @@ namespace cs_impl {
 			}
 			tcsetattr(0, TCSANOW, &newt);
 		}
+
 		/*
-			static void reset()
-			{
-				printf("\e[37;40;0m");
-			}
+		    static void reset()
+		    {
+		        printf("\e[37;40;0m");
+		    }
 		*/
 		static void clrscr()
 		{

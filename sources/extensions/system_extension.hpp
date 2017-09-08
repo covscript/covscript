@@ -23,12 +23,12 @@ namespace console_cs_ext {
 		return conio::terminal_height();
 	}
 
-	void gotoxy(number x,number y)
+	void gotoxy(number x, number y)
 	{
-		conio::gotoxy(x,y);
+		conio::gotoxy(x, y);
 	}
 
-	void echo(boolean v)
+	void echo(bool v)
 	{
 		conio::echo(v);
 	}
@@ -43,7 +43,7 @@ namespace console_cs_ext {
 		return conio::getch();
 	}
 
-	boolean kbhit()
+	bool kbhit()
 	{
 		return conio::kbhit();
 	}
