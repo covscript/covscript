@@ -154,7 +154,7 @@ namespace cov {
 	};
 
 	template<typename T, long blck_size, template<typename>class allocator_t=std::allocator>
-	class allocate_buffer final {
+	class allocator final {
 		allocator_t<T> mAlloc;
 		std::array<T *, blck_size> mPool;
 		long mOffset = -1;
@@ -179,14 +179,14 @@ namespace cov {
 				mAlloc.deallocate(mPool[mOffset], 1);
 		}
 
-		allocate_buffer()
+		allocator()
 		{
 			blance();
 		}
 
-		allocate_buffer(const allocate_buffer &) = delete;
+		allocator(const allocator &) = delete;
 
-		~allocate_buffer()
+		~allocator()
 		{
 			clean();
 		}
@@ -456,7 +456,7 @@ namespace cov {
 	public:
 		heap()=delete;
 		heap(const heap&)=delete;
-		explicit heap(size_t size,allocate_policy p=allocate_policy::best_fit):hs(::malloc(size)),policy(p)
+		explicit heap(size_t size,allocate_policy p=allocate_policy::first_fit):hs(::malloc(size)),policy(p)
 		{
 			hp=reinterpret_cast<byte*>(hs);
 			hl=hp+size;
@@ -492,12 +492,12 @@ namespace cov {
 		}
 	};
 	template<typename T,typename...ArgsT>
-	inline void construct(T* ptr,ArgsT&&...args)
+	void construct(T* ptr,ArgsT&&...args)
 	{
 		if(ptr!=nullptr)
 			::new(ptr) T(std::forward<ArgsT>(args)...);
 	}
-	template<typename T>inline void destroy(T* ptr)
+	template<typename T>void destroy(T* ptr)
 	{
 		if(ptr!=nullptr)
 			ptr->~T();
