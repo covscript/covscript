@@ -267,7 +267,7 @@ namespace cs_impl {
 		protected:
 			T mDat;
 		public:
-			static cov::allocate_buffer<holder<T>, default_allocate_buffer_size, default_allocator_provider> allocator;
+			static cov::allocator<holder<T>, default_allocate_buffer_size, default_allocator_provider> allocator;
 
 			holder() = default;
 
@@ -360,7 +360,7 @@ namespace cs_impl {
 			}
 		};
 
-		static cov::allocate_buffer<proxy, default_allocate_buffer_size, default_allocator_provider> allocator;
+		static cov::allocator<proxy, default_allocate_buffer_size, default_allocator_provider> allocator;
 		proxy *mDat = nullptr;
 
 		proxy *duplicate() const noexcept
@@ -691,8 +691,8 @@ namespace cs_impl {
 			return "false";
 	}
 
-	template<typename T> cov::allocate_buffer<any::holder<T>, default_allocate_buffer_size, default_allocator_provider> any::holder<T>::allocator;
-	cov::allocate_buffer<any::proxy, default_allocate_buffer_size, default_allocator_provider> any::allocator;
+	template<typename T> cov::allocator<any::holder<T>, default_allocate_buffer_size, default_allocator_provider> any::holder<T>::allocator;
+	cov::allocator<any::proxy, default_allocate_buffer_size, default_allocator_provider> any::allocator;
 
 	template<int N>
 	class any::holder<char[N]> : public any::holder<std::string> {
