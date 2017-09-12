@@ -452,7 +452,7 @@ namespace cov {
 				for (; it != free_list.end(); ++it)
 					if (get_size(*it) >= size)
 						break;
-				if (it != free_list.end()) {
+				if (it != free_list.end() && get_size(*it) >= size) {
 					// Remove from free list.
 					void *ptr = reinterpret_cast<void *>(*it + sizeof(size_t));
 					free_list.erase(it);
