@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 *
-* Version: 17.8.1
+* Version: 17.9.1
 */
 #include "./base.hpp"
 #include "./function.hpp"
@@ -373,6 +373,7 @@ namespace cov {
 		// Heap Limit
 		byte *hl = nullptr;
 		allocate_policy policy = allocate_policy::best_fit;
+		bool no_truncate = false;
 		std::list<byte *> free_list;
 
 		inline size_t &get_size(byte *ptr)
@@ -380,33 +381,14 @@ namespace cov {
 			return *reinterpret_cast<size_t *>(ptr);
 		}
 
-		inline void sort_by_size()
-		{
-			free_list.sort([this](byte *lhs, byte *rhs) {
-				return get_size(lhs) < get_size(rhs);
-			});
-		}
-
-		inline void sort_by_size_reverse()
-		{
-			free_list.sort([this](byte *lhs, byte *rhs) {
-				return get_size(lhs) > get_size(rhs);
-			});
-		}
-
-		inline void sort_by_addr()
-		{
-			free_list.sort([this](byte *lhs, byte *rhs) {
-				return lhs < rhs;
-			});
-		}
-
 		void compress()
 		{
 			std::list<byte *> new_list;
 			byte *ptr = nullptr;
 			// Sort the spaces by address.
-			sort_by_addr();
+			free_list.sort([this](byte *lhs, byte *rhs) {
+				return lhs < rhs;
+			});
 			// Compress the free list.
 			for (auto p:free_list) {
 				if (ptr != nullptr) {
@@ -437,26 +419,46 @@ namespace cov {
 		{
 			// Try to find usable spaces in free list
 			if (!free_list.empty()) {
+				auto it = free_list.begin();
 				switch (policy) {
-				case allocate_policy::first_fit:
-					break;
-				case allocate_policy::best_fit:
-					sort_by_size();
-					break;
-				case allocate_policy::worst_fit:
-					sort_by_size_reverse();
+				case allocate_policy::first_fit: {
+					// Find the first fit space.
+					for (; it != free_list.end(); ++it)
+						if (get_size(*it) >= size)
+							break;
 					break;
 				}
-				// Find the first fit space.
-				auto it = free_list.begin();
-				for (; it != free_list.end(); ++it)
-					if (get_size(*it) >= size)
-						break;
+				case allocate_policy::best_fit: {
+					// Find the best fit space.
+					auto best = it;
+					for (; it != free_list.end(); ++it)
+						if (get_size(*it) >= size && get_size(*it) < get_size(*best))
+							best = it;
+					it = best;
+					break;
+				}
+				case allocate_policy::worst_fit: {
+					// Find the worst fit space.
+					auto max = it;
+					for (; it != free_list.end(); ++it)
+						if (get_size(*it) > get_size(*max))
+							max = it;
+					it = max;
+					break;
+				}
+				}
 				if (it != free_list.end() && get_size(*it) >= size) {
 					// Remove from free list.
-					void *ptr = reinterpret_cast<void *>(*it + sizeof(size_t));
+					byte *raw = *it;
 					free_list.erase(it);
-					return ptr;
+					// Truncate remain spaces
+					if (!no_truncate && get_size(raw) - size > sizeof(size_t)) {
+						byte *ptr = raw + sizeof(size_t) + size;
+						get_size(ptr) = get_size(raw) - size - sizeof(size_t);
+						get_size(raw) = size;
+						free_list.push_back(ptr);
+					}
+					return reinterpret_cast<void *>(raw + sizeof(size_t));
 				}
 			}
 			// Checkout remain spaces,if enough,return.
@@ -474,7 +476,7 @@ namespace cov {
 
 		heap(const heap &) = delete;
 
-		explicit heap(size_t size, allocate_policy p = allocate_policy::first_fit) : hs(::malloc(size)), policy(p)
+		explicit heap(size_t size, allocate_policy p = allocate_policy::first_fit, bool nt = false) : hs(::malloc(size)), policy(p), no_truncate(nt)
 		{
 			hp = reinterpret_cast<byte *>(hs);
 			hl = hp + size;
