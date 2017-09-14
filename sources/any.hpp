@@ -24,8 +24,52 @@
 #include <functional>
 #include <ostream>
 
-#define CS_ANY_POOL_SIZE 64
 namespace cs_impl {
+
+// Be careful when you adjust the buffer and the heap size.
+	constexpr std::size_t default_allocate_buffer_size = 64;
+	constexpr cov::heap::size_t default_heap_size = 1048576;
+// If you want to improve memory occupy,you can set the best fit policy and allow the memory truncate.
+	constexpr cov::heap::allocate_policy default_heap_policy = cov::heap::allocate_policy::first_fit;
+	constexpr bool default_heap_no_truncate = true;
+
+	static cov::heap default_heap(default_heap_size, default_heap_policy, default_heap_no_truncate);
+
+	template<typename T>
+	class allocator final {
+	public:
+		allocator() = default;
+
+		allocator(const allocator &) = delete;
+
+		~allocator() = default;
+
+		inline T *allocate(std::size_t size)
+		{
+			return static_cast<T *>(default_heap.malloc(size * sizeof(T)));
+		}
+
+		inline void deallocate(T *ptr, std::size_t)
+		{
+			default_heap.free(ptr);
+		}
+
+		template<typename...ArgsT>
+		inline void construct(T *ptr, ArgsT &&...args)
+		{
+			if (ptr != nullptr)
+				::new(ptr) T(std::forward<ArgsT>(args)...);
+		}
+
+		inline void destroy(T *ptr)
+		{
+			if (ptr != nullptr)
+				ptr->~T();
+		}
+	};
+
+	template<typename T> using default_allocator_provider=cs_impl::allocator<T>;
+
 	template<typename _Tp>
 	class compare_helper {
 		template<typename T, typename X=bool>
@@ -233,7 +277,7 @@ namespace cs_impl {
 		protected:
 			T mDat;
 		public:
-			static cov::allocator<holder<T>, CS_ANY_POOL_SIZE> allocator;
+			static cov::allocator<holder<T>, default_allocate_buffer_size, default_allocator_provider> allocator;
 
 			holder() = default;
 
@@ -326,7 +370,7 @@ namespace cs_impl {
 			}
 		};
 
-		static cov::allocator<proxy, CS_ANY_POOL_SIZE> allocator;
+		static cov::allocator<proxy, default_allocate_buffer_size, default_allocator_provider> allocator;
 		proxy *mDat = nullptr;
 
 		proxy *duplicate() const noexcept
@@ -657,8 +701,8 @@ namespace cs_impl {
 			return "false";
 	}
 
-	template<typename T> cov::allocator<any::holder<T>, CS_ANY_POOL_SIZE> any::holder<T>::allocator;
-	cov::allocator<any::proxy, CS_ANY_POOL_SIZE> any::allocator;
+	template<typename T> cov::allocator<any::holder<T>, default_allocate_buffer_size, default_allocator_provider> any::holder<T>::allocator;
+	cov::allocator<any::proxy, default_allocate_buffer_size, default_allocator_provider> any::allocator;
 
 	template<int N>
 	class any::holder<char[N]> : public any::holder<std::string> {

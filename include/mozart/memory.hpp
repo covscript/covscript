@@ -19,13 +19,17 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 *
-* Version: 17.8.1
+* Version: 17.9.1
 */
 #include "./base.hpp"
 #include "./function.hpp"
+#include <cstdint>
+#include <cstdlib>
+#include <utility>
 #include <memory>
 #include <atomic>
 #include <array>
+#include <list>
 
 namespace cov {
 	template<typename _Tp, template<typename> class _alloc>
@@ -149,9 +153,9 @@ namespace cov {
 		}
 	};
 
-	template<typename T, long blck_size>
+	template<typename T, long blck_size, template<typename> class allocator_t=std::allocator>
 	class allocator final {
-		std::allocator<T> mAlloc;
+		allocator_t<T> mAlloc;
 		std::array<T *, blck_size> mPool;
 		long mOffset = -1;
 	public:
@@ -292,4 +296,237 @@ namespace cov {
 			return *pool[p.posit].ptr;
 		}
 	};
+
+	class stack final {
+	public:
+		using byte=uint8_t;
+		using size_t=uint64_t;
+	private:
+		// Stack Start
+		void *ss = nullptr;
+		// Stack Pointer
+		byte *sp = nullptr;
+		// Stack Limit
+		byte *sl = nullptr;
+	public:
+		stack() = delete;
+
+		stack(const stack &) = delete;
+
+		stack(size_t size) : ss(::malloc(size))
+		{
+			sp = reinterpret_cast<byte *>(ss) + size;
+			sl = sp;
+		}
+
+		~stack()
+		{
+			::free(ss);
+		}
+
+		inline bool empty() const
+		{
+			return sp == sl;
+		}
+
+		void *top()
+		{
+			if (sp == sl)
+				throw std::runtime_error("Stack is empty.");
+			return reinterpret_cast<void *>(sp + sizeof(size_t));
+		}
+
+		void *push(size_t size)
+		{
+			if (sp - reinterpret_cast<byte *>(ss) < size + sizeof(size_t))
+				throw std::runtime_error("Stack overflow.");
+			sp -= size + sizeof(size_t);
+			*reinterpret_cast<size_t *>(sp) = size;
+			return reinterpret_cast<void *>(sp + sizeof(size_t));
+		}
+
+		void pop()
+		{
+			if (sp == sl)
+				throw std::runtime_error("Stack is empty.");
+			sp += *reinterpret_cast<size_t *>(sp) + sizeof(size_t);
+		}
+
+		size_t size_of(void *ptr)
+		{
+			return *reinterpret_cast<size_t *>(reinterpret_cast<byte *>(ptr) - sizeof(size_t));
+		}
+	};
+
+	class heap final {
+	public:
+		using byte=uint8_t;
+		using size_t=uint64_t;
+		enum class allocate_policy {
+			first_fit, best_fit, worst_fit
+		};
+	private:
+		// Heap Start
+		void *hs = nullptr;
+		// Heap Pointer
+		byte *hp = nullptr;
+		// Heap Limit
+		byte *hl = nullptr;
+		allocate_policy policy = allocate_policy::best_fit;
+		bool no_truncate = false;
+		std::list<byte *> free_list;
+
+		inline size_t &get_size(byte *ptr)
+		{
+			return *reinterpret_cast<size_t *>(ptr);
+		}
+
+		void compress()
+		{
+			std::list<byte *> new_list;
+			byte *ptr = nullptr;
+			// Sort the spaces by address.
+			free_list.sort([this](byte *lhs, byte *rhs) {
+				return lhs < rhs;
+			});
+			// Compress the free list.
+			for (auto p:free_list) {
+				if (ptr != nullptr) {
+					size_t &size = get_size(ptr);
+					if (ptr + size + sizeof(size_t) == p) {
+						size += get_size(p) + sizeof(size_t);
+					}
+					else {
+						new_list.push_back(ptr);
+						ptr = p;
+					}
+				}
+				else
+					ptr = p;
+			}
+			// Connect the final space and remain spaces.
+			if (ptr != nullptr) {
+				if (ptr + get_size(ptr) + sizeof(size_t) == hp)
+					hp = ptr;
+				else
+					new_list.push_back(ptr);
+			}
+			// Swap the new list and old list.
+			std::swap(new_list, free_list);
+		}
+
+		void *allocate(size_t size)
+		{
+			// Try to find usable spaces in free list
+			if (!free_list.empty()) {
+				auto it = free_list.begin();
+				switch (policy) {
+				case allocate_policy::first_fit: {
+					// Find the first fit space.
+					for (; it != free_list.end(); ++it)
+						if (get_size(*it) >= size)
+							break;
+					break;
+				}
+				case allocate_policy::best_fit: {
+					// Find the best fit space.
+					auto best = it;
+					for (; it != free_list.end(); ++it)
+						if (get_size(*it) >= size && get_size(*it) < get_size(*best))
+							best = it;
+					it = best;
+					break;
+				}
+				case allocate_policy::worst_fit: {
+					// Find the worst fit space.
+					auto max = it;
+					for (; it != free_list.end(); ++it)
+						if (get_size(*it) > get_size(*max))
+							max = it;
+					it = max;
+					break;
+				}
+				}
+				if (it != free_list.end() && get_size(*it) >= size) {
+					// Remove from free list.
+					byte *raw = *it;
+					free_list.erase(it);
+					// Truncate remain spaces
+					if (!no_truncate && get_size(raw) - size > sizeof(size_t)) {
+						byte *ptr = raw + sizeof(size_t) + size;
+						get_size(ptr) = get_size(raw) - size - sizeof(size_t);
+						get_size(raw) = size;
+						free_list.push_back(ptr);
+					}
+					return reinterpret_cast<void *>(raw + sizeof(size_t));
+				}
+			}
+			// Checkout remain spaces,if enough,return.
+			if (hl - hp >= size + sizeof(size_t)) {
+				get_size(hp) = size;
+				void *ptr = reinterpret_cast<void *>(hp + sizeof(size_t));
+				hp += size + sizeof(size_t);
+				return ptr;
+			}
+			return nullptr;
+		}
+
+	public:
+		heap() = delete;
+
+		heap(const heap &) = delete;
+
+		explicit heap(size_t size, allocate_policy p = allocate_policy::first_fit, bool nt = false) : hs(::malloc(size)), policy(p), no_truncate(nt)
+		{
+			hp = reinterpret_cast<byte *>(hs);
+			hl = hp + size;
+		}
+
+		~heap()
+		{
+			::free(hs);
+		}
+
+		void *malloc(size_t size)
+		{
+			// Try to allocate.
+			void *ptr = allocate(size);
+			// If successed,return
+			if (ptr != nullptr)
+				return ptr;
+			// Compress the memory spaces
+			compress();
+			// Try to allocate again.
+			ptr = allocate(size);
+			// If successed,return.
+			if (ptr != nullptr)
+				return ptr;
+			else // There have no usable spaces,throw bad alloc exception.
+				throw std::runtime_error("Bad alloc.");
+		}
+
+		void free(void *ptr)
+		{
+			free_list.push_back(reinterpret_cast<byte *>(ptr) - sizeof(size_t));
+		}
+
+		size_t size_of(void *ptr)
+		{
+			return get_size(reinterpret_cast<byte *>(ptr));
+		}
+	};
+
+	template<typename T, typename...ArgsT>
+	void construct(T *ptr, ArgsT &&...args)
+	{
+		if (ptr != nullptr)
+			::new(ptr) T(std::forward<ArgsT>(args)...);
+	}
+
+	template<typename T>
+	void destroy(T *ptr)
+	{
+		if (ptr != nullptr)
+			ptr->~T();
+	}
 }
