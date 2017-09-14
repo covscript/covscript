@@ -157,12 +157,6 @@ namespace cs {
 					++i;
 					continue;
 				}
-				if (std::isalnum(buff[i]) || buff[i] == '_') {
-					type = token_types::id;
-					tmp += buff[i];
-					++i;
-					continue;
-				}
 				type = token_types::null;
 				tokens.push_back(new token_value(std::stold(tmp)));
 				tmp.clear();
