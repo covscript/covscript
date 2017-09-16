@@ -351,7 +351,7 @@ namespace cs {
 		if (str == "false")
 			return false;
 		try {
-			return number(std::stold(str));
+			return std::stold(str);
 		}
 		catch (...) {
 			return str;

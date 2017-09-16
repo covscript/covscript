@@ -250,7 +250,7 @@ namespace cov {
 			{
 				if (obj->type() == this->type()) {
 					const holder<T> *ptr = dynamic_cast<const holder<T> *>(obj);
-					return ptr != nullptr ? cov::compare(mDat, ptr->data()) : false;
+					return ptr != nullptr && cov::compare(mDat, ptr->data());
 				}
 				return false;
 			}

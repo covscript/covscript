@@ -26,7 +26,7 @@ void covscript_main(int args_size, const char *args[])
 	if (args_size > 1) {
 		cs::array arg;
 		for (int i = 1; i < args_size; ++i)
-			arg.push_back(std::string(args[i]));
+			arg.emplace_back(std::string(args[i]));
 		system_ext.add_var("args", arg);
 		cs::init_grammar();
 		cs::init_ext();

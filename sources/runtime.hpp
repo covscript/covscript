@@ -86,16 +86,12 @@ namespace cs {
 
 		bool var_exsist_current(const string &name)
 		{
-			if (m_data.front()->count(name) > 0)
-				return true;
-			return false;
+			return m_data.front()->count(name) > 0;
 		}
 
 		bool var_exsist_global(const string &name)
 		{
-			if (m_data.back()->count(name) > 0)
-				return true;
-			return false;
+			return m_data.back()->count(name) > 0;
 		}
 
 		var &get_var(const string &name)

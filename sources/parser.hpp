@@ -912,11 +912,7 @@ namespace cs {
 				return a == nullptr;
 			if (a->get_type() != b->get_type())
 				return false;
-			if (a->get_type() == token_types::action) {
-				return static_cast<const token_action *>(a)->get_action() == static_cast<const token_action *>(b)->get_action();
-			}
-			else
-				return true;
+			return !(a->get_type() == token_types::action) || static_cast<const token_action *>(a)->get_action() == static_cast<const token_action *>(b)->get_action();
 		}
 
 	private:
