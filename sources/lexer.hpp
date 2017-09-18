@@ -201,8 +201,7 @@ namespace cs {
 		int status=0;
 		for (auto& ch:char_buff) {
 			if(ch=='\n') {
-				if(status==1)
-				{
+				if(status==1) {
 					try {
 						process_char_buff(buff, tokens);
 					}
@@ -222,15 +221,13 @@ namespace cs {
 			}
 			if(status==-1)
 				continue;
-			if(status==0&&!std::isspace(ch))
-			{
+			if(status==0&&!std::isspace(ch)) {
 				if(ch=='#')
 					status=-1;
 				else
 					status=1;
 			}
-			if(status==1)
-			{
+			if(status==1) {
 				buff.push_back(ch);
 				line.push_back(ch);
 			}
