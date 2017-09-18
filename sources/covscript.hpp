@@ -122,6 +122,7 @@ namespace cs {
 		translate_into_statements(tokens, statements);
 		// Process constant values
 		token_value::mark();
+		// Run the instruction
 		for (auto &ptr:statements) {
 			try {
 				ptr->run();
