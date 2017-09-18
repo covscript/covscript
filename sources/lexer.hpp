@@ -204,7 +204,7 @@ namespace cs {
 				if(status==1)
 				{
 					try {
-						translate_into_tokens(buff, tokens);
+						process_char_buff(buff, tokens);
 					}
 					catch (const cs::exception &e) {
 						throw e;
