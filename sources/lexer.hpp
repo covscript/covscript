@@ -220,21 +220,19 @@ namespace cs {
 				status=0;
 				continue;
 			}
-			switch(status)
+			if(status==-1)
+				continue;
+			if(status==0&&!std::isspace(ch))
 			{
-				case 0:
-				if(!std::isspace(ch))
-				{
-					if(ch=='#')
-						status=-1;
-					else
-						status=1;
-				}
-				break;
-				case 1:
+				if(ch=='#')
+					status=-1;
+				else
+					status=1;
+			}
+			if(status==1)
+			{
 				buff.push_back(ch);
 				line.push_back(ch);
-				break;
 			}
 		}
 	}
