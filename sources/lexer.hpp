@@ -22,7 +22,7 @@
 #include "./symbols.hpp"
 
 namespace cs {
-	void translate_into_tokens(const std::deque<char> &buff, std::deque<token_base *> &tokens)
+	void process_char_buff(const std::deque<char> &buff, std::deque<token_base *> &tokens)
 	{
 		if (buff.empty())
 			throw syntax_error("Received empty character buffer.");
@@ -190,6 +190,43 @@ namespace cs {
 		case token_types::value:
 			tokens.push_back(new token_value(std::stold(tmp)));
 			break;
+		}
+	}
+
+	void translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens, const std::string& path="<Unknown>")
+	{
+		std::size_t line_num = 1;
+		bool is_note = false;
+		std::deque<char> buff;
+		std::string line;
+		for (auto& ch:char_buff) {
+			if(ch=='\n') {
+				if(!buff.empty())
+				{
+					try {
+						translate_into_tokens(buff, tokens);
+					}
+					catch (const cs::exception &e) {
+						throw e;
+					}
+					catch (const std::exception &e) {
+						throw exception(line_num, path, line, e.what());
+					}
+					tokens.push_back(new token_endline(line_num, path, line));
+				}
+				++line_num;
+				is_note=false;
+				buff.clear();
+				line.clear();
+				continue;
+			}
+			if(is_note)
+				continue;
+			if(ch=='#')
+			{
+				is_note=true;
+				continue;
+			}
 		}
 	}
 

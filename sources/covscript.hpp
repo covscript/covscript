@@ -103,46 +103,24 @@ namespace cs {
 
 	std::shared_ptr<runtime_type> covscript(const std::string &path)
 	{
-		token_value::clean();
-		runtime.new_instance();
-		init();
+		// Read from file
 		std::deque<char> buff;
-		std::deque<token_base *> tokens;
-		std::deque<statement_base *> statements;
 		std::ifstream in(path);
 		if (!in.is_open())
 			throw fatal_error(path + ": No such file or directory");
-		std::string line;
-		std::size_t line_num = 0;
-		while (std::getline(in, line)) {
-			++line_num;
-			if (line.empty())
-				continue;
-			bool is_note = false;
-			for (auto &ch:line) {
-				if (!std::isspace(ch)) {
-					if (ch == '#')
-						is_note = true;
-					break;
-				}
-			}
-			if (is_note)
-				continue;
-			for (auto &c:line)
-				buff.push_back(c);
-			try {
-				translate_into_tokens(buff, tokens);
-			}
-			catch (const cs::exception &e) {
-				throw e;
-			}
-			catch (const std::exception &e) {
-				throw exception(line_num, path, line, e.what());
-			}
-			tokens.push_back(new token_endline(line_num, path, line));
-			buff.clear();
-		}
+		while(!in.eof())
+			buff.push_back(in.get());
+		// Init resources
+		runtime.new_instance();
+		token_value::clean();
+		init();
+		// Lexer
+		std::deque<token_base *> tokens;
+		translate_into_tokens(buff,tokens);
+		// Parser
+		std::deque<statement_base *> statements;
 		translate_into_statements(tokens, statements);
+		// Process constant values
 		token_value::mark();
 		for (auto &ptr:statements) {
 			try {
