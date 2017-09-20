@@ -101,7 +101,7 @@ namespace cs {
 		runtime->storage.add_var("darwin", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&darwin_ext)));
 	}
 
-	std::shared_ptr<runtime_type> covscript(const std::string &path)
+	std::shared_ptr<runtime_type> covscript(const std::string &path, bool compile_only)
 	{
 		// Read from file
 		std::deque<char> buff;
@@ -122,6 +122,9 @@ namespace cs {
 		translate_into_statements(tokens, statements);
 		// Process constant values
 		token_value::mark();
+		// Exit if compile_only is true
+		if(compile_only)
+			return runtime.pop_instance();
 		// Run the instruction
 		for (auto &ptr:statements) {
 			try {

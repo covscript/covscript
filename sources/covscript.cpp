@@ -20,23 +20,43 @@
 * Website: http://covariant.cn/cs
 */
 #include "./covscript.hpp"
+#include <cstring>
+
+const char *log_path = "./cs_runtime.log";
+bool check=false;
+bool debug=false;
 
 void covscript_main(int args_size, const char *args[])
 {
 	if (args_size > 1) {
+		int index=1;
+		for (;index < args_size; ++index)
+		{
+			if(args[index][0]=='-')
+			{
+				if(std::strcmp(args[index],"--check")==0&&!check)
+					check=true;
+				else if(std::strcmp(args[index],"--debug")==0&&!debug)
+					debug=true;
+				else
+					throw cs::fatal_error("argument grammar error.");
+			}else
+				break;
+		}
+		if(index==args_size)
+			throw cs::fatal_error("no input file.");
+		const char* path=args[index];
 		cs::array arg;
-		for (int i = 1; i < args_size; ++i)
-			arg.emplace_back(std::string(args[i]));
-		system_ext.add_var("args", arg);
+		for (;index < args_size; ++index)
+			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
+		system_ext.add_var("args", cs::var::make_constant<cs::array>(arg));
 		cs::init_grammar();
 		cs::init_ext();
-		cs::covscript(args[1]);
+		cs::covscript(path,check);
 	}
 	else
 		throw cs::fatal_error("no input file.");
 }
-
-const char *log_path = "./cs_runtime.log";
 
 int main(int args_size, const char *args[])
 {
@@ -44,9 +64,12 @@ int main(int args_size, const char *args[])
 		covscript_main(args_size, args);
 	}
 	catch (const std::exception &e) {
-		std::ofstream out(::log_path);
-		out << e.what();
-		out.flush();
+		if(debug)
+		{
+			std::ofstream out(::log_path);
+			out << e.what();
+			out.flush();
+		}
 		std::cerr << e.what() << std::endl;
 		return -1;
 	}

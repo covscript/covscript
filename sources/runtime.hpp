@@ -189,7 +189,7 @@ namespace cs {
 		}
 	};
 
-	std::shared_ptr<runtime_type> covscript(const std::string &);
+	std::shared_ptr<runtime_type> covscript(const std::string &, bool compile_only=false);
 
 	static runtime_manager runtime;
 
