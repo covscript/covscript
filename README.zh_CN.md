@@ -26,7 +26,9 @@
 ### Mac OS ###
 编译Covariant Script的方法与Linux相同。目前Covariant Script已经在MacOS Sierra 10.12.5中测试通过。
 ## 运行 ##
-`cs <file> <args...>`  
+`cs [--check] [--debug] <file> <args...>`  
+`--check`表示你只是想检查你的程序。  
+`--debug`表示你想输出错误信息到日志。  
 你也可以下载[Covariant Script GUI](https://github.com/mikecovlee/covscript-gui/releases/latest)来简化您的工作。
 ## 示例 ##
 `examples`文件夹包含了数个使用CovScript编写的示例程序。

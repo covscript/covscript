@@ -26,7 +26,9 @@ After downloading the source code, if you have installed the G++ compiler on you
 ### Mac OS ###
 Building Covariant Script is the same as Linux. And now Covariant Script has been tested on macOS Sierra 10.12.5.
 ## Run ##
-`cs <file> <args...>`  
+`cs [--check] [--debug] <file> <args...>`  
+`--check` means you just want to check your program.  
+`--debug` means you want to output the error info to the log.  
 You can also download the [Covariant Script GUI](https://github.com/mikecovlee/covscript-gui/releases/latest) to simplify your work.
 ## Examples ##
 The `examples` folder contains several example programs written by CovScript.
