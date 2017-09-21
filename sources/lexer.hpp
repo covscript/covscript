@@ -200,6 +200,8 @@ namespace cs {
 		std::string line;
 		int status=0;
 		for (auto& ch:char_buff) {
+			if(isillegal(ch))
+				continue;
 			if(ch=='\n') {
 				if(status==1) {
 					try {
