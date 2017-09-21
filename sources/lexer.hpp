@@ -232,6 +232,18 @@ namespace cs {
 				line.push_back(ch);
 			}
 		}
+		if(status==1) {
+			try {
+				process_char_buff(buff, tokens);
+			}
+			catch (const cs::exception &e) {
+				throw e;
+			}
+			catch (const std::exception &e) {
+				throw exception(line_num, path, line, e.what());
+			}
+			tokens.push_back(new token_endline(line_num, path, line));
+		}
 	}
 
 	void process_empty_brackets(std::deque<token_base *> &tokens)
