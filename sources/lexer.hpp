@@ -193,17 +193,17 @@ namespace cs {
 		}
 	}
 
-	void translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens, const std::string& path="<Unknown>")
+	void translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens, const std::string &path = "<Unknown>")
 	{
 		std::size_t line_num = 1;
 		std::deque<char> buff;
 		std::string line;
-		int status=0;
-		for (auto& ch:char_buff) {
-			if(isillegal(ch))
+		int status = 0;
+		for (auto &ch:char_buff) {
+			if (isillegal(ch))
 				continue;
-			if(ch=='\n') {
-				if(status==1) {
+			if (ch == '\n') {
+				if (status == 1) {
 					try {
 						process_char_buff(buff, tokens);
 					}
@@ -218,23 +218,23 @@ namespace cs {
 				++line_num;
 				buff.clear();
 				line.clear();
-				status=0;
+				status = 0;
 				continue;
 			}
-			if(status==-1)
+			if (status == -1)
 				continue;
-			if(status==0&&!std::isspace(ch)) {
-				if(ch=='#')
-					status=-1;
+			if (status == 0 && !std::isspace(ch)) {
+				if (ch == '#')
+					status = -1;
 				else
-					status=1;
+					status = 1;
 			}
-			if(status==1) {
+			if (status == 1) {
 				buff.push_back(ch);
 				line.push_back(ch);
 			}
 		}
-		if(status==1) {
+		if (status == 1) {
 			try {
 				process_char_buff(buff, tokens);
 			}

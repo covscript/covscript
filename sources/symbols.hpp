@@ -371,6 +371,6 @@ namespace cs {
 
 	bool isillegal(int ch)
 	{
-		return ch<9||ch>127||(ch>=14&&ch<32);
+		return ch < 9 || ch > 127 || (ch >= 14 && ch < 32);
 	}
 }

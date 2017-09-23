@@ -23,7 +23,8 @@ set(SOURCE_FILES
         sources/covscript.hpp
         sources/exceptions.hpp
         sources/extension.hpp
-        sources/grammar.hpp
+        sources/codegen.hpp
+        sources/statement.hpp
         sources/lexer.hpp
         sources/optimize.hpp
         sources/parser.hpp

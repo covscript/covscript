@@ -20,6 +20,7 @@
 * Github: https://github.com/mikecovlee
 */
 #include "./parser.hpp"
+
 namespace cs {
 	enum class statement_types {
 		null, expression_, import_, package_, block_, namespace_, var_, constant_, if_, else_, switch_, case_, default_, while_, until_, loop_, for_, foreach_, break_, continue_, struct_, function_, return_, end_, try_, catch_, throw_
@@ -499,7 +500,9 @@ namespace cs {
 	};
 }
 #define CS_STACK_SIZE 1024
+
 #include "./optimize.hpp"
+
 namespace cs {
 	bool return_fcall = false;
 	bool break_block = false;

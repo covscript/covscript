@@ -21,6 +21,7 @@
 */
 #include "./parser.hpp"
 #include "./statement.hpp"
+
 namespace cs {
 	/*
 	* Grammar Types
@@ -49,11 +50,11 @@ namespace cs {
 			::operator delete(ptr);
 		}
 
-		method_base()=default;
+		method_base() = default;
 
-		method_base(const method_base&)=default;
+		method_base(const method_base &) = default;
 
-		virtual ~method_base()=default;
+		virtual ~method_base() = default;
 
 		virtual method_types get_type() const noexcept=0;
 
@@ -61,12 +62,12 @@ namespace cs {
 
 		virtual void preprocess(const std::deque<std::deque<token_base *>> &) {}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &)=0;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &)=0;
 	};
 
 	garbage_collector<method_base> method_base::gc;
 
-	class method_expression final:public method_base {
+	class method_expression final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -78,10 +79,10 @@ namespace cs {
 			return statement_types::expression_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_import final:public method_base {
+	class method_import final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -93,10 +94,10 @@ namespace cs {
 			return statement_types::import_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_package final:public method_base {
+	class method_package final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -108,10 +109,10 @@ namespace cs {
 			return statement_types::package_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_var final:public method_base {
+	class method_var final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -123,10 +124,10 @@ namespace cs {
 			return statement_types::var_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_constant final:public method_base {
+	class method_constant final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -138,10 +139,10 @@ namespace cs {
 			return statement_types::constant_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_end final:public method_base {
+	class method_end final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -153,10 +154,10 @@ namespace cs {
 			return statement_types::end_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_block final:public method_base {
+	class method_block final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -168,10 +169,10 @@ namespace cs {
 			return statement_types::block_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_namespace final:public method_base {
+	class method_namespace final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -183,10 +184,10 @@ namespace cs {
 			return statement_types::namespace_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_if final:public method_base {
+	class method_if final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -198,10 +199,10 @@ namespace cs {
 			return statement_types::if_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_else final:public method_base {
+	class method_else final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -213,10 +214,10 @@ namespace cs {
 			return statement_types::else_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_switch final:public method_base {
+	class method_switch final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -228,10 +229,10 @@ namespace cs {
 			return statement_types::switch_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_case final:public method_base {
+	class method_case final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -243,10 +244,10 @@ namespace cs {
 			return statement_types::case_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_default final:public method_base {
+	class method_default final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -258,10 +259,10 @@ namespace cs {
 			return statement_types::default_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_while final:public method_base {
+	class method_while final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -273,10 +274,10 @@ namespace cs {
 			return statement_types::while_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_until final:public method_base {
+	class method_until final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -288,10 +289,10 @@ namespace cs {
 			return statement_types::until_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_loop final:public method_base {
+	class method_loop final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -303,10 +304,10 @@ namespace cs {
 			return statement_types::loop_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_for final:public method_base {
+	class method_for final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -320,10 +321,10 @@ namespace cs {
 
 		virtual void preprocess(const std::deque<std::deque<token_base *>> &) override;
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_for_step final:public method_base {
+	class method_for_step final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -337,10 +338,10 @@ namespace cs {
 
 		virtual void preprocess(const std::deque<std::deque<token_base *>> &) override;
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_foreach final:public method_base {
+	class method_foreach final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -354,10 +355,10 @@ namespace cs {
 
 		virtual void preprocess(const std::deque<std::deque<token_base *>> &) override;
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_break final:public method_base {
+	class method_break final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -369,10 +370,10 @@ namespace cs {
 			return statement_types::break_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_continue final:public method_base {
+	class method_continue final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -384,10 +385,10 @@ namespace cs {
 			return statement_types::continue_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_function final:public method_base {
+	class method_function final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -399,10 +400,10 @@ namespace cs {
 			return statement_types::function_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_return final:public method_base {
+	class method_return final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -414,10 +415,10 @@ namespace cs {
 			return statement_types::return_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_return_no_value final:public method_base {
+	class method_return_no_value final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -429,10 +430,10 @@ namespace cs {
 			return statement_types::return_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_struct final:public method_base {
+	class method_struct final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -444,10 +445,10 @@ namespace cs {
 			return statement_types::struct_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_try final:public method_base {
+	class method_try final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -459,10 +460,10 @@ namespace cs {
 			return statement_types::try_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_catch final:public method_base {
+	class method_catch final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -474,10 +475,10 @@ namespace cs {
 			return statement_types::catch_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_throw final:public method_base {
+	class method_throw final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
 		{
@@ -489,12 +490,12 @@ namespace cs {
 			return statement_types::throw_;
 		}
 
-		virtual statement_base* translate(const std::deque<std::deque<token_base *>> &) override;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
 	class translator_type final {
 	public:
-		using data_type=std::pair<std::deque<token_base *>, method_base*>;
+		using data_type=std::pair<std::deque<token_base *>, method_base *>;
 
 		static bool compare(const token_base *a, const token_base *b)
 		{
@@ -516,12 +517,12 @@ namespace cs {
 
 		~translator_type() = default;
 
-		void add_method(const std::deque<token_base *> &grammar, method_base* method)
+		void add_method(const std::deque<token_base *> &grammar, method_base *method)
 		{
 			m_data.emplace_back(std::make_shared<data_type>(grammar, method));
 		}
 
-		method_base* match(const std::deque<token_base *> &raw)
+		method_base *match(const std::deque<token_base *> &raw)
 		{
 			if (raw.size() <= 1)
 				throw syntax_error("Grammar error.");
@@ -549,13 +550,16 @@ namespace cs {
 
 	static translator_type translator;
 }
+
 #include "./runtime.hpp"
+
 namespace cs {
-	statement_base* method_expression::translate(const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_expression::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_expression(dynamic_cast<token_expr *>(raw.front().front())->get_tree(), raw.front().back());
 	}
-	statement_base* method_import::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_import::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		runtime_t rt = covscript(dynamic_cast<token_value *>(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data())->get_value().const_val<string>());
 		if (rt->package_name.empty())
@@ -563,7 +567,8 @@ namespace cs {
 		runtime->storage.add_var(rt->package_name, var::make_protect<extension_t>(std::make_shared<extension_holder>(rt->storage.get_global())));
 		return nullptr;
 	}
-	statement_base* method_package::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_package::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		if (!runtime->package_name.empty())
 			throw syntax_error("Redefinition of package");
@@ -571,14 +576,16 @@ namespace cs {
 		runtime->storage.add_var_global(runtime->package_name, var::make_protect<extension_t>(std::make_shared<extension_holder>(runtime->storage.get_global())));
 		return nullptr;
 	}
-	statement_base* method_var::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_var::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
 		define_var_profile dvp;
 		parse_define_var(tree, dvp);
 		return new statement_var(dvp, raw.front().back());
 	}
-	statement_base* method_constant::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_constant::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(2))->get_tree();
 		define_var_profile dvp;
@@ -588,17 +595,20 @@ namespace cs {
 		runtime->storage.add_var(dvp.id, static_cast<token_value *>(dvp.expr.root().data())->get_value());
 		return nullptr;
 	}
-	statement_base* method_end::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_end::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_end;
 	}
-	statement_base* method_block::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_block::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		kill_action({raw.begin() + 1, raw.end()}, body);
 		return new statement_block(body, raw.front().back());
 	}
-	statement_base* method_namespace::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_namespace::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		kill_action({raw.begin() + 1, raw.end()}, body);
@@ -607,7 +617,8 @@ namespace cs {
 				throw syntax_error("Wrong grammar for namespace definition.");
 		return new statement_namespace(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data(), body, raw.front().back());
 	}
-	statement_base* method_if::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_if::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		bool have_else = false;
 		std::deque<statement_base *> body;
@@ -639,11 +650,13 @@ namespace cs {
 		else
 			return new statement_if(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), body, raw.front().back());
 	}
-	statement_base* method_else::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_else::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_else;
 	}
-	statement_base* method_switch::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_switch::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		kill_action({raw.begin() + 1, raw.end()}, body);
@@ -669,7 +682,8 @@ namespace cs {
 		}
 		return new statement_switch(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), cases, dptr, raw.front().back());
 	}
-	statement_base* method_case::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_case::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data()->get_type() != token_types::value)
@@ -678,23 +692,27 @@ namespace cs {
 		kill_action({raw.begin() + 1, raw.end()}, body);
 		return new statement_case(dynamic_cast<token_value *>(tree.root().data())->get_value(), body, raw.front().back());
 	}
-	statement_base* method_default::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_default::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		kill_action({raw.begin() + 1, raw.end()}, body);
 		return new statement_default(body, raw.front().back());
 	}
-	statement_base* method_while::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_while::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		kill_action({raw.begin() + 1, raw.end()}, body);
 		return new statement_while(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), body, raw.front().back());
 	}
-	statement_base* method_until::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_until::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_until(dynamic_cast<token_expr *>(raw.front().at(1)), raw.front().back());
 	}
-	statement_base* method_loop::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_loop::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		kill_action({raw.begin() + 1, raw.end()}, body);
@@ -706,6 +724,7 @@ namespace cs {
 		else
 			return new statement_loop(nullptr, body, raw.front().back());
 	}
+
 	void method_for_step::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
@@ -713,12 +732,14 @@ namespace cs {
 		parse_define_var(tree, dvp);
 		runtime->storage.add_record(dvp.id);
 	}
-	statement_base* method_for_step::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_for_step::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		kill_action({raw.begin() + 1, raw.end()}, body);
 		return new statement_for(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), dynamic_cast<token_expr *>(raw.front().at(3))->get_tree(), dynamic_cast<token_expr *>(raw.front().at(5))->get_tree(), body, raw.front().back());
 	}
+
 	void method_for::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
@@ -726,7 +747,8 @@ namespace cs {
 		parse_define_var(tree, dvp);
 		runtime->storage.add_record(dvp.id);
 	}
-	statement_base* method_for::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_for::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		kill_action({raw.begin() + 1, raw.end()}, body);
@@ -734,6 +756,7 @@ namespace cs {
 		tree_step.emplace_root_left(tree_step.root(), new token_value(number(1)));
 		return new statement_for(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), dynamic_cast<token_expr *>(raw.front().at(3))->get_tree(), tree_step, body, raw.front().back());
 	}
+
 	void method_foreach::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
@@ -743,7 +766,8 @@ namespace cs {
 			throw syntax_error("Wrong grammar(foreach)");
 		runtime->storage.add_record(dynamic_cast<token_id *>(t.root().data())->get_id());
 	}
-	statement_base* method_foreach::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_foreach::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
@@ -755,15 +779,18 @@ namespace cs {
 		kill_action({raw.begin() + 1, raw.end()}, body);
 		return new statement_foreach(it, dynamic_cast<token_expr *>(raw.front().at(3))->get_tree(), body, raw.front().back());
 	}
-	statement_base* method_break::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_break::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_break(raw.front().back());
 	}
-	statement_base* method_continue::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_continue::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_continue(raw.front().back());
 	}
-	statement_base* method_function::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_function::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
@@ -795,17 +822,20 @@ namespace cs {
 		kill_action({raw.begin() + 1, raw.end()}, body);
 		return new statement_function(name, args, body, raw.front().back());
 	}
-	statement_base* method_return::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_return::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_return(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), raw.front().back());
 	}
-	statement_base* method_return_no_value::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_return_no_value::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> tree;
 		tree.emplace_root_left(tree.root(), new token_value(number(0)));
 		return new statement_return(tree, raw.front().back());
 	}
-	statement_base* method_struct::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_struct::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
@@ -828,7 +858,8 @@ namespace cs {
 		}
 		return new statement_struct(name, body, raw.front().back());
 	}
-	statement_base* method_try::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_try::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		kill_action({raw.begin() + 1, raw.end()}, body);
@@ -850,7 +881,8 @@ namespace cs {
 			throw syntax_error("Wrong grammar for try statement.");
 		return new statement_try(name, tbody, cbody, raw.front().back());
 	}
-	statement_base* method_catch::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_catch::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
@@ -859,10 +891,12 @@ namespace cs {
 			throw syntax_error("Wrong grammar for catch statement.");
 		return new statement_catch(dynamic_cast<token_id *>(t.root().data())->get_id(), raw.front().back());
 	}
-	statement_base* method_throw::translate(const std::deque<std::deque<token_base *>> &raw)
+
+	statement_base *method_throw::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_throw(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), raw.front().back());
 	}
+
 	void kill_action(std::deque<std::deque<token_base *>> lines, std::deque<statement_base *> &statements, bool raw)
 	{
 		std::deque<std::deque<token_base *>> tmp;
@@ -926,6 +960,7 @@ namespace cs {
 		if (level != 0)
 			throw syntax_error("Lack of the \"end\" signal.");
 	}
+
 	void translate_into_statements(std::deque<token_base *> &tokens, std::deque<statement_base *> &statements)
 	{
 		std::deque<std::deque<token_base *>> lines;

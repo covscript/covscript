@@ -169,7 +169,7 @@ namespace cs {
 		std::ifstream in(path);
 		if (!in.is_open())
 			throw fatal_error(path + ": No such file or directory");
-		while(!in.eof())
+		while (!in.eof())
 			buff.push_back(in.get());
 		// Init resources
 		runtime.new_instance();
@@ -177,14 +177,14 @@ namespace cs {
 		init();
 		// Lexer
 		std::deque<token_base *> tokens;
-		translate_into_tokens(buff,tokens);
+		translate_into_tokens(buff, tokens);
 		// Parser
 		std::deque<statement_base *> statements;
 		translate_into_statements(tokens, statements);
 		// Process constant values
 		token_value::mark();
 		// Exit if compile_only is true
-		if(compile_only)
+		if (compile_only)
 			return runtime.pop_instance();
 		// Run the instruction
 		for (auto &ptr:statements) {
