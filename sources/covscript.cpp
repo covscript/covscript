@@ -20,6 +20,7 @@
 * Website: http://covariant.cn/cs
 */
 #include "./covscript.hpp"
+#include <cstring>
 
 const char *log_path = "./cs_runtime.log";
 bool check = false;
