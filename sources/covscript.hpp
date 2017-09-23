@@ -177,7 +177,7 @@ namespace cs {
 		init();
 		// Lexer
 		std::deque<token_base *> tokens;
-		translate_into_tokens(buff, tokens);
+		translate_into_tokens(buff, tokens, path);
 		// Parser
 		std::deque<statement_base *> statements;
 		translate_into_statements(tokens, statements);
