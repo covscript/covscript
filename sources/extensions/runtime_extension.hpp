@@ -88,8 +88,9 @@ namespace runtime_cs_ext {
 		std::deque<token_base *> tokens;
 		expression_t tree;
 		for (auto &ch:expr)
-			buff.push_back(ch);
-		translate_into_tokens(buff, tokens);
+			if(!isillegal(ch))
+				buff.push_back(ch);
+		process_char_buff(buff, tokens);
 		process_brackets(tokens);
 		kill_brackets(tokens);
 		gen_tree(tree, tokens);
