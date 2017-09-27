@@ -18,6 +18,8 @@
 ## Use the Covariant Script programming language ##
 [CovScript Document](https://github.com/covscript/covscript-docs)  
 [CovScript Tutorial](https://github.com/covscript/covscript-tutorial)  
+## Depends ##
+[Sqlite3](http://www.sqlite.org/)
 ## Download and install ##
 ### Microsoft Windows ###
 Please download the precompiled executable on the [Latest Release](https://github.com/covscript/covscript/releases/latest). You can also use MinGW or the appropriate tools to compile the source code directly. If you already have a G++ compiler installed in your system, you can execute `make.bat` directly. You need to make sure that the compiler supports the C++11 standard.  

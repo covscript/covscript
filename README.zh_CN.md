@@ -18,6 +18,8 @@
 ## 使用Covariant Script编程语言 ##
 [CovScript文档](https://github.com/covscript/covscript-docs)  
 [CovScript教程](https://github.com/covscript/covscript-tutorial)  
+## 依赖 ##
+[Sqlite3](http://www.sqlite.org/)
 ## 下载和安装 ##
 ### Microsoft Windows ###
 请在[Latest Release](https://github.com/covscript/covscript/releases/latest)上下载预编译可执行文件，你也可以使用MinGW或相应的工具来直接编译源代码。如果您的系统中已经安装了G++编译器，则可以直接执行`make.bat`。 您需要确保编译器支持C++11标准。  
