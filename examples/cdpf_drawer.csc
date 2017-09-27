@@ -1,4 +1,4 @@
-import "./str_tools.csp"
+import str_tools
 var dpic=darwin.picture(0,0)
 function save()
 	var pic=darwin.get_drawable()

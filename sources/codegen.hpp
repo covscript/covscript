@@ -561,10 +561,18 @@ namespace cs {
 
 	statement_base *method_import::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
-		runtime_t rt = covscript(dynamic_cast<token_value *>(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data())->get_value().const_val<string>());
-		if (rt->package_name.empty())
-			throw syntax_error("Only packages are allowed to import.");
-		runtime->storage.add_var(rt->package_name, var::make_protect<extension_t>(std::make_shared<extension_holder>(rt->storage.get_global())));
+		const std::string& package_name = dynamic_cast<token_id *>(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data())->get_id();
+		std::string package_path = std::string(import_path) + "/" + package_name;
+		if(std::ifstream(package_path + ".csp")) {
+			runtime_t rt = covscript(package_path + ".csp");
+			if (rt->package_name.empty())
+				throw syntax_error("Target file is not a package.");
+			runtime->storage.add_var(rt->package_name, var::make_protect<extension_t>(std::make_shared<extension_holder>(rt->storage.get_global())));
+		}
+		else if(std::ifstream(package_path + ".cse"))
+			runtime->storage.add_var(package_name, var::make_protect<extension_t>(std::make_shared<extension_holder>(package_path + ".cse")));
+		else
+			throw fatal_error("No such file or directory.");
 		return nullptr;
 	}
 

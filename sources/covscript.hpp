@@ -38,6 +38,7 @@
 #include "./extensions/hash_map_extension.hpp"
 #include "./extensions/math_extension.hpp"
 #include "./extensions/darwin_extension.hpp"
+#include "./extensions/sqlite_extension.hpp"
 
 namespace cs {
 // Internal Functions
@@ -134,6 +135,7 @@ namespace cs {
 		hash_map_cs_ext::init();
 		math_cs_ext::init();
 		darwin_cs_ext::init();
+		sqlite_cs_ext::init();
 	}
 
 	void init()
@@ -160,6 +162,7 @@ namespace cs {
 		runtime->storage.add_var("runtime", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
 		runtime->storage.add_var("math", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&math_ext)));
 		runtime->storage.add_var("darwin", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&darwin_ext)));
+		runtime->storage.add_var("sqlite", var::make_protect<std::shared_ptr<extension_holder>>(sqlite_ext_shared));
 	}
 
 	std::shared_ptr<runtime_type> covscript(const std::string &path, bool compile_only)

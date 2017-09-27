@@ -3,6 +3,10 @@ project(covscript)
 include_directories(include)
 
 set(SOURCE_FILES
+        sources/extensions/console/conio.hpp
+        sources/extensions/console/unix_conio.hpp
+        sources/extensions/console/win32_conio.hpp
+        sources/extensions/sqlite/sqlite.hpp
         sources/extensions/array_extension.hpp
         sources/extensions/char_extension.hpp
         sources/extensions/darwin_extension.hpp

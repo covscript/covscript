@@ -1,4 +1,4 @@
-import "./str_tools.csp"
+import str_tools
 system.out.println("Str to number")
 var result=str_tools.ston(system.in.getline())
 system.out.println(result)

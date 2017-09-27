@@ -1,4 +1,4 @@
-import "str_tools.csp"
+import str_tools
 var in=iostream.fstream("../LICENSE",iostream.openmode.in)
 if !in.good()
     throw runtime.exception("File is not exist")

@@ -21,27 +21,51 @@
 */
 #include "./covscript.hpp"
 #include <cstring>
+#include <cstdlib>
 
-const char *log_path = "./cs_runtime.log";
-bool check = false;
-bool debug = false;
+const char *env_name = "CS_IMPORT_PATH";
+const char *log_path = nullptr;
+bool compile_only = false;
+
+int covscript_args(int args_size, const char *args[])
+{
+	int expect_log_path = 0;
+	int expect_import_path = 0;
+	int index = 1;
+	for (; index < args_size; ++index) {
+		if (expect_log_path == 1) {
+			log_path = args[index];
+			expect_log_path = 2;
+		}
+		else if (expect_import_path == 1) {
+			cs::import_path = args[index];
+			expect_import_path = 2;
+		}
+		else if (args[index][0] == '-') {
+			if (std::strcmp(args[index], "--compile-only") == 0 && !compile_only)
+				compile_only = true;
+			else if (std::strcmp(args[index], "--log-path") == 0 && expect_log_path == 0)
+				expect_log_path = 1;
+			else if (std::strcmp(args[index], "--import-path") == 0 && expect_import_path == 0)
+				expect_import_path = 1;
+			else
+				throw cs::fatal_error("argument grammar error.");
+		}
+		else
+			break;
+	}
+	if (expect_log_path == 1 || expect_import_path == 1)
+		throw cs::fatal_error("argument grammar error.");
+	return index;
+}
 
 void covscript_main(int args_size, const char *args[])
 {
 	if (args_size > 1) {
-		int index = 1;
-		for (; index < args_size; ++index) {
-			if (args[index][0] == '-') {
-				if (std::strcmp(args[index], "--check") == 0 && !check)
-					check = true;
-				else if (std::strcmp(args[index], "--debug") == 0 && !debug)
-					debug = true;
-				else
-					throw cs::fatal_error("argument grammar error.");
-			}
-			else
-				break;
-		}
+		const char* import_path=nullptr;
+		if((import_path=std::getenv(env_name))!=nullptr)
+			cs::import_path = import_path;
+		int index = covscript_args(args_size, args);
 		if (index == args_size)
 			throw cs::fatal_error("no input file.");
 		const char *path = args[index];
@@ -51,7 +75,7 @@ void covscript_main(int args_size, const char *args[])
 		system_ext.add_var("args", cs::var::make_constant<cs::array>(arg));
 		cs::init_grammar();
 		cs::init_ext();
-		cs::covscript(path, check);
+		cs::covscript(path, compile_only);
 	}
 	else
 		throw cs::fatal_error("no input file.");
@@ -63,10 +87,14 @@ int main(int args_size, const char *args[])
 		covscript_main(args_size, args);
 	}
 	catch (const std::exception &e) {
-		if (debug) {
+		if (log_path!=nullptr) {
 			std::ofstream out(::log_path);
-			out << e.what();
-			out.flush();
+			if (out) {
+				out << e.what();
+				out.flush();
+			}
+			else
+				std::cerr << "Write log failed." << std::endl;
 		}
 		std::cerr << e.what() << std::endl;
 		return -1;

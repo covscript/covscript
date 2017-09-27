@@ -70,11 +70,6 @@ namespace runtime_cs_ext {
 		return var::make<lang_error>(str);
 	}
 
-	extension_t load_extension(const string &path)
-	{
-		return std::make_shared<extension_holder>(path);
-	}
-
 	std::size_t hash(const var &val)
 	{
 		return val.hash();
@@ -88,7 +83,7 @@ namespace runtime_cs_ext {
 		std::deque<token_base *> tokens;
 		expression_t tree;
 		for (auto &ch:expr)
-			if(!isillegal(ch))
+			if (!isillegal(ch))
 				buff.push_back(ch);
 		process_char_buff(buff, tokens);
 		process_brackets(tokens);
@@ -111,7 +106,6 @@ namespace runtime_cs_ext {
 		runtime_ext.add_var("rand", var::make_protect<callable>(cni(rand)));
 		runtime_ext.add_var("randint", var::make_protect<callable>(cni(randint)));
 		runtime_ext.add_var("exception", var::make_protect<callable>(cni(exception)));
-		runtime_ext.add_var("load_extension", var::make_protect<callable>(cni(load_extension), true));
 		runtime_ext.add_var("hash", var::make_protect<callable>(cni(hash), true));
 		runtime_ext.add_var("build", var::make_protect<callable>(cni(build)));
 		runtime_ext.add_var("solve", var::make_protect<callable>(cni(solve)));
