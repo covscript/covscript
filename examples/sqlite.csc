@@ -1,3 +1,4 @@
+import sqlite_ext
 function print_result(stmt)
 	for i=0 to stmt.column_count()-1
 		system.out.print(stmt.column_decltype(i)+"\t")
@@ -26,3 +27,16 @@ stmt.clear_bindings()
 stmt.bind_real(1,6.28)
 stmt.exec()
 print_result(stmt)
+stmt=null
+loop
+	system.out.print(">>")
+	var result=sqlite_ext.exec(db,system.in.getline())
+	for row iterate result
+		for it iterate row
+			system.out.print(it.type+"\t")
+			system.out.print(it.name)
+			system.out.print("=\t")
+			system.out.println(it.data)
+		end
+	end
+end
