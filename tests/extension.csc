@@ -1,4 +1,4 @@
-const var my=runtime.load_extension("./my.ext")
+import my_ext
 const var a=10
-const var b=my.test(a)
+const var b=my_ext.test(a)
 system.out.println(a+b)
