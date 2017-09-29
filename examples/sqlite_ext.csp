@@ -16,14 +16,14 @@ function exec(db,sql)
             var dat=new sqlite_ext.record
             dat.name=stmt.column_name(i)
             dat.type=stmt.column_decltype(i)
-            switch stmt.column_type(i)
-                case sqlite.integer
+            switch stmt.column_decltype(i)
+                case "integer"
                     dat.data=stmt.column_integer(i)
                 end
-                case sqlite.real
+                case "real"
                     dat.data=stmt.column_real(i)
                 end
-                case sqlite.text
+                case "text"
                     dat.data=stmt.column_text(i)
                 end
             end
