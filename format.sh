@@ -1,5 +1,6 @@
 #/bin/sh
 rm ./sources/*.gch
+rm ./sources/*/*.gch
 astyle ./sources/*.*
 astyle ./sources/*/*.*
 rm ./sources/*.orig

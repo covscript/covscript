@@ -1,4 +1,3 @@
-#pragma once
 /*
 * Covariant Script Lexer
 *
@@ -19,10 +18,10 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "./symbols.hpp"
+#include "./instance.hpp"
 
 namespace cs {
-	void process_char_buff(const std::deque<char> &buff, std::deque<token_base *> &tokens)
+	void instance::process_char_buff(const std::deque<char> &buff, std::deque<token_base *> &tokens)
 	{
 		if (buff.empty())
 			throw syntax_error("Received empty character buffer.");
@@ -193,7 +192,7 @@ namespace cs {
 		}
 	}
 
-	void translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens, const std::string &path = "<Unknown>")
+	void instance::translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens, const std::string &path)
 	{
 		std::size_t line_num = 1;
 		std::deque<char> buff;
@@ -248,7 +247,7 @@ namespace cs {
 		}
 	}
 
-	void process_empty_brackets(std::deque<token_base *> &tokens)
+	void instance::process_empty_brackets(std::deque<token_base *> &tokens)
 	{
 		if (tokens.empty())
 			throw syntax_error("Received empty token buffer.");
@@ -341,7 +340,7 @@ namespace cs {
 			throw syntax_error("Parentheses do not match.");
 	}
 
-	void process_brackets(std::deque<token_base *> &tokens)
+	void instance::process_brackets(std::deque<token_base *> &tokens)
 	{
 		if (tokens.empty())
 			throw syntax_error("Received empty token buffer.");

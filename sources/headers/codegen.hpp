@@ -19,54 +19,10 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "./parser.hpp"
+#include "./symbols.hpp"
 #include "./statement.hpp"
 
 namespace cs {
-	/*
-	* Grammar Types
-	* Null: Do not use!
-	* Single: Single Line Statement.
-	* Block: Statement with code block.
-	* Jit Command: Statement whitch execute in compile time.
-	*/
-	enum class method_types {
-		null, single, block, jit_command
-	};
-
-	class method_base {
-		static garbage_collector<method_base> gc;
-	public:
-		static void *operator new(std::size_t size)
-		{
-			void *ptr = ::operator new(size);
-			gc.add(ptr);
-			return ptr;
-		}
-
-		static void operator delete(void *ptr)
-		{
-			gc.remove(ptr);
-			::operator delete(ptr);
-		}
-
-		method_base() = default;
-
-		method_base(const method_base &) = default;
-
-		virtual ~method_base() = default;
-
-		virtual method_types get_type() const noexcept=0;
-
-		virtual statement_types get_target_type() const noexcept=0;
-
-		virtual void preprocess(const std::deque<std::deque<token_base *>> &) {}
-
-		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &)=0;
-	};
-
-	garbage_collector<method_base> method_base::gc;
-
 	class method_expression final : public method_base {
 	public:
 		virtual method_types get_type() const noexcept override
@@ -492,63 +448,6 @@ namespace cs {
 
 		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
-
-	class translator_type final {
-	public:
-		using data_type=std::pair<std::deque<token_base *>, method_base *>;
-
-		static bool compare(const token_base *a, const token_base *b)
-		{
-			if (a == nullptr)
-				return b == nullptr;
-			if (b == nullptr)
-				return a == nullptr;
-			if (a->get_type() != b->get_type())
-				return false;
-			return !(a->get_type() == token_types::action) || static_cast<const token_action *>(a)->get_action() == static_cast<const token_action *>(b)->get_action();
-		}
-
-	private:
-		std::list<std::shared_ptr<data_type>> m_data;
-	public:
-		translator_type() = default;
-
-		translator_type(const translator_type &) = delete;
-
-		~translator_type() = default;
-
-		void add_method(const std::deque<token_base *> &grammar, method_base *method)
-		{
-			m_data.emplace_back(std::make_shared<data_type>(grammar, method));
-		}
-
-		method_base *match(const std::deque<token_base *> &raw)
-		{
-			if (raw.size() <= 1)
-				throw syntax_error("Grammar error.");
-			std::list<std::shared_ptr<data_type>> stack;
-			for (auto &it:m_data)
-				if (this->compare(it->first.front(), raw.front()))
-					stack.push_back(it);
-			stack.remove_if([&](const std::shared_ptr<data_type> &dat) {
-				return dat->first.size() != raw.size();
-			});
-			stack.remove_if([&](const std::shared_ptr<data_type> &dat) {
-				for (std::size_t i = 1; i < raw.size() - 1; ++i) {
-					if (!compare(raw.at(i), dat->first.at(i)))
-						return true;
-				}
-				return false;
-			});
-			if (stack.empty())
-				throw syntax_error("Uknow grammar.");
-			if (stack.size() > 1)
-				throw syntax_error("Ambiguous grammar.");
-			return stack.front()->second;
-		}
-	};
-
-	static translator_type translator;
 }
 
 #include "./runtime.hpp"
@@ -905,85 +804,59 @@ namespace cs {
 		return new statement_throw(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), raw.front().back());
 	}
 
-	void kill_action(std::deque<std::deque<token_base *>> lines, std::deque<statement_base *> &statements, bool raw)
+	void instance::init_grammar()
 	{
-		std::deque<std::deque<token_base *>> tmp;
-		method_base *method = nullptr;
-		token_endline *endsig = nullptr;
-		int level = 0;
-		for (auto &line:lines) {
-			endsig = dynamic_cast<token_endline *>(line.back());
-			try {
-				if (raw) {
-					process_brackets(line);
-					kill_brackets(line);
-					kill_expr(line);
-				}
-				method_base *m = translator.match(line);
-				switch (m->get_type()) {
-				case method_types::null:
-					throw syntax_error("Null type of grammar.");
-					break;
-				case method_types::single: {
-					if (level > 0) {
-						if (m->get_target_type() == statement_types::end_) {
-							runtime->storage.remove_set();
-							runtime->storage.remove_domain();
-							--level;
-						}
-						if (level == 0) {
-							statements.push_back(method->translate(tmp));
-							tmp.clear();
-							method = nullptr;
-						}
-						else
-							tmp.push_back(line);
-					}
-					else
-						statements.push_back(m->translate({line}));
-				}
-				break;
-				case method_types::block: {
-					if (level == 0)
-						method = m;
-					++level;
-					runtime->storage.add_domain();
-					runtime->storage.add_set();
-					m->preprocess({line});
-					tmp.push_back(line);
-				}
-				break;
-				case method_types::jit_command:
-					m->translate({line});
-					break;
-				}
-			}
-			catch (const cs::exception &e) {
-				throw e;
-			}
-			catch (const std::exception &e) {
-				throw exception(endsig->get_num(), endsig->get_file(), endsig->get_code(), e.what());
-			}
-		}
-		if (level != 0)
-			throw syntax_error("Lack of the \"end\" signal.");
-	}
-
-	void translate_into_statements(std::deque<token_base *> &tokens, std::deque<statement_base *> &statements)
-	{
-		std::deque<std::deque<token_base *>> lines;
-		std::deque<token_base *> tmp;
-		for (auto &ptr:tokens) {
-			tmp.push_back(ptr);
-			if (ptr != nullptr && ptr->get_type() == token_types::endline) {
-				if (tmp.size() > 1)
-					lines.push_back(tmp);
-				tmp.clear();
-			}
-		}
-		if (tmp.size() > 1)
-			lines.push_back(tmp);
-		tmp.clear();
-		kill_action(lines, statements, true);
+		// Expression Grammar
+		translator.add_method({new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_expression);
+		// Import Grammar
+		translator.add_method({new token_action(action_types::import_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_import);
+		// Package Grammar
+		translator.add_method({new token_action(action_types::package_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_package);
+		// Var Grammar
+		translator.add_method({new token_action(action_types::var_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_var);
+		translator.add_method({new token_action(action_types::constant_), new token_action(action_types::var_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_constant);
+		// End Grammar
+		translator.add_method({new token_action(action_types::endblock_), new token_endline(0)}, new method_end);
+		// Block Grammar
+		translator.add_method({new token_action(action_types::block_), new token_endline(0)}, new method_block);
+		// Namespace Grammar
+		translator.add_method({new token_action(action_types::namespace_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_namespace);
+		// If Grammar
+		translator.add_method({new token_action(action_types::if_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_if);
+		// Else Grammar
+		translator.add_method({new token_action(action_types::else_), new token_endline(0)}, new method_else);
+		// Switch Grammar
+		translator.add_method({new token_action(action_types::switch_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_switch);
+		// Case Grammar
+		translator.add_method({new token_action(action_types::case_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_case);
+		// Default Grammar
+		translator.add_method({new token_action(action_types::default_), new token_endline(0)}, new method_default);
+		// While Grammar
+		translator.add_method({new token_action(action_types::while_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_while);
+		// Until Grammar
+		translator.add_method({new token_action(action_types::until_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_until);
+		// Loop Grammar
+		translator.add_method({new token_action(action_types::loop_), new token_endline(0)}, new method_loop);
+		// For Grammar
+		translator.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()), new token_action(action_types::to_), new token_expr(cov::tree<token_base *>()), new token_action(action_types::step_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_for_step);
+		translator.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()), new token_action(action_types::to_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_for);
+		translator.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()), new token_action(action_types::iterate_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_foreach);
+		// Break Grammar
+		translator.add_method({new token_action(action_types::break_), new token_endline(0)}, new method_break);
+		// Continue Grammar
+		translator.add_method({new token_action(action_types::continue_), new token_endline(0)}, new method_continue);
+		// Function Grammar
+		translator.add_method({new token_action(action_types::function_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_function);
+		// Return Grammar
+		translator.add_method({new token_action(action_types::return_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_return);
+		translator.add_method({new token_action(action_types::return_), new token_endline(0)}, new method_return_no_value);
+		// Struct Grammar
+		translator.add_method({new token_action(action_types::struct_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_struct);
+		// Try Grammar
+		translator.add_method({new token_action(action_types::try_), new token_endline(0)}, new method_try);
+		// Catch Grammar
+		translator.add_method({new token_action(action_types::catch_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_catch);
+		// Throw Grammar
+		translator.add_method({new token_action(action_types::throw_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_throw);
 	}
 }

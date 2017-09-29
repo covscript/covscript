@@ -19,63 +19,9 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "./parser.hpp"
+#include "./symbols.hpp"
 
 namespace cs {
-	enum class statement_types {
-		null, expression_, import_, package_, block_, namespace_, var_, constant_, if_, else_, switch_, case_, default_, while_, until_, loop_, for_, foreach_, break_, continue_, struct_, function_, return_, end_, try_, catch_, throw_
-	};
-
-	class statement_base {
-		static garbage_collector<statement_base> gc;
-	protected:
-		std::size_t mLineNum = 0;
-		std::string mFilePath = "<Unknown>";
-		std::string mCode = "<Unknown>";
-	public:
-		static void *operator new(std::size_t size)
-		{
-			void *ptr = ::operator new(size);
-			gc.add(ptr);
-			return ptr;
-		}
-
-		static void operator delete(void *ptr)
-		{
-			gc.remove(ptr);
-			::operator delete(ptr);
-		}
-
-		statement_base() = default;
-
-		statement_base(const statement_base &) = default;
-
-		statement_base(token_base *ptr) : mLineNum(static_cast<token_endline *>(ptr)->get_num()), mFilePath(static_cast<token_endline *>(ptr)->get_file()), mCode(static_cast<token_endline *>(ptr)->get_code()) {}
-
-		virtual ~statement_base() = default;
-
-		virtual statement_types get_type() const noexcept=0;
-
-		virtual std::size_t get_line_num() const noexcept final
-		{
-			return this->mLineNum;
-		}
-
-		virtual const std::string &get_file_path() const noexcept final
-		{
-			return this->mFilePath;
-		}
-
-		virtual const std::string &get_code() const noexcept final
-		{
-			return this->mCode;
-		}
-
-		virtual void run()=0;
-	};
-
-	garbage_collector<statement_base> statement_base::gc;
-
 	class statement_expression final : public statement_base {
 		cov::tree<token_base *> mTree;
 	public:

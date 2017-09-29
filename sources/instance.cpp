@@ -1,49 +1,21 @@
-#pragma once
-/*
-* Covariant Script Optimizer
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published
-* by the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*
-* Copyright (C) 2017 Michael Lee(李登淳)
-* Email: mikecovlee@163.com
-* Github: https://github.com/mikecovlee
-*/
-#include "./runtime.hpp"
-
+#include "headers/instance.hpp"
+#include "headers/statement.hpp"
 namespace cs {
-	void opt_expr(cov::tree<token_base *> &, cov::tree<token_base *>::iterator);
-
-	bool optimizable(const cov::tree<token_base *>::iterator &it)
+	const std::string & statement_base::get_file_path() const noexcept
 	{
-		if (!it.usable())
-			return false;
-		token_base *token = it.data();
-		if (token == nullptr)
-			return true;
-		switch (token->get_type()) {
-		default:
-			break;
-		case token_types::value:
-			return true;
-			break;
-		}
-		return false;
+		return context->get_file_path;
 	}
 
-	bool inside_lambda = false;
+	const std::string & statement_base::get_package_name() const noexcept
+	{
+		return context->runtime.package_name;
+	}
 
-	void opt_expr(cov::tree<token_base *> &tree, cov::tree<token_base *>::iterator it)
+	const std::string & statement_base::get_raw_code() const noexcept
+	{
+		return context->get_raw_code(line_num);
+	}
+	void instance::opt_expr(cov::tree<token_base *> &tree, cov::tree<token_base *>::iterator it)
 	{
 		if (!it.usable())
 			return;
@@ -55,12 +27,12 @@ namespace cs {
 			break;
 		case token_types::id: {
 			const std::string &id = static_cast<token_id *>(token)->get_id();
-			if (runtime->storage.exsist_record(id)) {
-				if (runtime->storage.var_exsist_current(id))
-					it.data() = new token_value(runtime->storage.get_var(id));
+			if (runtime.storage.exsist_record(id)) {
+				if (runtime.storage.var_exsist_current(id))
+					it.data() = new token_value(runtime.storage.get_var(id));
 			}
-			else if (runtime->storage.var_exsist(id) && runtime->storage.get_var(id).is_protect())
-				it.data() = new token_value(runtime->storage.get_var(id));
+			else if (runtime.storage.var_exsist(id) && runtime.storage.get_var(id).is_protect())
+				it.data() = new token_value(runtime.storage.get_var(id));
 			return;
 			break;
 		}
@@ -85,7 +57,7 @@ namespace cs {
 				bool is_map = true;
 				token_value *t = nullptr;
 				for (auto &tree:static_cast<token_array *>(token)->get_array()) {
-					const var &val = parse_expr(tree.root());
+					const var &val = runtime.parse_expr(tree.root());
 					if (is_map && val.type() != typeid(pair))
 						is_map = false;
 					arr.push_back((new token_value(copy(val)))->get_value());
@@ -159,7 +131,7 @@ namespace cs {
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
 					throw syntax_error("Wrong grammar for variable definition.");
-				runtime->storage.add_record(static_cast<token_id *>(rptr)->get_id());
+				runtime.storage.add_record(static_cast<token_id *>(rptr)->get_id());
 				it.data() = rptr;
 				return;
 				break;
@@ -174,7 +146,7 @@ namespace cs {
 					var &a = static_cast<token_value *>(lptr)->get_value();
 					token_base *orig_ptr = it.data();
 					try {
-						var v = parse_dot(a, rptr);
+						var v = runtime.parse_dot(a, rptr);
 						if (v.is_protect())
 							it.data() = new token_value(v);
 					}
@@ -201,7 +173,7 @@ namespace cs {
 						if (is_optimizable) {
 							array arr;
 							for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
-								arr.push_back(parse_expr(tree.root()));
+								arr.push_back(runtime.parse_expr(tree.root()));
 							it.data() = new token_value(a.val<callable>(true).call(arr));
 						}
 					}
@@ -251,15 +223,23 @@ namespace cs {
 		opt_expr(tree, it.left());
 		opt_expr(tree, it.right());
 		if (optimizable(it.left()) && optimizable(it.right())) {
-			token_value *token = new token_value(parse_expr(it));
+			token_value *token = new token_value(runtime.parse_expr(it));
 			tree.erase_left(it);
 			tree.erase_right(it);
 			it.data() = token;
 		}
 	}
-
-	void optimize_expression(cov::tree<token_base *> &tree)
+	void instance::parse_define_var(cov::tree<token_base *> &tree, define_var_profile &dvp)
 	{
-		opt_expr(tree, tree.root());
+		const auto &it = tree.root();
+		token_base *root = it.data();
+		if (root == nullptr || root->get_type() != token_types::signal || static_cast<token_signal *>(root)->get_signal() != signal_types::asi_)
+			throw syntax_error("Wrong grammar for variable definition.");
+		token_base *left = it.left().data();
+		const auto &right = it.right();
+		if (left == nullptr || right.data() == nullptr || left->get_type() != token_types::id)
+			throw syntax_error("Wrong grammar for variable definition.");
+		dvp.id = static_cast<token_id *>(left)->get_id();
+		dvp.expr = right;
 	}
 }

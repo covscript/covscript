@@ -31,6 +31,19 @@ namespace cs {
 	enum class signal_types {
 		add_, addasi_, sub_, subasi_, mul_, mulasi_, div_, divasi_, mod_, modasi_, pow_, powasi_, com_, dot_, und_, abo_, asi_, equ_, ueq_, aeq_, neq_, and_, or_, not_, inc_, dec_, pair_, choice_, slb_, srb_, mlb_, mrb_, llb_, lrb_, esb_, emb_, elb_, fcall_, access_, typeid_, new_, gcnew_, arrow_, lambda_, escape_, minus_, vardef_
 	};
+	enum class constant_values {
+		current_namespace, global_namespace
+	};
+	/*
+	* Grammar Types
+	* Null: Do not use!
+	* Single: Single Line Statement.
+	* Block: Statement with code block.
+	* Jit Command: Statement whitch execute in compile time.
+	*/
+	enum class method_types {
+		null, single, block, jit_command
+	};
 
 	template<typename Key, typename T>
 	class mapping final {
@@ -76,39 +89,21 @@ namespace cs {
 		virtual token_types get_type() const noexcept=0;
 	};
 
-	garbage_collector <token_base> token_base::gc;
-
 	class token_endline final : public token_base {
-		std::size_t mNum = 0;
-		std::string mFile = "<Unknown>";
-		std::string mCode = "<Unknown>";
+		std::size_t line_num = 0;
 	public:
 		token_endline() = default;
 
-		token_endline(std::size_t num) : mNum(num) {}
-
-		token_endline(std::size_t num, const std::string &file) : mNum(num), mFile(file) {}
-
-		token_endline(std::size_t num, const std::string &file, const std::string &code) : mNum(num), mFile(file), mCode(code) {}
+		token_endline(std::size_t line) : line_num(line) {}
 
 		virtual token_types get_type() const noexcept override
 		{
 			return token_types::endline;
 		}
 
-		std::size_t get_num() const noexcept
+		std::size_t get_line_num() const noexcept
 		{
-			return this->mNum;
-		}
-
-		const std::string &get_file() const noexcept
-		{
-			return this->mFile;
-		}
-
-		const std::string &get_code() const noexcept
-		{
-			return this->mCode;
+			return line_num;
 		}
 	};
 
@@ -168,17 +163,10 @@ namespace cs {
 
 	class token_value final : public token_base {
 		var mVal;
-		static std::deque<std::deque<token_value *>> mList;
 	public:
 		token_value() = delete;
 
-		token_value(const var &val) : mVal(val)
-		{
-			if (!mList.empty() && !mVal.is_protect()) {
-				mVal.protect();
-				mList.front().push_back(this);
-			}
-		}
+		token_value(const var &val) : mVal(val) {}
 
 		virtual token_types get_type() const noexcept override
 		{
@@ -189,21 +177,7 @@ namespace cs {
 		{
 			return this->mVal;
 		}
-
-		static void clean()
-		{
-			mList.emplace_front();
-		}
-
-		static void mark()
-		{
-			for (auto &it:mList.front())
-				it->mVal.constant();
-			mList.pop_front();
-		}
 	};
-
-	std::deque<std::deque<token_value *>> token_value::mList;
 
 	class token_sblist final : public token_base {
 		std::deque<std::deque<token_base *>> mList;
@@ -259,118 +233,144 @@ namespace cs {
 		}
 	};
 
-	mapping<std::string, signal_types> signal_map = {
-		{"+",  signal_types::add_},
-		{"+=", signal_types::addasi_},
-		{"-",  signal_types::sub_},
-		{"-=", signal_types::subasi_},
-		{"*",  signal_types::mul_},
-		{"*=", signal_types::mulasi_},
-		{"/",  signal_types::div_},
-		{"/=", signal_types::divasi_},
-		{"%",  signal_types::mod_},
-		{"%=", signal_types::modasi_},
-		{"^",  signal_types::pow_},
-		{"^=", signal_types::powasi_},
-		{">",  signal_types::abo_},
-		{"<",  signal_types::und_},
-		{"=",  signal_types::asi_},
-		{"&&", signal_types::and_},
-		{"||", signal_types::or_},
-		{"!",  signal_types::not_},
-		{"==", signal_types::equ_},
-		{"!=", signal_types::neq_},
-		{">=", signal_types::aeq_},
-		{"<=", signal_types::ueq_},
-		{"(",  signal_types::slb_},
-		{")",  signal_types::srb_},
-		{"[",  signal_types::mlb_},
-		{"]",  signal_types::mrb_},
-		{"{",  signal_types::llb_},
-		{"}",  signal_types::lrb_},
-		{",",  signal_types::com_},
-		{".",  signal_types::dot_},
-		{"()", signal_types::esb_},
-		{"[]", signal_types::emb_},
-		{"{}", signal_types::elb_},
-		{"++", signal_types::inc_},
-		{"--", signal_types::dec_},
-		{":",  signal_types::pair_},
-		{"?",  signal_types::choice_},
-		{"->", signal_types::arrow_}
-	};
-	mapping<std::string, action_types> action_map = {
-		{"import",    action_types::import_},
-		{"package",   action_types::package_},
-		{"namespace", action_types::namespace_},
-		{"struct",    action_types::struct_},
-		{"block",     action_types::block_},
-		{"end",       action_types::endblock_},
-		{"var",       action_types::var_},
-		{"const",     action_types::constant_},
-		{"if",        action_types::if_},
-		{"else",      action_types::else_},
-		{"switch",    action_types::switch_},
-		{"case",      action_types::case_},
-		{"default",   action_types::default_},
-		{"while",     action_types::while_},
-		{"until",     action_types::until_},
-		{"loop",      action_types::loop_},
-		{"for",       action_types::for_},
-		{"to",        action_types::to_},
-		{"step",      action_types::step_},
-		{"iterate",   action_types::iterate_},
-		{"break",     action_types::break_},
-		{"continue",  action_types::continue_},
-		{"function",  action_types::function_},
-		{"return",    action_types::return_},
-		{"try",       action_types::try_},
-		{"catch",     action_types::catch_},
-		{"throw",     action_types::throw_}
-	};
-	enum class constant_values {
-		current_namespace, global_namespace
-	};
-	mapping<std::string, std::function<token_base *()>> reserved_map = {
-		{"and",     []() -> token_base * { return new token_signal(signal_types::and_); }},
-		{"or",      []() -> token_base * { return new token_signal(signal_types::or_); }},
-		{"not",     []() -> token_base * { return new token_signal(signal_types::not_); }},
-		{"typeid",  []() -> token_base * { return new token_signal(signal_types::typeid_); }},
-		{"new",     []() -> token_base * { return new token_signal(signal_types::new_); }},
-		{"gcnew",   []() -> token_base * { return new token_signal(signal_types::gcnew_); }},
-		{"current", []() -> token_base * { return new token_value(constant_values::current_namespace); }},
-		{"global",  []() -> token_base * { return new token_value(constant_values::global_namespace); }},
-		{"null",    []() -> token_base * { return new token_value(null_pointer); }},
-		{"true",    []() -> token_base * { return new token_value(true); }},
-		{"false",   []() -> token_base * { return new token_value(false); }}
-	};
-	mapping<char, char> escape_map = {
-		{'a',  '\a'},
-		{'b',  '\b'},
-		{'f',  '\f'},
-		{'n',  '\n'},
-		{'r',  '\r'},
-		{'t',  '\t'},
-		{'v',  '\v'},
-		{'\\', '\\'},
-		{'\'', '\''},
-		{'\"', '\"'},
-		{'0',  '\0'}
-	};
-	constexpr char signals[] = {
-		'+', '-', '*', '/', '%', '^', ',', '.', '>', '<', '=', '&', '|', '!', '(', ')', '[', ']', '{', '}', ':', '?'
+	class token_expr final : public token_base {
+		cov::tree<token_base *> mTree;
+	public:
+		token_expr() = delete;
+
+		token_expr(const cov::tree<token_base *> &tree) : mTree(tree) {}
+
+		virtual token_types get_type() const noexcept override
+		{
+			return token_types::expr;
+		}
+
+		cov::tree<token_base *> &get_tree() noexcept
+		{
+			return this->mTree;
+		}
 	};
 
-	bool issignal(char ch)
-	{
-		for (auto &c:signals)
-			if (c == ch)
-				return true;
-		return false;
-	}
+	class token_arglist final : public token_base {
+		std::deque<cov::tree<token_base *>> mTreeList;
+	public:
+		token_arglist() = default;
 
-	bool isillegal(int ch)
-	{
-		return ch < 9 || ch > 127 || (ch >= 14 && ch < 32);
-	}
+		token_arglist(const std::deque<cov::tree<token_base *>> &tlist) : mTreeList(tlist) {}
+
+		virtual token_types get_type() const noexcept override
+		{
+			return token_types::arglist;
+		}
+
+		std::deque<cov::tree<token_base *>> &get_arglist() noexcept
+		{
+			return this->mTreeList;
+		}
+	};
+
+	class token_array final : public token_base {
+		std::deque<cov::tree<token_base *>> mTreeList;
+	public:
+		token_array() = default;
+
+		token_array(const std::deque<cov::tree<token_base *>> &tlist) : mTreeList(tlist) {}
+
+		virtual token_types get_type() const noexcept override
+		{
+			return token_types::array;
+		}
+
+		std::deque<cov::tree<token_base *>> &get_array() noexcept
+		{
+			return this->mTreeList;
+		}
+	};
+	enum class statement_types {
+		null, expression_, import_, package_, block_, namespace_, var_, constant_, if_, else_, switch_, case_, default_, while_, until_, loop_, for_, foreach_, break_, continue_, struct_, function_, return_, end_, try_, catch_, throw_
+	};
+
+	class statement_base {
+		static garbage_collector<statement_base> gc;
+	protected:
+		instance* context = nullptr;
+		std::size_t line_num = 0;
+	public:
+		static void *operator new(std::size_t size)
+		{
+			void *ptr = ::operator new(size);
+			gc.add(ptr);
+			return ptr;
+		}
+
+		static void operator delete(void *ptr)
+		{
+			gc.remove(ptr);
+			::operator delete(ptr);
+		}
+
+		statement_base() = default;
+
+		statement_base(const statement_base &) = default;
+
+		statement_base(instance* iptr, token_base *eptr) : context(iptr), line_num(static_cast<token_endline *>(eptr)->get_line_num()) {}
+
+		virtual ~statement_base() = default;
+
+		std::size_t get_line_num() const noexcept
+		{
+			return line_num;
+		}
+
+		const std::string &get_file_path() const noexcept;
+
+		const std::string &get_package_name() const noexcept;
+
+		const std::string &get_raw_code() const noexcept;
+
+		virtual statement_types get_type() const noexcept=0;
+
+		virtual void run()=0;
+	};
+
+	class method_base {
+		static garbage_collector<method_base> gc;
+	private:
+		instance* context = nullptr;
+	public:
+		static void *operator new(std::size_t size)
+		{
+			void *ptr = ::operator new(size);
+			gc.add(ptr);
+			return ptr;
+		}
+
+		static void operator delete(void *ptr)
+		{
+			gc.remove(ptr);
+			::operator delete(ptr);
+		}
+
+		method_base() = default;
+
+		method_base(const method_base &) = default;
+
+		method_base(instance* iptr):context(iptr) {}
+
+		virtual ~method_base() = default;
+
+		virtual method_types get_type() const noexcept=0;
+
+		virtual statement_types get_target_type() const noexcept=0;
+
+		virtual void preprocess(const std::deque<std::deque<token_base *>> &) {}
+
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &)=0;
+	};
+
+	garbage_collector<token_base> token_base::gc;
+
+	garbage_collector<statement_base> statement_base::gc;
+
+	garbage_collector<method_base> method_base::gc;
 }

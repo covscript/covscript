@@ -25,12 +25,12 @@
 * cs_impl: Implement Namespace
 */
 // Mozart
-#include "../include/mozart/static_stack.hpp"
-#include "../include/mozart/random.hpp"
-#include "../include/mozart/timer.hpp"
-#include "../include/mozart/tree.hpp"
+#include "../../include/mozart/static_stack.hpp"
+#include "../../include/mozart/random.hpp"
+#include "../../include/mozart/timer.hpp"
+#include "../../include/mozart/tree.hpp"
 // LibDLL
-#include "../include/libdll/dll.hpp"
+#include "../../include/libdll/dll.hpp"
 // STL
 #include <unordered_map>
 #include <unordered_set>

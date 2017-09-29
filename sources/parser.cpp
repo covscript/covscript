@@ -1,4 +1,3 @@
-#pragma once
 /*
 * Covariant Script Parser
 *
@@ -19,137 +18,11 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "./lexer.hpp"
+#include "./instance.hpp"
+#include "./runtime.hpp"
 
 namespace cs {
-	class token_expr final : public token_base {
-		cov::tree<token_base *> mTree;
-	public:
-		token_expr() = delete;
-
-		token_expr(const cov::tree<token_base *> &tree) : mTree(tree) {}
-
-		virtual token_types get_type() const noexcept override
-		{
-			return token_types::expr;
-		}
-
-		cov::tree<token_base *> &get_tree() noexcept
-		{
-			return this->mTree;
-		}
-	};
-
-	class token_arglist final : public token_base {
-		std::deque<cov::tree<token_base *>> mTreeList;
-	public:
-		token_arglist() = default;
-
-		token_arglist(const std::deque<cov::tree<token_base *>> &tlist) : mTreeList(tlist) {}
-
-		virtual token_types get_type() const noexcept override
-		{
-			return token_types::arglist;
-		}
-
-		std::deque<cov::tree<token_base *>> &get_arglist() noexcept
-		{
-			return this->mTreeList;
-		}
-	};
-
-	class token_array final : public token_base {
-		std::deque<cov::tree<token_base *>> mTreeList;
-	public:
-		token_array() = default;
-
-		token_array(const std::deque<cov::tree<token_base *>> &tlist) : mTreeList(tlist) {}
-
-		virtual token_types get_type() const noexcept override
-		{
-			return token_types::array;
-		}
-
-		std::deque<cov::tree<token_base *>> &get_array() noexcept
-		{
-			return this->mTreeList;
-		}
-	};
-
-	mapping<signal_types, int> signal_level_map = {
-		{signal_types::add_,    10},
-		{signal_types::addasi_, 0},
-		{signal_types::sub_,    10},
-		{signal_types::subasi_, 0},
-		{signal_types::mul_,    11},
-		{signal_types::mulasi_, 0},
-		{signal_types::div_,    11},
-		{signal_types::divasi_, 0},
-		{signal_types::mod_,    12},
-		{signal_types::modasi_, 0},
-		{signal_types::pow_,    12},
-		{signal_types::powasi_, 0},
-		{signal_types::dot_,    17},
-		{signal_types::arrow_,  17},
-		{signal_types::und_,    9},
-		{signal_types::abo_,    9},
-		{signal_types::asi_,    0},
-		{signal_types::choice_, 2},
-		{signal_types::pair_,   3},
-		{signal_types::equ_,    9},
-		{signal_types::ueq_,    9},
-		{signal_types::aeq_,    9},
-		{signal_types::neq_,    9},
-		{signal_types::lambda_, 1},
-		{signal_types::vardef_, 20},
-		{signal_types::and_,    7},
-		{signal_types::or_,     7},
-		{signal_types::not_,    8},
-		{signal_types::inc_,    13},
-		{signal_types::dec_,    13},
-		{signal_types::fcall_,  14},
-		{signal_types::emb_,    14},
-		{signal_types::access_, 15},
-		{signal_types::typeid_, 16},
-		{signal_types::new_,    16},
-		{signal_types::gcnew_,  16}
-	};
-
-	int get_signal_level(token_base *ptr)
-	{
-		if (ptr == nullptr)
-			throw syntax_error("Get the level of null token.");
-		if (ptr->get_type() != token_types::signal)
-			throw syntax_error("Get the level of non-signal token.");
-		return signal_level_map.match(static_cast<token_signal *>(ptr)->get_signal());
-	}
-
-	constexpr signal_types signal_left_associative[] = {
-		signal_types::asi_, signal_types::addasi_, signal_types::subasi_, signal_types::mulasi_, signal_types::divasi_, signal_types::modasi_, signal_types::powasi_, signal_types::equ_, signal_types::und_, signal_types::abo_, signal_types::ueq_, signal_types::aeq_, signal_types::neq_, signal_types::and_, signal_types::or_
-	};
-
-	bool is_left_associative(token_base *ptr)
-	{
-		if (ptr == nullptr)
-			throw syntax_error("Get the level of null token.");
-		if (ptr->get_type() != token_types::signal)
-			throw syntax_error("Get the level of non-signal token.");
-		signal_types s = static_cast<token_signal *>(ptr)->get_signal();
-		for (auto &t:signal_left_associative)
-			if (t == s)
-				return true;
-		return false;
-	}
-
-	void kill_brackets(std::deque<token_base *> &);
-
-	void gen_tree(cov::tree<token_base *> &, std::deque<token_base *> &);
-
-	void kill_expr(std::deque<token_base *> &);
-
-	void optimize_expression(cov::tree<token_base *> &);
-
-	void kill_brackets(std::deque<token_base *> &tokens)
+	void instance::kill_brackets(std::deque<token_base *> &tokens)
 	{
 		std::deque<token_base *> oldt;
 		std::swap(tokens, oldt);
@@ -281,7 +154,7 @@ namespace cs {
 		}
 	}
 
-	void split_token(std::deque<token_base *> &raw, std::deque<token_base *> &signals, std::deque<token_base *> &objects)
+	void instance::split_token(std::deque<token_base *> &raw, std::deque<token_base *> &signals, std::deque<token_base *> &objects)
 	{
 		bool request_signal = false;
 		for (auto &ptr:raw) {
@@ -302,7 +175,7 @@ namespace cs {
 			objects.push_back(nullptr);
 	}
 
-	void build_tree(cov::tree<token_base *> &tree, std::deque<token_base *> &signals, std::deque<token_base *> &objects)
+	void instance::build_tree(cov::tree<token_base *> &tree, std::deque<token_base *> &signals, std::deque<token_base *> &objects)
 	{
 		if (objects.empty() || signals.empty() || objects.size() != signals.size() + 1)
 			throw syntax_error("Symbols do not match the object.");
@@ -352,7 +225,7 @@ namespace cs {
 		}
 	}
 
-	void gen_tree(cov::tree<token_base *> &tree, std::deque<token_base *> &raw)
+	void instance::gen_tree(cov::tree<token_base *> &tree, std::deque<token_base *> &raw)
 	{
 		tree.clear();
 		if (raw.size() == 1) {
@@ -375,7 +248,7 @@ namespace cs {
 		optimize_expression(tree);
 	}
 
-	void kill_expr(std::deque<token_base *> &tokens)
+	void instance::kill_expr(std::deque<token_base *> &tokens)
 	{
 		std::deque<token_base *> oldt, expr;
 		std::swap(tokens, oldt);
@@ -395,7 +268,85 @@ namespace cs {
 		}
 	}
 
-	void kill_action(std::deque<std::deque<token_base *>>, std::deque<statement_base *> &, bool raw = false);
+	void instance::kill_action(std::deque<std::deque<token_base *>> lines, std::deque<statement_base *> &statements, bool raw)
+	{
+		std::deque<std::deque<token_base *>> tmp;
+		method_base *method = nullptr;
+		token_endline *endsig = nullptr;
+		int level = 0;
+		for (auto &line:lines) {
+			endsig = dynamic_cast<token_endline *>(line.back());
+			try {
+				if (raw) {
+					process_brackets(line);
+					kill_brackets(line);
+					kill_expr(line);
+				}
+				method_base *m = translator.match(line);
+				switch (m->get_type()) {
+				case method_types::null:
+					throw syntax_error("Null type of grammar.");
+					break;
+				case method_types::single: {
+					if (level > 0) {
+						if (m->get_target_type() == statement_types::end_) {
+							runtime->storage.remove_set();
+							runtime->storage.remove_domain();
+							--level;
+						}
+						if (level == 0) {
+							statements.push_back(method->translate(tmp));
+							tmp.clear();
+							method = nullptr;
+						}
+						else
+							tmp.push_back(line);
+					}
+					else
+						statements.push_back(m->translate({line}));
+				}
+				break;
+				case method_types::block: {
+					if (level == 0)
+						method = m;
+					++level;
+					runtime->storage.add_domain();
+					runtime->storage.add_set();
+					m->preprocess({line});
+					tmp.push_back(line);
+				}
+				break;
+				case method_types::jit_command:
+					m->translate({line});
+					break;
+				}
+			}
+			catch (const cs::exception &e) {
+				throw e;
+			}
+			catch (const std::exception &e) {
+				throw exception(endsig->get_num(), endsig->get_file(), endsig->get_code(), e.what());
+			}
+		}
+		if (level != 0)
+			throw syntax_error("Lack of the \"end\" signal.");
+	}
 
-	void translate_into_statements(std::deque<token_base *> &tokens, std::deque<statement_base *> &statements);
+	void instance::translate_into_statements(std::deque<token_base *> &tokens, std::deque<statement_base *> &statements)
+	{
+		std::deque<std::deque<token_base *>> lines;
+		std::deque<token_base *> tmp;
+		for (auto &ptr:tokens) {
+			tmp.push_back(ptr);
+			if (ptr != nullptr && ptr->get_type() == token_types::endline) {
+				if (tmp.size() > 1)
+					lines.push_back(tmp);
+				tmp.clear();
+			}
+		}
+		if (tmp.size() > 1)
+			lines.push_back(tmp);
+		tmp.clear();
+		kill_action(lines, statements, true);
+	}
 }

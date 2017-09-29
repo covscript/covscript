@@ -24,6 +24,8 @@ namespace cs_impl {
 	class any;
 }
 namespace cs {
+	class instance;
+
 	class token_base;
 
 	class statement_base;

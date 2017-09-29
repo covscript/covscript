@@ -1,4 +1,3 @@
-#pragma once
 /*
 * Covariant Script Runtime
 *
@@ -19,181 +18,9 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "./parser.hpp"
-
+#include "headers/runtime.hpp"
 namespace cs {
-	class domain_manager {
-		std::deque<std::unordered_set<string>> m_set;
-		std::deque<domain_t> m_data;
-	public:
-		domain_manager()
-		{
-			m_set.emplace_front();
-			m_data.emplace_front(std::make_shared<std::unordered_map<string, var>>());
-		}
-
-		domain_manager(const domain_manager &) = delete;
-
-		~domain_manager() = default;
-
-		void add_set()
-		{
-			m_set.emplace_front();
-		}
-
-		void add_domain()
-		{
-			m_data.emplace_front(std::make_shared<std::unordered_map<string, var>>());
-		}
-
-		domain_t &get_domain()
-		{
-			return m_data.front();
-		}
-
-		domain_t &get_global()
-		{
-			return m_data.back();
-		}
-
-		void remove_set()
-		{
-			m_set.pop_front();
-		}
-
-		void remove_domain()
-		{
-			m_data.pop_front();
-		}
-
-		void clear_domain()
-		{
-			m_data.front()->clear();
-		}
-
-		bool exsist_record(const string &name)
-		{
-			return m_set.front().count(name) > 0;
-		}
-
-		bool var_exsist(const string &name)
-		{
-			for (auto &domain:m_data)
-				if (domain->count(name) > 0)
-					return true;
-			return false;
-		}
-
-		bool var_exsist_current(const string &name)
-		{
-			return m_data.front()->count(name) > 0;
-		}
-
-		bool var_exsist_global(const string &name)
-		{
-			return m_data.back()->count(name) > 0;
-		}
-
-		var &get_var(const string &name)
-		{
-			for (auto &domain:m_data)
-				if (domain->count(name) > 0)
-					return (*domain)[name];
-			throw syntax_error("Use of undefined variable \"" + name + "\".");
-		}
-
-		var &get_var_current(const string &name)
-		{
-			if (m_data.front()->count(name) > 0)
-				return (*m_data.front())[name];
-			throw syntax_error("Use of undefined variable \"" + name + "\" in current domain.");
-		}
-
-		var &get_var_global(const string &name)
-		{
-			if (m_data.back()->count(name) > 0)
-				return (*m_data.back())[name];
-			throw syntax_error("Use of undefined variable \"" + name + "\" in global domain.");
-		}
-
-		void add_record(const string &name)
-		{
-			if (exsist_record(name))
-				throw syntax_error("Redefinition of variable.");
-			else
-				m_set.front().emplace(name);
-		}
-
-		void add_var(const string &name, const var &var)
-		{
-			if (var_exsist_current(name))
-				get_var(name) = var;
-			else
-				m_data.front()->emplace(name, var);
-		}
-
-		void add_var_global(const string &name, const var &var)
-		{
-			if (var_exsist_global(name))
-				get_var_global(name) = var;
-			else
-				m_data.back()->emplace(name, var);
-		}
-
-		void add_struct(const std::string &name, const struct_builder &builder)
-		{
-			add_var(name, var::make_protect<type>(builder, builder.get_hash()));
-		}
-
-		void add_type(const std::string &name, const std::function<var()> &func, std::size_t hash)
-		{
-			add_var(name, var::make_protect<type>(func, hash));
-		}
-
-		void add_type(const std::string &name, const std::function<var()> &func, std::size_t hash, extension_t ext)
-		{
-			add_var(name, var::make_protect<type>(func, hash, ext));
-		}
-	};
-
-	class runtime_type final {
-	public:
-		string package_name;
-		domain_manager storage;
-	};
-
-	class runtime_manager final {
-		std::deque<runtime_t> m_data;
-	public:
-		runtime_manager() = default;
-
-		runtime_manager(const runtime_manager &) = delete;
-
-		~runtime_manager() = default;
-
-		void new_instance()
-		{
-			m_data.emplace_front(std::make_shared<runtime_type>());
-		}
-
-		runtime_t pop_instance()
-		{
-			runtime_t front = m_data.front();
-			m_data.pop_front();
-			return front;
-		}
-
-		runtime_type *operator->()
-		{
-			return m_data.front().get();
-		}
-	};
-
-	std::shared_ptr<runtime_type> covscript(const std::string &, bool compile_only = false);
-
-	static runtime_manager runtime;
-
-	var parse_add(const var &a, const var &b)
+	var runtime_type::parse_add(const var &a, const var &b)
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return a.const_val<number>() + b.const_val<number>();
@@ -203,13 +30,13 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Add).");
 	}
 
-	var parse_addasi(var a, const var &b)
+	var runtime_type::parse_addasi(var a, const var &b)
 	{
 		a.swap(parse_add(a, b), true);
 		return a;
 	}
 
-	var parse_sub(const var &a, const var &b)
+	var runtime_type::parse_sub(const var &a, const var &b)
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return a.const_val<number>() - b.const_val<number>();
@@ -217,13 +44,13 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Sub).");
 	}
 
-	var parse_subasi(var a, const var &b)
+	var runtime_type::parse_subasi(var a, const var &b)
 	{
 		a.swap(parse_sub(a, b), true);
 		return a;
 	}
 
-	var parse_minus(const var &b)
+	var runtime_type::parse_minus(const var &b)
 	{
 		if (b.type() == typeid(number))
 			return -b.const_val<number>();
@@ -231,7 +58,7 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Minus).");
 	}
 
-	var parse_mul(const var &a, const var &b)
+	var runtime_type::parse_mul(const var &a, const var &b)
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return a.const_val<number>() * b.const_val<number>();
@@ -239,13 +66,13 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Mul).");
 	}
 
-	var parse_mulasi(var a, const var &b)
+	var runtime_type::parse_mulasi(var a, const var &b)
 	{
 		a.swap(parse_mul(a, b), true);
 		return a;
 	}
 
-	var parse_escape(const var &b)
+	var runtime_type::parse_escape(const var &b)
 	{
 		if (b.type() == typeid(pointer)) {
 			const pointer &ptr = b.const_val<pointer>();
@@ -258,7 +85,7 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Escape).");
 	}
 
-	var parse_div(const var &a, const var &b)
+	var runtime_type::parse_div(const var &a, const var &b)
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return a.const_val<number>() / b.const_val<number>();
@@ -266,13 +93,13 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Div).");
 	}
 
-	var parse_divasi(var a, const var &b)
+	var runtime_type::parse_divasi(var a, const var &b)
 	{
 		a.swap(parse_div(a, b), true);
 		return a;
 	}
 
-	var parse_mod(const var &a, const var &b)
+	var runtime_type::parse_mod(const var &a, const var &b)
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return number(long(a.const_val<number>()) % long(b.const_val<number>()));
@@ -280,13 +107,13 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Mod).");
 	}
 
-	var parse_modasi(var a, const var &b)
+	var runtime_type::parse_modasi(var a, const var &b)
 	{
 		a.swap(parse_mod(a, b), true);
 		return a;
 	}
 
-	var parse_pow(const var &a, const var &b)
+	var runtime_type::parse_pow(const var &a, const var &b)
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return number(std::pow(a.const_val<number>(), b.const_val<number>()));
@@ -294,21 +121,21 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Pow).");
 	}
 
-	var parse_powasi(var a, const var &b)
+	var runtime_type::parse_powasi(var a, const var &b)
 	{
 		a.swap(parse_pow(a, b), true);
 		return a;
 	}
 
-	var parse_dot(const var &a, token_base *b)
+	var runtime_type::parse_dot(const var &a, token_base *b)
 	{
 		if (a.type() == typeid(constant_values)) {
 			switch (a.const_val<constant_values>()) {
 			case constant_values::global_namespace:
-				return runtime->storage.get_var_global(static_cast<token_id *>(b)->get_id());
+				return storage.get_var_global(static_cast<token_id *>(b)->get_id());
 				break;
 			case constant_values::current_namespace:
-				return runtime->storage.get_var_current(static_cast<token_id *>(b)->get_id());
+				return storage.get_var_current(static_cast<token_id *>(b)->get_id());
 				break;
 			default:
 				throw syntax_error("Unsupported operator operations(Dot).");
@@ -335,7 +162,7 @@ namespace cs {
 		}
 	}
 
-	var parse_arraw(const var &a, token_base *b)
+	var runtime_type::parse_arraw(const var &a, token_base *b)
 	{
 		if (a.type() == typeid(pointer))
 			return parse_dot(a.const_val<pointer>().data, b);
@@ -343,7 +170,7 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Arraw).");
 	}
 
-	var parse_typeid(const var &b)
+	var runtime_type::parse_typeid(const var &b)
 	{
 		if (b.type() == typeid(type))
 			return b.const_val<type>().id;
@@ -353,7 +180,7 @@ namespace cs {
 			return cs_impl::hash<std::string>(b.type().name());
 	}
 
-	var parse_new(const var &b)
+	var runtime_type::parse_new(const var &b)
 	{
 		if (b.type() == typeid(type))
 			return b.const_val<type>().constructor();
@@ -361,7 +188,7 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(New).");
 	}
 
-	var parse_gcnew(const var &b)
+	var runtime_type::parse_gcnew(const var &b)
 	{
 		if (b.type() == typeid(type))
 			return var::make<pointer>(b.const_val<type>().constructor());
@@ -369,7 +196,7 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(GcNew).");
 	}
 
-	var parse_und(const var &a, const var &b)
+	var runtime_type::parse_und(const var &a, const var &b)
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return boolean(a.const_val<number>() < b.const_val<number>());
@@ -377,7 +204,7 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Und).");
 	}
 
-	var parse_abo(const var &a, const var &b)
+	var runtime_type::parse_abo(const var &a, const var &b)
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return boolean(a.const_val<number>() > b.const_val<number>());
@@ -385,7 +212,7 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Abo).");
 	}
 
-	var parse_ueq(const var &a, const var &b)
+	var runtime_type::parse_ueq(const var &a, const var &b)
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return boolean(a.const_val<number>() <= b.const_val<number>());
@@ -393,7 +220,7 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Ueq).");
 	}
 
-	var parse_aeq(const var &a, const var &b)
+	var runtime_type::parse_aeq(const var &a, const var &b)
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return boolean(a.const_val<number>() >= b.const_val<number>());
@@ -401,13 +228,13 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Aeq).");
 	}
 
-	var parse_asi(var a, const var &b)
+	var runtime_type::parse_asi(var a, const var &b)
 	{
 		a.swap(copy(b), true);
 		return a;
 	}
 
-	var parse_choice(const var &a, const var &b)
+	var runtime_type::parse_choice(const var &a, const var &b)
 	{
 		if (a.type() == typeid(boolean) && b.type() == typeid(pair)) {
 			const pair &p = b.const_val<pair>();
@@ -420,7 +247,7 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Choice).");
 	}
 
-	var parse_pair(const var &a, const var &b)
+	var runtime_type::parse_pair(const var &a, const var &b)
 	{
 		if (a.type() != typeid(pair) && b.type() != typeid(pair))
 			return var::make<pair>(copy(a), copy(b));
@@ -428,17 +255,17 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Pair).");
 	}
 
-	var parse_equ(const var &a, const var &b)
+	var runtime_type::parse_equ(const var &a, const var &b)
 	{
 		return boolean(a.compare(b));
 	}
 
-	var parse_neq(const var &a, const var &b)
+	var runtime_type::parse_neq(const var &a, const var &b)
 	{
 		return boolean(!a.compare(b));
 	}
 
-	var parse_and(const var &a, const var &b)
+	var runtime_type::parse_and(const var &a, const var &b)
 	{
 		if (a.type() == typeid(boolean) && b.type() == typeid(boolean))
 			return boolean(a.const_val<boolean>() && b.const_val<boolean>());
@@ -446,7 +273,7 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(And).");
 	}
 
-	var parse_or(const var &a, const var &b)
+	var runtime_type::parse_or(const var &a, const var &b)
 	{
 		if (a.type() == typeid(boolean) && b.type() == typeid(boolean))
 			return boolean(a.const_val<boolean>() || b.const_val<boolean>());
@@ -454,7 +281,7 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Or).");
 	}
 
-	var parse_not(const var &b)
+	var runtime_type::parse_not(const var &b)
 	{
 		if (b.type() == typeid(boolean))
 			return boolean(!b.const_val<boolean>());
@@ -462,7 +289,7 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Not).");
 	}
 
-	var parse_inc(var a, var b)
+	var runtime_type::parse_inc(var a, var b)
 	{
 		if (a.usable()) {
 			if (b.usable())
@@ -478,7 +305,7 @@ namespace cs {
 		}
 	}
 
-	var parse_dec(var a, var b)
+	var runtime_type::parse_dec(var a, var b)
 	{
 		if (a.usable()) {
 			if (b.usable())
@@ -494,7 +321,7 @@ namespace cs {
 		}
 	}
 
-	var parse_fcall(const var &a, var b)
+	var runtime_type::parse_fcall(const var &a, var b)
 	{
 		if (a.type() == typeid(callable))
 			return a.const_val<callable>().call(b.val<array>(true));
@@ -502,7 +329,7 @@ namespace cs {
 			throw syntax_error("Unsupported operator operations(Fcall).");
 	}
 
-	var parse_access(var a, const var &b)
+	var runtime_type::parse_access(var a, const var &b)
 	{
 		if (a.type() == typeid(array)) {
 			if (b.type() != typeid(number))
@@ -533,7 +360,7 @@ namespace cs {
 			throw syntax_error("Access non-array or string object.");
 	}
 
-	var parse_expr(const cov::tree<token_base *>::iterator &it)
+	var runtime_type::parse_expr(const cov::tree<token_base *>::iterator &it)
 	{
 		if (!it.usable())
 			throw internal_error("The expression tree is not available.");
@@ -544,7 +371,7 @@ namespace cs {
 		default:
 			break;
 		case token_types::id:
-			return runtime->storage.get_var(static_cast<token_id *>(token)->get_id());
+			return storage.get_var(static_cast<token_id *>(token)->get_id());
 			break;
 		case token_types::value:
 			return static_cast<token_value *>(token)->get_value();
@@ -696,19 +523,5 @@ namespace cs {
 		}
 		}
 		throw internal_error("Unrecognized expression.");
-	}
-
-	void parse_define_var(cov::tree<token_base *> &tree, define_var_profile &dvp)
-	{
-		const auto &it = tree.root();
-		token_base *root = it.data();
-		if (root == nullptr || root->get_type() != token_types::signal || static_cast<token_signal *>(root)->get_signal() != signal_types::asi_)
-			throw syntax_error("Wrong grammar for variable definition.");
-		token_base *left = it.left().data();
-		const auto &right = it.right();
-		if (left == nullptr || right.data() == nullptr || left->get_type() != token_types::id)
-			throw syntax_error("Wrong grammar for variable definition.");
-		dvp.id = static_cast<token_id *>(left)->get_id();
-		dvp.expr = right;
 	}
 }
