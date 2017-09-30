@@ -78,7 +78,10 @@ namespace cs {
 		}
 	};
 
-	class instance_type final {
+	constexpr std::size_t fcall_stack_size = 1024;
+
+	class instance_type final:public runtime_type {
+		// Symbol Table
 		mapping<std::string, signal_types> signal_map = {
 			{"+",  signal_types::add_},
 			{"+=", signal_types::addasi_},
@@ -218,15 +221,14 @@ namespace cs {
 		std::deque<signal_types> signal_left_associative = {
 			signal_types::asi_, signal_types::addasi_, signal_types::subasi_, signal_types::mulasi_, signal_types::divasi_, signal_types::modasi_, signal_types::powasi_, signal_types::equ_, signal_types::und_, signal_types::abo_, signal_types::ueq_, signal_types::aeq_, signal_types::neq_, signal_types::and_, signal_types::or_
 		};
+		// Constant Pool
 		std::deque<var> constant_values;
-		translator_type translator;
-		bool inside_lambda = false;
-		void init_grammar();
 		void mark_constant()
 		{
 			for (auto &it:constant_values)
 				it.constant();
 		}
+	public:
 		token_value* new_value(const var& val)
 		{
 			if(!val.is_protect()) {
@@ -235,27 +237,25 @@ namespace cs {
 			}
 			return new token_value(val);
 		}
+	private:
+		// Translator
+		translator_type translator;
+		void init_grammar();
 	public:
+		// Status
+		bool inside_lambda = false;
+		bool return_fcall = false;
+		bool break_block = false;
+		bool continue_block = false;
+		// Function Stack
+		cov::static_stack<var, fcall_stack_size> fcall_stack;
+		// Var definition
 		struct define_var_profile {
 			std::string id;
 			cov::tree<token_base *> expr;
 		};
-		runtime_type runtime;
-
-		void process_char_buff(const std::deque<char> &, std::deque<token_base *> &);
-		void translate_into_tokens(const std::deque<char> &, std::deque<token_base *> &, const std::string & = "<Unknown>");
-		void process_empty_brackets(std::deque<token_base *> &);
-		void process_brackets(std::deque<token_base *> &);
-		void kill_brackets(std::deque<token_base *> &);
-		void split_token(std::deque<token_base *> &raw, std::deque<token_base *> &, std::deque<token_base *> &);
-		void build_tree(cov::tree<token_base *> &, std::deque<token_base *> &, std::deque<token_base *> &);
-		void gen_tree(cov::tree<token_base *> &, std::deque<token_base *> &);
-		void kill_expr(std::deque<token_base *> &);
-		void kill_action(std::deque<std::deque<token_base *>>, std::deque<statement_base *> &, bool raw = false);
-		void translate_into_statements(std::deque<token_base *> &, std::deque<statement_base *> &);
-		void opt_expr(cov::tree<token_base *> &, cov::tree<token_base *>::iterator);
 		void parse_define_var(cov::tree<token_base *> &, define_var_profile &);
-
+		// Lexer
 		bool issignal(char ch)
 		{
 			for (auto &c:signals)
@@ -263,12 +263,15 @@ namespace cs {
 					return true;
 			return false;
 		}
-
 		bool isillegal(int ch)
 		{
 			return ch < 9 || ch > 127 || (ch >= 14 && ch < 32);
 		}
-
+		void process_char_buff(const std::deque<char> &, std::deque<token_base *> &);
+		void translate_into_tokens(const std::deque<char> &, std::deque<token_base *> &, const std::string & = "<Unknown>");
+		void process_empty_brackets(std::deque<token_base *> &);
+		void process_brackets(std::deque<token_base *> &);
+		// AST Builder
 		int get_signal_level(token_base *ptr)
 		{
 			if (ptr == nullptr)
@@ -277,7 +280,6 @@ namespace cs {
 				throw syntax_error("Get the level of non-signal token.");
 			return signal_level_map.match(static_cast<token_signal *>(ptr)->get_signal());
 		}
-
 		bool is_left_associative(token_base *ptr)
 		{
 			if (ptr == nullptr)
@@ -290,7 +292,16 @@ namespace cs {
 					return true;
 			return false;
 		}
-
+		void kill_brackets(std::deque<token_base *> &);
+		void split_token(std::deque<token_base *> &raw, std::deque<token_base *> &, std::deque<token_base *> &);
+		void build_tree(cov::tree<token_base *> &, std::deque<token_base *> &, std::deque<token_base *> &);
+		void gen_tree(cov::tree<token_base *> &, std::deque<token_base *> &);
+		void kill_expr(std::deque<token_base *> &);
+		// Parser and Code Generator
+		void kill_action(std::deque<std::deque<token_base *>>, std::deque<statement_base *> &, bool raw = false);
+		void translate_into_statements(std::deque<token_base *> &, std::deque<statement_base *> &);
+		\
+		// Optimizer
 		bool optimizable(const cov::tree<token_base *>::iterator &it)
 		{
 			if (!it.usable())
@@ -307,10 +318,45 @@ namespace cs {
 			}
 			return false;
 		}
-
 		void optimize_expression(cov::tree<token_base *> &tree)
 		{
 			opt_expr(tree, tree.root());
 		}
+		void opt_expr(cov::tree<token_base *> &, cov::tree<token_base *>::iterator);
 	};
+// Guarder
+	class scope_guard final {
+		context_t context;
+	public:
+		scope_guard()=delete;
+		scope_guard(context_t c):context(c)
+		{
+			context->instance->storage.add_domain();
+		}
+		~scope_guard()
+		{
+			context->instance->storage.remove_domain();
+		}
+		domain_t get() const
+		{
+			return context->instance->storage.get_domain();
+		}
+	};
+	class fcall_guard final {
+		context_t context;
+	public:
+		fcall_guard()=delete;
+		fcall_guard(context_t c):context(c)
+		{
+			context->instance.fcall_stack.push(number(0));
+		}
+		~fcall_guard()
+		{
+			context->instance.fcall_stack.pop();
+		}
+		var get() const
+		{
+			return context->instance.fcall_stack.top();
+		}
+	}
 }

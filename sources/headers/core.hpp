@@ -109,6 +109,7 @@ namespace cs {
 	};
 
 	class function final {
+		context_t mContext;
 		std::deque<std::string> mArgs;
 		std::deque<statement_base *> mBody;
 	public:
@@ -116,7 +117,7 @@ namespace cs {
 
 		function(const function &) = default;
 
-		function(const std::deque<std::string> &args, const std::deque<statement_base *> &body) : mArgs(args), mBody(body) {}
+		function(context_t c, const std::deque<std::string> &args, const std::deque<statement_base *> &body) : mContext(c), mArgs(args), mBody(body) {}
 
 		~function() = default;
 
@@ -225,13 +226,14 @@ namespace cs {
 
 	class struct_builder final {
 		static std::size_t mCount;
+		context_t mContext;
 		std::size_t mHash;
 		std::string mName;
 		std::deque<statement_base *> mMethod;
 	public:
 		struct_builder() = delete;
 
-		struct_builder(const std::string &name, const std::deque<statement_base *> &method) : mHash(++mCount), mName(name), mMethod(method) {}
+		struct_builder(context_t c, const std::string &name, const std::deque<statement_base *> &method) : mContext(c), mHash(++mCount), mName(name), mMethod(method) {}
 
 		struct_builder(const struct_builder &) = default;
 

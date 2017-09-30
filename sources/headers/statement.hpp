@@ -445,30 +445,23 @@ namespace cs {
 		virtual void run() override;
 	};
 }
-#define CS_STACK_SIZE 1024
 
 #include "./optimize.hpp"
 
 namespace cs {
-	bool return_fcall = false;
-	bool break_block = false;
-	bool continue_block = false;
-	cov::static_stack<var, CS_STACK_SIZE> fcall_stack;
-
 	var function::call(array &args) const
 	{
 		if (args.size() != this->mArgs.size())
 			throw syntax_error("Wrong size of arguments.");
-		runtime->storage.add_domain();
-		fcall_stack.push(number(0));
+		scope_guard scope(mContext);
+		fcall_guard fcall(mContext);
 		for (std::size_t i = 0; i < args.size(); ++i)
-			runtime->storage.add_var(this->mArgs[i], args[i]);
+			mContext->instance->storage.add_var(this->mArgs[i], args[i]);
 		for (auto &ptr:this->mBody) {
 			try {
 				ptr->run();
 			}
 			catch (const lang_error &le) {
-				runtime->storage.remove_domain();
 				throw le;
 			}
 			catch (const cs::exception &e) {
@@ -479,27 +472,20 @@ namespace cs {
 			}
 			if (return_fcall) {
 				return_fcall = false;
-				runtime->storage.remove_domain();
-				var retval = fcall_stack.top();
-				fcall_stack.pop();
-				return retval;
+				return fcall.get();
 			}
 		}
-		runtime->storage.remove_domain();
-		var retval = fcall_stack.top();
-		fcall_stack.pop();
-		return retval;
+		return fcall.get();
 	}
 
 	var struct_builder::operator()()
 	{
-		runtime->storage.add_domain();
+		scope_guard scope(mContext);
 		for (auto &ptr:this->mMethod) {
 			try {
 				ptr->run();
 			}
 			catch (const lang_error &le) {
-				runtime->storage.remove_domain();
 				throw le;
 			}
 			catch (const cs::exception &e) {
@@ -509,9 +495,7 @@ namespace cs {
 				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_code(), e.what());
 			}
 		}
-		var dat = var::make<structure>(this->mHash, this->mName, runtime->storage.get_domain());
-		runtime->storage.remove_domain();
-		return dat;
+		return var::make<structure>(this->mHash, this->mName, scope.get());
 	}
 
 	void statement_expression::run()

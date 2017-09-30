@@ -156,7 +156,7 @@ namespace cs {
 		}
 	};
 
-	class runtime_type final {
+	class runtime_type {
 	public:
 		domain_manager storage;
 		var parse_add(const var &, const var &);
