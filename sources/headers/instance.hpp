@@ -300,7 +300,7 @@ namespace cs {
 		// Parser and Code Generator
 		void kill_action(std::deque<std::deque<token_base *>>, std::deque<statement_base *> &, bool raw = false);
 		void translate_into_statements(std::deque<token_base *> &, std::deque<statement_base *> &);
-		\
+		
 		// Optimizer
 		bool optimizable(const cov::tree<token_base *>::iterator &it)
 		{
