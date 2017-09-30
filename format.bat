@@ -1,9 +1,5 @@
-@del /F /Q .\sources\*.gch
-@astyle .\sources\*.*
-@astyle .\sources\extensions\*.*
-@del /F /Q .\sources\*.orig
-@del /F /Q .\sources\extensions\*.orig
-@astyle -A4 -N -t .\sources\*.*
-@astyle -A4 -N -t .\sources\extensions\*.*
-@del /F /Q .\sources\*.orig
-@del /F /Q .\sources\extensions\*.orig
+@for /R .\sources\ %%i in (*.gch) do @del /F /Q %%i
+@for /R .\sources\ %%i in (*.*) do @astyle %%i
+@for /R .\sources\ %%i in (*.orig) do @del /F /Q %%i
+@for /R .\sources\ %%i in (*.*) do @astyle -A4 -N -t %%i
+@for /R .\sources\ %%i in (*.orig) do @del /F /Q %%i
