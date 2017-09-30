@@ -78,7 +78,7 @@ namespace cs {
 		}
 	};
 
-	class instance final {
+	class instance_type final {
 		mapping<std::string, signal_types> signal_map = {
 			{"+",  signal_types::add_},
 			{"+=", signal_types::addasi_},
@@ -220,9 +220,6 @@ namespace cs {
 		};
 		std::deque<var> constant_values;
 		translator_type translator;
-
-		std::deque<string> file_buff;
-		string file_path = "<Unknown>";
 		bool inside_lambda = false;
 		void init_grammar();
 		void mark_constant()
@@ -239,6 +236,10 @@ namespace cs {
 			return new token_value(val);
 		}
 	public:
+		struct define_var_profile {
+			std::string id;
+			cov::tree<token_base *> expr;
+		};
 		runtime_type runtime;
 
 		void process_char_buff(const std::deque<char> &, std::deque<token_base *> &);
@@ -254,16 +255,6 @@ namespace cs {
 		void translate_into_statements(std::deque<token_base *> &, std::deque<statement_base *> &);
 		void opt_expr(cov::tree<token_base *> &, cov::tree<token_base *>::iterator);
 		void parse_define_var(cov::tree<token_base *> &, define_var_profile &);
-
-		const string& get_file_path() const
-		{
-			return file_path;
-		}
-
-		const string& get_raw_code(std::size_t line) const
-		{
-			return file_buff.at(line);
-		}
 
 		bool issignal(char ch)
 		{

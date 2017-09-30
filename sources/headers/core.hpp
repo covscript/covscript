@@ -64,6 +64,15 @@ namespace cs {
 // Import Path
 	static const char* import_path = ".";
 
+// Context
+	class context_type final {
+	public:
+		instance_t instance;
+		std::deque<string> file_buff;
+		string file_path = "<Unknown>";
+		string package_name = "<Unknown>";
+	};
+
 // Callable and Function
 	class callable final {
 	public:
@@ -327,14 +336,6 @@ namespace cs {
 			return m_ns->get_var(name);
 		}
 	};
-
-// Var definition
-	struct define_var_profile {
-		std::string id;
-		cov::tree<token_base *> expr;
-	};
-
-	void parse_define_var(cov::tree<token_base *> &, define_var_profile &);
 
 // Implement
 	var &type::get_var(const std::string &name) const

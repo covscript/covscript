@@ -24,7 +24,11 @@ namespace cs_impl {
 	class any;
 }
 namespace cs {
-	class instance;
+	class instance_type;
+
+	class runtime_type;
+
+	class context_type;
 
 	class token_base;
 
@@ -36,8 +40,6 @@ namespace cs {
 
 	class name_space_holder;
 
-	class runtime_type;
-
 	using var=cs_impl::any;
 	using number=long double;
 	using boolean=bool;
@@ -46,12 +48,14 @@ namespace cs {
 	using array=std::deque<var>;
 	using pair=std::pair<var, var>;
 	using hash_map=std::unordered_map<var, var>;
+	using instance_t=std::shared_ptr<instance_type>;
+	using runtime_t=std::shared_ptr<runtime_type>;
+	using context_t=std::shared_ptr<context_type>;
 	using extension=name_space;
 	using extension_holder=name_space_holder;
 	using domain_t=std::shared_ptr<std::unordered_map<string, var>>;
 	using name_space_t=std::shared_ptr<name_space_holder>;
 	using extension_t=std::shared_ptr<extension_holder>;
-	using runtime_t=std::shared_ptr<runtime_type>;
 	using istream=std::shared_ptr<std::istream>;
 	using ostream=std::shared_ptr<std::ostream>;
 }

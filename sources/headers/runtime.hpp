@@ -158,7 +158,6 @@ namespace cs {
 
 	class runtime_type final {
 	public:
-		string package_name;
 		domain_manager storage;
 		var parse_add(const var &, const var &);
 		var parse_addasi(var, const var &);

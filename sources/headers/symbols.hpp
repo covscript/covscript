@@ -293,7 +293,7 @@ namespace cs {
 	class statement_base {
 		static garbage_collector<statement_base> gc;
 	protected:
-		instance* context = nullptr;
+		context_t context;
 		std::size_t line_num = 0;
 	public:
 		static void *operator new(std::size_t size)
@@ -313,7 +313,7 @@ namespace cs {
 
 		statement_base(const statement_base &) = default;
 
-		statement_base(instance* iptr, token_base *eptr) : context(iptr), line_num(static_cast<token_endline *>(eptr)->get_line_num()) {}
+		statement_base(context_t c, token_base *eptr) : context(c), line_num(static_cast<token_endline *>(eptr)->get_line_num()) {}
 
 		virtual ~statement_base() = default;
 
@@ -336,7 +336,7 @@ namespace cs {
 	class method_base {
 		static garbage_collector<method_base> gc;
 	private:
-		instance* context = nullptr;
+		context_t context;
 	public:
 		static void *operator new(std::size_t size)
 		{
@@ -355,7 +355,7 @@ namespace cs {
 
 		method_base(const method_base &) = default;
 
-		method_base(instance* iptr):context(iptr) {}
+		method_base(context_t c):context(c) {}
 
 		virtual ~method_base() = default;
 
