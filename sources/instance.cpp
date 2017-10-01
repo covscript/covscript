@@ -1,19 +1,7 @@
 #include "headers/instance.hpp"
 #include "headers/statement.hpp"
 #include "headers/codegen.hpp"
-#include "extensions/iostream.hpp"
-#include "extensions/system.hpp"
-#include "extensions/runtime.hpp"
-#include "extensions/exception.hpp"
-#include "extensions/char.hpp"
-#include "extensions/string.hpp"
-#include "extensions/list.hpp"
-#include "extensions/array.hpp"
-#include "extensions/pair.hpp"
-#include "extensions/hash_map.hpp"
-#include "extensions/math.hpp"
-#include "extensions/darwin.hpp"
-#include "extensions/sqlite.hpp"
+
 namespace cs {
 	const std::string & statement_base::get_file_path() const noexcept
 	{
@@ -28,45 +16,6 @@ namespace cs {
 	const std::string & statement_base::get_raw_code() const noexcept
 	{
 		return context->file_buff.at(line_num);
-	}
-// Internal Functions
-	number to_integer(const var &val)
-	{
-		return val.to_integer();
-	}
-
-	string to_string(const var &val)
-	{
-		return val.to_string();
-	}
-
-	var clone(const var &val)
-	{
-		return copy(val);
-	}
-
-	void swap(var &a, var &b)
-	{
-		a.swap(b, true);
-	}
-	void init_ext()
-	{
-		// Init the extensions
-		iostream_cs_ext::init();
-		istream_cs_ext::init();
-		ostream_cs_ext::init();
-		system_cs_ext::init();
-		runtime_cs_ext::init();
-		except_cs_ext::init();
-		char_cs_ext::init();
-		string_cs_ext::init();
-		list_cs_ext::init();
-		array_cs_ext::init();
-		pair_cs_ext::init();
-		hash_map_cs_ext::init();
-		math_cs_ext::init();
-		darwin_cs_ext::init();
-		sqlite_cs_ext::init();
 	}
 	void instance_type::init_grammar()
 	{
@@ -122,32 +71,6 @@ namespace cs {
 		translator.add_method({new token_action(action_types::catch_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_catch(context));
 		// Throw Grammar
 		translator.add_method({new token_action(action_types::throw_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_throw(context));
-	}
-	void instance_type::init_runtime()
-	{
-		// Internal Types
-		storage.add_type("char", []() -> var { return var::make<char>('\0'); }, cs_impl::hash<std::string>(typeid(char).name()), char_ext_shared);
-		storage.add_type("number", []() -> var { return var::make<number>(0); }, cs_impl::hash<std::string>(typeid(number).name()));
-		storage.add_type("boolean", []() -> var { return var::make<boolean>(true); }, cs_impl::hash<std::string>(typeid(boolean).name()));
-		storage.add_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, cs_impl::hash<std::string>(typeid(pointer).name()));
-		storage.add_type("string", []() -> var { return var::make<string>(); }, cs_impl::hash<std::string>(typeid(string).name()), string_ext_shared);
-		storage.add_type("list", []() -> var { return var::make<list>(); }, cs_impl::hash<std::string>(typeid(list).name()), list_ext_shared);
-		storage.add_type("array", []() -> var { return var::make<array>(); }, cs_impl::hash<std::string>(typeid(array).name()), array_ext_shared);
-		storage.add_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, cs_impl::hash<std::string>(typeid(pair).name()), pair_ext_shared);
-		storage.add_type("hash_map", []() -> var { return var::make<hash_map>(); }, cs_impl::hash<std::string>(typeid(hash_map).name()), hash_map_ext_shared);
-		// Add Internal Functions to storage
-		storage.add_var_global("to_integer", cs::var::make_protect<cs::callable>(cs::cni(to_integer), true));
-		storage.add_var_global("to_string", cs::var::make_protect<cs::callable>(cs::cni(to_string), true));
-		storage.add_var_global("clone", cs::var::make_protect<cs::callable>(cs::cni(clone)));
-		storage.add_var_global("swap", cs::var::make_protect<cs::callable>(cs::cni(swap)));
-		// Add extensions to storage
-		storage.add_var("exception", var::make_protect<std::shared_ptr<extension_holder>>(except_ext_shared));
-		storage.add_var("iostream", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&iostream_ext)));
-		storage.add_var("system", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));
-		storage.add_var("runtime", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
-		storage.add_var("math", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&math_ext)));
-		storage.add_var("darwin", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&darwin_ext)));
-		storage.add_var("sqlite", var::make_protect<std::shared_ptr<extension_holder>>(sqlite_ext_shared));
 	}
 	void instance_type::opt_expr(cov::tree<token_base *> &tree, cov::tree<token_base *>::iterator it)
 	{
@@ -378,6 +301,38 @@ namespace cs {
 	}
 	void instance_type::compile(const std::string& path)
 	{
-
+		context->file_path=path;
+		// Read from file
+		std::deque<char> buff;
+		std::ifstream in(path);
+		if (!in.is_open())
+			throw fatal_error(path + ": No such file or directory");
+		while (!in.eof())
+			buff.push_back(in.get());
+		// Lexer
+		std::deque<token_base *> tokens;
+		translate_into_tokens(buff, tokens, path);
+		// Parser
+		translate_into_statements(tokens, statements);
+		// Mark Constants
+		mark_constant();
+	}
+	void instance_type::interpret()
+	{
+		// Run the instruction
+		for (auto &ptr:statements) {
+			try {
+				ptr->run();
+			}
+			catch (const lang_error &le) {
+				throw fatal_error("Uncaught exception.");
+			}
+			catch (const cs::exception &e) {
+				throw e;
+			}
+			catch (const std::exception &e) {
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+			}
+		}
 	}
 }
