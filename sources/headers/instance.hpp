@@ -240,8 +240,22 @@ namespace cs {
 	private:
 		// Translator
 		translator_type translator;
+		// Statements
+		std::deque<statement_base*> statements;
+		// Initializations
 		void init_grammar();
+		void init_runtime();
 	public:
+		// Context
+		context_t context;
+		// Constructor and destructor
+		instance_type():context(std::make_shared<context_type>(this))
+		{
+			init_grammar();
+			init_runtime();
+		}
+		instance_type(const instance_type&)=delete;
+		~instance_type()=default;
 		// Status
 		bool inside_lambda = false;
 		bool return_fcall = false;
@@ -300,7 +314,7 @@ namespace cs {
 		// Parser and Code Generator
 		void kill_action(std::deque<std::deque<token_base *>>, std::deque<statement_base *> &, bool raw = false);
 		void translate_into_statements(std::deque<token_base *> &, std::deque<statement_base *> &);
-		
+
 		// Optimizer
 		bool optimizable(const cov::tree<token_base *>::iterator &it)
 		{
@@ -323,6 +337,10 @@ namespace cs {
 			opt_expr(tree, tree.root());
 		}
 		void opt_expr(cov::tree<token_base *> &, cov::tree<token_base *>::iterator);
+
+		// Wrapped Method
+		void compile(const std::string&);
+		void interpret();
 	};
 // Guarder
 	class scope_guard final {
@@ -341,6 +359,10 @@ namespace cs {
 		{
 			return context->instance->storage.get_domain();
 		}
+		void clear() const
+		{
+			context->instance->storage.clear_domain();
+		}
 	};
 	class fcall_guard final {
 		context_t context;
@@ -348,15 +370,15 @@ namespace cs {
 		fcall_guard()=delete;
 		fcall_guard(context_t c):context(c)
 		{
-			context->instance.fcall_stack.push(number(0));
+			context->instance->fcall_stack.push(number(0));
 		}
 		~fcall_guard()
 		{
-			context->instance.fcall_stack.pop();
+			context->instance->fcall_stack.pop();
 		}
 		var get() const
 		{
-			return context->instance.fcall_stack.top();
+			return context->instance->fcall_stack.top();
 		}
-	}
+	};
 }

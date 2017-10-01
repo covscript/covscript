@@ -48,8 +48,6 @@ namespace cs {
 	using array=std::deque<var>;
 	using pair=std::pair<var, var>;
 	using hash_map=std::unordered_map<var, var>;
-	using instance_t=std::shared_ptr<instance_type>;
-	using runtime_t=std::shared_ptr<runtime_type>;
 	using context_t=std::shared_ptr<context_type>;
 	using extension=name_space;
 	using extension_holder=name_space_holder;

@@ -67,10 +67,14 @@ namespace cs {
 // Context
 	class context_type final {
 	public:
-		instance_t instance;
+		instance_type* instance=nullptr;
 		std::deque<string> file_buff;
 		string file_path = "<Unknown>";
 		string package_name = "<Unknown>";
+		context_type()=delete;
+		context_type(instance_type* iptr):instance(iptr) {}
+		context_type(const context_type&)=default;
+		~context_type()=default;
 	};
 
 // Callable and Function
