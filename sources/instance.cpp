@@ -1,5 +1,6 @@
 #include "headers/instance.hpp"
 #include "headers/statement.hpp"
+#include "headers/codegen.hpp"
 #include "extensions/iostream.hpp"
 #include "extensions/system.hpp"
 #include "extensions/runtime.hpp"
@@ -16,17 +17,37 @@
 namespace cs {
 	const std::string & statement_base::get_file_path() const noexcept
 	{
-		return context->get_file_path;
+		return context->file_path;
 	}
 
 	const std::string & statement_base::get_package_name() const noexcept
 	{
-		return context->runtime.package_name;
+		return context->package_name;
 	}
 
 	const std::string & statement_base::get_raw_code() const noexcept
 	{
-		return context->get_raw_code(line_num);
+		return context->file_buff.at(line_num);
+	}
+// Internal Functions
+	number to_integer(const var &val)
+	{
+		return val.to_integer();
+	}
+
+	string to_string(const var &val)
+	{
+		return val.to_string();
+	}
+
+	var clone(const var &val)
+	{
+		return copy(val);
+	}
+
+	void swap(var &a, var &b)
+	{
+		a.swap(b, true);
 	}
 	void init_ext()
 	{
@@ -47,7 +68,7 @@ namespace cs {
 		darwin_cs_ext::init();
 		sqlite_cs_ext::init();
 	}
-	void instance::init_grammar()
+	void instance_type::init_grammar()
 	{
 		// Expression Grammar
 		translator.add_method({new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_expression);
@@ -102,7 +123,7 @@ namespace cs {
 		// Throw Grammar
 		translator.add_method({new token_action(action_types::throw_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_throw);
 	}
-	void instance::init_runtime()
+	void instance_type::init_runtime()
 	{
 		// Internal Types
 		storage.add_type("char", []() -> var { return var::make<char>('\0'); }, cs_impl::hash<std::string>(typeid(char).name()), char_ext_shared);
@@ -128,7 +149,7 @@ namespace cs {
 		storage.add_var("darwin", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&darwin_ext)));
 		storage.add_var("sqlite", var::make_protect<std::shared_ptr<extension_holder>>(sqlite_ext_shared));
 	}
-	void instance::opt_expr(cov::tree<token_base *> &tree, cov::tree<token_base *>::iterator it)
+	void instance_type::opt_expr(cov::tree<token_base *> &tree, cov::tree<token_base *>::iterator it)
 	{
 		if (!it.usable())
 			return;
@@ -140,12 +161,12 @@ namespace cs {
 			break;
 		case token_types::id: {
 			const std::string &id = static_cast<token_id *>(token)->get_id();
-			if (runtime.storage.exsist_record(id)) {
-				if (runtime.storage.var_exsist_current(id))
-					it.data() = new token_value(runtime.storage.get_var(id));
+			if (storage.exsist_record(id)) {
+				if (storage.var_exsist_current(id))
+					it.data() = new_value(storage.get_var(id));
 			}
-			else if (runtime.storage.var_exsist(id) && runtime.storage.get_var(id).is_protect())
-				it.data() = new token_value(runtime.storage.get_var(id));
+			else if (storage.var_exsist(id) && storage.get_var(id).is_protect())
+				it.data() = new_value(storage.get_var(id));
 			return;
 			break;
 		}
@@ -170,10 +191,10 @@ namespace cs {
 				bool is_map = true;
 				token_value *t = nullptr;
 				for (auto &tree:static_cast<token_array *>(token)->get_array()) {
-					const var &val = runtime.parse_expr(tree.root());
+					const var &val = parse_expr(tree.root());
 					if (is_map && val.type() != typeid(pair))
 						is_map = false;
-					arr.push_back((new token_value(copy(val)))->get_value());
+					arr.push_back((new_value(copy(val)))->get_value());
 				}
 				if (arr.empty())
 					is_map = false;
@@ -186,10 +207,10 @@ namespace cs {
 						else
 							map[p.first] = p.second;
 					}
-					t = new token_value(var::make<hash_map>(std::move(map)));
+					t = new_value(var::make<hash_map>(std::move(map)));
 				}
 				else
-					t = new token_value(var::make<array>(std::move(arr)));
+					t = new_value(var::make<array>(std::move(arr)));
 				it.data() = t;
 			}
 			return;
@@ -244,7 +265,7 @@ namespace cs {
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
 					throw syntax_error("Wrong grammar for variable definition.");
-				runtime.storage.add_record(static_cast<token_id *>(rptr)->get_id());
+				storage.add_record(static_cast<token_id *>(rptr)->get_id());
 				it.data() = rptr;
 				return;
 				break;
@@ -259,9 +280,9 @@ namespace cs {
 					var &a = static_cast<token_value *>(lptr)->get_value();
 					token_base *orig_ptr = it.data();
 					try {
-						var v = runtime.parse_dot(a, rptr);
+						var v = parse_dot(a, rptr);
 						if (v.is_protect())
-							it.data() = new token_value(v);
+							it.data() = new_value(v);
 					}
 					catch (const syntax_error &se) {
 						it.data() = orig_ptr;
@@ -286,8 +307,8 @@ namespace cs {
 						if (is_optimizable) {
 							array arr;
 							for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
-								arr.push_back(runtime.parse_expr(tree.root()));
-							it.data() = new token_value(a.val<callable>(true).call(arr));
+								arr.push_back(parse_expr(tree.root()));
+							it.data() = new_value(a.val<callable>(true).call(arr));
 						}
 					}
 				}
@@ -326,7 +347,7 @@ namespace cs {
 							throw syntax_error("Redefinition of function argument.");
 					args.push_back(str);
 				}
-				it.data() = new token_value(var::make_protect<callable>(function(args, std::deque<statement_base *> {new statement_return(cov::tree<token_base *>{it.right()}, new token_endline(0))})));
+				it.data() = new_value(var::make_protect<callable>(function(context, args, std::deque<statement_base *> {new statement_return(cov::tree<token_base *>{it.right()}, context, new token_endline(0))})));
 				return;
 				break;
 			}
@@ -336,13 +357,13 @@ namespace cs {
 		opt_expr(tree, it.left());
 		opt_expr(tree, it.right());
 		if (optimizable(it.left()) && optimizable(it.right())) {
-			token_value *token = new token_value(runtime.parse_expr(it));
+			token_value *token = new_value(parse_expr(it));
 			tree.erase_left(it);
 			tree.erase_right(it);
 			it.data() = token;
 		}
 	}
-	void instance::parse_define_var(cov::tree<token_base *> &tree, define_var_profile &dvp)
+	void instance_type::parse_define_var(cov::tree<token_base *> &tree, define_var_profile &dvp)
 	{
 		const auto &it = tree.root();
 		token_base *root = it.data();
@@ -355,7 +376,7 @@ namespace cs {
 		dvp.id = static_cast<token_id *>(left)->get_id();
 		dvp.expr = right;
 	}
-	void instance::compile(const std::string& path)
+	void instance_type::compile(const std::string& path)
 	{
 
 	}

@@ -19,8 +19,8 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "../cni.hpp"
-#include "./sqlite/sqlite.hpp"
+#include "../headers/cni.hpp"
+#include "../sqlite/sqlite.hpp"
 
 static cs::extension sqlite_ext;
 static cs::extension_t sqlite_ext_shared = std::make_shared<cs::extension_holder>(&sqlite_ext);

@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "../cni.hpp"
+#include "../headers/cni.hpp"
 
 static cs::extension pair_ext;
 static cs::extension_t pair_ext_shared = std::make_shared<cs::extension_holder>(&pair_ext);

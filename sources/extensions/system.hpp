@@ -19,8 +19,8 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "./console/conio.hpp"
-#include "../cni.hpp"
+#include "../console/conio.hpp"
+#include "../headers/cni.hpp"
 #include <iostream>
 #include <cstdlib>
 #include <limits>

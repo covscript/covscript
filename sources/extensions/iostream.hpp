@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "../cni.hpp"
+#include "../headers/cni.hpp"
 
 static cs::extension iostream_ext;
 static cs::extension seekdir_ext;

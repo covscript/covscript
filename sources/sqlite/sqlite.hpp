@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "../../exceptions.hpp"
+#include "../headers/exceptions.hpp"
 #include <sqlite3.h>
 #include <utility>
 #include <string>

@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "../cni.hpp"
+#include "../headers/cni.hpp"
 #include <algorithm>
 
 static cs::extension math_ext;

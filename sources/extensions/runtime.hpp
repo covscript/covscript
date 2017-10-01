@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "../cni.hpp"
+#include "../headers/cni.hpp"
 #include <cstdlib>
 
 static cs::extension runtime_ext;

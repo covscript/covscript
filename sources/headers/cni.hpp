@@ -19,10 +19,10 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "../include/mozart/bind.hpp"
-#include "../include/mozart/traits.hpp"
-#include "./core.hpp"
-#include "./arglist.hpp"
+#include "../../include/mozart/bind.hpp"
+#include "../../include/mozart/traits.hpp"
+#include "core.hpp"
+#include "arglist.hpp"
 
 namespace cs {
 	template<typename T>

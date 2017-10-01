@@ -19,8 +19,8 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "../include/mozart/traits.hpp"
-#include "./core.hpp"
+#include "../../include/mozart/traits.hpp"
+#include "core.hpp"
 
 namespace cs {
 	template<typename T>

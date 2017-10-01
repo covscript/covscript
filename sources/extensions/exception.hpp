@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "../cni.hpp"
+#include "../headers/cni.hpp"
 
 static cs::extension except_ext;
 static cs::extension_t except_ext_shared = std::make_shared<cs::extension_holder>(&except_ext);
