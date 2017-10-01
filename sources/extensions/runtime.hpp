@@ -22,6 +22,15 @@
 #include "../headers/cni.hpp"
 #include <cstdlib>
 
+static cs::extension context_ext;
+static cs::extension_t context_ext_shared = std::make_shared<cs::extension_holder>(&context_ext);
+namespace cs_impl {
+	template<>
+	cs::extension_t &get_ext<cs::context_t>()
+	{
+		return context_ext_shared;
+	}
+}
 static cs::extension runtime_ext;
 namespace runtime_cs_ext {
 	using namespace cs;
@@ -77,24 +86,24 @@ namespace runtime_cs_ext {
 
 	using expression_t=cov::tree<token_base *>;
 
-	var build(const string &expr)
+	var build(const context_t& context, const string &expr)
 	{
 		std::deque<char> buff;
 		std::deque<token_base *> tokens;
 		expression_t tree;
 		for (auto &ch:expr)
-			if (!isillegal(ch))
+			if (!context->instance->isillegal(ch))
 				buff.push_back(ch);
-		process_char_buff(buff, tokens);
-		process_brackets(tokens);
-		kill_brackets(tokens);
-		gen_tree(tree, tokens);
+		context->instance->process_char_buff(buff, tokens);
+		context->instance->process_brackets(tokens);
+		context->instance->kill_brackets(tokens);
+		context->instance->gen_tree(tree, tokens);
 		return var::make<expression_t>(tree);
 	}
 
-	var solve(expression_t &tree)
+	var solve(const context_t& context, expression_t &tree)
 	{
-		return parse_expr(tree.root());
+		return context->instance->parse_expr(tree.root());
 	}
 
 	void init()
@@ -109,5 +118,7 @@ namespace runtime_cs_ext {
 		runtime_ext.add_var("hash", var::make_protect<callable>(cni(hash), true));
 		runtime_ext.add_var("build", var::make_protect<callable>(cni(build)));
 		runtime_ext.add_var("solve", var::make_protect<callable>(cni(solve)));
+		context_ext.add_var("build", var::make_protect<callable>(cni(build)));
+		context_ext.add_var("solve", var::make_protect<callable>(cni(solve)));
 	}
 }
