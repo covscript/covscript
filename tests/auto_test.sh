@@ -6,5 +6,5 @@ function onCtrlC ()
 for f in *.csc
 do
     echo Testing $f...
-    ../cs $f
+    ../cs --wait-before-exit $f
 done

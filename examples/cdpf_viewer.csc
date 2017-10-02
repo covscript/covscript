@@ -5,7 +5,7 @@ function main()
 	end
 	darwin.load()
 	var pic=darwin.picture(0,0)
-	pic.load_from_file(system.args[1])
+	pic.load_from_file(system.args.at(1))
 	var head="Covariant Darwin Picture File Viewer 1.0"
 	var help="Q:Exit W:Up S:Down A:Left D:Right"
 	var info="File:\""+system.args[1]+"\" Width:"+to_string(pic.get_width())+"pix Height:"+to_string(pic.get_height())+"pix"

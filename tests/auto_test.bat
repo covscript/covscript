@@ -1,1 +1,1 @@
-@for %%f in (*.csc) do @echo Testing %%f...&&..\cs.exe %%f
+@for %%f in (*.csc) do @echo Testing %%f...&&..\cs.exe --wait-before-exit %%f

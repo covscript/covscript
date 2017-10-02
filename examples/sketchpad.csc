@@ -1,6 +1,6 @@
 darwin.load()
 var pic=darwin.get_drawable()
-var expr=runtime.build(darwin.ui.input_box("Sketchpad","Please enter a expression:","",false))
+var expr=context.build(darwin.ui.input_box("Sketchpad","Please enter a expression:","",false))
 var x_offset=0
 var y_offset=0
 var zoom=5
@@ -9,7 +9,7 @@ var center_x=0
 var center_y=0
 const var pix=darwin.pixel('+',darwin.blue,darwin.black)
 function f(x)
-  return runtime.solve(expr)
+  return context.solve(expr)
 end
 loop
   darwin.fit_drawable()

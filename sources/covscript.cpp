@@ -89,6 +89,8 @@ namespace cs {
 
 	void instance_type::init_runtime()
 	{
+		// Context
+		storage.add_var("context", var::make_constant<context_t>(context));
 		// Internal Types
 		storage.add_type("char", []() -> var { return var::make<char>('\0'); }, cs_impl::hash<std::string>(typeid(char).name()), char_ext_shared);
 		storage.add_type("number", []() -> var { return var::make<number>(0); }, cs_impl::hash<std::string>(typeid(number).name()));
@@ -105,13 +107,13 @@ namespace cs {
 		storage.add_var_global("clone", cs::var::make_protect<cs::callable>(cs::cni(clone)));
 		storage.add_var_global("swap", cs::var::make_protect<cs::callable>(cs::cni(swap)));
 		// Add extensions to storage
-		storage.add_var("exception", var::make_protect<std::shared_ptr<extension_holder>>(except_ext_shared));
-		storage.add_var("iostream", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&iostream_ext)));
-		storage.add_var("system", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&system_ext)));
-		storage.add_var("runtime", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&runtime_ext)));
-		storage.add_var("math", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&math_ext)));
-		storage.add_var("darwin", var::make_protect<std::shared_ptr<extension_holder>>(std::make_shared<extension_holder>(&darwin_ext)));
-		storage.add_var("sqlite", var::make_protect<std::shared_ptr<extension_holder>>(sqlite_ext_shared));
+		storage.add_var("exception", var::make_protect<extension_t>(except_ext_shared));
+		storage.add_var("iostream", var::make_protect<extension_t>(std::make_shared<extension_holder>(&iostream_ext)));
+		storage.add_var("system", var::make_protect<extension_t>(std::make_shared<extension_holder>(&system_ext)));
+		storage.add_var("runtime", var::make_protect<extension_t>(std::make_shared<extension_holder>(&runtime_ext)));
+		storage.add_var("math", var::make_protect<extension_t>(std::make_shared<extension_holder>(&math_ext)));
+		storage.add_var("darwin", var::make_protect<extension_t>(std::make_shared<extension_holder>(&darwin_ext)));
+		storage.add_var("sqlite", var::make_protect<extension_t>(sqlite_ext_shared));
 	}
 }
 
