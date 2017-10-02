@@ -282,7 +282,7 @@ namespace cs {
 			return ch < 9 || ch > 127 || (ch >= 14 && ch < 32);
 		}
 		void process_char_buff(const std::deque<char> &, std::deque<token_base *> &);
-		void translate_into_tokens(const std::deque<char> &, std::deque<token_base *> &, const std::string & = "<Unknown>");
+		void translate_into_tokens(const std::deque<char> &, std::deque<token_base *> &);
 		void process_empty_brackets(std::deque<token_base *> &);
 		void process_brackets(std::deque<token_base *> &);
 		// AST Builder

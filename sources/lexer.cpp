@@ -18,10 +18,10 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "./instance.hpp"
+#include "headers/instance.hpp"
 
 namespace cs {
-	void instance::process_char_buff(const std::deque<char> &buff, std::deque<token_base *> &tokens)
+	void instance_type::process_char_buff(const std::deque<char> &buff, std::deque<token_base *> &tokens)
 	{
 		if (buff.empty())
 			throw syntax_error("Received empty character buffer.");
@@ -192,7 +192,7 @@ namespace cs {
 		}
 	}
 
-	void instance::translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens, const std::string &path)
+	void instance_type::translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens)
 	{
 		std::size_t line_num = 1;
 		std::deque<char> buff;
@@ -210,10 +210,11 @@ namespace cs {
 						throw e;
 					}
 					catch (const std::exception &e) {
-						throw exception(line_num, path, line, e.what());
+						throw exception(line_num, context->file_path, line, e.what());
 					}
-					tokens.push_back(new token_endline(line_num, path, line));
+					tokens.push_back(new token_endline(line_num));
 				}
+				context->file_buff.push_back(line);
 				++line_num;
 				buff.clear();
 				line.clear();
@@ -241,13 +242,13 @@ namespace cs {
 				throw e;
 			}
 			catch (const std::exception &e) {
-				throw exception(line_num, path, line, e.what());
+				throw exception(line_num, context->file_path, line, e.what());
 			}
-			tokens.push_back(new token_endline(line_num, path, line));
+			tokens.push_back(new token_endline(line_num));
 		}
 	}
 
-	void instance::process_empty_brackets(std::deque<token_base *> &tokens)
+	void instance_type::process_empty_brackets(std::deque<token_base *> &tokens)
 	{
 		if (tokens.empty())
 			throw syntax_error("Received empty token buffer.");
@@ -340,7 +341,7 @@ namespace cs {
 			throw syntax_error("Parentheses do not match.");
 	}
 
-	void instance::process_brackets(std::deque<token_base *> &tokens)
+	void instance_type::process_brackets(std::deque<token_base *> &tokens)
 	{
 		if (tokens.empty())
 			throw syntax_error("Received empty token buffer.");
