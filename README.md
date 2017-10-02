@@ -33,6 +33,7 @@ Building Covariant Script is the same as Linux. And now Covariant Script has bee
 `cs [arguments..] <file> <args...>`  
 ### Arguments ###
 `--compile-only` Only compile.  
+`--wait-before-exit` Wait before process exit.  
 `--log-path PATH` Set the log path.  
 `--import-path PATH` Set the import path.  
 ### GUI ###
