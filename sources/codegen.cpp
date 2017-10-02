@@ -1,4 +1,25 @@
+/*
+* Covariant Script Code Gen
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* Copyright (C) 2017 Michael Lee(李登淳)
+* Email: mikecovlee@163.com
+* Github: https://github.com/mikecovlee
+*/
 #include "headers/codegen.hpp"
+
 namespace cs {
 	statement_base *method_expression::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
@@ -7,19 +28,19 @@ namespace cs {
 
 	statement_base *method_import::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
-		const std::string& package_name = dynamic_cast<token_id *>(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data())->get_id();
+		const std::string &package_name = dynamic_cast<token_id *>(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data())->get_id();
 		std::string package_path = std::string(import_path) + "/" + package_name;
-		if(std::ifstream(package_path + ".csp")) {
+		if (std::ifstream(package_path + ".csp")) {
 			instance_type instance;
 			instance.compile(package_path + ".csp");
 			instance.interpret();
-			context_t rt=instance.context;
+			context_t rt = instance.context;
 			if (rt->package_name.empty())
 				throw syntax_error("Target file is not a package.");
 			context->instance->storage.add_var(rt->package_name, var::make_protect<extension_t>(std::make_shared<extension_holder>(rt->instance->storage.get_global())));
-			rt->instance=context->instance;
+			rt->instance = context->instance;
 		}
-		else if(std::ifstream(package_path + ".cse"))
+		else if (std::ifstream(package_path + ".cse"))
 			context->instance->storage.add_var(package_name, var::make_protect<extension_t>(std::make_shared<extension_holder>(package_path + ".cse")));
 		else
 			throw fatal_error("No such file or directory.");
@@ -211,7 +232,7 @@ namespace cs {
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
 		cov::tree<token_base *> tree_step;
-		tree_step.emplace_root_left(tree_step.root(), new token_value(number(1)));
+		tree_step.emplace_root_left(tree_step.root(), context->instance->new_value(number(1)));
 		return new statement_for(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), dynamic_cast<token_expr *>(raw.front().at(3))->get_tree(), tree_step, body, context, raw.front().back());
 	}
 
@@ -289,7 +310,7 @@ namespace cs {
 	statement_base *method_return_no_value::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> tree;
-		tree.emplace_root_left(tree.root(), new token_value(number(0)));
+		tree.emplace_root_left(tree.root(), context->instance->new_value(number(0)));
 		return new statement_return(tree, context, raw.front().back());
 	}
 

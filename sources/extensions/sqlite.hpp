@@ -110,7 +110,7 @@ namespace sqlite_cs_ext {
 		stmt.bind_real(index, data);
 	}
 
-	void bind_text(sqlite::statement &stmt, number index, const string& data)
+	void bind_text(sqlite::statement &stmt, number index, const string &data)
 	{
 		stmt.bind_text(index, data);
 	}

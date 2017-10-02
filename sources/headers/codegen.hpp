@@ -26,6 +26,7 @@ namespace cs {
 	class method_expression final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::single;
@@ -42,6 +43,7 @@ namespace cs {
 	class method_import final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::jit_command;
@@ -58,6 +60,7 @@ namespace cs {
 	class method_package final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::jit_command;
@@ -74,6 +77,7 @@ namespace cs {
 	class method_var final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::single;
@@ -90,6 +94,7 @@ namespace cs {
 	class method_constant final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::jit_command;
@@ -106,6 +111,7 @@ namespace cs {
 	class method_end final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::single;
@@ -122,6 +128,7 @@ namespace cs {
 	class method_block final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::block;
@@ -138,6 +145,7 @@ namespace cs {
 	class method_namespace final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::block;
@@ -154,6 +162,7 @@ namespace cs {
 	class method_if final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::block;
@@ -170,6 +179,7 @@ namespace cs {
 	class method_else final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::single;
@@ -186,6 +196,7 @@ namespace cs {
 	class method_switch final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::block;
@@ -202,6 +213,7 @@ namespace cs {
 	class method_case final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::block;
@@ -218,6 +230,7 @@ namespace cs {
 	class method_default final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::block;
@@ -234,6 +247,7 @@ namespace cs {
 	class method_while final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::block;
@@ -250,6 +264,7 @@ namespace cs {
 	class method_until final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::single;
@@ -266,6 +281,7 @@ namespace cs {
 	class method_loop final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::block;
@@ -282,6 +298,7 @@ namespace cs {
 	class method_for final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::block;
@@ -300,6 +317,7 @@ namespace cs {
 	class method_for_step final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::block;
@@ -318,6 +336,7 @@ namespace cs {
 	class method_foreach final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::block;
@@ -336,6 +355,7 @@ namespace cs {
 	class method_break final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::single;
@@ -352,6 +372,7 @@ namespace cs {
 	class method_continue final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::single;
@@ -368,6 +389,7 @@ namespace cs {
 	class method_function final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::block;
@@ -384,6 +406,7 @@ namespace cs {
 	class method_return final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::single;
@@ -400,6 +423,7 @@ namespace cs {
 	class method_return_no_value final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::single;
@@ -416,6 +440,7 @@ namespace cs {
 	class method_struct final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::block;
@@ -432,6 +457,7 @@ namespace cs {
 	class method_try final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::block;
@@ -448,6 +474,7 @@ namespace cs {
 	class method_catch final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::single;
@@ -464,6 +491,7 @@ namespace cs {
 	class method_throw final : public method_base {
 	public:
 		using method_base::method_base;
+
 		virtual method_types get_type() const noexcept override
 		{
 			return method_types::single;

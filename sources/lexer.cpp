@@ -44,7 +44,7 @@ namespace cs {
 						throw syntax_error("Do not allow empty character.");
 					if (tmp.size() > 1)
 						throw syntax_error("Char must be a single character.");
-					tokens.push_back(new token_value(tmp[0]));
+					tokens.push_back(new_value(tmp[0]));
 					tmp.clear();
 					inside_char = false;
 				}
@@ -63,7 +63,7 @@ namespace cs {
 					escape = true;
 				}
 				else if (buff[i] == '\"') {
-					tokens.push_back(new token_value(tmp));
+					tokens.push_back(new_value(tmp));
 					tmp.clear();
 					inside_str = false;
 				}
@@ -157,7 +157,7 @@ namespace cs {
 					continue;
 				}
 				type = token_types::null;
-				tokens.push_back(new token_value(std::stold(tmp)));
+				tokens.push_back(new_value(std::stold(tmp)));
 				tmp.clear();
 				break;
 			}
@@ -187,7 +187,7 @@ namespace cs {
 			tokens.push_back(new token_signal(signal_map.match(tmp)));
 			break;
 		case token_types::value:
-			tokens.push_back(new token_value(std::stold(tmp)));
+			tokens.push_back(new_value(std::stold(tmp)));
 			break;
 		}
 	}

@@ -66,6 +66,7 @@ namespace cs {
 	{
 		a.swap(b, true);
 	}
+
 	void init_ext()
 	{
 		// Init the extensions
@@ -85,6 +86,7 @@ namespace cs {
 		darwin_cs_ext::init();
 		sqlite_cs_ext::init();
 	}
+
 	void instance_type::init_runtime()
 	{
 		// Internal Types
@@ -155,8 +157,8 @@ int covscript_args(int args_size, const char *args[])
 void covscript_main(int args_size, const char *args[])
 {
 	if (args_size > 1) {
-		const char* import_path=nullptr;
-		if((import_path=std::getenv(env_name))!=nullptr)
+		const char *import_path = nullptr;
+		if ((import_path = std::getenv(env_name)) != nullptr)
 			cs::import_path = import_path;
 		int index = covscript_args(args_size, args);
 		if (index == args_size)
@@ -169,7 +171,7 @@ void covscript_main(int args_size, const char *args[])
 		cs::init_ext();
 		cs::instance_type instance;
 		instance.compile(path);
-		if(!compile_only)
+		if (!compile_only)
 			instance.interpret();
 	}
 	else
@@ -183,7 +185,7 @@ int main(int args_size, const char *args[])
 		covscript_main(args_size, args);
 	}
 	catch (const std::exception &e) {
-		if (log_path!=nullptr) {
+		if (log_path != nullptr) {
 			std::ofstream out(::log_path);
 			if (out) {
 				out << e.what();
@@ -195,10 +197,10 @@ int main(int args_size, const char *args[])
 		std::cerr << e.what() << std::endl;
 		errorcode = -1;
 	}
-	if(wait_before_exit) {
-		std::cerr << "Program has been exited with a return value of " << errorcode << std::endl;
-		std::cerr << "Press any key to exit..."<<std::endl;
-		while(!cs_impl::conio::kbhit());
+	if (wait_before_exit) {
+		std::cerr << "\nProcess finished with exit code " << errorcode << std::endl;
+		std::cerr << "\nPress any key to exit..." << std::endl;
+		while (!cs_impl::conio::kbhit());
 		cs_impl::conio::getch();
 	}
 	return errorcode;

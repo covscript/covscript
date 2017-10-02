@@ -1,22 +1,43 @@
+/*
+* Covariant Script Instance
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* Copyright (C) 2017 Michael Lee(李登淳)
+* Email: mikecovlee@163.com
+* Github: https://github.com/mikecovlee
+*/
 #include "headers/instance.hpp"
 #include "headers/statement.hpp"
 #include "headers/codegen.hpp"
 
 namespace cs {
-	const std::string & statement_base::get_file_path() const noexcept
+	const std::string &statement_base::get_file_path() const noexcept
 	{
 		return context->file_path;
 	}
 
-	const std::string & statement_base::get_package_name() const noexcept
+	const std::string &statement_base::get_package_name() const noexcept
 	{
 		return context->package_name;
 	}
 
-	const std::string & statement_base::get_raw_code() const noexcept
+	const std::string &statement_base::get_raw_code() const noexcept
 	{
 		return context->file_buff.at(line_num);
 	}
+
 	void instance_type::init_grammar()
 	{
 		// Expression Grammar
@@ -72,6 +93,7 @@ namespace cs {
 		// Throw Grammar
 		translator.add_method({new token_action(action_types::throw_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_throw(context));
 	}
+
 	void instance_type::opt_expr(cov::tree<token_base *> &tree, cov::tree<token_base *>::iterator it)
 	{
 		if (!it.usable())
@@ -286,6 +308,7 @@ namespace cs {
 			it.data() = token;
 		}
 	}
+
 	void instance_type::parse_define_var(cov::tree<token_base *> &tree, define_var_profile &dvp)
 	{
 		const auto &it = tree.root();
@@ -299,9 +322,10 @@ namespace cs {
 		dvp.id = static_cast<token_id *>(left)->get_id();
 		dvp.expr = right;
 	}
-	void instance_type::compile(const std::string& path)
+
+	void instance_type::compile(const std::string &path)
 	{
-		context->file_path=path;
+		context->file_path = path;
 		// Read from file
 		std::deque<char> buff;
 		std::ifstream in(path);
@@ -317,6 +341,7 @@ namespace cs {
 		// Mark Constants
 		mark_constant();
 	}
+
 	void instance_type::interpret()
 	{
 		// Run the instruction

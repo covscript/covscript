@@ -57,24 +57,28 @@
 
 namespace cs {
 // Version
-	static const char* const version = "1.1.1";
+	static const char *const version = "1.1.1";
 	static const number std_version = 20170902;
 // Output Precision
 	static int output_precision = 8;
 // Import Path
-	static const char* import_path = ".";
+	static const char *import_path = ".";
 
 // Context
 	class context_type final {
 	public:
-		instance_type* instance=nullptr;
+		instance_type *instance = nullptr;
 		std::deque<string> file_buff;
 		string file_path = "<Unknown>";
 		string package_name;
-		context_type()=delete;
-		context_type(instance_type* iptr):instance(iptr) {}
-		context_type(const context_type&)=default;
-		~context_type()=default;
+
+		context_type() = delete;
+
+		context_type(instance_type *iptr) : instance(iptr) {}
+
+		context_type(const context_type &) = default;
+
+		~context_type() = default;
 	};
 
 // Callable and Function

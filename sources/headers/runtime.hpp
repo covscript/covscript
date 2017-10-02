@@ -159,41 +159,77 @@ namespace cs {
 	class runtime_type {
 	public:
 		domain_manager storage;
+
 		var parse_add(const var &, const var &);
+
 		var parse_addasi(var, const var &);
+
 		var parse_sub(const var &, const var &);
+
 		var parse_subasi(var, const var &);
+
 		var parse_minus(const var &);
+
 		var parse_mul(const var &, const var &);
+
 		var parse_mulasi(var, const var &);
+
 		var parse_escape(const var &);
+
 		var parse_div(const var &, const var &);
+
 		var parse_divasi(var, const var &);
+
 		var parse_mod(const var &, const var &);
+
 		var parse_modasi(var, const var &);
+
 		var parse_pow(const var &, const var &);
+
 		var parse_powasi(var, const var &);
+
 		var parse_dot(const var &, token_base *);
+
 		var parse_arraw(const var &, token_base *);
+
 		var parse_typeid(const var &);
+
 		var parse_new(const var &);
+
 		var parse_gcnew(const var &);
+
 		var parse_und(const var &, const var &);
+
 		var parse_abo(const var &, const var &);
+
 		var parse_ueq(const var &, const var &);
+
 		var parse_aeq(const var &, const var &);
+
 		var parse_asi(var, const var &);
+
 		var parse_choice(const var &, const var &);
+
 		var parse_pair(const var &, const var &);
+
 		var parse_equ(const var &, const var &);
+
 		var parse_neq(const var &, const var &);
+
 		var parse_and(const var &, const var &);
+
 		var parse_or(const var &, const var &);
+
 		var parse_not(const var &);
+
 		var parse_inc(var, var);
+
 		var parse_dec(var, var);
+
 		var parse_fcall(const var &, var);
+
 		var parse_access(var, const var &);
+
 		var parse_expr(const cov::tree<token_base *>::iterator &);
 	};
 }

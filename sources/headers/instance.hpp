@@ -80,7 +80,7 @@ namespace cs {
 
 	constexpr std::size_t fcall_stack_size = 1024;
 
-	class instance_type final:public runtime_type {
+	class instance_type final : public runtime_type {
 		// Symbol Table
 		mapping<std::string, signal_types> signal_map = {
 			{"+",  signal_types::add_},
@@ -222,40 +222,50 @@ namespace cs {
 			signal_types::asi_, signal_types::addasi_, signal_types::subasi_, signal_types::mulasi_, signal_types::divasi_, signal_types::modasi_, signal_types::powasi_, signal_types::equ_, signal_types::und_, signal_types::abo_, signal_types::ueq_, signal_types::aeq_, signal_types::neq_, signal_types::and_, signal_types::or_
 		};
 		// Constant Pool
-		std::deque<var> constant_values;
+		std::deque<var> constant_pool;
+
 		void mark_constant()
 		{
-			for (auto &it:constant_values)
+			for (auto &it:constant_pool)
 				it.constant();
 		}
+
 	public:
-		token_value* new_value(const var& val)
+		token_value *new_value(const var &val)
 		{
-			if(!val.is_protect()) {
-				constant_values.push_back(val);
-				constant_values.back().protect();
+			if (!val.is_protect()) {
+				constant_pool.push_back(val);
+				constant_pool.back().protect();
 			}
 			return new token_value(val);
 		}
+
 	private:
 		// Translator
 		translator_type translator;
 		// Statements
-		std::deque<statement_base*> statements;
+		std::deque<statement_base *> statements;
+
 		// Initializations
 		void init_grammar();
+
 		void init_runtime();
+
 	public:
 		// Context
 		context_t context;
+
 		// Constructor and destructor
-		instance_type():context(std::make_shared<context_type>(this))
+		instance_type() : context(std::make_shared<context_type>(this))
 		{
 			init_grammar();
 			init_runtime();
 		}
-		instance_type(const instance_type&)=delete;
-		~instance_type()=default;
+
+		instance_type(const instance_type &) = delete;
+
+		~instance_type() = default;
+
 		// Status
 		bool inside_lambda = false;
 		bool return_fcall = false;
@@ -268,7 +278,9 @@ namespace cs {
 			std::string id;
 			cov::tree<token_base *> expr;
 		};
+
 		void parse_define_var(cov::tree<token_base *> &, define_var_profile &);
+
 		// Lexer
 		bool issignal(char ch)
 		{
@@ -277,14 +289,20 @@ namespace cs {
 					return true;
 			return false;
 		}
+
 		bool isillegal(int ch)
 		{
 			return ch < 9 || ch > 127 || (ch >= 14 && ch < 32);
 		}
+
 		void process_char_buff(const std::deque<char> &, std::deque<token_base *> &);
+
 		void translate_into_tokens(const std::deque<char> &, std::deque<token_base *> &);
+
 		void process_empty_brackets(std::deque<token_base *> &);
+
 		void process_brackets(std::deque<token_base *> &);
+
 		// AST Builder
 		int get_signal_level(token_base *ptr)
 		{
@@ -294,6 +312,7 @@ namespace cs {
 				throw syntax_error("Get the level of non-signal token.");
 			return signal_level_map.match(static_cast<token_signal *>(ptr)->get_signal());
 		}
+
 		bool is_left_associative(token_base *ptr)
 		{
 			if (ptr == nullptr)
@@ -306,13 +325,20 @@ namespace cs {
 					return true;
 			return false;
 		}
+
 		void kill_brackets(std::deque<token_base *> &);
+
 		void split_token(std::deque<token_base *> &raw, std::deque<token_base *> &, std::deque<token_base *> &);
+
 		void build_tree(cov::tree<token_base *> &, std::deque<token_base *> &, std::deque<token_base *> &);
+
 		void gen_tree(cov::tree<token_base *> &, std::deque<token_base *> &);
+
 		void kill_expr(std::deque<token_base *> &);
+
 		// Parser and Code Generator
 		void kill_action(std::deque<std::deque<token_base *>>, std::deque<statement_base *> &, bool raw = false);
+
 		void translate_into_statements(std::deque<token_base *> &, std::deque<statement_base *> &);
 
 		// Optimizer
@@ -332,50 +358,62 @@ namespace cs {
 			}
 			return false;
 		}
+
 		void optimize_expression(cov::tree<token_base *> &tree)
 		{
 			opt_expr(tree, tree.root());
 		}
+
 		void opt_expr(cov::tree<token_base *> &, cov::tree<token_base *>::iterator);
 
 		// Wrapped Method
-		void compile(const std::string&);
+		void compile(const std::string &);
+
 		void interpret();
 	};
+
 // Guarder
 	class scope_guard final {
 		context_t context;
 	public:
-		scope_guard()=delete;
-		scope_guard(context_t c):context(c)
+		scope_guard() = delete;
+
+		scope_guard(context_t c) : context(c)
 		{
 			context->instance->storage.add_domain();
 		}
+
 		~scope_guard()
 		{
 			context->instance->storage.remove_domain();
 		}
+
 		domain_t get() const
 		{
 			return context->instance->storage.get_domain();
 		}
+
 		void clear() const
 		{
 			context->instance->storage.clear_domain();
 		}
 	};
+
 	class fcall_guard final {
 		context_t context;
 	public:
-		fcall_guard()=delete;
-		fcall_guard(context_t c):context(c)
+		fcall_guard() = delete;
+
+		fcall_guard(context_t c) : context(c)
 		{
 			context->instance->fcall_stack.push(number(0));
 		}
+
 		~fcall_guard()
 		{
 			context->instance->fcall_stack.pop();
 		}
+
 		var get() const
 		{
 			return context->instance->fcall_stack.top();

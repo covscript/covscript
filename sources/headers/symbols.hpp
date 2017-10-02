@@ -65,7 +65,7 @@ namespace cs {
 	};
 
 	class token_base {
-		static garbage_collector <token_base> gc;
+		static garbage_collector<token_base> gc;
 	public:
 		static void *operator new(std::size_t size)
 		{
@@ -286,6 +286,7 @@ namespace cs {
 			return this->mTreeList;
 		}
 	};
+
 	enum class statement_types {
 		null, expression_, import_, package_, block_, namespace_, var_, constant_, if_, else_, switch_, case_, default_, while_, until_, loop_, for_, foreach_, break_, continue_, struct_, function_, return_, end_, try_, catch_, throw_
 	};
@@ -355,7 +356,7 @@ namespace cs {
 
 		method_base(const method_base &) = default;
 
-		method_base(context_t c):context(c) {}
+		method_base(context_t c) : context(c) {}
 
 		virtual ~method_base() = default;
 

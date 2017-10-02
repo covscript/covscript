@@ -55,13 +55,13 @@ namespace cs_impl {
 		public:
 			int errcode = SQLITE_OK;
 
-			::sqlite3* host;
+			::sqlite3 *host;
 
 			::sqlite3_stmt *stmt;
 
 			stmt_holder() = delete;
 
-			explicit stmt_holder(::sqlite3 *db, const char *sql, std::size_t len):host(db)
+			explicit stmt_holder(::sqlite3 *db, const char *sql, std::size_t len) : host(db)
 			{
 				if (::sqlite3_prepare_v2(host, sql, len, &stmt, nullptr) != SQLITE_OK)
 					throw cs::lang_error(::sqlite3_errmsg(db));
@@ -86,7 +86,7 @@ namespace cs_impl {
 
 			std::shared_ptr<stmt_holder> m_stmt;
 
-			explicit statement(const std::shared_ptr<db_holder> &db, const std::string &sql) :m_stmt(std::make_shared<stmt_holder>(db->db, sql.c_str(), sql.size())) {}
+			explicit statement(const std::shared_ptr<db_holder> &db, const std::string &sql) : m_stmt(std::make_shared<stmt_holder>(db->db, sql.c_str(), sql.size())) {}
 
 		public:
 			statement() = delete;
@@ -102,13 +102,13 @@ namespace cs_impl {
 
 			void reset()
 			{
-				if (::sqlite3_reset(m_stmt->stmt)!=SQLITE_OK)
+				if (::sqlite3_reset(m_stmt->stmt) != SQLITE_OK)
 					throw cs::lang_error(::sqlite3_errmsg(m_stmt->host));
 			}
 
 			void step()
 			{
-				if ((m_stmt->errcode = ::sqlite3_step(m_stmt->stmt))==SQLITE_ERROR)
+				if ((m_stmt->errcode = ::sqlite3_step(m_stmt->stmt)) == SQLITE_ERROR)
 					throw cs::lang_error(::sqlite3_errmsg(m_stmt->host));
 			}
 
@@ -161,21 +161,21 @@ namespace cs_impl {
 				return ::sqlite3_bind_parameter_count(m_stmt->stmt);
 			}
 
-			void bind_integer(std::size_t index,int data)
+			void bind_integer(std::size_t index, int data)
 			{
-				if (::sqlite3_bind_int(m_stmt->stmt,index,data)!=SQLITE_OK)
+				if (::sqlite3_bind_int(m_stmt->stmt, index, data) != SQLITE_OK)
 					throw cs::lang_error(::sqlite3_errmsg(m_stmt->host));
 			}
 
-			void bind_real(std::size_t index,double data)
+			void bind_real(std::size_t index, double data)
 			{
-				if (::sqlite3_bind_double(m_stmt->stmt,index,data)!=SQLITE_OK)
+				if (::sqlite3_bind_double(m_stmt->stmt, index, data) != SQLITE_OK)
 					throw cs::lang_error(::sqlite3_errmsg(m_stmt->host));
 			}
 
-			void bind_text(std::size_t index,const std::string& data)
+			void bind_text(std::size_t index, const std::string &data)
 			{
-				if (::sqlite3_bind_text(m_stmt->stmt,index,data.c_str(),data.size(),nullptr)!=SQLITE_OK)
+				if (::sqlite3_bind_text(m_stmt->stmt, index, data.c_str(), data.size(), nullptr) != SQLITE_OK)
 					throw cs::lang_error(::sqlite3_errmsg(m_stmt->host));
 			}
 

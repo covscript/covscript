@@ -30,43 +30,43 @@ namespace cs_impl {
 	constexpr std::size_t default_allocate_buffer_size = 64;
 	/*	constexpr cov::heap::size_t default_heap_size = 1048576;
 	// If you want to improve memory occupy,you can set the best fit policy and allow the memory truncate.
-		constexpr cov::heap::allocate_policy default_heap_policy = cov::heap::allocate_policy::first_fit;
-		constexpr bool default_heap_no_truncate = true;
+	    constexpr cov::heap::allocate_policy default_heap_policy = cov::heap::allocate_policy::first_fit;
+	    constexpr bool default_heap_no_truncate = true;
 
-		static cov::heap default_heap(default_heap_size, default_heap_policy, default_heap_no_truncate);
+	    static cov::heap default_heap(default_heap_size, default_heap_policy, default_heap_no_truncate);
 
-		template<typename T>
-		class allocator final {
-		public:
-			allocator() = default;
+	    template<typename T>
+	    class allocator final {
+	    public:
+	        allocator() = default;
 
-			allocator(const allocator &) = delete;
+	        allocator(const allocator &) = delete;
 
-			~allocator() = default;
+	        ~allocator() = default;
 
-			inline T *allocate(std::size_t size)
-			{
-				return static_cast<T *>(default_heap.malloc(size * sizeof(T)));
-			}
+	        inline T *allocate(std::size_t size)
+	        {
+	            return static_cast<T *>(default_heap.malloc(size * sizeof(T)));
+	        }
 
-			inline void deallocate(T *ptr, std::size_t)
-			{
-				default_heap.free(ptr);
-			}
+	        inline void deallocate(T *ptr, std::size_t)
+	        {
+	            default_heap.free(ptr);
+	        }
 
-			template<typename...ArgsT>
-			inline void construct(T *ptr, ArgsT &&...args)
-			{
-				if (ptr != nullptr)
-					::new(ptr) T(std::forward<ArgsT>(args)...);
-			}
+	        template<typename...ArgsT>
+	        inline void construct(T *ptr, ArgsT &&...args)
+	        {
+	            if (ptr != nullptr)
+	                ::new(ptr) T(std::forward<ArgsT>(args)...);
+	        }
 
-			inline void destroy(T *ptr)
-			{
-				if (ptr != nullptr)
-					ptr->~T();
-			}
-		};
+	        inline void destroy(T *ptr)
+	        {
+	            if (ptr != nullptr)
+	                ptr->~T();
+	        }
+	    };
 	*/
 	template<typename T> using default_allocator_provider=std::allocator<T>;
 

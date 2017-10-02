@@ -19,6 +19,7 @@
 * Github: https://github.com/mikecovlee
 */
 #include "headers/runtime.hpp"
+
 namespace cs {
 	var runtime_type::parse_add(const var &a, const var &b)
 	{

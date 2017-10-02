@@ -86,7 +86,7 @@ namespace runtime_cs_ext {
 
 	using expression_t=cov::tree<token_base *>;
 
-	var build(const context_t& context, const string &expr)
+	var build(const context_t &context, const string &expr)
 	{
 		std::deque<char> buff;
 		std::deque<token_base *> tokens;
@@ -101,7 +101,7 @@ namespace runtime_cs_ext {
 		return var::make<expression_t>(tree);
 	}
 
-	var solve(const context_t& context, expression_t &tree)
+	var solve(const context_t &context, expression_t &tree)
 	{
 		return context->instance->parse_expr(tree.root());
 	}
