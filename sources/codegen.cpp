@@ -9,13 +9,17 @@ namespace cs {
 	{
 		const std::string& package_name = dynamic_cast<token_id *>(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data())->get_id();
 		std::string package_path = std::string(import_path) + "/" + package_name;
-		/*if(std::ifstream(package_path + ".csp")) {
-			context->instance_t rt = covscript(package_path + ".csp");
+		if(std::ifstream(package_path + ".csp")) {
+			instance_type instance;
+			instance.compile(package_path + ".csp");
+			instance.interpret();
+			context_t rt=instance.context;
 			if (rt->package_name.empty())
 				throw syntax_error("Target file is not a package.");
-			context->instance->storage.add_var(rt->package_name, var::make_protect<extension_t>(std::make_shared<extension_holder>(rt->storage.get_global())));
+			context->instance->storage.add_var(rt->package_name, var::make_protect<extension_t>(std::make_shared<extension_holder>(rt->instance->storage.get_global())));
+			rt->instance=context->instance;
 		}
-		else */if(std::ifstream(package_path + ".cse"))
+		else if(std::ifstream(package_path + ".cse"))
 			context->instance->storage.add_var(package_name, var::make_protect<extension_t>(std::make_shared<extension_holder>(package_path + ".cse")));
 		else
 			throw fatal_error("No such file or directory.");

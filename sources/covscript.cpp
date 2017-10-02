@@ -38,6 +38,13 @@
 #include <cstring>
 #include <cstdlib>
 
+#include "instance.cpp"
+#include "lexer.cpp"
+#include "parser.cpp"
+#include "runtime.cpp"
+#include "statement.cpp"
+#include "codegen.cpp"
+
 namespace cs {
 // Internal Functions
 	number to_integer(const var &val)
@@ -192,6 +199,7 @@ int main(int args_size, const char *args[])
 		std::cerr << "Program has been exited with a return value of " << errorcode << std::endl;
 		std::cerr << "Press any key to exit..."<<std::endl;
 		while(!cs_impl::conio::kbhit());
+		cs_impl::conio::getch();
 	}
 	return errorcode;
 }

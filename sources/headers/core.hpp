@@ -70,7 +70,7 @@ namespace cs {
 		instance_type* instance=nullptr;
 		std::deque<string> file_buff;
 		string file_path = "<Unknown>";
-		string package_name = "<Unknown>";
+		string package_name;
 		context_type()=delete;
 		context_type(instance_type* iptr):instance(iptr) {}
 		context_type(const context_type&)=default;
