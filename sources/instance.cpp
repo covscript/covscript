@@ -311,7 +311,7 @@ namespace cs {
 			buff.push_back(in.get());
 		// Lexer
 		std::deque<token_base *> tokens;
-		translate_into_tokens(buff, tokens, path);
+		translate_into_tokens(buff, tokens);
 		// Parser
 		translate_into_statements(tokens, statements);
 		// Mark Constants
