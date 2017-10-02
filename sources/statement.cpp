@@ -19,10 +19,10 @@ namespace cs {
 				throw e;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 			}
-			if (return_fcall) {
-				return_fcall = false;
+			if (mContext->instance->return_fcall) {
+				mContext->instance->return_fcall = false;
 				return fcall.get();
 			}
 		}
@@ -43,7 +43,7 @@ namespace cs {
 				throw e;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 			}
 		}
 		return var::make<structure>(this->mHash, this->mName, scope.get());
@@ -61,12 +61,12 @@ namespace cs {
 
 	void statement_break::run()
 	{
-		break_block = true;
+		context->instance->break_block = true;
 	}
 
 	void statement_continue::run()
 	{
-		continue_block = true;
+		context->instance->continue_block = true;
 	}
 
 	void statement_block::run()
@@ -83,9 +83,9 @@ namespace cs {
 				throw e;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 			}
-			if (return_fcall || break_block || continue_block)
+			if (context->instance->return_fcall || context->instance->break_block || context->instance->continue_block)
 				break;
 		}
 	}
@@ -104,7 +104,7 @@ namespace cs {
 				throw e;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 			}
 		}
 		context->instance->storage.add_var(this->mName, var::make_protect<name_space_t>(std::make_shared<name_space_holder>(scope.get())));
@@ -125,9 +125,9 @@ namespace cs {
 					throw e;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 				}
-				if (return_fcall || break_block || continue_block)
+				if (context->instance->return_fcall || context->instance->break_block || context->instance->continue_block)
 					break;
 			}
 		}
@@ -148,9 +148,9 @@ namespace cs {
 					throw e;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 				}
-				if (return_fcall || break_block || continue_block)
+				if (context->instance->return_fcall || context->instance->break_block || context->instance->continue_block)
 					break;
 			}
 		}
@@ -167,9 +167,9 @@ namespace cs {
 					throw e;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 				}
-				if (return_fcall || break_block || continue_block)
+				if (context->instance->return_fcall || context->instance->break_block || context->instance->continue_block)
 					break;
 			}
 		}
@@ -186,10 +186,10 @@ namespace cs {
 
 	void statement_while::run()
 	{
-		if (break_block)
-			break_block = false;
-		if (continue_block)
-			continue_block = false;
+		if (context->instance->break_block)
+			context->instance->break_block = false;
+		if (context->instance->continue_block)
+			context->instance->continue_block = false;
 		scope_guard scope(context);
 		while (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
 			scope.clear();
@@ -204,17 +204,17 @@ namespace cs {
 					throw e;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 				}
-				if (return_fcall) {
+				if (context->instance->return_fcall) {
 					return;
 				}
-				if (break_block) {
-					break_block = false;
+				if (context->instance->break_block) {
+					context->instance->break_block = false;
 					return;
 				}
-				if (continue_block) {
-					continue_block = false;
+				if (context->instance->continue_block) {
+					context->instance->continue_block = false;
 					break;
 				}
 			}
@@ -223,10 +223,10 @@ namespace cs {
 
 	void statement_loop::run()
 	{
-		if (break_block)
-			break_block = false;
-		if (continue_block)
-			continue_block = false;
+		if (context->instance->break_block)
+			context->instance->break_block = false;
+		if (context->instance->continue_block)
+			context->instance->continue_block = false;
 		scope_guard scope(context);
 		do {
 			scope.clear();
@@ -241,17 +241,17 @@ namespace cs {
 					throw e;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 				}
-				if (return_fcall) {
+				if (context->instance->return_fcall) {
 					return;
 				}
-				if (break_block) {
-					break_block = false;
+				if (context->instance->break_block) {
+					context->instance->break_block = false;
 					return;
 				}
-				if (continue_block) {
-					continue_block = false;
+				if (context->instance->continue_block) {
+					context->instance->continue_block = false;
 					break;
 				}
 			}
@@ -261,10 +261,10 @@ namespace cs {
 
 	void statement_for::run()
 	{
-		if (break_block)
-			break_block = false;
-		if (continue_block)
-			continue_block = false;
+		if (context->instance->break_block)
+			context->instance->break_block = false;
+		if (context->instance->continue_block)
+			context->instance->continue_block = false;
 		scope_guard scope(context);
 		var val = copy(context->instance->context->instance->parse_expr(mDvp.expr.root()));
 		while (val.const_val<number>() <= context->instance->parse_expr(mEnd.root()).const_val<number>()) {
@@ -281,17 +281,17 @@ namespace cs {
 					throw e;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 				}
-				if (return_fcall) {
+				if (context->instance->return_fcall) {
 					return;
 				}
-				if (break_block) {
-					break_block = false;
+				if (context->instance->break_block) {
+					context->instance->break_block = false;
 					return;
 				}
-				if (continue_block) {
-					continue_block = false;
+				if (context->instance->continue_block) {
+					context->instance->continue_block = false;
 					break;
 				}
 			}
@@ -300,14 +300,14 @@ namespace cs {
 	}
 
 	template<typename T, typename X>
-	void foreach_helper(const string &iterator, const var &obj, std::deque<statement_base *> &body)
+	void foreach_helper(context_t context, const string &iterator, const var &obj, std::deque<statement_base *> &body)
 	{
 		if (obj.const_val<T>().empty())
 			return;
-		if (break_block)
-			break_block = false;
-		if (continue_block)
-			continue_block = false;
+		if (context->instance->break_block)
+			context->instance->break_block = false;
+		if (context->instance->continue_block)
+			context->instance->continue_block = false;
 		scope_guard scope(context);
 		for (const X &it:obj.const_val<T>()) {
 			scope.clear();
@@ -323,17 +323,17 @@ namespace cs {
 					throw e;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 				}
-				if (return_fcall) {
+				if (context->instance->return_fcall) {
 					return;
 				}
-				if (break_block) {
-					break_block = false;
+				if (context->instance->break_block) {
+					context->instance->break_block = false;
 					return;
 				}
-				if (continue_block) {
-					continue_block = false;
+				if (context->instance->continue_block) {
+					context->instance->continue_block = false;
 					break;
 				}
 			}
@@ -344,13 +344,13 @@ namespace cs {
 	{
 		const var &obj = context->instance->parse_expr(this->mObj.root());
 		if (obj.type() == typeid(string))
-			foreach_helper<string, char>(this->mIt, obj, this->mBlock);
+			foreach_helper<string, char>(context, this->mIt, obj, this->mBlock);
 		else if (obj.type() == typeid(list))
-			foreach_helper<list, var>(this->mIt, obj, this->mBlock);
+			foreach_helper<list, var>(context, this->mIt, obj, this->mBlock);
 		else if (obj.type() == typeid(array))
-			foreach_helper<array, var>(this->mIt, obj, this->mBlock);
+			foreach_helper<array, var>(context, this->mIt, obj, this->mBlock);
 		else if (obj.type() == typeid(hash_map))
-			foreach_helper<hash_map, pair>(this->mIt, obj, this->mBlock);
+			foreach_helper<hash_map, pair>(context, this->mIt, obj, this->mBlock);
 		else
 			throw syntax_error("Unsupported type(foreach)");
 	}
@@ -370,10 +370,10 @@ namespace cs {
 
 	void statement_return::run()
 	{
-		if (fcall_stack.empty())
+		if (context->instance->fcall_stack.empty())
 			throw syntax_error("Return outside function.");
-		fcall_stack.top() = context->instance->parse_expr(this->mTree.root());
-		return_fcall = true;
+		context->instance->fcall_stack.top() = context->instance->parse_expr(this->mTree.root());
+		context->instance->return_fcall = true;
 	}
 
 	void statement_try::run()
@@ -397,9 +397,9 @@ namespace cs {
 						throw e;
 					}
 					catch (const std::exception &e) {
-						throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_code(), e.what());
+						throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 					}
-					if (return_fcall || break_block || continue_block)
+					if (context->instance->return_fcall || context->instance->break_block || context->instance->continue_block)
 						break;
 				}
 				return;
@@ -408,9 +408,9 @@ namespace cs {
 				throw e;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 			}
-			if (return_fcall || break_block || continue_block)
+			if (context->instance->return_fcall || context->instance->break_block || context->instance->continue_block)
 				break;
 		}
 	}
