@@ -335,7 +335,7 @@ namespace cs {
 
 	class method_base {
 		static garbage_collector<method_base> gc;
-	private:
+	protected:
 		context_t context;
 	public:
 		static void *operator new(std::size_t size)
