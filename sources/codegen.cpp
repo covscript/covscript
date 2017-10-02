@@ -28,7 +28,10 @@ namespace cs {
 
 	statement_base *method_import::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
-		const std::string &package_name = dynamic_cast<token_id *>(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data())->get_id();
+		token_base *token = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data();
+		if (token == nullptr || token->get_type() != token_types::id)
+			throw syntax_error("Wrong grammar for import statement.");
+		const std::string &package_name = dynamic_cast<token_id *>(token)->get_id();
 		std::string package_path = std::string(import_path) + "/" + package_name;
 		if (std::ifstream(package_path + ".csp")) {
 			instance_type instance;

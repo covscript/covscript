@@ -324,7 +324,7 @@ namespace cs {
 				throw e;
 			}
 			catch (const std::exception &e) {
-				throw exception(endsig->get_line_num(), context->file_path, context->file_buff.at(endsig->get_line_num()), e.what());
+				throw exception(endsig->get_line_num(), context->file_path, context->file_buff.at(endsig->get_line_num() - 1), e.what());
 			}
 		}
 		if (level != 0)

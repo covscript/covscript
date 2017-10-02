@@ -1,0 +1,4 @@
+package constant
+const var a={"World"}
+const var str="Hello"
+a.push_front(str)
