@@ -23,21 +23,38 @@
 #include "../sqlite/sqlite.hpp"
 
 static cs::extension sqlite_ext;
+static cs::extension sqlite_stmt_ext;
 static cs::extension_t sqlite_ext_shared = std::make_shared<cs::extension_holder>(&sqlite_ext);
+static cs::extension_t sqlite_stmt_ext_shared = std::make_shared<cs::extension_holder>(&sqlite_stmt_ext);
 namespace cs_impl {
 	template<>
 	cs::extension_t &get_ext<cs_impl::sqlite>()
 	{
 		return sqlite_ext_shared;
 	}
-}
-static cs::extension sqlite_stmt_ext;
-static cs::extension_t sqlite_stmt_ext_shared = std::make_shared<cs::extension_holder>(&sqlite_stmt_ext);
-namespace cs_impl {
+
 	template<>
 	cs::extension_t &get_ext<cs_impl::sqlite::statement>()
 	{
 		return sqlite_stmt_ext_shared;
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs_impl::sqlite>()
+	{
+		return "cs::sqlite";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs_impl::sqlite::data_type>()
+	{
+		return "cs::sqlite::data_type";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs_impl::sqlite::statement>()
+	{
+		return "cs::sqlite::statement";
 	}
 }
 namespace sqlite_cs_ext {

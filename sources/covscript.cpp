@@ -57,6 +57,11 @@ namespace cs {
 		return val.to_string();
 	}
 
+	string type(const var &a)
+	{
+		return a.get_type_name();
+	}
+
 	var clone(const var &val)
 	{
 		return copy(val);
@@ -104,6 +109,7 @@ namespace cs {
 		// Add Internal Functions to storage
 		storage.add_var_global("to_integer", cs::var::make_protect<cs::callable>(cs::cni(to_integer), true));
 		storage.add_var_global("to_string", cs::var::make_protect<cs::callable>(cs::cni(to_string), true));
+		storage.add_var_global("type", cs::var::make_protect<cs::callable>(cs::cni(type), true));
 		storage.add_var_global("clone", cs::var::make_protect<cs::callable>(cs::cni(clone)));
 		storage.add_var_global("swap", cs::var::make_protect<cs::callable>(cs::cni(swap)));
 		// Add extensions to storage

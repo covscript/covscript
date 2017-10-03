@@ -30,6 +30,12 @@ namespace cs_impl {
 	{
 		return context_ext_shared;
 	}
+
+	template<>
+	constexpr const char *get_name_of_type<cov::tree<cs::token_base *>>()
+	{
+		return "cs::expression";
+	}
 }
 static cs::extension runtime_ext;
 namespace runtime_cs_ext {

@@ -38,6 +38,12 @@ namespace cs_impl {
 	{
 		return array_iterator_ext_shared;
 	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::array::iterator>()
+	{
+		return "cs::array::iterator";
+	}
 }
 namespace array_cs_ext {
 	using namespace cs;

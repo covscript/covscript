@@ -215,7 +215,7 @@ namespace cs_impl {
 	struct hash_if<T, true> {
 		static std::size_t hash(const T &val)
 		{
-			static std::hash <T> gen;
+			static std::hash<T> gen;
 			return gen(val);
 		}
 	};
@@ -238,6 +238,12 @@ namespace cs_impl {
 	void detach(T &val)
 	{
 		// Do something if you want when data is copying.
+	}
+
+	template<typename T>
+	constexpr const char *get_name_of_type()
+	{
+		return typeid(T).name();
 	}
 
 	template<typename T>
@@ -269,7 +275,9 @@ namespace cs_impl {
 
 			virtual void kill() = 0;
 
-			virtual cs::extension_t &get_ext() const =0;
+			virtual cs::extension_t &get_ext() const = 0;
+
+			virtual const char *get_type_name() const = 0;
 		};
 
 		template<typename T>
@@ -334,6 +342,11 @@ namespace cs_impl {
 			virtual cs::extension_t &get_ext() const override
 			{
 				return cs_impl::get_ext<T>();
+			}
+
+			virtual const char *get_type_name() const override
+			{
+				return cs_impl::get_name_of_type<T>();
 			}
 
 			T &data()
@@ -524,6 +537,14 @@ namespace cs_impl {
 			if (this->mDat == nullptr)
 				throw cs::syntax_error("Target type does not support extensions.");
 			return this->mDat->data->get_ext();
+		}
+
+		const char *get_type_name() const
+		{
+			if (this->mDat == nullptr)
+				return get_name_of_type<void>();
+			else
+				return this->mDat->data->get_type_name();
 		}
 
 		bool is_same(const any &obj) const

@@ -39,6 +39,24 @@ namespace cs_impl {
 	{
 		return darwin_drawable_ext_shared;
 	}
+
+	template<>
+	constexpr const char *get_name_of_type<darwin::colors>()
+	{
+		return "darwin::colors";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<darwin::pixel>()
+	{
+		return "darwin::pixel";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<std::shared_ptr<darwin::drawable>>()
+	{
+		return "darwin::drawable";
+	}
 }
 namespace darwin_cs_ext {
 	using namespace cs;

@@ -356,7 +356,7 @@ namespace cs {
 			throw syntax_error("Type does not support the extension");
 	}
 
-// literal format
+// Literal format
 	var parse_value(const std::string &str)
 	{
 		if (str == "true")
@@ -429,5 +429,114 @@ namespace cs_impl {
 	std::string to_string<char>(const char &c)
 	{
 		return std::move(std::string(1, c));
+	}
+
+// Type name
+	template<>
+	constexpr const char *get_name_of_type<cs::context_t>()
+	{
+		return "cs::context";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::var>()
+	{
+		return "cs::var";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::number>()
+	{
+		return "cs::number";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::boolean>()
+	{
+		return "cs::boolean";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::pointer>()
+	{
+		return "cs::pointer";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<char>()
+	{
+		return "cs::char";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::string>()
+	{
+		return "cs::string";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::list>()
+	{
+		return "cs::list";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::array>()
+	{
+		return "cs::array";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::pair>()
+	{
+		return "cs::pair";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::hash_map>()
+	{
+		return "cs::hash_map";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::type>()
+	{
+		return "cs::type";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::name_space_t>()
+	{
+		return "cs::namespace";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::callable>()
+	{
+		return "cs::function";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::structure>()
+	{
+		return "cs::structure";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::lang_error>()
+	{
+		return "cs::exception";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::istream>()
+	{
+		return "cs::istream";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::ostream>()
+	{
+		return "cs::ostream";
 	}
 }

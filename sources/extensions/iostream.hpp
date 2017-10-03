@@ -25,21 +25,32 @@ static cs::extension iostream_ext;
 static cs::extension seekdir_ext;
 static cs::extension openmode_ext;
 static cs::extension istream_ext;
+static cs::extension ostream_ext;
 static cs::extension_t istream_ext_shared = std::make_shared<cs::extension_holder>(&istream_ext);
+static cs::extension_t ostream_ext_shared = std::make_shared<cs::extension_holder>(&ostream_ext);
 namespace cs_impl {
 	template<>
 	cs::extension_t &get_ext<cs::istream>()
 	{
 		return istream_ext_shared;
 	}
-}
-static cs::extension ostream_ext;
-static cs::extension_t ostream_ext_shared = std::make_shared<cs::extension_holder>(&ostream_ext);
-namespace cs_impl {
+
 	template<>
 	cs::extension_t &get_ext<cs::ostream>()
 	{
 		return ostream_ext_shared;
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<std::ios_base::seekdir>()
+	{
+		return "cs::iostream::seekdir";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<std::ios_base::openmode>()
+	{
+		return "cs::iostream::openmode";
 	}
 }
 namespace iostream_cs_ext {

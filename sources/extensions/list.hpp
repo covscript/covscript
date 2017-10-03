@@ -38,6 +38,12 @@ namespace cs_impl {
 	{
 		return list_iterator_ext_shared;
 	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::list::iterator>()
+	{
+		return "cs::list::iterator";
+	}
 }
 namespace list_cs_ext {
 	using namespace cs;
