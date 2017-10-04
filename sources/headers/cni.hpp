@@ -30,7 +30,7 @@ namespace cs {
 			static inline short check(const var &val)
 			{
 				if (typeid(T) != val.type())
-					throw syntax_error("Invalid Argument.At " + std::to_string(index + 1) + ".Expected " + cs_impl::get_name_of_type<T>());
+					throw syntax_error("Invalid Argument.At " + std::to_string(index + 1) + ".Expected " + cs_impl::get_name_of_type<T>() + ",provided " + val.get_type_name());
 				else
 					return 0;
 			}
@@ -51,7 +51,7 @@ namespace cs {
 			if (sizeof...(ArgTypes) == args.size())
 				check_helper<ArgTypes...>(args, cov::make_sequence<sizeof...(ArgTypes)>::result);
 			else
-				throw syntax_error("Wrong size of the arguments.Expected " + std::to_string(sizeof...(ArgTypes)));
+				throw syntax_error("Wrong size of the arguments.Expected " + std::to_string(sizeof...(ArgTypes)) + ",provided " + std::to_string(args.size()));
 		}
 	};
 

@@ -192,51 +192,47 @@ namespace cs {
 		}
 	}
 
-	void instance_type::translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens)
-	{
+	class preprocessor final {
 		std::size_t line_num = 1;
+		bool is_annotation = false;
+		bool is_command = false;
+		bool multi_line = false;
+		bool empty_buff = true;
+		bool empty_line = true;
 		std::deque<char> buff;
+		std::string command;
 		std::string line;
-		int status = 0;
-		for (auto &ch:char_buff) {
-			if (isillegal(ch))
-				continue;
-			if (ch == '\n') {
-				if (status == 1) {
-					try {
-						process_char_buff(buff, tokens);
-					}
-					catch (const cs::exception &e) {
-						throw e;
-					}
-					catch (const std::exception &e) {
-						throw exception(line_num, context->file_path, line, e.what());
-					}
-					tokens.push_back(new token_endline(line_num));
-				}
-				context->file_buff.push_back(line);
-				++line_num;
-				buff.clear();
-				line.clear();
-				status = 0;
-				continue;
-			}
-			if (status == -1)
-				continue;
-			if (status == 0 && !std::isspace(ch)) {
-				if (ch == '#')
-					status = -1;
-				else
-					status = 1;
-			}
-			if (status == 1) {
-				buff.push_back(ch);
-				line.push_back(ch);
-			}
+
+		void new_empty_line(context_t context)
+		{
+			context->file_buff.emplace_back();
+			empty_line = true;
+			++line_num;
 		}
-		if (status == 1) {
+
+		void process_endline(context_t context, std::deque<token_base *> &tokens)
+		{
+			if (is_annotation) {
+				is_annotation = false;
+				new_empty_line(context);
+				return;
+			}
+			if (is_command) {
+				is_command = false;
+				if (command == "begin" && !multi_line)
+					multi_line = true;
+				else if (command == "end" && multi_line)
+					multi_line = false;
+				else
+					throw exception(line_num, context->file_path, command, "Wrong grammar for preprocessor command.");
+				command.clear();
+			}
+			if (multi_line || empty_buff) {
+				new_empty_line(context);
+				return;
+			}
 			try {
-				process_char_buff(buff, tokens);
+				context->instance->process_char_buff(buff, tokens);
 			}
 			catch (const cs::exception &e) {
 				throw e;
@@ -245,7 +241,59 @@ namespace cs {
 				throw exception(line_num, context->file_path, line, e.what());
 			}
 			tokens.push_back(new token_endline(line_num));
+			context->file_buff.emplace_back(line);
+			++line_num;
+			buff.clear();
+			line.clear();
+			empty_buff = true;
+			empty_line = true;
 		}
+
+	public:
+		explicit preprocessor(context_t context, const std::deque<char> &char_buff, std::deque<token_base *> &tokens)
+		{
+			for (auto &ch:char_buff) {
+				if (context->instance->isillegal(ch))
+					continue;
+				if (ch == '\n') {
+					process_endline(context, tokens);
+					continue;
+				}
+				if (is_annotation)
+					continue;
+				if (is_command) {
+					if (!std::isspace(ch))
+						command.push_back(ch);
+					continue;
+				}
+				if (empty_line && !std::isspace(ch)) {
+					switch (ch) {
+					case '#':
+						is_annotation = true;
+						continue;
+					case '@':
+						is_command = true;
+						continue;
+					default:
+						empty_buff = false;
+						empty_line = false;
+						break;
+					}
+				}
+				if (!empty_line) {
+					buff.push_back(ch);
+					line.push_back(ch);
+				}
+			}
+			process_endline(context, tokens);
+			if (multi_line)
+				throw syntax_error("Lack of the @end command.");
+		}
+	};
+
+	void instance_type::translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens)
+	{
+		preprocessor(context, char_buff, tokens);
 	}
 
 	void instance_type::process_empty_brackets(std::deque<token_base *> &tokens)

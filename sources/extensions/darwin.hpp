@@ -43,19 +43,19 @@ namespace cs_impl {
 	template<>
 	constexpr const char *get_name_of_type<darwin::colors>()
 	{
-		return "darwin::colors";
+		return "cs::darwin::colors";
 	}
 
 	template<>
 	constexpr const char *get_name_of_type<darwin::pixel>()
 	{
-		return "darwin::pixel";
+		return "cs::darwin::pixel";
 	}
 
 	template<>
 	constexpr const char *get_name_of_type<std::shared_ptr<darwin::drawable>>()
 	{
-		return "darwin::drawable";
+		return "cs::darwin::drawable";
 	}
 }
 namespace darwin_cs_ext {
