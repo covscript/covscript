@@ -25,22 +25,24 @@
 #include <sys/ioctl.h>
 #include <sys/select.h>
 
-static void terminal_lnbuf(int yn) {
-   struct termios oldt, newt;
-   tcgetattr(0, &oldt);
-   newt = oldt;
-   if (!yn) newt.c_lflag &= ~ICANON;
-   else newt.c_lflag |= ICANON;
-   tcsetattr(0, TCSANOW, &newt);
+static void terminal_lnbuf(int yn)
+{
+	struct termios oldt, newt;
+	tcgetattr(0, &oldt);
+	newt = oldt;
+	if (!yn) newt.c_lflag &= ~ICANON;
+	else newt.c_lflag |= ICANON;
+	tcsetattr(0, TCSANOW, &newt);
 }
- 
-static void terminal_echo(int yn) {
-   struct termios oldt, newt;
-   tcgetattr(0, &oldt);
-   newt = oldt;
-   if (!yn) newt.c_lflag &= ~ECHO;
-   else newt.c_lflag |= ECHO;
-   tcsetattr(0, TCSANOW, &newt);
+
+static void terminal_echo(int yn)
+{
+	struct termios oldt, newt;
+	tcgetattr(0, &oldt);
+	newt = oldt;
+	if (!yn) newt.c_lflag &= ~ECHO;
+	else newt.c_lflag |= ECHO;
+	tcsetattr(0, TCSANOW, &newt);
 }
 
 namespace cs_impl {
