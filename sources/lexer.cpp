@@ -280,7 +280,7 @@ namespace cs {
 						break;
 					}
 				}
-				if (!empty_line) {
+				if (!empty_buff) {
 					buff.push_back(ch);
 					line.push_back(ch);
 				}
