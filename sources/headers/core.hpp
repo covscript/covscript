@@ -347,6 +347,11 @@ namespace cs {
 		}
 	};
 
+	extension_t make_shared_extension(name_space &ns)
+	{
+		return std::make_shared<extension_holder>(&ns);
+	}
+
 // Implement
 	var &type::get_var(const std::string &name) const
 	{
