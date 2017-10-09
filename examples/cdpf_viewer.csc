@@ -44,6 +44,7 @@ function main()
 		dpic.draw_string(0,dpic.get_height()-1,info,darwin.pixel(' ',darwin.white,darwin.blue))
 		darwin.update_drawable()
 	end
-	darwin.exit(0)
+	darwin.exit()
+	system.exit(0)
 end
 main()

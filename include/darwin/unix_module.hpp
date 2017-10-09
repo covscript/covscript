@@ -1,6 +1,7 @@
 #pragma once
 
 #include <csignal>
+#include <cstdlib>
 #include <dlfcn.h>
 
 #ifdef DARWIN_FORCE_BUILTIN
@@ -70,12 +71,14 @@ namespace darwin {
 void darwin::unix_module_adapter::force_exit(int flag)
 {
 	printf("Darwin have been exited safety.\n");
-	runtime.exit(0);
+	runtime.exit();
+	std::exit(0);
 }
 
 void darwin::unix_module_adapter::handle_segfault(int flag)
 {
 	printf("Your program have some problem about the Segmentation Fault.Please check your program after we terminate this program.\n");
 	printf("Darwin have been exited safety.\n");
-	runtime.exit(1);
+	runtime.exit();
+	std::exit(-1);
 }

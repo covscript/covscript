@@ -334,7 +334,8 @@ loop
 				resize()
 			end
 			case 'q'
-				darwin.exit(0)
+				darwin.exit()
+				system.exit(0)
 			end
 			case 'i'
 				yposition++

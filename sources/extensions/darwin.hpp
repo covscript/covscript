@@ -80,9 +80,9 @@ namespace darwin_cs_ext {
 		darwin::runtime.load("./darwin.module");
 	}
 
-	void exit(number code)
+	void exit()
 	{
-		darwin::runtime.exit(code);
+		darwin::runtime.exit();
 	}
 
 	bool is_kb_hit()

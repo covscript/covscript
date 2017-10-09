@@ -20,7 +20,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://covariant.cn/darwin/
 *
-* Library Version: 17.8.1
+* Library Version: 17.10.1
 *
 * Marco List:
 * Library Version: __Darwin
@@ -37,7 +37,7 @@
 #error Darwin UCGL need C++11 or later standard.
 #endif
 
-#define __Darwin 170801L
+#define __Darwin 171001L
 
 #include "./timer.hpp"
 #include "./core.hpp"
@@ -45,7 +45,6 @@
 #include "./adapter.hpp"
 #include "./graphics.hpp"
 #include <string>
-#include <cstdlib>
 
 namespace darwin {
 	class sync_clock final {
@@ -85,14 +84,8 @@ namespace darwin {
 
 	class darwin_rt final {
 	protected:
-		timer_t m_time_out = 1000;
 		module_adapter *m_module = nullptr;
 		platform_adapter *m_platform = nullptr;
-
-		bool wait_for_module();
-
-		bool wait_for_platform();
-
 	public:
 		darwin_rt() = delete;
 
@@ -106,7 +99,7 @@ namespace darwin {
 
 		void load(const std::string &);
 
-		void exit(int);
+		void exit();
 
 		status get_state() const noexcept
 		{
@@ -115,11 +108,6 @@ namespace darwin {
 			if (m_module->get_state() == status::busy || m_platform->get_state() == status::busy) return status::busy;
 			if (m_module->get_state() == status::ready && m_platform->get_state() == status::ready) return status::ready;
 			return status::null;
-		}
-
-		void set_time_out(timer_t tl) noexcept
-		{
-			m_time_out = tl;
 		}
 
 		virtual bool is_kb_hit() noexcept
@@ -154,55 +142,28 @@ namespace darwin {
 	};
 }
 
-bool darwin::darwin_rt::wait_for_module()
-{
-	if (m_module == nullptr) return false;
-	for (timer_t nt = timer::time(); m_module->get_state() == status::busy && timer::time() - nt <= m_time_out;);
-	if (m_module->get_state() == status::busy) return false;
-	else return true;
-}
-
-bool darwin::darwin_rt::wait_for_platform()
-{
-	if (m_platform == nullptr) return false;
-	for (timer_t nt = timer::time(); m_platform->get_state() == status::busy && timer::time() - nt <= m_time_out;);
-	if (m_platform->get_state() == status::busy) return false;
-	else return true;
-}
-
 darwin::darwin_rt::~darwin_rt()
 {
-	if (m_platform != nullptr)
-		if (wait_for_platform() && m_platform->get_state() == status::ready)
-			m_platform->stop();
-	if (m_module != nullptr)
-		if (wait_for_module() && m_module->get_state() == status::ready)
-			m_module->free_module();
+	exit();
 }
 
 void darwin::darwin_rt::load(const std::string &file)
 {
-	if (get_state() != status::leisure) Darwin_Error("Adapter Busy.");
-	if (wait_for_module() && m_module->get_state() == status::leisure) {
-		if (m_module->load_module(file) == results::failure) Darwin_Error("Adapter returns failure.");
-	}
-	else
+	if (get_state() != status::leisure || m_module->get_state() != status::leisure)
 		Darwin_Error("Adapter Busy.");
+	if (m_module->load_module(file) == results::failure)
+		Darwin_Error("Adapter returns failure.");
 	m_platform = m_module->get_platform_adapter();
 	m_platform->init();
 }
 
-void darwin::darwin_rt::exit(int code = 0)
+void darwin::darwin_rt::exit()
 {
-	if (m_platform != nullptr)
-		if (wait_for_platform() && m_platform->get_state() == status::ready)
-			m_platform->stop();
-	if (m_module != nullptr)
-		if (wait_for_module() && m_module->get_state() == status::ready)
-			m_module->free_module();
+	if (m_platform != nullptr && m_platform->get_state() == status::ready)
+		m_platform->stop();
+	if (m_module != nullptr && m_module->get_state() == status::ready)
+		m_module->free_module();
 	m_platform = nullptr;
-	m_module = nullptr;
-	std::exit(code);
 }
 
 #ifdef DARWIN_FORCE_UNIX

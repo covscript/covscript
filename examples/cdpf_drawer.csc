@@ -286,7 +286,8 @@ function start()
 							about()
 						end
 						case 3
-							darwin.exit(0)
+							darwin.exit()
+							system.exit(0)
 							run=false
 						end
 					end
@@ -305,7 +306,8 @@ function start()
 							about()
 						end
 						case 3
-							darwin.exit(0)
+							darwin.exit()
+							system.exit(0)
 							run=false
 						end
 					end
@@ -369,7 +371,8 @@ function menu()
 							about()
 						end
 						case 5
-							darwin.exit(0)
+							darwin.exit()
+							system.exit(0)
 						end
 					end
 					run=false
@@ -393,7 +396,8 @@ function menu()
 							about()
 						end
 						case 5
-							darwin.exit(0)
+							darwin.exit()
+							system.exit(0)
 						end
 					end
 					run=false
@@ -762,4 +766,4 @@ try
 catch e
 	system.out.println(e.what())
 end
-darwin.exit(0)
+darwin.exit()
