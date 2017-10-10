@@ -360,4 +360,68 @@ namespace cs {
 			}
 		}
 	}
+
+	void repl::exec(const string& code)
+	{
+		std::deque<char> buff;
+		for(auto& ch:code)
+			buff.push_back(ch);
+		// Lexer
+		std::deque<token_base *> line;
+		context->instance->translate_into_tokens(buff, line);
+		// Parse
+		try {
+			context->instance->process_brackets(line);
+			context->instance->kill_brackets(line);
+			context->instance->kill_expr(line);
+			method_base *m = context->instance->ranslator.match(line);
+			switch (m->get_type()) {
+			case method_types::null:
+				throw syntax_error("Null type of grammar.");
+				break;
+			case method_types::single: {
+				if (level > 0) {
+					if (m->get_target_type() == statement_types::end_) {
+						context->instance->storage.remove_set();
+						context->instance->storage.remove_domain();
+						--level;
+					}
+					if (level == 0) {
+						method->translate(tmp)->run();
+						tmp.clear();
+						method = nullptr;
+					}
+					else
+						tmp.push_back(line);
+				}
+				else
+					m->translate({line})->run();
+			}
+			break;
+			case method_types::block: {
+				if (level == 0)
+					method = m;
+				++level;
+				context->instance->storage.add_domain();
+				context->instance->storage.add_set();
+				m->preprocess({line});
+				tmp.push_back(line);
+			}
+			break;
+			case method_types::jit_command:
+				m->translate({line});
+				break;
+			}
+		}
+		catch (const lang_error &le) {
+			throw fatal_error("Uncaught exception.");
+		}
+		catch (const cs::exception &e) {
+			throw e;
+		}
+		catch (const std::exception &e) {
+			throw exception(line_num, context->file_path, code, e.what());
+		}
+		++line_num;
+	}
 }

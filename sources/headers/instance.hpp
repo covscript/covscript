@@ -240,9 +240,10 @@ namespace cs {
 			return new token_value(val);
 		}
 
-	private:
 		// Translator
 		translator_type translator;
+
+	private:
 		// Statements
 		std::deque<statement_base *> statements;
 
@@ -365,6 +366,21 @@ namespace cs {
 		void compile(const std::string &);
 
 		void interpret();
+	};
+
+// Repl
+	class repl final {
+		std::deque<std::deque<token_base *>> tmp;
+		method_base *method = nullptr;
+		token_endline *endsig = nullptr;
+		std::size_t line_num = 1;
+		int level = 0;
+	public:
+		context_t context;
+		repl()=delete;
+		explicit repl(const context_t& c):context(c) {}
+		repl(const repl&)=delete;
+		void exec(const string&);
 	};
 
 // Guarder
