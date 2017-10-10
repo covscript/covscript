@@ -253,8 +253,6 @@ namespace cs {
 		explicit preprocessor(context_t context, const std::deque<char> &char_buff, std::deque<token_base *> &tokens)
 		{
 			for (auto &ch:char_buff) {
-				if (context->instance->isillegal(ch))
-					continue;
 				if (ch == '\n') {
 					process_endline(context, tokens);
 					continue;

@@ -331,8 +331,8 @@ namespace cs {
 		std::ifstream in(path);
 		if (!in.is_open())
 			throw fatal_error(path + ": No such file or directory");
-		while (!in.eof())
-			buff.push_back(in.get());
+		for(int ch=in.get(); ch!=EOF; ch=in.get())
+			buff.push_back(ch);
 		// Lexer
 		std::deque<token_base *> tokens;
 		translate_into_tokens(buff, tokens);
