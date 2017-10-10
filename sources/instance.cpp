@@ -363,18 +363,20 @@ namespace cs {
 
 	void repl::exec(const string& code)
 	{
+		context->file_buff.push_back(code);
 		std::deque<char> buff;
 		for(auto& ch:code)
 			buff.push_back(ch);
 		// Lexer
 		std::deque<token_base *> line;
 		context->instance->translate_into_tokens(buff, line);
+		line.back()=new token_endline(line_num);
 		// Parse
 		try {
 			context->instance->process_brackets(line);
 			context->instance->kill_brackets(line);
 			context->instance->kill_expr(line);
-			method_base *m = context->instance->ranslator.match(line);
+			method_base *m = context->instance->translator.match(line);
 			switch (m->get_type()) {
 			case method_types::null:
 				throw syntax_error("Null type of grammar.");

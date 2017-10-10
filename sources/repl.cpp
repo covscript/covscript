@@ -61,13 +61,10 @@ int covscript_args(int args_size, const char *args[])
 
 void covscript_main(int args_size, const char *args[])
 {
-	if (args_size > 1) {
 		const char *import_path = nullptr;
 		if ((import_path = std::getenv(env_name)) != nullptr)
 			cs::import_path = import_path;
 		int index = covscript_args(args_size, args);
-		if (index == args_size)
-			throw cs::fatal_error("no input file.");
 		cs::array arg;
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
@@ -78,9 +75,6 @@ void covscript_main(int args_size, const char *args[])
 		std::string line;
 		while(std::getline(std::cin, line))
 			repl.exec(line);
-	}
-	else
-		throw cs::fatal_error("no input file.");
 }
 
 int main(int args_size, const char *args[])
