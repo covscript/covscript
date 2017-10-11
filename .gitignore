@@ -33,6 +33,7 @@
 
 # CovScript executable file
 cs
+cs_repl
 
 # CovScript intermediate file
 *.cs_ext

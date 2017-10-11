@@ -74,7 +74,7 @@ namespace cs {
 		context->instance->parse_define_var(tree, dvp);
 		if (dvp.expr.root().data()->get_type() != token_types::value)
 			throw syntax_error("Constant variable must have an constant value.");
-		const var& val=static_cast<token_value *>(dvp.expr.root().data())->get_value();
+		const var &val = static_cast<token_value *>(dvp.expr.root().data())->get_value();
 		context->instance->add_constant(val);
 		context->instance->storage.add_var(dvp.id, val);
 		return nullptr;

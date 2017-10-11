@@ -107,7 +107,7 @@ namespace cs {
 		case token_types::id: {
 			const std::string &id = static_cast<token_id *>(token)->get_id();
 			if (storage.exsist_record(id)) {
-				if (storage.var_exsist_current(id))
+				if (storage.var_exsist_current(id) && storage.get_var_current(id).is_protect())
 					it.data() = new_value(storage.get_var(id));
 			}
 			else if (storage.var_exsist(id) && storage.get_var(id).is_protect())
@@ -331,7 +331,7 @@ namespace cs {
 		std::ifstream in(path);
 		if (!in.is_open())
 			throw fatal_error(path + ": No such file or directory");
-		for(int ch=in.get(); ch!=EOF; ch=in.get())
+		for (int ch = in.get(); ch != EOF; ch = in.get())
 			buff.push_back(ch);
 		// Lexer
 		std::deque<token_base *> tokens;
@@ -361,17 +361,11 @@ namespace cs {
 		}
 	}
 
-	void repl::run(statement_base* ptr)
-	{
-		context->instance->mark_constant();
-		ptr->run();
-	}
-
-	void repl::exec(const string& code)
+	void repl::exec(const string &code)
 	{
 		context->file_buff.push_back(code);
 		std::deque<char> buff;
-		for(auto& ch:code)
+		for (auto &ch:code)
 			buff.push_back(ch);
 		try {
 			// Lexer
@@ -395,7 +389,7 @@ namespace cs {
 						--level;
 					}
 					if (level == 0) {
-						run(method->translate(tmp));
+						method->translate(tmp)->run();;
 						tmp.clear();
 						method = nullptr;
 					}
@@ -403,7 +397,7 @@ namespace cs {
 						tmp.push_back(line);
 				}
 				else
-					run(m->translate({line}));
+					m->translate({line})->run();
 			}
 			break;
 			case method_types::block: {
@@ -418,7 +412,6 @@ namespace cs {
 			break;
 			case method_types::jit_command:
 				m->translate({line});
-				context->instance->mark_constant();
 				break;
 			}
 		}
@@ -431,6 +424,7 @@ namespace cs {
 		catch (const std::exception &e) {
 			throw exception(line_num, context->file_path, code, e.what());
 		}
+		context->instance->mark_constant();
 		++line_num;
 	}
 }

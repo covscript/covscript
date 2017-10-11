@@ -82,6 +82,7 @@ namespace cs {
 
 	class instance_type final : public runtime_type {
 		friend class repl;
+
 		// Symbol Table
 		mapping<std::string, signal_types> signal_map = {
 			{"+",  signal_types::add_},
@@ -232,7 +233,7 @@ namespace cs {
 		}
 
 	public:
-		void add_constant(const var& val)
+		void add_constant(const var &val)
 		{
 			if (!val.is_protect()) {
 				constant_pool.push_back(val);
@@ -381,13 +382,17 @@ namespace cs {
 		token_endline *endsig = nullptr;
 		std::size_t line_num = 1;
 		int level = 0;
-		void run(statement_base*);
 	public:
 		context_t context;
-		repl()=delete;
-		explicit repl(const context_t& c):context(c) {}
-		repl(const repl&)=delete;
-		void exec(const string&);
+
+		repl() = delete;
+
+		explicit repl(const context_t &c) : context(c) {}
+
+		repl(const repl &) = delete;
+
+		void exec(const string &);
+
 		int get_level() const
 		{
 			return level;

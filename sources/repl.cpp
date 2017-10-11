@@ -63,7 +63,7 @@ void covscript_main(int args_size, const char *args[])
 {
 	std::cout << "Covariant Script Programming Language Interpreter Repl\nVersion: " << cs::version << "\n"
 	          "Copyright (C) 2017 Michael Lee.All rights reserved.\n"
-	          "Please visit <http://covscript.org/> for more information." <<std::endl;
+	          "Please visit <http://covscript.org/> for more information." << std::endl;
 	const char *import_path = nullptr;
 	if ((import_path = std::getenv(env_name)) != nullptr)
 		cs::import_path = import_path;
@@ -76,10 +76,10 @@ void covscript_main(int args_size, const char *args[])
 	cs::instance_type instance;
 	cs::repl repl(instance.context);
 	std::string line;
-	while(std::cin) {
-		std::cerr << std::string(repl.get_level()*2,'.') << ">";
+	while (std::cin) {
+		std::cerr << std::string(repl.get_level() * 2, '.') << ">";
 		std::getline(std::cin, line);
-		if(!line.empty())
+		if (!line.empty())
 			repl.exec(line);
 	}
 }
