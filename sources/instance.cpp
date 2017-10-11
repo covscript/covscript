@@ -361,9 +361,10 @@ namespace cs {
 		}
 	}
 
-	void repl::exec(const string &code)
+	void repl::run(const string &code)
 	{
-		context->file_buff.push_back(code);
+		if (code.empty())
+			return;
 		std::deque<char> buff;
 		for (auto &ch:code)
 			buff.push_back(ch);
@@ -425,6 +426,62 @@ namespace cs {
 			throw exception(line_num, context->file_path, code, e.what());
 		}
 		context->instance->mark_constant();
+	}
+
+	void repl::exec(const string &code)
+	{
+		// Preprocess
 		++line_num;
+		int mode = 0;
+		for (auto &ch:code) {
+			if (mode == 0) {
+				if (!std::isspace(ch)) {
+					switch (ch) {
+					case '#':
+						context->file_buff.emplace_back();
+						return;
+					case '@':
+						mode = 1;
+						break;
+					default:
+						mode = -1;
+					}
+				}
+			}
+			else if (mode == 1) {
+				if (!std::isspace(ch))
+					cmd_buff.push_back(ch);
+			}
+			else
+				break;
+		}
+		switch (mode) {
+		default:
+			break;
+		case 0:
+			return;
+		case 1:
+			if (cmd_buff == "begin" && !multi_line) {
+				multi_line = true;
+				context->file_buff.emplace_back();
+			}
+			else if (cmd_buff == "end" && multi_line) {
+				multi_line = false;
+				this->run(line_buff);
+				line_buff.clear();
+			}
+			else
+				throw exception(line_num, context->file_path, cmd_buff, "Wrong grammar for preprocessor command.");
+			cmd_buff.clear();
+			return;
+		}
+		if (multi_line) {
+			context->file_buff.emplace_back();
+			line_buff.append(code);
+		}
+		else {
+			context->file_buff.push_back(code);
+			this->run(code);
+		}
 	}
 }

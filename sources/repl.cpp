@@ -79,8 +79,7 @@ void covscript_main(int args_size, const char *args[])
 	while (std::cin) {
 		std::cerr << std::string(repl.get_level() * 2, '.') << ">";
 		std::getline(std::cin, line);
-		if (!line.empty())
-			repl.exec(line);
+		repl.exec(line);
 	}
 }
 

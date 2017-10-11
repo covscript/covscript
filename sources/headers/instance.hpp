@@ -379,9 +379,12 @@ namespace cs {
 	class repl final {
 		std::deque<std::deque<token_base *>> tmp;
 		method_base *method = nullptr;
-		token_endline *endsig = nullptr;
-		std::size_t line_num = 1;
+		std::size_t line_num = 0;
+		bool multi_line = false;
+		string line_buff;
+		string cmd_buff;
 		int level = 0;
+		void run(const string &);
 	public:
 		context_t context;
 
