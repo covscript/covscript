@@ -74,6 +74,7 @@ void covscript_main(int args_size, const char *args[])
 	system_ext.add_var("args", cs::var::make_constant<cs::array>(arg));
 	cs::init_ext();
 	cs::instance_type instance;
+	instance.context->file_path="<REPL_ENV>";
 	cs::repl repl(instance.context);
 	std::string line;
 	while (std::cin) {
