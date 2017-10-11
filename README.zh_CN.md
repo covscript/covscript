@@ -30,9 +30,17 @@
 ### Mac OS ###
 编译Covariant Script的方法与Linux相同。目前Covariant Script已经在MacOS Sierra 10.12.5中测试通过。
 ## 运行 ##
+### 解释器 ###
 `cs [参数..] <文件> <运行参数...>`  
-### 参数 ###
+#### 参数 ####
 `--compile-only` 仅编译。  
+`--wait-before-exit` 等待进程退出。  
+`--log-path PATH` 设置日志路径。  
+`--import-path PATH` 设置import路径。  
+### 交互式解释器(Repl) ###
+`cs_repl [参数..]`  
+#### 参数 ####
+`--args` 指定运行参数。  
 `--wait-before-exit` 等待进程退出。  
 `--log-path PATH` 设置日志路径。  
 `--import-path PATH` 设置import路径。  

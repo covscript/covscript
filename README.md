@@ -30,9 +30,17 @@ After downloading the source code, if you have installed the G++ compiler on you
 ### Mac OS ###
 Building Covariant Script is the same as Linux. And now Covariant Script has been tested on macOS Sierra 10.12.5.
 ## Run ##
+### Interpreter ###
 `cs [arguments..] <file> <args...>`  
-### Arguments ###
+#### Arguments ####
 `--compile-only` Only compile.  
+`--wait-before-exit` Wait before process exit.  
+`--log-path PATH` Set the log path.  
+`--import-path PATH` Set the import path.  
+### Repl Interpreter ###
+`cs_repl [arguments..]`  
+#### Arguments ####
+`--args` Specify the operating parameters.  
 `--wait-before-exit` Wait before process exit.  
 `--log-path PATH` Set the log path.  
 `--import-path PATH` Set the import path.  
