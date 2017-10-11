@@ -81,6 +81,7 @@ namespace cs {
 	constexpr std::size_t fcall_stack_size = 1024;
 
 	class instance_type final : public runtime_type {
+		friend class repl;
 		// Symbol Table
 		mapping<std::string, signal_types> signal_map = {
 			{"+",  signal_types::add_},
@@ -240,10 +241,10 @@ namespace cs {
 			return new token_value(val);
 		}
 
+	private:
 		// Translator
 		translator_type translator;
 
-	private:
 		// Statements
 		std::deque<statement_base *> statements;
 
@@ -375,12 +376,17 @@ namespace cs {
 		token_endline *endsig = nullptr;
 		std::size_t line_num = 1;
 		int level = 0;
+		void run(statement_base*);
 	public:
 		context_t context;
 		repl()=delete;
 		explicit repl(const context_t& c):context(c) {}
 		repl(const repl&)=delete;
 		void exec(const string&);
+		int get_level() const
+		{
+			return level;
+		}
 	};
 
 // Guarder

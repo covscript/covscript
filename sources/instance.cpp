@@ -361,18 +361,24 @@ namespace cs {
 		}
 	}
 
+	void repl::run(statement_base* ptr)
+	{
+		context->instance->mark_constant();
+		ptr->run();
+	}
+
 	void repl::exec(const string& code)
 	{
 		context->file_buff.push_back(code);
 		std::deque<char> buff;
 		for(auto& ch:code)
 			buff.push_back(ch);
-		// Lexer
-		std::deque<token_base *> line;
-		context->instance->translate_into_tokens(buff, line);
-		line.back()=new token_endline(line_num);
-		// Parse
 		try {
+			// Lexer
+			std::deque<token_base *> line;
+			context->instance->process_char_buff(buff, line);
+			line.push_back(new token_endline(line_num));
+			// Parse
 			context->instance->process_brackets(line);
 			context->instance->kill_brackets(line);
 			context->instance->kill_expr(line);
@@ -389,7 +395,7 @@ namespace cs {
 						--level;
 					}
 					if (level == 0) {
-						method->translate(tmp)->run();
+						run(method->translate(tmp));
 						tmp.clear();
 						method = nullptr;
 					}
@@ -397,7 +403,7 @@ namespace cs {
 						tmp.push_back(line);
 				}
 				else
-					m->translate({line})->run();
+					run(m->translate({line}));
 			}
 			break;
 			case method_types::block: {
