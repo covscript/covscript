@@ -61,14 +61,14 @@ int covscript_args(int args_size, const char *args[])
 
 void covscript_main(int args_size, const char *args[])
 {
-	std::cout << "Covariant Script Programming Language Interpreter Repl\nVersion: " << cs::version << "\n"
+	std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: " << cs::version << "\n"
 	          "Copyright (C) 2017 Michael Lee.All rights reserved.\n"
 	          "Please visit <http://covscript.org/> for more information." << std::endl;
 	const char *import_path = nullptr;
 	if ((import_path = std::getenv(env_name)) != nullptr)
 		cs::import_path = import_path;
 	int index = covscript_args(args_size, args);
-	cs::array arg;
+	cs::array arg{cs::var::make_constant<cs::string>("<REPL_ENV>")};
 	for (; index < args_size; ++index)
 		arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 	system_ext.add_var("args", cs::var::make_constant<cs::array>(arg));
