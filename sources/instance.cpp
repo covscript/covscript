@@ -418,6 +418,7 @@ namespace cs {
 			break;
 			case method_types::jit_command:
 				m->translate({line});
+				context->instance->mark_constant();
 				break;
 			}
 		}

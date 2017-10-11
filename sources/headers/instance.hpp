@@ -232,12 +232,17 @@ namespace cs {
 		}
 
 	public:
-		token_value *new_value(const var &val)
+		void add_constant(const var& val)
 		{
 			if (!val.is_protect()) {
 				constant_pool.push_back(val);
 				constant_pool.back().protect();
 			}
+		}
+
+		token_value *new_value(const var &val)
+		{
+			add_constant(val);
 			return new token_value(val);
 		}
 
