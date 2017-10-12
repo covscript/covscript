@@ -384,7 +384,9 @@ namespace cs {
 		string line_buff;
 		string cmd_buff;
 		int level = 0;
+
 		void run(const string &);
+
 	public:
 		context_t context;
 
