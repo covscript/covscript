@@ -9,7 +9,7 @@ struct texteditor
         darwin.set_frame_limit(60)
         var file_path=null
         if system.args.size()>1
-            file_path=system.args.at(1)
+            file_path=system.args[1]
         else
             file_path=darwin.ui.input_box("Text Editor","Please enter a file path:","",false)
         end

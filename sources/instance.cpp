@@ -308,10 +308,16 @@ namespace cs {
 		opt_expr(tree, it.left());
 		opt_expr(tree, it.right());
 		if (optimizable(it.left()) && optimizable(it.right())) {
-			token_value *token = new_value(parse_expr(it));
-			tree.erase_left(it);
-			tree.erase_right(it);
-			it.data() = token;
+			token_base *oldt = it.data();
+			try {
+				token_value *token = new_value(parse_expr(it));
+				tree.erase_left(it);
+				tree.erase_right(it);
+				it.data() = token;
+			}
+			catch(...) {
+				it.data() = oldt;
+			}
 		}
 	}
 
