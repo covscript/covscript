@@ -8,7 +8,11 @@ struct texteditor
         darwin.load()
         darwin.set_frame_limit(60)
         var file_path=null
-        file_path=darwin.ui.input_box("Text Editor","Please enter a file path:","",false)
+        if system.args.size()>1
+            file_path=system.args.at(1)
+        else
+            file_path=darwin.ui.input_box("Text Editor","Please enter a file path:","",false)
+        end
         this.file_stream=iostream.fstream(file_path,iostream.openmode.in)
         if !this.file_stream.good()
             throw runtime.exception("Open file error.")

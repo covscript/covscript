@@ -253,7 +253,13 @@ namespace cs {
 							array arr;
 							for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
 								arr.push_back(parse_expr(tree.root()));
-							it.data() = new_value(a.val<callable>(true).call(arr));
+							token_base *oldt = it.data();
+							try {
+								it.data() = new_value(a.val<callable>(true).call(arr));
+							}
+							catch(...) {
+								it.data() = oldt;
+							}
 						}
 					}
 				}
