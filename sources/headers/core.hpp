@@ -57,7 +57,7 @@
 
 namespace cs {
 // Version
-	static const char *const version = "1.1.2";
+	static const char *const version = "1.1.3";
 	static const number std_version = 20171001;
 // Output Precision
 	static int output_precision = 8;
