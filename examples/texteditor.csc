@@ -1,6 +1,7 @@
 struct texteditor
     var text_buffer=new array
     var file_stream=null
+    var border_size=0
     var x_offset=0
     var y_offset=0
     var cursor_x=0
@@ -30,12 +31,12 @@ struct texteditor
     function render_text()
         this.pic.clear()
         this.pic.fill(darwin.pixel(' ',darwin.white,darwin.white))
-        var max_size=(to_string(this.text_buffer.size())).size()+2
-        this.pic.fill_rect(0,0,max_size,this.pic.get_height(),darwin.pixel(' ',darwin.blue,darwin.blue))
+        this.border_size=(to_string(this.text_buffer.size())).size()+2
+        this.pic.fill_rect(0,0,this.border_size,this.pic.get_height(),darwin.pixel(' ',darwin.blue,darwin.blue))
         for y=0 to math.min(this.pic.get_height(),this.text_buffer.size()-this.y_offset)-1
             this.pic.draw_string(1,y,to_string(y+this.y_offset+1),darwin.pixel(' ',darwin.white,darwin.blue))
-            for x=0 to math.min(this.pic.get_width()-max_size,(this.text_buffer[y+this.y_offset]).size()-this.x_offset)-1
-                this.pic.draw_pixel(x+max_size,y,darwin.pixel(this.text_buffer[y+this.y_offset][x+this.x_offset],darwin.black,darwin.white))
+            for x=0 to math.min(this.pic.get_width()-this.border_size,(this.text_buffer[y+this.y_offset]).size()-this.x_offset)-1
+                this.pic.draw_pixel(x+this.border_size,y,darwin.pixel(this.text_buffer[y+this.y_offset][x+this.x_offset],darwin.black,darwin.white))
             end
         end
     end
@@ -50,12 +51,26 @@ struct texteditor
             if darwin.is_kb_hit()
                 invalidate=true
                 switch darwin.get_kb_hit()
+                    case 'q'
+                        system.exit(0)
+                    end
                     case 'w'
                         if this.cursor_y>0
                             --this.cursor_y
                         else
                             if this.y_offset>0
                                 --this.y_offset
+                            end
+                        end
+                        if this.cursor_x+this.x_offset>(this.text_buffer[this.cursor_y+this.y_offset]).size()
+                            var line_size=(this.text_buffer[this.cursor_y+this.y_offset]).size()
+                            var scr_width=this.pic.get_width()-this.border_size
+                            if line_size>=scr_width
+                                this.x_offset=line_size-scr_width+1
+                                this.cursor_x=scr_width-1
+                            else
+                                this.x_offset=0
+                                this.cursor_x=line_size
                             end
                         end
                     end
@@ -65,6 +80,17 @@ struct texteditor
                         else
                             ++this.y_offset
                         end
+                        if this.cursor_x+this.x_offset>(this.text_buffer[this.cursor_y+this.y_offset]).size()
+                            var line_size=(this.text_buffer[this.cursor_y+this.y_offset]).size()
+                            var scr_width=this.pic.get_width()-this.border_size
+                            if line_size>=scr_width
+                                this.x_offset=line_size-scr_width+1
+                                this.cursor_x=scr_width-1
+                            else
+                                this.x_offset=0
+                                this.cursor_x=line_size
+                            end
+                        end
                     end
                     case 'a'
                         if this.cursor_x>0
@@ -72,22 +98,51 @@ struct texteditor
                         else
                             if this.x_offset>0
                                 --this.x_offset
+                            else
+                                if this.cursor_y>0
+                                    --this.cursor_y
+                                    this.cursor_x=(this.text_buffer[this.cursor_y+this.y_offset]).size()
+                                    if this.border_size+this.cursor_x+this.x_offset>this.pic.get_width()-1
+                                        this.x_offset=this.cursor_x-this.pic.get_width()+this.border_size+1
+                                        this.cursor_x=this.pic.get_width()-this.border_size-1
+                                    end
+                                else
+                                    if this.y_offset>0
+                                        --this.y_offset
+                                    end
+                                end
                             end
                         end
                     end
                     case 'd'
-                        if this.cursor_x<this.pic.get_width()-1
-                            ++this.cursor_x
+                        if this.cursor_x+this.x_offset>=(this.text_buffer[this.cursor_y+this.y_offset]).size()
+                            this.cursor_x=0
+                            this.x_offset=0
+                            if this.cursor_y<this.pic.get_height()-1
+                                ++this.cursor_y
+                            else
+                                ++this.y_offset
+                            end
                         else
-                            ++this.x_offset
+                            if this.cursor_x<this.pic.get_width()-this.border_size-1
+                                ++this.cursor_x
+                            else
+                                ++this.x_offset
+                            end
                         end
                     end
                 end
             end
             darwin.fit_drawable()
-            if runtime.time()-clock>500
-                invalidate=true
-                show_cursor=!show_cursor
+            if invalidate
+                show_cursor=true
+                clock=runtime.time()
+            else
+                if runtime.time()-clock>=500
+                    invalidate=true
+                    show_cursor=!show_cursor
+                    clock=runtime.time()
+                end
             end
             if this.pic.get_width()!=old_w
                 invalidate=true
@@ -101,12 +156,10 @@ struct texteditor
                 this.preload_text_buffer()
                 this.render_text()
                 if show_cursor
-                    this.pic.draw_pixel(cursor_x,cursor_y,darwin.pixel(' ',darwin.white,darwin.white))
+                    this.pic.draw_pixel(this.cursor_x+this.border_size,this.cursor_y,darwin.pixel(' ',darwin.black,darwin.black))
                 end
                 darwin.update_drawable()
                 invalidate=false
-            else
-                runtime.delay(1)
             end
         end
     end
