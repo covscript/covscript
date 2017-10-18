@@ -3,6 +3,8 @@ struct texteditor
     var file_stream=null
     var x_offset=0
     var y_offset=0
+    var cursor_x=0
+    var cursor_y=0
     var pic=null
     function init()
         darwin.load()
@@ -40,6 +42,8 @@ struct texteditor
     function main()
         this.init()
         var invalidate=false
+        var show_cursor=true
+        var clock=runtime.time()
         var old_w=0
         var old_h=0
         loop
@@ -47,24 +51,44 @@ struct texteditor
                 invalidate=true
                 switch darwin.get_kb_hit()
                     case 'w'
-                        if this.y_offset>0
-                            --this.y_offset
+                        if this.cursor_y>0
+                            --this.cursor_y
+                        else
+                            if this.y_offset>0
+                                --this.y_offset
+                            end
                         end
                     end
                     case 's'
-                        ++this.y_offset
+                        if this.cursor_y<this.pic.get_height()-1
+                            ++this.cursor_y
+                        else
+                            ++this.y_offset
+                        end
                     end
                     case 'a'
-                        if this.x_offset>0
-                            --this.x_offset
+                        if this.cursor_x>0
+                            --this.cursor_x
+                        else
+                            if this.x_offset>0
+                                --this.x_offset
+                            end
                         end
                     end
                     case 'd'
-                        ++this.x_offset
+                        if this.cursor_x<this.pic.get_width()-1
+                            ++this.cursor_x
+                        else
+                            ++this.x_offset
+                        end
                     end
                 end
             end
             darwin.fit_drawable()
+            if runtime.time()-clock>500
+                invalidate=true
+                show_cursor=!show_cursor
+            end
             if this.pic.get_width()!=old_w
                 invalidate=true
                 old_w=this.pic.get_width()
@@ -76,6 +100,9 @@ struct texteditor
             if invalidate
                 this.preload_text_buffer()
                 this.render_text()
+                if show_cursor
+                    this.pic.draw_pixel(cursor_x,cursor_y,darwin.pixel(' ',darwin.white,darwin.white))
+                end
                 darwin.update_drawable()
                 invalidate=false
             else
