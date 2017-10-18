@@ -257,7 +257,7 @@ namespace cs {
 							try {
 								it.data() = new_value(a.val<callable>(true).call(arr));
 							}
-							catch(...) {
+							catch (...) {
 								it.data() = oldt;
 							}
 						}
@@ -315,7 +315,7 @@ namespace cs {
 				tree.erase_right(it);
 				it.data() = token;
 			}
-			catch(...) {
+			catch (...) {
 				it.data() = oldt;
 			}
 		}

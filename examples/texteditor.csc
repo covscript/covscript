@@ -40,6 +40,23 @@ struct texteditor
             end
         end
     end
+    function jump_line()
+        if this.cursor_x+this.x_offset>(this.text_buffer[this.cursor_y+this.y_offset]).size()
+            var line_size=(this.text_buffer[this.cursor_y+this.y_offset]).size()
+            var scr_width=this.pic.get_width()-this.border_size
+            if line_size<this.x_offset
+                if line_size>=scr_width
+                    this.x_offset=line_size-scr_width+1
+                    this.cursor_x=scr_width-1
+                else
+                    this.x_offset=0
+                    this.cursor_x=line_size
+                end
+            else
+                this.cursor_x=line_size-this.x_offset
+            end
+        end
+    end
     function main()
         this.init()
         var invalidate=false
@@ -62,35 +79,17 @@ struct texteditor
                                 --this.y_offset
                             end
                         end
-                        if this.cursor_x+this.x_offset>(this.text_buffer[this.cursor_y+this.y_offset]).size()
-                            var line_size=(this.text_buffer[this.cursor_y+this.y_offset]).size()
-                            var scr_width=this.pic.get_width()-this.border_size
-                            if line_size>=scr_width
-                                this.x_offset=line_size-scr_width+1
-                                this.cursor_x=scr_width-1
-                            else
-                                this.x_offset=0
-                                this.cursor_x=line_size
-                            end
-                        end
+                        this.jump_line()
                     end
                     case 's'
-                        if this.cursor_y<this.pic.get_height()-1
-                            ++this.cursor_y
-                        else
-                            ++this.y_offset
-                        end
-                        if this.cursor_x+this.x_offset>(this.text_buffer[this.cursor_y+this.y_offset]).size()
-                            var line_size=(this.text_buffer[this.cursor_y+this.y_offset]).size()
-                            var scr_width=this.pic.get_width()-this.border_size
-                            if line_size>=scr_width
-                                this.x_offset=line_size-scr_width+1
-                                this.cursor_x=scr_width-1
+                        if this.cursor_y+this.y_offset<this.text_buffer.size()-1
+                            if this.cursor_y<this.pic.get_height()-1
+                                ++this.cursor_y
                             else
-                                this.x_offset=0
-                                this.cursor_x=line_size
+                                ++this.y_offset
                             end
                         end
+                        this.jump_line()
                     end
                     case 'a'
                         if this.cursor_x>0
@@ -118,10 +117,12 @@ struct texteditor
                         if this.cursor_x+this.x_offset>=(this.text_buffer[this.cursor_y+this.y_offset]).size()
                             this.cursor_x=0
                             this.x_offset=0
-                            if this.cursor_y<this.pic.get_height()-1
-                                ++this.cursor_y
-                            else
-                                ++this.y_offset
+                            if this.cursor_y+this.y_offset<this.text_buffer.size()-1
+                                if this.cursor_y<this.pic.get_height()-1
+                                    ++this.cursor_y
+                                else
+                                    ++this.y_offset
+                                end
                             end
                         else
                             if this.cursor_x<this.pic.get_width()-this.border_size-1
@@ -134,6 +135,8 @@ struct texteditor
                 end
             end
             darwin.fit_drawable()
+            this.cursor_x=math.min(this.cursor_x,this.pic.get_width()-this.border_size-1)
+            this.cursor_y=math.min(this.cursor_y,this.pic.get_height()-1)
             if invalidate
                 show_cursor=true
                 clock=runtime.time()
