@@ -140,6 +140,12 @@ namespace cs {
 				m_data.back()->emplace(name, var);
 		}
 
+		void add_buildin_var(const string &name, const var &var)
+		{
+			add_record(name);
+			add_var_global(name, var);
+		}
+
 		void add_struct(const std::string &name, const struct_builder &builder)
 		{
 			add_var(name, var::make_protect<type>(builder, builder.get_hash()));
@@ -152,6 +158,18 @@ namespace cs {
 
 		void add_type(const std::string &name, const std::function<var()> &func, std::size_t hash, extension_t ext)
 		{
+			add_var(name, var::make_protect<type>(func, hash, ext));
+		}
+
+		void add_buildin_type(const std::string &name, const std::function<var()> &func, std::size_t hash)
+		{
+			add_record(name);
+			add_var(name, var::make_protect<type>(func, hash));
+		}
+
+		void add_buildin_type(const std::string &name, const std::function<var()> &func, std::size_t hash, extension_t ext)
+		{
+			add_record(name);
 			add_var(name, var::make_protect<type>(func, hash, ext));
 		}
 	};

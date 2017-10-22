@@ -1,5 +1,5 @@
 package hash_table
-struct type
+struct type_impl
 	var bucket_count=new number
 	var table=new array
 	var bucket_func=[](val)->math.abs(to_integer(runtime.hash(val)))%this.bucket_count
@@ -41,7 +41,7 @@ struct type
 	end
 end
 function create(bc)
-	var ht=gcnew hash_table.type
+	var ht=gcnew hash_table.type_impl
 	ht->bucket_count=bc
 	for i=1 to bc
 		ht->table.push_back(null)

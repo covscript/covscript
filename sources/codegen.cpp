@@ -55,6 +55,7 @@ namespace cs {
 		if (!context->package_name.empty())
 			throw syntax_error("Redefinition of package");
 		context->package_name = dynamic_cast<token_id *>(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data())->get_id();
+		context->instance->storage.add_record(context->package_name);
 		context->instance->storage.add_var_global(context->package_name, var::make_protect<extension_t>(std::make_shared<extension_holder>(context->instance->storage.get_global())));
 		return nullptr;
 	}

@@ -222,14 +222,14 @@ namespace cs {
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
 					throw syntax_error("Wrong grammar for dot expression.");
 				if (lptr != nullptr && lptr->get_type() == token_types::value) {
-					var &a = static_cast<token_value *>(lptr)->get_value();
+					const var &a = static_cast<token_value *>(lptr)->get_value();
 					token_base *orig_ptr = it.data();
 					try {
-						var v = parse_dot(a, rptr);
+						const var &v = parse_dot(a, rptr);
 						if (v.is_protect())
 							it.data() = new_value(v);
 					}
-					catch (const syntax_error &se) {
+					catch (...) {
 						it.data() = orig_ptr;
 					}
 				}
