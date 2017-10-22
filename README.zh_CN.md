@@ -7,6 +7,7 @@
 - [简体中文](https://github.com/covscript/covscript/blob/master/README.zh_CN.md)
 - [English](https://github.com/covscript/covscript/blob/master/README.md)
 
+***由于学业紧张，作者可能无法及时的修复所有Bug。如果你遇到了一些问题，请在issue中提出，感谢您的理解。***
 ## 语言特性 ##
 1. 完整的编译器前端
 2. 动态类型
