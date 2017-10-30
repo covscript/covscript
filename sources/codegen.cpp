@@ -320,6 +320,11 @@ namespace cs {
 		return new statement_return(tree, context, raw.front().back());
 	}
 
+	void method_struct::preprocess(const std::deque<std::deque<token_base *>> &)
+	{
+		context->instance->storage.add_record("__CS_STRUCT_DEFINITION__");
+	}
+
 	statement_base *method_struct::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();

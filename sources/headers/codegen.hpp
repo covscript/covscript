@@ -451,6 +451,8 @@ namespace cs {
 			return statement_types::struct_;
 		}
 
+		virtual void preprocess(const std::deque<std::deque<token_base *>> &) override;
+
 		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 

@@ -1,9 +1,9 @@
 struct foo
     var a=10
     function test()
-        --this.a
-        if(this.a>0)
-            this.test()
+        --a
+        if(a>0)
+            test()
         end
     end
 end
