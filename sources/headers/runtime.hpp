@@ -75,6 +75,16 @@ namespace cs {
 		{
 			return m_set.front().count(name) > 0;
 		}
+		
+		bool exsist_record_in_struct(const string &name)
+		{
+			for (auto &set:m_set)
+			{
+				if (set.count("__PRAGMA_CS_STRUCT_DEFINITION__") > 0)
+					return set.count(name) > 0;
+			}
+			return false;
+		}
 
 		bool var_exsist(const string &name)
 		{
@@ -122,6 +132,11 @@ namespace cs {
 				throw syntax_error("Redefinition of variable.");
 			else
 				m_set.front().emplace(name);
+		}
+		
+		void mark_set_as_struct()
+		{
+			add_record("__PRAGMA_CS_STRUCT_DEFINITION__");
 		}
 
 		void add_var(const string &name, const var &var)

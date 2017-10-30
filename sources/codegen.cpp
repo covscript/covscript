@@ -322,7 +322,7 @@ namespace cs {
 
 	void method_struct::preprocess(const std::deque<std::deque<token_base *>> &)
 	{
-		context->instance->storage.add_record("__CS_STRUCT_DEFINITION__");
+		context->instance->storage.mark_set_as_struct();
 	}
 
 	statement_base *method_struct::translate(const std::deque<std::deque<token_base *>> &raw)

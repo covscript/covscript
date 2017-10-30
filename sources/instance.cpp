@@ -110,13 +110,17 @@ namespace cs {
 				if (storage.var_exsist_current(id) && storage.get_var_current(id).is_protect())
 					it.data() = new_value(storage.get_var(id));
 			}
+			else if (storage.exsist_record_in_struct(id)) {
+				if (storage.var_exsist(id) && storage.get_var(id).is_protect())
+					it.data() = new_value(storage.get_var(id));
+				else {
+					it.data() = new token_signal(signal_types::dot_);
+					tree.emplace_left_left(it,new token_id("this"));
+					tree.emplace_right_right(it,token);
+				}
+			}
 			else if (storage.var_exsist(id) && storage.get_var(id).is_protect())
 				it.data() = new_value(storage.get_var(id));
-			else if (storage.exsist_record("__CS_STRUCT_DEFINITION__")) {
-				it.data() = new token_signal(signal_types::dot_);
-				tree.emplace_left_left(it,new token_id("this"));
-				tree.emplace_right_right(it,token);
-			}
 			return;
 			break;
 		}
