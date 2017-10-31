@@ -287,6 +287,7 @@ namespace cs {
 					throw syntax_error("Null type of grammar.");
 					break;
 				case method_types::single: {
+					statement_base *sptr = nullptr;
 					if (level > 0) {
 						if (m->get_target_type() == statement_types::end_) {
 							storage.remove_set();
@@ -294,7 +295,7 @@ namespace cs {
 							--level;
 						}
 						if (level == 0) {
-							statements.push_back(method->translate(tmp));
+							sptr = method->translate(tmp);
 							tmp.clear();
 							method = nullptr;
 						}
@@ -302,7 +303,9 @@ namespace cs {
 							tmp.push_back(line);
 					}
 					else
-						statements.push_back(m->translate({line}));
+						sptr = m->translate({line});
+					if (sptr != nullptr)
+						statements.push_back(sptr);
 				}
 				break;
 				case method_types::block: {

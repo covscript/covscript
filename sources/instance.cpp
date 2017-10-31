@@ -115,8 +115,8 @@ namespace cs {
 					it.data() = new_value(storage.get_var(id));
 				else {
 					it.data() = new token_signal(signal_types::dot_);
-					tree.emplace_left_left(it,new token_id("this"));
-					tree.emplace_right_right(it,token);
+					tree.emplace_left_left(it, new token_id("this"));
+					tree.emplace_right_right(it, token);
 				}
 			}
 			else if (storage.var_exsist(id) && storage.get_var(id).is_protect())

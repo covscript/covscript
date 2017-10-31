@@ -116,6 +116,8 @@ namespace cs {
 					throw syntax_error("Multi Else Grammar.");
 			}
 		}
+		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
+		token_base *ptr = tree.root().data();
 		if (have_else) {
 			std::deque<statement_base *> body_true;
 			std::deque<statement_base *> body_false;
@@ -130,10 +132,23 @@ namespace cs {
 				else
 					body_false.push_back(ptr);
 			}
-			return new statement_ifelse(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), body_true, body_false, context, raw.front().back());
+			if (ptr != nullptr && ptr->get_type() == token_types::value) {
+				if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
+					return new statement_block(body_true, context, raw.front().back());
+				else
+					return new statement_block(body_false, context, raw.front().back());
+			}
+			else
+				return new statement_ifelse(tree, body_true, body_false, context, raw.front().back());
+		}
+		else if (ptr != nullptr && ptr->get_type() == token_types::value) {
+			if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
+				return new statement_block(body, context, raw.front().back());
+			else
+				return nullptr;
 		}
 		else
-			return new statement_if(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), body, context, raw.front().back());
+			return new statement_if(tree, body, context, raw.front().back());
 	}
 
 	statement_base *method_else::translate(const std::deque<std::deque<token_base *>> &raw)
@@ -189,7 +204,16 @@ namespace cs {
 	{
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
-		return new statement_while(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), body, context, raw.front().back());
+		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
+		token_base *ptr = tree.root().data();
+		if (ptr != nullptr && ptr->get_type() == token_types::value) {
+			if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
+				return new statement_loop(nullptr, body, context, raw.front().back());
+			else
+				return nullptr;
+		}
+		else
+			return new statement_while(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), body, context, raw.front().back());
 	}
 
 	statement_base *method_until::translate(const std::deque<std::deque<token_base *>> &raw)
@@ -204,7 +228,16 @@ namespace cs {
 		if (!body.empty() && body.back()->get_type() == statement_types::until_) {
 			token_expr *expr = dynamic_cast<statement_until *>(body.back())->get_expr();
 			body.pop_back();
-			return new statement_loop(expr, body, context, raw.front().back());
+			cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(expr)->get_tree();
+			token_base *ptr = tree.root().data();
+			if (ptr != nullptr && ptr->get_type() == token_types::value) {
+				if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
+					return new statement_block(body, context, raw.front().back());
+				else
+					return new statement_loop(nullptr, body, context, raw.front().back());
+			}
+			else
+				return new statement_loop(expr, body, context, raw.front().back());
 		}
 		else
 			return new statement_loop(nullptr, body, context, raw.front().back());
