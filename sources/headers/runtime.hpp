@@ -75,11 +75,10 @@ namespace cs {
 		{
 			return m_set.front().count(name) > 0;
 		}
-		
+
 		bool exsist_record_in_struct(const string &name)
 		{
-			for (auto &set:m_set)
-			{
+			for (auto &set:m_set) {
 				if (set.count("__PRAGMA_CS_STRUCT_DEFINITION__") > 0)
 					return set.count(name) > 0;
 			}
@@ -133,7 +132,7 @@ namespace cs {
 			else
 				m_set.front().emplace(name);
 		}
-		
+
 		void mark_set_as_struct()
 		{
 			add_record("__PRAGMA_CS_STRUCT_DEFINITION__");

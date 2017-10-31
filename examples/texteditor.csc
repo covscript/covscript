@@ -16,49 +16,49 @@ struct texteditor
         else
             file_path=darwin.ui.input_box("Text Editor","Please enter a file path:","",false)
         end
-        this.file_stream=iostream.fstream(file_path,iostream.openmode.in)
-        if !this.file_stream.good()
+        file_stream=iostream.fstream(file_path,iostream.openmode.in)
+        if !file_stream.good()
             throw runtime.exception("Open file error.")
         end
         darwin.fit_drawable()
-        this.pic=darwin.get_drawable()
+        pic=darwin.get_drawable()
     end
     function preload_text_buffer()
-        while !this.file_stream.eof()&&this.text_buffer.size()-this.y_offset<=this.pic.get_height()
-            this.text_buffer.push_back(this.file_stream.getline())
+        while !file_stream.eof()&&text_buffer.size()-y_offset<=pic.get_height()
+            text_buffer.push_back(file_stream.getline())
         end
     end
     function render_text()
-        this.pic.clear()
-        this.pic.fill(darwin.pixel(' ',darwin.white,darwin.white))
-        this.border_size=(to_string(this.text_buffer.size())).size()+2
-        this.pic.fill_rect(0,0,this.border_size,this.pic.get_height(),darwin.pixel(' ',darwin.blue,darwin.blue))
-        for y=0 to math.min(this.pic.get_height(),this.text_buffer.size()-this.y_offset)-1
-            this.pic.draw_string(1,y,to_string(y+this.y_offset+1),darwin.pixel(' ',darwin.white,darwin.blue))
-            for x=0 to math.min(this.pic.get_width()-this.border_size,(this.text_buffer[y+this.y_offset]).size()-this.x_offset)-1
-                this.pic.draw_pixel(x+this.border_size,y,darwin.pixel(this.text_buffer[y+this.y_offset][x+this.x_offset],darwin.black,darwin.white))
+        pic.clear()
+        pic.fill(darwin.pixel(' ',darwin.white,darwin.white))
+        border_size=(to_string(text_buffer.size())).size()+2
+        pic.fill_rect(0,0,border_size,pic.get_height(),darwin.pixel(' ',darwin.blue,darwin.blue))
+        for y=0 to math.min(pic.get_height(),text_buffer.size()-y_offset)-1
+            pic.draw_string(1,y,to_string(y+y_offset+1),darwin.pixel(' ',darwin.white,darwin.blue))
+            for x=0 to math.min(pic.get_width()-border_size,(text_buffer[y+y_offset]).size()-x_offset)-1
+                pic.draw_pixel(x+border_size,y,darwin.pixel(text_buffer[y+y_offset][x+x_offset],darwin.black,darwin.white))
             end
         end
     end
     function jump_line()
-        if this.cursor_x+this.x_offset>(this.text_buffer[this.cursor_y+this.y_offset]).size()
-            var line_size=(this.text_buffer[this.cursor_y+this.y_offset]).size()
-            var scr_width=this.pic.get_width()-this.border_size
-            if line_size<this.x_offset
+        if cursor_x+x_offset>(text_buffer[cursor_y+y_offset]).size()
+            var line_size=(text_buffer[cursor_y+y_offset]).size()
+            var scr_width=pic.get_width()-border_size
+            if line_size<x_offset
                 if line_size>=scr_width
-                    this.x_offset=line_size-scr_width+1
-                    this.cursor_x=scr_width-1
+                    x_offset=line_size-scr_width+1
+                    cursor_x=scr_width-1
                 else
-                    this.x_offset=0
-                    this.cursor_x=line_size
+                    x_offset=0
+                    cursor_x=line_size
                 end
             else
-                this.cursor_x=line_size-this.x_offset
+                cursor_x=line_size-x_offset
             end
         end
     end
     function main()
-        this.init()
+        init()
         var invalidate=false
         var show_cursor=true
         var clock=runtime.time()
@@ -72,71 +72,71 @@ struct texteditor
                         system.exit(0)
                     end
                     case 'w'
-                        if this.cursor_y>0
-                            --this.cursor_y
+                        if cursor_y>0
+                            --cursor_y
                         else
-                            if this.y_offset>0
-                                --this.y_offset
+                            if y_offset>0
+                                --y_offset
                             end
                         end
-                        this.jump_line()
+                        jump_line()
                     end
                     case 's'
-                        if this.cursor_y+this.y_offset<this.text_buffer.size()-1
-                            if this.cursor_y<this.pic.get_height()-1
-                                ++this.cursor_y
+                        if cursor_y+y_offset<text_buffer.size()-1
+                            if cursor_y<pic.get_height()-1
+                                ++cursor_y
                             else
-                                ++this.y_offset
+                                ++y_offset
                             end
                         end
-                        this.jump_line()
+                        jump_line()
                     end
                     case 'a'
-                        if this.cursor_x>0
-                            --this.cursor_x
+                        if cursor_x>0
+                            --cursor_x
                         else
-                            if this.x_offset>0
-                                --this.x_offset
+                            if x_offset>0
+                                --x_offset
                             else
-                                if this.cursor_y>0
-                                    --this.cursor_y
-                                    this.cursor_x=(this.text_buffer[this.cursor_y+this.y_offset]).size()
-                                    if this.border_size+this.cursor_x+this.x_offset>this.pic.get_width()-1
-                                        this.x_offset=this.cursor_x-this.pic.get_width()+this.border_size+1
-                                        this.cursor_x=this.pic.get_width()-this.border_size-1
+                                if cursor_y>0
+                                    --cursor_y
+                                    cursor_x=(text_buffer[cursor_y+y_offset]).size()
+                                    if border_size+cursor_x+x_offset>pic.get_width()-1
+                                        x_offset=cursor_x-pic.get_width()+border_size+1
+                                        cursor_x=pic.get_width()-border_size-1
                                     end
                                 else
-                                    if this.y_offset>0
-                                        --this.y_offset
+                                    if y_offset>0
+                                        --y_offset
                                     end
                                 end
                             end
                         end
                     end
                     case 'd'
-                        if this.cursor_x+this.x_offset>=(this.text_buffer[this.cursor_y+this.y_offset]).size()
-                            this.cursor_x=0
-                            this.x_offset=0
-                            if this.cursor_y+this.y_offset<this.text_buffer.size()-1
-                                if this.cursor_y<this.pic.get_height()-1
-                                    ++this.cursor_y
+                        if cursor_x+x_offset>=(text_buffer[cursor_y+y_offset]).size()
+                            cursor_x=0
+                            x_offset=0
+                            if cursor_y+y_offset<text_buffer.size()-1
+                                if cursor_y<pic.get_height()-1
+                                    ++cursor_y
                                 else
-                                    ++this.y_offset
+                                    ++y_offset
                                 end
                             end
                         else
-                            if this.cursor_x<this.pic.get_width()-this.border_size-1
-                                ++this.cursor_x
+                            if cursor_x<pic.get_width()-border_size-1
+                                ++cursor_x
                             else
-                                ++this.x_offset
+                                ++x_offset
                             end
                         end
                     end
                 end
             end
             darwin.fit_drawable()
-            this.cursor_x=math.min(this.cursor_x,this.pic.get_width()-this.border_size-1)
-            this.cursor_y=math.min(this.cursor_y,this.pic.get_height()-1)
+            cursor_x=math.min(cursor_x,pic.get_width()-border_size-1)
+            cursor_y=math.min(cursor_y,pic.get_height()-1)
             if invalidate
                 show_cursor=true
                 clock=runtime.time()
@@ -147,19 +147,19 @@ struct texteditor
                     clock=runtime.time()
                 end
             end
-            if this.pic.get_width()!=old_w
+            if pic.get_width()!=old_w
                 invalidate=true
-                old_w=this.pic.get_width()
+                old_w=pic.get_width()
             end
-            if this.pic.get_height()!=old_h
+            if pic.get_height()!=old_h
                 invalidate=true
-                old_h=this.pic.get_height()
+                old_h=pic.get_height()
             end
             if invalidate
-                this.preload_text_buffer()
-                this.render_text()
+                preload_text_buffer()
+                render_text()
                 if show_cursor
-                    this.pic.draw_pixel(this.cursor_x+this.border_size,this.cursor_y,darwin.pixel(' ',darwin.black,darwin.black))
+                    pic.draw_pixel(cursor_x+border_size,cursor_y,darwin.pixel(' ',darwin.black,darwin.black))
                 end
                 darwin.update_drawable()
                 invalidate=false

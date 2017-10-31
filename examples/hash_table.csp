@@ -4,11 +4,11 @@ struct type_impl
 	var table=new array
 	var bucket_func=[](val)->math.abs(to_integer(runtime.hash(val)))%this.bucket_count
 	function insert(dat)
-		var bucket=this.bucket_func(dat.first())
-		if this.table.at(bucket)==null
-			this.table.at(bucket)=gcnew list
+		var bucket=bucket_func(dat.first())
+		if table.at(bucket)==null
+			table.at(bucket)=gcnew list
 		end
-		var lst=this.table.at(bucket)
+		var lst=table.at(bucket)
 		for it iterate *lst
 			if it.first()==dat.first()
 				it.second()=dat.second()
@@ -18,8 +18,8 @@ struct type_impl
 		lst->push_back(dat)
 	end
 	function get(key)
-		var bucket=this.bucket_func(key)
-		var lst=this.table.at(bucket)
+		var bucket=bucket_func(key)
+		var lst=table.at(bucket)
 		if lst==null
 			return null
 		end
@@ -31,7 +31,7 @@ struct type_impl
 		return null
 	end
 	function print()
-		for lst iterate this.table
+		for lst iterate table
 			if lst!=null
 				for p iterate *lst
 					system.out.println(to_string(p.first())+":"+to_string(p.second()))
