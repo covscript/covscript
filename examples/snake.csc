@@ -1,3 +1,4 @@
+import darwin
 const var head_pix=darwin.pixel('#',darwin.white,darwin.black)
 const var body_pix=darwin.pixel('+',darwin.white,darwin.black)
 const var food_pix=darwin.pixel('@',darwin.white,darwin.black)

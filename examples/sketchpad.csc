@@ -1,3 +1,4 @@
+import darwin
 darwin.load()
 var pic=darwin.get_drawable()
 var expr=context.build(darwin.ui.input_box("Sketchpad","Please enter a expression:","",false))
@@ -16,6 +17,9 @@ loop
   pic.clear()
   if(darwin.is_kb_hit())
     switch darwin.get_kb_hit()
+			case 'x'
+				system.exit(0)
+			end
     	case 'w'
 			++y_offset
     	end

@@ -1,4 +1,5 @@
 import sqlite_ext
+import sqlite
 function print_result(stmt)
 	for i=0 to stmt.column_count()-1
 		system.out.print(stmt.column_decltype(i)+"\t")

@@ -1,4 +1,5 @@
 import str_tools
+import darwin
 var dpic=darwin.picture(0,0)
 function save()
 	var pic=darwin.get_drawable()

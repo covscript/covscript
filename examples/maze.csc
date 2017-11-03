@@ -1,6 +1,8 @@
 # Maze Program
 # This program is written by Big_True any modified by Michael Lee
 
+import darwin
+
 darwin.load()
 darwin.fit_drawable()
 var dpic=darwin.get_drawable()

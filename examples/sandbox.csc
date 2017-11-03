@@ -1,3 +1,4 @@
+import darwin
 const var gravity=10
 const var air_drop=5
 const var delta_time=0.1
@@ -32,6 +33,13 @@ function main()
 	darwin.load()
 	var pic=darwin.get_drawable()
 	loop
+		if darwin.is_kb_hit()
+            switch darwin.get_kb_hit()
+                case 'q'
+                    system.exit(0)
+                end
+            end
+        end
 		darwin.fit_drawable()
 		pic.clear()
 		pic.draw_string(0,0,"Simple Sandbox",darwin.pixel(' ',darwin.black,darwin.white))

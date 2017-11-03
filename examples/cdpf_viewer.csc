@@ -1,3 +1,4 @@
+import darwin
 function main()
 	if system.args.size()<2
 		system.out.println("Wrong size of arguments.")

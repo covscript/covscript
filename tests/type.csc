@@ -1,5 +1,10 @@
+import regex
+import darwin
+import sqlite
 struct foo
 end
+var reg=regex.build("REGEX")
+var reg_result=reg.search("COVSCRIPTREGEX")
 var sql=sqlite.open(":memory:")
 @begin
 var types=
@@ -26,6 +31,8 @@ var types=
     type(iostream.seekdir.start),
     type(iostream.openmode.app),
     type(context.build("x")),
+    type(reg),
+    type(reg_result),
     type(darwin.red),
     type(darwin.pixel(' ',darwin.white,darwin.white)),
     type(darwin.get_drawable()),

@@ -1,3 +1,4 @@
+import darwin
 struct texteditor
     var text_buffer=new array
     var file_stream=null

@@ -1,3 +1,4 @@
+import darwin
 iostream.setprecision(12)
 darwin.load()
 var expr=darwin.ui.input_box("test-darwin","test1","math.sin(x)",false)

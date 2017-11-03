@@ -1,3 +1,4 @@
+import darwin
 const var a=10
 switch system.in.input()
 	case "Hello"+"!"

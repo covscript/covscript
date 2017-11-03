@@ -1,3 +1,4 @@
+import darwin
 function main()
 #初始化和设置
 	darwin.load()

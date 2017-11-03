@@ -1,3 +1,4 @@
+import darwin
 var fd=10
 function main()
     var pic=darwin.get_drawable()
@@ -5,6 +6,13 @@ function main()
     const var pix=darwin.pixel('@',darwin.blue,darwin.white)
     var x=0
     loop
+        if darwin.is_kb_hit()
+            switch darwin.get_kb_hit()
+                case 'q'
+                    system.exit(0)
+                end
+            end
+        end
         darwin.fit_drawable()
         pic.clear()
         for i=0 to pic.get_width()-1
