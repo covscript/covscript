@@ -31,10 +31,6 @@
 # Logs
 *.log
 
-# CovScript executable file
-cs
-cs_repl
-
 # CovScript intermediate file
 *.cs_ext
 
@@ -44,3 +40,4 @@ cs_repl
 .idea/modules.xml
 .idea/workspace.xml
 cmake-build-debug/
+build/

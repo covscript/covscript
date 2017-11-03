@@ -1,4 +1,3 @@
-#pragma once
 /*
 * Covariant Script Sqlite Extension
 *
@@ -19,8 +18,9 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "../headers/cni.hpp"
 #include "../sqlite/sqlite.hpp"
+#include "../headers/extension.hpp"
+#include "../headers/cni.hpp"
 
 static cs::extension sqlite_ext;
 static cs::extension sqlite_stmt_ext;
@@ -172,4 +172,10 @@ namespace sqlite_cs_ext {
 		sqlite_stmt_ext.add_var("bind_text", var::make_protect<callable>(cni(bind_text)));
 		sqlite_stmt_ext.add_var("clear_bindings", var::make_protect<callable>(cni(clear_bindings)));
 	}
+}
+
+cs::extension *cs_extension()
+{
+	sqlite_cs_ext::init();
+	return &sqlite_ext;
 }

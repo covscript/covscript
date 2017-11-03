@@ -32,8 +32,6 @@
 #include "extensions/pair.hpp"
 #include "extensions/hash_map.hpp"
 #include "extensions/math.hpp"
-#include "extensions/darwin.hpp"
-#include "extensions/sqlite.hpp"
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
@@ -88,8 +86,6 @@ namespace cs {
 		pair_cs_ext::init();
 		hash_map_cs_ext::init();
 		math_cs_ext::init();
-		darwin_cs_ext::init();
-		sqlite_cs_ext::init();
 	}
 
 	void instance_type::init_runtime()
@@ -118,7 +114,5 @@ namespace cs {
 		storage.add_buildin_var("system", var::make_protect<extension_t>(make_shared_extension(system_ext)));
 		storage.add_buildin_var("runtime", var::make_protect<extension_t>(make_shared_extension(runtime_ext)));
 		storage.add_buildin_var("math", var::make_protect<extension_t>(make_shared_extension(math_ext)));
-		storage.add_buildin_var("darwin", var::make_protect<extension_t>(make_shared_extension(darwin_ext)));
-		storage.add_buildin_var("sqlite", var::make_protect<extension_t>(sqlite_ext_shared));
 	}
 }

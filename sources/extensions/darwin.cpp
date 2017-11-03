@@ -1,4 +1,3 @@
-#pragma once
 /*
 * Covariant Script Darwin Extension
 *
@@ -25,6 +24,7 @@
 #define DARWIN_FORCE_BUILTIN
 
 #include "../../include/darwin/darwin.hpp"
+#include "../headers/extension.hpp"
 #include "../headers/cni.hpp"
 #include <fstream>
 
@@ -324,4 +324,10 @@ namespace darwin_cs_ext {
 		darwin_drawable_ext.add_var("draw_string", var::make_protect<callable>(cni(draw_string)));
 		darwin_drawable_ext.add_var("draw_picture", var::make_protect<callable>(cni(draw_picture)));
 	}
+}
+
+cs::extension *cs_extension()
+{
+	darwin_cs_ext::init();
+	return &darwin_ext;
 }
