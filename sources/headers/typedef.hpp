@@ -51,7 +51,7 @@ namespace cs {
 	using context_t=std::shared_ptr<context_type>;
 	using extension=name_space;
 	using extension_holder=name_space_holder;
-	using domain_t=std::shared_ptr <std::unordered_map<string, var>>;
+	using domain_t=std::shared_ptr<std::unordered_map<string, var>>;
 	using name_space_t=std::shared_ptr<name_space_holder>;
 	using extension_t=std::shared_ptr<extension_holder>;
 	using istream=std::shared_ptr<std::istream>;

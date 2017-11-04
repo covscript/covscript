@@ -64,4 +64,3 @@ The `examples` folder contains several example programs written by CovScript.
 ## Thanks ##
 **Ranking by contribution.**  
 Testing: Shi Youcheng,Kiva(zt515)  
-Tutorial: Zaozhuang No.8 Middle School (North Campus) Computer Community Teaching Group(Pan Yuguang,Shi Youcheng)  

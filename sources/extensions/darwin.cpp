@@ -26,7 +26,6 @@
 #include "../../include/darwin/darwin.hpp"
 #include "../headers/extension.hpp"
 #include "../headers/cni.hpp"
-#include <fstream>
 
 static cs::extension darwin_ext;
 static cs::extension darwin_ui_ext;

@@ -54,66 +54,66 @@ namespace cs_impl {
 namespace regex_cs_ext {
 	using namespace cs;
 
-	var build(const string& str)
+	var build(const string &str)
 	{
 		return var::make<std::regex>(str);
 	}
 
-	std::smatch match(std::regex& reg,const string& str)
+	std::smatch match(std::regex &reg, const string &str)
 	{
 		std::smatch m;
-		std::regex_search(str,m,reg);
+		std::regex_search(str, m, reg);
 		return std::move(m);
 	}
 
-	std::smatch search(std::regex& reg,const string& str)
+	std::smatch search(std::regex &reg, const string &str)
 	{
 		std::smatch m;
-		std::regex_search(str,m,reg);
+		std::regex_search(str, m, reg);
 		return std::move(m);
 	}
 
-	string replace(std::regex& reg,const string& str,const string& fmt)
+	string replace(std::regex &reg, const string &str, const string &fmt)
 	{
-		return std::regex_replace(str,reg,fmt);
+		return std::regex_replace(str, reg, fmt);
 	}
 
-	bool ready(const std::smatch& m)
+	bool ready(const std::smatch &m)
 	{
 		return m.ready();
 	}
 
-	bool empty(const std::smatch& m)
+	bool empty(const std::smatch &m)
 	{
 		return m.empty();
 	}
 
-	number length(const std::smatch& m)
+	number length(const std::smatch &m)
 	{
 		return m.length();
 	}
 
-	number position(const std::smatch& m)
+	number position(const std::smatch &m)
 	{
 		return m.position();
 	}
 
-	string str(const std::smatch& m)
+	string str(const std::smatch &m)
 	{
 		return m.str();
 	}
 
-	string prefix(const std::smatch& m)
+	string prefix(const std::smatch &m)
 	{
 		return m.prefix();
 	}
 
-	string suffix(const std::smatch& m)
+	string suffix(const std::smatch &m)
 	{
 		return m.suffix();
 	}
 
-	string format(const std::smatch& m,const string& fmt)
+	string format(const std::smatch &m, const string &fmt)
 	{
 		return m.format(fmt);
 	}
