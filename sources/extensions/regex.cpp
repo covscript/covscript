@@ -88,19 +88,24 @@ namespace regex_cs_ext {
 		return m.empty();
 	}
 
-	number length(const std::smatch &m)
+	number size(const std::smatch &m)
 	{
-		return m.length();
+		return m.size();
 	}
 
-	number position(const std::smatch &m)
+	number length(const std::smatch &m,number index)
 	{
-		return m.position();
+		return m.length(index);
 	}
 
-	string str(const std::smatch &m)
+	number position(const std::smatch &m,number index)
 	{
-		return m.str();
+		return m.position(index);
+	}
+
+	string str(const std::smatch &m,number index)
+	{
+		return m.str(index);
 	}
 
 	string prefix(const std::smatch &m)
@@ -127,6 +132,7 @@ namespace regex_cs_ext {
 		regex_ext.add_var("replace", var::make_protect<callable>(cni(replace)));
 		regex_result_ext.add_var("ready", var::make_protect<callable>(cni(ready)));
 		regex_result_ext.add_var("empty", var::make_protect<callable>(cni(empty)));
+		regex_result_ext.add_var("size", var::make_protect<callable>(cni(size)));
 		regex_result_ext.add_var("length", var::make_protect<callable>(cni(length)));
 		regex_result_ext.add_var("position", var::make_protect<callable>(cni(position)));
 		regex_result_ext.add_var("str", var::make_protect<callable>(cni(str)));

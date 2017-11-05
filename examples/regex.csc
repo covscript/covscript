@@ -1,5 +1,5 @@
 import regex
-var reg=regex.build("(\\S+)")
+var reg=regex.build("\\S+")
 @begin
 var s="Some people, when confronted with a problem, think 
 \"I know, I'll use regular expressions.\"
@@ -10,6 +10,6 @@ loop
     if !res.ready()||res.empty()
         break
     end
-    system.out.println(res.str())
+    system.out.println(res.str(0))
     s=res.suffix()
 end
