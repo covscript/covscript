@@ -14,8 +14,9 @@
 3. 编译期优化
 4. 引用计数垃圾回收器
 5. C/C++原生接口
-6. Darwin通用字符图形库
-6. SQLite3数据库
+6. 正则表达式
+7. Darwin通用字符图形库
+8. SQLite3数据库
 
 ## 使用Covariant Script编程语言 ##
 [CovScript文档](https://github.com/covscript/covscript-docs)  

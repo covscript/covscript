@@ -14,8 +14,9 @@
 3. Compile-time optimization
 4. Reference count garbage collector
 5. C/C++ Native Interface
-6. Darwin Universal CGL
-7. SQLite3 Database
+6. Regular Expression
+7. Darwin Universal CGL
+8. SQLite3 Database
 
 ## Use the Covariant Script programming language ##
 [CovScript Document](https://github.com/covscript/covscript-docs)  
