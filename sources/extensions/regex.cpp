@@ -24,8 +24,8 @@
 
 static cs::extension regex_ext;
 static cs::extension regex_result_ext;
-static cs::extension_t regex_ext_shared = std::make_shared<cs::extension_holder>(&regex_ext);
-static cs::extension_t regex_result_ext_shared = std::make_shared<cs::extension_holder>(&regex_result_ext);
+static cs::extension_t regex_ext_shared = cs::make_shared_extension(regex_ext);
+static cs::extension_t regex_result_ext_shared = cs::make_shared_extension(regex_result_ext);
 namespace cs_impl {
 	template<>
 	cs::extension_t &get_ext<std::regex>()
@@ -93,17 +93,17 @@ namespace regex_cs_ext {
 		return m.size();
 	}
 
-	number length(const std::smatch &m,number index)
+	number length(const std::smatch &m, number index)
 	{
 		return m.length(index);
 	}
 
-	number position(const std::smatch &m,number index)
+	number position(const std::smatch &m, number index)
 	{
 		return m.position(index);
 	}
 
-	string str(const std::smatch &m,number index)
+	string str(const std::smatch &m, number index)
 	{
 		return m.str(index);
 	}

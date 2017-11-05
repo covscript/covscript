@@ -22,7 +22,7 @@
 #include "../headers/cni.hpp"
 
 static cs::extension array_ext;
-static cs::extension_t array_ext_shared = std::make_shared<cs::extension_holder>(&array_ext);
+static cs::extension_t array_ext_shared = cs::make_shared_extension(array_ext);
 namespace cs_impl {
 	template<>
 	cs::extension_t &get_ext<cs::array>()
@@ -31,7 +31,7 @@ namespace cs_impl {
 	}
 }
 static cs::extension array_iterator_ext;
-static cs::extension_t array_iterator_ext_shared = std::make_shared<cs::extension_holder>(&array_iterator_ext);
+static cs::extension_t array_iterator_ext_shared = cs::make_shared_extension(array_iterator_ext);
 namespace cs_impl {
 	template<>
 	cs::extension_t &get_ext<cs::array::iterator>()

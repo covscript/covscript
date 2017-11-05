@@ -26,8 +26,8 @@ static cs::extension seekdir_ext;
 static cs::extension openmode_ext;
 static cs::extension istream_ext;
 static cs::extension ostream_ext;
-static cs::extension_t istream_ext_shared = std::make_shared<cs::extension_holder>(&istream_ext);
-static cs::extension_t ostream_ext_shared = std::make_shared<cs::extension_holder>(&ostream_ext);
+static cs::extension_t istream_ext_shared = cs::make_shared_extension(istream_ext);
+static cs::extension_t ostream_ext_shared = cs::make_shared_extension(ostream_ext);
 namespace cs_impl {
 	template<>
 	cs::extension_t &get_ext<cs::istream>()
@@ -82,8 +82,8 @@ namespace iostream_cs_ext {
 	{
 		iostream_ext.add_var("istream", var::make_protect<extension_t>(istream_ext_shared));
 		iostream_ext.add_var("ostream", var::make_protect<extension_t>(ostream_ext_shared));
-		iostream_ext.add_var("seekdir", var::make_protect<extension_t>(std::make_shared<cs::extension_holder>(&seekdir_ext)));
-		iostream_ext.add_var("openmode", var::make_protect<extension_t>(std::make_shared<cs::extension_holder>(&openmode_ext)));
+		iostream_ext.add_var("seekdir", var::make_protect<extension_t>(cs::make_shared_extension(seekdir_ext)));
+		iostream_ext.add_var("openmode", var::make_protect<extension_t>(cs::make_shared_extension(openmode_ext)));
 		seekdir_ext.add_var("start", var::make_constant<std::ios_base::seekdir>(std::ios_base::beg));
 		seekdir_ext.add_var("finish", var::make_constant<std::ios_base::seekdir>(std::ios_base::end));
 		seekdir_ext.add_var("present", var::make_constant<std::ios_base::seekdir>(std::ios_base::cur));

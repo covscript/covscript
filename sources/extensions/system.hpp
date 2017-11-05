@@ -27,7 +27,7 @@
 
 static cs::extension system_ext;
 static cs::extension console_ext;
-static cs::extension_t console_ext_shared = std::make_shared<cs::extension_holder>(&console_ext);
+static cs::extension_t console_ext_shared = cs::make_shared_extension(console_ext);
 namespace console_cs_ext {
 	using namespace cs;
 	using namespace cs_impl;

@@ -22,7 +22,7 @@
 #include "../headers/cni.hpp"
 
 static cs::extension hash_map_ext;
-static cs::extension_t hash_map_ext_shared = std::make_shared<cs::extension_holder>(&hash_map_ext);
+static cs::extension_t hash_map_ext_shared = cs::make_shared_extension(hash_map_ext);
 namespace cs_impl {
 	template<>
 	cs::extension_t &get_ext<cs::hash_map>()

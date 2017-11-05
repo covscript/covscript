@@ -22,7 +22,7 @@
 #include "../headers/cni.hpp"
 
 static cs::extension pair_ext;
-static cs::extension_t pair_ext_shared = std::make_shared<cs::extension_holder>(&pair_ext);
+static cs::extension_t pair_ext_shared = cs::make_shared_extension(pair_ext);
 namespace cs_impl {
 	template<>
 	cs::extension_t &get_ext<cs::pair>()

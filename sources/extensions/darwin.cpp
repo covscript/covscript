@@ -30,8 +30,8 @@
 static cs::extension darwin_ext;
 static cs::extension darwin_ui_ext;
 static cs::extension darwin_drawable_ext;
-static cs::extension_t darwin_ui_ext_shared = std::make_shared<cs::extension_holder>(&darwin_ui_ext);
-static cs::extension_t darwin_drawable_ext_shared = std::make_shared<cs::extension_holder>(&darwin_drawable_ext);
+static cs::extension_t darwin_ui_ext_shared = cs::make_shared_extension(darwin_ui_ext);
+static cs::extension_t darwin_drawable_ext_shared = cs::make_shared_extension(darwin_drawable_ext);
 namespace cs_impl {
 	template<>
 	cs::extension_t &get_ext<std::shared_ptr<darwin::drawable>>()

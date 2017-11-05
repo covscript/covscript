@@ -23,7 +23,7 @@
 #include <cstdlib>
 
 static cs::extension context_ext;
-static cs::extension_t context_ext_shared = std::make_shared<cs::extension_holder>(&context_ext);
+static cs::extension_t context_ext_shared = cs::make_shared_extension(context_ext);
 namespace cs_impl {
 	template<>
 	cs::extension_t &get_ext<cs::context_t>()

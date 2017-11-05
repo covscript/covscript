@@ -23,7 +23,7 @@
 #include <cctype>
 
 static cs::extension char_ext;
-static cs::extension_t char_ext_shared = std::make_shared<cs::extension_holder>(&char_ext);
+static cs::extension_t char_ext_shared = cs::make_shared_extension(char_ext);
 namespace cs_impl {
 	template<>
 	cs::extension_t &get_ext<char>()
