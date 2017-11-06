@@ -21,6 +21,7 @@
 #include <regex>
 #include "../headers/extension.hpp"
 #include "../headers/cni.hpp"
+#include "./string.hpp"
 
 static cs::extension regex_ext;
 static cs::extension regex_result_ext;
@@ -110,12 +111,12 @@ namespace regex_cs_ext {
 
 	string prefix(const std::smatch &m)
 	{
-		return m.prefix();
+		return m.prefix().str();
 	}
 
 	string suffix(const std::smatch &m)
 	{
-		return m.suffix();
+		return m.suffix().str();
 	}
 
 	string format(const std::smatch &m, const string &fmt)
@@ -125,6 +126,7 @@ namespace regex_cs_ext {
 
 	void init()
 	{
+		string_cs_ext.init();
 		regex_ext.add_var("result", var::make_protect<extension_t>(regex_result_ext_shared));
 		regex_ext.add_var("build", var::make_protect<callable>(cni(build)));
 		regex_ext.add_var("match", var::make_protect<callable>(cni(match)));

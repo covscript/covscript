@@ -113,22 +113,25 @@ namespace cs {
 
 	void statement_namespace::run()
 	{
-		scope_guard scope(context);
-		for (auto &ptr:mBlock) {
-			try {
-				ptr->run();
+		context->instance->storage.add_var(this->mName, var::make_protect<name_space_t>(std::make_shared<name_space_holder>([this] {
+			scope_guard scope(context);
+			for (auto &ptr:mBlock)
+			{
+				try {
+					ptr->run();
+				}
+				catch (const lang_error &le) {
+					throw le;
+				}
+				catch (const cs::exception &e) {
+					throw e;
+				}
+				catch (const std::exception &e) {
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+				}
 			}
-			catch (const lang_error &le) {
-				throw le;
-			}
-			catch (const cs::exception &e) {
-				throw e;
-			}
-			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
-			}
-		}
-		context->instance->storage.add_var(this->mName, var::make_protect<name_space_t>(std::make_shared<name_space_holder>(scope.get())));
+			return scope.get();
+		}())));
 	}
 
 	void statement_if::run()

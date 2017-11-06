@@ -299,8 +299,10 @@ namespace cs {
 							tmp.clear();
 							method = nullptr;
 						}
-						else
+						else {
+							m->preprocess({line});
 							tmp.push_back(line);
+						}
 					}
 					else
 						sptr = m->translate({line});

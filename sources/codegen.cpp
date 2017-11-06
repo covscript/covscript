@@ -151,6 +151,12 @@ namespace cs {
 			return new statement_if(tree, body, context, raw.front().back());
 	}
 
+	void method_else::preprocess(const std::deque<std::deque<token_base *>> &)
+	{
+		context->instance->storage.clear_domain();
+		context->instance->storage.clear_set();
+	}
+
 	statement_base *method_else::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_else;

@@ -66,6 +66,11 @@ namespace cs {
 			m_data.pop_front();
 		}
 
+		void clear_set()
+		{
+			m_set.front().clear();
+		}
+
 		void clear_domain()
 		{
 			m_data.front()->clear();
