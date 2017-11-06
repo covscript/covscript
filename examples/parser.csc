@@ -23,7 +23,6 @@ function parse(_line)
                 throw runtime.exception("Unknow Stat Grammar")
             end
             var s=r.str(1)
-            system.out.println(s)
             var _r=grammar._var.match(s)
             if _r.empty()
                 run(s)
@@ -33,7 +32,6 @@ function parse(_line)
         else
             var s=r.str(1)
             var l=r.str(2)
-            system.out.println(s+";"+l)
             var _r=grammar._if.match(s)
             if _r.empty()
                 throw runtime.exception("Unknow Blck Grammar")
@@ -48,8 +46,8 @@ end
 try
 @begin
 parse("
-var a=system.in.input();
-if(a>10){
+var a=10;
+if(system.in.input()>10){
     system.out.println(\"OK\");
 }
 ")

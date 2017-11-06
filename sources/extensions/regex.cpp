@@ -126,7 +126,7 @@ namespace regex_cs_ext {
 
 	void init()
 	{
-		string_cs_ext.init();
+		string_cs_ext::init();
 		regex_ext.add_var("result", var::make_protect<extension_t>(regex_result_ext_shared));
 		regex_ext.add_var("build", var::make_protect<callable>(cni(build)));
 		regex_ext.add_var("match", var::make_protect<callable>(cni(match)));
