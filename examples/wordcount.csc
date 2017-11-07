@@ -1,11 +1,10 @@
-import str_tools
 var in=iostream.fstream("../LICENSE",iostream.openmode.in)
 if !in.good()
     throw runtime.exception("File is not exist")
 end
 var table=new hash_map
 while !in.eof()
-    var str_arr=str_tools.split(str_tools.tolower(in.getline()))
+    var str_arr=((in.getline()).tolower()).split({' ','\t','\n','\v','\f','\r'})
     for str iterate str_arr
         if(!str.empty())
             ++table[str]

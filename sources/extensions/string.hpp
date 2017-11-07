@@ -20,6 +20,7 @@
 * Github: https://github.com/mikecovlee
 */
 #include "../headers/cni.hpp"
+#include <cctype>
 
 static cs::extension string_ext;
 static cs::extension_t string_ext_shared = cs::make_shared_extension(string_ext);
@@ -106,6 +107,53 @@ namespace string_cs_ext {
 		return str.size();
 	}
 
+	string tolower(const string &str)
+	{
+		string s;
+		for (auto &ch:str)
+			s.push_back(std::tolower(ch));
+		return std::move(s);
+	}
+
+	string toupper(const string &str)
+	{
+		string s;
+		for (auto &ch:str)
+			s.push_back(std::toupper(ch));
+		return std::move(s);
+	}
+
+	number to_number(const string &str)
+	{
+		return std::stold(str);
+	}
+
+	array split(const string &str, const array &signals)
+	{
+		array arr;
+		string buf;
+		bool found = false;
+		for (auto &ch:str) {
+			for (auto &sig:signals) {
+				if (ch == sig.const_val<char>()) {
+					if (!buf.empty()) {
+						arr.push_back(buf);
+						buf.clear();
+					}
+					found = true;
+					break;
+				}
+			}
+			if (found)
+				found = false;
+			else
+				buf.push_back(ch);
+		}
+		if (!buf.empty())
+			arr.push_back(buf);
+		return std::move(arr);
+	}
+
 	void init()
 	{
 		string_ext.add_var("append", var::make_protect<callable>(cni(append), true));
@@ -119,5 +167,9 @@ namespace string_cs_ext {
 		string_ext.add_var("empty", var::make_protect<callable>(cni(empty), true));
 		string_ext.add_var("clear", var::make_protect<callable>(cni(clear), true));
 		string_ext.add_var("size", var::make_protect<callable>(cni(size), true));
+		string_ext.add_var("tolower", var::make_protect<callable>(cni(tolower), true));
+		string_ext.add_var("toupper", var::make_protect<callable>(cni(toupper), true));
+		string_ext.add_var("to_number", var::make_protect<callable>(cni(to_number), true));
+		string_ext.add_var("split", var::make_protect<callable>(cni(split), true));
 	}
 }

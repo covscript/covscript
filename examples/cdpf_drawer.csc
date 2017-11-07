@@ -1,4 +1,3 @@
-import str_tools
 import darwin
 var dpic=darwin.picture(0,0)
 function save()
@@ -173,7 +172,7 @@ function new_picture()
 						end
 						case 3
 							dpic.clear()
-							dpic.resize(str_tools.ston(buff0),str_tools.ston(buff1))
+							dpic.resize(buff0.to_number(),buff1.to_number())
 							dpic.fill(darwin.pixel(' ',darwin.black,darwin.white))
 							run=false
 						end
@@ -192,7 +191,7 @@ function new_picture()
 						end
 						case 3
 							dpic.clear()
-							dpic.resize(str_tools.ston(buff0),str_tools.ston(buff1))
+							dpic.resize(buff0.to_number(),buff1.to_number())
 							dpic.fill(darwin.pixel(' ',darwin.black,darwin.white))
 							run=false
 						end
@@ -212,7 +211,7 @@ function new_picture()
 						end
 						default
 							dpic.clear()
-							dpic.resize(str_tools.ston(buff0),str_tools.ston(buff1))
+							dpic.resize(buff0.to_number(),buff1.to_number())
 							dpic.fill(darwin.pixel(' ',darwin.black,darwin.white))
 							run=false
 						end
