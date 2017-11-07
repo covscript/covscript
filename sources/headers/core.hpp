@@ -31,9 +31,9 @@
 #include "../../include/mozart/tree.hpp"
 // LibDLL
 #include "../../include/libdll/dll.hpp"
+// Sparsepp
+#include "../../include/sparsepp/spp.h"
 // STL
-#include <unordered_map>
-#include <unordered_set>
 #include <forward_list>
 #include <functional>
 #include <algorithm>
@@ -57,7 +57,7 @@
 
 namespace cs {
 // Version
-	static const char *const version = "1.1.4";
+	static const char *const version = "1.1.5";
 	static const number std_version = 20171101;
 // Output Precision
 	static int output_precision = 8;
@@ -199,13 +199,13 @@ namespace cs {
 	class structure final {
 		std::size_t m_hash;
 		std::string m_name;
-		std::shared_ptr<std::unordered_map<string, var>> m_data;
+		std::shared_ptr<spp::sparse_hash_map<string, var>> m_data;
 	public:
 		structure() = delete;
 
-		structure(std::size_t hash, const std::string &name, const std::shared_ptr<std::unordered_map<string, var>> &data) : m_hash(hash), m_name(typeid(structure).name() + name), m_data(data) {}
+		structure(std::size_t hash, const std::string &name, const std::shared_ptr<spp::sparse_hash_map<string, var>> &data) : m_hash(hash), m_name(typeid(structure).name() + name), m_data(data) {}
 
-		structure(const structure &s) : m_hash(s.m_hash), m_name(s.m_name), m_data(std::make_shared<std::unordered_map<string, var>>(*s.m_data))
+		structure(const structure &s) : m_hash(s.m_hash), m_name(s.m_name), m_data(std::make_shared<spp::sparse_hash_map<string, var>>(*s.m_data))
 		{
 			for (auto &it:*m_data)
 				it.second.clone();
@@ -213,7 +213,7 @@ namespace cs {
 
 		~structure() = default;
 
-		std::shared_ptr<std::unordered_map<string, var>> &get_domain()
+		std::shared_ptr<spp::sparse_hash_map<string, var>> &get_domain()
 		{
 			return m_data;
 		}
@@ -290,7 +290,7 @@ namespace cs {
 	class name_space final {
 		domain_t m_data;
 	public:
-		name_space() : m_data(std::make_shared<std::unordered_map<string, var>>()) {}
+		name_space() : m_data(std::make_shared<spp::sparse_hash_map<string, var>>()) {}
 
 		name_space(const name_space &) = delete;
 

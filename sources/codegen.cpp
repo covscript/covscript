@@ -167,7 +167,7 @@ namespace cs {
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
 		statement_block *dptr = nullptr;
-		std::unordered_map<var, statement_block *> cases;
+		spp::sparse_hash_map<var, statement_block *> cases;
 		for (auto &it:body) {
 			if (it == nullptr)
 				throw internal_error("Access Null Pointer.");

@@ -23,13 +23,13 @@
 
 namespace cs {
 	class domain_manager {
-		std::deque<std::unordered_set<string>> m_set;
+		std::deque<spp::sparse_hash_set<string>> m_set;
 		std::deque<domain_t> m_data;
 	public:
 		domain_manager()
 		{
 			m_set.emplace_front();
-			m_data.emplace_front(std::make_shared<std::unordered_map<string, var>>());
+			m_data.emplace_front(std::make_shared<spp::sparse_hash_map<string, var>>());
 		}
 
 		domain_manager(const domain_manager &) = delete;
@@ -43,7 +43,7 @@ namespace cs {
 
 		void add_domain()
 		{
-			m_data.emplace_front(std::make_shared<std::unordered_map<string, var>>());
+			m_data.emplace_front(std::make_shared<spp::sparse_hash_map<string, var>>());
 		}
 
 		domain_t &get_domain()
