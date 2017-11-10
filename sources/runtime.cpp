@@ -103,7 +103,7 @@ namespace cs {
 	var runtime_type::parse_mod(const var &a, const var &b)
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
-			return number(long(a.const_val<number>()) % long(b.const_val<number>()));
+			return number(std::fmod(a.const_val<number>(), b.const_val<number>()));
 		else
 			throw syntax_error("Unsupported operator operations(Mod).");
 	}
