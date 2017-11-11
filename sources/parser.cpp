@@ -304,8 +304,12 @@ namespace cs {
 							tmp.push_back(line);
 						}
 					}
-					else
-						sptr = m->translate({line});
+					else {
+						if (m->get_target_type() == statement_types::end_)
+							throw syntax_error("Hanging end statement.");
+						else
+							sptr = m->translate({line});
+					}
 					if (sptr != nullptr)
 						statements.push_back(sptr);
 				}

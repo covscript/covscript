@@ -28,32 +28,32 @@ function create_table(db,path)
 end
 function read_data_by_name(db,name)
     var stmt=db.prepare("SELECT * FROM PEOPLE_DATA WHERE NAME=?")
-    stmt.bind_text(0,name)
+    stmt.bind_text(1,name)
     stmt.exec()
     var dat=gcnew people.data
     dat->name=stmt.column_text(0)
-    dat->age=stmt.column_int(1)
+    dat->age=stmt.column_integer(1)
     dat->sex=stmt.column_text(2)
     dat->id=stmt.column_text(3)
     return dat
 end
 function read_data_by_id(db,id)
     var stmt=db.prepare("SELECT * FROM PEOPLE_DATA WHERE ID=?")
-    stmt.bind_text(0,id)
+    stmt.bind_text(1,id)
     stmt.exec()
     var dat=gcnew people.data
     dat->name=stmt.column_text(0)
-    dat->age=stmt.column_int(1)
+    dat->age=stmt.column_integer(1)
     dat->sex=stmt.column_text(2)
     dat->id=stmt.column_text(3)
     return dat
 end
 function add_data(db,dat)
     var stmt=db.prepare("INSERT INTO PEOPLE_DATA VALUES(?,?,?,?)")
-    stmt.bind_text(0,dat->name)
-    stmt.bind_int(1,dat->age)
-    stmt.bind_text(2,dat->sex)
-    stmt.bind_text(3,dat->id)
+    stmt.bind_text(1,dat->name)
+    stmt.bind_integer(2,dat->age)
+    stmt.bind_text(3,dat->sex)
+    stmt.bind_text(4,dat->id)
     stmt.exec()
 end
 var print=[](val)->system.out.print(val)
