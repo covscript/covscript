@@ -18,10 +18,10 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "../sqlite/sqlite.hpp"
-#include "../headers/extension.hpp"
-#include "../headers/cni.hpp"
-#include "./string.hpp"
+#include <covscript/sqlite/sqlite.hpp>
+#include <covscript/extension.hpp>
+#include <covscript/cni.hpp>
+#include <covscript/extensions/string.hpp>
 
 static cs::extension sqlite_ext;
 static cs::extension sqlite_stmt_ext;

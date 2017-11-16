@@ -18,7 +18,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "headers/codegen.hpp"
+#include <covscript/codegen.hpp>
 
 namespace cs {
 	statement_base *method_expression::translate(const std::deque<std::deque<token_base *>> &raw)

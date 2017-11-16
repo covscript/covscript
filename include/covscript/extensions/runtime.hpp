@@ -19,7 +19,9 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "../headers/cni.hpp"
+#include <mozart/random.hpp>
+#include <mozart/timer.hpp>
+#include <covscript/cni.hpp>
 #include <cstdlib>
 
 static cs::extension context_ext;

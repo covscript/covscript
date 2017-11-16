@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "./symbols.hpp"
+#include <covscript/symbols.hpp>
 
 namespace cs {
 	class domain_manager {

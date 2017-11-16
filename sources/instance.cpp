@@ -18,9 +18,9 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "headers/instance.hpp"
-#include "headers/statement.hpp"
-#include "headers/codegen.hpp"
+#include <covscript/instance.hpp>
+#include <covscript/statement.hpp>
+#include <covscript/codegen.hpp>
 
 namespace cs {
 	const std::string &statement_base::get_file_path() const noexcept

@@ -25,14 +25,12 @@
 * cs_impl: Implement Namespace
 */
 // Mozart
-#include "../../include/mozart/static_stack.hpp"
-#include "../../include/mozart/random.hpp"
-#include "../../include/mozart/timer.hpp"
-#include "../../include/mozart/tree.hpp"
+#include <mozart/static_stack.hpp>
+#include <mozart/tree.hpp>
 // LibDLL
-#include "../../include/libdll/dll.hpp"
+#include <libdll/dll.hpp>
 // Sparsepp
-#include "../../include/sparsepp/spp.h"
+#include <sparsepp/spp.h>
 // STL
 #include <forward_list>
 #include <functional>
@@ -51,9 +49,9 @@
 #include <list>
 #include <map>
 // CovScript Headers
-#include "./exceptions.hpp"
-#include "./any.hpp"
-#include "./typedef.hpp"
+#include <covscript/exceptions.hpp>
+#include <covscript/any.hpp>
+#include <covscript/typedef.hpp>
 
 namespace cs {
 // Version

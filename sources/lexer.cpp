@@ -18,7 +18,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "headers/instance.hpp"
+#include <covscript/instance.hpp>
 
 namespace cs {
 	void instance_type::process_char_buff(const std::deque<char> &buff, std::deque<token_base *> &tokens)

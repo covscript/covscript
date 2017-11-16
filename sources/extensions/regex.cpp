@@ -19,9 +19,9 @@
 * Github: https://github.com/mikecovlee
 */
 #include <regex>
-#include "../headers/extension.hpp"
-#include "../headers/cni.hpp"
-#include "./string.hpp"
+#include <covscript/extension.hpp>
+#include <covscript/cni.hpp>
+#include <covscript/extensions/string.hpp>
 
 static cs::extension regex_ext;
 static cs::extension regex_result_ext;

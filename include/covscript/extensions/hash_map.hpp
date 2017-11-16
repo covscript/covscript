@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "../headers/cni.hpp"
+#include <covscript/cni.hpp>
 
 static cs::extension hash_map_ext;
 static cs::extension_t hash_map_ext_shared = cs::make_shared_extension(hash_map_ext);

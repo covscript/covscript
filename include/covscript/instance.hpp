@@ -19,8 +19,8 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "./symbols.hpp"
-#include "./runtime.hpp"
+#include <covscript/symbols.hpp>
+#include <covscript/runtime.hpp>
 
 namespace cs {
 	class translator_type final {

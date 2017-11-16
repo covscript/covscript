@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "../headers/cni.hpp"
+#include <covscript/cni.hpp>
 
 static cs::extension pair_ext;
 static cs::extension_t pair_ext_shared = cs::make_shared_extension(pair_ext);

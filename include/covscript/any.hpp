@@ -19,8 +19,8 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "../../include/mozart/memory.hpp"
-#include "./typedef.hpp"
+#include <covscript/typedef.hpp>
+#include <mozart/memory.hpp>
 #include <functional>
 #include <ostream>
 

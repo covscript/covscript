@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "./instance.hpp"
+#include <covscript/instance.hpp>
 
 namespace cs {
 	class statement_expression final : public statement_base {

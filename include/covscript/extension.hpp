@@ -1,6 +1,6 @@
 #pragma once
 /*
-* Covariant Script Exception Extension
+* Covariant Script Extension Header
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU Affero General Public License as published
@@ -19,27 +19,14 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "../headers/cni.hpp"
+#include <covscript/core.hpp>
 
-static cs::extension except_ext;
-static cs::extension_t except_ext_shared = cs::make_shared_extension(except_ext);
-namespace cs_impl {
-	template<>
-	cs::extension_t &get_ext<cs::lang_error>()
-	{
-		return except_ext_shared;
-	}
-}
-namespace except_cs_ext {
-	using namespace cs;
+cs::extension *cs_extension();
 
-	string what(const lang_error &le)
+extern "C"
+{
+	cs::extension *__CS_EXTENSION__()
 	{
-		return le.what();
-	}
-
-	void init()
-	{
-		except_ext.add_var("what", var::make_protect<callable>(cni(what)));
+		return cs_extension();
 	}
 }

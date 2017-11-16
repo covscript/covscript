@@ -19,19 +19,19 @@
 * Github: https://github.com/mikecovlee
 * Website: http://covariant.cn/cs
 */
-#include "console/conio.hpp"
-#include "headers/instance.hpp"
-#include "extensions/iostream.hpp"
-#include "extensions/system.hpp"
-#include "extensions/runtime.hpp"
-#include "extensions/exception.hpp"
-#include "extensions/char.hpp"
-#include "extensions/string.hpp"
-#include "extensions/list.hpp"
-#include "extensions/array.hpp"
-#include "extensions/pair.hpp"
-#include "extensions/hash_map.hpp"
-#include "extensions/math.hpp"
+#include <covscript/instance.hpp>
+#include <covscript/console/conio.hpp>
+#include <covscript/extensions/iostream.hpp>
+#include <covscript/extensions/system.hpp>
+#include <covscript/extensions/runtime.hpp>
+#include <covscript/extensions/exception.hpp>
+#include <covscript/extensions/char.hpp>
+#include <covscript/extensions/string.hpp>
+#include <covscript/extensions/list.hpp>
+#include <covscript/extensions/array.hpp>
+#include <covscript/extensions/pair.hpp>
+#include <covscript/extensions/hash_map.hpp>
+#include <covscript/extensions/math.hpp>
 #include <iostream>
 #include <cstring>
 #include <cstdlib>

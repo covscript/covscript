@@ -1,5 +1,5 @@
-#include "../sources/headers/extension.hpp"
-#include "../sources/headers/cni.hpp"
+#include <covscript/extension.hpp>
+#include <covscript/cni.hpp>
 #include <iostream>
 
 using namespace cs;

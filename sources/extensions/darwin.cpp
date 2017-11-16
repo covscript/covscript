@@ -23,9 +23,9 @@
 #endif
 #define DARWIN_FORCE_BUILTIN
 
-#include "../../include/darwin/darwin.hpp"
-#include "../headers/extension.hpp"
-#include "../headers/cni.hpp"
+#include <darwin/darwin.hpp>
+#include <covscript/extension.hpp>
+#include <covscript/cni.hpp>
 
 static cs::extension darwin_ext;
 static cs::extension darwin_ui_ext;

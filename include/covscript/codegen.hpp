@@ -19,8 +19,8 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include "./symbols.hpp"
-#include "./statement.hpp"
+#include <covscript/symbols.hpp>
+#include <covscript/statement.hpp>
 
 namespace cs {
 	class method_expression final : public method_base {
