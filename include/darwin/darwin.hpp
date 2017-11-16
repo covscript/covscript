@@ -3,22 +3,21 @@
 * Covariant Darwin Universal Character Graphics Library
 *
 * This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* any later version.
+* it under the terms of the GNU Affero General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
 *
 * This program is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
+* GNU Affero General Public License for more details.
 *
-* You should have received a copy of the GNU General Public License
+* You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 * Copyright (C) 2017 Michael Lee(李登淳)
-* Email: China-LDC@outlook.com
+* Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
-* Website: http://covariant.cn/darwin/
 *
 * Library Version: 17.10.1
 *
@@ -93,7 +92,7 @@ namespace darwin {
 
 		darwin_rt(const darwin_rt &) = delete;
 
-		darwin_rt(darwin_rt &&) noexcept = delete;
+		darwin_rt(darwin_rt &&) = delete;
 
 		~darwin_rt();
 
@@ -101,7 +100,7 @@ namespace darwin {
 
 		void exit();
 
-		status get_state() const noexcept
+		status get_state() const
 		{
 			if (m_module == nullptr) return status::error;
 			if (m_platform == nullptr) return status::leisure;
@@ -110,31 +109,31 @@ namespace darwin {
 			return status::null;
 		}
 
-		virtual bool is_kb_hit() noexcept
+		virtual bool is_kb_hit()
 		{
 			if (m_platform == nullptr) Darwin_Error("Adapter is not ready.");
 			return m_platform->is_kb_hit();
 		}
 
-		virtual int get_kb_hit() noexcept
+		virtual int get_kb_hit()
 		{
 			if (m_platform == nullptr) Darwin_Error("Adapter is not ready.");
 			return m_platform->get_kb_hit();
 		}
 
-		results fit_drawable() noexcept
+		results fit_drawable()
 		{
 			if (m_platform == nullptr) return results::failure;
 			return m_platform->fit_drawable();
 		}
 
-		drawable *get_drawable() noexcept
+		drawable *get_drawable()
 		{
 			if (m_platform == nullptr) return nullptr;
 			return m_platform->get_drawable();
 		}
 
-		results update_drawable() noexcept
+		results update_drawable()
 		{
 			if (m_platform == nullptr) return results::failure;
 			return m_platform->update_drawable();

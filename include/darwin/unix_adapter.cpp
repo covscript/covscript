@@ -1,3 +1,23 @@
+/*
+* Covariant Darwin Universal Character Graphics Library
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* Copyright (C) 2017 Michael Lee(李登淳)
+* Email: mikecovlee@163.com
+* Github: https://github.com/mikecovlee
+*/
 #include "./module.hpp"
 #include "./graphics.hpp"
 #include "./unix_conio.hpp"
@@ -13,7 +33,7 @@ namespace darwin {
 
 		virtual ~unix_adapter() = default;
 
-		virtual status get_state() const noexcept override
+		virtual status get_state() const override
 		{
 			if (mReady)
 				return status::ready;
@@ -21,7 +41,7 @@ namespace darwin {
 				return status::leisure;
 		}
 
-		virtual results init() noexcept override
+		virtual results init() override
 		{
 			conio::reset();
 			//conio::clrscr();
@@ -30,7 +50,7 @@ namespace darwin {
 			return results::success;
 		}
 
-		virtual results stop() noexcept override
+		virtual results stop() override
 		{
 			conio::reset();
 			//conio::clrscr();
@@ -39,7 +59,7 @@ namespace darwin {
 			return results::success;
 		}
 
-		virtual results exec_commands(commands c) noexcept override
+		virtual results exec_commands(commands c) override
 		{
 			switch (c) {
 			case commands::echo_on:
@@ -61,28 +81,28 @@ namespace darwin {
 			return results::success;
 		}
 
-		virtual bool is_kb_hit() noexcept override
+		virtual bool is_kb_hit() override
 		{
 			return conio::kbhit();
 		}
 
-		virtual int get_kb_hit() noexcept override
+		virtual int get_kb_hit() override
 		{
 			return conio::getch();
 		}
 
-		virtual results fit_drawable() noexcept override
+		virtual results fit_drawable() override
 		{
 			mDrawable.resize(conio::terminal_width(), conio::terminal_height());
 			return results::success;
 		}
 
-		virtual drawable *get_drawable() noexcept override
+		virtual drawable *get_drawable() override
 		{
 			return &mDrawable;
 		}
 
-		virtual results update_drawable() noexcept override
+		virtual results update_drawable() override
 		{
 			conio::gotoxy(0, 0);
 			std::size_t sw(std::min<std::size_t>(mDrawable.get_width(), conio::terminal_width())), sh(std::min<std::size_t>(mDrawable.get_height(), conio::terminal_height()));
