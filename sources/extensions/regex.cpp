@@ -119,11 +119,6 @@ namespace regex_cs_ext {
 		return m.suffix().str();
 	}
 
-	string format(const std::smatch &m, const string &fmt)
-	{
-		return m.format(fmt.c_str());
-	}
-
 	void init()
 	{
 		string_cs_ext::init();
@@ -140,7 +135,6 @@ namespace regex_cs_ext {
 		regex_result_ext.add_var("str", var::make_protect<callable>(cni(str)));
 		regex_result_ext.add_var("prefix", var::make_protect<callable>(cni(prefix)));
 		regex_result_ext.add_var("suffix", var::make_protect<callable>(cni(suffix)));
-		regex_result_ext.add_var("format", var::make_protect<callable>(cni(format)));
 	}
 }
 
