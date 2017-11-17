@@ -186,7 +186,8 @@ namespace cs {
 			add_var(name, var::make_protect<type>(func, hash));
 		}
 
-		void add_buildin_type(const std::string &name, const std::function<var()> &func, std::size_t hash, extension_t ext)
+		void
+		add_buildin_type(const std::string &name, const std::function<var()> &func, std::size_t hash, extension_t ext)
 		{
 			add_record(name);
 			add_var(name, var::make_protect<type>(func, hash, ext));

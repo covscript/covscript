@@ -33,10 +33,12 @@ namespace spp {
 		{
 			reset();
 		}
+
 		void reset()
 		{
 			_start = _snap = clock::now();
 		}
+
 		void snap()
 		{
 			_snap = clock::now();
@@ -46,6 +48,7 @@ namespace spp {
 		{
 			return get_diff<float>(_start, clock::now());
 		}
+
 		float get_delta() const
 		{
 			return get_diff<float>(_snap, clock::now());
@@ -56,7 +59,7 @@ namespace spp {
 		using point = std::chrono::time_point<clock>;
 
 		template<typename T>
-		static T get_diff(const point& start, const point& end)
+		static T get_diff(const point &start, const point &end)
 		{
 			using duration_t = std::chrono::duration<T, time_unit>;
 

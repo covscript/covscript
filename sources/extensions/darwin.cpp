@@ -133,14 +133,27 @@ namespace darwin_cs_ext {
 				break;
 			}
 			darwin::runtime.fit_drawable();
-			std::size_t x(0.5 * (darwin::runtime.get_drawable()->get_width() - width)), y(0.5 * (darwin::runtime.get_drawable()->get_height() - 6));
+			std::size_t x(0.5 * (darwin::runtime.get_drawable()->get_width() - width)), y(
+			    0.5 * (darwin::runtime.get_drawable()->get_height() - 6));
 			darwin::runtime.get_drawable()->clear();
-			darwin::runtime.get_drawable()->fill_rect(x, y, width, 6, darwin::pixel(' ', true, false, darwin::colors::white, darwin::colors::white));
-			darwin::runtime.get_drawable()->fill_rect(x, y, width, 1, darwin::pixel(' ', true, false, darwin::colors::white, darwin::colors::cyan));
-			darwin::runtime.get_drawable()->fill_rect(x + 0.5 * (width - button.size() - 2), y + 4, button.size() + 2, 1, darwin::pixel(' ', true, false, darwin::colors::white, darwin::colors::cyan));
-			darwin::runtime.get_drawable()->draw_string(x + 0.5 * (width - title.size()), y, title, darwin::pixel(' ', true, false, darwin::colors::black, darwin::colors::cyan));
-			darwin::runtime.get_drawable()->draw_string(x + 0.5 * (width - message.size()), y + 2, message, darwin::pixel(' ', true, false, darwin::colors::black, darwin::colors::white));
-			darwin::runtime.get_drawable()->draw_string(x + 0.5 * (width - button.size()), y + 4, button, darwin::pixel(' ', true, false, darwin::colors::white, darwin::colors::cyan));
+			darwin::runtime.get_drawable()->fill_rect(x, y, width, 6,
+			        darwin::pixel(' ', true, false, darwin::colors::white,
+			                      darwin::colors::white));
+			darwin::runtime.get_drawable()->fill_rect(x, y, width, 1,
+			        darwin::pixel(' ', true, false, darwin::colors::white,
+			                      darwin::colors::cyan));
+			darwin::runtime.get_drawable()->fill_rect(x + 0.5 * (width - button.size() - 2), y + 4, button.size() + 2,
+			        1, darwin::pixel(' ', true, false, darwin::colors::white,
+			                         darwin::colors::cyan));
+			darwin::runtime.get_drawable()->draw_string(x + 0.5 * (width - title.size()), y, title,
+			        darwin::pixel(' ', true, false, darwin::colors::black,
+			                      darwin::colors::cyan));
+			darwin::runtime.get_drawable()->draw_string(x + 0.5 * (width - message.size()), y + 2, message,
+			        darwin::pixel(' ', true, false, darwin::colors::black,
+			                      darwin::colors::white));
+			darwin::runtime.get_drawable()->draw_string(x + 0.5 * (width - button.size()), y + 4, button,
+			        darwin::pixel(' ', true, false, darwin::colors::white,
+			                      darwin::colors::cyan));
 			darwin::runtime.update_drawable();
 			c.sync();
 		}
@@ -164,14 +177,27 @@ namespace darwin_cs_ext {
 			}
 			darwin::runtime.fit_drawable();
 			std::size_t width = std::max(title.size(), std::max(message.size(), buff.size())) + 4;
-			std::size_t x(0.5 * (darwin::runtime.get_drawable()->get_width() - width)), y(0.5 * (darwin::runtime.get_drawable()->get_height() - 6));
+			std::size_t x(0.5 * (darwin::runtime.get_drawable()->get_width() - width)), y(
+			    0.5 * (darwin::runtime.get_drawable()->get_height() - 6));
 			darwin::runtime.get_drawable()->clear();
-			darwin::runtime.get_drawable()->fill_rect(x, y, width, 6, darwin::pixel(' ', true, false, darwin::colors::white, darwin::colors::white));
-			darwin::runtime.get_drawable()->fill_rect(x, y, width, 1, darwin::pixel(' ', true, false, darwin::colors::white, darwin::colors::cyan));
-			darwin::runtime.get_drawable()->fill_rect(x + 2, y + 4, width - 4, 1, darwin::pixel(' ', true, false, darwin::colors::white, darwin::colors::black));
-			darwin::runtime.get_drawable()->draw_string(x + 0.5 * (width - title.size()), y, title, darwin::pixel(' ', true, false, darwin::colors::black, darwin::colors::cyan));
-			darwin::runtime.get_drawable()->draw_string(x + 0.5 * (width - message.size()), y + 2, message, darwin::pixel(' ', true, false, darwin::colors::black, darwin::colors::white));
-			darwin::runtime.get_drawable()->draw_string(x + 2, y + 4, buff, darwin::pixel(' ', true, false, darwin::colors::white, darwin::colors::black));
+			darwin::runtime.get_drawable()->fill_rect(x, y, width, 6,
+			        darwin::pixel(' ', true, false, darwin::colors::white,
+			                      darwin::colors::white));
+			darwin::runtime.get_drawable()->fill_rect(x, y, width, 1,
+			        darwin::pixel(' ', true, false, darwin::colors::white,
+			                      darwin::colors::cyan));
+			darwin::runtime.get_drawable()->fill_rect(x + 2, y + 4, width - 4, 1,
+			        darwin::pixel(' ', true, false, darwin::colors::white,
+			                      darwin::colors::black));
+			darwin::runtime.get_drawable()->draw_string(x + 0.5 * (width - title.size()), y, title,
+			        darwin::pixel(' ', true, false, darwin::colors::black,
+			                      darwin::colors::cyan));
+			darwin::runtime.get_drawable()->draw_string(x + 0.5 * (width - message.size()), y + 2, message,
+			        darwin::pixel(' ', true, false, darwin::colors::black,
+			                      darwin::colors::white));
+			darwin::runtime.get_drawable()->draw_string(x + 2, y + 4, buff,
+			        darwin::pixel(' ', true, false, darwin::colors::white,
+			                      darwin::colors::black));
 			darwin::runtime.update_drawable();
 			c.sync();
 		}
@@ -255,12 +281,14 @@ namespace darwin_cs_ext {
 		pic->fill_rect(x, y, w, h, pix);
 	}
 
-	void draw_triangle(const drawable_t &pic, number x1, number y1, number x2, number y2, number x3, number y3, const darwin::pixel &pix)
+	void draw_triangle(const drawable_t &pic, number x1, number y1, number x2, number y2, number x3, number y3,
+	                   const darwin::pixel &pix)
 	{
 		pic->draw_triangle(x1, y1, x2, y2, x3, y3, pix);
 	}
 
-	void fill_triangle(const drawable_t &pic, number x1, number y1, number x2, number y2, number x3, number y3, const darwin::pixel &pix)
+	void fill_triangle(const drawable_t &pic, number x1, number y1, number x2, number y2, number x3, number y3,
+	                   const darwin::pixel &pix)
 	{
 		pic->fill_triangle(x1, y1, x2, y2, x3, y3, pix);
 	}

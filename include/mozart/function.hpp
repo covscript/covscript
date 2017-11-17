@@ -294,7 +294,8 @@ namespace cov {
 		template<typename _Tp>
 		function(const _Tp &func)
 		{
-			static_assert(is_same_type<_rT(*)(ArgsT...), typename function_parser<_Tp>::type::common_type>::value, "E000B");
+			static_assert(is_same_type<_rT(*)(ArgsT...), typename function_parser<_Tp>::type::common_type>::value,
+			              "E000B");
 			mFunc = function_parser<_Tp>::make_func_ptr(func);
 		}
 
@@ -333,7 +334,8 @@ namespace cov {
 		template<typename _Tp>
 		function &operator=(_Tp func)
 		{
-			static_assert(is_same_type<_rT(*)(ArgsT...), typename function_parser<_Tp>::type::common_type>::value, "E000B");
+			static_assert(is_same_type<_rT(*)(ArgsT...), typename function_parser<_Tp>::type::common_type>::value,
+			              "E000B");
 			delete mFunc;
 			mFunc = function_parser<_Tp>::make_func_ptr(func);
 			return *this;

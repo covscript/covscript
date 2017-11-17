@@ -153,7 +153,8 @@ namespace cs {
 		}
 	}
 
-	void instance_type::split_token(std::deque<token_base *> &raw, std::deque<token_base *> &signals, std::deque<token_base *> &objects)
+	void instance_type::split_token(std::deque<token_base *> &raw, std::deque<token_base *> &signals,
+	                                std::deque<token_base *> &objects)
 	{
 		bool request_signal = false;
 		for (auto &ptr:raw) {
@@ -174,7 +175,8 @@ namespace cs {
 			objects.push_back(nullptr);
 	}
 
-	void instance_type::build_tree(cov::tree<token_base *> &tree, std::deque<token_base *> &signals, std::deque<token_base *> &objects)
+	void instance_type::build_tree(cov::tree<token_base *> &tree, std::deque<token_base *> &signals,
+	                               std::deque<token_base *> &objects)
 	{
 		if (objects.empty() || signals.empty() || objects.size() != signals.size() + 1)
 			throw syntax_error("Symbols do not match the object.");
@@ -267,7 +269,9 @@ namespace cs {
 		}
 	}
 
-	void instance_type::kill_action(std::deque<std::deque<token_base *>> lines, std::deque<statement_base *> &statements, bool raw)
+	void
+	instance_type::kill_action(std::deque<std::deque<token_base *>> lines, std::deque<statement_base *> &statements,
+	                           bool raw)
 	{
 		std::deque<std::deque<token_base *>> tmp;
 		method_base *method = nullptr;
@@ -333,14 +337,16 @@ namespace cs {
 				throw e;
 			}
 			catch (const std::exception &e) {
-				throw exception(endsig->get_line_num(), context->file_path, context->file_buff.at(endsig->get_line_num() - 1), e.what());
+				throw exception(endsig->get_line_num(), context->file_path,
+				                context->file_buff.at(endsig->get_line_num() - 1), e.what());
 			}
 		}
 		if (level != 0)
 			throw syntax_error("Lack of the \"end\" signal.");
 	}
 
-	void instance_type::translate_into_statements(std::deque<token_base *> &tokens, std::deque<statement_base *> &statements)
+	void instance_type::translate_into_statements(std::deque<token_base *> &tokens,
+	        std::deque<statement_base *> &statements)
 	{
 		std::deque<std::deque<token_base *>> lines;
 		std::deque<token_base *> tmp;

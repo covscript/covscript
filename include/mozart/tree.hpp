@@ -42,7 +42,8 @@ namespace cov {
 			tree_node(tree_node *a, tree_node *b, tree_node *c, const T &dat) : root(a), left(b), right(c), data(dat) {}
 
 			template<typename...Args_T>
-			tree_node(tree_node *a, tree_node *b, tree_node *c, Args_T &&...args):root(a), left(b), right(c), data(std::forward<Args_T>(args)...) {}
+			tree_node(tree_node *a, tree_node *b, tree_node *c, Args_T &&...args):root(a), left(b), right(c),
+				data(std::forward<Args_T>(args)...) {}
 
 			~tree_node() = default;
 		};

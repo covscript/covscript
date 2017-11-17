@@ -113,7 +113,8 @@ namespace cs {
 
 	void statement_namespace::run()
 	{
-		context->instance->storage.add_var(this->mName, var::make_protect<name_space_t>(std::make_shared<name_space_holder>([this] {
+		context->instance->storage.add_var(this->mName,
+		var::make_protect<name_space_t>(std::make_shared<name_space_holder>([this] {
 			scope_guard scope(context);
 			for (auto &ptr:mBlock)
 			{
@@ -127,7 +128,8 @@ namespace cs {
 					throw e;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(),
+					                ptr->get_raw_code(), e.what());
 				}
 			}
 			return scope.get();
@@ -151,7 +153,8 @@ namespace cs {
 				catch (const std::exception &e) {
 					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 				}
-				if (context->instance->return_fcall || context->instance->break_block || context->instance->continue_block)
+				if (context->instance->return_fcall || context->instance->break_block ||
+				        context->instance->continue_block)
 					break;
 			}
 		}
@@ -174,7 +177,8 @@ namespace cs {
 				catch (const std::exception &e) {
 					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 				}
-				if (context->instance->return_fcall || context->instance->break_block || context->instance->continue_block)
+				if (context->instance->return_fcall || context->instance->break_block ||
+				        context->instance->continue_block)
 					break;
 			}
 		}
@@ -193,7 +197,8 @@ namespace cs {
 				catch (const std::exception &e) {
 					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 				}
-				if (context->instance->return_fcall || context->instance->break_block || context->instance->continue_block)
+				if (context->instance->return_fcall || context->instance->break_block ||
+				        context->instance->continue_block)
 					break;
 			}
 		}
@@ -387,7 +392,8 @@ namespace cs {
 	void statement_function::run()
 	{
 		if (this->mIsMemFn)
-			context->instance->storage.add_var(this->mName, var::make_protect<callable>(this->mFunc, callable::types::member_fn));
+			context->instance->storage.add_var(this->mName,
+			                                   var::make_protect<callable>(this->mFunc, callable::types::member_fn));
 		else
 			context->instance->storage.add_var(this->mName, var::make_protect<callable>(this->mFunc));
 	}
@@ -423,7 +429,8 @@ namespace cs {
 					catch (const std::exception &e) {
 						throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 					}
-					if (context->instance->return_fcall || context->instance->break_block || context->instance->continue_block)
+					if (context->instance->return_fcall || context->instance->break_block ||
+					        context->instance->continue_block)
 						break;
 				}
 				return;

@@ -105,7 +105,8 @@ namespace darwin {
 			if (m_module == nullptr) return status::error;
 			if (m_platform == nullptr) return status::leisure;
 			if (m_module->get_state() == status::busy || m_platform->get_state() == status::busy) return status::busy;
-			if (m_module->get_state() == status::ready && m_platform->get_state() == status::ready) return status::ready;
+			if (m_module->get_state() == status::ready && m_platform->get_state() == status::ready)
+				return status::ready;
 			return status::null;
 		}
 

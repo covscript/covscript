@@ -201,7 +201,8 @@ namespace cov {
 		}
 
 		template<int N>
-		typename cov::add_constant_reference<typename tuple_random_iterator<N, _Tp, _ArgsT...>::type>::type get() const
+		typename cov::add_constant_reference<typename tuple_random_iterator<N, _Tp, _ArgsT...>::type>::type
+		get() const
 		{
 			return tuple_random_iterator<N, _Tp, _ArgsT...>::get(*this);
 		}

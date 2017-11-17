@@ -69,7 +69,9 @@
 #endif
 
 #if !defined(SPP_NO_CXX11_HDR_INITIALIZER_LIST)
+
 #include <initializer_list>
+
 #endif
 
 #if (SPP_GROUP_SIZE == 32)
@@ -89,8 +91,8 @@ namespace spp_ {
 //  ----------------------------------------------------------------------
 //                  U T I L    F U N C T I O N S
 //  ----------------------------------------------------------------------
-	template <class E>
-	inline void throw_exception(const E& exception)
+	template<class E>
+	inline void throw_exception(const E &exception)
 	{
 #if !defined(SPP_NO_EXCEPTIONS)
 		throw exception;
@@ -104,17 +106,17 @@ namespace spp_ {
 //              M U T A B L E     P A I R      H A C K
 // turn std::pair<const K, V> into mutable std::pair<K, V>
 //  ----------------------------------------------------------------------
-	template <class T>
+	template<class T>
 	struct cvt {
 		typedef T type;
 	};
 
-	template <class K, class V>
+	template<class K, class V>
 	struct cvt<std::pair<const K, V> > {
 		typedef std::pair<K, V> type;
 	};
 
-	template <class K, class V>
+	template<class K, class V>
 	struct cvt<const std::pair<const K, V> > {
 		typedef const std::pair<K, V> type;
 	};
@@ -171,15 +173,15 @@ namespace spp_ {
 // ----- low-level I/O for FILE* ----
 
 		template<typename Ignored>
-		inline bool read_data_internal(Ignored* /*unused*/, FILE* fp,
-		                               void* data, size_t length)
+		inline bool read_data_internal(Ignored * /*unused*/, FILE *fp,
+		                               void *data, size_t length)
 		{
 			return fread(data, length, 1, fp) == 1;
 		}
 
 		template<typename Ignored>
-		inline bool write_data_internal(Ignored* /*unused*/, FILE* fp,
-		                                const void* data, size_t length)
+		inline bool write_data_internal(Ignored * /*unused*/, FILE *fp,
+		                                const void *data, size_t length)
 		{
 			return fwrite(data, length, 1, fp) == 1;
 		}
@@ -191,29 +193,31 @@ namespace spp_ {
 // it's only legal to delay the instantiation the way we want to if
 // the istream/ostream is a template type.  So we jump through hoops.
 		template<typename ISTREAM>
-		inline bool read_data_internal_for_istream(ISTREAM* fp,
-		        void* data, size_t length)
+		inline bool read_data_internal_for_istream(ISTREAM *fp,
+		        void *data, size_t length)
 		{
-			return fp->read(reinterpret_cast<char*>(data),
+			return fp->read(reinterpret_cast<char *>(data),
 			                static_cast<std::streamsize>(length)).good();
 		}
+
 		template<typename Ignored>
-		inline bool read_data_internal(Ignored* /*unused*/, std::istream* fp,
-		                               void* data, size_t length)
+		inline bool read_data_internal(Ignored * /*unused*/, std::istream *fp,
+		                               void *data, size_t length)
 		{
 			return read_data_internal_for_istream(fp, data, length);
 		}
 
 		template<typename OSTREAM>
-		inline bool write_data_internal_for_ostream(OSTREAM* fp,
-		        const void* data, size_t length)
+		inline bool write_data_internal_for_ostream(OSTREAM *fp,
+		        const void *data, size_t length)
 		{
-			return fp->write(reinterpret_cast<const char*>(data),
+			return fp->write(reinterpret_cast<const char *>(data),
 			                 static_cast<std::streamsize>(length)).good();
 		}
+
 		template<typename Ignored>
-		inline bool write_data_internal(Ignored* /*unused*/, std::ostream* fp,
-		                                const void* data, size_t length)
+		inline bool write_data_internal(Ignored * /*unused*/, std::ostream *fp,
+		                                const void *data, size_t length)
 		{
 			return write_data_internal_for_ostream(fp, data, length);
 		}
@@ -222,32 +226,32 @@ namespace spp_ {
 
 // The INPUT type needs to support a Read() method that takes a
 // buffer and a length and returns the number of bytes read.
-		template <typename INPUT>
-		inline bool read_data_internal(INPUT* fp, void* /*unused*/,
-		                               void* data, size_t length)
+		template<typename INPUT>
+		inline bool read_data_internal(INPUT *fp, void * /*unused*/,
+		                               void *data, size_t length)
 		{
 			return static_cast<size_t>(fp->Read(data, length)) == length;
 		}
 
 // The OUTPUT type needs to support a Write() operation that takes
 // a buffer and a length and returns the number of bytes written.
-		template <typename OUTPUT>
-		inline bool write_data_internal(OUTPUT* fp, void* /*unused*/,
-		                                const void* data, size_t length)
+		template<typename OUTPUT>
+		inline bool write_data_internal(OUTPUT *fp, void * /*unused*/,
+		                                const void *data, size_t length)
 		{
 			return static_cast<size_t>(fp->Write(data, length)) == length;
 		}
 
 // ----- low-level I/O: the public API ----
 
-		template <typename INPUT>
-		inline bool read_data(INPUT* fp, void* data, size_t length)
+		template<typename INPUT>
+		inline bool read_data(INPUT *fp, void *data, size_t length)
 		{
 			return read_data_internal(fp, fp, data, length);
 		}
 
-		template <typename OUTPUT>
-		inline bool write_data(OUTPUT* fp, const void* data, size_t length)
+		template<typename OUTPUT>
+		inline bool write_data(OUTPUT *fp, const void *data, size_t length)
 		{
 			return write_data_internal(fp, fp, data, length);
 		}
@@ -258,13 +262,14 @@ namespace spp_ {
 // and load on a 64-bit system).  Excess bytes are taken to be 0.
 // INPUT and OUTPUT must match legal inputs to read/write_data (above).
 // --------------------------------------------------------------------
-		template <typename INPUT, typename IntType>
-		bool read_bigendian_number(INPUT* fp, IntType* value, size_t length)
+		template<typename INPUT, typename IntType>
+		bool read_bigendian_number(INPUT *fp, IntType *value, size_t length)
 		{
 			*value = 0;
 			unsigned char byte;
 			// We require IntType to be unsigned or else the shifting gets all screwy.
-			SPP_COMPILE_ASSERT(static_cast<IntType>(-1) > static_cast<IntType>(0), "serializing_int_requires_an_unsigned_type");
+			SPP_COMPILE_ASSERT(static_cast<IntType>(-1) > static_cast<IntType>(0),
+			                   "serializing_int_requires_an_unsigned_type");
 			for (size_t i = 0; i < length; ++i) {
 				if (!read_data(fp, &byte, sizeof(byte)))
 					return false;
@@ -273,15 +278,17 @@ namespace spp_ {
 			return true;
 		}
 
-		template <typename OUTPUT, typename IntType>
-		bool write_bigendian_number(OUTPUT* fp, IntType value, size_t length)
+		template<typename OUTPUT, typename IntType>
+		bool write_bigendian_number(OUTPUT *fp, IntType value, size_t length)
 		{
 			unsigned char byte;
 			// We require IntType to be unsigned or else the shifting gets all screwy.
-			SPP_COMPILE_ASSERT(static_cast<IntType>(-1) > static_cast<IntType>(0), "serializing_int_requires_an_unsigned_type");
+			SPP_COMPILE_ASSERT(static_cast<IntType>(-1) > static_cast<IntType>(0),
+			                   "serializing_int_requires_an_unsigned_type");
 			for (size_t i = 0; i < length; ++i) {
-				byte = (sizeof(value) <= length-1 - i)
-				       ? static_cast<unsigned char>(0) : static_cast<unsigned char>((value >> ((length-1 - i) * 8)) & 255);
+				byte = (sizeof(value) <= length - 1 - i)
+				       ? static_cast<unsigned char>(0) : static_cast<unsigned char>((value >> ((length - 1 - i) * 8)) &
+				               255);
 				if (!write_data(fp, &byte, sizeof(byte))) return false;
 			}
 			return true;
@@ -293,15 +300,16 @@ namespace spp_ {
 // however, we don't try to normalize endianness.
 // This is the type used for NopointerSerializer.
 // ---------------------------------------------------------------
-		template <typename value_type> struct pod_serializer {
-			template <typename INPUT>
-			bool operator()(INPUT* fp, value_type* value) const
+		template<typename value_type>
+		struct pod_serializer {
+			template<typename INPUT>
+			bool operator()(INPUT *fp, value_type *value) const
 			{
 				return read_data(fp, value, sizeof(*value));
 			}
 
-			template <typename OUTPUT>
-			bool operator()(OUTPUT* fp, const value_type& value) const
+			template<typename OUTPUT>
+			bool operator()(OUTPUT *fp, const value_type &value) const
 			{
 				return write_data(fp, &value, sizeof(value));
 			}
@@ -318,12 +326,15 @@ namespace spp_ {
 		class sh_hashtable_settings : public HashFunc {
 		private:
 #ifndef SPP_MIX_HASH
-			template <class T, int sz> struct Mixer {
+
+			template<class T, int sz>
+			struct Mixer {
 				inline T operator()(T h) const
 				{
 					return h;
 				}
 			};
+
 #else
 			template <class T, int sz> struct Mixer {
 				inline T operator()(T h) const;
@@ -366,7 +377,7 @@ namespace spp_ {
 			typedef SizeType size_type;
 
 		public:
-			sh_hashtable_settings(const hasher& hf,
+			sh_hashtable_settings(const hasher &hf,
 			                      const float ht_occupancy_flt,
 			                      const float ht_empty_flt)
 				: hasher(hf),
@@ -379,7 +390,7 @@ namespace spp_ {
 				set_shrink_factor(ht_empty_flt);
 			}
 
-			size_t hash(const key_type& v) const
+			size_t hash(const key_type &v) const
 			{
 				size_t h = hasher::operator()(v);
 				Mixer<size_t, sizeof(size_t)> mixer;
@@ -391,14 +402,17 @@ namespace spp_ {
 			{
 				return enlarge_factor_;
 			}
+
 			void set_enlarge_factor(float f)
 			{
 				enlarge_factor_ = f;
 			}
+
 			float shrink_factor() const
 			{
 				return shrink_factor_;
 			}
+
 			void set_shrink_factor(float f)
 			{
 				shrink_factor_ = f;
@@ -408,14 +422,17 @@ namespace spp_ {
 			{
 				return enlarge_threshold_;
 			}
+
 			void set_enlarge_threshold(size_type t)
 			{
 				enlarge_threshold_ = t;
 			}
+
 			size_type shrink_threshold() const
 			{
 				return shrink_threshold_;
 			}
+
 			void set_shrink_threshold(size_type t)
 			{
 				shrink_threshold_ = t;
@@ -425,6 +442,7 @@ namespace spp_ {
 			{
 				return static_cast<size_type>(x * enlarge_factor_);
 			}
+
 			size_type shrink_size(size_type x) const
 			{
 				return static_cast<size_type>(x * shrink_factor_);
@@ -434,6 +452,7 @@ namespace spp_ {
 			{
 				return consider_shrink_;
 			}
+
 			void set_consider_shrink(bool t)
 			{
 				consider_shrink_ = t;
@@ -443,6 +462,7 @@ namespace spp_ {
 			{
 				return num_ht_copies_;
 			}
+
 			void inc_num_ht_copies()
 			{
 				++num_ht_copies_;
@@ -464,7 +484,7 @@ namespace spp_ {
 			{
 				assert(shrink >= 0);
 				assert(grow <= 1);
-				if (shrink > grow/2.0f)
+				if (shrink > grow / 2.0f)
 					shrink = grow / 2.0f;     // otherwise we thrash hashtable size
 				set_shrink_factor(shrink);
 				set_enlarge_factor(grow);
@@ -602,19 +622,18 @@ namespace spp_ {
 
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
-	template <class tabletype>
+	template<class tabletype>
 	class table_iterator {
 	public:
 		typedef table_iterator iterator;
 
-		typedef std::random_access_iterator_tag      iterator_category;
-		typedef typename tabletype::value_type       value_type;
-		typedef typename tabletype::difference_type  difference_type;
-		typedef typename tabletype::size_type        size_type;
+		typedef std::random_access_iterator_tag iterator_category;
+		typedef typename tabletype::value_type value_type;
+		typedef typename tabletype::difference_type difference_type;
+		typedef typename tabletype::size_type size_type;
 
 		explicit table_iterator(tabletype *tbl = 0, size_type p = 0) :
-			table(tbl), pos(p)
-		{ }
+			table(tbl), pos(p) {}
 
 		// Helper function to assert things are ok; eg pos is still in range
 		void check() const
@@ -625,30 +644,34 @@ namespace spp_ {
 
 		// Arithmetic: we just do arithmetic on pos.  We don't even need to
 		// do bounds checking, since STL doesn't consider that its job.  :-)
-		iterator& operator+=(size_type t)
+		iterator &operator+=(size_type t)
 		{
 			pos += t;
 			check();
 			return *this;
 		}
-		iterator& operator-=(size_type t)
+
+		iterator &operator-=(size_type t)
 		{
 			pos -= t;
 			check();
 			return *this;
 		}
-		iterator& operator++()
+
+		iterator &operator++()
 		{
 			++pos;
 			check();
 			return *this;
 		}
-		iterator& operator--()
+
+		iterator &operator--()
 		{
 			--pos;
 			check();
 			return *this;
 		}
+
 		iterator operator++(int)
 		{
 			iterator tmp(*this);     // for x++
@@ -687,30 +710,33 @@ namespace spp_ {
 		}
 
 		// Comparisons.
-		bool operator==(const iterator& it) const
+		bool operator==(const iterator &it) const
 		{
 			return table == it.table && pos == it.pos;
 		}
 
-		bool operator<(const iterator& it) const
+		bool operator<(const iterator &it) const
 		{
 			assert(table == it.table);              // life is bad bad bad otherwise
 			return pos < it.pos;
 		}
 
-		bool operator!=(const iterator& it) const
+		bool operator!=(const iterator &it) const
 		{
 			return !(*this == it);
 		}
-		bool operator<=(const iterator& it) const
+
+		bool operator<=(const iterator &it) const
 		{
 			return !(it < *this);
 		}
-		bool operator>(const iterator& it) const
+
+		bool operator>(const iterator &it) const
 		{
 			return it < *this;
 		}
-		bool operator>=(const iterator& it) const
+
+		bool operator>=(const iterator &it) const
 		{
 			return !(*this < it);
 		}
@@ -722,7 +748,7 @@ namespace spp_ {
 
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
-	template <class tabletype>
+	template<class tabletype>
 	class const_table_iterator {
 	public:
 		typedef table_iterator<tabletype> iterator;
@@ -737,15 +763,15 @@ namespace spp_ {
 
 		// The "real" constructor
 		const_table_iterator(const tabletype *tbl, size_type p)
-			: table(tbl), pos(p) { }
+			: table(tbl), pos(p) {}
 
 		// The default constructor, used when I define vars of type table::iterator
-		const_table_iterator() : table(NULL), pos(0) { }
+		const_table_iterator() : table(NULL), pos(0) {}
 
 		// The copy constructor, for when I say table::iterator foo = tbl.begin()
 		// Also converts normal iterators to const iterators // not explicit on purpose
 		const_table_iterator(const iterator &from)
-			: table(from.table), pos(from.pos) { }
+			: table(from.table), pos(from.pos) {}
 
 		// The default destructor is fine; we don't define one
 		// The default operator= is fine; we don't define one
@@ -756,6 +782,7 @@ namespace spp_ {
 		{
 			return (*table)[pos];
 		}
+
 		pointer operator->() const
 		{
 			return &(operator*());
@@ -770,30 +797,34 @@ namespace spp_ {
 
 		// Arithmetic: we just do arithmetic on pos.  We don't even need to
 		// do bounds checking, since STL doesn't consider that its job.  :-)
-		const_iterator& operator+=(size_type t)
+		const_iterator &operator+=(size_type t)
 		{
 			pos += t;
 			check();
 			return *this;
 		}
-		const_iterator& operator-=(size_type t)
+
+		const_iterator &operator-=(size_type t)
 		{
 			pos -= t;
 			check();
 			return *this;
 		}
-		const_iterator& operator++()
+
+		const_iterator &operator++()
 		{
 			++pos;
 			check();
 			return *this;
 		}
-		const_iterator& operator--()
+
+		const_iterator &operator--()
 		{
 			--pos;
 			check();
 			return *this;
 		}
+
 		const_iterator operator++(int)
 		{
 			const_iterator tmp(*this); // for x++
@@ -801,6 +832,7 @@ namespace spp_ {
 			check();
 			return tmp;
 		}
+
 		const_iterator operator--(int)
 		{
 			const_iterator tmp(*this); // for x--
@@ -808,53 +840,61 @@ namespace spp_ {
 			check();
 			return tmp;
 		}
+
 		const_iterator operator+(difference_type i) const
 		{
 			const_iterator tmp(*this);
 			tmp += i;
 			return tmp;
 		}
+
 		const_iterator operator-(difference_type i) const
 		{
 			const_iterator tmp(*this);
 			tmp -= i;
 			return tmp;
 		}
+
 		difference_type operator-(const_iterator it) const
 		{
 			// for "x = it2 - it"
 			assert(table == it.table);
 			return pos - it.pos;
 		}
+
 		reference operator[](difference_type n) const
 		{
 			return *(*this + n);            // simple though not totally efficient
 		}
 
 		// Comparisons.
-		bool operator==(const const_iterator& it) const
+		bool operator==(const const_iterator &it) const
 		{
 			return table == it.table && pos == it.pos;
 		}
 
-		bool operator<(const const_iterator& it) const
+		bool operator<(const const_iterator &it) const
 		{
 			assert(table == it.table);              // life is bad bad bad otherwise
 			return pos < it.pos;
 		}
-		bool operator!=(const const_iterator& it) const
+
+		bool operator!=(const const_iterator &it) const
 		{
 			return !(*this == it);
 		}
-		bool operator<=(const const_iterator& it) const
+
+		bool operator<=(const const_iterator &it) const
 		{
 			return !(it < *this);
 		}
-		bool operator>(const const_iterator& it) const
+
+		bool operator>(const const_iterator &it) const
 		{
 			return it < *this;
 		}
-		bool operator>=(const const_iterator& it) const
+
+		bool operator>=(const const_iterator &it) const
 		{
 			return !(*this < it);
 		}
@@ -885,11 +925,11 @@ namespace spp_ {
 
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
-	template <class T, class row_it, class col_it, class iter_type>
+	template<class T, class row_it, class col_it, class iter_type>
 	class Two_d_iterator : public std::iterator<iter_type, T> {
 	public:
 		typedef Two_d_iterator iterator;
-		typedef T              value_type;
+		typedef T value_type;
 
 		explicit Two_d_iterator(row_it curr) : row_current(curr), col_current(0)
 		{
@@ -905,25 +945,25 @@ namespace spp_ {
 		}
 
 		// The default constructor
-		Two_d_iterator() :  row_current(0), col_current(0) { }
+		Two_d_iterator() : row_current(0), col_current(0) {}
 
 		// Need this explicitly so we can convert normal iterators <=> const iterators
 		// not explicit on purpose
 		// ---------------------------------------------------------------------------
-		template <class T2, class row_it2, class col_it2, class iter_type2>
-		Two_d_iterator(const Two_d_iterator<T2, row_it2, col_it2, iter_type2>& it) :
-			row_current (*(row_it *)&it.row_current),
-			col_current (*(col_it *)&it.col_current)
-		{ }
+		template<class T2, class row_it2, class col_it2, class iter_type2>
+		Two_d_iterator(const Two_d_iterator<T2, row_it2, col_it2, iter_type2> &it) :
+			row_current(*(row_it *) &it.row_current),
+			col_current(*(col_it *) &it.col_current) {}
 
 		// The default destructor is fine; we don't define one
 		// The default operator= is fine; we don't define one
 
-		value_type& operator*() const
+		value_type &operator*() const
 		{
 			return *(col_current);
 		}
-		value_type* operator->() const
+
+		value_type *operator->() const
 		{
 			return &(operator*());
 		}
@@ -959,7 +999,7 @@ namespace spp_ {
 			return diff;
 		}
 
-		iterator& operator++()
+		iterator &operator++()
 		{
 			// assert(!row_current->is_marked());               // how to ++ from there?
 			++col_current;
@@ -967,7 +1007,7 @@ namespace spp_ {
 			return *this;
 		}
 
-		iterator& operator--()
+		iterator &operator--()
 		{
 			while (row_current->is_marked() ||
 			        col_current == row_current->ne_begin()) {
@@ -977,12 +1017,14 @@ namespace spp_ {
 			--col_current;
 			return *this;
 		}
+
 		iterator operator++(int)
 		{
 			iterator tmp(*this);
 			++*this;
 			return tmp;
 		}
+
 		iterator operator--(int)
 		{
 			iterator tmp(*this);
@@ -992,13 +1034,13 @@ namespace spp_ {
 
 
 		// Comparisons.
-		bool operator==(const iterator& it) const
+		bool operator==(const iterator &it) const
 		{
 			return (row_current == it.row_current &&
 			        (!row_current || row_current->is_marked() || col_current == it.col_current));
 		}
 
-		bool operator!=(const iterator& it) const
+		bool operator!=(const iterator &it) const
 		{
 			return !(*this == it);
 		}
@@ -1013,7 +1055,7 @@ namespace spp_ {
 
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
-	template <class T, class row_it, class col_it, class iter_type, class Alloc>
+	template<class T, class row_it, class col_it, class iter_type, class Alloc>
 	class Two_d_destructive_iterator : public Two_d_iterator<T, row_it, col_it, iter_type> {
 	public:
 		typedef Two_d_destructive_iterator iterator;
@@ -1049,7 +1091,7 @@ namespace spp_ {
 			}
 		}
 
-		iterator& operator++()
+		iterator &operator++()
 		{
 			// assert(!this->row_current->is_marked());         // how to ++ from there?
 			++this->col_current;
@@ -1058,7 +1100,7 @@ namespace spp_ {
 		}
 
 	private:
-		Two_d_destructive_iterator& operator=(const Two_d_destructive_iterator &o);
+		Two_d_destructive_iterator &operator=(const Two_d_destructive_iterator &o);
 
 		Alloc &_alloc;
 	};
@@ -1142,73 +1184,84 @@ namespace spp_ {
 // called its "offset."
 // ---------------------------------------------------------------------------
 
-	template <class T, class Alloc>
+	template<class T, class Alloc>
 	class sparsegroup {
 	public:
 		// Basic types
-		typedef T                                              value_type;
-		typedef Alloc                                          allocator_type;
-		typedef value_type&                                    reference;
-		typedef const value_type&                              const_reference;
-		typedef value_type*                                    pointer;
-		typedef const value_type*                              const_pointer;
+		typedef T value_type;
+		typedef Alloc allocator_type;
+		typedef value_type &reference;
+		typedef const value_type &const_reference;
+		typedef value_type *pointer;
+		typedef const value_type *const_pointer;
 
-		typedef uint8_t                                        size_type;        // max # of buckets
+		typedef uint8_t size_type;        // max # of buckets
 
 		// These are our special iterators, that go over non-empty buckets in a
 		// group.  These aren't const-only because you can change non-empty bcks.
 		// ---------------------------------------------------------------------
-		typedef pointer                                        ne_iterator;
-		typedef const_pointer                                  const_ne_iterator;
-		typedef std::reverse_iterator<ne_iterator>             reverse_ne_iterator;
-		typedef std::reverse_iterator<const_ne_iterator>       const_reverse_ne_iterator;
+		typedef pointer ne_iterator;
+		typedef const_pointer const_ne_iterator;
+		typedef std::reverse_iterator<ne_iterator> reverse_ne_iterator;
+		typedef std::reverse_iterator<const_ne_iterator> const_reverse_ne_iterator;
 
 		// We'll have versions for our special non-empty iterator too
 		// ----------------------------------------------------------
-		ne_iterator               ne_begin()
+		ne_iterator ne_begin()
 		{
 			return reinterpret_cast<pointer>(_group);
 		}
-		const_ne_iterator         ne_begin() const
+
+		const_ne_iterator ne_begin() const
 		{
 			return reinterpret_cast<pointer>(_group);
 		}
-		const_ne_iterator         ne_cbegin() const
+
+		const_ne_iterator ne_cbegin() const
 		{
 			return reinterpret_cast<pointer>(_group);
 		}
-		ne_iterator               ne_end()
+
+		ne_iterator ne_end()
 		{
 			return reinterpret_cast<pointer>(_group + _num_items());
 		}
-		const_ne_iterator         ne_end() const
+
+		const_ne_iterator ne_end() const
 		{
 			return reinterpret_cast<pointer>(_group + _num_items());
 		}
-		const_ne_iterator         ne_cend() const
+
+		const_ne_iterator ne_cend() const
 		{
 			return reinterpret_cast<pointer>(_group + _num_items());
 		}
-		reverse_ne_iterator       ne_rbegin()
+
+		reverse_ne_iterator ne_rbegin()
 		{
 			return reverse_ne_iterator(ne_end());
 		}
+
 		const_reverse_ne_iterator ne_rbegin() const
 		{
 			return const_reverse_ne_iterator(ne_cend());
 		}
+
 		const_reverse_ne_iterator ne_crbegin() const
 		{
 			return const_reverse_ne_iterator(ne_cend());
 		}
-		reverse_ne_iterator       ne_rend()
+
+		reverse_ne_iterator ne_rend()
 		{
 			return reverse_ne_iterator(ne_begin());
 		}
+
 		const_reverse_ne_iterator ne_rend() const
 		{
 			return const_reverse_ne_iterator(ne_cbegin());
 		}
+
 		const_reverse_ne_iterator ne_crend() const
 		{
 			return const_reverse_ne_iterator(ne_cbegin());
@@ -1217,18 +1270,20 @@ namespace spp_ {
 	private:
 		// T can be std::pair<const K, V>, but sometime we need to cast to a mutable type
 		// ------------------------------------------------------------------------------
-		typedef typename spp_::cvt<T>::type                    mutable_value_type;
-		typedef mutable_value_type *                           mutable_pointer;
-		typedef const mutable_value_type *                     const_mutable_pointer;
+		typedef typename spp_::cvt<T>::type mutable_value_type;
+		typedef mutable_value_type *mutable_pointer;
+		typedef const mutable_value_type *const_mutable_pointer;
 
 		bool _bmtest(size_type i) const
 		{
 			return !!(_bitmap & (static_cast<group_bm_type>(1) << i));
 		}
+
 		void _bmset(size_type i)
 		{
 			_bitmap |= static_cast<group_bm_type>(1) << i;
 		}
+
 		void _bmclear(size_type i)
 		{
 			_bitmap &= ~(static_cast<group_bm_type>(1) << i);
@@ -1238,10 +1293,12 @@ namespace spp_ {
 		{
 			return !!(_bm_erased & (static_cast<group_bm_type>(1) << i));
 		}
+
 		void _bme_set(size_type i)
 		{
 			_bm_erased |= static_cast<group_bm_type>(1) << i;
 		}
+
 		void _bme_clear(size_type i)
 		{
 			_bm_erased &= ~(static_cast<group_bm_type>(1) << i);
@@ -1266,11 +1323,11 @@ namespace spp_ {
 				SPP_CXX14_CONSTEXPR alloc_batch_size()
 					: data()
 				{
-					uint8_t group_sz          = SPP_GROUP_SIZE / 4;
+					uint8_t group_sz = SPP_GROUP_SIZE / 4;
 					uint8_t group_start_alloc = SPP_GROUP_SIZE / 8; //4;
-					uint8_t alloc_sz          = group_start_alloc;
-					for (int i=0; i<4; ++i) {
-						for (int j=0; j<group_sz; ++j) {
+					uint8_t alloc_sz = group_start_alloc;
+					for (int i = 0; i < 4; ++i) {
+						for (int j = 0; j < group_sz; ++j) {
 							if (j && j % group_start_alloc == 0)
 								alloc_sz += group_start_alloc;
 							data[i * group_sz + j] = alloc_sz;
@@ -1280,11 +1337,13 @@ namespace spp_ {
 						alloc_sz += group_start_alloc;
 					}
 				}
+
 				uint8_t data[SPP_GROUP_SIZE];
 			};
 
 			static alloc_batch_size s_alloc_batch_sz;
-			return n ? static_cast<uint32_t>(s_alloc_batch_sz.data[n-1]) : 0; // more aggressive alloc at the beginning
+			return n ? static_cast<uint32_t>(s_alloc_batch_sz.data[n - 1])
+			       : 0; // more aggressive alloc at the beginning
 
 #elif (SPP_ALLOC_SZ == 1)
 			// use as little memory as possible - slowest insert/delete in table
@@ -1303,7 +1362,7 @@ namespace spp_ {
 			// ignore tight since we don't store num_alloc
 			// num_alloc = (uint8_t)(tight ? n : _sizing(n));
 
-			uint32_t num_alloc = (uint8_t)_sizing(n);
+			uint32_t num_alloc = (uint8_t) _sizing(n);
 			_set_num_alloc(num_alloc);
 			pointer retval = alloc.allocate(static_cast<size_type>(num_alloc));
 			if (retval == NULL) {
@@ -1320,16 +1379,16 @@ namespace spp_ {
 				uint32_t num_buckets = _num_items();
 				if (num_buckets) {
 					mutable_pointer end_it = (mutable_pointer)(_group + num_buckets);
-					for (mutable_pointer p = (mutable_pointer)_group; p != end_it; ++p)
+					for (mutable_pointer p = (mutable_pointer) _group; p != end_it; ++p)
 						p->~mutable_value_type();
 				}
-				alloc.deallocate(_group, (typename allocator_type::size_type)num_alloc);
+				alloc.deallocate(_group, (typename allocator_type::size_type) num_alloc);
 				_group = NULL;
 			}
 		}
 
 		// private because should not be called - no allocator!
-		sparsegroup &operator=(const sparsegroup& x);
+		sparsegroup &operator=(const sparsegroup &x);
 
 		static size_type _pos_to_offset(group_bm_type bm, size_type pos)
 		{
@@ -1360,14 +1419,14 @@ namespace spp_ {
 		static size_type offset_to_pos(group_bm_type bm, size_type offset)
 		{
 			for (; offset > 0; offset--)
-				bm &= (bm-1);  // remove right-most set bit
+				bm &= (bm - 1);  // remove right-most set bit
 
 			// Clear all bits to the left of the rightmost bit (the &),
 			// and then clear the rightmost bit but set all bits to the
 			// right of it (the -1).
 			// --------------------------------------------------------
 			bm = (bm & -bm) - 1;
-			return  static_cast<size_type>(spp_popcount(bm));
+			return static_cast<size_type>(spp_popcount(bm));
 		}
 
 #ifdef _MSC_VER
@@ -1388,7 +1447,7 @@ namespace spp_ {
 			_set_num_alloc(0);
 		}
 
-		sparsegroup(const sparsegroup& x) :
+		sparsegroup(const sparsegroup &x) :
 			_group(0), _bitmap(x._bitmap), _bm_erased(x._bm_erased)
 		{
 			_set_num_items(0);
@@ -1397,7 +1456,7 @@ namespace spp_ {
 			if (_group) exit(1);
 		}
 
-		sparsegroup(const sparsegroup& x, allocator_type& a) :
+		sparsegroup(const sparsegroup &x, allocator_type &a) :
 			_group(0), _bitmap(x._bitmap), _bm_erased(x._bm_erased)
 		{
 			_set_num_items(0);
@@ -1417,13 +1476,13 @@ namespace spp_ {
 			if (_group) exit(1);
 		}
 
-		void destruct(allocator_type& a)
+		void destruct(allocator_type &a)
 		{
 			_free_group(a, _num_alloc());
 		}
 
 		// Many STL algorithms use swap instead of copy constructors
-		void swap(sparsegroup& x)
+		void swap(sparsegroup &x)
 		{
 			using std::swap;
 
@@ -1431,7 +1490,7 @@ namespace spp_ {
 			swap(_bitmap, x._bitmap);
 			swap(_bm_erased, x._bm_erased);
 #ifdef SPP_STORE_NUM_ITEMS
-			swap(_num_buckets,   x._num_buckets);
+			swap(_num_buckets, x._num_buckets);
 			swap(_num_allocated, x._num_allocated);
 #endif
 		}
@@ -1453,6 +1512,7 @@ namespace spp_ {
 		{
 			return static_cast<size_type>(SPP_GROUP_SIZE);
 		}
+
 		size_type max_size() const
 		{
 			return static_cast<size_type>(SPP_GROUP_SIZE);
@@ -1466,7 +1526,7 @@ namespace spp_ {
 		// We also may want to know how many *used* buckets there are
 		size_type num_nonempty() const
 		{
-			return (size_type)_num_items();
+			return (size_type) _num_items();
 		}
 
 		// TODO(csilvers): make protected + friend
@@ -1475,14 +1535,14 @@ namespace spp_ {
 		reference unsafe_get(size_type i) const
 		{
 			// assert(_bmtest(i));
-			return (reference)_group[pos_to_offset(i)];
+			return (reference) _group[pos_to_offset(i)];
 		}
 
 		typedef std::pair<pointer, bool> SetResult;
 
 	private:
 		//typedef spp_::integral_constant<bool, spp_::is_relocatable<value_type>::value> check_relocatable;
-		typedef spp_::true_type  realloc_ok_type;
+		typedef spp_::true_type realloc_ok_type;
 		typedef spp_::false_type realloc_not_ok_type;
 
 		//typedef spp_::zero_type  libc_reloc_type;
@@ -1492,7 +1552,7 @@ namespace spp_ {
 
 #if 1
 		typedef typename if_<((spp_::is_same<allocator_type, libc_allocator<value_type> >::value ||
-		                       spp_::is_same<allocator_type,  spp_allocator<value_type> >::value) &&
+		                       spp_::is_same<allocator_type, spp_allocator<value_type> >::value) &&
 		                      spp_::is_relocatable<value_type>::value), realloc_ok_type, realloc_not_ok_type>::type
 		check_alloc_type;
 #else
@@ -1519,7 +1579,7 @@ namespace spp_ {
 		void _init_val(mutable_value_type *p, reference val)
 		{
 #if !defined(SPP_NO_CXX11_RVALUE_REFERENCES)
-			::new (p) value_type(std::move(val));
+			::new(p) value_type(std::move(val));
 #else
 			::new (p) value_type(val);
 #endif
@@ -1528,14 +1588,14 @@ namespace spp_ {
 		// ------------------------- memory at *p is uninitialized => need to construct
 		void _init_val(mutable_value_type *p, const_reference val)
 		{
-			::new (p) value_type(val);
+			::new(p) value_type(val);
 		}
 
 		// ------------------------------------------------ memory at *p is initialized
 		void _set_val(value_type *p, reference val)
 		{
 #if !defined(SPP_NO_CXX11_RVALUE_REFERENCES)
-			*(mutable_pointer)p = std::move(val);
+			*(mutable_pointer) p = std::move(val);
 #else
 			using std::swap;
 			swap(*(mutable_pointer)p, *(mutable_pointer)&val);
@@ -1545,20 +1605,20 @@ namespace spp_ {
 		// ------------------------------------------------ memory at *p is initialized
 		void _set_val(value_type *p, const_reference val)
 		{
-			*(mutable_pointer)p = *(const_mutable_pointer)&val;
+			*(mutable_pointer) p = *(const_mutable_pointer) & val;
 		}
 
 		// Create space at _group[offset], assuming value_type is relocatable, and the
 		// allocator_type is the spp allocator.
 		// return true if the slot was constructed (i.e. contains a valid value_type
 		// ---------------------------------------------------------------------------------
-		template <class Val>
+		template<class Val>
 		void _set_aux(allocator_type &alloc, size_type offset, Val &val, realloc_ok_type)
 		{
 			//static int x=0;  if (++x < 10) printf("x\n"); // check we are getting here
 
-			uint32_t  num_items = _num_items();
-			uint32_t  num_alloc = _sizing(num_items);
+			uint32_t num_items = _num_items();
+			uint32_t num_alloc = _sizing(num_items);
 
 			if (num_items == num_alloc) {
 				num_alloc = _sizing(num_items + 1);
@@ -1567,7 +1627,7 @@ namespace spp_ {
 			}
 
 			for (uint32_t i = num_items; i > offset; --i)
-				memcpy(_group + i, _group + i-1, sizeof(*_group));
+				memcpy(_group + i, _group + i - 1, sizeof(*_group));
 
 			_init_val((mutable_pointer)(_group + offset), val);
 		}
@@ -1576,16 +1636,16 @@ namespace spp_ {
 		// allocator_type is the spp allocator.
 		// return true if the slot was constructed (i.e. contains a valid value_type
 		// ---------------------------------------------------------------------------------
-		template <class Val>
+		template<class Val>
 		void _set_aux(allocator_type &alloc, size_type offset, Val &val, realloc_not_ok_type)
 		{
-			uint32_t  num_items = _num_items();
-			uint32_t  num_alloc = _sizing(num_items);
+			uint32_t num_items = _num_items();
+			uint32_t num_alloc = _sizing(num_items);
 
 			//assert(num_alloc == (uint32_t)_num_allocated);
 			if (num_items < num_alloc) {
 				// create new object at end and rotate it to position
-				_init_val((mutable_pointer)&_group[num_items], val);
+				_init_val((mutable_pointer) & _group[num_items], val);
 				std::rotate((mutable_pointer)(_group + offset),
 				            (mutable_pointer)(_group + num_items),
 				            (mutable_pointer)(_group + num_items + 1));
@@ -1595,9 +1655,9 @@ namespace spp_ {
 			// This is valid because 0 <= offset <= num_items
 			pointer p = _allocate_group(alloc, _sizing(num_items + 1));
 			if (offset)
-				std::uninitialized_copy(MK_MOVE_IT((mutable_pointer)_group),
+				std::uninitialized_copy(MK_MOVE_IT((mutable_pointer) _group),
 				                        MK_MOVE_IT((mutable_pointer)(_group + offset)),
-				                        (mutable_pointer)p);
+				                        (mutable_pointer) p);
 			if (num_items > offset)
 				std::uninitialized_copy(MK_MOVE_IT((mutable_pointer)(_group + offset)),
 				                        MK_MOVE_IT((mutable_pointer)(_group + num_items)),
@@ -1608,7 +1668,7 @@ namespace spp_ {
 		}
 
 		// ----------------------------------------------------------------------------------
-		template <class Val>
+		template<class Val>
 		void _set(allocator_type &alloc, size_type i, size_type offset, Val &val)
 		{
 			if (!_bmtest(i)) {
@@ -1624,7 +1684,7 @@ namespace spp_ {
 
 		// This returns the pointer to the inserted item
 		// ---------------------------------------------
-		template <class Val>
+		template<class Val>
 		pointer set(allocator_type &alloc, size_type i, Val &val)
 		{
 			_bme_clear(i); // in case this was an "erased" location
@@ -1655,8 +1715,8 @@ namespace spp_ {
 		void _group_erase_aux(allocator_type &alloc, size_type offset, realloc_ok_type)
 		{
 			// static int x=0;  if (++x < 10) printf("Y\n"); // check we are getting here
-			uint32_t  num_items = _num_items();
-			uint32_t  num_alloc = _sizing(num_items);
+			uint32_t num_items = _num_items();
+			uint32_t num_alloc = _sizing(num_items);
 
 			if (num_items == 1) {
 				assert(offset == 0);
@@ -1683,8 +1743,8 @@ namespace spp_ {
 		// --------------------------------------------------------------------------
 		void _group_erase_aux(allocator_type &alloc, size_type offset, realloc_not_ok_type)
 		{
-			uint32_t  num_items = _num_items();
-			uint32_t  num_alloc   = _sizing(num_items);
+			uint32_t num_items = _num_items();
+			uint32_t num_alloc = _sizing(num_items);
 
 			if (_sizing(num_items - 1) != num_alloc) {
 				pointer p = 0;
@@ -1720,12 +1780,12 @@ namespace spp_ {
 		}
 
 	public:
-		template <class twod_iter>
+		template<class twod_iter>
 		bool erase_ne(allocator_type &alloc, twod_iter &it)
 		{
 			assert(_group && it.col_current != ne_end());
 			size_type offset = (size_type)(it.col_current - ne_begin());
-			size_type pos    = offset_to_pos(offset);
+			size_type pos = offset_to_pos(offset);
 
 			if (_num_items() <= 1) {
 				clear(alloc, false);
@@ -1770,7 +1830,8 @@ namespace spp_ {
 		// the actual array contents (which we don't know how to store),
 		// just the bitmap and size.  Meant to be used with table I/O.
 		// --------------------------------------------------------------
-		template <typename OUTPUT> bool write_metadata(OUTPUT *fp) const
+		template<typename OUTPUT>
+		bool write_metadata(OUTPUT *fp) const
 		{
 			// warning: we write 4 or 8 bytes for the bitmap, instead of 6 in the
 			//          original google sparsehash
@@ -1782,7 +1843,8 @@ namespace spp_ {
 		}
 
 		// Reading destroys the old group contents!  Returns true if all was ok.
-		template <typename INPUT> bool read_metadata(allocator_type &alloc, INPUT *fp)
+		template<typename INPUT>
+		bool read_metadata(allocator_type &alloc, INPUT *fp)
 		{
 			clear(alloc, true);
 
@@ -1798,7 +1860,8 @@ namespace spp_ {
 		}
 
 		// Again, only meaningful if value_type is a POD.
-		template <typename INPUT> bool read_nopointer_data(INPUT *fp)
+		template<typename INPUT>
+		bool read_nopointer_data(INPUT *fp)
 		{
 			for (ne_iterator it = ne_begin(); it != ne_end(); ++it)
 				if (!sparsehash_internal::read_data(fp, &(*it), sizeof(*it)))
@@ -1810,7 +1873,8 @@ namespace spp_ {
 		// to disk for you.  "simple enough" means POD and no pointers.
 		// However, we don't try to normalize endianness.
 		// ------------------------------------------------------------
-		template <typename OUTPUT> bool write_nopointer_data(OUTPUT *fp) const
+		template<typename OUTPUT>
+		bool write_nopointer_data(OUTPUT *fp) const
 		{
 			for (const_ne_iterator it = ne_begin(); it != ne_end(); ++it)
 				if (!sparsehash_internal::write_data(fp, &(*it), sizeof(*it)))
@@ -1825,56 +1889,62 @@ namespace spp_ {
 		// values of the first index that isn't equal (using default
 		// value for empty buckets).
 		// ---------------------------------------------------------
-		bool operator==(const sparsegroup& x) const
+		bool operator==(const sparsegroup &x) const
 		{
 			return (_bitmap == x._bitmap &&
 			        _bm_erased == x._bm_erased &&
 			        std::equal(_group, _group + _num_items(), x._group));
 		}
 
-		bool operator<(const sparsegroup& x) const
+		bool operator<(const sparsegroup &x) const
 		{
 			// also from <algorithm>
 			return std::lexicographical_compare(_group, _group + _num_items(),
 			                                    x._group, x._group + x._num_items());
 		}
 
-		bool operator!=(const sparsegroup& x) const
+		bool operator!=(const sparsegroup &x) const
 		{
 			return !(*this == x);
 		}
-		bool operator<=(const sparsegroup& x) const
+
+		bool operator<=(const sparsegroup &x) const
 		{
 			return !(x < *this);
 		}
-		bool operator> (const sparsegroup& x) const
+
+		bool operator>(const sparsegroup &x) const
 		{
 			return x < *this;
 		}
-		bool operator>=(const sparsegroup& x) const
+
+		bool operator>=(const sparsegroup &x) const
 		{
 			return !(*this < x);
 		}
 
 		void mark()
 		{
-			_group = (value_type *)static_cast<uintptr_t>(-1);
+			_group = (value_type * )
+			         static_cast<uintptr_t>(-1);
 		}
+
 		bool is_marked() const
 		{
-			return _group == (value_type *)static_cast<uintptr_t>(-1);
+			return _group == (value_type * )
+			       static_cast<uintptr_t>(-1);
 		}
 
 	private:
 		// ---------------------------------------------------------------------------
-		template <class A>
+		template<class A>
 		class alloc_impl : public A {
 		public:
 			typedef typename A::pointer pointer;
 			typedef typename A::size_type size_type;
 
 			// Convert a normal allocator to one that has realloc_or_die()
-			explicit alloc_impl(const A& a) : A(a) { }
+			explicit alloc_impl(const A &a) : A(a) {}
 
 			// realloc_or_die should only be used when using the default
 			// allocator (spp::spp_allocator).
@@ -1890,15 +1960,14 @@ namespace spp_ {
 		// A template specialization of alloc_impl for
 		// spp::libc_allocator that can handle realloc_or_die.
 		// -----------------------------------------------------------
-		template <class A>
+		template<class A>
 		class alloc_impl<spp_::libc_allocator<A> > : public spp_::libc_allocator<A> {
 		public:
 			typedef typename spp_::libc_allocator<A>::pointer pointer;
 			typedef typename spp_::libc_allocator<A>::size_type size_type;
 
-			explicit alloc_impl(const spp_::libc_allocator<A>& a)
-				: spp_::libc_allocator<A>(a)
-			{ }
+			explicit alloc_impl(const spp_::libc_allocator<A> &a)
+				: spp_::libc_allocator<A>(a) {}
 
 			pointer realloc_or_die(pointer ptr, size_type n)
 			{
@@ -1915,15 +1984,14 @@ namespace spp_ {
 		// A template specialization of alloc_impl for
 		// spp::spp_allocator that can handle realloc_or_die.
 		// -----------------------------------------------------------
-		template <class A>
+		template<class A>
 		class alloc_impl<spp_::spp_allocator<A> > : public spp_::spp_allocator<A> {
 		public:
 			typedef typename spp_::spp_allocator<A>::pointer pointer;
 			typedef typename spp_::spp_allocator<A>::size_type size_type;
 
-			explicit alloc_impl(const spp_::spp_allocator<A>& a)
-				: spp_::spp_allocator<A>(a)
-			{ }
+			explicit alloc_impl(const spp_::spp_allocator<A> &a)
+				: spp_::spp_allocator<A>(a) {}
 
 			pointer realloc_or_die(pointer ptr, size_type n)
 			{
@@ -1939,30 +2007,37 @@ namespace spp_ {
 
 
 #ifdef SPP_STORE_NUM_ITEMS
+
 		uint32_t _num_items() const
 		{
-			return (uint32_t)_num_buckets;
+			return (uint32_t) _num_buckets;
 		}
-		void     _set_num_items(uint32_t val)
+
+		void _set_num_items(uint32_t val)
 		{
 			_num_buckets = static_cast<size_type>(val);
 		}
-		void     _incr_num_items()
+
+		void _incr_num_items()
 		{
 			++_num_buckets;
 		}
-		void     _decr_num_items()
+
+		void _decr_num_items()
 		{
 			--_num_buckets;
 		}
+
 		uint32_t _num_alloc() const
 		{
-			return (uint32_t)_num_allocated;
+			return (uint32_t) _num_allocated;
 		}
-		void     _set_num_alloc(uint32_t val)
+
+		void _set_num_alloc(uint32_t val)
 		{
 			_num_allocated = static_cast<size_type>(val);
 		}
+
 #else
 		uint32_t _num_items() const
 		{
@@ -1980,49 +2055,49 @@ namespace spp_ {
 
 		// The actual data
 		// ---------------
-		value_type *         _group;                             // (small) array of T's
-		group_bm_type        _bitmap;
-		group_bm_type        _bm_erased;                         // ones where items have been erased
+		value_type *_group;                             // (small) array of T's
+		group_bm_type _bitmap;
+		group_bm_type _bm_erased;                         // ones where items have been erased
 
 #ifdef SPP_STORE_NUM_ITEMS
-		size_type            _num_buckets;
-		size_type            _num_allocated;
+		size_type _num_buckets;
+		size_type _num_allocated;
 #endif
 	};
 
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
-	template <class T, class Alloc>
+	template<class T, class Alloc>
 	class sparsetable {
 	public:
-		typedef T                                             value_type;
-		typedef Alloc                                         allocator_type;
-		typedef sparsegroup<value_type, allocator_type>       group_type;
+		typedef T value_type;
+		typedef Alloc allocator_type;
+		typedef sparsegroup<value_type, allocator_type> group_type;
 
 	private:
 		typedef typename Alloc::template rebind<group_type>::other group_alloc_type;
-		typedef typename group_alloc_type::size_type          group_size_type;
+		typedef typename group_alloc_type::size_type group_size_type;
 
 	public:
 		// Basic types
 		// -----------
-		typedef typename allocator_type::size_type            size_type;
-		typedef typename allocator_type::difference_type      difference_type;
-		typedef value_type&                                   reference;
-		typedef const value_type&                             const_reference;
-		typedef value_type*                                   pointer;
-		typedef const value_type*                             const_pointer;
+		typedef typename allocator_type::size_type size_type;
+		typedef typename allocator_type::difference_type difference_type;
+		typedef value_type &reference;
+		typedef const value_type &const_reference;
+		typedef value_type *pointer;
+		typedef const value_type *const_pointer;
 
-		typedef group_type&                                   GroupsReference;
-		typedef const group_type&                             GroupsConstReference;
+		typedef group_type &GroupsReference;
+		typedef const group_type &GroupsConstReference;
 
-		typedef typename group_type::ne_iterator              ColIterator;
-		typedef typename group_type::const_ne_iterator        ColConstIterator;
+		typedef typename group_type::ne_iterator ColIterator;
+		typedef typename group_type::const_ne_iterator ColConstIterator;
 
-		typedef table_iterator<sparsetable<T, allocator_type> >        iterator;       // defined with index
-		typedef const_table_iterator<sparsetable<T, allocator_type> >  const_iterator; // defined with index
-		typedef std::reverse_iterator<const_iterator>         const_reverse_iterator;
-		typedef std::reverse_iterator<iterator>               reverse_iterator;
+		typedef table_iterator<sparsetable<T, allocator_type> > iterator;       // defined with index
+		typedef const_table_iterator<sparsetable<T, allocator_type> > const_iterator; // defined with index
+		typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+		typedef std::reverse_iterator<iterator> reverse_iterator;
 
 		// These are our special iterators, that go over non-empty buckets in a
 		// table.  These aren't const only because you can change non-empty bcks.
@@ -2044,58 +2119,69 @@ namespace spp_ {
 		        group_type *,
 		        ColIterator,
 		        std::input_iterator_tag,
-		        allocator_type>     destructive_iterator;
+		        allocator_type> destructive_iterator;
 
-		typedef std::reverse_iterator<ne_iterator>               reverse_ne_iterator;
-		typedef std::reverse_iterator<const_ne_iterator>         const_reverse_ne_iterator;
+		typedef std::reverse_iterator<ne_iterator> reverse_ne_iterator;
+		typedef std::reverse_iterator<const_ne_iterator> const_reverse_ne_iterator;
 
 
 		// Iterator functions
 		// ------------------
-		iterator               begin()
+		iterator begin()
 		{
 			return iterator(this, 0);
 		}
-		const_iterator         begin() const
+
+		const_iterator begin() const
 		{
 			return const_iterator(this, 0);
 		}
-		const_iterator         cbegin() const
+
+		const_iterator cbegin() const
 		{
 			return const_iterator(this, 0);
 		}
-		iterator               end()
+
+		iterator end()
 		{
 			return iterator(this, size());
 		}
-		const_iterator         end() const
+
+		const_iterator end() const
 		{
 			return const_iterator(this, size());
 		}
-		const_iterator         cend() const
+
+		const_iterator cend() const
 		{
 			return const_iterator(this, size());
 		}
-		reverse_iterator       rbegin()
+
+		reverse_iterator rbegin()
 		{
 			return reverse_iterator(end());
 		}
+
 		const_reverse_iterator rbegin() const
 		{
 			return const_reverse_iterator(cend());
 		}
+
 		const_reverse_iterator crbegin() const
 		{
 			return const_reverse_iterator(cend());
 		}
-		reverse_iterator       rend()
+
+		reverse_iterator rend()
 		{
 			return reverse_iterator(begin());
 		}
+
 		const_reverse_iterator rend() const
 		{
 			return const_reverse_iterator(cbegin());
 		}
+
 		const_reverse_iterator crend() const
 		{
 			return const_reverse_iterator(cbegin());
@@ -2103,51 +2189,61 @@ namespace spp_ {
 
 		// Versions for our special non-empty iterator
 		// ------------------------------------------
-		ne_iterator       ne_begin()
+		ne_iterator ne_begin()
 		{
-			return ne_iterator      (_first_group);
+			return ne_iterator(_first_group);
 		}
+
 		const_ne_iterator ne_begin() const
 		{
 			return const_ne_iterator(_first_group);
 		}
+
 		const_ne_iterator ne_cbegin() const
 		{
 			return const_ne_iterator(_first_group);
 		}
-		ne_iterator       ne_end()
+
+		ne_iterator ne_end()
 		{
-			return ne_iterator      (_last_group);
+			return ne_iterator(_last_group);
 		}
+
 		const_ne_iterator ne_end() const
 		{
 			return const_ne_iterator(_last_group);
 		}
+
 		const_ne_iterator ne_cend() const
 		{
 			return const_ne_iterator(_last_group);
 		}
 
-		reverse_ne_iterator       ne_rbegin()
+		reverse_ne_iterator ne_rbegin()
 		{
 			return reverse_ne_iterator(ne_end());
 		}
+
 		const_reverse_ne_iterator ne_rbegin() const
 		{
 			return const_reverse_ne_iterator(ne_end());
 		}
+
 		const_reverse_ne_iterator ne_crbegin() const
 		{
 			return const_reverse_ne_iterator(ne_end());
 		}
-		reverse_ne_iterator       ne_rend()
+
+		reverse_ne_iterator ne_rend()
 		{
 			return reverse_ne_iterator(ne_begin());
 		}
+
 		const_reverse_ne_iterator ne_rend() const
 		{
 			return const_reverse_ne_iterator(ne_begin());
 		}
+
 		const_reverse_ne_iterator ne_crend() const
 		{
 			return const_reverse_ne_iterator(ne_begin());
@@ -2167,8 +2263,8 @@ namespace spp_ {
 		static group_size_type num_groups(size_type num)
 		{
 			// how many to hold num buckets
-			return num == 0 ? (group_size_type)0 :
-			       (group_size_type)(((num-1) / SPP_GROUP_SIZE) + 1);
+			return num == 0 ? (group_size_type) 0 :
+			       (group_size_type)(((num - 1) / SPP_GROUP_SIZE) + 1);
 		}
 
 		typename group_type::size_type pos_in_group(size_type i) const
@@ -2228,15 +2324,15 @@ namespace spp_ {
 		void _cleanup()
 		{
 			_free_groups();    // sets _first_group = _last_group = 0
-			_table_size  = 0;
+			_table_size = 0;
 			_num_buckets = 0;
 		}
 
 		void _init()
 		{
 			_first_group = 0;
-			_last_group  = 0;
-			_table_size  = 0;
+			_last_group = 0;
+			_table_size = 0;
 			_num_buckets = 0;
 		}
 
@@ -2250,8 +2346,8 @@ namespace spp_ {
 			group_size_type sz = (group_size_type)(o._last_group - o._first_group);
 			if (sz) {
 				_alloc_group_array(sz, _first_group, _last_group);
-				for (group_size_type i=0; i<sz; ++i)
-					new (_first_group + i) group_type(o._first_group[i], _alloc);
+				for (group_size_type i = 0; i < sz; ++i)
+					new(_first_group + i) group_type(o._first_group[i], _alloc);
 			}
 		}
 
@@ -2281,7 +2377,7 @@ namespace spp_ {
 			_copy(o);
 		}
 
-		sparsetable& operator=(const sparsetable &o)
+		sparsetable &operator=(const sparsetable &o)
 		{
 			_cleanup();
 			_copy(o);
@@ -2290,35 +2386,37 @@ namespace spp_ {
 
 
 #if !defined(SPP_NO_CXX11_RVALUE_REFERENCES)
-		sparsetable(sparsetable&& o)
+
+		sparsetable(sparsetable &&o)
 		{
 			_init();
 			this->swap(o);
 		}
 
-		sparsetable(sparsetable&& o, const allocator_type &alloc)
+		sparsetable(sparsetable &&o, const allocator_type &alloc)
 		{
 			_init();
 			this->swap(o);
 			_alloc = alloc; // [gp todo] is this correct?
 		}
 
-		sparsetable& operator=(sparsetable&& o)
+		sparsetable &operator=(sparsetable &&o)
 		{
 			_cleanup();
 			this->swap(o);
 			return *this;
 		}
+
 #endif
 
 		// Many STL algorithms use swap instead of copy constructors
-		void swap(sparsetable& o)
+		void swap(sparsetable &o)
 		{
 			using std::swap;
 
 			swap(_first_group, o._first_group);
-			swap(_last_group,  o._last_group);
-			swap(_table_size,  o._table_size);
+			swap(_last_group, o._last_group);
+			swap(_table_size, o._table_size);
 			swap(_num_buckets, o._num_buckets);
 			if (_alloc != o._alloc)
 				swap(_alloc, o._alloc);
@@ -2349,14 +2447,17 @@ namespace spp_ {
 		{
 			return _table_size;
 		}
+
 		size_type max_size() const
 		{
 			return _alloc.max_size();
 		}
+
 		bool empty() const
 		{
 			return _table_size == 0;
 		}
+
 		size_type num_nonempty() const
 		{
 			return _num_buckets;
@@ -2386,7 +2487,7 @@ namespace spp_ {
 
 				_free_group_array(_first_group, _last_group);
 				_first_group = first;
-				_last_group  = last;
+				_last_group = last;
 			}
 #if 0
 			// used only in test program
@@ -2425,6 +2526,7 @@ namespace spp_ {
 
 		struct GrpPos {
 			typedef typename sparsetable::ne_iterator ne_iter;
+
 			GrpPos(const sparsetable &table, size_type i) :
 				grp(table.which_group(i)), pos(table.pos_in_group(i)) {}
 
@@ -2432,28 +2534,31 @@ namespace spp_ {
 			{
 				return grp.test_strict(pos);
 			}
+
 			bool test() const
 			{
 				return grp.test(pos);
 			}
+
 			typename sparsetable::reference unsafe_get() const
 			{
-				return  grp.unsafe_get(pos);
+				return grp.unsafe_get(pos);
 			}
+
 			ne_iter get_iter(typename sparsetable::reference ref)
 			{
-				return ne_iter((group_type *)&grp, &ref);
+				return ne_iter((group_type * ) & grp, &ref);
 			}
 
 			void erase(sparsetable &table) // item *must* be present
 			{
 				assert(table._num_buckets);
-				((group_type &)grp).erase(table._alloc, pos);
+				((group_type &) grp).erase(table._alloc, pos);
 				--table._num_buckets;
 			}
 
 		private:
-			GrpPos* operator=(const GrpPos&);
+			GrpPos *operator=(const GrpPos &);
 
 			const group_type &grp;
 			typename group_type::size_type pos;
@@ -2515,7 +2620,7 @@ namespace spp_ {
 		}
 
 		// And the reverse transformation.
-		size_type get_pos(const const_ne_iterator& it) const
+		size_type get_pos(const const_ne_iterator &it) const
 		{
 			difference_type current_row = it.row_current - _first_group;
 			difference_type current_col = (it.col_current - _first_group[current_row].ne_begin());
@@ -2525,7 +2630,7 @@ namespace spp_ {
 
 		// Val can be reference or const_reference
 		// ---------------------------------------
-		template <class Val>
+		template<class Val>
 		reference set(size_type i, Val &val)
 		{
 			assert(i < _table_size);
@@ -2602,8 +2707,8 @@ namespace spp_ {
 		// causes us to mis-read old-version code that stores exactly
 		// 0xFFFFFFF, but I don't think that is likely to have happened for
 		// these particular values.
-		template <typename OUTPUT, typename IntType>
-		static bool write_32_or_64(OUTPUT* fp, IntType value)
+		template<typename OUTPUT, typename IntType>
+		static bool write_32_or_64(OUTPUT *fp, IntType value)
 		{
 			if (value < 0xFFFFFFFFULL) {      // fits in 4 bytes
 				if (!sparsehash_internal::write_bigendian_number(fp, value, 4))
@@ -2618,8 +2723,8 @@ namespace spp_ {
 			return true;
 		}
 
-		template <typename INPUT, typename IntType>
-		static bool read_32_or_64(INPUT* fp, IntType *value)
+		template<typename INPUT, typename IntType>
+		static bool read_32_or_64(INPUT *fp, IntType *value)
 		{
 			// reads into value
 			MagicNumberType first4 = 0;   // a convenient 32-bit unsigned type
@@ -2640,12 +2745,12 @@ namespace spp_ {
 		// read/write_metadata() and read_write/nopointer_data() are DEPRECATED.
 		// Use serialize() and unserialize(), below, for new code.
 
-		template <typename OUTPUT>
+		template<typename OUTPUT>
 		bool write_metadata(OUTPUT *fp) const
 		{
-			if (!write_32_or_64(fp, MAGIC_NUMBER))  return false;
-			if (!write_32_or_64(fp, _table_size))  return false;
-			if (!write_32_or_64(fp, _num_buckets))  return false;
+			if (!write_32_or_64(fp, MAGIC_NUMBER)) return false;
+			if (!write_32_or_64(fp, _table_size)) return false;
+			if (!write_32_or_64(fp, _num_buckets)) return false;
 
 			for (const group_type *group = _first_group; group != _last_group; ++group)
 				if (group->write_metadata(fp) == false)
@@ -2654,18 +2759,18 @@ namespace spp_ {
 		}
 
 		// Reading destroys the old table contents!  Returns true if read ok.
-		template <typename INPUT>
+		template<typename INPUT>
 		bool read_metadata(INPUT *fp)
 		{
 			size_type magic_read = 0;
-			if (!read_32_or_64(fp, &magic_read))  return false;
+			if (!read_32_or_64(fp, &magic_read)) return false;
 			if (magic_read != MAGIC_NUMBER) {
 				clear();                        // just to be consistent
 				return false;
 			}
 
-			if (!read_32_or_64(fp, &_table_size))  return false;
-			if (!read_32_or_64(fp, &_num_buckets))  return false;
+			if (!read_32_or_64(fp, &_table_size)) return false;
+			if (!read_32_or_64(fp, &_num_buckets)) return false;
 
 			resize(_table_size);                    // so the vector's sized ok
 			for (group_type *group = _first_group; group != _last_group; ++group)
@@ -2690,7 +2795,7 @@ namespace spp_ {
 		bool read_nopointer_data(FILE *fp)
 		{
 			for (ne_iterator it = ne_begin(); it != ne_end(); ++it)
-				if (!fread(reinterpret_cast<void*>(&(*it)), sizeof(*it), 1, fp))
+				if (!fread(reinterpret_cast<void *>(&(*it)), sizeof(*it), 1, fp))
 					return false;
 			return true;
 		}
@@ -2704,7 +2809,7 @@ namespace spp_ {
 		typedef sparsehash_internal::pod_serializer<value_type> NopointerSerializer;
 
 		// ValueSerializer: a functor.  operator()(OUTPUT*, const value_type&)
-		template <typename ValueSerializer, typename OUTPUT>
+		template<typename ValueSerializer, typename OUTPUT>
 		bool serialize(ValueSerializer serializer, OUTPUT *fp)
 		{
 			if (!write_metadata(fp))
@@ -2716,7 +2821,7 @@ namespace spp_ {
 		}
 
 		// ValueSerializer: a functor.  operator()(INPUT*, value_type*)
-		template <typename ValueSerializer, typename INPUT>
+		template<typename ValueSerializer, typename INPUT>
 		bool unserialize(ValueSerializer serializer, INPUT *fp)
 		{
 			clear();
@@ -2731,30 +2836,34 @@ namespace spp_ {
 		// Comparisons.  Note the comparisons are pretty arbitrary: we
 		// compare values of the first index that isn't equal (using default
 		// value for empty buckets).
-		bool operator==(const sparsetable& x) const
+		bool operator==(const sparsetable &x) const
 		{
 			return (_table_size == x._table_size &&
 			        _num_buckets == x._num_buckets &&
 			        _first_group == x._first_group);
 		}
 
-		bool operator<(const sparsetable& x) const
+		bool operator<(const sparsetable &x) const
 		{
 			return std::lexicographical_compare(begin(), end(), x.begin(), x.end());
 		}
-		bool operator!=(const sparsetable& x) const
+
+		bool operator!=(const sparsetable &x) const
 		{
 			return !(*this == x);
 		}
-		bool operator<=(const sparsetable& x) const
+
+		bool operator<=(const sparsetable &x) const
 		{
 			return !(x < *this);
 		}
-		bool operator>(const sparsetable& x)  const
+
+		bool operator>(const sparsetable &x) const
 		{
 			return x < *this;
 		}
-		bool operator>=(const sparsetable& x) const
+
+		bool operator>=(const sparsetable &x) const
 		{
 			return !(*this < x);
 		}
@@ -2763,12 +2872,12 @@ namespace spp_ {
 	private:
 		// The actual data
 		// ---------------
-		group_type *     _first_group;
-		group_type *     _last_group;
-		size_type        _table_size;          // how many buckets they want
-		size_type        _num_buckets;         // number of non-empty buckets
+		group_type *_first_group;
+		group_type *_last_group;
+		size_type _table_size;          // how many buckets they want
+		size_type _num_buckets;         // number of non-empty buckets
 		group_alloc_type _group_alloc;
-		allocator_type   _alloc;
+		allocator_type _alloc;
 	};
 
 //  ----------------------------------------------------------------------
@@ -2800,38 +2909,38 @@ namespace spp_ {
 
 // -------------------------------------------------------------------
 // -------------------------------------------------------------------
-	template <class Value, class Key, class HashFcn,
-	          class ExtractKey, class SetKey, class EqualKey, class Alloc>
+	template<class Value, class Key, class HashFcn,
+	         class ExtractKey, class SetKey, class EqualKey, class Alloc>
 	class sparse_hashtable {
 	public:
-		typedef Key                                        key_type;
-		typedef Value                                      value_type;
-		typedef HashFcn                                    hasher; // user provided or spp_hash<Key>
-		typedef EqualKey                                   key_equal;
-		typedef Alloc                                      allocator_type;
+		typedef Key key_type;
+		typedef Value value_type;
+		typedef HashFcn hasher; // user provided or spp_hash<Key>
+		typedef EqualKey key_equal;
+		typedef Alloc allocator_type;
 
-		typedef typename allocator_type::size_type         size_type;
-		typedef typename allocator_type::difference_type   difference_type;
-		typedef value_type&                                reference;
-		typedef const value_type&                          const_reference;
-		typedef value_type*                                pointer;
-		typedef const value_type*                          const_pointer;
+		typedef typename allocator_type::size_type size_type;
+		typedef typename allocator_type::difference_type difference_type;
+		typedef value_type &reference;
+		typedef const value_type &const_reference;
+		typedef value_type *pointer;
+		typedef const value_type *const_pointer;
 
 		// Table is the main storage class.
-		typedef sparsetable<value_type, allocator_type>   Table;
-		typedef typename Table::ne_iterator               ne_it;
-		typedef typename Table::const_ne_iterator         cne_it;
-		typedef typename Table::destructive_iterator      dest_it;
-		typedef typename Table::ColIterator               ColIterator;
+		typedef sparsetable<value_type, allocator_type> Table;
+		typedef typename Table::ne_iterator ne_it;
+		typedef typename Table::const_ne_iterator cne_it;
+		typedef typename Table::destructive_iterator dest_it;
+		typedef typename Table::ColIterator ColIterator;
 
-		typedef ne_it                                     iterator;
-		typedef cne_it                                    const_iterator;
-		typedef dest_it                                   destructive_iterator;
+		typedef ne_it iterator;
+		typedef cne_it const_iterator;
+		typedef dest_it destructive_iterator;
 
 		// These come from tr1.  For us they're the same as regular iterators.
 		// -------------------------------------------------------------------
-		typedef iterator                                  local_iterator;
-		typedef const_iterator                            const_local_iterator;
+		typedef iterator local_iterator;
+		typedef const_iterator const_local_iterator;
 
 		// How full we let the table get before we resize
 		// ----------------------------------------------
@@ -2858,26 +2967,31 @@ namespace spp_ {
 
 		// iterators
 		// ---------
-		iterator       begin()
+		iterator begin()
 		{
 			return _mk_iterator(table.ne_begin());
 		}
-		iterator       end()
+
+		iterator end()
 		{
 			return _mk_iterator(table.ne_end());
 		}
+
 		const_iterator begin() const
 		{
 			return _mk_const_iterator(table.ne_cbegin());
 		}
+
 		const_iterator end() const
 		{
 			return _mk_const_iterator(table.ne_cend());
 		}
+
 		const_iterator cbegin() const
 		{
 			return _mk_const_iterator(table.ne_cbegin());
 		}
+
 		const_iterator cend() const
 		{
 			return _mk_const_iterator(table.ne_cend());
@@ -2919,7 +3033,8 @@ namespace spp_ {
 		{
 			return begin(i);
 		}
-		const_local_iterator cend(size_type i)   const
+
+		const_local_iterator cend(size_type i) const
 		{
 			return end(i);
 		}
@@ -2930,6 +3045,7 @@ namespace spp_ {
 		{
 			return _mk_destructive_iterator(table.destructive_begin());
 		}
+
 		destructive_iterator destructive_end()
 		{
 			return _mk_destructive_iterator(table.destructive_end());
@@ -2942,10 +3058,12 @@ namespace spp_ {
 		{
 			return settings;
 		}
+
 		key_equal key_eq() const
 		{
 			return key_info;
 		}
+
 		allocator_type get_allocator() const
 		{
 			return table.get_allocator();
@@ -2963,18 +3081,22 @@ namespace spp_ {
 		// the hashtable as we copy, and without.  To make sure the outside world
 		// can't do a destructive copy, we make the typename private.
 		// -----------------------------------------------------------------------
-		enum MoveDontCopyT {MoveDontCopy, MoveDontGrow};
+		enum MoveDontCopyT {
+			MoveDontCopy, MoveDontGrow
+		};
 
 		// creating iterators from sparsetable::ne_iterators
 		// -------------------------------------------------
-		iterator             _mk_iterator(ne_it it) const
+		iterator _mk_iterator(ne_it it) const
 		{
 			return it;
 		}
-		const_iterator       _mk_const_iterator(cne_it it) const
+
+		const_iterator _mk_const_iterator(cne_it it) const
 		{
 			return it;
 		}
+
 		destructive_iterator _mk_destructive_iterator(dest_it it) const
 		{
 			return it;
@@ -2985,22 +3107,27 @@ namespace spp_ {
 		{
 			return table.num_nonempty();
 		}
+
 		size_type max_size() const
 		{
 			return table.max_size();
 		}
+
 		bool empty() const
 		{
 			return size() == 0;
 		}
+
 		size_type bucket_count() const
 		{
 			return table.size();
 		}
+
 		size_type max_bucket_count() const
 		{
 			return max_size();
 		}
+
 		// These are tr1 methods.  Their idea of 'bucket' doesn't map well to
 		// what we do.  We just say every bucket has 0 or 1 items in it.
 		size_type bucket_size(size_type i) const
@@ -3019,7 +3146,7 @@ namespace spp_ {
 		// --------------------------------------------------------------------
 		bool _maybe_shrink()
 		{
-			assert((bucket_count() & (bucket_count()-1)) == 0); // is a power of two
+			assert((bucket_count() & (bucket_count() - 1)) == 0); // is a power of two
 			assert(bucket_count() >= HT_MIN_BUCKETS);
 			bool retval = false;
 
@@ -3076,7 +3203,7 @@ namespace spp_ {
 			// are currently taking up room).
 			// -------------------------------------------------------------
 			const size_type needed_size =
-			    settings.min_buckets((size_type)(num_occupied + delta), (size_type)0);
+			    settings.min_buckets((size_type)(num_occupied + delta), (size_type) 0);
 
 			if (needed_size <= bucket_count())      // we have enough buckets
 				return did_resize;
@@ -3093,7 +3220,7 @@ namespace spp_ {
 				// through the trouble of copying (in order to purge the
 				// deleted elements).
 				const size_type target =
-				    static_cast<size_type>(settings.shrink_size((size_type)(resize_to*2)));
+				    static_cast<size_type>(settings.shrink_size((size_type)(resize_to * 2)));
 				if (table.num_nonempty() + delta >= target) {
 					// Good, we won't be below the shrink threshhold even if we double.
 					resize_to *= 2;
@@ -3123,7 +3250,7 @@ namespace spp_ {
 			// We use a normal iterator to get bcks from ht
 			// We could use insert() here, but since we know there are
 			// no duplicates, we can be more efficient
-			assert((bucket_count() & (bucket_count()-1)) == 0);      // a power of two
+			assert((bucket_count() & (bucket_count() - 1)) == 0);      // a power of two
 			for (const_iterator it = ht.begin(); it != ht.end(); ++it) {
 				size_type num_probes = 0;              // how many times we've probed
 				size_type bucknum;
@@ -3164,8 +3291,8 @@ namespace spp_ {
 			// We use a normal iterator to get bcks from ht
 			// We could use insert() here, but since we know there are
 			// no duplicates, we can be more efficient
-			assert((bucket_count() & (bucket_count()-1)) == 0);      // a power of two
-			const size_type bucket_count_minus_one = (const size_type)(bucket_count() - 1);
+			assert((bucket_count() & (bucket_count() - 1)) == 0);      // a power of two
+			const size_type bucket_count_minus_one = (const size_type) (bucket_count() - 1);
 
 			// THIS IS THE MAJOR LINE THAT DIFFERS FROM COPY_FROM():
 			for (destructive_iterator it = ht.destructive_begin();
@@ -3174,7 +3301,7 @@ namespace spp_ {
 				size_type bucknum;
 				for (bucknum = hash(get_key(*it)) & bucket_count_minus_one;
 				        table.test(bucknum);                          // table.test() OK since no erase()
-				        bucknum = (size_type)((bucknum + JUMP_(key, num_probes)) & (bucket_count()-1))) {
+				        bucknum = (size_type)((bucknum + JUMP_(key, num_probes)) & (bucket_count() - 1))) {
 					++num_probes;
 					assert(num_probes < bucket_count()
 					       && "Hashtable is full: an error in key_equal<> or hash<>");
@@ -3205,7 +3332,7 @@ namespace spp_ {
 		// the values.  Setting the shrink parameter to 0.0 ensures that the
 		// table never shrinks.
 		// ------------------------------------------------------------------
-		void get_resizing_parameters(float* shrink, float* grow) const
+		void get_resizing_parameters(float *shrink, float *grow) const
 		{
 			*shrink = settings.shrink_factor();
 			*grow = settings.enlarge_factor();
@@ -3215,6 +3342,7 @@ namespace spp_ {
 		{
 			return settings.shrink_factor();
 		}
+
 		float get_enlarge_factor() const
 		{
 			return settings.enlarge_factor();
@@ -3242,11 +3370,11 @@ namespace spp_ {
 		// DESTRUCTOR -- the default is fine, surprisingly.
 		// ------------------------------------------------------------
 		explicit sparse_hashtable(size_type expected_max_items_in_table = 0,
-		                          const HashFcn& hf = HashFcn(),
-		                          const EqualKey& eql = EqualKey(),
-		                          const ExtractKey& ext = ExtractKey(),
-		                          const SetKey& set = SetKey(),
-		                          const allocator_type& alloc = allocator_type())
+		                          const HashFcn &hf = HashFcn(),
+		                          const EqualKey &eql = EqualKey(),
+		                          const ExtractKey &ext = ExtractKey(),
+		                          const SetKey &set = SetKey(),
+		                          const allocator_type &alloc = allocator_type())
 			: settings(hf),
 			  key_info(ext, set, eql),
 			  num_deleted(0),
@@ -3263,7 +3391,7 @@ namespace spp_ {
 		// We also provide a mechanism of saying you want to "move" the ht argument
 		// into us instead of copying.
 		// ------------------------------------------------------------------------
-		sparse_hashtable(const sparse_hashtable& ht,
+		sparse_hashtable(const sparse_hashtable &ht,
 		                 size_type min_buckets_wanted = HT_DEFAULT_STARTING_BUCKETS)
 			: settings(ht.settings),
 			  key_info(ht.key_info),
@@ -3276,7 +3404,7 @@ namespace spp_ {
 
 #if !defined(SPP_NO_CXX11_RVALUE_REFERENCES)
 
-		sparse_hashtable(sparse_hashtable&& o) :
+		sparse_hashtable(sparse_hashtable &&o) :
 			settings(std::move(o.settings)),
 			key_info(std::move(o.key_info)),
 			num_deleted(o.num_deleted),
@@ -3284,7 +3412,7 @@ namespace spp_ {
 		{
 		}
 
-		sparse_hashtable(sparse_hashtable&& o, const allocator_type& alloc) :
+		sparse_hashtable(sparse_hashtable &&o, const allocator_type &alloc) :
 			settings(std::move(o.settings)),
 			key_info(std::move(o.key_info)),
 			num_deleted(o.num_deleted),
@@ -3292,7 +3420,7 @@ namespace spp_ {
 		{
 		}
 
-		sparse_hashtable& operator=(sparse_hashtable&& o)
+		sparse_hashtable &operator=(sparse_hashtable &&o)
 		{
 			using std::swap;
 
@@ -3300,10 +3428,11 @@ namespace spp_ {
 			swap(tmp, *this);
 			return *this;
 		}
+
 #endif
 
 		sparse_hashtable(MoveDontCopyT mover,
-		                 sparse_hashtable& ht,
+		                 sparse_hashtable &ht,
 		                 size_type min_buckets_wanted = HT_DEFAULT_STARTING_BUCKETS)
 			: settings(ht.settings),
 			  key_info(ht.key_info),
@@ -3315,7 +3444,7 @@ namespace spp_ {
 			_move_from(mover, ht, min_buckets_wanted);
 		}
 
-		sparse_hashtable& operator=(const sparse_hashtable& ht)
+		sparse_hashtable &operator=(const sparse_hashtable &ht)
 		{
 			if (&ht == this)
 				return *this;        // don't copy onto ourselves
@@ -3331,7 +3460,7 @@ namespace spp_ {
 		}
 
 		// Many STL algorithms use swap instead of copy constructors
-		void swap(sparse_hashtable& ht)
+		void swap(sparse_hashtable &ht)
 		{
 			using std::swap;
 
@@ -3358,15 +3487,19 @@ namespace spp_ {
 		// LOOKUP ROUTINES
 	private:
 
-		enum pos_type { pt_empty = 0, pt_erased, pt_full };
+		enum pos_type {
+			pt_empty = 0, pt_erased, pt_full
+		};
+
 		// -------------------------------------------------------------------
 		class Position {
 		public:
 
 			Position() : _t(pt_empty) {}
+
 			Position(pos_type t, size_type idx) : _t(t), _idx(idx) {}
 
-			pos_type  _t;
+			pos_type _t;
 			size_type _idx;
 		};
 
@@ -3379,7 +3512,7 @@ namespace spp_ {
 		Position _find_position(const key_type &key) const
 		{
 			size_type num_probes = 0;                    // how many times we've probed
-			const size_type bucket_count_minus_one = (const size_type)(bucket_count() - 1);
+			const size_type bucket_count_minus_one = (const size_type) (bucket_count() - 1);
 			size_type bucknum = hash(key) & bucket_count_minus_one;
 			Position pos;
 
@@ -3400,7 +3533,7 @@ namespace spp_ {
 				}
 				else if (pos._t == pt_empty) {
 					// first erased position
-					pos._t   = pt_erased;
+					pos._t = pt_erased;
 					pos._idx = bucknum;
 				}
 
@@ -3415,7 +3548,7 @@ namespace spp_ {
 		// I hate to duplicate find() like that, but it is
 		// significantly faster to not have the intermediate pair
 		// ------------------------------------------------------------------
-		iterator find(const key_type& key)
+		iterator find(const key_type &key)
 		{
 			size_type num_probes = 0;              // how many times we've probed
 			const size_type bucket_count_minus_one = bucket_count() - 1;
@@ -3441,7 +3574,7 @@ namespace spp_ {
 
 		// Wish I could avoid the duplicate find() const and non-const.
 		// ------------------------------------------------------------
-		const_iterator find(const key_type& key) const
+		const_iterator find(const key_type &key) const
 		{
 			size_type num_probes = 0;              // how many times we've probed
 			const size_type bucket_count_minus_one = bucket_count() - 1;
@@ -3468,7 +3601,7 @@ namespace spp_ {
 		// This is a tr1 method: the bucket a given key is in, or what bucket
 		// it would be put in, if it were to be inserted.  Shrug.
 		// ------------------------------------------------------------------
-		size_type bucket(const key_type& key) const
+		size_type bucket(const key_type &key) const
 		{
 			Position pos = _find_position(key);
 			return pos._idx;
@@ -3484,25 +3617,25 @@ namespace spp_ {
 
 		// Likewise, equal_range doesn't really make sense for us.  Oh well.
 		// -----------------------------------------------------------------
-		std::pair<iterator,iterator> equal_range(const key_type& key)
+		std::pair<iterator, iterator> equal_range(const key_type &key)
 		{
 			iterator pos = find(key);      // either an iterator or end
 			if (pos == end())
-				return std::pair<iterator,iterator>(pos, pos);
+				return std::pair<iterator, iterator>(pos, pos);
 			else {
 				const iterator startpos = pos++;
-				return std::pair<iterator,iterator>(startpos, pos);
+				return std::pair<iterator, iterator>(startpos, pos);
 			}
 		}
 
-		std::pair<const_iterator,const_iterator> equal_range(const key_type& key) const
+		std::pair<const_iterator, const_iterator> equal_range(const key_type &key) const
 		{
 			const_iterator pos = find(key);      // either an iterator or end
 			if (pos == end())
-				return std::pair<const_iterator,const_iterator>(pos, pos);
+				return std::pair<const_iterator, const_iterator>(pos, pos);
 			else {
 				const const_iterator startpos = pos++;
-				return std::pair<const_iterator,const_iterator>(startpos, pos);
+				return std::pair<const_iterator, const_iterator>(startpos, pos);
 			}
 		}
 
@@ -3510,8 +3643,8 @@ namespace spp_ {
 		// INSERTION ROUTINES
 	private:
 		// Private method used by insert_noresize and find_or_insert.
-		template <class T>
-		reference _insert_at(T& obj, size_type pos, bool erased)
+		template<class T>
+		reference _insert_at(T &obj, size_type pos, bool erased)
 		{
 			if (size() >= max_size()) {
 				throw_exception(std::length_error("insert overflow"));
@@ -3524,8 +3657,8 @@ namespace spp_ {
 		}
 
 		// If you know *this is big enough to hold obj, use this routine
-		template <class T>
-		std::pair<iterator, bool> _insert_noresize(T& obj)
+		template<class T>
+		std::pair<iterator, bool> _insert_noresize(T &obj)
 		{
 			Position pos = _find_position(get_key(obj));
 			bool already_there = (pos._t == pt_full);
@@ -3534,16 +3667,16 @@ namespace spp_ {
 				reference ref(_insert_at(obj, pos._idx, pos._t == pt_erased));
 				return std::pair<iterator, bool>(_mk_iterator(table.get_iter(pos._idx, &ref)), true);
 			}
-			return std::pair<iterator,bool>(_mk_iterator(table.get_iter(pos._idx)), false);
+			return std::pair<iterator, bool>(_mk_iterator(table.get_iter(pos._idx)), false);
 		}
 
 		// Specializations of insert(it, it) depending on the power of the iterator:
 		// (1) Iterator supports operator-, resize before inserting
-		template <class ForwardIterator>
+		template<class ForwardIterator>
 		void _insert(ForwardIterator f, ForwardIterator l, std::forward_iterator_tag /*unused*/)
 		{
 			int64_t dist = std::distance(f, l);
-			if (dist < 0 ||  static_cast<size_t>(dist) >= (std::numeric_limits<size_type>::max)())
+			if (dist < 0 || static_cast<size_t>(dist) >= (std::numeric_limits<size_type>::max)())
 				throw_exception(std::length_error("insert-range overflow"));
 
 			_resize_delta(static_cast<size_type>(dist));
@@ -3553,7 +3686,7 @@ namespace spp_ {
 		}
 
 		// (2) Arbitrary iterator, can't tell how much to resize
-		template <class InputIterator>
+		template<class InputIterator>
 		void _insert(InputIterator f, InputIterator l, std::input_iterator_tag /*unused*/)
 		{
 			for (; f != l; ++f)
@@ -3563,13 +3696,15 @@ namespace spp_ {
 	public:
 
 #if !defined(SPP_NO_CXX11_VARIADIC_TEMPLATES)
-		template <class... Args>
-		std::pair<iterator, bool> emplace(Args&&... args)
+
+		template<class... Args>
+		std::pair<iterator, bool> emplace(Args &&... args)
 		{
 			_resize_delta(1);
 			value_type obj(std::forward<Args>(args)...);
 			return _insert_noresize(obj);
 		}
+
 #endif
 
 		// This is the normal insert routine, used by the outside world
@@ -3580,17 +3715,19 @@ namespace spp_ {
 		}
 
 #if !defined(SPP_NO_CXX11_RVALUE_REFERENCES)
-		template< class P >
+
+		template<class P>
 		std::pair<iterator, bool> insert(P &&obj)
 		{
 			_resize_delta(1);                      // adding an object, grow if need be
 			value_type val(std::forward<value_type>(obj));
 			return _insert_noresize(val);
 		}
+
 #endif
 
 		// When inserting a lot at a time, we specialize on the type of iterator
-		template <class InputIterator>
+		template<class InputIterator>
 		void insert(InputIterator f, InputIterator l)
 		{
 			// specializes on iterator type
@@ -3600,8 +3737,8 @@ namespace spp_ {
 
 		// DefaultValue is a functor that takes a key and returns a value_type
 		// representing the default value to be inserted if none is found.
-		template <class DefaultValue>
-		value_type& find_or_insert(const key_type& key)
+		template<class DefaultValue>
+		value_type &find_or_insert(const key_type &key)
 		{
 			size_type num_probes = 0;              // how many times we've probed
 			const size_type bucket_count_minus_one = bucket_count() - 1;
@@ -3646,7 +3783,7 @@ namespace spp_ {
 			}
 		}
 
-		size_type erase(const key_type& key)
+		size_type erase(const key_type &key)
 		{
 			size_type num_probes = 0;              // how many times we've probed
 			const size_type bucket_count_minus_one = bucket_count() - 1;
@@ -3700,7 +3837,7 @@ namespace spp_ {
 		// Deleted key routines - just to keep google test framework happy
 		// we don't actually use the deleted key
 		// ---------------------------------------------------------------
-		void set_deleted_key(const key_type&)
+		void set_deleted_key(const key_type &)
 		{
 		}
 
@@ -3708,7 +3845,7 @@ namespace spp_ {
 		{
 		}
 
-		bool operator==(const sparse_hashtable& ht) const
+		bool operator==(const sparse_hashtable &ht) const
 		{
 			if (this == &ht)
 				return true;
@@ -3725,7 +3862,7 @@ namespace spp_ {
 			return true;
 		}
 
-		bool operator!=(const sparse_hashtable& ht) const
+		bool operator!=(const sparse_hashtable &ht) const
 		{
 			return !(*this == ht);
 		}
@@ -3744,13 +3881,13 @@ namespace spp_ {
 		// The INPUT type needs to support a Read() operation. File and
 		// InputBuffer are appropriate types to pass in.
 		// -------------------------------------------------------------
-		template <typename OUTPUT>
+		template<typename OUTPUT>
 		bool write_metadata(OUTPUT *fp)
 		{
 			return table.write_metadata(fp);
 		}
 
-		template <typename INPUT>
+		template<typename INPUT>
 		bool read_metadata(INPUT *fp)
 		{
 			num_deleted = 0;            // since we got rid before writing
@@ -3760,14 +3897,14 @@ namespace spp_ {
 		}
 
 		// Only meaningful if value_type is a POD.
-		template <typename OUTPUT>
+		template<typename OUTPUT>
 		bool write_nopointer_data(OUTPUT *fp)
 		{
 			return table.write_nopointer_data(fp);
 		}
 
 		// Only meaningful if value_type is a POD.
-		template <typename INPUT>
+		template<typename INPUT>
 		bool read_nopointer_data(INPUT *fp)
 		{
 			return table.read_nopointer_data(fp);
@@ -3782,14 +3919,14 @@ namespace spp_ {
 		typedef sparsehash_internal::pod_serializer<value_type> NopointerSerializer;
 
 		// ValueSerializer: a functor.  operator()(OUTPUT*, const value_type&)
-		template <typename ValueSerializer, typename OUTPUT>
+		template<typename ValueSerializer, typename OUTPUT>
 		bool serialize(ValueSerializer serializer, OUTPUT *fp)
 		{
 			return table.serialize(serializer, fp);
 		}
 
 		// ValueSerializer: a functor.  operator()(INPUT*, value_type*)
-		template <typename ValueSerializer, typename INPUT>
+		template<typename ValueSerializer, typename INPUT>
 		bool unserialize(ValueSerializer serializer, INPUT *fp)
 		{
 			num_deleted = 0;            // since we got rid before writing
@@ -3808,7 +3945,7 @@ namespace spp_ {
 		struct Settings :
 			sparsehash_internal::sh_hashtable_settings<key_type, hasher,
 			size_type, HT_MIN_BUCKETS> {
-			explicit Settings(const hasher& hf)
+			explicit Settings(const hasher &hf)
 				: sparsehash_internal::sh_hashtable_settings<key_type, hasher, size_type,
 				  HT_MIN_BUCKETS>
 				  (hf, HT_OCCUPANCY_PCT / 100.0f, HT_EMPTY_PCT / 100.0f) {}
@@ -3819,7 +3956,7 @@ namespace spp_ {
 		// ---------------------------------------------------------
 		class KeyInfo : public ExtractKey, public SetKey, public EqualKey {
 		public:
-			KeyInfo(const ExtractKey& ek, const SetKey& sk, const EqualKey& eq)
+			KeyInfo(const ExtractKey &ek, const SetKey &sk, const EqualKey &eq)
 				: ExtractKey(ek), SetKey(sk), EqualKey(eq)
 			{
 			}
@@ -3830,19 +3967,19 @@ namespace spp_ {
 				return ExtractKey::operator()(v);
 			}
 
-			bool equals(const key_type& a, const key_type& b) const
+			bool equals(const key_type &a, const key_type &b) const
 			{
 				return EqualKey::operator()(a, b);
 			}
 		};
 
 		// Utility functions to access the templated operators
-		size_t hash(const key_type& v) const
+		size_t hash(const key_type &v) const
 		{
 			return settings.hash(v);
 		}
 
-		bool equals(const key_type& a, const key_type& b) const
+		bool equals(const key_type &a, const key_type &b) const
 		{
 			return key_info.equals(a, b);
 		}
@@ -3855,41 +3992,41 @@ namespace spp_ {
 	private:
 		// Actual data
 		// -----------
-		Settings  settings;
-		KeyInfo   key_info;
+		Settings settings;
+		KeyInfo key_info;
 		size_type num_deleted;
-		Table     table;         // holds num_buckets and num_elements too
+		Table table;         // holds num_buckets and num_elements too
 	};
 
 #undef JUMP_
 
 // -----------------------------------------------------------------------------
-	template <class V, class K, class HF, class ExK, class SetK, class EqK, class A>
-	const typename sparse_hashtable<V,K,HF,ExK,SetK,EqK,A>::size_type
-	sparse_hashtable<V,K,HF,ExK,SetK,EqK,A>::ILLEGAL_BUCKET;
+	template<class V, class K, class HF, class ExK, class SetK, class EqK, class A>
+	const typename sparse_hashtable<V, K, HF, ExK, SetK, EqK, A>::size_type
+	sparse_hashtable<V, K, HF, ExK, SetK, EqK, A>::ILLEGAL_BUCKET;
 
 // How full we let the table get before we resize.  Knuth says .8 is
 // good -- higher causes us to probe too much, though saves memory
 // -----------------------------------------------------------------------------
-	template <class V, class K, class HF, class ExK, class SetK, class EqK, class A>
-	const int sparse_hashtable<V,K,HF,ExK,SetK,EqK,A>::HT_OCCUPANCY_PCT = 50;
+	template<class V, class K, class HF, class ExK, class SetK, class EqK, class A>
+	const int sparse_hashtable<V, K, HF, ExK, SetK, EqK, A>::HT_OCCUPANCY_PCT = 50;
 
 // How empty we let the table get before we resize lower.
 // It should be less than OCCUPANCY_PCT / 2 or we thrash resizing
 // -----------------------------------------------------------------------------
-	template <class V, class K, class HF, class ExK, class SetK, class EqK, class A>
-	const int sparse_hashtable<V,K,HF,ExK,SetK,EqK,A>::HT_EMPTY_PCT
+	template<class V, class K, class HF, class ExK, class SetK, class EqK, class A>
+	const int sparse_hashtable<V, K, HF, ExK, SetK, EqK, A>::HT_EMPTY_PCT
 	    = static_cast<int>(0.4 *
-	                       sparse_hashtable<V,K,HF,ExK,SetK,EqK,A>::HT_OCCUPANCY_PCT);
+	                       sparse_hashtable<V, K, HF, ExK, SetK, EqK, A>::HT_OCCUPANCY_PCT);
 
 
 //  ----------------------------------------------------------------------
 //                   S P A R S E _ H A S H _ M A P
 //  ----------------------------------------------------------------------
-	template <class Key, class T,
-	          class HashFcn  = spp_hash<Key>,
-	          class EqualKey = std::equal_to<Key>,
-	          class Alloc    = SPP_DEFAULT_ALLOCATOR<std::pair<const Key, T> > >
+	template<class Key, class T,
+	         class HashFcn  = spp_hash<Key>,
+	         class EqualKey = std::equal_to<Key>,
+	         class Alloc    = SPP_DEFAULT_ALLOCATOR<std::pair<const Key, T> > >
 	class sparse_hash_map {
 	public:
 		typedef typename std::pair<const Key, T> value_type;
@@ -3897,24 +4034,24 @@ namespace spp_ {
 	private:
 		// Apparently select1st is not stl-standard, so we define our own
 		struct SelectKey {
-			typedef const Key& result_type;
+			typedef const Key &result_type;
 
-			inline const Key& operator()(const value_type& p) const
+			inline const Key &operator()(const value_type &p) const
 			{
 				return p.first;
 			}
 		};
 
 		struct SetKey {
-			inline void operator()(value_type* value, const Key& new_key) const
+			inline void operator()(value_type *value, const Key &new_key) const
 			{
-				*const_cast<Key*>(&value->first) = new_key;
+				*const_cast<Key *>(&value->first) = new_key;
 			}
 		};
 
 		// For operator[].
 		struct DefaultValue {
-			inline value_type operator()(const Key& key)  const
+			inline value_type operator()(const Key &key) const
 			{
 				return std::make_pair(key, T());
 			}
@@ -3925,46 +4062,51 @@ namespace spp_ {
 		        SetKey, EqualKey, Alloc> ht;
 
 	public:
-		typedef typename ht::key_type             key_type;
-		typedef T                                 data_type;
-		typedef T                                 mapped_type;
-		typedef typename ht::hasher               hasher;
-		typedef typename ht::key_equal            key_equal;
-		typedef Alloc                             allocator_type;
+		typedef typename ht::key_type key_type;
+		typedef T data_type;
+		typedef T mapped_type;
+		typedef typename ht::hasher hasher;
+		typedef typename ht::key_equal key_equal;
+		typedef Alloc allocator_type;
 
-		typedef typename ht::size_type            size_type;
-		typedef typename ht::difference_type      difference_type;
-		typedef typename ht::pointer              pointer;
-		typedef typename ht::const_pointer        const_pointer;
-		typedef typename ht::reference            reference;
-		typedef typename ht::const_reference      const_reference;
+		typedef typename ht::size_type size_type;
+		typedef typename ht::difference_type difference_type;
+		typedef typename ht::pointer pointer;
+		typedef typename ht::const_pointer const_pointer;
+		typedef typename ht::reference reference;
+		typedef typename ht::const_reference const_reference;
 
-		typedef typename ht::iterator             iterator;
-		typedef typename ht::const_iterator       const_iterator;
-		typedef typename ht::local_iterator       local_iterator;
+		typedef typename ht::iterator iterator;
+		typedef typename ht::const_iterator const_iterator;
+		typedef typename ht::local_iterator local_iterator;
 		typedef typename ht::const_local_iterator const_local_iterator;
 
 		// Iterator functions
-		iterator       begin()
+		iterator begin()
 		{
 			return rep.begin();
 		}
-		iterator       end()
+
+		iterator end()
 		{
 			return rep.end();
 		}
+
 		const_iterator begin() const
 		{
 			return rep.cbegin();
 		}
+
 		const_iterator end() const
 		{
 			return rep.cend();
 		}
+
 		const_iterator cbegin() const
 		{
 			return rep.cbegin();
 		}
+
 		const_iterator cend() const
 		{
 			return rep.cend();
@@ -3975,22 +4117,27 @@ namespace spp_ {
 		{
 			return rep.begin(i);
 		}
+
 		local_iterator end(size_type i)
 		{
 			return rep.end(i);
 		}
+
 		const_local_iterator begin(size_type i) const
 		{
 			return rep.begin(i);
 		}
+
 		const_local_iterator end(size_type i) const
 		{
 			return rep.end(i);
 		}
+
 		const_local_iterator cbegin(size_type i) const
 		{
 			return rep.cbegin(i);
 		}
+
 		const_local_iterator cend(size_type i) const
 		{
 			return rep.cend(i);
@@ -4002,14 +4149,17 @@ namespace spp_ {
 		{
 			return rep.get_allocator();
 		}
+
 		hasher hash_funct() const
 		{
 			return rep.hash_funct();
 		}
+
 		hasher hash_function() const
 		{
 			return hash_funct();
 		}
+
 		key_equal key_eq() const
 		{
 			return rep.key_eq();
@@ -4019,101 +4169,100 @@ namespace spp_ {
 		// Constructors
 		// ------------
 		explicit sparse_hash_map(size_type n = 0,
-		                         const hasher& hf = hasher(),
-		                         const key_equal& eql = key_equal(),
-		                         const allocator_type& alloc = allocator_type())
+		                         const hasher &hf = hasher(),
+		                         const key_equal &eql = key_equal(),
+		                         const allocator_type &alloc = allocator_type())
 			: rep(n, hf, eql, SelectKey(), SetKey(), alloc)
 		{
 		}
 
-		explicit sparse_hash_map(const allocator_type& alloc) :
+		explicit sparse_hash_map(const allocator_type &alloc) :
 			rep(0, hasher(), key_equal(), SelectKey(), SetKey(), alloc)
 		{
 		}
 
-		sparse_hash_map(size_type n, const allocator_type& alloc) :
+		sparse_hash_map(size_type n, const allocator_type &alloc) :
 			rep(n, hasher(), key_equal(), SelectKey(), SetKey(), alloc)
 		{
 		}
 
-		sparse_hash_map(size_type n, const hasher& hf, const allocator_type& alloc) :
+		sparse_hash_map(size_type n, const hasher &hf, const allocator_type &alloc) :
 			rep(n, hf, key_equal(), SelectKey(), SetKey(), alloc)
 		{
 		}
 
-		template <class InputIterator>
+		template<class InputIterator>
 		sparse_hash_map(InputIterator f, InputIterator l,
 		                size_type n = 0,
-		                const hasher& hf = hasher(),
-		                const key_equal& eql = key_equal(),
-		                const allocator_type& alloc = allocator_type())
+		                const hasher &hf = hasher(),
+		                const key_equal &eql = key_equal(),
+		                const allocator_type &alloc = allocator_type())
 			: rep(n, hf, eql, SelectKey(), SetKey(), alloc)
 		{
 			rep.insert(f, l);
 		}
 
-		template <class InputIterator>
+		template<class InputIterator>
 		sparse_hash_map(InputIterator f, InputIterator l,
-		                size_type n, const allocator_type& alloc)
+		                size_type n, const allocator_type &alloc)
 			: rep(n, hasher(), key_equal(), SelectKey(), SetKey(), alloc)
 		{
 			rep.insert(f, l);
 		}
 
-		template <class InputIterator>
+		template<class InputIterator>
 		sparse_hash_map(InputIterator f, InputIterator l,
-		                size_type n, const hasher& hf, const allocator_type& alloc)
+		                size_type n, const hasher &hf, const allocator_type &alloc)
 			: rep(n, hf, key_equal(), SelectKey(), SetKey(), alloc)
 		{
 			rep.insert(f, l);
 		}
 
 		sparse_hash_map(const sparse_hash_map &o) :
-			rep(o.rep)
-		{}
+			rep(o.rep) {}
 
 		sparse_hash_map(const sparse_hash_map &o,
-		                const allocator_type& alloc) :
-			rep(o.rep, alloc)
-		{}
+		                const allocator_type &alloc) :
+			rep(o.rep, alloc) {}
 
 #if !defined(SPP_NO_CXX11_RVALUE_REFERENCES)
+
 		sparse_hash_map(sparse_hash_map &&o) :
-			rep(std::move(o.rep))
-		{}
+			rep(std::move(o.rep)) {}
 
 		sparse_hash_map(sparse_hash_map &&o,
-		                const allocator_type& alloc) :
-			rep(std::move(o.rep), alloc)
-		{}
+		                const allocator_type &alloc) :
+			rep(std::move(o.rep), alloc) {}
+
 #endif
 
 #if !defined(SPP_NO_CXX11_HDR_INITIALIZER_LIST)
+
 		sparse_hash_map(std::initializer_list<value_type> init,
 		                size_type n = 0,
-		                const hasher& hf = hasher(),
-		                const key_equal& eql = key_equal(),
-		                const allocator_type& alloc = allocator_type())
+		                const hasher &hf = hasher(),
+		                const key_equal &eql = key_equal(),
+		                const allocator_type &alloc = allocator_type())
 			: rep(n, hf, eql, SelectKey(), SetKey(), alloc)
 		{
 			rep.insert(init.begin(), init.end());
 		}
 
 		sparse_hash_map(std::initializer_list<value_type> init,
-		                size_type n, const allocator_type& alloc) :
+		                size_type n, const allocator_type &alloc) :
 			rep(n, hasher(), key_equal(), SelectKey(), SetKey(), alloc)
 		{
 			rep.insert(init.begin(), init.end());
 		}
 
 		sparse_hash_map(std::initializer_list<value_type> init,
-		                size_type n, const hasher& hf, const allocator_type& alloc) :
+		                size_type n, const hasher &hf, const allocator_type &alloc) :
 			rep(n, hf, key_equal(), SelectKey(), SetKey(), alloc)
 		{
 			rep.insert(init.begin(), init.end());
 		}
 
-		sparse_hash_map& operator=(std::initializer_list<value_type> init)
+		sparse_hash_map &operator=(std::initializer_list<value_type> init)
 		{
 			rep.clear();
 			rep.insert(init.begin(), init.end());
@@ -4124,9 +4273,10 @@ namespace spp_ {
 		{
 			rep.insert(init.begin(), init.end());
 		}
+
 #endif
 
-		sparse_hash_map& operator=(const sparse_hash_map &o)
+		sparse_hash_map &operator=(const sparse_hash_map &o)
 		{
 			rep = o.rep;
 			return *this;
@@ -4136,7 +4286,8 @@ namespace spp_ {
 		{
 			rep.clear();
 		}
-		void swap(sparse_hash_map& hs)
+
+		void swap(sparse_hash_map &hs)
 		{
 			rep.swap(hs.rep);
 		}
@@ -4147,18 +4298,22 @@ namespace spp_ {
 		{
 			return rep.size();
 		}
+
 		size_type max_size() const
 		{
 			return rep.max_size();
 		}
+
 		bool empty() const
 		{
 			return rep.empty();
 		}
+
 		size_type bucket_count() const
 		{
 			return rep.bucket_count();
 		}
+
 		size_type max_bucket_count() const
 		{
 			return rep.max_bucket_count();
@@ -4168,11 +4323,13 @@ namespace spp_ {
 		{
 			return rep.bucket_size(i);
 		}
-		size_type bucket(const key_type& key) const
+
+		size_type bucket(const key_type &key) const
 		{
 			return rep.bucket(key);
 		}
-		float     load_factor() const
+
+		float load_factor() const
 		{
 			return size() * 1.0f / bucket_count();
 		}
@@ -4181,7 +4338,8 @@ namespace spp_ {
 		{
 			return rep.get_enlarge_factor();
 		}
-		void  max_load_factor(float grow)
+
+		void max_load_factor(float grow)
 		{
 			rep.set_enlarge_factor(grow);
 		}
@@ -4190,7 +4348,8 @@ namespace spp_ {
 		{
 			return rep.get_shrink_factor();
 		}
-		void  min_load_factor(float shrink)
+
+		void min_load_factor(float shrink)
 		{
 			rep.set_shrink_factor(shrink);
 		}
@@ -4204,10 +4363,12 @@ namespace spp_ {
 		{
 			rep.resize(cnt);
 		}
+
 		void rehash(size_type cnt)
 		{
 			resize(cnt);    // c++11 name
 		}
+
 		void reserve(size_type cnt)
 		{
 			resize(cnt);    // c++11
@@ -4215,42 +4376,44 @@ namespace spp_ {
 
 		// Lookup
 		// ------
-		iterator find(const key_type& key)
+		iterator find(const key_type &key)
 		{
 			return rep.find(key);
 		}
-		const_iterator find(const key_type& key) const
+
+		const_iterator find(const key_type &key) const
 		{
 			return rep.find(key);
 		}
-		bool contains(const key_type& key) const
+
+		bool contains(const key_type &key) const
 		{
 			return rep.find(key) != rep.end();
 		}
 
-		mapped_type& operator[](const key_type& key)
+		mapped_type &operator[](const key_type &key)
 		{
 			return rep.template find_or_insert<DefaultValue>(key).second;
 		}
 
-		size_type count(const key_type& key) const
+		size_type count(const key_type &key) const
 		{
 			return rep.count(key);
 		}
 
 		std::pair<iterator, iterator>
-		equal_range(const key_type& key)
+		equal_range(const key_type &key)
 		{
 			return rep.equal_range(key);
 		}
 
 		std::pair<const_iterator, const_iterator>
-		equal_range(const key_type& key) const
+		equal_range(const key_type &key) const
 		{
 			return rep.equal_range(key);
 		}
 
-		mapped_type& at(const key_type& key)
+		mapped_type &at(const key_type &key)
 		{
 			iterator it = rep.find(key);
 			if (it == rep.end())
@@ -4258,7 +4421,7 @@ namespace spp_ {
 			return it->second;
 		}
 
-		const mapped_type& at(const key_type& key) const
+		const mapped_type &at(const key_type &key) const
 		{
 			const_iterator it = rep.find(key);
 			if (it == rep.cend())
@@ -4267,36 +4430,40 @@ namespace spp_ {
 		}
 
 #if !defined(SPP_NO_CXX11_VARIADIC_TEMPLATES)
-		template <class... Args>
-		std::pair<iterator, bool> emplace(Args&&... args)
+
+		template<class... Args>
+		std::pair<iterator, bool> emplace(Args &&... args)
 		{
 			return rep.emplace(std::forward<Args>(args)...);
 		}
 
-		template <class... Args>
-		iterator emplace_hint(const_iterator, Args&&... args)
+		template<class... Args>
+		iterator emplace_hint(const_iterator, Args &&... args)
 		{
 			return rep.emplace(std::forward<Args>(args)...).first;
 		}
+
 #endif
 
 		// Insert
 		// ------
 		std::pair<iterator, bool>
-		insert(const value_type& obj)
+		insert(const value_type &obj)
 		{
 			return rep.insert(obj);
 		}
 
 #if !defined(SPP_NO_CXX11_RVALUE_REFERENCES)
-		template< class P >
-		std::pair<iterator, bool> insert(P&& obj)
+
+		template<class P>
+		std::pair<iterator, bool> insert(P &&obj)
 		{
 			return rep.insert(std::forward<P>(obj));
 		}
+
 #endif
 
-		template <class InputIterator>
+		template<class InputIterator>
 		void insert(InputIterator f, InputIterator l)
 		{
 			rep.insert(f, l);
@@ -4307,11 +4474,12 @@ namespace spp_ {
 			rep.insert(f, l);
 		}
 
-		iterator insert(iterator /*unused*/, const value_type& obj)
+		iterator insert(iterator /*unused*/, const value_type &obj)
 		{
 			return insert(obj).first;
 		}
-		iterator insert(const_iterator /*unused*/, const value_type& obj)
+
+		iterator insert(const_iterator /*unused*/, const value_type &obj)
 		{
 			return insert(obj).first;
 		}
@@ -4319,14 +4487,16 @@ namespace spp_ {
 		// Deleted key routines - just to keep google test framework happy
 		// we don't actually use the deleted key
 		// ---------------------------------------------------------------
-		void set_deleted_key(const key_type& key)
+		void set_deleted_key(const key_type &key)
 		{
 			rep.set_deleted_key(key);
 		}
+
 		void clear_deleted_key()
 		{
 			rep.clear_deleted_key();
 		}
+
 		key_type deleted_key() const
 		{
 			return rep.deleted_key();
@@ -4334,34 +4504,39 @@ namespace spp_ {
 
 		// Erase
 		// -----
-		size_type erase(const key_type& key)
+		size_type erase(const key_type &key)
 		{
 			return rep.erase(key);
 		}
-		iterator  erase(iterator it)
+
+		iterator erase(iterator it)
 		{
 			return rep.erase(it);
 		}
-		iterator  erase(iterator f, iterator l)
+
+		iterator erase(iterator f, iterator l)
 		{
 			return rep.erase(f, l);
 		}
-		iterator  erase(const_iterator it)
+
+		iterator erase(const_iterator it)
 		{
 			return rep.erase(it);
 		}
-		iterator  erase(const_iterator f, const_iterator l)
+
+		iterator erase(const_iterator f, const_iterator l)
 		{
 			return rep.erase(f, l);
 		}
 
 		// Comparison
 		// ----------
-		bool operator==(const sparse_hash_map& hs) const
+		bool operator==(const sparse_hash_map &hs) const
 		{
 			return rep == hs.rep;
 		}
-		bool operator!=(const sparse_hash_map& hs) const
+
+		bool operator!=(const sparse_hash_map &hs) const
 		{
 			return rep != hs.rep;
 		}
@@ -4389,8 +4564,8 @@ namespace spp_ {
 		//    owns) and returns the number of bytes successfully written.
 		//    Note basic_ostream<not_char> is not currently supported.
 		// ---------------------------------------------------------------
-		template <typename ValueSerializer, typename OUTPUT>
-		bool serialize(ValueSerializer serializer, OUTPUT* fp)
+		template<typename ValueSerializer, typename OUTPUT>
+		bool serialize(ValueSerializer serializer, OUTPUT *fp)
 		{
 			return rep.serialize(serializer, fp);
 		}
@@ -4410,8 +4585,8 @@ namespace spp_ {
 		// equals-assignment or similar.  (The value_type* passed into the
 		// serializer points to garbage memory.)
 		// ---------------------------------------------------------------
-		template <typename ValueSerializer, typename INPUT>
-		bool unserialize(ValueSerializer serializer, INPUT* fp)
+		template<typename ValueSerializer, typename INPUT>
+		bool unserialize(ValueSerializer serializer, INPUT *fp)
 		{
 			return rep.unserialize(serializer, fp);
 		}
@@ -4419,25 +4594,25 @@ namespace spp_ {
 		// The four methods below are DEPRECATED.
 		// Use serialize() and unserialize() for new code.
 		// -----------------------------------------------
-		template <typename OUTPUT>
+		template<typename OUTPUT>
 		bool write_metadata(OUTPUT *fp)
 		{
 			return rep.write_metadata(fp);
 		}
 
-		template <typename INPUT>
+		template<typename INPUT>
 		bool read_metadata(INPUT *fp)
 		{
 			return rep.read_metadata(fp);
 		}
 
-		template <typename OUTPUT>
+		template<typename OUTPUT>
 		bool write_nopointer_data(OUTPUT *fp)
 		{
 			return rep.write_nopointer_data(fp);
 		}
 
-		template <typename INPUT>
+		template<typename INPUT>
 		bool read_nopointer_data(INPUT *fp)
 		{
 			return rep.read_nopointer_data(fp);
@@ -4454,23 +4629,24 @@ namespace spp_ {
 //                   S P A R S E _ H A S H _ S E T
 //  ----------------------------------------------------------------------
 
-	template <class Value,
-	          class HashFcn  = spp_hash<Value>,
-	          class EqualKey = std::equal_to<Value>,
-	          class Alloc    = SPP_DEFAULT_ALLOCATOR<Value> >
+	template<class Value,
+	         class HashFcn  = spp_hash<Value>,
+	         class EqualKey = std::equal_to<Value>,
+	         class Alloc    = SPP_DEFAULT_ALLOCATOR<Value> >
 	class sparse_hash_set {
 	private:
 		// Apparently identity is not stl-standard, so we define our own
 		struct Identity {
-			typedef const Value& result_type;
-			inline const Value& operator()(const Value& v) const
+			typedef const Value &result_type;
+
+			inline const Value &operator()(const Value &v) const
 			{
 				return v;
 			}
 		};
 
 		struct SetKey {
-			inline void operator()(Value* value, const Value& new_key) const
+			inline void operator()(Value *value, const Value &new_key) const
 			{
 				*value = new_key;
 			}
@@ -4480,38 +4656,41 @@ namespace spp_ {
 		        EqualKey, Alloc> ht;
 
 	public:
-		typedef typename ht::key_type              key_type;
-		typedef typename ht::value_type            value_type;
-		typedef typename ht::hasher                hasher;
-		typedef typename ht::key_equal             key_equal;
-		typedef Alloc                              allocator_type;
+		typedef typename ht::key_type key_type;
+		typedef typename ht::value_type value_type;
+		typedef typename ht::hasher hasher;
+		typedef typename ht::key_equal key_equal;
+		typedef Alloc allocator_type;
 
-		typedef typename ht::size_type             size_type;
-		typedef typename ht::difference_type       difference_type;
-		typedef typename ht::const_pointer         pointer;
-		typedef typename ht::const_pointer         const_pointer;
-		typedef typename ht::const_reference       reference;
-		typedef typename ht::const_reference       const_reference;
+		typedef typename ht::size_type size_type;
+		typedef typename ht::difference_type difference_type;
+		typedef typename ht::const_pointer pointer;
+		typedef typename ht::const_pointer const_pointer;
+		typedef typename ht::const_reference reference;
+		typedef typename ht::const_reference const_reference;
 
-		typedef typename ht::const_iterator        iterator;
-		typedef typename ht::const_iterator        const_iterator;
-		typedef typename ht::const_local_iterator  local_iterator;
-		typedef typename ht::const_local_iterator  const_local_iterator;
+		typedef typename ht::const_iterator iterator;
+		typedef typename ht::const_iterator const_iterator;
+		typedef typename ht::const_local_iterator local_iterator;
+		typedef typename ht::const_local_iterator const_local_iterator;
 
 
 		// Iterator functions -- recall all iterators are const
-		iterator       begin() const
+		iterator begin() const
 		{
 			return rep.begin();
 		}
-		iterator       end() const
+
+		iterator end() const
 		{
 			return rep.end();
 		}
+
 		const_iterator cbegin() const
 		{
 			return rep.cbegin();
 		}
+
 		const_iterator cend() const
 		{
 			return rep.cend();
@@ -4522,14 +4701,17 @@ namespace spp_ {
 		{
 			return rep.begin(i);
 		}
+
 		local_iterator end(size_type i) const
 		{
 			return rep.end(i);
 		}
+
 		local_iterator cbegin(size_type i) const
 		{
 			return rep.cbegin(i);
 		}
+
 		local_iterator cend(size_type i) const
 		{
 			return rep.cend(i);
@@ -4542,15 +4724,18 @@ namespace spp_ {
 		{
 			return rep.get_allocator();
 		}
-		hasher         hash_funct() const
+
+		hasher hash_funct() const
 		{
 			return rep.hash_funct();
 		}
-		hasher         hash_function() const
+
+		hasher hash_function() const
 		{
 			return hash_funct();    // tr1 name
 		}
-		key_equal      key_eq() const
+
+		key_equal key_eq() const
 		{
 			return rep.key_eq();
 		}
@@ -4559,103 +4744,102 @@ namespace spp_ {
 		// Constructors
 		// ------------
 		explicit sparse_hash_set(size_type n = 0,
-		                         const hasher& hf = hasher(),
-		                         const key_equal& eql = key_equal(),
-		                         const allocator_type& alloc = allocator_type()) :
+		                         const hasher &hf = hasher(),
+		                         const key_equal &eql = key_equal(),
+		                         const allocator_type &alloc = allocator_type()) :
 			rep(n, hf, eql, Identity(), SetKey(), alloc)
 		{
 		}
 
-		explicit sparse_hash_set(const allocator_type& alloc) :
+		explicit sparse_hash_set(const allocator_type &alloc) :
 			rep(0, hasher(), key_equal(), Identity(), SetKey(), alloc)
 		{
 		}
 
-		sparse_hash_set(size_type n, const allocator_type& alloc) :
+		sparse_hash_set(size_type n, const allocator_type &alloc) :
 			rep(n, hasher(), key_equal(), Identity(), SetKey(), alloc)
 		{
 		}
 
-		sparse_hash_set(size_type n, const hasher& hf,
-		                const allocator_type& alloc) :
+		sparse_hash_set(size_type n, const hasher &hf,
+		                const allocator_type &alloc) :
 			rep(n, hf, key_equal(), Identity(), SetKey(), alloc)
 		{
 		}
 
-		template <class InputIterator>
+		template<class InputIterator>
 		sparse_hash_set(InputIterator f, InputIterator l,
 		                size_type n = 0,
-		                const hasher& hf = hasher(),
-		                const key_equal& eql = key_equal(),
-		                const allocator_type& alloc = allocator_type())
+		                const hasher &hf = hasher(),
+		                const key_equal &eql = key_equal(),
+		                const allocator_type &alloc = allocator_type())
 			: rep(n, hf, eql, Identity(), SetKey(), alloc)
 		{
 			rep.insert(f, l);
 		}
 
-		template <class InputIterator>
+		template<class InputIterator>
 		sparse_hash_set(InputIterator f, InputIterator l,
-		                size_type n, const allocator_type& alloc)
+		                size_type n, const allocator_type &alloc)
 			: rep(n, hasher(), key_equal(), Identity(), SetKey(), alloc)
 		{
 			rep.insert(f, l);
 		}
 
-		template <class InputIterator>
+		template<class InputIterator>
 		sparse_hash_set(InputIterator f, InputIterator l,
-		                size_type n, const hasher& hf, const allocator_type& alloc)
+		                size_type n, const hasher &hf, const allocator_type &alloc)
 			: rep(n, hf, key_equal(), Identity(), SetKey(), alloc)
 		{
 			rep.insert(f, l);
 		}
 
 		sparse_hash_set(const sparse_hash_set &o) :
-			rep(o.rep)
-		{}
+			rep(o.rep) {}
 
 		sparse_hash_set(const sparse_hash_set &o,
-		                const allocator_type& alloc) :
-			rep(o.rep, alloc)
-		{}
+		                const allocator_type &alloc) :
+			rep(o.rep, alloc) {}
 
 #if !defined(SPP_NO_CXX11_RVALUE_REFERENCES)
+
 		sparse_hash_set(sparse_hash_set &&o) :
-			rep(std::move(o.rep))
-		{}
+			rep(std::move(o.rep)) {}
 
 		sparse_hash_set(sparse_hash_set &&o,
-		                const allocator_type& alloc) :
-			rep(std::move(o.rep), alloc)
-		{}
+		                const allocator_type &alloc) :
+			rep(std::move(o.rep), alloc) {}
+
 #endif
 
 #if !defined(SPP_NO_CXX11_HDR_INITIALIZER_LIST)
+
 		sparse_hash_set(std::initializer_list<value_type> init,
 		                size_type n = 0,
-		                const hasher& hf = hasher(),
-		                const key_equal& eql = key_equal(),
-		                const allocator_type& alloc = allocator_type()) :
+		                const hasher &hf = hasher(),
+		                const key_equal &eql = key_equal(),
+		                const allocator_type &alloc = allocator_type()) :
 			rep(n, hf, eql, Identity(), SetKey(), alloc)
 		{
 			rep.insert(init.begin(), init.end());
 		}
 
 		sparse_hash_set(std::initializer_list<value_type> init,
-		                size_type n, const allocator_type& alloc) :
+		                size_type n, const allocator_type &alloc) :
 			rep(n, hasher(), key_equal(), Identity(), SetKey(), alloc)
 		{
 			rep.insert(init.begin(), init.end());
 		}
 
 		sparse_hash_set(std::initializer_list<value_type> init,
-		                size_type n, const hasher& hf,
-		                const allocator_type& alloc) :
+		                size_type n, const hasher &hf,
+		                const allocator_type &alloc) :
 			rep(n, hf, key_equal(), Identity(), SetKey(), alloc)
 		{
 			rep.insert(init.begin(), init.end());
 		}
 
-		sparse_hash_set& operator=(std::initializer_list<value_type> init)
+		sparse_hash_set &operator=(std::initializer_list<value_type> init)
 		{
 			rep.clear();
 			rep.insert(init.begin(), init.end());
@@ -4669,7 +4853,7 @@ namespace spp_ {
 
 #endif
 
-		sparse_hash_set& operator=(const sparse_hash_set &o)
+		sparse_hash_set &operator=(const sparse_hash_set &o)
 		{
 			rep = o.rep;
 			return *this;
@@ -4679,7 +4863,8 @@ namespace spp_ {
 		{
 			rep.clear();
 		}
-		void swap(sparse_hash_set& hs)
+
+		void swap(sparse_hash_set &hs)
 		{
 			rep.swap(hs.rep);
 		}
@@ -4691,18 +4876,22 @@ namespace spp_ {
 		{
 			return rep.size();
 		}
+
 		size_type max_size() const
 		{
 			return rep.max_size();
 		}
+
 		bool empty() const
 		{
 			return rep.empty();
 		}
+
 		size_type bucket_count() const
 		{
 			return rep.bucket_count();
 		}
+
 		size_type max_bucket_count() const
 		{
 			return rep.max_bucket_count();
@@ -4712,12 +4901,13 @@ namespace spp_ {
 		{
 			return rep.bucket_size(i);
 		}
-		size_type bucket(const key_type& key) const
+
+		size_type bucket(const key_type &key) const
 		{
 			return rep.bucket(key);
 		}
 
-		float     load_factor() const
+		float load_factor() const
 		{
 			return size() * 1.0f / bucket_count();
 		}
@@ -4726,7 +4916,8 @@ namespace spp_ {
 		{
 			return rep.get_enlarge_factor();
 		}
-		void  max_load_factor(float grow)
+
+		void max_load_factor(float grow)
 		{
 			rep.set_enlarge_factor(grow);
 		}
@@ -4735,7 +4926,8 @@ namespace spp_ {
 		{
 			return rep.get_shrink_factor();
 		}
-		void  min_load_factor(float shrink)
+
+		void min_load_factor(float shrink)
 		{
 			rep.set_shrink_factor(shrink);
 		}
@@ -4749,10 +4941,12 @@ namespace spp_ {
 		{
 			rep.resize(cnt);
 		}
+
 		void rehash(size_type cnt)
 		{
 			resize(cnt);    // c++11 name
 		}
+
 		void reserve(size_type cnt)
 		{
 			resize(cnt);    // c++11
@@ -4760,57 +4954,62 @@ namespace spp_ {
 
 		// Lookup
 		// ------
-		iterator find(const key_type& key) const
+		iterator find(const key_type &key) const
 		{
 			return rep.find(key);
 		}
-		bool contains(const key_type& key) const
+
+		bool contains(const key_type &key) const
 		{
 			return rep.find(key) != rep.end();
 		}
 
-		size_type count(const key_type& key) const
+		size_type count(const key_type &key) const
 		{
 			return rep.count(key);
 		}
 
 		std::pair<iterator, iterator>
-		equal_range(const key_type& key) const
+		equal_range(const key_type &key) const
 		{
 			return rep.equal_range(key);
 		}
 
 #if !defined(SPP_NO_CXX11_VARIADIC_TEMPLATES)
-		template <class... Args>
-		std::pair<iterator, bool> emplace(Args&&... args)
+
+		template<class... Args>
+		std::pair<iterator, bool> emplace(Args &&... args)
 		{
 			return rep.emplace(std::forward<Args>(args)...);
 		}
 
-		template <class... Args>
-		iterator emplace_hint(const_iterator, Args&&... args)
+		template<class... Args>
+		iterator emplace_hint(const_iterator, Args &&... args)
 		{
 			return rep.emplace(std::forward<Args>(args)...).first;
 		}
+
 #endif
 
 		// Insert
 		// ------
-		std::pair<iterator, bool> insert(const value_type& obj)
+		std::pair<iterator, bool> insert(const value_type &obj)
 		{
 			std::pair<typename ht::iterator, bool> p = rep.insert(obj);
 			return std::pair<iterator, bool>(p.first, p.second);   // const to non-const
 		}
 
 #if !defined(SPP_NO_CXX11_RVALUE_REFERENCES)
+
 		template<class P>
-		std::pair<iterator, bool> insert(P&& obj)
+		std::pair<iterator, bool> insert(P &&obj)
 		{
 			return rep.insert(std::forward<P>(obj));
 		}
+
 #endif
 
-		template <class InputIterator>
+		template<class InputIterator>
 		void insert(InputIterator f, InputIterator l)
 		{
 			rep.insert(f, l);
@@ -4821,21 +5020,23 @@ namespace spp_ {
 			rep.insert(f, l);
 		}
 
-		iterator insert(iterator /*unused*/, const value_type& obj)
+		iterator insert(iterator /*unused*/, const value_type &obj)
 		{
 			return insert(obj).first;
 		}
 
 		// Deleted key - do nothing - just to keep google test framework happy
 		// -------------------------------------------------------------------
-		void set_deleted_key(const key_type& key)
+		void set_deleted_key(const key_type &key)
 		{
 			rep.set_deleted_key(key);
 		}
+
 		void clear_deleted_key()
 		{
 			rep.clear_deleted_key();
 		}
+
 		key_type deleted_key() const
 		{
 			return rep.deleted_key();
@@ -4843,26 +5044,29 @@ namespace spp_ {
 
 		// Erase
 		// -----
-		size_type erase(const key_type& key)
+		size_type erase(const key_type &key)
 		{
 			return rep.erase(key);
 		}
-		iterator  erase(iterator it)
+
+		iterator erase(iterator it)
 		{
 			return rep.erase(it);
 		}
-		iterator  erase(iterator f, iterator l)
+
+		iterator erase(iterator f, iterator l)
 		{
 			return rep.erase(f, l);
 		}
 
 		// Comparison
 		// ----------
-		bool operator==(const sparse_hash_set& hs) const
+		bool operator==(const sparse_hash_set &hs) const
 		{
 			return rep == hs.rep;
 		}
-		bool operator!=(const sparse_hash_set& hs) const
+
+		bool operator!=(const sparse_hash_set &hs) const
 		{
 			return rep != hs.rep;
 		}
@@ -4890,8 +5094,8 @@ namespace spp_ {
 		//    owns) and returns the number of bytes successfully written.
 		//    Note basic_ostream<not_char> is not currently supported.
 		// ---------------------------------------------------------------
-		template <typename ValueSerializer, typename OUTPUT>
-		bool serialize(ValueSerializer serializer, OUTPUT* fp)
+		template<typename ValueSerializer, typename OUTPUT>
+		bool serialize(ValueSerializer serializer, OUTPUT *fp)
 		{
 			return rep.serialize(serializer, fp);
 		}
@@ -4911,8 +5115,8 @@ namespace spp_ {
 		// equals-assignment or similar.  (The value_type* passed into
 		// the serializer points to garbage memory.)
 		// ---------------------------------------------------------------
-		template <typename ValueSerializer, typename INPUT>
-		bool unserialize(ValueSerializer serializer, INPUT* fp)
+		template<typename ValueSerializer, typename INPUT>
+		bool unserialize(ValueSerializer serializer, INPUT *fp)
 		{
 			return rep.unserialize(serializer, fp);
 		}
@@ -4920,25 +5124,25 @@ namespace spp_ {
 		// The four methods below are DEPRECATED.
 		// Use serialize() and unserialize() for new code.
 		// -----------------------------------------------
-		template <typename OUTPUT>
+		template<typename OUTPUT>
 		bool write_metadata(OUTPUT *fp)
 		{
 			return rep.write_metadata(fp);
 		}
 
-		template <typename INPUT>
+		template<typename INPUT>
 		bool read_metadata(INPUT *fp)
 		{
 			return rep.read_metadata(fp);
 		}
 
-		template <typename OUTPUT>
+		template<typename OUTPUT>
 		bool write_nopointer_data(OUTPUT *fp)
 		{
 			return rep.write_nopointer_data(fp);
 		}
 
-		template <typename INPUT>
+		template<typename INPUT>
 		bool read_nopointer_data(INPUT *fp)
 		{
 			return rep.read_nopointer_data(fp);
@@ -4956,35 +5160,35 @@ namespace spp_ {
 // We need a global swap for all our classes as well
 // -------------------------------------------------
 
-template <class T, class Alloc>
-inline void swap(spp_::sparsegroup<T,Alloc> &x, spp_::sparsegroup<T,Alloc> &y)
+template<class T, class Alloc>
+inline void swap(spp_::sparsegroup<T, Alloc> &x, spp_::sparsegroup<T, Alloc> &y)
 {
 	x.swap(y);
 }
 
-template <class T, class Alloc>
-inline void swap(spp_::sparsetable<T,Alloc> &x, spp_::sparsetable<T,Alloc> &y)
+template<class T, class Alloc>
+inline void swap(spp_::sparsetable<T, Alloc> &x, spp_::sparsetable<T, Alloc> &y)
 {
 	x.swap(y);
 }
 
-template <class V, class K, class HF, class ExK, class SetK, class EqK, class A>
-inline void swap(spp_::sparse_hashtable<V,K,HF,ExK,SetK,EqK,A> &x,
-                 spp_::sparse_hashtable<V,K,HF,ExK,SetK,EqK,A> &y)
+template<class V, class K, class HF, class ExK, class SetK, class EqK, class A>
+inline void swap(spp_::sparse_hashtable<V, K, HF, ExK, SetK, EqK, A> &x,
+                 spp_::sparse_hashtable<V, K, HF, ExK, SetK, EqK, A> &y)
 {
 	x.swap(y);
 }
 
-template <class Key, class T, class HashFcn, class EqualKey, class Alloc>
-inline void swap(spp_::sparse_hash_map<Key, T, HashFcn, EqualKey, Alloc>& hm1,
-                 spp_::sparse_hash_map<Key, T, HashFcn, EqualKey, Alloc>& hm2)
+template<class Key, class T, class HashFcn, class EqualKey, class Alloc>
+inline void swap(spp_::sparse_hash_map<Key, T, HashFcn, EqualKey, Alloc> &hm1,
+                 spp_::sparse_hash_map<Key, T, HashFcn, EqualKey, Alloc> &hm2)
 {
 	hm1.swap(hm2);
 }
 
-template <class Val, class HashFcn, class EqualKey, class Alloc>
-inline void swap(spp_::sparse_hash_set<Val, HashFcn, EqualKey, Alloc>& hs1,
-                 spp_::sparse_hash_set<Val, HashFcn, EqualKey, Alloc>& hs2)
+template<class Val, class HashFcn, class EqualKey, class Alloc>
+inline void swap(spp_::sparse_hash_set<Val, HashFcn, EqualKey, Alloc> &hs1,
+                 spp_::sparse_hash_set<Val, HashFcn, EqualKey, Alloc> &hs2)
 {
 	hs1.swap(hs2);
 }

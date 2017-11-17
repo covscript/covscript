@@ -49,7 +49,9 @@ namespace cov {
 	}
 
 	template<int N, typename...Args>
-	auto select(placeholder<N> &ph, cov::tuple<Args...> &t) -> typename cov::add_reference<typename cov::tuple_random_iterator<N - 1, Args...>::type>::type
+	auto select(placeholder<N> &ph,
+	            cov::tuple<Args...> &t) -> typename cov::add_reference<typename cov::tuple_random_iterator<
+	N - 1, Args...>::type>::type
 	{
 		return cov::tuple_random_iterator<N - 1, Args...>::get(t);
 	}
@@ -63,7 +65,8 @@ namespace cov {
 	};
 
 	template<int N, typename...Args>
-	typename cov::add_reference<typename cov::tuple_random_iterator<N, Args...>::type>::type get(cov::tuple<Args...> &t)
+	typename cov::add_reference<typename cov::tuple_random_iterator<N, Args...>::type>::type
+	get(cov::tuple<Args...> &t)
 	{
 		return cov::tuple_random_iterator<N, Args...>::get(t);
 	}
@@ -76,7 +79,8 @@ namespace cov {
 		cov::tuple<Args...> mArgs;
 
 		template<typename...ArgsT, int...S>
-		typename resolver<typename cov::function_parser<F>::type::common_type>::return_type _call(cov::tuple<ArgsT...> &t, sequence<S...>)
+		typename resolver<typename cov::function_parser<F>::type::common_type>::return_type
+		_call(cov::tuple<ArgsT...> &t, sequence<S...>)
 		{
 			return mFunc(select(get<S>(mArgs), t)...);
 		}
@@ -91,7 +95,8 @@ namespace cov {
 		bind_t(F func, Args &&...args) : mFunc(func), mArgs(std::forward<Args>(args)...) {}
 
 		template<typename...ArgsT>
-		typename resolver<typename cov::function_parser<F>::type::common_type>::return_type operator()(ArgsT &&...args)
+		typename resolver<typename cov::function_parser<F>::type::common_type>::return_type
+		operator()(ArgsT &&...args)
 		{
 			cov::tuple<ArgsT...> t(std::forward<ArgsT>(args)...);
 			return _call(t, make_sequence<cov::type_list::get_size<args_t>::result>::result);

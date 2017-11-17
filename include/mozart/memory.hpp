@@ -101,7 +101,8 @@ namespace cov {
 			_alloc_helper<data_type, _alloc>::allocator.construct(mProxy->data, obj);
 		}
 
-		shared_ptr(const data_type &obj, const deleter &f) : mProxy(_alloc_helper<proxy, _alloc>::allocator.allocate(1))
+		shared_ptr(const data_type &obj, const deleter &f) : mProxy(
+			    _alloc_helper<proxy, _alloc>::allocator.allocate(1))
 		{
 			mProxy->ref_count = 1;
 			mProxy->deleter = f;
@@ -476,7 +477,8 @@ namespace cov {
 
 		heap(const heap &) = delete;
 
-		explicit heap(size_t size, allocate_policy p = allocate_policy::first_fit, bool nt = false) : hs(::malloc(size)), policy(p), no_truncate(nt)
+		explicit heap(size_t size, allocate_policy p = allocate_policy::first_fit, bool nt = false) : hs(
+			    ::malloc(size)), policy(p), no_truncate(nt)
 		{
 			hp = reinterpret_cast<byte *>(hs);
 			hl = hp + size;

@@ -86,7 +86,8 @@ namespace cs_impl {
 
 			std::shared_ptr<stmt_holder> m_stmt;
 
-			explicit statement(const std::shared_ptr<db_holder> &db, const std::string &sql) : m_stmt(std::make_shared<stmt_holder>(db->db, sql.c_str(), sql.size())) {}
+			explicit statement(const std::shared_ptr<db_holder> &db, const std::string &sql) : m_stmt(
+				    std::make_shared<stmt_holder>(db->db, sql.c_str(), sql.size())) {}
 
 		public:
 			statement() = delete;

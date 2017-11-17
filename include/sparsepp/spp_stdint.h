@@ -4,7 +4,9 @@
 #include "spp_config.h"
 
 #if defined(SPP_HAS_CSTDINT) && (__cplusplus >= 201103)
+
 #include <cstdint>
+
 #else
 #if defined(__FreeBSD__) || defined(__IBMCPP__) || defined(_AIX)
 #include <inttypes.h>

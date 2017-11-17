@@ -41,57 +41,105 @@ namespace cs {
 	void instance_type::init_grammar()
 	{
 		// Expression Grammar
-		translator.add_method({new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_expression(context));
+		translator.add_method({new token_expr(cov::tree<token_base *>()), new token_endline(0)},
+		new method_expression(context));
 		// Import Grammar
-		translator.add_method({new token_action(action_types::import_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_import(context));
+		translator.add_method({new token_action(action_types::import_), new token_expr(cov::tree<token_base *>()),
+			                      new token_endline(0)
+		}, new method_import(context));
 		// Package Grammar
-		translator.add_method({new token_action(action_types::package_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_package(context));
+		translator.add_method({new token_action(action_types::package_), new token_expr(cov::tree<token_base *>()),
+			                      new token_endline(0)
+		}, new method_package(context));
 		// Var Grammar
-		translator.add_method({new token_action(action_types::var_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_var(context));
-		translator.add_method({new token_action(action_types::constant_), new token_action(action_types::var_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_constant(context));
+		translator.add_method(
+		{new token_action(action_types::var_), new token_expr(cov::tree<token_base *>()), new token_endline(0)},
+		new method_var(context));
+		translator.add_method({new token_action(action_types::constant_), new token_action(action_types::var_),
+			                      new token_expr(cov::tree<token_base *>()), new token_endline(0)
+		},
+		new method_constant(context));
 		// End Grammar
-		translator.add_method({new token_action(action_types::endblock_), new token_endline(0)}, new method_end(context));
+		translator.add_method({new token_action(action_types::endblock_), new token_endline(0)},
+		new method_end(context));
 		// Block Grammar
-		translator.add_method({new token_action(action_types::block_), new token_endline(0)}, new method_block(context));
+		translator.add_method({new token_action(action_types::block_), new token_endline(0)},
+		new method_block(context));
 		// Namespace Grammar
-		translator.add_method({new token_action(action_types::namespace_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_namespace(context));
+		translator.add_method({new token_action(action_types::namespace_), new token_expr(cov::tree<token_base *>()),
+			                      new token_endline(0)
+		}, new method_namespace(context));
 		// If Grammar
-		translator.add_method({new token_action(action_types::if_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_if(context));
+		translator.add_method(
+		{new token_action(action_types::if_), new token_expr(cov::tree<token_base *>()), new token_endline(0)},
+		new method_if(context));
 		// Else Grammar
 		translator.add_method({new token_action(action_types::else_), new token_endline(0)}, new method_else(context));
 		// Switch Grammar
-		translator.add_method({new token_action(action_types::switch_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_switch(context));
+		translator.add_method({new token_action(action_types::switch_), new token_expr(cov::tree<token_base *>()),
+			                      new token_endline(0)
+		}, new method_switch(context));
 		// Case Grammar
-		translator.add_method({new token_action(action_types::case_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_case(context));
+		translator.add_method({new token_action(action_types::case_), new token_expr(cov::tree<token_base *>()),
+			                      new token_endline(0)
+		}, new method_case(context));
 		// Default Grammar
-		translator.add_method({new token_action(action_types::default_), new token_endline(0)}, new method_default(context));
+		translator.add_method({new token_action(action_types::default_), new token_endline(0)},
+		new method_default(context));
 		// While Grammar
-		translator.add_method({new token_action(action_types::while_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_while(context));
+		translator.add_method({new token_action(action_types::while_), new token_expr(cov::tree<token_base *>()),
+			                      new token_endline(0)
+		}, new method_while(context));
 		// Until Grammar
-		translator.add_method({new token_action(action_types::until_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_until(context));
+		translator.add_method({new token_action(action_types::until_), new token_expr(cov::tree<token_base *>()),
+			                      new token_endline(0)
+		}, new method_until(context));
 		// Loop Grammar
 		translator.add_method({new token_action(action_types::loop_), new token_endline(0)}, new method_loop(context));
 		// For Grammar
-		translator.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()), new token_action(action_types::to_), new token_expr(cov::tree<token_base *>()), new token_action(action_types::step_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_for_step(context));
-		translator.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()), new token_action(action_types::to_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_for(context));
-		translator.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()), new token_action(action_types::iterate_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_foreach(context));
+		translator.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()),
+			                      new token_action(action_types::to_), new token_expr(cov::tree<token_base *>()),
+			                      new token_action(action_types::step_), new token_expr(cov::tree<token_base *>()),
+			                      new token_endline(0)
+		}, new method_for_step(context));
+		translator.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()),
+			                      new token_action(action_types::to_), new token_expr(cov::tree<token_base *>()),
+			                      new token_endline(0)
+		}, new method_for(context));
+		translator.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()),
+			                      new token_action(action_types::iterate_), new token_expr(cov::tree<token_base *>()),
+			                      new token_endline(0)
+		}, new method_foreach(context));
 		// Break Grammar
-		translator.add_method({new token_action(action_types::break_), new token_endline(0)}, new method_break(context));
+		translator.add_method({new token_action(action_types::break_), new token_endline(0)},
+		new method_break(context));
 		// Continue Grammar
-		translator.add_method({new token_action(action_types::continue_), new token_endline(0)}, new method_continue(context));
+		translator.add_method({new token_action(action_types::continue_), new token_endline(0)},
+		new method_continue(context));
 		// Function Grammar
-		translator.add_method({new token_action(action_types::function_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_function(context));
+		translator.add_method({new token_action(action_types::function_), new token_expr(cov::tree<token_base *>()),
+			                      new token_endline(0)
+		}, new method_function(context));
 		// Return Grammar
-		translator.add_method({new token_action(action_types::return_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_return(context));
-		translator.add_method({new token_action(action_types::return_), new token_endline(0)}, new method_return_no_value(context));
+		translator.add_method({new token_action(action_types::return_), new token_expr(cov::tree<token_base *>()),
+			                      new token_endline(0)
+		}, new method_return(context));
+		translator.add_method({new token_action(action_types::return_), new token_endline(0)},
+		new method_return_no_value(context));
 		// Struct Grammar
-		translator.add_method({new token_action(action_types::struct_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_struct(context));
+		translator.add_method({new token_action(action_types::struct_), new token_expr(cov::tree<token_base *>()),
+			                      new token_endline(0)
+		}, new method_struct(context));
 		// Try Grammar
 		translator.add_method({new token_action(action_types::try_), new token_endline(0)}, new method_try(context));
 		// Catch Grammar
-		translator.add_method({new token_action(action_types::catch_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_catch(context));
+		translator.add_method({new token_action(action_types::catch_), new token_expr(cov::tree<token_base *>()),
+			                      new token_endline(0)
+		}, new method_catch(context));
 		// Throw Grammar
-		translator.add_method({new token_action(action_types::throw_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_throw(context));
+		translator.add_method({new token_action(action_types::throw_), new token_expr(cov::tree<token_base *>()),
+			                      new token_endline(0)
+		}, new method_throw(context));
 	}
 
 	void instance_type::opt_expr(cov::tree<token_base *> &tree, cov::tree<token_base *>::iterator it)
@@ -250,7 +298,8 @@ namespace cs {
 				opt_expr(tree, it.right());
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
-				if (lptr != nullptr && lptr->get_type() == token_types::value && rptr != nullptr && rptr->get_type() == token_types::arglist) {
+				if (lptr != nullptr && lptr->get_type() == token_types::value && rptr != nullptr &&
+				        rptr->get_type() == token_types::arglist) {
 					var &a = static_cast<token_value *>(lptr)->get_value();
 					if (a.type() == typeid(callable) && a.const_val<callable>().is_constant()) {
 						bool is_optimizable = true;
@@ -280,7 +329,8 @@ namespace cs {
 				opt_expr(tree, it.right());
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
-				if (!inside_lambda || lptr != nullptr || rptr == nullptr || rptr->get_type() != token_types::arglist)
+				if (!inside_lambda || lptr != nullptr || rptr == nullptr ||
+				        rptr->get_type() != token_types::arglist)
 					throw syntax_error("Wrong grammar for lambda expression.");
 				it.data() = rptr;
 				return;
@@ -307,7 +357,16 @@ namespace cs {
 							throw syntax_error("Redefinition of function argument.");
 					args.push_back(str);
 				}
-				it.data() = new_value(var::make_protect<callable>(function(context, args, std::deque<statement_base *> {new statement_return(cov::tree<token_base *>{it.right()}, context, new token_endline(0))})));
+				it.data() = new_value(var::make_protect<callable>(function(context, args,
+				std::deque<statement_base *> {
+					new statement_return(
+					cov::tree<token_base *>{
+						it.right()
+					},
+					context,
+					new token_endline(
+					    0))
+				})));
 				return;
 				break;
 			}
@@ -334,7 +393,8 @@ namespace cs {
 	{
 		const auto &it = tree.root();
 		token_base *root = it.data();
-		if (root == nullptr || root->get_type() != token_types::signal || static_cast<token_signal *>(root)->get_signal() != signal_types::asi_)
+		if (root == nullptr || root->get_type() != token_types::signal ||
+		        static_cast<token_signal *>(root)->get_signal() != signal_types::asi_)
 			throw syntax_error("Wrong grammar for variable definition.");
 		token_base *left = it.left().data();
 		const auto &right = it.right();

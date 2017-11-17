@@ -30,7 +30,8 @@ namespace cs {
 			static inline short check(const var &val)
 			{
 				if (typeid(T) != val.type())
-					throw syntax_error("Invalid Argument.At " + std::to_string(index + 1) + ".Expected " + cs_impl::get_name_of_type<T>() + ",provided " + val.get_type_name());
+					throw syntax_error("Invalid Argument.At " + std::to_string(index + 1) + ".Expected " +
+					                   cs_impl::get_name_of_type<T>() + ",provided " + val.get_type_name());
 				else
 					return 0;
 			}
@@ -41,7 +42,9 @@ namespace cs {
 		template<typename...ArgsT, int...Seq>
 		static inline void check_helper(const std::deque<var> &args, const cov::sequence<Seq...> &)
 		{
-			result_container(check_arg<typename cov::remove_constant<typename cov::remove_reference<ArgsT>::type>::type, Seq>::check(args[Seq])...);
+			result_container(
+			    check_arg<typename cov::remove_constant<typename cov::remove_reference<ArgsT>::type>::type, Seq>::check(
+			        args[Seq])...);
 		}
 
 	public:
@@ -51,7 +54,9 @@ namespace cs {
 			if (sizeof...(ArgTypes) == args.size())
 				check_helper<ArgTypes...>(args, cov::make_sequence<sizeof...(ArgTypes)>::result);
 			else
-				throw syntax_error("Wrong size of the arguments.Expected " + std::to_string(sizeof...(ArgTypes)) + ",provided " + std::to_string(args.size()));
+				throw syntax_error(
+				    "Wrong size of the arguments.Expected " + std::to_string(sizeof...(ArgTypes)) + ",provided " +
+				    std::to_string(args.size()));
 		}
 	};
 
@@ -256,7 +261,9 @@ namespace cs {
 		cni(const cni &c) : mCni(c.mCni->clone()) {}
 
 		template<typename T>
-		cni(T &&val):mCni(construct_helper<typename cni_modify<typename cov::remove_reference<T>::type>::type>::construct(std::forward<T>(val))) {}
+		cni(T &&val):mCni(
+			    construct_helper<typename cni_modify<typename cov::remove_reference<T>::type>::type>::construct(
+			        std::forward<T>(val))) {}
 
 		~cni()
 		{

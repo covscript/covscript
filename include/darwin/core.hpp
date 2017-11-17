@@ -159,7 +159,7 @@ namespace darwin {
 			return nullptr;
 		}
 
-		virtual bool usable() const=0;
+		virtual bool usable() const =0;
 
 		virtual void clear()=0;
 
@@ -179,7 +179,8 @@ namespace darwin {
 		{
 			if (!this->usable())
 				Darwin_Error("Use of not available object.");
-			if (p0x < 0 || p0y < 0 || p1x < 0 || p1y < 0 || p0x > this->get_width() - 1 || p0y > this->get_height() - 1 || p1x > this->get_width() - 1 || p1y > this->get_height() - 1)
+			if (p0x < 0 || p0y < 0 || p1x < 0 || p1y < 0 || p0x > this->get_width() - 1 ||
+			        p0y > this->get_height() - 1 || p1x > this->get_width() - 1 || p1y > this->get_height() - 1)
 				Darwin_Warning("Out of range.");
 			long w(p1x - p0x), h(p1y - p0y);
 			double distance(std::sqrt(std::pow(w, 2) + std::pow(h, 2)) * draw_line_precision);
@@ -193,7 +194,8 @@ namespace darwin {
 		{
 			if (!this->usable())
 				Darwin_Error("Use of not available object.");
-			if (x < 0 || y < 0 || x > this->get_width() - 1 || y > this->get_height() - 1 || x + w > this->get_width() || y + h > this->get_height())
+			if (x < 0 || y < 0 || x > this->get_width() - 1 || y > this->get_height() - 1 ||
+			        x + w > this->get_width() || y + h > this->get_height())
 				Darwin_Warning("Out of range.");
 			for (int i = 0; i != w; w > 0 ? ++i : --i) {
 				this->draw_pixel(x + i, y, pix);
@@ -209,7 +211,8 @@ namespace darwin {
 		{
 			if (!this->usable())
 				Darwin_Error("Use of not available object.");
-			if (x < 0 || y < 0 || x > this->get_width() - 1 || y > this->get_height() - 1 || x + w > this->get_width() || y + h > this->get_height())
+			if (x < 0 || y < 0 || x > this->get_width() - 1 || y > this->get_height() - 1 ||
+			        x + w > this->get_width() || y + h > this->get_height())
 				Darwin_Warning("Out of range.");
 			for (int cy = 0; cy != h; h > 0 ? ++cy : --cy)
 				for (int cx = 0; cx != w; w > 0 ? ++cx : --cx)
@@ -255,7 +258,8 @@ namespace darwin {
 					this->draw_line(x1 + k1 * y, y1 + y, x1 + k2 * y, y1 + y, pix);
 			}
 			else {
-				double k1(double(x3 - x1) / double(y3 - y1)), k2(double(x3 - x2) / double(y3 - y2)), k3(double(x2 - x1) / double(y2 - y1));
+				double k1(double(x3 - x1) / double(y3 - y1)), k2(double(x3 - x2) / double(y3 - y2)), k3(
+				    double(x2 - x1) / double(y2 - y1));
 				for (int y = 0; y <= y3 - y1; ++y) {
 					if (y < y2 - y1)
 						this->draw_line(x1 + k1 * y, y1 + y, x1 + k3 * y, y1 + y, pix);
@@ -269,7 +273,8 @@ namespace darwin {
 		{
 			if (!this->usable())
 				Darwin_Error("Use of not available object.");
-			if (x < 0 || y < 0 || x > this->get_width() - 1 || y > this->get_height() - 1 || x + str.size() > this->get_width())
+			if (x < 0 || y < 0 || x > this->get_width() - 1 || y > this->get_height() - 1 ||
+			        x + str.size() > this->get_width())
 				Darwin_Warning("Out of range.");
 			pixel p = pix;
 			for (int i = 0; i < str.size(); ++i) {

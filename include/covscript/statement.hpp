@@ -27,7 +27,9 @@ namespace cs {
 	public:
 		statement_expression() = delete;
 
-		statement_expression(const cov::tree<token_base *> &tree, context_t c, token_base *ptr) : statement_base(c, ptr), mTree(tree) {}
+		statement_expression(const cov::tree<token_base *> &tree, context_t c, token_base *ptr) : statement_base(c,
+			        ptr),
+			mTree(tree) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -42,7 +44,9 @@ namespace cs {
 	public:
 		statement_var() = delete;
 
-		statement_var(const instance_type::define_var_profile &dvp, context_t c, token_base *ptr) : statement_base(c, ptr), mDvp(dvp) {}
+		statement_var(const instance_type::define_var_profile &dvp, context_t c, token_base *ptr) : statement_base(c,
+			        ptr),
+			mDvp(dvp) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -85,7 +89,9 @@ namespace cs {
 	public:
 		statement_block() = delete;
 
-		statement_block(const std::deque<statement_base *> &block, context_t c, token_base *ptr) : statement_base(c, ptr), mBlock(block) {}
+		statement_block(const std::deque<statement_base *> &block, context_t c, token_base *ptr) : statement_base(c,
+			        ptr),
+			mBlock(block) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -101,7 +107,8 @@ namespace cs {
 	public:
 		statement_namespace() = delete;
 
-		statement_namespace(token_base *tbp, const std::deque<statement_base *> &block, context_t c, token_base *ptr) : statement_base(c, ptr), mName(static_cast<token_id *>(tbp)->get_id()), mBlock(block) {}
+		statement_namespace(token_base *tbp, const std::deque<statement_base *> &block, context_t c, token_base *ptr)
+			: statement_base(c, ptr), mName(static_cast<token_id *>(tbp)->get_id()), mBlock(block) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -117,7 +124,8 @@ namespace cs {
 	public:
 		statement_if() = delete;
 
-		statement_if(const cov::tree<token_base *> &tree, const std::deque<statement_base *> &block, context_t c, token_base *ptr) : statement_base(c, ptr), mTree(tree), mBlock(block) {}
+		statement_if(const cov::tree<token_base *> &tree, const std::deque<statement_base *> &block, context_t c,
+		             token_base *ptr) : statement_base(c, ptr), mTree(tree), mBlock(block) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -134,7 +142,13 @@ namespace cs {
 	public:
 		statement_ifelse() = delete;
 
-		statement_ifelse(const cov::tree<token_base *> &tree, const std::deque<statement_base *> &btrue, const std::deque<statement_base *> &bfalse, context_t c, token_base *ptr) : statement_base(c, ptr), mTree(tree), mBlock(btrue), mElseBlock(bfalse) {}
+		statement_ifelse(const cov::tree<token_base *> &tree, const std::deque<statement_base *> &btrue,
+		                 const std::deque<statement_base *> &bfalse, context_t c, token_base *ptr) : statement_base(c,
+			                         ptr),
+			mTree(tree),
+			mBlock(btrue),
+			mElseBlock(
+			    bfalse) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -166,7 +180,9 @@ namespace cs {
 	public:
 		statement_switch() = delete;
 
-		statement_switch(const cov::tree<token_base *> &tree, const spp::sparse_hash_map<var, statement_block *> &cases, statement_block *dptr, context_t c, token_base *ptr) : statement_base(c, ptr), mTree(tree), mCases(cases), mDefault(dptr) {}
+		statement_switch(const cov::tree<token_base *> &tree, const spp::sparse_hash_map<var, statement_block *> &cases,
+		                 statement_block *dptr, context_t c, token_base *ptr) : statement_base(c, ptr), mTree(tree),
+			mCases(cases), mDefault(dptr) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -182,7 +198,8 @@ namespace cs {
 	public:
 		statement_case() = delete;
 
-		statement_case(const var &tag, const std::deque<statement_base *> &b, context_t c, token_base *ptr) : statement_base(c, ptr), mTag(copy(tag)), mBlock(new statement_block(b, c, ptr)) {}
+		statement_case(const var &tag, const std::deque<statement_base *> &b, context_t c, token_base *ptr)
+			: statement_base(c, ptr), mTag(copy(tag)), mBlock(new statement_block(b, c, ptr)) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -210,7 +227,9 @@ namespace cs {
 	public:
 		statement_default() = delete;
 
-		statement_default(const std::deque<statement_base *> &b, context_t c, token_base *ptr) : statement_base(c, ptr), mBlock(new statement_block(b, c, ptr)) {}
+		statement_default(const std::deque<statement_base *> &b, context_t c, token_base *ptr) : statement_base(c, ptr),
+			mBlock(new statement_block(
+			           b, c, ptr)) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -234,7 +253,8 @@ namespace cs {
 	public:
 		statement_while() = delete;
 
-		statement_while(const cov::tree<token_base *> &tree, const std::deque<statement_base *> &b, context_t c, token_base *ptr) : statement_base(c, ptr), mTree(tree), mBlock(b) {}
+		statement_while(const cov::tree<token_base *> &tree, const std::deque<statement_base *> &b, context_t c,
+		                token_base *ptr) : statement_base(c, ptr), mTree(tree), mBlock(b) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -273,7 +293,8 @@ namespace cs {
 	public:
 		statement_loop() = delete;
 
-		statement_loop(token_expr *expr, const std::deque<statement_base *> &b, context_t c, token_base *ptr) : statement_base(c, ptr), mExpr(expr), mBlock(b) {}
+		statement_loop(token_expr *expr, const std::deque<statement_base *> &b, context_t c, token_base *ptr)
+			: statement_base(c, ptr), mExpr(expr), mBlock(b) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -291,7 +312,9 @@ namespace cs {
 	public:
 		statement_for() = delete;
 
-		statement_for(cov::tree<token_base *> &tree0, const cov::tree<token_base *> &tree1, const cov::tree<token_base *> &tree2, const std::deque<statement_base *> &b, context_t c, token_base *ptr) : statement_base(c, ptr), mEnd(tree1), mStep(tree2), mBlock(b)
+		statement_for(cov::tree<token_base *> &tree0, const cov::tree<token_base *> &tree1,
+		              const cov::tree<token_base *> &tree2, const std::deque<statement_base *> &b, context_t c,
+		              token_base *ptr) : statement_base(c, ptr), mEnd(tree1), mStep(tree2), mBlock(b)
 		{
 			context->instance->parse_define_var(tree0, mDvp);
 		}
@@ -311,7 +334,10 @@ namespace cs {
 	public:
 		statement_foreach() = delete;
 
-		statement_foreach(const std::string &it, const cov::tree<token_base *> &tree1, const std::deque<statement_base *> &b, context_t c, token_base *ptr) : statement_base(c, ptr), mIt(it), mObj(tree1), mBlock(b) {}
+		statement_foreach(const std::string &it, const cov::tree<token_base *> &tree1,
+		                  const std::deque<statement_base *> &b, context_t c, token_base *ptr) : statement_base(c, ptr),
+			mIt(it), mObj(tree1),
+			mBlock(b) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -327,7 +353,8 @@ namespace cs {
 	public:
 		statement_struct() = delete;
 
-		statement_struct(const std::string &name, const std::deque<statement_base *> &method, context_t c, token_base *ptr) : statement_base(c, ptr), mName(name), mBuilder(c, name, method) {}
+		statement_struct(const std::string &name, const std::deque<statement_base *> &method, context_t c,
+		                 token_base *ptr) : statement_base(c, ptr), mName(name), mBuilder(c, name, method) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -344,7 +371,12 @@ namespace cs {
 	public:
 		statement_function() = delete;
 
-		statement_function(const std::string &name, const std::deque<std::string> &args, const std::deque<statement_base *> &body, context_t c, token_base *ptr) : statement_base(c, ptr), mName(name), mFunc(c, args, body) {}
+		statement_function(const std::string &name, const std::deque<std::string> &args,
+		                   const std::deque<statement_base *> &body, context_t c, token_base *ptr) : statement_base(c,
+			                           ptr),
+			mName(name),
+			mFunc(c, args,
+			      body) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -365,7 +397,8 @@ namespace cs {
 	public:
 		statement_return() = delete;
 
-		statement_return(const cov::tree<token_base *> &tree, context_t c, token_base *ptr) : statement_base(c, ptr), mTree(tree) {}
+		statement_return(const cov::tree<token_base *> &tree, context_t c, token_base *ptr) : statement_base(c, ptr),
+			mTree(tree) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -397,7 +430,11 @@ namespace cs {
 	public:
 		statement_try() = delete;
 
-		statement_try(const std::string &name, const std::deque<statement_base *> &tbody, const std::deque<statement_base *> &cbody, context_t c, token_base *ptr) : statement_base(c, ptr), mName(name), mTryBody(tbody), mCatchBody(cbody) {}
+		statement_try(const std::string &name, const std::deque<statement_base *> &tbody,
+		              const std::deque<statement_base *> &cbody, context_t c, token_base *ptr) : statement_base(c, ptr),
+			mName(name),
+			mTryBody(tbody),
+			mCatchBody(cbody) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -435,7 +472,8 @@ namespace cs {
 	public:
 		statement_throw() = delete;
 
-		statement_throw(const cov::tree<token_base *> &tree, context_t c, token_base *ptr) : statement_base(c, ptr), mTree(tree) {}
+		statement_throw(const cov::tree<token_base *> &tree, context_t c, token_base *ptr) : statement_base(c, ptr),
+			mTree(tree) {}
 
 		virtual statement_types get_type() const noexcept override
 		{

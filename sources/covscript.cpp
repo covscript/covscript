@@ -93,15 +93,24 @@ namespace cs {
 		// Context
 		storage.add_buildin_var("context", var::make_constant<context_t>(context));
 		// Internal Types
-		storage.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, cs_impl::hash<std::string>(typeid(char).name()), char_ext_shared);
-		storage.add_buildin_type("number", []() -> var { return var::make<number>(0); }, cs_impl::hash<std::string>(typeid(number).name()));
-		storage.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, cs_impl::hash<std::string>(typeid(boolean).name()));
-		storage.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, cs_impl::hash<std::string>(typeid(pointer).name()));
-		storage.add_buildin_type("string", []() -> var { return var::make<string>(); }, cs_impl::hash<std::string>(typeid(string).name()), string_ext_shared);
-		storage.add_buildin_type("list", []() -> var { return var::make<list>(); }, cs_impl::hash<std::string>(typeid(list).name()), list_ext_shared);
-		storage.add_buildin_type("array", []() -> var { return var::make<array>(); }, cs_impl::hash<std::string>(typeid(array).name()), array_ext_shared);
-		storage.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, cs_impl::hash<std::string>(typeid(pair).name()), pair_ext_shared);
-		storage.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, cs_impl::hash<std::string>(typeid(hash_map).name()), hash_map_ext_shared);
+		storage.add_buildin_type("char", []() -> var { return var::make<char>('\0'); },
+		                         cs_impl::hash<std::string>(typeid(char).name()), char_ext_shared);
+		storage.add_buildin_type("number", []() -> var { return var::make<number>(0); },
+		                         cs_impl::hash<std::string>(typeid(number).name()));
+		storage.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); },
+		                         cs_impl::hash<std::string>(typeid(boolean).name()));
+		storage.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); },
+		                         cs_impl::hash<std::string>(typeid(pointer).name()));
+		storage.add_buildin_type("string", []() -> var { return var::make<string>(); },
+		                         cs_impl::hash<std::string>(typeid(string).name()), string_ext_shared);
+		storage.add_buildin_type("list", []() -> var { return var::make<list>(); },
+		                         cs_impl::hash<std::string>(typeid(list).name()), list_ext_shared);
+		storage.add_buildin_type("array", []() -> var { return var::make<array>(); },
+		                         cs_impl::hash<std::string>(typeid(array).name()), array_ext_shared);
+		storage.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); },
+		                         cs_impl::hash<std::string>(typeid(pair).name()), pair_ext_shared);
+		storage.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); },
+		                         cs_impl::hash<std::string>(typeid(hash_map).name()), hash_map_ext_shared);
 		// Add Internal Functions to storage
 		storage.add_buildin_var("to_integer", cs::var::make_protect<cs::callable>(cs::cni(to_integer), true));
 		storage.add_buildin_var("to_string", cs::var::make_protect<cs::callable>(cs::cni(to_string), true));

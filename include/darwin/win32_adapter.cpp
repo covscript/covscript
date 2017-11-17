@@ -106,7 +106,8 @@ namespace darwin {
 		virtual results update_drawable() override
 		{
 			conio::gotoxy(0, 0);
-			std::size_t sw(std::min<std::size_t>(mDrawable.get_width(), conio::terminal_width())), sh(std::min<std::size_t>(mDrawable.get_height(), conio::terminal_height()));
+			std::size_t sw(std::min<std::size_t>(mDrawable.get_width(), conio::terminal_width())), sh(
+			    std::min<std::size_t>(mDrawable.get_height(), conio::terminal_height()));
 			conio::console buf(sw, sh);
 			for (std::size_t y = 0; y < sh; ++y) {
 				for (std::size_t x = 0; x < sw; ++x) {

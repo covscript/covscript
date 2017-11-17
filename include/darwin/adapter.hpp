@@ -31,7 +31,7 @@ namespace darwin {
 
 		virtual ~platform_adapter() = default;
 
-		virtual status get_state() const=0;
+		virtual status get_state() const =0;
 
 		virtual results init()=0;
 
@@ -58,7 +58,7 @@ namespace darwin {
 
 		virtual ~module_adapter() = default;
 
-		virtual status get_state() const=0;
+		virtual status get_state() const =0;
 
 		virtual results load_module(const std::string &)=0;
 

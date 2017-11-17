@@ -94,7 +94,8 @@ namespace cs {
 
 		callable(const callable &) = default;
 
-		callable(const function_type &func, bool constant = false) : mFunc(func), mType(constant ? types::constant : types::normal) {}
+		callable(const function_type &func, bool constant = false) : mFunc(func), mType(constant ? types::constant
+			        : types::normal) {}
 
 		callable(const function_type &func, types type) : mFunc(func), mType(type) {}
 
@@ -123,7 +124,8 @@ namespace cs {
 
 		function(const function &) = default;
 
-		function(context_t c, const std::deque<std::string> &args, const std::deque<statement_base *> &body) : mContext(c), mArgs(args), mBody(body) {}
+		function(context_t c, const std::deque<std::string> &args, const std::deque<statement_base *> &body) : mContext(
+			    c), mArgs(args), mBody(body) {}
 
 		~function() = default;
 
@@ -201,9 +203,13 @@ namespace cs {
 	public:
 		structure() = delete;
 
-		structure(std::size_t hash, const std::string &name, const std::shared_ptr<spp::sparse_hash_map<string, var>> &data) : m_hash(hash), m_name(typeid(structure).name() + name), m_data(data) {}
+		structure(std::size_t hash, const std::string &name,
+		          const std::shared_ptr<spp::sparse_hash_map<string, var>> &data) : m_hash(hash),
+			m_name(typeid(structure).name() +
+			       name), m_data(data) {}
 
-		structure(const structure &s) : m_hash(s.m_hash), m_name(s.m_name), m_data(std::make_shared<spp::sparse_hash_map<string, var>>(*s.m_data))
+		structure(const structure &s) : m_hash(s.m_hash), m_name(s.m_name),
+			m_data(std::make_shared<spp::sparse_hash_map<string, var>>(*s.m_data))
 		{
 			for (auto &it:*m_data)
 				it.second.clone();
@@ -239,7 +245,10 @@ namespace cs {
 	public:
 		struct_builder() = delete;
 
-		struct_builder(context_t c, const std::string &name, const std::deque<statement_base *> &method) : mContext(c), mHash(++mCount), mName(name), mMethod(method) {}
+		struct_builder(context_t c, const std::string &name, const std::deque<statement_base *> &method) : mContext(c),
+			mHash(++mCount),
+			mName(name),
+			mMethod(method) {}
 
 		struct_builder(const struct_builder &) = default;
 

@@ -10,8 +10,10 @@
 #endif
 
 #ifdef SPP_WIN
+
 #include <windows.h>
 #include <Psapi.h>
+
 #undef min
 #undef max
 #else

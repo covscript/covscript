@@ -35,7 +35,8 @@ namespace cs {
 				return a == nullptr;
 			if (a->get_type() != b->get_type())
 				return false;
-			return !(a->get_type() == token_types::action) || static_cast<const token_action *>(a)->get_action() == static_cast<const token_action *>(b)->get_action();
+			return !(a->get_type() == token_types::action) || static_cast<const token_action *>(a)->get_action() ==
+			       static_cast<const token_action *>(b)->get_action();
 		}
 
 	private:
@@ -180,7 +181,8 @@ namespace cs {
 			{'0',  '\0'}
 		};
 		std::deque<char> signals = {
-			'+', '-', '*', '/', '%', '^', ',', '.', '>', '<', '=', '&', '|', '!', '(', ')', '[', ']', '{', '}', ':', '?'
+			'+', '-', '*', '/', '%', '^', ',', '.', '>', '<', '=', '&', '|', '!', '(', ')', '[', ']', '{', '}', ':',
+			'?'
 		};
 		mapping<signal_types, int> signal_level_map = {
 			{signal_types::add_,    10},
@@ -221,7 +223,10 @@ namespace cs {
 			{signal_types::gcnew_,  16}
 		};
 		std::deque<signal_types> signal_left_associative = {
-			signal_types::asi_, signal_types::addasi_, signal_types::subasi_, signal_types::mulasi_, signal_types::divasi_, signal_types::modasi_, signal_types::powasi_, signal_types::equ_, signal_types::und_, signal_types::abo_, signal_types::ueq_, signal_types::aeq_, signal_types::neq_, signal_types::and_, signal_types::or_
+			signal_types::asi_, signal_types::addasi_, signal_types::subasi_, signal_types::mulasi_,
+			signal_types::divasi_, signal_types::modasi_, signal_types::powasi_, signal_types::equ_,
+			signal_types::und_, signal_types::abo_, signal_types::ueq_, signal_types::aeq_, signal_types::neq_,
+			signal_types::and_, signal_types::or_
 		};
 		// Constant Pool
 		std::deque<var> constant_pool;

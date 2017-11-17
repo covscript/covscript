@@ -427,7 +427,9 @@ inline void spp_cpuid(int info[4], int InfoType)
 // See https://svn.boost.org/trac/boost/ticket/11852
 //
 #ifdef __cplusplus
+
 #include <cstddef>
+
 #else
 #include <stddef.h>
 #endif

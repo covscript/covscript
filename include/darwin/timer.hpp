@@ -44,15 +44,20 @@ public:
 	{
 		switch (unit) {
 		case time_unit::nano_sec:
-			return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_timer).count();
+			return std::chrono::duration_cast<std::chrono::nanoseconds>(
+			           std::chrono::high_resolution_clock::now() - m_timer).count();
 		case time_unit::micro_sec:
-			return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_timer).count();
+			return std::chrono::duration_cast<std::chrono::microseconds>(
+			           std::chrono::high_resolution_clock::now() - m_timer).count();
 		case time_unit::milli_sec:
-			return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - m_timer).count();
+			return std::chrono::duration_cast<std::chrono::milliseconds>(
+			           std::chrono::high_resolution_clock::now() - m_timer).count();
 		case time_unit::second:
-			return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - m_timer).count();
+			return std::chrono::duration_cast<std::chrono::seconds>(
+			           std::chrono::high_resolution_clock::now() - m_timer).count();
 		case time_unit::minute:
-			return std::chrono::duration_cast<std::chrono::minutes>(std::chrono::high_resolution_clock::now() - m_timer).count();
+			return std::chrono::duration_cast<std::chrono::minutes>(
+			           std::chrono::high_resolution_clock::now() - m_timer).count();
 		}
 		return 0;
 	}
@@ -88,4 +93,5 @@ public:
 	}
 };
 
-std::chrono::time_point<std::chrono::high_resolution_clock> darwin::timer::m_timer(std::chrono::high_resolution_clock::now());
+std::chrono::time_point<std::chrono::high_resolution_clock>
+darwin::timer::m_timer(std::chrono::high_resolution_clock::now());
