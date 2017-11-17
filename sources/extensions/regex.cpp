@@ -121,7 +121,7 @@ namespace regex_cs_ext {
 
 	string format(const std::smatch &m, const string &fmt)
 	{
-		return m.format(fmt);
+		return m.format(fmt.c_str());
 	}
 
 	void init()
