@@ -31,13 +31,17 @@
 # Logs
 *.log
 
-# CovScript intermediate file
-*.cs_ext
+# CovScript intermediate files
+*.cse
 
 # Darwin Picture File
 *.cdpf
-.idea/covscript.iml
-.idea/modules.xml
-.idea/workspace.xml
+
+# IDE Configs
+.idea/
+.vscode/
+
+# Build Caches
 cmake-build-debug/
 build/
+build_x64/
