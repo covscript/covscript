@@ -146,7 +146,7 @@ namespace cs {
 		void add_var(const string &name, const var &var)
 		{
 			if (var_exsist_current(name))
-				get_var(name) = var;
+				throw syntax_error("Target domain exist variable \""+name+"\".");
 			else
 				m_data.front()->emplace(name, var);
 		}
@@ -154,7 +154,7 @@ namespace cs {
 		void add_var_global(const string &name, const var &var)
 		{
 			if (var_exsist_global(name))
-				get_var_global(name) = var;
+				throw syntax_error("Target domain exist variable \""+name+"\".");
 			else
 				m_data.back()->emplace(name, var);
 		}
@@ -196,10 +196,7 @@ namespace cs {
 		void involve_domain(const domain_t& domain)
 		{
 			for(auto& it:*domain)
-				if(var_exsist_current(it.first))
-					throw syntax_error("Target domain exist variable \""+it.first+"\".");
-				else
-					add_var(it.first,it.second);
+				add_var(it.first,it.second);
 		}
 	};
 
