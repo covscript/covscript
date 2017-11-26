@@ -67,7 +67,7 @@ namespace cs {
 
 	statement_base *method_involve::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
-		return new statement_involve(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), context,
+		return new statement_involve(dynamic_cast<token_expr *>(raw.front().at(2))->get_tree(), context,
 		                             raw.front().back());
 	}
 
