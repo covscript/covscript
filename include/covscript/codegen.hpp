@@ -74,6 +74,23 @@ namespace cs {
 		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
+	class method_involve final : public method_base {
+	public:
+		using method_base::method_base;
+
+		virtual method_types get_type() const noexcept override
+		{
+			return method_types::single;
+		}
+
+		virtual statement_types get_target_type() const noexcept override
+		{
+			return statement_types::involve_;
+		}
+
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
+	};
+
 	class method_var final : public method_base {
 	public:
 		using method_base::method_base;

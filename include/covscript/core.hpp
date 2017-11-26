@@ -320,6 +320,11 @@ namespace cs {
 			else
 				throw syntax_error("Use of undefined variable \"" + name + "\".");
 		}
+
+		domain_t get_domain() const
+		{
+			return m_data;
+		}
 	};
 
 	class name_space_holder final {
@@ -351,6 +356,13 @@ namespace cs {
 			if (m_ns == nullptr)
 				throw internal_error("Use of nullptr of extension.");
 			return m_ns->get_var(name);
+		}
+
+		domain_t get_domain() const
+		{
+			if (m_ns == nullptr)
+				throw internal_error("Use of nullptr of extension.");
+			return m_ns->get_domain();
 		}
 	};
 

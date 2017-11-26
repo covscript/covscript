@@ -192,6 +192,15 @@ namespace cs {
 			add_record(name);
 			add_var(name, var::make_protect<type>(func, hash, ext));
 		}
+
+		void involve_domain(const domain_t& domain)
+		{
+			for(auto& it:*domain)
+				if(var_exsist_current(it.first))
+					throw syntax_error("Target domain exist variable \""+it.first+"\".");
+				else
+					add_var(it.first,it.second);
+		}
 	};
 
 	class runtime_type {

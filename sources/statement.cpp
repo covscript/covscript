@@ -75,6 +75,15 @@ namespace cs {
 		context->instance->parse_expr(mTree.root());
 	}
 
+	void statement_involve::run()
+	{
+		var ns=context->instance->parse_expr(mTree.root());
+		if(ns.type()==typeid(name_space_t))
+			context->instance->storage.involve_domain(ns.const_val<name_space_t>()->get_domain());
+		else
+			throw syntax_error("Only support involve namespace.");
+	}
+
 	void statement_var::run()
 	{
 		context->instance->storage.add_var(mDvp.id, copy(context->instance->parse_expr(mDvp.expr.root())));

@@ -65,6 +65,12 @@ namespace cs {
 		return nullptr;
 	}
 
+	statement_base *method_involve::translate(const std::deque<std::deque<token_base *>> &raw)
+	{
+		return new statement_involve(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), context,
+		                             raw.front().back());
+	}
+
 	statement_base *method_var::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
@@ -103,7 +109,7 @@ namespace cs {
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
 		for (auto &ptr:body)
-			if (ptr->get_type() != statement_types::var_ && ptr->get_type() != statement_types::function_ &&
+			if (ptr->get_type() != statement_types::involve_ && ptr->get_type() != statement_types::var_ && ptr->get_type() != statement_types::function_ &&
 			        ptr->get_type() != statement_types::namespace_ && ptr->get_type() != statement_types::struct_)
 				throw syntax_error("Wrong grammar for namespace definition.");
 		return new statement_namespace(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data(), body,

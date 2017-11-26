@@ -51,6 +51,10 @@ namespace cs {
 		translator.add_method({new token_action(action_types::package_), new token_expr(cov::tree<token_base *>()),
 			                      new token_endline(0)
 		}, new method_package(context));
+		// Involve Grammar
+		translator.add_method({new token_action(action_types::involve_), new token_expr(cov::tree<token_base *>()),
+			                      new token_endline(0)
+		}, new method_involve(context));
 		// Var Grammar
 		translator.add_method(
 		{new token_action(action_types::var_), new token_expr(cov::tree<token_base *>()), new token_endline(0)},

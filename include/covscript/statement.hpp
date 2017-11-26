@@ -39,6 +39,22 @@ namespace cs {
 		virtual void run() override;
 	};
 
+	class statement_involve final : public statement_base {
+		cov::tree<token_base *> mTree;
+	public:
+		statement_involve() = delete;
+
+		statement_involve(const cov::tree<token_base *> &tree, context_t c, token_base *ptr) : statement_base(c, ptr),
+			mTree(tree) {}
+
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::involve_;
+		}
+
+		virtual void run() override;
+	};
+
 	class statement_var final : public statement_base {
 		instance_type::define_var_profile mDvp;
 	public:

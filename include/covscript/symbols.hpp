@@ -28,6 +28,7 @@ namespace cs {
 	enum class action_types {
 		import_,
 		package_,
+		involve_,
 		namespace_,
 		struct_,
 		block_,
@@ -369,6 +370,7 @@ namespace cs {
 		expression_,
 		import_,
 		package_,
+		involve_,
 		block_,
 		namespace_,
 		var_,
