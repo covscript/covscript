@@ -21,7 +21,7 @@
 #include <covscript/instance.hpp>
 
 namespace cs {
-	void instance_type::kill_brackets(std::deque<token_base *> &tokens)
+	void instance_type::kill_brackets(std::deque<token_base *> &tokens,std::size_t line_num)
 	{
 		std::deque<token_base *> oldt;
 		std::swap(tokens, oldt);
@@ -118,7 +118,7 @@ namespace cs {
 					break;
 				case signal_types::arrow_:
 					if (expected_lambda) {
-						tokens.push_back(new token_signal(signal_types::lambda_));
+						tokens.push_back(new token_signal(signal_types::lambda_,line_num));
 						expected_lambda = false;
 						continue;
 					}
@@ -282,7 +282,7 @@ namespace cs {
 			try {
 				if (raw) {
 					process_brackets(line);
-					kill_brackets(line);
+					kill_brackets(line,endsig->get_line_num());
 					kill_expr(line);
 				}
 				method_base *m = translator.match(line);

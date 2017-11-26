@@ -334,7 +334,7 @@ namespace cs {
 			return false;
 		}
 
-		void kill_brackets(std::deque<token_base *> &);
+		void kill_brackets(std::deque<token_base *> &,std::size_t=1);
 
 		void split_token(std::deque<token_base *> &raw, std::deque<token_base *> &, std::deque<token_base *> &);
 

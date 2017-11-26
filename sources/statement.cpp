@@ -24,7 +24,7 @@ namespace cs {
 	var function::call(array &args) const
 	{
 		if (args.size() != this->mArgs.size())
-			throw syntax_error("Wrong size of arguments.");
+			throw syntax_error("Wrong size of arguments.Expected "+std::to_string(this->mArgs.size())+",provided "+std::to_string(args.size()));
 		scope_guard scope(mContext);
 		fcall_guard fcall(mContext);
 		for (std::size_t i = 0; i < args.size(); ++i)

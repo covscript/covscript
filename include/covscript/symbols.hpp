@@ -138,6 +138,8 @@ namespace cs {
 
 	class token_base {
 		static garbage_collector<token_base> gc;
+	protected:
+		std::size_t line_num = 1;
 	public:
 		static void *operator new(std::size_t size)
 		{
@@ -156,26 +158,27 @@ namespace cs {
 
 		token_base(const token_base &) = default;
 
+		explicit token_base(std::size_t line):line_num(line) {}
+
 		virtual ~token_base() = default;
 
 		virtual token_types get_type() const noexcept=0;
+
+		virtual std::size_t get_line_num() const noexcept final
+		{
+			return line_num;
+		}
 	};
 
 	class token_endline final : public token_base {
-		std::size_t line_num = 0;
 	public:
 		token_endline() = default;
 
-		token_endline(std::size_t line) : line_num(line) {}
+		token_endline(std::size_t line) : token_base(line) {}
 
 		virtual token_types get_type() const noexcept override
 		{
 			return token_types::endline;
-		}
-
-		std::size_t get_line_num() const noexcept
-		{
-			return line_num;
 		}
 	};
 
@@ -203,6 +206,8 @@ namespace cs {
 		token_signal() = delete;
 
 		token_signal(signal_types t) : mType(t) {}
+
+		token_signal(signal_types t,std::size_t line) : token_base(line),mType(t) {}
 
 		virtual token_types get_type() const noexcept override
 		{
@@ -393,7 +398,7 @@ namespace cs {
 		static garbage_collector<statement_base> gc;
 	protected:
 		context_t context;
-		std::size_t line_num = 0;
+		std::size_t line_num = 1;
 	public:
 		static void *operator new(std::size_t size)
 		{

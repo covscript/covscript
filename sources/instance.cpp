@@ -365,7 +365,7 @@ namespace cs {
 					},
 					context,
 					new token_endline(
-					    1))
+					    token->get_line_num()))
 				})));
 				return;
 				break;
