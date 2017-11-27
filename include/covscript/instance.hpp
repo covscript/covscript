@@ -128,6 +128,7 @@ namespace cs {
 		mapping<std::string, action_types> action_map = {
 			{"import",    action_types::import_},
 			{"package",   action_types::package_},
+			{"using",   action_types::using_},
 			{"namespace", action_types::namespace_},
 			{"struct",    action_types::struct_},
 			{"block",     action_types::block_},

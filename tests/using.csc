@@ -1,4 +1,4 @@
 namespace console
-    import namespace system.console
+    using system.console
 end
 console.clrscr()

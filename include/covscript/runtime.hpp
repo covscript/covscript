@@ -133,7 +133,7 @@ namespace cs {
 		void add_record(const string &name)
 		{
 			if (exsist_record(name))
-				throw syntax_error("Redefinition of variable.");
+				throw syntax_error("Redefinition of variable \""+name+"\".");
 			else
 				m_set.front().emplace(name);
 		}

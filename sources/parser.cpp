@@ -37,6 +37,10 @@ namespace cs {
 				switch (static_cast<token_action *>(ptr)->get_action()) {
 				default:
 					break;
+				case action_types::import_:
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::vardef_));
+					continue;
 				case action_types::var_:
 					tokens.push_back(ptr);
 					tokens.push_back(new token_signal(signal_types::vardef_));

@@ -52,7 +52,7 @@ namespace cs {
 			                      new token_endline(0)
 		}, new method_package(context));
 		// Involve Grammar
-		translator.add_method({new token_action(action_types::import_), new token_action(action_types::namespace_), new token_expr(cov::tree<token_base *>()),
+		translator.add_method({new token_action(action_types::using_), new token_expr(cov::tree<token_base *>()),
 			                      new token_endline(0)
 		}, new method_involve(context));
 		// Var Grammar
