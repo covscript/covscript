@@ -21,6 +21,7 @@
 */
 #include <covscript/typedef.hpp>
 #include <mozart/memory.hpp>
+#include <type_traits>
 #include <functional>
 #include <ostream>
 
@@ -208,11 +209,27 @@ namespace cs_impl {
 		static constexpr bool value = match<_Tp>(nullptr);
 	};
 
-	template<typename, bool>
+	template<typename T>
+	struct hash_gen_base {
+		static std::size_t base_code;
+	};
+
+	template<typename T>std::size_t hash_gen_base<T>::base_code=typeid(T).hash_code();
+
+	template<typename, typename, bool>
 	struct hash_if;
 
+	template<typename T, typename X>
+	struct hash_if<T, X, true> {
+		static std::size_t hash(const X &val)
+		{
+			static std::hash<T> gen;
+			return gen(static_cast<const T>(val))+hash_gen_base<X>::base_code;
+		}
+	};
+
 	template<typename T>
-	struct hash_if<T, true> {
+	struct hash_if<T, T, true> {
 		static std::size_t hash(const T &val)
 		{
 			static std::hash<T> gen;
@@ -220,18 +237,32 @@ namespace cs_impl {
 		}
 	};
 
-	template<typename T>
-	struct hash_if<T, false> {
-		static std::size_t hash(const T &val)
+	template<typename T, typename X>
+	struct hash_if<T, X, false> {
+		static std::size_t hash(const X &val)
 		{
 			throw cov::error("E000F");
 		}
 	};
 
+	template<typename,bool>
+	struct hash_enum_resolver;
+
+	template<typename T>
+	struct hash_enum_resolver<T,true> {
+		using type=hash_if<std::size_t,T,true>;
+	};
+
+	template<typename T>
+	struct hash_enum_resolver<T,false> {
+		using type=hash_if<T,T,hash_helper<T>::value>;
+	};
+
 	template<typename T>
 	std::size_t hash(const T &val)
 	{
-		return hash_if<T, hash_helper<T>::value>::hash(val);
+		using type=typename hash_enum_resolver<T,std::is_enum<T>::value>::type;
+		return type::hash(val);
 	}
 
 	template<typename T>

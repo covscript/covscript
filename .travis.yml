@@ -1,3 +1,5 @@
 language: cpp
-install: sh make.sh
+install:
+    - sudo apt-get install libsqlite3-dev
+    - sh make.sh
 script: ./build/bin/cs ./examples/benchmark.csc
