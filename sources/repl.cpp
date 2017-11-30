@@ -39,20 +39,16 @@ int covscript_args(int args_size, const char *args[])
 			cs::import_path = args[index];
 			expect_import_path = 2;
 		}
-		else if (args[index][0] == '-') {
-			if (std::strcmp(args[index], "--args") == 0)
-				return ++index;
-			else if (std::strcmp(args[index], "--wait-before-exit") == 0 && !wait_before_exit)
-				wait_before_exit = true;
-			else if (std::strcmp(args[index], "--log-path") == 0 && expect_log_path == 0)
-				expect_log_path = 1;
-			else if (std::strcmp(args[index], "--import-path") == 0 && expect_import_path == 0)
-				expect_import_path = 1;
-			else
-				throw cs::fatal_error("argument grammar error.");
-		}
+		else if (std::strcmp(args[index], "--args") == 0)
+			return ++index;
+		else if (std::strcmp(args[index], "--wait-before-exit") == 0 && !wait_before_exit)
+			wait_before_exit = true;
+		else if (std::strcmp(args[index], "--log-path") == 0 && expect_log_path == 0)
+			expect_log_path = 1;
+		else if (std::strcmp(args[index], "--import-path") == 0 && expect_import_path == 0)
+			expect_import_path = 1;
 		else
-			break;
+			throw cs::fatal_error("argument grammar error.");
 	}
 	if (expect_log_path == 1 || expect_import_path == 1)
 		throw cs::fatal_error("argument grammar error.");
