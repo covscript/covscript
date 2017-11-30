@@ -265,6 +265,18 @@ namespace cs {
 				opt_expr(tree, it.right());
 				return;
 				break;
+			case signal_types::sarrow_:
+				it.data() = new token_signal(signal_types::arrow_);
+				opt_expr(tree, it.left());
+				opt_expr(tree, it.right());
+				return;
+				break;
+			case signal_types::sdot_:
+				it.data() = new token_signal(signal_types::dot_);
+				opt_expr(tree, it.left());
+				opt_expr(tree, it.right());
+				return;
+				break;
 			case signal_types::vardef_: {
 				if (it.left().data() != nullptr)
 					throw syntax_error("Wrong grammar for variable definition.");

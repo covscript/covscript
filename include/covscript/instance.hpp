@@ -199,7 +199,9 @@ namespace cs {
 			{signal_types::pow_,    12},
 			{signal_types::powasi_, 0},
 			{signal_types::dot_,    17},
+			{signal_types::sdot_,   14},
 			{signal_types::arrow_,  17},
+			{signal_types::sarrow_, 14},
 			{signal_types::und_,    9},
 			{signal_types::abo_,    9},
 			{signal_types::asi_,    0},
@@ -218,7 +220,7 @@ namespace cs {
 			{signal_types::dec_,    13},
 			{signal_types::fcall_,  14},
 			{signal_types::emb_,    14},
-			{signal_types::access_, 15},
+			{signal_types::access_, 14},
 			{signal_types::typeid_, 16},
 			{signal_types::new_,    16},
 			{signal_types::gcnew_,  16}
