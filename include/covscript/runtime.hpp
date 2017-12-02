@@ -133,7 +133,7 @@ namespace cs {
 		void add_record(const string &name)
 		{
 			if (exsist_record(name))
-				throw syntax_error("Redefinition of variable \""+name+"\".");
+				throw syntax_error("Redefinition of variable \"" + name + "\".");
 			else
 				m_set.front().emplace(name);
 		}
@@ -146,7 +146,7 @@ namespace cs {
 		void add_var(const string &name, const var &var)
 		{
 			if (var_exsist_current(name))
-				throw syntax_error("Target domain exist variable \""+name+"\".");
+				throw syntax_error("Target domain exist variable \"" + name + "\".");
 			else
 				m_data.front()->emplace(name, var);
 		}
@@ -154,7 +154,7 @@ namespace cs {
 		void add_var_global(const string &name, const var &var)
 		{
 			if (var_exsist_global(name))
-				throw syntax_error("Target domain exist variable \""+name+"\".");
+				throw syntax_error("Target domain exist variable \"" + name + "\".");
 			else
 				m_data.back()->emplace(name, var);
 		}
@@ -193,10 +193,10 @@ namespace cs {
 			add_var(name, var::make_protect<type>(func, hash, ext));
 		}
 
-		void involve_domain(const domain_t& domain)
+		void involve_domain(const domain_t &domain)
 		{
-			for(auto& it:*domain)
-				add_var(it.first,it.second);
+			for (auto &it:*domain)
+				add_var(it.first, it.second);
 		}
 	};
 

@@ -109,7 +109,8 @@ namespace cs {
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
 		for (auto &ptr:body)
-			if (ptr->get_type() != statement_types::involve_ && ptr->get_type() != statement_types::var_ && ptr->get_type() != statement_types::function_ &&
+			if (ptr->get_type() != statement_types::involve_ && ptr->get_type() != statement_types::var_ &&
+			        ptr->get_type() != statement_types::function_ &&
 			        ptr->get_type() != statement_types::namespace_ && ptr->get_type() != statement_types::struct_)
 				throw syntax_error("Wrong grammar for namespace definition.");
 		return new statement_namespace(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data(), body,

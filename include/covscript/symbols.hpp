@@ -161,7 +161,7 @@ namespace cs {
 
 		token_base(const token_base &) = default;
 
-		explicit token_base(std::size_t line):line_num(line) {}
+		explicit token_base(std::size_t line) : line_num(line) {}
 
 		virtual ~token_base() = default;
 
@@ -210,7 +210,7 @@ namespace cs {
 
 		token_signal(signal_types t) : mType(t) {}
 
-		token_signal(signal_types t,std::size_t line) : token_base(line),mType(t) {}
+		token_signal(signal_types t, std::size_t line) : token_base(line), mType(t) {}
 
 		virtual token_types get_type() const noexcept override
 		{

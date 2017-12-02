@@ -128,7 +128,7 @@ namespace cs {
 		mapping<std::string, action_types> action_map = {
 			{"import",    action_types::import_},
 			{"package",   action_types::package_},
-			{"using",   action_types::using_},
+			{"using",     action_types::using_},
 			{"namespace", action_types::namespace_},
 			{"struct",    action_types::struct_},
 			{"block",     action_types::block_},
@@ -337,7 +337,7 @@ namespace cs {
 			return false;
 		}
 
-		void kill_brackets(std::deque<token_base *> &,std::size_t=1);
+		void kill_brackets(std::deque<token_base *> &, std::size_t= 1);
 
 		void split_token(std::deque<token_base *> &raw, std::deque<token_base *> &, std::deque<token_base *> &);
 

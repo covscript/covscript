@@ -24,7 +24,8 @@ namespace cs {
 	var function::call(array &args) const
 	{
 		if (args.size() != this->mArgs.size())
-			throw syntax_error("Wrong size of arguments.Expected "+std::to_string(this->mArgs.size())+",provided "+std::to_string(args.size()));
+			throw syntax_error("Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
+			                   std::to_string(args.size()));
 		scope_guard scope(mContext);
 		fcall_guard fcall(mContext);
 		for (std::size_t i = 0; i < args.size(); ++i)
@@ -77,8 +78,8 @@ namespace cs {
 
 	void statement_involve::run()
 	{
-		var ns=context->instance->parse_expr(mTree.root());
-		if(ns.type()==typeid(name_space_t))
+		var ns = context->instance->parse_expr(mTree.root());
+		if (ns.type() == typeid(name_space_t))
 			context->instance->storage.involve_domain(ns.const_val<name_space_t>()->get_domain());
 		else
 			throw syntax_error("Only support involve namespace.");

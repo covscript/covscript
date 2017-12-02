@@ -214,7 +214,7 @@ namespace cs_impl {
 		static std::size_t base_code;
 	};
 
-	template<typename T>std::size_t hash_gen_base<T>::base_code=typeid(T).hash_code();
+	template<typename T> std::size_t hash_gen_base<T>::base_code = typeid(T).hash_code();
 
 	template<typename, typename, bool>
 	struct hash_if;
@@ -224,7 +224,7 @@ namespace cs_impl {
 		static std::size_t hash(const X &val)
 		{
 			static std::hash<T> gen;
-			return gen(static_cast<const T>(val))+hash_gen_base<X>::base_code;
+			return gen(static_cast<const T>(val)) + hash_gen_base<X>::base_code;
 		}
 	};
 
@@ -245,23 +245,23 @@ namespace cs_impl {
 		}
 	};
 
-	template<typename,bool>
+	template<typename, bool>
 	struct hash_enum_resolver;
 
 	template<typename T>
-	struct hash_enum_resolver<T,true> {
-		using type=hash_if<std::size_t,T,true>;
+	struct hash_enum_resolver<T, true> {
+		using type=hash_if<std::size_t, T, true>;
 	};
 
 	template<typename T>
-	struct hash_enum_resolver<T,false> {
-		using type=hash_if<T,T,hash_helper<T>::value>;
+	struct hash_enum_resolver<T, false> {
+		using type=hash_if<T, T, hash_helper<T>::value>;
 	};
 
 	template<typename T>
 	std::size_t hash(const T &val)
 	{
-		using type=typename hash_enum_resolver<T,std::is_enum<T>::value>::type;
+		using type=typename hash_enum_resolver<T, std::is_enum<T>::value>::type;
 		return type::hash(val);
 	}
 
