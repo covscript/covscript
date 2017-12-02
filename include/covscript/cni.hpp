@@ -21,7 +21,7 @@
 */
 #include <mozart/traits.hpp>
 #include <mozart/bind.hpp>
-#include "core.hpp"
+#include <covscript/core.hpp>
 
 namespace cs {
 	class arglist final {
