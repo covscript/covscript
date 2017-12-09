@@ -8,7 +8,6 @@ end
 function exec(db,sql)
     var data=new array
     var stmt=db.prepare(sql)
-    data.push_back(new array)
     stmt.exec()
     while !stmt.done()
         var column_count=stmt.column_count()-1
@@ -16,7 +15,7 @@ function exec(db,sql)
         for i=0 to column_count
             var dat=new sqlite_ext.record
             dat.name=stmt.column_name(i)
-            dat.type=stmt.column_decltype(i)
+            dat.type=stmt.column_type(i)
             switch stmt.column_type(i)
                 case sqlite.integer
                     dat.data=stmt.column_integer(i)
@@ -31,7 +30,6 @@ function exec(db,sql)
             row.push_back(dat)
         end
         data.push_back(row)
-        data.push_back(new array)
         stmt.exec()
     end
     return data
