@@ -127,10 +127,13 @@ namespace cs {
 					if (expected_lambda) {
 						tokens.push_back(new token_signal(signal_types::lambda_, line_num));
 						expected_lambda = false;
+						expected_fcall = false;
+						expected_dot = false;
 						continue;
 					}
 					else if (expected_dot) {
 						tokens.push_back(new token_signal(signal_types::sarrow_));
+						expected_fcall = false;
 						expected_dot = false;
 						continue;
 					}
@@ -139,6 +142,7 @@ namespace cs {
 				case signal_types::dot_:
 					if (expected_dot) {
 						tokens.push_back(new token_signal(signal_types::sdot_));
+						expected_fcall = false;
 						expected_dot = false;
 						continue;
 					}
