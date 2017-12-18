@@ -43,6 +43,11 @@ static cs::extension runtime_ext;
 namespace runtime_cs_ext {
 	using namespace cs;
 
+	string get_import_path()
+	{
+		return import_path;
+	}
+
 	void info()
 	{
 		std::cout << "Covariant Script Programming Language Interpreter\nVersion: " << cs::version << "\n"
@@ -113,9 +118,29 @@ namespace runtime_cs_ext {
 		return context->instance->parse_expr(tree.root());
 	}
 
+	var dynamic_import(const context_t &context, const string &path, const string &name)
+	{
+		std::string package_path = path + "/" + name;
+		if (std::ifstream(package_path + ".csp")) {
+			instance_type instance;
+			instance.compile(package_path + ".csp");
+			instance.interpret();
+			context_t rt = instance.context;
+			if (rt->package_name.empty())
+				throw syntax_error("Target file is not a package.");
+			rt->instance = context->instance;
+			return var::make_protect<extension_t>(std::make_shared<extension_holder>(rt->instance->storage.get_global()));
+		}
+		else if (std::ifstream(package_path + ".cse"))
+			return var::make_protect<extension_t>(std::make_shared<extension_holder>(package_path + ".cse"));
+		else
+			throw fatal_error("No such file or directory.");
+	}
+
 	void init()
 	{
 		runtime_ext.add_var("std_version", var::make_constant<number>(std_version));
+		runtime_ext.add_var("get_import_path", var::make_protect<callable>(cni(get_import_path),true));
 		runtime_ext.add_var("info", var::make_protect<callable>(cni(info)));
 		runtime_ext.add_var("time", var::make_protect<callable>(cni(time)));
 		runtime_ext.add_var("delay", var::make_protect<callable>(cni(delay)));
@@ -125,7 +150,6 @@ namespace runtime_cs_ext {
 		runtime_ext.add_var("hash", var::make_protect<callable>(cni(hash), true));
 		runtime_ext.add_var("build", var::make_protect<callable>(cni(build)));
 		runtime_ext.add_var("solve", var::make_protect<callable>(cni(solve)));
-		context_ext.add_var("build", var::make_protect<callable>(cni(build)));
-		context_ext.add_var("solve", var::make_protect<callable>(cni(solve)));
+		runtime_ext.add_var("dynamic_import", var::make_protect<callable>(cni(dynamic_import), true));
 	}
 }
