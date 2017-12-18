@@ -129,7 +129,8 @@ namespace runtime_cs_ext {
 			if (rt->package_name.empty())
 				throw syntax_error("Target file is not a package.");
 			rt->instance = context->instance;
-			return var::make_protect<extension_t>(std::make_shared<extension_holder>(rt->instance->storage.get_global()));
+			return var::make_protect<extension_t>(
+			           std::make_shared<extension_holder>(rt->instance->storage.get_global()));
 		}
 		else if (std::ifstream(package_path + ".cse"))
 			return var::make_protect<extension_t>(std::make_shared<extension_holder>(package_path + ".cse"));
@@ -140,7 +141,7 @@ namespace runtime_cs_ext {
 	void init()
 	{
 		runtime_ext.add_var("std_version", var::make_constant<number>(std_version));
-		runtime_ext.add_var("get_import_path", var::make_protect<callable>(cni(get_import_path),true));
+		runtime_ext.add_var("get_import_path", var::make_protect<callable>(cni(get_import_path), true));
 		runtime_ext.add_var("info", var::make_protect<callable>(cni(info)));
 		runtime_ext.add_var("time", var::make_protect<callable>(cni(time)));
 		runtime_ext.add_var("delay", var::make_protect<callable>(cni(delay)));
