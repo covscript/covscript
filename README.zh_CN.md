@@ -17,22 +17,18 @@
 6. 正则表达式
 7. Darwin通用字符图形库
 8. SQLite3数据库
+9. ASIO网络库
 
 ## 使用Covariant Script编程语言 ##
 [CovScript文档](https://github.com/covscript/covscript-docs)  
-[CovScript教程](https://github.com/covscript/covscript-tutorial)  
-## 依赖 ##
-[SQLite3](http://www.sqlite.org/)
+[CovScript教程](https://github.com/covscript/covscript-tutorial)
 ## 下载和安装 ##
 ### Microsoft Windows ###
 请在[Latest Release](https://github.com/covscript/covscript/releases/latest)上下载预编译可执行文件。  
-你也可以使用MinGW或相应的工具来直接编译源代码。如果您的系统中已经安装了G++编译器和SQLite3数据库，则可以直接执行`make.bat`。 您需要确保编译器支持C++11标准。  
+你也可以使用MinGW或相应的工具来直接编译源代码。如果您的系统中已经安装了G++编译器，则可以直接执行`make.bat`。 您需要确保编译器支持C++11标准。  
 **注意！Covariant Script不支持Microsoft CL编译器，具体原因还不太清楚，可能是它对C++标准的支持不完整。**
 ### Linux ###
-- 首先你需要安装`libsqlite3-dev`  
-使用apt：`apt-get install libsqlite3-dev`  
-使用yum：`yum install libsqlite3-dev`  
-- 第二，你需要从[CovScript Github主页](https://github.com/covscript/covscript)下载源代码。
+首先你需要从[CovScript Github主页](https://github.com/covscript/covscript)下载源代码。
 下载源代码后，如果您在系统上安装了G++编译器，则可以在终端中直接键入`sh ./make.sh`。
 如果您安装了CMake工具，我们提供了`CMakeLists.txt`，以便您执行`cmake`命令来构建。
 您需要确保编译器支持C++11标准。
