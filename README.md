@@ -17,22 +17,18 @@
 6. Regular Expression
 7. Darwin Universal CGL
 8. SQLite3 Database
+9. ASIO Network
 
 ## Use the Covariant Script programming language ##
 [CovScript Document](https://github.com/covscript/covscript-docs)  
 [CovScript Tutorial](https://github.com/covscript/covscript-tutorial)  
-## Depends ##
-[SQLite3](http://www.sqlite.org/)
 ## Download and install ##
 ### Microsoft Windows ###
 Please download the precompiled executable on the [Latest Release](https://github.com/covscript/covscript/releases/latest).   
-You can also use MinGW or the appropriate tools to compile the source code directly. If you already have a G++ compiler and SQLite3 installed in your system, you can execute `make.bat` directly. You need to make sure that the compiler supports the C++11 standard.  
+You can also use MinGW or the appropriate tools to compile the source code directly. If you already have a G++ compiler installed in your system, you can execute `make.bat` directly. You need to make sure that the compiler supports the C++11 standard.  
 **Attention! Covariant Script does not support the use of Microsoft CL compiler, the specific reason is not yet clear, probably because of its support for the C++ standard is not complete.**
 ### Linux ###
-- First you need to install `libsqlite3-dev`  
-Use apt:`apt-get install libsqlite3-dev`  
-Use yum:`yum install libsqlite3-dev`  
-- Second you need to download the source code from [CovScript Github Page](https://github.com/covscript/covscript).  
+First you need to download the source code from [CovScript Github Page](https://github.com/covscript/covscript).  
 After downloading the source code, if you have installed the G++ compiler on your system, you can type `sh ./make.sh` directly in the terminal.  
 If you have the CMake tool installed, we provided the `CMakeLists.txt`, so that you can execute the `cmake` command to build.  
 You need to make sure that the compiler supports the C++11 standard.  
