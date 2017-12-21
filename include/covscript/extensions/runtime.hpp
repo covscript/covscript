@@ -152,5 +152,8 @@ namespace runtime_cs_ext {
 		runtime_ext.add_var("build", var::make_protect<callable>(cni(build)));
 		runtime_ext.add_var("solve", var::make_protect<callable>(cni(solve)));
 		runtime_ext.add_var("dynamic_import", var::make_protect<callable>(cni(dynamic_import), true));
+		context_ext.add_var("build", var::make_protect<callable>(cni(build)));
+		context_ext.add_var("solve", var::make_protect<callable>(cni(solve)));
+		context_ext.add_var("dynamic_import", var::make_protect<callable>(cni(dynamic_import), true));
 	}
 }
