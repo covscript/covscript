@@ -2,13 +2,11 @@ import network
 using network
 var ep=udp.endpoint("127.0.0.1",1024)
 var sock=new udp.socket
-sock.open()
+sock.open_v4()
 loop
     var s=system.in.getline()
     if !s.empty()
         sock.send_to(s,ep)
-        var rep=udp.endpoint("0.0.0.0",0)
-        sock.receive_from(s,512,rep)
-        system.out.println(s)
+        system.out.println(sock.receive_from(512,udp.endpoint_v4(0)))
     end
 end

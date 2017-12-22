@@ -7,7 +7,6 @@ loop
     var s=system.in.getline()
     if !s.empty()
         sock.send(s)
-        sock.receive(s,512)
-        system.out.println(s)
+        system.out.println(sock.receive(512))
     end
 end
