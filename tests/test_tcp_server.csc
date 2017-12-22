@@ -5,8 +5,7 @@ var a=tcp.acceptor(ep)
 var sock=new tcp.socket
 sock.accept(a)
 loop
-    var s=new string
-    sock.receive(s,512)
+    var s=sock.receive(512)
     system.out.println(s)
     sock.send(s+"[RECEIVED]")
 end
