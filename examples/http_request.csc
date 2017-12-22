@@ -3,7 +3,7 @@ using network
 function http_request(host,port,page)
     var sock=new tcp.socket
     sock.connect(tcp.resolve(host,port))
-   @begin
+    @begin
     var head=
     "GET "+page+" HTTP/1.1\r\n"+
     "Host: "+host+"\r\n"+
@@ -19,6 +19,7 @@ function http_request(host,port,page)
             system.out.print(sock.receive(32))
         end
     catch e
+            system.out.println(e.what())
     end
 end
 http_request("covscript.org","http","/")
