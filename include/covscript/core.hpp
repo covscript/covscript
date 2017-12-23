@@ -55,8 +55,8 @@
 
 namespace cs {
 // Version
-	static const char *const version = "1.1.6";
-	static const number std_version = 20171201;
+	static const char *const version = "1.2.0";
+	static const number std_version = 20180101;
 // Output Precision
 	static int output_precision = 8;
 // Import Path
