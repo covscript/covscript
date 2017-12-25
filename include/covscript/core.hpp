@@ -293,6 +293,27 @@ namespace cs {
 		}
 	};
 
+// Exception Handler
+	struct exception_handler final {
+		static std_exception_handler std_eh_callback;
+		static cs_exception_handler cs_eh_callback;
+
+		static void cs_defalt_exception_handler(const lang_error& e)
+		{
+			printf("Cs Default Exception Handler Inspired.\n");
+			throw e;
+		}
+
+		static void std_defalt_exception_handler(const std::exception& e)
+		{
+			printf("STD Default Exception Handler Inspired.\n");
+			throw forward_exception(e.what());
+		}
+	};
+
+	cs_exception_handler exception_handler::cs_eh_callback = exception_handler::cs_defalt_exception_handler;
+	std_exception_handler exception_handler::std_eh_callback = exception_handler::std_defalt_exception_handler;
+
 // Namespace and extensions
 	class name_space final {
 		domain_t m_data;
@@ -342,7 +363,7 @@ namespace cs {
 
 		name_space_holder(const std::string &path) : m_local(false), m_dll(path)
 		{
-			m_ns = reinterpret_cast<name_space *(*)()>(m_dll.get_address("__CS_EXTENSION__"))();
+			m_ns = reinterpret_cast<extension_entrance_t>(m_dll.get_address("__CS_EXTENSION__"))(exception_handler::cs_eh_callback,exception_handler::std_eh_callback);
 		}
 
 		~name_space_holder()
