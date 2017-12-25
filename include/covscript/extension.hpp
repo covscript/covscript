@@ -25,8 +25,10 @@ cs::extension *cs_extension();
 
 extern "C"
 {
-	cs::extension *__CS_EXTENSION__()
+	cs::extension *__CS_EXTENSION__(cs::cs_exception_handler ceh,cs::std_exception_handler seh)
 	{
+		cs::exception_handler::cs_eh_callback=ceh;
+		cs::exception_handler::std_eh_callback=seh;
 		return cs_extension();
 	}
 }

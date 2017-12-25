@@ -142,4 +142,27 @@ namespace cs {
 			return this->mWhat.c_str();
 		}
 	};
+
+	class forward_exception final : public std::exception {
+		const char* mWhat;
+	public:
+		forward_exception() = delete;
+
+		forward_exception(const char* str) noexcept:mWhat(str) {}
+
+		forward_exception(const forward_exception &) = default;
+
+		forward_exception(forward_exception &&) noexcept = default;
+
+		virtual ~forward_exception() = default;
+
+		forward_exception &operator=(const forward_exception &)= default;
+
+		forward_exception &operator=(forward_exception &&)= default;
+
+		virtual const char *what() const noexcept override
+		{
+			return this->mWhat;
+		}
+	};
 }

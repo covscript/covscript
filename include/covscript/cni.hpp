@@ -272,7 +272,15 @@ namespace cs {
 
 		var operator()(array &args) const
 		{
-			return mCni->call(args);
+			try {
+				return mCni->call(args);
+			}
+			catch(const lang_error& e) {
+				exception_handler::cs_eh_callback(e);
+			}
+			catch(const std::exception& e) {
+				exception_handler::std_eh_callback(e);
+			}
 		}
 	};
 

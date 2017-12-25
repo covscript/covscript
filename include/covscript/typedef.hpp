@@ -56,4 +56,7 @@ namespace cs {
 	using extension_t=std::shared_ptr<extension_holder>;
 	using istream=std::shared_ptr<std::istream>;
 	using ostream=std::shared_ptr<std::ostream>;
+	typedef void(*cs_exception_handler)(const lang_error&);
+	typedef void(*std_exception_handler)(const std::exception&);
+	typedef name_space *(*extension_entrance_t)(cs_exception_handler,std_exception_handler);
 }
