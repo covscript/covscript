@@ -57,7 +57,7 @@
 `examples`文件夹包含了数个使用CovScript编写的示例程序。
 ## 版权 ##
 **Covariant Script编程语言的作者是Michael Lee(mikecovlee@github.com,mikecovlee@163.com).**  
-**版权所有 (C) 2017 Michael Lee(李登淳)**  
+**版权所有 (C) 2018 Michael Lee(李登淳)**  
 ## 感谢 ##
 **按贡献排名。**  
 测试：史为成，Kiva(zt515)  

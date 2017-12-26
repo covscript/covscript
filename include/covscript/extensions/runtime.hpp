@@ -15,7 +15,7 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Copyright (C) 2017 Michael Lee(李登淳)
+* Copyright (C) 2018 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
@@ -51,7 +51,7 @@ namespace runtime_cs_ext {
 	void info()
 	{
 		std::cout << "Covariant Script Programming Language Interpreter\nVersion: " << cs::version << "\n"
-		          "Copyright (C) 2017 Michael Lee.All rights reserved.\n"
+		          "Copyright (C) 2018 Michael Lee.All rights reserved.\n"
 		          "This program is free software: you can redistribute it and/or modify"
 		          "it under the terms of the GNU Affero General Public License as published"
 		          "by the Free Software Foundation, either version 3 of the License, or"

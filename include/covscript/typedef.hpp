@@ -15,7 +15,7 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Copyright (C) 2017 Michael Lee(李登淳)
+* Copyright (C) 2018 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
@@ -56,7 +56,10 @@ namespace cs {
 	using extension_t=std::shared_ptr<extension_holder>;
 	using istream=std::shared_ptr<std::istream>;
 	using ostream=std::shared_ptr<std::ostream>;
-	typedef void(*cs_exception_handler)(const lang_error&);
-	typedef void(*std_exception_handler)(const std::exception&);
-	typedef name_space *(*extension_entrance_t)(cs_exception_handler,std_exception_handler);
+
+	typedef void(*cs_exception_handler)(const lang_error &);
+
+	typedef void(*std_exception_handler)(const std::exception &);
+
+	typedef name_space *(*extension_entrance_t)(cs_exception_handler, std_exception_handler);
 }

@@ -15,7 +15,7 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Copyright (C) 2017 Michael Lee(李登淳)
+* Copyright (C) 2018 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 * Website: http://covariant.cn/cs
@@ -298,15 +298,13 @@ namespace cs {
 		static std_exception_handler std_eh_callback;
 		static cs_exception_handler cs_eh_callback;
 
-		static void cs_defalt_exception_handler(const lang_error& e)
+		static void cs_defalt_exception_handler(const lang_error &e)
 		{
-			printf("Cs Default Exception Handler Inspired.\n");
 			throw e;
 		}
 
-		static void std_defalt_exception_handler(const std::exception& e)
+		static void std_defalt_exception_handler(const std::exception &e)
 		{
-			printf("STD Default Exception Handler Inspired.\n");
 			throw forward_exception(e.what());
 		}
 	};
@@ -363,7 +361,8 @@ namespace cs {
 
 		name_space_holder(const std::string &path) : m_local(false), m_dll(path)
 		{
-			m_ns = reinterpret_cast<extension_entrance_t>(m_dll.get_address("__CS_EXTENSION__"))(exception_handler::cs_eh_callback,exception_handler::std_eh_callback);
+			m_ns = reinterpret_cast<extension_entrance_t>(m_dll.get_address("__CS_EXTENSION__"))(
+			           exception_handler::cs_eh_callback, exception_handler::std_eh_callback);
 		}
 
 		~name_space_holder()
