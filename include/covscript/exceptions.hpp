@@ -15,7 +15,7 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Copyright (C) 2017 Michael Lee(李登淳)
+* Copyright (C) 2018 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
@@ -33,7 +33,7 @@ namespace cs {
 
 		exception(const exception &) = default;
 
-		exception(exception &&) = default;
+		exception(exception &&) noexcept = default;
 
 		virtual ~exception() = default;
 
@@ -57,7 +57,7 @@ namespace cs {
 
 		syntax_error(const syntax_error &) = default;
 
-		syntax_error(syntax_error &&) = default;
+		syntax_error(syntax_error &&) noexcept = default;
 
 		virtual ~syntax_error() = default;
 
@@ -81,7 +81,7 @@ namespace cs {
 
 		internal_error(const internal_error &) = default;
 
-		internal_error(internal_error &&) = default;
+		internal_error(internal_error &&) noexcept = default;
 
 		virtual ~internal_error() = default;
 
@@ -105,7 +105,7 @@ namespace cs {
 
 		lang_error(const lang_error &) = default;
 
-		lang_error(lang_error &&) = default;
+		lang_error(lang_error &&) noexcept = default;
 
 		~lang_error() = default;
 
@@ -129,7 +129,7 @@ namespace cs {
 
 		fatal_error(const fatal_error &) = default;
 
-		fatal_error(fatal_error &&) = default;
+		fatal_error(fatal_error &&) noexcept = default;
 
 		virtual ~fatal_error() = default;
 
@@ -144,11 +144,11 @@ namespace cs {
 	};
 
 	class forward_exception final : public std::exception {
-		const char* mWhat;
+		const char *mWhat;
 	public:
 		forward_exception() = delete;
 
-		forward_exception(const char* str) noexcept:mWhat(str) {}
+		forward_exception(const char *str) noexcept: mWhat(str) {}
 
 		forward_exception(const forward_exception &) = default;
 

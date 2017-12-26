@@ -57,7 +57,7 @@ You can also download the [Covariant Script GUI](https://github.com/covscript/co
 The `examples` folder contains several example programs written by CovScript.
 ## Copyright ##
 **The author of the Covariant Script Programming Language is Michael Lee(mikecovlee@github.com,mikecovlee@163.com).**  
-**Copyright (C) 2017 Michael Lee(李登淳)**  
+**Copyright (C) 2018 Michael Lee(李登淳)**  
 ## Thanks ##
 **Ranking by contribution.**  
 Testing: Shi Youcheng,Kiva(zt515)  

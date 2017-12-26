@@ -14,7 +14,7 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Copyright (C) 2017 Michael Lee(李登淳)
+* Copyright (C) 2018 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 * Website: http://covariant.cn/cs
@@ -58,7 +58,7 @@ int covscript_args(int args_size, const char *args[])
 void covscript_main(int args_size, const char *args[])
 {
 	std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: " << cs::version << "\n"
-	          "Copyright (C) 2017 Michael Lee.All rights reserved.\n"
+	          "Copyright (C) 2018 Michael Lee.All rights reserved.\n"
 	          "Please visit <http://covscript.org/> for more information." << std::endl;
 	const char *import_path = nullptr;
 	if ((import_path = std::getenv(env_name)) != nullptr)

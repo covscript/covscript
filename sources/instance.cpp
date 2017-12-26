@@ -14,7 +14,7 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Copyright (C) 2017 Michael Lee(李登淳)
+* Copyright (C) 2018 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
@@ -146,261 +146,314 @@ namespace cs {
 		}, new method_throw(context));
 	}
 
-	void instance_type::opt_expr(cov::tree<token_base *> &tree, cov::tree<token_base *>::iterator it)
+	void instance_type::opt_expr(cov::tree<token_base *> &tree, cov::tree<token_base *>::iterator
+	                             it)
 	{
-		if (!it.usable())
+		if (!it.
+
+		        usable()
+
+		   )
 			return;
 		token_base *token = it.data();
 		if (token == nullptr)
 			return;
-		switch (token->get_type()) {
+		switch (token->
+
+		        get_type()
+
+		       ) {
 		default:
 			break;
-		case token_types::id: {
-			const std::string &id = static_cast<token_id *>(token)->get_id();
-			if (storage.exsist_record(id)) {
-				if (storage.var_exsist_current(id) && storage.get_var_current(id).is_protect())
-					it.data() = new_value(storage.get_var(id));
-			}
-			else if (storage.exsist_record_in_struct(id)) {
-				if (storage.var_exsist(id) && storage.get_var(id).is_protect())
-					it.data() = new_value(storage.get_var(id));
-				else {
-					it.data() = new token_signal(signal_types::dot_);
-					tree.emplace_left_left(it, new token_id("this"));
-					tree.emplace_right_right(it, token);
+		case
+
+				token_types::id: {
+				const std::string &id = static_cast<token_id *>(token)->get_id();
+				if (storage.exsist_record(id)) {
+					if (storage.var_exsist_current(id) && storage.get_var_current(id).is_protect())
+						it.data() = new_value(storage.get_var(id));
 				}
+				else if (storage.exsist_record_in_struct(id)) {
+					if (storage.var_exsist(id) && storage.get_var(id).is_protect())
+						it.data() = new_value(storage.get_var(id));
+					else {
+						it.data() = new token_signal(signal_types::dot_);
+						tree.emplace_left_left(it, new token_id("this"));
+						tree.emplace_right_right(it, token);
+					}
+				}
+				else if (storage.var_exsist(id) && storage.get_var(id).is_protect())
+					it.data() = new_value(storage.get_var(id));
+				return;
+				break;
 			}
-			else if (storage.var_exsist(id) && storage.get_var(id).is_protect())
-				it.data() = new_value(storage.get_var(id));
-			return;
-			break;
-		}
-		case token_types::expr: {
-			cov::tree<token_base *> &t = static_cast<token_expr *>(it.data())->get_tree();
-			optimize_expression(t);
-			if (optimizable(t.root())) {
-				it.data() = t.root().data();
+
+		case
+
+				token_types::expr: {
+				cov::tree<token_base *> &t = static_cast<token_expr *>(it.data())->get_tree();
+				optimize_expression(t);
+				if (optimizable(t.root())) {
+					it.data() = t.root().data();
+				}
+				return;
+				break;
 			}
-			return;
-			break;
-		}
-		case token_types::array: {
-			bool is_optimizable = true;
-			for (auto &tree:static_cast<token_array *>(token)->get_array()) {
-				optimize_expression(tree);
-				if (is_optimizable && !optimizable(tree.root()))
-					is_optimizable = false;
-			}
-			if (is_optimizable) {
-				array arr;
-				bool is_map = true;
-				token_value *t = nullptr;
+
+		case
+
+				token_types::array: {
+				bool is_optimizable = true;
 				for (auto &tree:static_cast<token_array *>(token)->get_array()) {
-					const var &val = parse_expr(tree.root());
-					if (is_map && val.type() != typeid(pair))
+					optimize_expression(tree);
+					if (is_optimizable && !optimizable(tree.root()))
+						is_optimizable = false;
+				}
+				if (is_optimizable) {
+					array arr;
+					bool is_map = true;
+					token_value *t = nullptr;
+					for (auto &tree:static_cast<token_array *>(token)->get_array()) {
+						const var &val = parse_expr(tree.root());
+						if (is_map && val.type() != typeid(pair))
+							is_map = false;
+						arr.push_back((new_value(copy(val)))->get_value());
+					}
+					if (arr.empty())
 						is_map = false;
-					arr.push_back((new_value(copy(val)))->get_value());
-				}
-				if (arr.empty())
-					is_map = false;
-				if (is_map) {
-					hash_map map;
-					for (auto &it:arr) {
-						pair &p = it.val<pair>(true);
-						if (map.count(p.first) == 0)
-							map.emplace(p.first, p.second);
-						else
-							map[p.first] = p.second;
-					}
-					t = new_value(var::make<hash_map>(std::move(map)));
-				}
-				else
-					t = new_value(var::make<array>(std::move(arr)));
-				it.data() = t;
-			}
-			return;
-			break;
-		}
-		case token_types::arglist: {
-			for (auto &tree:static_cast<token_arglist *>(token)->get_arglist())
-				optimize_expression(tree);
-			return;
-			break;
-		}
-		case token_types::signal: {
-			switch (static_cast<token_signal *>(token)->get_signal()) {
-			default:
-				break;
-			case signal_types::new_:
-				if (it.left().data() != nullptr)
-					throw syntax_error("Wrong grammar for new expression.");
-				break;
-			case signal_types::gcnew_:
-				if (it.left().data() != nullptr)
-					throw syntax_error("Wrong grammar for gcnew expression.");
-				opt_expr(tree, it.right());
-				return;
-				break;
-			case signal_types::typeid_:
-				if (it.left().data() != nullptr)
-					throw syntax_error("Wrong grammar for typeid expression.");
-				break;
-			case signal_types::not_:
-				if (it.left().data() != nullptr)
-					throw syntax_error("Wrong grammar for not expression.");
-				break;
-			case signal_types::sub_:
-				if (it.left().data() == nullptr)
-					it.data() = new token_signal(signal_types::minus_);
-				break;
-			case signal_types::mul_:
-				if (it.left().data() == nullptr)
-					it.data() = new token_signal(signal_types::escape_);
-				break;
-			case signal_types::asi_:
-				if (it.left().data() == nullptr || it.right().data() == nullptr)
-					throw syntax_error("Wrong grammar for assign expression.");
-				opt_expr(tree, it.left());
-				opt_expr(tree, it.right());
-				return;
-				break;
-			case signal_types::sarrow_:
-				it.data() = new token_signal(signal_types::arrow_);
-				opt_expr(tree, it.left());
-				opt_expr(tree, it.right());
-				return;
-				break;
-			case signal_types::sdot_:
-				it.data() = new token_signal(signal_types::dot_);
-				opt_expr(tree, it.left());
-				opt_expr(tree, it.right());
-				return;
-				break;
-			case signal_types::vardef_: {
-				if (it.left().data() != nullptr)
-					throw syntax_error("Wrong grammar for variable definition.");
-				token_base *rptr = it.right().data();
-				if (rptr == nullptr || rptr->get_type() != token_types::id)
-					throw syntax_error("Wrong grammar for variable definition.");
-				storage.add_record(static_cast<token_id *>(rptr)->get_id());
-				it.data() = rptr;
-				return;
-				break;
-			}
-			case signal_types::dot_: {
-				opt_expr(tree, it.left());
-				token_base *lptr = it.left().data();
-				token_base *rptr = it.right().data();
-				if (rptr == nullptr || rptr->get_type() != token_types::id)
-					throw syntax_error("Wrong grammar for dot expression.");
-				if (lptr != nullptr && lptr->get_type() == token_types::value) {
-					const var &a = static_cast<token_value *>(lptr)->get_value();
-					token_base *orig_ptr = it.data();
-					try {
-						const var &v = parse_dot(a, rptr);
-						if (v.is_protect())
-							it.data() = new_value(v);
-					}
-					catch (...) {
-						it.data() = orig_ptr;
-					}
-				}
-				return;
-				break;
-			}
-			case signal_types::fcall_: {
-				opt_expr(tree, it.left());
-				opt_expr(tree, it.right());
-				token_base *lptr = it.left().data();
-				token_base *rptr = it.right().data();
-				if (lptr != nullptr && lptr->get_type() == token_types::value && rptr != nullptr &&
-				        rptr->get_type() == token_types::arglist) {
-					var &a = static_cast<token_value *>(lptr)->get_value();
-					if (a.type() == typeid(callable) && a.const_val<callable>().is_constant()) {
-						bool is_optimizable = true;
-						for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
-							if (is_optimizable && !optimizable(tree.root()))
-								is_optimizable = false;
+					if (is_map) {
+						hash_map map;
+						for (auto &it:arr) {
+							pair &p = it.val<pair>(true);
+							if (map.count(p.first) == 0)
+								map.emplace(p.first, p.second);
+							else
+								map[p.first] = p.second;
 						}
-						if (is_optimizable) {
-							array arr;
-							for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
-								arr.push_back(parse_expr(tree.root()));
-							token_base *oldt = it.data();
-							try {
-								it.data() = new_value(a.val<callable>(true).call(arr));
-							}
-							catch (...) {
-								it.data() = oldt;
-							}
+						t = new_value(var::make<hash_map>(std::move(map)));
+					}
+					else
+						t = new_value(var::make<array>(std::move(arr)));
+					it.data() = t;
+				}
+				return;
+				break;
+			}
+
+		case
+
+				token_types::arglist: {
+				for (auto &tree:static_cast<token_arglist *>(token)->get_arglist())
+					optimize_expression(tree);
+				return;
+				break;
+			}
+
+		case
+
+				token_types::signal: {
+				switch (static_cast<token_signal *>(token)->get_signal()) {
+				default:
+					break;
+				case signal_types::new_:
+					if (it.left().data() != nullptr)
+						throw syntax_error("Wrong grammar for new expression.");
+					break;
+				case signal_types::gcnew_:
+					if (it.left().data() != nullptr)
+						throw syntax_error("Wrong grammar for gcnew expression.");
+					opt_expr(tree, it.right());
+					return;
+					break;
+				case signal_types::typeid_:
+					if (it.left().data() != nullptr)
+						throw syntax_error("Wrong grammar for typeid expression.");
+					break;
+				case signal_types::not_:
+					if (it.left().data() != nullptr)
+						throw syntax_error("Wrong grammar for not expression.");
+					break;
+				case signal_types::sub_:
+					if (it.left().data() == nullptr)
+						it.data() = new token_signal(signal_types::minus_);
+					break;
+				case signal_types::mul_:
+					if (it.left().data() == nullptr)
+						it.data() = new token_signal(signal_types::escape_);
+					break;
+				case signal_types::asi_:
+					if (it.left().data() == nullptr || it.right().data() == nullptr)
+						throw syntax_error("Wrong grammar for assign expression.");
+					opt_expr(tree, it.left());
+					opt_expr(tree, it.right());
+					return;
+					break;
+				case signal_types::sarrow_:
+					it.data() = new token_signal(signal_types::arrow_);
+					opt_expr(tree, it.left());
+					opt_expr(tree, it.right());
+					return;
+					break;
+				case signal_types::sdot_:
+					it.data() = new token_signal(signal_types::dot_);
+					opt_expr(tree, it.left());
+					opt_expr(tree, it.right());
+					return;
+					break;
+				case signal_types::vardef_: {
+					if (it.left().data() != nullptr)
+						throw syntax_error("Wrong grammar for variable definition.");
+					token_base *rptr = it.right().data();
+					if (rptr == nullptr || rptr->get_type() != token_types::id)
+						throw syntax_error("Wrong grammar for variable definition.");
+					storage.add_record(static_cast<token_id *>(rptr)->get_id());
+					it.data() = rptr;
+					return;
+					break;
+				}
+				case signal_types::dot_: {
+					opt_expr(tree, it.left());
+					token_base *lptr = it.left().data();
+					token_base *rptr = it.right().data();
+					if (rptr == nullptr || rptr->get_type() != token_types::id)
+						throw syntax_error("Wrong grammar for dot expression.");
+					if (lptr != nullptr && lptr->get_type() == token_types::value) {
+						const var &a = static_cast<token_value *>(lptr)->get_value();
+						token_base *orig_ptr = it.data();
+						try {
+							const var &v = parse_dot(a, rptr);
+							if (v.is_protect())
+								it.data() = new_value(v);
+						}
+						catch (...) {
+							it.data() = orig_ptr;
 						}
 					}
+					return;
+					break;
 				}
-				return;
-				break;
-			}
-			case signal_types::emb_: {
-				opt_expr(tree, it.left());
-				opt_expr(tree, it.right());
-				token_base *lptr = it.left().data();
-				token_base *rptr = it.right().data();
-				if (!inside_lambda || lptr != nullptr || rptr == nullptr ||
-				        rptr->get_type() != token_types::arglist)
-					throw syntax_error("Wrong grammar for lambda expression.");
-				it.data() = rptr;
-				return;
-				break;
-			}
-			case signal_types::lambda_: {
-				inside_lambda = true;
-				opt_expr(tree, it.left());
-				inside_lambda = false;
-				opt_expr(tree, it.right());
-				token_base *lptr = it.left().data();
-				token_base *rptr = it.right().data();
-				if (lptr == nullptr || rptr == nullptr || lptr->get_type() != token_types::arglist)
-					throw syntax_error("Wrong grammar for lambda expression.");
-				std::deque<std::string> args;
-				for (auto &it:dynamic_cast<token_arglist *>(lptr)->get_arglist()) {
-					if (it.root().data() == nullptr)
-						throw internal_error("Null pointer accessed.");
-					if (it.root().data()->get_type() != token_types::id)
-						throw syntax_error("Wrong grammar for function definition.");
-					const std::string &str = dynamic_cast<token_id *>(it.root().data())->get_id();
-					for (auto &it:args)
-						if (it == str)
-							throw syntax_error("Redefinition of function argument.");
-					args.push_back(str);
+				case signal_types::fcall_: {
+					opt_expr(tree, it.left());
+					opt_expr(tree, it.right());
+					token_base *lptr = it.left().data();
+					token_base *rptr = it.right().data();
+					if (lptr != nullptr && lptr->get_type() == token_types::value && rptr != nullptr &&
+					        rptr->get_type() == token_types::arglist) {
+						var &a = static_cast<token_value *>(lptr)->get_value();
+						if (a.type() == typeid(callable) && a.const_val<callable>().is_constant()) {
+							bool is_optimizable = true;
+							for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
+								if (is_optimizable && !optimizable(tree.root()))
+									is_optimizable = false;
+							}
+							if (is_optimizable) {
+								array arr;
+								for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
+									arr.push_back(parse_expr(tree.root()));
+								token_base *oldt = it.data();
+								try {
+									it.data() = new_value(a.val<callable>(true).call(arr));
+								}
+								catch (...) {
+									it.data() = oldt;
+								}
+							}
+						}
+					}
+					return;
+					break;
 				}
-				it.data() = new_value(var::make_protect<callable>(function(context, args,
-				std::deque<statement_base *> {
-					new statement_return(
-					cov::tree<token_base *>{
-						it.right()
-					},
-					context,
-					new token_endline(
-					    token->get_line_num()))
-				})));
-				return;
-				break;
-			}
+				case signal_types::emb_: {
+					opt_expr(tree, it.left());
+					opt_expr(tree, it.right());
+					token_base *lptr = it.left().data();
+					token_base *rptr = it.right().data();
+					if (!inside_lambda || lptr != nullptr || rptr == nullptr ||
+					        rptr->get_type() != token_types::arglist)
+						throw syntax_error("Wrong grammar for lambda expression.");
+					it.data() = rptr;
+					return;
+					break;
+				}
+				case signal_types::lambda_: {
+					inside_lambda = true;
+					opt_expr(tree, it.left());
+					inside_lambda = false;
+					opt_expr(tree, it.right());
+					token_base *lptr = it.left().data();
+					token_base *rptr = it.right().data();
+					if (lptr == nullptr || rptr == nullptr || lptr->get_type() != token_types::arglist)
+						throw syntax_error("Wrong grammar for lambda expression.");
+					std::deque<std::string> args;
+					for (auto &it:dynamic_cast<token_arglist *>(lptr)->get_arglist()) {
+						if (it.root().data() == nullptr)
+							throw internal_error("Null pointer accessed.");
+						if (it.root().data()->get_type() != token_types::id)
+							throw syntax_error("Wrong grammar for function definition.");
+						const std::string &str = dynamic_cast<token_id *>(it.root().data())->get_id();
+						for (auto &it:args)
+							if (it == str)
+								throw syntax_error("Redefinition of function argument.");
+						args.push_back(str);
+					}
+					it.data() = new_value(var::make_protect<callable>(function(context, args,
+					std::deque<statement_base *> {
+						new statement_return(
+						cov::tree<token_base *> {
+							it.right()
+						},
+						context,
+						new token_endline(
+						    token->get_line_num()))
+					})));
+					return;
+					break;
+				}
+				}
 			}
 		}
-		}
-		opt_expr(tree, it.left());
-		opt_expr(tree, it.right());
-		if (optimizable(it.left()) && optimizable(it.right())) {
+		opt_expr(tree, it
+		         .
+
+		         left()
+
+		        );
+		opt_expr(tree, it
+		         .
+
+		         right()
+
+		        );
+		if (
+		    optimizable(it
+		                .
+
+		                left()
+
+		               ) &&
+		    optimizable(it
+		                .
+
+		                right()
+
+		               )) {
 			token_base *oldt = it.data();
 			try {
 				token_value *token = new_value(parse_expr(it));
-				tree.erase_left(it);
-				tree.erase_right(it);
-				it.data() = token;
+				tree.
+				erase_left(it);
+				tree.
+				erase_right(it);
+				it.
+
+				data() = token;
+
 			}
 			catch (...) {
-				it.data() = oldt;
+				it.
+
+				data() = oldt;
+
 			}
 		}
 	}
@@ -581,4 +634,5 @@ namespace cs {
 			this->run(code);
 		}
 	}
+
 }
