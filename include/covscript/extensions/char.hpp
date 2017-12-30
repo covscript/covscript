@@ -99,6 +99,13 @@ namespace char_cs_ext {
 		return std::toupper(c);
 	}
 
+	char from_ascii(number ascii)
+	{
+		if (ascii < 0 || ascii > 255)
+			throw lang_error("Out of range.");
+		return static_cast<char>(ascii);
+	}
+
 	void init()
 	{
 		char_ext.add_var("isalnum", var::make_protect<callable>(cni(isalnum), true));
@@ -114,5 +121,6 @@ namespace char_cs_ext {
 		char_ext.add_var("ispunct", var::make_protect<callable>(cni(ispunct), true));
 		char_ext.add_var("tolower", var::make_protect<callable>(cni(tolower), true));
 		char_ext.add_var("toupper", var::make_protect<callable>(cni(toupper), true));
+		char_ext.add_var("from_ascii", var::make_protect<callable>(cni(from_ascii), true));
 	}
 }
