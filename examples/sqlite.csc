@@ -5,14 +5,14 @@ function print_result(stmt)
 		system.out.print(stmt.column_decltype(i)+"\t")
 		system.out.print(stmt.column_name(i))
 		system.out.print("=\t")
-		switch stmt.column_decltype(i)
-			case "integer"
+		switch stmt.column_type(i)
+			case sqlite.integer
 				system.out.println(stmt.column_integer(i))
 			end
-			case "real"
+			case sqlite.real
 				system.out.println(stmt.column_real(i))
 			end
-			case "text"
+			case sqlite.text
 				system.out.println(stmt.column_text(i))
 			end
 		end
