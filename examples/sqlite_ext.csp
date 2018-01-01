@@ -15,7 +15,7 @@ function exec(db,sql)
         for i=0 to column_count
             var dat=new sqlite_ext.record
             dat.name=stmt.column_name(i)
-            dat.type=stmt.column_type(i)
+            dat.type=stmt.column_decltype(i)
             switch stmt.column_type(i)
                 case sqlite.integer
                     dat.data=stmt.column_integer(i)

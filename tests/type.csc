@@ -1,11 +1,5 @@
-import regex
-import darwin
-import sqlite
 struct foo
 end
-var reg=regex.build("REGEX")
-var reg_result=reg.search("COVSCRIPTREGEX")
-var sql=sqlite.open(":memory:")
 @begin
 var types=
 {
@@ -30,15 +24,7 @@ var types=
     type((new list).begin()),
     type(iostream.seekdir.start),
     type(iostream.openmode.app),
-    type(context.build("x")),
-    type(reg),
-    type(reg_result),
-    type(darwin.red),
-    type(darwin.pixel(' ',darwin.white,darwin.white)),
-    type(darwin.get_drawable()),
-    type(sql),
-    type(sqlite.integer),
-    type(sql.prepare("create table test(a integer)"))
+    type(context.build("x"))
 }
 @end
 for it iterate types
