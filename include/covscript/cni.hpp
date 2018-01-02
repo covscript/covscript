@@ -40,7 +40,7 @@ namespace cs {
 		static inline void result_container(short...) {}
 
 		template<typename...ArgsT, int...Seq>
-		static inline void check_helper(const std::deque<var> &args, const cov::sequence<Seq...> &)
+		static inline void check_helper(const vector &args, const cov::sequence<Seq...> &)
 		{
 			result_container(
 			    check_arg<typename cov::remove_constant<typename cov::remove_reference<ArgsT>::type>::type, Seq>::check(
@@ -49,7 +49,7 @@ namespace cs {
 
 	public:
 		template<typename...ArgTypes>
-		static inline void check(const std::deque<var> &args)
+		static inline void check(const vector &args)
 		{
 			if (sizeof...(ArgTypes) == args.size())
 				check_helper<ArgTypes...>(args, cov::make_sequence<sizeof...(ArgTypes)>::result);
@@ -121,7 +121,7 @@ namespace cs {
 
 		cni_helper(const std::function<void()> &func) : mFunc(func) {}
 
-		var call(array &args) const
+		var call(vector &args) const
 		{
 			if (!args.empty())
 				throw syntax_error("Wrong size of the arguments.Expected 0");
@@ -140,7 +140,7 @@ namespace cs {
 
 		cni_helper(const std::function<RetT()> &func) : mFunc(func) {}
 
-		var call(array &args) const
+		var call(vector &args) const
 		{
 			if (!args.empty())
 				throw syntax_error("Wrong size of the arguments.Expected 0");
@@ -154,7 +154,7 @@ namespace cs {
 		std::function<void(ArgsT...)> mFunc;
 
 		template<int...S>
-		void _call(array &args, const cov::sequence<S...> &) const
+		void _call(vector &args, const cov::sequence<S...> &) const
 		{
 			mFunc(convert<ArgsT>::get_val(args[S])...);
 		}
@@ -166,7 +166,7 @@ namespace cs {
 
 		cni_helper(const std::function<void(ArgsT...)> &func) : mFunc(func) {}
 
-		var call(array &args) const
+		var call(vector &args) const
 		{
 			arglist::check<ArgsT...>(args);
 			_call(args, cov::make_sequence<cov::type_list::get_size<args_t>::result>::result);
@@ -180,7 +180,7 @@ namespace cs {
 		std::function<RetT(ArgsT...)> mFunc;
 
 		template<int...S>
-		RetT _call(array &args, const cov::sequence<S...> &) const
+		RetT _call(vector &args, const cov::sequence<S...> &) const
 		{
 			return std::move(mFunc(convert<ArgsT>::get_val(args[S])...));
 		}
@@ -192,7 +192,7 @@ namespace cs {
 
 		cni_helper(const std::function<RetT(ArgsT...)> &func) : mFunc(func) {}
 
-		var call(array &args) const
+		var call(vector &args) const
 		{
 			arglist::check<ArgsT...>(args);
 			return std::move(_call(args, cov::make_sequence<cov::type_list::get_size<args_t>::result>::result));
@@ -219,7 +219,7 @@ namespace cs {
 
 			virtual cni_base *clone()=0;
 
-			virtual var call(array &) const =0;
+			virtual var call(vector &) const =0;
 		};
 
 		template<typename T>
@@ -239,7 +239,7 @@ namespace cs {
 				return new cni_holder(*this);
 			}
 
-			virtual var call(array &args) const override
+			virtual var call(vector &args) const override
 			{
 				return mCni.call(args);
 			}
@@ -270,7 +270,7 @@ namespace cs {
 			delete mCni;
 		}
 
-		var operator()(array &args) const
+		var operator()(vector &args) const
 		{
 			try {
 				return mCni->call(args);

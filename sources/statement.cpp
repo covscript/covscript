@@ -21,7 +21,7 @@
 #include <covscript/statement.hpp>
 
 namespace cs {
-	var function::call(array &args) const
+	var function::call(vector &args) const
 	{
 		if (args.size() != this->mArgs.size())
 			throw syntax_error("Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
