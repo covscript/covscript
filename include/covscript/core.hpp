@@ -142,28 +142,16 @@ namespace cs {
 		}
 	};
 
-	class object_method final {
-		var mObj;
-		var mCallable;
-	public:
+	struct object_method final {
+		var object;
+		var callable;
+		bool is_constant = false;
+
 		object_method() = delete;
 
-		object_method(const var &obj, const var &callable) : mObj(obj), mCallable(callable) {}
+		object_method(const var &obj, const var &func, bool constant = false) : object(obj), callable(func), is_constant(constant) {}
 
 		~object_method() = default;
-
-		const var &get_callable() const
-		{
-			return mCallable;
-		}
-
-		var operator()(array &args) const
-		{
-			args.push_front(mObj);
-			var retval = mCallable.const_val<callable>().call(args);
-			args.pop_front();
-			return retval;
-		}
 	};
 
 // Type and struct

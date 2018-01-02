@@ -150,14 +150,14 @@ namespace cs {
 		else if (a.type() == typeid(structure)) {
 			var &val = a.val<structure>(true).get_var(static_cast<token_id *>(b)->get_id());
 			if (val.type() == typeid(callable) && val.const_val<callable>().is_member_fn())
-				return var::make_protect<callable>(object_method(a, val));
+				return var::make_protect<object_method>(a, val);
 			else
 				return val;
 		}
 		else {
 			var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
 			if (val.type() == typeid(callable))
-				return var::make_protect<callable>(object_method(a, val), val.const_val<callable>().is_constant());
+				return var::make_protect<object_method>(a, val, val.const_val<callable>().is_constant());
 			else
 				return val;
 		}
@@ -322,10 +322,21 @@ namespace cs {
 		}
 	}
 
-	var runtime_type::parse_fcall(const var &a, var b)
+	var runtime_type::parse_fcall(const var &a, token_base *b)
 	{
-		if (a.type() == typeid(callable))
-			return a.const_val<callable>().call(b.val<array>(true));
+		if (a.type() == typeid(callable)) {
+			array args;
+			for (auto &tree:static_cast<token_arglist *>(b)->get_arglist())
+				args.push_back(parse_expr(tree.root()));
+			return a.const_val<callable>().call(args);
+		}
+		else if(a.type() == typeid(object_method)) {
+			const object_method &om = a.const_val<object_method>();
+			array args{om.object};
+			for (auto &tree:static_cast<token_arglist *>(b)->get_arglist())
+				args.push_back(parse_expr(tree.root()));
+			return om.callable.const_val<callable>().call(args);
+		}
 		else
 			throw syntax_error("Unsupported operator operations(Fcall).");
 	}
@@ -404,12 +415,6 @@ namespace cs {
 			}
 			else
 				return var::make<array>(std::move(arr));
-		}
-		case token_types::arglist: {
-			array arr;
-			for (auto &tree:static_cast<token_arglist *>(token)->get_arglist())
-				arr.push_back(parse_expr(tree.root()));
-			return var::make<array>(std::move(arr));
 		}
 		case token_types::signal: {
 			switch (static_cast<token_signal *>(token)->get_signal()) {
@@ -515,7 +520,7 @@ namespace cs {
 				return parse_dec(parse_expr(it.left()), parse_expr(it.right()));
 				break;
 			case signal_types::fcall_:
-				return parse_fcall(parse_expr(it.left()), parse_expr(it.right()));
+				return parse_fcall(parse_expr(it.left()), it.right().data());
 				break;
 			case signal_types::access_:
 				return parse_access(parse_expr(it.left()), parse_expr(it.right()));

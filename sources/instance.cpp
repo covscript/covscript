@@ -352,7 +352,27 @@ namespace cs {
 									arr.push_back(parse_expr(tree.root()));
 								token_base *oldt = it.data();
 								try {
-									it.data() = new_value(a.val<callable>(true).call(arr));
+									it.data() = new_value(a.const_val<callable>().call(arr));
+								}
+								catch (...) {
+									it.data() = oldt;
+								}
+							}
+						}
+						else if (a.type() == typeid(object_method) && a.const_val<object_method>().is_constant) {
+							bool is_optimizable = true;
+							for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
+								if (is_optimizable && !optimizable(tree.root()))
+									is_optimizable = false;
+							}
+							if (is_optimizable) {
+								const object_method &om = a.const_val<object_method>();
+								array args{om.object};
+								for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
+									args.push_back(parse_expr(tree.root()));
+								token_base *oldt = it.data();
+								try {
+									it.data() = new_value(om.callable.const_val<callable>().call(args));
 								}
 								catch (...) {
 									it.data() = oldt;
