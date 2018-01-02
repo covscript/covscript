@@ -347,12 +347,13 @@ namespace cs {
 									is_optimizable = false;
 							}
 							if (is_optimizable) {
-								array arr;
+								vector args;
+								args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
 								for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
-									arr.push_back(parse_expr(tree.root()));
+									args.push_back(parse_expr(tree.root()));
 								token_base *oldt = it.data();
 								try {
-									it.data() = new_value(a.const_val<callable>().call(arr));
+									it.data() = new_value(a.const_val<callable>().call(args));
 								}
 								catch (...) {
 									it.data() = oldt;
@@ -367,7 +368,8 @@ namespace cs {
 							}
 							if (is_optimizable) {
 								const object_method &om = a.const_val<object_method>();
-								array args{om.object};
+								vector args{om.object};
+								args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
 								for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
 									args.push_back(parse_expr(tree.root()));
 								token_base *oldt = it.data();

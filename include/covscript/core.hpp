@@ -43,6 +43,7 @@
 #include <utility>
 #include <cctype>
 #include <string>
+#include <vector>
 #include <memory>
 #include <cmath>
 #include <deque>
@@ -55,7 +56,7 @@
 
 namespace cs {
 // Version
-	static const char *const version = "1.2.0";
+	static const char *const version = "1.2.1";
 	static const number std_version = 20180101;
 // Output Precision
 	static int output_precision = 8;
@@ -82,7 +83,7 @@ namespace cs {
 // Callable and Function
 	class callable final {
 	public:
-		using function_type=std::function<var(array &)>;
+		using function_type=std::function<var(vector &)>;
 		enum class types {
 			normal, constant, member_fn
 		};
@@ -109,7 +110,7 @@ namespace cs {
 			return mType == types::member_fn;
 		}
 
-		var call(array &args) const
+		var call(vector &args) const
 		{
 			return mFunc(args);
 		}
@@ -129,9 +130,9 @@ namespace cs {
 
 		~function() = default;
 
-		var call(array &) const;
+		var call(vector &) const;
 
-		var operator()(array &args) const
+		var operator()(vector &args) const
 		{
 			return call(args);
 		}
