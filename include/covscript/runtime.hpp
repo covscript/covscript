@@ -270,7 +270,7 @@ namespace cs {
 
 		var parse_dec(var, var);
 
-		var parse_fcall(const var &, var);
+		var parse_fcall(const var &, token_base *);
 
 		var parse_access(var, const var &);
 
