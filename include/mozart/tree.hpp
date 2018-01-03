@@ -57,11 +57,11 @@ namespace cov {
 			return node;
 		}
 
-		static void destory(tree_node *raw)
+		static void destroy(tree_node *raw)
 		{
 			if (raw != nullptr) {
-				destory(raw->left);
-				destory(raw->right);
+				destroy(raw->left);
+				destroy(raw->right);
 				delete raw;
 			}
 		}
@@ -211,12 +211,12 @@ namespace cov {
 
 		~tree()
 		{
-			destory(this->mRoot);
+			destroy(this->mRoot);
 		}
 
 		tree &operator=(const tree &t)
 		{
-			destory(this->mRoot);
+			destroy(this->mRoot);
 			this->mRoot = copy(t.mRoot);
 			return *this;
 		}
@@ -229,7 +229,7 @@ namespace cov {
 
 		void assign(const tree &t)
 		{
-			destory(this->mRoot);
+			destroy(this->mRoot);
 			this->mRoot = copy(t.mRoot);
 		}
 
@@ -240,7 +240,7 @@ namespace cov {
 
 		void clear()
 		{
-			destory(this->mRoot);
+			destroy(this->mRoot);
 			this->mRoot = nullptr;
 		}
 
@@ -422,7 +422,7 @@ namespace cov {
 			if (!it.usable())
 				throw cov::error("E000E");
 			iterator root(it.mData->root);
-			destory(it.mData);
+			destroy(it.mData);
 			return root;
 		}
 
@@ -430,7 +430,7 @@ namespace cov {
 		{
 			if (!it.usable())
 				throw cov::error("E000E");
-			destory(it.mData->left);
+			destroy(it.mData->left);
 			it.mData->left = nullptr;
 			return it;
 		}
@@ -439,7 +439,7 @@ namespace cov {
 		{
 			if (!it.usable())
 				throw cov::error("E000E");
-			destory(it.mData->right);
+			destroy(it.mData->right);
 			it.mData->right = nullptr;
 			return it;
 		}

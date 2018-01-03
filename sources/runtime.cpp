@@ -331,7 +331,7 @@ namespace cs {
 				args.push_back(parse_expr(tree.root()));
 			return a.const_val<callable>().call(args);
 		}
-		else if(a.type() == typeid(object_method)) {
+		else if (a.type() == typeid(object_method)) {
 			const object_method &om = a.const_val<object_method>();
 			vector args{om.object};
 			args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());

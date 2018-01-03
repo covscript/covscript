@@ -150,7 +150,8 @@ namespace cs {
 
 		object_method() = delete;
 
-		object_method(const var &obj, const var &func, bool constant = false) : object(obj), callable(func), is_constant(constant) {}
+		object_method(const var &obj, const var &func, bool constant = false) : object(obj), callable(func),
+			is_constant(constant) {}
 
 		~object_method() = default;
 	};
