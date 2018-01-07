@@ -235,14 +235,13 @@ namespace cs {
 		return a;
 	}
 
-	var runtime_type::parse_choice(const var &a, const var &b)
+	var runtime_type::parse_choice(const var &a, const cov::tree<token_base *>::iterator &b)
 	{
-		if (a.type() == typeid(boolean) && b.type() == typeid(pair)) {
-			const pair &p = b.const_val<pair>();
+		if (a.type() == typeid(boolean)) {
 			if (a.const_val<boolean>())
-				return p.first;
+				return parse_expr(b.left());
 			else
-				return p.second;
+				return parse_expr(b.right());
 		}
 		else
 			throw syntax_error("Unsupported operator operations(Choice).");
@@ -489,7 +488,7 @@ namespace cs {
 				return parse_asi(parse_expr(it.left()), parse_expr(it.right()));
 				break;
 			case signal_types::choice_:
-				return parse_choice(parse_expr(it.left()), parse_expr(it.right()));
+				return parse_choice(parse_expr(it.left()), it.right());
 				break;
 			case signal_types::pair_:
 				return parse_pair(parse_expr(it.left()), parse_expr(it.right()));

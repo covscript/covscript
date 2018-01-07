@@ -252,7 +252,7 @@ namespace cs {
 
 		var parse_asi(var, const var &);
 
-		var parse_choice(const var &, const var &);
+		var parse_choice(const var &, const cov::tree<token_base *>::iterator &);
 
 		var parse_pair(const var &, const var &);
 

@@ -1,5 +1,8 @@
 import darwin
 const var a=10
+const var lambda=[](x,y)->x+y
+const var b=a<0?lambda("A","B"):"C"
+var c=a>0?lambda("A","B"):"C"
 switch system.in.input()
 	case "Hello"+"!"
 		system.out.println("Hello!")
@@ -23,5 +26,6 @@ switch system.in.input()
 		system.out.println("x3.14")
 	end
 	case a
+		system.out.println(b+c)
 	end
 end

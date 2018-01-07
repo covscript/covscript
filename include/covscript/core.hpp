@@ -53,6 +53,7 @@
 #include <covscript/exceptions.hpp>
 #include <covscript/any.hpp>
 #include <covscript/typedef.hpp>
+
 #define _CONVERT_TO_STR(s) #s
 #define CONVERT_TO_STR(s) _CONVERT_TO_STR(s)
 namespace cs {
