@@ -300,6 +300,27 @@ namespace cs {
 					opt_expr(tree, it.right());
 					return;
 					break;
+				case signal_types::choice_: {
+					token_signal *sig = dynamic_cast<token_signal *>(it.right().data());
+					if (sig == nullptr || sig->get_signal() != signal_types::pair_)
+						throw syntax_error("Wrong grammar for choice expression.");
+					opt_expr(tree, it.left());
+					opt_expr(tree, it.right());
+					token_value *val = dynamic_cast<token_value *>(it.left().data());
+					if (val != nullptr) {
+						if (val->get_value().type() == typeid(boolean)) {
+							if (val->get_value().const_val<boolean>())
+								it.data() = new token_expr(it.right().left());
+							else
+								it.data() = new token_expr(it.right().right());
+							opt_expr(tree, it);
+						}
+						else
+							throw syntax_error("Choice condition must be boolean.");
+					}
+					return;
+					break;
+				}
 				case signal_types::vardef_: {
 					if (it.left().data() != nullptr)
 						throw syntax_error("Wrong grammar for variable definition.");
