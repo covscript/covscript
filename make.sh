@@ -1,7 +1,6 @@
 #!/bin/bash
-if [ "$#" != "1" ]; then
-    PREFIX="/usr"
-else
+PREFIX="/usr"
+if [ "$#" = "1" ]; then
     PREFIX=$1
 fi
 mkdir -p build
