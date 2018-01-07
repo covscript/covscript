@@ -1,7 +1,8 @@
+#!/bin/bash
 if [ "$#" != "1" ]; then
-    export PREFIX="/usr"
+    PREFIX="/usr"
 else
-    export PREFIX=$1
+    PREFIX=$1
 fi
 mkdir -p build
 cd build
