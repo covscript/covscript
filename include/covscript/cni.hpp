@@ -281,6 +281,10 @@ namespace cs {
 			catch (const std::exception &e) {
 				exception_handler::std_eh_callback(e);
 			}
+			catch (...) {
+				exception_handler::std_eh_callback(fatal_error("CNI:Unrecognized exception."));
+			}
+			return var::make<number>(0);
 		}
 	};
 
