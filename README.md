@@ -52,6 +52,8 @@ Building Covariant Script is the same as Linux. And now Covariant Script has bee
 `--import-path PATH` Set the import path.  
 ### GUI ###
 You can also download the [Covariant Script GUI](https://github.com/covscript/covscript-gui/releases/latest) to simplify your work.
+### IntelliJ Plugin ###
+The IntelliJ Plugin is available now: [Covariant Script IntelliJ Plugin](https://github.com/covscript/covscript-intellij)
 ## Examples ##
 The `examples` folder contains several example programs written by CovScript.
 ## Copyright ##
@@ -60,3 +62,4 @@ The `examples` folder contains several example programs written by CovScript.
 ## Thanks ##
 **Ranking by contribution.**  
 Testing: Shi Youcheng,Kiva(zt515)  
+IntelliJ Plugin: Tesla Ice Zhang(ice1000)

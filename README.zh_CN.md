@@ -52,6 +52,8 @@
 `--import-path PATH` 设置import路径。  
 ### GUI ###
 你也可以下载[Covariant Script GUI](https://github.com/covscript/covscript-gui/releases/latest)来简化您的工作。
+### IntelliJ插件 ###
+IntelliJ插件现已可用：[Covariant Script IntelliJ Plugin](https://github.com/covscript/covscript-intellij)
 ## 示例 ##
 `examples`文件夹包含了数个使用CovScript编写的示例程序。
 ## 版权 ##
@@ -60,3 +62,4 @@
 ## 感谢 ##
 **按贡献排名。**  
 测试：史为成，Kiva(zt515)  
+IntelliJ插件：千里冰封(ice1000)
