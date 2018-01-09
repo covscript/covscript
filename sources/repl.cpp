@@ -64,7 +64,7 @@ void covscript_main(int args_size, const char *args[])
 	if ((import_path = std::getenv(env_name)) != nullptr)
 		cs::import_path = import_path;
 	int index = covscript_args(args_size, args);
-	if(!silent)
+	if (!silent)
 		std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: " << cs::version << "\n"
 		          "Copyright (C) 2018 Michael Lee.All rights reserved.\n"
 		          "Please visit <http://covscript.org/> for more information." << std::endl;
