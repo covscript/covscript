@@ -54,8 +54,6 @@
 #include <covscript/any.hpp>
 #include <covscript/typedef.hpp>
 
-#define _CONVERT_TO_STR(s) #s
-#define CONVERT_TO_STR(s) _CONVERT_TO_STR(s)
 namespace cs {
 // Version
 	static const char *const version = "1.2.1";
@@ -63,11 +61,7 @@ namespace cs {
 // Output Precision
 	static int output_precision = 8;
 // Import Path
-#ifdef CS_IMPORT_PATH
-	static const char *import_path = CONVERT_TO_STR(CS_IMPORT_PATH);
-#else
 	static const char *import_path = ".";
-#endif
 
 // Context
 	class context_type final {

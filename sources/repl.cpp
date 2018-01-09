@@ -24,6 +24,7 @@
 const char *env_name = "CS_IMPORT_PATH";
 const char *log_path = nullptr;
 bool wait_before_exit = false;
+bool silent = false;
 
 int covscript_args(int args_size, const char *args[])
 {
@@ -43,6 +44,8 @@ int covscript_args(int args_size, const char *args[])
 			return ++index;
 		else if (std::strcmp(args[index], "--wait-before-exit") == 0 && !wait_before_exit)
 			wait_before_exit = true;
+		else if (std::strcmp(args[index], "--silent") == 0 && !silent)
+			silent = true;
 		else if (std::strcmp(args[index], "--log-path") == 0 && expect_log_path == 0)
 			expect_log_path = 1;
 		else if (std::strcmp(args[index], "--import-path") == 0 && expect_import_path == 0)
@@ -57,13 +60,14 @@ int covscript_args(int args_size, const char *args[])
 
 void covscript_main(int args_size, const char *args[])
 {
-	std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: " << cs::version << "\n"
-	          "Copyright (C) 2018 Michael Lee.All rights reserved.\n"
-	          "Please visit <http://covscript.org/> for more information." << std::endl;
 	const char *import_path = nullptr;
 	if ((import_path = std::getenv(env_name)) != nullptr)
 		cs::import_path = import_path;
 	int index = covscript_args(args_size, args);
+	if(!silent)
+		std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: " << cs::version << "\n"
+		          "Copyright (C) 2018 Michael Lee.All rights reserved.\n"
+		          "Please visit <http://covscript.org/> for more information." << std::endl;
 	cs::array arg{cs::var::make_constant<cs::string>("<REPL_ENV>")};
 	for (; index < args_size; ++index)
 		arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
@@ -74,7 +78,7 @@ void covscript_main(int args_size, const char *args[])
 	cs::repl repl(instance.context);
 	std::string line;
 	while (std::cin) {
-		std::cerr << std::string(repl.get_level() * 2, '.') << ">";
+		std::cout << std::string(repl.get_level() * 2, '.') << ">" << std::flush;
 		std::getline(std::cin, line);
 		repl.exec(line);
 	}
