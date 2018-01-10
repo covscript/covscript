@@ -21,8 +21,8 @@
 */
 #include "covscript.cpp"
 
-const char *env_name = "CS_IMPORT_PATH";
-const char *log_path = nullptr;
+const char *const env_name = "CS_IMPORT_PATH";
+std::string log_path;
 bool wait_before_exit = false;
 bool silent = false;
 
@@ -33,11 +33,11 @@ int covscript_args(int args_size, const char *args[])
 	int index = 1;
 	for (; index < args_size; ++index) {
 		if (expect_log_path == 1) {
-			log_path = args[index];
+			log_path = process_path(args[index]);
 			expect_log_path = 2;
 		}
 		else if (expect_import_path == 1) {
-			cs::import_path = args[index];
+			cs::import_path = process_path(args[index]);
 			expect_import_path = 2;
 		}
 		else if (std::strcmp(args[index], "--args") == 0)
@@ -51,10 +51,10 @@ int covscript_args(int args_size, const char *args[])
 		else if (std::strcmp(args[index], "--import-path") == 0 && expect_import_path == 0)
 			expect_import_path = 1;
 		else
-			throw cs::fatal_error("argument grammar error.");
+			throw cs::fatal_error("argument syntax error.");
 	}
 	if (expect_log_path == 1 || expect_import_path == 1)
-		throw cs::fatal_error("argument grammar error.");
+		throw cs::fatal_error("argument syntax error.");
 	return index;
 }
 
@@ -62,7 +62,7 @@ void covscript_main(int args_size, const char *args[])
 {
 	const char *import_path = nullptr;
 	if ((import_path = std::getenv(env_name)) != nullptr)
-		cs::import_path = import_path;
+		cs::import_path = process_path(import_path);
 	int index = covscript_args(args_size, args);
 	if (!silent)
 		std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: " << cs::version << "\n"
@@ -91,7 +91,7 @@ int main(int args_size, const char *args[])
 		covscript_main(args_size, args);
 	}
 	catch (const std::exception &e) {
-		if (log_path != nullptr) {
+		if (!log_path.empty()) {
 			std::ofstream out(::log_path);
 			if (out) {
 				out << e.what();
