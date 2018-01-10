@@ -125,3 +125,17 @@ namespace cs {
 		storage.add_buildin_var("math", var::make_protect<extension_t>(make_shared_extension(math_ext)));
 	}
 }
+
+std::string process_path(const std::string &raw)
+{
+	auto pos0 = raw.find('\"');
+	auto pos1 = raw.rfind('\"');
+	if (pos0 != std::string::npos) {
+		if (pos0 == pos1)
+			throw cs::fatal_error("argument syntax error.");
+		else
+			return raw.substr(pos0 + 1, pos1 - pos0 - 1);
+	}
+	else
+		return raw;
+}

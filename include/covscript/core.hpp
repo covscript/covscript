@@ -56,12 +56,12 @@
 
 namespace cs {
 // Version
-	static const char *const version = "1.2.1(Unstable)";
+	static const std::string version = "1.2.1(Unstable)";
 	static const number std_version = 20180101;
 // Output Precision
 	static int output_precision = 8;
 // Import Path
-	static const char *import_path = ".";
+	static std::string import_path = ".";
 
 // Context
 	class context_type final {
