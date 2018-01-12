@@ -13,7 +13,7 @@
 ***Due to academic stress, the author may not be able to fix all the bugs in time. If you have some problems, please raise in the issue, thank you for your understanding.***
 
 ## Features ##
-1. Fast compiler front end
+1. Efficient compiler front end
 2. Compile-time optimization
 3. Reference count garbage collector
 4. C/C++ Native Interface
@@ -37,7 +37,8 @@ Then you have two choices:
 ```sh
 $ sh ./make.sh
 ```
-+ With CMake toolchain  
++ With CMake toolchain
+
 We've provided a `CMakeLists.txt`.
 
 Make sure your compiler supports C++11.  
@@ -66,7 +67,7 @@ If you hate command line you can use [Covariant Script GUI](https://github.com/c
 ### IntelliJ Plugin ###
 The IntelliJ Plugin is available now:
 + [Source Code](https://github.com/covscript/covscript-intellij)
-+ The Plugin is also available in [Plugin Repository](https://plugins.jetbrains.com/plugin/10326-covscript)!
++ [Plugin Repository](https://plugins.jetbrains.com/plugin/10326-covscript)!
 ## Examples ##
 The `examples` folder contains several example programs written by CovScript.
 ## Copyright ##
@@ -80,7 +81,7 @@ IntelliJ Plugin: [@ice1000](https://github.com/ice1000/)
 ## Comments ##
 Comments by [@ice1000](https://github.com/ice1000/):
 
-> This is a programming language created by my friend Michael Lee, written in C++. The detailed description is on it’s website so I’ll just put some comments here. This is a C-like language (at least the function call syntax is of C style), while functions, structs, namespaces are ends with end like Ruby, and it has the concepts of package import using (the module system). <br/>
-Its parser is hand-written (very complex, although parsers are trivial), which impressed me (I didn’t even think of that when working on Lice, I just wrote an AST evaluator). <br/>
-This language supports invoking functions written in C++, like JNI. <br/><br/>
+>This is a programming language created by my friend Michael Lee, written in C++. The detailed description is on it’s website so I’ll just put some comments here. This is a C-like language (at least the function call syntax is of C style), while functions, structs, namespaces are ends with end like Ruby, and it has the concepts of package import using (the module system).  
+Its parser is hand-written (very complex, although parsers are trivial), which impressed me (I didn’t even think of that when working on Lice, I just wrote an AST evaluator).  
+This language supports invoking functions written in C++, like JNI.  
 CovScript mostly features its powerful standard library, which has database, GUI, web access, regular expressions.
