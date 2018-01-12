@@ -43,7 +43,8 @@ namespace cs {
 				throw syntax_error("Target file is not a package.");
 			context->instance->storage.add_var(rt->package_name, var::make_protect<extension_t>(
 			                                       std::make_shared<extension_holder>(rt->instance->storage.get_global())));
-			rt->instance = context->instance;
+			context->refers.push_back(rt);
+			rt->apply_host(context->instance);
 		}
 		else if (std::ifstream(package_path + ".cse"))
 			context->instance->storage.add_var(package_name, var::make_protect<extension_t>(
