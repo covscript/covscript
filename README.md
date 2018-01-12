@@ -47,6 +47,7 @@ Building Covariant Script is the same as Linux. And now Covariant Script has bee
 `cs_repl [arguments..]`  
 #### Arguments ####
 `--args` Specify the operating parameters.  
+`--silent` Does not display the version info.  
 `--wait-before-exit` Wait before process exit.  
 `--log-path PATH` Set the log path.  
 `--import-path PATH` Set the import path.  
