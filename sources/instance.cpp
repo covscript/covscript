@@ -288,24 +288,13 @@ namespace cs {
 					opt_expr(tree, it.right());
 					return;
 					break;
-				case signal_types::sarrow_:
-					it.data() = new token_signal(signal_types::arrow_);
-					opt_expr(tree, it.left());
-					opt_expr(tree, it.right());
-					return;
-					break;
-				case signal_types::sdot_:
-					it.data() = new token_signal(signal_types::dot_);
-					opt_expr(tree, it.left());
-					opt_expr(tree, it.right());
-					return;
-					break;
 				case signal_types::choice_: {
 					token_signal *sig = dynamic_cast<token_signal *>(it.right().data());
 					if (sig == nullptr || sig->get_signal() != signal_types::pair_)
 						throw syntax_error("Wrong grammar for choice expression.");
 					opt_expr(tree, it.left());
-					opt_expr(tree, it.right());
+					opt_expr(tree, it.right().left());
+					opt_expr(tree, it.right().right());
 					token_value *val = dynamic_cast<token_value *>(it.left().data());
 					if (val != nullptr) {
 						if (val->get_value().type() == typeid(boolean)) {
@@ -358,8 +347,9 @@ namespace cs {
 					opt_expr(tree, it.right());
 					token_base *lptr = it.left().data();
 					token_base *rptr = it.right().data();
-					if (lptr != nullptr && lptr->get_type() == token_types::value && rptr != nullptr &&
-					        rptr->get_type() == token_types::arglist) {
+					if (lptr == nullptr || rptr == nullptr || rptr->get_type() != token_types::arglist)
+						throw syntax_error("Wrong syntax for function call.");
+					if (lptr->get_type() == token_types::value) {
 						var &a = static_cast<token_value *>(lptr)->get_value();
 						if (a.type() == typeid(callable) && a.const_val<callable>().is_constant()) {
 							bool is_optimizable = true;

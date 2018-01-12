@@ -31,7 +31,6 @@ namespace cs {
 
 		clear();
 
-		bool expected_dot = false;
 		bool expected_fcall = false;
 		bool expected_lambda = false;
 		for (
@@ -133,7 +132,6 @@ namespace cs {
 						if (!expected_lambda)
 							tokens.push_back(new token_signal(signal_types::fcall_));
 						tokens.push_back(new token_arglist(tlist));
-						expected_dot = true;
 						continue;
 					}
 					else {
@@ -156,7 +154,6 @@ namespace cs {
 					tokens.push_back(new token_signal(signal_types::access_));
 					tokens.push_back(new token_expr(tree));
 					expected_fcall = true;
-					expected_dot = true;
 					continue;
 				}
 
@@ -187,22 +184,6 @@ namespace cs {
 							tokens.push_back(new token_signal(signal_types::lambda_, line_num));
 							expected_lambda = false;
 							expected_fcall = false;
-							expected_dot = false;
-							continue;
-						}
-						else if (expected_dot) {
-							tokens.push_back(new token_signal(signal_types::sarrow_));
-							expected_fcall = false;
-							expected_dot = false;
-							continue;
-						}
-						else
-							break;
-					case signal_types::dot_:
-						if (expected_dot) {
-							tokens.push_back(new token_signal(signal_types::sdot_));
-							expected_fcall = false;
-							expected_dot = false;
 							continue;
 						}
 						else
@@ -229,7 +210,6 @@ namespace cs {
 					}
 					expected_lambda = false;
 					expected_fcall = false;
-					expected_dot = false;
 					break;
 				}
 
