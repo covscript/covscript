@@ -67,7 +67,7 @@ If you hate command line you can use [Covariant Script GUI](https://github.com/c
 ### IntelliJ Plugin ###
 The IntelliJ Plugin is available now:
 + [Source Code](https://github.com/covscript/covscript-intellij)
-+ [Plugin Repository](https://plugins.jetbrains.com/plugin/10326-covscript)!
++ [Plugin Repository](https://plugins.jetbrains.com/plugin/10326-covscript)
 ## Examples ##
 The `examples` folder contains several example programs written by CovScript.
 ## Copyright ##
