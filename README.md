@@ -8,6 +8,14 @@
 - [English](https://github.com/covscript/covscript/blob/master/README.md)
 
 ***Due to academic stress, the author may not be able to fix all the bugs in time. If you have some problems, please raise in the issue, thank you for your understanding.***
+## Comments ##
+Comments by Tesla Ice Zhang(ice1000):
+>This is a programming language created by my friend Michael Lee, using C++ to achieve, the specific introduction in the official website or more detailed, I am here to write only my own opinion.  
+The language itself is one of the species of C (at least expressions and function calls are C-style), while functions, structures, namespace definitions, and so on are Ruby-style endings and have the concept of package import using (that is, a module system) .  
+Michael's Parser is handwritten (can be said that the complexity is high, although Parser is very trivial), so I admire his endurance (with the sophomore, I did not write the mind when Lice, Just made a very flexible AST evaluator only).
+This language supports calling functions implemented in C++ in the form of JNI.  
+CovScript's C-like syntax makes it very enjoyable to write, plus support for lambda can be said to be a real-world programming language (unlike Lice, which is aimed at supporting another language) .  
+The biggest feature should be its full-featured standard library, a database, GUI (a command line graphics library, feel bunker), network programming, regular library, feel convenient to write procedures.  
 ## Language features ##
 1. Complete compiler front end
 2. Compile-time optimization
