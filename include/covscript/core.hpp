@@ -70,6 +70,7 @@ namespace cs {
 		std::deque<string> file_buff;
 		string file_path = "<Unknown>";
 		string package_name;
+		std::deque<context_t> refers;
 
 		context_type() = delete;
 
@@ -78,6 +79,13 @@ namespace cs {
 		context_type(const context_type &) = default;
 
 		~context_type() = default;
+
+		void apply_host(instance_type *host)
+		{
+			instance = host;
+			for (auto &ref:refers)
+				ref->apply_host(host);
+		}
 	};
 
 // Callable and Function
