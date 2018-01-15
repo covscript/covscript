@@ -193,9 +193,7 @@ namespace cs {
 				token_types::expr: {
 				cov::tree<token_base *> &t = static_cast<token_expr *>(it.data())->get_tree();
 				optimize_expression(t);
-				if (optimizable(t.root())) {
-					it.data() = t.root().data();
-				}
+				tree.merge(it, t);
 				return;
 				break;
 			}
@@ -299,10 +297,10 @@ namespace cs {
 					if (val != nullptr) {
 						if (val->get_value().type() == typeid(boolean)) {
 							if (val->get_value().const_val<boolean>())
-								it.data() = new token_expr(it.right().left());
+								tree.reserve_left(it.right());
 							else
-								it.data() = new token_expr(it.right().right());
-							opt_expr(tree, it);
+								tree.reserve_right(it.right());
+							tree.reserve_right(it);
 						}
 						else
 							throw syntax_error("Choice condition must be boolean.");
