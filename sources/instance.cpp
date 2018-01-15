@@ -321,6 +321,12 @@ namespace cs {
 					return;
 					break;
 				}
+				case signal_types::arrow_:
+					if (it.left().data() == nullptr || it.right().data() == nullptr ||
+					        it.right().data()->get_type() != token_types::id)
+						throw syntax_error("Wrong grammar for arrow expression.");
+					return;
+					break;
 				case signal_types::dot_: {
 					opt_expr(tree, it.left());
 					token_base *lptr = it.left().data();
