@@ -1,4 +1,4 @@
-var a={10:3.14,"Hello":10,2:6.28}
+var a={10:3.14,"Hello":10,2:6.28}.to_hash_map()
 a["Hello"]=1
 a.insert("World",20)
 a.at("World")=2

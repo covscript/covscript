@@ -138,6 +138,20 @@ namespace array_cs_ext {
 	}
 
 // Operations
+	var to_hash_map(const array &arr)
+	{
+		hash_map map;
+		for (auto &it:arr) {
+			if (it.type() == typeid(pair)) {
+				const pair &p = it.const_val<pair>();
+				map[p.first] = copy(p.second);
+			}
+			else
+				throw lang_error("Wrong syntax for hash map.");
+		}
+		return var::make<hash_map>(std::move(map));
+	}
+
 	var to_list(const array &arr)
 	{
 		var lst = var::make<list>(arr.begin(), arr.end());
@@ -165,6 +179,7 @@ namespace array_cs_ext {
 		array_ext.add_var("pop_front", var::make_protect<callable>(cni(pop_front), true));
 		array_ext.add_var("push_back", var::make_protect<callable>(cni(push_back), true));
 		array_ext.add_var("pop_back", var::make_protect<callable>(cni(pop_back), true));
+		array_ext.add_var("to_hash_map", var::make_protect<callable>(cni(to_hash_map), true));
 		array_ext.add_var("to_list", var::make_protect<callable>(cni(to_list), true));
 	}
 }
