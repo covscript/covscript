@@ -394,28 +394,9 @@ namespace cs {
 			break;
 		case token_types::array: {
 			array arr;
-			bool is_map = true;
-			for (auto &tree:static_cast<token_array *>(token)->get_array()) {
-				const var &val = parse_expr(tree.root());
-				if (is_map && val.type() != typeid(pair))
-					is_map = false;
-				arr.push_back(copy(val));
-			}
-			if (arr.empty())
-				is_map = false;
-			if (is_map) {
-				hash_map map;
-				for (auto &it:arr) {
-					pair &p = it.val<pair>(true);
-					if (map.count(p.first) == 0)
-						map.emplace(p.first, p.second);
-					else
-						map[p.first] = p.second;
-				}
-				return var::make<hash_map>(std::move(map));
-			}
-			else
-				return var::make<array>(std::move(arr));
+			for (auto &tree:static_cast<token_array *>(token)->get_array())
+				arr.push_back(copy(parse_expr(tree.root())));
+			return var::make<array>(std::move(arr));
 		}
 		case token_types::signal: {
 			switch (static_cast<token_signal *>(token)->get_signal()) {

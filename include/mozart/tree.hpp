@@ -216,8 +216,10 @@ namespace cov {
 
 		tree &operator=(const tree &t)
 		{
-			destroy(this->mRoot);
-			this->mRoot = copy(t.mRoot);
+			if (&t != this) {
+				destroy(this->mRoot);
+				this->mRoot = copy(t.mRoot);
+			}
 			return *this;
 		}
 
@@ -229,8 +231,10 @@ namespace cov {
 
 		void assign(const tree &t)
 		{
-			destroy(this->mRoot);
-			this->mRoot = copy(t.mRoot);
+			if (&t != this) {
+				destroy(this->mRoot);
+				this->mRoot = copy(t.mRoot);
+			}
 		}
 
 		bool empty() const noexcept
@@ -272,6 +276,7 @@ namespace cov {
 				it.mData->root->left = node;
 			else
 				it.mData->root->right = node;
+			it.mData.root = node;
 			return node;
 		}
 
@@ -288,6 +293,7 @@ namespace cov {
 				it.mData->root->left = node;
 			else
 				it.mData->root->right = node;
+			it.mData.root = node;
 			return node;
 		}
 
@@ -349,6 +355,7 @@ namespace cov {
 				it.mData->root->left = node;
 			else
 				it.mData->root->right = node;
+			it.mData->root = node;
 			return node;
 		}
 
@@ -366,6 +373,7 @@ namespace cov {
 				it.mData->root->left = node;
 			else
 				it.mData->root->right = node;
+			it.mData->root = node;
 			return node;
 		}
 
@@ -499,8 +507,8 @@ namespace cov {
 		{
 			if (!it.usable())
 				throw cov::error("E000E");
-			tree_node *subroot = copy(tree.mRoot);
 			tree_node *root = it.mData->root;
+			tree_node *subroot = copy(tree.mRoot, root);
 			if (root != nullptr) {
 				if (it.mData == root->left)
 					root->left = subroot;

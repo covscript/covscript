@@ -133,8 +133,9 @@ namespace cs {
 
 		function(const function &) = default;
 
-		function(context_t c, const std::deque<std::string> &args, const std::deque<statement_base *> &body) : mContext(
-			    c), mArgs(args), mBody(body) {}
+		function(context_t c, const std::deque<std::string> &args, const std::deque<statement_base *> &body)
+			: mContext(
+			      c), mArgs(args), mBody(body) {}
 
 		~function() = default;
 
@@ -207,7 +208,7 @@ namespace cs {
 			       name), m_data(data) {}
 
 		structure(const structure &s) : m_hash(s.m_hash), m_name(s.m_name),
-			m_data(std::make_shared<spp::sparse_hash_map<string, var>>(*s.m_data))
+			m_data(std::make_shared<spp::sparse_hash_map<string, var >>(*s.m_data))
 		{
 			for (auto &it:*m_data)
 				it.second.clone();
@@ -314,7 +315,7 @@ namespace cs {
 	class name_space final {
 		domain_t m_data;
 	public:
-		name_space() : m_data(std::make_shared<spp::sparse_hash_map<string, var>>()) {}
+		name_space() : m_data(std::make_shared<spp::sparse_hash_map<string, var >>()) {}
 
 		name_space(const name_space &) = delete;
 

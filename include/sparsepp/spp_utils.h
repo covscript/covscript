@@ -107,7 +107,9 @@
 #define SPP_NO_CXX11_NOEXCEPT
 #endif
 #else
+
 #include <functional>
+
 #define SPP_HASH_CLASS  std::hash
 #endif
 

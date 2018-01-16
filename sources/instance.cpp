@@ -209,30 +209,9 @@ namespace cs {
 				}
 				if (is_optimizable) {
 					array arr;
-					bool is_map = true;
-					token_value *t = nullptr;
-					for (auto &tree:static_cast<token_array *>(token)->get_array()) {
-						const var &val = parse_expr(tree.root());
-						if (is_map && val.type() != typeid(pair))
-							is_map = false;
-						arr.push_back((new_value(copy(val)))->get_value());
-					}
-					if (arr.empty())
-						is_map = false;
-					if (is_map) {
-						hash_map map;
-						for (auto &it:arr) {
-							pair &p = it.val<pair>(true);
-							if (map.count(p.first) == 0)
-								map.emplace(p.first, p.second);
-							else
-								map[p.first] = p.second;
-						}
-						t = new_value(var::make<hash_map>(std::move(map)));
-					}
-					else
-						t = new_value(var::make<array>(std::move(arr)));
-					it.data() = t;
+					for (auto &tree:static_cast<token_array *>(token)->get_array())
+						arr.push_back((new_value(copy(parse_expr(tree.root()))))->get_value());
+					it.data() = new_value(var::make<array>(std::move(arr)));
 				}
 				return;
 				break;

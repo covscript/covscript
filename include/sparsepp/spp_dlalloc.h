@@ -266,7 +266,9 @@ namespace std {
 #endif
 
 #ifndef SPP_LACKS_SYS_TYPES_H
+
 #include <sys/types.h>  /* For size_t */
+
 #endif
 
 #ifndef SPP_MALLOC_ALIGNMENT
@@ -393,7 +395,9 @@ static size_t align_offset(void *p)
 #pragma warning( disable : 4146 ) /* no "unsigned" warnings */
 #endif
 #ifndef SPP_LACKS_ERRNO_H
+
 #include <errno.h>       /* for SPP_MALLOC_FAILURE_ACTION */
+
 #endif
 
 #ifdef SPP_DEBUG
@@ -411,7 +415,9 @@ static size_t align_offset(void *p)
 #endif
 
 #if !defined(WIN32) && !defined(SPP_LACKS_TIME_H)
+
 #include <time.h>        /* for magic initialization */
+
 #endif
 
 #ifndef SPP_LACKS_STDLIB_H
@@ -421,7 +427,9 @@ static size_t align_offset(void *p)
 #endif
 
 #ifndef SPP_LACKS_STRING_H
+
 #include <string.h>      /* for memset etc */
+
 #endif
 
 #if SPP_USE_BUILTIN_FFS
@@ -438,7 +446,9 @@ static size_t align_offset(void *p)
 #include <sys/mman.h>    /* for mmap */
 #undef __USE_GNU
 #else
+
 #include <sys/mman.h>    /* for mmap */
+
 #endif
 #endif
 #ifndef SPP_LACKS_FCNTL_H
@@ -449,7 +459,9 @@ static size_t align_offset(void *p)
 #endif
 
 #ifndef SPP_LACKS_UNISTD_H
+
 #include <unistd.h>     /* for sbrk, sysconf */
+
 #else
 #if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__NetBSD__)
 
@@ -495,7 +507,9 @@ namespace spp {
 #define malloc_getpagesize getpagesize()
 #else
 #ifndef SPP_LACKS_SYS_PARAM_H
+
 #include <sys/param.h>
+
 #endif
 #ifdef EXEC_PAGESIZE
 #define malloc_getpagesize EXEC_PAGESIZE
@@ -562,6 +576,7 @@ namespace spp {
 			dev_zero_fd = open("/dev/zero", O_RDWR);
 		mmap(0, s, SPP_MMAP_PROT, SPP_MMAP_FLAGS, dev_zero_fd, 0);
 	}
+
 #endif /* MAP_ANONYMOUS */
 
 #define SPP_DIRECT_MMAP_DEFAULT(s) SPP_MMAP_DEFAULT(s)
@@ -1346,10 +1361,12 @@ namespace spp {
 		}
 
 #else
+
 		static bool rtcheck(bool e)
 		{
 			return e;
 		}
+
 #endif
 #else
 		static bool ok_address(void *)
@@ -1530,7 +1547,7 @@ namespace spp {
 			return (bindex_t)((K << 1) + ((S >> (K + (TREEBIN_SHIFT - 1)) & 1)));
 		}
 
-#elif defined(_MSC_VER) && _MSC_VER>=1300
+#elif defined(_MSC_VER) && _MSC_VER >= 1300
 		SPP_FORCEINLINE static bindex_t compute_tree_index(size_t S)
 		{
 			size_t X = S >> TREEBIN_SHIFT;
@@ -1545,6 +1562,7 @@ namespace spp {
 		}
 
 #else // GNUC
+
 		SPP_FORCEINLINE static bindex_t compute_tree_index(size_t S)
 		{
 			size_t X = S >> TREEBIN_SHIFT;
@@ -1553,7 +1571,7 @@ namespace spp {
 			else if (X > 0xFFFF)
 				return NTREEBINS - 1;
 
-			unsigned int Y = (unsigned int)X;
+			unsigned int Y = (unsigned int) X;
 			unsigned int N = ((Y - 0x100) >> 16) & 8;
 			unsigned int K = (((Y <<= N) - 0x1000) >> 16) & 4;
 			N += K;
@@ -1561,6 +1579,7 @@ namespace spp {
 			K = 14 - N + ((Y <<= K) >> 15);
 			return (K << 1) + ((S >> (K + (TREEBIN_SHIFT - 1)) & 1));
 		}
+
 #endif
 
 		// Shift placing maximum resolved bit in a treebin at i as sign bit
@@ -1608,7 +1627,7 @@ namespace spp {
 			return (bindex_t)J;
 		}
 
-#elif defined(_MSC_VER) && _MSC_VER>=1300
+#elif defined(_MSC_VER) && _MSC_VER >= 1300
 		static bindex_t compute_bit2idx(binmap_t X)
 		{
 			unsigned int J;
@@ -1623,22 +1642,24 @@ namespace spp {
 		}
 
 #else
+
 		static bindex_t compute_bit2idx(binmap_t X)
 		{
 			unsigned int Y = X - 1;
 			unsigned int K = Y >> (16 - 4) & 16;
 			unsigned int N = K;
 			Y >>= K;
-			N += K = Y >> (8 - 3) &  8;
+			N += K = Y >> (8 - 3) & 8;
 			Y >>= K;
-			N += K = Y >> (4 - 2) &  4;
+			N += K = Y >> (4 - 2) & 4;
 			Y >>= K;
-			N += K = Y >> (2 - 1) &  2;
+			N += K = Y >> (2 - 1) & 2;
 			Y >>= K;
-			N += K = Y >> (1 - 0) &  1;
+			N += K = Y >> (1 - 0) & 1;
 			Y >>= K;
 			return (bindex_t)(N + Y);
 		}
+
 #endif
 
 		/* ------------------------ Set up inuse chunks with or without footers ---*/
@@ -1911,7 +1932,7 @@ namespace spp {
 #elif defined(SPP_LACKS_TIME_H)
 					magic = (size_t)&magic ^ (size_t)0x55555555U;
 #else
-					magic = (size_t)(time(0) ^ (size_t)0x55555555U);
+					magic = (size_t)(time(0) ^ (size_t) 0x55555555U);
 #endif
 				}
 				magic |= (size_t) 8U;    // ensure nonzero
