@@ -126,7 +126,7 @@ namespace cs {
 			if (!args.empty())
 				throw syntax_error("Wrong size of the arguments.Expected 0");
 			mFunc();
-			return var::make<number>(0);
+			return null_pointer;
 		}
 	};
 
@@ -170,7 +170,7 @@ namespace cs {
 		{
 			arglist::check<ArgsT...>(args);
 			_call(args, cov::make_sequence<cov::type_list::get_size<args_t>::result>::result);
-			return var::make<number>(0);
+			return null_pointer;
 		}
 	};
 
@@ -284,7 +284,7 @@ namespace cs {
 			catch (...) {
 				exception_handler::std_eh_callback(fatal_error("CNI:Unrecognized exception."));
 			}
-			return var::make<number>(0);
+			return null_pointer;
 		}
 	};
 

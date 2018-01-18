@@ -381,7 +381,7 @@ namespace cs {
 	statement_base *method_return_no_value::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> tree;
-		tree.emplace_root_left(tree.root(), context->instance->new_value(number(0)));
+		tree.emplace_root_left(tree.root(), new token_value(null_pointer));
 		return new statement_return(tree, context, raw.front().back());
 	}
 

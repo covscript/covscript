@@ -444,7 +444,7 @@ namespace cs {
 
 		fcall_guard(context_t c) : context(c)
 		{
-			context->instance->fcall_stack.push(number(0));
+			context->instance->fcall_stack.push(null_pointer);
 		}
 
 		~fcall_guard()
