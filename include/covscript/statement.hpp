@@ -37,6 +37,8 @@ namespace cs {
 		}
 
 		virtual void run() override;
+
+		virtual void repl_run() override;
 	};
 
 	class statement_involve final : public statement_base {

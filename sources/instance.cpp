@@ -556,7 +556,7 @@ namespace cs {
 						--level;
 					}
 					if (level == 0) {
-						method->translate(tmp)->run();;
+						method->translate(tmp)->repl_run();
 						tmp.clear();
 						method = nullptr;
 					}
@@ -564,7 +564,7 @@ namespace cs {
 						tmp.push_back(line);
 				}
 				else
-					m->translate({line})->run();
+					m->translate({line})->repl_run();
 			}
 			break;
 			case method_types::block: {
