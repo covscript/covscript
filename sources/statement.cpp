@@ -19,6 +19,7 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/statement.hpp>
+#include <iostream>
 
 namespace cs {
 	var function::call(vector &args) const
@@ -74,6 +75,18 @@ namespace cs {
 	void statement_expression::run()
 	{
 		context->instance->parse_expr(mTree.root());
+	}
+
+	void statement_expression::repl_run()
+	{
+		const var &result=context->instance->parse_expr(mTree.root());
+		try {
+			std::cout<<result.to_string()<<std::endl;
+		}
+		catch(cov::error& e) {
+			if(std::strcmp(e.what(),"E000D")!=1)
+				throw e;
+		}
 	}
 
 	void statement_involve::run()

@@ -438,6 +438,11 @@ namespace cs {
 		virtual statement_types get_type() const noexcept=0;
 
 		virtual void run()=0;
+
+		virtual void repl_run()
+		{
+			this->run();
+		}
 	};
 
 	class method_base {
