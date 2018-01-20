@@ -6,6 +6,7 @@ cd "$SELF_DIR"
 
 PREFIX="/usr"
 CXXFLAGS="-std=c++11 -I ../include -fPIE -s -O3 -ldl"
+LDFLAGS="-ldl"
 CXX=g++
 CP=cp
 
@@ -20,8 +21,10 @@ done
 mkdir -p build
 cd build
 mkdir -p bin
-$CXX $CXXFLAGS -DCONFIG_CS_HOME="\"$PREFIX/share/covscript\"" ../sources/standalone.cpp -o ./bin/cs &
-$CXX $CXXFLAGS -DCONFIG_CS_HOME="\"$PREFIX/share/covscript\"" ../sources/repl.cpp -o ./bin/cs_repl &
+$CXX $CXXFLAGS -DCONFIG_CS_HOME="\"$PREFIX/share/covscript\"" \
+    ../sources/standalone.cpp $LDFLAGS -o ./bin/cs &
+$CXX $CXXFLAGS -DCONFIG_CS_HOME="\"$PREFIX/share/covscript\"" \
+    ../sources/repl.cpp $LDFLAGS -o ./bin/cs_repl &
 wait
 
 mkdir -p ./$PREFIX/{bin,share}
