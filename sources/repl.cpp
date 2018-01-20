@@ -21,7 +21,6 @@
 */
 #include "covscript.cpp"
 
-const char *const env_name = "CS_IMPORT_PATH";
 std::string log_path;
 bool wait_before_exit = false;
 bool silent = false;
@@ -60,9 +59,7 @@ int covscript_args(int args_size, const char *args[])
 
 void covscript_main(int args_size, const char *args[])
 {
-	const char *import_path = nullptr;
-	if ((import_path = std::getenv(env_name)) != nullptr)
-		cs::import_path = process_path(import_path);
+	cs::import_path = get_default_import_path();
 	int index = covscript_args(args_size, args);
 	if (!silent)
 		std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: " << cs::version << "\n"

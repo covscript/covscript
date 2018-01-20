@@ -45,3 +45,7 @@
 cmake-build-debug/
 build/
 build_x64/
+
+# macOS Files
+.DS_Store
+
