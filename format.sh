@@ -1,4 +1,5 @@
-#/bin/sh
+#!/usr/bin/env bash
+
 rm ./include/*.gch
 rm ./include/*/*.gch
 astyle ./include/*.*

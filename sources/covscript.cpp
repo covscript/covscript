@@ -19,6 +19,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://covariant.cn/cs
 */
+#include <covscript/config.hpp>
 #include <covscript/instance.hpp>
 #include <covscript/console/conio.hpp>
 #include <covscript/extensions/iostream.hpp>
@@ -139,3 +140,15 @@ std::string process_path(const std::string &raw)
 	else
 		return raw;
 }
+
+std::string get_default_import_path() {
+	static const char *const env_name = "CS_IMPORT_PATH";
+	const char *import_path = nullptr;
+
+    if ((import_path = std::getenv(env_name)) != nullptr
+        || (import_path = CONFIG_CS_IMPORT_PATH) != nullptr) {
+			return process_path(import_path);
+	}
+	return ".";
+}
+
