@@ -59,7 +59,7 @@ int covscript_args(int args_size, const char *args[])
 
 void covscript_main(int args_size, const char *args[])
 {
-	cs::import_path = get_default_import_path();
+	cs::import_path = get_import_path();
 	int index = covscript_args(args_size, args);
 	if (!silent)
 		std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: " << cs::version << "\n"
@@ -75,7 +75,7 @@ void covscript_main(int args_size, const char *args[])
 	cs::repl repl(instance.context);
 	std::string line;
 	while (std::cin) {
-		if(!silent)
+		if (!silent)
 			std::cout << std::string(repl.get_level() * 2, '.') << ">" << std::flush;
 		std::getline(std::cin, line);
 		repl.exec(line);
