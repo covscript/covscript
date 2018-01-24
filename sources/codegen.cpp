@@ -35,7 +35,8 @@ namespace cs {
 		const std::string &package_name = dynamic_cast<token_id *>(token)->get_id();
 		std::string package_path = std::string(import_path) + "/" + package_name;
 		if (std::ifstream(package_path + ".csp")) {
-			instance_type instance;
+			context->refers.emplace_back();
+			instance_type &instance = context->refers.back();
 			instance.compile(package_path + ".csp");
 			instance.interpret();
 			context_t rt = instance.context;
@@ -43,8 +44,6 @@ namespace cs {
 				throw syntax_error("Target file is not a package.");
 			context->instance->storage.add_var(rt->package_name, var::make_protect<extension_t>(
 			                                       std::make_shared<extension_holder>(rt->instance->storage.get_global())));
-			context->refers.push_back(rt);
-			rt->apply_host(context->instance);
 		}
 		else if (std::ifstream(package_path + ".cse"))
 			context->instance->storage.add_var(package_name, var::make_protect<extension_t>(
@@ -58,11 +57,7 @@ namespace cs {
 	{
 		if (!context->package_name.empty())
 			throw syntax_error("Redefinition of package");
-		context->package_name = dynamic_cast<token_id *>(dynamic_cast<token_expr *>(raw.front().at(
-		                            1))->get_tree().root().data())->get_id();
-		context->instance->storage.add_record(context->package_name);
-		context->instance->storage.add_var_global(context->package_name, var::make_protect<extension_t>(
-		            std::make_shared<extension_holder>(context->instance->storage.get_global())));
+		context->package_name = dynamic_cast<token_id *>(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data())->get_id();
 		return nullptr;
 	}
 
