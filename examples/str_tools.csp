@@ -20,7 +20,7 @@ function ston(str)
 		for i=1 to str.size()-1
 			tmp.append(str[i])
 		end
-		return -str_tools.ston(tmp)
+		return -ston(tmp)
 	end
 	var ipart=new string
 	var fpart=new string
@@ -42,12 +42,12 @@ function ston(str)
 		end
 	end
 	var result=0
-	ipart=str_tools.reverse_str(ipart)
+	ipart=reverse_str(ipart)
 	for i=0 to ipart.size()-1
-		result=result+str_tools.cton(ipart[i])*10^i
+		result=result+cton(ipart[i])*10^i
 	end
 	for i=0 to fpart.size()-1
-		result=result+str_tools.cton(fpart[i])*10^(-i-1)
+		result=result+cton(fpart[i])*10^(-i-1)
 	end
 	return result
 end
