@@ -57,7 +57,8 @@ namespace cs {
 	{
 		if (!context->package_name.empty())
 			throw syntax_error("Redefinition of package");
-		context->package_name = dynamic_cast<token_id *>(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data())->get_id();
+		context->package_name = dynamic_cast<token_id *>(dynamic_cast<token_expr *>(raw.front().at(
+		                            1))->get_tree().root().data())->get_id();
 		return nullptr;
 	}
 
