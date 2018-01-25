@@ -351,7 +351,7 @@ namespace cs {
 		if (t.root().right().data()->get_type() != token_types::arglist)
 			throw syntax_error("Wrong grammar for function definition.");
 		std::string name = dynamic_cast<token_id *>(t.root().left().data())->get_id();
-		std::deque<std::string> args;
+		std::vector<std::string> args;
 		for (auto &it:dynamic_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
 			if (it.root().data() == nullptr)
 				throw internal_error("Null pointer accessed.");
@@ -397,14 +397,25 @@ namespace cs {
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
 		for (auto &ptr:body) {
-			switch (ptr->get_type()) {
-			default:
-				throw syntax_error("Wrong grammar for struct definition.");
-			case statement_types::var_:
-				break;
-			case statement_types::function_:
-				static_cast<statement_function *>(ptr)->set_mem_fn();
-				break;
+			try {
+				switch (ptr->get_type()) {
+				default:
+					throw syntax_error("Wrong grammar for struct definition.");
+				case statement_types::var_:
+					break;
+				case statement_types::function_:
+					static_cast<statement_function *>(ptr)->set_mem_fn();
+					break;
+				}
+			}
+			catch (const lang_error &le) {
+				throw le;
+			}
+			catch (const cs::exception &e) {
+				throw e;
+			}
+			catch (const std::exception &e) {
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 			}
 		}
 		return new statement_struct(name, body, context, raw.front().back());
