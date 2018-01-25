@@ -143,13 +143,13 @@ namespace cs {
 		{
 			std::vector<std::string> args{"this"};
 			args.reserve(mArgs.size());
-			for(auto& name:mArgs) {
-				if(name!="this")
+			for (auto &name:mArgs) {
+				if (name != "this")
 					args.push_back(name);
 				else
 					throw syntax_error("Overwrite the default argument \"this\".");
 			}
-			std::swap(mArgs,args);
+			std::swap(mArgs, args);
 		}
 	};
 
