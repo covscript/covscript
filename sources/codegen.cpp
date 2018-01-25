@@ -180,22 +180,31 @@ namespace cs {
 		statement_block *dptr = nullptr;
 		spp::sparse_hash_map<var, statement_block *> cases;
 		for (auto &it:body) {
-			if (it == nullptr)
-				throw internal_error("Access Null Pointer.");
-			else if (it->get_type() == statement_types::case_) {
-				statement_case *scptr = dynamic_cast<statement_case *>(it);
-				if (cases.count(scptr->get_tag()) > 0)
-					throw syntax_error("Redefinition of case.");
-				cases.emplace(scptr->get_tag(), scptr->get_block());
+			try {
+				if (it->get_type() == statement_types::case_) {
+					statement_case *scptr = dynamic_cast<statement_case *>(it);
+					if (cases.count(scptr->get_tag()) > 0)
+						throw syntax_error("Redefinition of case.");
+					cases.emplace(scptr->get_tag(), scptr->get_block());
+				}
+				else if (it->get_type() == statement_types::default_) {
+					statement_default *sdptr = dynamic_cast<statement_default *>(it);
+					if (dptr != nullptr)
+						throw syntax_error("Redefinition of default case.");
+					dptr = sdptr->get_block();
+				}
+				else
+					throw syntax_error("Wrong format of switch statement.");
 			}
-			else if (it->get_type() == statement_types::default_) {
-				statement_default *sdptr = dynamic_cast<statement_default *>(it);
-				if (dptr != nullptr)
-					throw syntax_error("Redefinition of default case.");
-				dptr = sdptr->get_block();
+			catch (const lang_error &le) {
+				throw le;
 			}
-			else
-				throw syntax_error("Wrong format of switch statement.");
+			catch (const cs::exception &e) {
+				throw e;
+			}
+			catch (const std::exception &e) {
+				throw exception(it->get_line_num(), it->get_file_path(), it->get_raw_code(), e.what());
+			}
 		}
 		return new statement_switch(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), cases, dptr, context,
 		                            raw.front().back());
@@ -204,8 +213,11 @@ namespace cs {
 	statement_base *method_case::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
-		if (tree.root().data()->get_type() != token_types::value)
-			throw syntax_error("Case Tag must be a constant value.");
+		if (tree.root().data()->get_type() != token_types::value) {
+			std::size_t line_num = static_cast<token_endline *>(raw.front().back())->get_line_num();
+			const char *what = "Case Tag must be a constant value.";
+			throw exception(line_num, context->file_path, context->file_buff.at(line_num - 1), what);
+		}
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
 		return new statement_case(dynamic_cast<token_value *>(tree.root().data())->get_value(), body, context,
