@@ -79,12 +79,12 @@ namespace cs {
 
 	void statement_expression::repl_run()
 	{
-		const var &result=context->instance->parse_expr(mTree.root());
+		const var &result = context->instance->parse_expr(mTree.root());
 		try {
-			std::cout<<result.to_string()<<std::endl;
+			std::cout << result.to_string() << std::endl;
 		}
-		catch(cov::error& e) {
-			if(std::strcmp(e.what(),"E000D")!=1)
+		catch (cov::error &e) {
+			if (!std::strcmp(e.what(), "E000D"))
 				throw e;
 		}
 	}

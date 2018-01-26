@@ -19,7 +19,6 @@
 * Github: https://github.com/mikecovlee
 * Website: http://covariant.cn/cs
 */
-#include <covscript/config.hpp>
 #include <covscript/instance.hpp>
 #include <covscript/console/conio.hpp>
 #include <covscript/extensions/iostream.hpp>
@@ -127,6 +126,36 @@ namespace cs {
 	}
 }
 
+#if defined(__WIN32__) || defined(WIN32)
+
+#include <shlobj.h>
+
+#pragma comment(lib, "shell32.lib")
+
+std::string get_sdk_path()
+{
+#ifdef COVSCRIPT_HOME
+	return COVSCRIPT_HOME;
+#else
+	CHAR path[MAX_PATH];
+	HRESULT result = SHGetFolderPathA(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, path);
+	return std::strcat(path, "\\CovScript");
+#endif
+}
+
+constexpr const char *path_separator = "\\";
+#else
+std::string get_sdk_path()
+{
+#ifdef COVSCRIPT_HOME
+	return COVSCRIPT_HOME;
+#else
+	return "/usr/share/covscript";
+#endif
+}
+constexpr const char* path_separator="/";
+#endif
+
 std::string process_path(const std::string &raw)
 {
 	auto pos0 = raw.find('\"');
@@ -141,14 +170,11 @@ std::string process_path(const std::string &raw)
 		return raw;
 }
 
-std::string get_default_import_path() {
-	static const char *const env_name = "CS_IMPORT_PATH";
-	const char *import_path = nullptr;
-
-    if ((import_path = std::getenv(env_name)) != nullptr
-        || (import_path = CONFIG_CS_IMPORT_PATH) != nullptr) {
-			return process_path(import_path);
-	}
-	return ".";
+std::string get_import_path()
+{
+	const char *import_path = std::getenv("CS_IMPORT_PATH");
+	if (import_path != nullptr)
+		return process_path(import_path);
+	else
+		return process_path(get_sdk_path() + path_separator + "imports");
 }
-
