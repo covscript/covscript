@@ -73,12 +73,26 @@ void covscript_main(int args_size, const char *args[])
 	cs::instance_type instance;
 	instance.context->file_path = "<REPL_ENV>";
 	cs::repl repl(instance.context);
+	std::ofstream log_stream;
 	std::string line;
 	while (std::cin) {
 		if (!silent)
 			std::cout << std::string(repl.get_level() * 2, '.') << ">" << std::flush;
 		std::getline(std::cin, line);
-		repl.exec(line);
+		try {
+			repl.exec(line);
+		}
+		catch (const std::exception &e) {
+			if (!log_path.empty()) {
+				if (!log_stream.is_open())
+					log_stream.open(::log_path);
+				if (log_stream)
+					log_stream << e.what() << std::endl;
+				else
+					std::cerr << "Write log failed." << std::endl;
+			}
+			std::cerr << e.what() << std::endl;
+		}
 	}
 }
 
