@@ -56,7 +56,7 @@
 
 namespace cs {
 // Version
-	static const std::string version = "1.2.1(Release)";
+	static const std::string version = "1.2.1(Release2)";
 	static const number std_version = 20180102;
 // Output Precision
 	static int output_precision = 8;
@@ -70,7 +70,7 @@ namespace cs {
 		std::deque<string> file_buff;
 		string file_path = "<Unknown>";
 		string package_name;
-		std::deque<context_t> refers;
+		std::deque<instance_type> refers;
 
 		context_type() = delete;
 
@@ -79,13 +79,6 @@ namespace cs {
 		context_type(const context_type &) = default;
 
 		~context_type() = default;
-
-		void apply_host(instance_type *host)
-		{
-			instance = host;
-			for (auto &ref:refers)
-				ref->apply_host(host);
-		}
 	};
 
 // Callable and Function
@@ -126,14 +119,14 @@ namespace cs {
 
 	class function final {
 		context_t mContext;
-		std::deque<std::string> mArgs;
+		std::vector<std::string> mArgs;
 		std::deque<statement_base *> mBody;
 	public:
 		function() = delete;
 
 		function(const function &) = default;
 
-		function(context_t c, const std::deque<std::string> &args, const std::deque<statement_base *> &body)
+		function(context_t c, const std::vector<std::string> &args, const std::deque<statement_base *> &body)
 			: mContext(
 			      c), mArgs(args), mBody(body) {}
 
@@ -148,7 +141,15 @@ namespace cs {
 
 		void add_this()
 		{
-			mArgs.push_front("this");
+			std::vector<std::string> args{"this"};
+			args.reserve(mArgs.size());
+			for (auto &name:mArgs) {
+				if (name != "this")
+					args.push_back(name);
+				else
+					throw syntax_error("Overwrite the default argument \"this\".");
+			}
+			std::swap(mArgs, args);
 		}
 	};
 

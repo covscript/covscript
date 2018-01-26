@@ -400,7 +400,7 @@ namespace cs {
 					token_base *rptr = it.right().data();
 					if (lptr == nullptr || rptr == nullptr || lptr->get_type() != token_types::arglist)
 						throw syntax_error("Wrong grammar for lambda expression.");
-					std::deque<std::string> args;
+					std::vector<std::string> args;
 					for (auto &it:dynamic_cast<token_arglist *>(lptr)->get_arglist()) {
 						if (it.root().data() == nullptr)
 							throw internal_error("Null pointer accessed.");

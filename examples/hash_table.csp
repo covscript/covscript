@@ -41,7 +41,7 @@ struct type_impl
 	end
 end
 function create(bc)
-	var ht=gcnew hash_table.type_impl
+	var ht=gcnew type_impl
 	ht->bucket_count=bc
 	for i=1 to bc
 		ht->table.push_back(null)

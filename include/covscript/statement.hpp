@@ -389,7 +389,7 @@ namespace cs {
 	public:
 		statement_function() = delete;
 
-		statement_function(const std::string &name, const std::deque<std::string> &args,
+		statement_function(const std::string &name, const std::vector<std::string> &args,
 		                   const std::deque<statement_base *> &body, context_t c, token_base *ptr) : statement_base(c,
 			                           ptr),
 			mName(name),

@@ -59,7 +59,7 @@ int covscript_args(int args_size, const char *args[])
 
 void covscript_main(int args_size, const char *args[])
 {
-	cs::import_path = get_default_import_path();
+	cs::import_path = get_import_path();
 	int index = covscript_args(args_size, args);
 	if (!silent)
 		std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: " << cs::version << "\n"
@@ -73,12 +73,26 @@ void covscript_main(int args_size, const char *args[])
 	cs::instance_type instance;
 	instance.context->file_path = "<REPL_ENV>";
 	cs::repl repl(instance.context);
+	std::ofstream log_stream;
 	std::string line;
 	while (std::cin) {
-		if(!silent)
+		if (!silent)
 			std::cout << std::string(repl.get_level() * 2, '.') << ">" << std::flush;
 		std::getline(std::cin, line);
-		repl.exec(line);
+		try {
+			repl.exec(line);
+		}
+		catch (const std::exception &e) {
+			if (!log_path.empty()) {
+				if (!log_stream.is_open())
+					log_stream.open(::log_path);
+				if (log_stream)
+					log_stream << e.what() << std::endl;
+				else
+					std::cerr << "Write log failed." << std::endl;
+			}
+			std::cerr << e.what() << std::endl;
+		}
 	}
 }
 
