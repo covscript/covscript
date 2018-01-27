@@ -113,7 +113,9 @@ void force_exit(int flag)
 
 void handle_segfault(int flag)
 {
-	std::cerr<<"Your program have some problem about the Segmentation Fault.Please check your program after we terminate this program."<<std::endl;
+	std::cerr
+	        << "Your program have some problem about the Segmentation Fault.Please check your program after we terminate this program."
+	        << std::endl;
 	std::exit(-1);
 }
 
