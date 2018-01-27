@@ -63,32 +63,6 @@ namespace cs {
 // Import Path
 	static std::string import_path = ".";
 
-// Unique Pointer
-	template<typename T>
-	class unique_ptr final {
-		T *raw_ptr = nullptr;
-	public:
-		unique_ptr() = delete;
-
-		unique_ptr(T *ptr) : raw_ptr(ptr)
-		{
-			if (ptr == nullptr)
-				throw fatal_error("Unique pointer can not hold null pointer.");
-		}
-
-		unique_ptr(const unique_ptr &) = delete;
-
-		~unique_ptr()
-		{
-			delete raw_ptr;
-		}
-
-		T &operator*() const
-		{
-			return *raw_ptr;
-		}
-	};
-
 // Context
 	class context_type final {
 	public:
@@ -96,7 +70,7 @@ namespace cs {
 		std::deque<string> file_buff;
 		string file_path = "<Unknown>";
 		string package_name;
-		std::deque<unique_ptr<instance_type>> refers;
+		std::deque<instance_type> refers;
 
 		context_type() = delete;
 
