@@ -124,12 +124,12 @@ namespace cs {
 	public:
 		mapping(std::initializer_list<std::pair<const Key, T>> l) : mDat(l) {}
 
-		bool exsist(const Key &k)
+		bool exsist(const Key &k) const
 		{
 			return mDat.count(k) > 0;
 		}
 
-		T match(const Key &k)
+		const T &match(const Key &k) const
 		{
 			if (!exsist(k))
 				throw syntax_error("Undefined Mapping.");
