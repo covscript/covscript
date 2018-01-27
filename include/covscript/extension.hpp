@@ -21,6 +21,11 @@
 */
 #include <covscript/core.hpp>
 
+namespace cs {
+	class instance_type final {
+	};
+}
+
 cs::extension *cs_extension();
 
 extern "C"
