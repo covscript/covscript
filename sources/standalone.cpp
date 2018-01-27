@@ -20,6 +20,7 @@
 * Website: http://covariant.cn/cs
 */
 #include "covscript.cpp"
+#include <csignal>
 
 std::string log_path;
 bool compile_only = false;
@@ -81,9 +82,35 @@ void covscript_main(int args_size, const char *args[])
 		throw cs::fatal_error("no input file.");
 }
 
+void covscript_exit_handler()
+{
+	if (wait_before_exit) {
+		std::cerr << "\nPress any key to exit..." << std::endl;
+		std::setbuf(stdin, nullptr);
+		cs_impl::conio::getch();
+	}
+}
+
+void force_exit(int flag)
+{
+	std::exit(0);
+}
+
+void handle_segfault(int flag)
+{
+	std::cerr<<"Your program have some problem about the Segmentation Fault.Please check your program after we terminate this program."<<std::endl;
+	std::exit(-1);
+}
+
 int main(int args_size, const char *args[])
 {
 	int errorcode = 0;
+	std::atexit(covscript_exit_handler);
+	std::signal(SIGSEGV, handle_segfault);
+#if not defined(__WIN32__) && not defined(WIN32)
+	std::signal(SIGINT, force_exit);
+	std::signal(SIGABRT, force_exit);
+#endif
 	try {
 		covscript_main(args_size, args);
 	}
@@ -100,11 +127,7 @@ int main(int args_size, const char *args[])
 		std::cerr << e.what() << std::endl;
 		errorcode = -1;
 	}
-	if (wait_before_exit) {
-		std::cerr << "\nProcess finished with exit code " << errorcode << std::endl;
-		std::cerr << "\nPress any key to exit..." << std::endl;
-		while (!cs_impl::conio::kbhit());
-		cs_impl::conio::getch();
-	}
+	if (wait_before_exit)
+		std::cerr << std::string("\nProcess finished with exit code ") + std::to_string(errorcode) << std::endl;
 	return errorcode;
 }
