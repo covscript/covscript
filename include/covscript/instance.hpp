@@ -286,9 +286,9 @@ namespace cs {
 		bool break_block = false;
 		bool continue_block = false;
 		// Refers
-	std::forward_list<instance_type> refers;
+		std::forward_list<instance_type> refers;
 		// Function Stack
-		cov::static_stack<var,fcall_stack_size> fcall_stack;
+		cov::static_stack<var, fcall_stack_size> fcall_stack;
 		// Var definition
 		struct define_var_profile {
 			std::string id;
