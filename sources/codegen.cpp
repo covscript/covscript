@@ -35,8 +35,8 @@ namespace cs {
 		const std::string &package_name = dynamic_cast<token_id *>(token)->get_id();
 		std::string package_path = std::string(import_path) + "/" + package_name;
 		if (std::ifstream(package_path + ".csp")) {
-			context->instance->refers.emplace_back();
-			instance_type &instance = context->instance->refers.back();
+			context->instance->refers.emplace_front();
+			instance_type &instance = context->instance->refers.front();
 			instance.compile(package_path + ".csp");
 			instance.interpret();
 			context_t rt = instance.context;
