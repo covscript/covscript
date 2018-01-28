@@ -70,7 +70,6 @@ namespace cs {
 		std::deque<string> file_buff;
 		string file_path = "<Unknown>";
 		string package_name;
-		std::deque<instance_type> refers;
 
 		context_type() = delete;
 
