@@ -121,7 +121,7 @@ namespace runtime_cs_ext {
 
 	var dynamic_import(const context_t &context, const string &path, const string &name)
 	{
-		return var::make_protect<extension_t>(context->instance->import(path,name));
+		return var::make_protect<extension_t>(context->instance->import(path, name));
 	}
 
 	void init()

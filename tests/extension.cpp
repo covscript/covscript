@@ -1,5 +1,4 @@
 #include <covscript/extension.hpp>
-#include <covscript/cni.hpp>
 #include <iostream>
 
 using namespace cs;
