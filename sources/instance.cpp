@@ -491,23 +491,41 @@ namespace cs {
 
 	extension_t instance_type::import(const std::string &path, const std::string &name)
 	{
-		std::string package_path = std::string(path) + "/" + name;
-		if (std::ifstream(package_path + ".csp")) {
-			refers.emplace_front();
-			instance_type &instance = refers.front();
-			instance.compile(package_path + ".csp");
-			instance.interpret();
-			context_t rt = instance.context;
-			if (rt->package_name.empty())
-				throw syntax_error("Target file is not a package.");
-			if (rt->package_name!=name)
-				throw syntax_error("Package name is different from file name.");
-			return std::make_shared<extension_holder>(rt->instance->storage.get_global());
+		std::vector<std::string> collection;
+		{
+			std::string tmp;
+			for (auto &ch:path) {
+				if (ch == ';') {
+					collection.push_back(tmp);
+					tmp.clear();
+				}
+				else
+					tmp.push_back(ch);
+			}
+			collection.push_back(tmp);
 		}
-		else if (std::ifstream(package_path + ".cse"))
-			return std::make_shared<extension_holder>(package_path + ".cse");
-		else
-			throw fatal_error("No such file or directory.");
+		for (auto &it:collection) {
+#if defined(__WIN32__) || defined(WIN32)
+			std::string package_path = it + "\\" + name;
+#else
+			std::string package_path = it + "/" + name;
+#endif
+			if (std::ifstream(package_path + ".csp")) {
+				refers.emplace_front();
+				instance_type &instance = refers.front();
+				instance.compile(package_path + ".csp");
+				instance.interpret();
+				context_t rt = instance.context;
+				if (rt->package_name.empty())
+					throw syntax_error("Target file is not a package.");
+				if (rt->package_name != name)
+					throw syntax_error("Package name is different from file name.");
+				return std::make_shared<extension_holder>(rt->instance->storage.get_global());
+			}
+			else if (std::ifstream(package_path + ".cse"))
+				return std::make_shared<extension_holder>(package_path + ".cse");
+		}
+		throw fatal_error("No such file or directory.");
 	}
 
 	void instance_type::compile(const std::string &path)
