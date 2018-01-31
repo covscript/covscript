@@ -28,19 +28,6 @@
 #include <covscript/extensions/pair.hpp>
 #include <covscript/extensions/hash_map.hpp>
 
-namespace cs {
-	void init_type_extensions()
-	{
-		except_cs_ext::init();
-		char_cs_ext::init();
-		string_cs_ext::init();
-		list_cs_ext::init();
-		array_cs_ext::init();
-		pair_cs_ext::init();
-		hash_map_cs_ext::init();
-	}
-}
-
 cs::extension *cs_extension();
 
 extern "C"
@@ -49,6 +36,13 @@ extern "C"
 	{
 		cs::exception_handler::cs_eh_callback = ceh;
 		cs::exception_handler::std_eh_callback = seh;
+		except_cs_ext::init();
+		char_cs_ext::init();
+		string_cs_ext::init();
+		list_cs_ext::init();
+		array_cs_ext::init();
+		pair_cs_ext::init();
+		hash_map_cs_ext::init();
 		return cs_extension();
 	}
 }
