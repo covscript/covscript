@@ -121,22 +121,7 @@ namespace runtime_cs_ext {
 
 	var dynamic_import(const context_t &context, const string &path, const string &name)
 	{
-		std::string package_path = path + "/" + name;
-		if (std::ifstream(package_path + ".csp")) {
-			instance_type instance;
-			instance.compile(package_path + ".csp");
-			instance.interpret();
-			context_t rt = instance.context;
-			if (rt->package_name.empty())
-				throw syntax_error("Target file is not a package.");
-			rt->instance = context->instance;
-			return var::make_protect<extension_t>(
-			           std::make_shared<extension_holder>(rt->instance->storage.get_global()));
-		}
-		else if (std::ifstream(package_path + ".cse"))
-			return var::make_protect<extension_t>(std::make_shared<extension_holder>(package_path + ".cse"));
-		else
-			throw fatal_error("No such file or directory.");
+		return var::make_protect<extension_t>(context->instance->import(path,name));
 	}
 
 	void init()
