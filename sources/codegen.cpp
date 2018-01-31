@@ -33,23 +33,7 @@ namespace cs {
 		if (token == nullptr || token->get_type() != token_types::id)
 			throw syntax_error("Wrong grammar for import statement.");
 		const std::string &package_name = dynamic_cast<token_id *>(token)->get_id();
-		std::string package_path = std::string(import_path) + "/" + package_name;
-		if (std::ifstream(package_path + ".csp")) {
-			context->instance->refers.emplace_front();
-			instance_type &instance = context->instance->refers.front();
-			instance.compile(package_path + ".csp");
-			instance.interpret();
-			context_t rt = instance.context;
-			if (rt->package_name.empty())
-				throw syntax_error("Target file is not a package.");
-			context->instance->storage.add_var(rt->package_name, var::make_protect<extension_t>(
-			                                       std::make_shared<extension_holder>(rt->instance->storage.get_global())));
-		}
-		else if (std::ifstream(package_path + ".cse"))
-			context->instance->storage.add_var(package_name, var::make_protect<extension_t>(
-			                                       std::make_shared<extension_holder>(package_path + ".cse")));
-		else
-			throw fatal_error("No such file or directory.");
+		context->instance->storage.add_var(package_name, var::make_protect<extension_t>(context->instance->import(import_path,package_name)));
 		return nullptr;
 	}
 

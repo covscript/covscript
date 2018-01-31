@@ -489,6 +489,27 @@ namespace cs {
 		dvp.expr = right;
 	}
 
+	extension_t instance_type::import(const std::string &path, const std::string &name)
+	{
+		std::string package_path = std::string(path) + "/" + name;
+		if (std::ifstream(package_path + ".csp")) {
+			refers.emplace_front();
+			instance_type &instance = refers.front();
+			instance.compile(package_path + ".csp");
+			instance.interpret();
+			context_t rt = instance.context;
+			if (rt->package_name.empty())
+				throw syntax_error("Target file is not a package.");
+			if (rt->package_name!=name)
+				throw syntax_error("Package name is different from file name.");
+			return std::make_shared<extension_holder>(rt->instance->storage.get_global());
+		}
+		else if (std::ifstream(package_path + ".cse"))
+			return std::make_shared<extension_holder>(package_path + ".cse");
+		else
+			throw fatal_error("No such file or directory.");
+	}
+
 	void instance_type::compile(const std::string &path)
 	{
 		context->file_path = path;
