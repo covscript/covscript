@@ -20,6 +20,26 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/core.hpp>
+#include <covscript/extensions/exception.hpp>
+#include <covscript/extensions/char.hpp>
+#include <covscript/extensions/string.hpp>
+#include <covscript/extensions/list.hpp>
+#include <covscript/extensions/array.hpp>
+#include <covscript/extensions/pair.hpp>
+#include <covscript/extensions/hash_map.hpp>
+
+namespace cs {
+	void init_type_extensions()
+	{
+		except_cs_ext::init();
+		char_cs_ext::init();
+		string_cs_ext::init();
+		list_cs_ext::init();
+		array_cs_ext::init();
+		pair_cs_ext::init();
+		hash_map_cs_ext::init();
+	}
+}
 
 cs::extension *cs_extension();
 
