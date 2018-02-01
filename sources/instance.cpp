@@ -505,11 +505,7 @@ namespace cs {
 			collection.push_back(tmp);
 		}
 		for (auto &it:collection) {
-#if defined(__WIN32__) || defined(WIN32)
-			std::string package_path = it + "\\" + name;
-#else
-			std::string package_path = it + "/" + name;
-#endif
+			std::string package_path = it + path_separator + name;
 			if (std::ifstream(package_path + ".csp")) {
 				refers.emplace_front();
 				instance_type &instance = refers.front();
