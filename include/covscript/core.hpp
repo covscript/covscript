@@ -62,6 +62,14 @@ namespace cs {
 	static int output_precision = 8;
 // Import Path
 	static std::string import_path = ".";
+// Path seperator and delimiter
+#if defined(__WIN32__) || defined(WIN32)
+	constexpr char path_separator = '\\';
+	constexpr char path_delimiter = ';';
+#else
+	constexpr char path_separator = '/';
+	constexpr char path_delimiter = ':';
+#endif
 
 // Context
 	class context_type final {

@@ -143,7 +143,6 @@ std::string get_sdk_path()
 #endif
 }
 
-constexpr const char *path_separator = "\\";
 #else
 std::string get_sdk_path()
 {
@@ -153,7 +152,6 @@ std::string get_sdk_path()
 	return "/usr/share/covscript";
 #endif
 }
-constexpr const char* path_separator="/";
 #endif
 
 std::string process_path(const std::string &raw)
@@ -176,5 +174,5 @@ std::string get_import_path()
 	if (import_path != nullptr)
 		return process_path(import_path);
 	else
-		return process_path(get_sdk_path() + path_separator + "imports");
+		return process_path(get_sdk_path() + cs::path_separator + "imports");
 }

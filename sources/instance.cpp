@@ -495,7 +495,7 @@ namespace cs {
 		{
 			std::string tmp;
 			for (auto &ch:path) {
-				if (ch == ';') {
+				if (ch == cs::path_delimiter) {
 					collection.push_back(tmp);
 					tmp.clear();
 				}
