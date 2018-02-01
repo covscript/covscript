@@ -106,6 +106,8 @@ namespace system_cs_ext {
 		system_ext.add_var("console", var::make_protect<extension_t>(console_ext_shared));
 		system_ext.add_var("max", var::make_constant<number>(std::numeric_limits<number>::max()));
 		system_ext.add_var("inf", var::make_constant<number>(std::numeric_limits<number>::infinity()));
+		system_ext.add_var("path_separator", var::make_constant<char>(path_separator));
+		system_ext.add_var("path_delimiter", var::make_constant<char>(path_delimiter));
 		system_ext.add_var("in", var::make_protect<istream>(&std::cin, [](std::istream *) {}));
 		system_ext.add_var("out", var::make_protect<ostream>(&std::cout, [](std::ostream *) {}));
 		system_ext.add_var("run", var::make_protect<callable>(cni(run)));

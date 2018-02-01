@@ -36,7 +36,7 @@ int covscript_args(int args_size, const char *args[])
 			expect_log_path = 2;
 		}
 		else if (expect_import_path == 1) {
-			cs::import_path += ";" + process_path(args[index]);
+			cs::import_path += cs::path_delimiter + process_path(args[index]);
 			expect_import_path = 2;
 		}
 		else if (std::strcmp(args[index], "--args") == 0)
@@ -60,7 +60,7 @@ int covscript_args(int args_size, const char *args[])
 void covscript_main(int args_size, const char *args[])
 {
 	int index = covscript_args(args_size, args);
-	cs::import_path += ";" + get_import_path();
+	cs::import_path += cs::path_delimiter + get_import_path();
 	if (!silent)
 		std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: " << cs::version << "\n"
 		          "Copyright (C) 2018 Michael Lee.All rights reserved.\n"
