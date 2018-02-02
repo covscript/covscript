@@ -15,7 +15,10 @@ namespace cov {
 
 		dll(const dll &) = delete;
 
-		dll(const std::string &path) : m_handle(::LoadLibrary(path.c_str())) {}
+		dll(const std::string &path)
+		{
+			open(path);
+		}
 
 		~dll()
 		{
@@ -33,6 +36,11 @@ namespace cov {
 			if (m_handle != nullptr)
 				::FreeLibrary(m_handle);
 			m_handle = ::LoadLibrary(path.c_str());
+			if (m_handle == nullptr) {
+				static char msgbuf[512];
+				::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, ::GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&msgbuf, 512, nullptr);
+				throw std::logic_error(msgbuf);
+			}
 		}
 
 		void close()
@@ -62,7 +70,10 @@ namespace cov {
 
 		dll(const dll &) = delete;
 
-		dll(const std::string &path) : m_handle(::dlopen(path.c_str(), RTLD_LAZY)) {}
+		dll(const std::string &path)
+		{
+			open(path);
+		}
 
 		~dll()
 		{
@@ -79,7 +90,9 @@ namespace cov {
 		{
 			if (m_handle != nullptr)
 				::dlclose(m_handle);
-			m_handle = ::dlopen(path.c_str(), RTLD_LAZY);
+			m_handle = ::dlopen(path.c_str(), RTLD_NOW);
+			if (m_handle == nullptr)
+				throw std::logic_error(::dlerror());
 		}
 
 		void close()
