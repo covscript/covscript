@@ -37,9 +37,10 @@ namespace cov {
 				::FreeLibrary(m_handle);
 			m_handle = ::LoadLibrary(path.c_str());
 			if (m_handle == nullptr) {
-				static char msgbuf[512];
-				::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, ::GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&msgbuf, 512, nullptr);
-				throw std::logic_error(msgbuf);
+				static char szBuf[128];
+				const char *args[] = {path.c_str()};
+				::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ARGUMENT_ARRAY, nullptr, ::GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&szBuf, 128, (va_list *)args);
+				throw std::logic_error(szBuf);
 			}
 		}
 
