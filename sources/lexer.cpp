@@ -112,12 +112,12 @@ namespace cs {
 					continue;
 				}
 				type = token_types::null;
-				if (action_map.exsist(tmp)) {
+				if (action_map.exist(tmp)) {
 					tokens.push_back(new token_action(action_map.match(tmp)));
 					tmp.clear();
 					break;
 				}
-				if (reserved_map.exsist(tmp)) {
+				if (reserved_map.exist(tmp)) {
 					tokens.push_back(reserved_map.match(tmp)());
 					tmp.clear();
 					break;
@@ -128,12 +128,12 @@ namespace cs {
 			case token_types::signal:
 				if (issignal(buff[i])) {
 					if (tmp.size() == 1) {
-						if (signal_map.exsist(tmp + buff[i])) {
+						if (signal_map.exist(tmp + buff[i])) {
 							tokens.push_back(new token_signal(signal_map.match(tmp + buff[i])));
 							tmp.clear();
 						}
 						else {
-							if (signal_map.exsist(tmp)) {
+							if (signal_map.exist(tmp)) {
 								tokens.push_back(new token_signal(signal_map.match(tmp)));
 								tmp.clear();
 							}
@@ -172,11 +172,11 @@ namespace cs {
 		default:
 			break;
 		case token_types::id:
-			if (action_map.exsist(tmp)) {
+			if (action_map.exist(tmp)) {
 				tokens.push_back(new token_action(action_map.match(tmp)));
 				break;
 			}
-			if (reserved_map.exsist(tmp)) {
+			if (reserved_map.exist(tmp)) {
 				tokens.push_back(reserved_map.match(tmp)());
 				tmp.clear();
 				break;

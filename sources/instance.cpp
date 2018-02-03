@@ -169,12 +169,12 @@ namespace cs {
 
 				token_types::id: {
 				const std::string &id = static_cast<token_id *>(token)->get_id();
-				if (storage.exsist_record(id)) {
-					if (storage.var_exsist_current(id) && storage.get_var_current(id).is_protect())
+				if (storage.exist_record(id)) {
+					if (storage.var_exist_current(id) && storage.get_var_current(id).is_protect())
 						it.data() = new_value(storage.get_var(id));
 				}
-				else if (storage.exsist_record_in_struct(id)) {
-					if (storage.var_exsist(id) && storage.get_var(id).is_protect())
+				else if (storage.exist_record_in_struct(id)) {
+					if (storage.var_exist(id) && storage.get_var(id).is_protect())
 						it.data() = new_value(storage.get_var(id));
 					else {
 						it.data() = new token_signal(signal_types::dot_);
@@ -182,7 +182,7 @@ namespace cs {
 						tree.emplace_right_right(it, token);
 					}
 				}
-				else if (storage.var_exsist(id) && storage.get_var(id).is_protect())
+				else if (storage.var_exist(id) && storage.get_var(id).is_protect())
 					it.data() = new_value(storage.get_var(id));
 				return;
 				break;

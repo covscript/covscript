@@ -60,7 +60,7 @@ function about()
 		darwin.update_drawable()
 	end
 end
-function open_exsist()
+function open_exist()
 	var pic=darwin.get_drawable()
 	var str0="Please enter a file path"
 	var buff=new string
@@ -279,7 +279,7 @@ function start()
 							run=false
 						end
 						case 1
-							open_exsist()
+							open_exist()
 							run=false
 						end
 						case 2
@@ -299,7 +299,7 @@ function start()
 							run=false
 						end
 						case 1
-							open_exsist()
+							open_exist()
 							run=false
 						end
 						case 2
@@ -321,7 +321,7 @@ function start()
 		pic.draw_string(0.25*pic.get_width()+1,0.25*pic.get_height(),"CDPF Drawer v1.0-Welcome",darwin.pixel(' ',darwin.white,darwin.blue))
 		pic.draw_string(0.25*pic.get_width()+4,0.5*(pic.get_height()-6),"Getting start",darwin.pixel(' ',darwin.white,darwin.red))
 		pic.draw_string(0.25*pic.get_width()+4,0.5*(pic.get_height()-6)+2,"New Picture",darwin.pixel(' ',darwin.white,darwin.cyan))
-		pic.draw_string(0.25*pic.get_width()+4,0.5*(pic.get_height()-6)+3,"Open Exsist Picture",darwin.pixel(' ',darwin.white,darwin.cyan))
+		pic.draw_string(0.25*pic.get_width()+4,0.5*(pic.get_height()-6)+3,"Open exist Picture",darwin.pixel(' ',darwin.white,darwin.cyan))
 		pic.draw_string(0.25*pic.get_width()+4,0.5*(pic.get_height()-6)+4,"About This Software",darwin.pixel(' ',darwin.white,darwin.cyan))
 		pic.draw_string(0.25*pic.get_width()+4,0.5*(pic.get_height()-6)+5,"Exit",darwin.pixel(' ',darwin.white,darwin.cyan))
 		pic.draw_string(0.25*pic.get_width()+2,0.5*(pic.get_height()-6)+2+select,"->",darwin.pixel(' ',darwin.white,darwin.cyan))
@@ -365,7 +365,7 @@ function menu()
 							new_picture()
 						end
 						case 3
-							open_exsist()
+							open_exist()
 						end
 						case 4
 							about()
@@ -390,7 +390,7 @@ function menu()
 							new_picture()
 						end
 						case 3
-							open_exsist()
+							open_exist()
 						end
 						case 4
 							about()
@@ -413,7 +413,7 @@ function menu()
 		pic.draw_string(0.25*pic.get_width()+4,0.5*(pic.get_height()-8)+2,"Continue",darwin.pixel(' ',darwin.white,darwin.cyan))
 		pic.draw_string(0.25*pic.get_width()+4,0.5*(pic.get_height()-8)+3,"Save",darwin.pixel(' ',darwin.white,darwin.cyan))
 		pic.draw_string(0.25*pic.get_width()+4,0.5*(pic.get_height()-8)+4,"New Picture",darwin.pixel(' ',darwin.white,darwin.cyan))
-		pic.draw_string(0.25*pic.get_width()+4,0.5*(pic.get_height()-8)+5,"Open Exsist Picture",darwin.pixel(' ',darwin.white,darwin.cyan))
+		pic.draw_string(0.25*pic.get_width()+4,0.5*(pic.get_height()-8)+5,"Open exist Picture",darwin.pixel(' ',darwin.white,darwin.cyan))
 		pic.draw_string(0.25*pic.get_width()+4,0.5*(pic.get_height()-8)+6,"About This Software",darwin.pixel(' ',darwin.white,darwin.cyan))
 		pic.draw_string(0.25*pic.get_width()+4,0.5*(pic.get_height()-8)+7,"Exit",darwin.pixel(' ',darwin.white,darwin.cyan))
 		pic.draw_string(0.25*pic.get_width()+2,0.5*(pic.get_height()-8)+2+select,"->",darwin.pixel(' ',darwin.white,darwin.cyan))
