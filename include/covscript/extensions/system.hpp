@@ -113,7 +113,7 @@ namespace file_cs_ext {
 		return std::remove(path.c_str()) == 0;
 	}
 
-	bool exsists(const string &path)
+	bool exists(const string &path)
 	{
 		return std::ifstream(path).is_open();
 	}
@@ -127,7 +127,7 @@ namespace file_cs_ext {
 	{
 		file_ext.add_var("copy", var::make_protect<callable>(cni(copy)));
 		file_ext.add_var("remove", var::make_protect<callable>(cni(remove)));
-		file_ext.add_var("exsists", var::make_protect<callable>(cni(exsists)));
+		file_ext.add_var("exists", var::make_protect<callable>(cni(exists)));
 		file_ext.add_var("rename", var::make_protect<callable>(cni(rename)));
 	}
 }
