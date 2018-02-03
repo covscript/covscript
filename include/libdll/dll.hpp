@@ -39,7 +39,8 @@ namespace cov {
 			if (m_handle == nullptr) {
 				static char szBuf[128];
 				const char *args[] = {path.c_str()};
-				::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ARGUMENT_ARRAY, nullptr, ::GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&szBuf, 128, (va_list *)args);
+				::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ARGUMENT_ARRAY, nullptr, ::GetLastError(),
+				                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &szBuf, 128, (va_list *) args);
 				throw std::logic_error(szBuf);
 			}
 		}
