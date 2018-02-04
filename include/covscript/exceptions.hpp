@@ -19,13 +19,12 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <covscript/string.hpp>
 #include <exception>
 #include <stdexcept>
 
 namespace cs {
 	class exception final : public std::exception {
-		cov::string mWhat;
+		std::string mWhat;
 	public:
 		exception() = delete;
 
@@ -44,12 +43,12 @@ namespace cs {
 
 		virtual const char *what() const noexcept override
 		{
-			return this->mWhat.data();
+			return this->mWhat.c_str();
 		}
 	};
 
 	class syntax_error final : public std::exception {
-		cov::string mWhat = "Syntax Error";
+		std::string mWhat = "Syntax Error";
 	public:
 		syntax_error() = default;
 
@@ -68,12 +67,12 @@ namespace cs {
 
 		virtual const char *what() const noexcept override
 		{
-			return this->mWhat.data();
+			return this->mWhat.c_str();
 		}
 	};
 
 	class internal_error final : public std::exception {
-		cov::string mWhat = "Internal Error";
+		std::string mWhat = "Internal Error";
 	public:
 		internal_error() = default;
 
@@ -92,12 +91,12 @@ namespace cs {
 
 		virtual const char *what() const noexcept override
 		{
-			return this->mWhat.data();
+			return this->mWhat.c_str();
 		}
 	};
 
 	class lang_error final {
-		cov::string mWhat;
+		std::string mWhat;
 	public:
 		lang_error() = default;
 
@@ -116,12 +115,12 @@ namespace cs {
 
 		const char *what() const noexcept
 		{
-			return this->mWhat.data();
+			return this->mWhat.c_str();
 		}
 	};
 
 	class fatal_error final : public std::exception {
-		cov::string mWhat = "Fatal Error";
+		std::string mWhat = "Fatal Error";
 	public:
 		fatal_error() = default;
 
@@ -140,12 +139,12 @@ namespace cs {
 
 		virtual const char *what() const noexcept override
 		{
-			return this->mWhat.data();
+			return this->mWhat.c_str();
 		}
 	};
 
 	class forward_exception final : public std::exception {
-		cov::string mWhat;
+		std::string mWhat;
 	public:
 		forward_exception() = delete;
 
@@ -163,7 +162,7 @@ namespace cs {
 
 		virtual const char *what() const noexcept override
 		{
-			return this->mWhat.data();
+			return this->mWhat.c_str();
 		}
 	};
 }
