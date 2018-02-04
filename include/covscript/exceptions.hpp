@@ -145,7 +145,7 @@ namespace cs {
 	};
 
 	class forward_exception final : public std::exception {
-		const char *mWhat;
+		cov::string mWhat;
 	public:
 		forward_exception() = delete;
 
