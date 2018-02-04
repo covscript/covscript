@@ -19,12 +19,13 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
+#include <covscript/string.hpp>
 #include <exception>
 #include <stdexcept>
 
 namespace cs {
 	class exception final : public std::exception {
-		std::string mWhat;
+		cov::string mWhat;
 	public:
 		exception() = delete;
 
@@ -43,12 +44,12 @@ namespace cs {
 
 		virtual const char *what() const noexcept override
 		{
-			return this->mWhat.c_str();
+			return this->mWhat.data();
 		}
 	};
 
 	class syntax_error final : public std::exception {
-		std::string mWhat = "Syntax Error";
+		cov::string mWhat = "Syntax Error";
 	public:
 		syntax_error() = default;
 
@@ -67,12 +68,12 @@ namespace cs {
 
 		virtual const char *what() const noexcept override
 		{
-			return this->mWhat.c_str();
+			return this->mWhat.data();
 		}
 	};
 
 	class internal_error final : public std::exception {
-		std::string mWhat = "Internal Error";
+		cov::string mWhat = "Internal Error";
 	public:
 		internal_error() = default;
 
@@ -91,12 +92,12 @@ namespace cs {
 
 		virtual const char *what() const noexcept override
 		{
-			return this->mWhat.c_str();
+			return this->mWhat.data();
 		}
 	};
 
 	class lang_error final {
-		std::string mWhat;
+		cov::string mWhat;
 	public:
 		lang_error() = default;
 
@@ -115,12 +116,12 @@ namespace cs {
 
 		const char *what() const noexcept
 		{
-			return this->mWhat.c_str();
+			return this->mWhat.data();
 		}
 	};
 
 	class fatal_error final : public std::exception {
-		std::string mWhat = "Fatal Error";
+		cov::string mWhat = "Fatal Error";
 	public:
 		fatal_error() = default;
 
@@ -139,7 +140,7 @@ namespace cs {
 
 		virtual const char *what() const noexcept override
 		{
-			return this->mWhat.c_str();
+			return this->mWhat.data();
 		}
 	};
 
