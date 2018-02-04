@@ -163,7 +163,7 @@ namespace cs {
 
 		virtual const char *what() const noexcept override
 		{
-			return this->mWhat;
+			return this->mWhat.data();
 		}
 	};
 }
