@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 SELF_DIR="$(dirname $(readlink -f $0))"
