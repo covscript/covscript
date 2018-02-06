@@ -1,15 +1,16 @@
-if system.args.size()!=2
-    system.out.println("Usage: ls <dir>")
-    system.exit(-1)
+using system
+if args.size()!=2
+    out.println("Usage: ls <dir>")
+    exit(-1)
 end
-var info=system.path.scan(system.args.at(1))
+var info=path.scan(args.at(1))
 for it iterate info
     switch it.type()
-        case system.path.type.dir
-            system.out.println(to_string(system.path.separator)+it.name())
+        case path.type.dir
+            out.println(to_string(path.separator)+it.name())
         end
         default
-            system.out.println(it.name())
+            out.println(it.name())
         end
     end
 end
