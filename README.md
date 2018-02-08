@@ -13,16 +13,18 @@
 ***Due to academic stress, the author may not be able to fix all the bugs in time. If you have some problems, please raise in the issue, thank you for your understanding.***
 
 ## Features ##
-1. Efficient compiler front end
-2. Compile-time optimization
-3. Reference count garbage collector
-4. C/C++ Native Interface
-5. Regular Expression
-6. Darwin Universal CGL
-7. SQLite3 Database
-8. ASIO Network
++ Efficient compiler front end
++ Compile-time optimization
++ Reference count garbage collector
++ C/C++ Native Interface
++ Regular Expression
++ Darwin Universal CGL
++ SQLite3 Database
++ ASIO Network
++ Streams API
 
 ## Documentations ##
+[CovScript Gitbooks](https://covscript.gitbooks.io/api/content/)  
 [CovScript Document](https://github.com/covscript/covscript-docs)  
 [CovScript Tutorial](https://github.com/covscript/covscript-tutorial)  
 ## Installation ##
@@ -62,8 +64,12 @@ All the steps are the same as Linux, tested under macOS Sierra 10.12.5.
 `--wait-before-exit` Wait before process exit.  
 `--log-path PATH` Set the log path.  
 `--import-path PATH` Set the import path.  
+### Installer ###
+Covariant Script Installer provides a simple toolchain configuration method for the Microsoft Windows platform. You can download, install, upgrade and uninstall the toolchain by simply push a button. You can download the latest installer from the [CovScript Programming Language Home](http://covscript.org). For more information, visit the [Covariant Script Installer](https://github.com/covscript/covscript-installer).
 ### GUI ###
-If you hate command line you can use [Covariant Script GUI](https://github.com/covscript/covscript-gui/releases/latest).
+Covariant Script provides a one-stop code editing, running, debugging experience for the Microsoft Windows platform . The CovScript Installer will automatically downloads the CovScript GUI for you. For more information, please visit [Covariant Script GUI](https://github.com/covscript/covscript-gui).
+### Package Manager ###
+`cspkg` is a package manager written in Covariant Script whose main function is to manage extensions or packages for Covariant Script. `cspkg` will be released with the latest version of Covariant Script. For more information, please visit [Covariant Script Package Manager](https://github.com/covscript/cspkg).
 ### IntelliJ Plugin ###
 The IntelliJ Plugin is available now:
 + [Source Code](https://github.com/covscript/covscript-intellij)
@@ -71,12 +77,13 @@ The IntelliJ Plugin is available now:
 ## Examples ##
 The `examples` folder contains several example programs written by CovScript.
 ## Copyright ##
-**The author of the Covariant Script Programming Language is Michael Lee(mikecovlee@github.com,mikecovlee@163.com).**  
-**Copyright (C) 2018 Michael Lee (李登淳)**  
-
+**The author of the Covariant Script Programming Language is [@mikecovlee](https://github.com/mikecovlee/).**  
+**Copyright © 2018 Michael Lee**
 ## Thanks ##
 **Ranked by contribution.**  
-Testing: Shi Youcheng, Kiva (zt515)  
+Testing: Shi Youcheng, [@imkiva](https://github.com/imkiva/)  
+Douments: [@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)  
+Streams API Extension: [@imkiva](https://github.com/imkiva/)  
 IntelliJ Plugin: [@ice1000](https://github.com/ice1000/)
 ## Comments ##
 Comments by [@ice1000](https://github.com/ice1000/):

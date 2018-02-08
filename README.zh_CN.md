@@ -13,16 +13,18 @@
 ***由于学业紧张，作者可能无法及时的修复所有Bug。如果你遇到了一些问题，请在issue中提出，感谢您的理解。***
 
 ## 语言特性 ##
-1. 高效的编译器前端
-2. 编译期优化
-3. 引用计数垃圾回收器
-4. C/C++原生接口
-5. 正则表达式
-6. Darwin通用字符图形库
-7. SQLite3数据库
-8. ASIO网络库
++ 高效的编译器前端
++ 编译期优化
++ 引用计数垃圾回收器
++ C/C++原生接口
++ 正则表达式
++ Darwin通用字符图形库
++ SQLite3数据库
++ ASIO网络库
++ 流式API
 
 ## 文档 ##
+[CovScript Gitbooks](https://covscript.gitbooks.io/api/content/)  
 [CovScript文档](https://github.com/covscript/covscript-docs)  
 [CovScript教程](https://github.com/covscript/covscript-tutorial)
 ## 安装 ##
@@ -62,8 +64,12 @@ $ sh ./make.sh
 `--wait-before-exit` 等待进程退出。  
 `--log-path PATH` 设置日志路径。  
 `--import-path PATH` 设置import路径。  
+### 安装器 ###
+Covariant Script安装器为Windows平台提供了简易的工具链配置方法，您可以一键安装，升级，卸载工具链。你可以在[CovScript编程语言主页](http://covscript.org)下载最新版安装器，详情请访问[Covariant Script Installer](https://github.com/covscript/covscript-installer)。
 ### GUI ###
-你也可以下载[Covariant Script GUI](https://github.com/covscript/covscript-gui/releases/latest)来简化您的工作。
+Covariant Script为Windows平台提供了一站式的代码编辑，运行，调试体验。CovScript安装器会自动为您下载CovScript GUI，详情请访问[Covariant Script GUI](https://github.com/covscript/covscript-gui)。
+### 包管理器 ###
+`cspkg`是使用Covariant Script编写的包管理器，其职能主要是管理Covariant Script的扩展或者是包。`cspkg`会与最新版本Covariant Script共同发行，详情请访问[Covariant Script Package Manager](https://github.com/covscript/cspkg)。
 ### IntelliJ插件 ###
 IntelliJ插件现已可用：
 + [源代码](https://github.com/covscript/covscript-intellij)
@@ -71,12 +77,13 @@ IntelliJ插件现已可用：
 ## 示例 ##
 `examples`文件夹包含了数个使用CovScript编写的示例程序。
 ## 版权 ##
-**Covariant Script编程语言的作者是Michael Lee(mikecovlee@github.com,mikecovlee@163.com).**  
-**版权所有 (C) 2018 Michael Lee(李登淳)** 
-
+**Covariant Script编程语言的作者是[@mikecovlee](https://github.com/mikecovlee/).**  
+**版权所有 © 2018 李登淳**
 ## 感谢 ##
 **按贡献排名。**  
-测试：史为成，Kiva (zt515)  
+测试：史为成，[@imkiva](https://github.com/imkiva/)  
+文档：[@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)  
+流式API扩展：[@imkiva](https://github.com/imkiva/)  
 IntelliJ插件：[@ice1000](https://github.com/ice1000/)
 ## 评论 ##
 [@ice1000](https://github.com/ice1000/)的评论：
