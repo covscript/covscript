@@ -438,6 +438,7 @@ namespace cs {
 	}
 }
 namespace cs_impl {
+	// Detach
 	template<>
 	void detach<cs::pair>(cs::pair &val)
 	{
@@ -466,6 +467,7 @@ namespace cs_impl {
 			cs::copy_no_return(it.second);
 	}
 
+// To String
 	template<>
 	std::string to_string<cs::number>(const cs::number &val)
 	{
@@ -481,6 +483,15 @@ namespace cs_impl {
 	{
 		return std::move(std::string(1, c));
 	}
+
+// To Integer
+	template<>
+	struct to_integer_if<cs::string, false> {
+		static long to_integer(const cs::string &str)
+		{
+			return std::stol(str);
+		}
+	};
 
 // Type name
 	template<>
