@@ -56,7 +56,7 @@
 
 namespace cs {
 // Version
-	static const std::string version = "1.2.1(Release)";
+	static const std::string version = "1.2.2(Beta1)";
 	static const number std_version = 20180201;
 // Output Precision
 	static int output_precision = 8;
@@ -438,7 +438,7 @@ namespace cs {
 	}
 }
 namespace cs_impl {
-	// Detach
+// Detach
 	template<>
 	void detach<cs::pair>(cs::pair &val)
 	{
