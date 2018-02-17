@@ -191,9 +191,6 @@ namespace cs {
 				else
 					throw syntax_error("Wrong format of switch statement.");
 			}
-			catch (const lang_error &le) {
-				throw le;
-			}
 			catch (const cs::exception &e) {
 				throw e;
 			}
@@ -414,9 +411,6 @@ namespace cs {
 					static_cast<statement_function *>(ptr)->set_mem_fn();
 					break;
 				}
-			}
-			catch (const lang_error &le) {
-				throw le;
 			}
 			catch (const cs::exception &e) {
 				throw e;

@@ -125,7 +125,7 @@ namespace string_cs_ext {
 
 	number to_number(const string &str)
 	{
-		return std::stold(str);
+		return parse_number(str);
 	}
 
 	array split(const string &str, const array &signals)
