@@ -126,7 +126,7 @@ namespace cs {
 	}
 }
 
-#if defined(__WIN32__) || defined(WIN32)
+#if defined(__WIN32) || defined(WIN32)
 
 #include <shlobj.h>
 

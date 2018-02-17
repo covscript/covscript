@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <string>
 
-#if defined(__WIN32__) || defined(WIN32)
+#if defined(__WIN32) || defined(WIN32)
 
 #include <windows.h>
 
