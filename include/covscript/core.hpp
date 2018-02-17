@@ -51,19 +51,20 @@
 #include <map>
 // CovScript Headers
 #include <covscript/exceptions.hpp>
-#include <covscript/any.hpp>
 #include <covscript/typedef.hpp>
+#include <covscript/types.hpp>
+#include <covscript/any.hpp>
 
 namespace cs {
 // Version
-	static const std::string version = "1.2.2(Beta1)";
+	static const std::string version = "1.2.2(Beta2)";
 	static const number std_version = 20180201;
 // Output Precision
 	static int output_precision = 8;
 // Import Path
 	static std::string import_path = ".";
 // Path seperator and delimiter
-#if defined(__WIN32__) || defined(WIN32)
+#if defined(__WIN32) || defined(WIN32)
 	constexpr char path_separator = '\\';
 	constexpr char path_delimiter = ';';
 #else

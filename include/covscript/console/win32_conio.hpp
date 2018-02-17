@@ -55,62 +55,6 @@ namespace cs_impl {
 			SetConsoleCursorInfo(StdHandle, &cci);
 		}
 
-		/*
-		    class console final {
-		        SHORT w, h;
-		        std::size_t offset = 0;
-		        CHAR_INFO *buffer = nullptr;
-		        WORD attri = 0;
-		    public:
-		        console() = delete;
-
-		        console(std::size_t width, std::size_t height) : w(width), h(height), buffer(new CHAR_INFO[w * h]) {}
-
-		        ~console()
-		        {
-		            delete[] buffer;
-		        }
-
-		        void set_color(int textcolor, int bgcolor)
-		        {
-		            attri = textcolor + (bgcolor - 8) * 16;
-		        }
-
-		        void reset()
-		        {
-		            set_color(15, 8);
-		        }
-
-		        void put_char(char ch)
-		        {
-		            buffer[offset].Attributes = attri;
-		            buffer[offset].Char.AsciiChar = ch;
-		            ++offset;
-		        }
-
-		        void flush()
-		        {
-		            static CONSOLE_SCREEN_BUFFER_INFO csbi;
-		            GetConsoleScreenBufferInfo(StdHandle, &csbi);
-		            WriteConsoleOutput(StdHandle, buffer, {w, h}, {0, 0}, &csbi.srWindow);
-		        }
-		    };
-
-		    static void set_title(const char *title)
-		    {
-		        SetConsoleTitle(title);
-		    }
-
-		    static void set_color(int textcolor, int bgcolor)
-		    {
-		        SetConsoleTextAttribute(StdHandle, textcolor + (bgcolor - 8) * 16);
-		    }
-
-		    static void reset()
-		    {
-		        set_color(15, 8);
-		    }
-		*/
 		static void clrscr()
 		{
 			system("cls");
