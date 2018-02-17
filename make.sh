@@ -47,4 +47,3 @@ mkdir -p bin
 $CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" ../sources/standalone.cpp $LDFLAGS -o ./bin/cs &
 $CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" ../sources/repl.cpp $LDFLAGS -o ./bin/cs_repl &
 wait
-

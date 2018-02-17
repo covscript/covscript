@@ -157,7 +157,7 @@ namespace cs {
 					continue;
 				}
 				type = token_types::null;
-				tokens.push_back(new_value(std::stold(tmp)));
+				tokens.push_back(new_value(parse_number(tmp)));
 				tmp.clear();
 				break;
 			}
@@ -187,7 +187,7 @@ namespace cs {
 			tokens.push_back(new token_signal(signal_map.match(tmp)));
 			break;
 		case token_types::value:
-			tokens.push_back(new_value(std::stold(tmp)));
+			tokens.push_back(new_value(parse_number(tmp)));
 			break;
 		}
 	}

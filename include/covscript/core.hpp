@@ -409,6 +409,18 @@ namespace cs {
 	}
 
 // Literal format
+	number parse_number(const std::string &str)
+	{
+		int point_count = 0;
+		for (auto &ch:str) {
+			if (!std::isdigit(ch)) {
+				if (ch != '.' || ++point_count > 1)
+					throw syntax_error("Wrong literal format.");
+			}
+		}
+		return std::stold(str);
+	}
+
 	var parse_value(const std::string &str)
 	{
 		if (str == "true")
@@ -416,7 +428,7 @@ namespace cs {
 		if (str == "false")
 			return false;
 		try {
-			return std::stold(str);
+			return parse_number(str);
 		}
 		catch (...) {
 			return str;
@@ -487,12 +499,14 @@ namespace cs_impl {
 
 // To Integer
 	template<>
-	struct to_integer_if<cs::string, false> {
-		static long to_integer(const cs::string &str)
-		{
-			return std::stol(str);
+	long to_integer<std::string>(const std::string &str)
+	{
+		for (auto &ch:str) {
+			if (!std::isdigit(ch))
+				throw cs::syntax_error("Wrong literal format.");
 		}
-	};
+		return std::stol(str);
+	}
 
 // Type name
 	template<>

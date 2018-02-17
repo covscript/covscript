@@ -35,9 +35,6 @@ namespace cs {
 			try {
 				ptr->run();
 			}
-			catch (const lang_error &le) {
-				throw le;
-			}
 			catch (const cs::exception &e) {
 				throw e;
 			}
@@ -58,9 +55,6 @@ namespace cs {
 		for (auto &ptr:this->mMethod) {
 			try {
 				ptr->run();
-			}
-			catch (const lang_error &le) {
-				throw le;
 			}
 			catch (const cs::exception &e) {
 				throw e;
@@ -120,9 +114,6 @@ namespace cs {
 			try {
 				ptr->run();
 			}
-			catch (const lang_error &le) {
-				throw le;
-			}
 			catch (const cs::exception &e) {
 				throw e;
 			}
@@ -144,9 +135,6 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const lang_error &le) {
-					throw le;
-				}
 				catch (const cs::exception &e) {
 					throw e;
 				}
@@ -166,9 +154,6 @@ namespace cs {
 			for (auto &ptr:mBlock) {
 				try {
 					ptr->run();
-				}
-				catch (const lang_error &le) {
-					throw le;
 				}
 				catch (const cs::exception &e) {
 					throw e;
@@ -191,9 +176,6 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const lang_error &le) {
-					throw le;
-				}
 				catch (const cs::exception &e) {
 					throw e;
 				}
@@ -210,9 +192,6 @@ namespace cs {
 			for (auto &ptr:mElseBlock) {
 				try {
 					ptr->run();
-				}
-				catch (const lang_error &le) {
-					throw le;
 				}
 				catch (const cs::exception &e) {
 					throw e;
@@ -249,9 +228,6 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const lang_error &le) {
-					throw le;
-				}
 				catch (const cs::exception &e) {
 					throw e;
 				}
@@ -285,9 +261,6 @@ namespace cs {
 			for (auto &ptr:mBlock) {
 				try {
 					ptr->run();
-				}
-				catch (const lang_error &le) {
-					throw le;
 				}
 				catch (const cs::exception &e) {
 					throw e;
@@ -325,9 +298,6 @@ namespace cs {
 			for (auto &ptr:mBlock) {
 				try {
 					ptr->run();
-				}
-				catch (const lang_error &le) {
-					throw le;
 				}
 				catch (const cs::exception &e) {
 					throw e;
@@ -367,9 +337,6 @@ namespace cs {
 			for (auto &ptr:body) {
 				try {
 					ptr->run();
-				}
-				catch (const lang_error &le) {
-					throw le;
 				}
 				catch (const cs::exception &e) {
 					throw e;
@@ -442,9 +409,6 @@ namespace cs {
 				for (auto &ptr:mCatchBody) {
 					try {
 						ptr->run();
-					}
-					catch (const lang_error &le) {
-						throw le;
 					}
 					catch (const cs::exception &e) {
 						throw e;

@@ -551,7 +551,7 @@ namespace cs {
 				ptr->run();
 			}
 			catch (const lang_error &le) {
-				throw fatal_error("Uncaught exception.");
+				throw fatal_error(std::string("Uncaught exception: ") + le.what());
 			}
 			catch (const cs::exception &e) {
 				throw e;
@@ -618,7 +618,7 @@ namespace cs {
 			}
 		}
 		catch (const lang_error &le) {
-			throw fatal_error("Uncaught exception.");
+			throw fatal_error(std::string("Uncaught exception: ") + le.what());
 		}
 		catch (const cs::exception &e) {
 			throw e;
