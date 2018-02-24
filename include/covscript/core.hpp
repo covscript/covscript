@@ -225,7 +225,7 @@ namespace cs {
 
 		~structure() = default;
 
-		std::shared_ptr<spp::sparse_hash_map<string, var>> &get_domain()
+		const std::shared_ptr<spp::sparse_hash_map<string, var>> &get_domain() const
 		{
 			return m_data;
 		}
@@ -249,13 +249,15 @@ namespace cs {
 		context_t mContext;
 		std::size_t mHash;
 		std::string mName;
+		std::string mParent;
 		std::deque<statement_base *> mMethod;
 	public:
 		struct_builder() = delete;
 
-		struct_builder(context_t c, const std::string &name, const std::deque<statement_base *> &method) : mContext(c),
+		struct_builder(context_t c, const std::string &name, const std::string &parent, const std::deque<statement_base *> &method) : mContext(c),
 			mHash(++mCount),
 			mName(name),
+			mParent(parent),
 			mMethod(method) {}
 
 		struct_builder(const struct_builder &) = default;
