@@ -221,6 +221,7 @@ namespace cs {
 	};
 
 	class structure final {
+		bool m_shadow = false;
 		std::size_t m_hash;
 		std::string m_name;
 		std::shared_ptr<spp::sparse_hash_map<string, var>> m_data;
@@ -233,7 +234,7 @@ namespace cs {
 			       name), m_data(data)
 		{
 			if (m_data->count("initialize") > 0)
-				invoke((*m_data)["initialize"]);
+				invoke((*m_data)["initialize"], var::make<structure>(this));
 		}
 
 		structure(const structure &s) : m_hash(s.m_hash), m_name(s.m_name),
@@ -242,13 +243,15 @@ namespace cs {
 			for (auto &it:*m_data)
 				it.second.clone();
 			if (m_data->count("duplicate") > 0)
-				invoke((*m_data)["duplicate"]);
+				invoke((*m_data)["duplicate"], var::make<structure>(this));
 		}
+
+		explicit structure(structure *s) : m_shadow(true), m_hash(s->m_hash), m_name(s->m_name), m_data(s->m_data) {}
 
 		~structure()
 		{
-			if (m_data->count("finalize") > 0)
-				invoke((*m_data)["finalize"]);
+			if (!m_shadow && m_data->count("finalize") > 0)
+				invoke((*m_data)["finalize"], var::make<structure>(this));
 		}
 
 		const std::shared_ptr<spp::sparse_hash_map<string, var>> &get_domain() const
