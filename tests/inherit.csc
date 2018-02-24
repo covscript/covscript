@@ -4,7 +4,7 @@ struct base
     end
 end
 struct child extends base
-    function type()
+    function type() override
         system.out.println("child")
     end
 end

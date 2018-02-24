@@ -151,6 +151,7 @@ namespace cs {
 			{"break",     action_types::break_},
 			{"continue",  action_types::continue_},
 			{"function",  action_types::function_},
+			{"override",  action_types::override_},
 			{"return",    action_types::return_},
 			{"try",       action_types::try_},
 			{"catch",     action_types::catch_},
