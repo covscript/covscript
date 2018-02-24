@@ -456,7 +456,7 @@ namespace cs {
 		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_struct final : public method_base {
+	class method_struct : public method_base {
 	public:
 		using method_base::method_base;
 
@@ -471,6 +471,13 @@ namespace cs {
 		}
 
 		virtual void preprocess(const std::deque<std::deque<token_base *>> &) override;
+
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
+	};
+
+	class method_struct_extends final : public method_struct {
+	public:
+		using method_struct::method_struct;
 
 		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};

@@ -131,6 +131,7 @@ namespace cs {
 			{"using",     action_types::using_},
 			{"namespace", action_types::namespace_},
 			{"struct",    action_types::struct_},
+			{"extends",   action_types::extends_},
 			{"block",     action_types::block_},
 			{"end",       action_types::endblock_},
 			{"var",       action_types::var_},

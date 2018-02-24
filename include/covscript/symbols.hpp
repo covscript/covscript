@@ -31,6 +31,7 @@ namespace cs {
 		using_,
 		namespace_,
 		struct_,
+		extends_,
 		block_,
 		endblock_,
 		var_,

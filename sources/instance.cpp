@@ -134,6 +134,8 @@ namespace cs {
 		translator.add_method({new token_action(action_types::struct_), new token_expr(cov::tree<token_base *>()),
 			                      new token_endline(0)
 		}, new method_struct(context));
+		translator.add_method({new token_action(action_types::struct_), new token_expr(cov::tree<token_base *>()), new token_action(action_types::extends_), new token_expr(cov::tree<token_base *>()), new token_endline(0)
+		}, new method_struct_extends(context));
 		// Try Grammar
 		translator.add_method({new token_action(action_types::try_), new token_endline(0)}, new method_try(context));
 		// Catch Grammar
