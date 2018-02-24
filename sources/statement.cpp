@@ -56,8 +56,11 @@ namespace cs {
 			var builder = mContext->instance->storage.get_var(mParent);
 			if (builder.type() == typeid(type)) {
 				var parent = builder.const_val<type>().constructor();
-				if (parent.type() == typeid(structure))
+				if (parent.type() == typeid(structure)) {
+					parent.protect();
 					mContext->instance->storage.involve_domain(parent.const_val<structure>().get_domain());
+					mContext->instance->storage.add_var("parent", parent);
+				}
 				else
 					throw syntax_error("Target is not a struct.");
 			}
