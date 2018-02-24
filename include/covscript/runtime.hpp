@@ -145,8 +145,7 @@ namespace cs {
 
 		void add_var(const string &name, const var &val, bool is_override=false)
 		{
-			if (var_exist_current(name))
-			{
+			if (var_exist_current(name)) {
 				if(is_override)
 					(*m_data.front())[name]=val;
 				else

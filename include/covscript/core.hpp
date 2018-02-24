@@ -174,6 +174,22 @@ namespace cs {
 		~object_method() = default;
 	};
 
+	template<typename... ArgsT>
+	var invoke(const var &func, ArgsT &&... _args)
+	{
+		if (func.type() == typeid(callable)) {
+			vector args{std::forward<ArgsT>(_args)...};
+			return func.const_val<callable>().call(args);
+		}
+		else if (func.type() == typeid(object_method)) {
+			const auto &om = func.const_val<object_method>();
+			vector args{om.object, std::forward<ArgsT>(_args)...};
+			return om.callable.const_val<callable>().call(args);
+		}
+		else
+			throw syntax_error("Invoke non-callable object.");
+	}
+
 // Type and struct
 	struct pointer final {
 		var data;
@@ -211,19 +227,26 @@ namespace cs {
 	public:
 		structure() = delete;
 
-		structure(std::size_t hash, const std::string &name,
-		          const std::shared_ptr<spp::sparse_hash_map<string, var>> &data) : m_hash(hash),
-			m_name(typeid(structure).name() +
-			       name), m_data(data) {}
+		structure(std::size_t hash, const std::string &name, const std::shared_ptr<spp::sparse_hash_map<string, var>> &data) : m_hash(hash), m_name(typeid(structure).name() + name), m_data(data)
+		{
+			if(m_data->count("initialize")>0)
+				invoke((*m_data)["initialize"]);
+		}
 
 		structure(const structure &s) : m_hash(s.m_hash), m_name(s.m_name),
 			m_data(std::make_shared<spp::sparse_hash_map<string, var >>(*s.m_data))
 		{
 			for (auto &it:*m_data)
 				it.second.clone();
+			if(m_data->count("duplicate")>0)
+				invoke((*m_data)["duplicate"]);
 		}
 
-		~structure() = default;
+		~structure()
+		{
+			if(m_data->count("finalize")>0)
+				invoke((*m_data)["finalize"]);
+		}
 
 		const std::shared_ptr<spp::sparse_hash_map<string, var>> &get_domain() const
 		{
