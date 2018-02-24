@@ -124,6 +124,8 @@ namespace cs {
 		translator.add_method({new token_action(action_types::function_), new token_expr(cov::tree<token_base *>()),
 			                      new token_endline(0)
 		}, new method_function(context));
+		translator.add_method({new token_action(action_types::function_), new token_expr(cov::tree<token_base *>()), new token_action(action_types::override_), new token_endline(0)
+		}, new method_function(context));
 		// Return Grammar
 		translator.add_method({new token_action(action_types::return_), new token_expr(cov::tree<token_base *>()),
 			                      new token_endline(0)

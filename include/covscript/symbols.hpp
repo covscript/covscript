@@ -51,6 +51,7 @@ namespace cs {
 		break_,
 		continue_,
 		function_,
+		override_,
 		return_,
 		try_,
 		catch_,

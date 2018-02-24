@@ -143,12 +143,17 @@ namespace cs {
 			add_record("__PRAGMA_CS_STRUCT_DEFINITION__");
 		}
 
-		void add_var(const string &name, const var &var)
+		void add_var(const string &name, const var &val, bool is_override=false)
 		{
 			if (var_exist_current(name))
-				throw syntax_error("Target domain exist variable \"" + name + "\".");
+			{
+				if(is_override)
+					(*m_data.front())[name]=val;
+				else
+					throw syntax_error("Target domain exist variable \"" + name + "\".");
+			}
 			else
-				m_data.front()->emplace(name, var);
+				m_data.front()->emplace(name, val);
 		}
 
 		void add_var_global(const string &name, const var &var)
