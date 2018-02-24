@@ -227,9 +227,12 @@ namespace cs {
 	public:
 		structure() = delete;
 
-		structure(std::size_t hash, const std::string &name, const std::shared_ptr<spp::sparse_hash_map<string, var>> &data) : m_hash(hash), m_name(typeid(structure).name() + name), m_data(data)
+		structure(std::size_t hash, const std::string &name,
+		          const std::shared_ptr<spp::sparse_hash_map<string, var>> &data) : m_hash(hash),
+			m_name(typeid(structure).name() +
+			       name), m_data(data)
 		{
-			if(m_data->count("initialize")>0)
+			if (m_data->count("initialize") > 0)
 				invoke((*m_data)["initialize"]);
 		}
 
@@ -238,13 +241,13 @@ namespace cs {
 		{
 			for (auto &it:*m_data)
 				it.second.clone();
-			if(m_data->count("duplicate")>0)
+			if (m_data->count("duplicate") > 0)
 				invoke((*m_data)["duplicate"]);
 		}
 
 		~structure()
 		{
-			if(m_data->count("finalize")>0)
+			if (m_data->count("finalize") > 0)
 				invoke((*m_data)["finalize"]);
 		}
 
@@ -277,7 +280,8 @@ namespace cs {
 	public:
 		struct_builder() = delete;
 
-		struct_builder(context_t c, const std::string &name, const std::string &parent, const std::deque<statement_base *> &method) : mContext(c),
+		struct_builder(context_t c, const std::string &name, const std::string &parent,
+		               const std::deque<statement_base *> &method) : mContext(c),
 			mHash(++mCount),
 			mName(name),
 			mParent(parent),

@@ -369,7 +369,7 @@ namespace cs {
 		}
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
-		return new statement_function(name, args, body, raw.front().size()==4, context, raw.front().back());
+		return new statement_function(name, args, body, raw.front().size() == 4, context, raw.front().back());
 	}
 
 	statement_base *method_return::translate(const std::deque<std::deque<token_base *>> &raw)

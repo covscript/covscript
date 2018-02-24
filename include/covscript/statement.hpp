@@ -371,7 +371,8 @@ namespace cs {
 	public:
 		statement_struct() = delete;
 
-		statement_struct(const std::string &name, const std::string &parent, const std::deque<statement_base *> &method, context_t c,
+		statement_struct(const std::string &name, const std::string &parent, const std::deque<statement_base *> &method,
+		                 context_t c,
 		                 token_base *ptr) : statement_base(c, ptr), mName(name), mBuilder(c, name, parent, method) {}
 
 		virtual statement_types get_type() const noexcept override
