@@ -371,8 +371,9 @@ namespace cs {
 	public:
 		statement_struct() = delete;
 
-		statement_struct(const std::string &name, const std::deque<statement_base *> &method, context_t c,
-		                 token_base *ptr) : statement_base(c, ptr), mName(name), mBuilder(c, name, method) {}
+		statement_struct(const std::string &name, const std::string &parent, const std::deque<statement_base *> &method,
+		                 context_t c,
+		                 token_base *ptr) : statement_base(c, ptr), mName(name), mBuilder(c, name, parent, method) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -385,16 +386,17 @@ namespace cs {
 	class statement_function final : public statement_base {
 		std::string mName;
 		function mFunc;
+		bool mOverride = false;
 		bool mIsMemFn = false;
 	public:
 		statement_function() = delete;
 
 		statement_function(const std::string &name, const std::vector<std::string> &args,
-		                   const std::deque<statement_base *> &body, context_t c, token_base *ptr) : statement_base(c,
-			                           ptr),
+		                   const std::deque<statement_base *> &body, bool is_override, context_t c, token_base *ptr) :
+			statement_base(c, ptr),
 			mName(name),
-			mFunc(c, args,
-			      body) {}
+			mFunc(c, args, body),
+			mOverride(is_override) {}
 
 		virtual statement_types get_type() const noexcept override
 		{

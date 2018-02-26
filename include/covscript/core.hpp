@@ -174,6 +174,22 @@ namespace cs {
 		~object_method() = default;
 	};
 
+	template<typename... ArgsT>
+	var invoke(const var &func, ArgsT &&... _args)
+	{
+		if (func.type() == typeid(callable)) {
+			vector args{std::forward<ArgsT>(_args)...};
+			return func.const_val<callable>().call(args);
+		}
+		else if (func.type() == typeid(object_method)) {
+			const auto &om = func.const_val<object_method>();
+			vector args{om.object, std::forward<ArgsT>(_args)...};
+			return om.callable.const_val<callable>().call(args);
+		}
+		else
+			throw syntax_error("Invoke non-callable object.");
+	}
+
 // Type and struct
 	struct pointer final {
 		var data;
@@ -205,6 +221,7 @@ namespace cs {
 	};
 
 	class structure final {
+		bool m_shadow = false;
 		std::size_t m_hash;
 		std::string m_name;
 		std::shared_ptr<spp::sparse_hash_map<string, var>> m_data;
@@ -214,18 +231,30 @@ namespace cs {
 		structure(std::size_t hash, const std::string &name,
 		          const std::shared_ptr<spp::sparse_hash_map<string, var>> &data) : m_hash(hash),
 			m_name(typeid(structure).name() +
-			       name), m_data(data) {}
+			       name), m_data(data)
+		{
+			if (m_data->count("initialize") > 0)
+				invoke((*m_data)["initialize"], var::make<structure>(this));
+		}
 
 		structure(const structure &s) : m_hash(s.m_hash), m_name(s.m_name),
 			m_data(std::make_shared<spp::sparse_hash_map<string, var >>(*s.m_data))
 		{
 			for (auto &it:*m_data)
 				it.second.clone();
+			if (m_data->count("duplicate") > 0)
+				invoke((*m_data)["duplicate"], var::make<structure>(this));
 		}
 
-		~structure() = default;
+		explicit structure(structure *s) : m_shadow(true), m_hash(s->m_hash), m_name(s->m_name), m_data(s->m_data) {}
 
-		std::shared_ptr<spp::sparse_hash_map<string, var>> &get_domain()
+		~structure()
+		{
+			if (!m_shadow && m_data->count("finalize") > 0)
+				invoke((*m_data)["finalize"], var::make<structure>(this));
+		}
+
+		const std::shared_ptr<spp::sparse_hash_map<string, var>> &get_domain() const
 		{
 			return m_data;
 		}
@@ -249,13 +278,16 @@ namespace cs {
 		context_t mContext;
 		std::size_t mHash;
 		std::string mName;
+		std::string mParent;
 		std::deque<statement_base *> mMethod;
 	public:
 		struct_builder() = delete;
 
-		struct_builder(context_t c, const std::string &name, const std::deque<statement_base *> &method) : mContext(c),
+		struct_builder(context_t c, const std::string &name, const std::string &parent,
+		               const std::deque<statement_base *> &method) : mContext(c),
 			mHash(++mCount),
 			mName(name),
+			mParent(parent),
 			mMethod(method) {}
 
 		struct_builder(const struct_builder &) = default;

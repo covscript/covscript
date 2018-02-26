@@ -52,6 +52,21 @@ namespace cs {
 	var struct_builder::operator()()
 	{
 		scope_guard scope(mContext);
+		if (!mParent.empty()) {
+			var builder = mContext->instance->storage.get_var(mParent);
+			if (builder.type() == typeid(type)) {
+				var parent = builder.const_val<type>().constructor();
+				if (parent.type() == typeid(structure)) {
+					parent.protect();
+					mContext->instance->storage.involve_domain(parent.const_val<structure>().get_domain());
+					mContext->instance->storage.add_var("parent", parent);
+				}
+				else
+					throw syntax_error("Target is not a struct.");
+			}
+			else
+				throw syntax_error("Target is not a type.");
+		}
 		for (auto &ptr:this->mMethod) {
 			try {
 				ptr->run();
@@ -383,9 +398,10 @@ namespace cs {
 	{
 		if (this->mIsMemFn)
 			context->instance->storage.add_var(this->mName,
-			                                   var::make_protect<callable>(this->mFunc, callable::types::member_fn));
+			                                   var::make_protect<callable>(this->mFunc, callable::types::member_fn),
+			                                   mOverride);
 		else
-			context->instance->storage.add_var(this->mName, var::make_protect<callable>(this->mFunc));
+			context->instance->storage.add_var(this->mName, var::make_protect<callable>(this->mFunc), mOverride);
 	}
 
 	void statement_return::run()
