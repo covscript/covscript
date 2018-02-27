@@ -62,5 +62,5 @@ namespace cs {
 
 	typedef void(*std_exception_handler)(const std::exception &);
 
-	typedef name_space *(*extension_entrance_t)(cs_exception_handler, std_exception_handler);
+	typedef name_space *(*extension_entrance_t)(int *, cs_exception_handler, std_exception_handler);
 }

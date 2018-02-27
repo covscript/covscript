@@ -57,10 +57,11 @@
 
 namespace cs {
 // Version
-	static const std::string version = "1.2.2(Beta2)";
+	static const std::string version = "1.2.2(Beta3)";
 	static const number std_version = 20180201;
 // Output Precision
 	static int output_precision = 8;
+	static int *output_precision_ref = &output_precision;
 // Import Path
 	static std::string import_path = ".";
 // Path seperator and delimiter
@@ -402,7 +403,7 @@ namespace cs {
 		name_space_holder(const std::string &path) : m_local(false), m_dll(path)
 		{
 			m_ns = reinterpret_cast<extension_entrance_t>(m_dll.get_address("__CS_EXTENSION__"))(
-			           exception_handler::cs_eh_callback, exception_handler::std_eh_callback);
+			           output_precision_ref, exception_handler::cs_eh_callback, exception_handler::std_eh_callback);
 		}
 
 		~name_space_holder()
@@ -518,7 +519,7 @@ namespace cs_impl {
 	{
 		std::stringstream ss;
 		std::string str;
-		ss << std::setprecision(cs::output_precision) << val;
+		ss << std::setprecision(*cs::output_precision_ref) << val;
 		ss >> str;
 		return std::move(str);
 	}
