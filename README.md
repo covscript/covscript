@@ -17,9 +17,12 @@
 + Compile-time optimization
 + Reference count garbage collector
 + C/C++ Native Interface
-+ Regular Expression
+
+## Extensions ##
 + Darwin Universal CGL
++ Regular Expression
 + SQLite3 Database
++ Dear ImGui GUI
 + ASIO Network
 + Streams API
 
