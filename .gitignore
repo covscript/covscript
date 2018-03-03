@@ -37,6 +37,9 @@
 # Darwin Picture File
 *.cdpf
 
+# ImGui INI
+imgui.ini
+
 # IDE Configs
 .idea/
 .vscode/
