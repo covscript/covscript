@@ -244,7 +244,7 @@ namespace cs {
 			for (auto &it:*m_data)
 				it.second.clone();
 			if (m_data->count("duplicate") > 0)
-				invoke((*m_data)["duplicate"], var::make<structure>(this));
+				invoke((*m_data)["duplicate"], var::make<structure>(this), var::make<structure>(&s));
 		}
 
 		explicit structure(structure *s) : m_shadow(true), m_hash(s->m_hash), m_name(s->m_name), m_data(s->m_data) {}
