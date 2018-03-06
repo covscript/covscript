@@ -57,7 +57,7 @@
 
 namespace cs {
 // Version
-	static const std::string version = "1.2.2(Beta3)";
+	static const std::string version = "1.2.2(Beta4)";
 	static const number std_version = 20180201;
 // Output Precision
 	static int output_precision = 8;
@@ -175,6 +175,21 @@ namespace cs {
 		~object_method() = default;
 	};
 
+// Copy
+	void copy_no_return(var &val)
+	{
+		val.clone();
+		val.detach();
+	}
+
+	var copy(var val)
+	{
+		val.clone();
+		val.detach();
+		return val;
+	}
+
+// Invoke
 	template<typename... ArgsT>
 	var invoke(const var &func, ArgsT &&... _args)
 	{
@@ -239,15 +254,33 @@ namespace cs {
 		}
 
 		structure(const structure &s) : m_hash(s.m_hash), m_name(s.m_name),
-			m_data(std::make_shared<spp::sparse_hash_map<string, var >>(*s.m_data))
+			m_data(std::make_shared<spp::sparse_hash_map<string, var >>())
 		{
-			for (auto &it:*m_data)
-				it.second.clone();
+			if(s.m_data->count("parent")>0)
+			{
+				var &_p=(*s.m_data)["parent"];
+				structure& _parent=_p.val<structure>(true);
+				var p=copy(_p);
+				structure& parent=p.val<structure>(true);
+				m_data->emplace("parent",p);
+				for(auto& it:*parent.m_data)
+				{
+					// Handle overriding
+					var &v=(*s.m_data)[it.first];
+					if(!(*_parent.m_data)[it.first].is_same(v))
+						m_data->emplace(it.first,copy(v));
+					else
+						m_data->emplace(it.first,it.second);
+				}
+			}
+			for (auto &it:*s.m_data)
+				if(m_data->count(it.first)==0)
+					m_data->emplace(it.first,copy(it.second));
 			if (m_data->count("duplicate") > 0)
 				invoke((*m_data)["duplicate"], var::make<structure>(this), var::make<structure>(&s));
 		}
 
-		explicit structure(structure *s) : m_shadow(true), m_hash(s->m_hash), m_name(s->m_name), m_data(s->m_data) {}
+		explicit structure(const structure *s) : m_shadow(true), m_hash(s->m_hash), m_name(s->m_name), m_data(s->m_data) {}
 
 		~structure()
 		{
@@ -467,20 +500,6 @@ namespace cs {
 			return str;
 		}
 		return str;
-	}
-
-// Copy
-	void copy_no_return(var &val)
-	{
-		val.clone();
-		val.detach();
-	}
-
-	var copy(var val)
-	{
-		val.clone();
-		val.detach();
-		return val;
 	}
 }
 namespace cs_impl {
