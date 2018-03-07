@@ -178,14 +178,29 @@ namespace cs {
 // Copy
 	void copy_no_return(var &val)
 	{
-		val.clone();
-		val.detach();
+		if (!val.is_rvalue()) {
+			val.clone();
+			val.detach();
+		}
+		else
+			val.mark_as_rvalue(false);
 	}
 
 	var copy(var val)
 	{
-		val.clone();
-		val.detach();
+		if (!val.is_rvalue()) {
+			val.clone();
+			val.detach();
+		}
+		else
+			val.mark_as_rvalue(false);
+		return val;
+	}
+
+// Rvalue
+	var rvalue(var val)
+	{
+		val.mark_as_rvalue(true);
 		return val;
 	}
 
@@ -256,31 +271,30 @@ namespace cs {
 		structure(const structure &s) : m_hash(s.m_hash), m_name(s.m_name),
 			m_data(std::make_shared<spp::sparse_hash_map<string, var >>())
 		{
-			if(s.m_data->count("parent")>0)
-			{
-				var &_p=(*s.m_data)["parent"];
-				structure& _parent=_p.val<structure>(true);
-				var p=copy(_p);
-				structure& parent=p.val<structure>(true);
-				m_data->emplace("parent",p);
-				for(auto& it:*parent.m_data)
-				{
+			if (s.m_data->count("parent") > 0) {
+				var &_p = (*s.m_data)["parent"];
+				structure &_parent = _p.val<structure>(true);
+				var p = copy(_p);
+				structure &parent = p.val<structure>(true);
+				m_data->emplace("parent", p);
+				for (auto &it:*parent.m_data) {
 					// Handle overriding
-					var &v=(*s.m_data)[it.first];
-					if(!(*_parent.m_data)[it.first].is_same(v))
-						m_data->emplace(it.first,copy(v));
+					var &v = (*s.m_data)[it.first];
+					if (!(*_parent.m_data)[it.first].is_same(v))
+						m_data->emplace(it.first, copy(v));
 					else
-						m_data->emplace(it.first,it.second);
+						m_data->emplace(it.first, it.second);
 				}
 			}
 			for (auto &it:*s.m_data)
-				if(m_data->count(it.first)==0)
-					m_data->emplace(it.first,copy(it.second));
+				if (m_data->count(it.first) == 0)
+					m_data->emplace(it.first, copy(it.second));
 			if (m_data->count("duplicate") > 0)
 				invoke((*m_data)["duplicate"], var::make<structure>(this), var::make<structure>(&s));
 		}
 
-		explicit structure(const structure *s) : m_shadow(true), m_hash(s->m_hash), m_name(s->m_name), m_data(s->m_data) {}
+		explicit structure(const structure *s) : m_shadow(true), m_hash(s->m_hash), m_name(s->m_name),
+			m_data(s->m_data) {}
 
 		~structure()
 		{

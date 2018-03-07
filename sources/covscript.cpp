@@ -65,6 +65,11 @@ namespace cs {
 		return copy(val);
 	}
 
+	var move(const var &val)
+	{
+		return rvalue(val);
+	}
+
 	void swap(var &a, var &b)
 	{
 		a.swap(b, true);
@@ -115,8 +120,9 @@ namespace cs {
 		storage.add_buildin_var("to_integer", cs::var::make_protect<cs::callable>(cs::cni(to_integer), true));
 		storage.add_buildin_var("to_string", cs::var::make_protect<cs::callable>(cs::cni(to_string), true));
 		storage.add_buildin_var("type", cs::var::make_protect<cs::callable>(cs::cni(type), true));
-		storage.add_buildin_var("clone", cs::var::make_protect<cs::callable>(cs::cni(clone)));
-		storage.add_buildin_var("swap", cs::var::make_protect<cs::callable>(cs::cni(swap)));
+		storage.add_buildin_var("clone", cs::var::make_protect<cs::callable>(cs::cni(clone), true));
+		storage.add_buildin_var("move", cs::var::make_protect<cs::callable>(cs::cni(move), true));
+		storage.add_buildin_var("swap", cs::var::make_protect<cs::callable>(cs::cni(swap), true));
 		// Add extensions to storage
 		storage.add_buildin_var("exception", var::make_protect<extension_t>(except_ext_shared));
 		storage.add_buildin_var("iostream", var::make_protect<extension_t>(make_shared_extension(iostream_ext)));

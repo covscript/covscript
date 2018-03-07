@@ -5,7 +5,7 @@ struct base
         system.out.println("Init base"+id)
     end
     function duplicate(orig)
-        ++id
+        id=++id_count
         system.out.println("Copy base"+orig.id)
     end
     function finalize()

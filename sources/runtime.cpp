@@ -396,29 +396,29 @@ namespace cs {
 			array arr;
 			for (auto &tree:static_cast<token_array *>(token)->get_array())
 				arr.push_back(copy(parse_expr(tree.root())));
-			return var::make<array>(std::move(arr));
+			return rvalue(var::make<array>(std::move(arr)));
 		}
 		case token_types::signal: {
 			switch (static_cast<token_signal *>(token)->get_signal()) {
 			default:
 				break;
 			case signal_types::add_:
-				return parse_add(parse_expr(it.left()), parse_expr(it.right()));
+				return rvalue(parse_add(parse_expr(it.left()), parse_expr(it.right())));
 				break;
 			case signal_types::addasi_:
 				return parse_addasi(parse_expr(it.left()), parse_expr(it.right()));
 				break;
 			case signal_types::sub_:
-				return parse_sub(parse_expr(it.left()), parse_expr(it.right()));
+				return rvalue(parse_sub(parse_expr(it.left()), parse_expr(it.right())));
 				break;
 			case signal_types::subasi_:
 				return parse_subasi(parse_expr(it.left()), parse_expr(it.right()));
 				break;
 			case signal_types::minus_:
-				return parse_minus(parse_expr(it.right()));
+				return rvalue(parse_minus(parse_expr(it.right())));
 				break;
 			case signal_types::mul_:
-				return parse_mul(parse_expr(it.left()), parse_expr(it.right()));
+				return rvalue(parse_mul(parse_expr(it.left()), parse_expr(it.right())));
 				break;
 			case signal_types::mulasi_:
 				return parse_mulasi(parse_expr(it.left()), parse_expr(it.right()));
@@ -427,19 +427,19 @@ namespace cs {
 				return parse_escape(parse_expr(it.right()));
 				break;
 			case signal_types::div_:
-				return parse_div(parse_expr(it.left()), parse_expr(it.right()));
+				return rvalue(parse_div(parse_expr(it.left()), parse_expr(it.right())));
 				break;
 			case signal_types::divasi_:
 				return parse_divasi(parse_expr(it.left()), parse_expr(it.right()));
 				break;
 			case signal_types::mod_:
-				return parse_mod(parse_expr(it.left()), parse_expr(it.right()));
+				return rvalue(parse_mod(parse_expr(it.left()), parse_expr(it.right())));
 				break;
 			case signal_types::modasi_:
 				return parse_modasi(parse_expr(it.left()), parse_expr(it.right()));
 				break;
 			case signal_types::pow_:
-				return parse_pow(parse_expr(it.left()), parse_expr(it.right()));
+				return rvalue(parse_pow(parse_expr(it.left()), parse_expr(it.right())));
 				break;
 			case signal_types::powasi_:
 				return parse_powasi(parse_expr(it.left()), parse_expr(it.right()));
@@ -451,19 +451,19 @@ namespace cs {
 				return parse_arraw(parse_expr(it.left()), it.right().data());
 				break;
 			case signal_types::typeid_:
-				return parse_typeid(parse_expr(it.right()));
+				return rvalue(parse_typeid(parse_expr(it.right())));
 				break;
 			case signal_types::new_:
-				return parse_new(parse_expr(it.right()));
+				return rvalue(parse_new(parse_expr(it.right())));
 				break;
 			case signal_types::gcnew_:
-				return parse_gcnew(parse_expr(it.right()));
+				return rvalue(parse_gcnew(parse_expr(it.right())));
 				break;
 			case signal_types::und_:
-				return parse_und(parse_expr(it.left()), parse_expr(it.right()));
+				return rvalue(parse_und(parse_expr(it.left()), parse_expr(it.right())));
 				break;
 			case signal_types::abo_:
-				return parse_abo(parse_expr(it.left()), parse_expr(it.right()));
+				return rvalue(parse_abo(parse_expr(it.left()), parse_expr(it.right())));
 				break;
 			case signal_types::asi_:
 				return parse_asi(parse_expr(it.left()), parse_expr(it.right()));
@@ -472,28 +472,28 @@ namespace cs {
 				return parse_choice(parse_expr(it.left()), it.right());
 				break;
 			case signal_types::pair_:
-				return parse_pair(parse_expr(it.left()), parse_expr(it.right()));
+				return rvalue(parse_pair(parse_expr(it.left()), parse_expr(it.right())));
 				break;
 			case signal_types::equ_:
-				return parse_equ(parse_expr(it.left()), parse_expr(it.right()));
+				return rvalue(parse_equ(parse_expr(it.left()), parse_expr(it.right())));
 				break;
 			case signal_types::ueq_:
-				return parse_ueq(parse_expr(it.left()), parse_expr(it.right()));
+				return rvalue(parse_ueq(parse_expr(it.left()), parse_expr(it.right())));
 				break;
 			case signal_types::aeq_:
-				return parse_aeq(parse_expr(it.left()), parse_expr(it.right()));
+				return rvalue(parse_aeq(parse_expr(it.left()), parse_expr(it.right())));
 				break;
 			case signal_types::neq_:
-				return parse_neq(parse_expr(it.left()), parse_expr(it.right()));
+				return rvalue(parse_neq(parse_expr(it.left()), parse_expr(it.right())));
 				break;
 			case signal_types::and_:
-				return parse_and(parse_expr(it.left()), parse_expr(it.right()));
+				return rvalue(parse_and(parse_expr(it.left()), parse_expr(it.right())));
 				break;
 			case signal_types::or_:
-				return parse_or(parse_expr(it.left()), parse_expr(it.right()));
+				return rvalue(parse_or(parse_expr(it.left()), parse_expr(it.right())));
 				break;
 			case signal_types::not_:
-				return parse_not(parse_expr(it.right()));
+				return rvalue(parse_not(parse_expr(it.right())));
 				break;
 			case signal_types::inc_:
 				return parse_inc(parse_expr(it.left()), parse_expr(it.right()));

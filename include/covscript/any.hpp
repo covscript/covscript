@@ -141,6 +141,7 @@ namespace cs_impl {
 		};
 
 		struct proxy {
+			bool is_rvalue = false;
 			short protect_level = 0;
 			std::size_t refcount = 1;
 			baseHolder *data = nullptr;
@@ -255,7 +256,7 @@ namespace cs_impl {
 			return any(allocator.alloc(3, 1, holder<T>::allocator.alloc(std::forward<ArgsT>(args)...)));
 		}
 
-		any() = default;
+		constexpr any() = default;
 
 		template<typename T>
 		any(const T &dat):mDat(allocator.alloc(1, holder<T>::allocator.alloc(dat))) {}
@@ -327,6 +328,11 @@ namespace cs_impl {
 			return this->mDat == obj.mDat;
 		}
 
+		bool is_rvalue() const
+		{
+			return this->mDat != nullptr && this->mDat->is_rvalue;
+		}
+
 		bool is_protect() const
 		{
 			return this->mDat != nullptr && this->mDat->protect_level > 0;
@@ -340,6 +346,12 @@ namespace cs_impl {
 		bool is_single() const
 		{
 			return this->mDat != nullptr && this->mDat->protect_level > 2;
+		}
+
+		void mark_as_rvalue(bool value)
+		{
+			if (this->mDat != nullptr)
+				this->mDat->is_rvalue = value;
 		}
 
 		void protect()
