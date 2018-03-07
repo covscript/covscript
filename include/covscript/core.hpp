@@ -197,10 +197,16 @@ namespace cs {
 		return val;
 	}
 
-// Rvalue
-	var rvalue(var val)
+// Rvalue and move
+	var rvalue(const var &val)
 	{
 		val.mark_as_rvalue(true);
+		return val;
+	}
+
+	var try_move(const var &val)
+	{
+		val.try_move();
 		return val;
 	}
 

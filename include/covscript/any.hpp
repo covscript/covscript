@@ -227,6 +227,14 @@ namespace cs_impl {
 			}
 		}
 
+		void try_move() const
+		{
+			if (mDat != nullptr && mDat->refcount == 1) {
+				mDat->protect_level=0;
+				mDat->is_rvalue=true;
+			}
+		}
+
 		bool usable() const noexcept
 		{
 			return mDat != nullptr;
@@ -299,7 +307,7 @@ namespace cs_impl {
 			return this->mDat->data->hash();
 		}
 
-		void detach()
+		void detach() const
 		{
 			if (this->mDat != nullptr) {
 				if (this->mDat->protect_level > 2)
@@ -348,7 +356,7 @@ namespace cs_impl {
 			return this->mDat != nullptr && this->mDat->protect_level > 2;
 		}
 
-		void mark_as_rvalue(bool value)
+		void mark_as_rvalue(bool value) const
 		{
 			if (this->mDat != nullptr)
 				this->mDat->is_rvalue = value;

@@ -273,7 +273,7 @@ namespace cs {
 		var operator()(vector &args) const
 		{
 			try {
-				return mCni->call(args);
+				return try_move(mCni->call(args));
 			}
 			catch (const lang_error &e) {
 				exception_handler::cs_eh_callback(e);
