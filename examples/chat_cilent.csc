@@ -22,6 +22,9 @@ function config()
     var addr=new string
     var port="256"
     loop
+        if app.is_closed()
+            system.exit(0)
+        end
         app.prepare()
         begin_main_menu_bar()
             menu_item("CovScript Chat Room: Configure","",false)
@@ -44,7 +47,7 @@ function config()
             separator()
             input_text("Your Name",name,128)
             separator()
-            if button("Confirm")
+            if button("Confirm") || is_key_pressed(get_key_index(keys.enter))
                 end_window()
                 app.render()
                 break
@@ -66,6 +69,8 @@ function connect()
     id=sock.receive_from(32,server)
 end
 var message=new string
+var keyboard_focus=true
+var scroll_focus=true
 function chatroom()
     var window_opened=true
     var height=40
@@ -73,10 +78,20 @@ function chatroom()
         set_window_size(vec2(app.get_window_width(),app.get_window_height()-height-22))
         set_window_pos(vec2(0,22))
         text(msg)
+        separator()
+        text("History message")
+        if scroll_focus
+            set_scroll_here()
+            scroll_focus=false
+        end
     end_window()
     begin_window("chatroom_input",window_opened,{flags.no_resize,flags.no_move,flags.no_collapse,flags.no_title_bar})
         set_window_size(vec2(app.get_window_width(),height))
         set_window_pos(vec2(0,app.get_window_height()-height))
+        if keyboard_focus
+            set_keyboard_focus_here()
+            keyboard_focus=false
+        end
         input_text("",message,512)
         same_line()
         if button("Send") || is_key_pressed(get_key_index(keys.enter))
@@ -84,6 +99,8 @@ function chatroom()
                 sock.send_to("MSG@"+id+":"+message,server)
                 message=new string
             end
+            keyboard_focus=true
+            scroll_focus=true
         end
     end_window()
 end
@@ -123,6 +140,10 @@ config()
 connect()
 loop
     app.prepare()
+    if app.is_closed()
+        sock.send_to("EXIT@"+id,server)
+        system.exit(0)
+    end
     if is_key_pressed(get_key_index(keys.escape))
         show_confirm=true
     end
