@@ -246,6 +246,7 @@ namespace cs {
 			if (!val.is_protect()) {
 				constant_pool.push_back(val);
 				constant_pool.back().protect();
+				constant_pool.back().mark_as_rvalue(false);
 			}
 		}
 

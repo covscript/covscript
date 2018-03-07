@@ -230,8 +230,8 @@ namespace cs_impl {
 		void try_move() const
 		{
 			if (mDat != nullptr && mDat->refcount == 1) {
-				mDat->protect_level=0;
-				mDat->is_rvalue=true;
+				mDat->protect_level = 0;
+				mDat->is_rvalue = true;
 			}
 		}
 
