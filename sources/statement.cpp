@@ -59,7 +59,7 @@ namespace cs {
 				if (parent.type() == typeid(structure)) {
 					parent.protect();
 					mContext->instance->storage.involve_domain(parent.const_val<structure>().get_domain());
-					mContext->instance->storage.add_var("parent", parent);
+					mContext->instance->storage.add_var("parent", parent, true);
 				}
 				else
 					throw syntax_error("Target is not a struct.");
