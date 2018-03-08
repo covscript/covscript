@@ -52,8 +52,8 @@ namespace cs {
 	var struct_builder::operator()()
 	{
 		scope_guard scope(mContext);
-		if (!mParent.empty()) {
-			var builder = mContext->instance->storage.get_var(mParent);
+		if (mParent.root().usable()) {
+			var builder = mContext->instance->parse_expr(mParent.root());
 			if (builder.type() == typeid(type)) {
 				var parent = builder.const_val<type>().constructor();
 				if (parent.type() == typeid(structure)) {
