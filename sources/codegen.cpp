@@ -419,39 +419,10 @@ namespace cs {
 				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 			}
 		}
-		return new statement_struct(name, cov::tree<token_base *>(), body, context, raw.front().back());
-	}
-
-	statement_base *method_struct_extends::translate(const std::deque<std::deque<token_base *>> &raw)
-	{
-		cov::tree<token_base *> &t = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
-		if (t.root().data() == nullptr)
-			throw internal_error("Null pointer accessed.");
-		if (t.root().data()->get_type() != token_types::id)
-			throw syntax_error("Wrong grammar for struct definition.");
-		std::string name = dynamic_cast<token_id *>(t.root().data())->get_id();
-		std::deque<statement_base *> body;
-		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
-		for (auto &ptr:body) {
-			try {
-				switch (ptr->get_type()) {
-				default:
-					throw syntax_error("Wrong grammar for struct definition.");
-				case statement_types::var_:
-					break;
-				case statement_types::function_:
-					static_cast<statement_function *>(ptr)->set_mem_fn();
-					break;
-				}
-			}
-			catch (const cs::exception &e) {
-				throw e;
-			}
-			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
-			}
-		}
-		return new statement_struct(name, dynamic_cast<token_expr *>(raw.front().at(3))->get_tree(), body, context, raw.front().back());
+		if (raw.front().size()==5)
+			return new statement_struct(name, dynamic_cast<token_expr *>(raw.front().at(3))->get_tree(), body, context, raw.front().back());
+		else
+			return new statement_struct(name, cov::tree<token_base *>(), body, context, raw.front().back());
 	}
 
 	statement_base *method_try::translate(const std::deque<std::deque<token_base *>> &raw)
