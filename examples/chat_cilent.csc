@@ -9,7 +9,6 @@ var server=null
 # ImGui
 system.file.remove("./imgui.ini")
 var app=window_application(0.5*imgui.get_monitor_width(0),0.5*imgui.get_monitor_height(0),"CovScript Chat Room")
-add_font("./DroidSans.ttf",16)
 style_color_light()
 var show_confirm=false
 var show_about=false
