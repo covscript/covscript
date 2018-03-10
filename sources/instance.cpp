@@ -176,21 +176,13 @@ namespace cs {
 
 				token_types::id: {
 				const std::string &id = static_cast<token_id *>(token)->get_id();
-				if (storage.exist_record(id)) {
-					if (storage.var_exist_current(id) && storage.get_var_current(id).is_protect())
-						it.data() = new_value(storage.get_var(id));
-				}
-				else if (storage.exist_record_in_struct(id)) {
-					if (storage.var_exist(id) && storage.get_var(id).is_protect())
-						it.data() = new_value(storage.get_var(id));
-					else {
-						it.data() = new token_signal(signal_types::dot_);
-						tree.emplace_left_left(it, new token_id("this"));
-						tree.emplace_right_right(it, token);
-					}
-				}
-				else if (storage.var_exist(id) && storage.get_var(id).is_protect())
+				if (storage.var_exist(id) && storage.get_var(id).is_protect())
 					it.data() = new_value(storage.get_var(id));
+				else if (storage.exist_record_in_struct(id)) {
+					it.data() = new token_signal(signal_types::dot_);
+					tree.emplace_left_left(it, new token_id("this"));
+					tree.emplace_right_right(it, token);
+				}
 				return;
 				break;
 			}
@@ -309,6 +301,7 @@ namespace cs {
 					if (it.left().data() == nullptr || it.right().data() == nullptr ||
 					        it.right().data()->get_type() != token_types::id)
 						throw syntax_error("Wrong grammar for arrow expression.");
+					opt_expr(tree, it.left());
 					return;
 					break;
 				case signal_types::dot_: {

@@ -419,8 +419,9 @@ namespace cs {
 				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 			}
 		}
-		if (raw.front().size()==5)
-			return new statement_struct(name, dynamic_cast<token_expr *>(raw.front().at(3))->get_tree(), body, context, raw.front().back());
+		if (raw.front().size() == 5)
+			return new statement_struct(name, dynamic_cast<token_expr *>(raw.front().at(3))->get_tree(), body, context,
+			                            raw.front().back());
 		else
 			return new statement_struct(name, cov::tree<token_base *>(), body, context, raw.front().back());
 	}
