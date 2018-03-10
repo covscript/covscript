@@ -344,7 +344,7 @@ namespace cs {
 								vector args;
 								args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
 								for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
-									args.push_back(parse_expr(tree.root()));
+									args.push_back(lvalue(parse_expr(tree.root())));
 								token_base *oldt = it.data();
 								try {
 									it.data() = new_value(a.const_val<callable>().call(args));
@@ -365,7 +365,7 @@ namespace cs {
 								vector args{om.object};
 								args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
 								for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
-									args.push_back(parse_expr(tree.root()));
+									args.push_back(lvalue(parse_expr(tree.root())));
 								token_base *oldt = it.data();
 								try {
 									it.data() = new_value(om.callable.const_val<callable>().call(args));

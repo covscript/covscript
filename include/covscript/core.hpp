@@ -197,7 +197,13 @@ namespace cs {
 		return val;
 	}
 
-// Rvalue and move
+// Move Semantics
+	var lvalue(const var &val)
+	{
+		val.mark_as_rvalue(false);
+		return val;
+	}
+
 	var rvalue(const var &val)
 	{
 		val.mark_as_rvalue(true);

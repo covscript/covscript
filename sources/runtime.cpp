@@ -327,7 +327,7 @@ namespace cs {
 			vector args;
 			args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
 			for (auto &tree:static_cast<token_arglist *>(b)->get_arglist())
-				args.push_back(parse_expr(tree.root()));
+				args.push_back(lvalue(parse_expr(tree.root())));
 			return a.const_val<callable>().call(args);
 		}
 		else if (a.type() == typeid(object_method)) {
@@ -335,7 +335,7 @@ namespace cs {
 			vector args{om.object};
 			args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
 			for (auto &tree:static_cast<token_arglist *>(b)->get_arglist())
-				args.push_back(parse_expr(tree.root()));
+				args.push_back(lvalue(parse_expr(tree.root())));
 			return om.callable.const_val<callable>().call(args);
 		}
 		else
