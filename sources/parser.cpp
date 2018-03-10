@@ -31,6 +31,7 @@ namespace cs {
 
 		clear();
 
+		bool expected_fdef = false;
 		bool expected_fcall = false;
 		bool expected_lambda = false;
 		for (
@@ -88,6 +89,7 @@ namespace cs {
 					tokens.push_back(new
 					                 token_signal(signal_types::vardef_)
 					                );
+					expected_fdef = true;
 					continue;
 				case
 						action_types::namespace_:
@@ -124,11 +126,16 @@ namespace cs {
 						kill_brackets(list);
 					if (expected_fcall) {
 						std::deque<cov::tree<token_base *>> tlist;
+						if (expected_fdef) {
+							expected_fdef = false;
+							no_optimize = true;
+						}
 						for (auto &list:static_cast<token_sblist *>(ptr)->get_list()) {
 							cov::tree<token_base *> tree;
 							gen_tree(tree, list);
 							tlist.push_back(tree);
 						}
+						no_optimize = false;
 						if (!expected_lambda)
 							tokens.push_back(new token_signal(signal_types::fcall_));
 						tokens.push_back(new token_arglist(tlist));

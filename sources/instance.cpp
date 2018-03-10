@@ -218,15 +218,6 @@ namespace cs {
 
 		case
 
-				token_types::arglist: {
-				for (auto &tree:static_cast<token_arglist *>(token)->get_arglist())
-					optimize_expression(tree);
-				return;
-				break;
-			}
-
-		case
-
 				token_types::signal: {
 				switch (static_cast<token_signal *>(token)->get_signal()) {
 				default:

@@ -285,6 +285,7 @@ namespace cs {
 
 		// Status
 		bool inside_lambda = false;
+		bool no_optimize = false;
 		bool return_fcall = false;
 		bool break_block = false;
 		bool continue_block = false;
@@ -375,7 +376,8 @@ namespace cs {
 
 		void optimize_expression(cov::tree<token_base *> &tree)
 		{
-			opt_expr(tree, tree.root());
+			if (!no_optimize)
+				opt_expr(tree, tree.root());
 		}
 
 		void opt_expr(cov::tree<token_base *> &, cov::tree<token_base *>::iterator);
