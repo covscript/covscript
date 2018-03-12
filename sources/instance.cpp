@@ -560,6 +560,7 @@ namespace cs {
 		std::deque<char> buff;
 		for (auto &ch:code)
 			buff.push_back(ch);
+		statement_base *statement = nullptr;
 		try {
 			// Lexer
 			std::deque<token_base *> line;
@@ -582,7 +583,7 @@ namespace cs {
 						--level;
 					}
 					if (level == 0) {
-						method->translate(tmp)->repl_run();
+						statement = method->translate(tmp);
 						tmp.clear();
 						method = nullptr;
 					}
@@ -590,7 +591,7 @@ namespace cs {
 						tmp.push_back(line);
 				}
 				else
-					m->translate({line})->repl_run();
+					statement = m->translate({line});
 			}
 			break;
 			case method_types::block: {
@@ -607,6 +608,8 @@ namespace cs {
 				m->translate({line});
 				break;
 			}
+			if (statement != nullptr)
+				statement->repl_run();
 		}
 		catch (const lang_error &le) {
 			throw fatal_error(std::string("Uncaught exception: ") + le.what());

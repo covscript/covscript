@@ -58,7 +58,7 @@
 namespace cs {
 // Version
 	static const std::string version = "1.2.2(Beta5)";
-	static const number std_version = 20180201;
+	static const number std_version = 20180301;
 // Output Precision
 	static int output_precision = 8;
 	static int *output_precision_ref = &output_precision;
