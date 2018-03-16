@@ -1,0 +1,3 @@
+#include "./covscript.rc"
+A ICON "../icon/covariant_script.ico"
+MY_VERSION_INFO_APP("Covariant Script REPL", "cs_repl")

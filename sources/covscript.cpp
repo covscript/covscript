@@ -132,7 +132,7 @@ namespace cs {
 	}
 }
 
-#if defined(__WIN32) || defined(WIN32)
+#ifdef COVSCRIPT_PLATFORM_WIN32
 
 #include <shlobj.h>
 
