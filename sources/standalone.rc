@@ -1,4 +1,4 @@
-#include "./covscript.rc"
+#include "./resources.rc"
 
 A ICON
 "../icon/covariant_script.ico"
