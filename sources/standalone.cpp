@@ -32,11 +32,11 @@ int covscript_args(int args_size, const char *args[])
 	int index = 1;
 	for (; index < args_size; ++index) {
 		if (expect_log_path == 1) {
-			log_path = process_path(args[index]);
+			log_path = cs::process_path(args[index]);
 			expect_log_path = 2;
 		}
 		else if (expect_import_path == 1) {
-			cs::import_path += cs::path_delimiter + process_path(args[index]);
+			cs::import_path += cs::path_delimiter + cs::process_path(args[index]);
 			expect_import_path = 2;
 		}
 		else if (args[index][0] == '-') {
@@ -63,15 +63,14 @@ void covscript_main(int args_size, const char *args[])
 {
 	if (args_size > 1) {
 		int index = covscript_args(args_size, args);
-		cs::import_path += cs::path_delimiter + get_import_path();
+		cs::import_path += cs::path_delimiter + cs::get_import_path();
 		if (index == args_size)
 			throw cs::fatal_error("no input file.");
-		std::string path = process_path(args[index]);
+		std::string path = cs::process_path(args[index]);
 		cs::array arg;
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
-		system_ext.add_var("args", cs::var::make_constant<cs::array>(arg));
-		cs::init_ext();
+		cs::init(arg);
 		cs::instance_type instance;
 		instance.compile(path);
 		if (!compile_only)

@@ -36,6 +36,13 @@
 #include <cstring>
 #include <cstdlib>
 
+#ifdef COVSCRIPT_PLATFORM_WIN32
+
+#include <shlobj.h>
+
+#pragma comment(lib, "shell32.lib")
+#endif
+
 #include "instance.cpp"
 #include "lexer.cpp"
 #include "parser.cpp"
@@ -75,9 +82,9 @@ namespace cs {
 		a.swap(b, true);
 	}
 
-	void init_ext()
+	void init(const array &args)
 	{
-		// Init the extensions
+		// Init extensions
 		iostream_cs_ext::init();
 		istream_cs_ext::init();
 		ostream_cs_ext::init();
@@ -91,16 +98,41 @@ namespace cs {
 		pair_cs_ext::init();
 		hash_map_cs_ext::init();
 		math_cs_ext::init();
+		system_ext.add_var("args", cs::var::make_constant<cs::array>(args));
 	}
 
-	void init(int argv, char** args)
+	void init(int argv, const char *args[])
 	{
+		// Init args
 		cs::array arg;
 		for (std::size_t i; i < argv; ++i)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[i]));
-		system_ext.add_var("args", cs::var::make_constant<cs::array>(arg));
-	    cs::init_ext();
-    }
+		init(arg);
+	}
+
+#ifdef COVSCRIPT_PLATFORM_WIN32
+
+	std::string get_sdk_path()
+	{
+#ifdef COVSCRIPT_HOME
+		return COVSCRIPT_HOME;
+#else
+		CHAR path[MAX_PATH];
+		HRESULT result = SHGetFolderPathA(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, path);
+		return std::strcat(path, "\\CovScript");
+#endif
+	}
+
+#else
+	std::string get_sdk_path()
+	{
+#ifdef COVSCRIPT_HOME
+		return COVSCRIPT_HOME;
+#else
+		return "/usr/share/covscript";
+#endif
+	}
+#endif
 
 	void instance_type::init_runtime()
 	{
@@ -139,55 +171,4 @@ namespace cs {
 		storage.add_buildin_var("runtime", var::make_protect<extension_t>(make_shared_extension(runtime_ext)));
 		storage.add_buildin_var("math", var::make_protect<extension_t>(make_shared_extension(math_ext)));
 	}
-}
-
-#ifdef COVSCRIPT_PLATFORM_WIN32
-
-#include <shlobj.h>
-
-#pragma comment(lib, "shell32.lib")
-
-std::string get_sdk_path()
-{
-#ifdef COVSCRIPT_HOME
-	return COVSCRIPT_HOME;
-#else
-	CHAR path[MAX_PATH];
-	HRESULT result = SHGetFolderPathA(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, path);
-	return std::strcat(path, "\\CovScript");
-#endif
-}
-
-#else
-std::string get_sdk_path()
-{
-#ifdef COVSCRIPT_HOME
-	return COVSCRIPT_HOME;
-#else
-	return "/usr/share/covscript";
-#endif
-}
-#endif
-
-std::string process_path(const std::string &raw)
-{
-	auto pos0 = raw.find('\"');
-	auto pos1 = raw.rfind('\"');
-	if (pos0 != std::string::npos) {
-		if (pos0 == pos1)
-			throw cs::fatal_error("argument syntax error.");
-		else
-			return raw.substr(pos0 + 1, pos1 - pos0 - 1);
-	}
-	else
-		return raw;
-}
-
-std::string get_import_path()
-{
-	const char *import_path = std::getenv("CS_IMPORT_PATH");
-	if (import_path != nullptr)
-		return process_path(import_path);
-	else
-		return process_path(get_sdk_path() + cs::path_separator + "imports");
 }

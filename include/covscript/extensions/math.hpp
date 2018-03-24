@@ -25,7 +25,7 @@
 
 static cs::extension math_ext;
 static cs::extension math_const_ext;
-static cs::extension_t math_const_ext_shared=cs::make_shared_extension(math_const_ext);
+static cs::extension_t math_const_ext_shared = cs::make_shared_extension(math_const_ext);
 namespace math_cs_ext {
 	using namespace cs;
 
@@ -120,7 +120,7 @@ namespace math_cs_ext {
 		math_const_ext.add_var("min", var::make_constant<number>(std::numeric_limits<number>::min()));
 		math_const_ext.add_var("inf", var::make_constant<number>(std::numeric_limits<number>::infinity()));
 		math_const_ext.add_var("nan", var::make_constant<number>(std::numeric_limits<number>::quiet_NaN()));
-		math_const_ext.add_var("pi", var::make_constant<number>(std::asin(number(1))*2));
+		math_const_ext.add_var("pi", var::make_constant<number>(std::asin(number(1)) * 2));
 		math_const_ext.add_var("e", var::make_constant<number>(std::exp(number(1))));
 		math_ext.add_var("constant", var::make_protect<extension_t>(math_const_ext_shared));
 		math_ext.add_var("abs", var::make_protect<callable>(cni(abs), true));
