@@ -33,8 +33,8 @@ end
 function gen_food()
 	var is_fit=true
 	while(is_fit)
-		food[0]=runtime.randint(0,pic.get_width()-1)
-		food[1]=runtime.randint(0,pic.get_height()-1)
+		food[0]=math.randint(0,pic.get_width()-1)
+		food[1]=math.randint(0,pic.get_height()-1)
 		is_fit=false
 		for it iterate snake_body
 			if(it[0]==food[0]&&it[1]==food[1])

@@ -251,11 +251,11 @@ function newmap()
 	end
 	var ls=(xsize-2)*(ysize-2)
 	while ls!=0
-		var x=runtime.randint(1,xsize-2)
-		var y=runtime.randint(1,ysize-2)
-		var cangoit=cango[runtime.randint(0,3)]
+		var x=math.randint(1,xsize-2)
+		var y=math.randint(1,ysize-2)
+		var cangoit=cango[math.randint(0,3)]
 		while map[2*x+2*y*xlong]==0
-			var whe=cangoit[runtime.randint(0,1)]
+			var whe=cangoit[math.randint(0,1)]
 			map[2*x+2*y*xlong]=1
 			ls--
 			switch whe

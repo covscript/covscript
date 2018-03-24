@@ -86,7 +86,7 @@ function step4(n,k)
     for i=1 to k
         var a={}
         for i=0 to n
-            a.push_back(runtime.randint(0,n))
+            a.push_back(math.randint(0,n))
         end
         var ts=runtime.time()
         quicksort(a,0,a.size()-1)

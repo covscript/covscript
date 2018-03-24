@@ -11,7 +11,7 @@ end
 var ts=runtime.time()
 var lst=new list
 for i=1 to 100
-    push(lst,runtime.randint(1,100))
+    push(lst,math.randint(1,100))
 end
 system.out.println("Time spend:"+to_string(runtime.time()-ts))
 for it iterate lst
