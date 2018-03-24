@@ -8,6 +8,10 @@ struct base
         id=++id_count
         system.out.println("Copy base"+orig.id)
     end
+    function equal(orig)
+        system.out.println("Compare base "+id+" to "+orig.id)
+        return true
+    end
     function finalize()
         system.out.println("Destroy base"+id)
     end
@@ -22,6 +26,10 @@ struct child extends base
     function duplicate(orig) override
         system.out.println("Copy child"+orig.id)
     end
+    function equal(orig) override
+        system.out.println("Compare child "+this.id+" to "+orig.id)
+        return true
+    end
     function finalize() override
         system.out.println("Destroy child"+this.id)
     end
@@ -35,3 +43,6 @@ var b=a
 b.type()
 var c=b.parent
 c.type()
+a==b
+b==c
+b.parent==c

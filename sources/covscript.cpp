@@ -32,9 +32,6 @@
 #include <covscript/extensions/pair.hpp>
 #include <covscript/extensions/hash_map.hpp>
 #include <covscript/extensions/math.hpp>
-#include <iostream>
-#include <cstring>
-#include <cstdlib>
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
 

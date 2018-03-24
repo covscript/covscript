@@ -315,6 +315,21 @@ namespace cs {
 				invoke((*m_data)["finalize"], var::make<structure>(this));
 		}
 
+		bool operator==(const structure &s) const
+		{
+			if (s.m_hash != m_hash)
+				return false;
+			if (!m_shadow && m_data->count("finalize") > 0)
+				return invoke((*m_data)["equal"], var::make<structure>(this),
+				              var::make<structure>(&s)).const_val<bool>();
+			else {
+				for (auto &it:*m_data)
+					if (it.first != "parent" && (*s.m_data)[it.first] != it.second)
+						return false;
+				return true;
+			}
+		}
+
 		const std::shared_ptr<spp::sparse_hash_map<string, var>> &get_domain() const
 		{
 			return m_data;

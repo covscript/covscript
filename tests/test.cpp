@@ -1,6 +1,5 @@
 #include <covscript/covscript.hpp>
 #include <iostream>
-#include <string>
 
 int main(int argv, const char *args[]) {
     cs::init(argv, args);
