@@ -19,7 +19,6 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <mozart/random.hpp>
 #include <mozart/timer.hpp>
 #include <covscript/cni.hpp>
 #include <cstdlib>
@@ -78,16 +77,6 @@ namespace runtime_cs_ext {
 		cov::timer::delay(cov::timer::time_unit::milli_sec, time);
 	}
 
-	number rand(number b, number e)
-	{
-		return cov::rand<number>(b, e);
-	}
-
-	number randint(number b, number e)
-	{
-		return cov::rand<long>(b, e);
-	}
-
 	var exception(const string &str)
 	{
 		return var::make<lang_error>(str);
@@ -131,8 +120,6 @@ namespace runtime_cs_ext {
 		runtime_ext.add_var("info", var::make_protect<callable>(cni(info)));
 		runtime_ext.add_var("time", var::make_protect<callable>(cni(time)));
 		runtime_ext.add_var("delay", var::make_protect<callable>(cni(delay)));
-		runtime_ext.add_var("rand", var::make_protect<callable>(cni(rand)));
-		runtime_ext.add_var("randint", var::make_protect<callable>(cni(randint)));
 		runtime_ext.add_var("exception", var::make_protect<callable>(cni(exception)));
 		runtime_ext.add_var("hash", var::make_protect<callable>(cni(hash), true));
 		runtime_ext.add_var("build", var::make_protect<callable>(cni(build)));
