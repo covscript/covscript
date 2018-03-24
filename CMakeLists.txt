@@ -3,7 +3,7 @@ project(covscript)
 include_directories(include)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS " -fPIE -s -O3")
+set(CMAKE_CXX_FLAGS "-s -O3")
 
 add_library(covscript SHARED sources/covscript.cpp)
 add_executable(cs sources/standalone.cpp)
