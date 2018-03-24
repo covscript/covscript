@@ -19,7 +19,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://covariant.cn/cs
 */
-#include <covscript/instance.hpp>
+#include <covscript/covscript.hpp>
 #include <covscript/console/conio.hpp>
 #include <covscript/extensions/iostream.hpp>
 #include <covscript/extensions/system.hpp>
@@ -92,6 +92,15 @@ namespace cs {
 		hash_map_cs_ext::init();
 		math_cs_ext::init();
 	}
+
+	void init(int argv, char** args)
+	{
+		cs::array arg;
+		for (std::size_t i; i < argv; ++i)
+			arg.emplace_back(cs::var::make_constant<cs::string>(args[i]));
+		system_ext.add_var("args", cs::var::make_constant<cs::array>(arg));
+	    cs::init_ext();
+    }
 
 	void instance_type::init_runtime()
 	{
