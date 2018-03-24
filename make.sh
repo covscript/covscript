@@ -44,6 +44,8 @@ done
 mkdir -p build
 cd build
 mkdir -p bin
+mkdir -p lib
+$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -shared ../sources/covscript.cpp $LDFLAGS -o ./lib/libcovscript.so &
 $CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" ../sources/standalone.cpp $LDFLAGS -o ./bin/cs &
 $CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" ../sources/repl.cpp $LDFLAGS -o ./bin/cs_repl &
 wait
