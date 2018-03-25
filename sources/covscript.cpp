@@ -102,7 +102,7 @@ namespace cs {
 	{
 		// Init args
 		cs::array arg;
-		for (std::size_t i; i < argv; ++i)
+		for (std::size_t i = 0; i < argv; ++i)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[i]));
 		init(arg);
 	}
