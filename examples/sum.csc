@@ -12,4 +12,4 @@ loop
 until r<10^(-6)
 end
 system.out.println(s)
-system.out.println(math.pi/4)
+system.out.println(math.constant.pi/4)

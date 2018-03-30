@@ -50,17 +50,7 @@ namespace cs {
 	statement_base *method_involve::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
-		token_value *vptr = dynamic_cast<token_value *>(tree.root().data());
-		if (vptr != nullptr) {
-			var ns = vptr->get_value();
-			if (ns.type() == typeid(name_space_t))
-				context->instance->storage.involve_domain(ns.const_val<name_space_t>()->get_domain());
-			else
-				throw syntax_error("Only support involve namespace.");
-			return nullptr;
-		}
-		else
-			return new statement_involve(tree, context, raw.front().back());
+		return new statement_involve(tree, context, raw.front().back());
 	}
 
 	statement_base *method_var::translate(const std::deque<std::deque<token_base *>> &raw)
