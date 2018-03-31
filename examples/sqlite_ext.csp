@@ -1,10 +1,39 @@
 package sqlite_ext
 import sqlite
+import regex
 struct record
     var name=null
     var type=null
     var data=null
     var sql_type=null
+end
+struct column
+    var name=null
+    var type=null
+    var data=new string
+end
+function table_list(db)
+    var tables=exec(db,"select name from sqlite_master where type=\'table\' order by name")
+    var table_list=new array
+    for row iterate tables
+        for col iterate row
+            table_list.push_back(col.data)
+        end
+    end
+    return move(table_list)
+end
+function column_info(db,table)
+    var info=exec(db,"select sql from sqlite_master where tbl_name = \'"+table+"\' and type=\'table\'")[0][0].data
+    var list=regex.build("^.+\\((.*)\\)$").match(info).str(1).split({','})
+    var res=new array
+    for it iterate list
+        var col=new column
+        var _col=it.split({' ','\t','\n'})
+        col.name=_col[0]
+        col.type=_col[1]
+        res.push_back(move(col))
+    end
+    return move(res)
 end
 function exec(db,sql)
     var data=new array

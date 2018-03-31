@@ -7,6 +7,7 @@ struct db_editor extends picasso.base_window
     var result=null
     var table_name=null
     var table_list=new array
+    var column_info=null
     var text_buff=new string
     var selected=0
     var app_width=0
@@ -27,6 +28,7 @@ struct db_editor extends picasso.base_window
     function load(table)
         table_name=table
         result=sqlite_ext.exec(db,"select * from "+table)
+        column_info=sqlite_ext.column_info(db,table)
     end
     function on_present_handle(act)
         app_width=act.imgui_app.get_window_width()
@@ -40,17 +42,11 @@ struct db_editor extends picasso.base_window
             open_popup("Change Table")
             text_buff=table_name
             selected=0
-            var tables=sqlite_ext.exec(db,"select name from sqlite_master where type=\'table\' order by name")
-            table_list=new array
-            for row iterate tables
-                for col iterate row
-                    table_list.push_back(col.data)
-                end
-            end
+            table_list=sqlite_ext.table_list(db)
         end
-        columns(result.at(0).size(),"",true)
+        columns(column_info.size(),"",true)
         separator()
-        for it iterate result.at(0)
+        for it iterate column_info
             text(it.name)
             next_column()
         end
@@ -62,9 +58,14 @@ struct db_editor extends picasso.base_window
                 end
                 opened=false
                 selectable(to_string(it.data),opened)
-                if is_item_hovered()&&is_mouse_clicked(0)
-                    open_popup("Edit Value##popup"+id)
-                    text_buff=to_string(it.data)
+                if is_item_hovered()
+                    if is_mouse_clicked(0)
+                        open_popup("Edit Value##popup"+id)
+                        text_buff=to_string(it.data)
+                    end
+                    if is_mouse_clicked(1)
+                        open_popup("Delete Value##popup"+id)
+                    end
                 end
                 opened=true
                 if begin_popup_modal("Edit Value##popup"+id,opened,{flags.no_move,flags.always_auto_resize})
@@ -95,12 +96,78 @@ struct db_editor extends picasso.base_window
                     end
                     end_popup()
                 end
+                opened=true
+                if begin_popup_modal("Delete Value##popup"+id,opened,{flags.no_move,flags.always_auto_resize})
+                    text("Do you want to delete this line of table?")
+                    if button("Yes")
+                        var stmt=db.prepare("delete from "+table_name+" where "+it.name+"=?")
+                        switch it.sql_type
+                            case sqlite.integer
+                                stmt.bind_integer(1,it.data)
+                            end
+                            case sqlite.real
+                                stmt.bind_real(1,it.data)
+                            end
+                            case sqlite.text
+                                stmt.bind_text(1,it.data)
+                            end
+                        end
+                        stmt.exec()
+                        load(table_name)
+                        close_current_popup()
+                        end_popup()
+                        return
+                    end
+                    same_line()
+                    if button("No")
+                        close_current_popup()
+                    end
+                    end_popup()
+                end
                 ++id
                 next_column()
 		    end
 	    end
+        separator()
+        for it iterate column_info
+            opened=false
+            selectable(it.data,opened)
+            if is_item_hovered()&&is_mouse_clicked(0)
+                open_popup("Edit Value##popup"+id)
+                text_buff=it.data
+            end
+            opened=true
+            if begin_popup_modal("Edit Value##popup"+id,opened,{flags.no_move,flags.always_auto_resize})
+                text("Type:"+it.type)
+                input_text("",text_buff,128)
+                same_line()
+                if button("Confirm")
+                    it.data=text_buff
+                    close_current_popup()
+                end
+                end_popup()
+            end
+            ++id
+            next_column()
+        end
         columns(1,"",true)
         separator()
+        if button("Insert")
+            var sql="insert into "+table_name+"("
+            for it iterate column_info
+                sql+=it.name+","
+            end
+            sql.cut(1)
+            sql+=") values("
+            for it iterate column_info
+                sql+="\'"+it.data+"\',"
+                it.data=new string
+            end
+            sql.cut(1)
+            sql+=")"
+            sqlite_ext.exec(db,sql)
+            load(table_name)
+        end
     end
     function on_draw() override
         var opened=true
