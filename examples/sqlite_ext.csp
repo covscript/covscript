@@ -4,6 +4,7 @@ struct record
     var name=null
     var type=null
     var data=null
+    var sql_type=null
 end
 function exec(db,sql)
     var data=new array
@@ -16,6 +17,7 @@ function exec(db,sql)
             var dat=new record
             dat.name=stmt.column_name(i)
             dat.type=stmt.column_decltype(i)
+            dat.sql_type=stmt.column_type(i)
             switch stmt.column_type(i)
                 case sqlite.integer
                     dat.data=stmt.column_integer(i)
