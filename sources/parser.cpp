@@ -436,5 +436,4 @@ namespace cs {
 		tmp.clear();
 		kill_action(lines, statements, true);
 	}
-
 }

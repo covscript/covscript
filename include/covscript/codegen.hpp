@@ -46,7 +46,7 @@ namespace cs {
 
 		virtual method_types get_type() const noexcept override
 		{
-			return method_types::jit_command;
+			return method_types::single;
 		}
 
 		virtual statement_types get_target_type() const noexcept override
@@ -114,7 +114,7 @@ namespace cs {
 
 		virtual method_types get_type() const noexcept override
 		{
-			return method_types::jit_command;
+			return method_types::single;
 		}
 
 		virtual statement_types get_target_type() const noexcept override

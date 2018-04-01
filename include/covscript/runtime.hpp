@@ -197,10 +197,10 @@ namespace cs {
 			add_var(name, var::make_protect<type>(func, hash, ext));
 		}
 
-		void involve_domain(const domain_t &domain)
+		void involve_domain(const domain_t &domain, bool is_override = false)
 		{
 			for (auto &it:*domain)
-				add_var(it.first, it.second);
+				add_var(it.first, it.second, is_override);
 		}
 	};
 

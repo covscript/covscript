@@ -33,9 +33,9 @@ namespace cs {
 		if (token == nullptr || token->get_type() != token_types::id)
 			throw syntax_error("Wrong grammar for import statement.");
 		const std::string &package_name = dynamic_cast<token_id *>(token)->get_id();
-		context->instance->storage.add_var(package_name, var::make_protect<extension_t>(
-		                                       context->instance->import(import_path, package_name)));
-		return nullptr;
+		const extension_t &ext = context->instance->import(import_path, package_name);
+		context->instance->storage.add_var(package_name, var::make_protect<extension_t>(ext));
+		return new statement_import(package_name, ext, context, raw.front().back());
 	}
 
 	statement_base *method_package::translate(const std::deque<std::deque<token_base *>> &raw)
@@ -50,7 +50,17 @@ namespace cs {
 	statement_base *method_involve::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
-		return new statement_involve(tree, context, raw.front().back());
+		token_value *vptr = dynamic_cast<token_value *>(tree.root().data());
+		if (vptr != nullptr) {
+			var ns = vptr->get_value();
+			if (ns.type() == typeid(name_space_t))
+				context->instance->storage.involve_domain(ns.const_val<name_space_t>()->get_domain());
+			else
+				throw syntax_error("Only support involve namespace.");
+			return new statement_involve(tree, true, context, raw.front().back());
+		}
+		else
+			return new statement_involve(tree, false, context, raw.front().back());
 	}
 
 	statement_base *method_var::translate(const std::deque<std::deque<token_base *>> &raw)
@@ -58,7 +68,7 @@ namespace cs {
 		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
 		instance_type::define_var_profile dvp;
 		context->instance->parse_define_var(tree, dvp);
-		return new statement_var(dvp, context, raw.front().back());
+		return new statement_var(dvp, false, context, raw.front().back());
 	}
 
 	statement_base *method_constant::translate(const std::deque<std::deque<token_base *>> &raw)
@@ -71,7 +81,7 @@ namespace cs {
 		const var &val = static_cast<token_value *>(dvp.expr.root().data())->get_value();
 		context->instance->add_constant(val);
 		context->instance->storage.add_var(dvp.id, val);
-		return nullptr;
+		return new statement_var(dvp, true, context, raw.front().back());
 	}
 
 	statement_base *method_end::translate(const std::deque<std::deque<token_base *>> &raw)
@@ -91,8 +101,8 @@ namespace cs {
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
 		for (auto &ptr:body)
-			if (ptr->get_type() != statement_types::involve_ && ptr->get_type() != statement_types::var_ &&
-			        ptr->get_type() != statement_types::function_ &&
+			if (ptr->get_type() != statement_types::import_ && ptr->get_type() != statement_types::involve_ &&
+			        ptr->get_type() != statement_types::var_ && ptr->get_type() != statement_types::function_ &&
 			        ptr->get_type() != statement_types::namespace_ && ptr->get_type() != statement_types::struct_)
 				throw syntax_error("Wrong grammar for namespace definition.");
 		return new statement_namespace(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data(), body,
@@ -454,6 +464,4 @@ namespace cs {
 		return new statement_throw(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), context,
 		                           raw.front().back());
 	}
-
-
 }
