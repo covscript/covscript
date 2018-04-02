@@ -41,24 +41,6 @@ namespace cs {
 		virtual void repl_run() override;
 	};
 
-	class statement_import final : public statement_base {
-		std::string mName;
-		extension_t mExtension;
-	public:
-		statement_import() = delete;
-
-		statement_import(const std::string &name, const extension_t &ext, context_t c, token_base *ptr)
-			: statement_base(c, ptr),
-			  mName(name), mExtension(ext) {}
-
-		virtual statement_types get_type() const noexcept override
-		{
-			return statement_types::import_;
-		}
-
-		virtual void run() override;
-	};
-
 	class statement_involve final : public statement_base {
 		bool mOverride = false;
 		cov::tree<token_base *> mTree;
@@ -83,10 +65,28 @@ namespace cs {
 	public:
 		statement_var() = delete;
 
-		statement_var(const instance_type::define_var_profile &dvp, bool is_override, context_t c, token_base *ptr)
-			: statement_base(c,
-			                 ptr),
-			  mDvp(dvp), mOverride(is_override) {}
+		statement_var(const instance_type::define_var_profile &dvp, context_t c, token_base *ptr) : statement_base(c,
+			        ptr),
+			mDvp(dvp) {}
+
+		virtual statement_types get_type() const noexcept override
+		{
+			return statement_types::var_;
+		}
+
+		virtual void run() override;
+	};
+
+	class statement_constant final : public statement_base {
+		std::string mName;
+		var mVal;
+	public:
+		statement_constant() = delete;
+
+		statement_constant(const std::string &name, const var &val, context_t c, token_base *ptr) : statement_base(c,
+			        ptr),
+			mName(name),
+			mVal(val) {}
 
 		virtual statement_types get_type() const noexcept override
 		{

@@ -33,9 +33,9 @@ namespace cs {
 		if (token == nullptr || token->get_type() != token_types::id)
 			throw syntax_error("Wrong grammar for import statement.");
 		const std::string &package_name = dynamic_cast<token_id *>(token)->get_id();
-		const extension_t &ext = context->instance->import(import_path, package_name);
-		context->instance->storage.add_var(package_name, var::make_protect<extension_t>(ext));
-		return new statement_import(package_name, ext, context, raw.front().back());
+		const var &ext = var::make_protect<extension_t>(context->instance->import(import_path, package_name));
+		context->instance->storage.add_var(package_name, ext);
+		return new statement_constant(package_name, ext, context, raw.front().back());
 	}
 
 	statement_base *method_package::translate(const std::deque<std::deque<token_base *>> &raw)
@@ -68,7 +68,7 @@ namespace cs {
 		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
 		instance_type::define_var_profile dvp;
 		context->instance->parse_define_var(tree, dvp);
-		return new statement_var(dvp, false, context, raw.front().back());
+		return new statement_var(dvp, context, raw.front().back());
 	}
 
 	statement_base *method_constant::translate(const std::deque<std::deque<token_base *>> &raw)
@@ -81,7 +81,7 @@ namespace cs {
 		const var &val = static_cast<token_value *>(dvp.expr.root().data())->get_value();
 		context->instance->add_constant(val);
 		context->instance->storage.add_var(dvp.id, val);
-		return new statement_var(dvp, true, context, raw.front().back());
+		return new statement_constant(dvp.id, val, context, raw.front().back());
 	}
 
 	statement_base *method_end::translate(const std::deque<std::deque<token_base *>> &raw)

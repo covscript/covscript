@@ -98,11 +98,6 @@ namespace cs {
 		}
 	}
 
-	void statement_import::run()
-	{
-		context->instance->storage.add_var(mName, var::make_protect<extension_t>(mExtension));
-	}
-
 	void statement_involve::run()
 	{
 		var ns = context->instance->parse_expr(mTree.root());
@@ -114,7 +109,12 @@ namespace cs {
 
 	void statement_var::run()
 	{
-		context->instance->storage.add_var(mDvp.id, copy(context->instance->parse_expr(mDvp.expr.root())), mOverride);
+		context->instance->storage.add_var(mDvp.id, copy(context->instance->parse_expr(mDvp.expr.root())));
+	}
+
+	void statement_constant::run()
+	{
+		context->instance->storage.add_var(mName, mVal, true);
 	}
 
 	void statement_break::run()
