@@ -17,7 +17,7 @@
 * Copyright (C) 2018 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
-* Website: http://covariant.cn/cs
+* Website: http://covscript.org
 */
 #include "covscript.cpp"
 
