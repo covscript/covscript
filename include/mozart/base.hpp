@@ -25,8 +25,10 @@
 #error E0001
 #endif
 
+#ifndef _MSC_VER
 #if __cplusplus < 201103L
 #error E0002
+#endif
 #endif
 
 #define __Mozart 170601L

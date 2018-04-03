@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#if defined(__WIN32) || defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 
 #include "./win32_conio.hpp"
 

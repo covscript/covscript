@@ -40,7 +40,7 @@ namespace cs_impl {
 	{
 		return ostream_ext_shared;
 	}
-
+#ifndef _MSC_VER
 	template<>
 	constexpr const char *get_name_of_type<std::ios_base::seekdir>()
 	{
@@ -52,6 +52,7 @@ namespace cs_impl {
 	{
 		return "cs::iostream::openmode";
 	}
+#endif
 }
 namespace iostream_cs_ext {
 	using namespace cs;

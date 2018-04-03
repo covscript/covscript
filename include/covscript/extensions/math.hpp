@@ -94,14 +94,14 @@ namespace math_cs_ext {
 		return std::pow(a, b);
 	}
 
-	number min(number a, number b)
+	number _min(number a, number b)
 	{
-		return std::min(a, b);
+		return (std::min)(a, b);
 	}
 
-	number max(number a, number b)
+	number _max(number a, number b)
 	{
-		return std::max(a, b);
+		return (std::max)(a, b);
 	}
 
 	number rand(number b, number e)
@@ -116,8 +116,8 @@ namespace math_cs_ext {
 
 	void init()
 	{
-		math_const_ext.add_var("max", var::make_constant<number>(std::numeric_limits<number>::max()));
-		math_const_ext.add_var("min", var::make_constant<number>(std::numeric_limits<number>::min()));
+		math_const_ext.add_var("max", var::make_constant<number>((std::numeric_limits<number>::max)()));
+		math_const_ext.add_var("min", var::make_constant<number>((std::numeric_limits<number>::min)()));
 		math_const_ext.add_var("inf", var::make_constant<number>(std::numeric_limits<number>::infinity()));
 		math_const_ext.add_var("nan", var::make_constant<number>(std::numeric_limits<number>::quiet_NaN()));
 		math_const_ext.add_var("pi", var::make_constant<number>(std::asin(number(1)) * 2));
@@ -136,8 +136,8 @@ namespace math_cs_ext {
 		math_ext.add_var("sqrt", var::make_protect<callable>(cni(sqrt), true));
 		math_ext.add_var("root", var::make_protect<callable>(cni(root), true));
 		math_ext.add_var("pow", var::make_protect<callable>(cni(pow), true));
-		math_ext.add_var("min", var::make_protect<callable>(cni(min), true));
-		math_ext.add_var("max", var::make_protect<callable>(cni(max), true));
+		math_ext.add_var("min", var::make_protect<callable>(cni(_min), true));
+		math_ext.add_var("max", var::make_protect<callable>(cni(_max), true));
 		math_ext.add_var("rand", var::make_protect<callable>(cni(rand)));
 		math_ext.add_var("randint", var::make_protect<callable>(cni(randint)));
 	}
