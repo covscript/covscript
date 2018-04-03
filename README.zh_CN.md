@@ -34,7 +34,7 @@
 ### Microsoft Windows ###
 请在[Latest Release](https://github.com/covscript/covscript/releases/latest)上下载预编译可执行文件。  
 你也可以使用MinGW或相应的工具来直接编译源代码。如果您的系统中已经安装了G++编译器，则可以直接执行`make.bat`。 您需要确保编译器支持C++11标准。  
-**注意：Covariant Script不支持Microsoft CL编译器，具体原因还不太清楚，可能是它对C++标准的支持不完整。**
+**注意：Covariant Script解释器支持MSVC编译器，但由于Windows系统对DLL导出符号的限制所以目前Covariant Script的扩展机制在MSVC上是几乎完全瘫痪的。虽然我们提供了`make_msvc.bat`，但并不推荐使用，仅用于参考。需要嵌入Covariant Script的Windows开发者请直接编译源码，但所有的扩展库暂时不可用。**
 ### Linux ###
 首先你需要从[CovScript Github主页](https://github.com/covscript/covscript)下载源代码。
 然后你有两种选择：
