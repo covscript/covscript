@@ -27,9 +27,7 @@
 + 流式API
 
 ## 文档 ##
-[CovScript Gitbooks](https://covscript.gitbooks.io/api/content/)  
-[CovScript文档](https://github.com/covscript/covscript-docs)  
-[CovScript教程](https://github.com/covscript/covscript-tutorial)
+[CovScript文档](http://covscript.org/docs/)  
 ## 安装 ##
 ### Microsoft Windows ###
 请在[Latest Release](https://github.com/covscript/covscript/releases/latest)上下载预编译可执行文件。  

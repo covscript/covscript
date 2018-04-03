@@ -27,14 +27,12 @@
 + Streams API
 
 ## Documentations ##
-[CovScript Gitbooks](https://covscript.gitbooks.io/api/content/)  
-[CovScript Document](https://github.com/covscript/covscript-docs)  
-[CovScript Tutorial](https://github.com/covscript/covscript-tutorial)  
+[CovScript Document](http://covscript.org/docs/)  
 ## Installation ##
 ### Windows ###
 Download the precompiled executable on the [Latest Release](https://github.com/covscript/covscript/releases/latest).   
 You can also use other tools (like MinGW) to compile. If you already have a G++ compiler installed, you can use `make.bat`. Make sure the compiler supports C++11.  
-**Note: Covariant Script does not compile with Microsoft CL compiler magically.**
+**Note: The Covariant Script interpreter supports the MSVC compiler, but due to the restrictions imposed by the Windows system on DLL export symbols, the current Covariant Script extension mechanism is almost completely paradoxical on MSVC. Although we provide `make_msvc.bat`, it is not recommended and is for reference only. Windows developers who need to embed Covariant Script please compile the source code directly, but all extension libraries are temporarily unavailable.**
 ### Linux ###
 First, download source from [CovScript Github Page](https://github.com/covscript/covscript).  
 Then you have two choices:
