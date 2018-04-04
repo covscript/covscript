@@ -164,8 +164,16 @@ namespace cs {
 			{"typeid",  []() -> token_base * { return new token_signal(signal_types::typeid_); }},
 			{"new",     []() -> token_base * { return new token_signal(signal_types::new_); }},
 			{"gcnew",   []() -> token_base * { return new token_signal(signal_types::gcnew_); }},
-			{"current", []() -> token_base * { return new token_value(var::make_constant<constant_values>(constant_values::current_namespace)); }},
-			{"global",  []() -> token_base * { return new token_value(var::make_constant<constant_values>(constant_values::global_namespace)); }},
+			{
+				"current", []() -> token_base * {
+					return new token_value(var::make_constant<constant_values>(constant_values::current_namespace));
+				}
+			},
+			{
+				"global",  []() -> token_base * {
+					return new token_value(var::make_constant<constant_values>(constant_values::global_namespace));
+				}
+			},
 			{"null",    []() -> token_base * { return new token_value(null_pointer); }},
 			{"true",    []() -> token_base * { return new token_value(var::make_constant<bool>(true)); }},
 			{"false",   []() -> token_base * { return new token_value(var::make_constant<bool>(false)); }}
