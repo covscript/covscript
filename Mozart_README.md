@@ -44,7 +44,7 @@ E000I|Stack overflow
 E000J|The variable has been protected.  
 E000K|It is not allowed to change the value of a constant.  
 E000L|Duplicate singleton objects are not allowed.  
-E000M|Does not support conversion of the specified type to 'long'.  
+E000M|Does not support conversion of the specified type to `long`.  
 
 ##### 简体中文:
 
@@ -72,4 +72,4 @@ E000I|栈溢出
 E000J|变量已被保护  
 E000K|不允许更改常量的值  
 E000L|不允许复制单例对象  
-E000M|不支持指定类型向'long'的转换
+E000M|不支持指定类型向`long`的转换
