@@ -115,7 +115,7 @@ namespace cs {
 		return COVSCRIPT_HOME;
 #else
 		CHAR path[MAX_PATH];
-		HRESULT result = SHGetFolderPathA(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, path);
+		SHGetFolderPathA(nullptr, CSIDL_PERSONAL, nullptr, SHGFP_TYPE_CURRENT, path);
 		return std::strcat(path, "\\CovScript");
 #endif
 	}
