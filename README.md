@@ -10,8 +10,6 @@
 - [简体中文](https://github.com/covscript/covscript/blob/master/README.zh_CN.md)
 - [English](https://github.com/covscript/covscript/blob/master/README.md)
 
-***Due to academic stress, the author may not be able to fix all the bugs in time. If you have some problems, please raise in the issue, thank you for your understanding.***
-
 ## Features ##
 + Efficient compiler front end
 + Compile-time optimization
