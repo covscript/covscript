@@ -63,7 +63,8 @@ void covscript_main(int args_size, const char *args[])
 	if (!silent)
 		std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: " << cs::version << "\n"
 		          "Copyright (C) 2018 Michael Lee.All rights reserved.\n"
-		          "Please visit <http://covscript.org/> for more information." << std::endl;
+		          "Please visit <http://covscript.org/> for more information."
+		          << std::endl;
 	cs::array arg{cs::var::make_constant<cs::string>("<REPL_ENV>")};
 	for (; index < args_size; ++index)
 		arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));

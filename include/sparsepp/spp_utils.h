@@ -155,7 +155,7 @@ namespace spp_ {
 	struct spp_hash {
 		SPP_INLINE size_t operator()(const T &__v) const SPP_NOEXCEPT
 		{
-			SPP_HASH_CLASS<T> hasher;
+			SPP_HASH_CLASS <T> hasher;
 			return hasher(__v);
 		}
 	};

@@ -77,7 +77,7 @@ namespace cs {
 	class context_type final {
 	public:
 		instance_type *instance = nullptr;
-		std::deque<string> file_buff;
+		std::deque <string> file_buff;
 		string file_path = "<Unknown>";
 		string package_name;
 
@@ -93,7 +93,7 @@ namespace cs {
 // Callable and Function
 	class callable final {
 	public:
-		using function_type=std::function<var(vector &)>;
+		using function_type=std::function<var(vector & )>;
 		enum class types {
 			normal, constant, member_fn
 		};
@@ -128,14 +128,14 @@ namespace cs {
 
 	class function final {
 		context_t mContext;
-		std::vector<std::string> mArgs;
+		std::vector <std::string> mArgs;
 		std::deque<statement_base *> mBody;
 	public:
 		function() = delete;
 
 		function(const function &) = default;
 
-		function(context_t c, const std::vector<std::string> &args, const std::deque<statement_base *> &body)
+		function(context_t c, const std::vector <std::string> &args, const std::deque<statement_base *> &body)
 			: mContext(
 			      c), mArgs(args), mBody(body) {}
 
@@ -150,7 +150,7 @@ namespace cs {
 
 		void add_this()
 		{
-			std::vector<std::string> args{"this"};
+			std::vector <std::string> args{"this"};
 			args.reserve(mArgs.size());
 			for (auto &name:mArgs) {
 				if (name != "this")
@@ -281,7 +281,7 @@ namespace cs {
 		}
 
 		structure(const structure &s) : m_hash(s.m_hash), m_name(s.m_name),
-			m_data(std::make_shared<map_t<string, var >>())
+			m_data(std::make_shared < map_t < string, var >> ())
 		{
 			if (s.m_data->count("parent") > 0) {
 				var &_p = (*s.m_data)["parent"];
@@ -431,11 +431,11 @@ namespace cs {
 	class name_space final {
 		domain_t m_data;
 	public:
-		name_space() : m_data(std::make_shared<map_t<string, var >>()) {}
+		name_space() : m_data(std::make_shared < map_t < string, var >> ()) {}
 
 		name_space(const name_space &) = delete;
 
-		name_space(const domain_t &dat) : m_data(dat) {}
+		explicit name_space(const domain_t &dat) : m_data(dat) {}
 
 		~name_space() = default;
 

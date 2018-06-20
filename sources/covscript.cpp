@@ -120,6 +120,7 @@ namespace cs {
 	}
 
 #else
+
 	std::string get_sdk_path()
 	{
 #ifdef COVSCRIPT_HOME
@@ -128,6 +129,7 @@ namespace cs {
 		return "/usr/share/covscript";
 #endif
 	}
+
 #endif
 
 	void instance_type::init_runtime()

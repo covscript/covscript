@@ -194,7 +194,7 @@ namespace spp_ {
 	struct is_relocatable<A[N]> : is_relocatable<A> {
 	};
 	template<class T, class U>
-	struct is_relocatable<std::pair<T, U> > :
+	struct is_relocatable<std::pair < T, U> > :
 	integral_constant<bool, (is_relocatable<T>::value && is_relocatable<U>::value)> {
 	};
 

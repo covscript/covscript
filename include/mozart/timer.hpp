@@ -27,7 +27,7 @@
 
 namespace cov {
 	class timer final {
-		static std::chrono::time_point<std::chrono::high_resolution_clock> m_timer;
+		static std::chrono::time_point <std::chrono::high_resolution_clock> m_timer;
 	public:
 		typedef unsigned long timer_t;
 		enum class time_unit {
@@ -92,6 +92,6 @@ namespace cov {
 		}
 	};
 
-	std::chrono::time_point<std::chrono::high_resolution_clock>
+	std::chrono::time_point <std::chrono::high_resolution_clock>
 	timer::m_timer(std::chrono::high_resolution_clock::now());
 }

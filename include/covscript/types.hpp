@@ -162,7 +162,7 @@ namespace cs_impl {
 	struct hash_if<T, X, true> {
 		static std::size_t hash(const X &val)
 		{
-			static std::hash<T> gen;
+			static std::hash <T> gen;
 			return gen(static_cast<const T>(val)) + hash_gen_base<X>::base_code;
 		}
 	};
@@ -171,7 +171,7 @@ namespace cs_impl {
 	struct hash_if<T, T, true> {
 		static std::size_t hash(const T &val)
 		{
-			static std::hash<T> gen;
+			static std::hash <T> gen;
 			return gen(val);
 		}
 	};

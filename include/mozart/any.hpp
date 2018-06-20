@@ -172,7 +172,7 @@ namespace cov {
 	struct hash_if<T, true> {
 		static std::size_t hash(const T &val)
 		{
-			static std::hash<T> gen;
+			static std::hash <T> gen;
 			return gen(val);
 		}
 	};

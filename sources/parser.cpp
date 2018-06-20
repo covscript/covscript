@@ -23,7 +23,7 @@ namespace cs {
 	void instance_type::kill_brackets(std::deque<token_base *> &tokens, std::size_t
 	                                  line_num)
 	{
-		std::deque<token_base *> oldt;
+		std::deque < token_base * > oldt;
 		std::swap(tokens, oldt
 		         );
 		tokens.
@@ -124,13 +124,13 @@ namespace cs {
 					for (auto &list:static_cast<token_sblist *>(ptr)->get_list())
 						kill_brackets(list);
 					if (expected_fcall) {
-						std::deque<cov::tree<token_base *>> tlist;
+						std::deque <cov::tree<token_base *>> tlist;
 						if (expected_fdef) {
 							expected_fdef = false;
 							no_optimize = true;
 						}
 						for (auto &list:static_cast<token_sblist *>(ptr)->get_list()) {
-							cov::tree<token_base *> tree;
+							cov::tree < token_base * > tree;
 							gen_tree(tree, list);
 							tlist.push_back(tree);
 						}
@@ -155,7 +155,7 @@ namespace cs {
 					if (mbl->get_list().size() != 1)
 						throw syntax_error("There are no more elements in middle bracket.");
 					kill_brackets(mbl->get_list().front());
-					cov::tree<token_base *> tree;
+					cov::tree < token_base * > tree;
 					gen_tree(tree, mbl->get_list().front());
 					tokens.push_back(new token_signal(signal_types::access_));
 					tokens.push_back(new token_expr(tree));
@@ -168,9 +168,9 @@ namespace cs {
 					token_types::lblist: {
 					for (auto &list:static_cast<token_lblist *>(ptr)->get_list())
 						kill_brackets(list);
-					std::deque<cov::tree<token_base *>> tlist;
+					std::deque <cov::tree<token_base *>> tlist;
 					for (auto &list:static_cast<token_lblist *>(ptr)->get_list()) {
-						cov::tree<token_base *> tree;
+						cov::tree < token_base * > tree;
 						gen_tree(tree, list);
 						tlist.push_back(tree);
 					}
@@ -257,7 +257,7 @@ namespace cs {
 				token_sblist *sbl = static_cast<token_sblist *>(obj);
 				if (sbl->get_list().size() != 1)
 					throw syntax_error("There are no more elements in small bracket.");
-				cov::tree<token_base *> t;
+				cov::tree < token_base * > t;
 				gen_tree(t, sbl->get_list().front());
 				obj = new token_expr(t);
 			}
@@ -307,14 +307,14 @@ namespace cs {
 				token_sblist *sbl = static_cast<token_sblist *>(obj);
 				if (sbl->get_list().size() != 1)
 					throw syntax_error("There are no more elements in small bracket.");
-				cov::tree<token_base *> t;
+				cov::tree < token_base * > t;
 				gen_tree(t, sbl->get_list().front());
 				obj = new token_expr(t);
 			}
 			tree.emplace_root_left(tree.root(), obj);
 		}
 		else {
-			std::deque<token_base *> signals, objects;
+			std::deque < token_base * > signals, objects;
 			split_token(raw, signals, objects);
 			build_tree(tree, signals, objects);
 		}
@@ -323,13 +323,13 @@ namespace cs {
 
 	void instance_type::kill_expr(std::deque<token_base *> &tokens)
 	{
-		std::deque<token_base *> oldt, expr;
+		std::deque < token_base * > oldt, expr;
 		std::swap(tokens, oldt);
 		tokens.clear();
 		for (auto &ptr:oldt) {
 			if (ptr->get_type() == token_types::action || ptr->get_type() == token_types::endline) {
 				if (!expr.empty()) {
-					cov::tree<token_base *> tree;
+					cov::tree < token_base * > tree;
 					gen_tree(tree, expr);
 					tokens.push_back(new token_expr(tree));
 					expr.clear();
@@ -342,10 +342,10 @@ namespace cs {
 	}
 
 	void
-	instance_type::kill_action(std::deque<std::deque<token_base *>> lines, std::deque<statement_base *> &statements,
+	instance_type::kill_action(std::deque <std::deque<token_base *>> lines, std::deque<statement_base *> &statements,
 	                           bool raw)
 	{
-		std::deque<std::deque<token_base *>> tmp;
+		std::deque <std::deque<token_base *>> tmp;
 		method_base *method = nullptr;
 		token_endline *endsig = nullptr;
 		int level = 0;
@@ -420,8 +420,8 @@ namespace cs {
 	void instance_type::translate_into_statements(std::deque<token_base *> &tokens,
 	        std::deque<statement_base *> &statements)
 	{
-		std::deque<std::deque<token_base *>> lines;
-		std::deque<token_base *> tmp;
+		std::deque <std::deque<token_base *>> lines;
+		std::deque < token_base * > tmp;
 		for (auto &ptr:tokens) {
 			tmp.push_back(ptr);
 			if (ptr != nullptr && ptr->get_type() == token_types::endline) {

@@ -32,7 +32,7 @@ namespace cs_impl {
 	}
 
 	template<>
-	constexpr const char *get_name_of_type<cov::tree<cs::token_base * >>
+	constexpr const char *get_name_of_type<cov::tree < cs::token_base * >>
 	        ()
 	{
 		return "cs::expression";
@@ -63,7 +63,8 @@ namespace runtime_cs_ext {
 		          "\n"
 		          "You should have received a copy of the GNU Affero General Public License "
 		          "along with this program.  If not, see <http://www.gnu.org/licenses/>.\n"
-		          "Please visit <http://covscript.org/> for more information." << std::endl;
+		          "Please visit <http://covscript.org/> for more information."
+		          << std::endl;
 	}
 
 	number time()
@@ -91,7 +92,7 @@ namespace runtime_cs_ext {
 	var build(const context_t &context, const string &expr)
 	{
 		std::deque<char> buff;
-		std::deque<token_base *> tokens;
+		std::deque < token_base * > tokens;
 		expression_t tree;
 		for (auto &ch:expr)
 			buff.push_back(ch);

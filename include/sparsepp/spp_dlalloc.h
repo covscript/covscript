@@ -716,7 +716,7 @@ namespace spp {
 
 		void set_foot(size_t s)
 		{
-			((malloc_chunk_header *) ((char *) this + s))->_prev_foot = s;
+			((malloc_chunk_header * )((char *) this + s))->_prev_foot = s;
 		}
 
 		// extraction of fields from head words
@@ -768,23 +768,23 @@ namespace spp {
 		// Treat space at ptr +/- offset as a chunk
 		malloc_chunk_header *chunk_plus_offset(size_t s)
 		{
-			return (malloc_chunk_header *) ((char *) this + s);
+			return (malloc_chunk_header * )((char *) this + s);
 		}
 
 		malloc_chunk_header *chunk_minus_offset(size_t s)
 		{
-			return (malloc_chunk_header *) ((char *) this - s);
+			return (malloc_chunk_header * )((char *) this - s);
 		}
 
 		// Ptr to next or previous physical malloc_chunk.
 		malloc_chunk_header *next_chunk()
 		{
-			return (malloc_chunk_header *) ((char *) this + (_head & ~FLAG_BITS));
+			return (malloc_chunk_header * )((char *) this + (_head & ~FLAG_BITS));
 		}
 
 		malloc_chunk_header *prev_chunk()
 		{
-			return (malloc_chunk_header *) ((char *) this - (_prev_foot));
+			return (malloc_chunk_header * )((char *) this - (_prev_foot));
 		}
 
 		// extract next chunk's pinuse bit
@@ -1593,7 +1593,7 @@ namespace spp {
 		static bindex_t minsize_for_tree_index(bindex_t i)
 		{
 			return ((size_t) 1 << ((i >> 1) + TREEBIN_SHIFT)) |
-			       (((size_t) (i & 1)) << ((i >> 1) + TREEBIN_SHIFT - 1));
+			       (((size_t)(i & 1)) << ((i >> 1) + TREEBIN_SHIFT - 1));
 		}
 
 
@@ -2805,7 +2805,7 @@ namespace spp {
 
 				// Offset top by embedded malloc_state
 				mchunkptr mn = (mchunkptr) mem2chunk(this)->next_chunk();
-				init_top(mn, (size_t) ((tbase + tsize) - (char *) mn) - top_foot_size());
+				init_top(mn, (size_t)((tbase + tsize) - (char *) mn) - top_foot_size());
 			}
 			else {
 				// Try to merge with an existing segment
@@ -3082,7 +3082,7 @@ namespace spp {
 		}
 
 		//  If dv is a better fit, return 0 so malloc will use it
-		if (v != 0 && rsize < (size_t) (_dvsize - nb)) {
+		if (v != 0 && rsize < (size_t)(_dvsize - nb)) {
 			if (rtcheck(ok_address(v))) {
 				// split
 				mchunkptr r = (mchunkptr) v->chunk_plus_offset(nb);
@@ -3451,7 +3451,7 @@ postaction:
 			mem = internal_malloc(req);
 			if (mem != 0) {
 				mchunkptr p = mem2chunk(mem);
-				if ((((size_t) (mem)) & (alignment - 1)) != 0) {
+				if ((((size_t)(mem)) & (alignment - 1)) != 0) {
 					// misaligned
 					/*
 					  Find an aligned spot inside chunk.  Since we need to give
@@ -3461,9 +3461,9 @@ postaction:
 					  We've allocated enough total room so that this is always
 					  possible.
 					*/
-					char *br = (char *) mem2chunk((void *) (((size_t) ((char *) mem + alignment - 1)) &
+					char *br = (char *) mem2chunk((void *) (((size_t)((char *) mem + alignment - 1)) &
 					                                        -alignment));
-					char *pos = ((size_t) (br - (char *) (p)) >= MIN_CHUNK_SIZE) ?
+					char *pos = ((size_t)(br - (char *) (p)) >= MIN_CHUNK_SIZE) ?
 					            br : br + alignment;
 					mchunkptr newp = (mchunkptr) pos;
 					size_t leadsize = pos - (char *) (p);
@@ -3689,7 +3689,7 @@ postaction:
 		disable_contiguous();
 		init_bins();
 		mchunkptr mn = (mchunkptr) mem2chunk(this)->next_chunk();
-		init_top(mn, (size_t) ((tbase + tsize) - (char *) mn) - top_foot_size());
+		init_top(mn, (size_t)((tbase + tsize) - (char *) mn) - top_foot_size());
 		check_top_chunk(_top);
 	}
 
@@ -3754,7 +3754,7 @@ postaction:
 		size_t msize;
 		mparams.ensure_initialization();
 		msize = pad_request(sizeof(malloc_state));
-		if (capacity < (size_t) -(msize + top_foot_size() + mparams._page_size)) {
+		if (capacity < (size_t) - (msize + top_foot_size() + mparams._page_size)) {
 			size_t rs = ((capacity == 0) ? mparams._granularity :
 			             (capacity + top_foot_size() + msize));
 			size_t tsize = mparams.granularity_align(rs);

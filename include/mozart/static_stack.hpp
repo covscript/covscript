@@ -27,7 +27,7 @@
 namespace cov {
 	template<typename T, long Size>
 	class static_stack final {
-		std::array<T, Size> mData;
+		std::array <T, Size> mData;
 		long mOffset = -1;
 	public:
 		static_stack() = default;

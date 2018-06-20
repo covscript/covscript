@@ -297,7 +297,7 @@ namespace cs {
 	{
 		if (tokens.empty())
 			throw syntax_error("Received empty token buffer.");
-		std::deque<token_base *> oldt;
+		std::deque < token_base * > oldt;
 		std::swap(tokens, oldt);
 		tokens.clear();
 		std::deque<int> blist_stack;
@@ -391,11 +391,11 @@ namespace cs {
 		if (tokens.empty())
 			throw syntax_error("Received empty token buffer.");
 		process_empty_brackets(tokens);
-		std::deque<token_base *> oldt;
+		std::deque < token_base * > oldt;
 		std::swap(tokens, oldt);
 		tokens.clear();
-		std::deque<std::deque<token_base *>> blist;
-		std::deque<token_base *> btokens;
+		std::deque <std::deque<token_base *>> blist;
+		std::deque < token_base * > btokens;
 		std::deque<int> blist_stack;
 		for (auto &ptr:oldt) {
 			if (ptr->get_type() == token_types::signal) {

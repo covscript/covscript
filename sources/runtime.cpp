@@ -351,7 +351,7 @@ namespace cs {
 			const array &carr = a.const_val<array>();
 			std::size_t posit = b.const_val<number>();
 			if (posit >= carr.size()) {
-				array & arr = a.val<array>(true);
+				array &arr = a.val<array>(true);
 				for (std::size_t i = posit - arr.size() + 1; i > 0; --i)
 					arr.emplace_back(number(0));
 			}
