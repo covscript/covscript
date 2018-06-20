@@ -39,6 +39,7 @@ namespace cs {
 
 	class name_space_holder;
 
+	template<typename _kT, typename _vT>using map_t=spp::sparse_hash_map<_kT, _vT>;
 	using var=cs_impl::any;
 	using number=long double;
 	using boolean=bool;
@@ -46,12 +47,12 @@ namespace cs {
 	using list=std::list<var>;
 	using array=std::deque<var>;
 	using pair=std::pair<var, var>;
-	using hash_map=spp::sparse_hash_map<var, var>;
+	using hash_map=map_t<var, var>;
 	using vector=std::vector<var>;
 	using context_t=std::shared_ptr<context_type>;
 	using extension=name_space;
 	using extension_holder=name_space_holder;
-	using domain_t=std::shared_ptr<spp::sparse_hash_map<string, var>>;
+	using domain_t=std::shared_ptr<map_t<string, var>>;
 	using name_space_t=std::shared_ptr<name_space_holder>;
 	using extension_t=std::shared_ptr<extension_holder>;
 	using istream=std::shared_ptr<std::istream>;

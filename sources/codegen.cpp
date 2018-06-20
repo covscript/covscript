@@ -172,7 +172,7 @@ namespace cs {
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
 		statement_block *dptr = nullptr;
-		spp::sparse_hash_map<var, statement_block *> cases;
+		map_t<var, statement_block *> cases;
 		for (auto &it:body) {
 			try {
 				if (it->get_type() == statement_types::case_) {

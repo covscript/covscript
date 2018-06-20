@@ -267,12 +267,12 @@ namespace cs {
 		bool m_shadow = false;
 		std::size_t m_hash;
 		std::string m_name;
-		std::shared_ptr<spp::sparse_hash_map<string, var>> m_data;
+		domain_t m_data;
 	public:
 		structure() = delete;
 
 		structure(std::size_t hash, const std::string &name,
-		          const std::shared_ptr<spp::sparse_hash_map<string, var>> &data) : m_hash(hash),
+		          const domain_t &data) : m_hash(hash),
 			m_name(typeid(structure).name() +
 			       name), m_data(data)
 		{
@@ -281,7 +281,7 @@ namespace cs {
 		}
 
 		structure(const structure &s) : m_hash(s.m_hash), m_name(s.m_name),
-			m_data(std::make_shared<spp::sparse_hash_map<string, var >>())
+			m_data(std::make_shared<map_t<string, var >>())
 		{
 			if (s.m_data->count("parent") > 0) {
 				var &_p = (*s.m_data)["parent"];
@@ -329,7 +329,7 @@ namespace cs {
 			}
 		}
 
-		const std::shared_ptr<spp::sparse_hash_map<string, var>> &get_domain() const
+		const domain_t &get_domain() const
 		{
 			return m_data;
 		}
@@ -431,7 +431,7 @@ namespace cs {
 	class name_space final {
 		domain_t m_data;
 	public:
-		name_space() : m_data(std::make_shared<spp::sparse_hash_map<string, var >>()) {}
+		name_space() : m_data(std::make_shared<map_t<string, var >>()) {}
 
 		name_space(const name_space &) = delete;
 

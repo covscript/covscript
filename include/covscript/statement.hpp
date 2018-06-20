@@ -215,11 +215,11 @@ namespace cs {
 	class statement_switch final : public statement_base {
 		cov::tree<token_base *> mTree;
 		statement_block *mDefault = nullptr;
-		spp::sparse_hash_map<var, statement_block *> mCases;
+		map_t<var, statement_block *> mCases;
 	public:
 		statement_switch() = delete;
 
-		statement_switch(const cov::tree<token_base *> &tree, const spp::sparse_hash_map<var, statement_block *> &cases,
+		statement_switch(const cov::tree<token_base *> &tree, const map_t<var, statement_block *> &cases,
 		                 statement_block *dptr, context_t c, token_base *ptr) : statement_base(c, ptr), mTree(tree),
 			mCases(cases), mDefault(dptr) {}
 

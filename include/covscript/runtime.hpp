@@ -28,7 +28,7 @@ namespace cs {
 		domain_manager()
 		{
 			m_set.emplace_front();
-			m_data.emplace_front(std::make_shared<spp::sparse_hash_map<string, var >>());
+			m_data.emplace_front(std::make_shared<map_t<string, var >>());
 		}
 
 		domain_manager(const domain_manager &) = delete;
@@ -42,7 +42,7 @@ namespace cs {
 
 		void add_domain()
 		{
-			m_data.emplace_front(std::make_shared<spp::sparse_hash_map<string, var >>());
+			m_data.emplace_front(std::make_shared<map_t<string, var >>());
 		}
 
 		domain_t &get_domain()
