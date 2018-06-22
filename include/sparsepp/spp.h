@@ -4363,6 +4363,7 @@ namespace spp_ {
 		{
 			resize(cnt);    // c++11 name
 		}
+
 		void reserve(size_type cnt)
 		{
 			resize(cnt);    // c++11
@@ -4728,6 +4729,7 @@ namespace spp_ {
 		{
 			return hash_funct();    // tr1 name
 		}
+
 		key_equal key_eq() const
 		{
 			return rep.key_eq();
@@ -4939,6 +4941,7 @@ namespace spp_ {
 		{
 			resize(cnt);    // c++11 name
 		}
+
 		void reserve(size_type cnt)
 		{
 			resize(cnt);    // c++11
