@@ -19,17 +19,15 @@
 * Github: https://github.com/mikecovlee
 *
 * Version Format:
-*   1 . 0 . 0 . 0 (Preview/Unstable/Stable)
-*   |   |   |   |            |
-*   |   |   |   |          Status
-*   |   |   | Build
-*   |   | Minor
+*   1 . 0 . 0 [Version Code](Preview/Unstable/Stable) Build 1
+*   |   |   |                           |
+*   |   | Minor                       Status
 *   | Major
 * Master
 *
 */
 #define COVSCRIPT_VERSION_NUM 1,2,3,1
-#define COVSCRIPT_VERSION_STR "1.2.3.1(Unstable)"
+#define COVSCRIPT_VERSION_STR "1.2.3 Macaca arctoides(Unstable) Build 1"
 #define COVSCRIPT_STD_VERSION 180601
 #if defined(_WIN32) || defined(WIN32)
 #define COVSCRIPT_PLATFORM_WIN32
