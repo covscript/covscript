@@ -18,7 +18,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <mozart/memory.hpp>
+#include <covscript/mozart/memory.hpp>
 #include <ostream>
 
 namespace cs_impl {

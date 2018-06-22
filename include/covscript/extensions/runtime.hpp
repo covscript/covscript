@@ -18,7 +18,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <mozart/timer.hpp>
+#include <covscript/mozart/timer.hpp>
 #include <covscript/cni.hpp>
 #include <cstdlib>
 

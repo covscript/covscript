@@ -24,12 +24,12 @@
 * cs_impl: Implement Namespace
 */
 // Mozart
-#include <mozart/static_stack.hpp>
-#include <mozart/tree.hpp>
+#include <covscript/mozart/static_stack.hpp>
+#include <covscript/mozart/tree.hpp>
 // LibDLL
-#include <libdll/dll.hpp>
+#include <covscript/libdll/dll.hpp>
 // Sparsepp
-#include <sparsepp/spp.h>
+#include <covscript/sparsepp/spp.h>
 // STL
 #include <forward_list>
 #include <functional>

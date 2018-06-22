@@ -19,7 +19,7 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/console/conio.hpp>
-#include <covscript/dirent/dirent.h>
+#include <covscript/dirent/dirent.hpp>
 #include <covscript/cni.hpp>
 #include <iostream>
 #include <fstream>

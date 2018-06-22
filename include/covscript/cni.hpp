@@ -18,8 +18,8 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <mozart/traits.hpp>
-#include <mozart/bind.hpp>
+#include <covscript/mozart/traits.hpp>
+#include <covscript/mozart/bind.hpp>
 #include <covscript/core.hpp>
 
 namespace cs {

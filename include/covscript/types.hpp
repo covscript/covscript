@@ -18,7 +18,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <mozart/traits.hpp>
+#include <covscript/mozart/traits.hpp>
 #include <type_traits>
 #include <functional>
 

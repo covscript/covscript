@@ -18,8 +18,8 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
+#include <covscript/mozart/random.hpp>
 #include <covscript/cni.hpp>
-#include <mozart/random.hpp>
 #include <algorithm>
 
 static cs::extension math_ext;
