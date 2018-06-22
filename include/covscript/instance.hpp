@@ -39,7 +39,7 @@ namespace cs {
 		}
 
 	private:
-		std::list <std::shared_ptr<data_type>> m_data;
+		std::list<std::shared_ptr<data_type>> m_data;
 	public:
 		translator_type() = default;
 
@@ -56,14 +56,14 @@ namespace cs {
 		{
 			if (raw.size() <= 1)
 				throw syntax_error("Grammar error.");
-			std::list <std::shared_ptr<data_type>> stack;
+			std::list<std::shared_ptr<data_type>> stack;
 			for (auto &it:m_data)
 				if (this->compare(it->first.front(), raw.front()))
 					stack.push_back(it);
-			stack.remove_if([&](const std::shared_ptr <data_type> &dat) {
+			stack.remove_if([&](const std::shared_ptr<data_type> &dat) {
 				return dat->first.size() != raw.size();
 			});
-			stack.remove_if([&](const std::shared_ptr <data_type> &dat) {
+			stack.remove_if([&](const std::shared_ptr<data_type> &dat) {
 				for (std::size_t i = 1; i < raw.size() - 1; ++i) {
 					if (!compare(raw.at(i), dat->first.at(i)))
 						return true;
@@ -84,7 +84,7 @@ namespace cs {
 		friend class repl;
 
 		// Symbol Table
-		mapping <std::string, signal_types> signal_map = {
+		mapping<std::string, signal_types> signal_map = {
 			{"+",  signal_types::add_},
 			{"+=", signal_types::addasi_},
 			{"-",  signal_types::sub_},
@@ -124,7 +124,7 @@ namespace cs {
 			{"?",  signal_types::choice_},
 			{"->", signal_types::arrow_}
 		};
-		mapping <std::string, action_types> action_map = {
+		mapping<std::string, action_types> action_map = {
 			{"import",    action_types::import_},
 			{"package",   action_types::package_},
 			{"using",     action_types::using_},
@@ -156,7 +156,7 @@ namespace cs {
 			{"catch",     action_types::catch_},
 			{"throw",     action_types::throw_}
 		};
-		mapping <std::string, std::function<token_base * ()>> reserved_map = {
+		mapping<std::string, std::function<token_base *()>> reserved_map = {
 			{"and",     []() -> token_base * { return new token_signal(signal_types::and_); }},
 			{"or",      []() -> token_base * { return new token_signal(signal_types::or_); }},
 			{"not",     []() -> token_base * { return new token_signal(signal_types::not_); }},
@@ -232,14 +232,14 @@ namespace cs {
 			{signal_types::new_,    14},
 			{signal_types::gcnew_,  14}
 		};
-		std::deque <signal_types> signal_left_associative = {
+		std::deque<signal_types> signal_left_associative = {
 			signal_types::asi_, signal_types::addasi_, signal_types::subasi_, signal_types::mulasi_,
 			signal_types::divasi_, signal_types::modasi_, signal_types::powasi_, signal_types::equ_,
 			signal_types::und_, signal_types::abo_, signal_types::ueq_, signal_types::aeq_, signal_types::neq_,
 			signal_types::and_, signal_types::or_
 		};
 		// Constant Pool
-		std::deque <var> constant_pool;
+		std::deque<var> constant_pool;
 
 		void mark_constant()
 		{
@@ -297,9 +297,9 @@ namespace cs {
 		bool break_block = false;
 		bool continue_block = false;
 		// Refers
-		std::forward_list <instance_type> refers;
+		std::forward_list<instance_type> refers;
 		// Function Stack
-		cov::static_stack <var, fcall_stack_size> fcall_stack;
+		cov::static_stack<var, fcall_stack_size> fcall_stack;
 		// Var definition
 		struct define_var_profile {
 			std::string id;
@@ -359,7 +359,7 @@ namespace cs {
 		void kill_expr(std::deque<token_base *> &);
 
 		// Parser and Code Generator
-		void kill_action(std::deque <std::deque<token_base *>>, std::deque<statement_base *> &, bool raw = false);
+		void kill_action(std::deque<std::deque<token_base *>>, std::deque<statement_base *> &, bool raw = false);
 
 		void translate_into_statements(std::deque<token_base *> &, std::deque<statement_base *> &);
 
@@ -399,7 +399,7 @@ namespace cs {
 
 // Repl
 	class repl final {
-		std::deque <std::deque<token_base *>> tmp;
+		std::deque<std::deque<token_base *>> tmp;
 		method_base *method = nullptr;
 		std::size_t line_num = 0;
 		bool multi_line = false;

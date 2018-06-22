@@ -11,9 +11,7 @@
 #if defined(__FreeBSD__) || defined(__IBMCPP__) || defined(_AIX)
 #include <inttypes.h>
 #else
-
 #include <stdint.h>
-
 #endif
 #endif
 

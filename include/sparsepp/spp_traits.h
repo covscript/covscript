@@ -174,7 +174,10 @@ namespace spp_ {
 	struct is_relocatable;
 	template<class T>
 	struct is_relocatable :
-	integral_constant<bool, (is_integral<T>::value || is_floating_point<T>::value)> {
+	integral_constant<bool, (is_integral<T>::value ||
+	                         is_floating_point<T>::value ||
+	                         is_pointer<T>::value
+	                        )> {
 	};
 
 	template<int S, int H>
@@ -194,7 +197,7 @@ namespace spp_ {
 	struct is_relocatable<A[N]> : is_relocatable<A> {
 	};
 	template<class T, class U>
-	struct is_relocatable<std::pair < T, U> > :
+	struct is_relocatable<std::pair<T, U> > :
 	integral_constant<bool, (is_relocatable<T>::value && is_relocatable<U>::value)> {
 	};
 

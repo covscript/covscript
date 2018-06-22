@@ -113,12 +113,12 @@ namespace spp_ {
 
 	template<class K, class V>
 	struct cvt<std::pair<const K, V> > {
-		typedef std::pair <K, V> type;
+		typedef std::pair<K, V> type;
 	};
 
 	template<class K, class V>
 	struct cvt<const std::pair<const K, V> > {
-		typedef const std::pair <K, V> type;
+		typedef const std::pair<K, V> type;
 	};
 
 //  ----------------------------------------------------------------------
@@ -1202,8 +1202,8 @@ namespace spp_ {
 		// ---------------------------------------------------------------------
 		typedef pointer ne_iterator;
 		typedef const_pointer const_ne_iterator;
-		typedef std::reverse_iterator <ne_iterator> reverse_ne_iterator;
-		typedef std::reverse_iterator <const_ne_iterator> const_reverse_ne_iterator;
+		typedef std::reverse_iterator<ne_iterator> reverse_ne_iterator;
+		typedef std::reverse_iterator<const_ne_iterator> const_reverse_ne_iterator;
 
 		// We'll have versions for our special non-empty iterator too
 		// ----------------------------------------------------------
@@ -2096,8 +2096,8 @@ namespace spp_ {
 
 		typedef table_iterator<sparsetable<T, allocator_type> > iterator;       // defined with index
 		typedef const_table_iterator<sparsetable<T, allocator_type> > const_iterator; // defined with index
-		typedef std::reverse_iterator <const_iterator> const_reverse_iterator;
-		typedef std::reverse_iterator <iterator> reverse_iterator;
+		typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+		typedef std::reverse_iterator<iterator> reverse_iterator;
 
 		// These are our special iterators, that go over non-empty buckets in a
 		// table.  These aren't const only because you can change non-empty bcks.
@@ -2121,8 +2121,8 @@ namespace spp_ {
 		        std::input_iterator_tag,
 		        allocator_type> destructive_iterator;
 
-		typedef std::reverse_iterator <ne_iterator> reverse_ne_iterator;
-		typedef std::reverse_iterator <const_ne_iterator> const_reverse_ne_iterator;
+		typedef std::reverse_iterator<ne_iterator> reverse_ne_iterator;
+		typedef std::reverse_iterator<const_ne_iterator> const_reverse_ne_iterator;
 
 
 		// Iterator functions
@@ -3420,14 +3420,7 @@ namespace spp_ {
 		{
 		}
 
-		sparse_hashtable &operator=(sparse_hashtable &&o)
-		{
-			using std::swap;
-
-			sparse_hashtable tmp(std::move(o));
-			swap(tmp, *this);
-			return *this;
-		}
+		sparse_hashtable &operator=(sparse_hashtable &&o) = default;
 
 #endif
 
@@ -3617,7 +3610,7 @@ namespace spp_ {
 
 		// Likewise, equal_range doesn't really make sense for us.  Oh well.
 		// -----------------------------------------------------------------
-		std::pair <iterator, iterator> equal_range(const key_type &key)
+		std::pair<iterator, iterator> equal_range(const key_type &key)
 		{
 			iterator pos = find(key);      // either an iterator or end
 			if (pos == end())
@@ -3628,7 +3621,7 @@ namespace spp_ {
 			}
 		}
 
-		std::pair <const_iterator, const_iterator> equal_range(const key_type &key) const
+		std::pair<const_iterator, const_iterator> equal_range(const key_type &key) const
 		{
 			const_iterator pos = find(key);      // either an iterator or end
 			if (pos == end())
@@ -4025,7 +4018,7 @@ namespace spp_ {
 //  ----------------------------------------------------------------------
 	template<class Key, class T,
 	         class HashFcn  = spp_hash<Key>,
-	         class EqualKey = std::equal_to <Key>,
+	         class EqualKey = std::equal_to<Key>,
 	         class Alloc    = SPP_DEFAULT_ALLOCATOR<std::pair<const Key, T> > >
 	class sparse_hash_map {
 	public:
@@ -4234,11 +4227,13 @@ namespace spp_ {
 		                const allocator_type &alloc) :
 			rep(std::move(o.rep), alloc) {}
 
+		sparse_hash_map &operator=(sparse_hash_map &&o) = default;
+
 #endif
 
 #if !defined(SPP_NO_CXX11_HDR_INITIALIZER_LIST)
 
-		sparse_hash_map(std::initializer_list <value_type> init,
+		sparse_hash_map(std::initializer_list<value_type> init,
 		                size_type n = 0,
 		                const hasher &hf = hasher(),
 		                const key_equal &eql = key_equal(),
@@ -4248,28 +4243,28 @@ namespace spp_ {
 			rep.insert(init.begin(), init.end());
 		}
 
-		sparse_hash_map(std::initializer_list <value_type> init,
+		sparse_hash_map(std::initializer_list<value_type> init,
 		                size_type n, const allocator_type &alloc) :
 			rep(n, hasher(), key_equal(), SelectKey(), SetKey(), alloc)
 		{
 			rep.insert(init.begin(), init.end());
 		}
 
-		sparse_hash_map(std::initializer_list <value_type> init,
+		sparse_hash_map(std::initializer_list<value_type> init,
 		                size_type n, const hasher &hf, const allocator_type &alloc) :
 			rep(n, hf, key_equal(), SelectKey(), SetKey(), alloc)
 		{
 			rep.insert(init.begin(), init.end());
 		}
 
-		sparse_hash_map &operator=(std::initializer_list <value_type> init)
+		sparse_hash_map &operator=(std::initializer_list<value_type> init)
 		{
 			rep.clear();
 			rep.insert(init.begin(), init.end());
 			return *this;
 		}
 
-		void insert(std::initializer_list <value_type> init)
+		void insert(std::initializer_list<value_type> init)
 		{
 			rep.insert(init.begin(), init.end());
 		}
@@ -4368,7 +4363,6 @@ namespace spp_ {
 		{
 			resize(cnt);    // c++11 name
 		}
-
 		void reserve(size_type cnt)
 		{
 			resize(cnt);    // c++11
@@ -4401,13 +4395,13 @@ namespace spp_ {
 			return rep.count(key);
 		}
 
-		std::pair <iterator, iterator>
+		std::pair<iterator, iterator>
 		equal_range(const key_type &key)
 		{
 			return rep.equal_range(key);
 		}
 
-		std::pair <const_iterator, const_iterator>
+		std::pair<const_iterator, const_iterator>
 		equal_range(const key_type &key) const
 		{
 			return rep.equal_range(key);
@@ -4631,7 +4625,7 @@ namespace spp_ {
 
 	template<class Value,
 	         class HashFcn  = spp_hash<Value>,
-	         class EqualKey = std::equal_to <Value>,
+	         class EqualKey = std::equal_to<Value>,
 	         class Alloc    = SPP_DEFAULT_ALLOCATOR<Value> >
 	class sparse_hash_set {
 	private:
@@ -4734,7 +4728,6 @@ namespace spp_ {
 		{
 			return hash_funct();    // tr1 name
 		}
-
 		key_equal key_eq() const
 		{
 			return rep.key_eq();
@@ -4814,7 +4807,7 @@ namespace spp_ {
 
 #if !defined(SPP_NO_CXX11_HDR_INITIALIZER_LIST)
 
-		sparse_hash_set(std::initializer_list <value_type> init,
+		sparse_hash_set(std::initializer_list<value_type> init,
 		                size_type n = 0,
 		                const hasher &hf = hasher(),
 		                const key_equal &eql = key_equal(),
@@ -4824,14 +4817,14 @@ namespace spp_ {
 			rep.insert(init.begin(), init.end());
 		}
 
-		sparse_hash_set(std::initializer_list <value_type> init,
+		sparse_hash_set(std::initializer_list<value_type> init,
 		                size_type n, const allocator_type &alloc) :
 			rep(n, hasher(), key_equal(), Identity(), SetKey(), alloc)
 		{
 			rep.insert(init.begin(), init.end());
 		}
 
-		sparse_hash_set(std::initializer_list <value_type> init,
+		sparse_hash_set(std::initializer_list<value_type> init,
 		                size_type n, const hasher &hf,
 		                const allocator_type &alloc) :
 			rep(n, hf, key_equal(), Identity(), SetKey(), alloc)
@@ -4839,14 +4832,14 @@ namespace spp_ {
 			rep.insert(init.begin(), init.end());
 		}
 
-		sparse_hash_set &operator=(std::initializer_list <value_type> init)
+		sparse_hash_set &operator=(std::initializer_list<value_type> init)
 		{
 			rep.clear();
 			rep.insert(init.begin(), init.end());
 			return *this;
 		}
 
-		void insert(std::initializer_list <value_type> init)
+		void insert(std::initializer_list<value_type> init)
 		{
 			rep.insert(init.begin(), init.end());
 		}
@@ -4946,7 +4939,6 @@ namespace spp_ {
 		{
 			resize(cnt);    // c++11 name
 		}
-
 		void reserve(size_type cnt)
 		{
 			resize(cnt);    // c++11
@@ -4969,7 +4961,7 @@ namespace spp_ {
 			return rep.count(key);
 		}
 
-		std::pair <iterator, iterator>
+		std::pair<iterator, iterator>
 		equal_range(const key_type &key) const
 		{
 			return rep.equal_range(key);

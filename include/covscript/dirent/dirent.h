@@ -1,5 +1,3 @@
-#pragma once
-#if defined(_WIN32) || defined(WIN32)
 /*
  * Dirent interface for Microsoft Visual Studio
  *
@@ -7,12 +5,16 @@
  * This file is part of dirent.  Dirent may be freely distributed
  * under the MIT license.  For all details and documentation, see
  * https://github.com/tronkko/dirent
- *
+ */
+#ifndef DIRENT_H
+#define DIRENT_H
+
+/*
  * Include windows.h without Windows Sockets 1.1 to prevent conflicts with
  * Windows Sockets 2.0.
  */
 #ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
+#   define WIN32_LEAN_AND_MEAN
 #endif
 
 #include <windows.h>
@@ -35,123 +37,123 @@
 
 /* Entries missing from MSVC 6.0 */
 #if !defined(FILE_ATTRIBUTE_DEVICE)
-#define FILE_ATTRIBUTE_DEVICE 0x40
+#   define FILE_ATTRIBUTE_DEVICE 0x40
 #endif
 
 /* File type and permission flags for stat(), general mask */
 #if !defined(S_IFMT)
-#define S_IFMT _S_IFMT
+#   define S_IFMT _S_IFMT
 #endif
 
 /* Directory bit */
 #if !defined(S_IFDIR)
-#define S_IFDIR _S_IFDIR
+#   define S_IFDIR _S_IFDIR
 #endif
 
 /* Character device bit */
 #if !defined(S_IFCHR)
-#define S_IFCHR _S_IFCHR
+#   define S_IFCHR _S_IFCHR
 #endif
 
 /* Pipe bit */
 #if !defined(S_IFFIFO)
-#define S_IFFIFO _S_IFFIFO
+#   define S_IFFIFO _S_IFFIFO
 #endif
 
 /* Regular file bit */
 #if !defined(S_IFREG)
-#define S_IFREG _S_IFREG
+#   define S_IFREG _S_IFREG
 #endif
 
 /* Read permission */
 #if !defined(S_IREAD)
-#define S_IREAD _S_IREAD
+#   define S_IREAD _S_IREAD
 #endif
 
 /* Write permission */
 #if !defined(S_IWRITE)
-#define S_IWRITE _S_IWRITE
+#   define S_IWRITE _S_IWRITE
 #endif
 
 /* Execute permission */
 #if !defined(S_IEXEC)
-#define S_IEXEC _S_IEXEC
+#   define S_IEXEC _S_IEXEC
 #endif
 
 /* Pipe */
 #if !defined(S_IFIFO)
-#define S_IFIFO _S_IFIFO
+#   define S_IFIFO _S_IFIFO
 #endif
 
 /* Block device */
 #if !defined(S_IFBLK)
-#define S_IFBLK 0
+#   define S_IFBLK 0
 #endif
 
 /* Link */
 #if !defined(S_IFLNK)
-#define S_IFLNK 0
+#   define S_IFLNK 0
 #endif
 
 /* Socket */
 #if !defined(S_IFSOCK)
-#define S_IFSOCK 0
+#   define S_IFSOCK 0
 #endif
 
 /* Read user permission */
 #if !defined(S_IRUSR)
-#define S_IRUSR S_IREAD
+#   define S_IRUSR S_IREAD
 #endif
 
 /* Write user permission */
 #if !defined(S_IWUSR)
-#define S_IWUSR S_IWRITE
+#   define S_IWUSR S_IWRITE
 #endif
 
 /* Execute user permission */
 #if !defined(S_IXUSR)
-#define S_IXUSR 0
+#   define S_IXUSR 0
 #endif
 
 /* Read group permission */
 #if !defined(S_IRGRP)
-#define S_IRGRP 0
+#   define S_IRGRP 0
 #endif
 
 /* Write group permission */
 #if !defined(S_IWGRP)
-#define S_IWGRP 0
+#   define S_IWGRP 0
 #endif
 
 /* Execute group permission */
 #if !defined(S_IXGRP)
-#define S_IXGRP 0
+#   define S_IXGRP 0
 #endif
 
 /* Read others permission */
 #if !defined(S_IROTH)
-#define S_IROTH 0
+#   define S_IROTH 0
 #endif
 
 /* Write others permission */
 #if !defined(S_IWOTH)
-#define S_IWOTH 0
+#   define S_IWOTH 0
 #endif
 
 /* Execute others permission */
 #if !defined(S_IXOTH)
-#define S_IXOTH 0
+#   define S_IXOTH 0
 #endif
 
 /* Maximum length of file name */
 #if !defined(PATH_MAX)
-#define PATH_MAX MAX_PATH
+#   define PATH_MAX MAX_PATH
 #endif
 #if !defined(FILENAME_MAX)
-#define FILENAME_MAX MAX_PATH
+#   define FILENAME_MAX MAX_PATH
 #endif
 #if !defined(NAME_MAX)
-#define NAME_MAX FILENAME_MAX
+#   define NAME_MAX FILENAME_MAX
 #endif
 
 /* File type flags for d_type */
@@ -165,7 +167,7 @@
 #define DT_LNK S_IFLNK
 
 /* Macros for converting between st_mode and d_type */
-#define IFTODT(mode) ((mode)&S_IFMT)
+#define IFTODT(mode) ((mode) & S_IFMT)
 #define DTTOIF(type) (type)
 
 /*
@@ -175,36 +177,38 @@
  * on Windows.
  */
 #if !defined(S_ISFIFO)
-#define S_ISFIFO(mode) (((mode)&S_IFMT) == S_IFIFO)
+#   define S_ISFIFO(mode) (((mode) & S_IFMT) == S_IFIFO)
 #endif
 #if !defined(S_ISDIR)
-#define S_ISDIR(mode) (((mode)&S_IFMT) == S_IFDIR)
+#   define S_ISDIR(mode) (((mode) & S_IFMT) == S_IFDIR)
 #endif
 #if !defined(S_ISREG)
-#define S_ISREG(mode) (((mode)&S_IFMT) == S_IFREG)
+#   define S_ISREG(mode) (((mode) & S_IFMT) == S_IFREG)
 #endif
 #if !defined(S_ISLNK)
-#define S_ISLNK(mode) (((mode)&S_IFMT) == S_IFLNK)
+#   define S_ISLNK(mode) (((mode) & S_IFMT) == S_IFLNK)
 #endif
 #if !defined(S_ISSOCK)
-#define S_ISSOCK(mode) (((mode)&S_IFMT) == S_IFSOCK)
+#   define S_ISSOCK(mode) (((mode) & S_IFMT) == S_IFSOCK)
 #endif
 #if !defined(S_ISCHR)
-#define S_ISCHR(mode) (((mode)&S_IFMT) == S_IFCHR)
+#   define S_ISCHR(mode) (((mode) & S_IFMT) == S_IFCHR)
 #endif
 #if !defined(S_ISBLK)
-#define S_ISBLK(mode) (((mode)&S_IFMT) == S_IFBLK)
+#   define S_ISBLK(mode) (((mode) & S_IFMT) == S_IFBLK)
 #endif
 
 /* Return the exact length of the file name without zero terminator */
 #define _D_EXACT_NAMLEN(p) ((p)->d_namlen)
 
 /* Return the maximum size of a file name */
-#define _D_ALLOC_NAMLEN(p) ((PATH_MAX) + 1)
+#define _D_ALLOC_NAMLEN(p) ((PATH_MAX)+1)
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 /* Wide-character version */
 struct _wdirent {
@@ -274,6 +278,7 @@ struct DIR {
 };
 typedef struct DIR DIR;
 
+
 /* Dirent functions */
 static DIR *opendir(const char *dirname);
 static _WDIR *_wopendir(const wchar_t *dirname);
@@ -294,11 +299,12 @@ static void _wrewinddir(_WDIR *dirp);
 
 static int scandir(const char *dirname, struct dirent ***namelist,
                    int (*filter)(const struct dirent *),
-                   int (*compare)(const void *, const void *));
+                   int (*compare)(const struct dirent **, const struct dirent **));
 
 static int alphasort(const struct dirent **a, const struct dirent **b);
 
 static int versionsort(const struct dirent **a, const struct dirent **b);
+
 
 /* For compatibility with Symbian */
 #define wdirent _wdirent
@@ -307,6 +313,7 @@ static int versionsort(const struct dirent **a, const struct dirent **b);
 #define wreaddir _wreaddir
 #define wclosedir _wclosedir
 #define wrewinddir _wrewinddir
+
 
 /* Internal utility functions */
 static WIN32_FIND_DATAW *dirent_first(_WDIR *dirp);
@@ -327,6 +334,7 @@ static int dirent_wcstombs_s(
     size_t count);
 
 static void dirent_set_errno(int error);
+
 
 /*
  * Open directory stream DIRNAME for read and return a pointer to the
@@ -361,29 +369,29 @@ _wopendir(
 		 * Note that on WinRT there's no way to convert relative paths
 		 * into absolute paths, so just assume it is an absolute path.
 		 */
-#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
+#       if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
 		n = wcslen(dirname);
-#else
+#       else
 		n = GetFullPathNameW(dirname, 0, NULL, NULL);
-#endif
+#       endif
 
 		/* Allocate room for absolute directory name and search pattern */
 		dirp->patt = (wchar_t *) malloc(sizeof(wchar_t) * n + 16);
 		if (dirp->patt) {
 
 			/*
-			     * Convert relative directory name to an absolute one.  This
-			     * allows rewinddir() to function correctly even when current
-			     * working directory is changed between opendir() and rewinddir().
-			     *
-			     * Note that on WinRT there's no way to convert relative paths
-			     * into absolute paths, so just assume it is an absolute path.
-			     */
-#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
-			wcsncpy_s(dirp->patt, n + 1, dirname, n);
-#else
+			 * Convert relative directory name to an absolute one.  This
+			 * allows rewinddir() to function correctly even when current
+			 * working directory is changed between opendir() and rewinddir().
+			 *
+			 * Note that on WinRT there's no way to convert relative paths
+			 * into absolute paths, so just assume it is an absolute path.
+			 */
+#           if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
+			wcsncpy_s(dirp->patt, n+1, dirname, n);
+#           else
 			n = GetFullPathNameW(dirname, n, dirp->patt, NULL);
-#endif
+#           endif
 			if (n > 0) {
 				wchar_t *p;
 
@@ -417,17 +425,20 @@ _wopendir(
 					error = 1;
 					dirent_set_errno(ENOENT);
 				}
+
 			}
 			else {
 				/* Cannot retrieve full path name */
 				dirent_set_errno(ENOENT);
 				error = 1;
 			}
+
 		}
 		else {
 			/* Cannot allocate memory for search pattern */
 			error = 1;
 		}
+
 	}
 	else {
 		/* Cannot allocate _WDIR structure */
@@ -519,14 +530,16 @@ _wreaddir_r(
 
 		/* Set result address */
 		*result = entry;
+
 	}
 	else {
 
 		/* Return NULL to indicate end of directory */
 		*result = NULL;
+
 	}
 
-	return /*OK*/ 0;
+	return /*OK*/0;
 }
 
 /*
@@ -555,13 +568,15 @@ _wclosedir(
 
 		/* Release directory structure */
 		free(dirp);
-		ok = /*success*/ 0;
+		ok = /*success*/0;
+
 	}
 	else {
 
 		/* Invalid directory stream */
 		dirent_set_errno(EBADF);
-		ok = /*failure*/ -1;
+		ok = /*failure*/-1;
+
 	}
 	return ok;
 }
@@ -601,12 +616,14 @@ dirent_first(
 		/* a directory entry is now waiting in memory */
 		datap = &dirp->data;
 		dirp->cached = 1;
+
 	}
 	else {
 
 		/* Failed to re-open directory: no directory entry in memory */
 		dirp->cached = 0;
 		datap = NULL;
+
 	}
 	return datap;
 }
@@ -628,6 +645,7 @@ dirent_next(
 		/* A valid directory entry already in memory */
 		p = &dirp->data;
 		dirp->cached = 0;
+
 	}
 	else if (dirp->handle != INVALID_HANDLE_VALUE) {
 
@@ -642,11 +660,13 @@ dirent_next(
 			dirp->handle = INVALID_HANDLE_VALUE;
 			p = NULL;
 		}
+
 	}
 	else {
 
 		/* End of directory stream reached */
 		p = NULL;
+
 	}
 
 	return p;
@@ -689,6 +709,7 @@ opendir(
 				/* Failed to open directory stream */
 				error = 1;
 			}
+
 		}
 		else {
 			/*
@@ -699,6 +720,7 @@ opendir(
 			 */
 			error = 1;
 		}
+
 	}
 	else {
 		/* Cannot allocate DIR structure */
@@ -795,6 +817,7 @@ readdir_r(
 			entry->d_ino = 0;
 			entry->d_off = 0;
 			entry->d_reclen = sizeof(struct dirent);
+
 		}
 		else {
 
@@ -811,18 +834,21 @@ readdir_r(
 			entry->d_ino = 0;
 			entry->d_off = -1;
 			entry->d_reclen = 0;
+
 		}
 
 		/* Return pointer to directory entry */
 		*result = entry;
+
 	}
 	else {
 
 		/* No more directory entries */
 		*result = NULL;
+
 	}
 
-	return /*OK*/ 0;
+	return /*OK*/0;
 }
 
 /*
@@ -841,12 +867,14 @@ closedir(
 
 		/* Release multi-byte character version */
 		free(dirp);
+
 	}
 	else {
 
 		/* Invalid directory stream */
 		dirent_set_errno(EBADF);
-		ok = /*failure*/ -1;
+		ok = /*failure*/-1;
+
 	}
 	return ok;
 }
@@ -870,7 +898,7 @@ scandir(
     const char *dirname,
     struct dirent ***namelist,
     int (*filter)(const struct dirent *),
-    int (*compare)(const void *, const void *))
+    int (*compare)(const struct dirent **, const struct dirent **))
 {
 	struct dirent **files = NULL;
 	size_t size = 0;
@@ -916,6 +944,7 @@ scandir(
 					result = -1;
 					break;
 				}
+
 			}
 
 			/* Allocate room for temporary directory entry */
@@ -929,7 +958,7 @@ scandir(
 			}
 
 			/* Read directory entry to temporary area */
-			if (readdir_r(dir, tmp, &entry) == /*OK*/ 0) {
+			if (readdir_r(dir, tmp, &entry) == /*OK*/0) {
 
 				/* Did we get an entry? */
 				if (entry != NULL) {
@@ -953,6 +982,7 @@ scandir(
 						/* Keep up with the number of files */
 						result++;
 					}
+
 				}
 				else {
 
@@ -960,16 +990,21 @@ scandir(
 					 * End of directory stream reached => sort entries and
 					 * exit.
 					 */
-					qsort(files, size, sizeof(void *), compare);
+					qsort(files, size, sizeof(void *),
+					      (int (*)(const void *, const void *)) compare);
 					break;
+
 				}
+
 			}
 			else {
 				/* Error reading directory entry */
 				result = /*Error*/ -1;
 				break;
 			}
+
 		}
+
 	}
 	else {
 		/* Cannot open directory */
@@ -1019,6 +1054,7 @@ versionsort(
 	return alphasort(a, b);
 }
 
+
 /* Convert multi-byte string to wide character string */
 static int
 dirent_mbstowcs_s(
@@ -1033,7 +1069,7 @@ dirent_mbstowcs_s(
 #if defined(_MSC_VER) && _MSC_VER >= 1400
 
 	/* Microsoft Visual Studio 2005 or later */
-	error = mbstowcs_s(pReturnValue, wcstr, sizeInWords, mbstr, count);
+	error = mbstowcs_s (pReturnValue, wcstr, sizeInWords, mbstr, count);
 
 #else
 
@@ -1059,11 +1095,13 @@ dirent_mbstowcs_s(
 
 		/* Success */
 		error = 0;
+
 	}
 	else {
 
 		/* Could not convert string */
 		error = 1;
+
 	}
 
 #endif
@@ -1085,7 +1123,7 @@ dirent_wcstombs_s(
 #if defined(_MSC_VER) && _MSC_VER >= 1400
 
 	/* Microsoft Visual Studio 2005 or later */
-	error = wcstombs_s(pReturnValue, mbstr, sizeInBytes, wcstr, count);
+	error = wcstombs_s (pReturnValue, mbstr, sizeInBytes, wcstr, count);
 
 #else
 
@@ -1111,11 +1149,13 @@ dirent_wcstombs_s(
 
 		/* Success */
 		error = 0;
+
 	}
 	else {
 
 		/* Cannot convert string */
 		error = 1;
+
 	}
 
 #endif
@@ -1131,7 +1171,7 @@ dirent_set_errno(
 #if defined(_MSC_VER) && _MSC_VER >= 1400
 
 	/* Microsoft Visual Studio 2005 and later */
-	_set_errno(error);
+	_set_errno (error);
 
 #else
 
@@ -1141,12 +1181,9 @@ dirent_set_errno(
 #endif
 }
 
+
 #ifdef __cplusplus
 }
 #endif
+#endif /*DIRENT_H*/
 
-#else
-
-#include <dirent.h>
-
-#endif

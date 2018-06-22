@@ -193,7 +193,7 @@ namespace cs {
 		case
 
 				token_types::expr: {
-				cov::tree < token_base * > &t = static_cast<token_expr *>(it.data())->get_tree();
+				cov::tree<token_base *> &t = static_cast<token_expr *>(it.data())->get_tree();
 				optimize_expression(t);
 				tree.merge(it, t);
 				return;
@@ -394,7 +394,7 @@ namespace cs {
 					token_base *rptr = it.right().data();
 					if (lptr == nullptr || rptr == nullptr || lptr->get_type() != token_types::arglist)
 						throw syntax_error("Wrong grammar for lambda expression.");
-					std::vector <std::string> args;
+					std::vector<std::string> args;
 					for (auto &it:dynamic_cast<token_arglist *>(lptr)->get_arglist()) {
 						if (it.root().data() == nullptr)
 							throw internal_error("Null pointer accessed.");
@@ -407,10 +407,10 @@ namespace cs {
 						args.push_back(str);
 					}
 					it.data() = new_value(var::make_protect<callable>(function(context, args,
-					std::deque < statement_base * > {
+					std::deque<statement_base *> {
 						new statement_return(
-						    cov::tree <
-						token_base * > {
+						    cov::tree<
+						token_base *>{
 							it.right()
 						},
 						context,
@@ -486,7 +486,7 @@ namespace cs {
 
 	extension_t instance_type::import(const std::string &path, const std::string &name)
 	{
-		std::vector <std::string> collection;
+		std::vector<std::string> collection;
 		{
 			std::string tmp;
 			for (auto &ch:path) {
@@ -530,7 +530,7 @@ namespace cs {
 		for (int ch = in.get(); ch != EOF; ch = in.get())
 			buff.push_back(ch);
 		// Lexer
-		std::deque < token_base * > tokens;
+		std::deque<token_base *> tokens;
 		translate_into_tokens(buff, tokens);
 		// Parser
 		translate_into_statements(tokens, statements);
@@ -567,7 +567,7 @@ namespace cs {
 		statement_base *statement = nullptr;
 		try {
 			// Lexer
-			std::deque < token_base * > line;
+			std::deque<token_base *> line;
 			context->instance->process_char_buff(buff, line);
 			line.push_back(new token_endline(line_num));
 			// Parse

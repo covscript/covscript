@@ -64,12 +64,12 @@ namespace array_cs_ext {
 	}
 
 // Iterators
-	array::iterator begin(array &arr)
+	array::iterator begin(array & arr)
 	{
 		return arr.begin();
 	}
 
-	array::iterator term(array &arr)
+	array::iterator term(array & arr)
 	{
 		return arr.end();
 	}
@@ -101,14 +101,18 @@ namespace array_cs_ext {
 	}
 
 // Modifiers
-	void clear(array &arr)
+	void clear(array & arr)
 	{
 		arr.clear();
 	}
 
-	array::iterator insert(array &arr, array::iterator &pos, const var &val)
+	array::iterator insert(array & arr, array::iterator & pos,
+	                       const var &val
+	                      )
 	{
-		return arr.insert(pos, copy(val));
+		return arr.
+		       insert(pos, copy(val)
+		             );
 	}
 
 	array::iterator erase(array &arr, array::iterator &pos)
@@ -181,4 +185,5 @@ namespace array_cs_ext {
 		array_ext.add_var("to_hash_map", var::make_protect<callable>(cni(to_hash_map), true));
 		array_ext.add_var("to_list", var::make_protect<callable>(cni(to_list), true));
 	}
+
 }

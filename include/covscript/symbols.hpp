@@ -121,9 +121,9 @@ namespace cs {
 
 	template<typename Key, typename T>
 	class mapping final {
-		std::map <Key, T> mDat;
+		std::map<Key, T> mDat;
 	public:
-		mapping(std::initializer_list <std::pair<const Key, T>> l) : mDat(l) {}
+		mapping(std::initializer_list<std::pair<const Key, T>> l) : mDat(l) {}
 
 		bool exist(const Key &k) const
 		{
@@ -139,7 +139,7 @@ namespace cs {
 	};
 
 	class token_base {
-		static garbage_collector <token_base> gc;
+		static garbage_collector<token_base> gc;
 	protected:
 		std::size_t line_num = 1;
 	public:
@@ -259,54 +259,54 @@ namespace cs {
 	};
 
 	class token_sblist final : public token_base {
-		std::deque <std::deque<token_base *>> mList;
+		std::deque<std::deque<token_base *>> mList;
 	public:
 		token_sblist() = delete;
 
-		token_sblist(const std::deque <std::deque<token_base *>> &list) : mList(list) {}
+		token_sblist(const std::deque<std::deque<token_base *>> &list) : mList(list) {}
 
 		virtual token_types get_type() const noexcept override
 		{
 			return token_types::sblist;
 		}
 
-		std::deque <std::deque<token_base *>> &get_list() noexcept
+		std::deque<std::deque<token_base *>> &get_list() noexcept
 		{
 			return this->mList;
 		}
 	};
 
 	class token_mblist final : public token_base {
-		std::deque <std::deque<token_base *>> mList;
+		std::deque<std::deque<token_base *>> mList;
 	public:
 		token_mblist() = delete;
 
-		token_mblist(const std::deque <std::deque<token_base *>> &list) : mList(list) {}
+		token_mblist(const std::deque<std::deque<token_base *>> &list) : mList(list) {}
 
 		virtual token_types get_type() const noexcept override
 		{
 			return token_types::mblist;
 		}
 
-		std::deque <std::deque<token_base *>> &get_list() noexcept
+		std::deque<std::deque<token_base *>> &get_list() noexcept
 		{
 			return this->mList;
 		}
 	};
 
 	class token_lblist final : public token_base {
-		std::deque <std::deque<token_base *>> mList;
+		std::deque<std::deque<token_base *>> mList;
 	public:
 		token_lblist() = delete;
 
-		token_lblist(const std::deque <std::deque<token_base *>> &list) : mList(list) {}
+		token_lblist(const std::deque<std::deque<token_base *>> &list) : mList(list) {}
 
 		virtual token_types get_type() const noexcept override
 		{
 			return token_types::lblist;
 		}
 
-		std::deque <std::deque<token_base *>> &get_list() noexcept
+		std::deque<std::deque<token_base *>> &get_list() noexcept
 		{
 			return this->mList;
 		}
@@ -331,36 +331,36 @@ namespace cs {
 	};
 
 	class token_arglist final : public token_base {
-		std::deque <cov::tree<token_base *>> mTreeList;
+		std::deque<cov::tree<token_base *>> mTreeList;
 	public:
 		token_arglist() = default;
 
-		token_arglist(const std::deque <cov::tree<token_base *>> &tlist) : mTreeList(tlist) {}
+		token_arglist(const std::deque<cov::tree<token_base *>> &tlist) : mTreeList(tlist) {}
 
 		virtual token_types get_type() const noexcept override
 		{
 			return token_types::arglist;
 		}
 
-		std::deque <cov::tree<token_base *>> &get_arglist() noexcept
+		std::deque<cov::tree<token_base *>> &get_arglist() noexcept
 		{
 			return this->mTreeList;
 		}
 	};
 
 	class token_array final : public token_base {
-		std::deque <cov::tree<token_base *>> mTreeList;
+		std::deque<cov::tree<token_base *>> mTreeList;
 	public:
 		token_array() = default;
 
-		token_array(const std::deque <cov::tree<token_base *>> &tlist) : mTreeList(tlist) {}
+		token_array(const std::deque<cov::tree<token_base *>> &tlist) : mTreeList(tlist) {}
 
 		virtual token_types get_type() const noexcept override
 		{
 			return token_types::array;
 		}
 
-		std::deque <cov::tree<token_base *>> &get_array() noexcept
+		std::deque<cov::tree<token_base *>> &get_array() noexcept
 		{
 			return this->mTreeList;
 		}
@@ -398,7 +398,7 @@ namespace cs {
 	};
 
 	class statement_base {
-		static garbage_collector <statement_base> gc;
+		static garbage_collector<statement_base> gc;
 	protected:
 		context_t context;
 		std::size_t line_num = 1;
@@ -447,7 +447,7 @@ namespace cs {
 	};
 
 	class method_base {
-		static garbage_collector <method_base> gc;
+		static garbage_collector<method_base> gc;
 	protected:
 		context_t context;
 	public:
@@ -476,14 +476,14 @@ namespace cs {
 
 		virtual statement_types get_target_type() const noexcept=0;
 
-		virtual void preprocess(const std::deque <std::deque<token_base *>> &) {}
+		virtual void preprocess(const std::deque<std::deque<token_base *>> &) {}
 
-		virtual statement_base *translate(const std::deque <std::deque<token_base *>> &)=0;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &)=0;
 	};
 
-	garbage_collector <token_base> token_base::gc;
+	garbage_collector<token_base> token_base::gc;
 
-	garbage_collector <statement_base> statement_base::gc;
+	garbage_collector<statement_base> statement_base::gc;
 
-	garbage_collector <method_base> method_base::gc;
+	garbage_collector<method_base> method_base::gc;
 }
