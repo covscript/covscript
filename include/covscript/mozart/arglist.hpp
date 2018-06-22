@@ -96,7 +96,7 @@ namespace cov {
 		argument_list() = delete;
 
 		template<typename...ArgTypes>
-		argument_list(ArgTypes &&...args):mArgs( {
+		argument_list(ArgTypes &&...args):mArgs({
 			args...
 		})
 		{
