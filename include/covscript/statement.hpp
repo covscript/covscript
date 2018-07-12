@@ -47,8 +47,7 @@ namespace cs {
 		statement_involve() = delete;
 
 		statement_involve(const cov::tree<token_base *> &tree, bool is_override, context_t c, token_base *ptr)
-			: statement_base(c, ptr),
-			  mTree(tree), mOverride(is_override) {}
+			: statement_base(c, ptr), mOverride(is_override), mTree(tree) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -59,7 +58,6 @@ namespace cs {
 	};
 
 	class statement_var final : public statement_base {
-		bool mOverride = false;
 		instance_type::define_var_profile mDvp;
 	public:
 		statement_var() = delete;
@@ -221,7 +219,7 @@ namespace cs {
 
 		statement_switch(const cov::tree<token_base *> &tree, const map_t<var, statement_block *> &cases,
 		                 statement_block *dptr, context_t c, token_base *ptr) : statement_base(c, ptr), mTree(tree),
-			mCases(cases), mDefault(dptr) {}
+			mDefault(dptr), mCases(cases) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
