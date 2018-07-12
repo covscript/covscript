@@ -32,6 +32,7 @@
 *.log
 
 # CovScript intermediate files
+tests/test.txt
 *.cse
 
 # Darwin Picture File

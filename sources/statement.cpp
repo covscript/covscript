@@ -54,7 +54,10 @@ namespace cs {
 		if (mParent.root().usable()) {
 			var builder = mContext->instance->parse_expr(mParent.root());
 			if (builder.type() == typeid(type)) {
-				var parent = builder.const_val<type>().constructor();
+				const type &t = builder.const_val<type>();
+				if (mHash == t.id)
+					throw syntax_error("Can not inherit itself.");
+				var parent = t.constructor();
 				if (parent.type() == typeid(structure)) {
 					parent.protect();
 					mContext->instance->storage.involve_domain(parent.const_val<structure>().get_domain());
