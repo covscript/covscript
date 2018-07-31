@@ -5,22 +5,23 @@ using namespace cs;
 static extension my_ext;
 
 namespace cs_impl {
-    template<>struct type_conversion_cs<int>{
+    template<>
+    struct type_conversion_cs<int> {
         using source_type=cs::string;
     };
 
-    template<>struct type_conversion_cpp<int>{
+    template<>
+    struct type_conversion_cpp<int> {
         using target_type=cs::number;
     };
 
-    template<>struct type_convertor<cs::string,int>
-	{
-		template<typename T>
-		static int convert(T&& val)
-		{
-			return std::stoi(std::forward<T>(val));
-		}
-	};
+    template<>
+    struct type_convertor<cs::string, int> {
+        template<typename T>
+        static int convert(T &&val) {
+            return std::stoi(std::forward<T>(val));
+        }
+    };
 }
 
 int test0(int a) {

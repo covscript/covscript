@@ -26,8 +26,8 @@
 * Master
 *
 */
-#define COVSCRIPT_VERSION_NUM 1,2,3,2
-#define COVSCRIPT_VERSION_STR "1.2.3 Macaca arctoides(Stable) Build 2"
+#define COVSCRIPT_VERSION_NUM 1,3,0,1
+#define COVSCRIPT_VERSION_STR "1.3.0 Panthera uncia(Unstable) Build 1"
 #define COVSCRIPT_STD_VERSION 180701
 #if defined(_WIN32) || defined(WIN32)
 #define COVSCRIPT_PLATFORM_WIN32

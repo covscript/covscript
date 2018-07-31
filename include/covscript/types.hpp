@@ -255,19 +255,19 @@ namespace cs_impl {
 		using target_type=_Source;
 	};
 
-	template<typename _From,typename _To>
+	template<typename _From, typename _To>
 	struct type_convertor {
 		template<typename T>
-		static _To convert(T&& val)
+		static _To convert(T &&val)
 		{
 			return std::move(static_cast<_To>(std::forward<T>(val)));
 		}
 	};
 
 	template<typename T>
-	struct type_convertor<T,T> {
+	struct type_convertor<T, T> {
 		template<typename X>
-		static X&& convert(X&& val)
+		static X &&convert(X &&val)
 		{
 			return std::forward<X>(val);
 		}
