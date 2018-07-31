@@ -29,8 +29,8 @@ namespace cs {
 			static inline short check(const var &val)
 			{
 				if (typeid(T) != val.type())
-					throw syntax_error("Invalid Argument.At " + std::to_string(index + 1) + ".Expected " +
-					                   cs_impl::get_name_of_type<T>() + ",provided " + val.get_type_name());
+					throw runtime_error("Invalid Argument.At " + std::to_string(index + 1) + ".Expected " +
+					                    cs_impl::get_name_of_type<T>() + ",provided " + val.get_type_name());
 				else
 					return 0;
 			}
@@ -53,7 +53,7 @@ namespace cs {
 			if (sizeof...(ArgTypes) == args.size())
 				check_helper<ArgTypes...>(args, cov::make_sequence<sizeof...(ArgTypes)>::result);
 			else
-				throw syntax_error(
+				throw runtime_error(
 				    "Wrong size of the arguments.Expected " + std::to_string(sizeof...(ArgTypes)) + ",provided " +
 				    std::to_string(args.size()));
 		}
@@ -123,7 +123,7 @@ namespace cs {
 		var call(vector &args) const
 		{
 			if (!args.empty())
-				throw syntax_error("Wrong size of the arguments.Expected 0");
+				throw runtime_error("Wrong size of the arguments.Expected 0");
 			mFunc();
 			return null_pointer;
 		}
@@ -142,7 +142,7 @@ namespace cs {
 		var call(vector &args) const
 		{
 			if (!args.empty())
-				throw syntax_error("Wrong size of the arguments.Expected 0");
+				throw runtime_error("Wrong size of the arguments.Expected 0");
 			return var::make<_Source_RetT>(std::move(cs_impl::type_convertor<_Target_RetT,_Source_RetT>::convert(mFunc())));
 		}
 	};
@@ -275,7 +275,7 @@ namespace cs {
 			return sizeof...(ArgsT);
 		}
 
-		static void result_container(short...) {}
+		static void result_container(...) {}
 
 		template<typename _From, typename _To>
 		static short _check_conversion()

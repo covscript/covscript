@@ -133,7 +133,7 @@ namespace cs {
 		const T &match(const Key &k) const
 		{
 			if (!exist(k))
-				throw syntax_error("Undefined Mapping.");
+				throw runtime_error("Undefined Mapping.");
 			return mDat.at(k);
 		}
 	};

@@ -30,7 +30,7 @@ namespace cs {
 	{
 		token_base *token = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data();
 		if (token == nullptr || token->get_type() != token_types::id)
-			throw syntax_error("Wrong grammar for import statement.");
+			throw runtime_error("Wrong grammar for import statement.");
 		const std::string &package_name = dynamic_cast<token_id *>(token)->get_id();
 		const var &ext = var::make_protect<extension_t>(context->instance->import(import_path, package_name));
 		context->instance->storage.add_var(package_name, ext);
@@ -40,7 +40,7 @@ namespace cs {
 	statement_base *method_package::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		if (!context->package_name.empty())
-			throw syntax_error("Redefinition of package");
+			throw runtime_error("Redefinition of package");
 		context->package_name = dynamic_cast<token_id *>(dynamic_cast<token_expr *>(raw.front().at(
 		                            1))->get_tree().root().data())->get_id();
 		return nullptr;
@@ -55,7 +55,7 @@ namespace cs {
 			if (ns.type() == typeid(name_space_t))
 				context->instance->storage.involve_domain(ns.const_val<name_space_t>()->get_domain());
 			else
-				throw syntax_error("Only support involve namespace.");
+				throw runtime_error("Only support involve namespace.");
 			return new statement_involve(tree, true, context, raw.front().back());
 		}
 		else
@@ -76,7 +76,7 @@ namespace cs {
 		instance_type::define_var_profile dvp;
 		context->instance->parse_define_var(tree, dvp);
 		if (dvp.expr.root().data()->get_type() != token_types::value)
-			throw syntax_error("Constant variable must have an constant value.");
+			throw runtime_error("Constant variable must have an constant value.");
 		const var &val = static_cast<token_value *>(dvp.expr.root().data())->get_value();
 		context->instance->add_constant(val);
 		context->instance->storage.add_var(dvp.id, val);
@@ -103,7 +103,7 @@ namespace cs {
 			if (ptr->get_type() != statement_types::import_ && ptr->get_type() != statement_types::involve_ &&
 			        ptr->get_type() != statement_types::var_ && ptr->get_type() != statement_types::function_ &&
 			        ptr->get_type() != statement_types::namespace_ && ptr->get_type() != statement_types::struct_)
-				throw syntax_error("Wrong grammar for namespace definition.");
+				throw runtime_error("Wrong grammar for namespace definition.");
 		return new statement_namespace(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data(), body,
 		                               context, raw.front().back());
 	}
@@ -118,7 +118,7 @@ namespace cs {
 				if (!have_else)
 					have_else = true;
 				else
-					throw syntax_error("Multi Else Grammar.");
+					throw runtime_error("Multi Else Grammar.");
 			}
 		}
 		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
@@ -178,17 +178,17 @@ namespace cs {
 				if (it->get_type() == statement_types::case_) {
 					statement_case *scptr = dynamic_cast<statement_case *>(it);
 					if (cases.count(scptr->get_tag()) > 0)
-						throw syntax_error("Redefinition of case.");
+						throw runtime_error("Redefinition of case.");
 					cases.emplace(scptr->get_tag(), scptr->get_block());
 				}
 				else if (it->get_type() == statement_types::default_) {
 					statement_default *sdptr = dynamic_cast<statement_default *>(it);
 					if (dptr != nullptr)
-						throw syntax_error("Redefinition of default case.");
+						throw runtime_error("Redefinition of default case.");
 					dptr = sdptr->get_block();
 				}
 				else
-					throw syntax_error("Wrong format of switch statement.");
+					throw runtime_error("Wrong format of switch statement.");
 			}
 			catch (const cs::exception &e) {
 				throw e;
@@ -309,7 +309,7 @@ namespace cs {
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::id)
-			throw syntax_error("Wrong grammar(foreach)");
+			throw runtime_error("Wrong grammar(foreach)");
 		context->instance->storage.add_record(dynamic_cast<token_id *>(t.root().data())->get_id());
 	}
 
@@ -319,7 +319,7 @@ namespace cs {
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::id)
-			throw syntax_error("Wrong grammar(foreach)");
+			throw runtime_error("Wrong grammar(foreach)");
 		const std::string &it = dynamic_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
@@ -344,26 +344,26 @@ namespace cs {
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::signal ||
 		        dynamic_cast<token_signal *>(t.root().data())->get_signal() != signal_types::fcall_)
-			throw syntax_error("Wrong grammar for function definition.");
+			throw runtime_error("Wrong grammar for function definition.");
 		if (t.root().left().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().left().data()->get_type() != token_types::id)
-			throw syntax_error("Wrong grammar for function definition.");
+			throw runtime_error("Wrong grammar for function definition.");
 		if (t.root().right().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().right().data()->get_type() != token_types::arglist)
-			throw syntax_error("Wrong grammar for function definition.");
+			throw runtime_error("Wrong grammar for function definition.");
 		std::string name = dynamic_cast<token_id *>(t.root().left().data())->get_id();
 		std::vector<std::string> args;
 		for (auto &it:dynamic_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
 			if (it.root().data() == nullptr)
 				throw internal_error("Null pointer accessed.");
 			if (it.root().data()->get_type() != token_types::id)
-				throw syntax_error("Wrong grammar for function definition.");
+				throw runtime_error("Wrong grammar for function definition.");
 			const std::string &str = dynamic_cast<token_id *>(it.root().data())->get_id();
 			for (auto &it:args)
 				if (it == str)
-					throw syntax_error("Redefinition of function argument.");
+					throw runtime_error("Redefinition of function argument.");
 			args.push_back(str);
 		}
 		std::deque<statement_base *> body;
@@ -395,7 +395,7 @@ namespace cs {
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::id)
-			throw syntax_error("Wrong grammar for struct definition.");
+			throw runtime_error("Wrong grammar for struct definition.");
 		std::string name = dynamic_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
@@ -403,7 +403,7 @@ namespace cs {
 			try {
 				switch (ptr->get_type()) {
 				default:
-					throw syntax_error("Wrong grammar for struct definition.");
+					throw runtime_error("Wrong grammar for struct definition.");
 				case statement_types::var_:
 					break;
 				case statement_types::function_:
@@ -444,7 +444,7 @@ namespace cs {
 				tbody.push_back(ptr);
 		}
 		if (!founded)
-			throw syntax_error("Wrong grammar for try statement.");
+			throw runtime_error("Wrong grammar for try statement.");
 		return new statement_try(name, tbody, cbody, context, raw.front().back());
 	}
 
@@ -454,7 +454,7 @@ namespace cs {
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::id)
-			throw syntax_error("Wrong grammar for catch statement.");
+			throw runtime_error("Wrong grammar for catch statement.");
 		return new statement_catch(dynamic_cast<token_id *>(t.root().data())->get_id(), context, raw.front().back());
 	}
 

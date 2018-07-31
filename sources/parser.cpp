@@ -151,9 +151,9 @@ namespace cs {
 					token_types::mblist: {
 					token_mblist *mbl = static_cast<token_mblist *>(ptr);
 					if (mbl == nullptr)
-						throw syntax_error("Internal Error(Nullptr Access).");
+						throw runtime_error("Internal Error(Nullptr Access).");
 					if (mbl->get_list().size() != 1)
-						throw syntax_error("There are no more elements in middle bracket.");
+						throw runtime_error("There are no more elements in middle bracket.");
 					kill_brackets(mbl->get_list().front());
 					cov::tree<token_base *> tree;
 					gen_tree(tree, mbl->get_list().front());
@@ -201,7 +201,7 @@ namespace cs {
 							tokens.push_back(new token_arglist());
 						}
 						else
-							throw syntax_error("Do not allow standalone empty small parentheses.");
+							throw runtime_error("Do not allow standalone empty small parentheses.");
 						expected_fcall = false;
 						continue;
 					case signal_types::emb_:
@@ -231,7 +231,7 @@ namespace cs {
 		bool request_signal = false;
 		for (auto &ptr:raw) {
 			if (ptr->get_type() == token_types::action)
-				throw syntax_error("Wrong format of expression.");
+				throw runtime_error("Wrong format of expression.");
 			if (ptr->get_type() == token_types::signal) {
 				if (!request_signal)
 					objects.push_back(nullptr);
@@ -251,12 +251,12 @@ namespace cs {
 	                               std::deque<token_base *> &objects)
 	{
 		if (objects.empty() || signals.empty() || objects.size() != signals.size() + 1)
-			throw syntax_error("Symbols do not match the object.");
+			throw runtime_error("Symbols do not match the object.");
 		for (auto &obj:objects) {
 			if (obj != nullptr && obj->get_type() == token_types::sblist) {
 				token_sblist *sbl = static_cast<token_sblist *>(obj);
 				if (sbl->get_list().size() != 1)
-					throw syntax_error("There are no more elements in small bracket.");
+					throw runtime_error("There are no more elements in small bracket.");
 				cov::tree<token_base *> t;
 				gen_tree(t, sbl->get_list().front());
 				obj = new token_expr(t);
@@ -306,7 +306,7 @@ namespace cs {
 			if (obj != nullptr && obj->get_type() == token_types::sblist) {
 				token_sblist *sbl = static_cast<token_sblist *>(obj);
 				if (sbl->get_list().size() != 1)
-					throw syntax_error("There are no more elements in small bracket.");
+					throw runtime_error("There are no more elements in small bracket.");
 				cov::tree<token_base *> t;
 				gen_tree(t, sbl->get_list().front());
 				obj = new token_expr(t);
@@ -360,7 +360,7 @@ namespace cs {
 				method_base *m = translator.match(line);
 				switch (m->get_type()) {
 				case method_types::null:
-					throw syntax_error("Null type of grammar.");
+					throw runtime_error("Null type of grammar.");
 					break;
 				case method_types::single: {
 					statement_base *sptr = nullptr;
@@ -382,7 +382,7 @@ namespace cs {
 					}
 					else {
 						if (m->get_target_type() == statement_types::end_)
-							throw syntax_error("Hanging end statement.");
+							throw runtime_error("Hanging end statement.");
 						else
 							sptr = m->translate({line});
 					}
@@ -414,7 +414,7 @@ namespace cs {
 			}
 		}
 		if (level != 0)
-			throw syntax_error("Lack of the \"end\" signal.");
+			throw runtime_error("Lack of the \"end\" signal.");
 	}
 
 	void instance_type::translate_into_statements(std::deque<token_base *> &tokens,

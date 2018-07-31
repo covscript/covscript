@@ -156,7 +156,7 @@ namespace cs {
 				if (name != "this")
 					args.push_back(name);
 				else
-					throw syntax_error("Overwrite the default argument \"this\".");
+					throw runtime_error("Overwrite the default argument \"this\".");
 			}
 			std::swap(mArgs, args);
 		}
@@ -230,7 +230,7 @@ namespace cs {
 			return om.callable.const_val<callable>().call(args);
 		}
 		else
-			throw syntax_error("Invoke non-callable object.");
+			throw runtime_error("Invoke non-callable object.");
 	}
 
 // Type and struct
@@ -344,7 +344,7 @@ namespace cs {
 			if (m_data->count(name) > 0)
 				return (*m_data)[name];
 			else
-				throw syntax_error("Struct \"" + m_name + "\" have no member called \"" + name + "\".");
+				throw runtime_error("Struct \"" + m_name + "\" have no member called \"" + name + "\".");
 		}
 	};
 
@@ -452,7 +452,7 @@ namespace cs {
 			if (m_data->count(name) > 0)
 				return (*m_data)[name];
 			else
-				throw syntax_error("Use of undefined variable \"" + name + "\".");
+				throw runtime_error("Use of undefined variable \"" + name + "\".");
 		}
 
 		domain_t get_domain() const
@@ -512,7 +512,7 @@ namespace cs {
 		if (extensions.get() != nullptr)
 			return extensions->get_var(name);
 		else
-			throw syntax_error("Type does not support the extension");
+			throw runtime_error("Type does not support the extension");
 	}
 
 // Literal format
@@ -522,7 +522,7 @@ namespace cs {
 		for (auto &ch:str) {
 			if (!std::isdigit(ch)) {
 				if (ch != '.' || ++point_count > 1)
-					throw syntax_error("Wrong literal format.");
+					throw runtime_error("Wrong literal format.");
 			}
 		}
 		return std::stold(str);
@@ -596,7 +596,7 @@ namespace cs_impl {
 	{
 		for (auto &ch:str) {
 			if (!std::isdigit(ch))
-				throw cs::syntax_error("Wrong literal format.");
+				throw cs::runtime_error("Wrong literal format.");
 		}
 		return std::stol(str);
 	}

@@ -46,23 +46,23 @@ namespace cs {
 		}
 	};
 
-	class syntax_error final : public std::exception {
-		std::string mWhat = "Syntax Error";
+	class runtime_error final : public std::exception {
+		std::string mWhat = "Runtime Error";
 	public:
-		syntax_error() = default;
+		runtime_error() = default;
 
-		syntax_error(const std::string &str) noexcept:
-			mWhat("Syntax Error: " + str) {}
+		runtime_error(const std::string &str) noexcept:
+			mWhat("Runtime Error: " + str) {}
 
-		syntax_error(const syntax_error &) = default;
+		runtime_error(const runtime_error &) = default;
 
-		syntax_error(syntax_error &&) noexcept = default;
+		runtime_error(runtime_error &&) noexcept = default;
 
-		virtual ~syntax_error() = default;
+		virtual ~runtime_error() = default;
 
-		syntax_error &operator=(const syntax_error &)= default;
+		runtime_error &operator=(const runtime_error &)= default;
 
-		syntax_error &operator=(syntax_error &&)= default;
+		runtime_error &operator=(runtime_error &&)= default;
 
 		virtual const char *what() const noexcept override
 		{

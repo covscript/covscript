@@ -206,7 +206,7 @@ namespace cs {
 
 		virtual void run() override
 		{
-			throw syntax_error("Do not allowed standalone else statement.");
+			throw runtime_error("Do not allowed standalone else statement.");
 		}
 	};
 
@@ -245,7 +245,7 @@ namespace cs {
 
 		virtual void run() override
 		{
-			throw syntax_error("Do not allowed standalone case statement.");
+			throw runtime_error("Do not allowed standalone case statement.");
 		}
 
 		const var &get_tag() const
@@ -275,7 +275,7 @@ namespace cs {
 
 		virtual void run() override
 		{
-			throw syntax_error("Do not allowed standalone default statement.");
+			throw runtime_error("Do not allowed standalone default statement.");
 		}
 
 		statement_block *get_block() const
@@ -320,7 +320,7 @@ namespace cs {
 
 		virtual void run() override
 		{
-			throw syntax_error("Do not allowed standalone until statement.");
+			throw runtime_error("Do not allowed standalone until statement.");
 		}
 	};
 
@@ -459,7 +459,7 @@ namespace cs {
 
 		virtual void run() override
 		{
-			throw syntax_error("Do not allowed standalone end statement.");
+			throw runtime_error("Do not allowed standalone end statement.");
 		}
 	};
 
@@ -503,7 +503,7 @@ namespace cs {
 
 		virtual void run() override
 		{
-			throw syntax_error("Do not allowed standalone catch statement.");
+			throw runtime_error("Do not allowed standalone catch statement.");
 		}
 	};
 

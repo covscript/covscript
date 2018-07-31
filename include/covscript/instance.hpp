@@ -55,7 +55,7 @@ namespace cs {
 		method_base *match(const std::deque<token_base *> &raw)
 		{
 			if (raw.size() <= 1)
-				throw syntax_error("Grammar error.");
+				throw runtime_error("Grammar error.");
 			std::list<std::shared_ptr<data_type>> stack;
 			for (auto &it:m_data)
 				if (this->compare(it->first.front(), raw.front()))
@@ -71,9 +71,9 @@ namespace cs {
 				return false;
 			});
 			if (stack.empty())
-				throw syntax_error("Uknow grammar.");
+				throw runtime_error("Uknow grammar.");
 			if (stack.size() > 1)
-				throw syntax_error("Ambiguous grammar.");
+				throw runtime_error("Ambiguous grammar.");
 			return stack.front()->second;
 		}
 	};
@@ -329,18 +329,18 @@ namespace cs {
 		int get_signal_level(token_base *ptr)
 		{
 			if (ptr == nullptr)
-				throw syntax_error("Get the level of null token.");
+				throw runtime_error("Get the level of null token.");
 			if (ptr->get_type() != token_types::signal)
-				throw syntax_error("Get the level of non-signal token.");
+				throw runtime_error("Get the level of non-signal token.");
 			return signal_level_map.match(static_cast<token_signal *>(ptr)->get_signal());
 		}
 
 		bool is_left_associative(token_base *ptr)
 		{
 			if (ptr == nullptr)
-				throw syntax_error("Get the level of null token.");
+				throw runtime_error("Get the level of null token.");
 			if (ptr->get_type() != token_types::signal)
-				throw syntax_error("Get the level of non-signal token.");
+				throw runtime_error("Get the level of non-signal token.");
 			signal_types s = static_cast<token_signal *>(ptr)->get_signal();
 			for (auto &t:signal_left_associative)
 				if (t == s)

@@ -27,7 +27,7 @@ namespace cs {
 		else if (a.type() == typeid(string))
 			return var::make<std::string>(a.const_val<string>() + b.to_string());
 		else
-			throw syntax_error("Unsupported operator operations(Add).");
+			throw runtime_error("Unsupported operator operations(Add).");
 	}
 
 	var runtime_type::parse_addasi(var a, const var &b)
@@ -41,7 +41,7 @@ namespace cs {
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return a.const_val<number>() - b.const_val<number>();
 		else
-			throw syntax_error("Unsupported operator operations(Sub).");
+			throw runtime_error("Unsupported operator operations(Sub).");
 	}
 
 	var runtime_type::parse_subasi(var a, const var &b)
@@ -55,7 +55,7 @@ namespace cs {
 		if (b.type() == typeid(number))
 			return -b.const_val<number>();
 		else
-			throw syntax_error("Unsupported operator operations(Minus).");
+			throw runtime_error("Unsupported operator operations(Minus).");
 	}
 
 	var runtime_type::parse_mul(const var &a, const var &b)
@@ -63,7 +63,7 @@ namespace cs {
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return a.const_val<number>() * b.const_val<number>();
 		else
-			throw syntax_error("Unsupported operator operations(Mul).");
+			throw runtime_error("Unsupported operator operations(Mul).");
 	}
 
 	var runtime_type::parse_mulasi(var a, const var &b)
@@ -79,10 +79,10 @@ namespace cs {
 			if (ptr.data.usable())
 				return ptr.data;
 			else
-				throw syntax_error("Escape from null pointer.");
+				throw runtime_error("Escape from null pointer.");
 		}
 		else
-			throw syntax_error("Unsupported operator operations(Escape).");
+			throw runtime_error("Unsupported operator operations(Escape).");
 	}
 
 	var runtime_type::parse_div(const var &a, const var &b)
@@ -90,7 +90,7 @@ namespace cs {
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return a.const_val<number>() / b.const_val<number>();
 		else
-			throw syntax_error("Unsupported operator operations(Div).");
+			throw runtime_error("Unsupported operator operations(Div).");
 	}
 
 	var runtime_type::parse_divasi(var a, const var &b)
@@ -104,7 +104,7 @@ namespace cs {
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return number(std::fmod(a.const_val<number>(), b.const_val<number>()));
 		else
-			throw syntax_error("Unsupported operator operations(Mod).");
+			throw runtime_error("Unsupported operator operations(Mod).");
 	}
 
 	var runtime_type::parse_modasi(var a, const var &b)
@@ -118,7 +118,7 @@ namespace cs {
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return number(std::pow(a.const_val<number>(), b.const_val<number>()));
 		else
-			throw syntax_error("Unsupported operator operations(Pow).");
+			throw runtime_error("Unsupported operator operations(Pow).");
 	}
 
 	var runtime_type::parse_powasi(var a, const var &b)
@@ -138,7 +138,7 @@ namespace cs {
 				return storage.get_var_current(static_cast<token_id *>(b)->get_id());
 				break;
 			default:
-				throw syntax_error("Unsupported operator operations(Dot).");
+				throw runtime_error("Unsupported operator operations(Dot).");
 				break;
 			}
 		}
@@ -167,7 +167,7 @@ namespace cs {
 		if (a.type() == typeid(pointer))
 			return parse_dot(a.const_val<pointer>().data, b);
 		else
-			throw syntax_error("Unsupported operator operations(Arraw).");
+			throw runtime_error("Unsupported operator operations(Arraw).");
 	}
 
 	var runtime_type::parse_typeid(const var &b)
@@ -185,7 +185,7 @@ namespace cs {
 		if (b.type() == typeid(type))
 			return b.const_val<type>().constructor();
 		else
-			throw syntax_error("Unsupported operator operations(New).");
+			throw runtime_error("Unsupported operator operations(New).");
 	}
 
 	var runtime_type::parse_gcnew(const var &b)
@@ -193,7 +193,7 @@ namespace cs {
 		if (b.type() == typeid(type))
 			return var::make<pointer>(b.const_val<type>().constructor());
 		else
-			throw syntax_error("Unsupported operator operations(GcNew).");
+			throw runtime_error("Unsupported operator operations(GcNew).");
 	}
 
 	var runtime_type::parse_und(const var &a, const var &b)
@@ -201,7 +201,7 @@ namespace cs {
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return boolean(a.const_val<number>() < b.const_val<number>());
 		else
-			throw syntax_error("Unsupported operator operations(Und).");
+			throw runtime_error("Unsupported operator operations(Und).");
 	}
 
 	var runtime_type::parse_abo(const var &a, const var &b)
@@ -209,7 +209,7 @@ namespace cs {
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return boolean(a.const_val<number>() > b.const_val<number>());
 		else
-			throw syntax_error("Unsupported operator operations(Abo).");
+			throw runtime_error("Unsupported operator operations(Abo).");
 	}
 
 	var runtime_type::parse_ueq(const var &a, const var &b)
@@ -217,7 +217,7 @@ namespace cs {
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return boolean(a.const_val<number>() <= b.const_val<number>());
 		else
-			throw syntax_error("Unsupported operator operations(Ueq).");
+			throw runtime_error("Unsupported operator operations(Ueq).");
 	}
 
 	var runtime_type::parse_aeq(const var &a, const var &b)
@@ -225,7 +225,7 @@ namespace cs {
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return boolean(a.const_val<number>() >= b.const_val<number>());
 		else
-			throw syntax_error("Unsupported operator operations(Aeq).");
+			throw runtime_error("Unsupported operator operations(Aeq).");
 	}
 
 	var runtime_type::parse_asi(var a, const var &b)
@@ -243,7 +243,7 @@ namespace cs {
 				return parse_expr(b.right());
 		}
 		else
-			throw syntax_error("Unsupported operator operations(Choice).");
+			throw runtime_error("Unsupported operator operations(Choice).");
 	}
 
 	var runtime_type::parse_pair(const var &a, const var &b)
@@ -251,7 +251,7 @@ namespace cs {
 		if (a.type() != typeid(pair) && b.type() != typeid(pair))
 			return var::make<pair>(copy(a), copy(b));
 		else
-			throw syntax_error("Unsupported operator operations(Pair).");
+			throw runtime_error("Unsupported operator operations(Pair).");
 	}
 
 	var runtime_type::parse_equ(const var &a, const var &b)
@@ -269,7 +269,7 @@ namespace cs {
 		if (a.type() == typeid(boolean) && b.type() == typeid(boolean))
 			return boolean(a.const_val<boolean>() && b.const_val<boolean>());
 		else
-			throw syntax_error("Unsupported operator operations(And).");
+			throw runtime_error("Unsupported operator operations(And).");
 	}
 
 	var runtime_type::parse_or(const var &a, const var &b)
@@ -277,7 +277,7 @@ namespace cs {
 		if (a.type() == typeid(boolean) && b.type() == typeid(boolean))
 			return boolean(a.const_val<boolean>() || b.const_val<boolean>());
 		else
-			throw syntax_error("Unsupported operator operations(Or).");
+			throw runtime_error("Unsupported operator operations(Or).");
 	}
 
 	var runtime_type::parse_not(const var &b)
@@ -285,20 +285,20 @@ namespace cs {
 		if (b.type() == typeid(boolean))
 			return boolean(!b.const_val<boolean>());
 		else
-			throw syntax_error("Unsupported operator operations(Not).");
+			throw runtime_error("Unsupported operator operations(Not).");
 	}
 
 	var runtime_type::parse_inc(var a, var b)
 	{
 		if (a.usable()) {
 			if (b.usable())
-				throw syntax_error("Unsupported operator operations(Inc).");
+				throw runtime_error("Unsupported operator operations(Inc).");
 			else
 				return a.val<number>(true)++;
 		}
 		else {
 			if (!b.usable())
-				throw syntax_error("Unsupported operator operations(Inc).");
+				throw runtime_error("Unsupported operator operations(Inc).");
 			else
 				return ++b.val<number>(true);
 		}
@@ -308,13 +308,13 @@ namespace cs {
 	{
 		if (a.usable()) {
 			if (b.usable())
-				throw syntax_error("Unsupported operator operations(Dec).");
+				throw runtime_error("Unsupported operator operations(Dec).");
 			else
 				return a.val<number>(true)--;
 		}
 		else {
 			if (!b.usable())
-				throw syntax_error("Unsupported operator operations(Dec).");
+				throw runtime_error("Unsupported operator operations(Dec).");
 			else
 				return --b.val<number>(true);
 		}
@@ -338,16 +338,16 @@ namespace cs {
 			return om.callable.const_val<callable>().call(args);
 		}
 		else
-			throw syntax_error("Unsupported operator operations(Fcall).");
+			throw runtime_error("Unsupported operator operations(Fcall).");
 	}
 
 	var runtime_type::parse_access(var a, const var &b)
 	{
 		if (a.type() == typeid(array)) {
 			if (b.type() != typeid(number))
-				throw syntax_error("Index must be a number.");
+				throw runtime_error("Index must be a number.");
 			if (b.const_val<number>() < 0)
-				throw syntax_error("Index must above zero.");
+				throw runtime_error("Index must above zero.");
 			const array &carr = a.const_val<array>();
 			std::size_t posit = b.const_val<number>();
 			if (posit >= carr.size()) {
@@ -365,11 +365,11 @@ namespace cs {
 		}
 		else if (a.type() == typeid(string)) {
 			if (b.type() != typeid(number))
-				throw syntax_error("Index must be a number.");
+				throw runtime_error("Index must be a number.");
 			return a.const_val<string>().at(b.const_val<number>());
 		}
 		else
-			throw syntax_error("Access non-array or string object.");
+			throw runtime_error("Access non-array or string object.");
 	}
 
 	var runtime_type::parse_expr(const cov::tree<token_base *>::iterator &it)

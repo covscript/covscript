@@ -318,7 +318,7 @@ namespace cs_impl {
 		cs::extension_t &get_ext() const
 		{
 			if (this->mDat == nullptr)
-				throw cs::syntax_error("Target type does not support extensions.");
+				throw cs::runtime_error("Target type does not support extensions.");
 			return this->mDat->data->get_ext();
 		}
 

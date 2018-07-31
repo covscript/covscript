@@ -112,27 +112,27 @@ namespace cs {
 			for (auto &domain:m_data)
 				if (domain->count(name) > 0)
 					return (*domain)[name];
-			throw syntax_error("Use of undefined variable \"" + name + "\".");
+			throw runtime_error("Use of undefined variable \"" + name + "\".");
 		}
 
 		var &get_var_current(const string &name)
 		{
 			if (m_data.front()->count(name) > 0)
 				return (*m_data.front())[name];
-			throw syntax_error("Use of undefined variable \"" + name + "\" in current domain.");
+			throw runtime_error("Use of undefined variable \"" + name + "\" in current domain.");
 		}
 
 		var &get_var_global(const string &name)
 		{
 			if (m_data.back()->count(name) > 0)
 				return (*m_data.back())[name];
-			throw syntax_error("Use of undefined variable \"" + name + "\" in global domain.");
+			throw runtime_error("Use of undefined variable \"" + name + "\" in global domain.");
 		}
 
 		void add_record(const string &name)
 		{
 			if (exist_record(name))
-				throw syntax_error("Redefinition of variable \"" + name + "\".");
+				throw runtime_error("Redefinition of variable \"" + name + "\".");
 			else
 				m_set.front().emplace(name);
 		}
@@ -148,7 +148,7 @@ namespace cs {
 				if (is_override)
 					(*m_data.front())[name] = val;
 				else
-					throw syntax_error("Target domain exist variable \"" + name + "\".");
+					throw runtime_error("Target domain exist variable \"" + name + "\".");
 			}
 			else
 				m_data.front()->emplace(name, val);
@@ -157,7 +157,7 @@ namespace cs {
 		void add_var_global(const string &name, const var &var)
 		{
 			if (var_exist_global(name))
-				throw syntax_error("Target domain exist variable \"" + name + "\".");
+				throw runtime_error("Target domain exist variable \"" + name + "\".");
 			else
 				m_data.back()->emplace(name, var);
 		}

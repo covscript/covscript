@@ -242,7 +242,7 @@ namespace cs_impl {
 	template<typename T>
 	cs::extension_t &get_ext()
 	{
-		throw cs::syntax_error("Target type does not support extensions.");
+		throw cs::runtime_error("Target type does not support extensions.");
 	}
 
 	template<typename _Target>

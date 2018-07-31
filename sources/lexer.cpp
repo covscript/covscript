@@ -23,7 +23,7 @@ namespace cs {
 	void instance_type::process_char_buff(const std::deque<char> &buff, std::deque<token_base *> &tokens)
 	{
 		if (buff.empty())
-			throw syntax_error("Received empty character buffer.");
+			throw runtime_error("Received empty character buffer.");
 		std::string tmp;
 		token_types type = token_types::null;
 		bool inside_char = false;
@@ -40,9 +40,9 @@ namespace cs {
 				}
 				else if (buff[i] == '\'') {
 					if (tmp.empty())
-						throw syntax_error("Do not allow empty character.");
+						throw runtime_error("Do not allow empty character.");
 					if (tmp.size() > 1)
-						throw syntax_error("Char must be a single character.");
+						throw runtime_error("Char must be a single character.");
 					tokens.push_back(new_value(tmp[0]));
 					tmp.clear();
 					inside_char = false;
@@ -102,7 +102,7 @@ namespace cs {
 					type = token_types::id;
 					continue;
 				}
-				throw syntax_error("Uknown character.");
+				throw runtime_error("Uknown character.");
 				break;
 			case token_types::id:
 				if (std::isalnum(buff[i]) || buff[i] == '_') {
@@ -162,9 +162,9 @@ namespace cs {
 			}
 		}
 		if (inside_char)
-			throw syntax_error("Lack of the \'.");
+			throw runtime_error("Lack of the \'.");
 		if (inside_str)
-			throw syntax_error("Lack of the \".");
+			throw runtime_error("Lack of the \".");
 		if (tmp.empty())
 			return;
 		switch (type) {
@@ -284,7 +284,7 @@ namespace cs {
 			}
 			process_endline(context, tokens);
 			if (multi_line)
-				throw syntax_error("Lack of the @end command.");
+				throw runtime_error("Lack of the @end command.");
 		}
 	};
 
@@ -296,7 +296,7 @@ namespace cs {
 	void instance_type::process_empty_brackets(std::deque<token_base *> &tokens)
 	{
 		if (tokens.empty())
-			throw syntax_error("Received empty token buffer.");
+			throw runtime_error("Received empty token buffer.");
 		std::deque<token_base *> oldt;
 		std::swap(tokens, oldt);
 		tokens.clear();
@@ -340,9 +340,9 @@ namespace cs {
 					continue;
 				case signal_types::srb_:
 					if (blist_stack.empty())
-						throw syntax_error("Parentheses do not match.");
+						throw runtime_error("Parentheses do not match.");
 					if (blist_stack.front() != 1)
-						throw syntax_error("The parentheses type does not match.(Request Small Bracket)");
+						throw runtime_error("The parentheses type does not match.(Request Small Bracket)");
 					blist_stack.pop_front();
 					if (empty_bracket) {
 						empty_bracket = false;
@@ -352,9 +352,9 @@ namespace cs {
 					break;
 				case signal_types::mrb_:
 					if (blist_stack.empty())
-						throw syntax_error("Parentheses do not match.");
+						throw runtime_error("Parentheses do not match.");
 					if (blist_stack.front() != 2)
-						throw syntax_error("The parentheses type does not match.(Request Middle Bracket)");
+						throw runtime_error("The parentheses type does not match.(Request Middle Bracket)");
 					blist_stack.pop_front();
 					if (empty_bracket) {
 						empty_bracket = false;
@@ -364,9 +364,9 @@ namespace cs {
 					break;
 				case signal_types::lrb_:
 					if (blist_stack.empty())
-						throw syntax_error("Parentheses do not match.");
+						throw runtime_error("Parentheses do not match.");
 					if (blist_stack.front() != 3)
-						throw syntax_error("The parentheses type does not match.(Request Large Bracket)");
+						throw runtime_error("The parentheses type does not match.(Request Large Bracket)");
 					blist_stack.pop_front();
 					if (empty_bracket) {
 						empty_bracket = false;
@@ -383,13 +383,13 @@ namespace cs {
 			tokens.push_back(ptr);
 		}
 		if (!blist_stack.empty())
-			throw syntax_error("Parentheses do not match.");
+			throw runtime_error("Parentheses do not match.");
 	}
 
 	void instance_type::process_brackets(std::deque<token_base *> &tokens)
 	{
 		if (tokens.empty())
-			throw syntax_error("Received empty token buffer.");
+			throw runtime_error("Received empty token buffer.");
 		process_empty_brackets(tokens);
 		std::deque<token_base *> oldt;
 		std::swap(tokens, oldt);
@@ -419,9 +419,9 @@ namespace cs {
 					break;
 				case signal_types::srb_:
 					if (blist_stack.empty())
-						throw syntax_error("Parentheses do not match.");
+						throw runtime_error("Parentheses do not match.");
 					if (blist_stack.front() != 1)
-						throw syntax_error("The parentheses type does not match.(Request Small Bracket)");
+						throw runtime_error("The parentheses type does not match.(Request Small Bracket)");
 					blist_stack.pop_front();
 					if (blist_stack.empty()) {
 						process_brackets(btokens);
@@ -434,9 +434,9 @@ namespace cs {
 					break;
 				case signal_types::mrb_:
 					if (blist_stack.empty())
-						throw syntax_error("Parentheses do not match.");
+						throw runtime_error("Parentheses do not match.");
 					if (blist_stack.front() != 2)
-						throw syntax_error("The parentheses type does not match.(Request Middle Bracket)");
+						throw runtime_error("The parentheses type does not match.(Request Middle Bracket)");
 					blist_stack.pop_front();
 					if (blist_stack.empty()) {
 						process_brackets(btokens);
@@ -449,9 +449,9 @@ namespace cs {
 					break;
 				case signal_types::lrb_:
 					if (blist_stack.empty())
-						throw syntax_error("Parentheses do not match.");
+						throw runtime_error("Parentheses do not match.");
 					if (blist_stack.front() != 3)
-						throw syntax_error("The parentheses type does not match.(Request Large Bracket)");
+						throw runtime_error("The parentheses type does not match.(Request Large Bracket)");
 					blist_stack.pop_front();
 					if (blist_stack.empty()) {
 						process_brackets(btokens);
@@ -478,6 +478,6 @@ namespace cs {
 				btokens.push_back(ptr);
 		}
 		if (!blist_stack.empty())
-			throw syntax_error("Parentheses do not match.");
+			throw runtime_error("Parentheses do not match.");
 	}
 }

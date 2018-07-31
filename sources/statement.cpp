@@ -24,8 +24,8 @@ namespace cs {
 	var function::call(vector &args) const
 	{
 		if (args.size() != this->mArgs.size())
-			throw syntax_error("Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
-			                   std::to_string(args.size()));
+			throw runtime_error("Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
+			                    std::to_string(args.size()));
 		scope_guard scope(mContext);
 		fcall_guard fcall(mContext);
 		for (std::size_t i = 0; i < args.size(); ++i)
@@ -56,7 +56,7 @@ namespace cs {
 			if (builder.type() == typeid(type)) {
 				const type &t = builder.const_val<type>();
 				if (mHash == t.id)
-					throw syntax_error("Can not inherit itself.");
+					throw runtime_error("Can not inherit itself.");
 				var parent = t.constructor();
 				if (parent.type() == typeid(structure)) {
 					parent.protect();
@@ -64,10 +64,10 @@ namespace cs {
 					mContext->instance->storage.add_var("parent", parent, true);
 				}
 				else
-					throw syntax_error("Target is not a struct.");
+					throw runtime_error("Target is not a struct.");
 			}
 			else
-				throw syntax_error("Target is not a type.");
+				throw runtime_error("Target is not a type.");
 		}
 		for (auto &ptr:this->mMethod) {
 			try {
@@ -106,7 +106,7 @@ namespace cs {
 		if (ns.type() == typeid(name_space_t))
 			context->instance->storage.involve_domain(ns.const_val<name_space_t>()->get_domain(), mOverride);
 		else
-			throw syntax_error("Only support involve namespace.");
+			throw runtime_error("Only support involve namespace.");
 	}
 
 	void statement_var::run()
@@ -393,7 +393,7 @@ namespace cs {
 		else if (obj.type() == typeid(hash_map))
 			foreach_helper<hash_map, pair>(context, this->mIt, obj, this->mBlock);
 		else
-			throw syntax_error("Unsupported type(foreach)");
+			throw runtime_error("Unsupported type(foreach)");
 	}
 
 	void statement_struct::run()
@@ -414,7 +414,7 @@ namespace cs {
 	void statement_return::run()
 	{
 		if (context->instance->fcall_stack.empty())
-			throw syntax_error("Return outside function.");
+			throw runtime_error("Return outside function.");
 		context->instance->fcall_stack.top() = context->instance->parse_expr(this->mTree.root());
 		context->instance->return_fcall = true;
 	}
@@ -460,7 +460,7 @@ namespace cs {
 	{
 		var e = context->instance->parse_expr(this->mTree.root());
 		if (e.type() != typeid(lang_error))
-			throw syntax_error("Throwing unsupported exception.");
+			throw runtime_error("Throwing unsupported exception.");
 		else
 			throw e.const_val<lang_error>();
 	}
