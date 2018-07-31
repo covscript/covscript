@@ -143,7 +143,7 @@ namespace cs {
 		{
 			if (!args.empty())
 				throw syntax_error("Wrong size of the arguments.Expected 0");
-			return var::make<_Source_RetT>(std::move(mFunc()));
+			return var::make<_Source_RetT>(std::move(cs_impl::type_convertor<_Target_RetT,_Source_RetT>::convert(mFunc())));
 		}
 	};
 
@@ -154,7 +154,7 @@ namespace cs {
 		template<int...S>
 		void _call(vector &args, const cov::sequence<S...> &) const
 		{
-			mFunc(convert<_Source_ArgsT>::get_val(args[S])...);
+			mFunc(cs_impl::type_convertor<_Source_ArgsT,_Target_ArgsT>::convert(convert<_Source_ArgsT>::get_val(args[S]))...);
 		}
 
 	public:
@@ -179,7 +179,7 @@ namespace cs {
 		template<int...S>
 		_Source_RetT _call(vector &args, const cov::sequence<S...> &) const
 		{
-			return std::move(mFunc(convert<_Source_ArgsT>::get_val(args[S])...));
+			return std::move(cs_impl::type_convertor<_Target_RetT,_Source_RetT>::convert(mFunc(cs_impl::type_convertor<_Source_ArgsT,_Target_ArgsT>::convert(convert<_Source_ArgsT>::get_val(args[S]))...)));
 		}
 
 	public:
@@ -207,6 +207,30 @@ namespace cs {
 	};
 
 	template<typename T>struct cni_type {};
+
+	template<typename From, typename To>
+	class cni_castable final {
+		template<typename From1, typename To1>
+		static constexpr bool helper(...)
+		{
+			return false;
+		}
+
+		template<typename From1, typename To1, typename=decltype(cs_impl::type_convertor<From1,To1>::convert(std::declval<From1>()))>
+		static constexpr bool helper(int)
+		{
+			return true;
+		}
+
+	public:
+		static constexpr bool value = helper<From, To>(0);
+	};
+
+	template<typename T>
+	class cni_castable<T,T> final {
+	public:
+		static constexpr bool value = true;
+	};
 
 	class cni final {
 		class cni_base {
@@ -245,20 +269,6 @@ namespace cs {
 			}
 		};
 
-		template<typename T>
-		struct construct_helper {
-			template<typename X,typename RetT,typename...ArgsT>
-			static cni_base *_construct(X &&val,RetT(*)(ArgsT...))
-			{
-				return new cni_holder<T,typename cs_impl::type_conversion<RetT>::target_type(*)(typename cs_impl::type_conversion<ArgsT>::target_type...)>(std::forward<X>(val));
-			}
-			template<typename X>
-			static cni_base *construct(X &&val)
-			{
-				return _construct(std::forward<X>(val),typename cov::function_parser<T>::type::common_type(nullptr));
-			}
-		};
-
 		template<typename RetT,typename...ArgsT>
 		static constexpr int count_args_size(RetT(*)(ArgsT...))
 		{
@@ -270,7 +280,8 @@ namespace cs {
 		template<typename _From, typename _To>
 		static short _check_conversion()
 		{
-			static_assert(cov::castable<_From,_To>::value);
+			static_assert(cni_castable<_From,_To>::value,"Invalid conversion.");
+			return 0;
 		}
 
 		template<typename _Target_RetT, typename _Source_RetT, typename..._Target_ArgsT, typename..._Source_ArgsT>
@@ -278,6 +289,25 @@ namespace cs {
 		{
 			result_container(_check_conversion<_Target_ArgsT,_Source_ArgsT>()...);
 		}
+
+		template<typename T>
+		struct construct_helper {
+			template<typename X,typename RetT,typename...ArgsT>
+			static cni_base *_construct(X &&val,RetT(*target_function)(ArgsT...))
+			{
+				using source_function_type=typename cs_impl::type_conversion_cpp<RetT>::target_type(*)(typename cs_impl::type_conversion_cs<ArgsT>::source_type...);
+				// Return type
+				static_assert(cni_castable<RetT,typename cs_impl::type_conversion_cpp<RetT>::target_type>::value,"Invalid conversion.");
+				// Argument type
+				check_conversion(target_function,source_function_type(nullptr));
+				return new cni_holder<T,source_function_type>(std::forward<X>(val));
+			}
+			template<typename X>
+			static cni_base *construct(X &&val)
+			{
+				return _construct(std::forward<X>(val),typename cov::function_parser<T>::type::common_type(nullptr));
+			}
+		};
 
 		cni_base *mCni = nullptr;
 	public:
@@ -296,9 +326,9 @@ namespace cs {
 			using source_function_type=typename cov::function_parser<typename cni_modify<X>::type>::type::common_type;
 			// Check consistency
 			// Argument size
-			static_assert(count_args_size(target_function_type(nullptr))==count_args_size(source_function_type(nullptr)));
+			static_assert(count_args_size(target_function_type(nullptr))==count_args_size(source_function_type(nullptr)),"Invalid argument size.");
 			// Return type
-			static_assert(cov::castable<typename cov::resolver<target_function_type>::return_type,typename cov::resolver<source_function_type>::return_type>::value);
+			static_assert(cni_castable<typename cov::resolver<target_function_type>::return_type,typename cov::resolver<source_function_type>::return_type>::value,"Invalid conversion.");
 			// Argument type
 			check_conversion(target_function_type(nullptr),source_function_type(nullptr));
 		}

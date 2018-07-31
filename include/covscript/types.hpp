@@ -245,8 +245,31 @@ namespace cs_impl {
 		throw cs::syntax_error("Target type does not support extensions.");
 	}
 
-	template<typename _From>
-	struct type_conversion {
-		using target_type=_From;
+	template<typename _Target>
+	struct type_conversion_cs {
+		using source_type=_Target;
+	};
+
+	template<typename _Source>
+	struct type_conversion_cpp {
+		using target_type=_Source;
+	};
+
+	template<typename _From,typename _To>
+	struct type_convertor {
+		template<typename T>
+		static _To convert(T&& val)
+		{
+			return std::move(static_cast<_To>(std::forward<T>(val)));
+		}
+	};
+
+	template<typename T>
+	struct type_convertor<T,T> {
+		template<typename X>
+		static X&& convert(X&& val)
+		{
+			return std::forward<X>(val);
+		}
 	};
 }
