@@ -244,4 +244,9 @@ namespace cs_impl {
 	{
 		throw cs::syntax_error("Target type does not support extensions.");
 	}
+
+	template<typename _From>
+	struct type_conversion {
+		using target_type=_From;
+	};
 }

@@ -247,10 +247,15 @@ namespace cs {
 
 		template<typename T>
 		struct construct_helper {
+			template<typename X,typename RetT,typename...ArgsT>
+			static cni_base *_construct(X &&val,RetT(*)(ArgsT...))
+			{
+				return new cni_holder<T,typename cs_impl::type_conversion<RetT>::target_type(*)(typename cs_impl::type_conversion<ArgsT>::target_type...)>(std::forward<X>(val));
+			}
 			template<typename X>
 			static cni_base *construct(X &&val)
 			{
-				return new cni_holder<T,T>(std::forward<X>(val));
+				return _construct(std::forward<X>(val),typename cov::function_parser<T>::type::common_type(nullptr));
 			}
 		};
 
