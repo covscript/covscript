@@ -107,11 +107,11 @@ namespace cs {
 		}
 	};
 
-	template<typename T, typename...RealArgsT>
+	template<typename _Target, typename _Source>
 	class cni_helper;
 
 	template<>
-	class cni_helper<void (*)()> {
+	class cni_helper<void (*)(), void (*)()> {
 		std::function<void()> mFunc;
 	public:
 		cni_helper() = delete;
@@ -129,33 +129,32 @@ namespace cs {
 		}
 	};
 
-	template<typename RetT>
-	class cni_helper<RetT(*)()> {
-		std::function<RetT()> mFunc;
+	template<typename _Target_RetT, typename _Source_RetT>
+	class cni_helper<_Target_RetT(*)(),_Source_RetT(*)()> {
+		std::function<_Target_RetT()> mFunc;
 	public:
 		cni_helper() = delete;
 
 		cni_helper(const cni_helper &) = default;
 
-		cni_helper(const std::function<RetT()> &func) : mFunc(func) {}
+		cni_helper(const std::function<_Target_RetT()> &func) : mFunc(func) {}
 
 		var call(vector &args) const
 		{
 			if (!args.empty())
 				throw syntax_error("Wrong size of the arguments.Expected 0");
-			return std::move(mFunc());
+			return var::make<_Source_RetT>(std::move(mFunc()));
 		}
 	};
 
-	template<typename...ArgsT, typename...RealArgsT>
-	class cni_helper<void (*)(ArgsT...), RealArgsT...> {
-		using args_t=typename cov::type_list::make<ArgsT...>::result;
-		std::function<void(ArgsT...)> mFunc;
+	template<typename..._Target_ArgsT, typename..._Source_ArgsT>
+	class cni_helper<void (*)(_Target_ArgsT...), void (*)(_Source_ArgsT...)> {
+		std::function<void(_Target_ArgsT...)> mFunc;
 
 		template<int...S>
 		void _call(vector &args, const cov::sequence<S...> &) const
 		{
-			mFunc(convert<RealArgsT>::get_val(args[S])...);
+			mFunc(convert<_Source_ArgsT>::get_val(args[S])...);
 		}
 
 	public:
@@ -163,25 +162,24 @@ namespace cs {
 
 		cni_helper(const cni_helper &) = default;
 
-		cni_helper(const std::function<void(ArgsT...)> &func) : mFunc(func) {}
+		cni_helper(const std::function<void(_Target_ArgsT...)> &func) : mFunc(func) {}
 
 		var call(vector &args) const
 		{
-			arglist::check<RealArgsT...>(args);
-			_call(args, cov::make_sequence<cov::type_list::get_size<args_t>::result>::result);
+			arglist::check<_Source_ArgsT...>(args);
+			_call(args, cov::make_sequence<sizeof...(_Source_ArgsT)>::result);
 			return null_pointer;
 		}
 	};
 
-	template<typename RetT, typename...ArgsT, typename...RealArgsT>
-	class cni_helper<RetT(*)(ArgsT...), RealArgsT...> {
-		using args_t=typename cov::type_list::make<ArgsT...>::result;
-		std::function<RetT(ArgsT...)> mFunc;
+	template<typename _Target_RetT, typename _Source_RetT, typename..._Target_ArgsT, typename..._Source_ArgsT>
+	class cni_helper<_Target_RetT(*)(_Target_ArgsT...), _Source_RetT(*)(_Source_ArgsT...)> {
+		std::function<_Target_RetT(_Target_ArgsT...)> mFunc;
 
 		template<int...S>
-		RetT _call(vector &args, const cov::sequence<S...> &) const
+		_Source_RetT _call(vector &args, const cov::sequence<S...> &) const
 		{
-			return std::move(mFunc(convert<RealArgsT>::get_val(args[S])...));
+			return std::move(mFunc(convert<_Source_ArgsT>::get_val(args[S])...));
 		}
 
 	public:
@@ -189,12 +187,12 @@ namespace cs {
 
 		cni_helper(const cni_helper &) = default;
 
-		cni_helper(const std::function<RetT(ArgsT...)> &func) : mFunc(func) {}
+		cni_helper(const std::function<_Target_RetT(_Target_ArgsT...)> &func) : mFunc(func) {}
 
 		var call(vector &args) const
 		{
-			arglist::check<RealArgsT...>(args);
-			return std::move(_call(args, cov::make_sequence<cov::type_list::get_size<args_t>::result>::result));
+			arglist::check<_Source_ArgsT...>(args);
+			return std::move(_call(args, cov::make_sequence<sizeof...(_Source_ArgsT)>::result));
 		}
 	};
 
@@ -202,12 +200,13 @@ namespace cs {
 	struct cni_modify {
 		using type=T;
 	};
+
 	template<typename RetT, typename...ArgsT>
 	struct cni_modify<RetT(ArgsT...)> {
 		using type=RetT(*)(ArgsT...);
 	};
 
-	template<typename...ArgsT>struct cni_args{};
+	template<typename T>struct cni_type {};
 
 	class cni final {
 		class cni_base {
@@ -223,9 +222,9 @@ namespace cs {
 			virtual var call(vector &) const =0;
 		};
 
-		template<typename T, typename...ArgsT>
+		template<typename T, typename X>
 		class cni_holder final : public cni_base {
-			cni_helper<typename cov::function_parser<T>::type::common_type, ArgsT...> mCni;
+			cni_helper<typename cov::function_parser<T>::type::common_type, typename cov::function_parser<X>::type::common_type> mCni;
 		public:
 			cni_holder() = delete;
 
@@ -248,15 +247,10 @@ namespace cs {
 
 		template<typename T>
 		struct construct_helper {
-			template<typename X,typename RetT,typename...ArgsT>
-			static cni_base *_construct(X &&val, RetT(*)(ArgsT...))
-			{
-				return new cni_holder<T,ArgsT...>(std::forward<X>(val));
-			}
 			template<typename X>
 			static cni_base *construct(X &&val)
 			{
-				return _construct(std::forward<X>(val),typename cov::function_parser<T>::type::common_type(nullptr));
+				return new cni_holder<T,T>(std::forward<X>(val));
 			}
 		};
 
@@ -274,10 +268,10 @@ namespace cs {
 			static_assert(cov::castable<_From,_To>::value);
 		}
 
-		template<typename RetT,typename...ArgsT,typename...RealArgsT>
-		static void check_conversion(RetT(*)(ArgsT...),cni_args<RealArgsT...>)
+		template<typename _Target_RetT, typename _Source_RetT, typename..._Target_ArgsT, typename..._Source_ArgsT>
+		static void check_conversion(_Target_RetT(*)(_Target_ArgsT...), _Source_RetT(*)(_Source_ArgsT...))
 		{
-			result_container(_check_conversion<ArgsT,RealArgsT>()...);
+			result_container(_check_conversion<_Target_ArgsT,_Source_ArgsT>()...);
 		}
 
 		cni_base *mCni = nullptr;
@@ -289,11 +283,19 @@ namespace cs {
 		template<typename T>
 		cni(T &&val):mCni(construct_helper<typename cni_modify<typename cov::remove_reference<T>::type>::type>::construct(std::forward<T>(val))) {}
 
-		template<typename T, typename...ArgsT>
-		cni(T &&val, cni_args<ArgsT...> args):mCni(new cni_holder<typename cni_modify<typename cov::remove_reference<T>::type>::type, ArgsT...>(std::forward<T>(val))) {
-			using function_type=typename cov::function_parser<typename cni_modify<typename cov::remove_reference<T>::type>::type>::type::common_type;
-			static_assert(sizeof...(ArgsT)==count_args_size(function_type(nullptr)));
-			check_conversion(function_type(nullptr),args);
+		template<typename T, typename X>
+		cni(T &&val, cni_type<X>):mCni(new cni_holder<typename cni_modify<typename cov::remove_reference<T>::type>::type, typename cni_modify<X>::type>(std::forward<T>(val)))
+		{
+			// Analysis the function
+			using target_function_type=typename cov::function_parser<typename cni_modify<typename cov::remove_reference<T>::type>::type>::type::common_type;
+			using source_function_type=typename cov::function_parser<typename cni_modify<X>::type>::type::common_type;
+			// Check consistency
+			// Argument size
+			static_assert(count_args_size(target_function_type(nullptr))==count_args_size(source_function_type(nullptr)));
+			// Return type
+			static_assert(cov::castable<typename cov::resolver<target_function_type>::return_type,typename cov::resolver<source_function_type>::return_type>::value);
+			// Argument type
+			check_conversion(target_function_type(nullptr),source_function_type(nullptr));
 		}
 
 		~cni()
