@@ -22,91 +22,149 @@
 #include <covscript/mozart/bind.hpp>
 #include <covscript/core.hpp>
 
-namespace cs {
-	class arglist final {
-		template<typename T, int index>
-		struct check_arg {
-			static inline short check(const var &val)
-			{
-				if (typeid(T) != val.type())
-					throw runtime_error("Invalid Argument.At " + std::to_string(index + 1) + ".Expected " +
-					                    cs_impl::get_name_of_type<T>() + ",provided " + val.get_type_name());
-				else
-					return 0;
-			}
-		};
-
-		static inline void result_container(short...) {}
-
-		template<typename...ArgsT, int...Seq>
-		static inline void check_helper(const vector &args, const cov::sequence<Seq...> &)
-		{
-			result_container(
-			    check_arg<typename cov::remove_constant<typename cov::remove_reference<ArgsT>::type>::type, Seq>::check(
-			        args[Seq])...);
-		}
-
-	public:
-		template<typename...ArgTypes>
-		static inline void check(const vector &args)
-		{
-			if (sizeof...(ArgTypes) == args.size())
-				check_helper<ArgTypes...>(args, cov::make_sequence<sizeof...(ArgTypes)>::result);
-			else
-				throw runtime_error(
-				    "Wrong size of the arguments.Expected " + std::to_string(sizeof...(ArgTypes)) + ",provided " +
-				    std::to_string(args.size()));
-		}
-	};
-
-	template<int index>
-	struct arglist::check_arg<var, index> {
-		static inline short check(const var &)
-		{
-			return 0;
-		}
-	};
+namespace cs_impl {
+// Utilities
+	template<typename...ArgsT>
+	inline void result_container(ArgsT &&...) {}
 
 	template<typename T>
-	struct convert {
-		static inline const T &get_val(var &val)
+	struct cni_modify {
+		using type=T;
+	};
+
+	template<typename RetT, typename...ArgsT>
+	struct cni_modify<RetT(ArgsT...)> {
+		using type=RetT(*)(ArgsT...);
+	};
+
+// Type conversion
+	template<typename T>
+	struct convert_helper {
+		static inline const T &get_val(any &val)
 		{
 			return val.const_val<T>();
 		}
 	};
 
 	template<typename T>
-	struct convert<const T &> {
-		static inline const T &get_val(var &val)
+	struct convert_helper<const T &> {
+		static inline const T &get_val(any &val)
 		{
 			return val.const_val<T>();
 		}
 	};
 
 	template<typename T>
-	struct convert<T &> {
-		static inline T &get_val(var &val)
+	struct convert_helper<T &> {
+		static inline T &get_val(any &val)
 		{
 			return val.val<T>(true);
 		}
 	};
 
 	template<>
-	struct convert<const var &> {
-		static inline const var &get_val(const var &val)
+	struct convert_helper<const any &> {
+		static inline const any &get_val(const any &val)
 		{
 			return val;
 		}
 	};
 
 	template<>
-	struct convert<var &> {
-		static inline var &get_val(var &val)
+	struct convert_helper<any &> {
+		static inline any &get_val(any &val)
 		{
 			return val;
 		}
 	};
 
+	template<typename From, typename To>
+	class cni_convertible final {
+		template<typename From1, typename To1>
+		static constexpr bool helper(...)
+		{
+			return false;
+		}
+
+		template<typename From1, typename To1, typename=decltype(type_convertor<From1, To1>::convert(
+		             std::declval<From1>()))>
+		static constexpr bool helper(int)
+		{
+			return true;
+		}
+
+	public:
+		static constexpr bool value = helper<From, To>(0);
+	};
+
+	template<typename T>
+	class cni_convertible<T, T> final {
+	public:
+		static constexpr bool value = true;
+	};
+
+// Dynamic argument check
+	template<typename T, int index>
+	struct check_args_helper {
+		static inline char check(const any &val)
+		{
+			if (typeid(T) != val.type())
+				throw cs::runtime_error(
+				    "Invalid Argument.At " + std::to_string(index + 1) + ".Expected " + get_name_of_type<T>() +
+				    ",provided " + val.get_type_name());
+			else
+				return 0;
+		}
+	};
+
+	template<int index>
+	struct check_args_helper<any, index> {
+		static inline char check(const any &)
+		{
+			return 0;
+		}
+	};
+
+	template<typename...ArgsT, int...Seq>
+	void check_args_base(const cs::vector &args, const cov::sequence<Seq...> &)
+	{
+		result_container(
+		    check_args_helper<typename cov::remove_constant<typename cov::remove_reference<ArgsT>::type>::type, Seq>::check(
+		        args[Seq])...);
+	}
+
+	template<typename...ArgTypes>
+	void check_args(const cs::vector &args)
+	{
+		if (sizeof...(ArgTypes) == args.size())
+			check_args_base<ArgTypes...>(args, cov::make_sequence<sizeof...(ArgTypes)>::result);
+		else
+			throw cs::runtime_error(
+			    "Wrong size of the arguments.Expected " + std::to_string(sizeof...(ArgTypes)) + ",provided " +
+			    std::to_string(args.size()));
+	}
+
+// Static argument check
+	template<typename RetT, typename...ArgsT>
+	constexpr int count_args_size(RetT(*)(ArgsT...))
+	{
+		return sizeof...(ArgsT);
+	}
+
+	template<typename _From, typename _To>
+	char check_conversion_base()
+	{
+		static_assert(cni_convertible<_From, _To>::value, "Invalid conversion.");
+		return 0;
+	}
+
+	template<typename _Target_RetT, typename _Source_RetT, typename..._Target_ArgsT, typename..._Source_ArgsT>
+	void check_conversion(_Target_RetT(*)(_Target_ArgsT...), _Source_RetT(*)(_Source_ArgsT...))
+	{
+		result_container(check_conversion_base<_Target_ArgsT, _Source_ArgsT>()...);
+	}
+
+// CNI Helper
 	template<typename _Target, typename _Source>
 	class cni_helper;
 
@@ -120,12 +178,12 @@ namespace cs {
 
 		cni_helper(const std::function<void()> &func) : mFunc(func) {}
 
-		var call(vector &args) const
+		any call(cs::vector &args) const
 		{
 			if (!args.empty())
-				throw runtime_error("Wrong size of the arguments.Expected 0");
+				throw cs::runtime_error("Wrong size of the arguments.Expected 0");
 			mFunc();
-			return null_pointer;
+			return cs::null_pointer;
 		}
 	};
 
@@ -139,12 +197,11 @@ namespace cs {
 
 		cni_helper(const std::function<_Target_RetT()> &func) : mFunc(func) {}
 
-		var call(vector &args) const
+		any call(cs::vector &args) const
 		{
 			if (!args.empty())
-				throw runtime_error("Wrong size of the arguments.Expected 0");
-			return var::make<_Source_RetT>(
-			           std::move(cs_impl::type_convertor<_Target_RetT, _Source_RetT>::convert(mFunc())));
+				throw cs::runtime_error("Wrong size of the arguments.Expected 0");
+			return any::make<_Source_RetT>(std::move(type_convertor<_Target_RetT, _Source_RetT>::convert(mFunc())));
 		}
 	};
 
@@ -153,10 +210,10 @@ namespace cs {
 		std::function<void(_Target_ArgsT...)> mFunc;
 
 		template<int...S>
-		void _call(vector &args, const cov::sequence<S...> &) const
+		void _call(cs::vector &args, const cov::sequence<S...> &) const
 		{
-			mFunc(cs_impl::type_convertor<_Source_ArgsT, _Target_ArgsT>::convert(
-			          convert<_Source_ArgsT>::get_val(args[S]))...);
+			mFunc(type_convertor<_Source_ArgsT, _Target_ArgsT>::convert(
+			          convert_helper<_Source_ArgsT>::get_val(args[S]))...);
 		}
 
 	public:
@@ -166,11 +223,11 @@ namespace cs {
 
 		cni_helper(const std::function<void(_Target_ArgsT...)> &func) : mFunc(func) {}
 
-		var call(vector &args) const
+		any call(cs::vector &args) const
 		{
-			arglist::check<_Source_ArgsT...>(args);
+			check_args<_Source_ArgsT...>(args);
 			_call(args, cov::make_sequence<sizeof...(_Source_ArgsT)>::result);
-			return null_pointer;
+			return cs::null_pointer;
 		}
 	};
 
@@ -179,11 +236,11 @@ namespace cs {
 		std::function<_Target_RetT(_Target_ArgsT...)> mFunc;
 
 		template<int...S>
-		_Source_RetT _call(vector &args, const cov::sequence<S...> &) const
+		_Source_RetT _call(cs::vector &args, const cov::sequence<S...> &) const
 		{
-			return std::move(cs_impl::type_convertor<_Target_RetT, _Source_RetT>::convert(
-			                     mFunc(cs_impl::type_convertor<_Source_ArgsT, _Target_ArgsT>::convert(
-			                               convert<_Source_ArgsT>::get_val(args[S]))...)));
+			return std::move(type_convertor<_Target_RetT, _Source_RetT>::convert(
+			                     mFunc(type_convertor<_Source_ArgsT, _Target_ArgsT>::convert(
+			                               convert_helper<_Source_ArgsT>::get_val(args[S]))...)));
 		}
 
 	public:
@@ -193,119 +250,65 @@ namespace cs {
 
 		cni_helper(const std::function<_Target_RetT(_Target_ArgsT...)> &func) : mFunc(func) {}
 
-		var call(vector &args) const
+		any call(cs::vector &args) const
 		{
-			arglist::check<_Source_ArgsT...>(args);
+			check_args<_Source_ArgsT...>(args);
 			return std::move(_call(args, cov::make_sequence<sizeof...(_Source_ArgsT)>::result));
 		}
 	};
 
-	template<typename T>
-	struct cni_modify {
-		using type=T;
+// CNI Holder
+	class cni_holder_base {
+	public:
+		cni_holder_base() = default;
+
+		cni_holder_base(const cni_holder_base &) = default;
+
+		virtual ~cni_holder_base() = default;
+
+		virtual cni_holder_base *clone()=0;
+
+		virtual any call(cs::vector &) const =0;
 	};
 
-	template<typename RetT, typename...ArgsT>
-	struct cni_modify<RetT(ArgsT...)> {
-		using type=RetT(*)(ArgsT...);
+	template<typename T, typename X>
+	class cni_holder final : public cni_holder_base {
+		cni_helper<typename cov::function_parser<T>::type::common_type, typename cov::function_parser<X>::type::common_type> mCni;
+	public:
+		cni_holder() = delete;
+
+		cni_holder(const cni_holder &) = default;
+
+		cni_holder(const T &func) : mCni(func) {}
+
+		virtual ~cni_holder() = default;
+
+		virtual cni_holder_base *clone() override
+		{
+			return new cni_holder(*this);
+		}
+
+		virtual any call(cs::vector &args) const override
+		{
+			return mCni.call(args);
+		}
 	};
 
+// CNI Implementation
 	template<typename T>
 	struct cni_type {
 	};
 
-	template<typename From, typename To>
-	class cni_castable final {
-		template<typename From1, typename To1>
-		static constexpr bool helper(...)
-		{
-			return false;
-		}
-
-		template<typename From1, typename To1, typename=decltype(cs_impl::type_convertor<From1, To1>::convert(
-		             std::declval<From1>()))>
-		static constexpr bool helper(int)
-		{
-			return true;
-		}
-
-	public:
-		static constexpr bool value = helper<From, To>(0);
-	};
-
-	template<typename T>
-	class cni_castable<T, T> final {
-	public:
-		static constexpr bool value = true;
-	};
-
 	class cni final {
-		class cni_base {
-		public:
-			cni_base() = default;
-
-			cni_base(const cni_base &) = default;
-
-			virtual ~cni_base() = default;
-
-			virtual cni_base *clone()=0;
-
-			virtual var call(vector &) const =0;
-		};
-
-		template<typename T, typename X>
-		class cni_holder final : public cni_base {
-			cni_helper<typename cov::function_parser<T>::type::common_type, typename cov::function_parser<X>::type::common_type> mCni;
-		public:
-			cni_holder() = delete;
-
-			cni_holder(const cni_holder &) = default;
-
-			cni_holder(const T &func) : mCni(func) {}
-
-			virtual ~cni_holder() = default;
-
-			virtual cni_base *clone() override
-			{
-				return new cni_holder(*this);
-			}
-
-			virtual var call(vector &args) const override
-			{
-				return mCni.call(args);
-			}
-		};
-
-		template<typename RetT, typename...ArgsT>
-		static constexpr int count_args_size(RetT(*)(ArgsT...))
-		{
-			return sizeof...(ArgsT);
-		}
-
-		static void result_container(...) {}
-
-		template<typename _From, typename _To>
-		static short _check_conversion()
-		{
-			static_assert(cni_castable<_From, _To>::value, "Invalid conversion.");
-			return 0;
-		}
-
-		template<typename _Target_RetT, typename _Source_RetT, typename..._Target_ArgsT, typename..._Source_ArgsT>
-		static void check_conversion(_Target_RetT(*)(_Target_ArgsT...), _Source_RetT(*)(_Source_ArgsT...))
-		{
-			result_container(_check_conversion<_Target_ArgsT, _Source_ArgsT>()...);
-		}
-
 		template<typename T>
 		struct construct_helper {
 			template<typename X, typename RetT, typename...ArgsT>
-			static cni_base *_construct(X &&val, RetT(*target_function)(ArgsT...))
+			static cni_holder_base *_construct(X &&val, RetT(*target_function)(ArgsT...))
 			{
-				using source_function_type=typename cs_impl::type_conversion_cpp<RetT>::target_type(*)(
-				                               typename cs_impl::type_conversion_cs<ArgsT>::source_type...);
+				using source_function_type=typename type_conversion_cpp<RetT>::target_type(*)(
+				                               typename type_conversion_cs<ArgsT>::source_type...);
 				// Return type
-				static_assert(cni_castable<RetT, typename cs_impl::type_conversion_cpp<RetT>::target_type>::value,
+				static_assert(cni_convertible<RetT, typename type_conversion_cpp<RetT>::target_type>::value,
 				              "Invalid conversion.");
 				// Argument type
 				check_conversion(target_function, source_function_type(nullptr));
@@ -313,13 +316,13 @@ namespace cs {
 			}
 
 			template<typename X>
-			static cni_base *construct(X &&val)
+			static cni_holder_base *construct(X &&val)
 			{
 				return _construct(std::forward<X>(val), typename cov::function_parser<T>::type::common_type(nullptr));
 			}
 		};
 
-		cni_base *mCni = nullptr;
+		cni_holder_base *mCni = nullptr;
 	public:
 		cni() = delete;
 
@@ -345,7 +348,7 @@ namespace cs {
 			    "Invalid argument size.");
 			// Return type
 			static_assert(
-			    cni_castable<typename cov::resolver<target_function_type>::return_type, typename cov::resolver<source_function_type>::return_type>::value,
+			    cni_convertible<typename cov::resolver<target_function_type>::return_type, typename cov::resolver<source_function_type>::return_type>::value,
 			    "Invalid conversion.");
 			// Argument type
 			check_conversion(target_function_type(nullptr), source_function_type(nullptr));
@@ -356,27 +359,27 @@ namespace cs {
 			delete mCni;
 		}
 
-		var operator()(vector &args) const
+		any operator()(cs::vector &args) const
 		{
 			try {
-				return try_move(mCni->call(args));
+				return cs::try_move(mCni->call(args));
 			}
-			catch (const lang_error &e) {
-				exception_handler::cs_eh_callback(e);
+			catch (const cs::lang_error &e) {
+				cs::exception_handler::cs_eh_callback(e);
 			}
 			catch (const std::exception &e) {
-				exception_handler::std_eh_callback(e);
+				cs::exception_handler::std_eh_callback(e);
 			}
 			catch (...) {
-				exception_handler::std_eh_callback(fatal_error("CNI:Unrecognized exception."));
+				cs::exception_handler::std_eh_callback(cs::fatal_error("CNI:Unrecognized exception."));
 			}
-			return null_pointer;
+			return cs::null_pointer;
 		}
 	};
 
 	template<>
 	struct cni::construct_helper<const cni> {
-		static cni_base *construct(const cni &c)
+		static cni_holder_base *construct(const cni &c)
 		{
 			return c.mCni->clone();
 		}
@@ -384,9 +387,13 @@ namespace cs {
 
 	template<>
 	struct cni::construct_helper<cni> {
-		static cni_base *construct(const cni &c)
+		static cni_holder_base *construct(const cni &c)
 		{
 			return c.mCni->clone();
 		}
 	};
+}
+namespace cs {
+	using cs_impl::cni_type;
+	using cs_impl::cni;
 }
