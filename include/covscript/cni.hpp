@@ -201,7 +201,7 @@ namespace cs_impl {
 		{
 			if (!args.empty())
 				throw cs::runtime_error("Wrong size of the arguments.Expected 0");
-			return any::make<_Source_RetT>(std::move(type_convertor<_Target_RetT, _Source_RetT>::convert(mFunc())));
+			return std::move(type_convertor<_Target_RetT, _Source_RetT>::convert(mFunc()));
 		}
 	};
 
