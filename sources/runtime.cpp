@@ -392,7 +392,8 @@ namespace cs {
 			return parse_expr(static_cast<token_expr *>(token)->get_tree().root());
 			break;
 		case token_types::array: {
-			array arr;
+			array
+			arr;
 			for (auto &tree:static_cast<token_array *>(token)->get_array())
 				arr.push_back(copy(parse_expr(tree.root())));
 			return rvalue(var::make<array>(std::move(arr)));

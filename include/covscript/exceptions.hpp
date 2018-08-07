@@ -36,9 +36,9 @@ namespace cs {
 
 		virtual ~exception() = default;
 
-		exception &operator=(const exception &)= default;
+		exception &operator=(const exception &) = default;
 
-		exception &operator=(exception &&)= default;
+		exception &operator=(exception &&) = default;
 
 		virtual const char *what() const noexcept override
 		{
@@ -60,9 +60,9 @@ namespace cs {
 
 		virtual ~runtime_error() = default;
 
-		runtime_error &operator=(const runtime_error &)= default;
+		runtime_error &operator=(const runtime_error &) = default;
 
-		runtime_error &operator=(runtime_error &&)= default;
+		runtime_error &operator=(runtime_error &&) = default;
 
 		virtual const char *what() const noexcept override
 		{
@@ -84,9 +84,9 @@ namespace cs {
 
 		virtual ~internal_error() = default;
 
-		internal_error &operator=(const internal_error &)= default;
+		internal_error &operator=(const internal_error &) = default;
 
-		internal_error &operator=(internal_error &&)= default;
+		internal_error &operator=(internal_error &&) = default;
 
 		virtual const char *what() const noexcept override
 		{
@@ -108,9 +108,9 @@ namespace cs {
 
 		~lang_error() = default;
 
-		lang_error &operator=(const lang_error &)= default;
+		lang_error &operator=(const lang_error &) = default;
 
-		lang_error &operator=(lang_error &&)= default;
+		lang_error &operator=(lang_error &&) = default;
 
 		const char *what() const noexcept
 		{
@@ -132,9 +132,9 @@ namespace cs {
 
 		virtual ~fatal_error() = default;
 
-		fatal_error &operator=(const fatal_error &)= default;
+		fatal_error &operator=(const fatal_error &) = default;
 
-		fatal_error &operator=(fatal_error &&)= default;
+		fatal_error &operator=(fatal_error &&) = default;
 
 		virtual const char *what() const noexcept override
 		{
@@ -155,9 +155,9 @@ namespace cs {
 
 		virtual ~forward_exception() = default;
 
-		forward_exception &operator=(const forward_exception &)= default;
+		forward_exception &operator=(const forward_exception &) = default;
 
-		forward_exception &operator=(forward_exception &&)= default;
+		forward_exception &operator=(forward_exception &&) = default;
 
 		virtual const char *what() const noexcept override
 		{

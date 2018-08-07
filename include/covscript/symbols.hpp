@@ -164,7 +164,7 @@ namespace cs {
 
 		virtual ~token_base() = default;
 
-		virtual token_types get_type() const noexcept=0;
+		virtual token_types get_type() const noexcept = 0;
 
 		virtual std::size_t get_line_num() const noexcept final
 		{
@@ -436,9 +436,9 @@ namespace cs {
 
 		const std::string &get_raw_code() const noexcept;
 
-		virtual statement_types get_type() const noexcept=0;
+		virtual statement_types get_type() const noexcept = 0;
 
-		virtual void run()=0;
+		virtual void run() = 0;
 
 		virtual void repl_run()
 		{
@@ -472,13 +472,13 @@ namespace cs {
 
 		virtual ~method_base() = default;
 
-		virtual method_types get_type() const noexcept=0;
+		virtual method_types get_type() const noexcept = 0;
 
-		virtual statement_types get_target_type() const noexcept=0;
+		virtual statement_types get_target_type() const noexcept = 0;
 
 		virtual void preprocess(const std::deque<std::deque<token_base *>> &) {}
 
-		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &)=0;
+		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) = 0;
 	};
 
 	garbage_collector<token_base> token_base::gc;

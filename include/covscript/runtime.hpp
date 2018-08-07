@@ -129,12 +129,13 @@ namespace cs {
 			throw runtime_error("Use of undefined variable \"" + name + "\" in global domain.");
 		}
 
-		void add_record(const string &name)
+		domain_manager &add_record(const string &name)
 		{
 			if (exist_record(name))
 				throw runtime_error("Redefinition of variable \"" + name + "\".");
 			else
 				m_set.front().emplace(name);
+			return *this;
 		}
 
 		void mark_set_as_struct()
@@ -142,7 +143,7 @@ namespace cs {
 			add_record("__PRAGMA_CS_STRUCT_DEFINITION__");
 		}
 
-		void add_var(const string &name, const var &val, bool is_override = false)
+		domain_manager &add_var(const string &name, const var &val, bool is_override = false)
 		{
 			if (var_exist_current(name)) {
 				if (is_override)
@@ -152,48 +153,51 @@ namespace cs {
 			}
 			else
 				m_data.front()->emplace(name, val);
+			return *this;
 		}
 
-		void add_var_global(const string &name, const var &var)
+		domain_manager &add_var_global(const string &name, const var &var)
 		{
 			if (var_exist_global(name))
 				throw runtime_error("Target domain exist variable \"" + name + "\".");
 			else
 				m_data.back()->emplace(name, var);
+			return *this;
 		}
 
-		void add_buildin_var(const string &name, const var &var)
+		domain_manager &add_buildin_var(const string &name, const var &var)
 		{
 			add_record(name);
-			add_var_global(name, var);
+			return add_var_global(name, var);
 		}
 
-		void add_struct(const std::string &name, const struct_builder &builder)
+		domain_manager &add_struct(const std::string &name, const struct_builder &builder)
 		{
-			add_var(name, var::make_protect<type>(builder, builder.get_hash()));
+			return add_var(name, var::make_protect<type>(builder, builder.get_hash()));
 		}
 
-		void add_type(const std::string &name, const std::function<var()> &func, std::size_t hash)
+		domain_manager &add_type(const std::string &name, const std::function<var()> &func, std::size_t hash)
 		{
-			add_var(name, var::make_protect<type>(func, hash));
+			return add_var(name, var::make_protect<type>(func, hash));
 		}
 
-		void add_type(const std::string &name, const std::function<var()> &func, std::size_t hash, extension_t ext)
+		domain_manager &
+		add_type(const std::string &name, const std::function<var()> &func, std::size_t hash, extension_t ext)
 		{
-			add_var(name, var::make_protect<type>(func, hash, ext));
+			return add_var(name, var::make_protect<type>(func, hash, ext));
 		}
 
-		void add_buildin_type(const std::string &name, const std::function<var()> &func, std::size_t hash)
+		domain_manager &add_buildin_type(const std::string &name, const std::function<var()> &func, std::size_t hash)
 		{
 			add_record(name);
-			add_var(name, var::make_protect<type>(func, hash));
+			return add_var(name, var::make_protect<type>(func, hash));
 		}
 
-		void
+		domain_manager &
 		add_buildin_type(const std::string &name, const std::function<var()> &func, std::size_t hash, extension_t ext)
 		{
 			add_record(name);
-			add_var(name, var::make_protect<type>(func, hash, ext));
+			return add_var(name, var::make_protect<type>(func, hash, ext));
 		}
 
 		void involve_domain(const domain_t &domain, bool is_override = false)

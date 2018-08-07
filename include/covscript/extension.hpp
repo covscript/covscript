@@ -18,14 +18,10 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <covscript/core.hpp>
-#include <covscript/extensions/exception.hpp>
-#include <covscript/extensions/char.hpp>
-#include <covscript/extensions/string.hpp>
-#include <covscript/extensions/list.hpp>
-#include <covscript/extensions/array.hpp>
-#include <covscript/extensions/pair.hpp>
-#include <covscript/extensions/hash_map.hpp>
+#define CS_EXTENSIONS_MINIMAL
+
+#include <covscript/cni.hpp>
+#include <covscript/extensions/extensions.hpp>
 
 cs::extension *cs_extension();
 
@@ -36,13 +32,7 @@ extern "C"
 		cs::output_precision_ref = ref;
 		cs::exception_handler::cs_eh_callback = ceh;
 		cs::exception_handler::std_eh_callback = seh;
-		except_cs_ext::init();
-		char_cs_ext::init();
-		string_cs_ext::init();
-		list_cs_ext::init();
-		array_cs_ext::init();
-		pair_cs_ext::init();
-		hash_map_cs_ext::init();
+		cs::init_extensions();
 		return cs_extension();
 	}
 }

@@ -210,7 +210,8 @@ namespace cs {
 						is_optimizable = false;
 				}
 				if (is_optimizable) {
-					array arr;
+					array
+					arr;
 					for (auto &tree:static_cast<token_array *>(token)->get_array())
 						arr.push_back((new_value(copy(parse_expr(tree.root()))))->get_value());
 					it.data() = new_value(var::make<array>(std::move(arr)));

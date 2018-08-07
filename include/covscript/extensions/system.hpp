@@ -33,11 +33,11 @@ static cs::extension file_ext;
 static cs::extension path_ext;
 static cs::extension path_type_ext;
 static cs::extension path_info_ext;
-static cs::extension_t console_ext_shared = cs::make_shared_extension(console_ext);
-static cs::extension_t file_ext_shared = cs::make_shared_extension(file_ext);
-static cs::extension_t path_ext_shared = cs::make_shared_extension(path_ext);
-static cs::extension_t path_type_ext_shared = cs::make_shared_extension(path_type_ext);
-static cs::extension_t path_info_ext_shared = cs::make_shared_extension(path_info_ext);
+static cs::extension_t console_ext_shared = cs::make_shared_namespace(console_ext);
+static cs::extension_t file_ext_shared = cs::make_shared_namespace(file_ext);
+static cs::extension_t path_ext_shared = cs::make_shared_namespace(path_ext);
+static cs::extension_t path_type_ext_shared = cs::make_shared_namespace(path_type_ext);
+static cs::extension_t path_info_ext_shared = cs::make_shared_namespace(path_info_ext);
 namespace console_cs_ext {
 	using namespace cs;
 	using namespace cs_impl;
@@ -157,7 +157,8 @@ namespace path_cs_ext {
 	array scan(const string &path)
 	{
 		DIR *dir = ::opendir(path.c_str());
-		array entries;
+		array
+		entries;
 		for (dirent *dp = ::readdir(dir); dp != nullptr; dp = ::readdir(dir))
 			entries.push_back(var::make<path_info>(dp->d_name, dp->d_type));
 		::closedir(dir);

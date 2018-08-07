@@ -20,17 +20,7 @@
 */
 #include <covscript/covscript.hpp>
 #include <covscript/console/conio.hpp>
-#include <covscript/extensions/iostream.hpp>
-#include <covscript/extensions/system.hpp>
-#include <covscript/extensions/runtime.hpp>
-#include <covscript/extensions/exception.hpp>
-#include <covscript/extensions/char.hpp>
-#include <covscript/extensions/string.hpp>
-#include <covscript/extensions/list.hpp>
-#include <covscript/extensions/array.hpp>
-#include <covscript/extensions/pair.hpp>
-#include <covscript/extensions/hash_map.hpp>
-#include <covscript/extensions/math.hpp>
+#include <covscript/extensions/extensions.hpp>
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
 
@@ -81,26 +71,15 @@ namespace cs {
 	void init(const array &args)
 	{
 		// Init extensions
-		iostream_cs_ext::init();
-		istream_cs_ext::init();
-		ostream_cs_ext::init();
-		system_cs_ext::init();
-		runtime_cs_ext::init();
-		except_cs_ext::init();
-		char_cs_ext::init();
-		string_cs_ext::init();
-		list_cs_ext::init();
-		array_cs_ext::init();
-		pair_cs_ext::init();
-		hash_map_cs_ext::init();
-		math_cs_ext::init();
+		init_extensions();
 		system_ext.add_var("args", cs::var::make_constant<cs::array>(args));
 	}
 
 	void init(int argv, const char *args[])
 	{
 		// Init args
-		cs::array arg;
+		cs::array
+		arg;
 		for (std::size_t i = 0; i < argv; ++i)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[i]));
 		init(arg);
@@ -134,39 +113,40 @@ namespace cs {
 
 	void instance_type::init_runtime()
 	{
-		// Context
-		storage.add_buildin_var("context", var::make_constant<context_t>(context));
+		storage
 		// Internal Types
-		storage.add_buildin_type("char", []() -> var { return var::make<char>('\0'); },
-		                         cs_impl::hash<std::string>(typeid(char).name()), char_ext_shared);
-		storage.add_buildin_type("number", []() -> var { return var::make<number>(0); },
-		                         cs_impl::hash<std::string>(typeid(number).name()));
-		storage.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); },
-		                         cs_impl::hash<std::string>(typeid(boolean).name()));
-		storage.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); },
-		                         cs_impl::hash<std::string>(typeid(pointer).name()));
-		storage.add_buildin_type("string", []() -> var { return var::make<string>(); },
-		                         cs_impl::hash<std::string>(typeid(string).name()), string_ext_shared);
-		storage.add_buildin_type("list", []() -> var { return var::make<list>(); },
-		                         cs_impl::hash<std::string>(typeid(list).name()), list_ext_shared);
-		storage.add_buildin_type("array", []() -> var { return var::make<array>(); },
-		                         cs_impl::hash<std::string>(typeid(array).name()), array_ext_shared);
-		storage.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); },
-		                         cs_impl::hash<std::string>(typeid(pair).name()), pair_ext_shared);
-		storage.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); },
-		                         cs_impl::hash<std::string>(typeid(hash_map).name()), hash_map_ext_shared);
+		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); },
+		                  cs_impl::hash<std::string>(typeid(char).name()), char_ext_shared)
+		.add_buildin_type("number", []() -> var { return var::make<number>(0); },
+		                  cs_impl::hash<std::string>(typeid(number).name()))
+		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); },
+		                  cs_impl::hash<std::string>(typeid(boolean).name()))
+		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); },
+		                  cs_impl::hash<std::string>(typeid(pointer).name()))
+		.add_buildin_type("string", []() -> var { return var::make<string>(); },
+		                  cs_impl::hash<std::string>(typeid(string).name()), string_ext_shared)
+		.add_buildin_type("list", []() -> var { return var::make<list>(); },
+		                  cs_impl::hash<std::string>(typeid(list).name()), list_ext_shared)
+		.add_buildin_type("array", []() -> var { return var::make<array>(); },
+		                  cs_impl::hash<std::string>(typeid(array).name()), array_ext_shared)
+		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); },
+		                  cs_impl::hash<std::string>(typeid(pair).name()), pair_ext_shared)
+		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); },
+		                  cs_impl::hash<std::string>(typeid(hash_map).name()), hash_map_ext_shared)
+		// Context
+		.add_buildin_var("context", var::make_constant<context_t>(context))
 		// Add Internal Functions to storage
-		storage.add_buildin_var("to_integer", cs::var::make_protect<cs::callable>(cs::cni(to_integer), true));
-		storage.add_buildin_var("to_string", cs::var::make_protect<cs::callable>(cs::cni(to_string), true));
-		storage.add_buildin_var("type", cs::var::make_protect<cs::callable>(cs::cni(type), true));
-		storage.add_buildin_var("clone", cs::var::make_protect<cs::callable>(cs::cni(clone)));
-		storage.add_buildin_var("move", cs::var::make_protect<cs::callable>(cs::cni(move)));
-		storage.add_buildin_var("swap", cs::var::make_protect<cs::callable>(cs::cni(swap), true));
+		.add_buildin_var("to_integer", make_cni(to_integer, true))
+		.add_buildin_var("to_string", make_cni(to_string, true))
+		.add_buildin_var("type", make_cni(type, true))
+		.add_buildin_var("clone", make_cni(clone))
+		.add_buildin_var("move", make_cni(move))
+		.add_buildin_var("swap", make_cni(swap, true))
 		// Add extensions to storage
-		storage.add_buildin_var("exception", var::make_protect<extension_t>(except_ext_shared));
-		storage.add_buildin_var("iostream", var::make_protect<extension_t>(make_shared_extension(iostream_ext)));
-		storage.add_buildin_var("system", var::make_protect<extension_t>(make_shared_extension(system_ext)));
-		storage.add_buildin_var("runtime", var::make_protect<extension_t>(make_shared_extension(runtime_ext)));
-		storage.add_buildin_var("math", var::make_protect<extension_t>(make_shared_extension(math_ext)));
+		.add_buildin_var("exception", make_namespace(except_ext_shared))
+		.add_buildin_var("iostream", make_namespace(make_shared_namespace(iostream_ext)))
+		.add_buildin_var("system", make_namespace(make_shared_namespace(system_ext)))
+		.add_buildin_var("runtime", make_namespace(make_shared_namespace(runtime_ext)))
+		.add_buildin_var("math", make_namespace(make_shared_namespace(math_ext)));
 	}
 }

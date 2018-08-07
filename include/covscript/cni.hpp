@@ -266,9 +266,9 @@ namespace cs_impl {
 
 		virtual ~cni_holder_base() = default;
 
-		virtual cni_holder_base *clone()=0;
+		virtual cni_holder_base *clone() = 0;
 
-		virtual any call(cs::vector &) const =0;
+		virtual any call(cs::vector &) const = 0;
 	};
 
 	template<typename T, typename X>
@@ -396,4 +396,16 @@ namespace cs_impl {
 namespace cs {
 	using cs_impl::cni_type;
 	using cs_impl::cni;
+
+	template<typename T>
+	var make_cni(T &&func, bool constant = false)
+	{
+		return var::make_protect<callable>(cni(func), constant);
+	}
+
+	template<typename T, typename X>
+	var make_cni(T &&func, const cni_type<X> &type, bool constant = false)
+	{
+		return var::make_protect<callable>(cni(func), constant);
+	}
 }

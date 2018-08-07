@@ -21,7 +21,7 @@
 #include <covscript/cni.hpp>
 
 static cs::extension except_ext;
-static cs::extension_t except_ext_shared = cs::make_shared_extension(except_ext);
+static cs::extension_t except_ext_shared = cs::make_shared_namespace(except_ext);
 namespace cs_impl {
 	template<>
 	cs::extension_t &get_ext<cs::lang_error>()

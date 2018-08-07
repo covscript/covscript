@@ -66,7 +66,8 @@ void covscript_main(int args_size, const char *args[])
 		if (index == args_size)
 			throw cs::fatal_error("no input file.");
 		std::string path = cs::process_path(args[index]);
-		cs::array arg;
+		cs::array
+		arg;
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::init(arg);

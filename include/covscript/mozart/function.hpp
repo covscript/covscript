@@ -76,9 +76,9 @@ namespace cov {
 
 		virtual ~function_base() = default;
 
-		virtual function_base *copy() const =0;
+		virtual function_base *copy() const = 0;
 
-		virtual _rT call(_ArgsT &&...) const =0;
+		virtual _rT call(_ArgsT &&...) const = 0;
 	};
 
 	template<typename _Tp>

@@ -73,9 +73,9 @@ namespace cov {
 
 		virtual ~error() = default;
 
-		error &operator=(const error &)= default;
+		error &operator=(const error &) = default;
 
-		error &operator=(error &&)= default;
+		error &operator=(error &&) = default;
 
 		virtual const char *what() const noexcept override
 		{

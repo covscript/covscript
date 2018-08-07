@@ -82,9 +82,9 @@ namespace cov {
 
 			~iterator() = default;
 
-			iterator &operator=(const iterator &)= default;
+			iterator &operator=(const iterator &) = default;
 
-			iterator &operator=(iterator &&) noexcept= default;
+			iterator &operator=(iterator &&) noexcept = default;
 
 			bool usable() const noexcept
 			{
@@ -144,9 +144,9 @@ namespace cov {
 
 			~const_iterator() = default;
 
-			const_iterator &operator=(const const_iterator &)= default;
+			const_iterator &operator=(const const_iterator &) = default;
 
-			const_iterator &operator=(const_iterator &&) noexcept= default;
+			const_iterator &operator=(const_iterator &&) noexcept = default;
 
 			bool usable() const noexcept
 			{

@@ -22,7 +22,7 @@
 #include <cctype>
 
 static cs::extension string_ext;
-static cs::extension_t string_ext_shared = cs::make_shared_extension(string_ext);
+static cs::extension_t string_ext_shared = cs::make_shared_namespace(string_ext);
 namespace cs_impl {
 	template<>
 	cs::extension_t &get_ext<cs::string>()
@@ -129,7 +129,8 @@ namespace string_cs_ext {
 
 	array split(const string &str, const array &signals)
 	{
-		array arr;
+		array
+		arr;
 		string buf;
 		bool found = false;
 		for (auto &ch:str) {

@@ -65,7 +65,8 @@ void covscript_main(int args_size, const char *args[])
 		          "Copyright (C) 2018 Michael Lee.All rights reserved.\n"
 		          "Please visit <http://covscript.org/> for more information."
 		          << std::endl;
-	cs::array arg{cs::var::make_constant<cs::string>("<REPL_ENV>")};
+	cs::array
+	arg{cs::var::make_constant<cs::string>("<REPL_ENV>")};
 	for (; index < args_size; ++index)
 		arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 	cs::init(arg);

@@ -237,7 +237,7 @@ namespace cov {
 
 			~pointer() = default;
 
-			pointer &operator=(const pointer &)= default;
+			pointer &operator=(const pointer &) = default;
 		};
 
 		storage()

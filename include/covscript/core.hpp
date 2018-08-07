@@ -439,12 +439,13 @@ namespace cs {
 
 		~name_space() = default;
 
-		void add_var(const std::string &name, const var &var)
+		name_space &add_var(const std::string &name, const var &var)
 		{
 			if (m_data->count(name) > 0)
 				(*m_data)[name] = var;
 			else
 				m_data->emplace(name, var);
+			return *this;
 		}
 
 		var &get_var(const std::string &name)
@@ -501,7 +502,12 @@ namespace cs {
 		}
 	};
 
-	extension_t make_shared_extension(name_space &ns)
+	var make_namespace(const name_space_t &ns)
+	{
+		return var::make_protect<name_space_t>(ns);
+	}
+
+	name_space_t make_shared_namespace(name_space &ns)
 	{
 		return std::make_shared<extension_holder>(&ns);
 	}

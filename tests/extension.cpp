@@ -35,7 +35,8 @@ double test1(double b) {
 }
 
 extension *cs_extension() {
-    my_ext.add_var("test0", var::make_protect<callable>(cni(test0), true));
-    my_ext.add_var("test1", var::make_protect<callable>(cni(test1, cni_type<number(number)>()), true));
+    my_ext
+            .add_var("test0", make_cni(test0, true))
+            .add_var("test1", make_cni(test1, cni_type<number(number)>(), true));
     return &my_ext;
 }
