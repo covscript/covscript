@@ -109,23 +109,25 @@ namespace runtime_cs_ext {
 
 	var dynamic_import(const context_t &context, const string &path, const string &name)
 	{
-		return var::make_protect<extension_t>(context->instance->import(path, name));
+		return make_namespace(context->instance->import(path, name));
 	}
 
 	void init()
 	{
-		runtime_ext.add_var("std_version", var::make_constant<number>(std_version));
-		runtime_ext.add_var("get_import_path", var::make_protect<callable>(cni(get_import_path), true));
-		runtime_ext.add_var("info", var::make_protect<callable>(cni(info)));
-		runtime_ext.add_var("time", var::make_protect<callable>(cni(time)));
-		runtime_ext.add_var("delay", var::make_protect<callable>(cni(delay)));
-		runtime_ext.add_var("exception", var::make_protect<callable>(cni(exception)));
-		runtime_ext.add_var("hash", var::make_protect<callable>(cni(hash), true));
-		runtime_ext.add_var("build", var::make_protect<callable>(cni(build)));
-		runtime_ext.add_var("solve", var::make_protect<callable>(cni(solve)));
-		runtime_ext.add_var("dynamic_import", var::make_protect<callable>(cni(dynamic_import), true));
-		context_ext.add_var("build", var::make_protect<callable>(cni(build)));
-		context_ext.add_var("solve", var::make_protect<callable>(cni(solve)));
-		context_ext.add_var("dynamic_import", var::make_protect<callable>(cni(dynamic_import), true));
+		runtime_ext
+		.add_var("std_version", var::make_constant<number>(std_version))
+		.add_var("get_import_path", make_cni(get_import_path, true))
+		.add_var("info", make_cni(info))
+		.add_var("time", make_cni(time))
+		.add_var("delay", make_cni(delay))
+		.add_var("exception", make_cni(exception))
+		.add_var("hash", make_cni(hash, true))
+		.add_var("build", make_cni(build))
+		.add_var("solve", make_cni(solve))
+		.add_var("dynamic_import", make_cni(dynamic_import, true));
+		context_ext
+		.add_var("build", make_cni(build))
+		.add_var("solve", make_cni(solve))
+		.add_var("dynamic_import", make_cni(dynamic_import, true));
 	}
 }

@@ -79,13 +79,14 @@ namespace console_cs_ext {
 
 	void init()
 	{
-		console_ext.add_var("terminal_width", var::make_protect<callable>(cni(terminal_width)));
-		console_ext.add_var("terminal_height", var::make_protect<callable>(cni(terminal_height)));
-		console_ext.add_var("gotoxy", var::make_protect<callable>(cni(gotoxy)));
-		console_ext.add_var("echo", var::make_protect<callable>(cni(echo)));
-		console_ext.add_var("clrscr", var::make_protect<callable>(cni(clrscr)));
-		console_ext.add_var("getch", var::make_protect<callable>(cni(getch)));
-		console_ext.add_var("kbhit", var::make_protect<callable>(cni(kbhit)));
+		console_ext
+		.add_var("terminal_width", make_cni(terminal_width))
+		.add_var("terminal_height", make_cni(terminal_height))
+		.add_var("gotoxy", make_cni(gotoxy))
+		.add_var("echo", make_cni(echo))
+		.add_var("clrscr", make_cni(clrscr))
+		.add_var("getch", make_cni(getch))
+		.add_var("kbhit", make_cni(kbhit));
 	}
 }
 
@@ -124,10 +125,11 @@ namespace file_cs_ext {
 
 	void init()
 	{
-		file_ext.add_var("copy", var::make_protect<callable>(cni(copy)));
-		file_ext.add_var("remove", var::make_protect<callable>(cni(remove)));
-		file_ext.add_var("exists", var::make_protect<callable>(cni(exists)));
-		file_ext.add_var("rename", var::make_protect<callable>(cni(rename)));
+		file_ext
+		.add_var("copy", make_cni(copy))
+		.add_var("remove", make_cni(remove))
+		.add_var("exists", make_cni(exists))
+		.add_var("rename", make_cni(rename));
 	}
 }
 
@@ -167,21 +169,23 @@ namespace path_cs_ext {
 
 	void init()
 	{
-		path_ext.add_var("type", var::make_protect<extension_t>(path_type_ext_shared));
-		path_ext.add_var("info", var::make_protect<extension_t>(path_info_ext_shared));
-		path_type_ext.add_var("unknown", var::make_constant<int>(DT_UNKNOWN));
-		path_type_ext.add_var("fifo", var::make_constant<int>(DT_FIFO));
-		path_type_ext.add_var("sock", var::make_constant<int>(DT_SOCK));
-		path_type_ext.add_var("chr", var::make_constant<int>(DT_CHR));
-		path_type_ext.add_var("dir", var::make_constant<int>(DT_DIR));
-		path_type_ext.add_var("blk", var::make_constant<int>(DT_BLK));
-		path_type_ext.add_var("reg", var::make_constant<int>(DT_REG));
-		path_type_ext.add_var("lnk", var::make_constant<int>(DT_LNK));
-		path_info_ext.add_var("name", var::make_protect<callable>(cni(name)));
-		path_info_ext.add_var("type", var::make_protect<callable>(cni(type)));
-		path_ext.add_var("separator", var::make_constant<char>(path_separator));
-		path_ext.add_var("delimiter", var::make_constant<char>(path_delimiter));
-		path_ext.add_var("scan", var::make_protect<callable>(cni(scan)));
+		path_type_ext
+		.add_var("unknown", var::make_constant<int>(DT_UNKNOWN))
+		.add_var("fifo", var::make_constant<int>(DT_FIFO))
+		.add_var("sock", var::make_constant<int>(DT_SOCK))
+		.add_var("chr", var::make_constant<int>(DT_CHR))
+		.add_var("dir", var::make_constant<int>(DT_DIR))
+		.add_var("blk", var::make_constant<int>(DT_BLK))
+		.add_var("reg", var::make_constant<int>(DT_REG))
+		.add_var("lnk", var::make_constant<int>(DT_LNK))
+		.add_var("name", make_cni(name))
+		.add_var("type", make_cni(type));
+		path_ext
+		.add_var("type", make_namespace(path_type_ext_shared))
+		.add_var("info", make_namespace(path_info_ext_shared))
+		.add_var("separator", var::make_constant<char>(path_separator))
+		.add_var("delimiter", var::make_constant<char>(path_delimiter))
+		.add_var("scan", make_cni(scan));
 	}
 }
 namespace cs_impl {
@@ -223,13 +227,14 @@ namespace system_cs_ext {
 		console_cs_ext::init();
 		file_cs_ext::init();
 		path_cs_ext::init();
-		system_ext.add_var("console", var::make_protect<extension_t>(console_ext_shared));
-		system_ext.add_var("file", var::make_protect<extension_t>(file_ext_shared));
-		system_ext.add_var("path", var::make_protect<extension_t>(path_ext_shared));
-		system_ext.add_var("in", var::make_protect<istream>(&std::cin, [](std::istream *) {}));
-		system_ext.add_var("out", var::make_protect<ostream>(&std::cout, [](std::ostream *) {}));
-		system_ext.add_var("run", var::make_protect<callable>(cni(run)));
-		system_ext.add_var("getenv", var::make_protect<callable>(cni(getenv)));
-		system_ext.add_var("exit", var::make_protect<callable>(cni(exit)));
+		system_ext
+		.add_var("console", make_namespace(console_ext_shared))
+		.add_var("file", make_namespace(file_ext_shared))
+		.add_var("path", make_namespace(path_ext_shared))
+		.add_var("in", var::make_protect<istream>(&std::cin, [](std::istream *) {}))
+		.add_var("out", var::make_protect<ostream>(&std::cout, [](std::ostream *) {}))
+		.add_var("run", make_cni(run))
+		.add_var("getenv", make_cni(getenv))
+		.add_var("exit", make_cni(exit));
 	}
 }

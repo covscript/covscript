@@ -107,19 +107,20 @@ namespace char_cs_ext {
 
 	void init()
 	{
-		char_ext.add_var("isalnum", var::make_protect<callable>(cni(isalnum), true));
-		char_ext.add_var("isalpha", var::make_protect<callable>(cni(isalpha), true));
-		char_ext.add_var("islower", var::make_protect<callable>(cni(islower), true));
-		char_ext.add_var("isupper", var::make_protect<callable>(cni(isupper), true));
-		char_ext.add_var("isdigit", var::make_protect<callable>(cni(isdigit), true));
-		char_ext.add_var("iscntrl", var::make_protect<callable>(cni(iscntrl), true));
-		char_ext.add_var("isgraph", var::make_protect<callable>(cni(isgraph), true));
-		char_ext.add_var("isspace", var::make_protect<callable>(cni(isspace), true));
-		char_ext.add_var("isblank", var::make_protect<callable>(cni(isblank), true));
-		char_ext.add_var("isprint", var::make_protect<callable>(cni(isprint), true));
-		char_ext.add_var("ispunct", var::make_protect<callable>(cni(ispunct), true));
-		char_ext.add_var("tolower", var::make_protect<callable>(cni(tolower), true));
-		char_ext.add_var("toupper", var::make_protect<callable>(cni(toupper), true));
-		char_ext.add_var("from_ascii", var::make_protect<callable>(cni(from_ascii), true));
+		char_ext
+		.add_var("isalnum", make_cni(isalnum, true))
+		.add_var("isalpha", make_cni(isalpha, true))
+		.add_var("islower", make_cni(islower, true))
+		.add_var("isupper", make_cni(isupper, true))
+		.add_var("isdigit", make_cni(isdigit, true))
+		.add_var("iscntrl", make_cni(iscntrl, true))
+		.add_var("isgraph", make_cni(isgraph, true))
+		.add_var("isspace", make_cni(isspace, true))
+		.add_var("isblank", make_cni(isblank, true))
+		.add_var("isprint", make_cni(isprint, true))
+		.add_var("ispunct", make_cni(ispunct, true))
+		.add_var("tolower", make_cni(tolower, true))
+		.add_var("toupper", make_cni(toupper, true))
+		.add_var("from_ascii", make_cni(from_ascii, true));
 	}
 }

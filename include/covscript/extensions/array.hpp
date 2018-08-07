@@ -164,26 +164,27 @@ namespace array_cs_ext {
 
 	void init()
 	{
-		array_ext.add_var("iterator", var::make_protect<extension_t>(array_iterator_ext_shared));
-		array_ext.add_var("at", var::make_protect<callable>(cni(at), true));
-		array_ext.add_var("front", var::make_protect<callable>(cni(front), true));
-		array_ext.add_var("back", var::make_protect<callable>(cni(back), true));
-		array_ext.add_var("begin", var::make_protect<callable>(cni(begin), true));
-		array_ext.add_var("term", var::make_protect<callable>(cni(term), true));
-		array_iterator_ext.add_var("forward", var::make_protect<callable>(cni(forward), true));
-		array_iterator_ext.add_var("backward", var::make_protect<callable>(cni(backward), true));
-		array_iterator_ext.add_var("data", var::make_protect<callable>(cni(data), true));
-		array_ext.add_var("empty", var::make_protect<callable>(cni(empty), true));
-		array_ext.add_var("size", var::make_protect<callable>(cni(size), true));
-		array_ext.add_var("clear", var::make_protect<callable>(cni(clear), true));
-		array_ext.add_var("insert", var::make_protect<callable>(cni(insert), true));
-		array_ext.add_var("erase", var::make_protect<callable>(cni(erase), true));
-		array_ext.add_var("push_front", var::make_protect<callable>(cni(push_front), true));
-		array_ext.add_var("pop_front", var::make_protect<callable>(cni(pop_front), true));
-		array_ext.add_var("push_back", var::make_protect<callable>(cni(push_back), true));
-		array_ext.add_var("pop_back", var::make_protect<callable>(cni(pop_back), true));
-		array_ext.add_var("to_hash_map", var::make_protect<callable>(cni(to_hash_map), true));
-		array_ext.add_var("to_list", var::make_protect<callable>(cni(to_list), true));
+		array_iterator_ext
+		.add_var("forward", make_cni(forward, true))
+		.add_var("backward", make_cni(backward, true))
+		.add_var("data", make_cni(data, true));
+		array_ext
+		.add_var("iterator", make_namespace(array_iterator_ext_shared))
+		.add_var("at", make_cni(at, true))
+		.add_var("front", make_cni(front, true))
+		.add_var("back", make_cni(back, true))
+		.add_var("begin", make_cni(begin, true))
+		.add_var("term", make_cni(term, true))
+		.add_var("empty", make_cni(empty, true))
+		.add_var("size", make_cni(size, true))
+		.add_var("clear", make_cni(clear, true))
+		.add_var("insert", make_cni(insert, true))
+		.add_var("erase", make_cni(erase, true))
+		.add_var("push_front", make_cni(push_front, true))
+		.add_var("pop_front", make_cni(pop_front, true))
+		.add_var("push_back", make_cni(push_back, true))
+		.add_var("pop_back", make_cni(pop_back, true))
+		.add_var("to_hash_map", make_cni(to_hash_map, true))
+		.add_var("to_list", make_cni(to_list, true));
 	}
-
 }

@@ -75,12 +75,13 @@ namespace hash_map_cs_ext {
 
 	void init()
 	{
-		hash_map_ext.add_var("empty", var::make_protect<callable>(cni(empty), true));
-		hash_map_ext.add_var("size", var::make_protect<callable>(cni(size), true));
-		hash_map_ext.add_var("clear", var::make_protect<callable>(cni(clear), true));
-		hash_map_ext.add_var("insert", var::make_protect<callable>(cni(insert), true));
-		hash_map_ext.add_var("erase", var::make_protect<callable>(cni(erase), true));
-		hash_map_ext.add_var("at", var::make_protect<callable>(cni(at), true));
-		hash_map_ext.add_var("exist", var::make_protect<callable>(cni(exist), true));
+		hash_map_ext
+		.add_var("empty", make_cni(empty, true))
+		.add_var("size", make_cni(size, true))
+		.add_var("clear", make_cni(clear, true))
+		.add_var("insert", make_cni(insert, true))
+		.add_var("erase", make_cni(erase, true))
+		.add_var("at", make_cni(at, true))
+		.add_var("exist", make_cni(exist, true));
 	}
 }

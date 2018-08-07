@@ -39,6 +39,6 @@ namespace except_cs_ext {
 
 	void init()
 	{
-		except_ext.add_var("what", var::make_protect<callable>(cni(what)));
+		except_ext.add_var("what", make_cni(what));
 	}
 }

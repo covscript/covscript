@@ -156,20 +156,21 @@ namespace string_cs_ext {
 
 	void init()
 	{
-		string_ext.add_var("append", var::make_protect<callable>(cni(append), true));
-		string_ext.add_var("insert", var::make_protect<callable>(cni(insert), true));
-		string_ext.add_var("erase", var::make_protect<callable>(cni(erase), true));
-		string_ext.add_var("replace", var::make_protect<callable>(cni(replace), true));
-		string_ext.add_var("substr", var::make_protect<callable>(cni(substr), true));
-		string_ext.add_var("find", var::make_protect<callable>(cni(find), true));
-		string_ext.add_var("rfind", var::make_protect<callable>(cni(rfind), true));
-		string_ext.add_var("cut", var::make_protect<callable>(cni(cut), true));
-		string_ext.add_var("empty", var::make_protect<callable>(cni(empty), true));
-		string_ext.add_var("clear", var::make_protect<callable>(cni(clear), true));
-		string_ext.add_var("size", var::make_protect<callable>(cni(size), true));
-		string_ext.add_var("tolower", var::make_protect<callable>(cni(tolower), true));
-		string_ext.add_var("toupper", var::make_protect<callable>(cni(toupper), true));
-		string_ext.add_var("to_number", var::make_protect<callable>(cni(to_number), true));
-		string_ext.add_var("split", var::make_protect<callable>(cni(split), true));
+		string_ext
+		.add_var("append", make_cni(append, true))
+		.add_var("insert", make_cni(insert, true))
+		.add_var("erase", make_cni(erase, true))
+		.add_var("replace", make_cni(replace, true))
+		.add_var("substr", make_cni(substr, true))
+		.add_var("find", make_cni(find, true))
+		.add_var("rfind", make_cni(rfind, true))
+		.add_var("cut", make_cni(cut, true))
+		.add_var("empty", make_cni(empty, true))
+		.add_var("clear", make_cni(clear, true))
+		.add_var("size", make_cni(size, true))
+		.add_var("tolower", make_cni(tolower, true))
+		.add_var("toupper", make_cni(toupper, true))
+		.add_var("to_number", make_cni(to_number, true))
+		.add_var("split", make_cni(split, true));
 	}
 }

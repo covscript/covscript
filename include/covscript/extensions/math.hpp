@@ -115,29 +115,31 @@ namespace math_cs_ext {
 
 	void init()
 	{
-		math_const_ext.add_var("max", var::make_constant<number>((std::numeric_limits<number>::max)()));
-		math_const_ext.add_var("min", var::make_constant<number>((std::numeric_limits<number>::min)()));
-		math_const_ext.add_var("inf", var::make_constant<number>(std::numeric_limits<number>::infinity()));
-		math_const_ext.add_var("nan", var::make_constant<number>(std::numeric_limits<number>::quiet_NaN()));
-		math_const_ext.add_var("pi", var::make_constant<number>(std::asin(number(1)) * 2));
-		math_const_ext.add_var("e", var::make_constant<number>(std::exp(number(1))));
-		math_ext.add_var("constant", var::make_protect<extension_t>(math_const_ext_shared));
-		math_ext.add_var("abs", var::make_protect<callable>(cni(abs), true));
-		math_ext.add_var("ln", var::make_protect<callable>(cni(ln), true));
-		math_ext.add_var("log10", var::make_protect<callable>(cni(log10), true));
-		math_ext.add_var("log", var::make_protect<callable>(cni(log), true));
-		math_ext.add_var("sin", var::make_protect<callable>(cni(sin), true));
-		math_ext.add_var("cos", var::make_protect<callable>(cni(cos), true));
-		math_ext.add_var("tan", var::make_protect<callable>(cni(tan), true));
-		math_ext.add_var("asin", var::make_protect<callable>(cni(asin), true));
-		math_ext.add_var("acos", var::make_protect<callable>(cni(acos), true));
-		math_ext.add_var("atan", var::make_protect<callable>(cni(atan), true));
-		math_ext.add_var("sqrt", var::make_protect<callable>(cni(sqrt), true));
-		math_ext.add_var("root", var::make_protect<callable>(cni(root), true));
-		math_ext.add_var("pow", var::make_protect<callable>(cni(pow), true));
-		math_ext.add_var("min", var::make_protect<callable>(cni(_min), true));
-		math_ext.add_var("max", var::make_protect<callable>(cni(_max), true));
-		math_ext.add_var("rand", var::make_protect<callable>(cni(rand)));
-		math_ext.add_var("randint", var::make_protect<callable>(cni(randint)));
+		math_const_ext
+		.add_var("max", var::make_constant<number>((std::numeric_limits<number>::max)()))
+		.add_var("min", var::make_constant<number>((std::numeric_limits<number>::min)()))
+		.add_var("inf", var::make_constant<number>(std::numeric_limits<number>::infinity()))
+		.add_var("nan", var::make_constant<number>(std::numeric_limits<number>::quiet_NaN()))
+		.add_var("pi", var::make_constant<number>(std::asin(number(1)) * 2))
+		.add_var("e", var::make_constant<number>(std::exp(number(1))));
+		math_ext
+		.add_var("constant", make_namespace(math_const_ext_shared))
+		.add_var("abs", make_cni(abs, true))
+		.add_var("ln", make_cni(ln, true))
+		.add_var("log10", make_cni(log10, true))
+		.add_var("log", make_cni(log, true))
+		.add_var("sin", make_cni(sin, true))
+		.add_var("cos", make_cni(cos, true))
+		.add_var("tan", make_cni(tan, true))
+		.add_var("asin", make_cni(asin, true))
+		.add_var("acos", make_cni(acos, true))
+		.add_var("atan", make_cni(atan, true))
+		.add_var("sqrt", make_cni(sqrt, true))
+		.add_var("root", make_cni(root, true))
+		.add_var("pow", make_cni(pow, true))
+		.add_var("min", make_cni(_min, true))
+		.add_var("max", make_cni(_max, true))
+		.add_var("rand", make_cni(rand))
+		.add_var("randint", make_cni(randint));
 	}
 }
