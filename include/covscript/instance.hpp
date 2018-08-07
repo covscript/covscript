@@ -47,9 +47,10 @@ namespace cs {
 
 		~translator_type() = default;
 
-		void add_method(const std::deque<token_base *> &grammar, method_base *method)
+		translator_type &add_method(const std::deque<token_base *> &grammar, method_base *method)
 		{
 			m_data.emplace_back(std::make_shared<data_type>(grammar, method));
+			return *this;
 		}
 
 		method_base *match(const std::deque<token_base *> &raw)
