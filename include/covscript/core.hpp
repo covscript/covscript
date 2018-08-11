@@ -509,7 +509,7 @@ namespace cs {
 
 	name_space_t make_shared_namespace(name_space &ns)
 	{
-		return std::make_shared<extension_holder>(&ns);
+		return std::make_shared<name_space_holder>(&ns);
 	}
 
 // Implement
