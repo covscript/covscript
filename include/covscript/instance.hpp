@@ -283,6 +283,7 @@ namespace cs {
 		// Constructor and destructor
 		instance_type() : context(std::make_shared<context_type>(this))
 		{
+			struct_builder::reset_counter();
 			init_grammar();
 			init_runtime();
 		}

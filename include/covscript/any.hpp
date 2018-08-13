@@ -19,12 +19,51 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/mozart/memory.hpp>
+#include <covscript/mozart/random.hpp>
 #include <ostream>
 
 namespace cs_impl {
 // Be careful when you adjust the buffer size.
 	constexpr std::size_t default_allocate_buffer_size = 64;
 	template<typename T> using default_allocator_provider=std::allocator<T>;
+
+	class type_id {
+		static std::size_t type_counter;
+		static cs::map_t<std::type_index,std::size_t*> type_data;
+		struct type_data_helper {
+			std::size_t type_id;
+			type_data_helper(const std::type_index& idx, std::size_t id):type_id(id)
+			{
+				type_data[idx]=&type_id;
+			}
+		};
+		template<typename T>struct type_counter_helper {
+			static type_data_helper type_data;
+		};
+	public:
+		template<typename T>static std::size_t get_id()
+		{
+			return type_counter_helper<T>::type_data.type_id;
+		}
+		static void sync_type_data(cs::map_t<std::type_index,std::size_t*> const* new_data)
+		{
+			for(auto& data:type_data)
+				if(new_data->count(data.first)>0)
+					*data.second=*new_data->at(data.first);
+		}
+		static cs::map_t<std::type_index,std::size_t*> const* get_type_data()
+		{
+			return &type_data;
+		}
+		static std::size_t get_type_count()
+		{
+			return type_counter;
+		}
+	};
+
+	std::size_t type_id::type_counter=cov::rand<std::size_t>(0,(std::numeric_limits<std::size_t>::max)());
+	cs::map_t<std::type_index,std::size_t*> type_id::type_data;
+	template<typename T>type_id::type_data_helper type_id::type_counter_helper<T>::type_data(typeid(T),++type_id::type_counter);
 
 	class any final {
 		class baseHolder {
@@ -34,6 +73,8 @@ namespace cs_impl {
 			virtual ~ baseHolder() = default;
 
 			virtual const std::type_info &type() const = 0;
+
+			virtual std::size_t type_id() const = 0;
 
 			virtual baseHolder *duplicate() = 0;
 
@@ -57,6 +98,7 @@ namespace cs_impl {
 		template<typename T>
 		class holder : public baseHolder {
 		protected:
+			static std::size_t mTypeId;
 			T mDat;
 		public:
 			static cov::allocator<holder<T>, default_allocate_buffer_size, default_allocator_provider> allocator;
@@ -71,6 +113,11 @@ namespace cs_impl {
 			virtual const std::type_info &type() const override
 			{
 				return typeid(T);
+			}
+
+			virtual std::size_t type_id() const override
+			{
+				return mTypeId;
 			}
 
 			virtual baseHolder *duplicate() override
@@ -283,6 +330,11 @@ namespace cs_impl {
 		const std::type_info &type() const
 		{
 			return this->mDat != nullptr ? this->mDat->data->type() : typeid(void);
+		}
+
+		std::size_t type_id() const
+		{
+			return this->mDat != nullptr ? this->mDat->data->type_id() : 0;
 		}
 
 		long to_integer() const
@@ -516,6 +568,7 @@ namespace cs_impl {
 			return "false";
 	}
 
+	template<typename T> std::size_t any::holder<T>::mTypeId=type_id::get_id<T>();
 	template<typename T> cov::allocator<any::holder<T>, default_allocate_buffer_size, default_allocator_provider> any::holder<T>::allocator;
 	cov::allocator<any::proxy, default_allocate_buffer_size, default_allocator_provider> any::allocator;
 

@@ -27,9 +27,10 @@ cs::extension *cs_extension();
 
 extern "C"
 {
-	cs::extension *__CS_EXTENSION__(int *ref, cs::cs_exception_handler ceh, cs::std_exception_handler seh)
+	cs::extension *__CS_EXTENSION__(int *ref, cs::map_t<std::type_index,std::size_t> const* type_data, cs::cs_exception_handler ceh, cs::std_exception_handler seh)
 	{
 		cs::output_precision_ref = ref;
+		cs_impl::type_id::sync_type_data(type_data);
 		cs::exception_handler::cs_eh_callback = ceh;
 		cs::exception_handler::std_eh_callback = seh;
 		cs::init_extensions();

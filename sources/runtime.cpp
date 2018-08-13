@@ -177,7 +177,7 @@ namespace cs {
 		else if (b.type() == typeid(structure))
 			return b.const_val<structure>().get_hash();
 		else
-			return cs_impl::hash<std::string>(b.type().name());
+			return b.type_id();
 	}
 
 	var runtime_type::parse_new(const var &b)

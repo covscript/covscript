@@ -33,6 +33,7 @@
 // STL
 #include <forward_list>
 #include <functional>
+#include <typeindex>
 #include <algorithm>
 #include <fstream>
 #include <sstream>
@@ -369,6 +370,11 @@ namespace cs {
 
 		~struct_builder() = default;
 
+		static void reset_counter()
+		{
+			mCount=cs_impl::type_id::get_type_count();
+		}
+
 		std::size_t get_hash() const
 		{
 			return mHash;
@@ -477,8 +483,7 @@ namespace cs {
 
 		name_space_holder(const std::string &path) : m_local(false), m_dll(path)
 		{
-			m_ns = reinterpret_cast<extension_entrance_t>(m_dll.get_address("__CS_EXTENSION__"))(
-			           output_precision_ref, exception_handler::cs_eh_callback, exception_handler::std_eh_callback);
+			m_ns = reinterpret_cast<extension_entrance_t>(m_dll.get_address("__CS_EXTENSION__"))(output_precision_ref, cs_impl::type_id::get_type_data(), exception_handler::cs_eh_callback, exception_handler::std_eh_callback);
 		}
 
 		~name_space_holder()
