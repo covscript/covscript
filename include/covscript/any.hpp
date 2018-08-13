@@ -98,7 +98,6 @@ namespace cs_impl {
 		template<typename T>
 		class holder : public baseHolder {
 		protected:
-			static std::size_t mTypeId;
 			T mDat;
 		public:
 			static cov::allocator<holder<T>, default_allocate_buffer_size, default_allocator_provider> allocator;
@@ -117,7 +116,7 @@ namespace cs_impl {
 
 			virtual std::size_t type_id() const override
 			{
-				return mTypeId;
+				return type_id::get_id<T>();
 			}
 
 			virtual baseHolder *duplicate() override
@@ -568,7 +567,6 @@ namespace cs_impl {
 			return "false";
 	}
 
-	template<typename T> std::size_t any::holder<T>::mTypeId=type_id::get_id<T>();
 	template<typename T> cov::allocator<any::holder<T>, default_allocate_buffer_size, default_allocator_provider> any::holder<T>::allocator;
 	cov::allocator<any::proxy, default_allocate_buffer_size, default_allocator_provider> any::allocator;
 
