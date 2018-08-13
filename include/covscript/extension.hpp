@@ -28,7 +28,7 @@ cs::extension *cs_extension();
 extern "C"
 {
 	cs::extension *
-	__CS_EXTENSION__(int *ref, cs::map_t<std::type_index, std::size_t *> const *type_data, cs::cs_exception_handler ceh,
+	__CS_EXTENSION__(int *ref, cs::map_t<std::type_index, std::size_t> *type_data, cs::cs_exception_handler ceh,
 	                 cs::std_exception_handler seh)
 	{
 		cs::output_precision_ref = ref;
