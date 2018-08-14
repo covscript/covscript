@@ -40,6 +40,7 @@ namespace cs {
 	};
 
 	class method_import final : public method_base {
+		statement_base * mResult=nullptr;
 	public:
 		using method_base::method_base;
 
@@ -52,6 +53,8 @@ namespace cs {
 		{
 			return statement_types::import_;
 		}
+
+		virtual void preprocess(const std::deque<std::deque<token_base *>> &) override;
 
 		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
@@ -74,6 +77,7 @@ namespace cs {
 	};
 
 	class method_involve final : public method_base {
+		statement_base * mResult=nullptr;
 	public:
 		using method_base::method_base;
 
@@ -86,6 +90,8 @@ namespace cs {
 		{
 			return statement_types::involve_;
 		}
+
+		virtual void preprocess(const std::deque<std::deque<token_base *>> &) override;
 
 		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
@@ -108,6 +114,7 @@ namespace cs {
 	};
 
 	class method_constant final : public method_base {
+		statement_base * mResult=nullptr;
 	public:
 		using method_base::method_base;
 
@@ -120,6 +127,8 @@ namespace cs {
 		{
 			return statement_types::constant_;
 		}
+
+		virtual void preprocess(const std::deque<std::deque<token_base *>> &) override;
 
 		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};

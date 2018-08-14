@@ -383,8 +383,11 @@ namespace cs {
 					else {
 						if (m->get_target_type() == statement_types::end_)
 							throw runtime_error("Hanging end statement.");
-						else
+						else {
+							if(raw)
+								m->preprocess({line});
 							sptr = m->translate({line});
+						}
 					}
 					if (sptr != nullptr)
 						statements.push_back(sptr);

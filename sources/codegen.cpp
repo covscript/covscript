@@ -26,7 +26,7 @@ namespace cs {
 		                                raw.front().back());
 	}
 
-	statement_base *method_import::translate(const std::deque<std::deque<token_base *>> &raw)
+	void method_import::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
 		token_base *token = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data();
 		if (token == nullptr || token->get_type() != token_types::id)
@@ -34,7 +34,12 @@ namespace cs {
 		const std::string &package_name = dynamic_cast<token_id *>(token)->get_id();
 		const var &ext = make_namespace(context->instance->import(import_path, package_name));
 		context->instance->storage.add_var(package_name, ext);
-		return new statement_constant(package_name, ext, context, raw.front().back());
+		mResult=new statement_constant(package_name, ext, context, raw.front().back());
+	}
+
+	statement_base *method_import::translate(const std::deque<std::deque<token_base *>> &raw)
+	{
+		return mResult;
 	}
 
 	statement_base *method_package::translate(const std::deque<std::deque<token_base *>> &raw)
@@ -46,7 +51,7 @@ namespace cs {
 		return nullptr;
 	}
 
-	statement_base *method_involve::translate(const std::deque<std::deque<token_base *>> &raw)
+	void method_involve::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_value *vptr = dynamic_cast<token_value *>(tree.root().data());
@@ -56,10 +61,15 @@ namespace cs {
 				context->instance->storage.involve_domain(ns.const_val<name_space_t>()->get_domain());
 			else
 				throw runtime_error("Only support involve namespace.");
-			return new statement_involve(tree, true, context, raw.front().back());
+			mResult=new statement_involve(tree, true, context, raw.front().back());
 		}
 		else
-			return new statement_involve(tree, false, context, raw.front().back());
+			mResult=new statement_involve(tree, false, context, raw.front().back());
+	}
+
+	statement_base *method_involve::translate(const std::deque<std::deque<token_base *>> &raw)
+	{
+		return mResult;
 	}
 
 	statement_base *method_var::translate(const std::deque<std::deque<token_base *>> &raw)
@@ -70,7 +80,7 @@ namespace cs {
 		return new statement_var(dvp, context, raw.front().back());
 	}
 
-	statement_base *method_constant::translate(const std::deque<std::deque<token_base *>> &raw)
+	void method_constant::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(2))->get_tree();
 		instance_type::define_var_profile dvp;
@@ -80,7 +90,12 @@ namespace cs {
 		const var &val = static_cast<token_value *>(dvp.expr.root().data())->get_value();
 		context->instance->add_constant(val);
 		context->instance->storage.add_var(dvp.id, val);
-		return new statement_constant(dvp.id, val, context, raw.front().back());
+		mResult=new statement_constant(dvp.id, val, context, raw.front().back());
+	}
+
+	statement_base *method_constant::translate(const std::deque<std::deque<token_base *>> &raw)
+	{
+		return mResult;
 	}
 
 	statement_base *method_end::translate(const std::deque<std::deque<token_base *>> &raw)

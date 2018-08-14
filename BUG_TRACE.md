@@ -1,4 +1,6 @@
 # Covariant Script Vulnerabilities & Exposures #
+*本文件列出了影响较大或至少影响一个Release版本的Bug，各类信息仅供参考*  
+*为了避免出现不可预知的错误，请尽量更新至最新版本*
 ## CSVE-2018-01-01 ##
 + 触发方法：在三目运算符中进行递归
 + 漏洞原理：CovScript在计算三目运算符时会将两个目标值全部计算从而可能造成无限递归从而触发栈溢出
@@ -44,3 +46,13 @@
 + 漏洞原理：优化器缺少优化规则导致无法自动推断`this`
 + 漏洞状态：已修复
 + 影响范围：CovScript 1.2.1(Beta5)-1.2.2(Beta4)
+## CSVE-2018-08-01 ##
++ 触发方法：使用运行时类型信息(RTTI)时类型ID冲突
++ 漏洞原理：运行时类型信息系统的类型ID生成逻辑不严谨
++ 漏洞状态：已修复
++ 影响范围：CovBasic 2.1.2.3-CovScript 1.3.0 Panthera uncia(Unstable) Build 2
+## CSVE-2018-08-02 ##
++ 触发方法：使用`import`，`using`，`const var`后污染`global`名称空间
++ 漏洞原理：代码生成器设计失误
++ 漏洞状态：已修复
++ 影响范围：CovScript 1.2.2(Beta6)-1.3.0 Panthera uncia(Unstable) Build 2
