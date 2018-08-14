@@ -177,7 +177,8 @@ namespace path_cs_ext {
 		.add_var("dir", var::make_constant<int>(DT_DIR))
 		.add_var("blk", var::make_constant<int>(DT_BLK))
 		.add_var("reg", var::make_constant<int>(DT_REG))
-		.add_var("lnk", var::make_constant<int>(DT_LNK))
+		.add_var("lnk", var::make_constant<int>(DT_LNK));
+		path_info_ext
 		.add_var("name", make_cni(name))
 		.add_var("type", make_cni(type));
 		path_ext
