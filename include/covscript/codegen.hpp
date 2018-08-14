@@ -40,7 +40,7 @@ namespace cs {
 	};
 
 	class method_import final : public method_base {
-		statement_base * mResult=nullptr;
+		statement_base *mResult = nullptr;
 	public:
 		using method_base::method_base;
 
@@ -77,7 +77,7 @@ namespace cs {
 	};
 
 	class method_involve final : public method_base {
-		statement_base * mResult=nullptr;
+		statement_base *mResult = nullptr;
 	public:
 		using method_base::method_base;
 
@@ -114,7 +114,7 @@ namespace cs {
 	};
 
 	class method_constant final : public method_base {
-		statement_base * mResult=nullptr;
+		statement_base *mResult = nullptr;
 	public:
 		using method_base::method_base;
 

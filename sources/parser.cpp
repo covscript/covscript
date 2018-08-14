@@ -384,7 +384,7 @@ namespace cs {
 						if (m->get_target_type() == statement_types::end_)
 							throw runtime_error("Hanging end statement.");
 						else {
-							if(raw)
+							if (raw)
 								m->preprocess({line});
 							sptr = m->translate({line});
 						}

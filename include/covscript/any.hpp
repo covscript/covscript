@@ -34,7 +34,7 @@ namespace cs_impl {
 		struct type_data_helper {
 			std::shared_ptr<std::size_t> type_id;
 
-			type_data_helper(const std::type_index &idx, std::size_t id):type_id(std::make_shared<std::size_t>(id))
+			type_data_helper(const std::type_index &idx, std::size_t id) : type_id(std::make_shared<std::size_t>(id))
 			{
 				type_data[idx] = type_id;
 			}
@@ -57,7 +57,7 @@ namespace cs_impl {
 				if (new_data->count(data.first) > 0)
 					*data.second = *new_data->at(data.first);
 				else
-					new_data->insert({data.first,std::make_shared<std::size_t>(*data.second)});
+					new_data->insert({data.first, std::make_shared<std::size_t>(*data.second)});
 		}
 
 		static cs::map_t<std::type_index, std::shared_ptr<std::size_t>> *get_type_data()

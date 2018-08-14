@@ -34,7 +34,7 @@ namespace cs {
 		const std::string &package_name = dynamic_cast<token_id *>(token)->get_id();
 		const var &ext = make_namespace(context->instance->import(import_path, package_name));
 		context->instance->storage.add_var(package_name, ext);
-		mResult=new statement_constant(package_name, ext, context, raw.front().back());
+		mResult = new statement_constant(package_name, ext, context, raw.front().back());
 	}
 
 	statement_base *method_import::translate(const std::deque<std::deque<token_base *>> &raw)
@@ -61,10 +61,10 @@ namespace cs {
 				context->instance->storage.involve_domain(ns.const_val<name_space_t>()->get_domain());
 			else
 				throw runtime_error("Only support involve namespace.");
-			mResult=new statement_involve(tree, true, context, raw.front().back());
+			mResult = new statement_involve(tree, true, context, raw.front().back());
 		}
 		else
-			mResult=new statement_involve(tree, false, context, raw.front().back());
+			mResult = new statement_involve(tree, false, context, raw.front().back());
 	}
 
 	statement_base *method_involve::translate(const std::deque<std::deque<token_base *>> &raw)
@@ -90,7 +90,7 @@ namespace cs {
 		const var &val = static_cast<token_value *>(dvp.expr.root().data())->get_value();
 		context->instance->add_constant(val);
 		context->instance->storage.add_var(dvp.id, val);
-		mResult=new statement_constant(dvp.id, val, context, raw.front().back());
+		mResult = new statement_constant(dvp.id, val, context, raw.front().back());
 	}
 
 	statement_base *method_constant::translate(const std::deque<std::deque<token_base *>> &raw)
