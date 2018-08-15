@@ -1,68 +1,71 @@
 ![](https://github.com/covscript/covscript/raw/master/icon/covariant_script_wide.png)
-# Covariant Script 编程语言 #
+# Covariant Script 编程语言：解释器 #
 [![Build Status](https://travis-ci.org/covscript/covscript.svg?branch=master)](https://travis-ci.org/covscript/covscript)
-[![](https://img.shields.io/badge/GUI%20build-passing-blue.svg)](https://github.com/covscript/covscript-gui/releases/latest)
-[![](https://img.shields.io/github/languages/top/covscript/covscript.svg)](http://www.cplusplus.com/)
-[![](https://img.shields.io/github/license/covscript/covscript.svg)](https://github.com/covscript/covscript/blob/master/LICENSE)  
+[![](https://img.shields.io/github/license/covscript/covscript.svg)](https://github.com/covscript/covscript/blob/master/LICENSE)
+[![](https://img.shields.io/github/languages/top/covscript/covscript.svg)](http://www.cplusplus.com/)  
 **欢迎使用Covariant Script编程语言!**  
-**Covariant Script**是一种开源的跨平台编程语言。
+**Covariant Script**是一种开源的跨平台编程语言  
+此项目为官方维护的Covariant Script解释器
 ## 切换语言 ##
-- [简体中文](https://github.com/covscript/covscript/blob/master/README.zh_CN.md)
-- [English](https://github.com/covscript/covscript/blob/master/README.md)
-
-## 语言特性 ##
-+ 高效的编译器前端
-+ 编译期优化
++ [简体中文](https://github.com/covscript/covscript/blob/master/README.zh_CN.md)
++ [English](https://github.com/covscript/covscript/blob/master/README.md)
+## 特点 ##
++ 跨平台，支持大部分主流操作系统
++ 使用C++ 11编写，兼容性更好
++ 独立、高效的编译器前端
++ 可导出编译结果
++ 支持编译期优化
++ 高效的内存管理系统
 + 引用计数垃圾回收器
-+ C/C++原生接口
-
++ 强大易用的扩展系统
++ C/C++原生接口(CNI)
 ## 扩展 ##
-+ Dear ImGui图形用户界面
-+ Darwin通用字符图形库
-+ SQLite3数据库
-+ ASIO网络库
-+ 正则表达式
-+ 流式API
-
++ [Dear ImGui图形用户界面](https://github.com/covscript/covscript-imgui)
++ [Darwin通用字符图形库](https://github.com/covscript/covscript-darwin)
++ [SQLite3数据库](https://github.com/covscript/covscript-sqlite)
++ [ASIO网络库](https://github.com/covscript/covscript-network)
++ [正则表达式](https://github.com/covscript/covscript-regex)
++ [流式API](https://github.com/covscript/covscript-streams)
 ## 文档 ##
-[CovScript文档](http://covscript.org/docs/)  
+[CovScript在线文档](http://covscript.org/docs/)  
 ## 安装 ##
 ### Microsoft Windows ###
 请在[Latest Release](https://github.com/covscript/covscript/releases/latest)上下载预编译可执行文件。  
 你也可以使用MinGW或相应的工具来直接编译源代码。如果您的系统中已经安装了G++编译器，则可以直接执行`make.bat`。 您需要确保编译器支持C++11标准。   
 **注意：Covariant Script解释器支持MSVC编译器，但由于Windows系统对DLL导出符号的限制所以目前Covariant Script的扩展机制在MSVC上是几乎完全瘫痪的。虽然我们提供了`make_msvc.bat`，但并不推荐使用，仅用于参考。需要嵌入Covariant Script的Windows开发者请直接编译源码，但所有的扩展库暂时不可用。**
 ### Linux ###
-首先你需要从[CovScript Github主页](https://github.com/covscript/covscript)下载源代码。
-然后你有两种选择：
+首先你需要从[CovScript Github主页](https://github.com/covscript/covscript)下载源代码。然后你有两种选择：
 + 使用G++编译器和编译脚本
 ```sh
 $ sh ./make.sh
 ```
-+ 使用CMake工具链
-
-我们提供了`CMakeLists.txt`，以便您执行`cmake`命令来构建。
-
-您需要确保编译器支持C++11标准。
++ 使用CMake工具链  
+我们提供了`CMakeLists.txt`，以便您执行`cmake`命令来构建。  
 
 **注意：某些发行版的G++版本太旧，无法支持C++11标准，请下载最新版本的G++编译器。**
 ### Mac OS ###
 编译Covariant Script的方法与Linux相同。目前Covariant Script已经在MacOS Sierra 10.12.5中测试通过。
 ## 运行 ##
 ### 解释器 ###
-`cs [参数..] <文件> <运行参数...>`  
+`cs [参数...] <文件> <运行参数...>`  
 #### 参数 ####
-`--compile-only` 仅编译。  
-`--wait-before-exit` 等待进程退出。  
-`--log-path PATH` 设置日志路径。  
-`--import-path PATH` 设置import路径。  
++ `--compile-only` 仅编译
++ `--dump-ast` 导出抽象语法树
++ `--wait-before-exit` 等待进程退出
++ `--log-path PATH` 设置日志和导出AST路径
++ `--import-path PATH` 设置import路径
+
+**注意，若不设置日志和导出AST路径，这两者将直接输出至标准输出流**
 ### 交互式解释器(Repl) ###
-`cs_repl [参数..]`  
+`cs_repl [参数...]`  
 #### 参数 ####
-`--args` 指定运行参数。  
-`--silent` 不显示版本信息。  
-`--wait-before-exit` 等待进程退出。  
-`--log-path PATH` 设置日志路径。  
-`--import-path PATH` 设置import路径。  
++ `--args` 指定运行参数
++ `--silent` 不显示版本信息
++ `--wait-before-exit` 等待进程退出
++ `--log-path PATH` 设置日志路径
++ `--import-path PATH` 设置import路径
+
+**注意，若不设置日志路径，将直接输出至标准输出流**
 ### 安装器 ###
 Covariant Script安装器为Windows平台提供了简易的工具链配置方法，您可以一键安装，升级，卸载工具链。你可以在[CovScript编程语言主页](http://covscript.org)下载最新版安装器，详情请访问[Covariant Script Installer](https://github.com/covscript/covscript-installer)。
 ### GUI ###
@@ -80,13 +83,13 @@ IntelliJ插件现已可用：
 **版权所有 © 2018 李登淳**
 ## 感谢 ##
 **按贡献排名。**  
-测试：史为成，[@imkiva](https://github.com/imkiva/)  
-文档：[@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)  
-流式API扩展：[@imkiva](https://github.com/imkiva/)  
-IntelliJ插件：[@ice1000](https://github.com/ice1000/)
++ 顾问：[@ice1000](https://github.com/ice1000/), [@imkiva](https://github.com/imkiva/)
++ 测试：史为成，[@imkiva](https://github.com/imkiva/)
++ 文档：[@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
++ 流式API扩展：[@imkiva](https://github.com/imkiva/)
++ IntelliJ插件：[@ice1000](https://github.com/ice1000/)
 ## 评论 ##
 [@ice1000](https://github.com/ice1000/)的评论：
-
 >这是我的朋友李登淳创造的一门编程语言，用 C++ 实现，具体介绍在官网还是比较详细的，我在这里就只写点我自己的看法吧。  
 这门语言本身是类 C 的（至少表达式和函数调用是 C 风格），而函数、结构体、命名空间定义等是 Ruby 风格的 end 结尾，并有 package import using 的概念（也就是模块系统）。  
 老李的 Parser 是手写的（可以说复杂度很高了，虽然 Parser 是很 trivial 的），让我对他的耐力很佩服（同为高二学生， 我在写 Lice 的时候就没有这份心思，只是做了个很灵活的 AST evaluator 而已）。  
