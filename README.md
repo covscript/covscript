@@ -1,31 +1,33 @@
 ![](https://github.com/covscript/covscript/raw/master/icon/covariant_script_wide.png)
-# The Covariant Script Programming Language #
+# Covariant Script Programming Language: The Interpreter #
 [![Build Status](https://travis-ci.org/covscript/covscript.svg?branch=master)](https://travis-ci.org/covscript/covscript)
-[![](https://img.shields.io/badge/GUI%20build-passing-blue.svg)](https://github.com/covscript/covscript-gui/releases/latest)
-[![](https://img.shields.io/github/languages/top/covscript/covscript.svg)](http://www.cplusplus.com/)
-[![](https://img.shields.io/github/license/covscript/covscript.svg)](https://github.com/covscript/covscript/blob/master/LICENSE)  
+[![](https://img.shields.io/github/license/covscript/covscript.svg)](https://github.com/covscript/covscript/blob/master/LICENSE)
+[![](https://img.shields.io/github/languages/top/covscript/covscript.svg)](http://www.cplusplus.com/)  
 **Welcome to the Covariant Script programming language!**  
-**Covariant Script** is an open source,cross-platform programming language.
+**Covariant Script** is an open source, cross-platform programming language  
+This project is an officially maintained Covariant Script interpreter
 ## Switch language ##
 - [简体中文](https://github.com/covscript/covscript/blob/master/README.zh_CN.md)
 - [English](https://github.com/covscript/covscript/blob/master/README.md)
-
 ## Features ##
-+ Efficient compiler front end
-+ Compile-time optimization
++ Cross-platform, supporting most mainstream operating systems
++ The extension system is powerful and easy to use
++ Written in C++ 11, which compatibility is better
++ Independent and efficient compiler front end
++ The compilation results can be exported
++ Efficient memory management system
++ Support compile-time optimization
 + Reference count garbage collector
-+ C/C++ Native Interface
-
++ C/C++ Native Interface(CNI)
 ## Extensions ##
-+ Darwin Universal CGL
-+ Regular Expression
-+ SQLite3 Database
-+ Dear ImGui GUI
-+ ASIO Network
-+ Streams API
-
++ [Darwin Universal CGL](https://github.com/covscript/covscript-darwin)
++ [Regular Expression](https://github.com/covscript/covscript-regex)
++ [SQLite3 Database](https://github.com/covscript/covscript-sqlite)
++ [Dear ImGui GUI](https://github.com/covscript/covscript-imgui)
++ [ASIO Network](https://github.com/covscript/covscript-network)
++ [Streams API](https://github.com/covscript/covscript-streams)
 ## Documentations ##
-[CovScript Document](http://covscript.org/docs/)  
+[CovScript Online Documents](http://covscript.org/docs/)  
 ## Installation ##
 ### Windows ###
 Download the precompiled executable on the [Latest Release](https://github.com/covscript/covscript/releases/latest).   
@@ -38,11 +40,8 @@ Then you have two choices:
 ```sh
 $ sh ./make.sh
 ```
-+ With CMake toolchain
-
++ With CMake toolchain  
 We've provided a `CMakeLists.txt`.
-
-Make sure your compiler supports C++11.  
 
 **Note: Some distributions' G++ are too old to support C++11, make sure you G++ compiler is up to date.**
 ### Mac OS ###
@@ -51,18 +50,23 @@ All the steps are the same as Linux, tested under macOS Sierra 10.12.5.
 ### Interpreter ###
 `cs [arguments..] <file> <args...>`  
 #### Arguments ####
-`--compile-only` Only compile.  
-`--wait-before-exit` Wait before process exit.  
-`--log-path PATH` Set the log path.  
-`--import-path PATH` Set the import path.  
++ `--compile-only` Only compile
++ `--dump-ast` Export abstract syntax tree
++ `--wait-before-exit` Wait before process exit
++ `--log-path PATH` Set the log and AST exporting path
++ `--import-path PATH` Set the import path
+
+**Note that if you do not set the log and AST exporting path, both will be output directly to the standard output stream.**
 ### Repl ###
 `cs_repl [arguments..]`  
 #### Arguments ####
-`--args` Specify the operating parameters.  
-`--silent` Does not display the version info.  
-`--wait-before-exit` Wait before process exit.  
-`--log-path PATH` Set the log path.  
-`--import-path PATH` Set the import path.  
++ `--args` Specify the operating parameters
++ `--silent` Does not display the version info
++ `--wait-before-exit` Wait before process exit
++ `--log-path PATH` Set the log path
++ `--import-path PATH` Set the import path
+
+**Note that if you do not set a log path, it will be output directly to the standard output stream.**
 ### Installer ###
 Covariant Script Installer provides a simple toolchain configuration method for the Microsoft Windows platform. You can download, install, upgrade and uninstall the toolchain by simply push a button. You can download the latest installer from the [CovScript Programming Language Home](http://covscript.org). For more information, visit the [Covariant Script Installer](https://github.com/covscript/covscript-installer).
 ### GUI ###
@@ -80,13 +84,13 @@ The `examples` folder contains several example programs written by CovScript.
 **Copyright © 2018 Michael Lee**
 ## Thanks ##
 **Ranked by contribution.**  
-Testing: Shi Youcheng, [@imkiva](https://github.com/imkiva/)  
-Douments: [@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)  
-Streams API Extension: [@imkiva](https://github.com/imkiva/)  
-IntelliJ Plugin: [@ice1000](https://github.com/ice1000/)
++ Consultant: [@ice1000](https://github.com/ice1000/), [@imkiva](https://github.com/imkiva/)
++ Testing: Shi Youcheng, [@imkiva](https://github.com/imkiva/)
++ Douments: [@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
++ Streams API Extension: [@imkiva](https://github.com/imkiva/)
++ IntelliJ Plugin: [@ice1000](https://github.com/ice1000/)
 ## Comments ##
 Comments by [@ice1000](https://github.com/ice1000/):
-
 >This is a programming language created by my friend Michael Lee, written in C++. The detailed description is on it’s website so I’ll just put some comments here. This is a C-like language (at least the function call syntax is of C style), while functions, structs, namespaces are ends with end like Ruby, and it has the concepts of package import using (the module system).  
 Its parser is hand-written (very complex, although parsers are trivial), which impressed me (I didn’t even think of that when working on Lice, I just wrote an AST evaluator).  
 This language supports invoking functions written in C++, like JNI.  
