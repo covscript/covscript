@@ -20,7 +20,6 @@
 */
 #include <covscript/mozart/memory.hpp>
 #include <covscript/mozart/random.hpp>
-#include <ostream>
 
 namespace cs_impl {
 // Be careful when you adjust the buffer size.

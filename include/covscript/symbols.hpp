@@ -170,6 +170,11 @@ namespace cs {
 		{
 			return line_num;
 		}
+
+		virtual void dump(std::ostream& o) const
+		{
+			o<<"<token>";
+		}
 	};
 
 	class token_endline final : public token_base {
@@ -443,6 +448,11 @@ namespace cs {
 		virtual void repl_run()
 		{
 			this->run();
+		}
+
+		virtual void dump(std::ostream& o) const
+		{
+			o<<"<statement>\n";
 		}
 	};
 

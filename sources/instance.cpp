@@ -489,6 +489,34 @@ namespace cs {
 		}
 	}
 
+	void instance_type::dump_expr(cov::tree<token_base*>::const_iterator it, std::ostream& stream)
+	{
+		if(!it.usable())
+		{
+			stream<<"<NULL>";
+			return;
+		}
+		token_base *token = it.data();
+		if (token == nullptr) {
+			stream<<"<NULL>";
+			return;
+		}
+		stream<<"<Tree Node: ";
+		token->dump(stream);
+		stream<<" Left Leaf: ";
+		dump_expr(it.left(),stream);
+		stream<<" Right Leaf: ";
+		dump_expr(it.right(),stream);
+		stream<<">";
+	}
+
+	void instance_type::dump_ast(std::ostream& stream)
+	{
+		for (auto &ptr:statements)
+			ptr->dump(stream);
+		stream<<std::flush;
+	}
+
 	void repl::run(const string &code)
 	{
 		if (code.empty())

@@ -391,12 +391,16 @@ namespace cs {
 
 		void opt_expr(cov::tree<token_base *> &, cov::tree<token_base *>::iterator);
 
+		// Wrapped Method
 		extension_t import(const std::string &, const std::string &);
 
-		// Wrapped Method
 		void compile(const std::string &);
 
 		void interpret();
+
+		void dump_expr(cov::tree<token_base*>::const_iterator, std::ostream&);
+
+		void dump_ast(std::ostream&);
 	};
 
 // Repl

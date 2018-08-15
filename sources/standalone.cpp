@@ -21,6 +21,7 @@
 #include "covscript.cpp"
 
 std::string log_path;
+bool dump_ast = false;
 bool compile_only = false;
 bool wait_before_exit = false;
 
@@ -39,7 +40,9 @@ int covscript_args(int args_size, const char *args[])
 			expect_import_path = 2;
 		}
 		else if (args[index][0] == '-') {
-			if (std::strcmp(args[index], "--compile-only") == 0 && !compile_only)
+			if (std::strcmp(args[index], "--dump-ast") == 0 && !dump_ast)
+				dump_ast = true;
+			else if (std::strcmp(args[index], "--compile-only") == 0 && !compile_only)
 				compile_only = true;
 			else if (std::strcmp(args[index], "--wait-before-exit") == 0 && !wait_before_exit)
 				wait_before_exit = true;
@@ -73,6 +76,8 @@ void covscript_main(int args_size, const char *args[])
 		cs::init(arg);
 		cs::instance_type instance;
 		instance.compile(path);
+		if (dump_ast)
+			instance.dump_ast(std::cout);
 		if (!compile_only)
 			instance.interpret();
 	}

@@ -264,6 +264,7 @@ namespace cs {
 		var &get_var(const std::string &) const;
 	};
 
+// Maybe here the name is unnecessary
 	class structure final {
 		bool m_shadow = false;
 		std::size_t m_hash;
