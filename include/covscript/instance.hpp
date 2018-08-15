@@ -398,9 +398,9 @@ namespace cs {
 
 		void interpret();
 
-		static void dump_expr(cov::tree<token_base*>::const_iterator, std::ostream&);
+		static void dump_expr(cov::tree<token_base *>::const_iterator, std::ostream &);
 
-		void dump_ast(std::ostream&);
+		void dump_ast(std::ostream &);
 	};
 
 // Repl

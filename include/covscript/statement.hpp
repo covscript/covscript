@@ -39,7 +39,7 @@ namespace cs {
 
 		virtual void repl_run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_involve final : public statement_base {
@@ -58,7 +58,7 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_var final : public statement_base {
@@ -77,7 +77,7 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_constant final : public statement_base {
@@ -98,7 +98,7 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_break final : public statement_base {
@@ -114,7 +114,7 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_continue final : public statement_base {
@@ -130,7 +130,7 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_block final : public statement_base {
@@ -149,9 +149,9 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 
-		const std::deque<statement_base *>& get_block() const
+		const std::deque<statement_base *> &get_block() const
 		{
 			return this->mBlock;
 		}
@@ -173,7 +173,7 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_if final : public statement_base {
@@ -192,7 +192,7 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_ifelse final : public statement_base {
@@ -217,7 +217,7 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_else final : public statement_base {
@@ -234,7 +234,7 @@ namespace cs {
 			throw runtime_error("Do not allowed standalone else statement.");
 		}
 
-		virtual void dump(std::ostream&) const override
+		virtual void dump(std::ostream &) const override
 		{
 			throw runtime_error("Do not allowed standalone else statement.");
 		}
@@ -258,7 +258,7 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_case final : public statement_base {
@@ -280,7 +280,7 @@ namespace cs {
 			throw runtime_error("Do not allowed standalone case statement.");
 		}
 
-		virtual void dump(std::ostream&) const override
+		virtual void dump(std::ostream &) const override
 		{
 			throw runtime_error("Do not allowed standalone case statement.");
 		}
@@ -315,7 +315,7 @@ namespace cs {
 			throw runtime_error("Do not allowed standalone default statement.");
 		}
 
-		virtual void dump(std::ostream&) const override
+		virtual void dump(std::ostream &) const override
 		{
 			throw runtime_error("Do not allowed standalone default statement.");
 		}
@@ -342,7 +342,7 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_until final : public statement_base {
@@ -367,7 +367,7 @@ namespace cs {
 			throw runtime_error("Do not allowed standalone until statement.");
 		}
 
-		virtual void dump(std::ostream&) const override
+		virtual void dump(std::ostream &) const override
 		{
 			throw runtime_error("Do not allowed standalone until statement.");
 		}
@@ -389,7 +389,7 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_for final : public statement_base {
@@ -414,7 +414,7 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_foreach final : public statement_base {
@@ -436,7 +436,7 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_struct final : public statement_base {
@@ -448,7 +448,15 @@ namespace cs {
 	public:
 		statement_struct() = delete;
 
-		statement_struct(const std::string &name, const cov::tree<token_base *> &parent, const std::deque<statement_base *> &method, context_t c, token_base *ptr) : statement_base(c, ptr), mName(name), mBuilder(c, name, parent, method), mParent(parent), mBlock(method) {}
+		statement_struct(const std::string &name, const cov::tree<token_base *> &parent,
+		                 const std::deque<statement_base *> &method, context_t c, token_base *ptr) : statement_base(c,
+			                         ptr),
+			mName(name),
+			mBuilder(c, name,
+			         parent,
+			         method),
+			mParent(parent),
+			mBlock(method) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -457,7 +465,7 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_function final : public statement_base {
@@ -471,7 +479,10 @@ namespace cs {
 	public:
 		statement_function() = delete;
 
-		statement_function(const std::string &name, const std::vector<std::string> &args, const std::deque<statement_base *> &body, bool is_override, context_t c, token_base *ptr) : statement_base(c, ptr), mName(name), mFunc(c, args, body), mOverride(is_override), mArgs(args), mBlock(body) {}
+		statement_function(const std::string &name, const std::vector<std::string> &args,
+		                   const std::deque<statement_base *> &body, bool is_override, context_t c, token_base *ptr)
+			: statement_base(c, ptr), mName(name), mFunc(c, args, body), mOverride(is_override), mArgs(args),
+			  mBlock(body) {}
 
 		virtual statement_types get_type() const noexcept override
 		{
@@ -486,7 +497,7 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_return final : public statement_base {
@@ -504,7 +515,7 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_end final : public statement_base {
@@ -521,7 +532,7 @@ namespace cs {
 			throw runtime_error("Do not allowed standalone end statement.");
 		}
 
-		virtual void dump(std::ostream&) const override
+		virtual void dump(std::ostream &) const override
 		{
 			throw runtime_error("Do not allowed standalone end statement.");
 		}
@@ -547,7 +558,7 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 
 	class statement_catch final : public statement_base {
@@ -572,7 +583,7 @@ namespace cs {
 			throw runtime_error("Do not allowed standalone catch statement.");
 		}
 
-		virtual void dump(std::ostream&) const override
+		virtual void dump(std::ostream &) const override
 		{
 			throw runtime_error("Do not allowed standalone catch statement.");
 		}
@@ -593,6 +604,6 @@ namespace cs {
 
 		virtual void run() override;
 
-		virtual void dump(std::ostream&) const override;
+		virtual void dump(std::ostream &) const override;
 	};
 }

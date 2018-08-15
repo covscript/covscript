@@ -22,182 +22,182 @@
 #include <covscript/codegen.hpp>
 
 namespace cs {
-	void token_signal::dump(std::ostream& o) const
+	void token_signal::dump(std::ostream &o) const
 	{
-		o<<"<Signal = ";
-		switch(mType) {
+		o << "< Signal = \"";
+		switch (mType) {
 		case signal_types::add_:
-			o<<"+";
+			o << "+";
 			break;
 		case signal_types::addasi_:
-			o<<"+=";
+			o << "+=";
 			break;
 		case signal_types::sub_:
-			o<<"-";
+			o << "-";
 			break;
 		case signal_types::subasi_:
-			o<<"-=";
+			o << "-=";
 			break;
 		case signal_types::mul_:
-			o<<"*";
+			o << "*";
 			break;
 		case signal_types::mulasi_:
-			o<<"*=";
+			o << "*=";
 			break;
 		case signal_types::div_:
-			o<<"/";
+			o << "/";
 			break;
 		case signal_types::divasi_:
-			o<<"/=";
+			o << "/=";
 			break;
 		case signal_types::mod_:
-			o<<"%";
+			o << "%";
 			break;
 		case signal_types::modasi_:
-			o<<"%=";
+			o << "%=";
 			break;
 		case signal_types::pow_:
-			o<<"^";
+			o << "^";
 			break;
 		case signal_types::powasi_:
-			o<<"^=";
+			o << "^=";
 			break;
 		case signal_types::com_:
-			o<<",";
+			o << ",";
 			break;
 		case signal_types::dot_:
-			o<<".";
+			o << ".";
 			break;
 		case signal_types::und_:
-			o<<"<";
+			o << "<";
 			break;
 		case signal_types::abo_:
-			o<<">";
+			o << ">";
 			break;
 		case signal_types::asi_:
-			o<<"=";
+			o << "=";
 			break;
 		case signal_types::equ_:
-			o<<"==";
+			o << "==";
 			break;
 		case signal_types::ueq_:
-			o<<"<=";
+			o << "<=";
 			break;
 		case signal_types::aeq_:
-			o<<">=";
+			o << ">=";
 			break;
 		case signal_types::neq_:
-			o<<"!=";
+			o << "!=";
 			break;
 		case signal_types::and_:
-			o<<"&&";
+			o << "&&";
 			break;
 		case signal_types::or_:
-			o<<"||";
+			o << "||";
 			break;
 		case signal_types::not_:
-			o<<"!";
+			o << "!";
 			break;
 		case signal_types::inc_:
-			o<<"++";
+			o << "++";
 			break;
 		case signal_types::dec_:
-			o<<"--";
+			o << "--";
 			break;
 		case signal_types::pair_:
-			o<<":";
+			o << ":";
 			break;
 		case signal_types::choice_:
-			o<<"?";
+			o << "?";
 			break;
 		case signal_types::slb_:
-			o<<"(";
+			o << "(";
 			break;
 		case signal_types::srb_:
-			o<<")";
+			o << ")";
 			break;
 		case signal_types::mlb_:
-			o<<"[";
+			o << "[";
 			break;
 		case signal_types::mrb_:
-			o<<"]";
+			o << "]";
 			break;
 		case signal_types::llb_:
-			o<<"{";
+			o << "{";
 			break;
 		case signal_types::lrb_:
-			o<<"}";
+			o << "}";
 			break;
 		case signal_types::esb_:
-			o<<"()";
+			o << "()";
 			break;
 		case signal_types::emb_:
-			o<<"[]";
+			o << "[]";
 			break;
 		case signal_types::elb_:
-			o<<"{}";
+			o << "{}";
 			break;
 		case signal_types::fcall_:
-			o<<"[call]";
+			o << "[call]";
 			break;
 		case signal_types::access_:
-			o<<"[access]";
+			o << "[access]";
 			break;
 		case signal_types::typeid_:
-			o<<"typeid";
+			o << "typeid";
 			break;
 		case signal_types::new_:
-			o<<"new";
+			o << "new";
 			break;
 		case signal_types::gcnew_:
-			o<<"gcnew";
+			o << "gcnew";
 			break;
 		case signal_types::arrow_:
-			o<<"->";
+			o << "->";
 			break;
 		case signal_types::lambda_:
-			o<<"[lambda]";
+			o << "[lambda]";
 			break;
 		case signal_types::escape_:
-			o<<"*";
+			o << "*";
 			break;
 		case signal_types::minus_:
-			o<<"-";
+			o << "-";
 			break;
 		case signal_types::vardef_:
-			o<<"[vardef]";
+			o << "[vardef]";
 			break;
 		}
-		o<<">";
+		o << "\" >";
 	}
 
-	void token_expr::dump(std::ostream& o) const
+	void token_expr::dump(std::ostream &o) const
 	{
-		o<<"<Child Expression: ";
-		instance_type::dump_expr(mTree.root(),o);
-		o<<">";
+		o << "< ChildExpression = ";
+		instance_type::dump_expr(mTree.root(), o);
+		o << " >";
 	}
 
-	void token_arglist::dump(std::ostream& o) const
+	void token_arglist::dump(std::ostream &o) const
 	{
-		o<<"Argument List: ";
-		for(auto&tree:mTreeList) {
-			o<<"<Child Expression: ";
-			instance_type::dump_expr(tree.root(),o);
-			o<<">";
+		o << "< ArgumentList = {";
+		for (auto &tree:mTreeList) {
+			o << "< ChildExpression: ";
+			instance_type::dump_expr(tree.root(), o);
+			o << " >";
 		}
-		o<<">";
+		o << "} >";
 	}
 
-	void token_array::dump(std::ostream& o) const
+	void token_array::dump(std::ostream &o) const
 	{
-		o<<"Array List: ";
-		for(auto&tree:mTreeList) {
-			o<<"<Child Expression: ";
-			instance_type::dump_expr(tree.root(),o);
-			o<<">";
+		o << "< ArrayList = {";
+		for (auto &tree:mTreeList) {
+			o << "< ChildExpression: ";
+			instance_type::dump_expr(tree.root(), o);
+			o << " >";
 		}
-		o<<">";
+		o << "} >";
 	}
 
 	const std::string &statement_base::get_file_path() const noexcept
@@ -667,33 +667,33 @@ namespace cs {
 		}
 	}
 
-	void instance_type::dump_expr(cov::tree<token_base*>::const_iterator it, std::ostream& stream)
+	void instance_type::dump_expr(cov::tree<token_base *>::const_iterator it, std::ostream &stream)
 	{
-		if(!it.usable()) {
-			stream<<"<Empty Expression>";
+		if (!it.usable()) {
+			stream << "< Empty Expression >";
 			return;
 		}
-		stream<<"<";
+		stream << "<";
 		if (it.data() != nullptr) {
-			stream<<" Tree Node = ";
+			stream << " Tree Node = ";
 			it.data()->dump(stream);
 		}
 		if (it.left().usable()) {
-			stream<<" Left Leaf = ";
+			stream << " Left Leaf = ";
 			dump_expr(it.left(), stream);
 		}
 		if (it.right().usable()) {
-			stream<<" Right Leaf = ";
+			stream << " Right Leaf = ";
 			dump_expr(it.right(), stream);
 		}
-		stream<<">";
+		stream << " >";
 	}
 
-	void instance_type::dump_ast(std::ostream& stream)
+	void instance_type::dump_ast(std::ostream &stream)
 	{
 		for (auto &ptr:statements)
 			ptr->dump(stream);
-		stream<<std::flush;
+		stream << std::flush;
 	}
 
 	void repl::run(const string &code)

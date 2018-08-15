@@ -76,8 +76,14 @@ void covscript_main(int args_size, const char *args[])
 		cs::init(arg);
 		cs::instance_type instance;
 		instance.compile(path);
-		if (dump_ast)
-			instance.dump_ast(std::cout);
+		if (dump_ast) {
+			if (!log_path.empty()) {
+				std::ofstream out(::log_path);
+				instance.dump_ast(out);
+			}
+			else
+				instance.dump_ast(std::cout);
+		}
 		if (!compile_only)
 			instance.interpret();
 	}
