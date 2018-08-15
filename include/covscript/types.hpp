@@ -22,6 +22,45 @@
 #include <type_traits>
 #include <functional>
 
+// Name Demangle
+#ifdef _MSC_VER
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0501
+#endif
+#include <windows.h>
+#include <Dbghelp.h>
+#pragma comment(lib, "DbgHelp")
+namespace cs_impl {
+	std::string cxx_demangle(const char* name)
+	{
+		char buffer[1024];
+		DWORD length = UnDecorateSymbolName(name, buffer, sizeof(buffer), 0);
+		if (length > 0)
+			return std::string(buffer, length);
+		else
+			return name;
+	}
+}
+#elif defined __GNUC__
+#include <cxxabi.h>
+namespace cs_impl {
+	std::string cxx_demangle(const char* name)
+	{
+		char buffer[1024] = {0};
+		size_t size = sizeof(buffer);
+		int status;
+		char *ret;
+		if (ret = abi::__cxa_demangle(name, buffer, &size, &status))
+			return std::string(ret);
+		else
+			return name;
+	}
+}
+#endif
+
 namespace cs_impl {
 // Type support auto-detection(SFINAE)
 // Compare

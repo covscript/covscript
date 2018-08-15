@@ -288,7 +288,7 @@ namespace cs {
 			catch (cov::error &e) {
 				if (!std::strcmp(e.what(), "E000D"))
 					throw e;
-				o << "[" << mVal.get_type_name() << "]";
+				o << "[" << cs_impl::cxx_demangle(mVal.type().name()) << "]";
 			}
 			o << "\" >";
 		}

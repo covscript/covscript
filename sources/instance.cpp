@@ -691,6 +691,16 @@ namespace cs {
 
 	void instance_type::dump_ast(std::ostream &stream)
 	{
+		stream << "< BeginMetaData >\n< Version: "<<version<<" >\n< STD Version: "<<std_version<<" >\n< Output Precision: "<<*output_precision_ref<<" >\n< Import Path: \""<<import_path<<"\" >\n";
+#ifdef COVSCRIPT_PLATFORM_WIN32
+		stream<<"< Platform: Win32 >\n";
+#else
+		stream<<"< Platform: Unix >\n";
+#endif
+		stream<< "< TypeID: {";
+		for(auto& it:*cs_impl::type_id::get_type_data())
+			stream<<"< TypeName = \""<<cs_impl::cxx_demangle(it.first.name())<<"\", ID = "<<*it.second<<" >";
+		stream<<"} >\n< EndMetaData >\n";
 		for (auto &ptr:statements)
 			ptr->dump(stream);
 		stream << std::flush;

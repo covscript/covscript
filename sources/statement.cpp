@@ -150,7 +150,7 @@ namespace cs {
 		catch (cov::error &e) {
 			if (!std::strcmp(e.what(), "E000D"))
 				throw e;
-			o << "[" << mVal.get_type_name() << "]";
+			o << "[" << cs_impl::cxx_demangle(mVal.type().name()) << "]";
 		}
 		o << "\" >\n";
 	}
@@ -335,7 +335,7 @@ namespace cs {
 			catch (cov::error &e) {
 				if (!std::strcmp(e.what(), "E000D"))
 					throw e;
-				o << "[" << it.first.get_type_name() << "]";
+				o << "[" << cs_impl::cxx_demangle(it.first.type().name()) << "]";
 			}
 			o << "\" >\n";
 			for (auto &ptr:it.second->get_block())
