@@ -173,7 +173,7 @@ namespace cs {
 
 		virtual void dump(std::ostream& o) const
 		{
-			o<<"<token>";
+			o<<"<Token>";
 		}
 	};
 
@@ -186,6 +186,11 @@ namespace cs {
 		virtual token_types get_type() const noexcept override
 		{
 			return token_types::endline;
+		}
+
+		virtual void dump(std::ostream& o) const override
+		{
+			o<<"<Endline>";
 		}
 	};
 
@@ -204,6 +209,11 @@ namespace cs {
 		action_types get_action() const noexcept
 		{
 			return this->mType;
+		}
+
+		virtual void dump(std::ostream& o) const override
+		{
+			o<<"<Action>";
 		}
 	};
 
@@ -225,6 +235,8 @@ namespace cs {
 		{
 			return this->mType;
 		}
+
+		virtual void dump(std::ostream&) const override;
 	};
 
 	class token_id final : public token_base {
@@ -242,6 +254,11 @@ namespace cs {
 		const std::string &get_id() const noexcept
 		{
 			return this->mId;
+		}
+
+		virtual void dump(std::ostream& o) const override
+		{
+			o<<"<ID = "<<mId<<">";
 		}
 	};
 
@@ -261,6 +278,20 @@ namespace cs {
 		{
 			return this->mVal;
 		}
+
+		virtual void dump(std::ostream& o) const override
+		{
+			o<<"<Value = ";
+			try {
+				o << mVal.to_string();
+			}
+			catch (cov::error &e) {
+				if (!std::strcmp(e.what(), "E000D"))
+					throw e;
+				o<<"["<<mVal.get_type_name()<<"]";
+			}
+			o<<">";
+		}
 	};
 
 	class token_sblist final : public token_base {
@@ -278,6 +309,11 @@ namespace cs {
 		std::deque<std::deque<token_base *>> &get_list() noexcept
 		{
 			return this->mList;
+		}
+
+		virtual void dump(std::ostream& o) const override
+		{
+			o<<"<Small Bracket>";
 		}
 	};
 
@@ -297,6 +333,11 @@ namespace cs {
 		{
 			return this->mList;
 		}
+
+		virtual void dump(std::ostream& o) const override
+		{
+			o<<"<Middle Bracket>";
+		}
 	};
 
 	class token_lblist final : public token_base {
@@ -314,6 +355,11 @@ namespace cs {
 		std::deque<std::deque<token_base *>> &get_list() noexcept
 		{
 			return this->mList;
+		}
+
+		virtual void dump(std::ostream& o) const override
+		{
+			o<<"<Large Bracket>";
 		}
 	};
 
@@ -333,6 +379,8 @@ namespace cs {
 		{
 			return this->mTree;
 		}
+
+		virtual void dump(std::ostream&) const override;
 	};
 
 	class token_arglist final : public token_base {
@@ -351,6 +399,8 @@ namespace cs {
 		{
 			return this->mTreeList;
 		}
+
+		virtual void dump(std::ostream&) const override;
 	};
 
 	class token_array final : public token_base {
@@ -369,6 +419,8 @@ namespace cs {
 		{
 			return this->mTreeList;
 		}
+
+		virtual void dump(std::ostream&) const override;
 	};
 
 	enum class statement_types {

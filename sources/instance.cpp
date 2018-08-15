@@ -22,6 +22,184 @@
 #include <covscript/codegen.hpp>
 
 namespace cs {
+	void token_signal::dump(std::ostream& o) const
+	{
+		o<<"<Signal = ";
+		switch(mType) {
+		case signal_types::add_:
+			o<<"+";
+			break;
+		case signal_types::addasi_:
+			o<<"+=";
+			break;
+		case signal_types::sub_:
+			o<<"-";
+			break;
+		case signal_types::subasi_:
+			o<<"-=";
+			break;
+		case signal_types::mul_:
+			o<<"*";
+			break;
+		case signal_types::mulasi_:
+			o<<"*=";
+			break;
+		case signal_types::div_:
+			o<<"/";
+			break;
+		case signal_types::divasi_:
+			o<<"/=";
+			break;
+		case signal_types::mod_:
+			o<<"%";
+			break;
+		case signal_types::modasi_:
+			o<<"%=";
+			break;
+		case signal_types::pow_:
+			o<<"^";
+			break;
+		case signal_types::powasi_:
+			o<<"^=";
+			break;
+		case signal_types::com_:
+			o<<",";
+			break;
+		case signal_types::dot_:
+			o<<".";
+			break;
+		case signal_types::und_:
+			o<<"<";
+			break;
+		case signal_types::abo_:
+			o<<">";
+			break;
+		case signal_types::asi_:
+			o<<"=";
+			break;
+		case signal_types::equ_:
+			o<<"==";
+			break;
+		case signal_types::ueq_:
+			o<<"<=";
+			break;
+		case signal_types::aeq_:
+			o<<">=";
+			break;
+		case signal_types::neq_:
+			o<<"!=";
+			break;
+		case signal_types::and_:
+			o<<"&&";
+			break;
+		case signal_types::or_:
+			o<<"||";
+			break;
+		case signal_types::not_:
+			o<<"!";
+			break;
+		case signal_types::inc_:
+			o<<"++";
+			break;
+		case signal_types::dec_:
+			o<<"--";
+			break;
+		case signal_types::pair_:
+			o<<":";
+			break;
+		case signal_types::choice_:
+			o<<"?";
+			break;
+		case signal_types::slb_:
+			o<<"(";
+			break;
+		case signal_types::srb_:
+			o<<")";
+			break;
+		case signal_types::mlb_:
+			o<<"[";
+			break;
+		case signal_types::mrb_:
+			o<<"]";
+			break;
+		case signal_types::llb_:
+			o<<"{";
+			break;
+		case signal_types::lrb_:
+			o<<"}";
+			break;
+		case signal_types::esb_:
+			o<<"()";
+			break;
+		case signal_types::emb_:
+			o<<"[]";
+			break;
+		case signal_types::elb_:
+			o<<"{}";
+			break;
+		case signal_types::fcall_:
+			o<<"[call]";
+			break;
+		case signal_types::access_:
+			o<<"[access]";
+			break;
+		case signal_types::typeid_:
+			o<<"typeid";
+			break;
+		case signal_types::new_:
+			o<<"new";
+			break;
+		case signal_types::gcnew_:
+			o<<"gcnew";
+			break;
+		case signal_types::arrow_:
+			o<<"->";
+			break;
+		case signal_types::lambda_:
+			o<<"[lambda]";
+			break;
+		case signal_types::escape_:
+			o<<"*";
+			break;
+		case signal_types::minus_:
+			o<<"-";
+			break;
+		case signal_types::vardef_:
+			o<<"[vardef]";
+			break;
+		}
+		o<<">";
+	}
+
+	void token_expr::dump(std::ostream& o) const
+	{
+		o<<"<Child Expression: ";
+		instance_type::dump_expr(mTree.root(),o);
+		o<<">";
+	}
+
+	void token_arglist::dump(std::ostream& o) const
+	{
+		o<<"Argument List: ";
+		for(auto&tree:mTreeList) {
+			o<<"<Child Expression: ";
+			instance_type::dump_expr(tree.root(),o);
+			o<<">";
+		}
+		o<<">";
+	}
+
+	void token_array::dump(std::ostream& o) const
+	{
+		o<<"Array List: ";
+		for(auto&tree:mTreeList) {
+			o<<"<Child Expression: ";
+			instance_type::dump_expr(tree.root(),o);
+			o<<">";
+		}
+		o<<">";
+	}
+
 	const std::string &statement_base::get_file_path() const noexcept
 	{
 		return context->file_path;
@@ -491,22 +669,23 @@ namespace cs {
 
 	void instance_type::dump_expr(cov::tree<token_base*>::const_iterator it, std::ostream& stream)
 	{
-		if(!it.usable())
-		{
-			stream<<"<NULL>";
+		if(!it.usable()) {
+			stream<<"<Empty Expression>";
 			return;
 		}
-		token_base *token = it.data();
-		if (token == nullptr) {
-			stream<<"<NULL>";
-			return;
+		stream<<"<";
+		if (it.data() != nullptr) {
+			stream<<" Tree Node = ";
+			it.data()->dump(stream);
 		}
-		stream<<"<Tree Node: ";
-		token->dump(stream);
-		stream<<" Left Leaf: ";
-		dump_expr(it.left(),stream);
-		stream<<" Right Leaf: ";
-		dump_expr(it.right(),stream);
+		if (it.left().usable()) {
+			stream<<" Left Leaf = ";
+			dump_expr(it.left(), stream);
+		}
+		if (it.right().usable()) {
+			stream<<" Right Leaf = ";
+			dump_expr(it.right(), stream);
+		}
 		stream<<">";
 	}
 

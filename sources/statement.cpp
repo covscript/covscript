@@ -104,7 +104,7 @@ namespace cs {
 	void statement_expression::dump(std::ostream& o) const
 	{
 		o<<"<Expression: ";
-		context->instance->dump_expr(mTree.root(),o);
+		instance_type::dump_expr(mTree.root(),o);
 		o<<">\n";
 	}
 
@@ -120,7 +120,7 @@ namespace cs {
 	void statement_involve::dump(std::ostream& o) const
 	{
 		o<<"<Using: ";
-		context->instance->dump_expr(mTree.root(),o);
+		instance_type::dump_expr(mTree.root(),o);
 		o<<">\n";
 	}
 
@@ -132,7 +132,7 @@ namespace cs {
 	void statement_var::dump(std::ostream& o) const
 	{
 		o<<"<Var: ID = "<<mDvp.id<<" Value = ";
-		context->instance->dump_expr(mDvp.expr.root(),o);
+		instance_type::dump_expr(mDvp.expr.root(),o);
 		o<<">\n";
 	}
 
@@ -255,7 +255,7 @@ namespace cs {
 	void statement_if::dump(std::ostream& o) const
 	{
 		o<<"<BeginIf: Condition = ";
-		context->instance->dump_expr(mTree.root(),o);
+		instance_type::dump_expr(mTree.root(),o);
 		o<<">\n";
 		for (auto &ptr:mBlock)
 			ptr->dump(o);
@@ -303,7 +303,7 @@ namespace cs {
 	void statement_ifelse::dump(std::ostream& o) const
 	{
 		o<<"<BeginIf: Condition = ";
-		context->instance->dump_expr(mTree.root(),o);
+		instance_type::dump_expr(mTree.root(),o);
 		o<<">\n";
 		for (auto &ptr:mBlock)
 			ptr->dump(o);
@@ -325,7 +325,7 @@ namespace cs {
 	void statement_switch::dump(std::ostream& o) const
 	{
 		o<<"<BeginSwitch: Condition = ";
-		context->instance->dump_expr(mTree.root(),o);
+		instance_type::dump_expr(mTree.root(),o);
 		o<<">\n";
 		for(auto& it:mCases) {
 			o<<"<BeginCase: Tag = ";
@@ -388,7 +388,7 @@ namespace cs {
 	void statement_while::dump(std::ostream& o) const
 	{
 		o<<"<BeginWhile: Condition = ";
-		context->instance->dump_expr(mTree.root(),o);
+		instance_type::dump_expr(mTree.root(),o);
 		o<<">\n";
 		for (auto &ptr:mBlock)
 			ptr->dump(o);
@@ -437,7 +437,7 @@ namespace cs {
 			ptr->dump(o);
 		if(mExpr!=nullptr) {
 			o<<"<Until: Condition = ";
-			context->instance->dump_expr(mExpr->get_tree().root(),o);
+			instance_type::dump_expr(mExpr->get_tree().root(),o);
 			o<<">\n";
 		}
 		o<<"<EndLoop>\n";
@@ -484,11 +484,11 @@ namespace cs {
 	{
 		o<<"<BeginFor>\n";
 		o<<"<IteratorID = "<<mDvp.id<<" IteratorValue = ";
-		context->instance->dump_expr(mDvp.expr.root(),o);
+		instance_type::dump_expr(mDvp.expr.root(),o);
 		o<<">\n<DestinationValue = ";
-		context->instance->dump_expr(mEnd.root(),o);
+		instance_type::dump_expr(mEnd.root(),o);
 		o<<">\n<StepValue = ";
-		context->instance->dump_expr(mStep.root(),o);
+		instance_type::dump_expr(mStep.root(),o);
 		o<<">\n<Body>\n";
 		for (auto &ptr:mBlock)
 			ptr->dump(o);
@@ -552,7 +552,7 @@ namespace cs {
 	{
 		o<<"<BeginForEach>\n";
 		o<<"<IteratorID = "<<mIt<<" TargetValue = ";
-		context->instance->dump_expr(mObj.root(),o);
+		instance_type::dump_expr(mObj.root(),o);
 		o<<">\n<Body>\n";
 		for (auto &ptr:mBlock)
 			ptr->dump(o);
@@ -569,7 +569,7 @@ namespace cs {
 		o<<"<BeginStruct: ID = "<<mName;
 		if(mParent.root().usable()) {
 			o<<" Parent = ";
-			context->instance->dump_expr(mParent.root(),o);
+			instance_type::dump_expr(mParent.root(),o);
 		}
 		o<<">\n";
 		for (auto &ptr:mBlock)
@@ -614,7 +614,7 @@ namespace cs {
 	void statement_return::dump(std::ostream& o) const
 	{
 		o<<"<Return: ";
-		context->instance->dump_expr(mTree.root(),o);
+		instance_type::dump_expr(mTree.root(),o);
 		o<<">\n";
 	}
 
@@ -678,7 +678,7 @@ namespace cs {
 	void statement_throw::dump(std::ostream& o) const
 	{
 		o<<"<Throw: ";
-		context->instance->dump_expr(mTree.root(),o);
+		instance_type::dump_expr(mTree.root(),o);
 		o<<">\n";
 	}
 }
