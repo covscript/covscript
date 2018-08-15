@@ -45,9 +45,11 @@ namespace cs_impl {
 	}
 }
 #elif defined __GNUC__
+
 #include <cxxabi.h>
+
 namespace cs_impl {
-	std::string cxx_demangle(const char* name)
+	std::string cxx_demangle(const char *name)
 	{
 		char buffer[1024] = {0};
 		size_t size = sizeof(buffer);
