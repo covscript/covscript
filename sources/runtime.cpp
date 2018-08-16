@@ -175,9 +175,9 @@ namespace cs {
 		if (b.type() == typeid(type))
 			return b.const_val<type>().id;
 		else if (b.type() == typeid(structure))
-			return b.const_val<structure>().get_hash();
+			return b.const_val<structure>().get_id();
 		else
-			return b.type_id();
+			return var::make<type_id>(b.type());
 	}
 
 	var runtime_type::parse_new(const var &b)

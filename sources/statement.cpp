@@ -56,7 +56,7 @@ namespace cs {
 			var builder = mContext->instance->parse_expr(mParent.root());
 			if (builder.type() == typeid(type)) {
 				const type &t = builder.const_val<type>();
-				if (mHash == t.id)
+				if (mTypeId == t.id)
 					throw runtime_error("Can not inherit itself.");
 				var parent = t.constructor();
 				if (parent.type() == typeid(structure)) {
@@ -81,7 +81,7 @@ namespace cs {
 				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 			}
 		}
-		return var::make<structure>(this->mHash, this->mName, scope.get());
+		return var::make<structure>(this->mTypeId, this->mName, scope.get());
 	}
 
 	void statement_expression::run()

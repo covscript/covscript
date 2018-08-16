@@ -173,31 +173,34 @@ namespace cs {
 
 		domain_manager &add_struct(const std::string &name, const struct_builder &builder)
 		{
-			return add_var(name, var::make_protect<type>(builder, builder.get_hash()));
+			return add_var(name, var::make_protect<type>(builder, builder.get_id()));
 		}
 
-		domain_manager &add_type(const std::string &name, const std::function<var()> &func, std::size_t hash)
+		domain_manager &add_type(const std::string &name, const std::function<var()> &func, const std::type_index &id)
 		{
-			return add_var(name, var::make_protect<type>(func, hash));
-		}
-
-		domain_manager &
-		add_type(const std::string &name, const std::function<var()> &func, std::size_t hash, extension_t ext)
-		{
-			return add_var(name, var::make_protect<type>(func, hash, ext));
-		}
-
-		domain_manager &add_buildin_type(const std::string &name, const std::function<var()> &func, std::size_t hash)
-		{
-			add_record(name);
-			return add_var(name, var::make_protect<type>(func, hash));
+			return add_var(name, var::make_protect<type>(func, id));
 		}
 
 		domain_manager &
-		add_buildin_type(const std::string &name, const std::function<var()> &func, std::size_t hash, extension_t ext)
+		add_type(const std::string &name, const std::function<var()> &func, const std::type_index &id,
+		         extension_t ext)
+		{
+			return add_var(name, var::make_protect<type>(func, id, ext));
+		}
+
+		domain_manager &
+		add_buildin_type(const std::string &name, const std::function<var()> &func, const std::type_index &id)
 		{
 			add_record(name);
-			return add_var(name, var::make_protect<type>(func, hash, ext));
+			return add_var(name, var::make_protect<type>(func, id));
+		}
+
+		domain_manager &
+		add_buildin_type(const std::string &name, const std::function<var()> &func, const std::type_index &id,
+		                 extension_t ext)
+		{
+			add_record(name);
+			return add_var(name, var::make_protect<type>(func, id, ext));
 		}
 
 		void involve_domain(const domain_t &domain, bool is_override = false)

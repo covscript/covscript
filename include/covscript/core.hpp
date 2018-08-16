@@ -250,16 +250,46 @@ namespace cs {
 
 	static const pointer null_pointer = {};
 
+	struct type_id final {
+		std::type_index type_idx;
+		std::size_t type_hash;
+
+		type_id() = delete;
+
+		type_id(const std::type_index &id, std::size_t hash = 0) : type_idx(id), type_hash(hash) {}
+
+		bool compare(const type_id &id) const
+		{
+			if (&id == this)
+				return true;
+			if (type_hash != 0)
+				return type_hash == id.type_hash;
+			else
+				return type_idx == id.type_idx;
+		}
+
+		bool operator==(const type_id &id) const
+		{
+			return compare(id);
+		}
+
+		bool operator!=(const type_id &id) const
+		{
+			return !compare(id);
+		}
+	};
+
 	struct type final {
 		std::function<var()> constructor;
-		std::size_t id;
 		extension_t extensions;
+		type_id id;
 
 		type() = delete;
 
-		type(const std::function<var()> &c, std::size_t i) : constructor(c), id(i) {}
+		type(const std::function<var()> &c, const type_id &i) : constructor(c), id(i) {}
 
-		type(const std::function<var()> &c, std::size_t i, extension_t ext) : constructor(c), id(i), extensions(ext) {}
+		type(const std::function<var()> &c, const type_id &i, extension_t ext) : constructor(c), id(i),
+			extensions(ext) {}
 
 		var &get_var(const std::string &) const;
 	};
@@ -267,14 +297,13 @@ namespace cs {
 // Maybe here the name is unnecessary
 	class structure final {
 		bool m_shadow = false;
-		std::size_t m_hash;
 		std::string m_name;
 		domain_t m_data;
+		type_id m_id;
 	public:
 		structure() = delete;
 
-		structure(std::size_t hash, const std::string &name,
-		          const domain_t &data) : m_hash(hash),
+		structure(const type_id &id, const std::string &name, const domain_t &data) : m_id(id),
 			m_name(typeid(structure).name() +
 			       name), m_data(data)
 		{
@@ -282,7 +311,7 @@ namespace cs {
 				invoke((*m_data)["initialize"], var::make<structure>(this));
 		}
 
-		structure(const structure &s) : m_hash(s.m_hash), m_name(s.m_name),
+		structure(const structure &s) : m_id(s.m_id), m_name(s.m_name),
 			m_data(std::make_shared<map_t<string, var >>())
 		{
 			if (s.m_data->count("parent") > 0) {
@@ -307,7 +336,7 @@ namespace cs {
 				invoke((*m_data)["duplicate"], var::make<structure>(this), var::make<structure>(&s));
 		}
 
-		explicit structure(const structure *s) : m_shadow(true), m_hash(s->m_hash), m_name(s->m_name),
+		explicit structure(const structure *s) : m_shadow(true), m_id(s->m_id), m_name(s->m_name),
 			m_data(s->m_data) {}
 
 		~structure()
@@ -318,7 +347,7 @@ namespace cs {
 
 		bool operator==(const structure &s) const
 		{
-			if (s.m_hash != m_hash)
+			if (s.m_id != m_id)
 				return false;
 			if (!m_shadow && m_data->count("finalize") > 0)
 				return invoke((*m_data)["equal"], var::make<structure>(this),
@@ -336,9 +365,9 @@ namespace cs {
 			return m_data;
 		}
 
-		std::size_t get_hash() const
+		const type_id &get_id() const
 		{
-			return m_hash;
+			return m_id;
 		}
 
 		var &get_var(const std::string &name) const
@@ -353,7 +382,7 @@ namespace cs {
 	class struct_builder final {
 		static std::size_t mCount;
 		context_t mContext;
-		std::size_t mHash;
+		type_id mTypeId;
 		std::string mName;
 		cov::tree<token_base *> mParent;
 		std::deque<statement_base *> mMethod;
@@ -362,7 +391,7 @@ namespace cs {
 
 		struct_builder(context_t c, const std::string &name, const cov::tree<token_base *> &parent,
 		               const std::deque<statement_base *> &method) : mContext(c),
-			mHash(++mCount),
+			mTypeId(typeid(structure), ++mCount),
 			mName(name),
 			mParent(parent),
 			mMethod(method) {}
@@ -373,12 +402,12 @@ namespace cs {
 
 		static void reset_counter()
 		{
-			mCount = cs_impl::type_id::get_type_count();
+			mCount = 0;
 		}
 
-		std::size_t get_hash() const
+		const type_id &get_id() const
 		{
-			return mHash;
+			return mTypeId;
 		}
 
 		var operator()();
@@ -485,7 +514,6 @@ namespace cs {
 		name_space_holder(const std::string &path) : m_local(false), m_dll(path)
 		{
 			m_ns = reinterpret_cast<extension_entrance_t>(m_dll.get_address("__CS_EXTENSION__"))(output_precision_ref,
-			        cs_impl::type_id::get_type_data(),
 			        exception_handler::cs_eh_callback,
 			        exception_handler::std_eh_callback);
 		}
@@ -602,7 +630,16 @@ namespace cs_impl {
 	template<>
 	std::string to_string<char>(const char &c)
 	{
-		return std::move(std::string(1, c));
+		return std::string(1, c);
+	}
+
+	template<>
+	std::string to_string<cs::type_id>(const cs::type_id &id)
+	{
+		if (id.type_hash != 0)
+			return cxx_demangle(id.type_idx.name()) + "_" + to_string(id.type_hash);
+		else
+			return cxx_demangle(id.type_idx.name());
 	}
 
 // To Integer

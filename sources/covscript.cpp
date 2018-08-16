@@ -115,24 +115,18 @@ namespace cs {
 	{
 		storage
 		// Internal Types
-		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); },
-		                  cs_impl::type_id::get_id<char>(), char_ext_shared)
-		.add_buildin_type("number", []() -> var { return var::make<number>(0); },
-		                  cs_impl::type_id::get_id<number>())
-		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); },
-		                  cs_impl::type_id::get_id<boolean>())
-		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); },
-		                  cs_impl::type_id::get_id<pointer>())
-		.add_buildin_type("string", []() -> var { return var::make<string>(); },
-		                  cs_impl::type_id::get_id<string>(), string_ext_shared)
-		.add_buildin_type("list", []() -> var { return var::make<list>(); }, cs_impl::type_id::get_id<list>(),
-		                  list_ext_shared)
-		.add_buildin_type("array", []() -> var { return var::make<array>(); },
-		                  cs_impl::type_id::get_id<array>(), array_ext_shared)
-		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); },
-		                  cs_impl::type_id::get_id<pair>(), pair_ext_shared)
-		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); },
-		                  cs_impl::type_id::get_id<hash_map>(), hash_map_ext_shared)
+		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char), char_ext_shared)
+		.add_buildin_type("number", []() -> var { return var::make<number>(0); }, typeid(number))
+		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
+		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
+		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string),
+		                  string_ext_shared)
+		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), list_ext_shared)
+		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array), array_ext_shared)
+		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
+		                  pair_ext_shared)
+		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, typeid(hash_map),
+		                  hash_map_ext_shared)
 		// Context
 		.add_buildin_var("context", var::make_constant<context_t>(context))
 		// Add Internal Functions to storage
