@@ -26,8 +26,8 @@
 * Master
 *
 */
-#define COVSCRIPT_VERSION_NUM 1,3,0,4
-#define COVSCRIPT_VERSION_STR "1.3.0 Panthera uncia(Unstable) Build 4"
+#define COVSCRIPT_VERSION_NUM 1,3,0,5
+#define COVSCRIPT_VERSION_STR "1.3.0 Panthera uncia(Unstable) Build 5"
 #define COVSCRIPT_STD_VERSION 180801
 #if defined(_WIN32) || defined(WIN32)
 #define COVSCRIPT_PLATFORM_WIN32
