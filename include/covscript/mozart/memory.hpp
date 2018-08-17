@@ -386,7 +386,7 @@ namespace cov {
 			std::list<byte *> new_list;
 			byte *ptr = nullptr;
 			// Sort the spaces by address.
-			free_list.sort([this](byte *lhs, byte *rhs) {
+			free_list.sort([](byte *lhs, byte *rhs) {
 				return lhs < rhs;
 			});
 			// Compress the free list.
