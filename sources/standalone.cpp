@@ -110,6 +110,32 @@ int main(int args_size, const char *args[])
 		std::cerr << e.what() << std::endl;
 		errorcode = -1;
 	}
+	catch (const cs::lang_error &e) {
+		if (!log_path.empty()) {
+			std::ofstream out(::log_path);
+			if (out) {
+				out << "Uncaught covscript exception: " << e.what();
+				out.flush();
+			}
+			else
+				std::cerr << "Write log failed." << std::endl;
+		}
+		std::cerr << "Uncaught covscript exception: " << e.what() << std::endl;
+		errorcode = -1;
+	}
+	catch (...) {
+		if (!log_path.empty()) {
+			std::ofstream out(::log_path);
+			if (out) {
+				out << "Uncaught exception: Unknown exception";
+				out.flush();
+			}
+			else
+				std::cerr << "Write log failed." << std::endl;
+		}
+		std::cerr << "Uncaught exception: Unknown exception" << std::endl;
+		errorcode = -1;
+	}
 	if (wait_before_exit) {
 		std::cerr << "\nProcess finished with exit code " << errorcode << std::endl;
 		std::cerr << "\nPress any key to exit..." << std::endl;

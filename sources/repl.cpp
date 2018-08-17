@@ -93,6 +93,17 @@ void covscript_main(int args_size, const char *args[])
 			}
 			std::cerr << e.what() << std::endl;
 		}
+		catch (const cs::lang_error &e) {
+			if (!log_path.empty()) {
+				if (!log_stream.is_open())
+					log_stream.open(::log_path);
+				if (log_stream)
+					log_stream << "Uncaught covscript exception: " << e.what() << std::endl;
+				else
+					std::cerr << "Write log failed." << std::endl;
+			}
+			std::cerr << "Uncaught covscript exception: " << e.what() << std::endl;
+		}
 	}
 }
 
@@ -113,6 +124,19 @@ int main(int args_size, const char *args[])
 				std::cerr << "Write log failed." << std::endl;
 		}
 		std::cerr << e.what() << std::endl;
+		errorcode = -1;
+	}
+	catch (...) {
+		if (!log_path.empty()) {
+			std::ofstream out(::log_path);
+			if (out) {
+				out << "Uncaught exception: Unknown exception";
+				out.flush();
+			}
+			else
+				std::cerr << "Write log failed." << std::endl;
+		}
+		std::cerr << "Uncaught exception: Unknown exception" << std::endl;
 		errorcode = -1;
 	}
 	if (wait_before_exit) {
