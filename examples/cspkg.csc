@@ -1,6 +1,24 @@
 #!/usr/bin/env cs
-import picasso
-using picasso.imgui
+
+# Covariant Script Package Manager
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Copyright (C) 2018 Michael Lee(李登淳)
+# Email: mikecovlee@163.com
+# Github: https://github.com/mikecovlee
+
+const var version_str="1.1.0"
 struct package_info
     var name=null
     var type=null
@@ -24,230 +42,238 @@ function get_file_name(path)
     end
 end
 var path=runtime.get_import_path().split({system.path.delimiter}).back()
-# About Window
-struct about_win extends picasso.message_box
-    function initialize() override
-        this.title="About"
-    end
-    function on_layout() override
-        text("CovScript Package Manager")
-        bullet()
-        text("Version 1.0.0")
-    end
-end
-# Install
-struct inst_win extends picasso.file_explorer
-    var gui=null
-    var confirm_inst=gcnew picasso.question_box
-    function on_close_handle(_path)
-        if typeid _path!=typeid string
-            return false
+function gui()
+    # Force disable the optimization to avoid
+    # the problems in some devices which do not support the opengl.
+    var ext_name="picasso"
+    var picasso=context.dynamic_import(runtime.get_import_path(),ext_name)
+    using picasso.imgui
+    # About Window
+    struct about_win extends picasso.message_box
+        function initialize() override
+            this.title="About"
         end
-        var file_name=get_file_name(_path)
-        if system.file.exists(path+system.path.separator+file_name)
-            confirm_inst->show()
-            return false
+        function on_layout() override
+            text("CovScript Package Manager")
+            bullet()
+            text("Version "+version_str)
         end
-        system.file.copy(_path,path+system.path.separator+file_name)
-        gui->status="Installation succeed."
-        gui->load()
-        return false
     end
-    function confirm_inst_on_close_handle(arg)
-        if arg
+    # Install
+    struct inst_win extends picasso.file_explorer
+        var gui=null
+        var confirm_inst=gcnew picasso.question_box
+        function on_close_handle(_path)
+            if typeid _path!=typeid string
+                return false
+            end
+            var file_name=get_file_name(_path)
+            if system.file.exists(path+system.path.separator+file_name)
+                confirm_inst->show()
+                return false
+            end
+            system.file.copy(_path,path+system.path.separator+file_name)
             gui->status="Installation succeed."
-        end
-        return false
-    end
-    function initialize() override
-        this.title="Install"
-        this.message="Please select a package"
-        this.filters.push_back(".*\\.cse")
-        this.filters.push_back(".*\\.csp")
-        this.on_close.add_listener(on_close_handle)
-        confirm_inst->title="Install"
-        confirm_inst->question="Target exists.Overwrite?"
-        confirm_inst->on_close.add_listener(confirm_inst_on_close_handle)
-    end
-end
-# Uninstall
-struct uninst_win extends picasso.question_box
-    var gui=null
-    function on_close_handle(arg)
-        if arg
-            var info=gui->packages.at(gui->select)
-            var extension_name=path+system.path.separator+info->name+".cse"
-            var package_name=path+system.path.separator+info->name+".csp"
-            if !system.file.remove(extension_name)&&!system.file.remove(package_name)
-                gui->status="Uninstall failed.("+info->name+")"
-            else
-                gui->status="Uninstall succeed.("+info->name+")"
-            end
             gui->load()
+            return false
         end
-        return false
-    end
-    function initialize() override
-        this.title="Uninstall"
-        this.on_close.add_listener(on_close_handle)
-    end
-    function on_layout() override
-        var info=gui->packages.at(gui->select)
-        if info->type=="cse"
-            text("Do you want to uninstall the extension \""+info->name+"\"?")
-        else
-            text("Do you want to uninstall the package \""+info->name+"\"?")
+        function confirm_inst_on_close_handle(arg)
+            if arg
+                gui->status="Installation succeed."
+            end
+            return false
+        end
+        function initialize() override
+            this.title="Install"
+            this.message="Please select a package"
+            this.filters.push_back(".*\\.cse")
+            this.filters.push_back(".*\\.csp")
+            this.on_close.add_listener(on_close_handle)
+            confirm_inst->title="Install"
+            confirm_inst->question="Target exists.Overwrite?"
+            confirm_inst->on_close.add_listener(confirm_inst_on_close_handle)
         end
     end
-end
-# Main Window
-struct gui_window extends picasso.base_window
-    var confirm=gcnew picasso.question_box
-    var about=gcnew about_win
-    var install=gcnew inst_win
-    var uninstall=gcnew uninst_win
-    var select=0
-    var status="No error."
-    var items=new array
-    var packages=new array
-    function load()
-        select=0
-        items=new array
-        packages=new array
-        var info=system.path.scan(path)
-        for it iterate info
-            if it.type()==system.path.type.reg
-                var pack_info=get_package_info(it.name())
-                packages.push_back(pack_info)
-                items.push_back(pack_info->name)
+    # Uninstall
+    struct uninst_win extends picasso.question_box
+        var gui=null
+        function on_close_handle(arg)
+            if arg
+                var info=gui->packages.at(gui->select)
+                var extension_name=path+system.path.separator+info->name+".cse"
+                var package_name=path+system.path.separator+info->name+".csp"
+                if !system.file.remove(extension_name)&&!system.file.remove(package_name)
+                    gui->status="Uninstall failed.("+info->name+")"
+                else
+                    gui->status="Uninstall succeed.("+info->name+")"
+                end
+                gui->load()
+            end
+            return false
+        end
+        function initialize() override
+            this.title="Uninstall"
+            this.on_close.add_listener(on_close_handle)
+        end
+        function on_layout() override
+            var info=gui->packages.at(gui->select)
+            if info->type=="cse"
+                text("Do you want to uninstall the extension \""+info->name+"\"?")
+            else
+                text("Do you want to uninstall the package \""+info->name+"\"?")
             end
         end
     end
-    function menu()
-        if begin_menu("Tools",true)
-            if begin_menu("Styles",true)
-                if menu_item("Classic","",true)
-                    style_color_classic()
+    # Main Window
+    struct gui_window extends picasso.base_window
+        var confirm=gcnew picasso.question_box
+        var about=gcnew about_win
+        var install=gcnew inst_win
+        var uninstall=gcnew uninst_win
+        var select=0
+        var status="No error."
+        var items=new array
+        var packages=new array
+        function load()
+            select=0
+            items=new array
+            packages=new array
+            var info=system.path.scan(path)
+            for it iterate info
+                if it.type()==system.path.type.reg
+                    var pack_info=get_package_info(it.name())
+                    packages.push_back(pack_info)
+                    items.push_back(pack_info->name)
                 end
-                if menu_item("Light","",true)
-                    style_color_light()
-                end
-                if menu_item("Dark","",true)
-                    style_color_dark()
+            end
+        end
+        function menu()
+            if begin_menu("Tools",true)
+                if begin_menu("Styles",true)
+                    if menu_item("Classic","",true)
+                        style_color_classic()
+                    end
+                    if menu_item("Light","",true)
+                        style_color_light()
+                    end
+                    if menu_item("Dark","",true)
+                        style_color_dark()
+                    end
+                    end_menu()
                 end
                 end_menu()
             end
-            end_menu()
-        end
-        if begin_menu("Help",true)
-            if menu_item("About this software","",true)
-                about->show()
+            if begin_menu("Help",true)
+                if menu_item("About this software","",true)
+                    about->show()
+                end
+                end_menu()
             end
-            end_menu()
+            if menu_item("Exit","Esc",true)
+                confirm->show()
+            end
         end
-        if menu_item("Exit","Esc",true)
+        function confirm_on_close_handle(arg)
+            if arg
+                system.exit(0)
+            end
+            return false
+        end
+        function on_close_handle(arg)
             confirm->show()
+            arg=true
+            return false
         end
-    end
-    function confirm_on_close_handle(arg)
-        if arg
-            system.exit(0)
+        function initialize() override
+            load()
+            this.win_flags.push_back(flags.menu_bar)
+            this.title="Cspkg"
+            this.on_close.add_listener(on_close_handle)
+            confirm->title="Confirm"
+            confirm->question="Do you want to exit?"
+            confirm->on_close.add_listener(confirm_on_close_handle)
         end
-        return false
-    end
-    function on_close_handle(arg)
-        confirm->show()
-        arg=true
-        return false
-    end
-    function initialize() override
-        load()
-        this.win_flags.push_back(flags.menu_bar)
-        this.title="Cspkg"
-        this.on_close.add_listener(on_close_handle)
-        confirm->title="Confirm"
-        confirm->question="Do you want to exit?"
-        confirm->on_close.add_listener(confirm_on_close_handle)
-    end
-    function on_layout() override
-        var info=packages.at(select)
-        text(status)
-        list_box("##list",select,items)
-        if begin_popup_item("list")
-            if menu_item("Refresh","",true)
+        function on_layout() override
+            var info=packages.at(select)
+            text(status)
+            list_box("##list",select,items)
+            if begin_popup_item("list")
+                if menu_item("Refresh","",true)
+                    load()
+                end
+                if begin_menu("Property",true)
+                    if info->type=="cse"
+                        menu_item("CovScript Extension","",false)
+                    else
+                        menu_item("CovScript Package","",false)
+                    end
+                    menu_item("Name: "+info->name,"",false)
+                    end_menu()
+                end
+                if menu_item("Uninstall","",true)
+                    uninstall->show()
+                end
+                end_popup()
+            end
+            if info->type=="cse"
+                text("CovScript Extension")
+            else
+                text("CovScript Package")
+            end
+            text("Name: "+info->name)
+            spacing()
+        end
+        function on_draw() override
+            if begin_menu_bar()
+                menu()
+                end_menu_bar()
+            end
+            if begin_popup_window()
+                menu()
+                end_popup()
+            end
+            if button("Refresh List")
                 load()
             end
-            if begin_menu("Property",true)
-                if info->type=="cse"
-                    menu_item("CovScript Extension","",false)
-                else
-                    menu_item("CovScript Package","",false)
-                end
-                menu_item("Name: "+info->name,"",false)
-                end_menu()
+            same_line()
+            if button("Install New")
+                install->show()
+                install->read_path()
             end
-            if menu_item("Uninstall","",true)
+            same_line()
+            if button("Uninstall")
                 uninstall->show()
             end
-            end_popup()
-        end
-        if info->type=="cse"
-            text("CovScript Extension")
-        else
-            text("CovScript Package")
-        end
-        text("Name: "+info->name)
-        spacing()
-    end
-    function on_draw() override
-        if begin_menu_bar()
-            menu()
-            end_menu_bar()
-        end
-        if begin_popup_window()
-            menu()
-            end_popup()
-        end
-        if button("Refresh List")
-            load()
-        end
-        same_line()
-        if button("Install New")
-            install->show()
-            install->read_path()
-        end
-        same_line()
-        if button("Uninstall")
-            uninstall->show()
         end
     end
-end
-struct gui_activity extends picasso.base_activity
-    var win=gcnew gui_window
-    function on_start_handle(arg) override
-        style_color_light()
-        return false
-    end
-    function on_present_handle(arg) override
-        if is_key_pressed(get_key_index(keys.escape))
-            win->confirm->show()
+    struct gui_activity extends picasso.base_activity
+        var win=gcnew gui_window
+        function on_start_handle(arg) override
+            style_color_light()
+            return false
         end
-        return false
+        function on_present_handle(arg) override
+            if is_key_pressed(get_key_index(keys.escape))
+                win->confirm->show()
+            end
+            return false
+        end
+        function initialize() override
+            this.title="CovScript Package Manager"
+            win->install->gui=win
+            win->uninstall->gui=win
+            win->show()
+            this.add_window(win)
+            this.add_window(win->confirm)
+            this.add_window(win->about)
+            this.add_window(win->install)
+            this.add_window(win->install->confirm_inst)
+            this.add_window(win->uninstall)
+            this.on_start.add_listener(on_start_handle)
+            this.on_present.add_listener(on_present_handle)
+        end
     end
-    function initialize() override
-        this.title="CovScript Package Manager"
-        win->install->gui=win
-        win->uninstall->gui=win
-        win->show()
-        this.add_window(win)
-        this.add_window(win->confirm)
-        this.add_window(win->about)
-        this.add_window(win->install)
-        this.add_window(win->install->confirm_inst)
-        this.add_window(win->uninstall)
-        this.on_start.add_listener(on_start_handle)
-        this.on_present.add_listener(on_present_handle)
-    end
+    (new gui_activity).start()
 end
 function answer(question)
     loop
@@ -348,12 +374,12 @@ switch system.args.at(1)
         end
     end
     case "--gui"
-        (new gui_activity).start()
+        gui()
     end
     case "--help"
 @begin
 system.out.print("
-Covariant Script Package Manager 1.0.0\n
+Covariant Script Package Manager "+version_str+"\n
     --install   <path>    Install a CovScript Package/Extension\n
     --uninstall <name>    Uninstall a CovScript Package/Extension\n
     --list                List Installed CovScript Package/Extension\n
@@ -364,6 +390,6 @@ Covariant Script Package Manager 1.0.0\n
 @end
     end
     case "--version"
-        system.out.println("cspkg v1.0.0")
+        system.out.println("cspkg v"+version_str)
     end
 end
