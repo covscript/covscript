@@ -79,10 +79,8 @@ namespace cs_impl {
 
 			bool compare(const baseHolder *obj) const override
 			{
-				if (obj->type() == this->type()) {
-					const holder<T> *ptr = static_cast<const holder<T> *>(obj);
-					return cs_impl::compare(mDat, ptr->data());
-				}
+				if (obj->type() == this->type())
+					return cs_impl::compare(mDat, static_cast<const holder<T> *>(obj)->data());
 				else
 					return false;
 			}

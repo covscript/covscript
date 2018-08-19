@@ -28,7 +28,7 @@ namespace cs {
 
 	void method_import::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
-		token_base *token = static_cast<token_expr *>(raw.front().at(1))->get_tree().root().data();
+		token_base *token = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data();
 		if (token == nullptr || token->get_type() != token_types::id)
 			throw runtime_error("Wrong grammar for import statement.");
 		const std::string &package_name = static_cast<token_id *>(token)->get_id();

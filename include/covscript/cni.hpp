@@ -21,7 +21,6 @@
 #include <covscript/mozart/traits.hpp>
 #include <covscript/mozart/bind.hpp>
 #include <covscript/core.hpp>
-#include <utility>
 
 namespace cs_impl {
 // Utilities
