@@ -63,21 +63,21 @@ namespace cs_impl {
 			holder() = default;
 
 			template<typename...ArgsT>
-			holder(ArgsT &&...args):mDat(std::forward<ArgsT>(args)...) {}
+			explicit holder(ArgsT &&...args):mDat(std::forward<ArgsT>(args)...) {}
 
-			virtual ~ holder() = default;
+			~ holder() override = default;
 
-			virtual const std::type_info &type() const override
+			const std::type_info &type() const override
 			{
 				return typeid(T);
 			}
 
-			virtual baseHolder *duplicate() override
+			baseHolder *duplicate() override
 			{
 				return allocator.alloc(mDat);
 			}
 
-			virtual bool compare(const baseHolder *obj) const override
+			bool compare(const baseHolder *obj) const override
 			{
 				if (obj->type() == this->type()) {
 					const holder<T> *ptr = static_cast<const holder<T> *>(obj);
@@ -87,27 +87,27 @@ namespace cs_impl {
 					return false;
 			}
 
-			virtual long to_integer() const override
+			long to_integer() const override
 			{
 				return cs_impl::to_integer(mDat);
 			}
 
-			virtual std::string to_string() const override
+			std::string to_string() const override
 			{
 				return cs_impl::to_string(mDat);
 			}
 
-			virtual std::size_t hash() const override
+			std::size_t hash() const override
 			{
 				return cs_impl::hash<T>(mDat);
 			}
 
-			virtual void detach() override
+			void detach() override
 			{
 				cs_impl::detach(mDat);
 			}
 
-			virtual void kill() override
+			void kill() override
 			{
 				allocator.free(this);
 			}
@@ -117,7 +117,7 @@ namespace cs_impl {
 				return cs_impl::get_ext<T>();
 			}
 
-			virtual const char *get_type_name() const override
+			const char *get_type_name() const override
 			{
 				return cs_impl::get_name_of_type<T>();
 			}
@@ -179,7 +179,7 @@ namespace cs_impl {
 			}
 		}
 
-		any(proxy *dat) : mDat(dat) {}
+		explicit any(proxy *dat) : mDat(dat) {}
 
 	public:
 		void swap(any &obj, bool raw = false)
@@ -453,7 +453,7 @@ namespace cs_impl {
 		}
 
 		template<typename T>
-		operator const T &() const
+		explicit operator const T &() const
 		{
 			return this->const_val<T>();
 		}

@@ -34,8 +34,8 @@ namespace cs {
 				return a == nullptr;
 			if (a->get_type() != b->get_type())
 				return false;
-			return !(a->get_type() == token_types::action) || static_cast<const token_action *>(a)->get_action() ==
-			       static_cast<const token_action *>(b)->get_action();
+			return !(a->get_type() == token_types::action) || dynamic_cast<const token_action *>(a)->get_action() ==
+			       dynamic_cast<const token_action *>(b)->get_action();
 		}
 
 	private:
@@ -59,7 +59,7 @@ namespace cs {
 				throw runtime_error("Grammar error.");
 			std::list<std::shared_ptr<data_type>> stack;
 			for (auto &it:m_data)
-				if (this->compare(it->first.front(), raw.front()))
+				if (cs::translator_type::compare(it->first.front(), raw.front()))
 					stack.push_back(it);
 			stack.remove_if([&](const std::shared_ptr<data_type> &dat) {
 				return dat->first.size() != raw.size();
@@ -334,7 +334,7 @@ namespace cs {
 				throw runtime_error("Get the level of null token.");
 			if (ptr->get_type() != token_types::signal)
 				throw runtime_error("Get the level of non-signal token.");
-			return signal_level_map.match(static_cast<token_signal *>(ptr)->get_signal());
+			return signal_level_map.match(dynamic_cast<token_signal *>(ptr)->get_signal());
 		}
 
 		bool is_left_associative(token_base *ptr)
@@ -343,7 +343,7 @@ namespace cs {
 				throw runtime_error("Get the level of null token.");
 			if (ptr->get_type() != token_types::signal)
 				throw runtime_error("Get the level of non-signal token.");
-			signal_types s = static_cast<token_signal *>(ptr)->get_signal();
+			signal_types s = dynamic_cast<token_signal *>(ptr)->get_signal();
 			for (auto &t:signal_left_associative)
 				if (t == s)
 					return true;
@@ -420,7 +420,7 @@ namespace cs {
 
 		repl() = delete;
 
-		explicit repl(const context_t &c) : context(c) {}
+		explicit repl(context_t c) : context(std::move(c)) {}
 
 		repl(const repl &) = delete;
 
@@ -438,7 +438,7 @@ namespace cs {
 	public:
 		scope_guard() = delete;
 
-		scope_guard(context_t c) : context(c)
+		explicit scope_guard(context_t c) : context(std::move(std::move(c)))
 		{
 			context->instance->storage.add_domain();
 		}
@@ -464,7 +464,7 @@ namespace cs {
 	public:
 		fcall_guard() = delete;
 
-		fcall_guard(context_t c) : context(c)
+		explicit fcall_guard(context_t c) : context(std::move(std::move(c)))
 		{
 			context->instance->fcall_stack.push(null_pointer);
 		}

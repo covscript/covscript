@@ -181,14 +181,14 @@ namespace cs {
 	public:
 		token_endline() = default;
 
-		token_endline(std::size_t line) : token_base(line) {}
+		explicit token_endline(std::size_t line) : token_base(line) {}
 
-		virtual token_types get_type() const noexcept override
+		token_types get_type() const noexcept override
 		{
 			return token_types::endline;
 		}
 
-		virtual void dump(std::ostream &o) const override
+		void dump(std::ostream &o) const override
 		{
 			o << "< Endline >";
 		}
@@ -199,9 +199,9 @@ namespace cs {
 	public:
 		token_action() = delete;
 
-		token_action(action_types t) : mType(t) {}
+		explicit token_action(action_types t) : mType(t) {}
 
-		virtual token_types get_type() const noexcept override
+		token_types get_type() const noexcept override
 		{
 			return token_types::action;
 		}
@@ -211,7 +211,7 @@ namespace cs {
 			return this->mType;
 		}
 
-		virtual void dump(std::ostream &o) const override
+		void dump(std::ostream &o) const override
 		{
 			o << "< Action >";
 		}
@@ -222,11 +222,11 @@ namespace cs {
 	public:
 		token_signal() = delete;
 
-		token_signal(signal_types t) : mType(t) {}
+		explicit token_signal(signal_types t) : mType(t) {}
 
 		token_signal(signal_types t, std::size_t line) : token_base(line), mType(t) {}
 
-		virtual token_types get_type() const noexcept override
+		token_types get_type() const noexcept override
 		{
 			return token_types::signal;
 		}
@@ -236,7 +236,7 @@ namespace cs {
 			return this->mType;
 		}
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class token_id final : public token_base {
@@ -244,9 +244,9 @@ namespace cs {
 	public:
 		token_id() = delete;
 
-		token_id(const std::string &id) : mId(id) {}
+		explicit token_id(std::string id) : mId(std::move(id)) {}
 
-		virtual token_types get_type() const noexcept override
+		token_types get_type() const noexcept override
 		{
 			return token_types::id;
 		}
@@ -256,7 +256,7 @@ namespace cs {
 			return this->mId;
 		}
 
-		virtual void dump(std::ostream &o) const override
+		void dump(std::ostream &o) const override
 		{
 			o << "< ID = \"" << mId << "\" >";
 		}
@@ -267,9 +267,9 @@ namespace cs {
 	public:
 		token_value() = delete;
 
-		token_value(const var &val) : mVal(val) {}
+		explicit token_value(var val) : mVal(std::move(val)) {}
 
-		virtual token_types get_type() const noexcept override
+		token_types get_type() const noexcept override
 		{
 			return token_types::value;
 		}
@@ -279,7 +279,7 @@ namespace cs {
 			return this->mVal;
 		}
 
-		virtual void dump(std::ostream &o) const override
+		void dump(std::ostream &o) const override
 		{
 			o << "< Value = \"";
 			try {
@@ -299,9 +299,9 @@ namespace cs {
 	public:
 		token_sblist() = delete;
 
-		token_sblist(const std::deque<std::deque<token_base *>> &list) : mList(list) {}
+		explicit token_sblist(std::deque<std::deque<token_base *>> list) : mList(std::move(list)) {}
 
-		virtual token_types get_type() const noexcept override
+		token_types get_type() const noexcept override
 		{
 			return token_types::sblist;
 		}
@@ -311,7 +311,7 @@ namespace cs {
 			return this->mList;
 		}
 
-		virtual void dump(std::ostream &o) const override
+		void dump(std::ostream &o) const override
 		{
 			o << "< Small Bracket >";
 		}
@@ -322,9 +322,9 @@ namespace cs {
 	public:
 		token_mblist() = delete;
 
-		token_mblist(const std::deque<std::deque<token_base *>> &list) : mList(list) {}
+		explicit token_mblist(std::deque<std::deque<token_base *>> list) : mList(std::move(list)) {}
 
-		virtual token_types get_type() const noexcept override
+		token_types get_type() const noexcept override
 		{
 			return token_types::mblist;
 		}
@@ -334,7 +334,7 @@ namespace cs {
 			return this->mList;
 		}
 
-		virtual void dump(std::ostream &o) const override
+		void dump(std::ostream &o) const override
 		{
 			o << "< Middle Bracket >";
 		}
@@ -345,9 +345,9 @@ namespace cs {
 	public:
 		token_lblist() = delete;
 
-		token_lblist(const std::deque<std::deque<token_base *>> &list) : mList(list) {}
+		explicit token_lblist(std::deque<std::deque<token_base *>> list) : mList(std::move(list)) {}
 
-		virtual token_types get_type() const noexcept override
+		token_types get_type() const noexcept override
 		{
 			return token_types::lblist;
 		}
@@ -357,7 +357,7 @@ namespace cs {
 			return this->mList;
 		}
 
-		virtual void dump(std::ostream &o) const override
+		void dump(std::ostream &o) const override
 		{
 			o << "< Large Bracket >";
 		}
@@ -368,9 +368,9 @@ namespace cs {
 	public:
 		token_expr() = delete;
 
-		token_expr(const cov::tree<token_base *> &tree) : mTree(tree) {}
+		explicit token_expr(cov::tree<token_base *> tree) : mTree(std::move(tree)) {}
 
-		virtual token_types get_type() const noexcept override
+		token_types get_type() const noexcept override
 		{
 			return token_types::expr;
 		}
@@ -380,7 +380,7 @@ namespace cs {
 			return this->mTree;
 		}
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class token_arglist final : public token_base {
@@ -388,9 +388,9 @@ namespace cs {
 	public:
 		token_arglist() = default;
 
-		token_arglist(const std::deque<cov::tree<token_base *>> &tlist) : mTreeList(tlist) {}
+		explicit token_arglist(std::deque<cov::tree<token_base *>> tlist) : mTreeList(std::move(tlist)) {}
 
-		virtual token_types get_type() const noexcept override
+		token_types get_type() const noexcept override
 		{
 			return token_types::arglist;
 		}
@@ -400,7 +400,7 @@ namespace cs {
 			return this->mTreeList;
 		}
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class token_array final : public token_base {
@@ -408,9 +408,9 @@ namespace cs {
 	public:
 		token_array() = default;
 
-		token_array(const std::deque<cov::tree<token_base *>> &tlist) : mTreeList(tlist) {}
+		explicit token_array(std::deque<cov::tree<token_base *>> tlist) : mTreeList(std::move(tlist)) {}
 
-		virtual token_types get_type() const noexcept override
+		token_types get_type() const noexcept override
 		{
 			return token_types::array;
 		}
@@ -420,7 +420,7 @@ namespace cs {
 			return this->mTreeList;
 		}
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	enum class statement_types {
@@ -477,8 +477,8 @@ namespace cs {
 
 		statement_base(const statement_base &) = default;
 
-		statement_base(context_t c, token_base *eptr) : context(c),
-			line_num(static_cast<token_endline *>(eptr)->get_line_num()) {}
+		statement_base(context_t c, token_base *eptr) : context(std::move(std::move(c))),
+			line_num(dynamic_cast<token_endline *>(eptr)->get_line_num()) {}
 
 		virtual ~statement_base() = default;
 
@@ -530,7 +530,7 @@ namespace cs {
 
 		method_base(const method_base &) = default;
 
-		method_base(context_t c) : context(c) {}
+		explicit method_base(context_t c) : context(std::move(std::move(c))) {}
 
 		virtual ~method_base() = default;
 

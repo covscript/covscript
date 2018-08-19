@@ -80,7 +80,7 @@ namespace cov {
 			_alloc_helper<data_type, _alloc>::allocator.construct(mProxy->data);
 		}
 
-		shared_ptr(const deleter &f) : mProxy(_alloc_helper<proxy, _alloc>::allocator.allocate(1))
+		explicit shared_ptr(const deleter &f) : mProxy(_alloc_helper<proxy, _alloc>::allocator.allocate(1))
 		{
 			mProxy->ref_count = 1;
 			mProxy->deleter = f;
@@ -93,7 +93,7 @@ namespace cov {
 			mProxy->add_ref();
 		}
 
-		shared_ptr(const data_type &obj) : mProxy(_alloc_helper<proxy, _alloc>::allocator.allocate(1))
+		explicit shared_ptr(const data_type &obj) : mProxy(_alloc_helper<proxy, _alloc>::allocator.allocate(1))
 		{
 			mProxy->ref_count = 1;
 			mProxy->data = _alloc_helper<_Tp, _alloc>::allocator.allocate(1);
@@ -228,7 +228,7 @@ namespace cov {
 
 			std::size_t posit;
 
-			pointer(std::size_t p) : posit(p) {}
+			explicit pointer(std::size_t p) : posit(p) {}
 
 		public:
 			pointer() = delete;
@@ -313,7 +313,7 @@ namespace cov {
 
 		stack(const stack &) = delete;
 
-		stack(size_t size) : ss(::malloc(size))
+		explicit stack(size_t size) : ss(::malloc(size))
 		{
 			sp = reinterpret_cast<byte *>(ss) + size;
 			sl = sp;
@@ -386,7 +386,7 @@ namespace cov {
 			std::list<byte *> new_list;
 			byte *ptr = nullptr;
 			// Sort the spaces by address.
-			free_list.sort([](byte *lhs, byte *rhs) {
+			free_list.sort([](const byte *lhs, const byte *rhs) {
 				return lhs < rhs;
 			});
 			// Compress the free list.
@@ -464,7 +464,7 @@ namespace cov {
 			// Checkout remain spaces,if enough,return.
 			if (hl - hp >= size + sizeof(size_t)) {
 				get_size(hp) = size;
-				void *ptr = reinterpret_cast<void *>(hp + sizeof(size_t));
+				auto *ptr = reinterpret_cast<void *>(hp + sizeof(size_t));
 				hp += size + sizeof(size_t);
 				return ptr;
 			}

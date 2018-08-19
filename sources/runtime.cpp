@@ -75,7 +75,7 @@ namespace cs {
 	var runtime_type::parse_escape(const var &b)
 	{
 		if (b.type() == typeid(pointer)) {
-			const pointer &ptr = b.const_val<pointer>();
+			const auto &ptr = b.const_val<pointer>();
 			if (ptr.data.usable())
 				return ptr.data;
 			else
@@ -132,10 +132,10 @@ namespace cs {
 		if (a.type() == typeid(constant_values)) {
 			switch (a.const_val<constant_values>()) {
 			case constant_values::global_namespace:
-				return storage.get_var_global(static_cast<token_id *>(b)->get_id());
+				return storage.get_var_global(dynamic_cast<token_id *>(b)->get_id());
 				break;
 			case constant_values::current_namespace:
-				return storage.get_var_current(static_cast<token_id *>(b)->get_id());
+				return storage.get_var_current(dynamic_cast<token_id *>(b)->get_id());
 				break;
 			default:
 				throw runtime_error("Unsupported operator operations(Dot).");
@@ -143,18 +143,18 @@ namespace cs {
 			}
 		}
 		else if (a.type() == typeid(extension_t))
-			return a.val<extension_t>(true)->get_var(static_cast<token_id *>(b)->get_id());
+			return a.val<extension_t>(true)->get_var(dynamic_cast<token_id *>(b)->get_id());
 		else if (a.type() == typeid(type))
-			return a.val<type>(true).get_var(static_cast<token_id *>(b)->get_id());
+			return a.val<type>(true).get_var(dynamic_cast<token_id *>(b)->get_id());
 		else if (a.type() == typeid(structure)) {
-			var &val = a.val<structure>(true).get_var(static_cast<token_id *>(b)->get_id());
+			var &val = a.val<structure>(true).get_var(dynamic_cast<token_id *>(b)->get_id());
 			if (val.type() == typeid(callable) && val.const_val<callable>().is_member_fn())
 				return var::make_protect<object_method>(a, val);
 			else
 				return val;
 		}
 		else {
-			var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
+			var &val = a.get_ext()->get_var(dynamic_cast<token_id *>(b)->get_id());
 			if (val.type() == typeid(callable))
 				return var::make_protect<object_method>(a, val, val.const_val<callable>().is_constant());
 			else
@@ -324,16 +324,16 @@ namespace cs {
 	{
 		if (a.type() == typeid(callable)) {
 			vector args;
-			args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
-			for (auto &tree:static_cast<token_arglist *>(b)->get_arglist())
+			args.reserve(dynamic_cast<token_arglist *>(b)->get_arglist().size());
+			for (auto &tree:dynamic_cast<token_arglist *>(b)->get_arglist())
 				args.push_back(lvalue(parse_expr(tree.root())));
 			return a.const_val<callable>().call(args);
 		}
 		else if (a.type() == typeid(object_method)) {
-			const object_method &om = a.const_val<object_method>();
+			const auto &om = a.const_val<object_method>();
 			vector args{om.object};
-			args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
-			for (auto &tree:static_cast<token_arglist *>(b)->get_arglist())
+			args.reserve(dynamic_cast<token_arglist *>(b)->get_arglist().size());
+			for (auto &tree:dynamic_cast<token_arglist *>(b)->get_arglist())
 				args.push_back(lvalue(parse_expr(tree.root())));
 			return om.callable.const_val<callable>().call(args);
 		}
@@ -348,17 +348,17 @@ namespace cs {
 				throw runtime_error("Index must be a number.");
 			if (b.const_val<number>() < 0)
 				throw runtime_error("Index must above zero.");
-			const array &carr = a.const_val<array>();
+			const auto &carr = a.const_val<array>();
 			std::size_t posit = b.const_val<number>();
 			if (posit >= carr.size()) {
-				array & arr = a.val<array>(true);
+				auto & arr = a.val<array>(true);
 				for (std::size_t i = posit - arr.size() + 1; i > 0; --i)
 					arr.emplace_back(number(0));
 			}
 			return carr.at(posit);
 		}
 		else if (a.type() == typeid(hash_map)) {
-			const hash_map &cmap = a.const_val<hash_map>();
+			const auto &cmap = a.const_val<hash_map>();
 			if (cmap.count(b) == 0)
 				a.val<hash_map>(true).emplace(copy(b), number(0));
 			return cmap.at(b);
@@ -383,23 +383,23 @@ namespace cs {
 		default:
 			break;
 		case token_types::id:
-			return storage.get_var(static_cast<token_id *>(token)->get_id());
+			return storage.get_var(dynamic_cast<token_id *>(token)->get_id());
 			break;
 		case token_types::value:
-			return static_cast<token_value *>(token)->get_value();
+			return dynamic_cast<token_value *>(token)->get_value();
 			break;
 		case token_types::expr:
-			return parse_expr(static_cast<token_expr *>(token)->get_tree().root());
+			return parse_expr(dynamic_cast<token_expr *>(token)->get_tree().root());
 			break;
 		case token_types::array: {
 			array
 			arr;
-			for (auto &tree:static_cast<token_array *>(token)->get_array())
+			for (auto &tree:dynamic_cast<token_array *>(token)->get_array())
 				arr.push_back(copy(parse_expr(tree.root())));
 			return rvalue(var::make<array>(std::move(arr)));
 		}
 		case token_types::signal: {
-			switch (static_cast<token_signal *>(token)->get_signal()) {
+			switch (dynamic_cast<token_signal *>(token)->get_signal()) {
 			default:
 				break;
 			case signal_types::add_:

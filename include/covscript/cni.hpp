@@ -21,6 +21,7 @@
 #include <covscript/mozart/traits.hpp>
 #include <covscript/mozart/bind.hpp>
 #include <covscript/core.hpp>
+#include <utility>
 
 namespace cs_impl {
 // Utilities
@@ -176,7 +177,7 @@ namespace cs_impl {
 
 		cni_helper(const cni_helper &) = default;
 
-		cni_helper(const std::function<void()> &func) : mFunc(func) {}
+		explicit cni_helper(std::function<void()> func) : mFunc(std::move(func)) {}
 
 		any call(cs::vector &args) const
 		{
@@ -195,7 +196,7 @@ namespace cs_impl {
 
 		cni_helper(const cni_helper &) = default;
 
-		cni_helper(const std::function<_Target_RetT()> &func) : mFunc(func) {}
+		explicit cni_helper(const std::function<_Target_RetT()> &func) : mFunc(func) {}
 
 		any call(cs::vector &args) const
 		{
@@ -221,7 +222,7 @@ namespace cs_impl {
 
 		cni_helper(const cni_helper &) = default;
 
-		cni_helper(const std::function<void(_Target_ArgsT...)> &func) : mFunc(func) {}
+		explicit cni_helper(const std::function<void(_Target_ArgsT...)> &func) : mFunc(func) {}
 
 		any call(cs::vector &args) const
 		{
@@ -248,7 +249,7 @@ namespace cs_impl {
 
 		cni_helper(const cni_helper &) = default;
 
-		cni_helper(const std::function<_Target_RetT(_Target_ArgsT...)> &func) : mFunc(func) {}
+		explicit cni_helper(const std::function<_Target_RetT(_Target_ArgsT...)> &func) : mFunc(func) {}
 
 		any call(cs::vector &args) const
 		{
@@ -279,16 +280,16 @@ namespace cs_impl {
 
 		cni_holder(const cni_holder &) = default;
 
-		cni_holder(const T &func) : mCni(func) {}
+		explicit cni_holder(const T &func) : mCni(func) {}
 
-		virtual ~cni_holder() = default;
+		~cni_holder() override = default;
 
-		virtual cni_holder_base *clone() override
+		cni_holder_base *clone() override
 		{
 			return new cni_holder(*this);
 		}
 
-		virtual any call(cs::vector &args) const override
+		any call(cs::vector &args) const override
 		{
 			return mCni.call(args);
 		}
@@ -329,7 +330,7 @@ namespace cs_impl {
 		cni(const cni &c) : mCni(c.mCni->clone()) {}
 
 		template<typename T>
-		cni(T &&val):mCni(
+		explicit cni(T &&val):mCni(
 			    construct_helper<typename cni_modify<typename cov::remove_reference<T>::type>::type>::construct(
 			        std::forward<T>(val))) {}
 

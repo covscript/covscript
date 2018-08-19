@@ -20,6 +20,7 @@
 */
 #include <exception>
 #include <stdexcept>
+#include <utility>
 
 namespace cs {
 	class exception final : public std::exception {
@@ -34,13 +35,13 @@ namespace cs {
 
 		exception(exception &&) noexcept = default;
 
-		virtual ~exception() = default;
+		~exception() override = default;
 
 		exception &operator=(const exception &) = default;
 
 		exception &operator=(exception &&) = default;
 
-		virtual const char *what() const noexcept override
+		const char *what() const noexcept override
 		{
 			return this->mWhat.c_str();
 		}
@@ -51,20 +52,20 @@ namespace cs {
 	public:
 		runtime_error() = default;
 
-		runtime_error(const std::string &str) noexcept:
+		explicit runtime_error(const std::string &str) noexcept:
 			mWhat("Runtime Error: " + str) {}
 
 		runtime_error(const runtime_error &) = default;
 
 		runtime_error(runtime_error &&) noexcept = default;
 
-		virtual ~runtime_error() = default;
+		~runtime_error() override = default;
 
 		runtime_error &operator=(const runtime_error &) = default;
 
 		runtime_error &operator=(runtime_error &&) = default;
 
-		virtual const char *what() const noexcept override
+		const char *what() const noexcept override
 		{
 			return this->mWhat.c_str();
 		}
@@ -75,20 +76,20 @@ namespace cs {
 	public:
 		internal_error() = default;
 
-		internal_error(const std::string &str) noexcept:
+		explicit internal_error(const std::string &str) noexcept:
 			mWhat("Internal Error: " + str) {}
 
 		internal_error(const internal_error &) = default;
 
 		internal_error(internal_error &&) noexcept = default;
 
-		virtual ~internal_error() = default;
+		~internal_error() override = default;
 
 		internal_error &operator=(const internal_error &) = default;
 
 		internal_error &operator=(internal_error &&) = default;
 
-		virtual const char *what() const noexcept override
+		const char *what() const noexcept override
 		{
 			return this->mWhat.c_str();
 		}
@@ -99,8 +100,8 @@ namespace cs {
 	public:
 		lang_error() = default;
 
-		lang_error(const std::string &str) noexcept:
-			mWhat(str) {}
+		explicit lang_error(std::string str) noexcept:
+			mWhat(std::move(str)) {}
 
 		lang_error(const lang_error &) = default;
 
@@ -123,20 +124,20 @@ namespace cs {
 	public:
 		fatal_error() = default;
 
-		fatal_error(const std::string &str) noexcept:
+		explicit fatal_error(const std::string &str) noexcept:
 			mWhat("Fatal Error: " + str) {}
 
 		fatal_error(const fatal_error &) = default;
 
 		fatal_error(fatal_error &&) noexcept = default;
 
-		virtual ~fatal_error() = default;
+		~fatal_error() override = default;
 
 		fatal_error &operator=(const fatal_error &) = default;
 
 		fatal_error &operator=(fatal_error &&) = default;
 
-		virtual const char *what() const noexcept override
+		const char *what() const noexcept override
 		{
 			return this->mWhat.c_str();
 		}
@@ -147,19 +148,19 @@ namespace cs {
 	public:
 		forward_exception() = delete;
 
-		forward_exception(const char *str) noexcept: mWhat(str) {}
+		explicit forward_exception(const char *str) noexcept: mWhat(str) {}
 
 		forward_exception(const forward_exception &) = default;
 
 		forward_exception(forward_exception &&) noexcept = default;
 
-		virtual ~forward_exception() = default;
+		~forward_exception() override = default;
 
 		forward_exception &operator=(const forward_exception &) = default;
 
 		forward_exception &operator=(forward_exception &&) = default;
 
-		virtual const char *what() const noexcept override
+		const char *what() const noexcept override
 		{
 			return this->mWhat.c_str();
 		}

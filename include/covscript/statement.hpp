@@ -26,20 +26,20 @@ namespace cs {
 	public:
 		statement_expression() = delete;
 
-		statement_expression(const cov::tree<token_base *> &tree, context_t c, token_base *ptr) : statement_base(c,
+		statement_expression(cov::tree<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c),
 			        ptr),
-			mTree(tree) {}
+			mTree(std::move(tree)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::expression_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void repl_run() override;
+		void repl_run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_involve final : public statement_base {
@@ -48,17 +48,17 @@ namespace cs {
 	public:
 		statement_involve() = delete;
 
-		statement_involve(const cov::tree<token_base *> &tree, bool is_override, context_t c, token_base *ptr)
-			: statement_base(c, ptr), mOverride(is_override), mTree(tree) {}
+		statement_involve(cov::tree<token_base *> tree, bool is_override, context_t c, token_base *ptr)
+			: statement_base(std::move(c), ptr), mOverride(is_override), mTree(std::move(tree)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::involve_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_var final : public statement_base {
@@ -66,18 +66,18 @@ namespace cs {
 	public:
 		statement_var() = delete;
 
-		statement_var(const instance_type::define_var_profile &dvp, context_t c, token_base *ptr) : statement_base(c,
+		statement_var(instance_type::define_var_profile dvp, context_t c, token_base *ptr) : statement_base(std::move(c),
 			        ptr),
-			mDvp(dvp) {}
+			mDvp(std::move(dvp)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::var_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_constant final : public statement_base {
@@ -86,51 +86,51 @@ namespace cs {
 	public:
 		statement_constant() = delete;
 
-		statement_constant(const std::string &name, const var &val, context_t c, token_base *ptr) : statement_base(c,
+		statement_constant(std::string name, var val, context_t c, token_base *ptr) : statement_base(std::move(c),
 			        ptr),
-			mName(name),
-			mVal(val) {}
+			mName(std::move(name)),
+			mVal(std::move(val)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::var_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_break final : public statement_base {
 	public:
 		statement_break() = default;
 
-		statement_break(context_t c, token_base *ptr) : statement_base(c, ptr) {}
+		statement_break(context_t c, token_base *ptr) : statement_base(std::move(c), ptr) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::break_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_continue final : public statement_base {
 	public:
 		statement_continue() = default;
 
-		statement_continue(context_t c, token_base *ptr) : statement_base(c, ptr) {}
+		statement_continue(context_t c, token_base *ptr) : statement_base(std::move(c), ptr) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::continue_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_block final : public statement_base {
@@ -138,18 +138,18 @@ namespace cs {
 	public:
 		statement_block() = delete;
 
-		statement_block(const std::deque<statement_base *> &block, context_t c, token_base *ptr) : statement_base(c,
+		statement_block(std::deque<statement_base *> block, context_t c, token_base *ptr) : statement_base(std::move(c),
 			        ptr),
-			mBlock(block) {}
+			mBlock(std::move(block)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::block_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 
 		const std::deque<statement_base *> &get_block() const
 		{
@@ -163,17 +163,17 @@ namespace cs {
 	public:
 		statement_namespace() = delete;
 
-		statement_namespace(token_base *tbp, const std::deque<statement_base *> &block, context_t c, token_base *ptr)
-			: statement_base(c, ptr), mName(static_cast<token_id *>(tbp)->get_id()), mBlock(block) {}
+		statement_namespace(token_base *tbp, std::deque<statement_base *> block, context_t c, token_base *ptr)
+			: statement_base(std::move(c), ptr), mName(dynamic_cast<token_id *>(tbp)->get_id()), mBlock(std::move(block)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::namespace_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_if final : public statement_base {
@@ -182,17 +182,17 @@ namespace cs {
 	public:
 		statement_if() = delete;
 
-		statement_if(const cov::tree<token_base *> &tree, const std::deque<statement_base *> &block, context_t c,
-		             token_base *ptr) : statement_base(c, ptr), mTree(tree), mBlock(block) {}
+		statement_if(cov::tree<token_base *> tree, std::deque<statement_base *> block, context_t c,
+		             token_base *ptr) : statement_base(std::move(c), ptr), mTree(std::move(tree)), mBlock(std::move(block)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::if_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_ifelse final : public statement_base {
@@ -202,39 +202,39 @@ namespace cs {
 	public:
 		statement_ifelse() = delete;
 
-		statement_ifelse(const cov::tree<token_base *> &tree, const std::deque<statement_base *> &btrue,
-		                 const std::deque<statement_base *> &bfalse, context_t c, token_base *ptr) : statement_base(c,
+		statement_ifelse(cov::tree<token_base *> tree, std::deque<statement_base *> btrue,
+		                 std::deque<statement_base *> bfalse, context_t c, token_base *ptr) : statement_base(std::move(c),
 			                         ptr),
-			mTree(tree),
-			mBlock(btrue),
-			mElseBlock(
-			    bfalse) {}
+			mTree(std::move(tree)),
+			mBlock(std::move(btrue)),
+			mElseBlock(std::move(
+			               bfalse)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::if_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_else final : public statement_base {
 	public:
 		statement_else() = default;
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::else_;
 		}
 
-		virtual void run() override
+		void run() override
 		{
 			throw runtime_error("Do not allowed standalone else statement.");
 		}
 
-		virtual void dump(std::ostream &) const override
+		void dump(std::ostream &) const override
 		{
 			throw runtime_error("Do not allowed standalone else statement.");
 		}
@@ -247,18 +247,19 @@ namespace cs {
 	public:
 		statement_switch() = delete;
 
-		statement_switch(const cov::tree<token_base *> &tree, const map_t<var, statement_block *> &cases,
-		                 statement_block *dptr, context_t c, token_base *ptr) : statement_base(c, ptr), mTree(tree),
-			mDefault(dptr), mCases(cases) {}
+		statement_switch(cov::tree<token_base *> tree, map_t<var, statement_block *> cases,
+		                 statement_block *dptr, context_t c, token_base *ptr) : statement_base(std::move(c), ptr), mTree(
+			                     std::move(tree)),
+			mDefault(dptr), mCases(std::move(cases)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::switch_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_case final : public statement_base {
@@ -267,20 +268,20 @@ namespace cs {
 	public:
 		statement_case() = delete;
 
-		statement_case(const var &tag, const std::deque<statement_base *> &b, context_t c, token_base *ptr)
+		statement_case(const var &tag, const std::deque<statement_base *> &b, const context_t &c, token_base *ptr)
 			: statement_base(c, ptr), mTag(copy(tag)), mBlock(new statement_block(b, c, ptr)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::case_;
 		}
 
-		virtual void run() override
+		void run() override
 		{
 			throw runtime_error("Do not allowed standalone case statement.");
 		}
 
-		virtual void dump(std::ostream &) const override
+		void dump(std::ostream &) const override
 		{
 			throw runtime_error("Do not allowed standalone case statement.");
 		}
@@ -301,21 +302,21 @@ namespace cs {
 	public:
 		statement_default() = delete;
 
-		statement_default(const std::deque<statement_base *> &b, context_t c, token_base *ptr) : statement_base(c, ptr),
+		statement_default(const std::deque<statement_base *> &b, const context_t &c, token_base *ptr) : statement_base(c, ptr),
 			mBlock(new statement_block(
 			           b, c, ptr)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::default_;
 		}
 
-		virtual void run() override
+		void run() override
 		{
 			throw runtime_error("Do not allowed standalone default statement.");
 		}
 
-		virtual void dump(std::ostream &) const override
+		void dump(std::ostream &) const override
 		{
 			throw runtime_error("Do not allowed standalone default statement.");
 		}
@@ -332,17 +333,17 @@ namespace cs {
 	public:
 		statement_while() = delete;
 
-		statement_while(const cov::tree<token_base *> &tree, const std::deque<statement_base *> &b, context_t c,
-		                token_base *ptr) : statement_base(c, ptr), mTree(tree), mBlock(b) {}
+		statement_while(cov::tree<token_base *> tree, std::deque<statement_base *> b, context_t c,
+		                token_base *ptr) : statement_base(std::move(c), ptr), mTree(std::move(tree)), mBlock(std::move(b)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::while_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_until final : public statement_base {
@@ -350,9 +351,9 @@ namespace cs {
 	public:
 		statement_until() = delete;
 
-		statement_until(token_expr *expr, context_t c, token_base *ptr) : statement_base(c, ptr), mExpr(expr) {}
+		statement_until(token_expr *expr, context_t c, token_base *ptr) : statement_base(std::move(c), ptr), mExpr(expr) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::until_;
 		}
@@ -362,12 +363,12 @@ namespace cs {
 			return mExpr;
 		}
 
-		virtual void run() override
+		void run() override
 		{
 			throw runtime_error("Do not allowed standalone until statement.");
 		}
 
-		virtual void dump(std::ostream &) const override
+		void dump(std::ostream &) const override
 		{
 			throw runtime_error("Do not allowed standalone until statement.");
 		}
@@ -379,17 +380,17 @@ namespace cs {
 	public:
 		statement_loop() = delete;
 
-		statement_loop(token_expr *expr, const std::deque<statement_base *> &b, context_t c, token_base *ptr)
-			: statement_base(c, ptr), mExpr(expr), mBlock(b) {}
+		statement_loop(token_expr *expr, std::deque<statement_base *> b, context_t c, token_base *ptr)
+			: statement_base(std::move(c), ptr), mExpr(expr), mBlock(std::move(b)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::loop_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_for final : public statement_base {
@@ -400,21 +401,21 @@ namespace cs {
 	public:
 		statement_for() = delete;
 
-		statement_for(cov::tree<token_base *> &tree0, const cov::tree<token_base *> &tree1,
-		              const cov::tree<token_base *> &tree2, const std::deque<statement_base *> &b, context_t c,
-		              token_base *ptr) : statement_base(c, ptr), mEnd(tree1), mStep(tree2), mBlock(b)
+		statement_for(cov::tree<token_base *> &tree0, cov::tree<token_base *> tree1,
+		              cov::tree<token_base *> tree2, std::deque<statement_base *> b, context_t c,
+		              token_base *ptr) : statement_base(std::move(c), ptr), mEnd(std::move(tree1)), mStep(std::move(tree2)), mBlock(std::move(b))
 		{
 			context->instance->parse_define_var(tree0, mDvp);
 		}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::for_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_foreach final : public statement_base {
@@ -424,19 +425,20 @@ namespace cs {
 	public:
 		statement_foreach() = delete;
 
-		statement_foreach(const std::string &it, const cov::tree<token_base *> &tree1,
-		                  const std::deque<statement_base *> &b, context_t c, token_base *ptr) : statement_base(c, ptr),
-			mIt(it), mObj(tree1),
-			mBlock(b) {}
+		statement_foreach(std::string it, cov::tree<token_base *> tree1,
+		                  std::deque<statement_base *> b, context_t c, token_base *ptr) : statement_base(
+			                      std::move(c), ptr),
+			mIt(std::move(it)), mObj(std::move(tree1)),
+			mBlock(std::move(b)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::foreach_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_struct final : public statement_base {
@@ -449,7 +451,7 @@ namespace cs {
 		statement_struct() = delete;
 
 		statement_struct(const std::string &name, const cov::tree<token_base *> &parent,
-		                 const std::deque<statement_base *> &method, context_t c, token_base *ptr) : statement_base(c,
+		                 const std::deque<statement_base *> &method, const context_t &c, token_base *ptr) : statement_base(c,
 			                         ptr),
 			mName(name),
 			mBuilder(c, name,
@@ -458,14 +460,14 @@ namespace cs {
 			mParent(parent),
 			mBlock(method) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::struct_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_function final : public statement_base {
@@ -479,12 +481,12 @@ namespace cs {
 	public:
 		statement_function() = delete;
 
-		statement_function(const std::string &name, const std::vector<std::string> &args,
-		                   const std::deque<statement_base *> &body, bool is_override, context_t c, token_base *ptr)
-			: statement_base(c, ptr), mName(name), mFunc(c, args, body), mOverride(is_override), mArgs(args),
+		statement_function(std::string name, const std::vector<std::string> &args,
+		                   const std::deque<statement_base *> &body, bool is_override, const context_t &c, token_base *ptr)
+			: statement_base(c, ptr), mName(std::move(name)), mFunc(c, args, body), mOverride(is_override), mArgs(args),
 			  mBlock(body) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::function_;
 		}
@@ -495,9 +497,9 @@ namespace cs {
 			mIsMemFn = true;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_return final : public statement_base {
@@ -505,34 +507,34 @@ namespace cs {
 	public:
 		statement_return() = delete;
 
-		statement_return(const cov::tree<token_base *> &tree, context_t c, token_base *ptr) : statement_base(c, ptr),
-			mTree(tree) {}
+		statement_return(cov::tree<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c), ptr),
+			mTree(std::move(tree)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::return_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_end final : public statement_base {
 	public:
 		statement_end() = default;
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::end_;
 		}
 
-		virtual void run() override
+		void run() override
 		{
 			throw runtime_error("Do not allowed standalone end statement.");
 		}
 
-		virtual void dump(std::ostream &) const override
+		void dump(std::ostream &) const override
 		{
 			throw runtime_error("Do not allowed standalone end statement.");
 		}
@@ -545,20 +547,21 @@ namespace cs {
 	public:
 		statement_try() = delete;
 
-		statement_try(const std::string &name, const std::deque<statement_base *> &tbody,
-		              const std::deque<statement_base *> &cbody, context_t c, token_base *ptr) : statement_base(c, ptr),
-			mName(name),
-			mTryBody(tbody),
-			mCatchBody(cbody) {}
+		statement_try(std::string name, std::deque<statement_base *> tbody,
+		              std::deque<statement_base *> cbody, context_t c, token_base *ptr) : statement_base(
+			                  std::move(c), ptr),
+			mName(std::move(name)),
+			mTryBody(std::move(tbody)),
+			mCatchBody(std::move(cbody)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::try_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_catch final : public statement_base {
@@ -566,9 +569,9 @@ namespace cs {
 	public:
 		statement_catch() = delete;
 
-		statement_catch(const std::string &name, context_t c, token_base *ptr) : statement_base(c, ptr), mName(name) {}
+		statement_catch(std::string name, context_t c, token_base *ptr) : statement_base(std::move(c), ptr), mName(std::move(name)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::catch_;
 		}
@@ -578,12 +581,12 @@ namespace cs {
 			return this->mName;
 		}
 
-		virtual void run() override
+		void run() override
 		{
 			throw runtime_error("Do not allowed standalone catch statement.");
 		}
 
-		virtual void dump(std::ostream &) const override
+		void dump(std::ostream &) const override
 		{
 			throw runtime_error("Do not allowed standalone catch statement.");
 		}
@@ -594,16 +597,16 @@ namespace cs {
 	public:
 		statement_throw() = delete;
 
-		statement_throw(const cov::tree<token_base *> &tree, context_t c, token_base *ptr) : statement_base(c, ptr),
-			mTree(tree) {}
+		statement_throw(cov::tree<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c), ptr),
+			mTree(std::move(tree)) {}
 
-		virtual statement_types get_type() const noexcept override
+		statement_types get_type() const noexcept override
 		{
 			return statement_types::throw_;
 		}
 
-		virtual void run() override;
+		void run() override;
 
-		virtual void dump(std::ostream &) const override;
+		void dump(std::ostream &) const override;
 	};
 }

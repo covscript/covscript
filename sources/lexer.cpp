@@ -202,14 +202,14 @@ namespace cs {
 		std::string command;
 		std::string line;
 
-		void new_empty_line(context_t context)
+		void new_empty_line(const context_t &context)
 		{
 			context->file_buff.emplace_back();
 			empty_line = true;
 			++line_num;
 		}
 
-		void process_endline(context_t context, std::deque<token_base *> &tokens)
+		void process_endline(const context_t &context, std::deque<token_base *> &tokens)
 		{
 			if (is_annotation) {
 				is_annotation = false;
@@ -249,7 +249,7 @@ namespace cs {
 		}
 
 	public:
-		explicit preprocessor(context_t context, const std::deque<char> &char_buff, std::deque<token_base *> &tokens)
+		explicit preprocessor(const context_t &context, const std::deque<char> &char_buff, std::deque<token_base *> &tokens)
 		{
 			for (auto &ch:char_buff) {
 				if (ch == '\n') {
@@ -317,7 +317,7 @@ namespace cs {
 		};
 		for (auto &ptr:oldt) {
 			if (ptr->get_type() == token_types::signal) {
-				switch (static_cast<token_signal *>(ptr)->get_signal()) {
+				switch (dynamic_cast<token_signal *>(ptr)->get_signal()) {
 				default:
 					break;
 				case signal_types::slb_:
@@ -399,7 +399,7 @@ namespace cs {
 		std::deque<int> blist_stack;
 		for (auto &ptr:oldt) {
 			if (ptr->get_type() == token_types::signal) {
-				switch (static_cast<token_signal *>(ptr)->get_signal()) {
+				switch (dynamic_cast<token_signal *>(ptr)->get_signal()) {
 				default:
 					break;
 				case signal_types::slb_:

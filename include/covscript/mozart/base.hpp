@@ -44,16 +44,16 @@ namespace cov {
 	public:
 		warning() = default;
 
-		warning(const std::string &str) noexcept:
+		explicit warning(const std::string &str) noexcept:
 			mWhat("Mozart Warning:" + str) {}
 
 		warning(const warning &) = default;
 
 		warning(warning &&) = default;
 
-		virtual ~warning() = default;
+		~warning() override = default;
 
-		virtual const char *what() const noexcept override
+		const char *what() const noexcept override
 		{
 			return this->mWhat.c_str();
 		}
@@ -64,20 +64,20 @@ namespace cov {
 	public:
 		error() = default;
 
-		error(const std::string &str) noexcept:
+		explicit error(const std::string &str) noexcept:
 			mWhat("Mozart Error:" + str) {}
 
 		error(const error &) = default;
 
 		error(error &&) = default;
 
-		virtual ~error() = default;
+		~error() override = default;
 
 		error &operator=(const error &) = default;
 
 		error &operator=(error &&) = default;
 
-		virtual const char *what() const noexcept override
+		const char *what() const noexcept override
 		{
 			return this->mWhat.c_str();
 		}

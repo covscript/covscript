@@ -55,7 +55,7 @@ namespace cs {
 		if (mParent.root().usable()) {
 			var builder = mContext->instance->parse_expr(mParent.root());
 			if (builder.type() == typeid(type)) {
-				const type &t = builder.const_val<type>();
+				const auto &t = builder.const_val<type>();
 				if (mTypeId == t.id)
 					throw runtime_error("Can not inherit itself.");
 				var parent = t.constructor();
@@ -496,7 +496,7 @@ namespace cs {
 	}
 
 	template<typename T, typename X>
-	void foreach_helper(context_t context, const string &iterator, const var &obj, std::deque<statement_base *> &body)
+	void foreach_helper(const context_t &context, const string &iterator, const var &obj, std::deque<statement_base *> &body)
 	{
 		if (obj.const_val<T>().empty())
 			return;

@@ -84,7 +84,7 @@ namespace cs {
 
 		context_type() = delete;
 
-		context_type(instance_type *iptr) : instance(iptr) {}
+		explicit context_type(instance_type *iptr) : instance(iptr) {}
 
 		context_type(const context_type &) = default;
 
@@ -106,10 +106,10 @@ namespace cs {
 
 		callable(const callable &) = default;
 
-		callable(const function_type &func, bool constant = false) : mFunc(func), mType(constant ? types::constant
+		explicit callable(function_type func, bool constant = false) : mFunc(std::move(func)), mType(constant ? types::constant
 			        : types::normal) {}
 
-		callable(const function_type &func, types type) : mFunc(func), mType(type) {}
+		callable(function_type func, types type) : mFunc(std::move(func)), mType(type) {}
 
 		bool is_constant() const
 		{
@@ -136,9 +136,9 @@ namespace cs {
 
 		function(const function &) = default;
 
-		function(context_t c, const std::vector<std::string> &args, const std::deque<statement_base *> &body)
-			: mContext(
-			      c), mArgs(args), mBody(body) {}
+		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body)
+			: mContext(std::move(
+			               std::move(c))), mArgs(std::move(args)), mBody(std::move(body)) {}
 
 		~function() = default;
 
@@ -170,7 +170,7 @@ namespace cs {
 
 		object_method() = delete;
 
-		object_method(const var &obj, const var &func, bool constant = false) : object(obj), callable(func),
+		object_method(var obj, var func, bool constant = false) : object(std::move(obj)), callable(std::move(func)),
 			is_constant(constant) {}
 
 		~object_method() = default;
@@ -240,7 +240,7 @@ namespace cs {
 
 		pointer() = default;
 
-		pointer(const var &v) : data(v) {}
+		explicit pointer(var v) : data(std::move(v)) {}
 
 		bool operator==(const pointer &ptr) const
 		{
@@ -286,10 +286,10 @@ namespace cs {
 
 		type() = delete;
 
-		type(const std::function<var()> &c, const type_id &i) : constructor(c), id(i) {}
+		type(std::function<var()> c, const type_id &i) : constructor(std::move(c)), id(i) {}
 
-		type(const std::function<var()> &c, const type_id &i, extension_t ext) : constructor(c), id(i),
-			extensions(ext) {}
+		type(std::function<var()> c, const type_id &i, extension_t ext) : constructor(std::move(c)), id(i),
+			extensions(std::move(std::move(ext))) {}
 
 		var &get_var(const std::string &) const;
 	};
@@ -302,9 +302,9 @@ namespace cs {
 	public:
 		structure() = delete;
 
-		structure(const type_id &id, const std::string &name, const domain_t &data) : m_id(id),
+		structure(const type_id &id, const std::string &name, domain_t data) : m_id(id),
 			m_name(typeid(structure).name() +
-			       name), m_data(data)
+			       name), m_data(std::move(data))
 		{
 			if (m_data->count("initialize") > 0)
 				invoke((*m_data)["initialize"], var::make<structure>(this));
@@ -315,9 +315,9 @@ namespace cs {
 		{
 			if (s.m_data->count("parent") > 0) {
 				var &_p = (*s.m_data)["parent"];
-				structure &_parent = _p.val<structure>(true);
+				auto &_parent = _p.val<structure>(true);
 				var p = copy(_p);
-				structure &parent = p.val<structure>(true);
+				auto &parent = p.val<structure>(true);
 				m_data->emplace("parent", p);
 				for (auto &it:*parent.m_data) {
 					// Handle overriding
@@ -388,12 +388,12 @@ namespace cs {
 	public:
 		struct_builder() = delete;
 
-		struct_builder(context_t c, const std::string &name, const cov::tree<token_base *> &parent,
-		               const std::deque<statement_base *> &method) : mContext(c),
+		struct_builder(context_t c, std::string name, cov::tree<token_base *> parent,
+		               std::deque<statement_base *> method) : mContext(std::move(std::move(c))),
 			mTypeId(typeid(structure), ++mCount),
-			mName(name),
-			mParent(parent),
-			mMethod(method) {}
+			mName(std::move(name)),
+			mParent(std::move(parent)),
+			mMethod(std::move(method)) {}
 
 		struct_builder(const struct_builder &) = default;
 
@@ -470,7 +470,7 @@ namespace cs {
 
 		name_space(const name_space &) = delete;
 
-		explicit name_space(const domain_t &dat) : m_data(dat) {}
+		explicit name_space(domain_t dat) : m_data(std::move(dat)) {}
 
 		~name_space() = default;
 
@@ -506,11 +506,11 @@ namespace cs {
 
 		name_space_holder(const name_space_holder &) = delete;
 
-		name_space_holder(const domain_t &dat) : m_local(true), m_ns(new name_space(dat)) {}
+		explicit name_space_holder(const domain_t &dat) : m_local(true), m_ns(new name_space(dat)) {}
 
-		name_space_holder(name_space *ptr) : m_local(false), m_ns(ptr) {}
+		explicit name_space_holder(name_space *ptr) : m_local(false), m_ns(ptr) {}
 
-		name_space_holder(const std::string &path) : m_local(false), m_dll(path)
+		explicit name_space_holder(const std::string &path) : m_local(false), m_dll(path)
 		{
 			m_ns = reinterpret_cast<extension_entrance_t>(m_dll.get_address("__CS_EXTENSION__"))(output_precision_ref,
 			        exception_handler::cs_eh_callback,

@@ -91,7 +91,7 @@ namespace cov {
 		}
 
 	public:
-		bind_t(F func, Args &&...args) : mFunc(func), mArgs(std::forward<Args>(args)...) {}
+		explicit bind_t(F func, Args &&...args) : mFunc(func), mArgs(std::forward<Args>(args)...) {}
 
 		template<typename...ArgsT>
 		typename resolver<typename cov::function_parser<F>::type::common_type>::return_type

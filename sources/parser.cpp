@@ -46,7 +46,7 @@ namespace cs {
 			case
 					token_types::action:
 				expected_fcall = false;
-				switch (static_cast<token_action *>(ptr)->
+				switch (dynamic_cast<token_action *>(ptr)->
 
 				        get_action()
 
@@ -121,7 +121,7 @@ namespace cs {
 			case
 
 					token_types::sblist: {
-					for (auto &list:static_cast<token_sblist *>(ptr)->get_list())
+					for (auto &list:dynamic_cast<token_sblist *>(ptr)->get_list())
 						kill_brackets(list);
 					if (expected_fcall) {
 						std::deque<cov::tree<token_base *>> tlist;
@@ -129,7 +129,7 @@ namespace cs {
 							expected_fdef = false;
 							no_optimize = true;
 						}
-						for (auto &list:static_cast<token_sblist *>(ptr)->get_list()) {
+						for (auto &list:dynamic_cast<token_sblist *>(ptr)->get_list()) {
 							cov::tree<token_base *> tree;
 							gen_tree(tree, list);
 							tlist.push_back(tree);
@@ -149,7 +149,7 @@ namespace cs {
 			case
 
 					token_types::mblist: {
-					token_mblist *mbl = static_cast<token_mblist *>(ptr);
+					auto *mbl = dynamic_cast<token_mblist *>(ptr);
 					if (mbl == nullptr)
 						throw runtime_error("Internal Error(Nullptr Access).");
 					if (mbl->get_list().size() != 1)
@@ -166,10 +166,10 @@ namespace cs {
 			case
 
 					token_types::lblist: {
-					for (auto &list:static_cast<token_lblist *>(ptr)->get_list())
+					for (auto &list:dynamic_cast<token_lblist *>(ptr)->get_list())
 						kill_brackets(list);
 					std::deque<cov::tree<token_base *>> tlist;
-					for (auto &list:static_cast<token_lblist *>(ptr)->get_list()) {
+					for (auto &list:dynamic_cast<token_lblist *>(ptr)->get_list()) {
 						cov::tree<token_base *> tree;
 						gen_tree(tree, list);
 						tlist.push_back(tree);
@@ -182,7 +182,7 @@ namespace cs {
 			case
 
 					token_types::signal: {
-					switch (static_cast<token_signal *>(ptr)->get_signal()) {
+					switch (dynamic_cast<token_signal *>(ptr)->get_signal()) {
 					default:
 						break;
 					case signal_types::arrow_:
@@ -254,7 +254,7 @@ namespace cs {
 			throw runtime_error("Symbols do not match the object.");
 		for (auto &obj:objects) {
 			if (obj != nullptr && obj->get_type() == token_types::sblist) {
-				token_sblist *sbl = static_cast<token_sblist *>(obj);
+				auto *sbl = dynamic_cast<token_sblist *>(obj);
 				if (sbl->get_list().size() != 1)
 					throw runtime_error("There are no more elements in small bracket.");
 				cov::tree<token_base *> t;
@@ -304,7 +304,7 @@ namespace cs {
 		if (raw.size() == 1) {
 			token_base *obj = raw.front();
 			if (obj != nullptr && obj->get_type() == token_types::sblist) {
-				token_sblist *sbl = static_cast<token_sblist *>(obj);
+				auto *sbl = dynamic_cast<token_sblist *>(obj);
 				if (sbl->get_list().size() != 1)
 					throw runtime_error("There are no more elements in small bracket.");
 				cov::tree<token_base *> t;

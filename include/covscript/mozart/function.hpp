@@ -85,7 +85,7 @@ namespace cov {
 	class function_container {
 		_Tp function;
 	public:
-		function_container(_Tp func) : function(func) {}
+		explicit function_container(_Tp func) : function(func) {}
 
 		template<typename..._ArgsT>
 		decltype(std::declval<_Tp>()(std::declval<_ArgsT>()...))
@@ -105,14 +105,14 @@ namespace cov {
 	private:
 		type function;
 	public:
-		function_index(type func) : function(func) {}
+		explicit function_index(type func) : function(func) {}
 
-		virtual _rT call(Args &&...args) const override
+		_rT call(Args &&...args) const override
 		{
 			return function(std::forward<Args>(args)...);
 		}
 
-		virtual function_base<common_type> *copy() const override
+		function_base<common_type> *copy() const override
 		{
 			return new function_index(function);
 		}
@@ -128,16 +128,16 @@ namespace cov {
 	private:
 		type function;
 	public:
-		function_index(type func) : function(func) {}
+		explicit function_index(type func) : function(func) {}
 
 		virtual ~function_index() = default;
 
-		virtual _rT call(_Tp &obj, Args &&...args) const override
+		_rT call(_Tp &obj, Args &&...args) const override
 		{
 			return (obj.*function)(std::forward<Args>(args)...);
 		}
 
-		virtual function_base<common_type> *copy() const override
+		function_base<common_type> *copy() const override
 		{
 			return new function_index(function);
 		}
@@ -153,16 +153,16 @@ namespace cov {
 	private:
 		type function;
 	public:
-		function_index(type func) : function(func) {}
+		explicit function_index(type func) : function(func) {}
 
 		virtual ~function_index() = default;
 
-		virtual _rT call(const _Tp &obj, Args &&...args) const override
+		_rT call(const _Tp &obj, Args &&...args) const override
 		{
 			return (obj.*function)(std::forward<Args>(args)...);
 		}
 
-		virtual function_base<common_type> *copy() const override
+		function_base<common_type> *copy() const override
 		{
 			return new function_index(function);
 		}
@@ -179,16 +179,16 @@ namespace cov {
 		mutable _Tp object;
 		type function;
 	public:
-		executor_index(const _Tp &obj) : object(obj), function(&_Tp::operator()) {}
+		explicit executor_index(const _Tp &obj) : object(obj), function(&_Tp::operator()) {}
 
 		virtual ~executor_index() = default;
 
-		virtual _rT call(_ArgsT &&...args) const override
+		_rT call(_ArgsT &&...args) const override
 		{
 			return (object.*function)(std::forward<_ArgsT>(args)...);
 		}
 
-		virtual function_base<common_type> *copy() const override
+		function_base<common_type> *copy() const override
 		{
 			return new executor_index(object);
 		}
@@ -205,16 +205,16 @@ namespace cov {
 		const _Tp object;
 		type function;
 	public:
-		executor_index(const _Tp &obj) : object(obj), function(&_Tp::operator()) {}
+		explicit executor_index(const _Tp &obj) : object(obj), function(&_Tp::operator()) {}
 
 		virtual ~executor_index() = default;
 
-		virtual _rT call(_ArgsT &&...args) const override
+		_rT call(_ArgsT &&...args) const override
 		{
 			return (object.*function)(std::forward<_ArgsT>(args)...);
 		}
 
-		virtual function_base<common_type> *copy() const override
+		function_base<common_type> *copy() const override
 		{
 			return new executor_index(object);
 		}
@@ -291,7 +291,7 @@ namespace cov {
 		function() = default;
 
 		template<typename _Tp>
-		function(const _Tp &func)
+		explicit function(const _Tp &func)
 		{
 			static_assert(is_same_type<_rT(*)(ArgsT...), typename function_parser<_Tp>::type::common_type>::value,
 			              "E000B");

@@ -198,7 +198,7 @@ namespace cov {
 
 		tree() = default;
 
-		tree(iterator it) : mRoot(copy(it.mData)) {}
+		explicit tree(iterator it) : mRoot(copy(it.mData)) {}
 
 		tree(const tree &t) : mRoot(copy(t.mRoot)) {}
 

@@ -87,7 +87,7 @@ namespace cs {
 		context->instance->parse_define_var(tree, dvp);
 		if (dvp.expr.root().data()->get_type() != token_types::value)
 			throw runtime_error("Constant variable must have an constant value.");
-		const var &val = static_cast<token_value *>(dvp.expr.root().data())->get_value();
+		const var &val = dynamic_cast<token_value *>(dvp.expr.root().data())->get_value();
 		context->instance->add_constant(val);
 		context->instance->storage.add_var(dvp.id, val);
 		mResult = new statement_constant(dvp.id, val, context, raw.front().back());
@@ -153,7 +153,7 @@ namespace cs {
 					body_false.push_back(ptr);
 			}
 			if (ptr != nullptr && ptr->get_type() == token_types::value) {
-				if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
+				if (dynamic_cast<token_value *>(ptr)->get_value().const_val<bool>())
 					return new statement_block(body_true, context, raw.front().back());
 				else
 					return new statement_block(body_false, context, raw.front().back());
@@ -162,7 +162,7 @@ namespace cs {
 				return new statement_ifelse(tree, body_true, body_false, context, raw.front().back());
 		}
 		else if (ptr != nullptr && ptr->get_type() == token_types::value) {
-			if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
+			if (dynamic_cast<token_value *>(ptr)->get_value().const_val<bool>())
 				return new statement_block(body, context, raw.front().back());
 			else
 				return nullptr;
@@ -191,13 +191,13 @@ namespace cs {
 		for (auto &it:body) {
 			try {
 				if (it->get_type() == statement_types::case_) {
-					statement_case *scptr = dynamic_cast<statement_case *>(it);
+					auto *scptr = dynamic_cast<statement_case *>(it);
 					if (cases.count(scptr->get_tag()) > 0)
 						throw runtime_error("Redefinition of case.");
 					cases.emplace(scptr->get_tag(), scptr->get_block());
 				}
 				else if (it->get_type() == statement_types::default_) {
-					statement_default *sdptr = dynamic_cast<statement_default *>(it);
+					auto *sdptr = dynamic_cast<statement_default *>(it);
 					if (dptr != nullptr)
 						throw runtime_error("Redefinition of default case.");
 					dptr = sdptr->get_block();
@@ -220,7 +220,7 @@ namespace cs {
 	{
 		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data()->get_type() != token_types::value) {
-			std::size_t line_num = static_cast<token_endline *>(raw.front().back())->get_line_num();
+			std::size_t line_num = dynamic_cast<token_endline *>(raw.front().back())->get_line_num();
 			const char *what = "Case Tag must be a constant value.";
 			throw exception(line_num, context->file_path, context->file_buff.at(line_num - 1), what);
 		}
@@ -244,7 +244,7 @@ namespace cs {
 		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_base *ptr = tree.root().data();
 		if (ptr != nullptr && ptr->get_type() == token_types::value) {
-			if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
+			if (dynamic_cast<token_value *>(ptr)->get_value().const_val<bool>())
 				return new statement_loop(nullptr, body, context, raw.front().back());
 			else
 				return nullptr;
@@ -269,7 +269,7 @@ namespace cs {
 			cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(expr)->get_tree();
 			token_base *ptr = tree.root().data();
 			if (ptr != nullptr && ptr->get_type() == token_types::value) {
-				if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
+				if (dynamic_cast<token_value *>(ptr)->get_value().const_val<bool>())
 					return new statement_block(body, context, raw.front().back());
 				else
 					return new statement_loop(nullptr, body, context, raw.front().back());
@@ -422,7 +422,7 @@ namespace cs {
 				case statement_types::var_:
 					break;
 				case statement_types::function_:
-					static_cast<statement_function *>(ptr)->set_mem_fn();
+					dynamic_cast<statement_function *>(ptr)->set_mem_fn();
 					break;
 				}
 			}
@@ -449,7 +449,7 @@ namespace cs {
 		bool founded = false;
 		for (auto &ptr:body) {
 			if (ptr->get_type() == statement_types::catch_) {
-				name = static_cast<statement_catch *>(ptr)->get_name();
+				name = dynamic_cast<statement_catch *>(ptr)->get_name();
 				founded = true;
 				continue;
 			}

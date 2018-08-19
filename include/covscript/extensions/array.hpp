@@ -146,7 +146,7 @@ namespace array_cs_ext {
 		hash_map map;
 		for (auto &it:arr) {
 			if (it.type() == typeid(pair)) {
-				const pair &p = it.const_val<pair>();
+				const auto &p = it.const_val<pair>();
 				map[p.first] = copy(p.second);
 			}
 			else

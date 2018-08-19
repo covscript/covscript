@@ -33,7 +33,7 @@ namespace cov {
 
 		dll(const dll &) = delete;
 
-		dll(const std::string &path)
+		explicit dll(const std::string &path)
 		{
 			open(path);
 		}
