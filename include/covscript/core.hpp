@@ -106,8 +106,9 @@ namespace cs {
 
 		callable(const callable &) = default;
 
-		explicit callable(function_type func, bool constant = false) : mFunc(std::move(func)), mType(constant ? types::constant
-			        : types::normal) {}
+		explicit callable(function_type func, bool constant = false) : mFunc(std::move(func)),
+			mType(constant ? types::constant
+			      : types::normal) {}
 
 		callable(function_type func, types type) : mFunc(std::move(func)), mType(type) {}
 

@@ -478,7 +478,7 @@ namespace cs {
 		statement_base(const statement_base &) = default;
 
 		statement_base(context_t c, token_base *eptr) : context(std::move(std::move(c))),
-			line_num(dynamic_cast<token_endline *>(eptr)->get_line_num()) {}
+			line_num(static_cast<token_endline *>(eptr)->get_line_num()) {}
 
 		virtual ~statement_base() = default;
 

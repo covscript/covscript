@@ -34,8 +34,8 @@ namespace cs {
 				return a == nullptr;
 			if (a->get_type() != b->get_type())
 				return false;
-			return !(a->get_type() == token_types::action) || dynamic_cast<const token_action *>(a)->get_action() ==
-			       dynamic_cast<const token_action *>(b)->get_action();
+			return !(a->get_type() == token_types::action) || static_cast<const token_action *>(a)->get_action() ==
+			       static_cast<const token_action *>(b)->get_action();
 		}
 
 	private:
@@ -334,7 +334,7 @@ namespace cs {
 				throw runtime_error("Get the level of null token.");
 			if (ptr->get_type() != token_types::signal)
 				throw runtime_error("Get the level of non-signal token.");
-			return signal_level_map.match(dynamic_cast<token_signal *>(ptr)->get_signal());
+			return signal_level_map.match(static_cast<token_signal *>(ptr)->get_signal());
 		}
 
 		bool is_left_associative(token_base *ptr)
@@ -343,7 +343,7 @@ namespace cs {
 				throw runtime_error("Get the level of null token.");
 			if (ptr->get_type() != token_types::signal)
 				throw runtime_error("Get the level of non-signal token.");
-			signal_types s = dynamic_cast<token_signal *>(ptr)->get_signal();
+			signal_types s = static_cast<token_signal *>(ptr)->get_signal();
 			for (auto &t:signal_left_associative)
 				if (t == s)
 					return true;

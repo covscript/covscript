@@ -24,201 +24,141 @@ namespace cs {
 	                                  line_num)
 	{
 		std::deque<token_base *> oldt;
-		std::swap(tokens, oldt
-		         );
-		tokens.
-
-		clear();
-
+		std::swap(tokens, oldt);
+		tokens.clear();
 		bool expected_fdef = false;
 		bool expected_fcall = false;
 		bool expected_lambda = false;
-		for (
-		    auto &ptr:
-		    oldt) {
-			switch (ptr->
-
-			        get_type()
-
-			       ) {
+		for (auto &ptr:oldt) {
+			switch (ptr->get_type()) {
 			default:
 				break;
 			case
 					token_types::action:
 				expected_fcall = false;
-				switch (dynamic_cast<token_action *>(ptr)->
-
-				        get_action()
-
-				       ) {
+				switch (static_cast<token_action *>(ptr)->get_action()) {
 				default:
 					break;
-				case
-						action_types::import_:
-					tokens
-					.
-					push_back(ptr);
-					tokens.push_back(new
-					                 token_signal(signal_types::vardef_)
-					                );
+				case action_types::import_:
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::vardef_));
 					continue;
-				case
-						action_types::var_:
-					tokens
-					.
-					push_back(ptr);
-					tokens.push_back(new
-					                 token_signal(signal_types::vardef_)
-					                );
+				case action_types::var_:
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::vardef_));
 					continue;
-				case
-						action_types::struct_:
-					tokens
-					.
-					push_back(ptr);
-					tokens.push_back(new
-					                 token_signal(signal_types::vardef_)
-					                );
+				case action_types::struct_:
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::vardef_));
 					continue;
-				case
-						action_types::function_:
-					tokens
-					.
-					push_back(ptr);
-					tokens.push_back(new
-					                 token_signal(signal_types::vardef_)
-					                );
+				case action_types::function_:
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::vardef_));
 					expected_fdef = true;
 					continue;
-				case
-						action_types::namespace_:
-					tokens
-					.
-					push_back(ptr);
-					tokens.push_back(new
-					                 token_signal(signal_types::vardef_)
-					                );
+				case action_types::namespace_:
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::vardef_));
 					continue;
-				case
-						action_types::catch_:
-					tokens
-					.
-					push_back(ptr);
-					tokens.push_back(new
-					                 token_signal(signal_types::vardef_)
-					                );
+				case action_types::catch_:
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::vardef_));
 					continue;
 				}
 				break;
-			case
-					token_types::id:
+			case token_types::id:
 				expected_fcall = true;
 				break;
-			case
-					token_types::value:
+			case token_types::value:
 				expected_fcall = false;
 				break;
-			case
-
-					token_types::sblist: {
-					for (auto &list:dynamic_cast<token_sblist *>(ptr)->get_list())
-						kill_brackets(list);
-					if (expected_fcall) {
-						std::deque<cov::tree<token_base *>> tlist;
-						if (expected_fdef) {
-							expected_fdef = false;
-							no_optimize = true;
-						}
-						for (auto &list:dynamic_cast<token_sblist *>(ptr)->get_list()) {
-							cov::tree<token_base *> tree;
-							gen_tree(tree, list);
-							tlist.push_back(tree);
-						}
-						no_optimize = false;
-						if (!expected_lambda)
-							tokens.push_back(new token_signal(signal_types::fcall_));
-						tokens.push_back(new token_arglist(tlist));
-						continue;
-					}
-					else {
-						expected_fcall = true;
-						break;
-					}
-				}
-
-			case
-
-					token_types::mblist: {
-					auto *mbl = dynamic_cast<token_mblist *>(ptr);
-					if (mbl == nullptr)
-						throw runtime_error("Internal Error(Nullptr Access).");
-					if (mbl->get_list().size() != 1)
-						throw runtime_error("There are no more elements in middle bracket.");
-					kill_brackets(mbl->get_list().front());
-					cov::tree<token_base *> tree;
-					gen_tree(tree, mbl->get_list().front());
-					tokens.push_back(new token_signal(signal_types::access_));
-					tokens.push_back(new token_expr(tree));
-					expected_fcall = true;
-					continue;
-				}
-
-			case
-
-					token_types::lblist: {
-					for (auto &list:dynamic_cast<token_lblist *>(ptr)->get_list())
-						kill_brackets(list);
+			case token_types::sblist: {
+				for (auto &list:static_cast<token_sblist *>(ptr)->get_list())
+					kill_brackets(list);
+				if (expected_fcall) {
 					std::deque<cov::tree<token_base *>> tlist;
-					for (auto &list:dynamic_cast<token_lblist *>(ptr)->get_list()) {
+					if (expected_fdef) {
+						expected_fdef = false;
+						no_optimize = true;
+					}
+					for (auto &list:static_cast<token_sblist *>(ptr)->get_list()) {
 						cov::tree<token_base *> tree;
 						gen_tree(tree, list);
 						tlist.push_back(tree);
 					}
-					tokens.push_back(new token_array(tlist));
-					expected_fcall = false;
+					no_optimize = false;
+					if (!expected_lambda)
+						tokens.push_back(new token_signal(signal_types::fcall_));
+					tokens.push_back(new token_arglist(tlist));
 					continue;
 				}
-
-			case
-
-					token_types::signal: {
-					switch (dynamic_cast<token_signal *>(ptr)->get_signal()) {
-					default:
-						break;
-					case signal_types::arrow_:
-						if (expected_lambda) {
-							tokens.push_back(new token_signal(signal_types::lambda_, line_num));
-							expected_lambda = false;
-							expected_fcall = false;
-							continue;
-						}
-						else
-							break;
-					case signal_types::esb_:
-						if (expected_fcall) {
-							if (!expected_lambda)
-								tokens.push_back(new token_signal(signal_types::fcall_));
-							tokens.push_back(new token_arglist());
-						}
-						else
-							throw runtime_error("Do not allow standalone empty small parentheses.");
-						expected_fcall = false;
-						continue;
-					case signal_types::emb_:
-						expected_fcall = true;
-						expected_lambda = true;
-						tokens.push_back(ptr);
-						continue;
-					case signal_types::elb_:
-						tokens.push_back(new token_array());
+				else {
+					expected_fcall = true;
+					break;
+				}
+			}
+			case token_types::mblist: {
+				auto *mbl = static_cast<token_mblist *>(ptr);
+				if (mbl->get_list().size() != 1)
+					throw runtime_error("There are no more elements in middle bracket.");
+				kill_brackets(mbl->get_list().front());
+				cov::tree<token_base *> tree;
+				gen_tree(tree, mbl->get_list().front());
+				tokens.push_back(new token_signal(signal_types::access_));
+				tokens.push_back(new token_expr(tree));
+				expected_fcall = true;
+				continue;
+			}
+			case token_types::lblist: {
+				for (auto &list:static_cast<token_lblist *>(ptr)->get_list())
+					kill_brackets(list);
+				std::deque<cov::tree<token_base *>> tlist;
+				for (auto &list:static_cast<token_lblist *>(ptr)->get_list()) {
+					cov::tree<token_base *> tree;
+					gen_tree(tree, list);
+					tlist.push_back(tree);
+				}
+				tokens.push_back(new token_array(tlist));
+				expected_fcall = false;
+				continue;
+			}
+			case token_types::signal: {
+				switch (static_cast<token_signal *>(ptr)->get_signal()) {
+				default:
+					break;
+				case signal_types::arrow_:
+					if (expected_lambda) {
+						tokens.push_back(new token_signal(signal_types::lambda_, line_num));
+						expected_lambda = false;
 						expected_fcall = false;
 						continue;
 					}
-					expected_lambda = false;
+					else
+						break;
+				case signal_types::esb_:
+					if (expected_fcall) {
+						if (!expected_lambda)
+							tokens.push_back(new token_signal(signal_types::fcall_));
+						tokens.push_back(new token_arglist());
+					}
+					else
+						throw runtime_error("Do not allow standalone empty small parentheses.");
 					expected_fcall = false;
-					break;
+					continue;
+				case signal_types::emb_:
+					expected_fcall = true;
+					expected_lambda = true;
+					tokens.push_back(ptr);
+					continue;
+				case signal_types::elb_:
+					tokens.push_back(new token_array());
+					expected_fcall = false;
+					continue;
 				}
-
+				expected_lambda = false;
+				expected_fcall = false;
+				break;
+			}
 			}
 			tokens.
 			push_back(ptr);
@@ -254,7 +194,7 @@ namespace cs {
 			throw runtime_error("Symbols do not match the object.");
 		for (auto &obj:objects) {
 			if (obj != nullptr && obj->get_type() == token_types::sblist) {
-				auto *sbl = dynamic_cast<token_sblist *>(obj);
+				auto *sbl = static_cast<token_sblist *>(obj);
 				if (sbl->get_list().size() != 1)
 					throw runtime_error("There are no more elements in small bracket.");
 				cov::tree<token_base *> t;
@@ -304,7 +244,7 @@ namespace cs {
 		if (raw.size() == 1) {
 			token_base *obj = raw.front();
 			if (obj != nullptr && obj->get_type() == token_types::sblist) {
-				auto *sbl = dynamic_cast<token_sblist *>(obj);
+				auto *sbl = static_cast<token_sblist *>(obj);
 				if (sbl->get_list().size() != 1)
 					throw runtime_error("There are no more elements in small bracket.");
 				cov::tree<token_base *> t;
@@ -350,7 +290,7 @@ namespace cs {
 		token_endline *endsig = nullptr;
 		int level = 0;
 		for (auto &line:lines) {
-			endsig = dynamic_cast<token_endline *>(line.back());
+			endsig = static_cast<token_endline *>(line.back());
 			try {
 				if (raw) {
 					process_brackets(line);

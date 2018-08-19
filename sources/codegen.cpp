@@ -22,16 +22,16 @@
 namespace cs {
 	statement_base *method_expression::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
-		return new statement_expression(dynamic_cast<token_expr *>(raw.front().front())->get_tree(), context,
+		return new statement_expression(static_cast<token_expr *>(raw.front().front())->get_tree(), context,
 		                                raw.front().back());
 	}
 
 	void method_import::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
-		token_base *token = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data();
+		token_base *token = static_cast<token_expr *>(raw.front().at(1))->get_tree().root().data();
 		if (token == nullptr || token->get_type() != token_types::id)
 			throw runtime_error("Wrong grammar for import statement.");
-		const std::string &package_name = dynamic_cast<token_id *>(token)->get_id();
+		const std::string &package_name = static_cast<token_id *>(token)->get_id();
 		const var &ext = make_namespace(context->instance->import(import_path, package_name));
 		context->instance->storage.add_var(package_name, ext);
 		mResult = new statement_constant(package_name, ext, context, raw.front().back());
@@ -46,14 +46,14 @@ namespace cs {
 	{
 		if (!context->package_name.empty())
 			throw runtime_error("Redefinition of package");
-		context->package_name = dynamic_cast<token_id *>(dynamic_cast<token_expr *>(raw.front().at(
+		context->package_name = static_cast<token_id *>(static_cast<token_expr *>(raw.front().at(
 		                            1))->get_tree().root().data())->get_id();
 		return nullptr;
 	}
 
 	void method_involve::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
+		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_value *vptr = dynamic_cast<token_value *>(tree.root().data());
 		if (vptr != nullptr) {
 			var ns = vptr->get_value();
@@ -74,7 +74,7 @@ namespace cs {
 
 	statement_base *method_var::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
+		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		instance_type::define_var_profile dvp;
 		context->instance->parse_define_var(tree, dvp);
 		return new statement_var(dvp, context, raw.front().back());
@@ -82,12 +82,12 @@ namespace cs {
 
 	void method_constant::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(2))->get_tree();
+		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(2))->get_tree();
 		instance_type::define_var_profile dvp;
 		context->instance->parse_define_var(tree, dvp);
 		if (dvp.expr.root().data()->get_type() != token_types::value)
 			throw runtime_error("Constant variable must have an constant value.");
-		const var &val = dynamic_cast<token_value *>(dvp.expr.root().data())->get_value();
+		const var &val = static_cast<token_value *>(dvp.expr.root().data())->get_value();
 		context->instance->add_constant(val);
 		context->instance->storage.add_var(dvp.id, val);
 		mResult = new statement_constant(dvp.id, val, context, raw.front().back());
@@ -119,7 +119,7 @@ namespace cs {
 			        ptr->get_type() != statement_types::var_ && ptr->get_type() != statement_types::function_ &&
 			        ptr->get_type() != statement_types::namespace_ && ptr->get_type() != statement_types::struct_)
 				throw runtime_error("Wrong grammar for namespace definition.");
-		return new statement_namespace(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data(), body,
+		return new statement_namespace(static_cast<token_expr *>(raw.front().at(1))->get_tree().root().data(), body,
 		                               context, raw.front().back());
 	}
 
@@ -136,7 +136,7 @@ namespace cs {
 					throw runtime_error("Multi Else Grammar.");
 			}
 		}
-		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
+		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_base *ptr = tree.root().data();
 		if (have_else) {
 			std::deque<statement_base *> body_true;
@@ -153,7 +153,7 @@ namespace cs {
 					body_false.push_back(ptr);
 			}
 			if (ptr != nullptr && ptr->get_type() == token_types::value) {
-				if (dynamic_cast<token_value *>(ptr)->get_value().const_val<bool>())
+				if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
 					return new statement_block(body_true, context, raw.front().back());
 				else
 					return new statement_block(body_false, context, raw.front().back());
@@ -162,7 +162,7 @@ namespace cs {
 				return new statement_ifelse(tree, body_true, body_false, context, raw.front().back());
 		}
 		else if (ptr != nullptr && ptr->get_type() == token_types::value) {
-			if (dynamic_cast<token_value *>(ptr)->get_value().const_val<bool>())
+			if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
 				return new statement_block(body, context, raw.front().back());
 			else
 				return nullptr;
@@ -191,13 +191,13 @@ namespace cs {
 		for (auto &it:body) {
 			try {
 				if (it->get_type() == statement_types::case_) {
-					auto *scptr = dynamic_cast<statement_case *>(it);
+					auto *scptr = static_cast<statement_case *>(it);
 					if (cases.count(scptr->get_tag()) > 0)
 						throw runtime_error("Redefinition of case.");
 					cases.emplace(scptr->get_tag(), scptr->get_block());
 				}
 				else if (it->get_type() == statement_types::default_) {
-					auto *sdptr = dynamic_cast<statement_default *>(it);
+					auto *sdptr = static_cast<statement_default *>(it);
 					if (dptr != nullptr)
 						throw runtime_error("Redefinition of default case.");
 					dptr = sdptr->get_block();
@@ -212,21 +212,21 @@ namespace cs {
 				throw exception(it->get_line_num(), it->get_file_path(), it->get_raw_code(), e.what());
 			}
 		}
-		return new statement_switch(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), cases, dptr, context,
+		return new statement_switch(static_cast<token_expr *>(raw.front().at(1))->get_tree(), cases, dptr, context,
 		                            raw.front().back());
 	}
 
 	statement_base *method_case::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
+		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data()->get_type() != token_types::value) {
-			std::size_t line_num = dynamic_cast<token_endline *>(raw.front().back())->get_line_num();
+			std::size_t line_num = static_cast<token_endline *>(raw.front().back())->get_line_num();
 			const char *what = "Case Tag must be a constant value.";
 			throw exception(line_num, context->file_path, context->file_buff.at(line_num - 1), what);
 		}
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
-		return new statement_case(dynamic_cast<token_value *>(tree.root().data())->get_value(), body, context,
+		return new statement_case(static_cast<token_value *>(tree.root().data())->get_value(), body, context,
 		                          raw.front().back());
 	}
 
@@ -241,22 +241,22 @@ namespace cs {
 	{
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
-		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
+		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_base *ptr = tree.root().data();
 		if (ptr != nullptr && ptr->get_type() == token_types::value) {
-			if (dynamic_cast<token_value *>(ptr)->get_value().const_val<bool>())
+			if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
 				return new statement_loop(nullptr, body, context, raw.front().back());
 			else
 				return nullptr;
 		}
 		else
-			return new statement_while(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), body, context,
+			return new statement_while(static_cast<token_expr *>(raw.front().at(1))->get_tree(), body, context,
 			                           raw.front().back());
 	}
 
 	statement_base *method_until::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
-		return new statement_until(dynamic_cast<token_expr *>(raw.front().at(1)), context, raw.front().back());
+		return new statement_until(static_cast<token_expr *>(raw.front().at(1)), context, raw.front().back());
 	}
 
 	statement_base *method_loop::translate(const std::deque<std::deque<token_base *>> &raw)
@@ -264,12 +264,12 @@ namespace cs {
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
 		if (!body.empty() && body.back()->get_type() == statement_types::until_) {
-			token_expr *expr = dynamic_cast<statement_until *>(body.back())->get_expr();
+			token_expr *expr = static_cast<statement_until *>(body.back())->get_expr();
 			body.pop_back();
-			cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(expr)->get_tree();
+			cov::tree<token_base *> &tree = static_cast<token_expr *>(expr)->get_tree();
 			token_base *ptr = tree.root().data();
 			if (ptr != nullptr && ptr->get_type() == token_types::value) {
-				if (dynamic_cast<token_value *>(ptr)->get_value().const_val<bool>())
+				if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
 					return new statement_block(body, context, raw.front().back());
 				else
 					return new statement_loop(nullptr, body, context, raw.front().back());
@@ -283,7 +283,7 @@ namespace cs {
 
 	void method_for_step::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
+		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		instance_type::define_var_profile dvp;
 		context->instance->parse_define_var(tree, dvp);
 		context->instance->storage.add_record(dvp.id);
@@ -293,15 +293,15 @@ namespace cs {
 	{
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
-		return new statement_for(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(),
-		                         dynamic_cast<token_expr *>(raw.front().at(3))->get_tree(),
-		                         dynamic_cast<token_expr *>(raw.front().at(5))->get_tree(), body, context,
+		return new statement_for(static_cast<token_expr *>(raw.front().at(1))->get_tree(),
+		                         static_cast<token_expr *>(raw.front().at(3))->get_tree(),
+		                         static_cast<token_expr *>(raw.front().at(5))->get_tree(), body, context,
 		                         raw.front().back());
 	}
 
 	void method_for::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &tree = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
+		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		instance_type::define_var_profile dvp;
 		context->instance->parse_define_var(tree, dvp);
 		context->instance->storage.add_record(dvp.id);
@@ -313,32 +313,32 @@ namespace cs {
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
 		cov::tree<token_base *> tree_step;
 		tree_step.emplace_root_left(tree_step.root(), context->instance->new_value(number(1)));
-		return new statement_for(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(),
-		                         dynamic_cast<token_expr *>(raw.front().at(3))->get_tree(), tree_step, body, context,
+		return new statement_for(static_cast<token_expr *>(raw.front().at(1))->get_tree(),
+		                         static_cast<token_expr *>(raw.front().at(3))->get_tree(), tree_step, body, context,
 		                         raw.front().back());
 	}
 
 	void method_foreach::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &t = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
+		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::id)
 			throw runtime_error("Wrong grammar(foreach)");
-		context->instance->storage.add_record(dynamic_cast<token_id *>(t.root().data())->get_id());
+		context->instance->storage.add_record(static_cast<token_id *>(t.root().data())->get_id());
 	}
 
 	statement_base *method_foreach::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &t = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
+		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::id)
 			throw runtime_error("Wrong grammar(foreach)");
-		const std::string &it = dynamic_cast<token_id *>(t.root().data())->get_id();
+		const std::string &it = static_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
-		return new statement_foreach(it, dynamic_cast<token_expr *>(raw.front().at(3))->get_tree(), body, context,
+		return new statement_foreach(it, static_cast<token_expr *>(raw.front().at(3))->get_tree(), body, context,
 		                             raw.front().back());
 	}
 
@@ -354,11 +354,11 @@ namespace cs {
 
 	statement_base *method_function::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &t = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
+		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::signal ||
-		        dynamic_cast<token_signal *>(t.root().data())->get_signal() != signal_types::fcall_)
+		        static_cast<token_signal *>(t.root().data())->get_signal() != signal_types::fcall_)
 			throw runtime_error("Wrong grammar for function definition.");
 		if (t.root().left().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
@@ -368,14 +368,14 @@ namespace cs {
 			throw internal_error("Null pointer accessed.");
 		if (t.root().right().data()->get_type() != token_types::arglist)
 			throw runtime_error("Wrong grammar for function definition.");
-		std::string name = dynamic_cast<token_id *>(t.root().left().data())->get_id();
+		std::string name = static_cast<token_id *>(t.root().left().data())->get_id();
 		std::vector<std::string> args;
-		for (auto &it:dynamic_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
+		for (auto &it:static_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
 			if (it.root().data() == nullptr)
 				throw internal_error("Null pointer accessed.");
 			if (it.root().data()->get_type() != token_types::id)
 				throw runtime_error("Wrong grammar for function definition.");
-			const std::string &str = dynamic_cast<token_id *>(it.root().data())->get_id();
+			const std::string &str = static_cast<token_id *>(it.root().data())->get_id();
 			for (auto &it:args)
 				if (it == str)
 					throw runtime_error("Redefinition of function argument.");
@@ -388,7 +388,7 @@ namespace cs {
 
 	statement_base *method_return::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
-		return new statement_return(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), context,
+		return new statement_return(static_cast<token_expr *>(raw.front().at(1))->get_tree(), context,
 		                            raw.front().back());
 	}
 
@@ -406,12 +406,12 @@ namespace cs {
 
 	statement_base *method_struct::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &t = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
+		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::id)
 			throw runtime_error("Wrong grammar for struct definition.");
-		std::string name = dynamic_cast<token_id *>(t.root().data())->get_id();
+		std::string name = static_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
 		for (auto &ptr:body) {
@@ -422,7 +422,7 @@ namespace cs {
 				case statement_types::var_:
 					break;
 				case statement_types::function_:
-					dynamic_cast<statement_function *>(ptr)->set_mem_fn();
+					static_cast<statement_function *>(ptr)->set_mem_fn();
 					break;
 				}
 			}
@@ -434,7 +434,7 @@ namespace cs {
 			}
 		}
 		if (raw.front().size() == 5)
-			return new statement_struct(name, dynamic_cast<token_expr *>(raw.front().at(3))->get_tree(), body, context,
+			return new statement_struct(name, static_cast<token_expr *>(raw.front().at(3))->get_tree(), body, context,
 			                            raw.front().back());
 		else
 			return new statement_struct(name, cov::tree<token_base *>(), body, context, raw.front().back());
@@ -449,7 +449,7 @@ namespace cs {
 		bool founded = false;
 		for (auto &ptr:body) {
 			if (ptr->get_type() == statement_types::catch_) {
-				name = dynamic_cast<statement_catch *>(ptr)->get_name();
+				name = static_cast<statement_catch *>(ptr)->get_name();
 				founded = true;
 				continue;
 			}
@@ -465,17 +465,17 @@ namespace cs {
 
 	statement_base *method_catch::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &t = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree();
+		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::id)
 			throw runtime_error("Wrong grammar for catch statement.");
-		return new statement_catch(dynamic_cast<token_id *>(t.root().data())->get_id(), context, raw.front().back());
+		return new statement_catch(static_cast<token_id *>(t.root().data())->get_id(), context, raw.front().back());
 	}
 
 	statement_base *method_throw::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
-		return new statement_throw(dynamic_cast<token_expr *>(raw.front().at(1))->get_tree(), context,
+		return new statement_throw(static_cast<token_expr *>(raw.front().at(1))->get_tree(), context,
 		                           raw.front().back());
 	}
 }

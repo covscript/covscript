@@ -247,11 +247,10 @@ namespace cov {
 
 			virtual bool compare(const baseHolder *obj) const override
 			{
-				if (obj->type() == this->type()) {
-					const holder<T> *ptr = dynamic_cast<const holder<T> *>(obj);
-					return ptr != nullptr && cov::compare(mDat, ptr->data());
-				}
-				return false;
+				if (obj->type() == this->type())
+					return cov::compare(mDat, static_cast<const holder<T> *>(obj)->data());
+				else
+					return false;
 			}
 
 			virtual long to_integer() const override
@@ -548,7 +547,7 @@ namespace cov {
 				throw cov::error("E000K");
 			if (!raw)
 				clone();
-			return dynamic_cast<holder<T> *>(this->mDat->data)->data();
+			return static_cast<holder<T> *>(this->mDat->data)->data();
 		}
 
 		template<typename T>
@@ -558,7 +557,7 @@ namespace cov {
 				throw cov::error("E0006");
 			if (this->mDat == nullptr)
 				throw cov::error("E0005");
-			return dynamic_cast<const holder<T> *>(this->mDat->data)->data();
+			return static_cast<const holder<T> *>(this->mDat->data)->data();
 		}
 
 		template<typename T>
@@ -568,7 +567,7 @@ namespace cov {
 				throw cov::error("E0006");
 			if (this->mDat == nullptr)
 				throw cov::error("E0005");
-			return dynamic_cast<const holder<T> *>(this->mDat->data)->data();
+			return static_cast<const holder<T> *>(this->mDat->data)->data();
 		}
 
 		template<typename T>

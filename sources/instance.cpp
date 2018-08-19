@@ -320,7 +320,7 @@ namespace cs {
 		default:
 			break;
 		case token_types::id: {
-			const std::string &id = dynamic_cast<token_id *>(token)->get_id();
+			const std::string &id = static_cast<token_id *>(token)->get_id();
 			if (storage.exist_record(id)) {
 				if (storage.var_exist_current(id) && storage.get_var_current(id).is_protect())
 					it.data() = new_value(storage.get_var(id));
@@ -336,7 +336,7 @@ namespace cs {
 			break;
 		}
 		case token_types::expr: {
-			cov::tree<token_base *> &t = dynamic_cast<token_expr *>(it.data())->get_tree();
+			cov::tree<token_base *> &t = static_cast<token_expr *>(it.data())->get_tree();
 			optimize_expression(t);
 			tree.merge(it, t);
 			return;
@@ -344,7 +344,7 @@ namespace cs {
 		}
 		case token_types::array: {
 			bool is_optimizable = true;
-			for (auto &tree:dynamic_cast<token_array *>(token)->get_array()) {
+			for (auto &tree:static_cast<token_array *>(token)->get_array()) {
 				optimize_expression(tree);
 				if (is_optimizable && !optimizable(tree.root()))
 					is_optimizable = false;
@@ -352,7 +352,7 @@ namespace cs {
 			if (is_optimizable) {
 				array
 				arr;
-				for (auto &tree:dynamic_cast<token_array *>(token)->get_array())
+				for (auto &tree:static_cast<token_array *>(token)->get_array())
 					arr.push_back((new_value(copy(parse_expr(tree.root()))))->get_value());
 				it.data() = new_value(var::make<array>(std::move(arr)));
 			}
@@ -360,7 +360,7 @@ namespace cs {
 			break;
 		}
 		case token_types::signal: {
-			switch (dynamic_cast<token_signal *>(token)->get_signal()) {
+			switch (static_cast<token_signal *>(token)->get_signal()) {
 			default:
 				break;
 			case signal_types::new_:
@@ -424,7 +424,7 @@ namespace cs {
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
 					throw runtime_error("Wrong grammar for variable definition.");
-				storage.add_record(dynamic_cast<token_id *>(rptr)->get_id());
+				storage.add_record(static_cast<token_id *>(rptr)->get_id());
 				it.data() = rptr;
 				return;
 				break;
@@ -443,7 +443,7 @@ namespace cs {
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
 					throw runtime_error("Wrong grammar for dot expression.");
 				if (lptr != nullptr && lptr->get_type() == token_types::value) {
-					const var &a = dynamic_cast<token_value *>(lptr)->get_value();
+					const var &a = static_cast<token_value *>(lptr)->get_value();
 					token_base *orig_ptr = it.data();
 					try {
 						const var &v = parse_dot(a, rptr);
@@ -465,17 +465,17 @@ namespace cs {
 				if (lptr == nullptr || rptr == nullptr || rptr->get_type() != token_types::arglist)
 					throw runtime_error("Wrong syntax for function call.");
 				if (lptr->get_type() == token_types::value) {
-					var &a = dynamic_cast<token_value *>(lptr)->get_value();
+					var &a = static_cast<token_value *>(lptr)->get_value();
 					if (a.type() == typeid(callable) && a.const_val<callable>().is_constant()) {
 						bool is_optimizable = true;
-						for (auto &tree:dynamic_cast<token_arglist *>(rptr)->get_arglist()) {
+						for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
 							if (is_optimizable && !optimizable(tree.root()))
 								is_optimizable = false;
 						}
 						if (is_optimizable) {
 							vector args;
-							args.reserve(dynamic_cast<token_arglist *>(rptr)->get_arglist().size());
-							for (auto &tree:dynamic_cast<token_arglist *>(rptr)->get_arglist())
+							args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
+							for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
 								args.push_back(lvalue(parse_expr(tree.root())));
 							token_base *oldt = it.data();
 							try {
@@ -488,15 +488,15 @@ namespace cs {
 					}
 					else if (a.type() == typeid(object_method) && a.const_val<object_method>().is_constant) {
 						bool is_optimizable = true;
-						for (auto &tree:dynamic_cast<token_arglist *>(rptr)->get_arglist()) {
+						for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
 							if (is_optimizable && !optimizable(tree.root()))
 								is_optimizable = false;
 						}
 						if (is_optimizable) {
 							const auto &om = a.const_val<object_method>();
 							vector args{om.object};
-							args.reserve(dynamic_cast<token_arglist *>(rptr)->get_arglist().size());
-							for (auto &tree:dynamic_cast<token_arglist *>(rptr)->get_arglist())
+							args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
+							for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
 								args.push_back(lvalue(parse_expr(tree.root())));
 							token_base *oldt = it.data();
 							try {
@@ -533,12 +533,12 @@ namespace cs {
 				if (lptr == nullptr || rptr == nullptr || lptr->get_type() != token_types::arglist)
 					throw runtime_error("Wrong grammar for lambda expression.");
 				std::vector<std::string> args;
-				for (auto &it:dynamic_cast<token_arglist *>(lptr)->get_arglist()) {
+				for (auto &it:static_cast<token_arglist *>(lptr)->get_arglist()) {
 					if (it.root().data() == nullptr)
 						throw internal_error("Null pointer accessed.");
 					if (it.root().data()->get_type() != token_types::id)
 						throw runtime_error("Wrong grammar for function definition.");
-					const std::string &str = dynamic_cast<token_id *>(it.root().data())->get_id();
+					const std::string &str = static_cast<token_id *>(it.root().data())->get_id();
 					for (auto &it:args)
 						if (it == str)
 							throw runtime_error("Redefinition of function argument.");
@@ -584,14 +584,14 @@ namespace cs {
 		const auto &it = tree.root();
 		token_base *root = it.data();
 		if (root == nullptr || root->get_type() != token_types::signal ||
-		        dynamic_cast<token_signal *>(root)->get_signal() != signal_types::asi_)
+		        static_cast<token_signal *>(root)->get_signal() != signal_types::asi_)
 			throw runtime_error("Wrong grammar for variable definition.");
 		token_base *left = it.left().data();
 		const auto &right = it.right();
 		if (left == nullptr || right.data() == nullptr || left->get_type() != token_types::id)
 			throw runtime_error("Wrong grammar for variable definition.");
-		dvp.id = dynamic_cast<token_id *>(left)->get_id();
-		dvp.expr = cov::tree<token_base*>(right);
+		dvp.id = static_cast<token_id *>(left)->get_id();
+		dvp.expr = cov::tree<token_base *>(right);
 	}
 
 	extension_t instance_type::import(const std::string &path, const std::string &name)
