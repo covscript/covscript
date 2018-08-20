@@ -110,7 +110,7 @@ namespace cs_impl {
 		{
 			if (typeid(T) != val.type())
 				throw cs::runtime_error(
-				    "Invalid Argument.At " + std::to_string(index + 1) + ".Expected " + get_name_of_type<T>() +
+				    "Invalid Argument.At " + std::to_string(index + 1) + ".Expected " + cxx_demangle(get_name_of_type<T>()) +
 				    ",provided " + val.get_type_name());
 			else
 				return 0;

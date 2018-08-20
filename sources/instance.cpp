@@ -740,11 +740,19 @@ namespace cs {
 						tmp.clear();
 						method = nullptr;
 					}
-					else
+					else {
+						m->preprocess({line});
 						tmp.push_back(line);
+					}
 				}
-				else
-					statement = m->translate({line});
+				else {
+					if (m->get_target_type() == statement_types::end_)
+						throw runtime_error("Hanging end statement.");
+					else {
+						m->preprocess({line});
+						statement = m->translate({line});
+					}
+				}
 			}
 			break;
 			case method_types::block: {

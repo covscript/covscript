@@ -319,12 +319,12 @@ namespace cs_impl {
 			return this->mDat->data->get_ext();
 		}
 
-		const char *get_type_name() const
+		std::string get_type_name() const
 		{
 			if (this->mDat == nullptr)
-				return get_name_of_type<void>();
+				return cxx_demangle(get_name_of_type<void>());
 			else
-				return this->mDat->data->get_type_name();
+				return cxx_demangle(this->mDat->data->get_type_name());
 		}
 
 		bool is_same(const any &obj) const
