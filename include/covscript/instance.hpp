@@ -248,7 +248,19 @@ namespace cs {
 				it.constant();
 		}
 
+		// Translator
+		translator_type translator;
+
+		// Statements
+		std::deque<statement_base *> statements;
+
+		// Initializations
+		void init_grammar();
+
+		void init_runtime();
+
 	public:
+		// Constants
 		void add_constant(const var &val)
 		{
 			if (!val.is_protect()) {
@@ -264,33 +276,8 @@ namespace cs {
 			return new token_value(val);
 		}
 
-	private:
-		// Translator
-		translator_type translator;
-
-		// Statements
-		std::deque<statement_base *> statements;
-
-		// Initializations
-		void init_grammar();
-
-		void init_runtime();
-
-	public:
 		// Context
 		context_t context;
-
-		// Constructor and destructor
-		instance_type() : context(std::make_shared<context_type>(this))
-		{
-			struct_builder::reset_counter();
-			init_grammar();
-			init_runtime();
-		}
-
-		instance_type(const instance_type &) = delete;
-
-		~instance_type() = default;
 
 		// Status
 		bool inside_lambda = false;
@@ -390,6 +377,18 @@ namespace cs {
 		}
 
 		void opt_expr(cov::tree<token_base *> &, cov::tree<token_base *>::iterator);
+
+		// Constructor and destructor
+		instance_type() : context(std::make_shared<context_type>(this))
+		{
+			struct_builder::reset_counter();
+			init_grammar();
+			init_runtime();
+		}
+
+		instance_type(const instance_type &) = delete;
+
+		~instance_type() = default;
 
 		// Wrapped Method
 		extension_t import(const std::string &, const std::string &);

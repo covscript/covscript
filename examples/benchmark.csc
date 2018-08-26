@@ -120,6 +120,16 @@ function step5(n,k)
     end
     return to_integer(score/k)
 end
+function step6(n,k)
+    var score=0
+    var fib=[](n)->n>2?fib(n-1)+fib(n-2):1
+    for i=1 to k
+        var ts=runtime.time()
+        fib(n)
+        score=score+runtime.time()-ts
+    end
+    return to_integer(score/k)
+end
 system.out.println("Covariant Script Performance Benchmark")
 system.out.println("Step 1:Speed of simple statement execution")
 system.out.println("Result:"+to_string(step1(5)))
@@ -131,3 +141,5 @@ system.out.println("Step 4:Speed of quick sort(10000 Data)")
 system.out.println("Result:"+to_string(step4(10000,5)))
 system.out.println("Step 5:Speed of fibonacci(10000 Data)")
 system.out.println("Result:"+to_string(step5(10000,5)))
+system.out.println("Step 6:Speed of fibonacci(Depth 30)")
+system.out.println("Result:"+to_string(step6(30,5)))
