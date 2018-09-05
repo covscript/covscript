@@ -64,12 +64,12 @@ namespace array_cs_ext {
 	}
 
 // Iterators
-	array::iterator begin(array & arr)
+	array::iterator begin(array &arr)
 	{
 		return arr.begin();
 	}
 
-	array::iterator term(array & arr)
+	array::iterator term(array &arr)
 	{
 		return arr.end();
 	}
@@ -101,12 +101,12 @@ namespace array_cs_ext {
 	}
 
 // Modifiers
-	void clear(array & arr)
+	void clear(array &arr)
 	{
 		arr.clear();
 	}
 
-	array::iterator insert(array & arr, array::iterator & pos,
+	array::iterator insert(array &arr, array::iterator &pos,
 	                       const var &val
 	                      )
 	{

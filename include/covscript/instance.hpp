@@ -131,7 +131,7 @@ namespace cs {
 			{"using",     action_types::using_},
 			{"namespace", action_types::namespace_},
 			{"struct",    action_types::struct_},
-			{"class",    action_types::struct_},
+			{"class",     action_types::struct_},
 			{"extends",   action_types::extends_},
 			{"block",     action_types::block_},
 			{"end",       action_types::endblock_},
@@ -159,25 +159,25 @@ namespace cs {
 			{"throw",     action_types::throw_}
 		};
 		mapping<std::string, std::function<token_base *()>> reserved_map = {
-			{"and",     []() -> token_base * { return new token_signal(signal_types::and_); }},
-			{"or",      []() -> token_base * { return new token_signal(signal_types::or_); }},
-			{"not",     []() -> token_base * { return new token_signal(signal_types::not_); }},
-			{"typeid",  []() -> token_base * { return new token_signal(signal_types::typeid_); }},
-			{"new",     []() -> token_base * { return new token_signal(signal_types::new_); }},
-			{"gcnew",   []() -> token_base * { return new token_signal(signal_types::gcnew_); }},
+			{"and",    []() -> token_base * { return new token_signal(signal_types::and_); }},
+			{"or",     []() -> token_base * { return new token_signal(signal_types::or_); }},
+			{"not",    []() -> token_base * { return new token_signal(signal_types::not_); }},
+			{"typeid", []() -> token_base * { return new token_signal(signal_types::typeid_); }},
+			{"new",    []() -> token_base * { return new token_signal(signal_types::new_); }},
+			{"gcnew",  []() -> token_base * { return new token_signal(signal_types::gcnew_); }},
 			{
-				"local", []() -> token_base * {
+				"local",  []() -> token_base * {
 					return new token_value(var::make_constant<constant_values>(constant_values::local_namepace));
 				}
 			},
 			{
-				"global",  []() -> token_base * {
+				"global", []() -> token_base * {
 					return new token_value(var::make_constant<constant_values>(constant_values::global_namespace));
 				}
 			},
-			{"null",    []() -> token_base * { return new token_value(null_pointer); }},
-			{"true",    []() -> token_base * { return new token_value(var::make_constant<bool>(true)); }},
-			{"false",   []() -> token_base * { return new token_value(var::make_constant<bool>(false)); }}
+			{"null",   []() -> token_base * { return new token_value(null_pointer); }},
+			{"true",   []() -> token_base * { return new token_value(var::make_constant<bool>(true)); }},
+			{"false",  []() -> token_base * { return new token_value(var::make_constant<bool>(false)); }}
 		};
 		mapping<char, char> escape_map = {
 			{'a',  '\a'},
