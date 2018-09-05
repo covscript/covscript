@@ -131,6 +131,7 @@ namespace cs {
 			{"using",     action_types::using_},
 			{"namespace", action_types::namespace_},
 			{"struct",    action_types::struct_},
+			{"class",    action_types::struct_},
 			{"extends",   action_types::extends_},
 			{"block",     action_types::block_},
 			{"end",       action_types::endblock_},
@@ -165,8 +166,8 @@ namespace cs {
 			{"new",     []() -> token_base * { return new token_signal(signal_types::new_); }},
 			{"gcnew",   []() -> token_base * { return new token_signal(signal_types::gcnew_); }},
 			{
-				"current", []() -> token_base * {
-					return new token_value(var::make_constant<constant_values>(constant_values::current_namespace));
+				"local", []() -> token_base * {
+					return new token_value(var::make_constant<constant_values>(constant_values::local_namepace));
 				}
 			},
 			{

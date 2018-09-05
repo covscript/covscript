@@ -106,7 +106,7 @@ namespace cs {
 		vardef_
 	};
 	enum class constant_values {
-		current_namespace, global_namespace
+		local_namepace, global_namespace
 	};
 	/*
 	* Grammar Types

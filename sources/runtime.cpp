@@ -134,7 +134,7 @@ namespace cs {
 			case constant_values::global_namespace:
 				return storage.get_var_global(static_cast<token_id *>(b)->get_id());
 				break;
-			case constant_values::current_namespace:
+			case constant_values::local_namepace:
 				return storage.get_var_current(static_cast<token_id *>(b)->get_id());
 				break;
 			default:

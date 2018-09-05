@@ -1,5 +1,5 @@
 var id_count=0
-struct base
+class base
     var id=++id_count
     function initialize()
         system.out.println("Init base"+id)
@@ -19,7 +19,7 @@ struct base
         system.out.println("base"+id)
     end
 end
-struct child extends base
+class child extends base
     function initialize() override
         system.out.println("Init child"+this.id)
     end
