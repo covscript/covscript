@@ -98,6 +98,7 @@ namespace cs {
 			{"%=", signal_types::modasi_},
 			{"^",  signal_types::pow_},
 			{"^=", signal_types::powasi_},
+			{";",  signal_types::sem_},
 			{">",  signal_types::abo_},
 			{"<",  signal_types::und_},
 			{"=",  signal_types::asi_},
@@ -194,7 +195,7 @@ namespace cs {
 		};
 		std::deque<char> signals = {
 			'+', '-', '*', '/', '%', '^', ',', '.', '>', '<', '=', '&', '|', '!', '(', ')', '[', ']', '{', '}', ':',
-			'?'
+			'?', ';'
 		};
 		mapping<signal_types, int> signal_level_map = {
 			{signal_types::add_,    10},
@@ -209,6 +210,7 @@ namespace cs {
 			{signal_types::modasi_, 0},
 			{signal_types::pow_,    12},
 			{signal_types::powasi_, 0},
+			{signal_types::sem_,    -1},
 			{signal_types::dot_,    15},
 			{signal_types::arrow_,  15},
 			{signal_types::und_,    9},

@@ -200,6 +200,17 @@ namespace cs {
 		o << "} >";
 	}
 
+	void token_parallel::dump(std::ostream &o) const
+	{
+		o << "< ParallelList = {";
+		for (auto &tree:mTreeList) {
+			o << "< ChildExpression: ";
+			instance_type::dump_expr(tree.root(), o);
+			o << " >";
+		}
+		o << "} >";
+	}
+
 	const std::string &statement_base::get_file_path() const noexcept
 	{
 		return context->file_path;
@@ -396,6 +407,31 @@ namespace cs {
 				opt_expr(tree, it.right());
 				return;
 				break;
+			case signal_types::sem_: {
+				opt_expr(tree, it.left());
+				opt_expr(tree, it.right());
+				token_base *lptr = it.left().data();
+				token_base *rptr = it.right().data();
+				if(lptr==nullptr&&rptr==nullptr)
+					it.data()=nullptr;
+				else {
+					token_parallel* parallel_list=nullptr;
+					if(lptr!=nullptr&&lptr->get_type()==token_types::parallel)
+						parallel_list=static_cast<token_parallel*>(lptr);
+					else if(lptr!=nullptr)
+						parallel_list=new token_parallel({cov::tree<token_base*>(it.left())});
+					else
+						parallel_list=new token_parallel();
+					if(rptr!=nullptr&&rptr->get_type()==token_types::parallel)
+						for(auto& tree:static_cast<token_parallel*>(rptr)->get_parallel())
+							parallel_list->get_parallel().push_back(tree);
+					else if(rptr!=nullptr)
+						parallel_list->get_parallel().push_back(cov::tree<token_base *>(it.right()));
+					it.data()=parallel_list;
+				}
+				return;
+				break;
+			}
 			case signal_types::choice_: {
 				token_signal *sig = dynamic_cast<token_signal *>(it.right().data());
 				if (sig == nullptr || sig->get_signal() != signal_types::pair_)

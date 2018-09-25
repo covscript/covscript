@@ -398,6 +398,12 @@ namespace cs {
 				arr.push_back(copy(parse_expr(tree.root())));
 			return rvalue(var::make<array>(std::move(arr)));
 		}
+		case token_types::parallel: {
+			var result;
+			for(auto& tree:static_cast<token_parallel*>(token)->get_parallel())
+				result=parse_expr(tree.root());
+			return result;
+		}
 		case token_types::signal: {
 			switch (static_cast<token_signal *>(token)->get_signal()) {
 			default:

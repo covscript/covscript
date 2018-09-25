@@ -22,7 +22,7 @@
 
 namespace cs {
 	enum class token_types {
-		null, endline, action, signal, id, value, sblist, mblist, lblist, expr, arglist, array
+		null, endline, action, signal, id, value, sblist, mblist, lblist, expr, arglist, array, parallel
 	};
 	enum class action_types {
 		import_,
@@ -69,6 +69,7 @@ namespace cs {
 		modasi_,
 		pow_,
 		powasi_,
+		sem_,
 		com_,
 		dot_,
 		und_,
@@ -416,6 +417,26 @@ namespace cs {
 		}
 
 		std::deque<cov::tree<token_base *>> &get_array() noexcept
+		{
+			return this->mTreeList;
+		}
+
+		void dump(std::ostream &) const override;
+	};
+
+	class token_parallel final : public token_base {
+		std::deque<cov::tree<token_base *>> mTreeList;
+	public:
+		token_parallel() = default;
+
+		explicit token_parallel(std::deque<cov::tree<token_base *>> tlist) : mTreeList(std::move(tlist)) {}
+
+		token_types get_type() const noexcept override
+		{
+			return token_types::parallel;
+		}
+
+		std::deque<cov::tree<token_base *>> &get_parallel() noexcept
 		{
 			return this->mTreeList;
 		}
