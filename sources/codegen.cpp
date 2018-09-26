@@ -288,8 +288,8 @@ namespace cs {
 			throw internal_error("Null pointer accessed.");
 		if (tree.root().data()->get_type() != token_types::parallel)
 			throw runtime_error("Wrong grammar(for)");
-		auto& parallel_list=static_cast<token_parallel*>(tree.root().data())->get_parallel();
-		if(parallel_list.size()!=3)
+		auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
+		if (parallel_list.size() != 3)
 			throw runtime_error("Wrong grammar(for)");
 		instance_type::define_var_profile dvp;
 		context->instance->parse_define_var(parallel_list[0], dvp);
@@ -301,7 +301,7 @@ namespace cs {
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
 		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
-		auto& parallel_list=static_cast<token_parallel*>(tree.root().data())->get_parallel();
+		auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
 		return new statement_for(parallel_list, body, context, raw.front().back());
 	}
 

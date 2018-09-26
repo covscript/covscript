@@ -400,8 +400,8 @@ namespace cs {
 		}
 		case token_types::parallel: {
 			var result;
-			for(auto& tree:static_cast<token_parallel*>(token)->get_parallel())
-				result=parse_expr(tree.root());
+			for (auto &tree:static_cast<token_parallel *>(token)->get_parallel())
+				result = parse_expr(tree.root());
 			return result;
 		}
 		case token_types::signal: {

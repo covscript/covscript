@@ -405,12 +405,14 @@ namespace cs {
 
 	class statement_for final : public statement_base {
 		instance_type::define_var_profile mDvp;
-		std::deque<cov::tree<token_base*>> mParallel;
+		std::deque<cov::tree<token_base *>> mParallel;
 		std::deque<statement_base *> mBlock;
 	public:
 		statement_for() = delete;
 
-		statement_for(const std::deque<cov::tree<token_base*>>& parallel_list, std::deque<statement_base *> block, context_t c, token_base *ptr): statement_base(std::move(c), ptr), mParallel(parallel_list), mBlock(block)
+		statement_for(const std::deque<cov::tree<token_base *>> &parallel_list, std::deque<statement_base *> block,
+		              context_t c, token_base *ptr) : statement_base(std::move(c), ptr), mParallel(parallel_list),
+			mBlock(block)
 		{
 			context->instance->parse_define_var(mParallel[0], mDvp);
 		}
@@ -422,7 +424,7 @@ namespace cs {
 
 		void run() override;
 
-		void dump(std::ostream&) const override;
+		void dump(std::ostream &) const override;
 	};
 
 	class statement_foreach final : public statement_base {

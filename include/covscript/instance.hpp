@@ -426,6 +426,15 @@ namespace cs {
 
 		void exec(const string &);
 
+		void reset_status()
+		{
+			context_t __context = context;
+			std::size_t __line_num = line_num;
+			this->~repl();
+			::new(this) repl(__context);
+			line_num = __line_num;
+		}
+
 		int get_level() const
 		{
 			return level;

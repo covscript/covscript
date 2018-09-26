@@ -277,7 +277,8 @@ namespace cs {
 		// Loop Grammar
 		.add_method({new token_action(action_types::loop_), new token_endline(0)}, new method_loop(context))
 		// For Grammar
-		.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_for(context))
+		.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_for(context))
 		.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()),
 			            new token_action(action_types::iterate_), new token_expr(cov::tree<token_base *>()),
 			            new token_endline(0)}, new method_foreach(context))
@@ -406,22 +407,22 @@ namespace cs {
 				opt_expr(tree, it.right());
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
-				if(lptr==nullptr&&rptr==nullptr)
-					it.data()=nullptr;
+				if (lptr == nullptr && rptr == nullptr)
+					it.data() = nullptr;
 				else {
-					token_parallel* parallel_list=nullptr;
-					if(lptr!=nullptr&&lptr->get_type()==token_types::parallel)
-						parallel_list=static_cast<token_parallel*>(lptr);
-					else if(lptr!=nullptr)
-						parallel_list=new token_parallel({cov::tree<token_base*>(it.left())});
+					token_parallel *parallel_list = nullptr;
+					if (lptr != nullptr && lptr->get_type() == token_types::parallel)
+						parallel_list = static_cast<token_parallel *>(lptr);
+					else if (lptr != nullptr)
+						parallel_list = new token_parallel({cov::tree<token_base *>(it.left())});
 					else
-						parallel_list=new token_parallel();
-					if(rptr!=nullptr&&rptr->get_type()==token_types::parallel)
-						for(auto& tree:static_cast<token_parallel*>(rptr)->get_parallel())
+						parallel_list = new token_parallel();
+					if (rptr != nullptr && rptr->get_type() == token_types::parallel)
+						for (auto &tree:static_cast<token_parallel *>(rptr)->get_parallel())
 							parallel_list->get_parallel().push_back(tree);
-					else if(rptr!=nullptr)
+					else if (rptr != nullptr)
 						parallel_list->get_parallel().push_back(cov::tree<token_base *>(it.right()));
-					it.data()=parallel_list;
+					it.data() = parallel_list;
 				}
 				return;
 				break;
@@ -803,12 +804,15 @@ namespace cs {
 				statement->repl_run();
 		}
 		catch (const lang_error &le) {
+			reset_status();
 			throw fatal_error(std::string("Uncaught exception: ") + le.what());
 		}
 		catch (const cs::exception &e) {
+			reset_status();
 			throw e;
 		}
 		catch (const std::exception &e) {
+			reset_status();
 			throw exception(line_num, context->file_path, code, e.what());
 		}
 		context->instance->mark_constant();

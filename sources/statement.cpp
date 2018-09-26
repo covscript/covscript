@@ -451,10 +451,10 @@ namespace cs {
 			context->instance->continue_block = false;
 		scope_guard scope(context);
 		var val = copy(context->instance->context->instance->parse_expr(mDvp.expr.root()));
-		while(true) {
+		while (true) {
 			scope.clear();
 			context->instance->storage.add_var(mDvp.id, val);
-			if(!context->instance->parse_expr(mParallel[1].root()).const_val<boolean>())
+			if (!context->instance->parse_expr(mParallel[1].root()).const_val<boolean>())
 				break;
 			for (auto &ptr:mBlock) {
 				try {
