@@ -410,7 +410,8 @@ namespace cs {
 	public:
 		statement_for() = delete;
 
-		statement_for(const std::deque<cov::tree<token_base*>>& parallel_list, std::deque<statement_base *> block, context_t c, token_base *ptr): statement_base(std::move(c), ptr), mParallel(parallel_list), mBlock(block) {
+		statement_for(const std::deque<cov::tree<token_base*>>& parallel_list, std::deque<statement_base *> block, context_t c, token_base *ptr): statement_base(std::move(c), ptr), mParallel(parallel_list), mBlock(block)
+		{
 			context->instance->parse_define_var(mParallel[0], mDvp);
 		}
 
@@ -422,32 +423,6 @@ namespace cs {
 		void run() override;
 
 		void dump(std::ostream&) const override;
-	};
-
-	class statement_traverse final : public statement_base {
-		instance_type::define_var_profile mDvp;
-		cov::tree<token_base *> mEnd;
-		cov::tree<token_base *> mStep;
-		std::deque<statement_base *> mBlock;
-	public:
-		statement_traverse() = delete;
-
-		statement_traverse(cov::tree<token_base *> &tree0, cov::tree<token_base *> tree1,
-		              cov::tree<token_base *> tree2, std::deque<statement_base *> b, context_t c,
-		              token_base *ptr) : statement_base(std::move(c), ptr), mEnd(std::move(tree1)),
-			mStep(std::move(tree2)), mBlock(std::move(b))
-		{
-			context->instance->parse_define_var(tree0, mDvp);
-		}
-
-		statement_types get_type() const noexcept override
-		{
-			return statement_types::traverse_;
-		}
-
-		void run() override;
-
-		void dump(std::ostream &) const override;
 	};
 
 	class statement_foreach final : public statement_base {

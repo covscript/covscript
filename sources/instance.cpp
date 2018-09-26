@@ -277,13 +277,7 @@ namespace cs {
 		// Loop Grammar
 		.add_method({new token_action(action_types::loop_), new token_endline(0)}, new method_loop(context))
 		// For Grammar
-		.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()),
-			            new token_action(action_types::to_), new token_expr(cov::tree<token_base *>()),
-			            new token_action(action_types::step_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_for_step(context))
-		.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()),
-			            new token_action(action_types::to_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_for(context))
+		.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_for(context))
 		.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()),
 			            new token_action(action_types::iterate_), new token_expr(cov::tree<token_base *>()),
 			            new token_endline(0)}, new method_foreach(context))

@@ -147,8 +147,6 @@ namespace cs {
 			{"until",     action_types::until_},
 			{"loop",      action_types::loop_},
 			{"for",       action_types::for_},
-			{"to",        action_types::to_},
-			{"step",      action_types::step_},
 			{"iterate",   action_types::iterate_},
 			{"break",     action_types::break_},
 			{"continue",  action_types::continue_},
