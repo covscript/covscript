@@ -451,6 +451,59 @@ namespace cs {
 			context->instance->continue_block = false;
 		scope_guard scope(context);
 		var val = copy(context->instance->context->instance->parse_expr(mDvp.expr.root()));
+		while(context->instance->parse_expr(mParallel[1].root()).const_val<boolean>())
+		{
+			scope.clear();
+			context->instance->storage.add_var(mDvp.id, val);
+			for (auto &ptr:mBlock) {
+				try {
+					ptr->run();
+				}
+				catch (const cs::exception &e) {
+					throw e;
+				}
+				catch (const std::exception &e) {
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+				}
+				if (context->instance->return_fcall) {
+					return;
+				}
+				if (context->instance->break_block) {
+					context->instance->break_block = false;
+					return;
+				}
+				if (context->instance->continue_block) {
+					context->instance->continue_block = false;
+					break;
+				}
+			}
+			context->instance->parse_expr(mParallel[2].root());
+		}
+	}
+
+	void statement_for::dump(std::ostream &o) const
+	{
+		o << "< BeginFor >\n";
+		o << "< IteratorID = \"" << mDvp.id << "\", IteratorValue = ";
+		instance_type::dump_expr(mDvp.expr.root(), o);
+		o << " >\n< Condition = ";
+		instance_type::dump_expr(mParallel[1].root(), o);
+		o << " >\n< Increment = ";
+		instance_type::dump_expr(mParallel[2].root(), o);
+		o << " >\n< Body >\n";
+		for (auto &ptr:mBlock)
+			ptr->dump(o);
+		o << "< EndFor >\n";
+	}
+
+	void statement_traverse::run()
+	{
+		if (context->instance->break_block)
+			context->instance->break_block = false;
+		if (context->instance->continue_block)
+			context->instance->continue_block = false;
+		scope_guard scope(context);
+		var val = copy(context->instance->context->instance->parse_expr(mDvp.expr.root()));
 		while (val.const_val<number>() <= context->instance->parse_expr(mEnd.root()).const_val<number>()) {
 			scope.clear();
 			context->instance->storage.add_var(mDvp.id, val);
@@ -480,7 +533,7 @@ namespace cs {
 		}
 	}
 
-	void statement_for::dump(std::ostream &o) const
+	void statement_traverse::dump(std::ostream &o) const
 	{
 		o << "< BeginFor >\n";
 		o << "< IteratorID = \"" << mDvp.id << "\", IteratorValue = ";

@@ -293,7 +293,7 @@ namespace cs {
 	{
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
-		return new statement_for(static_cast<token_expr *>(raw.front().at(1))->get_tree(),
+		return new statement_traverse(static_cast<token_expr *>(raw.front().at(1))->get_tree(),
 		                         static_cast<token_expr *>(raw.front().at(3))->get_tree(),
 		                         static_cast<token_expr *>(raw.front().at(5))->get_tree(), body, context,
 		                         raw.front().back());
@@ -313,7 +313,7 @@ namespace cs {
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
 		cov::tree<token_base *> tree_step;
 		tree_step.emplace_root_left(tree_step.root(), context->instance->new_value(number(1)));
-		return new statement_for(static_cast<token_expr *>(raw.front().at(1))->get_tree(),
+		return new statement_traverse(static_cast<token_expr *>(raw.front().at(1))->get_tree(),
 		                         static_cast<token_expr *>(raw.front().at(3))->get_tree(), tree_step, body, context,
 		                         raw.front().back());
 	}

@@ -463,6 +463,7 @@ namespace cs {
 		until_,
 		loop_,
 		for_,
+		traverse_,
 		foreach_,
 		break_,
 		continue_,
