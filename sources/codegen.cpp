@@ -305,6 +305,43 @@ namespace cs {
 		return new statement_for(parallel_list, body, context, raw.front().back());
 	}
 
+	void method_traverse_step::preprocess(const std::deque<std::deque<token_base *>> &raw)
+	{
+		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		instance_type::define_var_profile dvp;
+		context->instance->parse_define_var(tree, dvp);
+		context->instance->storage.add_record(dvp.id);
+	}
+
+	statement_base *method_traverse_step::translate(const std::deque<std::deque<token_base *>> &raw)
+	{
+		std::deque<statement_base *> body;
+		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
+		return new statement_traverse(static_cast<token_expr *>(raw.front().at(1))->get_tree(),
+		                         static_cast<token_expr *>(raw.front().at(3))->get_tree(),
+		                         static_cast<token_expr *>(raw.front().at(5))->get_tree(), body, context,
+		                         raw.front().back());
+	}
+
+	void method_traverse::preprocess(const std::deque<std::deque<token_base *>> &raw)
+	{
+		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		instance_type::define_var_profile dvp;
+		context->instance->parse_define_var(tree, dvp);
+		context->instance->storage.add_record(dvp.id);
+	}
+
+	statement_base *method_traverse::translate(const std::deque<std::deque<token_base *>> &raw)
+	{
+		std::deque<statement_base *> body;
+		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
+		cov::tree<token_base *> tree_step;
+		tree_step.emplace_root_left(tree_step.root(), context->instance->new_value(number(1)));
+		return new statement_traverse(static_cast<token_expr *>(raw.front().at(1))->get_tree(),
+		                         static_cast<token_expr *>(raw.front().at(3))->get_tree(), tree_step, body, context,
+		                         raw.front().back());
+	}
+
 	void method_foreach::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();

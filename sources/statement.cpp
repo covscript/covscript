@@ -497,6 +497,58 @@ namespace cs {
 		o << "< EndFor >\n";
 	}
 
+	void statement_traverse::run()
+	{
+		if (context->instance->break_block)
+			context->instance->break_block = false;
+		if (context->instance->continue_block)
+			context->instance->continue_block = false;
+		scope_guard scope(context);
+		var val = copy(context->instance->context->instance->parse_expr(mDvp.expr.root()));
+		while (val.const_val<number>() <= context->instance->parse_expr(mEnd.root()).const_val<number>()) {
+			scope.clear();
+			context->instance->storage.add_var(mDvp.id, val);
+			for (auto &ptr:mBlock) {
+				try {
+					ptr->run();
+				}
+				catch (const cs::exception &e) {
+					throw e;
+				}
+				catch (const std::exception &e) {
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+				}
+				if (context->instance->return_fcall) {
+					return;
+				}
+				if (context->instance->break_block) {
+					context->instance->break_block = false;
+					return;
+				}
+				if (context->instance->continue_block) {
+					context->instance->continue_block = false;
+					break;
+				}
+			}
+			val.val<number>(true) += context->instance->parse_expr(mStep.root()).const_val<number>();
+		}
+	}
+
+	void statement_traverse::dump(std::ostream &o) const
+	{
+		o << "< BeginFor >\n";
+		o << "< IteratorID = \"" << mDvp.id << "\", IteratorValue = ";
+		instance_type::dump_expr(mDvp.expr.root(), o);
+		o << " >\n< DestinationValue = ";
+		instance_type::dump_expr(mEnd.root(), o);
+		o << " >\n< StepValue = ";
+		instance_type::dump_expr(mStep.root(), o);
+		o << " >\n< Body >\n";
+		for (auto &ptr:mBlock)
+			ptr->dump(o);
+		o << "< EndFor >\n";
+	}
+
 	template<typename T, typename X>
 	void foreach_helper(const context_t &context, const string &iterator, const var &obj,
 	                    std::deque<statement_base *> &body)
