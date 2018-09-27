@@ -69,7 +69,6 @@ namespace cs {
 		modasi_,
 		pow_,
 		powasi_,
-		sem_,
 		com_,
 		dot_,
 		und_,
