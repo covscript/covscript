@@ -62,14 +62,11 @@ namespace cs {
 	};
 
 	class statement_var final : public statement_base {
-		instance_type::define_var_profile mDvp;
+		std::vector<instance_type::define_var_profile> mDvp;
 	public:
 		statement_var() = delete;
 
-		statement_var(instance_type::define_var_profile dvp, context_t c, token_base *ptr) : statement_base(
-			    std::move(c),
-			    ptr),
-			mDvp(std::move(dvp)) {}
+		statement_var(const std::vector<instance_type::define_var_profile>& dvp, context_t c, token_base *ptr) : statement_base(std::move(c), ptr), mDvp(dvp) {}
 
 		statement_types get_type() const noexcept override
 		{
@@ -436,8 +433,8 @@ namespace cs {
 		statement_traverse() = delete;
 
 		statement_traverse(cov::tree<token_base *> &tree0, cov::tree<token_base *> tree1,
-		              cov::tree<token_base *> tree2, std::deque<statement_base *> b, context_t c,
-		              token_base *ptr) : statement_base(std::move(c), ptr), mEnd(std::move(tree1)),
+		                   cov::tree<token_base *> tree2, std::deque<statement_base *> b, context_t c,
+		                   token_base *ptr) : statement_base(std::move(c), ptr), mEnd(std::move(tree1)),
 			mStep(std::move(tree2)), mBlock(std::move(b))
 		{
 			context->instance->parse_define_var(tree0, mDvp);

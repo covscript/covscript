@@ -72,12 +72,44 @@ namespace cs {
 		return mResult;
 	}
 
+	void method_var::preprocess(const std::deque<std::deque<token_base *>> &raw)
+	{
+		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		if (tree.root().data() == nullptr)
+			throw internal_error("Null pointer accessed.");
+		if (tree.root().data()->get_type() == token_types::parallel) {
+			auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
+			for(auto& t:parallel_list) {
+				instance_type::define_var_profile dvp;
+				context->instance->parse_define_var(t, dvp);
+				context->instance->storage.add_record(dvp.id);
+			}
+		}
+		else {
+			instance_type::define_var_profile dvp;
+			context->instance->parse_define_var(tree, dvp);
+			context->instance->storage.add_record(dvp.id);
+		}
+	}
+
 	statement_base *method_var::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
-		instance_type::define_var_profile dvp;
-		context->instance->parse_define_var(tree, dvp);
-		return new statement_var(dvp, context, raw.front().back());
+		if (tree.root().data() == nullptr)
+			throw internal_error("Null pointer accessed.");
+		std::vector<instance_type::define_var_profile> dvp_list;
+		if (tree.root().data()->get_type() == token_types::parallel) {
+			auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
+			for(auto& t:parallel_list) {
+				dvp_list.emplace_back();
+				context->instance->parse_define_var(t, dvp_list.back());
+			}
+		}
+		else {
+			dvp_list.emplace_back();
+			context->instance->parse_define_var(tree, dvp_list.back());
+		}
+		return new statement_var(dvp_list, context, raw.front().back());
 	}
 
 	void method_constant::preprocess(const std::deque<std::deque<token_base *>> &raw)
@@ -318,9 +350,9 @@ namespace cs {
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
 		return new statement_traverse(static_cast<token_expr *>(raw.front().at(1))->get_tree(),
-		                         static_cast<token_expr *>(raw.front().at(3))->get_tree(),
-		                         static_cast<token_expr *>(raw.front().at(5))->get_tree(), body, context,
-		                         raw.front().back());
+		                              static_cast<token_expr *>(raw.front().at(3))->get_tree(),
+		                              static_cast<token_expr *>(raw.front().at(5))->get_tree(), body, context,
+		                              raw.front().back());
 	}
 
 	void method_traverse::preprocess(const std::deque<std::deque<token_base *>> &raw)
@@ -338,8 +370,8 @@ namespace cs {
 		cov::tree<token_base *> tree_step;
 		tree_step.emplace_root_left(tree_step.root(), context->instance->new_value(number(1)));
 		return new statement_traverse(static_cast<token_expr *>(raw.front().at(1))->get_tree(),
-		                         static_cast<token_expr *>(raw.front().at(3))->get_tree(), tree_step, body, context,
-		                         raw.front().back());
+		                              static_cast<token_expr *>(raw.front().at(3))->get_tree(), tree_step, body, context,
+		                              raw.front().back());
 	}
 
 	void method_foreach::preprocess(const std::deque<std::deque<token_base *>> &raw)

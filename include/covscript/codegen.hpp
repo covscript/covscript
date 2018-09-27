@@ -110,6 +110,8 @@ namespace cs {
 			return statement_types::var_;
 		}
 
+		void preprocess(const std::deque<std::deque<token_base *>> &) override;
+
 		statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 

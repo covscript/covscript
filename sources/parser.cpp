@@ -43,10 +43,6 @@ namespace cs {
 					tokens.push_back(ptr);
 					tokens.push_back(new token_signal(signal_types::vardef_));
 					continue;
-				case action_types::var_:
-					tokens.push_back(ptr);
-					tokens.push_back(new token_signal(signal_types::vardef_));
-					continue;
 				case action_types::struct_:
 					tokens.push_back(ptr);
 					tokens.push_back(new token_signal(signal_types::vardef_));

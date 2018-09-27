@@ -52,9 +52,7 @@ function quicksort(a,m,n)
     if n<=m
         return 0
     end
-    var i=m-1
-    var j=n
-    var v=a[n]
+    var i=m-1,j=n,v=a[n]
     loop
         loop
             ++i
@@ -119,8 +117,7 @@ function step5(n,k)
     return to_integer(score/k)
 end
 function step6(n,k)
-    var score=0
-    var fib=[](n)->n>2?fib(n-1)+fib(n-2):1
+    var score=0,fib=[](n)->n>2?fib(n-1)+fib(n-2):1
     for i=1,i<=k,++i
         var ts=runtime.time()
         fib(n)

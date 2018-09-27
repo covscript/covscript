@@ -27,7 +27,7 @@
 *
 */
 #define COVSCRIPT_VERSION_NUM 1,3,2,1
-#define COVSCRIPT_VERSION_STR "1.3.2 Nautilus pompilius(Unstable) Build 1"
+#define COVSCRIPT_VERSION_STR "1.3.2 Nautilus pompilius(Unstable) Build 2"
 #define COVSCRIPT_STD_VERSION 181001
 #if defined(_WIN32) || defined(WIN32)
 #define COVSCRIPT_PLATFORM_WIN32
