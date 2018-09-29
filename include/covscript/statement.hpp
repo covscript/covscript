@@ -66,7 +66,8 @@ namespace cs {
 	public:
 		statement_var() = delete;
 
-		statement_var(const std::vector<instance_type::define_var_profile>& dvp, context_t c, token_base *ptr) : statement_base(std::move(c), ptr), mDvp(dvp) {}
+		statement_var(const std::vector<instance_type::define_var_profile> &dvp, context_t c, token_base *ptr)
+			: statement_base(std::move(c), ptr), mDvp(dvp) {}
 
 		statement_types get_type() const noexcept override
 		{
@@ -83,7 +84,8 @@ namespace cs {
 	public:
 		statement_constant() = delete;
 
-		statement_constant(const std::vector<std::pair<std::string, var>>& val, context_t c, token_base *ptr) : statement_base(std::move(c), ptr), mVal(std::move(val)) {}
+		statement_constant(const std::vector<std::pair<std::string, var>> &val, context_t c, token_base *ptr)
+			: statement_base(std::move(c), ptr), mVal(std::move(val)) {}
 
 		statement_types get_type() const noexcept override
 		{

@@ -40,7 +40,8 @@ namespace cs {
 	class name_space_holder;
 
 	template<typename _kT, typename _vT> using map_t=spp::sparse_hash_map<_kT, _vT>;
-	using var=cs_impl::any;
+	template<typename _Tp> using set_t=spp::sparse_hash_set
+	                                   using var=cs_impl::any;
 	using number=long double;
 	using boolean=bool;
 	using string=std::string;

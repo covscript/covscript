@@ -65,17 +65,17 @@ namespace cs_impl {
 			    StdHandle,
 			    csbi.wAttributes,
 			    csbi.dwSize.X * csbi.dwSize.Y,
-			{ 0,0 },
+			{0, 0},
 			&dwWritten);
 			FillConsoleOutputCharacterW(
 			    StdHandle,
 			    L' ',
 			    csbi.dwSize.X * csbi.dwSize.Y,
-			{ 0,0 },
+			{0, 0},
 			&dwWritten);
 			SetConsoleCursorPosition(
 			    StdHandle,
-			{ 0,0 });
+			{0, 0});
 		}
 
 		static int getch()

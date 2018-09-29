@@ -31,8 +31,8 @@ namespace cs {
 		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
-		std::vector<std::pair<std::string,var>> var_list;
-		auto process=[this,&var_list](cov::tree<token_base *> & t) {
+		std::vector<std::pair<std::string, var>> var_list;
+		auto process = [this, &var_list](cov::tree<token_base *> &t) {
 			token_base *token = t.root().data();
 			if (token == nullptr || token->get_type() != token_types::id)
 				throw runtime_error("Wrong grammar for import statement.");
@@ -44,7 +44,7 @@ namespace cs {
 		};
 		if (tree.root().data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
-			for(auto& t:parallel_list)
+			for (auto &t:parallel_list)
 				process(t);
 		}
 		else
@@ -94,7 +94,7 @@ namespace cs {
 			throw internal_error("Null pointer accessed.");
 		if (tree.root().data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
-			for(auto& t:parallel_list) {
+			for (auto &t:parallel_list) {
 				instance_type::define_var_profile dvp;
 				context->instance->parse_define_var(t, dvp);
 			}
@@ -113,7 +113,7 @@ namespace cs {
 		std::vector<instance_type::define_var_profile> dvp_list;
 		if (tree.root().data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
-			for(auto& t:parallel_list) {
+			for (auto &t:parallel_list) {
 				dvp_list.emplace_back();
 				context->instance->parse_define_var(t, dvp_list.back());
 			}
@@ -130,8 +130,8 @@ namespace cs {
 		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
-		std::vector<std::pair<std::string,var>> var_list;
-		auto process=[this,&var_list](cov::tree<token_base *> & t) {
+		std::vector<std::pair<std::string, var>> var_list;
+		auto process = [this, &var_list](cov::tree<token_base *> &t) {
 			instance_type::define_var_profile dvp;
 			context->instance->parse_define_var(t, dvp);
 			if (dvp.expr.root().data()->get_type() != token_types::value)
@@ -143,7 +143,7 @@ namespace cs {
 		};
 		if (tree.root().data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
-			for(auto& t:parallel_list)
+			for (auto &t:parallel_list)
 				process(t);
 		}
 		else
@@ -389,7 +389,7 @@ namespace cs {
 		const std::string &it = static_cast<token_id *>(t.root().left().data())->get_id();
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
-		return new statement_foreach(it, cov::tree<token_base*>(t.root().right()), body, context, raw.front().back());
+		return new statement_foreach(it, cov::tree<token_base *>(t.root().right()), body, context, raw.front().back());
 	}
 
 	statement_base *method_break::translate(const std::deque<std::deque<token_base *>> &raw)

@@ -22,7 +22,7 @@
 
 namespace cs {
 	class domain_manager {
-		std::deque<spp::sparse_hash_set<string>> m_set;
+		std::deque<set_t < string>> m_set;
 		std::deque<domain_t> m_data;
 	public:
 		domain_manager()

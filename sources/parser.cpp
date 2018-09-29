@@ -40,17 +40,17 @@ namespace cs {
 				default:
 					break;
 				case action_types::import_:
-					insert_vardef=true;
+					insert_vardef = true;
 					tokens.push_back(ptr);
 					tokens.push_back(new token_signal(signal_types::vardef_));
 					continue;
 				case action_types::var_:
-					insert_vardef=true;
+					insert_vardef = true;
 					tokens.push_back(ptr);
 					tokens.push_back(new token_signal(signal_types::vardef_));
 					continue;
 				case action_types::constant_:
-					insert_vardef=true;
+					insert_vardef = true;
 					tokens.push_back(ptr);
 					tokens.push_back(new token_signal(signal_types::vardef_));
 					continue;
@@ -142,7 +142,7 @@ namespace cs {
 				default:
 					break;
 				case signal_types::com_:
-					if(insert_vardef) {
+					if (insert_vardef) {
 						tokens.push_back(ptr);
 						tokens.push_back(new token_signal(signal_types::vardef_));
 						continue;

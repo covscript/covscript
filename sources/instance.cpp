@@ -244,7 +244,8 @@ namespace cs {
 		// Var Grammar
 		.add_method({new token_action(action_types::var_), new token_expr(cov::tree<token_base *>()),
 			            new token_endline(0)}, new method_var(context))
-		.add_method({new token_action(action_types::constant_), new token_expr(cov::tree<token_base *>()), new token_endline(0)},
+		.add_method({new token_action(action_types::constant_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)},
 		new method_constant(context))
 		// End Grammar
 		.add_method({new token_action(action_types::endblock_), new token_endline(0)}, new method_end(context))
@@ -278,7 +279,8 @@ namespace cs {
 		// For Grammar
 		.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()),
 			            new token_endline(0)}, new method_for(context))
-		.add_method({new token_action(action_types::foreach_), new token_expr(cov::tree<token_base *>()), new token_endline(0)}, new method_foreach(context))
+		.add_method({new token_action(action_types::foreach_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_foreach(context))
 		// Break Grammar
 		.add_method({new token_action(action_types::break_), new token_endline(0)}, new method_break(context))
 		// Continue Grammar
