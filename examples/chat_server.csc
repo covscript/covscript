@@ -16,7 +16,7 @@ var cilent_profile=new hash_map
 var id_count=10000
 function broadcast(msg)
     system.out.println(msg)
-    for it iterate cilent_profile
+    foreach it:cilent_profile
         it.second()->add_msg(msg)
     end
 end
@@ -32,7 +32,7 @@ end
 function recv_msg(id,msg)
     var sd=cilent_profile.at(id)
     var m="["+id+"@"+sd->name+"]:"+msg
-    for it iterate cilent_profile
+    foreach it:cilent_profile
         it.second()->add_msg(m)
     end
 end

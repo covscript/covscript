@@ -5,7 +5,7 @@ system.out.println(result)
 system.out.println(result*2)
 system.out.println("Split str")
 var r=str_tools.split(system.in.getline())
-for it iterate r
+foreach it:r
 	system.out.print("#"+it+"#")
 end
 system.out.println("")

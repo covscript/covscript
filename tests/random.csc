@@ -2,7 +2,7 @@ function test()
     var a=new array
     loop
         var num=math.randint(math.constant.min,math.constant.max)
-        for it iterate a
+        foreach it:a
             if math.abs(num-it)<10000
                 return a.size()
             end

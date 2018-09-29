@@ -27,6 +27,6 @@ var types=
     type(context.build("x"))
 }
 @end
-for it iterate types
+foreach it:types
     system.out.println(it)
 end

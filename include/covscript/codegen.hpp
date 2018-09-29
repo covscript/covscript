@@ -343,44 +343,6 @@ namespace cs {
 		statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_traverse final : public method_base {
-	public:
-		using method_base::method_base;
-
-		method_types get_type() const noexcept override
-		{
-			return method_types::block;
-		}
-
-		statement_types get_target_type() const noexcept override
-		{
-			return statement_types::traverse_;
-		}
-
-		void preprocess(const std::deque<std::deque<token_base *>> &) override;
-
-		statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
-	};
-
-	class method_traverse_step final : public method_base {
-	public:
-		using method_base::method_base;
-
-		method_types get_type() const noexcept override
-		{
-			return method_types::block;
-		}
-
-		statement_types get_target_type() const noexcept override
-		{
-			return statement_types::traverse_;
-		}
-
-		void preprocess(const std::deque<std::deque<token_base *>> &) override;
-
-		statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
-	};
-
 	class method_foreach final : public method_base {
 	public:
 		using method_base::method_base;

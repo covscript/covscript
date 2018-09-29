@@ -12,7 +12,7 @@ while it!=arr.term()
 	end
 	it.forward()
 end
-for it iterate arr
+foreach it:arr
 	system.out.print(to_string(it)+" ")
 end
 system.out.println("")

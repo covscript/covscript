@@ -184,7 +184,7 @@ loop
     sock.send_to("SYNC@"+id,server)
     var buff=sock.receive_from(1000,server)
     if buff!="NULL"
-        for it iterate buff.split({';'})
+        foreach it:buff.split({';'})
             msg+=it+"\n"
         end
     end

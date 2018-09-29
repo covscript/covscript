@@ -8,7 +8,7 @@ struct event
         listeners.push_front(func)
     end
     function activate(obj)
-        for func iterate listeners
+        foreach func:listeners
             if func(obj)
                 return true
             end
@@ -81,7 +81,7 @@ struct base_activity
                 end
             end
             on_present.activate(this)
-            for it iterate window_list
+            foreach it:window_list
                 if it->is_opened()
                     it->render()
                 end
@@ -139,24 +139,24 @@ struct file_explorer extends base_window
         var info=system.path.scan(path)
         var regs=new array
         var files=new array
-        for it iterate filters
+        foreach it:filters
             regs.push_back(regex.build(it))
         end
-        for it iterate info
+        foreach it:info
             if it.type()==system.path.type.dir
                 path_info.push_back(it)
             else
-                for reg iterate regs
+                foreach reg:regs
                     if !reg.match(it.name()).empty()
                         files.push_back(it)
                     end
                 end
             end
         end
-        for it iterate files
+        foreach it:files
             path_info.push_back(it)
         end
-        for it iterate path_info
+        foreach it:path_info
             if it.type()==system.path.type.dir
                 path_name.push_back(to_string(system.path.separator)+it.name())
             else

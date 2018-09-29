@@ -1,5 +1,5 @@
 var str="\t\"hello\"\n\tworld"
-for ch iterate str
+foreach ch:str
   if(ch=='\t')
     system.out.println("Boom!")
   end

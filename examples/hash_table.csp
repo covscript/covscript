@@ -9,7 +9,7 @@ struct type_impl
 			table.at(bucket)=gcnew list
 		end
 		var lst=table.at(bucket)
-		for it iterate *lst
+		foreach it:*lst
 			if it.first()==dat.first()
 				it.second()=dat.second()
 				return
@@ -23,7 +23,7 @@ struct type_impl
 		if lst==null
 			return null
 		end
-		for it iterate *lst
+		foreach it:*lst
 			if it.first()==key
 				return it.second()
 			end
@@ -31,9 +31,9 @@ struct type_impl
 		return null
 	end
 	function print()
-		for lst iterate table
+		foreach lst:table
 			if lst!=null
-				for p iterate *lst
+				foreach p:*lst
 					system.out.println(to_string(p.first())+":"+to_string(p.second()))
 				end
 			end

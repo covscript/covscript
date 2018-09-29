@@ -365,65 +365,33 @@ namespace cs {
 		return new statement_for(parallel_list, body, context, raw.front().back());
 	}
 
-	void method_traverse_step::preprocess(const std::deque<std::deque<token_base *>> &raw)
-	{
-		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
-		instance_type::define_var_profile dvp;
-		context->instance->parse_define_var(tree, dvp);
-		context->instance->storage.add_record(dvp.id);
-	}
-
-	statement_base *method_traverse_step::translate(const std::deque<std::deque<token_base *>> &raw)
-	{
-		std::deque<statement_base *> body;
-		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
-		return new statement_traverse(static_cast<token_expr *>(raw.front().at(1))->get_tree(),
-		                              static_cast<token_expr *>(raw.front().at(3))->get_tree(),
-		                              static_cast<token_expr *>(raw.front().at(5))->get_tree(), body, context,
-		                              raw.front().back());
-	}
-
-	void method_traverse::preprocess(const std::deque<std::deque<token_base *>> &raw)
-	{
-		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
-		instance_type::define_var_profile dvp;
-		context->instance->parse_define_var(tree, dvp);
-		context->instance->storage.add_record(dvp.id);
-	}
-
-	statement_base *method_traverse::translate(const std::deque<std::deque<token_base *>> &raw)
-	{
-		std::deque<statement_base *> body;
-		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
-		cov::tree<token_base *> tree_step;
-		tree_step.emplace_root_left(tree_step.root(), context->instance->new_value(number(1)));
-		return new statement_traverse(static_cast<token_expr *>(raw.front().at(1))->get_tree(),
-		                              static_cast<token_expr *>(raw.front().at(3))->get_tree(), tree_step, body, context,
-		                              raw.front().back());
-	}
-
 	void method_foreach::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
-		if (t.root().data() == nullptr)
-			throw internal_error("Null pointer accessed.");
-		if (t.root().data()->get_type() != token_types::id)
+		token_signal *sig = dynamic_cast<token_signal *>(t.root().data());
+		if (sig == nullptr || sig->get_signal() != signal_types::pair_)
 			throw runtime_error("Wrong grammar(foreach)");
-		context->instance->storage.add_record(static_cast<token_id *>(t.root().data())->get_id());
+		if (t.root().left().data() == nullptr)
+			throw internal_error("Null pointer accessed.");
+		if (t.root().left().data()->get_type() != token_types::id)
+			throw runtime_error("Wrong grammar(foreach)");
+		context->instance->storage.add_record(static_cast<token_id *>(t.root().left().data())->get_id());
 	}
 
 	statement_base *method_foreach::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
-		if (t.root().data() == nullptr)
-			throw internal_error("Null pointer accessed.");
-		if (t.root().data()->get_type() != token_types::id)
+		token_signal *sig = dynamic_cast<token_signal *>(t.root().data());
+		if (sig == nullptr || sig->get_signal() != signal_types::pair_)
 			throw runtime_error("Wrong grammar(foreach)");
-		const std::string &it = static_cast<token_id *>(t.root().data())->get_id();
+		if (t.root().left().data() == nullptr)
+			throw internal_error("Null pointer accessed.");
+		if (t.root().left().data()->get_type() != token_types::id)
+			throw runtime_error("Wrong grammar(foreach)");
+		const std::string &it = static_cast<token_id *>(t.root().left().data())->get_id();
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
-		return new statement_foreach(it, static_cast<token_expr *>(raw.front().at(3))->get_tree(), body, context,
-		                             raw.front().back());
+		return new statement_foreach(it, cov::tree<token_base*>(t.root().right()), body, context, raw.front().back());
 	}
 
 	statement_base *method_break::translate(const std::deque<std::deque<token_base *>> &raw)
