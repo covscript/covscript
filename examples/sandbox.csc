@@ -1,9 +1,9 @@
 import darwin
-const var gravity=10
-const var air_drop=5
-const var delta_time=0.1
-const var mass=0.5
-const var size=0.01
+constant gravity=10
+constant air_drop=5
+constant delta_time=0.1
+constant mass=0.5
+constant size=0.01
 var speed_x=15
 var speed_y=0
 var posit_x=0

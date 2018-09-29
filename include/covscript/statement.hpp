@@ -79,15 +79,11 @@ namespace cs {
 	};
 
 	class statement_constant final : public statement_base {
-		std::string mName;
-		var mVal;
+		std::vector<std::pair<std::string, var>> mVal;
 	public:
 		statement_constant() = delete;
 
-		statement_constant(std::string name, var val, context_t c, token_base *ptr) : statement_base(std::move(c),
-			        ptr),
-			mName(std::move(name)),
-			mVal(std::move(val)) {}
+		statement_constant(const std::vector<std::pair<std::string, var>>& val, context_t c, token_base *ptr) : statement_base(std::move(c), ptr), mVal(std::move(val)) {}
 
 		statement_types get_type() const noexcept override
 		{

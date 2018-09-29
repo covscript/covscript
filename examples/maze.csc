@@ -18,9 +18,9 @@ var ylong=2*ysize-1
 var map=new array
 var cango={{1,2},{1,4},{2,3},{3,4}}
 
-const var redpixel=darwin.pixel(' ',darwin.red,darwin.red)
-const var whitepixel=darwin.pixel(' ',darwin.white,darwin.white)
-const var cyanpixel=darwin.pixel(' ',darwin.cyan,darwin.cyan)
+constant redpixel=darwin.pixel(' ',darwin.red,darwin.red)
+constant whitepixel=darwin.pixel(' ',darwin.white,darwin.white)
+constant cyanpixel=darwin.pixel(' ',darwin.cyan,darwin.cyan)
 
 function addvoidmap()
 	map.clear()

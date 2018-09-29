@@ -8,7 +8,7 @@ var zoom=5
 var dzoom=1
 var center_x=0
 var center_y=0
-const var pix=darwin.pixel('+',darwin.blue,darwin.black)
+constant pix=darwin.pixel('+',darwin.blue,darwin.black)
 function f(x)
   return context.solve(expr)
 end

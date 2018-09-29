@@ -18,7 +18,7 @@
 # Email: mikecovlee@163.com
 # Github: https://github.com/mikecovlee
 
-const var version_str="1.1.0"
+constant version_str="1.1.0"
 struct package_info
     var name=null
     var type=null

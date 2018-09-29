@@ -4,5 +4,5 @@ switch system.in.input()
         system.out.println("Hello")
     end
 end
-const var s=constant.str+"!!!"
+constant s=constant.str+"!!!"
 system.out.println(s)

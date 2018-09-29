@@ -28,13 +28,28 @@ namespace cs {
 
 	void method_import::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
-		token_base *token = dynamic_cast<token_expr *>(raw.front().at(1))->get_tree().root().data();
-		if (token == nullptr || token->get_type() != token_types::id)
-			throw runtime_error("Wrong grammar for import statement.");
-		const std::string &package_name = static_cast<token_id *>(token)->get_id();
-		const var &ext = make_namespace(context->instance->import(import_path, package_name));
-		context->instance->storage.add_var(package_name, ext);
-		mResult = new statement_constant(package_name, ext, context, raw.front().back());
+		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		if (tree.root().data() == nullptr)
+			throw internal_error("Null pointer accessed.");
+		std::vector<std::pair<std::string,var>> var_list;
+		auto process=[this,&var_list](cov::tree<token_base *> & t) {
+			token_base *token = t.root().data();
+			if (token == nullptr || token->get_type() != token_types::id)
+				throw runtime_error("Wrong grammar for import statement.");
+			const std::string &package_name = static_cast<token_id *>(token)->get_id();
+			const var &ext = make_namespace(context->instance->import(import_path, package_name));
+			context->instance->add_constant(ext);
+			context->instance->storage.add_var(package_name, ext);
+			var_list.emplace_back(package_name, ext);
+		};
+		if (tree.root().data()->get_type() == token_types::parallel) {
+			auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
+			for(auto& t:parallel_list)
+				process(t);
+		}
+		else
+			process(tree);
+		mResult = new statement_constant(var_list, context, raw.front().back());
 	}
 
 	statement_base *method_import::translate(const std::deque<std::deque<token_base *>> &raw)
@@ -114,15 +129,28 @@ namespace cs {
 
 	void method_constant::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(2))->get_tree();
-		instance_type::define_var_profile dvp;
-		context->instance->parse_define_var(tree, dvp);
-		if (dvp.expr.root().data()->get_type() != token_types::value)
-			throw runtime_error("Constant variable must have an constant value.");
-		const var &val = static_cast<token_value *>(dvp.expr.root().data())->get_value();
-		context->instance->add_constant(val);
-		context->instance->storage.add_var(dvp.id, val);
-		mResult = new statement_constant(dvp.id, val, context, raw.front().back());
+		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		if (tree.root().data() == nullptr)
+			throw internal_error("Null pointer accessed.");
+		std::vector<std::pair<std::string,var>> var_list;
+		auto process=[this,&var_list](cov::tree<token_base *> & t) {
+			instance_type::define_var_profile dvp;
+			context->instance->parse_define_var(t, dvp);
+			if (dvp.expr.root().data()->get_type() != token_types::value)
+				throw runtime_error("Constant variable must have an constant value.");
+			const var &val = static_cast<token_value *>(dvp.expr.root().data())->get_value();
+			context->instance->add_constant(val);
+			context->instance->storage.add_var(dvp.id, val);
+			var_list.emplace_back(dvp.id, val);
+		};
+		if (tree.root().data()->get_type() == token_types::parallel) {
+			auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
+			for(auto& t:parallel_list)
+				process(t);
+		}
+		else
+			process(tree);
+		mResult = new statement_constant(var_list, context, raw.front().back());
 	}
 
 	statement_base *method_constant::translate(const std::deque<std::deque<token_base *>> &raw)

@@ -136,7 +136,7 @@ namespace cs {
 			{"block",     action_types::block_},
 			{"end",       action_types::endblock_},
 			{"var",       action_types::var_},
-			{"const",     action_types::constant_},
+			{"constant",     action_types::constant_},
 			{"if",        action_types::if_},
 			{"else",      action_types::else_},
 			{"switch",    action_types::switch_},

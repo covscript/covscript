@@ -3,7 +3,7 @@ var fd=10
 function main()
     var pic=darwin.get_drawable()
     darwin.set_frame_limit(60)
-    const var pix=darwin.pixel('@',darwin.blue,darwin.white)
+    constant pix=darwin.pixel('@',darwin.blue,darwin.white)
     var x=0
     loop
         if darwin.is_kb_hit()

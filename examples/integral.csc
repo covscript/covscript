@@ -1,5 +1,5 @@
 iostream.setprecision(10)
-const var precision=10^(-6)
+constant precision=10^(-6)
 function integral(func,begin,end_)
     var sum=0
     var x=begin

@@ -141,21 +141,24 @@ namespace cs {
 
 	void statement_constant::run()
 	{
-		context->instance->storage.add_var(mName, mVal, true);
+		for(auto& val:mVal)
+			context->instance->storage.add_var(val.first, val.second, true);
 	}
 
 	void statement_constant::dump(std::ostream &o) const
 	{
-		o << "< Const Var: ID = \"" << mName << "\", Value = \"";
-		try {
-			o << mVal.to_string();
+		for(auto& val:mVal) {
+			o << "< Const Var: ID = \"" << val.first << "\", Value = \"";
+			try {
+				o << val.second.to_string();
+			}
+			catch (cov::error &e) {
+				if (!std::strcmp(e.what(), "E000D"))
+					throw e;
+				o << "[" << cs_impl::cxx_demangle(val.second.type().name()) << "]";
+			}
+			o << "\" >\n";
 		}
-		catch (cov::error &e) {
-			if (!std::strcmp(e.what(), "E000D"))
-				throw e;
-			o << "[" << cs_impl::cxx_demangle(mVal.type().name()) << "]";
-		}
-		o << "\" >\n";
 	}
 
 	void statement_break::run()

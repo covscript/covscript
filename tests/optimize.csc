@@ -1,7 +1,7 @@
 import darwin
-const var a=10
-const var lambda=[](x,y)->x+y
-const var b=a<0?lambda("A","B"):"C"
+constant a=10
+constant lambda=[](x,y)->x+y
+constant b=a<0?lambda("A","B"):"C"
 var c=a>0?lambda("A","B"):"C"
 switch system.in.input()
 	case "Hello"+"!"

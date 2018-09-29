@@ -3,17 +3,17 @@ import network
 import remote_display
 using iostream
 using network
-const var head_pix=darwin.pixel('#',darwin.white,darwin.black)
-const var body_pix=darwin.pixel('+',darwin.white,darwin.black)
-const var food_pix=darwin.pixel('@',darwin.white,darwin.black)
+constant head_pix=darwin.pixel('#',darwin.white,darwin.black)
+constant body_pix=darwin.pixel('+',darwin.white,darwin.black)
+constant food_pix=darwin.pixel('@',darwin.white,darwin.black)
 var snake_body={}
 var snake_head={0,0}
 var food={0,0}
 var heading=2
-const var init_long=5
+constant init_long=5
 var god_mode=false
 var cross_wall=false
-const var hard=2
+constant hard=2
 var score=0
 darwin.load()
 var pic=darwin.get_drawable()
