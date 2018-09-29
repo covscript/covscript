@@ -457,6 +457,16 @@ namespace cs {
 				return;
 				break;
 			}
+			case signal_types::varprt_: {
+				if (it.left().data() != nullptr)
+					throw runtime_error("Wrong grammar for variable definition.");
+				token_base *rptr = it.right().data();
+				if (rptr == nullptr || rptr->get_type() != token_types::id)
+					throw runtime_error("Wrong grammar for variable definition.");
+				it.data() = rptr;
+				return;
+				break;
+			}
 			case signal_types::arrow_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr ||
 				        it.right().data()->get_type() != token_types::id)

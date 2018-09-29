@@ -101,7 +101,8 @@ namespace cs {
 		lambda_,
 		escape_,
 		minus_,
-		vardef_
+		vardef_,
+		varprt_
 	};
 	enum class constant_values {
 		local_namepace, global_namespace

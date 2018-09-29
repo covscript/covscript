@@ -97,13 +97,11 @@ namespace cs {
 			for(auto& t:parallel_list) {
 				instance_type::define_var_profile dvp;
 				context->instance->parse_define_var(t, dvp);
-				context->instance->storage.add_record(dvp.id);
 			}
 		}
 		else {
 			instance_type::define_var_profile dvp;
 			context->instance->parse_define_var(tree, dvp);
-			context->instance->storage.add_record(dvp.id);
 		}
 	}
 

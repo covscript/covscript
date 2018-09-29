@@ -26,6 +26,7 @@ namespace cs {
 		std::deque<token_base *> oldt;
 		std::swap(tokens, oldt);
 		tokens.clear();
+		bool insert_vardef = false;
 		bool expected_fdef = false;
 		bool expected_fcall = false;
 		bool expected_lambda = false;
@@ -33,15 +34,33 @@ namespace cs {
 			switch (ptr->get_type()) {
 			default:
 				break;
-			case
-					token_types::action:
+			case token_types::action:
 				expected_fcall = false;
 				switch (static_cast<token_action *>(ptr)->get_action()) {
 				default:
 					break;
 				case action_types::import_:
+					insert_vardef=true;
 					tokens.push_back(ptr);
 					tokens.push_back(new token_signal(signal_types::vardef_));
+					continue;
+				case action_types::var_:
+					insert_vardef=true;
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::vardef_));
+					continue;
+				case action_types::constant_:
+					insert_vardef=true;
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::vardef_));
+					continue;
+				case action_types::for_:
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::varprt_));
+					continue;
+				case action_types::foreach_:
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::varprt_));
 					continue;
 				case action_types::struct_:
 					tokens.push_back(ptr);
@@ -122,6 +141,14 @@ namespace cs {
 				switch (static_cast<token_signal *>(ptr)->get_signal()) {
 				default:
 					break;
+				case signal_types::com_:
+					if(insert_vardef) {
+						tokens.push_back(ptr);
+						tokens.push_back(new token_signal(signal_types::vardef_));
+						continue;
+					}
+					else
+						break;
 				case signal_types::arrow_:
 					if (expected_lambda) {
 						tokens.push_back(new token_signal(signal_types::lambda_, line_num));
