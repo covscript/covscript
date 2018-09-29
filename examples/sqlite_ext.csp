@@ -42,7 +42,7 @@ function exec(db,sql)
     while !stmt.done()
         var column_count=stmt.column_count()-1
         var row=new array
-        for i=0 to column_count
+        for i=0,i<=column_count,++i
             var dat=new record
             dat.name=stmt.column_name(i)
             dat.type=stmt.column_decltype(i)

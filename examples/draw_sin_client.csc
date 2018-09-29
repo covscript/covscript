@@ -21,7 +21,7 @@ function main()
         end
         darwin.fit_drawable()
         pic.clear()
-        for i=0 to pic.get_width()-1
+        for i=0,i<pic.get_width(),++i
             pic.draw_pixel(i,0.5*(pic.get_height()+math.sin((i+x)/fd)*pic.get_height()),pix)
         end
         client.transfer(pic)

@@ -52,7 +52,7 @@ end
 
 function start()
 	snake_head={init_long,to_integer(0.5*pic.get_height())}
-	for i=0 to init_long-2
+	for i=0,i<=init_long-2,++i
 		snake_body.push_back({snake_head[0]-i,snake_head[1]})
 	end
 	gen_food()
@@ -168,7 +168,7 @@ function start()
 	end
 end
 
-for i=1 to system.args.size()-1
+for i=1,i<system.args.size(),++i
 	switch system.args.at(i)
 		case "--god-mode"
 			god_mode=true

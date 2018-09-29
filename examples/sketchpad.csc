@@ -44,7 +44,7 @@ loop
   end
   center_x=0.5*pic.get_width()
   center_y=0.5*pic.get_height()
-  for i=0 to pic.get_width()-2
+  for i=0,i<=pic.get_width()-2,++i
     pic.draw_line(i,center_y-f((i-center_x-x_offset)/(2*zoom))*zoom+y_offset,i+1,center_y-f((i+1-center_x-x_offset)/(2*zoom))*zoom+y_offset,pix)
   end
   pic.draw_line(0,center_y+y_offset,pic.get_width()-1,center_y+y_offset,darwin.pixel('-',darwin.white,darwin.black))

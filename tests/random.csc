@@ -13,7 +13,7 @@ end
 loop
     var min=0
     var avg=0
-    for it=0 to 100
+    for it=0,it<=100,++it
         var res=test()
         if res<min||min==0
             min=res

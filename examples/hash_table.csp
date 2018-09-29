@@ -43,7 +43,7 @@ end
 function create(bc)
 	var ht=gcnew type_impl
 	ht->bucket_count=bc
-	for i=1 to bc
+	for i=1,i<=bc,++i
 		ht->table.push_back(null)
 	end
 	return ht

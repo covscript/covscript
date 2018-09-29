@@ -10,7 +10,7 @@ function push(lst,val)
 end
 var ts=runtime.time()
 var lst=new list
-for i=1 to 100
+for i=1,i<=100,++i
     push(lst,math.randint(1,100))
 end
 system.out.println("Time spend:"+to_string(runtime.time()-ts))

@@ -10,7 +10,7 @@ function cs()
     func("reimu",100,[](it)->test(233+it.at("reimu")))
 end
 function test(f, count)
-    for i=1 to count
+    for i=1,i<=count,++i
         f(i)
     end
 end

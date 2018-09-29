@@ -34,9 +34,9 @@ struct texteditor
         pic.fill(darwin.pixel(' ',darwin.white,darwin.white))
         border_size=(to_string(text_buffer.size())).size()+2
         pic.fill_rect(0,0,border_size,pic.get_height(),darwin.pixel(' ',darwin.blue,darwin.blue))
-        for y=0 to math.min(pic.get_height(),text_buffer.size()-y_offset)-1
+        for y=0,y<math.min(pic.get_height(),text_buffer.size()-y_offset),++y
             pic.draw_string(1,y,to_string(y+y_offset+1),darwin.pixel(' ',darwin.white,darwin.blue))
-            for x=0 to math.min(pic.get_width()-border_size,(text_buffer[y+y_offset]).size()-x_offset)-1
+            for x=0,x<math.min(pic.get_width()-border_size,(text_buffer[y+y_offset]).size()-x_offset),++x
                 pic.draw_pixel(x+border_size,y,darwin.pixel(text_buffer[y+y_offset][x+x_offset],darwin.black,darwin.white))
             end
         end

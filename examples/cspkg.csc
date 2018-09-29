@@ -292,7 +292,7 @@ function answer(question)
     end
 end
 function draw_separator()
-    for i=1 to system.console.terminal_width()
+    for i=1,i<=system.console.terminal_width(),++i
         system.out.print("-")
     end
     system.out.println("")
@@ -355,14 +355,14 @@ switch system.args.at(1)
             end
         end
         system.out.print("Name")
-        for i=0 to max_size
+        for i=0,i<=max_size,++i
             system.out.print(" ")
         end
         system.out.println("Type")
         draw_separator()
         for it iterate packages
             system.out.print(it->name)
-            for i=0 to max_size-it->name.size()
+            for i=0,i<=max_size-it->name.size(),++i
                 system.out.print(" ")
             end
             system.out.print("    ")

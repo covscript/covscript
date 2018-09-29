@@ -30,7 +30,7 @@ function quicksort(a,m,n)
 	quicksort(a,i+1,n)
 end
 var a={}
-for i=0 to 100
+for i=0,i<=100,++i
 	a.push_back(math.randint(0,100))
 end
 var ts=runtime.time()

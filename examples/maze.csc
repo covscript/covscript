@@ -241,11 +241,11 @@ function findroad()
 end
 
 function newmap()
-	for x=0 to xlong-1
+	for x=0,x<xlong,++x
 		map[x]=1
 		map[x+(ylong-1)*xlong]=1
 	end
-	for y=0 to ylong-1
+	for y=0,y<ylong,++y
 		map[y*xlong]=1
 		map[(y+1)*xlong-1]=1
 	end
@@ -282,8 +282,8 @@ end
 
 function adraw()
 	pic.clear()
-	for x=0 to xlong-1
-		for y=0 to ylong-1
+	for x=0,x<xlong,++x
+		for y=0,y<ylong,++y
 			if map[x+y*xlong]==1
 				pic.draw_pixel(2*x,y,whitepixel)
 				pic.draw_pixel(2*x+1,y,whitepixel)
