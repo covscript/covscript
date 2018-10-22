@@ -343,6 +343,23 @@ namespace cs {
 		statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};
 
+	class method_for_do final : public method_base {
+	public:
+		using method_base::method_base;
+
+		method_types get_type() const noexcept override
+		{
+			return method_types::single;
+		}
+
+		statement_types get_target_type() const noexcept override
+		{
+			return statement_types::for_;
+		}
+
+		statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
+	};
+
 	class method_foreach final : public method_base {
 	public:
 		using method_base::method_base;
@@ -358,6 +375,23 @@ namespace cs {
 		}
 
 		void preprocess(const std::deque<std::deque<token_base *>> &) override;
+
+		statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
+	};
+
+	class method_foreach_do final : public method_base {
+	public:
+		using method_base::method_base;
+
+		method_types get_type() const noexcept override
+		{
+			return method_types::single;
+		}
+
+		statement_types get_target_type() const noexcept override
+		{
+			return statement_types::foreach_;
+		}
 
 		statement_base *translate(const std::deque<std::deque<token_base *>> &) override;
 	};

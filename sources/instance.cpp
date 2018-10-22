@@ -279,8 +279,14 @@ namespace cs {
 		// For Grammar
 		.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()),
 			            new token_endline(0)}, new method_for(context))
+		.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()),
+			            new token_action(action_types::do_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_for_do(context))
 		.add_method({new token_action(action_types::foreach_), new token_expr(cov::tree<token_base *>()),
 			            new token_endline(0)}, new method_foreach(context))
+		.add_method({new token_action(action_types::foreach_), new token_expr(cov::tree<token_base *>()),
+			            new token_action(action_types::do_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_foreach_do(context))
 		// Break Grammar
 		.add_method({new token_action(action_types::break_), new token_endline(0)}, new method_break(context))
 		// Continue Grammar

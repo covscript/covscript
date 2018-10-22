@@ -35,6 +35,7 @@ namespace cs {
 		endblock_,
 		var_,
 		constant_,
+		do_,
 		if_,
 		else_,
 		switch_,

@@ -363,6 +363,22 @@ namespace cs {
 		return new statement_for(parallel_list, body, context, raw.front().back());
 	}
 
+	statement_base *method_for_do::translate(const std::deque<std::deque<token_base *>> &raw)
+	{
+		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		if (tree.root().data() == nullptr)
+			throw internal_error("Null pointer accessed.");
+		if (tree.root().data()->get_type() != token_types::parallel)
+			throw runtime_error("Wrong grammar(for)");
+		auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
+		if (parallel_list.size() != 3)
+			throw runtime_error("Wrong grammar(for)");
+		return new statement_for(parallel_list, {
+			new statement_expression(static_cast<token_expr *>(raw.front().at(3))->get_tree(),
+			                         context, raw.front().back())
+		}, context, raw.front().back());
+	}
+
 	void method_foreach::preprocess(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
@@ -379,6 +395,15 @@ namespace cs {
 	statement_base *method_foreach::translate(const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		const std::string &it = static_cast<token_id *>(t.root().left().data())->get_id();
+		std::deque<statement_base *> body;
+		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
+		return new statement_foreach(it, cov::tree<token_base *>(t.root().right()), body, context, raw.front().back());
+	}
+
+	statement_base *method_foreach_do::translate(const std::deque<std::deque<token_base *>> &raw)
+	{
+		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_signal *sig = dynamic_cast<token_signal *>(t.root().data());
 		if (sig == nullptr || sig->get_signal() != signal_types::pair_)
 			throw runtime_error("Wrong grammar(foreach)");
@@ -389,7 +414,11 @@ namespace cs {
 		const std::string &it = static_cast<token_id *>(t.root().left().data())->get_id();
 		std::deque<statement_base *> body;
 		context->instance->kill_action({raw.begin() + 1, raw.end()}, body);
-		return new statement_foreach(it, cov::tree<token_base *>(t.root().right()), body, context, raw.front().back());
+		return new statement_foreach(it, cov::tree<token_base *>(t.root().right()), {
+			new statement_expression(static_cast<token_expr *>(raw.front().at(3))->get_tree(),
+			                         context, raw.front().back())
+		}, context,
+		raw.front().back());
 	}
 
 	statement_base *method_break::translate(const std::deque<std::deque<token_base *>> &raw)

@@ -137,6 +137,7 @@ namespace cs {
 			{"end",       action_types::endblock_},
 			{"var",       action_types::var_},
 			{"constant",  action_types::constant_},
+			{"do",        action_types::do_},
 			{"if",        action_types::if_},
 			{"else",      action_types::else_},
 			{"switch",    action_types::switch_},
