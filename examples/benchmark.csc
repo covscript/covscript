@@ -109,7 +109,7 @@ function step6(n,k)
     for i=1,i<=k,++i
         var ts=runtime.time()
         fib(n)
-        score=score+runtime.time()-ts
+        score+=runtime.time()-ts
     end
     return to_integer(score/k)
 end
