@@ -32,9 +32,7 @@ function step3(n,k)
     var precision=10^(-n)
     function integral(func,begin,end_)
         var sum=0
-        for x=begin,x<=end_,x=x+precision
-            sum=sum+func(x)*precision
-        end
+        for x=begin,x<=end_,x=x+precision do sum+=func(x)*precision
         return sum
     end
     function f(x)
@@ -81,9 +79,7 @@ function step4(n,k)
     var score=0
     for i=1,i<=k,++i
         var a={}
-        for i=0,i<=n,++i
-            a.push_back(math.randint(0,n))
-        end
+        for i=0,i<=n,++i do a.push_back(math.randint(0,n))
         var ts=runtime.time()
         quicksort(a,0,a.size()-1)
         score=score+runtime.time()-ts
@@ -92,19 +88,11 @@ function step4(n,k)
 end
 function fibonacci(count)
     var fib={0,1}
-    for n=2,n<=count,++n
-        fib.push_back(fib.at(n-1)+fib.at(n-2))
-    end
+    for n=2,n<=count,++n do fib.push_back(fib.at(n-1)+fib.at(n-2))
     var sum=new hash_map
-    for i=2,i<fib.size(),++i
-        ++sum[to_string(fib.at(i)/fib.at(i-1))]
-    end
+    for i=2,i<fib.size(),++i do ++sum[to_string(fib.at(i)/fib.at(i-1))]
     var max=0:0
-    foreach it:sum
-        if it.second()>max.second()
-            max=it
-        end
-    end
+    foreach it:sum do it.second()>max.second()?(max=it):null
     return max.first()
 end
 function step5(n,k)
