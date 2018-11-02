@@ -123,7 +123,7 @@ namespace math_cs_ext {
 		.add_var("pi", var::make_constant<number>(std::asin(number(1)) * 2))
 		.add_var("e", var::make_constant<number>(std::exp(number(1))));
 		math_ext
-		.add_var("constant", make_namespace(math_const_ext_shared))
+		.add_var("constants", make_namespace(math_const_ext_shared))
 		.add_var("abs", make_cni(abs, true))
 		.add_var("ln", make_cni(ln, true))
 		.add_var("log10", make_cni(log10, true))

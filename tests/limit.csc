@@ -1,4 +1,4 @@
-system.out.println(math.constant.max)
-system.out.println(math.constant.min)
-system.out.println(math.constant.inf)
-system.out.println(math.constant.nan)
+system.out.println(math.constants.max)
+system.out.println(math.constants.min)
+system.out.println(math.constants.inf)
+system.out.println(math.constants.nan)

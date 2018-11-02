@@ -22,7 +22,7 @@ switch system.in.input()
 	case {darwin.pixel(' ',darwin.white,darwin.black),"Darwin"}.at(1)
 		system.out.println("Darwin")
 	end
-	case "x"+(to_string(math.constant.pi)).cut(5)
+	case "x"+(to_string(math.constants.pi)).cut(5)
 		system.out.println("x3.14")
 	end
 	case a
