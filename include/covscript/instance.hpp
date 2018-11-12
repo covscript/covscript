@@ -372,11 +372,19 @@ namespace cs {
 			return false;
 		}
 
+		void trim_expression(cov::tree<token_base *> &tree)
+		{
+			trim_expr(tree, tree.root());
+		}
+
 		void optimize_expression(cov::tree<token_base *> &tree)
 		{
+			trim_expr(tree, tree.root());
 			if (!no_optimize)
 				opt_expr(tree, tree.root());
 		}
+
+		void trim_expr(cov::tree<token_base *> &, cov::tree<token_base *>::iterator);
 
 		void opt_expr(cov::tree<token_base *> &, cov::tree<token_base *>::iterator);
 
