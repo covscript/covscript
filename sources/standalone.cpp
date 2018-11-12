@@ -22,6 +22,7 @@
 
 std::string log_path;
 bool dump_ast = false;
+bool no_optimize = false;
 bool compile_only = false;
 bool wait_before_exit = false;
 
@@ -44,6 +45,8 @@ int covscript_args(int args_size, const char *args[])
 				dump_ast = true;
 			else if (std::strcmp(args[index], "--compile-only") == 0 && !compile_only)
 				compile_only = true;
+			else if (std::strcmp(args[index], "--no-optimize") == 0 && !no_optimize)
+				no_optimize = true;
 			else if (std::strcmp(args[index], "--wait-before-exit") == 0 && !wait_before_exit)
 				wait_before_exit = true;
 			else if (std::strcmp(args[index], "--log-path") == 0 && expect_log_path == 0)
@@ -75,6 +78,7 @@ void covscript_main(int args_size, const char *args[])
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::init(arg);
 		cs::instance_type instance;
+		instance.disable_optimizer=no_optimize;
 		instance.compile(path);
 		if (dump_ast) {
 			if (!log_path.empty()) {

@@ -287,6 +287,8 @@ namespace cs {
 		bool return_fcall = false;
 		bool break_block = false;
 		bool continue_block = false;
+		// Settings
+		bool disable_optimizer=false;
 		// Refers
 		std::forward_list<instance_type> refers;
 		// Function Stack
@@ -380,7 +382,7 @@ namespace cs {
 		void optimize_expression(cov::tree<token_base *> &tree)
 		{
 			trim_expr(tree, tree.root());
-			if (!no_optimize)
+			if (!disable_optimizer)
 				opt_expr(tree, tree.root());
 		}
 
