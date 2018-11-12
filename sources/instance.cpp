@@ -337,7 +337,7 @@ namespace cs {
 			break;
 		case token_types::id: {
 			const std::string &id = static_cast<token_id *>(token)->get_id();
-			if (!storage.exist_record(id)&&storage.exist_record_in_struct(id)) {
+			if (!storage.exist_record(id) && storage.exist_record_in_struct(id)) {
 				it.data() = new token_signal(signal_types::dot_);
 				tree.emplace_left_left(it, new token_id("this"));
 				tree.emplace_right_right(it, token);
@@ -549,7 +549,8 @@ namespace cs {
 				if (storage.var_exist_current(id) && storage.get_var_current(id).is_protect())
 					it.data() = new_value(storage.get_var(id));
 			}
-			else if (!storage.exist_record_in_struct(id)&&storage.var_exist(id) && storage.get_var(id).is_protect())
+			else if (!storage.exist_record_in_struct(id) && storage.var_exist(id) &&
+			         storage.get_var(id).is_protect())
 				it.data() = new_value(storage.get_var(id));
 			return;
 			break;
@@ -808,12 +809,12 @@ namespace cs {
 			return;
 		}
 		stream << "<";
-		bool cutoff=false;
+		bool cutoff = false;
 		if (it.data() != nullptr) {
 			stream << " Tree Node = ";
-			cutoff=it.data()->dump(stream);
+			cutoff = it.data()->dump(stream);
 		}
-		if(!cutoff) {
+		if (!cutoff) {
 			if (it.left().usable()) {
 				stream << " Left Leaf = ";
 				dump_expr(it.left(), stream);

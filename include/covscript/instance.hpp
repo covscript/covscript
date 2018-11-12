@@ -288,7 +288,7 @@ namespace cs {
 		bool break_block = false;
 		bool continue_block = false;
 		// Settings
-		bool disable_optimizer=false;
+		bool disable_optimizer = false;
 		// Refers
 		std::forward_list<instance_type> refers;
 		// Function Stack
