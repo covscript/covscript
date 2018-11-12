@@ -171,9 +171,10 @@ namespace cs {
 			return line_num;
 		}
 
-		virtual void dump(std::ostream &o) const
+		virtual bool dump(std::ostream &o) const
 		{
 			o << "< BasicToken >";
+			return false;
 		}
 	};
 
@@ -188,9 +189,10 @@ namespace cs {
 			return token_types::endline;
 		}
 
-		void dump(std::ostream &o) const override
+		bool dump(std::ostream &o) const override
 		{
 			o << "< Endline >";
+			return false;
 		}
 	};
 
@@ -211,9 +213,10 @@ namespace cs {
 			return this->mType;
 		}
 
-		void dump(std::ostream &o) const override
+		bool dump(std::ostream &o) const override
 		{
 			o << "< Action >";
+			return false;
 		}
 	};
 
@@ -236,7 +239,7 @@ namespace cs {
 			return this->mType;
 		}
 
-		void dump(std::ostream &) const override;
+		bool dump(std::ostream &) const override;
 	};
 
 	class token_id final : public token_base {
@@ -256,9 +259,10 @@ namespace cs {
 			return this->mId;
 		}
 
-		void dump(std::ostream &o) const override
+		bool dump(std::ostream &o) const override
 		{
 			o << "< ID = \"" << mId << "\" >";
+			return true;
 		}
 	};
 
@@ -279,7 +283,7 @@ namespace cs {
 			return this->mVal;
 		}
 
-		void dump(std::ostream &o) const override
+		bool dump(std::ostream &o) const override
 		{
 			o << "< Value = \"";
 			try {
@@ -291,6 +295,7 @@ namespace cs {
 				o << "[" << cs_impl::cxx_demangle(mVal.type().name()) << "]";
 			}
 			o << "\" >";
+			return true;
 		}
 	};
 
@@ -311,9 +316,10 @@ namespace cs {
 			return this->mList;
 		}
 
-		void dump(std::ostream &o) const override
+		bool dump(std::ostream &o) const override
 		{
 			o << "< Small Bracket >";
+			return false;
 		}
 	};
 
@@ -334,9 +340,10 @@ namespace cs {
 			return this->mList;
 		}
 
-		void dump(std::ostream &o) const override
+		bool dump(std::ostream &o) const override
 		{
 			o << "< Middle Bracket >";
+			return false;
 		}
 	};
 
@@ -357,9 +364,10 @@ namespace cs {
 			return this->mList;
 		}
 
-		void dump(std::ostream &o) const override
+		bool dump(std::ostream &o) const override
 		{
 			o << "< Large Bracket >";
+			return false;
 		}
 	};
 
@@ -380,7 +388,7 @@ namespace cs {
 			return this->mTree;
 		}
 
-		void dump(std::ostream &) const override;
+		bool dump(std::ostream &) const override;
 	};
 
 	class token_arglist final : public token_base {
@@ -400,7 +408,7 @@ namespace cs {
 			return this->mTreeList;
 		}
 
-		void dump(std::ostream &) const override;
+		bool dump(std::ostream &) const override;
 	};
 
 	class token_array final : public token_base {
@@ -420,7 +428,7 @@ namespace cs {
 			return this->mTreeList;
 		}
 
-		void dump(std::ostream &) const override;
+		bool dump(std::ostream &) const override;
 	};
 
 	class token_parallel final : public token_base {
@@ -440,7 +448,7 @@ namespace cs {
 			return this->mTreeList;
 		}
 
-		void dump(std::ostream &) const override;
+		bool dump(std::ostream &) const override;
 	};
 
 	enum class statement_types {

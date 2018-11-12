@@ -22,7 +22,7 @@
 #include <covscript/codegen.hpp>
 
 namespace cs {
-	void token_signal::dump(std::ostream &o) const
+	bool token_signal::dump(std::ostream &o) const
 	{
 		o << "< Signal = \"";
 		switch (mType) {
@@ -169,16 +169,18 @@ namespace cs {
 			break;
 		}
 		o << "\" >";
+		return false;
 	}
 
-	void token_expr::dump(std::ostream &o) const
+	bool token_expr::dump(std::ostream &o) const
 	{
 		o << "< ChildExpression = ";
 		instance_type::dump_expr(mTree.root(), o);
 		o << " >";
+		return true;
 	}
 
-	void token_arglist::dump(std::ostream &o) const
+	bool token_arglist::dump(std::ostream &o) const
 	{
 		o << "< ArgumentList = {";
 		for (auto &tree:mTreeList) {
@@ -187,9 +189,10 @@ namespace cs {
 			o << " >";
 		}
 		o << "} >";
+		return true;
 	}
 
-	void token_array::dump(std::ostream &o) const
+	bool token_array::dump(std::ostream &o) const
 	{
 		o << "< ArrayList = {";
 		for (auto &tree:mTreeList) {
@@ -198,9 +201,10 @@ namespace cs {
 			o << " >";
 		}
 		o << "} >";
+		return true;
 	}
 
-	void token_parallel::dump(std::ostream &o) const
+	bool token_parallel::dump(std::ostream &o) const
 	{
 		o << "< ParallelList = {";
 		for (auto &tree:mTreeList) {
@@ -209,6 +213,7 @@ namespace cs {
 			o << " >";
 		}
 		o << "} >";
+		return true;
 	}
 
 	const std::string &statement_base::get_file_path() const noexcept
@@ -803,17 +808,20 @@ namespace cs {
 			return;
 		}
 		stream << "<";
+		bool cutoff=false;
 		if (it.data() != nullptr) {
 			stream << " Tree Node = ";
-			it.data()->dump(stream);
+			cutoff=it.data()->dump(stream);
 		}
-		if (it.left().usable()) {
-			stream << " Left Leaf = ";
-			dump_expr(it.left(), stream);
-		}
-		if (it.right().usable()) {
-			stream << " Right Leaf = ";
-			dump_expr(it.right(), stream);
+		if(!cutoff) {
+			if (it.left().usable()) {
+				stream << " Left Leaf = ";
+				dump_expr(it.left(), stream);
+			}
+			if (it.right().usable()) {
+				stream << " Right Leaf = ";
+				dump_expr(it.right(), stream);
+			}
 		}
 		stream << " >";
 	}
