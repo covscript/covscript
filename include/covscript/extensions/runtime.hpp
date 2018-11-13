@@ -91,14 +91,10 @@ namespace runtime_cs_ext {
 	var build(const context_t &context, const string &expr)
 	{
 		std::deque<char> buff;
-		std::deque<token_base *> tokens;
 		expression_t tree;
 		for (auto &ch:expr)
 			buff.push_back(ch);
-		context->instance->process_char_buff(buff, tokens);
-		context->instance->process_brackets(tokens);
-		context->instance->kill_brackets(tokens);
-		context->instance->gen_tree(tree, tokens);
+		context->instance->compiler.build_tree(buff, tree);
 		return var::make<expression_t>(tree);
 	}
 

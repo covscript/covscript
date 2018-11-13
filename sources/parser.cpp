@@ -304,10 +304,7 @@ namespace cs {
 		}
 	}
 
-	void
-	instance_type::kill_action(std::deque<std::deque<token_base *>> lines, std::deque<statement_base *> &statements,
-	                           bool raw)
-	{
+	void instance_type::translate_into_statements(const std::deque<std::deque<token_base *>> &lines, std::deque<statement_base *> &statements){
 		std::deque<std::deque<token_base *>> tmp;
 		method_base *method = nullptr;
 		token_endline *endsig = nullptr;
@@ -315,11 +312,6 @@ namespace cs {
 		for (auto &line:lines) {
 			endsig = static_cast<token_endline *>(line.back());
 			try {
-				if (raw) {
-					process_brackets(line);
-					kill_brackets(line, endsig->get_line_num());
-					kill_expr(line);
-				}
 				method_base *m = translator.match(line);
 				switch (m->get_type()) {
 				case method_types::null:
@@ -381,24 +373,5 @@ namespace cs {
 		}
 		if (level != 0)
 			throw runtime_error("Lack of the \"end\" signal.");
-	}
-
-	void instance_type::translate_into_statements(std::deque<token_base *> &tokens,
-	        std::deque<statement_base *> &statements)
-	{
-		std::deque<std::deque<token_base *>> lines;
-		std::deque<token_base *> tmp;
-		for (auto &ptr:tokens) {
-			tmp.push_back(ptr);
-			if (ptr != nullptr && ptr->get_type() == token_types::endline) {
-				if (tmp.size() > 1)
-					lines.push_back(tmp);
-				tmp.clear();
-			}
-		}
-		if (tmp.size() > 1)
-			lines.push_back(tmp);
-		tmp.clear();
-		kill_action(lines, statements, true);
 	}
 }
