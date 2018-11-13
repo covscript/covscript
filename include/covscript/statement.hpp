@@ -66,8 +66,8 @@ namespace cs {
 	public:
 		statement_var() = delete;
 
-		statement_var(const std::vector<compiler_type::define_var_profile> &dvp, context_t c, token_base *ptr)
-			: statement_base(std::move(c), ptr), mDvp(dvp) {}
+		statement_var(std::vector<compiler_type::define_var_profile> dvp, context_t c, token_base *ptr)
+			: statement_base(std::move(c), ptr), mDvp(std::move(dvp)) {}
 
 		statement_types get_type() const noexcept override
 		{

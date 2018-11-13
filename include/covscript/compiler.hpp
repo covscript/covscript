@@ -336,7 +336,7 @@ namespace cs {
 	public:
 		compiler_type() = delete;
 
-		compiler_type(context_t c, runtime_type *rt) : context(c), runtime(rt) {}
+		compiler_type(context_t c, runtime_type *rt) : context(std::move(c)), runtime(rt) {}
 
 		// Settings
 		bool disable_optimizer = false;

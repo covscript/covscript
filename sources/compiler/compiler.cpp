@@ -166,6 +166,9 @@ namespace cs {
 		case signal_types::vardef_:
 			o << "[vardef]";
 			break;
+		case signal_types::varprt_:
+			o << "[varprt]";
+			break;
 		}
 		o << "\" >";
 		return false;
@@ -243,7 +246,6 @@ namespace cs {
 			break;
 		}
 		case token_types::array: {
-			bool is_optimizable = true;
 			for (auto &tree:static_cast<token_array *>(token)->get_array())
 				trim_expression(tree);
 			return;
@@ -305,7 +307,7 @@ namespace cs {
 						for (auto &tree:static_cast<token_parallel *>(rptr)->get_parallel())
 							parallel_list->get_parallel().push_back(tree);
 					else if (rptr != nullptr)
-						parallel_list->get_parallel().push_back(cov::tree<token_base *>(it.right()));
+						parallel_list->get_parallel().emplace_back(it.right());
 					it.data() = parallel_list;
 				}
 				return;
@@ -351,7 +353,6 @@ namespace cs {
 				break;
 			case signal_types::dot_: {
 				trim_expr(tree, it.left());
-				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
 					throw runtime_error("Wrong grammar for dot expression.");
