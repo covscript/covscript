@@ -136,9 +136,12 @@ namespace cs {
 		method_base *method = nullptr;
 		token_endline *endsig = nullptr;
 		int level = 0;
-		for (auto &line:lines) {
+		for (auto &it:lines) {
+			std::deque<token_base*> line=it;
 			endsig = static_cast<token_endline *>(line.back());
 			try {
+				if(raw)
+					compiler.process_line(line);
 				method_base *m = translator.match(line);
 				switch (m->get_type()) {
 				case method_types::null:
