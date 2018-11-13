@@ -130,17 +130,18 @@ namespace cs {
 			            new token_endline(0)}, new method_throw(context));
 	}
 
-	void instance_type::translate(const std::deque<std::deque<token_base *>> &lines, std::deque<statement_base *> &statements, bool raw)
+	void instance_type::translate(const std::deque<std::deque<token_base *>> &lines,
+	                              std::deque<statement_base *> &statements, bool raw)
 	{
 		std::deque<std::deque<token_base *>> tmp;
 		method_base *method = nullptr;
 		token_endline *endsig = nullptr;
 		int level = 0;
 		for (auto &it:lines) {
-			std::deque<token_base*> line=it;
+			std::deque<token_base *> line = it;
 			endsig = static_cast<token_endline *>(line.back());
 			try {
-				if(raw)
+				if (raw)
 					compiler.process_line(line);
 				method_base *m = translator.match(line);
 				switch (m->get_type()) {
@@ -250,7 +251,7 @@ namespace cs {
 			throw fatal_error(path + ": No such file or directory");
 		for (int ch = in.get(); ch != EOF; ch = in.get())
 			buff.push_back(ch);
-		std::deque<std::deque<token_base*>> ast;
+		std::deque<std::deque<token_base *>> ast;
 		// Compile
 		compiler.build_ast(buff, ast);
 		translate(ast, statements, true);

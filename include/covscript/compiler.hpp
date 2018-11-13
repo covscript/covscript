@@ -244,9 +244,11 @@ namespace cs {
 		// Context
 		context_t context;
 		// Runtime
-		runtime_type* runtime;
+		runtime_type *runtime;
+
 		// Preprocessor
 		class preprocessor;
+
 		// Lexer
 		bool issignal(char ch)
 		{
@@ -330,11 +332,15 @@ namespace cs {
 		void trim_expr(cov::tree<token_base *> &, cov::tree<token_base *>::iterator);
 
 		void opt_expr(cov::tree<token_base *> &, cov::tree<token_base *>::iterator);
+
 	public:
-		compiler_type()=delete;
-		compiler_type(context_t c, runtime_type* rt):context(c), runtime(rt) {}
+		compiler_type() = delete;
+
+		compiler_type(context_t c, runtime_type *rt) : context(c), runtime(rt) {}
+
 		// Settings
 		bool disable_optimizer = false;
+
 		// Constants Operation
 		void mark_constant()
 		{
@@ -356,6 +362,7 @@ namespace cs {
 			add_constant(val);
 			return new token_value(val);
 		}
+
 		// Var definition
 		struct define_var_profile {
 			std::string id;
@@ -363,8 +370,9 @@ namespace cs {
 		};
 
 		void parse_define_var(cov::tree<token_base *> &, define_var_profile &);
+
 		// Wrapped Method
-		void build_expr(const std::deque<char>& buff, cov::tree<token_base*>& tree)
+		void build_expr(const std::deque<char> &buff, cov::tree<token_base *> &tree)
 		{
 			std::deque<token_base *> tokens;
 			process_char_buff(buff, tokens);
@@ -372,19 +380,22 @@ namespace cs {
 			kill_brackets(tokens);
 			gen_tree(tree, tokens);
 		}
-		void process_line(std::deque<token_base*> & line)
+
+		void process_line(std::deque<token_base *> &line)
 		{
 			process_brackets(line);
 			kill_brackets(line, static_cast<token_endline *>(line.back())->get_line_num());
 			kill_expr(line);
 		}
-		void build_line(const std::deque<char>& buff, std::deque<token_base*>& line, std::size_t line_num=1)
+
+		void build_line(const std::deque<char> &buff, std::deque<token_base *> &line, std::size_t line_num = 1)
 		{
 			process_char_buff(buff, line);
 			line.push_back(new token_endline(line_num));
 			process_line(line);
 		}
-		void build_ast(const std::deque<char>& buff, std::deque<std::deque<token_base*>>& ast)
+
+		void build_ast(const std::deque<char> &buff, std::deque<std::deque<token_base *>> &ast)
 		{
 			std::deque<token_base *> tokens, tmp;
 			translate_into_tokens(buff, tokens);
@@ -399,6 +410,7 @@ namespace cs {
 			if (tmp.size() > 1)
 				ast.push_back(tmp);
 		}
+
 		// AST Debugger
 		static void dump_expr(cov::tree<token_base *>::const_iterator, std::ostream &);
 	};

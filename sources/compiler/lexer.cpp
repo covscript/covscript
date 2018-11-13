@@ -209,7 +209,7 @@ namespace cs {
 			++line_num;
 		}
 
-		void process_endline(const context_t &context, compiler_type& compiler, std::deque<token_base *> &tokens)
+		void process_endline(const context_t &context, compiler_type &compiler, std::deque<token_base *> &tokens)
 		{
 			if (is_annotation) {
 				is_annotation = false;
@@ -249,7 +249,7 @@ namespace cs {
 		}
 
 	public:
-		explicit preprocessor(const context_t &context, compiler_type& compiler, const std::deque<char> &char_buff,
+		explicit preprocessor(const context_t &context, compiler_type &compiler, const std::deque<char> &char_buff,
 		                      std::deque<token_base *> &tokens)
 		{
 			for (auto &ch:char_buff) {

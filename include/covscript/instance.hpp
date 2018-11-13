@@ -26,13 +26,17 @@ namespace cs {
 
 	class instance_type final : public runtime_type {
 		friend class repl;
+
 		// Translator
 		translator_type translator;
 		// Statements
 		std::deque<statement_base *> statements;
+
 		// Initializations
 		void init_grammar();
+
 		void init_runtime();
+
 	public:
 		// Status
 		bool return_fcall = false;
@@ -46,6 +50,7 @@ namespace cs {
 		std::forward_list<instance_type> refers;
 		// Function Stack
 		cov::static_stack<var, fcall_stack_size> fcall_stack;
+
 		// Constructor and destructor
 		instance_type() : context(std::make_shared<context_type>(this)), compiler(context, this)
 		{
@@ -53,13 +58,20 @@ namespace cs {
 			init_grammar();
 			init_runtime();
 		}
+
 		instance_type(const instance_type &) = delete;
+
 		~instance_type() = default;
+
 		// Wrapped Method
-		void translate(const std::deque<std::deque<token_base *>> &, std::deque<statement_base *> &, bool=false);
+		void translate(const std::deque<std::deque<token_base *>> &, std::deque<statement_base *> &, bool= false);
+
 		extension_t import(const std::string &, const std::string &);
+
 		void compile(const std::string &);
+
 		void interpret();
+
 		void dump_ast(std::ostream &);
 	};
 
