@@ -62,11 +62,11 @@ namespace cs {
 	};
 
 	class statement_var final : public statement_base {
-		std::vector<instance_type::define_var_profile> mDvp;
+		std::vector<compiler_type::define_var_profile> mDvp;
 	public:
 		statement_var() = delete;
 
-		statement_var(const std::vector<instance_type::define_var_profile> &dvp, context_t c, token_base *ptr)
+		statement_var(const std::vector<compiler_type::define_var_profile> &dvp, context_t c, token_base *ptr)
 			: statement_base(std::move(c), ptr), mDvp(dvp) {}
 
 		statement_types get_type() const noexcept override
@@ -399,7 +399,7 @@ namespace cs {
 	};
 
 	class statement_for final : public statement_base {
-		instance_type::define_var_profile mDvp;
+		compiler_type::define_var_profile mDvp;
 		std::deque<cov::tree<token_base *>> mParallel;
 		std::deque<statement_base *> mBlock;
 	public:
@@ -409,7 +409,7 @@ namespace cs {
 		              context_t c, token_base *ptr) : statement_base(std::move(c), ptr), mParallel(parallel_list),
 			mBlock(block)
 		{
-			context->instance->parse_define_var(mParallel[0], mDvp);
+			context->instance->compiler.parse_define_var(mParallel[0], mDvp);
 		}
 
 		statement_types get_type() const noexcept override

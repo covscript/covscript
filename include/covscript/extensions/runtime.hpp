@@ -94,7 +94,7 @@ namespace runtime_cs_ext {
 		expression_t tree;
 		for (auto &ch:expr)
 			buff.push_back(ch);
-		context->instance->compiler.build_tree(buff, tree);
+		context->instance->compiler.build_expr(buff, tree);
 		return var::make<expression_t>(tree);
 	}
 

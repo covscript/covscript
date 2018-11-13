@@ -29,12 +29,16 @@
 #pragma comment(lib, "shell32.lib")
 #endif
 
-#include "instance.cpp"
-#include "lexer.cpp"
-#include "parser.cpp"
-#include "runtime.cpp"
-#include "statement.cpp"
-#include "codegen.cpp"
+// Compiler
+#include "compiler/compiler.cpp"
+#include "compiler/lexer.cpp"
+#include "compiler/parser.cpp"
+
+// Instance
+#include "instance/instance.cpp"
+#include "instance/runtime.cpp"
+#include "instance/statement.cpp"
+#include "instance/codegen.cpp"
 
 namespace cs {
 // Internal Functions

@@ -130,6 +130,78 @@ namespace cs {
 			            new token_endline(0)}, new method_throw(context));
 	}
 
+	void instance_type::translate(const std::deque<std::deque<token_base *>> &lines, std::deque<statement_base *> &statements, bool raw)
+	{
+		std::deque<std::deque<token_base *>> tmp;
+		method_base *method = nullptr;
+		token_endline *endsig = nullptr;
+		int level = 0;
+		for (auto &line:lines) {
+			endsig = static_cast<token_endline *>(line.back());
+			try {
+				method_base *m = translator.match(line);
+				switch (m->get_type()) {
+				case method_types::null:
+					throw runtime_error("Null type of grammar.");
+					break;
+				case method_types::single: {
+					statement_base *sptr = nullptr;
+					if (level > 0) {
+						if (m->get_target_type() == statement_types::end_) {
+							storage.remove_set();
+							storage.remove_domain();
+							--level;
+						}
+						if (level == 0) {
+							sptr = method->translate(tmp);
+							tmp.clear();
+							method = nullptr;
+						}
+						else {
+							m->preprocess({line});
+							tmp.push_back(line);
+						}
+					}
+					else {
+						if (m->get_target_type() == statement_types::end_)
+							throw runtime_error("Hanging end statement.");
+						else {
+							if (raw)
+								m->preprocess({line});
+							sptr = m->translate({line});
+						}
+					}
+					if (sptr != nullptr)
+						statements.push_back(sptr);
+				}
+				break;
+				case method_types::block: {
+					if (level == 0)
+						method = m;
+					++level;
+					storage.add_domain();
+					storage.add_set();
+					m->preprocess({line});
+					tmp.push_back(line);
+				}
+				break;
+				case method_types::jit_command:
+					m->translate({line});
+					break;
+				}
+			}
+			catch (const cs::exception &e) {
+				throw e;
+			}
+			catch (const std::exception &e) {
+				throw exception(endsig->get_line_num(), context->file_path,
+				                context->file_buff.at(endsig->get_line_num() - 1), e.what());
+			}
+		}
+		if (level != 0)
+			throw runtime_error("Lack of the \"end\" signal.");
+	}
+
 	extension_t instance_type::import(const std::string &path, const std::string &name)
 	{
 		std::vector<std::string> collection;
@@ -178,9 +250,9 @@ namespace cs {
 		std::deque<std::deque<token_base*>> ast;
 		// Compile
 		compiler.build_ast(buff, ast);
-		translate_into_statements(ast, statements);
+		translate(ast, statements, true);
 		// Mark Constants
-		mark_constant();
+		compiler.mark_constant();
 	}
 
 	void instance_type::interpret()
@@ -228,14 +300,8 @@ namespace cs {
 			buff.push_back(ch);
 		statement_base *statement = nullptr;
 		try {
-			// Lexer
 			std::deque<token_base *> line;
-			context->instance->process_char_buff(buff, line);
-			line.push_back(new token_endline(line_num));
-			// Parse
-			context->instance->process_brackets(line);
-			context->instance->kill_brackets(line);
-			context->instance->kill_expr(line);
+			context->instance->compiler.build_line(buff, line);
 			method_base *m = context->instance->translator.match(line);
 			switch (m->get_type()) {
 			case method_types::null:
@@ -297,7 +363,7 @@ namespace cs {
 			reset_status();
 			throw exception(line_num, context->file_path, code, e.what());
 		}
-		context->instance->mark_constant();
+		context->instance->compiler.mark_constant();
 	}
 
 	void repl::exec(const string &code)

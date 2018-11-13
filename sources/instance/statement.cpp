@@ -104,7 +104,7 @@ namespace cs {
 	void statement_expression::dump(std::ostream &o) const
 	{
 		o << "< Expression: ";
-		instance_type::dump_expr(mTree.root(), o);
+		compiler_type::dump_expr(mTree.root(), o);
 		o << " >\n";
 	}
 
@@ -120,7 +120,7 @@ namespace cs {
 	void statement_involve::dump(std::ostream &o) const
 	{
 		o << "< Using: ";
-		instance_type::dump_expr(mTree.root(), o);
+		compiler_type::dump_expr(mTree.root(), o);
 		o << " >\n";
 	}
 
@@ -134,7 +134,7 @@ namespace cs {
 	{
 		for (auto &dvp:mDvp) {
 			o << "< Var: ID = \"" << dvp.id << "\", Value = ";
-			instance_type::dump_expr(dvp.expr.root(), o);
+			compiler_type::dump_expr(dvp.expr.root(), o);
 			o << " >\n";
 		}
 	}
@@ -261,7 +261,7 @@ namespace cs {
 	void statement_if::dump(std::ostream &o) const
 	{
 		o << "< BeginIf: Condition = ";
-		instance_type::dump_expr(mTree.root(), o);
+		compiler_type::dump_expr(mTree.root(), o);
 		o << " >\n";
 		for (auto &ptr:mBlock)
 			ptr->dump(o);
@@ -309,7 +309,7 @@ namespace cs {
 	void statement_ifelse::dump(std::ostream &o) const
 	{
 		o << "< BeginIfElse: Condition = ";
-		instance_type::dump_expr(mTree.root(), o);
+		compiler_type::dump_expr(mTree.root(), o);
 		o << " >\n";
 		for (auto &ptr:mBlock)
 			ptr->dump(o);
@@ -331,7 +331,7 @@ namespace cs {
 	void statement_switch::dump(std::ostream &o) const
 	{
 		o << "< BeginSwitch: Condition = ";
-		instance_type::dump_expr(mTree.root(), o);
+		compiler_type::dump_expr(mTree.root(), o);
 		o << " >\n";
 		for (auto &it:mCases) {
 			o << "< BeginCase: Tag = \"";
@@ -394,7 +394,7 @@ namespace cs {
 	void statement_while::dump(std::ostream &o) const
 	{
 		o << "< BeginWhile: Condition = ";
-		instance_type::dump_expr(mTree.root(), o);
+		compiler_type::dump_expr(mTree.root(), o);
 		o << " >\n";
 		for (auto &ptr:mBlock)
 			ptr->dump(o);
@@ -443,7 +443,7 @@ namespace cs {
 			ptr->dump(o);
 		if (mExpr != nullptr) {
 			o << "< Until: Condition = ";
-			instance_type::dump_expr(mExpr->get_tree().root(), o);
+			compiler_type::dump_expr(mExpr->get_tree().root(), o);
 			o << " >\n";
 		}
 		o << "< EndLoop >\n";
@@ -492,11 +492,11 @@ namespace cs {
 	{
 		o << "< BeginFor >\n";
 		o << "< IteratorID = \"" << mDvp.id << "\", IteratorValue = ";
-		instance_type::dump_expr(mDvp.expr.root(), o);
+		compiler_type::dump_expr(mDvp.expr.root(), o);
 		o << " >\n< Condition = ";
-		instance_type::dump_expr(mParallel[1].root(), o);
+		compiler_type::dump_expr(mParallel[1].root(), o);
 		o << " >\n< Increment = ";
-		instance_type::dump_expr(mParallel[2].root(), o);
+		compiler_type::dump_expr(mParallel[2].root(), o);
 		o << " >\n< Body >\n";
 		for (auto &ptr:mBlock)
 			ptr->dump(o);
@@ -561,7 +561,7 @@ namespace cs {
 	{
 		o << "< BeginForEach >\n";
 		o << "< IteratorID = \"" << mIt << "\", TargetValue = ";
-		instance_type::dump_expr(mObj.root(), o);
+		compiler_type::dump_expr(mObj.root(), o);
 		o << " >\n< Body >\n";
 		for (auto &ptr:mBlock)
 			ptr->dump(o);
@@ -578,7 +578,7 @@ namespace cs {
 		o << "< BeginStruct: ID = \"" << mName << "\"";
 		if (mParent.root().usable()) {
 			o << ", Parent = ";
-			instance_type::dump_expr(mParent.root(), o);
+			compiler_type::dump_expr(mParent.root(), o);
 		}
 		o << " >\n";
 		for (auto &ptr:mBlock)
@@ -623,7 +623,7 @@ namespace cs {
 	void statement_return::dump(std::ostream &o) const
 	{
 		o << "< Return: ";
-		instance_type::dump_expr(mTree.root(), o);
+		compiler_type::dump_expr(mTree.root(), o);
 		o << " >\n";
 	}
 
@@ -687,7 +687,7 @@ namespace cs {
 	void statement_throw::dump(std::ostream &o) const
 	{
 		o << "< Throw: ";
-		instance_type::dump_expr(mTree.root(), o);
+		compiler_type::dump_expr(mTree.root(), o);
 		o << " >\n";
 	}
 }

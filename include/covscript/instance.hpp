@@ -33,24 +33,21 @@ namespace cs {
 		// Initializations
 		void init_grammar();
 		void init_runtime();
+	public:
 		// Status
 		bool return_fcall = false;
 		bool break_block = false;
 		bool continue_block = false;
-		// Refers
-		std::forward_list<instance_type> refers;
-		// Function Stack
-		cov::static_stack<var, fcall_stack_size> fcall_stack;
-		// Parser and Code Generator
-		void kill_action(std::deque<std::deque<token_base *>>, std::deque<statement_base *> &, bool raw = false);
-		void translate_into_statements(std::deque<token_base *> &, std::deque<statement_base *> &);
-	public:
 		// Context
 		context_t context;
 		// Compiler
 		compiler_type compiler;
+		// Refers
+		std::forward_list<instance_type> refers;
+		// Function Stack
+		cov::static_stack<var, fcall_stack_size> fcall_stack;
 		// Constructor and destructor
-		instance_type() : context(std::make_shared<context_type>(this))
+		instance_type() : context(std::make_shared<context_type>(this)), compiler(context, this)
 		{
 			struct_builder::reset_counter();
 			init_grammar();
@@ -59,6 +56,7 @@ namespace cs {
 		instance_type(const instance_type &) = delete;
 		~instance_type() = default;
 		// Wrapped Method
+		void translate(const std::deque<std::deque<token_base *>> &, std::deque<statement_base *> &, bool=false);
 		extension_t import(const std::string &, const std::string &);
 		void compile(const std::string &);
 		void interpret();

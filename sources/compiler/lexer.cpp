@@ -20,7 +20,7 @@
 #include <covscript/instance.hpp>
 
 namespace cs {
-	void instance_type::process_char_buff(const std::deque<char> &buff, std::deque<token_base *> &tokens)
+	void compiler_type::process_char_buff(const std::deque<char> &buff, std::deque<token_base *> &tokens)
 	{
 		if (buff.empty())
 			throw runtime_error("Received empty character buffer.");
@@ -191,7 +191,7 @@ namespace cs {
 		}
 	}
 
-	class preprocessor final {
+	class compiler_type::preprocessor final {
 		std::size_t line_num = 1;
 		bool is_annotation = false;
 		bool is_command = false;
@@ -209,7 +209,7 @@ namespace cs {
 			++line_num;
 		}
 
-		void process_endline(const context_t &context, std::deque<token_base *> &tokens)
+		void process_endline(const context_t &context, compiler_type& compiler, std::deque<token_base *> &tokens)
 		{
 			if (is_annotation) {
 				is_annotation = false;
@@ -231,7 +231,7 @@ namespace cs {
 				return;
 			}
 			try {
-				context->instance->process_char_buff(buff, tokens);
+				compiler.process_char_buff(buff, tokens);
 			}
 			catch (const cs::exception &e) {
 				throw e;
@@ -249,12 +249,12 @@ namespace cs {
 		}
 
 	public:
-		explicit preprocessor(const context_t &context, const std::deque<char> &char_buff,
+		explicit preprocessor(const context_t &context, compiler_type& compiler, const std::deque<char> &char_buff,
 		                      std::deque<token_base *> &tokens)
 		{
 			for (auto &ch:char_buff) {
 				if (ch == '\n') {
-					process_endline(context, tokens);
+					process_endline(context, compiler, tokens);
 					continue;
 				}
 				if (is_annotation)
@@ -283,18 +283,18 @@ namespace cs {
 					line.push_back(ch);
 				}
 			}
-			process_endline(context, tokens);
+			process_endline(context, compiler, tokens);
 			if (multi_line)
 				throw runtime_error("Lack of the @end command.");
 		}
 	};
 
-	void instance_type::translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens)
+	void compiler_type::translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens)
 	{
-		preprocessor(context, char_buff, tokens);
+		preprocessor(context, *this, char_buff, tokens);
 	}
 
-	void instance_type::process_empty_brackets(std::deque<token_base *> &tokens)
+	void compiler_type::process_empty_brackets(std::deque<token_base *> &tokens)
 	{
 		if (tokens.empty())
 			throw runtime_error("Received empty token buffer.");
@@ -387,7 +387,7 @@ namespace cs {
 			throw runtime_error("Parentheses do not match.");
 	}
 
-	void instance_type::process_brackets(std::deque<token_base *> &tokens)
+	void compiler_type::process_brackets(std::deque<token_base *> &tokens)
 	{
 		if (tokens.empty())
 			throw runtime_error("Received empty token buffer.");

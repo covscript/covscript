@@ -78,7 +78,7 @@ void covscript_main(int args_size, const char *args[])
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::init(arg);
 		cs::instance_type instance;
-		instance.disable_optimizer = no_optimize;
+		instance.compiler.disable_optimizer = no_optimize;
 		instance.compile(path);
 		if (dump_ast) {
 			if (!log_path.empty()) {

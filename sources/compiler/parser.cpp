@@ -20,7 +20,7 @@
 #include <covscript/instance.hpp>
 
 namespace cs {
-	void instance_type::kill_brackets(std::deque<token_base *> &tokens, std::size_t
+	void compiler_type::kill_brackets(std::deque<token_base *> &tokens, std::size_t
 	                                  line_num)
 	{
 		std::deque<token_base *> oldt;
@@ -188,7 +188,7 @@ namespace cs {
 		}
 	}
 
-	void instance_type::split_token(std::deque<token_base *> &raw, std::deque<token_base *> &signals,
+	void compiler_type::split_token(std::deque<token_base *> &raw, std::deque<token_base *> &signals,
 	                                std::deque<token_base *> &objects)
 	{
 		bool request_signal = false;
@@ -210,7 +210,7 @@ namespace cs {
 			objects.push_back(nullptr);
 	}
 
-	void instance_type::build_tree(cov::tree<token_base *> &tree, std::deque<token_base *> &signals,
+	void compiler_type::build_tree(cov::tree<token_base *> &tree, std::deque<token_base *> &signals,
 	                               std::deque<token_base *> &objects)
 	{
 		if (objects.empty() || signals.empty() || objects.size() != signals.size() + 1)
@@ -261,7 +261,7 @@ namespace cs {
 		}
 	}
 
-	void instance_type::gen_tree(cov::tree<token_base *> &tree, std::deque<token_base *> &raw)
+	void compiler_type::gen_tree(cov::tree<token_base *> &tree, std::deque<token_base *> &raw)
 	{
 		tree.clear();
 		if (raw.size() == 1) {
@@ -284,7 +284,7 @@ namespace cs {
 		optimize_expression(tree);
 	}
 
-	void instance_type::kill_expr(std::deque<token_base *> &tokens)
+	void compiler_type::kill_expr(std::deque<token_base *> &tokens)
 	{
 		std::deque<token_base *> oldt, expr;
 		std::swap(tokens, oldt);
@@ -302,76 +302,5 @@ namespace cs {
 			else
 				expr.push_back(ptr);
 		}
-	}
-
-	void instance_type::translate_into_statements(const std::deque<std::deque<token_base *>> &lines, std::deque<statement_base *> &statements){
-		std::deque<std::deque<token_base *>> tmp;
-		method_base *method = nullptr;
-		token_endline *endsig = nullptr;
-		int level = 0;
-		for (auto &line:lines) {
-			endsig = static_cast<token_endline *>(line.back());
-			try {
-				method_base *m = translator.match(line);
-				switch (m->get_type()) {
-				case method_types::null:
-					throw runtime_error("Null type of grammar.");
-					break;
-				case method_types::single: {
-					statement_base *sptr = nullptr;
-					if (level > 0) {
-						if (m->get_target_type() == statement_types::end_) {
-							storage.remove_set();
-							storage.remove_domain();
-							--level;
-						}
-						if (level == 0) {
-							sptr = method->translate(tmp);
-							tmp.clear();
-							method = nullptr;
-						}
-						else {
-							m->preprocess({line});
-							tmp.push_back(line);
-						}
-					}
-					else {
-						if (m->get_target_type() == statement_types::end_)
-							throw runtime_error("Hanging end statement.");
-						else {
-							if (raw)
-								m->preprocess({line});
-							sptr = m->translate({line});
-						}
-					}
-					if (sptr != nullptr)
-						statements.push_back(sptr);
-				}
-				break;
-				case method_types::block: {
-					if (level == 0)
-						method = m;
-					++level;
-					storage.add_domain();
-					storage.add_set();
-					m->preprocess({line});
-					tmp.push_back(line);
-				}
-				break;
-				case method_types::jit_command:
-					m->translate({line});
-					break;
-				}
-			}
-			catch (const cs::exception &e) {
-				throw e;
-			}
-			catch (const std::exception &e) {
-				throw exception(endsig->get_line_num(), context->file_path,
-				                context->file_buff.at(endsig->get_line_num() - 1), e.what());
-			}
-		}
-		if (level != 0)
-			throw runtime_error("Lack of the \"end\" signal.");
 	}
 }

@@ -241,8 +241,12 @@ namespace cs {
 		// Status
 		bool inside_lambda = false;
 		bool no_optimize = false;
-		// Settings
-		bool disable_optimizer = false;
+		// Context
+		context_t context;
+		// Runtime
+		runtime_type* runtime;
+		// Preprocessor
+		class preprocessor;
 		// Lexer
 		bool issignal(char ch)
 		{
@@ -293,12 +297,12 @@ namespace cs {
 
 		void kill_expr(std::deque<token_base *> &);
 
-        void process_line(std::deque<token_base*> & line)
-        {
-            process_brackets(line);
+		void process_line(std::deque<token_base*> & line)
+		{
+			process_brackets(line);
 			kill_brackets(line, static_cast<token_endline *>(line.back())->get_line_num());
 			kill_expr(line);
-        }
+		}
 
 		// Optimizer
 		bool optimizable(const cov::tree<token_base *>::iterator &it)
@@ -334,6 +338,10 @@ namespace cs {
 
 		void opt_expr(cov::tree<token_base *> &, cov::tree<token_base *>::iterator);
 	public:
+		compiler_type()=delete;
+		compiler_type(context_t c, runtime_type* rt):context(c), runtime(rt) {}
+		// Settings
+		bool disable_optimizer = false;
 		// Constants Operation
 		void mark_constant()
 		{
@@ -371,11 +379,12 @@ namespace cs {
 			kill_brackets(tokens);
 			gen_tree(tree, tokens);
 		}
-        void build_line(const std::deque<char>& buff, std::deque<token_base*>& line)
-        {
-            translate_into_tokens(buff, line);
-            process_line(line);
-        }
+		void build_line(const std::deque<char>& buff, std::deque<token_base*>& line, std::size_t line_num=1)
+		{
+			process_char_buff(buff, line);
+			line.push_back(new token_endline(line_num));
+			process_line(line);
+		}
 		void build_ast(const std::deque<char>& buff, std::deque<std::deque<token_base*>>& ast)
 		{
 			std::deque<token_base *> tokens, tmp;
@@ -383,19 +392,17 @@ namespace cs {
 			for (auto &ptr:tokens) {
 				tmp.push_back(ptr);
 				if (ptr != nullptr && ptr->get_type() == token_types::endline) {
-					if (tmp.size() > 1)
-                    {
-                        process_line(tmp);
-                        ast.push_back(tmp);
-                    }
+					if (tmp.size() > 1) {
+						process_line(tmp);
+						ast.push_back(tmp);
+					}
 					tmp.clear();
 				}
 			}
-			if (tmp.size() > 1)
-            {
-                process_line(tmp);
+			if (tmp.size() > 1) {
+				process_line(tmp);
 				ast.push_back(tmp);
-            }
+			}
 		}
 		// AST Debugger
 		static void dump_expr(cov::tree<token_base *>::const_iterator, std::ostream &);
