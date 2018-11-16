@@ -40,7 +40,10 @@ namespace cs {
 	private:
 		std::list<std::shared_ptr<data_type>> m_data;
 	public:
-		translator_type() = default;
+		context_t context;
+		translator_type() = delete;
+
+		translator_type(context_t c):context(std::move(c)) {}
 
 		translator_type(const translator_type &) = delete;
 
@@ -76,6 +79,8 @@ namespace cs {
 				throw runtime_error("Ambiguous grammar.");
 			return stack.front()->second;
 		}
+
+		void translate(const std::deque<std::deque<token_base *>> &, std::deque<statement_base *> &, bool= false);
 	};
 
 	class compiler_type final {
@@ -243,8 +248,6 @@ namespace cs {
 		bool no_optimize = false;
 		// Context
 		context_t context;
-		// Runtime
-		runtime_type *runtime;
 
 		// Preprocessor
 		class preprocessor;
@@ -336,7 +339,11 @@ namespace cs {
 	public:
 		compiler_type() = delete;
 
-		compiler_type(context_t c, runtime_type *rt) : context(std::move(c)), runtime(rt) {}
+		compiler_type(context_t c) : context(std::move(c)) {}
+
+		compiler_type(const compiler_type&)=delete;
+
+		~compiler_type()=default;
 
 		// Settings
 		bool disable_optimizer = false;

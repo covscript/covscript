@@ -22,10 +22,6 @@
 #include <covscript/instance.hpp>
 
 namespace cs {
-	void init(const array &);
-
-	void init(int, const char *[]);
-
 	std::string get_sdk_path();
 
 	std::string process_path(const std::string &raw)
@@ -50,4 +46,20 @@ namespace cs {
 		else
 			return process_path(get_sdk_path() + cs::path_separator + "imports");
 	}
+
+	class process_type final {
+		// Initializations
+		void init_grammar();
+		void init_runtime();
+	public:
+		translator_type translator;
+		compiler_type compiler;
+		instance_type instance;
+		runtime_type runtime;
+		process_type()=delete;
+		process_type(const process&)=delete;
+		explicit process_type(const array &);
+		process_type(int, const char *[]);
+		~process_type();
+	};
 }

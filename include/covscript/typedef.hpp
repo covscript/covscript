@@ -23,6 +23,10 @@ namespace cs_impl {
 	class any;
 }
 namespace cs {
+	class translator_type;
+
+	class compiler_type;
+
 	class instance_type;
 
 	class runtime_type;

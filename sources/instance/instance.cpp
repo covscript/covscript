@@ -37,175 +37,6 @@ namespace cs {
 		return context->file_buff.at(line_num - 1);
 	}
 
-	void instance_type::init_grammar()
-	{
-		translator
-		// Expression Grammar
-		.add_method({new token_expr(cov::tree<token_base *>()), new token_endline(0)},
-		new method_expression(context))
-		// Import Grammar
-		.add_method({new token_action(action_types::import_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_import(context))
-		// Package Grammar
-		.add_method({new token_action(action_types::package_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_package(context))
-		// Involve Grammar
-		.add_method({new token_action(action_types::using_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_involve(context))
-		// Var Grammar
-		.add_method({new token_action(action_types::var_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_var(context))
-		.add_method({new token_action(action_types::constant_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)},
-		new method_constant(context))
-		// End Grammar
-		.add_method({new token_action(action_types::endblock_), new token_endline(0)}, new method_end(context))
-		// Block Grammar
-		.add_method({new token_action(action_types::block_), new token_endline(0)}, new method_block(context))
-		// Namespace Grammar
-		.add_method({new token_action(action_types::namespace_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_namespace(context))
-		// If Grammar
-		.add_method({new token_action(action_types::if_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_if(context))
-		// Else Grammar
-		.add_method({new token_action(action_types::else_), new token_endline(0)}, new method_else(context))
-		// Switch Grammar
-		.add_method({new token_action(action_types::switch_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_switch(context))
-		// Case Grammar
-		.add_method({new token_action(action_types::case_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_case(context))
-		// Default Grammar
-		.add_method({new token_action(action_types::default_), new token_endline(0)},
-		new method_default(context))
-		// While Grammar
-		.add_method({new token_action(action_types::while_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_while(context))
-		// Until Grammar
-		.add_method({new token_action(action_types::until_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_until(context))
-		// Loop Grammar
-		.add_method({new token_action(action_types::loop_), new token_endline(0)}, new method_loop(context))
-		// For Grammar
-		.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_for(context))
-		.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()),
-			            new token_action(action_types::do_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_for_do(context))
-		.add_method({new token_action(action_types::foreach_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_foreach(context))
-		.add_method({new token_action(action_types::foreach_), new token_expr(cov::tree<token_base *>()),
-			            new token_action(action_types::do_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_foreach_do(context))
-		// Break Grammar
-		.add_method({new token_action(action_types::break_), new token_endline(0)}, new method_break(context))
-		// Continue Grammar
-		.add_method({new token_action(action_types::continue_), new token_endline(0)},
-		new method_continue(context))
-		// Function Grammar
-		.add_method({new token_action(action_types::function_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_function(context))
-		.add_method({new token_action(action_types::function_), new token_expr(cov::tree<token_base *>()),
-			            new token_action(action_types::override_), new token_endline(0)},
-		new method_function(context))
-		// Return Grammar
-		.add_method({new token_action(action_types::return_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_return(context))
-		.add_method({new token_action(action_types::return_), new token_endline(0)},
-		new method_return_no_value(context))
-		// Struct Grammar
-		.add_method({new token_action(action_types::struct_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_struct(context))
-		.add_method({new token_action(action_types::struct_), new token_expr(cov::tree<token_base *>()),
-			            new token_action(action_types::extends_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_struct(context))
-		// Try Grammar
-		.add_method({new token_action(action_types::try_), new token_endline(0)}, new method_try(context))
-		// Catch Grammar
-		.add_method({new token_action(action_types::catch_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_catch(context))
-		// Throw Grammar
-		.add_method({new token_action(action_types::throw_), new token_expr(cov::tree<token_base *>()),
-			            new token_endline(0)}, new method_throw(context));
-	}
-
-	void instance_type::translate(const std::deque<std::deque<token_base *>> &lines,
-	                              std::deque<statement_base *> &statements, bool raw)
-	{
-		std::deque<std::deque<token_base *>> tmp;
-		method_base *method = nullptr;
-		token_endline *endsig = nullptr;
-		int level = 0;
-		for (auto &it:lines) {
-			std::deque<token_base *> line = it;
-			endsig = static_cast<token_endline *>(line.back());
-			try {
-				if (raw)
-					compiler.process_line(line);
-				method_base *m = translator.match(line);
-				switch (m->get_type()) {
-				case method_types::null:
-					throw runtime_error("Null type of grammar.");
-					break;
-				case method_types::single: {
-					statement_base *sptr = nullptr;
-					if (level > 0) {
-						if (m->get_target_type() == statement_types::end_) {
-							storage.remove_set();
-							storage.remove_domain();
-							--level;
-						}
-						if (level == 0) {
-							sptr = method->translate(tmp);
-							tmp.clear();
-							method = nullptr;
-						}
-						else {
-							m->preprocess({line});
-							tmp.push_back(line);
-						}
-					}
-					else {
-						if (m->get_target_type() == statement_types::end_)
-							throw runtime_error("Hanging end statement.");
-						else {
-							if (raw)
-								m->preprocess({line});
-							sptr = m->translate({line});
-						}
-					}
-					if (sptr != nullptr)
-						statements.push_back(sptr);
-				}
-				break;
-				case method_types::block: {
-					if (level == 0)
-						method = m;
-					++level;
-					storage.add_domain();
-					storage.add_set();
-					m->preprocess({line});
-					tmp.push_back(line);
-				}
-				break;
-				case method_types::jit_command:
-					m->translate({line});
-					break;
-				}
-			}
-			catch (const cs::exception &e) {
-				throw e;
-			}
-			catch (const std::exception &e) {
-				throw exception(endsig->get_line_num(), context->file_path,
-				                context->file_buff.at(endsig->get_line_num() - 1), e.what());
-			}
-		}
-		if (level != 0)
-			throw runtime_error("Lack of the \"end\" signal.");
-	}
-
 	extension_t instance_type::import(const std::string &path, const std::string &name)
 	{
 		std::vector<std::string> collection;
@@ -241,7 +72,7 @@ namespace cs {
 		throw fatal_error("No such file or directory.");
 	}
 
-	void instance_type::compile(const std::string &path)
+	void instance_type::compile(const translator_type& translator, const std::string &path)
 	{
 		context->file_path = path;
 		// Read from file
@@ -253,10 +84,10 @@ namespace cs {
 			buff.push_back(ch);
 		std::deque<std::deque<token_base *>> ast;
 		// Compile
-		compiler.build_ast(buff, ast);
-		translate(ast, statements, true);
+		context->compiler->build_ast(buff, ast);
+		context->translator->translate(ast, statements, true);
 		// Mark Constants
-		compiler.mark_constant();
+		context->compiler->mark_constant();
 	}
 
 	void instance_type::interpret()
@@ -305,7 +136,7 @@ namespace cs {
 		statement_base *statement = nullptr;
 		try {
 			std::deque<token_base *> line;
-			context->instance->compiler.build_line(buff, line);
+			context->instance->compiler->build_line(buff, line);
 			method_base *m = context->instance->translator.match(line);
 			switch (m->get_type()) {
 			case method_types::null:

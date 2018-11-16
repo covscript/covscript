@@ -72,23 +72,6 @@ namespace cs {
 		a.swap(b, true);
 	}
 
-	void init(const array &args)
-	{
-		// Init extensions
-		init_extensions();
-		system_ext.add_var("args", cs::var::make_constant<cs::array>(args));
-	}
-
-	void init(int argv, const char *args[])
-	{
-		// Init args
-		cs::array
-		arg;
-		for (std::size_t i = 0; i < argv; ++i)
-			arg.emplace_back(cs::var::make_constant<cs::string>(args[i]));
-		init(arg);
-	}
-
 #ifdef COVSCRIPT_PLATFORM_WIN32
 
 	std::string get_sdk_path()
@@ -114,10 +97,102 @@ namespace cs {
 	}
 
 #endif
-
-	void instance_type::init_runtime()
+	void process_type::init_grammar()
 	{
-		storage
+		translator
+		// Expression Grammar
+		.add_method({new token_expr(cov::tree<token_base *>()), new token_endline(0)},
+		new method_expression(context))
+		// Import Grammar
+		.add_method({new token_action(action_types::import_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_import(context))
+		// Package Grammar
+		.add_method({new token_action(action_types::package_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_package(context))
+		// Involve Grammar
+		.add_method({new token_action(action_types::using_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_involve(context))
+		// Var Grammar
+		.add_method({new token_action(action_types::var_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_var(context))
+		.add_method({new token_action(action_types::constant_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)},
+		new method_constant(context))
+		// End Grammar
+		.add_method({new token_action(action_types::endblock_), new token_endline(0)}, new method_end(context))
+		// Block Grammar
+		.add_method({new token_action(action_types::block_), new token_endline(0)}, new method_block(context))
+		// Namespace Grammar
+		.add_method({new token_action(action_types::namespace_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_namespace(context))
+		// If Grammar
+		.add_method({new token_action(action_types::if_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_if(context))
+		// Else Grammar
+		.add_method({new token_action(action_types::else_), new token_endline(0)}, new method_else(context))
+		// Switch Grammar
+		.add_method({new token_action(action_types::switch_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_switch(context))
+		// Case Grammar
+		.add_method({new token_action(action_types::case_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_case(context))
+		// Default Grammar
+		.add_method({new token_action(action_types::default_), new token_endline(0)},
+		new method_default(context))
+		// While Grammar
+		.add_method({new token_action(action_types::while_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_while(context))
+		// Until Grammar
+		.add_method({new token_action(action_types::until_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_until(context))
+		// Loop Grammar
+		.add_method({new token_action(action_types::loop_), new token_endline(0)}, new method_loop(context))
+		// For Grammar
+		.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_for(context))
+		.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()),
+			            new token_action(action_types::do_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_for_do(context))
+		.add_method({new token_action(action_types::foreach_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_foreach(context))
+		.add_method({new token_action(action_types::foreach_), new token_expr(cov::tree<token_base *>()),
+			            new token_action(action_types::do_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_foreach_do(context))
+		// Break Grammar
+		.add_method({new token_action(action_types::break_), new token_endline(0)}, new method_break(context))
+		// Continue Grammar
+		.add_method({new token_action(action_types::continue_), new token_endline(0)},
+		new method_continue(context))
+		// Function Grammar
+		.add_method({new token_action(action_types::function_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_function(context))
+		.add_method({new token_action(action_types::function_), new token_expr(cov::tree<token_base *>()),
+			            new token_action(action_types::override_), new token_endline(0)},
+		new method_function(context))
+		// Return Grammar
+		.add_method({new token_action(action_types::return_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_return(context))
+		.add_method({new token_action(action_types::return_), new token_endline(0)},
+		new method_return_no_value(context))
+		// Struct Grammar
+		.add_method({new token_action(action_types::struct_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_struct(context))
+		.add_method({new token_action(action_types::struct_), new token_expr(cov::tree<token_base *>()),
+			            new token_action(action_types::extends_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_struct(context))
+		// Try Grammar
+		.add_method({new token_action(action_types::try_), new token_endline(0)}, new method_try(context))
+		// Catch Grammar
+		.add_method({new token_action(action_types::catch_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_catch(context))
+		// Throw Grammar
+		.add_method({new token_action(action_types::throw_), new token_expr(cov::tree<token_base *>()),
+			            new token_endline(0)}, new method_throw(context));
+	}
+
+	void process_type::init_runtime()
+	{
+		runtime.storage
 		// Internal Types
 		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char), char_ext_shared)
 		.add_buildin_type("number", []() -> var { return var::make<number>(0); }, typeid(number))
@@ -146,5 +221,22 @@ namespace cs {
 		.add_buildin_var("system", make_namespace(make_shared_namespace(system_ext)))
 		.add_buildin_var("runtime", make_namespace(make_shared_namespace(runtime_ext)))
 		.add_buildin_var("math", make_namespace(make_shared_namespace(math_ext)));
+	}
+
+	process_type::process_type(const array &args)
+	{
+		// Init extensions
+		init_extensions();
+		system_ext.add_var("args", cs::var::make_constant<cs::array>(args));
+	}
+
+	process_type::process_type(int argv, const char *args[])
+	{
+		// Init args
+		cs::array
+		arg;
+		for (std::size_t i = 0; i < argv; ++i)
+			arg.emplace_back(cs::var::make_constant<cs::string>(args[i]));
+		process_type::process_type(arg);
 	}
 }
