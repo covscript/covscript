@@ -30,7 +30,7 @@ namespace cs {
 		scope_guard scope(mContext);
 		fcall_guard fcall(mContext);
 		for (std::size_t i = 0; i < args.size(); ++i)
-			mContext->instance->storage.add_var(this->mArgs[i], args[i]);
+			mContext->runtime->storage.add_var(this->mArgs[i], args[i]);
 		for (auto &ptr:this->mBody) {
 			try {
 				ptr->run();
@@ -53,7 +53,7 @@ namespace cs {
 	{
 		scope_guard scope(mContext);
 		if (mParent.root().usable()) {
-			var builder = mContext->instance->parse_expr(mParent.root());
+			var builder = mContext->runtime->parse_expr(mParent.root());
 			if (builder.type() == typeid(type)) {
 				const auto &t = builder.const_val<type>();
 				if (mTypeId == t.id)
@@ -61,8 +61,8 @@ namespace cs {
 				var parent = t.constructor();
 				if (parent.type() == typeid(structure)) {
 					parent.protect();
-					mContext->instance->storage.involve_domain(parent.const_val<structure>().get_domain());
-					mContext->instance->storage.add_var("parent", parent, true);
+					mContext->runtime->storage.involve_domain(parent.const_val<structure>().get_domain());
+					mContext->runtime->storage.add_var("parent", parent, true);
 				}
 				else
 					throw runtime_error("Target is not a struct.");
@@ -86,12 +86,12 @@ namespace cs {
 
 	void statement_expression::run()
 	{
-		context->instance->parse_expr(mTree.root());
+		context->runtime->parse_expr(mTree.root());
 	}
 
 	void statement_expression::repl_run()
 	{
-		const var &result = context->instance->parse_expr(mTree.root());
+		const var &result = context->runtime->parse_expr(mTree.root());
 		try {
 			std::cout << result.to_string() << std::endl;
 		}
@@ -110,9 +110,9 @@ namespace cs {
 
 	void statement_involve::run()
 	{
-		var ns = context->instance->parse_expr(mTree.root());
+		var ns = context->runtime->parse_expr(mTree.root());
 		if (ns.type() == typeid(name_space_t))
-			context->instance->storage.involve_domain(ns.const_val<name_space_t>()->get_domain(), mOverride);
+			context->runtime->storage.involve_domain(ns.const_val<name_space_t>()->get_domain(), mOverride);
 		else
 			throw runtime_error("Only support involve namespace.");
 	}
@@ -127,7 +127,7 @@ namespace cs {
 	void statement_var::run()
 	{
 		for (auto &dvp:mDvp)
-			context->instance->storage.add_var(dvp.id, copy(context->instance->parse_expr(dvp.expr.root())));
+			context->runtime->storage.add_var(dvp.id, copy(context->runtime->parse_expr(dvp.expr.root())));
 	}
 
 	void statement_var::dump(std::ostream &o) const
@@ -142,7 +142,7 @@ namespace cs {
 	void statement_constant::run()
 	{
 		for (auto &val:mVal)
-			context->instance->storage.add_var(val.first, val.second, true);
+			context->runtime->storage.add_var(val.first, val.second, true);
 	}
 
 	void statement_constant::dump(std::ostream &o) const
@@ -209,7 +209,7 @@ namespace cs {
 
 	void statement_namespace::run()
 	{
-		context->instance->storage.add_var(this->mName,
+		context->runtime->storage.add_var(this->mName,
 		var::make_protect<name_space_t>(std::make_shared<name_space_holder>([this] {
 			scope_guard scope(context);
 			for (auto &ptr:mBlock)
@@ -239,7 +239,7 @@ namespace cs {
 
 	void statement_if::run()
 	{
-		if (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
+		if (context->runtime->parse_expr(mTree.root()).const_val<boolean>()) {
 			scope_guard scope(context);
 			for (auto &ptr:mBlock) {
 				try {
@@ -270,7 +270,7 @@ namespace cs {
 
 	void statement_ifelse::run()
 	{
-		if (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
+		if (context->runtime->parse_expr(mTree.root()).const_val<boolean>()) {
 			scope_guard scope(context);
 			for (auto &ptr:mBlock) {
 				try {
@@ -321,7 +321,7 @@ namespace cs {
 
 	void statement_switch::run()
 	{
-		var key = context->instance->parse_expr(mTree.root());
+		var key = context->runtime->parse_expr(mTree.root());
 		if (mCases.count(key) > 0)
 			mCases[key]->run();
 		else if (mDefault != nullptr)
@@ -364,7 +364,7 @@ namespace cs {
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
 		scope_guard scope(context);
-		while (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
+		while (context->runtime->parse_expr(mTree.root()).const_val<boolean>()) {
 			scope.clear();
 			for (auto &ptr:mBlock) {
 				try {
@@ -433,7 +433,7 @@ namespace cs {
 				}
 			}
 		}
-		while (!(mExpr != nullptr && context->instance->parse_expr(mExpr->get_tree().root()).const_val<boolean>()));
+		while (!(mExpr != nullptr && context->runtime->parse_expr(mExpr->get_tree().root()).const_val<boolean>()));
 	}
 
 	void statement_loop::dump(std::ostream &o) const
@@ -456,11 +456,11 @@ namespace cs {
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
 		scope_guard scope(context);
-		var val = copy(context->instance->context->instance->parse_expr(mDvp.expr.root()));
+		var val = copy(context->runtime->parse_expr(mDvp.expr.root()));
 		while (true) {
 			scope.clear();
-			context->instance->storage.add_var(mDvp.id, val);
-			if (!context->instance->parse_expr(mParallel[1].root()).const_val<boolean>())
+			context->runtime->storage.add_var(mDvp.id, val);
+			if (!context->runtime->parse_expr(mParallel[1].root()).const_val<boolean>())
 				break;
 			for (auto &ptr:mBlock) {
 				try {
@@ -484,7 +484,7 @@ namespace cs {
 					break;
 				}
 			}
-			context->instance->parse_expr(mParallel[2].root());
+			context->runtime->parse_expr(mParallel[2].root());
 		}
 	}
 
@@ -516,7 +516,7 @@ namespace cs {
 		scope_guard scope(context);
 		for (const X &it:obj.const_val<T>()) {
 			scope.clear();
-			context->instance->storage.add_var(iterator, it);
+			context->runtime->storage.add_var(iterator, it);
 			for (auto &ptr:body) {
 				try {
 					ptr->run();
@@ -544,7 +544,7 @@ namespace cs {
 
 	void statement_foreach::run()
 	{
-		const var &obj = context->instance->parse_expr(this->mObj.root());
+		const var &obj = context->runtime->parse_expr(this->mObj.root());
 		if (obj.type() == typeid(string))
 			foreach_helper<string, char>(context, this->mIt, obj, this->mBlock);
 		else if (obj.type() == typeid(list))
@@ -570,7 +570,7 @@ namespace cs {
 
 	void statement_struct::run()
 	{
-		context->instance->storage.add_struct(this->mName, this->mBuilder);
+		context->runtime->storage.add_struct(this->mName, this->mBuilder);
 	}
 
 	void statement_struct::dump(std::ostream &o) const
@@ -589,11 +589,11 @@ namespace cs {
 	void statement_function::run()
 	{
 		if (this->mIsMemFn)
-			context->instance->storage.add_var(this->mName,
+			context->runtime->storage.add_var(this->mName,
 			                                   var::make_protect<callable>(this->mFunc, callable::types::member_fn),
 			                                   mOverride);
 		else
-			context->instance->storage.add_var(this->mName, var::make_protect<callable>(this->mFunc), mOverride);
+			context->runtime->storage.add_var(this->mName, var::make_protect<callable>(this->mFunc), mOverride);
 	}
 
 	void statement_function::dump(std::ostream &o) const
@@ -616,7 +616,7 @@ namespace cs {
 	{
 		if (context->instance->fcall_stack.empty())
 			throw runtime_error("Return outside function.");
-		context->instance->fcall_stack.top() = context->instance->parse_expr(this->mTree.root());
+		context->instance->fcall_stack.top() = context->runtime->parse_expr(this->mTree.root());
 		context->instance->return_fcall = true;
 	}
 
@@ -636,7 +636,7 @@ namespace cs {
 			}
 			catch (const lang_error &le) {
 				scope.clear();
-				context->instance->storage.add_var(mName, le);
+				context->runtime->storage.add_var(mName, le);
 				for (auto &ptr:mCatchBody) {
 					try {
 						ptr->run();
@@ -677,7 +677,7 @@ namespace cs {
 
 	void statement_throw::run()
 	{
-		var e = context->instance->parse_expr(this->mTree.root());
+		var e = context->runtime->parse_expr(this->mTree.root());
 		if (e.type() != typeid(lang_error))
 			throw runtime_error("Throwing unsupported exception.");
 		else

@@ -55,9 +55,10 @@ namespace cs {
 		translator_type translator;
 		compiler_type compiler;
 		instance_type instance;
+		context_type context;
 		runtime_type runtime;
 		process_type()=delete;
-		process_type(const process&)=delete;
+		process_type(const process_type&)=delete;
 		explicit process_type(const array &);
 		process_type(int, const char *[]);
 		~process_type();

@@ -409,7 +409,7 @@ namespace cs {
 		              context_t c, token_base *ptr) : statement_base(std::move(c), ptr), mParallel(parallel_list),
 			mBlock(block)
 		{
-			context->instance->compiler.parse_define_var(mParallel[0], mDvp);
+			context->compiler->parse_define_var(mParallel[0], mDvp);
 		}
 
 		statement_types get_type() const noexcept override

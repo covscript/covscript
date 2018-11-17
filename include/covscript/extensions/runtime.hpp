@@ -94,13 +94,13 @@ namespace runtime_cs_ext {
 		expression_t tree;
 		for (auto &ch:expr)
 			buff.push_back(ch);
-		context->instance->compiler.build_expr(buff, tree);
+		context->compiler->build_expr(buff, tree);
 		return var::make<expression_t>(tree);
 	}
 
 	var solve(const context_t &context, expression_t &tree)
 	{
-		return context->instance->parse_expr(tree.root());
+		return context->runtime->parse_expr(tree.root());
 	}
 
 	var dynamic_import(const context_t &context, const string &path, const string &name)

@@ -231,7 +231,7 @@ namespace cs {
 			break;
 		case token_types::id: {
 			const std::string &id = static_cast<token_id *>(token)->get_id();
-			if (!runtime->storage.exist_record(id) && runtime->storage.exist_record_in_struct(id)) {
+			if (!context->runtime->storage.exist_record(id) && context->runtime->storage.exist_record_in_struct(id)) {
 				it.data() = new token_signal(signal_types::dot_);
 				tree.emplace_left_left(it, new token_id("this"));
 				tree.emplace_right_right(it, token);
@@ -330,7 +330,7 @@ namespace cs {
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
 					throw runtime_error("Wrong grammar for variable definition.");
-				runtime->storage.add_record(static_cast<token_id *>(rptr)->get_id());
+				context->runtime->storage.add_record(static_cast<token_id *>(rptr)->get_id());
 				it.data() = rptr;
 				return;
 				break;
@@ -436,13 +436,13 @@ namespace cs {
 			break;
 		case token_types::id: {
 			const std::string &id = static_cast<token_id *>(token)->get_id();
-			if (runtime->storage.exist_record(id)) {
-				if (runtime->storage.var_exist_current(id) && runtime->storage.get_var_current(id).is_protect())
-					it.data() = new_value(runtime->storage.get_var(id));
+			if (context->runtime->storage.exist_record(id)) {
+				if (context->runtime->storage.var_exist_current(id) && context->runtime->storage.get_var_current(id).is_protect())
+					it.data() = new_value(context->runtime->storage.get_var(id));
 			}
-			else if (!runtime->storage.exist_record_in_struct(id) && runtime->storage.var_exist(id) &&
-			         runtime->storage.get_var(id).is_protect())
-				it.data() = new_value(runtime->storage.get_var(id));
+			else if (!context->runtime->storage.exist_record_in_struct(id) && context->runtime->storage.var_exist(id) &&
+			         context->runtime->storage.get_var(id).is_protect())
+				it.data() = new_value(context->runtime->storage.get_var(id));
 			return;
 			break;
 		}
@@ -457,7 +457,7 @@ namespace cs {
 				array
 				arr;
 				for (auto &tree:static_cast<token_array *>(token)->get_array())
-					arr.push_back((new_value(copy(runtime->parse_expr(tree.root()))))->get_value());
+					arr.push_back((new_value(copy(context->runtime->parse_expr(tree.root()))))->get_value());
 				it.data() = new_value(var::make<array>(std::move(arr)));
 			}
 			return;
@@ -519,7 +519,7 @@ namespace cs {
 					const var &a = static_cast<token_value *>(lptr)->get_value();
 					token_base *orig_ptr = it.data();
 					try {
-						const var &v = runtime->parse_dot(a, rptr);
+						const var &v = context->runtime->parse_dot(a, rptr);
 						if (v.is_protect())
 							it.data() = new_value(v);
 					}
@@ -549,7 +549,7 @@ namespace cs {
 							vector args;
 							args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
 							for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
-								args.push_back(lvalue(runtime->parse_expr(tree.root())));
+								args.push_back(lvalue(context->runtime->parse_expr(tree.root())));
 							token_base *oldt = it.data();
 							try {
 								it.data() = new_value(a.const_val<callable>().call(args));
@@ -570,7 +570,7 @@ namespace cs {
 							vector args{om.object};
 							args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
 							for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
-								args.push_back(lvalue(runtime->parse_expr(tree.root())));
+								args.push_back(lvalue(context->runtime->parse_expr(tree.root())));
 							token_base *oldt = it.data();
 							try {
 								it.data() = new_value(om.callable.const_val<callable>().call(args));
@@ -592,7 +592,7 @@ namespace cs {
 		if (optimizable(it.left()) && optimizable(it.right())) {
 			token_base *oldt = it.data();
 			try {
-				token_value *token = new_value(runtime->parse_expr(it));
+				token_value *token = new_value(context->runtime->parse_expr(it));
 				tree.
 				erase_left(it);
 				tree.
@@ -645,7 +645,7 @@ namespace cs {
 		stream << " >";
 	}
 
-	void translator_type::translate(const translator_type& translator, const std::deque<std::deque<token_base *>> &lines, std::deque<statement_base *> &statements, bool raw)
+	void translator_type::translate(const std::deque<std::deque<token_base *>> &lines, std::deque<statement_base *> &statements, bool raw)
 	{
 		std::deque<std::deque<token_base *>> tmp;
 		method_base *method = nullptr;
@@ -657,7 +657,7 @@ namespace cs {
 			try {
 				if (raw)
 					context->compiler->process_line(line);
-				method_base *m = translator.match(line);
+				method_base *m = this->match(line);
 				switch (m->get_type()) {
 				case method_types::null:
 					throw runtime_error("Null type of grammar.");

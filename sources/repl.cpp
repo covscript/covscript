@@ -69,10 +69,8 @@ void covscript_main(int args_size, const char *args[])
 	arg{cs::var::make_constant<cs::string>("<REPL_ENV>")};
 	for (; index < args_size; ++index)
 		arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
-	cs::init(arg);
-	cs::instance_type instance;
-	instance.context->file_path = "<REPL_ENV>";
-	cs::repl repl(instance.context);
+	cs::process_type process(arg);
+	cs::repl repl(process.context);
 	std::ofstream log_stream;
 	std::string line;
 	while (std::cin) {

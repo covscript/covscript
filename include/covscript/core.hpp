@@ -85,9 +85,7 @@ namespace cs {
 		string file_path = "<Unknown>";
 		string package_name;
 
-		context_type() = delete;
-
-		explicit context_type(translator_type *tptr, compiler_type *cptr, instance_type *iptr, runtime_type *rptr) : translator(tptr), compiler(cptr), instance(iptr), runtime(rptr) {}
+		context_type() = default;
 
 		context_type(const context_type &) = default;
 

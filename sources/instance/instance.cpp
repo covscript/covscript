@@ -64,7 +64,7 @@ namespace cs {
 					throw runtime_error("Target file is not a package.");
 				if (rt->package_name != name)
 					throw runtime_error("Package name is different from file name.");
-				return std::make_shared<extension_holder>(rt->instance->storage.get_global());
+				return std::make_shared<extension_holder>(rt->runtime->storage.get_global());
 			}
 			else if (std::ifstream(package_path + ".cse"))
 				return std::make_shared<extension_holder>(package_path + ".cse");
@@ -72,7 +72,7 @@ namespace cs {
 		throw fatal_error("No such file or directory.");
 	}
 
-	void instance_type::compile(const translator_type& translator, const std::string &path)
+	void instance_type::compile(const std::string &path)
 	{
 		context->file_path = path;
 		// Read from file
@@ -136,8 +136,8 @@ namespace cs {
 		statement_base *statement = nullptr;
 		try {
 			std::deque<token_base *> line;
-			context->instance->compiler->build_line(buff, line);
-			method_base *m = context->instance->translator.match(line);
+			context->compiler->build_line(buff, line);
+			method_base *m = context->translator->match(line);
 			switch (m->get_type()) {
 			case method_types::null:
 				throw runtime_error("Null type of grammar.");
@@ -145,8 +145,8 @@ namespace cs {
 			case method_types::single: {
 				if (level > 0) {
 					if (m->get_target_type() == statement_types::end_) {
-						context->instance->storage.remove_set();
-						context->instance->storage.remove_domain();
+						context->runtime->storage.remove_set();
+						context->runtime->storage.remove_domain();
 						--level;
 					}
 					if (level == 0) {
@@ -173,8 +173,8 @@ namespace cs {
 				if (level == 0)
 					method = m;
 				++level;
-				context->instance->storage.add_domain();
-				context->instance->storage.add_set();
+				context->runtime->storage.add_domain();
+				context->runtime->storage.add_set();
 				m->preprocess({line});
 				tmp.push_back(line);
 			}
@@ -198,7 +198,7 @@ namespace cs {
 			reset_status();
 			throw exception(line_num, context->file_path, code, e.what());
 		}
-		context->instance->compiler.mark_constant();
+		context->compiler->mark_constant();
 	}
 
 	void repl::exec(const string &code)

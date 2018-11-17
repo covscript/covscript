@@ -24,7 +24,7 @@
 namespace cs {
 	constexpr std::size_t fcall_stack_size = 1024;
 
-	class instance_type final : public runtime_type {
+	class instance_type final {
 		friend class repl;
 		// Statements
 		std::deque<statement_base *> statements;
@@ -45,8 +45,6 @@ namespace cs {
 		instance_type(context_t c):context(std::move(c))
 		{
 			struct_builder::reset_counter();
-			init_grammar();
-			init_runtime();
 		}
 
 		instance_type(const instance_type &) = delete;
@@ -56,7 +54,7 @@ namespace cs {
 		// Wrapped Method
 		extension_t import(const std::string &, const std::string &);
 
-		void compile(const translator_type&, const std::string &);
+		void compile(const std::string &);
 
 		void interpret();
 
@@ -80,7 +78,9 @@ namespace cs {
 
 		repl() = delete;
 
-		explicit repl(context_t c) : context(std::move(c)) {}
+		explicit repl(context_t c) : context(std::move(c)) {
+			context->file_path = "<REPL_ENV>";
+		}
 
 		repl(const repl &) = delete;
 
@@ -109,22 +109,22 @@ namespace cs {
 
 		explicit scope_guard(context_t c) : context(std::move(std::move(c)))
 		{
-			context->instance->storage.add_domain();
+			context->runtime->storage.add_domain();
 		}
 
 		~scope_guard()
 		{
-			context->instance->storage.remove_domain();
+			context->runtime->storage.remove_domain();
 		}
 
 		domain_t get() const
 		{
-			return context->instance->storage.get_domain();
+			return context->runtime->storage.get_domain();
 		}
 
 		void clear() const
 		{
-			context->instance->storage.clear_domain();
+			context->runtime->storage.clear_domain();
 		}
 	};
 
