@@ -590,8 +590,8 @@ namespace cs {
 	{
 		if (this->mIsMemFn)
 			context->runtime->storage.add_var(this->mName,
-			                                   var::make_protect<callable>(this->mFunc, callable::types::member_fn),
-			                                   mOverride);
+			                                  var::make_protect<callable>(this->mFunc, callable::types::member_fn),
+			                                  mOverride);
 		else
 			context->runtime->storage.add_var(this->mName, var::make_protect<callable>(this->mFunc), mOverride);
 	}

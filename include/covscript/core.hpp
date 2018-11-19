@@ -57,14 +57,30 @@
 #include <covscript/any.hpp>
 
 namespace cs {
-// Version
-	static const std::string version = COVSCRIPT_VERSION_STR;
-	static const number std_version = COVSCRIPT_STD_VERSION;
+// Exception Handler
+	struct process_context final {
+		// Version
+		const std::string version = COVSCRIPT_VERSION_STR;
+		const number std_version = COVSCRIPT_STD_VERSION;
 // Output Precision
-	static int output_precision = 8;
-	static int *output_precision_ref = &output_precision;
+		int output_precision = 8;
 // Import Path
-	static std::string import_path = ".";
+		std::string import_path = ".";
+// Exception Handling
+		static void cs_defalt_exception_handler(const lang_error &e)
+		{
+			throw e;
+		}
+
+		static void std_defalt_exception_handler(const std::exception &e)
+		{
+			throw forward_exception(e.what());
+		}
+
+		std_exception_handler std_eh_callback=&cs_defalt_exception_handler;
+		cs_exception_handler cs_eh_callback=&std_defalt_exception_handler;
+	} this_process;
+	process_context* current_process=&this_process;
 // Path seperator and delimiter
 #ifdef COVSCRIPT_PLATFORM_WIN32
 	constexpr char path_separator = '\\';
@@ -443,25 +459,6 @@ namespace cs {
 		}
 	};
 
-// Exception Handler
-	struct exception_handler final {
-		static std_exception_handler std_eh_callback;
-		static cs_exception_handler cs_eh_callback;
-
-		static void cs_defalt_exception_handler(const lang_error &e)
-		{
-			throw e;
-		}
-
-		static void std_defalt_exception_handler(const std::exception &e)
-		{
-			throw forward_exception(e.what());
-		}
-	};
-
-	cs_exception_handler exception_handler::cs_eh_callback = exception_handler::cs_defalt_exception_handler;
-	std_exception_handler exception_handler::std_eh_callback = exception_handler::std_defalt_exception_handler;
-
 // Namespace and extensions
 	class name_space final {
 		domain_t m_data;
@@ -621,7 +618,7 @@ namespace cs_impl {
 	{
 		std::stringstream ss;
 		std::string str;
-		ss << std::setprecision(*cs::output_precision_ref) << val;
+		ss << std::setprecision(cs::current_process->output_precision) << val;
 		ss >> str;
 		return std::move(str);
 	}

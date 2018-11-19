@@ -1,6 +1,6 @@
 #pragma once
 /*
-* Covariant Script Extension Header
+* Covariant Script Extension
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -18,22 +18,44 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#define CS_EXTENSIONS_MINIMAL
+#include <covscript/core.hpp>
 
-#include <covscript/cni.hpp>
-#include <covscript/extensions/extensions.hpp>
-
-cs::extension *cs_extension();
-
-extern "C"
-{
-	cs::extension *
-	__CS_EXTENSION__(int *ref, cs::cs_exception_handler ceh, cs::std_exception_handler seh)
-	{
-		cs::output_precision_ref = ref;
-		cs::exception_handler::cs_eh_callback = ceh;
-		cs::exception_handler::std_eh_callback = seh;
-		cs::init_extensions();
-		return cs_extension();
+namespace cs_impl {
+	namespace dll_resources {
+		const char* dll_main_entrance = "__CS_EXTENSION_MAIN__";
+		typedef void(*dll_main_entrance_t)(cs::extension*, cs::process_context*);
+		const char* dll_compatible_entrance = "__CS_EXTENSION__";
+		typedef cs::extension*(*dll_compatible_entrance_t)(int *, cs::cs_exception_handler, cs::std_exception_handler);
 	}
+	class dll_manager final {
+		cov::dll m_dll;
+		bool m_compatible=false;
+		cs::name_space* m_ns=nullptr;
+	public:
+		dll_manager()=delete;
+		dll_manager(const dll_manager&)=delete;
+		explicit dll_manager(const std::string& path):m_dll(path)
+		{
+			using namespace dll_resources;
+			dll_main_entrance_t dll_main=reinterpret_cast<dll_main_entrance_t>(m_dll.get_address(dll_main_entrance));
+			if(dll_main!=nullptr)
+			{
+				m_ns=new cs::name_space;
+				dll_main(m_ns, cs::current_process);
+			}else{
+				dll_compatible_entrance_t dll_compatible=reinterpret_cast<dll_compatible_entrance_t>(m_dll.get_address(dll_compatible_entrance));
+				if(dll_compatible!=nullptr)
+				{
+					m_compatible=true;
+					m_ns=dll_compatible(&cs::current_process->output_precision, cs::current_process->cs_eh_callback, cs::current_process->std_eh_callback);
+				}else
+					throw cs::lang_error("Incompatible DLL.");
+			}
+		}
+		~dll_manager()
+		{
+			if(!m_compatible)
+				delete m_ns;
+		}
+	};
 }

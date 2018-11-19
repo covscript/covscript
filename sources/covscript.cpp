@@ -103,7 +103,7 @@ namespace cs {
 		context->compiler=std::make_shared<compiler_type>(context);
 		context->instance=std::make_shared<instance_type>(context);
 		// Init Grammars
-		(*compiler)
+		(*context->compiler)
 		// Expression Grammar
 		.add_method({new token_expr(cov::tree<token_base *>()), new token_endline(0)},
 		new method_expression(context))
@@ -193,7 +193,7 @@ namespace cs {
 		.add_method({new token_action(action_types::throw_), new token_expr(cov::tree<token_base *>()),
 			            new token_endline(0)}, new method_throw(context));
 		// Init Runtime
-		runtime->storage
+		context->instance->storage
 		// Internal Types
 		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char), char_ext_shared)
 		.add_buildin_type("number", []() -> var { return var::make<number>(0); }, typeid(number))
