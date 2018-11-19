@@ -24,7 +24,7 @@
 namespace cs {
 	constexpr std::size_t fcall_stack_size = 1024;
 
-	class instance_type final {
+	class instance_type final:public runtime_type {
 		friend class repl;
 		// Statements
 		std::deque<statement_base *> statements;

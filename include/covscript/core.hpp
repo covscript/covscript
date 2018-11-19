@@ -79,7 +79,6 @@ namespace cs {
 	public:
 		compiler_t compiler = nullptr;
 		instance_t instance = nullptr;
-		runtime_t runtime = nullptr;
 		std::deque<string> file_buff;
 		string file_path = "<Unknown>";
 		string package_name;

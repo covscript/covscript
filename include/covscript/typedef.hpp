@@ -54,7 +54,6 @@ namespace cs {
 	using vector=std::vector<var>;
 	using compiler_t=std::shared_ptr<compiler_type>;
 	using instance_t=std::shared_ptr<instance_type>;
-	using runtime_t=std::shared_ptr<runtime_type>;
 	using context_t=std::shared_ptr<context_type>;
 	using extension=name_space;
 	using extension_holder=name_space_holder;
