@@ -22,9 +22,7 @@
 
 namespace cs {
 	class translator_type final {
-	public:
 		using data_type=std::pair<std::deque<token_base *>, method_base *>;
-
 		static bool compare(const token_base *a, const token_base *b)
 		{
 			if (a == nullptr)
@@ -36,25 +34,6 @@ namespace cs {
 			return !(a->get_type() == token_types::action) || static_cast<const token_action *>(a)->get_action() ==
 			       static_cast<const token_action *>(b)->get_action();
 		}
-
-	private:
-		std::list<std::shared_ptr<data_type>> m_data;
-	public:
-		context_t context;
-		translator_type() = delete;
-
-		translator_type(context_t c):context(std::move(c)) {}
-
-		translator_type(const translator_type &) = delete;
-
-		~translator_type() = default;
-
-		translator_type &add_method(const std::deque<token_base *> &grammar, method_base *method)
-		{
-			m_data.emplace_back(std::make_shared<data_type>(grammar, method));
-			return *this;
-		}
-
 		method_base *match(const std::deque<token_base *> &raw)
 		{
 			if (raw.size() <= 1)
@@ -79,8 +58,24 @@ namespace cs {
 				throw runtime_error("Ambiguous grammar.");
 			return stack.front()->second;
 		}
+		std::list<std::shared_ptr<data_type>> m_data;
+	public:
+		context_t context;
+		translator_type() = delete;
 
-		void translate(const std::deque<std::deque<token_base *>> &, std::deque<statement_base *> &, bool= false);
+		translator_type(context_t c):context(std::move(c)) {}
+
+		translator_type(const translator_type &) = delete;
+
+		~translator_type() = default;
+
+		translator_type &add_method(const std::deque<token_base *> &grammar, method_base *method)
+		{
+			m_data.emplace_back(std::make_shared<data_type>(grammar, method));
+			return *this;
+		}
+
+		void translate(const std::deque<std::deque<token_base *>> &, std::deque<statement_base *> &, bool);
 	};
 
 	class compiler_type final {
@@ -246,6 +241,8 @@ namespace cs {
 		// Status
 		bool inside_lambda = false;
 		bool no_optimize = false;
+		// Translator
+		translator_type translator;
 		// Context
 		context_t context;
 
@@ -348,8 +345,13 @@ namespace cs {
 		// Settings
 		bool disable_optimizer = false;
 
-		// Constants Operation
-		void mark_constant()
+		// Metadata
+		void clear_metadata()
+		{
+			constant_pool.clear();
+		}
+
+		void utilize_metadata()
 		{
 			for (auto &it:constant_pool)
 				it.constant();
@@ -416,6 +418,22 @@ namespace cs {
 			}
 			if (tmp.size() > 1)
 				ast.push_back(tmp);
+		}
+
+		compiler_type &add_method(const std::deque<token_base *> &grammar, method_base *method)
+		{
+			translator.add_method(grammar, method);
+			return *this;
+		}
+
+		void translate(const std::deque<std::deque<token_base *>> & ast, std::deque<statement_base *> & code)
+		{
+			translator.translate(ast, code, false);
+		}
+
+		void code_gen(const std::deque<std::deque<token_base *>> & ast, std::deque<statement_base *> & code)
+		{
+			translator.translate(ast, code, true);
 		}
 
 		// AST Debugger

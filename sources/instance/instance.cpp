@@ -84,10 +84,10 @@ namespace cs {
 			buff.push_back(ch);
 		std::deque<std::deque<token_base *>> ast;
 		// Compile
+		context->compiler->clear_metadata();
 		context->compiler->build_ast(buff, ast);
-		context->translator->translate(ast, statements, true);
-		// Mark Constants
-		context->compiler->mark_constant();
+		context->compiler->code_gen(ast, statements);
+		context->compiler->utilize_metadata();
 	}
 
 	void instance_type::interpret()

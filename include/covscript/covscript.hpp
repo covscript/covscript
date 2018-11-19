@@ -47,20 +47,13 @@ namespace cs {
 			return process_path(get_sdk_path() + cs::path_separator + "imports");
 	}
 
-	class process_type final {
-		// Initializations
-		void init_grammar();
-		void init_runtime();
-	public:
-		translator_type translator;
-		compiler_type compiler;
-		instance_type instance;
-		context_type context;
-		runtime_type runtime;
-		process_type()=delete;
-		process_type(const process_type&)=delete;
-		explicit process_type(const array &);
-		process_type(int, const char *[]);
-		~process_type();
-	};
+	array parse_cmd_args(int argc, const char* argv[])
+	{
+		cs::array arg;
+		for (std::size_t i = 0; i < argv; ++i)
+			arg.emplace_back(cs::var::make_constant<cs::string>(args[i]));
+		return std::move(arg);
+	}
+
+	context_t create_context(const std::string&, const array&);
 }

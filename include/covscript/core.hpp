@@ -77,10 +77,9 @@ namespace cs {
 // Context
 	class context_type final {
 	public:
-		translator_type *translator = nullptr;
-		compiler_type *compiler = nullptr;
-		instance_type *instance = nullptr;
-		runtime_type *runtime = nullptr;
+		compiler_t compiler = nullptr;
+		instance_t instance = nullptr;
+		runtime_t runtime = nullptr;
 		std::deque<string> file_buff;
 		string file_path = "<Unknown>";
 		string package_name;

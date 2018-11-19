@@ -97,7 +97,7 @@ namespace cs {
 	}
 
 #endif
-	void process_type::init_grammar()
+	context_t create_context(const std::string& env, const array &args)
 	{
 		translator
 		// Expression Grammar
@@ -188,10 +188,6 @@ namespace cs {
 		// Throw Grammar
 		.add_method({new token_action(action_types::throw_), new token_expr(cov::tree<token_base *>()),
 			            new token_endline(0)}, new method_throw(context));
-	}
-
-	void process_type::init_runtime()
-	{
 		runtime.storage
 		// Internal Types
 		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char), char_ext_shared)
@@ -221,22 +217,6 @@ namespace cs {
 		.add_buildin_var("system", make_namespace(make_shared_namespace(system_ext)))
 		.add_buildin_var("runtime", make_namespace(make_shared_namespace(runtime_ext)))
 		.add_buildin_var("math", make_namespace(make_shared_namespace(math_ext)));
-	}
-
-	process_type::process_type(const array &args)
-	{
-		// Init extensions
-		init_extensions();
 		system_ext.add_var("args", cs::var::make_constant<cs::array>(args));
-	}
-
-	process_type::process_type(int argv, const char *args[])
-	{
-		// Init args
-		cs::array
-		arg;
-		for (std::size_t i = 0; i < argv; ++i)
-			arg.emplace_back(cs::var::make_constant<cs::string>(args[i]));
-		process_type::process_type(arg);
 	}
 }
