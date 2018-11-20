@@ -100,6 +100,7 @@ namespace cs {
 	context_t create_context(const std::string& env, const array &args)
 	{
 		context_t context=std::make_shared<context_type>();
+		context->file_path=env;
 		context->compiler=std::make_shared<compiler_type>(context);
 		context->instance=std::make_shared<instance_type>(context);
 		context->cmd_args=cs::var::make_constant<cs::array>(args);

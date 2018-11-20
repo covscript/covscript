@@ -37,7 +37,7 @@ int covscript_args(int args_size, const char *args[])
 			expect_log_path = 2;
 		}
 		else if (expect_import_path == 1) {
-			cs::import_path += cs::path_delimiter + cs::process_path(args[index]);
+			cs::current_process->import_path += cs::path_delimiter + cs::process_path(args[index]);
 			expect_import_path = 2;
 		}
 		else if (args[index][0] == '-') {
@@ -68,7 +68,7 @@ void covscript_main(int args_size, const char *args[])
 {
 	if (args_size > 1) {
 		int index = covscript_args(args_size, args);
-		cs::import_path += cs::path_delimiter + cs::get_import_path();
+		cs::current_process->import_path += cs::path_delimiter + cs::get_import_path();
 		if (index == args_size)
 			throw cs::fatal_error("no input file.");
 		std::string path = cs::process_path(args[index]);
@@ -76,19 +76,19 @@ void covscript_main(int args_size, const char *args[])
 		arg;
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
-		cs::process_type process(arg);
-		process.compiler.disable_optimizer = no_optimize;
-		process.instance.compile(path);
+		cs::context_t context=cs::create_context("path", arg);
+		context->compiler->disable_optimizer = no_optimize;
+		context->instance->compile(path);
 		if (dump_ast) {
 			if (!log_path.empty()) {
 				std::ofstream out(::log_path);
-				process.instance.dump_ast(out);
+				context->instance->dump_ast(out);
 			}
 			else
-				process.instance.dump_ast(std::cout);
+				context->instance->dump_ast(std::cout);
 		}
 		if (!compile_only)
-			process.instance.interpret();
+			context->instance->interpret();
 	}
 	else
 		throw cs::fatal_error("no input file.");

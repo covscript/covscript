@@ -35,8 +35,6 @@ namespace cs {
 		bool continue_block = false;
 		// Context
 		context_t context;
-		// Refers
-		std::forward_list<instance_type> refers;
 		// Function Stack
 		cov::static_stack<var, fcall_stack_size> fcall_stack;
 

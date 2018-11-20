@@ -34,6 +34,23 @@ namespace cs {
 			return !(a->get_type() == token_types::action) || static_cast<const token_action *>(a)->get_action() ==
 			       static_cast<const token_action *>(b)->get_action();
 		}
+		std::list<std::shared_ptr<data_type>> m_data;
+	public:
+		context_t context;
+		translator_type() = delete;
+
+		translator_type(context_t c):context(std::move(c)) {}
+
+		translator_type(const translator_type &) = delete;
+
+		~translator_type() = default;
+
+		translator_type &add_method(const std::deque<token_base *> &grammar, method_base *method)
+		{
+			m_data.emplace_back(std::make_shared<data_type>(grammar, method));
+			return *this;
+		}
+
 		method_base *match(const std::deque<token_base *> &raw)
 		{
 			if (raw.size() <= 1)
@@ -57,22 +74,6 @@ namespace cs {
 			if (stack.size() > 1)
 				throw runtime_error("Ambiguous grammar.");
 			return stack.front()->second;
-		}
-		std::list<std::shared_ptr<data_type>> m_data;
-	public:
-		context_t context;
-		translator_type() = delete;
-
-		translator_type(context_t c):context(std::move(c)) {}
-
-		translator_type(const translator_type &) = delete;
-
-		~translator_type() = default;
-
-		translator_type &add_method(const std::deque<token_base *> &grammar, method_base *method)
-		{
-			m_data.emplace_back(std::make_shared<data_type>(grammar, method));
-			return *this;
 		}
 
 		void translate(const std::deque<std::deque<token_base *>> &, std::deque<statement_base *> &, bool);
@@ -424,6 +425,11 @@ namespace cs {
 		{
 			translator.add_method(grammar, method);
 			return *this;
+		}
+
+		method_base *match_method(const std::deque<token_base *> &raw)
+		{
+			return translator.match(raw);
 		}
 
 		void translate(const std::deque<std::deque<token_base *>> & ast, std::deque<statement_base *> & code)

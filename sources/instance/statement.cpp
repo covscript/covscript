@@ -111,8 +111,8 @@ namespace cs {
 	void statement_involve::run()
 	{
 		var ns = context->instance->parse_expr(mTree.root());
-		if (ns.type() == typeid(name_space_t))
-			context->instance->storage.involve_domain(ns.const_val<name_space_t>()->get_domain(), mOverride);
+		if (ns.type() == typeid(namespace_t))
+			context->instance->storage.involve_domain(ns.const_val<namespace_t>()->get_domain(), mOverride);
 		else
 			throw runtime_error("Only support involve namespace.");
 	}
@@ -210,7 +210,7 @@ namespace cs {
 	void statement_namespace::run()
 	{
 		context->instance->storage.add_var(this->mName,
-		var::make_protect<name_space_t>(std::make_shared<name_space_holder>([this] {
+		make_namespace(make_shared_namespace<name_space>([this] {
 			scope_guard scope(context);
 			for (auto &ptr:mBlock)
 			{

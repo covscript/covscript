@@ -55,11 +55,12 @@ namespace cs {
 		for (auto &it:collection) {
 			std::string package_path = it + path_separator + name;
 			if (std::ifstream(package_path + ".csp")) {
-				refers.emplace_front();
-				instance_type &instance = refers.front();
-				instance.compile(package_path + ".csp");
-				instance.interpret();
-				context_t rt = instance.context;
+				context_t rt=std::make_shared<context_type>();
+				rt->compiler=context->compiler;
+				rt->instance=std::make_shared<instance_type>(context);
+				rt->cmd_args=context->cmd_args;
+				rt->instance->compile(package_path + ".csp");
+				rt->instance->interpret();
 				if (rt->package_name.empty())
 					throw runtime_error("Target file is not a package.");
 				if (rt->package_name != name)
@@ -111,9 +112,9 @@ namespace cs {
 
 	void instance_type::dump_ast(std::ostream &stream)
 	{
-		stream << "< Covariant Script AST Dump >\n< BeginMetaData >\n< Version: " << version << " >\n< STD Version: "
-		       << std_version
-		       << " >\n< Output Precision: " << *output_precision_ref << " >\n< Import Path: \"" << import_path
+		stream << "< Covariant Script AST Dump >\n< BeginMetaData >\n< Version: " << current_process->version << " >\n< STD Version: "
+		       << current_process->std_version
+		       << " >\n< Output Precision: " << current_process->output_precision << " >\n< Import Path: \"" << current_process->import_path
 		       << "\" >\n";
 #ifdef COVSCRIPT_PLATFORM_WIN32
 		stream << "< Platform: Win32 >\n";
@@ -136,8 +137,9 @@ namespace cs {
 		statement_base *statement = nullptr;
 		try {
 			std::deque<token_base *> line;
+			context->compiler->clear_metadata();
 			context->compiler->build_line(buff, line);
-			method_base *m = context->translator->match(line);
+			method_base *m = context->compiler->match_method(line);
 			switch (m->get_type()) {
 			case method_types::null:
 				throw runtime_error("Null type of grammar.");
@@ -198,7 +200,7 @@ namespace cs {
 			reset_status();
 			throw exception(line_num, context->file_path, code, e.what());
 		}
-		context->compiler->mark_constant();
+		context->compiler->utilize_metadata();
 	}
 
 	void repl::exec(const string &code)
