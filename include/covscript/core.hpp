@@ -105,6 +105,7 @@ namespace cs {
 		std::deque<string> file_buff;
 		string file_path = "<Unknown>";
 		string package_name;
+		var cmd_args;
 
 		context_type() = default;
 
@@ -469,7 +470,7 @@ namespace cs {
 	};
 
 // Namespace and extensions
-	class name_space final {
+	class name_space {
 		domain_t m_data;
 	public:
 		name_space() : m_data(std::make_shared<map_t<string, var >>()) {}
@@ -478,7 +479,7 @@ namespace cs {
 
 		explicit name_space(domain_t dat) : m_data(std::move(dat)) {}
 
-		~name_space() = default;
+		virtual ~name_space() = default;
 
 		name_space &add_var(const std::string &name, const var &var)
 		{
@@ -511,88 +512,25 @@ namespace cs {
 		}
 	};
 
-	class namespace_holder {
-	public:
-		namespace_holder() = default;
-
-		namespace_holder(const namespace_holder &) = delete;
-
-		virtual ~namespace_holder()=default;
-
-		virtual var &get_var(const std::string &)=0;
-
-		virtual const var &get_var(const std::string &) const=0;
-
-		virtual domain_t get_domain() const=0;
-	};
-
-	class default_namespace_holder final:public namespace_holder {
-		name_space m_ns;
-	public:
-		default_namespace_holder()=default;
-		default_namespace_holder(const default_namespace_holder&)=delete;
-		explicit default_namespace_holder(domain_t dat):m_ns(std::move(dat)) {}
-		virtual var &get_var(const std::string& name) override
-		{
-			return m_ns.get_var(name);
-		}
-		virtual const var &get_var(const std::string& name) const override
-		{
-			return m_ns.get_var(name);
-		}
-		virtual domain_t get_domain() const override
-		{
-			return m_ns.get_domain();
-		}
-	};
-
 	namespace dll_resources {
 		const char* dll_main_entrance = "__CS_EXTENSION_MAIN__";
 		typedef void(*dll_main_entrance_t)(name_space*, process_context*);
-		const char* dll_compatible_entrance = "__CS_EXTENSION__";
-		typedef name_space*(*dll_compatible_entrance_t)(int *, cs_exception_handler, std_exception_handler);
 	}
-	class dll_manager final:public namespace_holder {
+
+	class extension final:public name_space {
 		cov::dll m_dll;
-		bool m_compatible=false;
-		name_space* m_ns=nullptr;
 	public:
-		dll_manager()=delete;
-		dll_manager(const dll_manager&)=delete;
-		explicit dll_manager(const std::string& path):m_dll(path)
+		extension()=delete;
+		extension(const extension&)=delete;
+		explicit extension(const std::string& path):m_dll(path)
 		{
 			using namespace dll_resources;
 			dll_main_entrance_t dll_main=reinterpret_cast<dll_main_entrance_t>(m_dll.get_address(dll_main_entrance));
 			if(dll_main!=nullptr) {
-				m_ns=new name_space;
-				dll_main(m_ns, current_process);
+				dll_main(this, current_process);
 			}
-			else {
-				dll_compatible_entrance_t dll_compatible=reinterpret_cast<dll_compatible_entrance_t>(m_dll.get_address(dll_compatible_entrance));
-				if(dll_compatible!=nullptr) {
-					m_compatible=true;
-					m_ns=dll_compatible(&current_process->output_precision, current_process->cs_eh_callback, current_process->std_eh_callback);
-				}
-				else
-					throw lang_error("Incompatible DLL.");
-			}
-		}
-		~dll_manager()
-		{
-			if(!m_compatible)
-				delete m_ns;
-		}
-		virtual var &get_var(const std::string& name) override
-		{
-			return m_ns->get_var(name);
-		}
-		virtual const var &get_var(const std::string& name) const override
-		{
-			return m_ns->get_var(name);
-		}
-		virtual domain_t get_domain() const override
-		{
-			return m_ns->get_domain();
+			else
+				throw lang_error("Incompatible DLL.");
 		}
 	};
 

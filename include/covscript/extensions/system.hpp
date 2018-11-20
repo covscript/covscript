@@ -27,17 +27,12 @@
 #include <cstdio>
 #include <limits>
 
-static cs::name_space system_ext;
-static cs::name_space console_ext;
-static cs::name_space file_ext;
-static cs::name_space path_ext;
-static cs::name_space path_type_ext;
-static cs::name_space path_info_ext;
-static cs::namespace_t console_ext_shared = cs::make_shared_namespace(console_ext);
-static cs::namespace_t file_ext_shared = cs::make_shared_namespace(file_ext);
-static cs::namespace_t path_ext_shared = cs::make_shared_namespace(path_ext);
-static cs::namespace_t path_type_ext_shared = cs::make_shared_namespace(path_type_ext);
-static cs::namespace_t path_info_ext_shared = cs::make_shared_namespace(path_info_ext);
+static cs::namespace_t system_ext=cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t console_ext=cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t file_ext=cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t path_ext=cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t path_type_ext=cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t path_info_ext=cs::make_shared_namespace<cs::name_space>();
 namespace console_cs_ext {
 	using namespace cs;
 	using namespace cs_impl;
@@ -79,7 +74,7 @@ namespace console_cs_ext {
 
 	void init()
 	{
-		console_ext
+		(*console_ext)
 		.add_var("terminal_width", make_cni(terminal_width))
 		.add_var("terminal_height", make_cni(terminal_height))
 		.add_var("gotoxy", make_cni(gotoxy))
@@ -125,7 +120,7 @@ namespace file_cs_ext {
 
 	void init()
 	{
-		file_ext
+		(*file_ext)
 		.add_var("copy", make_cni(copy))
 		.add_var("remove", make_cni(remove))
 		.add_var("exists", make_cni(exists))
@@ -169,7 +164,7 @@ namespace path_cs_ext {
 
 	void init()
 	{
-		path_type_ext
+		(*path_type_ext)
 		.add_var("unknown", var::make_constant<int>(DT_UNKNOWN))
 		.add_var("fifo", var::make_constant<int>(DT_FIFO))
 		.add_var("sock", var::make_constant<int>(DT_SOCK))
@@ -178,12 +173,12 @@ namespace path_cs_ext {
 		.add_var("blk", var::make_constant<int>(DT_BLK))
 		.add_var("reg", var::make_constant<int>(DT_REG))
 		.add_var("lnk", var::make_constant<int>(DT_LNK));
-		path_info_ext
+		(*path_info_ext)
 		.add_var("name", make_cni(name))
 		.add_var("type", make_cni(type));
-		path_ext
-		.add_var("type", make_namespace(path_type_ext_shared))
-		.add_var("info", make_namespace(path_info_ext_shared))
+		(*path_ext)
+		.add_var("type", make_namespace(path_type_ext))
+		.add_var("info", make_namespace(path_info_ext))
 		.add_var("separator", var::make_constant<char>(path_separator))
 		.add_var("delimiter", var::make_constant<char>(path_delimiter))
 		.add_var("scan", make_cni(scan));
@@ -193,7 +188,7 @@ namespace cs_impl {
 	template<>
 	cs::namespace_t &get_ext<path_cs_ext::path_info>()
 	{
-		return path_info_ext_shared;
+		return path_info_ext;
 	}
 
 	template<>
@@ -228,10 +223,10 @@ namespace system_cs_ext {
 		console_cs_ext::init();
 		file_cs_ext::init();
 		path_cs_ext::init();
-		system_ext
-		.add_var("console", make_namespace(console_ext_shared))
-		.add_var("file", make_namespace(file_ext_shared))
-		.add_var("path", make_namespace(path_ext_shared))
+		(*system_ext)
+		.add_var("console", make_namespace(console_ext))
+		.add_var("file", make_namespace(file_ext))
+		.add_var("path", make_namespace(path_ext))
 		.add_var("in", var::make_protect<istream>(&std::cin, [](std::istream *) {}))
 		.add_var("out", var::make_protect<ostream>(&std::cout, [](std::ostream *) {}))
 		.add_var("run", make_cni(run))

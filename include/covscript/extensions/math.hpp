@@ -22,9 +22,8 @@
 #include <covscript/cni.hpp>
 #include <algorithm>
 
-static cs::name_space math_ext;
-static cs::name_space math_const_ext;
-static cs::namespace_t math_const_ext_shared = cs::make_shared_namespace(math_const_ext);
+static cs::namespace_t math_ext=cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t math_const_ext=cs::make_shared_namespace<cs::name_space>();
 namespace math_cs_ext {
 	using namespace cs;
 
@@ -115,15 +114,15 @@ namespace math_cs_ext {
 
 	void init()
 	{
-		math_const_ext
+		(*math_const_ext)
 		.add_var("max", var::make_constant<number>((std::numeric_limits<number>::max)()))
 		.add_var("min", var::make_constant<number>((std::numeric_limits<number>::min)()))
 		.add_var("inf", var::make_constant<number>(std::numeric_limits<number>::infinity()))
 		.add_var("nan", var::make_constant<number>(std::numeric_limits<number>::quiet_NaN()))
 		.add_var("pi", var::make_constant<number>(std::asin(number(1)) * 2))
 		.add_var("e", var::make_constant<number>(std::exp(number(1))));
-		math_ext
-		.add_var("constants", make_namespace(math_const_ext_shared))
+		(*math_ext)
+		.add_var("constants", make_namespace(math_const_ext))
 		.add_var("abs", make_cni(abs, true))
 		.add_var("ln", make_cni(ln, true))
 		.add_var("log10", make_cni(log10, true))

@@ -33,12 +33,12 @@
 #include "compiler/compiler.cpp"
 #include "compiler/lexer.cpp"
 #include "compiler/parser.cpp"
+#include "compiler/codegen.cpp"
 
 // Instance
 #include "instance/instance.cpp"
 #include "instance/runtime.cpp"
 #include "instance/statement.cpp"
-#include "instance/codegen.cpp"
 
 namespace cs {
 // Internal Functions
@@ -102,6 +102,7 @@ namespace cs {
 		context_t context=std::make_shared<context_type>();
 		context->compiler=std::make_shared<compiler_type>(context);
 		context->instance=std::make_shared<instance_type>(context);
+		context->cmd_args=cs::var::make_constant<cs::array>(args);
 		// Init Grammars
 		(*context->compiler)
 		// Expression Grammar
@@ -195,18 +196,15 @@ namespace cs {
 		// Init Runtime
 		context->instance->storage
 		// Internal Types
-		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char), char_ext_shared)
+		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char), char_ext)
 		.add_buildin_type("number", []() -> var { return var::make<number>(0); }, typeid(number))
 		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
 		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
-		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string),
-		                  string_ext_shared)
-		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), list_ext_shared)
-		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array), array_ext_shared)
-		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
-		                  pair_ext_shared)
-		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, typeid(hash_map),
-		                  hash_map_ext_shared)
+		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string), string_ext)
+		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), list_ext)
+		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array), array_ext)
+		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair), pair_ext)
+		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, typeid(hash_map), hash_map_ext)
 		// Context
 		.add_buildin_var("context", var::make_constant<context_t>(context))
 		// Add Internal Functions to storage
@@ -217,11 +215,10 @@ namespace cs {
 		.add_buildin_var("move", make_cni(move))
 		.add_buildin_var("swap", make_cni(swap, true))
 		// Add extensions to storage
-		.add_buildin_var("exception", make_namespace(except_ext_shared))
-		.add_buildin_var("iostream", make_namespace(make_shared_namespace(iostream_ext)))
-		.add_buildin_var("system", make_namespace(make_shared_namespace(system_ext)))
-		.add_buildin_var("runtime", make_namespace(make_shared_namespace(runtime_ext)))
-		.add_buildin_var("math", make_namespace(make_shared_namespace(math_ext)));
-		system_ext.add_var("args", cs::var::make_constant<cs::array>(args));
+		.add_buildin_var("exception", make_namespace(except_ext))
+		.add_buildin_var("iostream", make_namespace(iostream_ext))
+		.add_buildin_var("system", make_namespace(system_ext))
+		.add_buildin_var("runtime", make_namespace(runtime_ext))
+		.add_buildin_var("math", make_namespace(math_ext));
 	}
 }

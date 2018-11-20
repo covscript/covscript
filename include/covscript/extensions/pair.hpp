@@ -20,13 +20,12 @@
 */
 #include <covscript/cni.hpp>
 
-static cs::name_space pair_ext;
-static cs::namespace_t pair_ext_shared = cs::make_shared_namespace(pair_ext);
+static cs::namespace_t pair_ext=cs::make_shared_namespace<cs::name_space>();
 namespace cs_impl {
 	template<>
 	cs::namespace_t &get_ext<cs::pair>()
 	{
-		return pair_ext_shared;
+		return pair_ext;
 	}
 }
 namespace pair_cs_ext {
@@ -44,7 +43,7 @@ namespace pair_cs_ext {
 
 	void init()
 	{
-		pair_ext
+		(*pair_ext)
 		.add_var("first", make_cni(first, true))
 		.add_var("second", make_cni(second, true));
 	}

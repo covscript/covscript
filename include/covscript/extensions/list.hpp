@@ -20,22 +20,20 @@
 */
 #include <covscript/cni.hpp>
 
-static cs::name_space list_ext;
-static cs::namespace_t list_ext_shared = cs::make_shared_namespace(list_ext);
+static cs::namespace_t list_ext =cs::make_shared_namespace<cs::name_space>();
 namespace cs_impl {
 	template<>
 	cs::namespace_t &get_ext<cs::list>()
 	{
-		return list_ext_shared;
+		return list_ext;
 	}
 }
-static cs::name_space list_iterator_ext;
-static cs::namespace_t list_iterator_ext_shared = cs::make_shared_namespace(list_iterator_ext);
+static cs::namespace_t list_iterator_ext =cs::make_shared_namespace<cs::name_space>();
 namespace cs_impl {
 	template<>
 	cs::namespace_t &get_ext<cs::list::iterator>()
 	{
-		return list_iterator_ext_shared;
+		return list_iterator_ext;
 	}
 
 	template<>
@@ -149,12 +147,12 @@ namespace list_cs_ext {
 
 	void init()
 	{
-		list_iterator_ext
+		(*list_iterator_ext)
 		.add_var("forward", make_cni(forward, true))
 		.add_var("backward", make_cni(backward, true))
 		.add_var("data", make_cni(data, true));
-		list_ext
-		.add_var("iterator", make_namespace(list_iterator_ext_shared))
+		(*list_ext)
+		.add_var("iterator", make_namespace(list_iterator_ext))
 		.add_var("front", make_cni(front, true))
 		.add_var("back", make_cni(back, true))
 		.add_var("begin", make_cni(begin, true))
