@@ -59,6 +59,21 @@ namespace cs_impl {
 namespace iostream_cs_ext {
 	using namespace cs;
 
+	var parse_value(const std::string &str)
+	{
+		if (str == "true")
+			return true;
+		if (str == "false")
+			return false;
+		try {
+			return parse_number(str);
+		}
+		catch (...) {
+			return str;
+		}
+		return str;
+	}
+
 	var fstream(const string &path, std::ios_base::openmode openmode)
 	{
 		switch (openmode) {

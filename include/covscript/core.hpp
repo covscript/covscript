@@ -79,6 +79,13 @@ namespace cs {
 
 		std_exception_handler std_eh_callback=&cs_defalt_exception_handler;
 		cs_exception_handler cs_eh_callback=&std_defalt_exception_handler;
+
+		static void init_extensions();
+
+		process_context()
+		{
+			init_extensions();
+		}
 	} this_process;
 	process_context* current_process=&this_process;
 // Path seperator and delimiter
@@ -121,11 +128,7 @@ namespace cs {
 
 		callable(const callable &) = default;
 
-		explicit callable(function_type func, bool constant = false) : mFunc(std::move(func)),
-			mType(constant ? types::constant
-			      : types::normal) {}
-
-		callable(function_type func, types type) : mFunc(std::move(func)), mType(type) {}
+		explicit callable(function_type func, types type=types::normal) : mFunc(std::move(func)), mType(type) {}
 
 		bool is_constant() const
 		{
@@ -523,8 +526,7 @@ namespace cs {
 		virtual domain_t get_domain() const=0;
 	};
 
-	class default_namespace_holder final:public namespace_holder
-	{
+	class default_namespace_holder final:public namespace_holder {
 		name_space m_ns;
 	public:
 		default_namespace_holder()=default;
@@ -541,6 +543,56 @@ namespace cs {
 		virtual domain_t get_domain() const override
 		{
 			return m_ns.get_domain();
+		}
+	};
+
+	namespace dll_resources {
+		const char* dll_main_entrance = "__CS_EXTENSION_MAIN__";
+		typedef void(*dll_main_entrance_t)(name_space*, process_context*);
+		const char* dll_compatible_entrance = "__CS_EXTENSION__";
+		typedef name_space*(*dll_compatible_entrance_t)(int *, cs_exception_handler, std_exception_handler);
+	}
+	class dll_manager final:public namespace_holder {
+		cov::dll m_dll;
+		bool m_compatible=false;
+		name_space* m_ns=nullptr;
+	public:
+		dll_manager()=delete;
+		dll_manager(const dll_manager&)=delete;
+		explicit dll_manager(const std::string& path):m_dll(path)
+		{
+			using namespace dll_resources;
+			dll_main_entrance_t dll_main=reinterpret_cast<dll_main_entrance_t>(m_dll.get_address(dll_main_entrance));
+			if(dll_main!=nullptr) {
+				m_ns=new name_space;
+				dll_main(m_ns, current_process);
+			}
+			else {
+				dll_compatible_entrance_t dll_compatible=reinterpret_cast<dll_compatible_entrance_t>(m_dll.get_address(dll_compatible_entrance));
+				if(dll_compatible!=nullptr) {
+					m_compatible=true;
+					m_ns=dll_compatible(&current_process->output_precision, current_process->cs_eh_callback, current_process->std_eh_callback);
+				}
+				else
+					throw lang_error("Incompatible DLL.");
+			}
+		}
+		~dll_manager()
+		{
+			if(!m_compatible)
+				delete m_ns;
+		}
+		virtual var &get_var(const std::string& name) override
+		{
+			return m_ns->get_var(name);
+		}
+		virtual const var &get_var(const std::string& name) const override
+		{
+			return m_ns->get_var(name);
+		}
+		virtual domain_t get_domain() const override
+		{
+			return m_ns->get_domain();
 		}
 	};
 
@@ -566,196 +618,5 @@ namespace cs {
 			}
 		}
 		return std::stold(str);
-	}
-
-	var parse_value(const std::string &str)
-	{
-		if (str == "true")
-			return true;
-		if (str == "false")
-			return false;
-		try {
-			return parse_number(str);
-		}
-		catch (...) {
-			return str;
-		}
-		return str;
-	}
-}
-namespace cs_impl {
-// Detach
-	template<>
-	void detach<cs::pair>(cs::pair &val)
-	{
-		cs::copy_no_return(val.first);
-		cs::copy_no_return(val.second);
-	}
-
-	template<>
-	void detach<cs::list>(cs::list &val)
-	{
-		for (auto &it:val)
-			cs::copy_no_return(it);
-	}
-
-	template<>
-	void detach<cs::array>(cs::array &val)
-	{
-		for (auto &it:val)
-			cs::copy_no_return(it);
-	}
-
-	template<>
-	void detach<cs::hash_map>(cs::hash_map &val)
-	{
-		for (auto &it:val)
-			cs::copy_no_return(it.second);
-	}
-
-// To String
-	template<>
-	std::string to_string<cs::number>(const cs::number &val)
-	{
-		std::stringstream ss;
-		std::string str;
-		ss << std::setprecision(cs::current_process->output_precision) << val;
-		ss >> str;
-		return std::move(str);
-	}
-
-	template<>
-	std::string to_string<char>(const char &c)
-	{
-		return std::string(1, c);
-	}
-
-	template<>
-	std::string to_string<cs::type_id>(const cs::type_id &id)
-	{
-		if (id.type_hash != 0)
-			return cxx_demangle(id.type_idx.name()) + "_" + to_string(id.type_hash);
-		else
-			return cxx_demangle(id.type_idx.name());
-	}
-
-// To Integer
-	template<>
-	long to_integer<std::string>(const std::string &str)
-	{
-		for (auto &ch:str) {
-			if (!std::isdigit(ch))
-				throw cs::runtime_error("Wrong literal format.");
-		}
-		return std::stol(str);
-	}
-
-// Type name
-	template<>
-	constexpr const char *get_name_of_type<cs::context_t>()
-	{
-		return "cs::context";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::var>()
-	{
-		return "cs::var";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::number>()
-	{
-		return "cs::number";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::boolean>()
-	{
-		return "cs::boolean";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::pointer>()
-	{
-		return "cs::pointer";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<char>()
-	{
-		return "cs::char";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::string>()
-	{
-		return "cs::string";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::list>()
-	{
-		return "cs::list";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::array>()
-	{
-		return "cs::array";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::pair>()
-	{
-		return "cs::pair";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::hash_map>()
-	{
-		return "cs::hash_map";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::type>()
-	{
-		return "cs::type";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::name_space_t>()
-	{
-		return "cs::namespace";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::callable>()
-	{
-		return "cs::function";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::structure>()
-	{
-		return "cs::structure";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::lang_error>()
-	{
-		return "cs::exception";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::istream>()
-	{
-		return "cs::istream";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::ostream>()
-	{
-		return "cs::ostream";
 	}
 }

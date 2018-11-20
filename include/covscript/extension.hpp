@@ -18,56 +18,19 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <covscript/core.hpp>
+#define CS_EXTENSIONS_MINIMAL
 
-namespace cs_impl {
-	namespace dll_resources {
-		const char* dll_main_entrance = "__CS_EXTENSION_MAIN__";
-		typedef void(*dll_main_entrance_t)(cs::name_space*, cs::process_context*);
-		const char* dll_compatible_entrance = "__CS_EXTENSION__";
-		typedef cs::name_space*(*dll_compatible_entrance_t)(int *, cs::cs_exception_handler, cs::std_exception_handler);
+#include <covscript/cni.hpp>
+#include <covscript/extension.hpp>
+#include <covscript/extensions/extensions.hpp>
+
+void cs_extension_main(cs::name_space&);
+
+extern "C"
+{
+	void __CS_EXTENSION_MAIN__(cs::name_space* ext, cs::process_context* context)
+	{
+		cs::current_process=context;
+		cs_extension_main(*ext);
 	}
-	class dll_manager final:public cs::namespace_holder {
-		cov::dll m_dll;
-		bool m_compatible=false;
-		cs::name_space* m_ns=nullptr;
-	public:
-		dll_manager()=delete;
-		dll_manager(const dll_manager&)=delete;
-		explicit dll_manager(const std::string& path):m_dll(path)
-		{
-			using namespace dll_resources;
-			dll_main_entrance_t dll_main=reinterpret_cast<dll_main_entrance_t>(m_dll.get_address(dll_main_entrance));
-			if(dll_main!=nullptr) {
-				m_ns=new cs::name_space;
-				dll_main(m_ns, cs::current_process);
-			}
-			else {
-				dll_compatible_entrance_t dll_compatible=reinterpret_cast<dll_compatible_entrance_t>(m_dll.get_address(dll_compatible_entrance));
-				if(dll_compatible!=nullptr) {
-					m_compatible=true;
-					m_ns=dll_compatible(&cs::current_process->output_precision, cs::current_process->cs_eh_callback, cs::current_process->std_eh_callback);
-				}
-				else
-					throw cs::lang_error("Incompatible DLL.");
-			}
-		}
-		~dll_manager()
-		{
-			if(!m_compatible)
-				delete m_ns;
-		}
-		virtual cs::var &get_var(const std::string& name) override
-		{
-			return m_ns->get_var(name);
-		}
-		virtual const cs::var &get_var(const std::string& name) const override
-		{
-			return m_ns->get_var(name);
-		}
-		virtual cs::domain_t get_domain() const override
-		{
-			return m_ns->get_domain();
-		}
-	};
 }
