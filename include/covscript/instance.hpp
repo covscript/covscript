@@ -110,22 +110,22 @@ namespace cs {
 
 		explicit scope_guard(context_t c) : context(std::move(std::move(c)))
 		{
-			context->runtime->storage.add_domain();
+			context->instance->storage.add_domain();
 		}
 
 		~scope_guard()
 		{
-			context->runtime->storage.remove_domain();
+			context->instance->storage.remove_domain();
 		}
 
 		domain_t get() const
 		{
-			return context->runtime->storage.get_domain();
+			return context->instance->storage.get_domain();
 		}
 
 		void clear() const
 		{
-			context->runtime->storage.clear_domain();
+			context->instance->storage.clear_domain();
 		}
 	};
 

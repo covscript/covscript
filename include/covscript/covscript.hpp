@@ -50,8 +50,8 @@ namespace cs {
 	array parse_cmd_args(int argc, const char* argv[])
 	{
 		cs::array arg;
-		for (std::size_t i = 0; i < argv; ++i)
-			arg.emplace_back(cs::var::make_constant<cs::string>(args[i]));
+		for (std::size_t i = 0; i < argc; ++i)
+			arg.emplace_back(cs::var::make_constant<cs::string>(argv[i]));
 		return std::move(arg);
 	}
 

@@ -77,8 +77,8 @@ namespace cs {
 			throw forward_exception(e.what());
 		}
 
-		std_exception_handler std_eh_callback=&cs_defalt_exception_handler;
-		cs_exception_handler cs_eh_callback=&std_defalt_exception_handler;
+		std_exception_handler std_eh_callback=&std_defalt_exception_handler;
+		cs_exception_handler cs_eh_callback=&cs_defalt_exception_handler;
 
 		static void init_extensions();
 
@@ -311,13 +311,7 @@ namespace cs {
 		type(std::function<var()> c, const type_id &i, namespace_t ext) : constructor(std::move(c)), id(i),
 			extensions(std::move(std::move(ext))) {}
 
-		var &type::get_var(const std::string &name) const
-		{
-			if (extensions.get() != nullptr)
-				return extensions->get_var(name);
-			else
-				throw runtime_error("Type does not support the extension");
-		}
+		var &get_var(const std::string &) const;
 	};
 
 	class structure final {
@@ -544,6 +538,14 @@ namespace cs {
 	{
 		return std::make_shared<T>(std::forward<ArgsT>(args)...);
 	}
+
+	var &type::get_var(const std::string &name) const
+		{
+			if (extensions.get() != nullptr)
+				return extensions->get_var(name);
+			else
+				throw runtime_error("Type does not support the extension");
+		}
 
 // Literal format
 	number parse_number(const std::string &str)

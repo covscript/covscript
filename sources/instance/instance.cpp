@@ -64,10 +64,10 @@ namespace cs {
 					throw runtime_error("Target file is not a package.");
 				if (rt->package_name != name)
 					throw runtime_error("Package name is different from file name.");
-				return std::make_shared<extension_holder>(rt->runtime->storage.get_global());
+				return std::make_shared<name_space>(rt->instance->storage.get_global());
 			}
 			else if (std::ifstream(package_path + ".cse"))
-				return std::make_shared<extension_holder>(package_path + ".cse");
+				return std::make_shared<extension>(package_path + ".cse");
 		}
 		throw fatal_error("No such file or directory.");
 	}
@@ -145,8 +145,8 @@ namespace cs {
 			case method_types::single: {
 				if (level > 0) {
 					if (m->get_target_type() == statement_types::end_) {
-						context->runtime->storage.remove_set();
-						context->runtime->storage.remove_domain();
+						context->instance->storage.remove_set();
+						context->instance->storage.remove_domain();
 						--level;
 					}
 					if (level == 0) {
@@ -173,8 +173,8 @@ namespace cs {
 				if (level == 0)
 					method = m;
 				++level;
-				context->runtime->storage.add_domain();
-				context->runtime->storage.add_set();
+				context->instance->storage.add_domain();
+				context->instance->storage.add_set();
 				m->preprocess({line});
 				tmp.push_back(line);
 			}

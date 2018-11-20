@@ -241,10 +241,10 @@ namespace cs {
 		// Status
 		bool inside_lambda = false;
 		bool no_optimize = false;
-		// Translator
-		translator_type translator;
 		// Context
 		context_t context;
+		// Translator
+		translator_type translator;
 
 		// Preprocessor
 		class preprocessor;
@@ -336,7 +336,7 @@ namespace cs {
 	public:
 		compiler_type() = delete;
 
-		compiler_type(context_t c) : context(std::move(c)) {}
+		compiler_type(context_t c) : context(std::move(c)), translator(context) {}
 
 		compiler_type(const compiler_type&)=delete;
 

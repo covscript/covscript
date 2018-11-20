@@ -231,7 +231,7 @@ namespace cs {
 			break;
 		case token_types::id: {
 			const std::string &id = static_cast<token_id *>(token)->get_id();
-			if (!context->runtime->storage.exist_record(id) && context->runtime->storage.exist_record_in_struct(id)) {
+			if (!context->instance->storage.exist_record(id) && context->instance->storage.exist_record_in_struct(id)) {
 				it.data() = new token_signal(signal_types::dot_);
 				tree.emplace_left_left(it, new token_id("this"));
 				tree.emplace_right_right(it, token);
@@ -330,7 +330,7 @@ namespace cs {
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
 					throw runtime_error("Wrong grammar for variable definition.");
-				context->runtime->storage.add_record(static_cast<token_id *>(rptr)->get_id());
+				context->instance->storage.add_record(static_cast<token_id *>(rptr)->get_id());
 				it.data() = rptr;
 				return;
 				break;
@@ -436,13 +436,13 @@ namespace cs {
 			break;
 		case token_types::id: {
 			const std::string &id = static_cast<token_id *>(token)->get_id();
-			if (context->runtime->storage.exist_record(id)) {
-				if (context->runtime->storage.var_exist_current(id) && context->runtime->storage.get_var_current(id).is_protect())
-					it.data() = new_value(context->runtime->storage.get_var(id));
+			if (context->instance->storage.exist_record(id)) {
+				if (context->instance->storage.var_exist_current(id) && context->instance->storage.get_var_current(id).is_protect())
+					it.data() = new_value(context->instance->storage.get_var(id));
 			}
-			else if (!context->runtime->storage.exist_record_in_struct(id) && context->runtime->storage.var_exist(id) &&
-			         context->runtime->storage.get_var(id).is_protect())
-				it.data() = new_value(context->runtime->storage.get_var(id));
+			else if (!context->instance->storage.exist_record_in_struct(id) && context->instance->storage.var_exist(id) &&
+			         context->instance->storage.get_var(id).is_protect())
+				it.data() = new_value(context->instance->storage.get_var(id));
 			return;
 			break;
 		}
@@ -457,7 +457,7 @@ namespace cs {
 				array
 				arr;
 				for (auto &tree:static_cast<token_array *>(token)->get_array())
-					arr.push_back((new_value(copy(context->runtime->parse_expr(tree.root()))))->get_value());
+					arr.push_back((new_value(copy(context->instance->parse_expr(tree.root()))))->get_value());
 				it.data() = new_value(var::make<array>(std::move(arr)));
 			}
 			return;
@@ -519,7 +519,7 @@ namespace cs {
 					const var &a = static_cast<token_value *>(lptr)->get_value();
 					token_base *orig_ptr = it.data();
 					try {
-						const var &v = context->runtime->parse_dot(a, rptr);
+						const var &v = context->instance->parse_dot(a, rptr);
 						if (v.is_protect())
 							it.data() = new_value(v);
 					}
@@ -549,7 +549,7 @@ namespace cs {
 							vector args;
 							args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
 							for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
-								args.push_back(lvalue(context->runtime->parse_expr(tree.root())));
+								args.push_back(lvalue(context->instance->parse_expr(tree.root())));
 							token_base *oldt = it.data();
 							try {
 								it.data() = new_value(a.const_val<callable>().call(args));
@@ -570,7 +570,7 @@ namespace cs {
 							vector args{om.object};
 							args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
 							for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
-								args.push_back(lvalue(context->runtime->parse_expr(tree.root())));
+								args.push_back(lvalue(context->instance->parse_expr(tree.root())));
 							token_base *oldt = it.data();
 							try {
 								it.data() = new_value(om.callable.const_val<callable>().call(args));
@@ -592,7 +592,7 @@ namespace cs {
 		if (optimizable(it.left()) && optimizable(it.right())) {
 			token_base *oldt = it.data();
 			try {
-				token_value *token = new_value(context->runtime->parse_expr(it));
+				token_value *token = new_value(context->instance->parse_expr(it));
 				tree.
 				erase_left(it);
 				tree.
@@ -666,8 +666,8 @@ namespace cs {
 					statement_base *sptr = nullptr;
 					if (level > 0) {
 						if (m->get_target_type() == statement_types::end_) {
-							context->runtime->storage.remove_set();
-							context->runtime->storage.remove_domain();
+							context->instance->storage.remove_set();
+							context->instance->storage.remove_domain();
 							--level;
 						}
 						if (level == 0) {
@@ -697,8 +697,8 @@ namespace cs {
 					if (level == 0)
 						method = m;
 					++level;
-					context->runtime->storage.add_domain();
-					context->runtime->storage.add_set();
+					context->instance->storage.add_domain();
+					context->instance->storage.add_set();
 					m->preprocess({line});
 					tmp.push_back(line);
 				}

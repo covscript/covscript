@@ -36,8 +36,8 @@
 #include "compiler/codegen.cpp"
 
 // Instance
-#include "instance/instance.cpp"
 #include "instance/runtime.cpp"
+#include "instance/instance.cpp"
 #include "instance/statement.cpp"
 
 namespace cs {
