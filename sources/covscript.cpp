@@ -221,5 +221,6 @@ namespace cs {
 		.add_buildin_var("system", make_namespace(system_ext))
 		.add_buildin_var("runtime", make_namespace(runtime_ext))
 		.add_buildin_var("math", make_namespace(math_ext));
+		return context;
 	}
 }

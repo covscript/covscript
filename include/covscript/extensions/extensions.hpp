@@ -213,7 +213,7 @@ namespace cs_impl {
 }
 
 namespace cs {
-	void process_context::init_extensions()
+	void init_extensions()
 	{
 #ifndef CS_EXTENSIONS_MINIMAL
 		iostream_cs_ext::init();

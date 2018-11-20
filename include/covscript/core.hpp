@@ -79,13 +79,6 @@ namespace cs {
 
 		std_exception_handler std_eh_callback=&std_defalt_exception_handler;
 		cs_exception_handler cs_eh_callback=&cs_defalt_exception_handler;
-
-		static void init_extensions();
-
-		process_context()
-		{
-			init_extensions();
-		}
 	} this_process;
 	process_context* current_process=&this_process;
 // Path seperator and delimiter
@@ -540,12 +533,12 @@ namespace cs {
 	}
 
 	var &type::get_var(const std::string &name) const
-		{
-			if (extensions.get() != nullptr)
-				return extensions->get_var(name);
-			else
-				throw runtime_error("Type does not support the extension");
-		}
+	{
+		if (extensions.get() != nullptr)
+			return extensions->get_var(name);
+		else
+			throw runtime_error("Type does not support the extension");
+	}
 
 // Literal format
 	number parse_number(const std::string &str)
