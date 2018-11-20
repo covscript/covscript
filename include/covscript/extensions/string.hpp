@@ -21,11 +21,11 @@
 #include <covscript/cni.hpp>
 #include <cctype>
 
-static cs::extension string_ext;
-static cs::extension_t string_ext_shared = cs::make_shared_namespace(string_ext);
+static cs::name_space string_ext;
+static cs::namespace_t string_ext_shared = cs::make_shared_namespace(string_ext);
 namespace cs_impl {
 	template<>
-	cs::extension_t &get_ext<cs::string>()
+	cs::namespace_t &get_ext<cs::string>()
 	{
 		return string_ext_shared;
 	}

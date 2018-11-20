@@ -23,11 +23,11 @@
 namespace cs_impl {
 	namespace dll_resources {
 		const char* dll_main_entrance = "__CS_EXTENSION_MAIN__";
-		typedef void(*dll_main_entrance_t)(cs::extension*, cs::process_context*);
+		typedef void(*dll_main_entrance_t)(cs::name_space*, cs::process_context*);
 		const char* dll_compatible_entrance = "__CS_EXTENSION__";
-		typedef cs::extension*(*dll_compatible_entrance_t)(int *, cs::cs_exception_handler, cs::std_exception_handler);
+		typedef cs::name_space*(*dll_compatible_entrance_t)(int *, cs::cs_exception_handler, cs::std_exception_handler);
 	}
-	class dll_manager final {
+	class dll_manager final:public cs::namespace_holder {
 		cov::dll m_dll;
 		bool m_compatible=false;
 		cs::name_space* m_ns=nullptr;
@@ -38,17 +38,17 @@ namespace cs_impl {
 		{
 			using namespace dll_resources;
 			dll_main_entrance_t dll_main=reinterpret_cast<dll_main_entrance_t>(m_dll.get_address(dll_main_entrance));
-			if(dll_main!=nullptr)
-			{
+			if(dll_main!=nullptr) {
 				m_ns=new cs::name_space;
 				dll_main(m_ns, cs::current_process);
-			}else{
+			}
+			else {
 				dll_compatible_entrance_t dll_compatible=reinterpret_cast<dll_compatible_entrance_t>(m_dll.get_address(dll_compatible_entrance));
-				if(dll_compatible!=nullptr)
-				{
+				if(dll_compatible!=nullptr) {
 					m_compatible=true;
 					m_ns=dll_compatible(&cs::current_process->output_precision, cs::current_process->cs_eh_callback, cs::current_process->std_eh_callback);
-				}else
+				}
+				else
 					throw cs::lang_error("Incompatible DLL.");
 			}
 		}
@@ -56,6 +56,18 @@ namespace cs_impl {
 		{
 			if(!m_compatible)
 				delete m_ns;
+		}
+		virtual cs::var &get_var(const std::string& name) override
+		{
+			return m_ns->get_var(name);
+		}
+		virtual const cs::var &get_var(const std::string& name) const override
+		{
+			return m_ns->get_var(name);
+		}
+		virtual cs::domain_t get_domain() const override
+		{
+			return m_ns->get_domain();
 		}
 	};
 }

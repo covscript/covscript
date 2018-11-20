@@ -20,20 +20,20 @@
 */
 #include <covscript/cni.hpp>
 
-static cs::extension array_ext;
-static cs::extension_t array_ext_shared = cs::make_shared_namespace(array_ext);
+static cs::namespace array_ext;
+static cs::namespace_t array_ext_shared = cs::make_shared_namespace(array_ext);
 namespace cs_impl {
 	template<>
-	cs::extension_t &get_ext<cs::array>()
+	cs::namespace_t &get_ext<cs::array>()
 	{
 		return array_ext_shared;
 	}
 }
-static cs::extension array_iterator_ext;
-static cs::extension_t array_iterator_ext_shared = cs::make_shared_namespace(array_iterator_ext);
+static cs::namespace array_iterator_ext;
+static cs::namespace_t array_iterator_ext_shared = cs::make_shared_namespace(array_iterator_ext);
 namespace cs_impl {
 	template<>
-	cs::extension_t &get_ext<cs::array::iterator>()
+	cs::namespace_t &get_ext<cs::array::iterator>()
 	{
 		return array_iterator_ext_shared;
 	}

@@ -22,9 +22,9 @@
 #include <covscript/cni.hpp>
 #include <algorithm>
 
-static cs::extension math_ext;
-static cs::extension math_const_ext;
-static cs::extension_t math_const_ext_shared = cs::make_shared_namespace(math_const_ext);
+static cs::name_space math_ext;
+static cs::name_space math_const_ext;
+static cs::namespace_t math_const_ext_shared = cs::make_shared_namespace(math_const_ext);
 namespace math_cs_ext {
 	using namespace cs;
 

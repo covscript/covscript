@@ -37,7 +37,7 @@ namespace cs {
 		return context->file_buff.at(line_num - 1);
 	}
 
-	extension_t instance_type::import(const std::string &path, const std::string &name)
+	namespace_t instance_type::import(const std::string &path, const std::string &name)
 	{
 		std::vector<std::string> collection;
 		{

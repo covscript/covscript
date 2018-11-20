@@ -39,7 +39,7 @@ namespace cs {
 
 	class name_space;
 
-	class name_space_holder;
+	class namespace_holder;
 
 	template<typename _kT, typename _vT> using map_t=spp::sparse_hash_map<_kT, _vT>;
 	template<typename _Tp> using set_t=spp::sparse_hash_set<_Tp>;
@@ -55,11 +55,8 @@ namespace cs {
 	using compiler_t=std::shared_ptr<compiler_type>;
 	using instance_t=std::shared_ptr<instance_type>;
 	using context_t=std::shared_ptr<context_type>;
-	using extension=name_space;
-	using extension_holder=name_space_holder;
 	using domain_t=std::shared_ptr<map_t<string, var>>;
-	using name_space_t=std::shared_ptr<name_space_holder>;
-	using extension_t=std::shared_ptr<extension_holder>;
+	using namespace_t=std::shared_ptr<namespace_holder>;
 	using istream=std::shared_ptr<std::istream>;
 	using ostream=std::shared_ptr<std::ostream>;
 

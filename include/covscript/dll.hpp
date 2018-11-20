@@ -24,11 +24,11 @@
 #include <covscript/extension.hpp>
 #include <covscript/extensions/extensions.hpp>
 
-void cs_extension_main(cs::extension&);
+void cs_extension_main(cs::name_space&);
 
 extern "C"
 {
-	void __CS_EXTENSION_MAIN__(cs::extension* ext, cs::process_context* context)
+	void __CS_EXTENSION_MAIN__(cs::name_space* ext, cs::process_context* context)
 	{
 		cs::current_process=context;
 		cs::init_extensions();

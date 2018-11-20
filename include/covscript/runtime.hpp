@@ -183,7 +183,7 @@ namespace cs {
 
 		domain_manager &
 		add_type(const std::string &name, const std::function<var()> &func, const std::type_index &id,
-		         extension_t ext)
+		         namespace_t ext)
 		{
 			return add_var(name, var::make_protect<type>(func, id, ext));
 		}
@@ -197,7 +197,7 @@ namespace cs {
 
 		domain_manager &
 		add_buildin_type(const std::string &name, const std::function<var()> &func, const std::type_index &id,
-		                 extension_t ext)
+		                 namespace_t ext)
 		{
 			add_record(name);
 			return add_var(name, var::make_protect<type>(func, id, ext));

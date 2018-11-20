@@ -48,7 +48,7 @@ namespace cs_impl {
 
 			virtual void kill() = 0;
 
-			virtual cs::extension_t &get_ext() const = 0;
+			virtual cs::namespace_t &get_ext() const = 0;
 
 			virtual const char *get_type_name() const = 0;
 		};
@@ -110,7 +110,7 @@ namespace cs_impl {
 				allocator.free(this);
 			}
 
-			virtual cs::extension_t &get_ext() const override
+			virtual cs::namespace_t &get_ext() const override
 			{
 				return cs_impl::get_ext<T>();
 			}
@@ -312,7 +312,7 @@ namespace cs_impl {
 			}
 		}
 
-		cs::extension_t &get_ext() const
+		cs::namespace_t &get_ext() const
 		{
 			if (this->mDat == nullptr)
 				throw cs::runtime_error("Target type does not support extensions.");

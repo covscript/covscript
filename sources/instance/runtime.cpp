@@ -142,8 +142,8 @@ namespace cs {
 				break;
 			}
 		}
-		else if (a.type() == typeid(extension_t))
-			return a.val<extension_t>(true)->get_var(static_cast<token_id *>(b)->get_id());
+		else if (a.type() == typeid(namespace_t))
+			return a.val<namespace_t>(true)->get_var(static_cast<token_id *>(b)->get_id());
 		else if (a.type() == typeid(type))
 			return a.val<type>(true).get_var(static_cast<token_id *>(b)->get_id());
 		else if (a.type() == typeid(structure)) {

@@ -27,17 +27,17 @@
 #include <cstdio>
 #include <limits>
 
-static cs::extension system_ext;
-static cs::extension console_ext;
-static cs::extension file_ext;
-static cs::extension path_ext;
-static cs::extension path_type_ext;
-static cs::extension path_info_ext;
-static cs::extension_t console_ext_shared = cs::make_shared_namespace(console_ext);
-static cs::extension_t file_ext_shared = cs::make_shared_namespace(file_ext);
-static cs::extension_t path_ext_shared = cs::make_shared_namespace(path_ext);
-static cs::extension_t path_type_ext_shared = cs::make_shared_namespace(path_type_ext);
-static cs::extension_t path_info_ext_shared = cs::make_shared_namespace(path_info_ext);
+static cs::name_space system_ext;
+static cs::name_space console_ext;
+static cs::name_space file_ext;
+static cs::name_space path_ext;
+static cs::name_space path_type_ext;
+static cs::name_space path_info_ext;
+static cs::namespace_t console_ext_shared = cs::make_shared_namespace(console_ext);
+static cs::namespace_t file_ext_shared = cs::make_shared_namespace(file_ext);
+static cs::namespace_t path_ext_shared = cs::make_shared_namespace(path_ext);
+static cs::namespace_t path_type_ext_shared = cs::make_shared_namespace(path_type_ext);
+static cs::namespace_t path_info_ext_shared = cs::make_shared_namespace(path_info_ext);
 namespace console_cs_ext {
 	using namespace cs;
 	using namespace cs_impl;
@@ -191,7 +191,7 @@ namespace path_cs_ext {
 }
 namespace cs_impl {
 	template<>
-	cs::extension_t &get_ext<path_cs_ext::path_info>()
+	cs::namespace_t &get_ext<path_cs_ext::path_info>()
 	{
 		return path_info_ext_shared;
 	}

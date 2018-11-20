@@ -57,7 +57,7 @@
 #include <covscript/any.hpp>
 
 namespace cs {
-// Exception Handler
+// Process Context
 	struct process_context final {
 		// Version
 		const std::string version = COVSCRIPT_VERSION_STR;
@@ -297,17 +297,23 @@ namespace cs {
 
 	struct type final {
 		std::function<var()> constructor;
-		extension_t extensions;
+		namespace_t extensions;
 		type_id id;
 
 		type() = delete;
 
 		type(std::function<var()> c, const type_id &i) : constructor(std::move(c)), id(i) {}
 
-		type(std::function<var()> c, const type_id &i, extension_t ext) : constructor(std::move(c)), id(i),
+		type(std::function<var()> c, const type_id &i, namespace_t ext) : constructor(std::move(c)), id(i),
 			extensions(std::move(std::move(ext))) {}
 
-		var &get_var(const std::string &) const;
+		var &type::get_var(const std::string &name) const
+		{
+			if (extensions.get() != nullptr)
+				return extensions->get_var(name);
+			else
+				throw runtime_error("Type does not support the extension");
+		}
 	};
 
 	class structure final {
@@ -488,70 +494,65 @@ namespace cs {
 				throw runtime_error("Use of undefined variable \"" + name + "\".");
 		}
 
+		const var &get_var(const std::string &name) const
+		{
+			if (m_data->count(name) > 0)
+				return (*m_data)[name];
+			else
+				throw runtime_error("Use of undefined variable \"" + name + "\".");
+		}
+
 		domain_t get_domain() const
 		{
 			return m_data;
 		}
 	};
 
-	class name_space_holder final {
-		bool m_local;
-		name_space *m_ns = nullptr;
-		cov::dll m_dll;
+	class namespace_holder {
 	public:
-		name_space_holder() = delete;
+		namespace_holder() = default;
 
-		name_space_holder(const name_space_holder &) = delete;
+		namespace_holder(const namespace_holder &) = delete;
 
-		explicit name_space_holder(const domain_t &dat) : m_local(true), m_ns(new name_space(dat)) {}
+		virtual ~namespace_holder()=default;
 
-		explicit name_space_holder(name_space *ptr) : m_local(false), m_ns(ptr) {}
+		virtual var &get_var(const std::string &)=0;
 
-		explicit name_space_holder(const std::string &path) : m_local(false), m_dll(path)
+		virtual const var &get_var(const std::string &) const=0;
+
+		virtual domain_t get_domain() const=0;
+	};
+
+	class default_namespace_holder final:public namespace_holder
+	{
+		name_space m_ns;
+	public:
+		default_namespace_holder()=default;
+		default_namespace_holder(const default_namespace_holder&)=delete;
+		explicit default_namespace_holder(domain_t dat):m_ns(std::move(dat)) {}
+		virtual var &get_var(const std::string& name) override
 		{
-			m_ns = reinterpret_cast<extension_entrance_t>(m_dll.get_address("__CS_EXTENSION__"))(output_precision_ref,
-			        exception_handler::cs_eh_callback,
-			        exception_handler::std_eh_callback);
+			return m_ns.get_var(name);
 		}
-
-		~name_space_holder()
+		virtual const var &get_var(const std::string& name) const override
 		{
-			if (m_local)
-				delete m_ns;
+			return m_ns.get_var(name);
 		}
-
-		var &get_var(const std::string &name)
+		virtual domain_t get_domain() const override
 		{
-			if (m_ns == nullptr)
-				throw internal_error("Use of nullptr of extension.");
-			return m_ns->get_var(name);
-		}
-
-		domain_t get_domain() const
-		{
-			if (m_ns == nullptr)
-				throw internal_error("Use of nullptr of extension.");
-			return m_ns->get_domain();
+			return m_ns.get_domain();
 		}
 	};
 
-	var make_namespace(const name_space_t &ns)
+	var make_namespace(const namespace_t &ns)
 	{
-		return var::make_protect<name_space_t>(ns);
+		return var::make_protect<namespace_t>(ns);
 	}
 
-	name_space_t make_shared_namespace(name_space &ns)
+	template<typename T, typename...ArgsT>
+	namespace_t make_shared_namespace(ArgsT&&...args)
 	{
-		return std::make_shared<name_space_holder>(&ns);
-	}
-
-// Implement
-	var &type::get_var(const std::string &name) const
-	{
-		if (extensions.get() != nullptr)
-			return extensions->get_var(name);
-		else
-			throw runtime_error("Type does not support the extension");
+		return std::make_shared<T>(std::forward<ArgsT>(args)...);
 	}
 
 // Literal format

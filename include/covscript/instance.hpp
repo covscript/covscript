@@ -52,7 +52,7 @@ namespace cs {
 		~instance_type() = default;
 
 		// Wrapped Method
-		extension_t import(const std::string &, const std::string &);
+		namespace_t import(const std::string &, const std::string &);
 
 		void compile(const std::string &);
 

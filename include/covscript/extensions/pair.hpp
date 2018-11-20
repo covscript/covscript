@@ -20,11 +20,11 @@
 */
 #include <covscript/cni.hpp>
 
-static cs::extension pair_ext;
-static cs::extension_t pair_ext_shared = cs::make_shared_namespace(pair_ext);
+static cs::name_space pair_ext;
+static cs::namespace_t pair_ext_shared = cs::make_shared_namespace(pair_ext);
 namespace cs_impl {
 	template<>
-	cs::extension_t &get_ext<cs::pair>()
+	cs::namespace_t &get_ext<cs::pair>()
 	{
 		return pair_ext_shared;
 	}
