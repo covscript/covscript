@@ -20,13 +20,12 @@
 */
 #include <covscript/cni.hpp>
 
-static cs::extension hash_map_ext;
-static cs::extension_t hash_map_ext_shared = cs::make_shared_namespace(hash_map_ext);
+static cs::namespace_t hash_map_ext = cs::make_shared_namespace<cs::name_space>();
 namespace cs_impl {
 	template<>
-	cs::extension_t &get_ext<cs::hash_map>()
+	cs::namespace_t &get_ext<cs::hash_map>()
 	{
-		return hash_map_ext_shared;
+		return hash_map_ext;
 	}
 }
 namespace hash_map_cs_ext {
@@ -75,7 +74,7 @@ namespace hash_map_cs_ext {
 
 	void init()
 	{
-		hash_map_ext
+		(*hash_map_ext)
 		.add_var("empty", make_cni(empty, true))
 		.add_var("size", make_cni(size, true))
 		.add_var("clear", make_cni(clear, true))

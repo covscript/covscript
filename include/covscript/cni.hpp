@@ -366,13 +366,13 @@ namespace cs_impl {
 				return cs::try_move(mCni->call(args));
 			}
 			catch (const cs::lang_error &e) {
-				cs::exception_handler::cs_eh_callback(e);
+				cs::current_process->cs_eh_callback(e);
 			}
 			catch (const std::exception &e) {
-				cs::exception_handler::std_eh_callback(e);
+				cs::current_process->std_eh_callback(e);
 			}
 			catch (...) {
-				cs::exception_handler::std_eh_callback(cs::fatal_error("CNI:Unrecognized exception."));
+				cs::current_process->std_eh_callback(cs::fatal_error("CNI:Unrecognized exception."));
 			}
 			return cs::null_pointer;
 		}
@@ -401,12 +401,12 @@ namespace cs {
 	template<typename T>
 	var make_cni(T &&func, bool constant = false)
 	{
-		return var::make_protect<callable>(cni(func), constant);
+		return var::make_protect<callable>(cni(func), constant?callable::types::constant:callable::types::normal);
 	}
 
 	template<typename T, typename X>
 	var make_cni(T &&func, const cni_type<X> &type, bool constant = false)
 	{
-		return var::make_protect<callable>(cni(func), constant);
+		return var::make_protect<callable>(cni(func), constant?callable::types::constant:callable::types::normal);
 	}
 }

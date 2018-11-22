@@ -20,13 +20,12 @@
 */
 #include <covscript/cni.hpp>
 
-static cs::extension except_ext;
-static cs::extension_t except_ext_shared = cs::make_shared_namespace(except_ext);
+static cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
 namespace cs_impl {
 	template<>
-	cs::extension_t &get_ext<cs::lang_error>()
+	cs::namespace_t &get_ext<cs::lang_error>()
 	{
-		return except_ext_shared;
+		return except_ext;
 	}
 }
 namespace except_cs_ext {
@@ -39,6 +38,6 @@ namespace except_cs_ext {
 
 	void init()
 	{
-		except_ext.add_var("what", make_cni(what));
+		except_ext->add_var("what", make_cni(what));
 	}
 }

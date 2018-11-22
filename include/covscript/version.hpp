@@ -26,9 +26,9 @@
 * Master
 *
 */
-#define COVSCRIPT_VERSION_NUM 1,3,2,5
-#define COVSCRIPT_VERSION_STR "1.3.2 Nautilus pompilius(Stable) Build 5"
-#define COVSCRIPT_STD_VERSION 181001
+#define COVSCRIPT_VERSION_NUM 3,0,0,1
+#define COVSCRIPT_VERSION_STR "3.0.0 Pantholops hodgsonii(Preview) Build 1"
+#define COVSCRIPT_STD_VERSION 190101
 #if defined(_WIN32) || defined(WIN32)
 #define COVSCRIPT_PLATFORM_WIN32
 #endif

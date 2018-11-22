@@ -20,22 +20,20 @@
 */
 #include <covscript/cni.hpp>
 
-static cs::extension array_ext;
-static cs::extension_t array_ext_shared = cs::make_shared_namespace(array_ext);
+static cs::namespace_t array_ext=cs::make_shared_namespace<cs::name_space>();
 namespace cs_impl {
 	template<>
-	cs::extension_t &get_ext<cs::array>()
+	cs::namespace_t &get_ext<cs::array>()
 	{
-		return array_ext_shared;
+		return array_ext;
 	}
 }
-static cs::extension array_iterator_ext;
-static cs::extension_t array_iterator_ext_shared = cs::make_shared_namespace(array_iterator_ext);
+static cs::namespace_t array_iterator_ext=cs::make_shared_namespace<cs::name_space>();
 namespace cs_impl {
 	template<>
-	cs::extension_t &get_ext<cs::array::iterator>()
+	cs::namespace_t &get_ext<cs::array::iterator>()
 	{
-		return array_iterator_ext_shared;
+		return array_iterator_ext;
 	}
 
 	template<>
@@ -164,12 +162,12 @@ namespace array_cs_ext {
 
 	void init()
 	{
-		array_iterator_ext
+		(*array_iterator_ext)
 		.add_var("forward", make_cni(forward, true))
 		.add_var("backward", make_cni(backward, true))
 		.add_var("data", make_cni(data, true));
-		array_ext
-		.add_var("iterator", make_namespace(array_iterator_ext_shared))
+		(*array_ext)
+		.add_var("iterator", make_namespace(array_iterator_ext))
 		.add_var("at", make_cni(at, true))
 		.add_var("front", make_cni(front, true))
 		.add_var("back", make_cni(back, true))

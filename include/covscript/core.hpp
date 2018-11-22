@@ -57,14 +57,30 @@
 #include <covscript/any.hpp>
 
 namespace cs {
-// Version
-	static const std::string version = COVSCRIPT_VERSION_STR;
-	static const number std_version = COVSCRIPT_STD_VERSION;
+// Process Context
+	struct process_context final {
+		// Version
+		const std::string version = COVSCRIPT_VERSION_STR;
+		const number std_version = COVSCRIPT_STD_VERSION;
 // Output Precision
-	static int output_precision = 8;
-	static int *output_precision_ref = &output_precision;
+		int output_precision = 8;
 // Import Path
-	static std::string import_path = ".";
+		std::string import_path = ".";
+// Exception Handling
+		static void cs_defalt_exception_handler(const lang_error &e)
+		{
+			throw e;
+		}
+
+		static void std_defalt_exception_handler(const std::exception &e)
+		{
+			throw forward_exception(e.what());
+		}
+
+		std_exception_handler std_eh_callback=&std_defalt_exception_handler;
+		cs_exception_handler cs_eh_callback=&cs_defalt_exception_handler;
+	} this_process;
+	process_context* current_process=&this_process;
 // Path seperator and delimiter
 #ifdef COVSCRIPT_PLATFORM_WIN32
 	constexpr char path_separator = '\\';
@@ -77,14 +93,14 @@ namespace cs {
 // Context
 	class context_type final {
 	public:
-		instance_type *instance = nullptr;
+		compiler_t compiler = nullptr;
+		instance_t instance = nullptr;
 		std::deque<string> file_buff;
 		string file_path = "<Unknown>";
 		string package_name;
+		var cmd_args;
 
-		context_type() = delete;
-
-		explicit context_type(instance_type *iptr) : instance(iptr) {}
+		context_type() = default;
 
 		context_type(const context_type &) = default;
 
@@ -106,11 +122,7 @@ namespace cs {
 
 		callable(const callable &) = default;
 
-		explicit callable(function_type func, bool constant = false) : mFunc(std::move(func)),
-			mType(constant ? types::constant
-			      : types::normal) {}
-
-		callable(function_type func, types type) : mFunc(std::move(func)), mType(type) {}
+		explicit callable(function_type func, types type=types::normal) : mFunc(std::move(func)), mType(type) {}
 
 		bool is_constant() const
 		{
@@ -282,14 +294,14 @@ namespace cs {
 
 	struct type final {
 		std::function<var()> constructor;
-		extension_t extensions;
+		namespace_t extensions;
 		type_id id;
 
 		type() = delete;
 
 		type(std::function<var()> c, const type_id &i) : constructor(std::move(c)), id(i) {}
 
-		type(std::function<var()> c, const type_id &i, extension_t ext) : constructor(std::move(c)), id(i),
+		type(std::function<var()> c, const type_id &i, namespace_t ext) : constructor(std::move(c)), id(i),
 			extensions(std::move(std::move(ext))) {}
 
 		var &get_var(const std::string &) const;
@@ -444,27 +456,8 @@ namespace cs {
 		}
 	};
 
-// Exception Handler
-	struct exception_handler final {
-		static std_exception_handler std_eh_callback;
-		static cs_exception_handler cs_eh_callback;
-
-		static void cs_defalt_exception_handler(const lang_error &e)
-		{
-			throw e;
-		}
-
-		static void std_defalt_exception_handler(const std::exception &e)
-		{
-			throw forward_exception(e.what());
-		}
-	};
-
-	cs_exception_handler exception_handler::cs_eh_callback = exception_handler::cs_defalt_exception_handler;
-	std_exception_handler exception_handler::std_eh_callback = exception_handler::std_defalt_exception_handler;
-
 // Namespace and extensions
-	class name_space final {
+	class name_space {
 		domain_t m_data;
 	public:
 		name_space() : m_data(std::make_shared<map_t<string, var >>()) {}
@@ -473,7 +466,7 @@ namespace cs {
 
 		explicit name_space(domain_t dat) : m_data(std::move(dat)) {}
 
-		~name_space() = default;
+		virtual ~name_space() = default;
 
 		name_space &add_var(const std::string &name, const var &var)
 		{
@@ -492,64 +485,53 @@ namespace cs {
 				throw runtime_error("Use of undefined variable \"" + name + "\".");
 		}
 
+		const var &get_var(const std::string &name) const
+		{
+			if (m_data->count(name) > 0)
+				return (*m_data)[name];
+			else
+				throw runtime_error("Use of undefined variable \"" + name + "\".");
+		}
+
 		domain_t get_domain() const
 		{
 			return m_data;
 		}
 	};
 
-	class name_space_holder final {
-		bool m_local;
-		name_space *m_ns = nullptr;
+	namespace dll_resources {
+		const char* dll_main_entrance = "__CS_EXTENSION_MAIN__";
+		typedef void(*dll_main_entrance_t)(name_space*, process_context*);
+	}
+
+	class extension final:public name_space {
 		cov::dll m_dll;
 	public:
-		name_space_holder() = delete;
-
-		name_space_holder(const name_space_holder &) = delete;
-
-		explicit name_space_holder(const domain_t &dat) : m_local(true), m_ns(new name_space(dat)) {}
-
-		explicit name_space_holder(name_space *ptr) : m_local(false), m_ns(ptr) {}
-
-		explicit name_space_holder(const std::string &path) : m_local(false), m_dll(path)
+		extension()=delete;
+		extension(const extension&)=delete;
+		explicit extension(const std::string& path):m_dll(path)
 		{
-			m_ns = reinterpret_cast<extension_entrance_t>(m_dll.get_address("__CS_EXTENSION__"))(output_precision_ref,
-			        exception_handler::cs_eh_callback,
-			        exception_handler::std_eh_callback);
-		}
-
-		~name_space_holder()
-		{
-			if (m_local)
-				delete m_ns;
-		}
-
-		var &get_var(const std::string &name)
-		{
-			if (m_ns == nullptr)
-				throw internal_error("Use of nullptr of extension.");
-			return m_ns->get_var(name);
-		}
-
-		domain_t get_domain() const
-		{
-			if (m_ns == nullptr)
-				throw internal_error("Use of nullptr of extension.");
-			return m_ns->get_domain();
+			using namespace dll_resources;
+			dll_main_entrance_t dll_main=reinterpret_cast<dll_main_entrance_t>(m_dll.get_address(dll_main_entrance));
+			if(dll_main!=nullptr) {
+				dll_main(this, current_process);
+			}
+			else
+				throw lang_error("Incompatible DLL.");
 		}
 	};
 
-	var make_namespace(const name_space_t &ns)
+	var make_namespace(const namespace_t &ns)
 	{
-		return var::make_protect<name_space_t>(ns);
+		return var::make_protect<namespace_t>(ns);
 	}
 
-	name_space_t make_shared_namespace(name_space &ns)
+	template<typename T, typename...ArgsT>
+	namespace_t make_shared_namespace(ArgsT&&...args)
 	{
-		return std::make_shared<name_space_holder>(&ns);
+		return std::make_shared<T>(std::forward<ArgsT>(args)...);
 	}
 
-// Implement
 	var &type::get_var(const std::string &name) const
 	{
 		if (extensions.get() != nullptr)
@@ -569,196 +551,5 @@ namespace cs {
 			}
 		}
 		return std::stold(str);
-	}
-
-	var parse_value(const std::string &str)
-	{
-		if (str == "true")
-			return true;
-		if (str == "false")
-			return false;
-		try {
-			return parse_number(str);
-		}
-		catch (...) {
-			return str;
-		}
-		return str;
-	}
-}
-namespace cs_impl {
-// Detach
-	template<>
-	void detach<cs::pair>(cs::pair &val)
-	{
-		cs::copy_no_return(val.first);
-		cs::copy_no_return(val.second);
-	}
-
-	template<>
-	void detach<cs::list>(cs::list &val)
-	{
-		for (auto &it:val)
-			cs::copy_no_return(it);
-	}
-
-	template<>
-	void detach<cs::array>(cs::array &val)
-	{
-		for (auto &it:val)
-			cs::copy_no_return(it);
-	}
-
-	template<>
-	void detach<cs::hash_map>(cs::hash_map &val)
-	{
-		for (auto &it:val)
-			cs::copy_no_return(it.second);
-	}
-
-// To String
-	template<>
-	std::string to_string<cs::number>(const cs::number &val)
-	{
-		std::stringstream ss;
-		std::string str;
-		ss << std::setprecision(*cs::output_precision_ref) << val;
-		ss >> str;
-		return std::move(str);
-	}
-
-	template<>
-	std::string to_string<char>(const char &c)
-	{
-		return std::string(1, c);
-	}
-
-	template<>
-	std::string to_string<cs::type_id>(const cs::type_id &id)
-	{
-		if (id.type_hash != 0)
-			return cxx_demangle(id.type_idx.name()) + "_" + to_string(id.type_hash);
-		else
-			return cxx_demangle(id.type_idx.name());
-	}
-
-// To Integer
-	template<>
-	long to_integer<std::string>(const std::string &str)
-	{
-		for (auto &ch:str) {
-			if (!std::isdigit(ch))
-				throw cs::runtime_error("Wrong literal format.");
-		}
-		return std::stol(str);
-	}
-
-// Type name
-	template<>
-	constexpr const char *get_name_of_type<cs::context_t>()
-	{
-		return "cs::context";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::var>()
-	{
-		return "cs::var";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::number>()
-	{
-		return "cs::number";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::boolean>()
-	{
-		return "cs::boolean";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::pointer>()
-	{
-		return "cs::pointer";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<char>()
-	{
-		return "cs::char";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::string>()
-	{
-		return "cs::string";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::list>()
-	{
-		return "cs::list";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::array>()
-	{
-		return "cs::array";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::pair>()
-	{
-		return "cs::pair";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::hash_map>()
-	{
-		return "cs::hash_map";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::type>()
-	{
-		return "cs::type";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::name_space_t>()
-	{
-		return "cs::namespace";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::callable>()
-	{
-		return "cs::function";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::structure>()
-	{
-		return "cs::structure";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::lang_error>()
-	{
-		return "cs::exception";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::istream>()
-	{
-		return "cs::istream";
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::ostream>()
-	{
-		return "cs::ostream";
 	}
 }

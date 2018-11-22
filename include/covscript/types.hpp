@@ -281,7 +281,7 @@ namespace cs_impl {
 	}
 
 	template<typename T>
-	cs::extension_t &get_ext()
+	cs::namespace_t &get_ext()
 	{
 		throw cs::runtime_error("Target type does not support extensions(Default Extension Function Detected).");
 	}

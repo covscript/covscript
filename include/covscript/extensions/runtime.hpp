@@ -22,34 +22,32 @@
 #include <covscript/cni.hpp>
 #include <cstdlib>
 
-static cs::extension context_ext;
-static cs::extension_t context_ext_shared = cs::make_shared_namespace(context_ext);
+static cs::namespace_t context_ext=cs::make_shared_namespace<cs::name_space>();
 namespace cs_impl {
 	template<>
-	cs::extension_t &get_ext<cs::context_t>()
+	cs::namespace_t &get_ext<cs::context_t>()
 	{
-		return context_ext_shared;
+		return context_ext;
 	}
 
 	template<>
-	constexpr const char *get_name_of_type<cov::tree<cs::token_base * >>
-	        ()
+	constexpr const char *get_name_of_type<cov::tree<cs::token_base*>>()
 	{
 		return "cs::expression";
 	}
 }
-static cs::extension runtime_ext;
+static cs::namespace_t runtime_ext=cs::make_shared_namespace<cs::name_space>();
 namespace runtime_cs_ext {
 	using namespace cs;
 
 	string get_import_path()
 	{
-		return import_path;
+		return current_process->import_path;
 	}
 
 	void info()
 	{
-		std::cout << "Covariant Script Programming Language Interpreter\nVersion: " << cs::version << "\n"
+		std::cout << "Covariant Script Programming Language Interpreter\nVersion: " << current_process->version << "\n"
 		          "Copyright (C) 2018 Michael Lee.All rights reserved.\n"
 		          "Licensed under the Apache License, Version 2.0 (the \"License\");\n"
 		          "you may not use this file except in compliance with the License.\n"
@@ -91,14 +89,10 @@ namespace runtime_cs_ext {
 	var build(const context_t &context, const string &expr)
 	{
 		std::deque<char> buff;
-		std::deque<token_base *> tokens;
 		expression_t tree;
 		for (auto &ch:expr)
 			buff.push_back(ch);
-		context->instance->process_char_buff(buff, tokens);
-		context->instance->process_brackets(tokens);
-		context->instance->kill_brackets(tokens);
-		context->instance->gen_tree(tree, tokens);
+		context->compiler->build_expr(buff, tree);
 		return var::make<expression_t>(tree);
 	}
 
@@ -107,15 +101,20 @@ namespace runtime_cs_ext {
 		return context->instance->parse_expr(tree.root());
 	}
 
-	var dynamic_import(const context_t &context, const string &path, const string &name)
+	var cmd_args(const context_t &context)
+	{
+		return context->cmd_args;
+	}
+
+	var advance_import(const context_t &context, const string &path, const string &name)
 	{
 		return make_namespace(context->instance->import(path, name));
 	}
 
 	void init()
 	{
-		runtime_ext
-		.add_var("std_version", var::make_constant<number>(std_version))
+		(*runtime_ext)
+		.add_var("std_version", var::make_constant<number>(current_process->std_version))
 		.add_var("get_import_path", make_cni(get_import_path, true))
 		.add_var("info", make_cni(info))
 		.add_var("time", make_cni(time))
@@ -124,10 +123,12 @@ namespace runtime_cs_ext {
 		.add_var("hash", make_cni(hash, true))
 		.add_var("build", make_cni(build))
 		.add_var("solve", make_cni(solve))
-		.add_var("dynamic_import", make_cni(dynamic_import, true));
-		context_ext
+		.add_var("cmd_args", make_cni(cmd_args, true))
+		.add_var("dynamic_import", make_cni(advance_import, true));
+		(*context_ext)
 		.add_var("build", make_cni(build))
 		.add_var("solve", make_cni(solve))
-		.add_var("dynamic_import", make_cni(dynamic_import, true));
+		.add_var("cmd_args", make_cni(cmd_args, true))
+		.add_var("advance_import", make_cni(advance_import, true));
 	}
 }

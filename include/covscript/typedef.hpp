@@ -23,6 +23,8 @@ namespace cs_impl {
 	class any;
 }
 namespace cs {
+	class compiler_type;
+
 	class instance_type;
 
 	class runtime_type;
@@ -37,8 +39,6 @@ namespace cs {
 
 	class name_space;
 
-	class name_space_holder;
-
 	template<typename _kT, typename _vT> using map_t=spp::sparse_hash_map<_kT, _vT>;
 	template<typename _Tp> using set_t=spp::sparse_hash_set<_Tp>;
 	using var=cs_impl::any;
@@ -50,18 +50,15 @@ namespace cs {
 	using pair=std::pair<var, var>;
 	using hash_map=map_t<var, var>;
 	using vector=std::vector<var>;
+	using compiler_t=std::shared_ptr<compiler_type>;
+	using instance_t=std::shared_ptr<instance_type>;
 	using context_t=std::shared_ptr<context_type>;
-	using extension=name_space;
-	using extension_holder=name_space_holder;
 	using domain_t=std::shared_ptr<map_t<string, var>>;
-	using name_space_t=std::shared_ptr<name_space_holder>;
-	using extension_t=std::shared_ptr<extension_holder>;
+	using namespace_t=std::shared_ptr<name_space>;
 	using istream=std::shared_ptr<std::istream>;
 	using ostream=std::shared_ptr<std::ostream>;
 
 	typedef void(*cs_exception_handler)(const lang_error &);
 
 	typedef void(*std_exception_handler)(const std::exception &);
-
-	typedef name_space *(*extension_entrance_t)(int *, cs_exception_handler, std_exception_handler);
 }

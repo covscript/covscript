@@ -22,10 +22,6 @@
 #include <covscript/instance.hpp>
 
 namespace cs {
-	void init(const array &);
-
-	void init(int, const char *[]);
-
 	std::string get_sdk_path();
 
 	std::string process_path(const std::string &raw)
@@ -50,4 +46,14 @@ namespace cs {
 		else
 			return process_path(get_sdk_path() + cs::path_separator + "imports");
 	}
+
+	array parse_cmd_args(int argc, const char* argv[])
+	{
+		cs::array arg;
+		for (std::size_t i = 0; i < argc; ++i)
+			arg.emplace_back(cs::var::make_constant<cs::string>(argv[i]));
+		return std::move(arg);
+	}
+
+	context_t create_context(const std::string&, const array&);
 }

@@ -20,24 +20,22 @@
 */
 #include <covscript/cni.hpp>
 
-static cs::extension iostream_ext;
-static cs::extension seekdir_ext;
-static cs::extension openmode_ext;
-static cs::extension istream_ext;
-static cs::extension ostream_ext;
-static cs::extension_t istream_ext_shared = cs::make_shared_namespace(istream_ext);
-static cs::extension_t ostream_ext_shared = cs::make_shared_namespace(ostream_ext);
+static cs::namespace_t iostream_ext=cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t seekdir_ext=cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t openmode_ext=cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t istream_ext=cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t ostream_ext=cs::make_shared_namespace<cs::name_space>();
 namespace cs_impl {
 	template<>
-	cs::extension_t &get_ext<cs::istream>()
+	cs::namespace_t &get_ext<cs::istream>()
 	{
-		return istream_ext_shared;
+		return istream_ext;
 	}
 
 	template<>
-	cs::extension_t &get_ext<cs::ostream>()
+	cs::namespace_t &get_ext<cs::ostream>()
 	{
-		return ostream_ext_shared;
+		return ostream_ext;
 	}
 
 #ifndef _MSC_VER
@@ -78,31 +76,46 @@ namespace iostream_cs_ext {
 
 	void setprecision(number pre)
 	{
-		output_precision = pre;
+		current_process->output_precision = pre;
 	}
 
 	void init()
 	{
-		iostream_ext
-		.add_var("istream", make_namespace(istream_ext_shared))
-		.add_var("ostream", make_namespace(ostream_ext_shared))
-		.add_var("seekdir", make_namespace(cs::make_shared_namespace(seekdir_ext)))
-		.add_var("openmode", make_namespace(cs::make_shared_namespace(openmode_ext)));
-		seekdir_ext
+		(*iostream_ext)
+		.add_var("istream", make_namespace(istream_ext))
+		.add_var("ostream", make_namespace(ostream_ext))
+		.add_var("seekdir", make_namespace(seekdir_ext))
+		.add_var("openmode", make_namespace(openmode_ext));
+		(*seekdir_ext)
 		.add_var("start", var::make_constant<std::ios_base::seekdir>(std::ios_base::beg))
 		.add_var("finish", var::make_constant<std::ios_base::seekdir>(std::ios_base::end))
 		.add_var("present", var::make_constant<std::ios_base::seekdir>(std::ios_base::cur));
-		openmode_ext
+		(*openmode_ext)
 		.add_var("in", var::make_constant<std::ios_base::openmode>(std::ios_base::in))
 		.add_var("out", var::make_constant<std::ios_base::openmode>(std::ios_base::out))
 		.add_var("app", var::make_constant<std::ios_base::openmode>(std::ios_base::app));
-		iostream_ext
+		(*iostream_ext)
 		.add_var("fstream", make_cni(fstream))
 		.add_var("setprecision", make_cni(setprecision));
 	}
 }
 namespace istream_cs_ext {
 	using namespace cs;
+
+	var parse_value(const std::string &str)
+	{
+		if (str == "true")
+			return true;
+		if (str == "false")
+			return false;
+		try {
+			return parse_number(str);
+		}
+		catch (...) {
+			return str;
+		}
+		return str;
+	}
 
 // Input Stream
 	char get(istream &in)
@@ -161,7 +174,7 @@ namespace istream_cs_ext {
 
 	void init()
 	{
-		istream_ext
+		(*istream_ext)
 		.add_var("get", make_cni(get))
 		.add_var("peek", make_cni(peek))
 		.add_var("unget", make_cni(unget))
@@ -220,7 +233,7 @@ namespace ostream_cs_ext {
 
 	void init()
 	{
-		ostream_ext
+		(*ostream_ext)
 		.add_var("put", make_cni(put))
 		.add_var("tell", make_cni(tell))
 		.add_var("seek", make_cni(seek))

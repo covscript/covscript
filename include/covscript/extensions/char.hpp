@@ -21,13 +21,12 @@
 #include <covscript/cni.hpp>
 #include <cctype>
 
-static cs::extension char_ext;
-static cs::extension_t char_ext_shared = cs::make_shared_namespace(char_ext);
+static cs::namespace_t char_ext = cs::make_shared_namespace<cs::name_space>();
 namespace cs_impl {
 	template<>
-	cs::extension_t &get_ext<char>()
+	cs::namespace_t &get_ext<char>()
 	{
-		return char_ext_shared;
+		return char_ext;
 	}
 }
 namespace char_cs_ext {
@@ -107,7 +106,7 @@ namespace char_cs_ext {
 
 	void init()
 	{
-		char_ext
+		(*char_ext)
 		.add_var("isalnum", make_cni(isalnum, true))
 		.add_var("isalpha", make_cni(isalpha, true))
 		.add_var("islower", make_cni(islower, true))

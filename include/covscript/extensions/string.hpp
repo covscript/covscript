@@ -21,13 +21,12 @@
 #include <covscript/cni.hpp>
 #include <cctype>
 
-static cs::extension string_ext;
-static cs::extension_t string_ext_shared = cs::make_shared_namespace(string_ext);
+static cs::namespace_t string_ext=cs::make_shared_namespace<cs::name_space>();
 namespace cs_impl {
 	template<>
-	cs::extension_t &get_ext<cs::string>()
+	cs::namespace_t &get_ext<cs::string>()
 	{
-		return string_ext_shared;
+		return string_ext;
 	}
 }
 namespace string_cs_ext {
@@ -156,7 +155,7 @@ namespace string_cs_ext {
 
 	void init()
 	{
-		string_ext
+		(*string_ext)
 		.add_var("append", make_cni(append, true))
 		.add_var("insert", make_cni(insert, true))
 		.add_var("erase", make_cni(erase, true))

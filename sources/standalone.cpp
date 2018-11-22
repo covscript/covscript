@@ -22,6 +22,7 @@
 
 std::string log_path;
 bool dump_ast = false;
+bool no_optimize = false;
 bool compile_only = false;
 bool wait_before_exit = false;
 
@@ -36,7 +37,7 @@ int covscript_args(int args_size, const char *args[])
 			expect_log_path = 2;
 		}
 		else if (expect_import_path == 1) {
-			cs::import_path += cs::path_delimiter + cs::process_path(args[index]);
+			cs::current_process->import_path += cs::path_delimiter + cs::process_path(args[index]);
 			expect_import_path = 2;
 		}
 		else if (args[index][0] == '-') {
@@ -44,6 +45,8 @@ int covscript_args(int args_size, const char *args[])
 				dump_ast = true;
 			else if (std::strcmp(args[index], "--compile-only") == 0 && !compile_only)
 				compile_only = true;
+			else if (std::strcmp(args[index], "--no-optimize") == 0 && !no_optimize)
+				no_optimize = true;
 			else if (std::strcmp(args[index], "--wait-before-exit") == 0 && !wait_before_exit)
 				wait_before_exit = true;
 			else if (std::strcmp(args[index], "--log-path") == 0 && expect_log_path == 0)
@@ -65,7 +68,7 @@ void covscript_main(int args_size, const char *args[])
 {
 	if (args_size > 1) {
 		int index = covscript_args(args_size, args);
-		cs::import_path += cs::path_delimiter + cs::get_import_path();
+		cs::current_process->import_path += cs::path_delimiter + cs::get_import_path();
 		if (index == args_size)
 			throw cs::fatal_error("no input file.");
 		std::string path = cs::process_path(args[index]);
@@ -73,19 +76,20 @@ void covscript_main(int args_size, const char *args[])
 		arg;
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
-		cs::init(arg);
-		cs::instance_type instance;
-		instance.compile(path);
+		cs::init_extensions();
+		cs::context_t context=cs::create_context(path, arg);
+		context->compiler->disable_optimizer = no_optimize;
+		context->instance->compile(path);
 		if (dump_ast) {
 			if (!log_path.empty()) {
 				std::ofstream out(::log_path);
-				instance.dump_ast(out);
+				context->instance->dump_ast(out);
 			}
 			else
-				instance.dump_ast(std::cout);
+				context->instance->dump_ast(std::cout);
 		}
 		if (!compile_only)
-			instance.interpret();
+			context->instance->interpret();
 	}
 	else
 		throw cs::fatal_error("no input file.");

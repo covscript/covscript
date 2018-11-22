@@ -1,6 +1,6 @@
 #pragma once
 /*
-* Covariant Script Extension Header
+* Covariant Script Extension
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -21,19 +21,16 @@
 #define CS_EXTENSIONS_MINIMAL
 
 #include <covscript/cni.hpp>
+#include <covscript/extension.hpp>
 #include <covscript/extensions/extensions.hpp>
 
-cs::extension *cs_extension();
+void cs_extension_main(cs::name_space&);
 
 extern "C"
 {
-	cs::extension *
-	__CS_EXTENSION__(int *ref, cs::cs_exception_handler ceh, cs::std_exception_handler seh)
+	void __CS_EXTENSION_MAIN__(cs::name_space* ext, cs::process_context* context)
 	{
-		cs::output_precision_ref = ref;
-		cs::exception_handler::cs_eh_callback = ceh;
-		cs::exception_handler::std_eh_callback = seh;
-		cs::init_extensions();
-		return cs_extension();
+		cs::current_process=context;
+		cs_extension_main(*ext);
 	}
 }
