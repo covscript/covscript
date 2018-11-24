@@ -20,11 +20,11 @@
 */
 #include <covscript/cni.hpp>
 
-static cs::namespace_t iostream_ext=cs::make_shared_namespace<cs::name_space>();
-static cs::namespace_t seekdir_ext=cs::make_shared_namespace<cs::name_space>();
-static cs::namespace_t openmode_ext=cs::make_shared_namespace<cs::name_space>();
-static cs::namespace_t istream_ext=cs::make_shared_namespace<cs::name_space>();
-static cs::namespace_t ostream_ext=cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t iostream_ext = cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t seekdir_ext = cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t openmode_ext = cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t istream_ext = cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t ostream_ext = cs::make_shared_namespace<cs::name_space>();
 namespace cs_impl {
 	template<>
 	cs::namespace_t &get_ext<cs::istream>()

@@ -20,7 +20,7 @@
 */
 #include <covscript/cni.hpp>
 
-static cs::namespace_t list_ext =cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t list_ext = cs::make_shared_namespace<cs::name_space>();
 namespace cs_impl {
 	template<>
 	cs::namespace_t &get_ext<cs::list>()
@@ -28,7 +28,7 @@ namespace cs_impl {
 		return list_ext;
 	}
 }
-static cs::namespace_t list_iterator_ext =cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t list_iterator_ext = cs::make_shared_namespace<cs::name_space>();
 namespace cs_impl {
 	template<>
 	cs::namespace_t &get_ext<cs::list::iterator>()

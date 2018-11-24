@@ -231,7 +231,8 @@ namespace cs {
 			break;
 		case token_types::id: {
 			const std::string &id = static_cast<token_id *>(token)->get_id();
-			if (!context->instance->storage.exist_record(id) && context->instance->storage.exist_record_in_struct(id)) {
+			if (!context->instance->storage.exist_record(id) &&
+			        context->instance->storage.exist_record_in_struct(id)) {
 				it.data() = new token_signal(signal_types::dot_);
 				tree.emplace_left_left(it, new token_id("this"));
 				tree.emplace_right_right(it, token);
@@ -437,10 +438,12 @@ namespace cs {
 		case token_types::id: {
 			const std::string &id = static_cast<token_id *>(token)->get_id();
 			if (context->instance->storage.exist_record(id)) {
-				if (context->instance->storage.var_exist_current(id) && context->instance->storage.get_var_current(id).is_protect())
+				if (context->instance->storage.var_exist_current(id) &&
+				        context->instance->storage.get_var_current(id).is_protect())
 					it.data() = new_value(context->instance->storage.get_var(id));
 			}
-			else if (!context->instance->storage.exist_record_in_struct(id) && context->instance->storage.var_exist(id) &&
+			else if (!context->instance->storage.exist_record_in_struct(id) &&
+			         context->instance->storage.var_exist(id) &&
 			         context->instance->storage.get_var(id).is_protect())
 				it.data() = new_value(context->instance->storage.get_var(id));
 			return;
@@ -645,7 +648,8 @@ namespace cs {
 		stream << " >";
 	}
 
-	void translator_type::translate(const std::deque<std::deque<token_base *>> &lines, std::deque<statement_base *> &statements, bool raw)
+	void translator_type::translate(const std::deque<std::deque<token_base *>> &lines,
+	                                std::deque<statement_base *> &statements, bool raw)
 	{
 		std::deque<std::deque<token_base *>> tmp;
 		method_base *method = nullptr;

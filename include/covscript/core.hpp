@@ -66,6 +66,7 @@ namespace cs {
 		int output_precision = 8;
 // Import Path
 		std::string import_path = ".";
+
 // Exception Handling
 		static void cs_defalt_exception_handler(const lang_error &e)
 		{
@@ -77,10 +78,11 @@ namespace cs {
 			throw forward_exception(e.what());
 		}
 
-		std_exception_handler std_eh_callback=&std_defalt_exception_handler;
-		cs_exception_handler cs_eh_callback=&cs_defalt_exception_handler;
+		std_exception_handler std_eh_callback = &std_defalt_exception_handler;
+		cs_exception_handler cs_eh_callback = &cs_defalt_exception_handler;
 	} this_process;
-	process_context* current_process=&this_process;
+
+	process_context *current_process = &this_process;
 // Path seperator and delimiter
 #ifdef COVSCRIPT_PLATFORM_WIN32
 	constexpr char path_separator = '\\';
@@ -122,7 +124,7 @@ namespace cs {
 
 		callable(const callable &) = default;
 
-		explicit callable(function_type func, types type=types::normal) : mFunc(std::move(func)), mType(type) {}
+		explicit callable(function_type func, types type = types::normal) : mFunc(std::move(func)), mType(type) {}
 
 		bool is_constant() const
 		{
@@ -500,20 +502,23 @@ namespace cs {
 	};
 
 	namespace dll_resources {
-		const char* dll_main_entrance = "__CS_EXTENSION_MAIN__";
-		typedef void(*dll_main_entrance_t)(name_space*, process_context*);
+		const char *dll_main_entrance = "__CS_EXTENSION_MAIN__";
+
+		typedef void(*dll_main_entrance_t)(name_space *, process_context *);
 	}
 
-	class extension final:public name_space {
+	class extension final : public name_space {
 		cov::dll m_dll;
 	public:
-		extension()=delete;
-		extension(const extension&)=delete;
-		explicit extension(const std::string& path):m_dll(path)
+		extension() = delete;
+
+		extension(const extension &) = delete;
+
+		explicit extension(const std::string &path) : m_dll(path)
 		{
 			using namespace dll_resources;
-			dll_main_entrance_t dll_main=reinterpret_cast<dll_main_entrance_t>(m_dll.get_address(dll_main_entrance));
-			if(dll_main!=nullptr) {
+			dll_main_entrance_t dll_main = reinterpret_cast<dll_main_entrance_t>(m_dll.get_address(dll_main_entrance));
+			if (dll_main != nullptr) {
 				dll_main(this, current_process);
 			}
 			else
@@ -527,7 +532,7 @@ namespace cs {
 	}
 
 	template<typename T, typename...ArgsT>
-	namespace_t make_shared_namespace(ArgsT&&...args)
+	namespace_t make_shared_namespace(ArgsT &&...args)
 	{
 		return std::make_shared<T>(std::forward<ArgsT>(args)...);
 	}

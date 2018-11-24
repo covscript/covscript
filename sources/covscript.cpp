@@ -97,13 +97,14 @@ namespace cs {
 	}
 
 #endif
-	context_t create_context(const std::string& env, const array &args)
+
+	context_t create_context(const std::string &env, const array &args)
 	{
-		context_t context=std::make_shared<context_type>();
-		context->file_path=env;
-		context->compiler=std::make_shared<compiler_type>(context);
-		context->instance=std::make_shared<instance_type>(context);
-		context->cmd_args=cs::var::make_constant<cs::array>(args);
+		context_t context = std::make_shared<context_type>();
+		context->file_path = env;
+		context->compiler = std::make_shared<compiler_type>(context);
+		context->instance = std::make_shared<instance_type>(context);
+		context->cmd_args = cs::var::make_constant<cs::array>(args);
 		// Init Grammars
 		(*context->compiler)
 		// Expression Grammar
@@ -204,8 +205,10 @@ namespace cs {
 		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string), string_ext)
 		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), list_ext)
 		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array), array_ext)
-		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair), pair_ext)
-		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, typeid(hash_map), hash_map_ext)
+		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
+		                  pair_ext)
+		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, typeid(hash_map),
+		                  hash_map_ext)
 		// Context
 		.add_buildin_var("context", var::make_constant<context_t>(context))
 		// Add Internal Functions to storage

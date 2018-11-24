@@ -22,7 +22,7 @@
 #include <covscript/cni.hpp>
 #include <cstdlib>
 
-static cs::namespace_t context_ext=cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t context_ext = cs::make_shared_namespace<cs::name_space>();
 namespace cs_impl {
 	template<>
 	cs::namespace_t &get_ext<cs::context_t>()
@@ -31,12 +31,12 @@ namespace cs_impl {
 	}
 
 	template<>
-	constexpr const char *get_name_of_type<cov::tree<cs::token_base*>>()
+	constexpr const char *get_name_of_type<cov::tree<cs::token_base *>>()
 	{
 		return "cs::expression";
 	}
 }
-static cs::namespace_t runtime_ext=cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t runtime_ext = cs::make_shared_namespace<cs::name_space>();
 namespace runtime_cs_ext {
 	using namespace cs;
 

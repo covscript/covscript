@@ -401,12 +401,12 @@ namespace cs {
 	template<typename T>
 	var make_cni(T &&func, bool constant = false)
 	{
-		return var::make_protect<callable>(cni(func), constant?callable::types::constant:callable::types::normal);
+		return var::make_protect<callable>(cni(func), constant ? callable::types::constant : callable::types::normal);
 	}
 
 	template<typename T, typename X>
 	var make_cni(T &&func, const cni_type<X> &type, bool constant = false)
 	{
-		return var::make_protect<callable>(cni(func), constant?callable::types::constant:callable::types::normal);
+		return var::make_protect<callable>(cni(func), constant ? callable::types::constant : callable::types::normal);
 	}
 }

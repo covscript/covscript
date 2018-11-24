@@ -22,8 +22,8 @@
 #include <covscript/cni.hpp>
 #include <algorithm>
 
-static cs::namespace_t math_ext=cs::make_shared_namespace<cs::name_space>();
-static cs::namespace_t math_const_ext=cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t math_ext = cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t math_const_ext = cs::make_shared_namespace<cs::name_space>();
 namespace math_cs_ext {
 	using namespace cs;
 
