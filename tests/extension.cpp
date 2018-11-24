@@ -33,8 +33,8 @@ double test1(double b) {
     return b - 0.1;
 }
 
-void cs_extension_main(cs::name_space& ns) {
+void cs_extension_main(cs::name_space &ns) {
     ns
-    .add_var("test0", make_cni(test0, true))
-    .add_var("test1", make_cni(test1, cni_type<number(number)>(), true));
+            .add_var("test0", make_cni(test0, true))
+            .add_var("test1", make_cni(test1, cni_type<number(number)>(), true));
 }

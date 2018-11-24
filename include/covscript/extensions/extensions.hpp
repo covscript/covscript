@@ -36,12 +36,12 @@
 #include <covscript/extensions/hash_map.hpp>
 
 namespace cs_impl {
-	static bool extensions_initiator=true;
+	static bool extensions_initiator = true;
 
 	void init_extensions()
 	{
-		if(extensions_initiator) {
-			extensions_initiator=false;
+		if (extensions_initiator) {
+			extensions_initiator = false;
 #ifndef CS_EXTENSIONS_MINIMAL
 			iostream_cs_ext::init();
 			istream_cs_ext::init();
