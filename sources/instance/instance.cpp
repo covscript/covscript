@@ -55,10 +55,10 @@ namespace cs {
 		for (auto &it:collection) {
 			std::string package_path = it + path_separator + name;
 			if (std::ifstream(package_path + ".csp")) {
-				context_t rt=std::make_shared<context_type>();
-				rt->compiler=context->compiler;
-				rt->instance=std::make_shared<instance_type>(context);
-				rt->cmd_args=context->cmd_args;
+				context_t rt = std::make_shared<context_type>();
+				rt->compiler = context->compiler;
+				rt->instance = std::make_shared<instance_type>(context);
+				rt->cmd_args = context->cmd_args;
 				rt->instance->compile(package_path + ".csp");
 				rt->instance->interpret();
 				if (rt->package_name.empty())
@@ -112,9 +112,11 @@ namespace cs {
 
 	void instance_type::dump_ast(std::ostream &stream)
 	{
-		stream << "< Covariant Script AST Dump >\n< BeginMetaData >\n< Version: " << current_process->version << " >\n< STD Version: "
+		stream << "< Covariant Script AST Dump >\n< BeginMetaData >\n< Version: " << current_process->version
+		       << " >\n< STD Version: "
 		       << current_process->std_version
-		       << " >\n< Output Precision: " << current_process->output_precision << " >\n< Import Path: \"" << current_process->import_path
+		       << " >\n< Output Precision: " << current_process->output_precision << " >\n< Import Path: \""
+		       << current_process->import_path
 		       << "\" >\n";
 #ifdef COVSCRIPT_PLATFORM_WIN32
 		stream << "< Platform: Win32 >\n";

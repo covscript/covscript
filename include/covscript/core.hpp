@@ -66,6 +66,7 @@ namespace cs {
 		int output_precision = 8;
 // Import Path
 		std::string import_path = ".";
+
 // Exception Handling
 		static void cs_defalt_exception_handler(const lang_error &e)
 		{
@@ -77,10 +78,11 @@ namespace cs {
 			throw forward_exception(e.what());
 		}
 
-		std_exception_handler std_eh_callback=&std_defalt_exception_handler;
-		cs_exception_handler cs_eh_callback=&cs_defalt_exception_handler;
+		std_exception_handler std_eh_callback = &std_defalt_exception_handler;
+		cs_exception_handler cs_eh_callback = &cs_defalt_exception_handler;
 	} this_process;
-	process_context* current_process=&this_process;
+
+	process_context *current_process = &this_process;
 // Path seperator and delimiter
 #ifdef COVSCRIPT_PLATFORM_WIN32
 	constexpr char path_separator = '\\';
@@ -122,7 +124,7 @@ namespace cs {
 
 		callable(const callable &) = default;
 
-		explicit callable(function_type func, types type=types::normal) : mFunc(std::move(func)), mType(type) {}
+		explicit callable(function_type func, types type = types::normal) : mFunc(std::move(func)), mType(type) {}
 
 		bool is_constant() const
 		{
@@ -500,20 +502,23 @@ namespace cs {
 	};
 
 	namespace dll_resources {
-		const char* dll_main_entrance = "__CS_EXTENSION_MAIN__";
-		typedef void(*dll_main_entrance_t)(name_space*, process_context*);
+		const char *dll_main_entrance = "__CS_EXTENSION_MAIN__";
+
+		typedef void(*dll_main_entrance_t)(name_space *, process_context *);
 	}
 
-	class extension final:public name_space {
+	class extension final : public name_space {
 		cov::dll m_dll;
 	public:
-		extension()=delete;
-		extension(const extension&)=delete;
-		explicit extension(const std::string& path):m_dll(path)
+		extension() = delete;
+
+		extension(const extension &) = delete;
+
+		explicit extension(const std::string &path) : m_dll(path)
 		{
 			using namespace dll_resources;
-			dll_main_entrance_t dll_main=reinterpret_cast<dll_main_entrance_t>(m_dll.get_address(dll_main_entrance));
-			if(dll_main!=nullptr) {
+			dll_main_entrance_t dll_main = reinterpret_cast<dll_main_entrance_t>(m_dll.get_address(dll_main_entrance));
+			if (dll_main != nullptr) {
 				dll_main(this, current_process);
 			}
 			else
@@ -527,7 +532,7 @@ namespace cs {
 	}
 
 	template<typename T, typename...ArgsT>
-	namespace_t make_shared_namespace(ArgsT&&...args)
+	namespace_t make_shared_namespace(ArgsT &&...args)
 	{
 		return std::make_shared<T>(std::forward<ArgsT>(args)...);
 	}
@@ -551,5 +556,182 @@ namespace cs {
 			}
 		}
 		return std::stold(str);
+	}
+}
+
+namespace cs_impl {
+// Detach
+	template<>
+	void detach<cs::pair>(cs::pair &val)
+	{
+		cs::copy_no_return(val.first);
+		cs::copy_no_return(val.second);
+	}
+
+	template<>
+	void detach<cs::list>(cs::list &val)
+	{
+		for (auto &it:val)
+			cs::copy_no_return(it);
+	}
+
+	template<>
+	void detach<cs::array>(cs::array &val)
+	{
+		for (auto &it:val)
+			cs::copy_no_return(it);
+	}
+
+	template<>
+	void detach<cs::hash_map>(cs::hash_map &val)
+	{
+		for (auto &it:val)
+			cs::copy_no_return(it.second);
+	}
+
+// To String
+	template<>
+	std::string to_string<cs::number>(const cs::number &val)
+	{
+		std::stringstream ss;
+		std::string str;
+		ss << std::setprecision(cs::current_process->output_precision) << val;
+		ss >> str;
+		return std::move(str);
+	}
+
+	template<>
+	std::string to_string<char>(const char &c)
+	{
+		return std::string(1, c);
+	}
+
+	template<>
+	std::string to_string<cs::type_id>(const cs::type_id &id)
+	{
+		if (id.type_hash != 0)
+			return cxx_demangle(id.type_idx.name()) + "_" + to_string(id.type_hash);
+		else
+			return cxx_demangle(id.type_idx.name());
+	}
+
+// To Integer
+	template<>
+	long to_integer<std::string>(const std::string &str)
+	{
+		for (auto &ch:str) {
+			if (!std::isdigit(ch))
+				throw cs::runtime_error("Wrong literal format.");
+		}
+		return std::stol(str);
+	}
+
+// Type name
+	template<>
+	constexpr const char *get_name_of_type<cs::context_t>()
+	{
+		return "cs::context";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::var>()
+	{
+		return "cs::var";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::number>()
+	{
+		return "cs::number";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::boolean>()
+	{
+		return "cs::boolean";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::pointer>()
+	{
+		return "cs::pointer";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<char>()
+	{
+		return "cs::char";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::string>()
+	{
+		return "cs::string";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::list>()
+	{
+		return "cs::list";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::array>()
+	{
+		return "cs::array";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::pair>()
+	{
+		return "cs::pair";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::hash_map>()
+	{
+		return "cs::hash_map";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::type>()
+	{
+		return "cs::type";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::namespace_t>()
+	{
+		return "cs::namespace";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::callable>()
+	{
+		return "cs::function";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::structure>()
+	{
+		return "cs::structure";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::lang_error>()
+	{
+		return "cs::exception";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::istream>()
+	{
+		return "cs::istream";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::ostream>()
+	{
+		return "cs::ostream";
 	}
 }

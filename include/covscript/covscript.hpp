@@ -47,7 +47,7 @@ namespace cs {
 			return process_path(get_sdk_path() + cs::path_separator + "imports");
 	}
 
-	array parse_cmd_args(int argc, const char* argv[])
+	array parse_cmd_args(int argc, const char *argv[])
 	{
 		cs::array arg;
 		for (std::size_t i = 0; i < argc; ++i)
@@ -55,5 +55,5 @@ namespace cs {
 		return std::move(arg);
 	}
 
-	context_t create_context(const std::string&, const array&);
+	context_t create_context(const std::string &, const array &);
 }

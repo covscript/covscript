@@ -27,12 +27,12 @@
 #include <cstdio>
 #include <limits>
 
-static cs::namespace_t system_ext=cs::make_shared_namespace<cs::name_space>();
-static cs::namespace_t console_ext=cs::make_shared_namespace<cs::name_space>();
-static cs::namespace_t file_ext=cs::make_shared_namespace<cs::name_space>();
-static cs::namespace_t path_ext=cs::make_shared_namespace<cs::name_space>();
-static cs::namespace_t path_type_ext=cs::make_shared_namespace<cs::name_space>();
-static cs::namespace_t path_info_ext=cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t system_ext = cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t console_ext = cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t file_ext = cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t path_ext = cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t path_type_ext = cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t path_info_ext = cs::make_shared_namespace<cs::name_space>();
 namespace console_cs_ext {
 	using namespace cs;
 	using namespace cs_impl;

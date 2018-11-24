@@ -21,7 +21,7 @@
 #include <covscript/cni.hpp>
 #include <cctype>
 
-static cs::namespace_t string_ext=cs::make_shared_namespace<cs::name_space>();
+static cs::namespace_t string_ext = cs::make_shared_namespace<cs::name_space>();
 namespace cs_impl {
 	template<>
 	cs::namespace_t &get_ext<cs::string>()

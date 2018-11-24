@@ -23,6 +23,7 @@
 namespace cs {
 	class translator_type final {
 		using data_type=std::pair<std::deque<token_base *>, method_base *>;
+
 		static bool compare(const token_base *a, const token_base *b)
 		{
 			if (a == nullptr)
@@ -34,12 +35,14 @@ namespace cs {
 			return !(a->get_type() == token_types::action) || static_cast<const token_action *>(a)->get_action() ==
 			       static_cast<const token_action *>(b)->get_action();
 		}
+
 		std::list<std::shared_ptr<data_type>> m_data;
 	public:
 		context_t context;
+
 		translator_type() = delete;
 
-		translator_type(context_t c):context(std::move(c)) {}
+		translator_type(context_t c) : context(std::move(c)) {}
 
 		translator_type(const translator_type &) = delete;
 
@@ -339,9 +342,9 @@ namespace cs {
 
 		compiler_type(context_t c) : context(std::move(c)), translator(context) {}
 
-		compiler_type(const compiler_type&)=delete;
+		compiler_type(const compiler_type &) = delete;
 
-		~compiler_type()=default;
+		~compiler_type() = default;
 
 		// Settings
 		bool disable_optimizer = false;
@@ -432,12 +435,12 @@ namespace cs {
 			return translator.match(raw);
 		}
 
-		void translate(const std::deque<std::deque<token_base *>> & ast, std::deque<statement_base *> & code)
+		void translate(const std::deque<std::deque<token_base *>> &ast, std::deque<statement_base *> &code)
 		{
 			translator.translate(ast, code, false);
 		}
 
-		void code_gen(const std::deque<std::deque<token_base *>> & ast, std::deque<statement_base *> & code)
+		void code_gen(const std::deque<std::deque<token_base *>> &ast, std::deque<statement_base *> &code)
 		{
 			translator.translate(ast, code, true);
 		}

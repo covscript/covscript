@@ -24,8 +24,9 @@
 namespace cs {
 	constexpr std::size_t fcall_stack_size = 1024;
 
-	class instance_type final:public runtime_type {
+	class instance_type final : public runtime_type {
 		friend class repl;
+
 		// Statements
 		std::deque<statement_base *> statements;
 	public:
@@ -39,8 +40,9 @@ namespace cs {
 		cov::static_stack<var, fcall_stack_size> fcall_stack;
 
 		// Constructor and destructor
-		instance_type()=delete;
-		instance_type(context_t c):context(std::move(c))
+		instance_type() = delete;
+
+		instance_type(context_t c) : context(std::move(c))
 		{
 			struct_builder::reset_counter();
 		}

@@ -1,11 +1,9 @@
 #include <covscript/covscript.hpp>
 #include <iostream>
 
-int main(int argv, const char *args[]) {
-    cs::init(argv, args);
-    cs::instance_type instance;
-    instance.context->file_path = "<TEST_ENV>";
-    cs::repl repl(instance.context);
+int main(int args, const char *argv[]) {
+    cs::context_t context = cs::create_context("<TEST_ENV>", cs::parse_cmd_args(args, argv));
+    cs::repl repl(context);
     std::string line;
     while (std::getline(std::cin, line))
         repl.exec(line);

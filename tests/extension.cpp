@@ -2,7 +2,6 @@
 #include <iostream>
 
 using namespace cs;
-static name_space my_ext;
 
 namespace cs_impl {
     template<>
@@ -34,9 +33,8 @@ double test1(double b) {
     return b - 0.1;
 }
 
-name_space *cs_extension() {
-    my_ext
+void cs_extension_main(cs::name_space &ns) {
+    ns
             .add_var("test0", make_cni(test0, true))
             .add_var("test1", make_cni(test1, cni_type<number(number)>(), true));
-    return &my_ext;
 }
