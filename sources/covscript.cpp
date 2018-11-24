@@ -100,6 +100,7 @@ namespace cs {
 
 	context_t create_context(const std::string &env, const array &args)
 	{
+		cs_impl::init_extensions();
 		context_t context = std::make_shared<context_type>();
 		context->file_path = env;
 		context->compiler = std::make_shared<compiler_type>(context);

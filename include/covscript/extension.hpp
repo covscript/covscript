@@ -30,6 +30,7 @@ extern "C"
 {
 	void __CS_EXTENSION_MAIN__(cs::name_space *ext, cs::process_context *context)
 	{
+		cs_impl::init_extensions();
 		cs::current_process = context;
 		cs_extension_main(*ext);
 	}
