@@ -21,13 +21,16 @@
 #define CS_EXTENSIONS_MINIMAL
 
 #include <covscript/cni.hpp>
-#include <covscript/extension.hpp>
 #include <covscript/extensions/extensions.hpp>
 
 void cs_extension_main(cs::name_space *);
 
 extern "C"
 {
+	int __CS_ABI_COMPATIBLE__()
+	{
+		return COVSCRIPT_ABI_VERSION;
+	}
 	void __CS_EXTENSION_MAIN__(cs::name_space *ext, cs::process_context *context)
 	{
 		cs_impl::init_extensions();
