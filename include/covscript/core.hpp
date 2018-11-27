@@ -502,8 +502,9 @@ namespace cs {
 	};
 
 	namespace dll_resources {
+		const char *dll_compatible_check = "__CS_ABI_COMPATIBLE__";
 		const char *dll_main_entrance = "__CS_EXTENSION_MAIN__";
-
+		typedef int(*dll_compatible_check_t)();
 		typedef void(*dll_main_entrance_t)(name_space *, process_context *);
 	}
 
@@ -517,12 +518,15 @@ namespace cs {
 		explicit extension(const std::string &path) : m_dll(path)
 		{
 			using namespace dll_resources;
+			dll_compatible_check_t dll_check=reinterpret_cast<dll_compatible_check_t>(m_dll.get_address(dll_compatible_check));
+			if (dll_check == nullptr||dll_check()!=COVSCRIPT_ABI_VERSION)
+				throw lang_error("Incompatible Covariant Script Extension.");
 			dll_main_entrance_t dll_main = reinterpret_cast<dll_main_entrance_t>(m_dll.get_address(dll_main_entrance));
 			if (dll_main != nullptr) {
 				dll_main(this, current_process);
 			}
 			else
-				throw lang_error("Incompatible DLL.");
+				throw lang_error("Broken Covariant Script Extension.");
 		}
 	};
 
