@@ -1,15 +1,15 @@
 import darwin
 function main()
-	if system.args.size()<2
+	if context.cmd_args().size()<2
 		system.out.println("Wrong size of arguments.")
 		return
 	end
 	darwin.load()
 	var pic=darwin.picture(0,0)
-	pic.load_from_file(system.args.at(1))
+	pic.load_from_file(context.cmd_args().at(1))
 	var head="Covariant Darwin Picture File Viewer 1.0"
 	var help="Q:Exit W:Up S:Down A:Left D:Right"
-	var info="File:\""+system.args[1]+"\" Width:"+to_string(pic.get_width())+"pix Height:"+to_string(pic.get_height())+"pix"
+	var info="File:\""+context.cmd_args()[1]+"\" Width:"+to_string(pic.get_width())+"pix Height:"+to_string(pic.get_height())+"pix"
 	var dpic=darwin.get_drawable()
 	var x=0
 	var y=0

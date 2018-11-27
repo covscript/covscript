@@ -124,7 +124,7 @@ namespace runtime_cs_ext {
 		.add_var("build", make_cni(build))
 		.add_var("solve", make_cni(solve))
 		.add_var("cmd_args", make_cni(cmd_args, true))
-		.add_var("dynamic_import", make_cni(advance_import, true));
+		.add_var("advance_import", make_cni(advance_import, true));
 		(*context_ext)
 		.add_var("build", make_cni(build))
 		.add_var("solve", make_cni(solve))

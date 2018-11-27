@@ -161,8 +161,8 @@ function start()
 	end
 end
 
-for i=1,i<system.args.size(),++i
-	switch system.args.at(i)
+for i=1,i<context.cmd_args().size(),++i
+	switch context.cmd_args().at(i)
 		case "--god-mode"
 			god_mode=true
 		end

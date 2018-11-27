@@ -49,18 +49,18 @@ function exit(id)
     broadcast("["+id+"@"+cilent_profile.at(id)->name+"] Left CovScript Chat Room.")
     cilent_profile.erase(id)
 end
-if system.args.size()!=3
+if context.cmd_args().size()!=3
     system.out.println("Argument syntax error.Usage: <method> <port>")
     system.exit(0)
 end
 var sock=new udp.socket
 sock.open_v4()
-switch system.args.at(1)
+switch context.cmd_args().at(1)
     case "local"
-        sock.bind(udp.endpoint("127.0.0.1",system.args.at(2).to_number()))
+        sock.bind(udp.endpoint("127.0.0.1",context.cmd_args().at(2).to_number()))
     end
     case "online"
-        sock.bind(udp.endpoint_v4(system.args.at(2).to_number()))
+        sock.bind(udp.endpoint_v4(context.cmd_args().at(2).to_number()))
     end
     default
         system.out.println("Argument syntax error.Usage: <method> <port>")

@@ -349,6 +349,13 @@ namespace cs {
 		// Settings
 		bool disable_optimizer = false;
 
+		// Context
+		void change_context(const context_t& c)
+		{
+			context=c;
+			translator.context=c;
+		}
+
 		// Metadata
 		void clear_metadata()
 		{

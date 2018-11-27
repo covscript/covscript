@@ -46,7 +46,7 @@ function gui()
     # Force disable the optimization to avoid
     # the problems in some devices which do not support the opengl.
     var ext_name="picasso"
-    var picasso=context.dynamic_import(runtime.get_import_path(),ext_name)
+    var picasso=context.advance_import(runtime.get_import_path(),ext_name)
     using picasso.imgui
     # About Window
     struct about_win extends picasso.message_box
@@ -298,38 +298,38 @@ function draw_separator()
     system.out.println("")
 end
 # Main Program
-if system.args.size()<2
+if context.cmd_args().size()<2
     system.out.println("Error: No command.")
     system.out.println("Enter \"--help\" to view help.")
     system.exit(-1)
 end
-switch system.args.at(1)
+switch context.cmd_args().at(1)
     default
         system.out.println("Unsupported Function.")
         system.exit(-1)
     end
     case "--install"
-        if system.args.size()!=3
+        if context.cmd_args().size()!=3
             system.out.println("Wrong syntax.")
             system.exit(-1)
         end
-        var file_name=get_file_name(clone(system.args.at(2)))
+        var file_name=get_file_name(clone(context.cmd_args().at(2)))
         if system.file.exists(path+system.path.separator+file_name)
             if !answer("Target exists.Overwrite?")
                 system.out.println("Installation aborted.")
                 system.exit(0)
             end
         end
-        system.file.copy(system.args.at(2),path+system.path.separator+file_name)
+        system.file.copy(context.cmd_args().at(2),path+system.path.separator+file_name)
         system.out.println("Installation succeed.")
     end
     case "--uninstall"
-        if system.args.size()!=3
+        if context.cmd_args().size()!=3
             system.out.println("Wrong syntax.")
             system.exit(-1)
         end
-        var extension_name=path+system.path.separator+system.args.at(2)+".cse"
-        var package_name=path+system.path.separator+system.args.at(2)+".csp"
+        var extension_name=path+system.path.separator+context.cmd_args().at(2)+".cse"
+        var package_name=path+system.path.separator+context.cmd_args().at(2)+".csp"
         if !system.file.remove(extension_name)&&!system.file.remove(package_name)
             system.out.println("Uninstall failed.")
             system.exit(-1)
