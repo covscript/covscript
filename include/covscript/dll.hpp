@@ -1,6 +1,6 @@
 #pragma once
 /*
-* Covariant Script Exception Extension
+* Covariant Script Extension DLL
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -19,25 +19,20 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/cni.hpp>
+#include <covscript/extension.hpp>
 
-static cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
-namespace cs_impl {
-	template<>
-	cs::namespace_t &get_ext<cs::lang_error>()
+void cs_extension_main(cs::name_space *);
+
+extern "C"
+{
+	int __CS_ABI_COMPATIBLE__()
 	{
-		return except_ext;
+		return COVSCRIPT_ABI_VERSION;
 	}
-}
-namespace except_cs_ext {
-	using namespace cs;
-
-	string what(const lang_error &le)
+	void __CS_EXTENSION_MAIN__(cs::name_space *ext, cs::process_context *context)
 	{
-		return le.what();
-	}
-
-	void init()
-	{
-		except_ext->add_var("what", make_cni(what));
+		cs_impl::init_extensions();
+		cs::current_process = context;
+		cs_extension_main(ext);
 	}
 }

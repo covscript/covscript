@@ -18,6 +18,7 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/codegen.hpp>
+#include <covscript/covscript.hpp>
 
 namespace cs {
 	statement_base *method_expression::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)

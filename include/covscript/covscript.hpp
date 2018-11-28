@@ -19,41 +19,16 @@
 * Github: https://github.com/mikecovlee
 * Website: http://covscript.org
 */
-#include <covscript/instance.hpp>
+#include <covscript/extension.hpp>
 
 namespace cs {
 	std::string get_sdk_path();
 
-	std::string process_path(const std::string &raw)
-	{
-		auto pos0 = raw.find('\"');
-		auto pos1 = raw.rfind('\"');
-		if (pos0 != std::string::npos) {
-			if (pos0 == pos1)
-				throw cs::fatal_error("argument syntax error.");
-			else
-				return raw.substr(pos0 + 1, pos1 - pos0 - 1);
-		}
-		else
-			return raw;
-	}
+	std::string process_path(const std::string &);
 
-	std::string get_import_path()
-	{
-		const char *import_path = std::getenv("CS_IMPORT_PATH");
-		if (import_path != nullptr)
-			return process_path(import_path);
-		else
-			return process_path(get_sdk_path() + cs::path_separator + "imports");
-	}
+	std::string get_import_path();
 
-	array parse_cmd_args(int argc, const char *argv[])
-	{
-		cs::array arg;
-		for (std::size_t i = 0; i < argc; ++i)
-			arg.emplace_back(cs::var::make_constant<cs::string>(argv[i]));
-		return std::move(arg);
-	}
+	array parse_cmd_args(int, const char *[]);
 
 	context_t create_context(const array &);
 

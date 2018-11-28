@@ -23,45 +23,9 @@
 #include <functional>
 
 // Name Demangle
-#ifdef _MSC_VER
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0501
-#endif
-#include <windows.h>
-#include <Dbghelp.h>
-#pragma comment(lib, "DbgHelp")
 namespace cs_impl {
-	std::string cxx_demangle(const char* name)
-	{
-		char buffer[1024];
-		DWORD length = UnDecorateSymbolName(name, buffer, sizeof(buffer), 0);
-		if (length > 0)
-			return std::string(buffer, length);
-		else
-			return name;
-	}
+	std::string cxx_demangle(const char *);
 }
-#elif defined __GNUC__
-
-#include <cxxabi.h>
-
-namespace cs_impl {
-	std::string cxx_demangle(const char *name)
-	{
-		char buffer[1024] = {0};
-		size_t size = sizeof(buffer);
-		int status;
-		char *ret = abi::__cxa_demangle(name, buffer, &size, &status);
-		if (ret != nullptr)
-			return std::string(ret);
-		else
-			return name;
-	}
-}
-#endif
 
 namespace cs_impl {
 // Type support auto-detection(SFINAE)
@@ -244,32 +208,32 @@ namespace cs_impl {
 	* But if you do not have specialization, CovScript can also automatically detect related functions.
 	*/
 	template<typename T>
-	bool compare(const T &a, const T &b)
+	static bool compare(const T &a, const T &b)
 	{
 		return compare_if<T, compare_helper<T>::value>::compare(a, b);
 	}
 
 	template<typename T>
-	std::string to_string(const T &val)
+	static std::string to_string(const T &val)
 	{
 		return to_string_if<T, to_string_helper<T>::value>::to_string(val);
 	}
 
 	template<typename T>
-	long to_integer(const T &val)
+	static long to_integer(const T &val)
 	{
 		return to_integer_if<T, cov::castable<T, long>::value>::to_integer(val);
 	}
 
 	template<typename T>
-	std::size_t hash(const T &val)
+	static std::size_t hash(const T &val)
 	{
 		using type=typename hash_enum_resolver<T, std::is_enum<T>::value>::type;
 		return type::hash(val);
 	}
 
 	template<typename T>
-	void detach(T &val)
+	static void detach(T &val)
 	{
 		// Do something if you want when data is copying.
 	}
@@ -281,7 +245,7 @@ namespace cs_impl {
 	}
 
 	template<typename T>
-	cs::namespace_t &get_ext()
+	static cs::namespace_t &get_ext()
 	{
 		throw cs::runtime_error("Target type does not support extensions(Default Extension Function Detected).");
 	}

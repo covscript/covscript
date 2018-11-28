@@ -18,9 +18,10 @@
 * Github: https://github.com/mikecovlee
 * Website: http://covscript.org
 */
+#include <covscript/cni.hpp>
+#include <covscript/codegen.hpp>
 #include <covscript/covscript.hpp>
 #include <covscript/console/conio.hpp>
-#include <covscript/extensions/extensions.hpp>
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
 
@@ -28,7 +29,7 @@
 
 #pragma comment(lib, "shell32.lib")
 #endif
-
+/*
 // Compiler
 #include "compiler/compiler.cpp"
 #include "compiler/lexer.cpp"
@@ -39,9 +40,215 @@
 #include "instance/runtime.cpp"
 #include "instance/instance.cpp"
 #include "instance/statement.cpp"
+*/
+namespace cov{
+	bool object::show_warning = true;
+}
+#ifdef _MSC_VER
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0501
+#endif
+#include <windows.h>
+#include <Dbghelp.h>
+#pragma comment(lib, "DbgHelp")
+namespace cs_impl {
+	std::string cxx_demangle(const char* name)
+	{
+		char buffer[1024];
+		DWORD length = UnDecorateSymbolName(name, buffer, sizeof(buffer), 0);
+		if (length > 0)
+			return std::string(buffer, length);
+		else
+			return name;
+	}
+}
+#elif defined __GNUC__
 
+#include <cxxabi.h>
+
+namespace cs_impl {
+	std::string cxx_demangle(const char *name)
+	{
+		char buffer[1024] = {0};
+		size_t size = sizeof(buffer);
+		int status;
+		char *ret = abi::__cxa_demangle(name, buffer, &size, &status);
+		if (ret != nullptr)
+			return std::string(ret);
+		else
+			return name;
+	}
+}
+#endif
+
+namespace cs_impl {
+	cov::allocator<any::proxy, default_allocate_buffer_size, default_allocator_provider> any::allocator;
+}
+std::ostream &operator<<(std::ostream &out, const cs_impl::any &val)
+{
+	out << val.to_string();
+	return out;
+}
+cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t array_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t array_iterator_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t char_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t math_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t math_const_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t list_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t list_iterator_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t hash_map_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t pair_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t context_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t runtime_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t string_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t iostream_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t seekdir_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t openmode_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t istream_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t ostream_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t system_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t console_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t file_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t path_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t path_type_ext = cs::make_shared_namespace<cs::name_space>();
+cs::namespace_t path_info_ext = cs::make_shared_namespace<cs::name_space>();
 namespace cs {
-// Internal Functions
+	process_context this_process;
+	process_context *current_process=&this_process;
+
+	std::size_t struct_builder::mCount = 0;
+
+	void copy_no_return(var &val)
+	{
+		if (!val.is_rvalue()) {
+			val.clone();
+			val.detach();
+		}
+		else
+			val.mark_as_rvalue(false);
+	}
+
+	var copy(var val)
+	{
+		if (!val.is_rvalue()) {
+			val.clone();
+			val.detach();
+		}
+		else
+			val.mark_as_rvalue(false);
+		return val;
+	}
+
+	var lvalue(const var &val)
+	{
+		val.mark_as_rvalue(false);
+		return val;
+	}
+
+	var rvalue(const var &val)
+	{
+		val.mark_as_rvalue(true);
+		return val;
+	}
+
+	var try_move(const var &val)
+	{
+		val.try_move();
+		return val;
+	}
+
+	var make_namespace(const namespace_t &ns)
+	{
+		return var::make_protect<namespace_t>(ns);
+	}
+
+	var &type::get_var(const std::string &name) const
+	{
+		if (extensions.get() != nullptr)
+			return extensions->get_var(name);
+		else
+			throw runtime_error("Type does not support the extension");
+	}
+
+	number parse_number(const std::string &str)
+	{
+		int point_count = 0;
+		for (auto &ch:str) {
+			if (!std::isdigit(ch)) {
+				if (ch != '.' || ++point_count > 1)
+					throw runtime_error("Wrong literal format.");
+			}
+		}
+		return std::stold(str);
+	}
+
+	garbage_collector<token_base> token_base::gc;
+
+	garbage_collector<statement_base> statement_base::gc;
+
+	garbage_collector<method_base> method_base::gc;
+
+#ifdef COVSCRIPT_PLATFORM_WIN32
+
+	std::string get_sdk_path()
+	{
+#ifdef COVSCRIPT_HOME
+		return COVSCRIPT_HOME;
+#else
+		CHAR path[MAX_PATH];
+		SHGetFolderPathA(nullptr, CSIDL_PERSONAL, nullptr, SHGFP_TYPE_CURRENT, path);
+		return std::strcat(path, "\\CovScript");
+#endif
+	}
+
+#else
+
+	std::string get_sdk_path()
+	{
+#ifdef COVSCRIPT_HOME
+		return COVSCRIPT_HOME;
+#else
+		return "/usr/share/covscript";
+#endif
+	}
+
+#endif
+	std::string process_path(const std::string &raw)
+	{
+		auto pos0 = raw.find('\"');
+		auto pos1 = raw.rfind('\"');
+		if (pos0 != std::string::npos) {
+			if (pos0 == pos1)
+				throw cs::fatal_error("argument syntax error.");
+			else
+				return raw.substr(pos0 + 1, pos1 - pos0 - 1);
+		}
+		else
+			return raw;
+	}
+
+	std::string get_import_path()
+	{
+		const char *import_path = std::getenv("CS_IMPORT_PATH");
+		if (import_path != nullptr)
+			return process_path(import_path);
+		else
+			return process_path(get_sdk_path() + cs::path_separator + "imports");
+	}
+
+	array parse_cmd_args(int argc, const char *argv[])
+	{
+		cs::array arg;
+		for (std::size_t i = 0; i < argc; ++i)
+			arg.emplace_back(cs::var::make_constant<cs::string>(argv[i]));
+		return std::move(arg);
+	}
+
+	// Internal Functions
 	number to_integer(const var &val)
 	{
 		return val.to_integer();
@@ -71,32 +278,6 @@ namespace cs {
 	{
 		a.swap(b, true);
 	}
-
-#ifdef COVSCRIPT_PLATFORM_WIN32
-
-	std::string get_sdk_path()
-	{
-#ifdef COVSCRIPT_HOME
-		return COVSCRIPT_HOME;
-#else
-		CHAR path[MAX_PATH];
-		SHGetFolderPathA(nullptr, CSIDL_PERSONAL, nullptr, SHGFP_TYPE_CURRENT, path);
-		return std::strcat(path, "\\CovScript");
-#endif
-	}
-
-#else
-
-	std::string get_sdk_path()
-	{
-#ifdef COVSCRIPT_HOME
-		return COVSCRIPT_HOME;
-#else
-		return "/usr/share/covscript";
-#endif
-	}
-
-#endif
 
 	context_t create_context(const array &args)
 	{

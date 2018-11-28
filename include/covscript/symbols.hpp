@@ -566,10 +566,4 @@ namespace cs {
 
 		virtual statement_base *translate(const context_t&, const std::deque<std::deque<token_base *>> &) = 0;
 	};
-
-	garbage_collector<token_base> token_base::gc;
-
-	garbage_collector<statement_base> statement_base::gc;
-
-	garbage_collector<method_base> method_base::gc;
 }

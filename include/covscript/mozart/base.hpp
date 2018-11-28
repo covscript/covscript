@@ -115,6 +115,4 @@ namespace cov {
 			return this == ptr;
 		}
 	};
-
-	bool object::show_warning = true;
 }

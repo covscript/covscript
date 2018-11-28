@@ -20,6 +20,7 @@
 #include <covscript/compiler.hpp>
 #include <covscript/codegen.hpp>
 #include <covscript/statement.hpp>
+#include <covscript/covscript.hpp>
 
 namespace cs {
 	bool token_signal::dump(std::ostream &o) const

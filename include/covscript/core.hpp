@@ -80,9 +80,10 @@ namespace cs {
 
 		std_exception_handler std_eh_callback = &std_defalt_exception_handler;
 		cs_exception_handler cs_eh_callback = &cs_defalt_exception_handler;
-	} this_process;
+	};
 
-	process_context *current_process = &this_process;
+	extern process_context this_process;
+	extern process_context *current_process;
 // Path seperator and delimiter
 #ifdef COVSCRIPT_PLATFORM_WIN32
 	constexpr char path_separator = '\\';
@@ -192,49 +193,20 @@ namespace cs {
 	};
 
 // Copy
-	void copy_no_return(var &val)
-	{
-		if (!val.is_rvalue()) {
-			val.clone();
-			val.detach();
-		}
-		else
-			val.mark_as_rvalue(false);
-	}
+	void copy_no_return(var &);
 
-	var copy(var val)
-	{
-		if (!val.is_rvalue()) {
-			val.clone();
-			val.detach();
-		}
-		else
-			val.mark_as_rvalue(false);
-		return val;
-	}
+	var copy(var);
 
 // Move Semantics
-	var lvalue(const var &val)
-	{
-		val.mark_as_rvalue(false);
-		return val;
-	}
+	var lvalue(const var &);
 
-	var rvalue(const var &val)
-	{
-		val.mark_as_rvalue(true);
-		return val;
-	}
+	var rvalue(const var &);
 
-	var try_move(const var &val)
-	{
-		val.try_move();
-		return val;
-	}
+	var try_move(const var &);
 
 // Invoke
 	template<typename... ArgsT>
-	var invoke(const var &func, ArgsT &&... _args)
+	static var invoke(const var &func, ArgsT &&... _args)
 	{
 		if (func.type() == typeid(callable)) {
 			vector args{std::forward<ArgsT>(_args)...};
@@ -427,8 +399,6 @@ namespace cs {
 		var operator()();
 	};
 
-	std::size_t struct_builder::mCount = 0;
-
 // Internal Garbage Collection
 	template<typename T>
 	class garbage_collector final {
@@ -502,8 +472,8 @@ namespace cs {
 	};
 
 	namespace dll_resources {
-		const char *dll_compatible_check = "__CS_ABI_COMPATIBLE__";
-		const char *dll_main_entrance = "__CS_EXTENSION_MAIN__";
+		constexpr char dll_compatible_check[] = "__CS_ABI_COMPATIBLE__";
+		constexpr char dll_main_entrance[] = "__CS_EXTENSION_MAIN__";
 
 		typedef int(*dll_compatible_check_t)();
 
@@ -533,37 +503,16 @@ namespace cs {
 		}
 	};
 
-	var make_namespace(const namespace_t &ns)
-	{
-		return var::make_protect<namespace_t>(ns);
-	}
+	var make_namespace(const namespace_t &);
 
 	template<typename T, typename...ArgsT>
-	namespace_t make_shared_namespace(ArgsT &&...args)
+	static namespace_t make_shared_namespace(ArgsT &&...args)
 	{
 		return std::make_shared<T>(std::forward<ArgsT>(args)...);
 	}
 
-	var &type::get_var(const std::string &name) const
-	{
-		if (extensions.get() != nullptr)
-			return extensions->get_var(name);
-		else
-			throw runtime_error("Type does not support the extension");
-	}
-
 // Literal format
-	number parse_number(const std::string &str)
-	{
-		int point_count = 0;
-		for (auto &ch:str) {
-			if (!std::isdigit(ch)) {
-				if (ch != '.' || ++point_count > 1)
-					throw runtime_error("Wrong literal format.");
-			}
-		}
-		return std::stold(str);
-	}
+	number parse_number(const std::string &);
 }
 
 namespace cs_impl {

@@ -17,7 +17,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <covscript/runtime.hpp>
+#include <covscript/covscript.hpp>
 
 namespace cs {
 	var runtime_type::parse_add(const var &a, const var &b)
