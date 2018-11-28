@@ -23,7 +23,7 @@ function set_flag() {
 
 DEFAULT_PREFIX="/usr"
 DEFAULT_CXXFLAGS="-std=c++11 -I ../include -s -O3"
-DEFAULT_LDFLAGS="-ldl"
+DEFAULT_LDFLAGS="-L./lib -lcovscript -ldl"
 DEFAULT_CXX=g++
 
 set_flag CXX $DEFAULT_CXX
@@ -45,7 +45,11 @@ mkdir -p build
 cd build
 mkdir -p bin
 mkdir -p lib
-$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -shared -fPIC ../sources/covscript.cpp $LDFLAGS -o ./lib/libcovscript.so &
-$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIE ../sources/standalone.cpp $LDFLAGS -o ./bin/cs &
-$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIE ../sources/repl.cpp $LDFLAGS -o ./bin/cs_repl &
+$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIC -c ../sources/instance/*.cpp &
+$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIC -c ../sources/compiler/*.cpp &
+$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIC -c ../sources/*.cpp &
+wait
+ar -ro ./lib/libcovscript.a *.o
+$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIE standalone.o covscript.o $LDFLAGS -o ./bin/cs &
+$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIE repl.o covscript.o $LDFLAGS -o ./bin/cs_repl &
 wait
