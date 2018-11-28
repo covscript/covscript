@@ -58,7 +58,7 @@ namespace cs {
 				try {
 					rt->instance->compile(package_path + ".csp");
 				}
-				catch(...) {
+				catch (...) {
 					context->compiler->swap_context(context);
 					throw;
 				}

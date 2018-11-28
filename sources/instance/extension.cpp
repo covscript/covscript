@@ -4,13 +4,8 @@
 #include <covscript/mozart/random.hpp>
 #include <covscript/mozart/timer.hpp>
 #include <covscript/cni.hpp>
-#include <algorithm>
 #include <iostream>
-#include <fstream>
-#include <cstdlib>
-#include <cstdio>
-#include <limits>
-#include <cctype>
+
 namespace array_cs_ext {
 	using namespace cs;
 

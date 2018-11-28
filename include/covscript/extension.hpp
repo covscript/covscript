@@ -19,6 +19,7 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/instance.hpp>
+
 extern cs::namespace_t except_ext;
 extern cs::namespace_t array_ext;
 extern cs::namespace_t array_iterator_ext;
@@ -43,7 +44,7 @@ extern cs::namespace_t file_ext;
 extern cs::namespace_t path_ext;
 extern cs::namespace_t path_type_ext;
 extern cs::namespace_t path_info_ext;
-namespace path_cs_ext{
+namespace path_cs_ext {
 	struct path_info final {
 		std::string name;
 		int type;
@@ -59,36 +60,43 @@ namespace cs_impl {
 	{
 		return except_ext;
 	}
+
 	template<>
 	cs::namespace_t &get_ext<cs::array>()
 	{
 		return array_ext;
 	}
+
 	template<>
 	cs::namespace_t &get_ext<cs::array::iterator>()
 	{
 		return array_iterator_ext;
 	}
+
 	template<>
 	constexpr const char *get_name_of_type<cs::array::iterator>()
 	{
 		return "cs::array::iterator";
 	}
+
 	template<>
 	cs::namespace_t &get_ext<char>()
 	{
 		return char_ext;
 	}
+
 	template<>
 	cs::namespace_t &get_ext<cs::hash_map>()
 	{
 		return hash_map_ext;
 	}
+
 	template<>
 	cs::namespace_t &get_ext<cs::list>()
 	{
 		return list_ext;
 	}
+
 	template<>
 	cs::namespace_t &get_ext<cs::list::iterator>()
 	{
@@ -100,11 +108,13 @@ namespace cs_impl {
 	{
 		return "cs::list::iterator";
 	}
+
 	template<>
 	cs::namespace_t &get_ext<cs::pair>()
 	{
 		return pair_ext;
 	}
+
 	template<>
 	cs::namespace_t &get_ext<cs::istream>()
 	{
@@ -132,26 +142,31 @@ namespace cs_impl {
 	}
 
 #endif
+
 	template<>
 	cs::namespace_t &get_ext<cs::context_t>()
 	{
 		return context_ext;
 	}
+
 	template<>
 	constexpr const char *get_name_of_type<cov::tree<cs::token_base *>>()
 	{
 		return "cs::expression";
 	}
+
 	template<>
 	cs::namespace_t &get_ext<cs::string>()
 	{
 		return string_ext;
 	}
+
 	template<>
 	cs::namespace_t &get_ext<path_cs_ext::path_info>()
 	{
 		return path_info_ext;
 	}
+
 	template<>
 	constexpr const char *get_name_of_type<path_cs_ext::path_info>()
 	{

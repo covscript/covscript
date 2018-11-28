@@ -19,8 +19,6 @@
 */
 #include <covscript/compiler.hpp>
 #include <covscript/codegen.hpp>
-#include <covscript/statement.hpp>
-#include <covscript/covscript.hpp>
 
 namespace cs {
 	bool token_signal::dump(std::ostream &o) const
@@ -649,7 +647,7 @@ namespace cs {
 		stream << " >";
 	}
 
-	void translator_type::translate(const context_t& context, const std::deque<std::deque<token_base *>> &lines,
+	void translator_type::translate(const context_t &context, const std::deque<std::deque<token_base *>> &lines,
 	                                std::deque<statement_base *> &statements, bool raw)
 	{
 		std::deque<std::deque<token_base *>> tmp;

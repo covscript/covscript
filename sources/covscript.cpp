@@ -21,7 +21,6 @@
 #include <covscript/cni.hpp>
 #include <covscript/codegen.hpp>
 #include <covscript/covscript.hpp>
-#include <covscript/console/conio.hpp>
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
 
@@ -41,7 +40,7 @@
 #include "instance/instance.cpp"
 #include "instance/statement.cpp"
 */
-namespace cov{
+namespace cov {
 	bool object::show_warning = true;
 }
 #ifdef _MSC_VER
@@ -87,11 +86,13 @@ namespace cs_impl {
 namespace cs_impl {
 	cov::allocator<any::proxy, default_allocate_buffer_size, default_allocator_provider> any::allocator;
 }
+
 std::ostream &operator<<(std::ostream &out, const cs_impl::any &val)
 {
 	out << val.to_string();
 	return out;
 }
+
 cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
 cs::namespace_t array_ext = cs::make_shared_namespace<cs::name_space>();
 cs::namespace_t array_iterator_ext = cs::make_shared_namespace<cs::name_space>();
@@ -118,7 +119,7 @@ cs::namespace_t path_type_ext = cs::make_shared_namespace<cs::name_space>();
 cs::namespace_t path_info_ext = cs::make_shared_namespace<cs::name_space>();
 namespace cs {
 	process_context this_process;
-	process_context *current_process=&this_process;
+	process_context *current_process = &this_process;
 
 	std::size_t struct_builder::mCount = 0;
 
@@ -217,6 +218,7 @@ namespace cs {
 	}
 
 #endif
+
 	std::string process_path(const std::string &raw)
 	{
 		auto pos0 = raw.find('\"');
@@ -248,7 +250,7 @@ namespace cs {
 		return std::move(arg);
 	}
 
-	// Internal Functions
+// Internal Functions
 	number to_integer(const var &val)
 	{
 		return val.to_integer();

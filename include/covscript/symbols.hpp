@@ -562,8 +562,8 @@ namespace cs {
 
 		virtual statement_types get_target_type() const noexcept = 0;
 
-		virtual void preprocess(const context_t&, const std::deque<std::deque<token_base *>> &) {}
+		virtual void preprocess(const context_t &, const std::deque<std::deque<token_base *>> &) {}
 
-		virtual statement_base *translate(const context_t&, const std::deque<std::deque<token_base *>> &) = 0;
+		virtual statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) = 0;
 	};
 }

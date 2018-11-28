@@ -75,7 +75,8 @@ namespace cs {
 			return stack.front()->second;
 		}
 
-		void translate(const context_t&, const std::deque<std::deque<token_base *>> &, std::deque<statement_base *> &, bool);
+		void translate(const context_t &, const std::deque<std::deque<token_base *>> &, std::deque<statement_base *> &,
+		               bool);
 	};
 
 	class compiler_type final {

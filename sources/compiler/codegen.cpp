@@ -18,16 +18,16 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/codegen.hpp>
-#include <covscript/covscript.hpp>
 
 namespace cs {
-	statement_base *method_expression::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *
+	method_expression::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_expression(static_cast<token_expr *>(raw.front().front())->get_tree(), context,
 		                                raw.front().back());
 	}
 
-	void method_import::preprocess(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	void method_import::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
@@ -53,12 +53,14 @@ namespace cs {
 		mResult = new statement_constant(var_list, context, raw.front().back());
 	}
 
-	statement_base *method_import::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *
+	method_import::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		return mResult;
 	}
 
-	statement_base *method_package::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *
+	method_package::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		if (!context->package_name.empty())
 			throw runtime_error("Redefinition of package");
@@ -67,7 +69,7 @@ namespace cs {
 		return nullptr;
 	}
 
-	void method_involve::preprocess(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	void method_involve::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_value *vptr = dynamic_cast<token_value *>(tree.root().data());
@@ -83,12 +85,13 @@ namespace cs {
 			mResult = new statement_involve(tree, false, context, raw.front().back());
 	}
 
-	statement_base *method_involve::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *
+	method_involve::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		return mResult;
 	}
 
-	void method_var::preprocess(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	void method_var::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
@@ -106,7 +109,7 @@ namespace cs {
 		}
 	}
 
-	statement_base *method_var::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_var::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
@@ -126,7 +129,7 @@ namespace cs {
 		return new statement_var(dvp_list, context, raw.front().back());
 	}
 
-	void method_constant::preprocess(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	void method_constant::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
@@ -152,24 +155,26 @@ namespace cs {
 		mResult = new statement_constant(var_list, context, raw.front().back());
 	}
 
-	statement_base *method_constant::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *
+	method_constant::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		return mResult;
 	}
 
-	statement_base *method_end::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_end::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_end;
 	}
 
-	statement_base *method_block::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_block::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		return new statement_block(body, context, raw.front().back());
 	}
 
-	statement_base *method_namespace::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *
+	method_namespace::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
@@ -182,7 +187,7 @@ namespace cs {
 		                               context, raw.front().back());
 	}
 
-	statement_base *method_if::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_if::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		bool have_else = false;
 		std::deque<statement_base *> body;
@@ -230,18 +235,19 @@ namespace cs {
 			return new statement_if(tree, body, context, raw.front().back());
 	}
 
-	void method_else::preprocess(const context_t& context, const std::deque<std::deque<token_base *>> &)
+	void method_else::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &)
 	{
 		context->instance->storage.clear_domain();
 		context->instance->storage.clear_set();
 	}
 
-	statement_base *method_else::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_else::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_else;
 	}
 
-	statement_base *method_switch::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *
+	method_switch::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
@@ -275,7 +281,7 @@ namespace cs {
 		                            raw.front().back());
 	}
 
-	statement_base *method_case::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_case::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data()->get_type() != token_types::value) {
@@ -289,14 +295,15 @@ namespace cs {
 		                          raw.front().back());
 	}
 
-	statement_base *method_default::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *
+	method_default::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		return new statement_default(body, context, raw.front().back());
 	}
 
-	statement_base *method_while::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_while::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
@@ -313,12 +320,12 @@ namespace cs {
 			                           raw.front().back());
 	}
 
-	statement_base *method_until::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_until::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_until(static_cast<token_expr *>(raw.front().at(1)), context, raw.front().back());
 	}
 
-	statement_base *method_loop::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_loop::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
@@ -340,7 +347,7 @@ namespace cs {
 			return new statement_loop(nullptr, body, context, raw.front().back());
 	}
 
-	void method_for::preprocess(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	void method_for::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
@@ -355,7 +362,7 @@ namespace cs {
 		context->instance->storage.add_record(dvp.id);
 	}
 
-	statement_base *method_for::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_for::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
@@ -364,7 +371,8 @@ namespace cs {
 		return new statement_for(parallel_list, body, context, raw.front().back());
 	}
 
-	statement_base *method_for_do::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *
+	method_for_do::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
@@ -380,7 +388,7 @@ namespace cs {
 		}, context, raw.front().back());
 	}
 
-	void method_foreach::preprocess(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	void method_foreach::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_signal *sig = dynamic_cast<token_signal *>(t.root().data());
@@ -393,7 +401,8 @@ namespace cs {
 		context->instance->storage.add_record(static_cast<token_id *>(t.root().left().data())->get_id());
 	}
 
-	statement_base *method_foreach::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *
+	method_foreach::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		const std::string &it = static_cast<token_id *>(t.root().left().data())->get_id();
@@ -402,7 +411,8 @@ namespace cs {
 		return new statement_foreach(it, cov::tree<token_base *>(t.root().right()), body, context, raw.front().back());
 	}
 
-	statement_base *method_foreach_do::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *
+	method_foreach_do::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_signal *sig = dynamic_cast<token_signal *>(t.root().data());
@@ -422,17 +432,19 @@ namespace cs {
 		raw.front().back());
 	}
 
-	statement_base *method_break::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_break::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_break(context, raw.front().back());
 	}
 
-	statement_base *method_continue::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *
+	method_continue::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_continue(context, raw.front().back());
 	}
 
-	statement_base *method_function::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *
+	method_function::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
@@ -466,25 +478,28 @@ namespace cs {
 		return new statement_function(name, args, body, raw.front().size() == 4, context, raw.front().back());
 	}
 
-	statement_base *method_return::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *
+	method_return::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_return(static_cast<token_expr *>(raw.front().at(1))->get_tree(), context,
 		                            raw.front().back());
 	}
 
-	statement_base *method_return_no_value::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *
+	method_return_no_value::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> tree;
 		tree.emplace_root_left(tree.root(), new token_value(null_pointer));
 		return new statement_return(tree, context, raw.front().back());
 	}
 
-	void method_struct::preprocess(const context_t& context, const std::deque<std::deque<token_base *>> &)
+	void method_struct::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &)
 	{
 		context->instance->storage.mark_set_as_struct();
 	}
 
-	statement_base *method_struct::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *
+	method_struct::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
@@ -520,7 +535,7 @@ namespace cs {
 			return new statement_struct(name, cov::tree<token_base *>(), body, context, raw.front().back());
 	}
 
-	statement_base *method_try::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_try::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
@@ -543,7 +558,7 @@ namespace cs {
 		return new statement_try(name, tbody, cbody, context, raw.front().back());
 	}
 
-	statement_base *method_catch::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_catch::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
@@ -553,7 +568,7 @@ namespace cs {
 		return new statement_catch(static_cast<token_id *>(t.root().data())->get_id(), context, raw.front().back());
 	}
 
-	statement_base *method_throw::translate(const context_t& context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_throw::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_throw(static_cast<token_expr *>(raw.front().at(1))->get_tree(), context,
 		                           raw.front().back());
