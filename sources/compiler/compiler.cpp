@@ -648,7 +648,7 @@ namespace cs {
 		stream << " >";
 	}
 
-	void translator_type::translate(const std::deque<std::deque<token_base *>> &lines,
+	void translator_type::translate(const context_t& context, const std::deque<std::deque<token_base *>> &lines,
 	                                std::deque<statement_base *> &statements, bool raw)
 	{
 		std::deque<std::deque<token_base *>> tmp;
@@ -675,12 +675,12 @@ namespace cs {
 							--level;
 						}
 						if (level == 0) {
-							sptr = method->translate(tmp);
+							sptr = method->translate(context, tmp);
 							tmp.clear();
 							method = nullptr;
 						}
 						else {
-							m->preprocess({line});
+							m->preprocess(context, {line});
 							tmp.push_back(line);
 						}
 					}
@@ -689,8 +689,8 @@ namespace cs {
 							throw runtime_error("Hanging end statement.");
 						else {
 							if (raw)
-								m->preprocess({line});
-							sptr = m->translate({line});
+								m->preprocess(context, {line});
+							sptr = m->translate(context, {line});
 						}
 					}
 					if (sptr != nullptr)
@@ -703,12 +703,12 @@ namespace cs {
 					++level;
 					context->instance->storage.add_domain();
 					context->instance->storage.add_set();
-					m->preprocess({line});
+					m->preprocess(context, {line});
 					tmp.push_back(line);
 				}
 				break;
 				case method_types::jit_command:
-					m->translate({line});
+					m->translate(context, {line});
 					break;
 				}
 			}

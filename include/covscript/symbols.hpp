@@ -538,8 +538,6 @@ namespace cs {
 
 	class method_base {
 		static garbage_collector<method_base> gc;
-	protected:
-		context_t context;
 	public:
 		static void *operator new(std::size_t size)
 		{
@@ -558,17 +556,15 @@ namespace cs {
 
 		method_base(const method_base &) = default;
 
-		explicit method_base(context_t c) : context(std::move(std::move(c))) {}
-
 		virtual ~method_base() = default;
 
 		virtual method_types get_type() const noexcept = 0;
 
 		virtual statement_types get_target_type() const noexcept = 0;
 
-		virtual void preprocess(const std::deque<std::deque<token_base *>> &) {}
+		virtual void preprocess(const context_t&, const std::deque<std::deque<token_base *>> &) {}
 
-		virtual statement_base *translate(const std::deque<std::deque<token_base *>> &) = 0;
+		virtual statement_base *translate(const context_t&, const std::deque<std::deque<token_base *>> &) = 0;
 	};
 
 	garbage_collector<token_base> token_base::gc;

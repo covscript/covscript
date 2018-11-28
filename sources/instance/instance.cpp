@@ -55,14 +55,17 @@ namespace cs {
 		for (auto &it:collection) {
 			std::string package_path = it + path_separator + name;
 			if (std::ifstream(package_path + ".csp")) {
-				context_t rt = std::make_shared<context_type>();
-				rt->compiler = context->compiler;
-				rt->compiler->change_context(rt);
-				rt->instance = std::make_shared<instance_type>(context);
-				rt->cmd_args = context->cmd_args;
-				rt->instance->compile(package_path + ".csp");
+				context_t rt = create_subcontext(context);
+				rt->compiler->swap_context(rt);
+				try {
+					rt->instance->compile(package_path + ".csp");
+				}
+				catch(...) {
+					context->compiler->swap_context(context);
+					throw;
+				}
+				context->compiler->swap_context(context);
 				rt->instance->interpret();
-				context->compiler->change_context(context);
 				if (rt->package_name.empty())
 					throw runtime_error("Target file is not a package.");
 				if (rt->package_name != name)
@@ -156,12 +159,12 @@ namespace cs {
 						--level;
 					}
 					if (level == 0) {
-						statement = method->translate(tmp);
+						statement = method->translate(context, tmp);
 						tmp.clear();
 						method = nullptr;
 					}
 					else {
-						m->preprocess({line});
+						m->preprocess(context, {line});
 						tmp.push_back(line);
 					}
 				}
@@ -169,8 +172,8 @@ namespace cs {
 					if (m->get_target_type() == statement_types::end_)
 						throw runtime_error("Hanging end statement.");
 					else {
-						m->preprocess({line});
-						statement = m->translate({line});
+						m->preprocess(context, {line});
+						statement = m->translate(context, {line});
 					}
 				}
 			}
@@ -181,12 +184,12 @@ namespace cs {
 				++level;
 				context->instance->storage.add_domain();
 				context->instance->storage.add_set();
-				m->preprocess({line});
+				m->preprocess(context, {line});
 				tmp.push_back(line);
 			}
 			break;
 			case method_types::jit_command:
-				m->translate({line});
+				m->translate(context, {line});
 				break;
 			}
 			if (statement != nullptr)

@@ -38,11 +38,7 @@ namespace cs {
 
 		std::list<std::shared_ptr<data_type>> m_data;
 	public:
-		context_t context;
-
-		translator_type() = delete;
-
-		translator_type(context_t c) : context(std::move(c)) {}
+		translator_type() = default;
 
 		translator_type(const translator_type &) = delete;
 
@@ -79,7 +75,7 @@ namespace cs {
 			return stack.front()->second;
 		}
 
-		void translate(const std::deque<std::deque<token_base *>> &, std::deque<statement_base *> &, bool);
+		void translate(const context_t&, const std::deque<std::deque<token_base *>> &, std::deque<statement_base *> &, bool);
 	};
 
 	class compiler_type final {
@@ -340,7 +336,7 @@ namespace cs {
 	public:
 		compiler_type() = delete;
 
-		compiler_type(context_t c) : context(std::move(c)), translator(context) {}
+		compiler_type(context_t c) : context(std::move(c)) {}
 
 		compiler_type(const compiler_type &) = delete;
 
@@ -350,10 +346,10 @@ namespace cs {
 		bool disable_optimizer = false;
 
 		// Context
-		void change_context(const context_t& c)
+		context_t swap_context(context_t cxt)
 		{
-			context=c;
-			translator.context=c;
+			std::swap(context, cxt);
+			return cxt;
 		}
 
 		// Metadata
@@ -444,12 +440,12 @@ namespace cs {
 
 		void translate(const std::deque<std::deque<token_base *>> &ast, std::deque<statement_base *> &code)
 		{
-			translator.translate(ast, code, false);
+			translator.translate(context, ast, code, false);
 		}
 
 		void code_gen(const std::deque<std::deque<token_base *>> &ast, std::deque<statement_base *> &code)
 		{
-			translator.translate(ast, code, true);
+			translator.translate(context, ast, code, true);
 		}
 
 		// AST Debugger

@@ -55,5 +55,7 @@ namespace cs {
 		return std::move(arg);
 	}
 
-	context_t create_context(const std::string &, const array &);
+	context_t create_context(const array &);
+
+	context_t create_subcontext(const context_t &);
 }

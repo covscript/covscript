@@ -76,7 +76,7 @@ void covscript_main(int args_size, const char *args[])
 		arg;
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
-		cs::context_t context = cs::create_context(path, arg);
+		cs::context_t context = cs::create_context(arg);
 		context->compiler->disable_optimizer = no_optimize;
 		context->instance->compile(path);
 		if (dump_ast) {
