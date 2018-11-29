@@ -326,7 +326,7 @@ namespace cs {
 		void optimize_expression(cov::tree<token_base *> &tree)
 		{
 			trim_expr(tree, tree.root());
-			if (!disable_optimizer)
+			if (!disable_optimizer&&!no_optimize)
 				opt_expr(tree, tree.root());
 		}
 
