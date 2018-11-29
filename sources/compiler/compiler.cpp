@@ -652,7 +652,7 @@ namespace cs {
 	{
 		std::deque<std::deque<token_base *>> tmp;
 		method_base *method = nullptr;
-		std::size_t method_line_num=0, line_num=0;
+		std::size_t method_line_num = 0, line_num = 0;
 		int level = 0;
 		for (auto &it:lines) {
 			std::deque<token_base *> line = it;
@@ -674,7 +674,7 @@ namespace cs {
 							--level;
 						}
 						if (level == 0) {
-							line_num=method_line_num;
+							line_num = method_line_num;
 							sptr = method->translate(context, tmp);
 							tmp.clear();
 							method = nullptr;
@@ -698,8 +698,7 @@ namespace cs {
 				}
 				break;
 				case method_types::block: {
-					if (level == 0)
-					{
+					if (level == 0) {
 						method_line_num = static_cast<token_endline *>(line.back())->get_line_num();
 						method = m;
 					}
