@@ -1,4 +1,4 @@
-package constant
+package constants
 constant a={"World"}
 constant str="Hello"
 a.push_front(str)

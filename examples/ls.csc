@@ -1,4 +1,5 @@
 using system
+constant args=context.cmd_args()
 if args.size()!=2
     out.println("Usage: ls <dir>")
     exit(-1)

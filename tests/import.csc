@@ -1,8 +1,8 @@
-import constant
+import constants
 switch system.in.input()
-    case constant.a[0]
+    case constants.a[0]
         system.out.println("Hello")
     end
 end
-constant s=constant.str+"!!!"
+constant s=constants.str+"!!!"
 system.out.println(s)
