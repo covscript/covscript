@@ -48,7 +48,10 @@ imgui.ini
 # Build Caches
 cmake-build-debug/
 build/
-build_x64/
+csdev/
+bin/
+lib/
+tmp/
 
 # macOS Files
 .DS_Store
