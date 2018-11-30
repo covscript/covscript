@@ -3,7 +3,15 @@ project(covscript)
 include_directories(include)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "-s -O3")
+
+if(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS "-s -O3")
+endif ()
+
+if(MSVC)
+	set(CMAKE_CXX_FLAGS "/O2 /EHsc /std:c++14 /utf-8 /w")
+	set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif ()
 
 add_library(covscript STATIC
         sources/compiler/codegen.cpp

@@ -29,21 +29,8 @@ This project is an officially maintained Covariant Script interpreter
 ## Documentations ##
 [CovScript Online Documents](http://covscript.org/docs/)  
 ## Installation ##
-### Windows ###
-Download the precompiled executable on the [Latest Release](https://github.com/covscript/covscript/releases/latest).   
-You can also use other tools (like MinGW) to compile. If you already have a G++ compiler installed, you can use `make.bat`. Make sure the compiler supports C++11.  
-**Note: The Covariant Script interpreter supports the MSVC compiler, but due to the restrictions imposed by the Windows system on DLL export symbols, the current Covariant Script extension mechanism is almost completely paradoxical on MSVC. Although we provide `make_msvc.bat`, it is not recommended and is for reference only. Windows developers who need to embed Covariant Script please compile the source code directly, but all extension libraries are temporarily unavailable.**
-### Linux ###
-First, download source from [CovScript Github Page](https://github.com/covscript/covscript).  
-Then you have two choices:
-+ With G++ and makefile
-```sh
-$ sh ./make.sh
-```
-+ With CMake toolchain  
-We've provided a `CMakeLists.txt`.
-
-**Note: Some distributions' G++ are too old to support C++11, make sure you G++ compiler is up to date.**
++ Download the precompiled executable on the [Latest Release](https://github.com/covscript/covscript/releases/latest)
++ Directly compile source code with CMake toolchain
 ### Mac OS ###
 All the steps are the same as Linux, tested under macOS Sierra 10.12.5.
 ## Run ##
@@ -51,6 +38,7 @@ All the steps are the same as Linux, tested under macOS Sierra 10.12.5.
 `cs [arguments..] <file> <args...>`  
 #### Arguments ####
 + `--compile-only` Only compile
++ `--no-optimize` Disable optimizer
 + `--dump-ast` Export abstract syntax tree
 + `--wait-before-exit` Wait before process exit
 + `--log-path PATH` Set the log and AST exporting path

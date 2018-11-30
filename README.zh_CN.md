@@ -29,20 +29,8 @@
 ## 文档 ##
 [CovScript在线文档](http://covscript.org/docs/)  
 ## 安装 ##
-### Microsoft Windows ###
-请在[Latest Release](https://github.com/covscript/covscript/releases/latest)上下载预编译可执行文件。  
-你也可以使用MinGW或相应的工具来直接编译源代码。如果您的系统中已经安装了G++编译器，则可以直接执行`make.bat`。 您需要确保编译器支持C++11标准。   
-**注意：Covariant Script解释器支持MSVC编译器，但由于Windows系统对DLL导出符号的限制所以目前Covariant Script的扩展机制在MSVC上是几乎完全瘫痪的。虽然我们提供了`make_msvc.bat`，但并不推荐使用，仅用于参考。需要嵌入Covariant Script的Windows开发者请直接编译源码，但所有的扩展库暂时不可用。**
-### Linux ###
-首先你需要从[CovScript Github主页](https://github.com/covscript/covscript)下载源代码。然后你有两种选择：
-+ 使用G++编译器和编译脚本
-```sh
-$ sh ./make.sh
-```
-+ 使用CMake工具链  
-我们提供了`CMakeLists.txt`，以便您执行`cmake`命令来构建。  
-
-**注意：某些发行版的G++版本太旧，无法支持C++11标准，请下载最新版本的G++编译器。**
++ 在[Latest Release](https://github.com/covscript/covscript/releases/latest)里下载预编译的二进制文件
++ 使用CMake工具链直接编译源代码
 ### Mac OS ###
 编译Covariant Script的方法与Linux相同。目前Covariant Script已经在MacOS Sierra 10.12.5中测试通过。
 ## 运行 ##
@@ -50,6 +38,7 @@ $ sh ./make.sh
 `cs [参数...] <文件> <运行参数...>`  
 #### 参数 ####
 + `--compile-only` 仅编译
++ `--no-optimize` 关闭优化器
 + `--dump-ast` 导出抽象语法树
 + `--wait-before-exit` 等待进程退出
 + `--log-path PATH` 设置日志和导出AST路径
