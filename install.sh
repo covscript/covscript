@@ -1,6 +1,5 @@
-mkdir -p ./build/bin
-mkdir -p ./csdev/include
-mkdir -p ./csdev/lib
+mkdir -p ./build
+mkdir -p ./csdev
 cp -rf ./bin ./build
-cp -rf ./include ./csdev
 cp -rf ./lib ./csdev
+cp -rf ./include ./csdev
