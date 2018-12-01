@@ -20,6 +20,7 @@
 * Website: http://covscript.org
 */
 #include <covscript/extension.hpp>
+#include <covscript/cni.hpp>
 
 namespace cs {
 	std::string get_sdk_path();
@@ -33,4 +34,49 @@ namespace cs {
 	context_t create_context(const array &);
 
 	context_t create_subcontext(const context_t &);
+
+	template<typename>class function_invoker;
+
+	template<typename RetT, typename...ArgsT>class function_invoker<RetT(ArgsT...)> {
+		var m_func;
+	public:
+		function_invoker()=delete;
+		function_invoker(const function_invoker&)=default;
+		function_invoker(const context_t context, const std::string& expr)
+		{
+			cov::tree<token_base*> tree;
+			std::deque<char> buff;
+			for(auto& ch:expr)
+				buff.push_back(ch);
+			context->compiler->build_expr(buff, tree);
+			m_func=context->instance->parse_expr(tree.root());
+		}
+		template<typename...ElementT>
+		RetT operator()(ElementT&&...args) const
+		{
+			return cs_impl::convert_helper<RetT>::get_val(invoke(m_func, cs_impl::type_convertor<ElementT, ArgsT>::convert(std::forward<ElementT>(args))...));
+		}
+	};
+
+	template<typename...ArgsT>class function_invoker<void(ArgsT...)> {
+		var m_func;
+	public:
+		function_invoker()=delete;
+		function_invoker(const function_invoker&)=default;
+		function_invoker& operator=(const function_invoker&)=default;
+		function_invoker(const context_t context, const std::string& expr)
+		{
+			cov::tree<token_base*> tree;
+			std::deque<char> buff;
+			for(auto& ch:expr)
+				buff.push_back(ch);
+			context->compiler->build_expr(buff, tree);
+			m_func=context->instance->parse_expr(tree.root());
+		}
+		template<typename...ElementT>
+		void operator()(ElementT&&...args) const
+		{
+			invoke(m_func, cs_impl::type_convertor<ElementT, ArgsT>::convert(std::forward<ElementT>(args))...);
+		}
+	};
 }

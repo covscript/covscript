@@ -40,7 +40,7 @@ namespace cs_impl {
 // Type conversion
 	template<typename T>
 	struct convert_helper {
-		static inline const T &get_val(any &val)
+		static inline const T &get_val(const any &val)
 		{
 			return val.const_val<T>();
 		}
@@ -48,7 +48,7 @@ namespace cs_impl {
 
 	template<typename T>
 	struct convert_helper<const T &> {
-		static inline const T &get_val(any &val)
+		static inline const T &get_val(const any &val)
 		{
 			return val.const_val<T>();
 		}
@@ -56,7 +56,7 @@ namespace cs_impl {
 
 	template<typename T>
 	struct convert_helper<T &> {
-		static inline T &get_val(any &val)
+		static inline T &get_val(const any &val)
 		{
 			return val.val<T>(true);
 		}
