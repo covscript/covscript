@@ -431,8 +431,6 @@ namespace cs {
 	};
 
 	class method_function final : public method_base {
-		std::string name;
-		std::vector<std::string> args;
 	public:
 		using method_base::method_base;
 

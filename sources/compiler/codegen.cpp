@@ -459,8 +459,7 @@ namespace cs {
 			throw internal_error("Null pointer accessed.");
 		if (t.root().right().data()->get_type() != token_types::arglist)
 			throw runtime_error("Wrong grammar for function definition.");
-		name = static_cast<token_id *>(t.root().left().data())->get_id();
-		args.clear();
+		std::vector<std::string> args;
 		for (auto &it:static_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
 			if (it.root().data() == nullptr)
 				throw internal_error("Null pointer accessed.");
@@ -478,6 +477,11 @@ namespace cs {
 	statement_base *
 	method_function::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
+		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		std::string name = static_cast<token_id *>(t.root().left().data())->get_id();
+		std::vector<std::string> args;
+		for (auto &it:static_cast<token_arglist *>(t.root().right().data())->get_arglist())
+			args.push_back(static_cast<token_id *>(it.root().data())->get_id());
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		return new statement_function(name, args, body, raw.front().size() == 4, context, raw.front().back());
