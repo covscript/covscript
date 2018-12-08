@@ -431,6 +431,8 @@ namespace cs {
 	};
 
 	class method_function final : public method_base {
+		std::string name;
+		std::vector<std::string> args;
 	public:
 		using method_base::method_base;
 
@@ -443,6 +445,8 @@ namespace cs {
 		{
 			return statement_types::function_;
 		}
+
+		void preprocess(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};

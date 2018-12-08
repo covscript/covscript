@@ -443,8 +443,7 @@ namespace cs {
 		return new statement_continue(context, raw.front().back());
 	}
 
-	statement_base *
-	method_function::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	void method_function::preprocess(const context_t & context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
@@ -460,8 +459,8 @@ namespace cs {
 			throw internal_error("Null pointer accessed.");
 		if (t.root().right().data()->get_type() != token_types::arglist)
 			throw runtime_error("Wrong grammar for function definition.");
-		std::string name = static_cast<token_id *>(t.root().left().data())->get_id();
-		std::vector<std::string> args;
+		name = static_cast<token_id *>(t.root().left().data())->get_id();
+		args.clear();
 		for (auto &it:static_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
 			if (it.root().data() == nullptr)
 				throw internal_error("Null pointer accessed.");
@@ -471,8 +470,14 @@ namespace cs {
 			for (auto &it:args)
 				if (it == str)
 					throw runtime_error("Redefinition of function argument.");
+			context->instance->storage.add_record(str);
 			args.push_back(str);
 		}
+	}
+
+	statement_base *
+	method_function::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	{
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		return new statement_function(name, args, body, raw.front().size() == 4, context, raw.front().back());

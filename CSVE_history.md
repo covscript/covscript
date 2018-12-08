@@ -56,3 +56,8 @@
 + 漏洞原理：代码生成器设计失误
 + 漏洞状态：已修复
 + 影响范围：CovScript 1.2.2(Beta6)-1.3.0 Panthera uncia(Unstable) Build 2
+## CSVE-2018-12-01 ##
++ 触发方法：函数的参数与上层常量重名时会忽略函数参数的声明
++ 漏洞原理：代码生成器未给予优化器正确的参数
++ 漏洞状态：已修复
++ 影响范围：CovScript 1.2.1-3.0.0 Pantholops hodgsonii(Unstable) Build 3
