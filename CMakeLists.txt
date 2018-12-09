@@ -28,7 +28,7 @@ add_executable(cs sources/standalone.cpp)
 add_executable(cs_repl sources/repl.cpp)
 
 add_library(test-extension SHARED tests/extension.cpp)
-add_executable(test-covscript tests/test.cpp)
+add_executable(test-covscript tests/function_invoker.cpp)
 
 target_link_libraries(cs covscript)
 target_link_libraries(cs_repl covscript)
