@@ -443,7 +443,7 @@ namespace cs {
 		return new statement_continue(context, raw.front().back());
 	}
 
-	void method_function::preprocess(const context_t & context, const std::deque<std::deque<token_base *>> &raw)
+	void method_function::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)

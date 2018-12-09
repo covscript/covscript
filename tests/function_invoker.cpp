@@ -1,7 +1,6 @@
 #include <covscript/covscript.hpp>
 
-int main(int argc, const char *argv[])
-{
+int main(int argc, const char *argv[]) {
     if (argc <= 1)
         return -1;
     cs::context_t context = cs::create_context(cs::parse_cmd_args(argc - 1, argv + 1));

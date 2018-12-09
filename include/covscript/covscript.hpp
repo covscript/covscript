@@ -46,46 +46,57 @@ namespace cs_function_invoker_impl {
 		}
 	};
 
-	template<typename>class function_invoker;
+	template<typename>
+	class function_invoker;
 
-	template<typename RetT, typename...ArgsT>class function_invoker<RetT(ArgsT...)> {
+	template<typename RetT, typename...ArgsT>
+	class function_invoker<RetT(ArgsT...)> {
 		cs::var m_func;
 	public:
-		function_invoker()=delete;
-		function_invoker(const function_invoker&)=default;
-		function_invoker(const cs::context_t context, const std::string& expr)
+		function_invoker() = delete;
+
+		function_invoker(const function_invoker &) = default;
+
+		function_invoker(const cs::context_t context, const std::string &expr)
 		{
-			cov::tree<cs::token_base*> tree;
+			cov::tree<cs::token_base *> tree;
 			std::deque<char> buff;
-			for(auto& ch:expr)
+			for (auto &ch:expr)
 				buff.push_back(ch);
 			context->compiler->build_expr(buff, tree);
-			m_func=context->instance->parse_expr(tree.root());
+			m_func = context->instance->parse_expr(tree.root());
 		}
+
 		template<typename...ElementT>
-		RetT operator()(ElementT&&...args) const
+		RetT operator()(ElementT &&...args) const
 		{
-			return convert_helper<RetT>::get_val(cs::invoke(m_func, cs_impl::type_convertor<ElementT, ArgsT>::convert(std::forward<ElementT>(args))...));
+			return convert_helper<RetT>::get_val(cs::invoke(m_func, cs_impl::type_convertor<ElementT, ArgsT>::convert(
+			        std::forward<ElementT>(args))...));
 		}
 	};
 
-	template<typename...ArgsT>class function_invoker<void(ArgsT...)> {
+	template<typename...ArgsT>
+	class function_invoker<void(ArgsT...)> {
 		cs::var m_func;
 	public:
-		function_invoker()=delete;
-		function_invoker(const function_invoker&)=default;
-		function_invoker& operator=(const function_invoker&)=default;
-		function_invoker(const cs::context_t context, const std::string& expr)
+		function_invoker() = delete;
+
+		function_invoker(const function_invoker &) = default;
+
+		function_invoker &operator=(const function_invoker &) = default;
+
+		function_invoker(const cs::context_t context, const std::string &expr)
 		{
-			cov::tree<cs::token_base*> tree;
+			cov::tree<cs::token_base *> tree;
 			std::deque<char> buff;
-			for(auto& ch:expr)
+			for (auto &ch:expr)
 				buff.push_back(ch);
 			context->compiler->build_expr(buff, tree);
-			m_func=context->instance->parse_expr(tree.root());
+			m_func = context->instance->parse_expr(tree.root());
 		}
+
 		template<typename...ElementT>
-		void operator()(ElementT&&...args) const
+		void operator()(ElementT &&...args) const
 		{
 			cs::invoke(m_func, cs_impl::type_convertor<ElementT, ArgsT>::convert(std::forward<ElementT>(args))...);
 		}
