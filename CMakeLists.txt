@@ -5,7 +5,7 @@ include_directories(include)
 set(CMAKE_CXX_STANDARD 11)
 
 if (CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_CXX_FLAGS "-s -O3")
+    set(CMAKE_CXX_FLAGS "-fPIC -s -O3")
 endif ()
 
 if (MSVC)
