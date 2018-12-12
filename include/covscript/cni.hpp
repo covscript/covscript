@@ -109,10 +109,7 @@ namespace cs_impl {
 		static inline char check(const any &val)
 		{
 			if (typeid(T) != val.type())
-				throw cs::runtime_error(
-				    "Invalid Argument.At " + std::to_string(index + 1) + ".Expected " +
-				    cxx_demangle(get_name_of_type<T>()) +
-				    ",provided " + val.get_type_name());
+				throw cs::runtime_error("Invalid Argument. At " + std::to_string(index + 1) + ". Expected " + cxx_demangle(get_name_of_type<T>()) + ", provided " + val.get_type_name());
 			else
 				return 0;
 		}
@@ -129,9 +126,7 @@ namespace cs_impl {
 	template<typename...ArgsT, int...Seq>
 	void check_args_base(const cs::vector &args, const cov::sequence<Seq...> &)
 	{
-		result_container(
-		    check_args_helper<typename cov::remove_constant<typename cov::remove_reference<ArgsT>::type>::type, Seq>::check(
-		        args[Seq])...);
+		result_container(check_args_helper<typename cov::remove_constant<typename cov::remove_reference<ArgsT>::type>::type, Seq>::check(args[Seq])...);
 	}
 
 	template<typename...ArgTypes>
@@ -140,9 +135,7 @@ namespace cs_impl {
 		if (sizeof...(ArgTypes) == args.size())
 			check_args_base<ArgTypes...>(args, cov::make_sequence<sizeof...(ArgTypes)>::result);
 		else
-			throw cs::runtime_error(
-			    "Wrong size of the arguments.Expected " + std::to_string(sizeof...(ArgTypes)) + ",provided " +
-			    std::to_string(args.size()));
+			throw cs::runtime_error("Wrong size of the arguments. Expected " + std::to_string(sizeof...(ArgTypes)) + ", provided " + std::to_string(args.size()));
 	}
 
 // Static argument check
@@ -182,7 +175,7 @@ namespace cs_impl {
 		any call(cs::vector &args) const
 		{
 			if (!args.empty())
-				throw cs::runtime_error("Wrong size of the arguments.Expected 0");
+				throw cs::runtime_error("Wrong size of the arguments. Expected 0");
 			mFunc();
 			return cs::null_pointer;
 		}
@@ -201,7 +194,7 @@ namespace cs_impl {
 		any call(cs::vector &args) const
 		{
 			if (!args.empty())
-				throw cs::runtime_error("Wrong size of the arguments.Expected 0");
+				throw cs::runtime_error("Wrong size of the arguments. Expected 0");
 			return std::move(type_convertor<_Target_RetT, _Source_RetT>::convert(mFunc()));
 		}
 	};
