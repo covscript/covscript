@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
-astyle -q ./include/covscript/*.*
-astyle -q ./include/covscript/*/*.*
-rm ./include/covscript/*.orig
-rm ./include/covscript/*/*.orig
-astyle -A4 -N -t -q ./include/covscript/*.*
-astyle -A4 -N -t -q ./include/covscript/*/*.*
-rm ./include/covscript/*.orig
-rm ./include/covscript/*/*.orig
-astyle -q ./sources/*.*
-rm ./sources/*.orig
-astyle -A4 -N -t -q ./sources/*.*
-rm ./sources/*.orig
+function format() {
+    file_list=$(ls $1)
+    cd $1
+    astyle -q *.* &> /dev/null
+    rm *.orig &> /dev/null
+    astyle -A4 -N -t -q *.* &> /dev/null
+    rm *.orig &> /dev/null
+    for file in $file_list;do
+        if test -d ${file};then
+            format ${file} "$2"
+        fi
+    done
+    cd ..
+}
+format ./include
+format ./sources
