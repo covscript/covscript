@@ -553,6 +553,8 @@ namespace cs {
 			foreach_helper<array, var>(context, this->mIt, obj, this->mBlock);
 		else if (obj.type() == typeid(hash_map))
 			foreach_helper<hash_map, pair>(context, this->mIt, obj, this->mBlock);
+		else if (obj.type() == typeid(range_type))
+			foreach_helper<range_type, number>(context, this->mIt, obj, this->mBlock);
 		else
 			throw runtime_error("Unsupported type(foreach)");
 	}

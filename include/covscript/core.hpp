@@ -281,6 +281,51 @@ namespace cs {
 		var &get_var(const std::string &) const;
 	};
 
+	class range_iterator final {
+		number m_step, m_index;
+	public:
+		range_iterator()=delete;
+		explicit range_iterator(number step, number index):m_step(step), m_index(index) {}
+		range_iterator(const range_iterator&)=default;
+		range_iterator(range_iterator&&) noexcept=default;
+		range_iterator& operator=(const range_iterator&)=default;
+		bool operator!=(const range_iterator& it) const
+		{
+			return m_index!=it.m_index||m_step!=it.m_step;
+		}
+		range_iterator& operator++()
+		{
+			m_index+=m_step;
+			return *this;
+		}
+		number operator*() const
+		{
+			return m_index;
+		}
+	};
+
+	class range_type final {
+		number m_start, m_stop, m_step;
+	public:
+		range_type()=delete;
+		range_type(number start, number stop, number step):m_start(start), m_stop(stop), m_step(step) {}
+		range_type(const range_type&)=default;
+		range_type(range_type&&) noexcept=default;
+		range_type& operator=(const range_type&)=default;
+		range_iterator begin() const
+		{
+			return range_iterator(m_step, m_start);
+		}
+		range_iterator end() const
+		{
+			return range_iterator(m_step, m_stop);
+		}
+		bool empty() const
+		{
+			return m_start==m_stop;
+		}
+	};
+
 	class structure final {
 		bool m_shadow = false;
 		std::string m_name;

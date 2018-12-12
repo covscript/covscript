@@ -251,6 +251,24 @@ namespace cs {
 	}
 
 // Internal Functions
+
+	var range(vector& args)
+	{
+		switch(args.size()) {
+		case 1:
+			cs_impl::check_args<number>(args);
+			return var::make_constant<range_type>(0, args[0].const_val<number>(), 1);
+		case 2:
+			cs_impl::check_args<number, number>(args);
+			return var::make_constant<range_type>(args[0].const_val<number>(), args[1].const_val<number>(), 1);
+		case 3:
+			cs_impl::check_args<number, number, number>(args);
+			return var::make_constant<range_type>(args[0].const_val<number>(), args[1].const_val<number>(), args[2].const_val<number>());
+		default:
+			throw cs::runtime_error("Wrong size of the arguments. Expected 1, 2 or 3, provided " +std::to_string(args.size()));
+		}
+	}
+
 	number to_integer(const var &val)
 	{
 		return val.to_integer();
@@ -395,6 +413,7 @@ namespace cs {
 		// Context
 		.add_buildin_var("context", var::make_constant<context_t>(context))
 		// Add Internal Functions to storage
+		.add_buildin_var("range", var::make_protect<callable>(range, callable::types::constant))
 		.add_buildin_var("to_integer", make_cni(to_integer, true))
 		.add_buildin_var("to_string", make_cni(to_string, true))
 		.add_buildin_var("type", make_cni(type, true))
