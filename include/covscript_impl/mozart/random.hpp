@@ -18,9 +18,9 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 *
-* Version: 17.2.1
+* Version: 17.2.1(CovScript)
 */
-#include "./base.hpp"
+#include <covscript/mozart/base.hpp>
 #include <type_traits>
 #include <random>
 #include <ctime>

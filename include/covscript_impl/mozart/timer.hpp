@@ -18,10 +18,10 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 *
-* Version: 17.1.0
+* Version: 17.1.0(CovScript)
 */
-#include "./base.hpp"
-#include "./function.hpp"
+#include <covscript/mozart/base.hpp>
+#include <covscript/mozart/function.hpp>
 #include <thread>
 #include <chrono>
 
