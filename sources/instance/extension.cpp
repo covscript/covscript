@@ -1,8 +1,8 @@
+#include <covscript_impl/console/conio.hpp>
+#include <covscript_impl/dirent/dirent.hpp>
+#include <covscript_impl/mozart/random.hpp>
+#include <covscript_impl/mozart/timer.hpp>
 #include <covscript/extension.hpp>
-#include <covscript/console/conio.hpp>
-#include <covscript/dirent/dirent.hpp>
-#include <covscript/mozart/random.hpp>
-#include <covscript/mozart/timer.hpp>
 #include <covscript/cni.hpp>
 #include <iostream>
 

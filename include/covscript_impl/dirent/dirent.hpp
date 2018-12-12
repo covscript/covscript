@@ -20,7 +20,7 @@
 */
 #if defined(_WIN32) || defined(WIN32)
 
-#include <covscript/dirent/dirent.h>
+#include <covscript_impl/dirent/dirent.h>
 
 #else
 

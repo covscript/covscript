@@ -19,7 +19,7 @@
 * Website: http://covscript.org
 */
 //#include "covscript.cpp"
-#include <covscript/console/conio.hpp>
+#include <covscript_impl/console/conio.hpp>
 #include <covscript/covscript.hpp>
 #include <iostream>
 
