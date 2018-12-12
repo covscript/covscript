@@ -616,6 +616,19 @@ namespace cs_impl {
 			return cxx_demangle(id.type_idx.name());
 	}
 
+	template<>
+	std::string to_string<cs::range_type>(const cs::range_type &range)
+	{
+		if(range.empty())
+			return "[]";
+		std::string str="[";
+		for(cs::number it:range)
+			str+=to_string(it)+", ";
+		str.resize(str.size()-2);
+		str+="]";
+		return std::move(str);
+	}
+
 // To Integer
 	template<>
 	long to_integer<std::string>(const std::string &str)
@@ -710,6 +723,12 @@ namespace cs_impl {
 	constexpr const char *get_name_of_type<cs::callable>()
 	{
 		return "cs::function";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::range_type>()
+	{
+		return "cs::range";
 	}
 
 	template<>
