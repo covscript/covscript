@@ -102,7 +102,7 @@ namespace cs {
 	var runtime_type::parse_mod(const var &a, const var &b)
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
-			return number(std::fmod(a.const_val<number>(), b.const_val<number>()));
+			return std::fmod(a.const_val<number>(), b.const_val<number>());
 		else
 			throw runtime_error("Unsupported operator operations(Mod).");
 	}
@@ -116,7 +116,7 @@ namespace cs {
 	var runtime_type::parse_pow(const var &a, const var &b)
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
-			return number(std::pow(a.const_val<number>(), b.const_val<number>()));
+			return std::pow(a.const_val<number>(), b.const_val<number>());
 		else
 			throw runtime_error("Unsupported operator operations(Pow).");
 	}

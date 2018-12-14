@@ -42,7 +42,7 @@ namespace cs {
 		// Constructor and destructor
 		instance_type() = delete;
 
-		instance_type(context_t c) : context(std::move(c))
+		explicit instance_type(context_t c) : context(std::move(c))
 		{
 			struct_builder::reset_counter();
 		}

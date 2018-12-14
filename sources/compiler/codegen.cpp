@@ -332,7 +332,7 @@ namespace cs {
 		if (!body.empty() && body.back()->get_type() == statement_types::until_) {
 			token_expr *expr = static_cast<statement_until *>(body.back())->get_expr();
 			body.pop_back();
-			cov::tree<token_base *> &tree = static_cast<token_expr *>(expr)->get_tree();
+			cov::tree<token_base *> &tree = expr->get_tree();
 			token_base *ptr = tree.root().data();
 			if (ptr != nullptr && ptr->get_type() == token_types::value) {
 				if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())

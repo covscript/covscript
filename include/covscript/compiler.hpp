@@ -337,7 +337,7 @@ namespace cs {
 	public:
 		compiler_type() = delete;
 
-		compiler_type(context_t c) : context(std::move(c)) {}
+		explicit compiler_type(context_t c) : context(std::move(c)) {}
 
 		compiler_type(const compiler_type &) = delete;
 

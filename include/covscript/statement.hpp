@@ -84,8 +84,8 @@ namespace cs {
 	public:
 		statement_constant() = delete;
 
-		statement_constant(const std::vector<std::pair<std::string, var>> &val, context_t c, token_base *ptr)
-			: statement_base(std::move(c), ptr), mVal(std::move(val)) {}
+		statement_constant(std::vector<std::pair<std::string, var>> val, context_t c, token_base *ptr) : statement_base(
+			    std::move(c), ptr), mVal(std::move(val)) {}
 
 		statement_types get_type() const noexcept override
 		{
@@ -405,9 +405,9 @@ namespace cs {
 	public:
 		statement_for() = delete;
 
-		statement_for(const std::deque<cov::tree<token_base *>> &parallel_list, std::deque<statement_base *> block,
-		              context_t c, token_base *ptr) : statement_base(std::move(c), ptr), mParallel(parallel_list),
-			mBlock(block)
+		statement_for(std::deque<cov::tree<token_base *>> parallel_list, std::deque<statement_base *> block,
+		              context_t c, token_base *ptr) : statement_base(std::move(c), ptr),
+			mParallel(std::move(parallel_list)), mBlock(std::move(block))
 		{
 			context->compiler->parse_define_var(mParallel[0], mDvp);
 		}
