@@ -45,3 +45,10 @@ if (UNIX OR APPLE)
     target_link_libraries(cs_repl dl)
     target_link_libraries(test-covscript dl)
 endif ()
+
+install (TARGETS cs cs_repl covscript
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
+
+
