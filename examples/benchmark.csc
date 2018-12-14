@@ -1,7 +1,7 @@
 iostream.setprecision(64)
 function step1(n)
     var score=0
-    for i=1,i<=n,++i
+    foreach i:range(1,n+1)
         var ts=runtime.time()
         var fc=0
         loop
@@ -21,7 +21,7 @@ function step2(n,k)
         end
     end
     var score=0
-    for i=1,i<=k,++i
+    foreach i:range(1,k+1)
         var ts=runtime.time()
         recursion(n)
         score=score+runtime.time()-ts
@@ -39,7 +39,7 @@ function step3(n,k)
         return math.sqrt(1-x^2)
     end
     var score=0
-    for i=1,i<=k,++i
+    foreach i:range(1,k+1)
         var ts=runtime.time()
         integral(f,0,1)
         score=score+runtime.time()-ts
@@ -77,7 +77,7 @@ function quicksort(a,m,n)
 end
 function step4(n,k)
     var score=0
-    for i=1,i<=k,++i
+    foreach i:range(1,k+1)
         var a={}
         for i=0,i<=n,++i do a.push_back(math.randint(0,n))
         var ts=runtime.time()
@@ -97,7 +97,7 @@ function fibonacci(count)
 end
 function step5(n,k)
     var score=0
-    for i=1,i<=k,++i
+    foreach i:range(1,k+1)
         var ts=runtime.time()
         fibonacci(n)
         score=score+runtime.time()-ts
@@ -106,7 +106,7 @@ function step5(n,k)
 end
 function step6(n,k)
     var score=0,fib=[](n)->n>2?fib(n-1)+fib(n-2):1
-    for i=1,i<=k,++i
+    foreach i:range(1,k+1)
         var ts=runtime.time()
         fib(n)
         score+=runtime.time()-ts
