@@ -284,20 +284,27 @@ namespace cs {
 	class range_iterator final {
 		number m_step, m_index;
 	public:
-		range_iterator()=delete;
-		explicit range_iterator(number step, number index):m_step(step), m_index(index) {}
-		range_iterator(const range_iterator&)=default;
-		range_iterator(range_iterator&&) noexcept=default;
-		range_iterator& operator=(const range_iterator&)=default;
-		bool operator!=(const range_iterator& it) const
+		range_iterator() = delete;
+
+		explicit range_iterator(number step, number index) : m_step(step), m_index(index) {}
+
+		range_iterator(const range_iterator &) = default;
+
+		range_iterator(range_iterator &&) noexcept = default;
+
+		range_iterator &operator=(const range_iterator &) = default;
+
+		bool operator!=(const range_iterator &it) const
 		{
-			return m_index!=it.m_index||m_step!=it.m_step;
+			return m_index != it.m_index || m_step != it.m_step;
 		}
-		range_iterator& operator++()
+
+		range_iterator &operator++()
 		{
-			m_index+=m_step;
+			m_index += m_step;
 			return *this;
 		}
+
 		number operator*() const
 		{
 			return m_index;
@@ -307,22 +314,29 @@ namespace cs {
 	class range_type final {
 		number m_start, m_stop, m_step;
 	public:
-		range_type()=delete;
-		range_type(number start, number stop, number step):m_start(start), m_stop(stop), m_step(step) {}
-		range_type(const range_type&)=default;
-		range_type(range_type&&) noexcept=default;
-		range_type& operator=(const range_type&)=default;
+		range_type() = delete;
+
+		range_type(number start, number stop, number step) : m_start(start), m_stop(stop), m_step(step) {}
+
+		range_type(const range_type &) = default;
+
+		range_type(range_type &&) noexcept = default;
+
+		range_type &operator=(const range_type &) = default;
+
 		range_iterator begin() const
 		{
 			return range_iterator(m_step, m_start);
 		}
+
 		range_iterator end() const
 		{
 			return range_iterator(m_step, m_stop);
 		}
+
 		bool empty() const
 		{
-			return m_start==m_stop;
+			return m_start == m_stop;
 		}
 	};
 
@@ -619,13 +633,13 @@ namespace cs_impl {
 	template<>
 	std::string to_string<cs::range_type>(const cs::range_type &range)
 	{
-		if(range.empty())
+		if (range.empty())
 			return "[]";
-		std::string str="[";
-		for(cs::number it:range)
-			str+=to_string(it)+", ";
-		str.resize(str.size()-2);
-		str+="]";
+		std::string str = "[";
+		for (cs::number it:range)
+			str += to_string(it) + ", ";
+		str.resize(str.size() - 2);
+		str += "]";
 		return std::move(str);
 	}
 

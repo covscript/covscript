@@ -250,9 +250,9 @@ namespace cs {
 
 // Internal Functions
 
-	var range(vector& args)
+	var range(vector &args)
 	{
-		switch(args.size()) {
+		switch (args.size()) {
 		case 1:
 			cs_impl::check_args<number>(args);
 			return var::make_constant<range_type>(0, args[0].const_val<number>(), 1);
@@ -261,9 +261,11 @@ namespace cs {
 			return var::make_constant<range_type>(args[0].const_val<number>(), args[1].const_val<number>(), 1);
 		case 3:
 			cs_impl::check_args<number, number, number>(args);
-			return var::make_constant<range_type>(args[0].const_val<number>(), args[1].const_val<number>(), args[2].const_val<number>());
+			return var::make_constant<range_type>(args[0].const_val<number>(), args[1].const_val<number>(),
+			                                      args[2].const_val<number>());
 		default:
-			throw cs::runtime_error("Wrong size of the arguments. Expected 1, 2 or 3, provided " +std::to_string(args.size()));
+			throw cs::runtime_error(
+			    "Wrong size of the arguments. Expected 1, 2 or 3, provided " + std::to_string(args.size()));
 		}
 	}
 
