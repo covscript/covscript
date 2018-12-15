@@ -4,14 +4,12 @@ include_directories(include)
 
 set(CMAKE_CXX_STANDARD 11)
 
-if (CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_CXX_FLAGS "-fPIC -s -O3")
-endif ()
-
 if (MSVC)
     set(CMAKE_CXX_FLAGS "/O2 /EHsc /std:c++14 /utf-8 /w")
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-endif ()
+else()
+    set(CMAKE_CXX_FLAGS "-fPIC -s -O3")
+endif()
 
 add_library(covscript STATIC
         sources/compiler/codegen.cpp

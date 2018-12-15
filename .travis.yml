@@ -8,6 +8,7 @@ install:
   - cd build
   - cmake -G "Unix Makefiles" ..
   - make
+  - cd ..
 script:
   - ./build/cs ./examples/benchmark.csc
   - echo "runtime.info()" | ./build/cs_repl --silent
