@@ -1,3 +1,15 @@
+dist: xenial
 language: cpp
-install: ./make.sh
-script: ./bin/cs ./examples/benchmark.csc
+compiler:
+  - clang
+  - gcc
+install:
+  - mkdir build
+  - cd build
+  - cmake -G "Unix Makefiles" ..
+  - make
+script:
+  - ./build/cs ./examples/benchmark.csc
+  - echo "runtime.info()" | ./build/cs_repl --silent
+  - ./build/cs --import-path ./build ./tests/extension.csc
+  - ./build/test-covscript ./tests/function_invoker.csc
