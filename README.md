@@ -7,7 +7,7 @@
 **Covariant Script** is an open source, cross-platform programming language.  
 This project is an officially maintained Covariant Script interpreter.
 ## Switch language ##
-- [简体中文](https://github.com/covscript/covscript/blob/master/README.zh_CN.md)
+- [简体中文](https://github.com/covscript/covscript/blob/master/docs/README.zh_CN.md)
 - [English](https://github.com/covscript/covscript/blob/master/README.md)
 ## Features ##
 + Cross-platform, supports most mainstream Operating Systems
