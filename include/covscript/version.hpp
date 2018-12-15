@@ -26,8 +26,8 @@
 * Master
 *
 */
-#define COVSCRIPT_VERSION_NUM 3,0,0,6
-#define COVSCRIPT_VERSION_STR "3.0.0 Pantholops hodgsonii(Stable) Build 6"
+#define COVSCRIPT_VERSION_NUM 3,0,1,1
+#define COVSCRIPT_VERSION_STR "3.0.1 Acipenser sinensis(Unstable) Build 1"
 #define COVSCRIPT_STD_VERSION 190101
 #define COVSCRIPT_ABI_VERSION 190101
 #if defined(_WIN32) || defined(WIN32)
