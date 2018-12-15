@@ -7,9 +7,11 @@ set(CMAKE_CXX_STANDARD 11)
 if (MSVC)
     set(CMAKE_CXX_FLAGS "/O2 /EHsc /std:c++14 /utf-8 /w")
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-else()
+elseif (CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "-fPIC -s -O3")
-endif()
+else ()
+    set(CMAKE_CXX_FLAGS "-fPIC -O3")
+endif ()
 
 add_library(covscript STATIC
         sources/compiler/codegen.cpp
@@ -44,7 +46,7 @@ if (UNIX OR APPLE)
     target_link_libraries(test-covscript dl)
 endif ()
 
-install (TARGETS cs cs_repl covscript
+install(TARGETS cs cs_repl covscript
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)

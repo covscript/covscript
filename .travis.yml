@@ -7,7 +7,7 @@ install:
   - mkdir build
   - cd build
   - cmake -G "Unix Makefiles" ..
-  - make
+  - make -j4
   - cd ..
 script:
   - ./build/cs ./examples/benchmark.csc
