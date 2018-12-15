@@ -4,21 +4,21 @@
 [![](https://img.shields.io/github/license/covscript/covscript.svg)](https://github.com/covscript/covscript/blob/master/LICENSE)
 [![](https://img.shields.io/github/languages/top/covscript/covscript.svg)](http://www.cplusplus.com/)  
 **Welcome to the Covariant Script programming language!**  
-**Covariant Script** is an open source, cross-platform programming language  
-This project is an officially maintained Covariant Script interpreter
+**Covariant Script** is an open source, cross-platform programming language.  
+This project is an officially maintained Covariant Script interpreter.
 ## Switch language ##
 - [简体中文](https://github.com/covscript/covscript/blob/master/README.zh_CN.md)
 - [English](https://github.com/covscript/covscript/blob/master/README.md)
 ## Features ##
-+ Cross-platform, supporting most mainstream operating systems
-+ The extension system is powerful and easy to use
-+ Written in C++ 11, which compatibility is better
-+ Independent and efficient compiler front end
-+ The compilation results can be exported
++ Cross-platform, supports most mainstream Operating Systems
++ Powerful and bloat-free extension system
++ Good compatibility -- written in C++11
++ Dependency-free and efficient compiler front-end
++ Serialize optimized AST
 + Efficient memory management system
-+ Support compile-time optimization
-+ Reference count garbage collector
-+ C/C++ Native Interface(CNI)
++ Compile-time optimization
++ Reference count garbage collection system
++ C/**C++** Native Interface (CNI)
 ## Extensions ##
 + [Darwin Universal CGL](https://github.com/covscript/covscript-darwin)
 + [Regular Expression](https://github.com/covscript/covscript-regex)
@@ -26,7 +26,7 @@ This project is an officially maintained Covariant Script interpreter
 + [Dear ImGui GUI](https://github.com/covscript/covscript-imgui)
 + [ASIO Network](https://github.com/covscript/covscript-network)
 + [Streams API](https://github.com/covscript/covscript-streams)
-## Documentations ##
+## Documentation ##
 [CovScript Online Documents](http://covscript.org/docs/)  
 ## Installation ##
 + Download the precompiled executable on the [Latest Release](https://github.com/covscript/covscript/releases/latest)
@@ -34,9 +34,9 @@ This project is an officially maintained Covariant Script interpreter
 ### Mac OS ###
 All the steps are the same as Linux, tested under macOS Sierra 10.12.5.
 ## Run ##
-### Interpreter ###
+### Basic command ###
 `cs [arguments..] <file> <args...>`  
-#### Arguments ####
+#### Optional arguments ####
 + `--compile-only` Only compile
 + `--no-optimize` Disable optimizer
 + `--dump-ast` Export abstract syntax tree
@@ -44,7 +44,7 @@ All the steps are the same as Linux, tested under macOS Sierra 10.12.5.
 + `--log-path PATH` Set the log and AST exporting path
 + `--import-path PATH` Set the import path
 
-**Note that if you do not set the log and AST exporting path, both will be output directly to the standard output stream.**
+**Note that if you do not set the log and AST exporting path, both will be printed to stdout.**
 ### Repl ###
 `cs_repl [arguments..]`  
 #### Arguments ####
@@ -54,7 +54,7 @@ All the steps are the same as Linux, tested under macOS Sierra 10.12.5.
 + `--log-path PATH` Set the log path
 + `--import-path PATH` Set the import path
 
-**Note that if you do not set a log path, it will be output directly to the standard output stream.**
+**Note that if you do not set a log path, it will be printed to stdout.**
 ### Installer ###
 Covariant Script Installer provides a simple toolchain configuration method for the Microsoft Windows platform. You can download, install, upgrade and uninstall the toolchain by simply push a button. You can download the latest installer from the [CovScript Programming Language Home](http://covscript.org). For more information, visit the [Covariant Script Installer](https://github.com/covscript/covscript-installer).
 ### GUI ###
@@ -66,12 +66,12 @@ The IntelliJ Plugin is available now:
 + [Source Code](https://github.com/covscript/covscript-intellij)
 + [Plugin Repository](https://plugins.jetbrains.com/plugin/10326-covscript)
 ## Examples ##
-The `examples` folder contains several example programs written by CovScript.
+The [examples](./examples) folder contains several example programs written by CovScript.
 ## Copyright ##
 **The author of the Covariant Script Programming Language is [@mikecovlee](https://github.com/mikecovlee/).**  
 **Copyright © 2018 Michael Lee**
 ## Thanks ##
-**Ranked by contribution.**  
+**Ordered by contribution.**  
 + Consultant: [@ice1000](https://github.com/ice1000/), [@imkiva](https://github.com/imkiva/)
 + Testing: Shi Youcheng, [@imkiva](https://github.com/imkiva/)
 + Douments: [@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
