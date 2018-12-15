@@ -50,5 +50,3 @@ install(TARGETS cs cs_repl covscript
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
-
-

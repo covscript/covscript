@@ -2,7 +2,7 @@
 
 set -e
 SELF_DIR="$(dirname $(readlink -f $0))"
-cd "$SELF_DIR"
+cd "$SELF_DIR"/..
 
 function set_flag() {
     local append=false
