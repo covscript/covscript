@@ -10,7 +10,11 @@ install:
 - make -j4
 - cd ..
 script:
+- ./build/cs -v
+- ./build/cs -h
+- ./build/cs_repl -v
+- ./build/cs_repl -h
 - ./build/cs ./examples/benchmark.csc
-- echo "runtime.info()" | ./build/cs_repl --silent
+- echo "runtime.info()" | ./build/cs_repl -s
 - ./build/cs --import-path ./build ./tests/extension.csc
 - ./build/test-covscript ./tests/function_invoker.csc
