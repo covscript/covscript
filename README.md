@@ -10,7 +10,7 @@ This project is an officially maintained Covariant Script interpreter.
 - [简体中文](https://github.com/covscript/covscript/blob/master/docs/README.zh_CN.md)
 - [English](https://github.com/covscript/covscript/blob/master/README.md)
 ## Features ##
-+ Cross-platform, supports most mainstream Operating Systems
++ Cross-platform, supporting most mainstream Operating Systems
 + Powerful and bloat-free extension system
 + Good compatibility -- written in C++11
 + Dependency-free and efficient compiler front-end
@@ -63,13 +63,13 @@ Option|Mnemonic|Function
 `--import-path <PATH>`|`-i <PATH>`|Set the import path
 
 **Note:**
-- Everythings you set after option `--args` or its mnemonic `-a` will be regarded as arguments.
+- Everything you set after option `--args` or its mnemonic `-a` will be regarded as arguments.
 - If you do not set a log path, it will be printed to stdout.
 
 ### Installer ###
-Covariant Script Installer provides a simple toolchain configuration method for the Microsoft Windows platform. You can download, install, upgrade and uninstall the toolchain by simply push a button. You can download the latest installer from the [CovScript Programming Language Home](http://covscript.org). For more information, visit the [Covariant Script Installer](https://github.com/covscript/covscript-installer).
+Covariant Script Installer provides a simple toolchain configuration method for the Microsoft Windows platform. You can download, install, upgrade and uninstall the toolchain by simply pushing a button. You can download the latest installer from the [CovScript Programming Language Home](http://covscript.org). For more information, visit the [Covariant Script Installer](https://github.com/covscript/covscript-installer).
 ### GUI ###
-Covariant Script provides a one-stop code editing, running, debugging experience for the Microsoft Windows platform . The CovScript Installer will automatically downloads the CovScript GUI for you. For more information, please visit [Covariant Script GUI](https://github.com/covscript/covscript-gui).
+Covariant Script provides a one-stop code editing, running, debugging experience for the Microsoft Windows platform . The CovScript Installer will automatically download the CovScript GUI for you. For more information, please visit [Covariant Script GUI](https://github.com/covscript/covscript-gui).
 ### Package Manager ###
 `cspkg` is a package manager written in Covariant Script whose main function is to manage extensions or packages for Covariant Script. `cspkg` will be released with the latest version of Covariant Script. For more information, please visit [Covariant Script Package Manager](https://github.com/covscript/cspkg).
 ### IntelliJ Plugin ###
@@ -90,7 +90,7 @@ The [examples](./examples) folder contains several example programs written by C
 + IntelliJ Plugin: [@ice1000](https://github.com/ice1000/)
 ## Comments ##
 Comments by [@ice1000](https://github.com/ice1000/):
->This is a programming language created by my friend Michael Lee, written in C++. The detailed description is on it’s website so I’ll just put some comments here. This is a C-like language (at least the function call syntax is of C style), while functions, structs, namespaces are ends with end like Ruby, and it has the concepts of package import using (the module system).  
+> This is a programming language created by my friend Michael Lee, written in C++. The detailed description is on its website so I’ll just put some comments here. This is a C-like language (at least the function call syntax is of C style), while functions, structs, namespaces are ends with end like Ruby, and it has the concepts of package import using (the module system).  
 Its parser is hand-written (very complex, although parsers are trivial), which impressed me (I didn’t even think of that when working on Lice, I just wrote an AST evaluator).  
 This language supports invoking functions written in C++, like JNI.  
 CovScript mostly features its powerful standard library, which has database, GUI, web access, regular expressions.
