@@ -116,15 +116,15 @@ namespace cs {
 	void instance_type::dump_ast(std::ostream &stream)
 	{
 		stream << "< Covariant Script AST Dump >\n< BeginMetaData >\n< Version: " << current_process->version
-		       << " >\n< STD Version: "
+		       << " >\n< Standard Version: "
 		       << current_process->std_version
-		       << " >\n< Output Precision: " << current_process->output_precision << " >\n< Import Path: \""
+		       << " >\n< Import Path: \""
 		       << current_process->import_path
 		       << "\" >\n";
 #ifdef COVSCRIPT_PLATFORM_WIN32
 		stream << "< Platform: Win32 >\n";
 #else
-		stream<<"< Platform: Unix >\n";
+		stream << "< Platform: Unix >\n";
 #endif
 		stream << "< EndMetaData >\n";
 		for (auto &ptr:statements)

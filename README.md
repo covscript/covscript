@@ -35,26 +35,37 @@ This project is an officially maintained Covariant Script interpreter.
 All the steps are the same as Linux, tested under macOS Sierra 10.12.5.
 ## Run ##
 ### Basic command ###
-`cs [arguments..] <file> <args...>`  
-#### Optional arguments ####
-+ `--compile-only` Only compile
-+ `--no-optimize` Disable optimizer
-+ `--dump-ast` Export abstract syntax tree
-+ `--wait-before-exit` Wait before process exit
-+ `--log-path PATH` Set the log and AST exporting path
-+ `--import-path PATH` Set the import path
+`cs [options...] <FILE> [arguments...]`
+#### Options ####
+Option|Mnemonic|Function
+:---:|:---:|:--:
+`--compile-only`|`-c`|Only compile
+`--no-optimize`|`-o`|Disable optimizer
+`--help`|`-h`|Show help infomation
+`--version`|`-v`|Show version infomation
+`--wait-before-exit`|`-w`|Wait before process exit
+`--dump-ast`|`-d`|Export abstract syntax tree
+`--log-path <PATH>`|`-l <PATH>` |Set the log and AST exporting path
+`--import-path <PATH>`|`-i <PATH>`|Set the import path
 
 **Note that if you do not set the log and AST exporting path, both will be printed to stdout.**
 ### Repl ###
-`cs_repl [arguments..]`  
-#### Arguments ####
-+ `--args` Specify the operating parameters
-+ `--silent` Does not display the version info
-+ `--wait-before-exit` Wait before process exit
-+ `--log-path PATH` Set the log path
-+ `--import-path PATH` Set the import path
+`cs_repl [options...]`
+#### Options ####
+Option|Mnemonic|Function
+:---:|:---:|:--:
+`--help`|`-h`|Show help infomation
+`--version`|`-v`|Show version infomation
+`--silent`|`-s`|Close the command prompt
+`--wait-before-exit`|`-w`|Wait before process exit
+`--args <...>`|`-a <...>`|Set the covscript arguments
+`--log-path <PATH>`|`-l <PATH>`|Set the log path
+`--import-path <PATH>`|`-i <PATH>`|Set the import path
 
-**Note that if you do not set a log path, it will be printed to stdout.**
+**Note:**
+- Everythings you set after option `--args` or its mnemonic `-a` will be regarded as arguments.
+- If you do not set a log path, it will be printed to stdout.
+
 ### Installer ###
 Covariant Script Installer provides a simple toolchain configuration method for the Microsoft Windows platform. You can download, install, upgrade and uninstall the toolchain by simply push a button. You can download the latest installer from the [CovScript Programming Language Home](http://covscript.org). For more information, visit the [Covariant Script Installer](https://github.com/covscript/covscript-installer).
 ### GUI ###

@@ -24,8 +24,10 @@
 #include <iostream>
 
 std::string log_path;
-bool wait_before_exit = false;
 bool silent = false;
+bool show_help_info = false;
+bool wait_before_exit = false;
+bool show_version_info = false;
 
 int covscript_args(int args_size, const char *args[])
 {
@@ -41,15 +43,23 @@ int covscript_args(int args_size, const char *args[])
 			cs::current_process->import_path += cs::path_delimiter + cs::process_path(args[index]);
 			expect_import_path = 2;
 		}
-		else if (std::strcmp(args[index], "--args") == 0)
+		else if (std::strcmp(args[index], "--args") == 0 || std::strcmp(args[index], "-a") == 0)
 			return ++index;
-		else if (std::strcmp(args[index], "--wait-before-exit") == 0 && !wait_before_exit)
-			wait_before_exit = true;
-		else if (std::strcmp(args[index], "--silent") == 0 && !silent)
+		else if ((std::strcmp(args[index], "--silent") == 0 || std::strcmp(args[index], "-s") == 0) && !silent)
 			silent = true;
-		else if (std::strcmp(args[index], "--log-path") == 0 && expect_log_path == 0)
+		else if ((std::strcmp(args[index], "--help") == 0 || std::strcmp(args[index], "-h") == 0) && !show_help_info)
+			show_help_info = true;
+		else if ((std::strcmp(args[index], "--wait-before-exit") == 0 || std::strcmp(args[index], "-w") == 0) &&
+		         !wait_before_exit)
+			wait_before_exit = true;
+		else if ((std::strcmp(args[index], "--version") == 0 || std::strcmp(args[index], "-v") == 0) &&
+		         !show_version_info)
+			show_version_info = true;
+		else if ((std::strcmp(args[index], "--log-path") == 0 || std::strcmp(args[index], "-l") == 0) &&
+		         expect_log_path == 0)
 			expect_log_path = 1;
-		else if (std::strcmp(args[index], "--import-path") == 0 && expect_import_path == 0)
+		else if ((std::strcmp(args[index], "--import-path") == 0 || std::strcmp(args[index], "-i") == 0) &&
+		         expect_import_path == 0)
 			expect_import_path = 1;
 		else
 			throw cs::fatal_error("argument syntax error.");
@@ -63,10 +73,39 @@ void covscript_main(int args_size, const char *args[])
 {
 	int index = covscript_args(args_size, args);
 	cs::current_process->import_path += cs::path_delimiter + cs::get_import_path();
+	if (show_help_info) {
+		std::cout << "Usage: cs_repl [options...]\n" << "Options:\n";
+		std::cout << "    Option               Mnemonic   Function\n";
+		std::cout << "  --help                -h          Show help infomation\n";
+		std::cout << "  --version             -v          Show version infomation\n";
+		std::cout << "  --silent              -s          Close the command prompt\n";
+		std::cout << "  --wait-before-exit    -w          Wait before process exit\n";
+		std::cout << "  --args <...>          -a <...>    Set the arguments\n";
+		std::cout << "  --log-path    <PATH>  -l <PATH>   Set the log path\n";
+		std::cout << "  --import-path <PATH>  -i <PATH>   Set the import path\n";
+		std::cout << std::endl;
+		return;
+	}
+	else if (show_version_info) {
+		std::cout << "Covariant Script Programming Language Interpreter REPL\n";
+		std::cout << "Version: " << cs::current_process->version << "\n";
+		std::cout << "Copyright (C) 2018 Michael Lee. All rights reserved.\n";
+		std::cout << "Please visit <http://covscript.org/> for more information.\n";
+		std::cout << "\nMetadata:\n";
+		std::cout << "  Standard Version  STD" << cs::current_process->std_version << "\n";
+		std::cout << "  Import Path       " << cs::current_process->import_path << "\n";
+#ifdef COVSCRIPT_PLATFORM_WIN32
+		std::cout << "  Platform          Win32\n";
+#else
+		std::cout<<"  Platform          Unix\n";
+#endif
+		std::cout << std::endl;
+		return;
+	}
 	if (!silent)
 		std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: " << cs::current_process->version
 		          << "\n"
-		          "Copyright (C) 2018 Michael Lee.All rights reserved.\n"
+		          "Copyright (C) 2018 Michael Lee. All rights reserved.\n"
 		          "Please visit <http://covscript.org/> for more information."
 		          << std::endl;
 	cs::array
