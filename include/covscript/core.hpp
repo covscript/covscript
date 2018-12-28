@@ -56,6 +56,13 @@
 #include <covscript/types.hpp>
 #include <covscript/any.hpp>
 
+#ifdef CS_DEBUGGER
+void cs_debugger_step_callback(cs::statement_base*);
+#define CS_DEBUGGER_STEP(STMT) cs_debugger_step_callback(STMT)
+#else
+#define CS_DEBUGGER_STEP(STMT)
+#endif
+
 namespace cs {
 // Process Context
 	struct process_context final {

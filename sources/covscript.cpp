@@ -28,18 +28,6 @@
 
 #pragma comment(lib, "shell32.lib")
 #endif
-/*
-// Compiler
-#include "compiler/compiler.cpp"
-#include "compiler/lexer.cpp"
-#include "compiler/parser.cpp"
-#include "compiler/codegen.cpp"
-
-// Instance
-#include "instance/runtime.cpp"
-#include "instance/instance.cpp"
-#include "instance/statement.cpp"
-*/
 
 #ifdef _MSC_VER
 #ifndef WIN32_LEAN_AND_MEAN
