@@ -106,18 +106,14 @@ bool covscript_debugger(bool last=false)
 		return func_map[func](args);
 }
 
-std::vector<std::size_t> breakpoints;
+std::string path;
+cs::set_t<std::size_t> breakpoints;
 
 void cs_debugger_step_callback(cs::statement_base *stmt)
 {
-	if(!exec_by_step) {
-		for(auto& it:breakpoints) {
-			if(it==stmt->get_line_num()) {
-				std::cout<<"Hit breakpoint, at "<<stmt->get_file_path()<<":"<<stmt->get_line_num()<<std::endl;
-				exec_by_step=true;
-				break;
-			}
-		}
+	if(!exec_by_step&&stmt->get_file_path()==path&&breakpoints.count(stmt->get_line_num())>0) {
+		std::cout<<"Hit breakpoint, at "<<stmt->get_file_path()<<":"<<stmt->get_line_num()<<std::endl;
+		exec_by_step=true;
 	}
 	if(exec_by_step) {
 		std::cout<<stmt->get_line_num()<<"\t"<<stmt->get_raw_code()<<std::endl;
@@ -189,7 +185,7 @@ void covscript_main(int args_size, const char *args[])
 			throw cs::fatal_error("no input file.");
 		if (args_size-index>1)
 			throw cs::fatal_error("argument syntax error.");
-		std::string path = cs::process_path(args[index]);
+		path = cs::process_path(args[index]);
 		cs::array
 		arg;
 		for (; index < args_size; ++index)
@@ -203,7 +199,7 @@ void covscript_main(int args_size, const char *args[])
 			return false;
 		});
 		func_map.emplace("break", [](const std::string& cmd)->bool {
-			breakpoints.push_back(std::stoul(cmd));
+			breakpoints.emplace(std::stoul(cmd));
 			return true;
 		});
 		func_map.emplace("optimizer", [](const std::string& cmd)->bool {
@@ -215,7 +211,7 @@ void covscript_main(int args_size, const char *args[])
 				std::cout<<"Invalid option: \""<<cmd<<"\". Use \"on\" or \"off\"."<<std::endl;
 			return true;
 		});
-		func_map.emplace("run", [&path](const std::string& cmd)->bool {
+		func_map.emplace("run", [](const std::string& cmd)->bool {
 			cs::context_t context = cs::create_context(split(cmd));
 			context->compiler->disable_optimizer = no_optimize;
 			context->instance->compile(path);
