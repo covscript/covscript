@@ -24,6 +24,7 @@
 #include <iostream>
 
 std::string log_path;
+bool no_optimize = false;
 bool show_help_info = false;
 bool wait_before_exit = false;
 bool show_version_info = false;
@@ -44,12 +45,12 @@ int covscript_args(int args_size, const char *args[])
 		}
 		else if (args[index][0] == '-') {
 			if ((std::strcmp(args[index], "--help") == 0 || std::strcmp(args[index], "-h") == 0) &&
-			         !show_help_info)
+			        !show_help_info)
 				show_help_info = true;
 			else if ((std::strcmp(args[index], "--version") == 0 || std::strcmp(args[index], "-v") == 0) &&
 			         !show_version_info)
 				show_version_info = true;
-            else if ((std::strcmp(args[index], "--wait-before-exit") == 0 || std::strcmp(args[index], "-w") == 0) &&
+			else if ((std::strcmp(args[index], "--wait-before-exit") == 0 || std::strcmp(args[index], "-w") == 0) &&
 			         !wait_before_exit)
 				wait_before_exit = true;
 			else if ((std::strcmp(args[index], "--log-path") == 0 || std::strcmp(args[index], "-l") == 0) &&
@@ -75,57 +76,72 @@ std::string last_cmd;
 
 bool covscript_debugger(bool last=false)
 {
-    std::string cmd, func, args;
-    if(!last)
-    {
-        std::cout<<"> "<<std::flush;
-        std::getline(std::cin, cmd);
-    }else
-        cmd=last_cmd;
-    std::size_t posit=0;
-    for(;posit<cmd.size();++posit)
-        if(std::isspace(cmd[posit]))
-            break;
-        else
-            func.push_back(cmd[posit]);
-    for(;posit<cmd.size();++posit)
-        if(!std::isspace(cmd[posit]))
-            break;
-    for(;posit<cmd.size();++posit)
-        args.push_back(cmd[posit]);
-    if(func.empty()&&args.empty()&&!last_cmd.empty())
-        return covscript_debugger(true);
-    if(func.empty())
-        return true;
-    if(func_map.count(func)==0)
-    {
-        std::cout<<"Undefined command: \""<<func<<"\". Try \"help\"."<<std::endl;
-        return true;
-    }else
-        return func_map[func](args);
+	std::string cmd, func, args;
+	if(!last) {
+		std::cout<<"> "<<std::flush;
+		std::getline(std::cin, cmd);
+	}
+	else
+		cmd=last_cmd;
+	std::size_t posit=0;
+	for(; posit<cmd.size(); ++posit)
+		if(std::isspace(cmd[posit]))
+			break;
+		else
+			func.push_back(cmd[posit]);
+	for(; posit<cmd.size(); ++posit)
+		if(!std::isspace(cmd[posit]))
+			break;
+	for(; posit<cmd.size(); ++posit)
+		args.push_back(cmd[posit]);
+	if(func.empty()&&args.empty()&&!last_cmd.empty())
+		return covscript_debugger(true);
+	if(func.empty())
+		return true;
+	if(func_map.count(func)==0) {
+		std::cout<<"Undefined command: \""<<func<<"\". Try \"help\"."<<std::endl;
+		return true;
+	}
+	else
+		return func_map[func](args);
 }
 
-std::vector<std::size_t> breakpoints_line;
+std::vector<std::size_t> breakpoints;
 
 void cs_debugger_step_callback(cs::statement_base *stmt)
 {
-    if(!exec_by_step)
-    {
-        for(auto& it:breakpoints_line)
-        {
-            if(it==stmt->get_line_num())
-            {
-                std::cout<<"Hit breakpoint, at "<<stmt->get_file_path()<<":"<<stmt->get_line_num()<<std::endl;
-                exec_by_step=true;
-                break;
-            }
-        }
-    }
-    if(exec_by_step)
-    {
-        std::cout<<stmt->get_line_num()<<"\t"<<stmt->get_raw_code()<<std::endl;
-        while(covscript_debugger());
-    }
+	if(!exec_by_step) {
+		for(auto& it:breakpoints) {
+			if(it==stmt->get_line_num()) {
+				std::cout<<"Hit breakpoint, at "<<stmt->get_file_path()<<":"<<stmt->get_line_num()<<std::endl;
+				exec_by_step=true;
+				break;
+			}
+		}
+	}
+	if(exec_by_step) {
+		std::cout<<stmt->get_line_num()<<"\t"<<stmt->get_raw_code()<<std::endl;
+		while(covscript_debugger());
+	}
+}
+
+cs::array split(const std::string &str)
+{
+	cs::array arr;
+	std::string buf;
+	for (auto &ch:str) {
+		if (std::isspace(ch)) {
+			if (!buf.empty()) {
+				arr.push_back(buf);
+				buf.clear();
+			}
+		}
+		else
+			buf.push_back(ch);
+	}
+	if (!buf.empty())
+		arr.push_back(buf);
+	return std::move(arr);
 }
 
 void covscript_main(int args_size, const char *args[])
@@ -138,7 +154,7 @@ void covscript_main(int args_size, const char *args[])
 			std::cout << "    Option               Mnemonic   Function\n";
 			std::cout << "  --help                -h          Show help infomation\n";
 			std::cout << "  --version             -v          Show version infomation\n";
-            std::cout << "  --wait-before-exit    -w          Wait before process exit\n";
+			std::cout << "  --wait-before-exit    -w          Wait before process exit\n";
 			std::cout << "  --log-path    <PATH>  -l <PATH>   Set the log and AST exporting path\n";
 			std::cout << "  --import-path <PATH>  -i <PATH>   Set the import path\n";
 			std::cout << std::endl;
@@ -171,17 +187,42 @@ void covscript_main(int args_size, const char *args[])
 		}
 		if (index == args_size)
 			throw cs::fatal_error("no input file.");
-        if (args_size-index>1)
+		if (args_size-index>1)
 			throw cs::fatal_error("argument syntax error.");
 		std::string path = cs::process_path(args[index]);
 		cs::array
 		arg;
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
-		cs::context_t context = cs::create_context(arg);
-		// context->compiler->disable_optimizer = no_optimize;
-		context->instance->compile(path);
-		context->instance->interpret();
+		;
+		func_map.emplace("next", [](const std::string& cmd)->bool {
+			return false;
+		});
+		func_map.emplace("continue", [](const std::string& cmd)->bool {
+			exec_by_step=false;
+			return false;
+		});
+		func_map.emplace("break", [](const std::string& cmd)->bool {
+			breakpoints.push_back(std::stoul(cmd));
+			return true;
+		});
+		func_map.emplace("optimizer", [](const std::string& cmd)->bool {
+			if(cmd=="on")
+				no_optimize=false;
+			else if(cmd=="off")
+				no_optimize=true;
+			else
+				std::cout<<"Invalid option: \""<<cmd<<"\". Use \"on\" or \"off\"."<<std::endl;
+			return true;
+		});
+		func_map.emplace("run", [&path](const std::string& cmd)->bool {
+			cs::context_t context = cs::create_context(split(cmd));
+			context->compiler->disable_optimizer = no_optimize;
+			context->instance->compile(path);
+			context->instance->interpret();
+			return true;
+		});
+		while(covscript_debugger());
 	}
 	else
 		throw cs::fatal_error("no input file.");
