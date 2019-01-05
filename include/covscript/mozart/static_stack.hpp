@@ -43,6 +43,11 @@ namespace cov {
 			return mOffset == -1;
 		}
 
+		std::size_t size() const
+		{
+			return mOffset+1;
+		}
+
 		bool full() const
 		{
 			return mOffset == Size - 1;

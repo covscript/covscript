@@ -70,13 +70,20 @@ int covscript_args(int args_size, const char *args[])
 	return index;
 }
 
-cs::map_t<std::string, std::function<bool(const std::string&)>> func_map;
-bool exec_by_step=false;
+using callback_t=std::function<bool(const std::string&)>;
+std::string path;
 std::string last_cmd;
+cs::context_t context;
+bool exec_by_step=false;
+std::size_t current_level=0;
+bool step_into_function=false;
+cs::set_t<std::size_t> breakpoints;
+cs::map_t<std::string, callback_t> func_map;
 
 bool covscript_debugger(bool last=false)
 {
 	std::string cmd, func, args;
+	step_into_function=false;
 	if(!last) {
 		std::cout<<"> "<<std::flush;
 		std::getline(std::cin, cmd);
@@ -103,19 +110,20 @@ bool covscript_debugger(bool last=false)
 		return true;
 	}
 	else
+	{
+		last_cmd=cmd;
 		return func_map[func](args);
+	}
 }
-
-std::string path;
-cs::set_t<std::size_t> breakpoints;
 
 void cs_debugger_step_callback(cs::statement_base *stmt)
 {
 	if(!exec_by_step&&stmt->get_file_path()==path&&breakpoints.count(stmt->get_line_num())>0) {
 		std::cout<<"Hit breakpoint, at "<<stmt->get_file_path()<<":"<<stmt->get_line_num()<<std::endl;
+		current_level=context->instance->fcall_stack.size();
 		exec_by_step=true;
 	}
-	if(exec_by_step) {
+	if(exec_by_step&&(step_into_function?true:context->instance->fcall_stack.size()<=current_level)) {
 		std::cout<<stmt->get_line_num()<<"\t"<<stmt->get_raw_code()<<std::endl;
 		while(covscript_debugger());
 	}
@@ -194,6 +202,10 @@ void covscript_main(int args_size, const char *args[])
 		func_map.emplace("next", [](const std::string& cmd)->bool {
 			return false;
 		});
+		func_map.emplace("step", [](const std::string& cmd)->bool {
+			step_into_function=true;
+			return false;
+		});
 		func_map.emplace("continue", [](const std::string& cmd)->bool {
 			exec_by_step=false;
 			return false;
@@ -212,7 +224,7 @@ void covscript_main(int args_size, const char *args[])
 			return true;
 		});
 		func_map.emplace("run", [](const std::string& cmd)->bool {
-			cs::context_t context = cs::create_context(split(cmd));
+			context = cs::create_context(split(cmd));
 			context->compiler->disable_optimizer = no_optimize;
 			context->instance->compile(path);
 			context->instance->interpret();
