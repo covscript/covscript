@@ -193,12 +193,34 @@ void covscript_main(int args_size, const char *args[])
 			throw cs::fatal_error("no input file.");
 		if (args_size-index>1)
 			throw cs::fatal_error("argument syntax error.");
+		std::cout << "Covariant Script Programming Language Debugger\nVersion: " << cs::current_process->version
+		          << "\n"
+		          "Copyright (C) 2018 Michael Lee. All rights reserved.\n"
+		          "Please visit <http://covscript.org/> for more information."
+		          << std::endl;
 		path = cs::process_path(args[index]);
 		cs::array
 		arg;
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		;
+		func_map.emplace("help", [](const std::string& cmd)->bool {
+			std::cout<<"Command                   Function\n";
+			std::cout<<"help                      Show help infomation\n";
+			std::cout<<"quit                      Exit the debugger\n";
+			std::cout<<"next                      Execute next statement\n";
+			std::cout<<"step                      Execute next statement and step into function.\n";
+			std::cout<<"continue                  Continue execute program until next breakpint gets hit\n";
+			std::cout<<"break [line num]          Set breakpoint at specific line\n";
+			std::cout<<"optimizer [on|off]        Turn on or turn off the optimizer\n";
+			std::cout<<"run <...>                 Run program with specific arguments\n";
+			std::cout<<std::endl;
+			return true;
+		});
+		func_map.emplace("quit", [](const std::string& cmd)->bool {
+			std::exit(0);
+			return false;
+		});
 		func_map.emplace("next", [](const std::string& cmd)->bool {
 			return false;
 		});
