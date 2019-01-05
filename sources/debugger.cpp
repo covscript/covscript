@@ -119,7 +119,7 @@ bool covscript_debugger(bool last=false)
 void cs_debugger_step_callback(cs::statement_base *stmt)
 {
 	if(!exec_by_step&&stmt->get_file_path()==path&&breakpoints.count(stmt->get_line_num())>0) {
-		std::cout<<"Hit breakpoint, at "<<stmt->get_file_path()<<":"<<stmt->get_line_num()<<std::endl;
+		std::cout<<"\nHit breakpoint, at "<<stmt->get_file_path()<<":"<<stmt->get_line_num()<<std::endl;
 		current_level=context->instance->fcall_stack.size();
 		exec_by_step=true;
 	}
