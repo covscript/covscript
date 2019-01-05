@@ -28,8 +28,8 @@ set(SOURCE_CODE
     sources/covscript.cpp)
 
 # Static Library
-add_library(covscript STATIC $SOURCE_CODE)
-add_library(covscript_debug STATIC $SOURCE_CODE)
+add_library(covscript STATIC ${SOURCE_CODE})
+add_library(covscript_debug STATIC ${SOURCE_CODE})
 
 target_compile_definitions(covscript_debug PRIVATE CS_DEBUGGER)
 
