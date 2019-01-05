@@ -12,6 +12,8 @@ install:
 script:
 - ./build/cs -v
 - ./build/cs -h
+- ./build/cs_dbg -v
+- ./build/cs_dbg -h
 - ./build/cs_repl -v
 - ./build/cs_repl -h
 - ./build/cs ./examples/benchmark.csc
