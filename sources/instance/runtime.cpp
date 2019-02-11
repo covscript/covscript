@@ -373,7 +373,7 @@ namespace cs {
 			if (b.const_val<number>() >= 0)
 				return cstr[b.const_val<number>()];
 			else
-				return cstr[cstr.size()+b.const_val<number>()];
+				return cstr[cstr.size() + b.const_val<number>()];
 		}
 		else
 			throw runtime_error("Access non-array or string object.");
