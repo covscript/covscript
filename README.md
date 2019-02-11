@@ -24,6 +24,7 @@ This project is an officially maintained Covariant Script interpreter.
 + [Regular Expression](https://github.com/covscript/covscript-regex)
 + [SQLite3 Database](https://github.com/covscript/covscript-sqlite)
 + [Dear ImGui GUI](https://github.com/covscript/covscript-imgui)
++ [Base64 Codec](https://github.com/covscript/covscript-codec)
 + [ASIO Network](https://github.com/covscript/covscript-network)
 + [Streams API](https://github.com/covscript/covscript-streams)
 ## Documentation ##
