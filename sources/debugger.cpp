@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2018 Michael Lee(李登淳)
+* Copyright (C) 2019 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 * Website: http://covscript.org
@@ -167,7 +167,7 @@ void covscript_main(int args_size, const char *args[])
 		else if (show_version_info) {
 			std::cout << "Covariant Script Programming Language Debugger\n";
 			std::cout << "Version: " << cs::current_process->version << "\n";
-			std::cout << "Copyright (C) 2018 Michael Lee.All rights reserved.\n";
+			std::cout << "Copyright (C) 2019 Michael Lee.All rights reserved.\n";
 			std::cout << "Licensed under the Apache License, Version 2.0 (the \"License\");\n";
 			std::cout << "you may not use this file except in compliance with the License.\n";
 			std::cout << "You may obtain a copy of the License at\n";
@@ -195,7 +195,7 @@ void covscript_main(int args_size, const char *args[])
 			throw cs::fatal_error("argument syntax error.");
 		std::cout << "Covariant Script Programming Language Debugger\nVersion: " << cs::current_process->version
 		          << "\n"
-		          "Copyright (C) 2018 Michael Lee. All rights reserved.\n"
+		          "Copyright (C) 2019 Michael Lee. All rights reserved.\n"
 		          "Please visit <http://covscript.org/> for more information."
 		          << std::endl;
 		path = cs::process_path(args[index]);

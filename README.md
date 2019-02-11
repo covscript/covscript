@@ -80,7 +80,7 @@ The IntelliJ Plugin is available now:
 The [examples](./examples) folder contains several example programs written by CovScript.
 ## Copyright ##
 **The author of the Covariant Script Programming Language is [@mikecovlee](https://github.com/mikecovlee/).**  
-**Copyright © 2018 Michael Lee**
+**Copyright © 2019 Michael Lee**
 ## Thanks ##
 **Ordered by contribution.**  
 + Consultant: [@ice1000](https://github.com/ice1000/), [@imkiva](https://github.com/imkiva/)
