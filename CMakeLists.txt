@@ -17,15 +17,15 @@ endif ()
 
 # Source Code
 set(SOURCE_CODE
-    sources/compiler/codegen.cpp
-    sources/compiler/compiler.cpp
-    sources/compiler/lexer.cpp
-    sources/compiler/parser.cpp
-    sources/instance/extension.cpp
-    sources/instance/instance.cpp
-    sources/instance/runtime.cpp
-    sources/instance/statement.cpp
-    sources/covscript.cpp)
+        sources/compiler/codegen.cpp
+        sources/compiler/compiler.cpp
+        sources/compiler/lexer.cpp
+        sources/compiler/parser.cpp
+        sources/instance/extension.cpp
+        sources/instance/instance.cpp
+        sources/instance/runtime.cpp
+        sources/instance/statement.cpp
+        sources/covscript.cpp)
 
 # Static Library
 add_library(covscript STATIC ${SOURCE_CODE})

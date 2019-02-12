@@ -12,7 +12,7 @@ This project is an officially maintained Covariant Script interpreter.
 ## Features ##
 + Cross-platform, supporting most mainstream Operating Systems
 + Powerful and bloat-free extension system
-+ Good compatibility -- written in C++11
++ Good compatibility -- written in C++14
 + Dependency-free and efficient compiler front-end
 + Serialize optimized AST
 + Efficient memory management system

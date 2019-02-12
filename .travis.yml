@@ -1,22 +1,22 @@
 dist: xenial
 language: cpp
 compiler:
-- clang
-- gcc
+  - clang
+  - gcc
 install:
-- mkdir build
-- cd build
-- cmake -G "Unix Makefiles" ..
-- make -j4
-- cd ..
+  - mkdir build
+  - cd build
+  - cmake -G "Unix Makefiles" ..
+  - make -j4
+  - cd ..
 script:
-- ./build/cs -v
-- ./build/cs -h
-- ./build/cs_dbg -v
-- ./build/cs_dbg -h
-- ./build/cs_repl -v
-- ./build/cs_repl -h
-- ./build/cs ./examples/benchmark.csc
-- echo "runtime.info()" | ./build/cs_repl -s
-- ./build/cs --import-path ./build ./tests/extension.csc
-- ./build/test-covscript ./tests/function_invoker.csc
+  - ./build/cs -v
+  - ./build/cs -h
+  - ./build/cs_dbg -v
+  - ./build/cs_dbg -h
+  - ./build/cs_repl -v
+  - ./build/cs_repl -h
+  - ./build/cs ./examples/benchmark.csc
+  - echo "runtime.info()" | ./build/cs_repl -s
+  - ./build/cs --import-path ./build ./tests/extension.csc
+  - ./build/test-covscript ./tests/function_invoker.csc

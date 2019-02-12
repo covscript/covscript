@@ -11,7 +11,7 @@
 - [English](https://github.com/covscript/covscript/blob/master/README.md)
 ## 特点 ##
 + 跨平台，支持大部分主流操作系统
-+ 使用C++11编写，兼容性更好
++ 使用C++14编写，兼容性更好
 + 独立、高效的编译器前端
 + 可导出编译结果
 + 支持编译期优化
