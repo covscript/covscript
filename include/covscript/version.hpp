@@ -26,8 +26,8 @@
 * Master
 *
 */
-#define COVSCRIPT_VERSION_NUM 3,0,2,2
-#define COVSCRIPT_VERSION_STR "3.0.2 Acipenser sinensis(Unstable) Build 2"
+#define COVSCRIPT_VERSION_NUM 3,0,2,3
+#define COVSCRIPT_VERSION_STR "3.0.2 Acipenser sinensis(Unstable) Build 3"
 #define COVSCRIPT_STD_VERSION 190101
 #define COVSCRIPT_ABI_VERSION 190101
 #if defined(_WIN32) || defined(WIN32)
