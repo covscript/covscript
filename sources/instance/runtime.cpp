@@ -346,16 +346,19 @@ namespace cs {
 		if (a.type() == typeid(array)) {
 			if (b.type() != typeid(number))
 				throw runtime_error("Index must be a number.");
-			if (b.const_val<number>() < 0)
-				throw runtime_error("Index must above zero.");
 			const auto &carr = a.const_val<array>();
-			std::size_t posit = b.const_val<number>();
-			if (posit >= carr.size()) {
-				auto &arr = a.val<array>(true);
-				for (std::size_t i = posit - arr.size() + 1; i > 0; --i)
-					arr.emplace_back(number(0));
+			std::size_t posit = 0;
+			if (b.const_val<number>() >= 0) {
+				posit = b.const_val<number>();
+				if (posit >= carr.size()) {
+					auto &arr = a.val<array>(true);
+					for (std::size_t i = posit - arr.size() + 1; i > 0; --i)
+						arr.emplace_back(number(0));
+				}
 			}
-			return carr.at(posit);
+			else
+				posit = carr.size() + b.const_val<number>();
+			return carr[posit];
 		}
 		else if (a.type() == typeid(hash_map)) {
 			const auto &cmap = a.const_val<hash_map>();
@@ -366,7 +369,11 @@ namespace cs {
 		else if (a.type() == typeid(string)) {
 			if (b.type() != typeid(number))
 				throw runtime_error("Index must be a number.");
-			return a.const_val<string>().at(b.const_val<number>());
+			const auto &cstr = a.const_val<string>();
+			if (b.const_val<number>() >= 0)
+				return cstr[b.const_val<number>()];
+			else
+				return cstr[cstr.size() + b.const_val<number>()];
 		}
 		else
 			throw runtime_error("Access non-array or string object.");

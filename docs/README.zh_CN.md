@@ -23,6 +23,7 @@
 + [Dear ImGui图形用户界面](https://github.com/covscript/covscript-imgui)
 + [Darwin通用字符图形库](https://github.com/covscript/covscript-darwin)
 + [SQLite3数据库](https://github.com/covscript/covscript-sqlite)
++ [Base64编解码](https://github.com/covscript/covscript-codec)
 + [ASIO网络库](https://github.com/covscript/covscript-network)
 + [正则表达式](https://github.com/covscript/covscript-regex)
 + [流式API](https://github.com/covscript/covscript-streams)
