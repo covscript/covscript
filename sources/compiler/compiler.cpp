@@ -403,7 +403,8 @@ namespace cs {
 							throw runtime_error("Redefinition of function argument.");
 					args.push_back(str);
 				}
-				statement_base *ret=new statement_return(cov::tree<token_base *>(it.right()), context, new token_endline(token->get_line_num()));
+				statement_base *ret = new statement_return(cov::tree<token_base *>(it.right()), context,
+				        new token_endline(token->get_line_num()));
 #ifdef CS_DEBUGGER
 				std::string decl="function [lambda](";
 				if(args.size()!=0) {
@@ -416,7 +417,8 @@ namespace cs {
 					decl+=")";
 				it.data() = new_value(var::make_protect<callable>(function(context, decl, ret, args, std::deque<statement_base *> {ret})));
 #else
-				it.data() = new_value(var::make_protect<callable>(function(context, args, std::deque<statement_base *> {ret})));
+				it.data() = new_value(var::make_protect<callable>(
+				                          function(context, args, std::deque<statement_base *> {ret})));
 #endif
 				return;
 				break;

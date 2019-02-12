@@ -19,10 +19,12 @@
 * Website: http://covscript.org
 */
 #define CS_DEBUGGER
+
 #include <covscript_impl/console/conio.hpp>
 #include <covscript_impl/variant.hpp>
 #include <covscript/covscript.hpp>
 #include <iostream>
+#include <chrono>
 
 std::string log_path;
 bool no_optimize = false;
@@ -71,19 +73,20 @@ int covscript_args(int args_size, const char *args[])
 	return index;
 }
 
-class breakpoint_recorder final
-{
-	struct breakpoint final
-	{
-		std::size_t id=0;
+class breakpoint_recorder final {
+	struct breakpoint final {
+		std::size_t id = 0;
 		variant_impl::variant<std::size_t, cs::var> data;
-		template<typename T>breakpoint(std::size_t _id, T&& _data):id(_id), data(std::forward<T>(_data)) {}
+
+		template<typename T>
+		breakpoint(std::size_t _id, T &&_data):id(_id), data(std::forward<T>(_data)) {}
 	};
+
 	static std::size_t m_id;
 	std::forward_list<breakpoint> m_breakpoints;
 public:
 
-	breakpoint_recorder()=default;
+	breakpoint_recorder() = default;
 
 	std::size_t add_line(std::size_t line_num)
 	{
@@ -93,12 +96,12 @@ public:
 
 	std::size_t add_func(cs::var function)
 	{
-		if(function.type()==typeid(cs::object_method))
-			function=function.const_val<cs::object_method>().callable;
-		else if(function.type()!=typeid(cs::callable))
+		if (function.type() == typeid(cs::object_method))
+			function = function.const_val<cs::object_method>().callable;
+		else if (function.type() != typeid(cs::callable))
 			throw cs::lang_error("Debugger just can break at specific line or function.");
-		const cs::callable::function_type& target=function.const_val<cs::callable>().get_raw_data();
-		if(target.target_type()!=typeid(cs::function))
+		const cs::callable::function_type &target = function.const_val<cs::callable>().get_raw_data();
+		if (target.target_type() != typeid(cs::function))
 			throw cs::lang_error("Debugger can not break at CNI function.");
 		target.target<cs::function>()->set_debugger_state(true);
 		m_breakpoints.emplace_front(++m_id, function);
@@ -107,69 +110,77 @@ public:
 
 	void remove(std::size_t id)
 	{
-		m_breakpoints.remove_if([id](const breakpoint &b)->bool{
-			if(b.id==id&&b.data.type()==typeid(cs::var))
-				b.data.get<cs::var>().const_val<cs::callable>().get_raw_data().target<cs::function>()->set_debugger_state(false);
-			return b.id==id;
+		m_breakpoints.remove_if([id](const breakpoint &b) -> bool {
+			if (b.id == id && b.data.type() == typeid(cs::var))
+				b.data.get<cs::var>().const_val<cs::callable>().get_raw_data().target<cs::function>()->set_debugger_state(
+				    false);
+			return b.id == id;
 		});
 	}
 
 	bool exist(std::size_t line_num) const
 	{
-		for(auto& b:m_breakpoints)
-			if(b.data.type()==typeid(std::size_t)&&b.data.get<std::size_t>()==line_num)
+		for (auto &b:m_breakpoints)
+			if (b.data.type() == typeid(std::size_t) && b.data.get<std::size_t>() == line_num)
 				return true;
 		return false;
 	}
 
 	void list() const
 	{
-		std::cout<<"ID\tBreakpoint\n"<<std::endl;
-		for(auto& b:m_breakpoints)
-		{
-			std::cout<<b.id<<"\t";
-			if(b.data.type()==typeid(cs::var))
-			{
-				const cs::function* func=b.data.get<cs::var>().const_val<cs::callable>().get_raw_data().target<cs::function>();
-				std::cout<<"line "<<func->get_raw_statement()->get_line_num()<<", "<<func->get_declaration()<<std::endl;
-			}else
-				std::cout<<"line "<<b.data.get<std::size_t>()<<std::endl;
+		std::cout << "ID\tBreakpoint\n" << std::endl;
+		for (auto &b:m_breakpoints) {
+			std::cout << b.id << "\t";
+			if (b.data.type() == typeid(cs::var)) {
+				const cs::function *func = b.data.get<cs::var>().const_val<cs::callable>().get_raw_data().target<cs::function>();
+				std::cout << "line " << func->get_raw_statement()->get_line_num() << ", " << func->get_declaration()
+				          << std::endl;
+			}
+			else
+				std::cout << "line " << b.data.get<std::size_t>() << std::endl;
 		}
 	}
 };
 
-std::size_t breakpoint_recorder::m_id=0;
+std::size_t time()
+{
+	static std::chrono::time_point<std::chrono::high_resolution_clock> timer(std::chrono::high_resolution_clock::now());
+	return std::chrono::duration_cast<std::chrono::milliseconds>(
+	           std::chrono::high_resolution_clock::now() - timer).count();
+}
 
-using callback_t=std::function<bool(const std::string&)>;
+std::size_t breakpoint_recorder::m_id = 0;
+
+using callback_t=std::function<bool(const std::string &)>;
 std::string path;
 cs::context_t context;
-bool exec_by_step=false;
-std::size_t current_level=0;
-bool step_into_function=false;
+bool exec_by_step = false;
+std::size_t current_level = 0;
+bool step_into_function = false;
 breakpoint_recorder breakpoints;
 cs::map_t<std::string, callback_t> func_map;
 
 bool covscript_debugger()
 {
 	std::string cmd, func, args;
-	step_into_function=false;
-	std::cout<<"> "<<std::flush;
+	step_into_function = false;
+	std::cout << "> " << std::flush;
 	std::getline(std::cin, cmd);
-	std::size_t posit=0;
-	for(; posit<cmd.size(); ++posit)
-		if(std::isspace(cmd[posit]))
+	std::size_t posit = 0;
+	for (; posit < cmd.size(); ++posit)
+		if (std::isspace(cmd[posit]))
 			break;
 		else
 			func.push_back(cmd[posit]);
-	for(; posit<cmd.size(); ++posit)
-		if(!std::isspace(cmd[posit]))
+	for (; posit < cmd.size(); ++posit)
+		if (!std::isspace(cmd[posit]))
 			break;
-	for(; posit<cmd.size(); ++posit)
+	for (; posit < cmd.size(); ++posit)
 		args.push_back(cmd[posit]);
-	if(func.empty())
+	if (func.empty())
 		return true;
-	if(func_map.count(func)==0) {
-		std::cout<<"Undefined command: \""<<func<<"\". Try \"help\"."<<std::endl;
+	if (func_map.count(func) == 0) {
+		std::cout << "Undefined command: \"" << func << "\". Try \"help\"." << std::endl;
 		return true;
 	}
 	else
@@ -178,22 +189,24 @@ bool covscript_debugger()
 
 void cs_debugger_step_callback(cs::statement_base *stmt)
 {
-	if(!exec_by_step&&stmt->get_file_path()==path&&breakpoints.exist(stmt->get_line_num())) {
-		std::cout<<"\nHit breakpoint, at \""<<stmt->get_file_path()<<"\", line "<<stmt->get_line_num()<<std::endl;
-		current_level=context->instance->fcall_stack.size();
-		exec_by_step=true;
+	if (!exec_by_step && stmt->get_file_path() == path && breakpoints.exist(stmt->get_line_num())) {
+		std::cout << "\nHit breakpoint, at \"" << stmt->get_file_path() << "\", line " << stmt->get_line_num()
+		          << std::endl;
+		current_level = context->instance->fcall_stack.size();
+		exec_by_step = true;
 	}
-	if(exec_by_step&&(step_into_function?true:context->instance->fcall_stack.size()<=current_level)) {
-		std::cout<<stmt->get_line_num()<<"\t"<<stmt->get_raw_code()<<std::endl;
-		while(covscript_debugger());
+	if (exec_by_step && (step_into_function ? true : context->instance->fcall_stack.size() <= current_level)) {
+		std::cout << stmt->get_line_num() << "\t" << stmt->get_raw_code() << std::endl;
+		while (covscript_debugger());
 	}
 }
 
-void cs_debugger_func_callback(const std::string& decl, cs::statement_base *stmt)
+void cs_debugger_func_callback(const std::string &decl, cs::statement_base *stmt)
 {
-	std::cout<<"\nHit breakpoint, at \""<<stmt->get_file_path()<<"\", line "<<stmt->get_line_num()<<", "<<decl<<std::endl;
-	current_level=context->instance->fcall_stack.size();
-	exec_by_step=true;
+	std::cout << "\nHit breakpoint, at \"" << stmt->get_file_path() << "\", line " << stmt->get_line_num() << ", "
+	          << decl << std::endl;
+	current_level = context->instance->fcall_stack.size();
+	exec_by_step = true;
 }
 
 cs::array split(const std::string &str)
@@ -258,7 +271,7 @@ void covscript_main(int args_size, const char *args[])
 		}
 		if (index == args_size)
 			throw cs::fatal_error("no input file.");
-		if (args_size-index>1)
+		if (args_size - index > 1)
 			throw cs::fatal_error("argument syntax error.");
 		std::cout << "Covariant Script Programming Language Debugger\nVersion: " << cs::current_process->version
 		          << "\n"
@@ -270,100 +283,120 @@ void covscript_main(int args_size, const char *args[])
 		arg;
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
-		func_map.emplace("quit", [](const std::string& cmd)->bool {
+		func_map.emplace("quit", [](const std::string &cmd) -> bool {
 			std::exit(0);
 			return false;
 		});
-		func_map.emplace("help", [](const std::string& cmd)->bool {
-			std::cout<<"Command                   Function\n\n";
-			std::cout<<"quit                      Exit the debugger\n";
-			std::cout<<"help                      Show help infomation\n";
-			std::cout<<"next                      Execute next statement\n";
-			std::cout<<"step                      Execute next statement and step into function\n";
-			std::cout<<"continue                  Continue execute program until next breakpint gets hit\n";
-			std::cout<<"backtrace                 Show stack backtrace\n";
-			std::cout<<"break [line|function]     Set breakpoint at specific line or function\n";
-			std::cout<<"lsbreak                   List all breakpoints\n";
-			std::cout<<"rmbreak [id]              Remove specific breakpoint\n";
-			std::cout<<"print [expression]        Evaluate the value of expression\n";
-			std::cout<<"optimizer [on|off]        Turn on or turn off the optimizer\n";
-			std::cout<<"run <...>                 Run program with specific arguments\n";
-			std::cout<<std::endl;
+		func_map.emplace("help", [](const std::string &cmd) -> bool {
+			std::cout << "Command                   Function\n\n";
+			std::cout << "quit                      Exit the debugger\n";
+			std::cout << "help                      Show help infomation\n";
+			std::cout << "next                      Execute next statement\n";
+			std::cout << "step                      Execute next statement and step into function\n";
+			std::cout << "continue                  Continue execute program until next breakpint gets hit\n";
+			std::cout << "backtrace                 Show stack backtrace\n";
+			std::cout << "break [line|function]     Set breakpoint at specific line or function\n";
+			std::cout << "lsbreak                   List all breakpoints\n";
+			std::cout << "rmbreak [id]              Remove specific breakpoint\n";
+			std::cout << "print [expression]        Evaluate the value of expression\n";
+			std::cout << "optimizer [on|off]        Turn on or turn off the optimizer\n";
+			std::cout << "run <...>                 Run program with specific arguments\n";
+			std::cout << std::endl;
 			return true;
 		});
-		func_map.emplace("next", [](const std::string& cmd)->bool {
+		func_map.emplace("next", [](const std::string &cmd) -> bool {
+			if (context.get() == nullptr)
+				throw cs::runtime_error("Please launch a interpreter instance first.");
 			return false;
 		});
-		func_map.emplace("step", [](const std::string& cmd)->bool {
-			step_into_function=true;
+		func_map.emplace("step", [](const std::string &cmd) -> bool {
+			if (context.get() == nullptr)
+				throw cs::runtime_error("Please launch a interpreter instance first.");
+			step_into_function = true;
 			return false;
 		});
-		func_map.emplace("continue", [](const std::string& cmd)->bool {
-			exec_by_step=false;
+		func_map.emplace("continue", [](const std::string &cmd) -> bool {
+			if (context.get() == nullptr)
+				throw cs::runtime_error("Please launch a interpreter instance first.");
+			exec_by_step = false;
 			return false;
 		});
-		func_map.emplace("backtrace", [](const std::string& cmd)->bool {
-			for(auto& func:context->instance->stack_backtrace)
-				std::cout<<func<<std::endl;
+		func_map.emplace("backtrace", [](const std::string &cmd) -> bool {
+			if (context.get() == nullptr)
+				throw cs::runtime_error("Please launch a interpreter instance first.");
+			for (auto &func:context->instance->stack_backtrace)
+				std::cout << func << std::endl;
 			return true;
 		});
-		func_map.emplace("break", [](const std::string& cmd)->bool {
-			bool is_line=true;
-			for(auto& ch:cmd)
+		func_map.emplace("break", [](const std::string &cmd) -> bool {
+			bool is_line = true;
+			for (auto &ch:cmd)
 			{
-				if(!std::isspace(ch)&&!std::isdigit(ch))
-				{
-					is_line=false;
+				if (!std::isspace(ch) && !std::isdigit(ch)) {
+					is_line = false;
 					break;
 				}
 			}
-			if(!is_line)
+			if (!is_line)
 			{
+				if (context.get() == nullptr)
+					throw cs::runtime_error("Please launch a interpreter instance first.");
 				std::deque<char> buff;
-			cs::expression_t tree;
-			for (auto &ch:cmd)
-				buff.push_back(ch);
-			context->compiler->build_expr(buff, tree);
-			breakpoints.add_func(context->instance->parse_expr(tree.root()));
-			}else
+				cs::expression_t tree;
+				for (auto &ch:cmd)
+					buff.push_back(ch);
+				context->compiler->build_expr(buff, tree);
+				breakpoints.add_func(context->instance->parse_expr(tree.root()));
+			}
+			else
 				breakpoints.add_line(std::stoul(cmd));
 			return true;
 		});
-		func_map.emplace("lsbreak", [](const std::string& cmd)->bool {
+		func_map.emplace("lsbreak", [](const std::string &cmd) -> bool {
 			breakpoints.list();
 			return true;
 		});
-		func_map.emplace("rmbreak", [](const std::string& cmd)->bool {
+		func_map.emplace("rmbreak", [](const std::string &cmd) -> bool {
 			breakpoints.remove(std::stoul(cmd));
 			return true;
 		});
-		func_map.emplace("optimizer", [](const std::string& cmd)->bool {
-			if(cmd=="on")
-				no_optimize=false;
-			else if(cmd=="off")
-				no_optimize=true;
+		func_map.emplace("optimizer", [](const std::string &cmd) -> bool {
+			if (context.get() != nullptr)
+				throw cs::runtime_error("Can not tuning optimizer while interpreter is running.");
+			if (cmd == "on")
+				no_optimize = false;
+			else if (cmd == "off")
+				no_optimize = true;
 			else
-				std::cout<<"Invalid option: \""<<cmd<<"\". Use \"on\" or \"off\"."<<std::endl;
+				std::cout << "Invalid option: \"" << cmd << "\". Use \"on\" or \"off\"." << std::endl;
 			return true;
 		});
-		func_map.emplace("run", [](const std::string& cmd)->bool {
+		func_map.emplace("run", [](const std::string &cmd) -> bool {
+			if (context.get() != nullptr)
+				throw cs::runtime_error("Can not run two or more instance at the same time.");
 			context = cs::create_context(split(cmd));
 			context->compiler->disable_optimizer = no_optimize;
 			context->instance->compile(path);
+			std::cout << "Launching new interpreter instance..." << std::endl;
+			std::size_t start_time = time();
 			context->instance->interpret();
+			std::cout << "The interpreter instance has exited normally, up to " << time() - start_time << "ms."
+			          << std::endl;
 			return true;
 		});
-		func_map.emplace("print", [](const std::string& cmd)->bool {
+		func_map.emplace("print", [](const std::string &cmd) -> bool {
+			if (context.get() == nullptr)
+				throw cs::runtime_error("Please launch a interpreter instance first.");
 			std::deque<char> buff;
 			cs::expression_t tree;
 			for (auto &ch:cmd)
 				buff.push_back(ch);
 			context->compiler->build_expr(buff, tree);
-			std::cout<<context->instance->parse_expr(tree.root())<<std::endl;
+			std::cout << context->instance->parse_expr(tree.root()) << std::endl;
 			return true;
 		});
 		std::ofstream log_stream;
-		while(std::cin) {
+		while (std::cin) {
 			try {
 				covscript_debugger();
 			}

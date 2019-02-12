@@ -3200,7 +3200,7 @@ namespace spp {
 					r->set_size_and_pinuse_of_free_chunk(rsize);
 					set_size_and_pinuse_of_inuse_chunk(p, nb);
 				}
-				else {     // exhaust dv
+				else {       // exhaust dv
 					size_t dvs = _dvsize;
 					_dvsize = 0;
 					_dv = 0;

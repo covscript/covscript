@@ -150,6 +150,7 @@ namespace cs {
 			context->instance->stack_backtrace.pop();
 		}
 #else
+
 		explicit fcall_guard(context_t c) : context(std::move(std::move(c)))
 		{
 			context->instance->fcall_stack.push(null_pointer);
@@ -159,6 +160,7 @@ namespace cs {
 		{
 			context->instance->fcall_stack.pop();
 		}
+
 #endif
 
 		var get() const
