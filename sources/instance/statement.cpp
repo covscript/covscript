@@ -30,6 +30,8 @@ namespace cs {
 		scope_guard scope(mContext);
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(mContext, mDecl);
+		if(mMatch)
+			cs_debugger_func_callback(mDecl, mStmt);
 #else
 		fcall_guard fcall(mContext);
 #endif

@@ -20,6 +20,7 @@
 */
 #define CS_DEBUGGER
 #include <covscript_impl/console/conio.hpp>
+#include <covscript_impl/variant.hpp>
 #include <covscript/covscript.hpp>
 #include <iostream>
 
@@ -70,28 +71,90 @@ int covscript_args(int args_size, const char *args[])
 	return index;
 }
 
+class breakpoint_recorder final
+{
+	struct breakpoint final
+	{
+		std::size_t id=0;
+		variant_impl::variant<std::size_t, cs::var> data;
+		template<typename T>breakpoint(std::size_t _id, T&& _data):id(_id), data(std::forward<T>(_data)) {}
+	};
+	static std::size_t m_id;
+	std::forward_list<breakpoint> m_breakpoints;
+public:
+
+	breakpoint_recorder()=default;
+
+	std::size_t add_line(std::size_t line_num)
+	{
+		m_breakpoints.emplace_front(++m_id, line_num);
+		return m_id;
+	}
+
+	std::size_t add_func(cs::var function)
+	{
+		if(function.type()==typeid(cs::object_method))
+			function=function.const_val<cs::object_method>().callable;
+		else if(function.type()!=typeid(cs::callable))
+			throw cs::lang_error("Debugger just can break at specific line number and function.");
+		const cs::callable::function_type& target=function.const_val<cs::callable>().get_raw_data();
+		if(target.target_type()!=typeid(cs::function))
+			throw cs::lang_error("Debugger can not break at CNI function.");
+		target.target<cs::function>()->set_debugger_state(true);
+		m_breakpoints.emplace_front(++m_id, function);
+		return m_id;
+	}
+
+	void remove(std::size_t id)
+	{
+		m_breakpoints.remove_if([id](const breakpoint &b)->bool{
+			if(b.id==id&&b.data.type()==typeid(cs::var))
+				b.data.get<cs::var>().const_val<cs::callable>().get_raw_data().target<cs::function>()->set_debugger_state(false);
+			return b.id==id;
+		});
+	}
+
+	bool exist(std::size_t line_num) const
+	{
+		for(auto& b:m_breakpoints)
+			if(b.data.type()==typeid(std::size_t)&&b.data.get<std::size_t>()==line_num)
+				return true;
+		return false;
+	}
+
+	void list() const
+	{
+		std::cout<<"ID\tBreakpoint\n"<<std::endl;
+		for(auto& b:m_breakpoints)
+		{
+			std::cout<<b.id<<"\t";
+			if(b.data.type()==typeid(cs::var))
+			{
+				const cs::function* func=b.data.get<cs::var>().const_val<cs::callable>().get_raw_data().target<cs::function>();
+				std::cout<<"line "<<func->get_raw_statement()->get_line_num()<<", "<<func->get_declaration()<<std::endl;
+			}else
+				std::cout<<"line "<<b.data.get<std::size_t>()<<std::endl;
+		}
+	}
+};
+
+std::size_t breakpoint_recorder::m_id=0;
+
 using callback_t=std::function<bool(const std::string&)>;
 std::string path;
-std::string last_cmd;
 cs::context_t context;
 bool exec_by_step=false;
 std::size_t current_level=0;
 bool step_into_function=false;
-cs::set_t<std::size_t> breakpoints;
+breakpoint_recorder breakpoints;
 cs::map_t<std::string, callback_t> func_map;
 
-bool covscript_debugger(bool last=false)
+bool covscript_debugger()
 {
 	std::string cmd, func, args;
 	step_into_function=false;
-	if(!last) {
-		std::cout<<"> "<<std::flush;
-		// std::cin.
-		std::cin.sync();
-		std::getline(std::cin, cmd);
-	}
-	else
-		cmd=last_cmd;
+	std::cout<<"> "<<std::flush;
+	std::getline(std::cin, cmd);
 	std::size_t posit=0;
 	for(; posit<cmd.size(); ++posit)
 		if(std::isspace(cmd[posit]))
@@ -103,24 +166,20 @@ bool covscript_debugger(bool last=false)
 			break;
 	for(; posit<cmd.size(); ++posit)
 		args.push_back(cmd[posit]);
-	if(func.empty()&&args.empty()&&!last_cmd.empty())
-		return covscript_debugger(true);
 	if(func.empty())
 		return true;
 	if(func_map.count(func)==0) {
 		std::cout<<"Undefined command: \""<<func<<"\". Try \"help\"."<<std::endl;
 		return true;
 	}
-	else {
-		last_cmd=cmd;
+	else
 		return func_map[func](args);
-	}
 }
 
 void cs_debugger_step_callback(cs::statement_base *stmt)
 {
-	if(!exec_by_step&&stmt->get_file_path()==path&&breakpoints.count(stmt->get_line_num())>0) {
-		std::cout<<"\nHit breakpoint, at "<<stmt->get_file_path()<<":"<<stmt->get_line_num()<<std::endl;
+	if(!exec_by_step&&stmt->get_file_path()==path&&breakpoints.exist(stmt->get_line_num())) {
+		std::cout<<"\nHit breakpoint, at \""<<stmt->get_file_path()<<"\", line "<<stmt->get_line_num()<<std::endl;
 		current_level=context->instance->fcall_stack.size();
 		exec_by_step=true;
 	}
@@ -128,6 +187,13 @@ void cs_debugger_step_callback(cs::statement_base *stmt)
 		std::cout<<stmt->get_line_num()<<"\t"<<stmt->get_raw_code()<<std::endl;
 		while(covscript_debugger());
 	}
+}
+
+void cs_debugger_func_callback(const std::string& decl, cs::statement_base *stmt)
+{
+	std::cout<<"\nHit breakpoint, at \""<<stmt->get_file_path()<<"\", line "<<stmt->get_line_num()<<", "<<decl<<std::endl;
+	current_level=context->instance->fcall_stack.size();
+	exec_by_step=true;
 }
 
 cs::array split(const std::string &str)
@@ -235,15 +301,33 @@ void covscript_main(int args_size, const char *args[])
 			return false;
 		});
 		func_map.emplace("lsbreak", [](const std::string& cmd)->bool {
-			breakpoints.emplace(std::stoul(cmd));
+			breakpoints.list();
 			return true;
 		});
 		func_map.emplace("addbreak", [](const std::string& cmd)->bool {
-			breakpoints.emplace(std::stoul(cmd));
+			bool is_line=true;
+			for(auto& ch:cmd)
+			{
+				if(!std::isspace(ch)&&!std::isdigit(ch))
+				{
+					is_line=false;
+					break;
+				}
+			}
+			if(!is_line)
+			{
+				std::deque<char> buff;
+			cs::expression_t tree;
+			for (auto &ch:cmd)
+				buff.push_back(ch);
+			context->compiler->build_expr(buff, tree);
+			breakpoints.add_func(context->instance->parse_expr(tree.root()));
+			}else
+				breakpoints.add_line(std::stoul(cmd));
 			return true;
 		});
 		func_map.emplace("delbreak", [](const std::string& cmd)->bool {
-			breakpoints.emplace(std::stoul(cmd));
+			breakpoints.remove(std::stoul(cmd));
 			return true;
 		});
 		func_map.emplace("optimizer", [](const std::string& cmd)->bool {
