@@ -96,7 +96,7 @@ public:
 		if(function.type()==typeid(cs::object_method))
 			function=function.const_val<cs::object_method>().callable;
 		else if(function.type()!=typeid(cs::callable))
-			throw cs::lang_error("Debugger just can break at specific line number and function.");
+			throw cs::lang_error("Debugger just can break at specific line or function.");
 		const cs::callable::function_type& target=function.const_val<cs::callable>().get_raw_data();
 		if(target.target_type()!=typeid(cs::function))
 			throw cs::lang_error("Debugger can not break at CNI function.");
@@ -270,7 +270,10 @@ void covscript_main(int args_size, const char *args[])
 		arg;
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
-		;
+		func_map.emplace("quit", [](const std::string& cmd)->bool {
+			std::exit(0);
+			return false;
+		});
 		func_map.emplace("help", [](const std::string& cmd)->bool {
 			std::cout<<"Command                   Function\n\n";
 			std::cout<<"quit                      Exit the debugger\n";
@@ -278,16 +281,15 @@ void covscript_main(int args_size, const char *args[])
 			std::cout<<"next                      Execute next statement\n";
 			std::cout<<"step                      Execute next statement and step into function\n";
 			std::cout<<"continue                  Continue execute program until next breakpint gets hit\n";
-			std::cout<<"break [line num]          Set breakpoint at specific line\n";
+			std::cout<<"backtrace                 Show stack backtrace\n";
+			std::cout<<"break [line|function]     Set breakpoint at specific line or function\n";
+			std::cout<<"lsbreak                   List all breakpoints\n";
+			std::cout<<"rmbreak [id]              Remove specific breakpoint\n";
 			std::cout<<"print [expression]        Evaluate the value of expression\n";
 			std::cout<<"optimizer [on|off]        Turn on or turn off the optimizer\n";
 			std::cout<<"run <...>                 Run program with specific arguments\n";
 			std::cout<<std::endl;
 			return true;
-		});
-		func_map.emplace("quit", [](const std::string& cmd)->bool {
-			std::exit(0);
-			return false;
 		});
 		func_map.emplace("next", [](const std::string& cmd)->bool {
 			return false;
@@ -300,11 +302,12 @@ void covscript_main(int args_size, const char *args[])
 			exec_by_step=false;
 			return false;
 		});
-		func_map.emplace("lsbreak", [](const std::string& cmd)->bool {
-			breakpoints.list();
+		func_map.emplace("backtrace", [](const std::string& cmd)->bool {
+			for(auto& func:context->instance->stack_backtrace)
+				std::cout<<func<<std::endl;
 			return true;
 		});
-		func_map.emplace("addbreak", [](const std::string& cmd)->bool {
+		func_map.emplace("break", [](const std::string& cmd)->bool {
 			bool is_line=true;
 			for(auto& ch:cmd)
 			{
@@ -326,7 +329,11 @@ void covscript_main(int args_size, const char *args[])
 				breakpoints.add_line(std::stoul(cmd));
 			return true;
 		});
-		func_map.emplace("delbreak", [](const std::string& cmd)->bool {
+		func_map.emplace("lsbreak", [](const std::string& cmd)->bool {
+			breakpoints.list();
+			return true;
+		});
+		func_map.emplace("rmbreak", [](const std::string& cmd)->bool {
 			breakpoints.remove(std::stoul(cmd));
 			return true;
 		});
@@ -353,11 +360,6 @@ void covscript_main(int args_size, const char *args[])
 				buff.push_back(ch);
 			context->compiler->build_expr(buff, tree);
 			std::cout<<context->instance->parse_expr(tree.root())<<std::endl;
-			return true;
-		});
-		func_map.emplace("backtrace", [](const std::string& cmd)->bool {
-			for(auto& func:context->instance->stack_backtrace)
-				std::cout<<func<<std::endl;
 			return true;
 		});
 		std::ofstream log_stream;

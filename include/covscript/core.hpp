@@ -201,7 +201,7 @@ namespace cs {
 			std::swap(mArgs, args);
 #ifdef CS_DEBUGGER
 			std::string prefix, suffix;
-			auto lpos=mDecl.find(')');
+			auto lpos=mDecl.find('(')+1;
 			auto rpos=mDecl.rfind(')');
 			prefix=mDecl.substr(0, lpos);
 			suffix=mDecl.substr(rpos);
