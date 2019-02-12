@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2018 Michael Lee(李登淳)
+* Copyright (C) 2019 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 *
@@ -26,8 +26,8 @@
 * Master
 *
 */
-#define COVSCRIPT_VERSION_NUM 3,0,2,1
-#define COVSCRIPT_VERSION_STR "3.0.2 Acipenser sinensis(Unstable) Build 1"
+#define COVSCRIPT_VERSION_NUM 3,0,2,3
+#define COVSCRIPT_VERSION_STR "3.0.2 Acipenser sinensis(Unstable) Build 3"
 #define COVSCRIPT_STD_VERSION 190101
 #define COVSCRIPT_ABI_VERSION 190101
 #if defined(_WIN32) || defined(WIN32)

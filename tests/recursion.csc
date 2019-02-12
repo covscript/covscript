@@ -8,5 +8,6 @@ function test(a)
 end
 system.out.println("Please enter a intger:")
 var in=system.in.input()
+system.in.ignore()
 test(in)
 system.out.println(in)

@@ -11,7 +11,7 @@
 - [English](https://github.com/covscript/covscript/blob/master/README.md)
 ## 特点 ##
 + 跨平台，支持大部分主流操作系统
-+ 使用C++11编写，兼容性更好
++ 使用C++14编写，兼容性更好
 + 独立、高效的编译器前端
 + 可导出编译结果
 + 支持编译期优化
@@ -81,7 +81,7 @@ IntelliJ插件现已可用：
 `examples`文件夹包含了数个使用CovScript编写的示例程序。
 ## 版权 ##
 **Covariant Script编程语言的作者是[@mikecovlee](https://github.com/mikecovlee/).**  
-**版权所有 © 2018 李登淳**
+**版权所有 © 2019 李登淳**
 ## 感谢 ##
 **按贡献排名。**  
 + 顾问：[@ice1000](https://github.com/ice1000/), [@imkiva](https://github.com/imkiva/)

@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2018 Michael Lee(李登淳)
+* Copyright (C) 2019 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
@@ -84,7 +84,7 @@ namespace cs {
 		std::ifstream in(path);
 		if (!in.is_open())
 			throw fatal_error(path + ": No such file or directory");
-		for (int ch = in.get(); ch != EOF; ch = in.get())
+		for (int ch = in.get(); ch != std::char_traits<char>::eof(); ch = in.get())
 			buff.push_back(ch);
 		std::deque<std::deque<token_base *>> ast;
 		// Compile

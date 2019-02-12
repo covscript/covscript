@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2018 Michael Lee(李登淳)
+* Copyright (C) 2019 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 * Website: http://covscript.org
@@ -55,6 +55,14 @@
 #include <covscript/version.hpp>
 #include <covscript/types.hpp>
 #include <covscript/any.hpp>
+
+#ifdef CS_DEBUGGER
+void cs_debugger_step_callback(cs::statement_base*);
+void cs_debugger_func_callback(const std::string&, cs::statement_base*);
+#define CS_DEBUGGER_STEP(STMT) cs_debugger_step_callback(STMT)
+#else
+#define CS_DEBUGGER_STEP(STMT)
+#endif
 
 namespace cs {
 // Process Context
@@ -141,10 +149,23 @@ namespace cs {
 		{
 			return mFunc(args);
 		}
+
+#ifdef CS_DEBUGGER
+		const function_type& get_raw_data() const
+		{
+			return mFunc;
+		}
+#endif
 	};
 
 	class function final {
 		context_t mContext;
+#ifdef CS_DEBUGGER
+		// Debug Information
+		mutable bool mMatch;
+		std::string mDecl;
+		statement_base *mStmt;
+#endif
 		std::vector<std::string> mArgs;
 		std::deque<statement_base *> mBody;
 	public:
@@ -152,9 +173,14 @@ namespace cs {
 
 		function(const function &) = default;
 
-		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body)
-			: mContext(std::move(
-			               std::move(c))), mArgs(std::move(args)), mBody(std::move(body)) {}
+#ifdef CS_DEBUGGER
+		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body):mContext(std::move(std::move(c))), mDecl(std::move(decl)), mStmt(stmt), mArgs(std::move(args)), mBody(std::move(body)) {}
+#else
+
+		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body) : mContext(
+			    std::move(std::move(c))), mArgs(std::move(args)), mBody(std::move(body)) {}
+
+#endif
 
 		~function() = default;
 
@@ -176,7 +202,35 @@ namespace cs {
 					throw runtime_error("Overwrite the default argument \"this\".");
 			}
 			std::swap(mArgs, args);
+#ifdef CS_DEBUGGER
+			std::string prefix, suffix;
+			auto lpos=mDecl.find('(')+1;
+			auto rpos=mDecl.rfind(')');
+			prefix=mDecl.substr(0, lpos);
+			suffix=mDecl.substr(rpos);
+			if(args.size()>1)
+				mDecl=prefix+"this, "+mDecl.substr(lpos, rpos-lpos)+suffix;
+			else
+				mDecl=prefix+"this"+mDecl.substr(lpos, rpos-lpos)+suffix;
+#endif
 		}
+
+#ifdef CS_DEBUGGER
+		const std::string& get_declaration() const
+		{
+			return mDecl;
+		}
+
+		statement_base* get_raw_statement() const
+		{
+			return mStmt;
+		}
+
+		void set_debugger_state(bool match) const
+		{
+			mMatch=match;
+		}
+#endif
 	};
 
 	struct object_method final {

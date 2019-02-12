@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2018 Michael Lee(李登淳)
+* Copyright (C) 2019 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
@@ -403,17 +403,23 @@ namespace cs {
 							throw runtime_error("Redefinition of function argument.");
 					args.push_back(str);
 				}
-				it.data() = new_value(var::make_protect<callable>(function(context, args,
-				std::deque<statement_base *> {
-					new statement_return(
-					    cov::tree<
-					token_base *>{
-						it.right()
-					},
-					context,
-					new token_endline(
-					    token->get_line_num()))
-				})));
+				statement_base *ret = new statement_return(cov::tree<token_base *>(it.right()), context,
+				        new token_endline(token->get_line_num()));
+#ifdef CS_DEBUGGER
+				std::string decl="function [lambda](";
+				if(args.size()!=0) {
+					for(auto& it:args)
+						decl+=it+", ";
+					decl.pop_back();
+					decl[decl.size()-1]=')';
+				}
+				else
+					decl+=")";
+				it.data() = new_value(var::make_protect<callable>(function(context, decl, ret, args, std::deque<statement_base *> {ret})));
+#else
+				it.data() = new_value(var::make_protect<callable>(
+				                          function(context, args, std::deque<statement_base *> {ret})));
+#endif
 				return;
 				break;
 			}

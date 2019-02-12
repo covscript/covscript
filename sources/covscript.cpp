@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2018 Michael Lee(李登淳)
+* Copyright (C) 2019 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 * Website: http://covscript.org
@@ -28,18 +28,6 @@
 
 #pragma comment(lib, "shell32.lib")
 #endif
-/*
-// Compiler
-#include "compiler/compiler.cpp"
-#include "compiler/lexer.cpp"
-#include "compiler/parser.cpp"
-#include "compiler/codegen.cpp"
-
-// Instance
-#include "instance/runtime.cpp"
-#include "instance/instance.cpp"
-#include "instance/statement.cpp"
-*/
 
 #ifdef _MSC_VER
 #ifndef WIN32_LEAN_AND_MEAN

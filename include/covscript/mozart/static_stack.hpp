@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2018 Michael Lee(李登淳)
+* Copyright (C) 2019 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 *
@@ -41,6 +41,11 @@ namespace cov {
 		bool empty() const
 		{
 			return mOffset == -1;
+		}
+
+		std::size_t size() const
+		{
+			return mOffset + 1;
 		}
 
 		bool full() const
@@ -76,6 +81,16 @@ namespace cov {
 				--mOffset;
 			else
 				throw cov::error("E000H");
+		}
+
+		typename std::array<T, Size>::const_iterator begin() const
+		{
+			return mData.begin();
+		}
+
+		typename std::array<T, Size>::const_iterator end() const
+		{
+			return mData.begin() + size();
 		}
 	};
 }

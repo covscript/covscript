@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2018 Michael Lee(李登淳)
+* Copyright (C) 2019 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
@@ -482,10 +482,20 @@ namespace cs {
 		bool mOverride = false;
 		bool mIsMemFn = false;
 		// Debug Information
+#ifdef CS_DEBUGGER
+		std::string mDecl;
+#endif
 		std::vector<std::string> mArgs;
 		std::deque<statement_base *> mBlock;
 	public:
 		statement_function() = delete;
+
+#ifdef CS_DEBUGGER
+		statement_function(std::string name, std::string decl, const std::vector<std::string> &args,
+		                   const std::deque<statement_base *> &body, bool is_override, const context_t &c,
+		                   token_base *ptr)
+			: statement_base(c, ptr), mName(std::move(name)), mFunc(c, decl, this, args, body), mOverride(is_override), mDecl(decl), mArgs(args), mBlock(body) {}
+#else
 
 		statement_function(std::string name, const std::vector<std::string> &args,
 		                   const std::deque<statement_base *> &body, bool is_override, const context_t &c,
@@ -493,6 +503,8 @@ namespace cs {
 			: statement_base(c, ptr), mName(std::move(name)), mFunc(c, args, body), mOverride(is_override),
 			  mArgs(args),
 			  mBlock(body) {}
+
+#endif
 
 		statement_types get_type() const noexcept override
 		{
@@ -508,6 +520,13 @@ namespace cs {
 		void run() override;
 
 		void dump(std::ostream &) const override;
+
+#ifdef CS_DEBUGGER
+		const std::string& get_decl() const
+		{
+			return mDecl;
+		}
+#endif
 	};
 
 	class statement_return final : public statement_base {
