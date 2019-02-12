@@ -484,7 +484,22 @@ namespace cs {
 			args.push_back(static_cast<token_id *>(it.root().data())->get_id());
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
+#ifdef CS_DEBUGGER
+		std::string decl="function "+name+"(";
+		if(args.size()!=0) {
+			for(auto& it:args)
+				decl+=it+", ";
+			decl.pop_back();
+			decl[decl.size()-1]=')';
+		}
+		else
+			decl+=")";
+		if(raw.front().size() == 4)
+			decl+=" override";
+		return new statement_function(name, decl, args, body, raw.front().size() == 4, context, raw.front().back());
+#else
 		return new statement_function(name, args, body, raw.front().size() == 4, context, raw.front().back());
+#endif
 	}
 
 	statement_base *

@@ -38,6 +38,9 @@ namespace cs {
 		context_t context;
 		// Function Stack
 		cov::static_stack<var, fcall_stack_size> fcall_stack;
+#ifdef CS_DEBUGGER
+		cov::static_stack<std::string, fcall_stack_size> stack_backtrace;
+#endif
 
 		// Constructor and destructor
 		instance_type() = delete;
@@ -134,6 +137,19 @@ namespace cs {
 	public:
 		fcall_guard() = delete;
 
+#ifdef CS_DEBUGGER
+		explicit fcall_guard(context_t c, const std::string &decl) : context(std::move(std::move(c)))
+		{
+			context->instance->fcall_stack.push(null_pointer);
+			context->instance->stack_backtrace.push(decl);
+		}
+
+		~fcall_guard()
+		{
+			context->instance->fcall_stack.pop();
+			context->instance->stack_backtrace.pop();
+		}
+#else
 		explicit fcall_guard(context_t c) : context(std::move(std::move(c)))
 		{
 			context->instance->fcall_stack.push(null_pointer);
@@ -143,6 +159,7 @@ namespace cs {
 		{
 			context->instance->fcall_stack.pop();
 		}
+#endif
 
 		var get() const
 		{

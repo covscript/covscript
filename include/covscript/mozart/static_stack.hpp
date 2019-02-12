@@ -82,5 +82,15 @@ namespace cov {
 			else
 				throw cov::error("E000H");
 		}
+
+		typename std::array<T, Size>::const_iterator begin() const
+		{
+			return mData.begin();
+		}
+
+		typename std::array<T, Size>::const_iterator end() const
+		{
+			return mData.begin()+size();
+		}
 	};
 }

@@ -28,7 +28,11 @@ namespace cs {
 			    "Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
 			    std::to_string(args.size()));
 		scope_guard scope(mContext);
+#ifdef CS_DEBUGGER
+		fcall_guard fcall(mContext, mDecl);
+#else
 		fcall_guard fcall(mContext);
+#endif
 		for (std::size_t i = 0; i < args.size(); ++i)
 			mContext->instance->storage.add_var(this->mArgs[i], args[i]);
 		for (auto &ptr:this->mBody) {

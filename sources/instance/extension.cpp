@@ -432,6 +432,11 @@ namespace istream_cs_ext {
 		return parse_value(str);
 	}
 
+	void ignore(istream &in)
+	{
+		in->ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+	}
+
 	void init()
 	{
 		(*istream_ext)
@@ -444,7 +449,8 @@ namespace istream_cs_ext {
 		.add_var("seek_from", make_cni(seek_from))
 		.add_var("good", make_cni(good))
 		.add_var("eof", make_cni(eof))
-		.add_var("input", make_cni(input));
+		.add_var("input", make_cni(input))
+		.add_var("ignore", make_cni(ignore));
 	}
 }
 namespace ostream_cs_ext {
@@ -817,8 +823,6 @@ namespace runtime_cs_ext {
 	{
 		return val.hash();
 	}
-
-	using expression_t=cov::tree<token_base *>;
 
 	var build(const context_t &context, const string &expr)
 	{

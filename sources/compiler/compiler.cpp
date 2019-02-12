@@ -403,6 +403,28 @@ namespace cs {
 							throw runtime_error("Redefinition of function argument.");
 					args.push_back(str);
 				}
+#ifdef CS_DEBUGGER
+				std::string decl="function [lambda](";
+				if(args.size()!=0) {
+					for(auto& it:args)
+						decl+=it+", ";
+					decl.pop_back();
+					decl[decl.size()-1]=')';
+				}
+				else
+					decl+=")";
+				it.data() = new_value(var::make_protect<callable>(function(context, decl, args,
+				std::deque<statement_base *> {
+					new statement_return(
+					    cov::tree<
+					token_base *>{
+						it.right()
+					},
+					context,
+					new token_endline(
+					    token->get_line_num()))
+				})));
+#else
 				it.data() = new_value(var::make_protect<callable>(function(context, args,
 				std::deque<statement_base *> {
 					new statement_return(
@@ -414,6 +436,7 @@ namespace cs {
 					new token_endline(
 					    token->get_line_num()))
 				})));
+#endif
 				return;
 				break;
 			}

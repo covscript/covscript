@@ -86,6 +86,8 @@ bool covscript_debugger(bool last=false)
 	step_into_function=false;
 	if(!last) {
 		std::cout<<"> "<<std::flush;
+		// std::cin.
+		std::cin.sync();
 		std::getline(std::cin, cmd);
 	}
 	else
@@ -109,8 +111,7 @@ bool covscript_debugger(bool last=false)
 		std::cout<<"Undefined command: \""<<func<<"\". Try \"help\"."<<std::endl;
 		return true;
 	}
-	else
-	{
+	else {
 		last_cmd=cmd;
 		return func_map[func](args);
 	}
@@ -154,7 +155,7 @@ void covscript_main(int args_size, const char *args[])
 		int index = covscript_args(args_size, args);
 		cs::current_process->import_path += cs::path_delimiter + cs::get_import_path();
 		if (show_help_info) {
-			std::cout << "Usage: cs_dbg [options...] <FILE> [arguments...]\n" << "Options:\n";
+			std::cout << "Usage: cs_dbg [options...] <FILE>\n" << "Options:\n";
 			std::cout << "    Option               Mnemonic   Function\n";
 			std::cout << "  --help                -h          Show help infomation\n";
 			std::cout << "  --version             -v          Show version infomation\n";
@@ -205,13 +206,14 @@ void covscript_main(int args_size, const char *args[])
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		;
 		func_map.emplace("help", [](const std::string& cmd)->bool {
-			std::cout<<"Command                   Function\n";
-			std::cout<<"help                      Show help infomation\n";
+			std::cout<<"Command                   Function\n\n";
 			std::cout<<"quit                      Exit the debugger\n";
+			std::cout<<"help                      Show help infomation\n";
 			std::cout<<"next                      Execute next statement\n";
-			std::cout<<"step                      Execute next statement and step into function.\n";
+			std::cout<<"step                      Execute next statement and step into function\n";
 			std::cout<<"continue                  Continue execute program until next breakpint gets hit\n";
 			std::cout<<"break [line num]          Set breakpoint at specific line\n";
+			std::cout<<"print [expression]        Evaluate the value of expression\n";
 			std::cout<<"optimizer [on|off]        Turn on or turn off the optimizer\n";
 			std::cout<<"run <...>                 Run program with specific arguments\n";
 			std::cout<<std::endl;
@@ -232,7 +234,15 @@ void covscript_main(int args_size, const char *args[])
 			exec_by_step=false;
 			return false;
 		});
-		func_map.emplace("break", [](const std::string& cmd)->bool {
+		func_map.emplace("lsbreak", [](const std::string& cmd)->bool {
+			breakpoints.emplace(std::stoul(cmd));
+			return true;
+		});
+		func_map.emplace("addbreak", [](const std::string& cmd)->bool {
+			breakpoints.emplace(std::stoul(cmd));
+			return true;
+		});
+		func_map.emplace("delbreak", [](const std::string& cmd)->bool {
 			breakpoints.emplace(std::stoul(cmd));
 			return true;
 		});
@@ -252,7 +262,37 @@ void covscript_main(int args_size, const char *args[])
 			context->instance->interpret();
 			return true;
 		});
-		while(covscript_debugger());
+		func_map.emplace("print", [](const std::string& cmd)->bool {
+			std::deque<char> buff;
+			cs::expression_t tree;
+			for (auto &ch:cmd)
+				buff.push_back(ch);
+			context->compiler->build_expr(buff, tree);
+			std::cout<<context->instance->parse_expr(tree.root())<<std::endl;
+			return true;
+		});
+		func_map.emplace("backtrace", [](const std::string& cmd)->bool {
+			for(auto& func:context->instance->stack_backtrace)
+				std::cout<<func<<std::endl;
+			return true;
+		});
+		std::ofstream log_stream;
+		while(std::cin) {
+			try {
+				covscript_debugger();
+			}
+			catch (const std::exception &e) {
+				if (!log_path.empty()) {
+					if (!log_stream.is_open())
+						log_stream.open(::log_path);
+					if (log_stream)
+						log_stream << e.what() << std::endl;
+					else
+						std::cerr << "Write log failed." << std::endl;
+				}
+				std::cerr << e.what() << std::endl;
+			}
+		}
 	}
 	else
 		throw cs::fatal_error("no input file.");

@@ -152,6 +152,9 @@ namespace cs {
 
 	class function final {
 		context_t mContext;
+#ifdef CS_DEBUGGER
+		std::string mDecl;
+#endif
 		std::vector<std::string> mArgs;
 		std::deque<statement_base *> mBody;
 	public:
@@ -159,9 +162,11 @@ namespace cs {
 
 		function(const function &) = default;
 
-		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body)
-			: mContext(std::move(
-			               std::move(c))), mArgs(std::move(args)), mBody(std::move(body)) {}
+#ifdef CS_DEBUGGER
+		function(context_t c, std::string decl, std::vector<std::string> args, std::deque<statement_base *> body):mContext(std::move(std::move(c))), mDecl(std::move(decl)), mArgs(std::move(args)), mBody(std::move(body)) {}
+#else
+		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body):mContext(std::move(std::move(c))), mArgs(std::move(args)), mBody(std::move(body)) {}
+#endif
 
 		~function() = default;
 
@@ -183,6 +188,17 @@ namespace cs {
 					throw runtime_error("Overwrite the default argument \"this\".");
 			}
 			std::swap(mArgs, args);
+#ifdef CS_DEBUGGER
+			std::string prefix, suffix;
+			auto lpos=mDecl.find(')');
+			auto rpos=mDecl.rfind(')');
+			prefix=mDecl.substr(0, lpos);
+			suffix=mDecl.substr(rpos);
+			if(args.size()>1)
+				mDecl=prefix+"this, "+mDecl.substr(lpos, rpos-lpos)+suffix;
+			else
+				mDecl=prefix+"this"+mDecl.substr(lpos, rpos-lpos)+suffix;
+#endif
 		}
 	};
 
