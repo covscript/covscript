@@ -66,7 +66,18 @@ Option|Mnemonic|Function
 **Note:**
 - Everything you set after option `--args` or its mnemonic `-a` will be regarded as arguments.
 - If you do not set a log path, it will be printed to stdout.
+### Debugger ###
+`cs_dbg [options...] <FILE>`
+#### Options ####
+Option|Mnemonic|Function
+:---:|:---:|:--:
+`--help`|`-h`|Show help infomation
+`--version`|`-v`|Show version infomation
+`--wait-before-exit`|`-w`|Wait before process exit
+`--log-path <PATH>`|`-l <PATH>`|Set the log path
+`--import-path <PATH>`|`-i <PATH>`|Set the import path
 
+**Note that if you do not set the log path, it will be printed to stdout.**
 ### Installer ###
 Covariant Script Installer provides a simple toolchain configuration method for the Microsoft Windows platform. You can download, install, upgrade and uninstall the toolchain by simply pushing a button. You can download the latest installer from the [CovScript Programming Language Home](http://covscript.org). For more information, visit the [Covariant Script Installer](https://github.com/covscript/covscript-installer).
 ### GUI ###

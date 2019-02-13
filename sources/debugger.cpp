@@ -239,7 +239,7 @@ void covscript_main(int args_size, const char *args[])
 			std::cout << "  --help                -h          Show help infomation\n";
 			std::cout << "  --version             -v          Show version infomation\n";
 			std::cout << "  --wait-before-exit    -w          Wait before process exit\n";
-			std::cout << "  --log-path    <PATH>  -l <PATH>   Set the log and AST exporting path\n";
+			std::cout << "  --log-path    <PATH>  -l <PATH>   Set the log path\n";
 			std::cout << "  --import-path <PATH>  -i <PATH>   Set the import path\n";
 			std::cout << std::endl;
 			return;

@@ -66,7 +66,18 @@
 **注意：**
 - 在选项`--args`或其助记符`-a`之后设置的每一项都将被视为参数。
 - 若不设置日志路径，将直接输出至标准输出流
+### 调试器 ###
+`cs_dbg [选项...] <文件>`
+#### Options ####
+选项|助记符|功能
+:---:|:---:|:--:
+`--help`|`-h`|显示帮助信息
+`--version`|`-v`|显示版本信息
+`--wait-before-exit`|`-w`|等待进程退出
+`--log-path <PATH>`|`-l <PATH>`|设置日志路径
+`--import-path <PATH>`|`-i <PATH>`|设置引入查找路径
 
+**若不设置日志路径，将直接输出至标准输出流**
 ### 安装器 ###
 Covariant Script安装器为Windows平台提供了简易的工具链配置方法，您可以一键安装，升级，卸载工具链。你可以在[CovScript编程语言主页](http://covscript.org)下载最新版安装器，详情请访问[Covariant Script Installer](https://github.com/covscript/covscript-installer)。
 ### GUI ###
