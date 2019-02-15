@@ -167,43 +167,6 @@ namespace cs_impl {
 	template<typename _Target, typename _Source>
 	class cni_helper;
 
-	template<>
-	class cni_helper<void (*)(), void (*)()> {
-		std::function<void()> mFunc;
-	public:
-		cni_helper() = delete;
-
-		cni_helper(const cni_helper &) = default;
-
-		explicit cni_helper(std::function<void()> func) : mFunc(std::move(func)) {}
-
-		any call(cs::vector &args) const
-		{
-			if (!args.empty())
-				throw cs::runtime_error("Wrong size of the arguments. Expected 0");
-			mFunc();
-			return cs::null_pointer;
-		}
-	};
-
-	template<typename _Target_RetT, typename _Source_RetT>
-	class cni_helper<_Target_RetT(*)(), _Source_RetT(*)()> {
-		std::function<_Target_RetT()> mFunc;
-	public:
-		cni_helper() = delete;
-
-		cni_helper(const cni_helper &) = default;
-
-		explicit cni_helper(const std::function<_Target_RetT()> &func) : mFunc(func) {}
-
-		any call(cs::vector &args) const
-		{
-			if (!args.empty())
-				throw cs::runtime_error("Wrong size of the arguments. Expected 0");
-			return std::move(type_convertor<_Target_RetT, _Source_RetT>::convert(mFunc()));
-		}
-	};
-
 	template<typename..._Target_ArgsT, typename..._Source_ArgsT>
 	class cni_helper<void (*)(_Target_ArgsT...), void (*)(_Source_ArgsT...)> {
 		std::function<void(_Target_ArgsT...)> mFunc;

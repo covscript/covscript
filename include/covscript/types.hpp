@@ -263,7 +263,7 @@ namespace cs_impl {
 	template<typename _From, typename _To>
 	struct type_convertor {
 		template<typename T>
-		static _To convert(T &&val)
+		static inline _To convert(T &&val) noexcept
 		{
 			return std::move(static_cast<_To>(std::forward<T>(val)));
 		}
@@ -272,9 +272,15 @@ namespace cs_impl {
 	template<typename T>
 	struct type_convertor<T, T> {
 		template<typename X>
-		static X &&convert(X &&val)
+		static inline X &&convert(X &&val) noexcept
 		{
 			return std::forward<X>(val);
 		}
+	};
+
+	template<typename T>
+	struct type_convertor<T, void> {
+		template<typename X>
+		static inline void convert(X &&) noexcept{}
 	};
 }
