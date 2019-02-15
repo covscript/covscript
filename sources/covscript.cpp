@@ -455,4 +455,14 @@ namespace cs {
 		.add_buildin_var("math", make_namespace(math_ext));
 		return context;
 	}
+
+	cs::var eval(const context_t &context, const std::string &expr)
+	{
+		cov::tree<cs::token_base *> tree;
+		std::deque<char> buff;
+		for (auto &ch:expr)
+			buff.push_back(ch);
+		context->compiler->build_expr(buff, tree);
+		return context->instance->parse_expr(tree.root());
+	}
 }

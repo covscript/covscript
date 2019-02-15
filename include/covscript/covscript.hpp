@@ -46,6 +46,11 @@ namespace cs_function_invoker_impl {
 		}
 	};
 
+	template<>
+	struct convert_helper<void> {
+		static inline void get_val(const cs::var &) {}
+	};
+
 	template<typename>
 	class function_invoker;
 
@@ -53,18 +58,22 @@ namespace cs_function_invoker_impl {
 	class function_invoker<RetT(ArgsT...)> {
 		cs::var m_func;
 	public:
-		function_invoker() = delete;
+		function_invoker() = default;
 
 		function_invoker(const function_invoker &) = default;
 
-		function_invoker(const cs::context_t context, const std::string &expr)
+		function_invoker& operator=(const function_invoker&)=default;
+
+		explicit function_invoker(const cs::var& func):m_func(func) {}
+
+		void assign(const cs::var &func)
 		{
-			cov::tree<cs::token_base *> tree;
-			std::deque<char> buff;
-			for (auto &ch:expr)
-				buff.push_back(ch);
-			context->compiler->build_expr(buff, tree);
-			m_func = context->instance->parse_expr(tree.root());
+			m_func=func;
+		}
+
+		cs::var target() const
+		{
+			return m_func;
 		}
 
 		template<typename...ElementT>
@@ -72,33 +81,6 @@ namespace cs_function_invoker_impl {
 		{
 			return convert_helper<RetT>::get_val(cs::invoke(m_func, cs_impl::type_convertor<ElementT, ArgsT>::convert(
 			        std::forward<ElementT>(args))...));
-		}
-	};
-
-	template<typename...ArgsT>
-	class function_invoker<void(ArgsT...)> {
-		cs::var m_func;
-	public:
-		function_invoker() = delete;
-
-		function_invoker(const function_invoker &) = default;
-
-		function_invoker &operator=(const function_invoker &) = default;
-
-		function_invoker(const cs::context_t context, const std::string &expr)
-		{
-			cov::tree<cs::token_base *> tree;
-			std::deque<char> buff;
-			for (auto &ch:expr)
-				buff.push_back(ch);
-			context->compiler->build_expr(buff, tree);
-			m_func = context->instance->parse_expr(tree.root());
-		}
-
-		template<typename...ElementT>
-		void operator()(ElementT &&...args) const
-		{
-			cs::invoke(m_func, cs_impl::type_convertor<ElementT, ArgsT>::convert(std::forward<ElementT>(args))...);
 		}
 	};
 }
@@ -115,6 +97,8 @@ namespace cs {
 	context_t create_context(const array &);
 
 	context_t create_subcontext(const context_t &);
+
+	cs::var eval(const context_t &, const std::string &);
 
 	using cs_function_invoker_impl::function_invoker;
 }
