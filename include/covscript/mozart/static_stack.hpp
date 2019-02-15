@@ -85,7 +85,7 @@ namespace cov {
 
 		auto begin() const
 		{
-			return mData.rbegin()+(Size-size());
+			return mData.rbegin() + (Size - size());
 		}
 
 		auto end() const

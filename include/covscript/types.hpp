@@ -281,6 +281,6 @@ namespace cs_impl {
 	template<typename T>
 	struct type_convertor<T, void> {
 		template<typename X>
-		static inline void convert(X &&) noexcept{}
+		static inline void convert(X &&) noexcept {}
 	};
 }

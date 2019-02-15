@@ -62,13 +62,13 @@ namespace cs_function_invoker_impl {
 
 		function_invoker(const function_invoker &) = default;
 
-		function_invoker& operator=(const function_invoker&)=default;
+		function_invoker &operator=(const function_invoker &) = default;
 
-		explicit function_invoker(const cs::var& func):m_func(func) {}
+		explicit function_invoker(const cs::var &func) : m_func(func) {}
 
 		void assign(const cs::var &func)
 		{
-			m_func=func;
+			m_func = func;
 		}
 
 		cs::var target() const

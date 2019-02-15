@@ -147,20 +147,21 @@ using callback_t=std::function<bool(const std::string &)>;
 class function_map_t final {
 	cs::map_t<std::string, callback_t> m_map;
 public:
-	function_map_t()=default;
+	function_map_t() = default;
 
-	template<typename T>void add_func(const std::string& name, const std::string& shortcut, T&& func)
+	template<typename T>
+	void add_func(const std::string &name, const std::string &shortcut, T &&func)
 	{
 		m_map.emplace(name, std::forward<T>(func));
 		m_map.emplace(shortcut, std::forward<T>(func));
 	}
 
-	bool exist(const std::string& name)
+	bool exist(const std::string &name)
 	{
-		return m_map.count(name)>0;
+		return m_map.count(name) > 0;
 	}
 
-	bool call(const std::string& name, const std::string& cmd)
+	bool call(const std::string &name, const std::string &cmd)
 	{
 		return m_map.at(name)(cmd);
 	}
@@ -209,23 +210,22 @@ bool covscript_debugger()
 		std::cout << "Undefined command: \"" << func << "\". Try \"help\"." << std::endl;
 		return true;
 	}
-	else
-	{
+	else {
 		try {
-				return func_map.call(func, args);
+			return func_map.call(func, args);
+		}
+		catch (const std::exception &e) {
+			if (!log_path.empty()) {
+				if (!log_stream.is_open())
+					log_stream.open(::log_path);
+				if (log_stream)
+					log_stream << e.what() << std::endl;
+				else
+					std::cerr << "Write log failed." << std::endl;
 			}
-			catch (const std::exception &e) {
-				if (!log_path.empty()) {
-					if (!log_stream.is_open())
-						log_stream.open(::log_path);
-					if (log_stream)
-						log_stream << e.what() << std::endl;
-					else
-						std::cerr << "Write log failed." << std::endl;
-				}
-				std::cerr << e.what() << std::endl;
-				return true;
-			}
+			std::cerr << e.what() << std::endl;
+			return true;
+		}
 	}
 }
 
@@ -328,15 +328,16 @@ void covscript_main(int args_size, const char *args[])
 		func_map.add_func("quit", "q", [](const std::string &cmd) -> bool {
 			if (context.get() != nullptr)
 			{
-				std::cout<<"An interpreter instance is running, do you really want to quit?\nPress (y) to confirm or press any other key to cancel."<<std::endl;
+				std::cout
+				        << "An interpreter instance is running, do you really want to quit?\nPress (y) to confirm or press any other key to cancel."
+				        << std::endl;
 				while (!cs_impl::conio::kbhit());
-				switch(std::tolower(cs_impl::conio::getch()))
-				{
-					case 'y':
-						std::exit(0);
-						return false;
-					default:
-						return true;
+				switch (std::tolower(cs_impl::conio::getch())) {
+				case 'y':
+					std::exit(0);
+					return false;
+				default:
+					return true;
 				}
 			}
 			std::exit(0);
