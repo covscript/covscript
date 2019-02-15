@@ -23,8 +23,11 @@ function set_flag() {
 
 DEFAULT_PREFIX="/usr"
 DEFAULT_CXXFLAGS="-std=c++14 -I ../include -s -O3"
-DEFAULT_LDFLAGS="-L../lib -lcovscript -ldl"
+DEFAULT_LDFLAGS="-ldl"
 DEFAULT_CXX=g++
+
+CS_LDFLAGS="-L../lib -lcovscript"
+CS_DBG_LDFLAGS="-L../lib -lcovscript_debug"
 
 set_flag CXX $DEFAULT_CXX
 set_flag PREFIX $DEFAULT_PREFIX
@@ -50,8 +53,14 @@ $CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIC -c ../source
 $CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIC -c ../sources/covscript.cpp &
 wait
 ar -ro ../lib/libcovscript.a *.o
-$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIE ../sources/standalone.cpp $LDFLAGS -o ../bin/cs &
-$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIE ../sources/repl.cpp $LDFLAGS -o ../bin/cs_repl &
+$CXX $CXXFLAGS -DCS_DEBUGGER -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIC -c ../sources/instance/*.cpp &
+$CXX $CXXFLAGS -DCS_DEBUGGER -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIC -c ../sources/compiler/*.cpp &
+$CXX $CXXFLAGS -DCS_DEBUGGER -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIC -c ../sources/covscript.cpp &
+wait
+ar -ro ../lib/libcovscript_debug.a *.o
+$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIE ../sources/standalone.cpp $CS_LDFLAGS $LDFLAGS -o ../bin/cs &
+$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIE ../sources/repl.cpp $CS_LDFLAGS $LDFLAGS -o ../bin/cs_repl &
+$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIE ../sources/debugger.cpp $CS_DBG_LDFLAGS $LDFLAGS -o ../bin/cs_dbg &
 wait
 cd ..
 rm -rf ./tmp

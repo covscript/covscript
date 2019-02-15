@@ -142,6 +142,30 @@ public:
 	}
 };
 
+using callback_t=std::function<bool(const std::string &)>;
+
+class function_map_t final {
+	cs::map_t<std::string, callback_t> m_map;
+public:
+	function_map_t()=default;
+
+	template<typename T>void add_func(const std::string& name, const std::string& shortcut, T&& func)
+	{
+		m_map.emplace(name, std::forward<T>(func));
+		m_map.emplace(shortcut, std::forward<T>(func));
+	}
+
+	bool exist(const std::string& name)
+	{
+		return m_map.count(name)>0;
+	}
+
+	bool call(const std::string& name, const std::string& cmd)
+	{
+		return m_map.at(name)(cmd);
+	}
+};
+
 std::size_t time()
 {
 	static std::chrono::time_point<std::chrono::high_resolution_clock> timer(std::chrono::high_resolution_clock::now());
@@ -151,14 +175,16 @@ std::size_t time()
 
 std::size_t breakpoint_recorder::m_id = 0;
 
-using callback_t=std::function<bool(const std::string &)>;
 std::string path;
 cs::context_t context;
+std::ofstream log_stream;
+
 bool exec_by_step = false;
 std::size_t current_level = 0;
 bool step_into_function = false;
+
+function_map_t func_map;
 breakpoint_recorder breakpoints;
-cs::map_t<std::string, callback_t> func_map;
 
 bool covscript_debugger()
 {
@@ -179,12 +205,28 @@ bool covscript_debugger()
 		args.push_back(cmd[posit]);
 	if (func.empty())
 		return true;
-	if (func_map.count(func) == 0) {
+	if (!func_map.exist(func)) {
 		std::cout << "Undefined command: \"" << func << "\". Try \"help\"." << std::endl;
 		return true;
 	}
 	else
-		return func_map[func](args);
+	{
+		try {
+				return func_map.call(func, args);
+			}
+			catch (const std::exception &e) {
+				if (!log_path.empty()) {
+					if (!log_stream.is_open())
+						log_stream.open(::log_path);
+					if (log_stream)
+						log_stream << e.what() << std::endl;
+					else
+						std::cerr << "Write log failed." << std::endl;
+				}
+				std::cerr << e.what() << std::endl;
+				return true;
+			}
+	}
 }
 
 void cs_debugger_step_callback(cs::statement_base *stmt)
@@ -283,52 +325,66 @@ void covscript_main(int args_size, const char *args[])
 		arg;
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
-		func_map.emplace("quit", [](const std::string &cmd) -> bool {
+		func_map.add_func("quit", "q", [](const std::string &cmd) -> bool {
+			if (context.get() != nullptr)
+			{
+				std::cout<<"An interpreter instance is running, do you really want to quit?\nPress (y) to confirm or press any other key to cancel."<<std::endl;
+				while (!cs_impl::conio::kbhit());
+				switch(std::tolower(cs_impl::conio::getch()))
+				{
+					case 'y':
+						std::exit(0);
+						return false;
+					default:
+						return true;
+				}
+			}
 			std::exit(0);
 			return false;
 		});
-		func_map.emplace("help", [](const std::string &cmd) -> bool {
-			std::cout << "Command                   Function\n\n";
-			std::cout << "quit                      Exit the debugger\n";
-			std::cout << "help                      Show help infomation\n";
-			std::cout << "next                      Execute next statement\n";
-			std::cout << "step                      Execute next statement and step into function\n";
-			std::cout << "continue                  Continue execute program until next breakpint gets hit\n";
-			std::cout << "backtrace                 Show stack backtrace\n";
-			std::cout << "break [line|function]     Set breakpoint at specific line or function\n";
-			std::cout << "lsbreak                   List all breakpoints\n";
-			std::cout << "rmbreak [id]              Remove specific breakpoint\n";
-			std::cout << "print [expression]        Evaluate the value of expression\n";
-			std::cout << "optimizer [on|off]        Turn on or turn off the optimizer\n";
-			std::cout << "run <...>                 Run program with specific arguments\n";
+		func_map.add_func("help", "h", [](const std::string &cmd) -> bool {
+			std::cout << "Command           Shortcut    Function\n\n";
+			std::cout << "quit                     q    Exit the debugger\n";
+			std::cout << "help                     h    Show help infomation\n";
+			std::cout << "next                     n    Execute next statement\n";
+			std::cout << "step                     s    Execute next statement and step into function\n";
+			std::cout << "continue                 c    Continue execute program until next breakpint gets hit\n";
+			std::cout << "backtrace               bt    Show stack backtrace\n";
+			std::cout << "break [line|function]    b    Set breakpoint at specific line or function\n";
+			std::cout << "lsbreak                 lb    List all breakpoints\n";
+			std::cout << "rmbreak [id]            rb    Remove specific breakpoint\n";
+			std::cout << "print [expression]       p    Evaluate the value of expression\n";
+			std::cout << "optimizer [on|off]       o    Turn on or turn off the optimizer\n";
+			std::cout << "run <...>                r    Run program with specific arguments\n";
 			std::cout << std::endl;
 			return true;
 		});
-		func_map.emplace("next", [](const std::string &cmd) -> bool {
+		func_map.add_func("next", "n", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
 			return false;
 		});
-		func_map.emplace("step", [](const std::string &cmd) -> bool {
+		func_map.add_func("step", "s", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
 			step_into_function = true;
 			return false;
 		});
-		func_map.emplace("continue", [](const std::string &cmd) -> bool {
+		func_map.add_func("continue", "c", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
 			exec_by_step = false;
 			return false;
 		});
-		func_map.emplace("backtrace", [](const std::string &cmd) -> bool {
+		func_map.add_func("backtrace", "bt", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
 			for (auto &func:context->instance->stack_backtrace)
 				std::cout << func << std::endl;
+			std::cout << "function main()" << std::endl;
 			return true;
 		});
-		func_map.emplace("break", [](const std::string &cmd) -> bool {
+		func_map.add_func("break", "b", [](const std::string &cmd) -> bool {
 			bool is_line = true;
 			for (auto &ch:cmd)
 			{
@@ -352,15 +408,15 @@ void covscript_main(int args_size, const char *args[])
 				breakpoints.add_line(std::stoul(cmd));
 			return true;
 		});
-		func_map.emplace("lsbreak", [](const std::string &cmd) -> bool {
+		func_map.add_func("lsbreak", "lb", [](const std::string &cmd) -> bool {
 			breakpoints.list();
 			return true;
 		});
-		func_map.emplace("rmbreak", [](const std::string &cmd) -> bool {
+		func_map.add_func("rmbreak", "rb", [](const std::string &cmd) -> bool {
 			breakpoints.remove(std::stoul(cmd));
 			return true;
 		});
-		func_map.emplace("optimizer", [](const std::string &cmd) -> bool {
+		func_map.add_func("optimizer", "o", [](const std::string &cmd) -> bool {
 			if (context.get() != nullptr)
 				throw cs::runtime_error("Can not tuning optimizer while interpreter is running.");
 			if (cmd == "on")
@@ -371,7 +427,7 @@ void covscript_main(int args_size, const char *args[])
 				std::cout << "Invalid option: \"" << cmd << "\". Use \"on\" or \"off\"." << std::endl;
 			return true;
 		});
-		func_map.emplace("run", [](const std::string &cmd) -> bool {
+		func_map.add_func("run", "r", [](const std::string &cmd) -> bool {
 			if (context.get() != nullptr)
 				throw cs::runtime_error("Can not run two or more instance at the same time.");
 			context = cs::create_context(split(cmd));
@@ -382,9 +438,10 @@ void covscript_main(int args_size, const char *args[])
 			context->instance->interpret();
 			std::cout << "The interpreter instance has exited normally, up to " << time() - start_time << "ms."
 			          << std::endl;
+			context = nullptr;
 			return true;
 		});
-		func_map.emplace("print", [](const std::string &cmd) -> bool {
+		func_map.add_func("print", "p", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
 			std::deque<char> buff;
@@ -395,23 +452,7 @@ void covscript_main(int args_size, const char *args[])
 			std::cout << context->instance->parse_expr(tree.root()) << std::endl;
 			return true;
 		});
-		std::ofstream log_stream;
-		while (std::cin) {
-			try {
-				covscript_debugger();
-			}
-			catch (const std::exception &e) {
-				if (!log_path.empty()) {
-					if (!log_stream.is_open())
-						log_stream.open(::log_path);
-					if (log_stream)
-						log_stream << e.what() << std::endl;
-					else
-						std::cerr << "Write log failed." << std::endl;
-				}
-				std::cerr << e.what() << std::endl;
-			}
-		}
+		while (covscript_debugger());
 	}
 	else
 		throw cs::fatal_error("no input file.");

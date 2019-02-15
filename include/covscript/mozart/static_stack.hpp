@@ -83,14 +83,14 @@ namespace cov {
 				throw cov::error("E000H");
 		}
 
-		typename std::array<T, Size>::const_iterator begin() const
+		auto begin() const
 		{
-			return mData.begin();
+			return mData.rbegin()+(Size-size());
 		}
 
-		typename std::array<T, Size>::const_iterator end() const
+		auto end() const
 		{
-			return mData.begin() + size();
+			return mData.rend();
 		}
 	};
 }
