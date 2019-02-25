@@ -788,7 +788,7 @@ namespace runtime_cs_ext {
 	void info()
 	{
 		std::cout << "Covariant Script Programming Language Interpreter\nVersion: " << current_process->version << "\n"
-		          "Copyright (C) 2019 Michael Lee.All rights reserved.\n"
+		          "Copyright (C) 2019 Michael Lee. All rights reserved.\n"
 		          "Licensed under the Apache License, Version 2.0 (the \"License\");\n"
 		          "you may not use this file except in compliance with the License.\n"
 		          "You may obtain a copy of the License at\n"
