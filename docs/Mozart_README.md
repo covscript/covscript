@@ -1,13 +1,14 @@
 Covariant Mozart Utility Library Guide
 -----------------------------------------------
-**智锐随变：莫扎特 实用工具库指南**
+**智锐科创：莫扎特 实用工具库指南**
 
 ### 1:License(使用协议)
-**Licensed under the Apache License, Version 2.0 (the "License");**  
-**you may not use this file except in compliance with the License.**   
+**Licensed under the Covariant Innovation General Public License,**  
+**Version 1.0 (the "License");**  
+**you may not use this file except in compliance with the License.**  
 **You may obtain a copy of the License at**  
   
-**http://www.apache.org/licenses/LICENSE-2.0**  
+**https://covariant.cn/licenses/LICENSE-1.0**  
   
 **Unless required by applicable law or agreed to in writing, software**  
 **distributed under the License is distributed on an "AS IS" BASIS,**  
