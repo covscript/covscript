@@ -103,10 +103,11 @@ void covscript_main(int args_size, const char *args[])
 			std::cout << "Covariant Script Programming Language Interpreter\n";
 			std::cout << "Version: " << cs::current_process->version << "\n";
 			std::cout << "Copyright (C) 2019 Michael Lee. All rights reserved.\n";
-			std::cout << "Licensed under the Apache License, Version 2.0 (the \"License\");\n";
+			std::cout << "Licensed under the Covariant Innovation General Public License,\n";
+			std::cout << "Version 1.0 (the \"License\");\n";
 			std::cout << "you may not use this file except in compliance with the License.\n";
 			std::cout << "You may obtain a copy of the License at\n";
-			std::cout << "\nhttp://www.apache.org/licenses/LICENSE-2.0\n";
+			std::cout << "\nhttps://covariant.cn/licenses/LICENSE-1.0\n";
 			std::cout << "\nUnless required by applicable law or agreed to in writing, software\n";
 			std::cout << "distributed under the License is distributed on an \"AS IS\" BASIS,\n";
 			std::cout << "WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n";
