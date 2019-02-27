@@ -1,7 +1,7 @@
 ![](https://github.com/covscript/covscript/raw/master/icon/covariant_script_wide.png)
 # Covariant Script 编程语言：解释器 #
 [![Build Status](https://travis-ci.org/covscript/covscript.svg?branch=master)](https://travis-ci.org/covscript/covscript)
-[![](https://img.shields.io/github/license/covscript/covscript.svg)](https://github.com/covscript/covscript/blob/master/LICENSE)
+[![](https://img.shields.io/badge/license-CIGPL-green.svg)](https://github.com/covscript/covscript/blob/master/LICENSE)
 [![](https://img.shields.io/github/languages/top/covscript/covscript.svg)](http://www.cplusplus.com/)  
 **欢迎使用Covariant Script编程语言!**  
 **Covariant Script**是一种开源的跨平台编程语言  
