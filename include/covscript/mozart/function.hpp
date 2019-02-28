@@ -73,7 +73,7 @@ namespace cov {
 
 		function_base(const function_base &) = default;
 
-		function_base(function_base &&) = default;
+		function_base(function_base &&) noexcept = default;
 
 		virtual ~function_base() = default;
 
@@ -353,7 +353,7 @@ namespace cov {
 			return *this;
 		}
 
-		function &operator=(function &&func)
+		function &operator=(function &&func) noexcept
 		{
 			if (this != &func) {
 				swap(std::forward<function>(func));

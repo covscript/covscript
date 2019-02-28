@@ -133,7 +133,7 @@ public:
 		for (auto &b:m_breakpoints) {
 			std::cout << b.id << "\t";
 			if (b.data.type() == typeid(cs::var)) {
-				const cs::function *func = b.data.get<cs::var>().const_val<cs::callable>().get_raw_data().target<cs::function>();
+				auto func = b.data.get<cs::var>().const_val<cs::callable>().get_raw_data().target<cs::function>();
 				std::cout << "line " << func->get_raw_statement()->get_line_num() << ", " << func->get_declaration()
 				          << std::endl;
 			}
@@ -208,7 +208,7 @@ bool covscript_debugger()
 	if (func.empty())
 		return true;
 	if (!func_map.exist(func)) {
-		std::cout << "Undefined command: \"" << func << "\". Try \"help\"." << std::endl;
+		std::cout << "Undefined command: \"" << func << R"(". Try "help".)" << std::endl;
 		return true;
 	}
 	else {
@@ -427,7 +427,7 @@ void covscript_main(int args_size, const char *args[])
 			else if (cmd == "off")
 				no_optimize = true;
 			else
-				std::cout << "Invalid option: \"" << cmd << "\". Use \"on\" or \"off\"." << std::endl;
+				std::cout << "Invalid option: \"" << cmd << R"(". Use "on" or "off".)" << std::endl;
 			return true;
 		});
 		func_map.add_func("run", "r", [](const std::string &cmd) -> bool {
