@@ -27,8 +27,8 @@
 * Master
 *
 */
-#define COVSCRIPT_VERSION_NUM 3,1,0,4
-#define COVSCRIPT_VERSION_STR "3.1.0 Ovis ammon(Stable) Build 4"
+#define COVSCRIPT_VERSION_NUM 3,1,1,1
+#define COVSCRIPT_VERSION_STR "3.1.1 Ovis ammon(Unstable) Build 1"
 #define COVSCRIPT_STD_VERSION 190301
 #define COVSCRIPT_ABI_VERSION 190301
 #if defined(_WIN32) || defined(WIN32)
