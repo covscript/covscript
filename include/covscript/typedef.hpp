@@ -40,8 +40,8 @@ namespace cs {
 
 	class name_space;
 
-	template<typename _kT, typename _vT> using map_t=spp::sparse_hash_map<_kT, _vT>;
-	template<typename _Tp> using set_t=spp::sparse_hash_set<_Tp>;
+	template<typename _kT, typename _vT> using map_t=std::unordered_map<_kT, _vT>;
+	template<typename _Tp> using set_t=std::unordered_set<_Tp>;
 	using var=cs_impl::any;
 	using number=long double;
 	using boolean=bool;

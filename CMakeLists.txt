@@ -4,7 +4,7 @@ project(covscript)
 include_directories(include)
 
 # Compiler Options
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 11)
 
 if (MSVC)
     set(CMAKE_CXX_FLAGS "/O2 /EHsc /utf-8 /w")
@@ -29,14 +29,10 @@ set(SOURCE_CODE
 
 # Static Library
 add_library(covscript STATIC ${SOURCE_CODE})
-add_library(covscript_debug STATIC ${SOURCE_CODE})
-
-target_compile_definitions(covscript_debug PRIVATE CS_DEBUGGER)
 
 # Main Executable
 add_executable(cs sources/standalone.cpp)
 add_executable(cs_repl sources/repl.cpp)
-add_executable(cs_dbg sources/debugger.cpp)
 
 target_link_libraries(cs covscript)
 target_link_libraries(cs_repl covscript)
@@ -56,7 +52,6 @@ set_target_properties(test-extension PROPERTIES SUFFIX ".cse")
 # Link libdl in UNIX and APPLE platform
 if (UNIX OR APPLE)
     target_link_libraries(cs dl)
-    target_link_libraries(cs_dbg dl)
     target_link_libraries(cs_repl dl)
     target_link_libraries(test-covscript dl)
 endif ()

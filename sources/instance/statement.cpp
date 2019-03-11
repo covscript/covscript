@@ -29,13 +29,7 @@ namespace cs {
 			    "Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
 			    std::to_string(args.size()));
 		scope_guard scope(mContext);
-#ifdef CS_DEBUGGER
-		fcall_guard fcall(mContext, mDecl);
-		if(mMatch)
-			cs_debugger_func_callback(mDecl, mStmt);
-#else
 		fcall_guard fcall(mContext);
-#endif
 		for (std::size_t i = 0; i < args.size(); ++i)
 			mContext->instance->storage.add_var(this->mArgs[i], args[i]);
 		for (auto &ptr:this->mBody) {
@@ -93,7 +87,6 @@ namespace cs {
 
 	void statement_expression::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		context->instance->parse_expr(mTree.root());
 	}
 
@@ -118,7 +111,6 @@ namespace cs {
 
 	void statement_involve::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		var ns = context->instance->parse_expr(mTree.root());
 		if (ns.type() == typeid(namespace_t))
 			context->instance->storage.involve_domain(ns.const_val<namespace_t>()->get_domain(), mOverride);
@@ -135,7 +127,6 @@ namespace cs {
 
 	void statement_var::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		for (auto &dvp:mDvp)
 			context->instance->storage.add_var(dvp.id, copy(context->instance->parse_expr(dvp.expr.root())));
 	}
@@ -151,7 +142,6 @@ namespace cs {
 
 	void statement_constant::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		for (auto &val:mVal)
 			context->instance->storage.add_var(val.first, val.second, true);
 	}
@@ -174,7 +164,6 @@ namespace cs {
 
 	void statement_break::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		context->instance->break_block = true;
 	}
 
@@ -185,7 +174,6 @@ namespace cs {
 
 	void statement_continue::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		context->instance->continue_block = true;
 	}
 
@@ -196,7 +184,6 @@ namespace cs {
 
 	void statement_block::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		scope_guard scope(context);
 		for (auto &ptr:mBlock) {
 			try {
@@ -223,7 +210,6 @@ namespace cs {
 
 	void statement_namespace::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		context->instance->storage.add_var(this->mName,
 		make_namespace(make_shared_namespace<name_space>([this] {
 			scope_guard scope(context);
@@ -254,7 +240,6 @@ namespace cs {
 
 	void statement_if::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		if (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
 			scope_guard scope(context);
 			for (auto &ptr:mBlock) {
@@ -286,7 +271,6 @@ namespace cs {
 
 	void statement_ifelse::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		if (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
 			scope_guard scope(context);
 			for (auto &ptr:mBlock) {
@@ -338,7 +322,6 @@ namespace cs {
 
 	void statement_switch::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		var key = context->instance->parse_expr(mTree.root());
 		if (mCases.count(key) > 0)
 			mCases[key]->run();
@@ -377,7 +360,6 @@ namespace cs {
 
 	void statement_while::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		if (context->instance->break_block)
 			context->instance->break_block = false;
 		if (context->instance->continue_block)
@@ -422,7 +404,6 @@ namespace cs {
 
 	void statement_loop::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		if (context->instance->break_block)
 			context->instance->break_block = false;
 		if (context->instance->continue_block)
@@ -471,7 +452,6 @@ namespace cs {
 
 	void statement_for::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		if (context->instance->break_block)
 			context->instance->break_block = false;
 		if (context->instance->continue_block)
@@ -565,7 +545,6 @@ namespace cs {
 
 	void statement_foreach::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		const var &obj = context->instance->parse_expr(this->mObj.root());
 		if (obj.type() == typeid(string))
 			foreach_helper<string, char>(context, this->mIt, obj, this->mBlock);
@@ -594,7 +573,6 @@ namespace cs {
 
 	void statement_struct::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		context->instance->storage.add_struct(this->mName, this->mBuilder);
 	}
 
@@ -613,7 +591,6 @@ namespace cs {
 
 	void statement_function::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		if (this->mIsMemFn)
 			context->instance->storage.add_var(this->mName,
 			                                   var::make_protect<callable>(this->mFunc, callable::types::member_fn),
@@ -640,7 +617,6 @@ namespace cs {
 
 	void statement_return::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		if (context->instance->fcall_stack.empty())
 			throw runtime_error("Return outside function.");
 		context->instance->fcall_stack.top() = context->instance->parse_expr(this->mTree.root());
@@ -656,7 +632,6 @@ namespace cs {
 
 	void statement_try::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		scope_guard scope(context);
 		for (auto &ptr:mTryBody) {
 			try {
@@ -705,7 +680,6 @@ namespace cs {
 
 	void statement_throw::run()
 	{
-		CS_DEBUGGER_STEP(this);
 		var e = context->instance->parse_expr(this->mTree.root());
 		if (e.type() != typeid(lang_error))
 			throw runtime_error("Throwing unsupported exception.");
