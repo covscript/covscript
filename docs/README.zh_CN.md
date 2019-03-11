@@ -1,14 +1,14 @@
-![](https://github.com/covscript/covscript/raw/master/icon/covariant_script_wide.png)
+![](./icon/covariant_script_wide.png)
 # Covariant Script 编程语言：解释器(**教育版**) #
 [![Build Status](https://travis-ci.org/scu-covariant/covscript.svg?branch=master)](https://travis-ci.org/scu-covariant/covscript)
-[![](https://img.shields.io/badge/license-Covariant%20Innovation%20GPL-blue.svg)](https://github.com/covscript/covscript/blob/master/LICENSE)
-[![](https://img.shields.io/github/languages/top/covscript/covscript.svg)](http://www.cplusplus.com/)  
+[![](https://img.shields.io/badge/license-Covariant%20Innovation%20GPL-blue.svg)](./LICENSE)
+[![](https://img.shields.io/github/languages/top/scu-covariant/covscript.svg)](http://www.cplusplus.com/)  
 **欢迎使用Covariant Script编程语言!**  
 **Covariant Script**是一种开源的跨平台编程语言  
 此项目为官方维护的Covariant Script解释器(**教育版**)
 ## 切换语言 ##
-- [简体中文](https://github.com/covscript/covscript/blob/master/docs/README.zh_CN.md)
-- [English](https://github.com/covscript/covscript/blob/master/README.md)
+- [简体中文](./docs/README.zh_CN.md)
+- [English](./README.md)
 ## 关于教育版 ##
 **教育版**是在标准版本基础上修改的版本，移除了一些第三方组件和不太稳定的新功能。  
 但随着主项目的更新，此版本也会跟进较为稳定的功能和安全修复。
@@ -34,7 +34,7 @@
 ## 文档 ##
 [CovScript在线文档](http://covscript.org/docs/)  
 ## 安装 ##
-+ 在[Latest Release](https://github.com/covscript/covscript/releases/latest)里下载预编译的二进制文件
++ 在[Latest Release](https://github.com/scu-covariant/covscript/releases/latest)里下载预编译的二进制文件
 + 使用CMake工具链直接编译源代码
 ### Mac OS ###
 编译Covariant Script的方法与Linux相同。目前Covariant Script已经在MacOS Sierra 10.12.5中测试通过。
@@ -82,16 +82,6 @@
 `--import-path <PATH>`|`-i <PATH>`|设置引入查找路径
 
 **若不设置日志路径，将直接输出至标准输出流**
-### 安装器 ###
-Covariant Script安装器为Windows平台提供了简易的工具链配置方法，您可以一键安装，升级，卸载工具链。你可以在[CovScript编程语言主页](http://covscript.org)下载最新版安装器，详情请访问[Covariant Script Installer](https://github.com/covscript/covscript-installer)。
-### GUI ###
-Covariant Script为Windows平台提供了一站式的代码编辑，运行，调试体验。CovScript安装器会自动为您下载CovScript GUI，详情请访问[Covariant Script GUI](https://github.com/covscript/covscript-gui)。
-### 包管理器 ###
-`cspkg`是使用Covariant Script编写的包管理器，其职能主要是管理Covariant Script的扩展或者是包。`cspkg`会与最新版本Covariant Script共同发行，详情请访问[Covariant Script Package Manager](https://github.com/covscript/cspkg)。
-### IntelliJ插件 ###
-IntelliJ插件现已可用：
-+ [源代码](https://github.com/covscript/covscript-intellij)
-+ [Plugin Repository](https://plugins.jetbrains.com/plugin/10326-covscript)
 ## 示例 ##
 `examples`文件夹包含了数个使用CovScript编写的示例程序。
 ## 版权 ##

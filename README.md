@@ -1,14 +1,14 @@
-![](https://github.com/covscript/covscript/raw/master/icon/covariant_script_wide.png)
+![](./icon/covariant_script_wide.png)
 # Covariant Script Programming Language: The Interpreter(**Education Edition**) #
 [![Build Status](https://travis-ci.org/scu-covariant/covscript.svg?branch=master)](https://travis-ci.org/scu-covariant/covscript)
-[![](https://img.shields.io/badge/license-Covariant%20Innovation%20GPL-blue.svg)](https://github.com/covscript/covscript/blob/master/LICENSE)
-[![](https://img.shields.io/github/languages/top/covscript/covscript.svg)](http://www.cplusplus.com/)  
+[![](https://img.shields.io/badge/license-Covariant%20Innovation%20GPL-blue.svg)](./LICENSE)
+[![](https://img.shields.io/github/languages/top/scu-covariant/covscript.svg)](http://www.cplusplus.com/)  
 **Welcome to the Covariant Script programming language!**  
 **Covariant Script** is an open source, cross-platform programming language.  
 This project is an officially maintained Covariant Script interpreter(**Education Edition**).
 ## Switch language ##
-- [简体中文](https://github.com/covscript/covscript/blob/master/docs/README.zh_CN.md)
-- [English](https://github.com/covscript/covscript/blob/master/README.md)
+- [简体中文](./docs/README.zh_CN.md)
+- [English](./README.md)
 ## About Education Edition ##
 The **Education Edition** is a modified version based on the standard version, removing some third-party components and new features that are less stable.  
 However, as the main project is updated, this version will follow up with more stable features and security fixes.
@@ -34,7 +34,7 @@ However, as the main project is updated, this version will follow up with more s
 ## Documentation ##
 [CovScript Online Documents](http://covscript.org/docs/)  
 ## Installation ##
-+ Download the precompiled executable on the [Latest Release](https://github.com/covscript/covscript/releases/latest)
++ Download the precompiled executable on the [Latest Release](https://github.com/scu-covariant/covscript/releases/latest)
 + Directly compile source code with CMake toolchain
 ### Mac OS ###
 All the steps are the same as Linux, tested under macOS Sierra 10.12.5.
@@ -70,16 +70,6 @@ Option|Mnemonic|Function
 **Note:**
 - Everything you set after option `--args` or its mnemonic `-a` will be regarded as arguments.
 - If you do not set a log path, it will be printed to stdout.
-### Installer ###
-Covariant Script Installer provides a simple toolchain configuration method for the Microsoft Windows platform. You can download, install, upgrade and uninstall the toolchain by simply pushing a button. You can download the latest installer from the [CovScript Programming Language Home](http://covscript.org). For more information, visit the [Covariant Script Installer](https://github.com/covscript/covscript-installer).
-### GUI ###
-Covariant Script provides a one-stop code editing, running, debugging experience for the Microsoft Windows platform . The CovScript Installer will automatically download the CovScript GUI for you. For more information, please visit [Covariant Script GUI](https://github.com/covscript/covscript-gui).
-### Package Manager ###
-`cspkg` is a package manager written in Covariant Script whose main function is to manage extensions or packages for Covariant Script. `cspkg` will be released with the latest version of Covariant Script. For more information, please visit [Covariant Script Package Manager](https://github.com/covscript/cspkg).
-### IntelliJ Plugin ###
-The IntelliJ Plugin is available now:
-+ [Source Code](https://github.com/covscript/covscript-intellij)
-+ [Plugin Repository](https://plugins.jetbrains.com/plugin/10326-covscript)
 ## Examples ##
 The [examples](./examples) folder contains several example programs written by CovScript.
 ## Copyright ##
