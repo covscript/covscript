@@ -7,7 +7,7 @@
 **Covariant Script**是一种开源的跨平台编程语言  
 此项目为官方维护的Covariant Script解释器(**教育版**)
 ## 切换语言 ##
-- [简体中文](./docs/README.zh_CN.md)
+- [简体中文](./README.zh_CN.md)
 - [English](./README.md)
 ## 关于教育版 ##
 **教育版**是在标准版本基础上修改的版本，移除了一些第三方组件和不太稳定的新功能。  

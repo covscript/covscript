@@ -7,7 +7,7 @@
 **Covariant Script** is an open source, cross-platform programming language.  
 This project is an officially maintained Covariant Script interpreter(**Education Edition**).
 ## Switch language ##
-- [简体中文](./docs/README.zh_CN.md)
+- [简体中文](./README.zh_CN.md)
 - [English](./README.md)
 ## About Education Edition ##
 The **Education Edition** is a modified version based on the standard version, removing some third-party components and new features that are less stable.  
