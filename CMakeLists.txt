@@ -36,7 +36,6 @@ add_executable(cs_repl sources/repl.cpp)
 
 target_link_libraries(cs covscript)
 target_link_libraries(cs_repl covscript)
-target_link_libraries(cs_dbg covscript_debug)
 
 # Tests
 add_library(test-extension SHARED tests/extension.cpp)

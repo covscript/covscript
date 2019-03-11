@@ -27,7 +27,6 @@ DEFAULT_LDFLAGS="-ldl"
 DEFAULT_CXX=g++
 
 CS_LDFLAGS="-L../lib -lcovscript"
-CS_DBG_LDFLAGS="-L../lib -lcovscript_debug"
 
 set_flag CXX $DEFAULT_CXX
 set_flag PREFIX $DEFAULT_PREFIX
