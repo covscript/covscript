@@ -16,7 +16,7 @@ However, as the main project is updated, this version will follow up with more s
 + Cross-platform, supporting most mainstream Operating Systems
 + Designed for educational purposes, more stable
 + Powerful and bloat-free extension system
-+ Good compatibility -- written in C++11
++ Good compatibility -- written in C++14
 + Dependency-free and efficient compiler front-end
 + Serialize optimized AST
 + Efficient memory management system
@@ -36,8 +36,6 @@ However, as the main project is updated, this version will follow up with more s
 ## Installation ##
 + Download the precompiled executable on the [Latest Release](https://github.com/scu-covariant/covscript/releases/latest)
 + Directly compile source code with CMake toolchain
-### Mac OS ###
-All the steps are the same as Linux, tested under macOS Sierra 10.12.5.
 ## Run ##
 ### Basic command ###
 `cs [options...] <FILE> [arguments...]`
