@@ -28,7 +28,7 @@
 *
 */
 #define COVSCRIPT_VERSION_NUM 3,1,1,1
-#define COVSCRIPT_VERSION_STR "3.1.1 Education Edition(Unstable) Build 1"
+#define COVSCRIPT_VERSION_STR "3.1.1 Education Edition(Stable) Build 1"
 #define COVSCRIPT_STD_VERSION 190101
 #define COVSCRIPT_ABI_VERSION 190102
 #if defined(_WIN32) || defined(WIN32)
