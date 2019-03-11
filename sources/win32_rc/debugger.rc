@@ -1,5 +1,0 @@
-#include "./resources.rc"
-
-A ICON
-"../icon/covariant_script_debugger.ico"
-MY_VERSION_INFO_APP("Covariant Script Debugger", "cs_dbg")
