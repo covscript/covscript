@@ -1,18 +1,22 @@
 ![](https://github.com/covscript/covscript/raw/master/icon/covariant_script_wide.png)
-# Covariant Script Programming Language: The Interpreter #
+# Covariant Script Programming Language: The Interpreter(**Education Edition**) #
 [![Build Status](https://travis-ci.org/covscript/covscript.svg?branch=master)](https://travis-ci.org/covscript/covscript)
 [![](https://img.shields.io/badge/license-Covariant%20Innovation%20GPL-blue.svg)](https://github.com/covscript/covscript/blob/master/LICENSE)
 [![](https://img.shields.io/github/languages/top/covscript/covscript.svg)](http://www.cplusplus.com/)  
 **Welcome to the Covariant Script programming language!**  
 **Covariant Script** is an open source, cross-platform programming language.  
-This project is an officially maintained Covariant Script interpreter.
+This project is an officially maintained Covariant Script interpreter(**Education Edition**).
 ## Switch language ##
 - [简体中文](https://github.com/covscript/covscript/blob/master/docs/README.zh_CN.md)
 - [English](https://github.com/covscript/covscript/blob/master/README.md)
+## About Education Edition ##
+The **Education Edition** is a modified version based on the standard version, removing some third-party components and new features that are less stable.  
+However, as the main project is updated, this version will follow up with more stable features and security fixes.
 ## Features ##
 + Cross-platform, supporting most mainstream Operating Systems
++ Designed for educational purposes, more stable
 + Powerful and bloat-free extension system
-+ Good compatibility -- written in C++14
++ Good compatibility -- written in C++11
 + Dependency-free and efficient compiler front-end
 + Serialize optimized AST
 + Efficient memory management system
@@ -66,18 +70,6 @@ Option|Mnemonic|Function
 **Note:**
 - Everything you set after option `--args` or its mnemonic `-a` will be regarded as arguments.
 - If you do not set a log path, it will be printed to stdout.
-### Debugger ###
-`cs_dbg [options...] <FILE>`
-#### Options ####
-Option|Mnemonic|Function
-:---:|:---:|:--:
-`--help`|`-h`|Show help infomation
-`--version`|`-v`|Show version infomation
-`--wait-before-exit`|`-w`|Wait before process exit
-`--log-path <PATH>`|`-l <PATH>`|Set the log path
-`--import-path <PATH>`|`-i <PATH>`|Set the import path
-
-**Note that if you do not set the log path, it will be printed to stdout.**
 ### Installer ###
 Covariant Script Installer provides a simple toolchain configuration method for the Microsoft Windows platform. You can download, install, upgrade and uninstall the toolchain by simply pushing a button. You can download the latest installer from the [CovScript Programming Language Home](http://covscript.org). For more information, visit the [Covariant Script Installer](https://github.com/covscript/covscript-installer).
 ### GUI ###

@@ -1,17 +1,21 @@
 ![](https://github.com/covscript/covscript/raw/master/icon/covariant_script_wide.png)
-# Covariant Script 编程语言：解释器 #
+# Covariant Script 编程语言：解释器(**教育版**) #
 [![Build Status](https://travis-ci.org/covscript/covscript.svg?branch=master)](https://travis-ci.org/covscript/covscript)
 [![](https://img.shields.io/badge/license-Covariant%20Innovation%20GPL-blue.svg)](https://github.com/covscript/covscript/blob/master/LICENSE)
 [![](https://img.shields.io/github/languages/top/covscript/covscript.svg)](http://www.cplusplus.com/)  
 **欢迎使用Covariant Script编程语言!**  
 **Covariant Script**是一种开源的跨平台编程语言  
-此项目为官方维护的Covariant Script解释器
+此项目为官方维护的Covariant Script解释器(**教育版**)
 ## 切换语言 ##
 - [简体中文](https://github.com/covscript/covscript/blob/master/docs/README.zh_CN.md)
 - [English](https://github.com/covscript/covscript/blob/master/README.md)
+## 关于教育版 ##
+**教育版**是在标准版本基础上修改的版本，移除了一些第三方组件和不太稳定的新功能。  
+但随着主项目的更新，此版本也会跟进较为稳定的功能和安全修复。
 ## 特点 ##
 + 跨平台，支持大部分主流操作系统
-+ 使用C++14编写，兼容性更好
++ 专为教育目的而设计，更稳定
++ 使用C++11编写，兼容性更好
 + 独立、高效的编译器前端
 + 可导出编译结果
 + 支持编译期优化

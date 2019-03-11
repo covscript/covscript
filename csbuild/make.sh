@@ -22,7 +22,7 @@ function set_flag() {
 }
 
 DEFAULT_PREFIX="/usr"
-DEFAULT_CXXFLAGS="-std=c++14 -I ../include -s -O3"
+DEFAULT_CXXFLAGS="-std=c++11 -I ../include -s -O3"
 DEFAULT_LDFLAGS="-ldl"
 DEFAULT_CXX=g++
 
