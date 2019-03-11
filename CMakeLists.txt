@@ -4,7 +4,7 @@ project(covscript)
 include_directories(include)
 
 # Compiler Options
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 
 if (MSVC)
     set(CMAKE_CXX_FLAGS "/O2 /EHsc /utf-8 /w")

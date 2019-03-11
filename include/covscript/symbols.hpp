@@ -20,6 +20,7 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/core.hpp>
+#include <cstring>
 
 namespace cs {
 	enum class token_types {

@@ -145,8 +145,6 @@ namespace cs {
 			context->instance->fcall_stack.pop();
 		}
 
-#endif
-
 		var get() const
 		{
 			return context->instance->fcall_stack.top();

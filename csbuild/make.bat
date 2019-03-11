@@ -3,7 +3,7 @@ mkdir bin
 mkdir lib
 mkdir tmp
 cd tmp
-set CXX_ARGS=-std=c++11 -I ..\include -static -s -O3
+set CXX_ARGS=-std=c++14 -I ..\include -static -s -O3
 windres -I ..\include ..\sources\win32_rc\standalone.rc cs.o
 windres -I ..\include ..\sources\win32_rc\repl.rc cs_repl.o
 g++ %CXX_ARGS% -fPIC -c ..\sources\compiler\*.cpp ..\sources\instance\*.cpp ..\sources\covscript.cpp

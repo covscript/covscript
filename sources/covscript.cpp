@@ -22,6 +22,7 @@
 #include <covscript/cni.hpp>
 #include <covscript/codegen.hpp>
 #include <covscript/covscript.hpp>
+#include <cstring>
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
 
