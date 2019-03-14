@@ -357,8 +357,11 @@ namespace cs {
 						arr.emplace_back(number(0));
 				}
 			}
-			else
+			else {
+				if (-b.const_val<number>() > carr.size())
+					throw runtime_error("Out of range.");
 				posit = carr.size() + b.const_val<number>();
+			}
 			return carr[posit];
 		}
 		else if (a.type() == typeid(hash_map)) {
