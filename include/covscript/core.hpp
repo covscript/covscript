@@ -163,7 +163,7 @@ namespace cs {
 		context_t mContext;
 #ifdef CS_DEBUGGER
 		// Debug Information
-		mutable bool mMatch;
+		mutable bool mMatch = false;
 		std::string mDecl;
 		statement_base *mStmt;
 #endif
