@@ -357,9 +357,8 @@ namespace cs {
 						arr.emplace_back(number(0));
 				}
 			}
-			else
-			{
-				if(-b.const_val<number>()>carr.size())
+			else {
+				if (-b.const_val<number>() > carr.size())
 					throw runtime_error("Out of range.");
 				posit = carr.size() + b.const_val<number>();
 			}
