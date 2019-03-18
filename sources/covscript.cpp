@@ -78,29 +78,29 @@ std::ostream &operator<<(std::ostream &out, const cs_impl::any &val)
 namespace cs_impl {
 	cov::allocator<any::proxy, default_allocate_buffer_size, default_allocator_provider> any::allocator;
 	cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t array_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t array_iterator_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t char_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t math_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t math_const_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t list_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t list_iterator_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t hash_map_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t pair_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t context_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t runtime_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t string_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t iostream_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t seekdir_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t openmode_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t istream_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t ostream_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t system_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t console_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t file_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t path_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t path_type_ext = cs::make_shared_namespace<cs::name_space>();
-cs::namespace_t path_info_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t array_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t array_iterator_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t char_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t math_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t math_const_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t list_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t list_iterator_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t hash_map_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t pair_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t context_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t runtime_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t string_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t iostream_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t seekdir_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t openmode_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t istream_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t ostream_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t system_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t console_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t file_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t path_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t path_type_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t path_info_ext = cs::make_shared_namespace<cs::name_space>();
 }
 
 namespace cs {
@@ -387,13 +387,16 @@ namespace cs {
 		// Init Runtime
 		context->instance->storage
 		// Internal Types
-		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char), cs_impl::char_ext)
+		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char),
+		                  cs_impl::char_ext)
 		.add_buildin_type("number", []() -> var { return var::make<number>(0); }, typeid(number))
 		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
 		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
-		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string), cs_impl::string_ext)
+		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string),
+		                  cs_impl::string_ext)
 		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), cs_impl::list_ext)
-		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array), cs_impl::array_ext)
+		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array),
+		                  cs_impl::array_ext)
 		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
 		                  cs_impl::pair_ext)
 		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, typeid(hash_map),
@@ -427,13 +430,16 @@ namespace cs {
 		// Init Runtime
 		context->instance->storage
 		// Internal Types
-		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char), cs_impl::char_ext)
+		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char),
+		                  cs_impl::char_ext)
 		.add_buildin_type("number", []() -> var { return var::make<number>(0); }, typeid(number))
 		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
 		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
-		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string), cs_impl::string_ext)
+		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string),
+		                  cs_impl::string_ext)
 		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), cs_impl::list_ext)
-		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array), cs_impl::array_ext)
+		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array),
+		                  cs_impl::array_ext)
 		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
 		                  cs_impl::pair_ext)
 		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, typeid(hash_map),

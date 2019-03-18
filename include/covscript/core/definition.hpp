@@ -18,27 +18,13 @@
 * Copyright (C) 2019 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
-*
-* Version Format:
-*   1 . 0 . 0 [Version Code](Preview/Unstable/Stable) Build 1
-*   |   |   |                           |
-*   |   | Minor                       Status
-*   | Major
-* Master
 */
-
-#define COVSCRIPT_VERSION_NUM 3,1,1,1
-#define COVSCRIPT_VERSION_STR "3.1.1 Ovis ammon(Unstable) Build 1"
-#define COVSCRIPT_STD_VERSION 190301
-#define COVSCRIPT_ABI_VERSION 190301
-#if defined(_WIN32) || defined(WIN32)
-#define COVSCRIPT_PLATFORM_WIN32
-#endif
 
 // Types
 
 namespace cs_impl {
 	class any;
+
 	class cni;
 }
 namespace cs {
@@ -82,7 +68,7 @@ namespace cs {
 
 	typedef void(*std_exception_handler)(const std::exception &);
 
-	// Path seperator and delimiter
+// Path seperator and delimiter
 #ifdef COVSCRIPT_PLATFORM_WIN32
 	constexpr char path_separator = '\\';
 	constexpr char path_delimiter = ';';

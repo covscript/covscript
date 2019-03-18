@@ -55,6 +55,7 @@
 #include <covscript/core/exceptions.hpp>
 #include <covscript/core/definition.hpp>
 #include <covscript/core/variable.hpp>
+#include <covscript/core/version.hpp>
 
 namespace cs {
 // Process Context

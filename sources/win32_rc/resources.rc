@@ -1,4 +1,4 @@
-#include <covscript/version.hpp>
+#include <covscript/core/version.hpp>
 
 #define MY_VS_FFI_FILEFLAGSMASK  0x0000003FL
 #define MY_VOS_NT_WINDOWS32  0x00040004L

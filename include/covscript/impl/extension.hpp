@@ -221,41 +221,41 @@ namespace cs_impl {
 
 // Extended Type Support
 
-extern cs::namespace_t except_ext;
-extern cs::namespace_t array_ext;
-extern cs::namespace_t array_iterator_ext;
-extern cs::namespace_t char_ext;
-extern cs::namespace_t math_ext;
-extern cs::namespace_t math_const_ext;
-extern cs::namespace_t list_ext;
-extern cs::namespace_t list_iterator_ext;
-extern cs::namespace_t hash_map_ext;
-extern cs::namespace_t pair_ext;
-extern cs::namespace_t context_ext;
-extern cs::namespace_t runtime_ext;
-extern cs::namespace_t string_ext;
-extern cs::namespace_t iostream_ext;
-extern cs::namespace_t seekdir_ext;
-extern cs::namespace_t openmode_ext;
-extern cs::namespace_t istream_ext;
-extern cs::namespace_t ostream_ext;
-extern cs::namespace_t system_ext;
-extern cs::namespace_t console_ext;
-extern cs::namespace_t file_ext;
-extern cs::namespace_t path_ext;
-extern cs::namespace_t path_type_ext;
-extern cs::namespace_t path_info_ext;
+	extern cs::namespace_t except_ext;
+	extern cs::namespace_t array_ext;
+	extern cs::namespace_t array_iterator_ext;
+	extern cs::namespace_t char_ext;
+	extern cs::namespace_t math_ext;
+	extern cs::namespace_t math_const_ext;
+	extern cs::namespace_t list_ext;
+	extern cs::namespace_t list_iterator_ext;
+	extern cs::namespace_t hash_map_ext;
+	extern cs::namespace_t pair_ext;
+	extern cs::namespace_t context_ext;
+	extern cs::namespace_t runtime_ext;
+	extern cs::namespace_t string_ext;
+	extern cs::namespace_t iostream_ext;
+	extern cs::namespace_t seekdir_ext;
+	extern cs::namespace_t openmode_ext;
+	extern cs::namespace_t istream_ext;
+	extern cs::namespace_t ostream_ext;
+	extern cs::namespace_t system_ext;
+	extern cs::namespace_t console_ext;
+	extern cs::namespace_t file_ext;
+	extern cs::namespace_t path_ext;
+	extern cs::namespace_t path_type_ext;
+	extern cs::namespace_t path_info_ext;
 
-namespace path_cs_ext {
-	struct path_info final {
-		std::string name;
-		int type;
+	namespace path_cs_ext {
+		struct path_info final {
+			std::string name;
+			int type;
 
-		path_info() = delete;
+			path_info() = delete;
 
-		path_info(const char *n, int t) : name(n), type(t) {}
-	};
-}
+			path_info(const char *n, int t) : name(n), type(t) {}
+		};
+	}
 
 	template<>
 	cs::namespace_t &get_ext<cs::lang_error>()

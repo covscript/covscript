@@ -1,5 +1,5 @@
 /*
-* Covariant Script Code Gen
+* Covariant Script Code Generating
 *
 * Licensed under the Covariant Innovation General Public License,
 * Version 1.0 (the "License");

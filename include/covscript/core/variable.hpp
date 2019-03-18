@@ -23,7 +23,7 @@
 #include <type_traits>
 
 namespace cs_impl {
-	// Name Demangle
+// Name Demangle
 	std::string cxx_demangle(const char *);
 
 // Type support auto-detection(SFINAE)
@@ -282,11 +282,11 @@ namespace cs_impl {
 		static inline void convert(X &&) noexcept {}
 	};
 
-/*
-* Implementation of Any Container
-* A customized version of Mozart Any(cov::any)
-* Github: https://github.com/mikecovlee/mozart
-*/
+	/*
+	* Implementation of Any Container
+	* A customized version of Mozart Any(cov::any)
+	* Github: https://github.com/mikecovlee/mozart
+	*/
 
 // Be careful when you adjust the buffer size.
 	constexpr std::size_t default_allocate_buffer_size = 64;
