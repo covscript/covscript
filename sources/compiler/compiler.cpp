@@ -18,8 +18,8 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <covscript/compiler.hpp>
-#include <covscript/codegen.hpp>
+#include <covscript/impl/compiler.hpp>
+#include <covscript/impl/codegen.hpp>
 
 namespace cs {
 	bool token_signal::dump(std::ostream &o) const

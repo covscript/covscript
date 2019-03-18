@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <covscript/core.hpp>
+#include <covscript/impl/extension.hpp>
 
 namespace cs {
 	enum class token_types {

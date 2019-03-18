@@ -2,10 +2,9 @@
 #include <covscript_impl/dirent/dirent.hpp>
 #include <covscript_impl/mozart/random.hpp>
 #include <covscript_impl/mozart/timer.hpp>
-#include <covscript/extension.hpp>
-#include <covscript/cni.hpp>
+#include <covscript/impl/impl.hpp>
 #include <iostream>
-
+namespace cs_impl {
 namespace array_cs_ext {
 	using namespace cs;
 
@@ -1192,7 +1191,7 @@ namespace system_cs_ext {
 		.add_var("exit", make_cni(exit));
 	}
 }
-namespace cs_impl {
+
 	static bool extensions_initiator = true;
 
 	void init_extensions()

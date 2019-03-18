@@ -21,7 +21,7 @@
 *
 * Version: 17.2.1(CovScript)
 */
-#include <covscript/mozart/base.hpp>
+#include <covscript/import/mozart/base.hpp>
 #include <type_traits>
 #include <random>
 #include <ctime>

@@ -18,7 +18,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <covscript/compiler.hpp>
+#include <covscript/impl/compiler.hpp>
 
 namespace cs {
 	void compiler_type::kill_brackets(std::deque<token_base *> &tokens, std::size_t

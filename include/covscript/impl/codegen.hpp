@@ -1,6 +1,6 @@
 #pragma once
 /*
-* Covariant Script Code Gen
+* Covariant Script Code Generating
 *
 * Licensed under the Covariant Innovation General Public License,
 * Version 1.0 (the "License");
@@ -19,8 +19,8 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <covscript/symbols.hpp>
-#include <covscript/statement.hpp>
+#include <covscript/impl/symbols.hpp>
+#include <covscript/impl/statement.hpp>
 
 namespace cs {
 	class method_expression final : public method_base {

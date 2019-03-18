@@ -18,7 +18,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <covscript/statement.hpp>
+#include <covscript/impl/statement.hpp>
 #include <iostream>
 
 namespace cs {

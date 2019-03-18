@@ -19,8 +19,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://covscript.org
 */
-#include <covscript/cni.hpp>
-#include <covscript/codegen.hpp>
+#include <covscript/impl/codegen.hpp>
 #include <covscript/covscript.hpp>
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
@@ -70,17 +69,15 @@ namespace cs_impl {
 }
 #endif
 
-namespace cs_impl {
-	cov::allocator<any::proxy, default_allocate_buffer_size, default_allocator_provider> any::allocator;
-}
-
 std::ostream &operator<<(std::ostream &out, const cs_impl::any &val)
 {
 	out << val.to_string();
 	return out;
 }
 
-cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
+namespace cs_impl {
+	cov::allocator<any::proxy, default_allocate_buffer_size, default_allocator_provider> any::allocator;
+	cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
 cs::namespace_t array_ext = cs::make_shared_namespace<cs::name_space>();
 cs::namespace_t array_iterator_ext = cs::make_shared_namespace<cs::name_space>();
 cs::namespace_t char_ext = cs::make_shared_namespace<cs::name_space>();
@@ -104,6 +101,8 @@ cs::namespace_t file_ext = cs::make_shared_namespace<cs::name_space>();
 cs::namespace_t path_ext = cs::make_shared_namespace<cs::name_space>();
 cs::namespace_t path_type_ext = cs::make_shared_namespace<cs::name_space>();
 cs::namespace_t path_info_ext = cs::make_shared_namespace<cs::name_space>();
+}
+
 namespace cs {
 	process_context this_process;
 	process_context *current_process = &this_process;
@@ -388,17 +387,17 @@ namespace cs {
 		// Init Runtime
 		context->instance->storage
 		// Internal Types
-		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char), char_ext)
+		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char), cs_impl::char_ext)
 		.add_buildin_type("number", []() -> var { return var::make<number>(0); }, typeid(number))
 		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
 		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
-		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string), string_ext)
-		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), list_ext)
-		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array), array_ext)
+		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string), cs_impl::string_ext)
+		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), cs_impl::list_ext)
+		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array), cs_impl::array_ext)
 		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
-		                  pair_ext)
+		                  cs_impl::pair_ext)
 		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, typeid(hash_map),
-		                  hash_map_ext)
+		                  cs_impl::hash_map_ext)
 		// Context
 		.add_buildin_var("context", var::make_constant<context_t>(context))
 		// Add Internal Functions to storage
@@ -410,11 +409,11 @@ namespace cs {
 		.add_buildin_var("move", make_cni(move))
 		.add_buildin_var("swap", make_cni(swap, true))
 		// Add extensions to storage
-		.add_buildin_var("exception", make_namespace(except_ext))
-		.add_buildin_var("iostream", make_namespace(iostream_ext))
-		.add_buildin_var("system", make_namespace(system_ext))
-		.add_buildin_var("runtime", make_namespace(runtime_ext))
-		.add_buildin_var("math", make_namespace(math_ext));
+		.add_buildin_var("exception", make_namespace(cs_impl::except_ext))
+		.add_buildin_var("iostream", make_namespace(cs_impl::iostream_ext))
+		.add_buildin_var("system", make_namespace(cs_impl::system_ext))
+		.add_buildin_var("runtime", make_namespace(cs_impl::runtime_ext))
+		.add_buildin_var("math", make_namespace(cs_impl::math_ext));
 		return context;
 	}
 
@@ -428,17 +427,17 @@ namespace cs {
 		// Init Runtime
 		context->instance->storage
 		// Internal Types
-		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char), char_ext)
+		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char), cs_impl::char_ext)
 		.add_buildin_type("number", []() -> var { return var::make<number>(0); }, typeid(number))
 		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
 		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
-		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string), string_ext)
-		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), list_ext)
-		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array), array_ext)
+		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string), cs_impl::string_ext)
+		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), cs_impl::list_ext)
+		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array), cs_impl::array_ext)
 		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
-		                  pair_ext)
+		                  cs_impl::pair_ext)
 		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, typeid(hash_map),
-		                  hash_map_ext)
+		                  cs_impl::hash_map_ext)
 		// Context
 		.add_buildin_var("context", var::make_constant<context_t>(context))
 		// Add Internal Functions to storage
@@ -449,11 +448,11 @@ namespace cs {
 		.add_buildin_var("move", make_cni(move))
 		.add_buildin_var("swap", make_cni(swap, true))
 		// Add extensions to storage
-		.add_buildin_var("exception", make_namespace(except_ext))
-		.add_buildin_var("iostream", make_namespace(iostream_ext))
-		.add_buildin_var("system", make_namespace(system_ext))
-		.add_buildin_var("runtime", make_namespace(runtime_ext))
-		.add_buildin_var("math", make_namespace(math_ext));
+		.add_buildin_var("exception", make_namespace(cs_impl::except_ext))
+		.add_buildin_var("iostream", make_namespace(cs_impl::iostream_ext))
+		.add_buildin_var("system", make_namespace(cs_impl::system_ext))
+		.add_buildin_var("runtime", make_namespace(cs_impl::runtime_ext))
+		.add_buildin_var("math", make_namespace(cs_impl::math_ext));
 		return context;
 	}
 

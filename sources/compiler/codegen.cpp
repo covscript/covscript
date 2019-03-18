@@ -18,7 +18,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <covscript/codegen.hpp>
+#include <covscript/impl/codegen.hpp>
 
 namespace cs {
 	statement_base *

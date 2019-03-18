@@ -21,8 +21,8 @@
 *
 * Version: 17.1.0(CovScript)
 */
-#include <covscript/mozart/base.hpp>
-#include <covscript/mozart/function.hpp>
+#include <covscript/import/mozart/base.hpp>
+#include <covscript/import/mozart/function.hpp>
 #include <thread>
 #include <chrono>
 

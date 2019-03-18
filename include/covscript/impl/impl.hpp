@@ -1,6 +1,6 @@
 #pragma once
 /*
-* Covariant Script Instance
+* Covariant Script Implementation
 *
 * Licensed under the Covariant Innovation General Public License,
 * Version 1.0 (the "License");
@@ -19,8 +19,8 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <covscript/compiler.hpp>
-#include <covscript/runtime.hpp>
+#include <covscript/impl/compiler.hpp>
+#include <covscript/impl/runtime.hpp>
 
 namespace cs {
 	constexpr std::size_t fcall_stack_size = 1024;

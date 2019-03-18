@@ -1,4 +1,4 @@
-#include <covscript/dll.hpp>
+#include <covscript/extension.hpp>
 #include <iostream>
 
 using namespace cs;

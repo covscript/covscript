@@ -20,7 +20,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://covscript.org
 */
-#include <covscript/extension.hpp>
+#include <covscript/impl/impl.hpp>
 
 namespace cs_function_invoker_impl {
 	template<typename T>
