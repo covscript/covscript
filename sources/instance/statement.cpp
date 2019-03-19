@@ -618,8 +618,14 @@ namespace cs {
 			context->instance->storage.add_var(this->mName,
 			                                   var::make_protect<callable>(this->mFunc, callable::types::member_fn),
 			                                   mOverride);
-		else
-			context->instance->storage.add_var(this->mName, var::make_protect<callable>(this->mFunc), mOverride);
+		else {
+			var func = var::make_protect<callable>(this->mFunc);
+#ifdef CS_DEBUGGER
+			if(context->instance->storage.is_initial())
+				cs_debugger_func_breakpoint(this->mName, func);
+#endif
+			context->instance->storage.add_var(this->mName, func, mOverride);
+		}
 	}
 
 	void statement_function::dump(std::ostream &o) const

@@ -82,6 +82,7 @@ namespace cs {
 
 #ifdef CS_DEBUGGER
 void cs_debugger_step_callback(cs::statement_base*);
+void cs_debugger_func_breakpoint(const std::string&, const cs::var&);
 void cs_debugger_func_callback(const std::string&, cs::statement_base*);
 #define CS_DEBUGGER_STEP(STMT) cs_debugger_step_callback(STMT)
 #else

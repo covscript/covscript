@@ -36,6 +36,11 @@ namespace cs {
 
 		~domain_manager() = default;
 
+		bool is_initial() const
+		{
+			return m_data.size()==1;
+		}
+
 		void add_set()
 		{
 			m_set.emplace_front();

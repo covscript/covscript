@@ -77,7 +77,7 @@ int covscript_args(int args_size, const char *args[])
 class breakpoint_recorder final {
 	struct breakpoint final {
 		std::size_t id = 0;
-		variant_impl::variant<std::size_t, cs::var> data;
+		variant_impl::variant<std::size_t, std::string, cs::var> data;
 
 		template<typename T>
 		breakpoint(std::size_t _id, T &&_data):id(_id), data(std::forward<T>(_data)) {}
@@ -85,6 +85,7 @@ class breakpoint_recorder final {
 
 	static std::size_t m_id;
 	std::forward_list<breakpoint> m_breakpoints;
+	cs::map_t<std::string, std::size_t> m_pending;
 public:
 
 	breakpoint_recorder() = default;
@@ -109,12 +110,36 @@ public:
 		return m_id;
 	}
 
+	std::size_t add_pending(const std::string& func)
+	{
+		m_breakpoints.emplace_front(++m_id, func);
+		m_pending.emplace(func, m_id);
+		return m_id;
+	}
+
+	void replace_pending(const std::string& name, cs::var function)
+	{
+		if(m_pending.count(name)>0) {
+			const cs::callable::function_type &target = function.const_val<cs::callable>().get_raw_data();
+			target.target<cs::function>()->set_debugger_state(true);
+			auto key=m_pending.find(name);
+			for(auto& it:m_breakpoints) {
+				if(it.id==key->second) {
+					it.data.emplace<cs::var>(function);
+					break;
+				}
+			}
+			m_pending.erase(key);
+		}
+	}
+
 	void remove(std::size_t id)
 	{
-		m_breakpoints.remove_if([id](const breakpoint &b) -> bool {
+		m_breakpoints.remove_if([this, id](const breakpoint &b) -> bool {
 			if (b.id == id && b.data.type() == typeid(cs::var))
-				b.data.get<cs::var>().const_val<cs::callable>().get_raw_data().target<cs::function>()->set_debugger_state(
-				    false);
+				b.data.get<cs::var>().const_val<cs::callable>().get_raw_data().target<cs::function>()->set_debugger_state(false);
+			else if (b.id == id && b.data.type() == typeid(std::string))
+				m_pending.erase(m_pending.find(b.data.get<std::string>()));
 			return b.id == id;
 		});
 	}
@@ -137,6 +162,8 @@ public:
 				std::cout << "line " << func->get_raw_statement()->get_line_num() << ", " << func->get_declaration()
 				          << std::endl;
 			}
+			else if (b.data.type() == typeid(std::string))
+				std::cout << "\"" << b.data.get<std::string>() << "\"(pending)" << std::endl;
 			else
 				std::cout << "line " << b.data.get<std::size_t>() << std::endl;
 		}
@@ -242,6 +269,11 @@ void cs_debugger_step_callback(cs::statement_base *stmt)
 		std::cout << stmt->get_line_num() << "\t" << stmt->get_raw_code() << std::endl;
 		while (covscript_debugger());
 	}
+}
+
+void cs_debugger_func_breakpoint(const std::string& name, const cs::var& func)
+{
+	breakpoints.replace_pending(name, func);
 }
 
 void cs_debugger_func_callback(const std::string &decl, cs::statement_base *stmt)
@@ -392,19 +424,39 @@ void covscript_main(int args_size, const char *args[])
 					break;
 				}
 			}
+			std::size_t id=0;
+			std::string result=" has been set.";
 			if (!is_line)
 			{
-				if (context.get() == nullptr)
-					throw cs::runtime_error("Please launch a interpreter instance first.");
-				std::deque<char> buff;
-				cs::expression_t tree;
-				for (auto &ch:cmd)
-					buff.push_back(ch);
-				context->compiler->build_expr(buff, tree);
-				breakpoints.add_func(context->instance->parse_expr(tree.root()));
+				if (context.get() == nullptr) {
+					cs::array arr=split(cmd);
+					if(arr.size()!=2) {
+						std::cout << "Invalid option: \"" << cmd << "\"" << std::endl;
+						return true;
+					}
+					id=breakpoints.add_pending(arr.back().const_val<std::string>());
+					result=" pending.";
+				}
+				else {
+					std::deque<char> buff;
+					cs::expression_t tree;
+					for (auto &ch:cmd)
+						buff.push_back(ch);
+					context->compiler->build_expr(buff, tree);
+					id=breakpoints.add_func(context->instance->parse_expr(tree.root()));
+				}
 			}
 			else
-				breakpoints.add_line(std::stoul(cmd));
+			{
+				try{
+					id=breakpoints.add_line(std::stoul(cmd));
+				}catch(...)
+				{
+					std::cout << "Invalid option: \"" << cmd << "\"" << std::endl;
+					return true;
+				}
+			}
+			std::cout << "Breakpoint "<<id<<result<<std::endl;
 			return true;
 		});
 		func_map.add_func("lsbreak", "lb", [](const std::string &cmd) -> bool {
@@ -441,7 +493,7 @@ void covscript_main(int args_size, const char *args[])
 			}
 			catch(...)
 			{
-				std::cerr << "Fatal Error: An exception was detected, the interpreter instance will terminate immediately." <<std::endl;
+				std::cerr << "\nFatal Error: An exception was detected, the interpreter instance will terminate immediately." <<std::endl;
 				std::cerr << "The interpreter instance has exited unexpectedly, up to " << time() - start_time << "ms." << std::endl;
 				context = nullptr;
 				throw;
