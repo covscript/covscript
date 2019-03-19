@@ -1,6 +1,6 @@
 #pragma once
 /*
-* Covariant Script DLL Extension
+* Covariant Script Extension DLL
 *
 * Licensed under the Covariant Innovation General Public License,
 * Version 1.0 (the "License");

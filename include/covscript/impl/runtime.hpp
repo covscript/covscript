@@ -38,7 +38,7 @@ namespace cs {
 
 		bool is_initial() const
 		{
-			return m_data.size()==1;
+			return m_data.size() == 1;
 		}
 
 		void add_set()

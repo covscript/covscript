@@ -110,21 +110,21 @@ public:
 		return m_id;
 	}
 
-	std::size_t add_pending(const std::string& func)
+	std::size_t add_pending(const std::string &func)
 	{
 		m_breakpoints.emplace_front(++m_id, func);
 		m_pending.emplace(func, m_id);
 		return m_id;
 	}
 
-	void replace_pending(const std::string& name, cs::var function)
+	void replace_pending(const std::string &name, cs::var function)
 	{
-		if(m_pending.count(name)>0) {
+		if (m_pending.count(name) > 0) {
 			const cs::callable::function_type &target = function.const_val<cs::callable>().get_raw_data();
 			target.target<cs::function>()->set_debugger_state(true);
-			auto key=m_pending.find(name);
-			for(auto& it:m_breakpoints) {
-				if(it.id==key->second) {
+			auto key = m_pending.find(name);
+			for (auto &it:m_breakpoints) {
+				if (it.id == key->second) {
 					it.data.emplace<cs::var>(function);
 					break;
 				}
@@ -137,7 +137,8 @@ public:
 	{
 		m_breakpoints.remove_if([this, id](const breakpoint &b) -> bool {
 			if (b.id == id && b.data.type() == typeid(cs::var))
-				b.data.get<cs::var>().const_val<cs::callable>().get_raw_data().target<cs::function>()->set_debugger_state(false);
+				b.data.get<cs::var>().const_val<cs::callable>().get_raw_data().target<cs::function>()->set_debugger_state(
+				    false);
 			else if (b.id == id && b.data.type() == typeid(std::string))
 				m_pending.erase(m_pending.find(b.data.get<std::string>()));
 			return b.id == id;
@@ -271,7 +272,7 @@ void cs_debugger_step_callback(cs::statement_base *stmt)
 	}
 }
 
-void cs_debugger_func_breakpoint(const std::string& name, const cs::var& func)
+void cs_debugger_func_breakpoint(const std::string &name, const cs::var &func)
 {
 	breakpoints.replace_pending(name, func);
 }
@@ -424,18 +425,18 @@ void covscript_main(int args_size, const char *args[])
 					break;
 				}
 			}
-			std::size_t id=0;
-			std::string result=" has been set.";
+			std::size_t id = 0;
+			std::string result = " has been set.";
 			if (!is_line)
 			{
 				if (context.get() == nullptr) {
-					cs::array arr=split(cmd);
-					if(arr.size()!=2) {
+					cs::array arr = split(cmd);
+					if (arr.size() != 2) {
 						std::cout << "Invalid option: \"" << cmd << "\"" << std::endl;
 						return true;
 					}
-					id=breakpoints.add_pending(arr.back().const_val<std::string>());
-					result=" pending.";
+					id = breakpoints.add_pending(arr.back().const_val<std::string>());
+					result = " pending.";
 				}
 				else {
 					std::deque<char> buff;
@@ -443,20 +444,20 @@ void covscript_main(int args_size, const char *args[])
 					for (auto &ch:cmd)
 						buff.push_back(ch);
 					context->compiler->build_expr(buff, tree);
-					id=breakpoints.add_func(context->instance->parse_expr(tree.root()));
+					id = breakpoints.add_func(context->instance->parse_expr(tree.root()));
 				}
 			}
 			else
 			{
-				try{
-					id=breakpoints.add_line(std::stoul(cmd));
-				}catch(...)
-				{
+				try {
+					id = breakpoints.add_line(std::stoul(cmd));
+				}
+				catch (...) {
 					std::cout << "Invalid option: \"" << cmd << "\"" << std::endl;
 					return true;
 				}
 			}
-			std::cout << "Breakpoint "<<id<<result<<std::endl;
+			std::cout << "Breakpoint " << id << result << std::endl;
 			return true;
 		});
 		func_map.add_func("lsbreak", "lb", [](const std::string &cmd) -> bool {
@@ -481,7 +482,7 @@ void covscript_main(int args_size, const char *args[])
 		func_map.add_func("run", "r", [](const std::string &cmd) -> bool {
 			if (context.get() != nullptr)
 				throw cs::runtime_error("Can not run two or more instance at the same time.");
-			std::size_t start_time=0;
+			std::size_t start_time = 0;
 			try
 			{
 				context = cs::create_context(split(cmd));
@@ -494,10 +495,13 @@ void covscript_main(int args_size, const char *args[])
 				start_time = time();
 				context->instance->interpret();
 			}
-			catch(...)
+			catch (...)
 			{
-				std::cerr << "\nFatal Error: An exception was detected, the interpreter instance will terminate immediately." <<std::endl;
-				std::cerr << "The interpreter instance has exited unexpectedly, up to " << time() - start_time << "ms." << std::endl;
+				std::cerr
+				        << "\nFatal Error: An exception was detected, the interpreter instance will terminate immediately."
+				        << std::endl;
+				std::cerr << "The interpreter instance has exited unexpectedly, up to " << time() - start_time << "ms."
+				          << std::endl;
 				context = nullptr;
 				throw;
 			}
