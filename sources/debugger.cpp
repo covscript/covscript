@@ -486,7 +486,10 @@ void covscript_main(int args_size, const char *args[])
 			{
 				context = cs::create_context(split(cmd));
 				context->compiler->disable_optimizer = no_optimize;
+				std::cout << "Compiling..." << std::endl;
+				start_time = time();
 				context->instance->compile(path);
+				std::cout << "The compiler has exited normally, up to " << time() - start_time << "ms." << std::endl;
 				std::cout << "Launching new interpreter instance..." << std::endl;
 				start_time = time();
 				context->instance->interpret();
