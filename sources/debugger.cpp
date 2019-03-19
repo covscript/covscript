@@ -254,7 +254,7 @@ void cs_debugger_func_callback(const std::string &decl, cs::statement_base *stmt
 
 cs::array split(const std::string &str)
 {
-	cs::array arr;
+	cs::array arr{path};
 	std::string buf;
 	for (auto &ch:str) {
 		if (std::isspace(ch)) {
@@ -323,10 +323,6 @@ void covscript_main(int args_size, const char *args[])
 		          "Please visit <http://covscript.org/> for more information."
 		          << std::endl;
 		path = cs::process_path(args[index]);
-		cs::array
-		arg;
-		for (; index < args_size; ++index)
-			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		func_map.add_func("quit", "q", [](const std::string &cmd) -> bool {
 			if (context.get() != nullptr)
 			{
@@ -433,12 +429,23 @@ void covscript_main(int args_size, const char *args[])
 		func_map.add_func("run", "r", [](const std::string &cmd) -> bool {
 			if (context.get() != nullptr)
 				throw cs::runtime_error("Can not run two or more instance at the same time.");
-			context = cs::create_context(split(cmd));
-			context->compiler->disable_optimizer = no_optimize;
-			context->instance->compile(path);
-			std::cout << "Launching new interpreter instance..." << std::endl;
-			std::size_t start_time = time();
-			context->instance->interpret();
+			std::size_t start_time=0;
+			try
+			{
+				context = cs::create_context(split(cmd));
+				context->compiler->disable_optimizer = no_optimize;
+				context->instance->compile(path);
+				std::cout << "Launching new interpreter instance..." << std::endl;
+				start_time = time();
+				context->instance->interpret();
+			}
+			catch(...)
+			{
+				std::cerr << "Fatal Error: An exception was detected, the interpreter instance will terminate immediately." <<std::endl;
+				std::cerr << "The interpreter instance has exited unexpectedly, up to " << time() - start_time << "ms." << std::endl;
+				context = nullptr;
+				throw;
+			}
 			std::cout << "The interpreter instance has exited normally, up to " << time() - start_time << "ms."
 			          << std::endl;
 			context = nullptr;
