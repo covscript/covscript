@@ -20,6 +20,10 @@
 * Github: https://github.com/mikecovlee
 */
 
+#if defined(_WIN32) || defined(WIN32)
+#define COVSCRIPT_PLATFORM_WIN32
+#endif
+
 // Types
 
 namespace cs_impl {
