@@ -32,8 +32,6 @@
 ## 安装 ##
 + 在[Latest Release](https://github.com/covscript/covscript/releases/latest)里下载预编译的二进制文件
 + 使用CMake工具链直接编译源代码
-### Mac OS ###
-编译Covariant Script的方法与Linux相同。目前Covariant Script已经在MacOS Sierra 10.12.5中测试通过。
 ## 运行 ##
 ### 解释器 ###
 `cs [选项...] <文件> [参数...]`

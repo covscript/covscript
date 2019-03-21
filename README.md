@@ -32,8 +32,6 @@ This project is an officially maintained Covariant Script interpreter.
 ## Installation ##
 + Download the precompiled executable on the [Latest Release](https://github.com/covscript/covscript/releases/latest)
 + Directly compile source code with CMake toolchain
-### Mac OS ###
-All the steps are the same as Linux, tested under macOS Sierra 10.12.5.
 ## Run ##
 ### Basic command ###
 `cs [options...] <FILE> [arguments...]`
