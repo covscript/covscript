@@ -34,9 +34,18 @@ add_library(covscript_debug STATIC ${SOURCE_CODE})
 target_compile_definitions(covscript_debug PRIVATE CS_DEBUGGER)
 
 # Main Executable
-add_executable(cs sources/standalone.cpp)
-add_executable(cs_repl sources/repl.cpp)
-add_executable(cs_dbg sources/debugger.cpp)
+if (MSVC)
+    set(rc_flags "/nologo /c65001")
+	set(CMAKE_RC_FLAGS ${rc_flags})
+	
+	add_executable(cs sources/standalone.cpp sources/win32_rc/standalone.rc)
+	add_executable(cs_repl sources/repl.cpp sources/win32_rc/repl.rc)
+	add_executable(cs_dbg sources/debugger.cpp sources/win32_rc/debugger.rc)
+else ()   
+	add_executable(cs sources/standalone.cpp)
+	add_executable(cs_repl sources/repl.cpp)
+	add_executable(cs_dbg sources/debugger.cpp)
+endif ()
 
 target_link_libraries(cs covscript)
 target_link_libraries(cs_repl covscript)
