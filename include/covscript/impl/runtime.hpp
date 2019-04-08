@@ -20,6 +20,7 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/impl/symbols.hpp>
+#include <covscript/impl/variant.hpp>
 
 namespace cs {
 	class domain_manager {
@@ -291,5 +292,39 @@ namespace cs {
 		var parse_access(var, const var &);
 
 		var parse_expr(const cov::tree<token_base *>::iterator &);
+
+		cov::static_stack<variant<var, token_base*, cov::tree<token_base *>::iterator>, 1024> stack;
+	};
+
+	class instruction_id:public instruction_base {
+		std::string m_id;
+	public:
+		instruction_id()=delete;
+		instruction_id(const std::string& id, runtime_type* rt):instruction_base(rt), m_id(id) {}
+		void exec() override;
+	};
+
+	class instruction_value:public instruction_base {
+		var m_value;
+	public:
+		instruction_value()=delete;
+		instruction_value(const var& value, runtime_type* rt):instruction_base(rt), m_value(value) {}
+		void exec() override;
+	};
+
+	class instruction_array:public instruction_base {
+		std::size_t m_size;
+	public:
+		instruction_array()=delete;
+		instruction_array(std::size_t size, runtime_type* rt):instruction_base(rt), m_size(size) {}
+		void exec() override;
+	};
+
+	class instruction_signal:public instruction_base {
+		signal_types m_signal;
+	public:
+		instruction_signal()=delete;
+		instruction_signal(signal_types signal, runtime_type* rt):instruction_base(rt), m_signal(signal) {}
+		void exec() override;
 	};
 }

@@ -452,6 +452,16 @@ namespace cs {
 		bool dump(std::ostream &) const override;
 	};
 
+	class instruction_base {
+	protected:
+		runtime_type* runtime=nullptr;
+	public:
+		instruction_base()=delete;
+		explicit instruction_base(runtime_type* rt):runtime(rt) {}
+		virtual ~instruction_base()=default;
+		virtual void exec()=0;
+	};
+
 	enum class statement_types {
 		null,
 		expression_,

@@ -99,10 +99,10 @@ namespace variant_impl {
 				throw std::logic_error("Internal Error: No matching types(emplace).");
 		}
 
-		static void copy_data(const std::type_index &ti, byte_t *src, byte_t *dest)
+		static void copy_data(const std::type_index &ti, const byte_t *src, byte_t *dest)
 		{
 			if (ti == typeid(T))
-				::new(dest) T(*reinterpret_cast<T *>(src));
+				::new(dest) T(*reinterpret_cast<const T *>(src));
 			else
 				throw std::logic_error("Internal Error: No matching types(copy).");
 		}
@@ -137,10 +137,10 @@ namespace variant_impl {
 				return template_args_iterator<ArgsT...>::emplace(src, std::forward<X>(dat));
 		}
 
-		static void copy_data(const std::type_index &ti, byte_t *src, byte_t *dest)
+		static void copy_data(const std::type_index &ti, const byte_t *src, byte_t *dest)
 		{
 			if (ti == typeid(T))
-				::new(dest) T(*reinterpret_cast<T *>(src));
+				::new(dest) T(*reinterpret_cast<const T *>(src));
 			else
 				template_args_iterator<ArgsT...>::copy_data(ti, src, dest);
 		}
@@ -257,3 +257,8 @@ namespace variant_impl {
 		}
 	};
 } // namespace variant_impl
+
+namespace cs {
+	using variant_impl::monostate;
+	using variant_impl::variant;
+}
