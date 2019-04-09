@@ -296,6 +296,28 @@ namespace cs {
 		cov::static_stack<variant<var, token_base*, cov::tree<token_base *>::iterator>, 1024> stack;
 	};
 
+	class instruction_executor final {
+		std::vector<instruction_base*> m_assembly;
+		void gen_instruction(runtime_type*, const cov::tree<token_base*>::iterator &);
+	public:
+		instruction_executor()=delete;
+		instruction_executor(runtime_type* rt, const cov::tree<token_base*>::iterator &it)
+		{
+			gen_instruction(rt, it);
+		}
+		var operator()();
+	};
+
+	class instruction_pop:public instruction_base {
+	public:
+		instruction_pop()=delete;
+		instruction_pop(runtime_type* rt):instruction_base(rt) {}
+		void exec() override
+		{
+			runtime->stack.pop();
+		}
+	};
+
 	class instruction_id:public instruction_base {
 		std::string m_id;
 	public:

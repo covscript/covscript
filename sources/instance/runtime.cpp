@@ -530,6 +530,48 @@ namespace cs {
 		throw internal_error("Unrecognized expression.");
 	}
 
+	void instruction_executor::gen_instruction(runtime_type* rt, const cov::tree<token_base*>::iterator &it)
+	{
+		if (!it.usable())
+			throw internal_error("The expression tree is not available.");
+		token_base *token = it.data();
+		if (token == nullptr)
+			return;
+		switch (token->get_type()) {
+		default:
+			break;
+		case token_types::id:
+			m_assembly.push_back(new instruction_id(static_cast<token_id *>(token)->get_id(), rt));
+			break;
+		case token_types::value:
+			m_assembly.push_back(new instruction_value(static_cast<token_value *>(token)->get_value(), rt));
+			break;
+		case token_types::expr:
+			gen_instruction(rt, static_cast<token_expr *>(token)->get_tree().root());
+			break;
+		case token_types::array: {
+			auto& arr=static_cast<token_array *>(token)->get_array();
+			for (auto &tree:arr)
+				gen_instruction(rt, tree.root());
+			m_assembly.push_back(new instruction_array(arr.size(), rt));
+			break;
+		}
+		case token_types::parallel: {
+			var result;
+			for (auto &tree:static_cast<token_parallel *>(token)->get_parallel())
+			{
+				gen_instruction(rt, tree.root());
+				m_assembly.push_back(new instruction_pop(rt));
+			}
+			break;
+		}
+		case token_types::signal:
+			m_assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), rt));
+			break;
+		}
+		throw internal_error("Unrecognized expression.");
+	}
+
 	void instruction_id::exec()
 	{
 		runtime->stack.push(runtime->storage.get_var(m_id));
