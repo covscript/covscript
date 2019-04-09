@@ -94,12 +94,14 @@ namespace cs {
 	void statement_expression::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		context->instance->parse_expr(mTree.root());
+		//context->instance->parse_expr(mTree.root());
+		mExecutor();
 	}
 
 	void statement_expression::repl_run()
 	{
-		const var &result = context->instance->parse_expr(mTree.root());
+		//const var &result = context->instance->parse_expr(mTree.root());
+		var result=mExecutor();
 		try {
 			std::cout << result.to_string() << std::endl;
 		}

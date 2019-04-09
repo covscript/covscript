@@ -24,12 +24,11 @@
 namespace cs {
 	class statement_expression final : public statement_base {
 		cov::tree<token_base *> mTree;
+		instruction_executor mExecutor;
 	public:
 		statement_expression() = delete;
 
-		statement_expression(cov::tree<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c),
-			        ptr),
-			mTree(std::move(tree)) {}
+		statement_expression(cov::tree<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c), ptr), mTree(std::move(tree)), mExecutor(context->instance.get(), mTree.root()) {}
 
 		statement_types get_type() const noexcept override
 		{

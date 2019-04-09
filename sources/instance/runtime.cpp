@@ -566,6 +566,8 @@ namespace cs {
 			break;
 		}
 		case token_types::signal:
+			gen_instruction(rt, it.left());
+			gen_instruction(rt, it.right());
 			m_assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), rt));
 			break;
 		}
