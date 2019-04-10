@@ -305,20 +305,32 @@ namespace cs {
 		instruction_executor()=delete;
 		instruction_executor(runtime_type* rt, const cov::tree<token_base*>::iterator &it):runtime(rt)
 		{
-			std::cout<<__func__<<std::endl;
+			//std::cout<<__func__<<std::endl;
 			gen_instruction(rt, it);
 		}
 		var operator()()
 		{
-			std::cout<<__func__<<std::endl;
+			//std::cout<<__func__<<std::endl;
 			for(auto& it:m_assembly)
 			{
-				std::cout<<cs_impl::cxx_demangle(typeid(it).name())<<std::endl;
+				//std::cout<<cs_impl::cxx_demangle(typeid(*it).name())<<std::endl;
 				it->exec();
 			}
 			var result=runtime->stack.top();
 			runtime->stack.pop();
 			return result;
+		}
+	};
+
+	class instruction_push:public instruction_base {
+		variant<var, token_base*, cov::tree<token_base *>::iterator> mVal;
+	public:
+		instruction_push()=delete;
+		template<typename T>
+		instruction_push(T&& val, runtime_type* rt):instruction_base(rt), mVal(std::forward<T>(val)) {}
+		void exec() override
+		{
+			runtime->stack.push(mVal);
 		}
 	};
 

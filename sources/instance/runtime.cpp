@@ -536,7 +536,10 @@ namespace cs {
 			throw internal_error("The expression tree is not available.");
 		token_base *token = it.data();
 		if (token == nullptr)
+		{
+			m_assembly.push_back(new instruction_push(var(), rt));
 			return;
+		}
 		switch (token->get_type()) {
 		default:
 			break;
@@ -566,9 +569,33 @@ namespace cs {
 			break;
 		}
 		case token_types::signal:
-			gen_instruction(rt, it.left());
-			gen_instruction(rt, it.right());
-			m_assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), rt));
+			switch (static_cast<token_signal *>(token)->get_signal()) {
+				default:
+					gen_instruction(rt, it.right());
+					gen_instruction(rt, it.left());
+					m_assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), rt));
+					break;
+				case signal_types::dot_:
+					m_assembly.push_back(new instruction_push(it.right().data(), rt));
+					gen_instruction(rt, it.left());
+					m_assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), rt));
+					break;
+				case signal_types::arrow_:
+					m_assembly.push_back(new instruction_push(it.right().data(), rt));
+					gen_instruction(rt, it.left());
+					m_assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), rt));
+					break;
+				case signal_types::choice_:
+					m_assembly.push_back(new instruction_push(it.right(), rt));
+					gen_instruction(rt, it.left());
+					m_assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), rt));
+					break;
+				case signal_types::fcall_:
+					m_assembly.push_back(new instruction_push(it.right().data(), rt));
+					gen_instruction(rt, it.left());
+					m_assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), rt));
+					break;
+			}
 			break;
 		}
 		//throw internal_error("Unrecognized expression.");
