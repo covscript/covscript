@@ -571,7 +571,7 @@ namespace cs {
 			m_assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), rt));
 			break;
 		}
-		throw internal_error("Unrecognized expression.");
+		//throw internal_error("Unrecognized expression.");
 	}
 
 	void instruction_id::exec()
