@@ -530,71 +530,97 @@ namespace cs {
 		throw internal_error("Unrecognized expression.");
 	}
 
-	void instruction_executor::gen_instruction(runtime_type* rt, const cov::tree<token_base*>::iterator &it)
+	void instruction_executor::gen_instruction(const cov::tree<token_base*>::iterator &it, std::vector<instruction_base*>& assembly)
 	{
 		if (!it.usable())
 			throw internal_error("The expression tree is not available.");
 		token_base *token = it.data();
 		if (token == nullptr)
 		{
-			m_assembly.push_back(new instruction_push(var(), rt));
+			assembly.push_back(new instruction_push(var(), runtime));
 			return;
 		}
 		switch (token->get_type()) {
 		default:
 			break;
 		case token_types::id:
-			m_assembly.push_back(new instruction_id(static_cast<token_id *>(token)->get_id(), rt));
+			assembly.push_back(new instruction_id(static_cast<token_id *>(token)->get_id(), runtime));
 			break;
 		case token_types::value:
-			m_assembly.push_back(new instruction_push(static_cast<token_value *>(token)->get_value(), rt));
+			assembly.push_back(new instruction_push(static_cast<token_value *>(token)->get_value(), runtime));
 			break;
 		case token_types::expr:
-			gen_instruction(rt, static_cast<token_expr *>(token)->get_tree().root());
+			gen_instruction(static_cast<token_expr *>(token)->get_tree().root(), assembly);
 			break;
 		case token_types::array: {
 			auto& arr=static_cast<token_array *>(token)->get_array();
 			for(auto it=arr.rbegin();it!=arr.rend();++it)
-				gen_instruction(rt, it->root());
-			m_assembly.push_back(new instruction_array(arr.size(), rt));
+				gen_instruction(it->root(), assembly);
+			assembly.push_back(new instruction_array(arr.size(), runtime));
 			break;
 		}
 		case token_types::parallel: {
 			var result;
 			for (auto &tree:static_cast<token_parallel *>(token)->get_parallel())
 			{
-				gen_instruction(rt, tree.root());
-				m_assembly.push_back(new instruction_pop(rt));
+				gen_instruction(tree.root(), assembly);
+				assembly.push_back(new instruction_pop(runtime));
 			}
 			break;
 		}
 		case token_types::signal:{
 			switch (static_cast<token_signal *>(token)->get_signal()) {
 				default:
-					gen_instruction(rt, it.right());
-					gen_instruction(rt, it.left());
-					m_assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), rt));
+					gen_instruction(it.right(), assembly);
+					gen_instruction(it.left(), assembly);
+					assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
+					break;
+				case signal_types::minus_:
+					gen_instruction(it.right(), assembly);
+					assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
+					break;
+				case signal_types::escape_:
+					gen_instruction(it.right(), assembly);
+					assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
+					break;
+				case signal_types::typeid_:
+					gen_instruction(it.right(), assembly);
+					assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
+					break;
+				case signal_types::new_:
+					gen_instruction(it.right(), assembly);
+					assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
+					break;
+				case signal_types::gcnew_:
+					gen_instruction(it.right(), assembly);
+					assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
+					break;
+				case signal_types::not_:
+					gen_instruction(it.right(), assembly);
+					assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
 					break;
 				case signal_types::dot_:
-					gen_instruction(rt, it.left());
-					m_assembly.push_back(new instruction_sig_dot(it.right().data(), rt));
+					gen_instruction(it.left(), assembly);
+					assembly.push_back(new instruction_sig_dot(it.right().data(), runtime));
 					break;
 				case signal_types::arrow_:
-					gen_instruction(rt, it.left());
-					m_assembly.push_back(new instruction_sig_arrow(it.right().data(), rt));
+					gen_instruction(it.left(), assembly);
+					assembly.push_back(new instruction_sig_arrow(it.right().data(), runtime));
 					break;
-				case signal_types::choice_:
-					gen_instruction(rt, it.right().right());
-					gen_instruction(rt, it.right().left());
-					gen_instruction(rt, it.left());
-					m_assembly.push_back(new instruction_sig_choice(rt));
+				case signal_types::choice_:{
+					std::vector<instruction_base*> assembly_true, assembly_false;
+					gen_instruction(it.right().right(), assembly_false);
+					gen_instruction(it.right().left(), assembly_true);
+					gen_instruction(it.left(), assembly);
+					assembly.push_back(new instruction_sig_choice(assembly_true, assembly_false, runtime));
 					break;
+				}
 				case signal_types::fcall_:{
 					auto& arglist=static_cast<token_arglist *>(it.right().data())->get_arglist();
 					for(auto it=arglist.rbegin();it!=arglist.rend();++it)
-						gen_instruction(rt, it->root());
-					gen_instruction(rt, it.left());
-					m_assembly.push_back(new instruction_sig_fcall(arglist.size(), rt));
+						gen_instruction(it->root(), assembly);
+					gen_instruction(it.left(), assembly);
+					assembly.push_back(new instruction_sig_fcall(arglist.size(), runtime));
 					break;
 				}
 			}
@@ -877,15 +903,20 @@ namespace cs {
 	void instruction_sig_choice::exec(){
 		auto& cond=runtime->stack.top();
 		runtime->stack.pop();
-		auto& left=runtime->stack.top();
-		runtime->stack.pop();
-		auto& right=runtime->stack.top();
-		runtime->stack.pop();
 		if (cond.type() == typeid(boolean)) {
 			if (cond.const_val<boolean>())
-				runtime->stack.push(left);
+			{
+				for(auto& it:m_assembly_true)
+					it->exec();
+				runtime->stack.push(runtime->stack.top());
+			}
 			else
-				runtime->stack.push(right);
+			{
+				for(auto& it:m_assembly_false)
+					it->exec();
+				runtime->stack.push(runtime->stack.top());
+			}
+			runtime->stack.pop();
 		}
 		else
 			throw runtime_error("Unsupported operator operations(Choice).");

@@ -298,13 +298,17 @@ namespace cs {
 
 	class instruction_executor final {
 		std::vector<instruction_base*> m_assembly;
-		void gen_instruction(runtime_type*, const cov::tree<token_base*>::iterator &);
+		void gen_instruction(const cov::tree<token_base*>::iterator &, std::vector<instruction_base*>&);
+		void gen_instruction(const cov::tree<token_base*>::iterator &it)
+		{
+			gen_instruction(it, m_assembly);
+		}
 		runtime_type* runtime=nullptr;
 	public:
 		instruction_executor()=delete;
 		instruction_executor(runtime_type* rt, const cov::tree<token_base*>::iterator &it):runtime(rt)
 		{
-			gen_instruction(rt, it);
+			gen_instruction(it);
 		}
 		var operator()()
 		{
@@ -378,9 +382,10 @@ namespace cs {
 	};
 
 	class instruction_sig_choice:public instruction_base {
+		std::vector<instruction_base*> m_assembly_true, m_assembly_false;
 	public:
 		instruction_sig_choice()=delete;
-		instruction_sig_choice(runtime_type* rt):instruction_base(rt) {}
+		instruction_sig_choice(std::vector<instruction_base*> assembly_true, std::vector<instruction_base*> assembly_false, runtime_type* rt):instruction_base(rt), m_assembly_true(std::move(assembly_true)), m_assembly_false(std::move(assembly_false)) {}
 		void exec() override;
 	};
 
