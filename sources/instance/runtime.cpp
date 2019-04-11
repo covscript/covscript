@@ -530,13 +530,13 @@ namespace cs {
 		throw internal_error("Unrecognized expression.");
 	}
 
-	void instruction_executor::gen_instruction(const cov::tree<token_base*>::iterator &it, std::vector<instruction_base*>& assembly)
+	void instruction_executor::gen_instruction(const cov::tree<token_base *>::iterator &it,
+	        std::vector<instruction_base *> &assembly)
 	{
 		if (!it.usable())
 			throw internal_error("The expression tree is not available.");
 		token_base *token = it.data();
-		if (token == nullptr)
-		{
+		if (token == nullptr) {
 			assembly.push_back(new instruction_push(var(), runtime));
 			return;
 		}
@@ -553,76 +553,82 @@ namespace cs {
 			gen_instruction(static_cast<token_expr *>(token)->get_tree().root(), assembly);
 			break;
 		case token_types::array: {
-			auto& arr=static_cast<token_array *>(token)->get_array();
-			for(auto it=arr.rbegin();it!=arr.rend();++it)
+			auto &arr = static_cast<token_array *>(token)->get_array();
+			for (auto it = arr.rbegin(); it != arr.rend(); ++it)
 				gen_instruction(it->root(), assembly);
 			assembly.push_back(new instruction_array(arr.size(), runtime));
 			break;
 		}
 		case token_types::parallel: {
 			var result;
-			for (auto &tree:static_cast<token_parallel *>(token)->get_parallel())
-			{
+			for (auto &tree:static_cast<token_parallel *>(token)->get_parallel()) {
 				gen_instruction(tree.root(), assembly);
 				assembly.push_back(new instruction_pop(runtime));
 			}
 			break;
 		}
-		case token_types::signal:{
+		case token_types::signal: {
 			switch (static_cast<token_signal *>(token)->get_signal()) {
-				default:
-					gen_instruction(it.right(), assembly);
-					gen_instruction(it.left(), assembly);
-					assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
-					break;
-				case signal_types::minus_:
-					gen_instruction(it.right(), assembly);
-					assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
-					break;
-				case signal_types::escape_:
-					gen_instruction(it.right(), assembly);
-					assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
-					break;
-				case signal_types::typeid_:
-					gen_instruction(it.right(), assembly);
-					assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
-					break;
-				case signal_types::new_:
-					gen_instruction(it.right(), assembly);
-					assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
-					break;
-				case signal_types::gcnew_:
-					gen_instruction(it.right(), assembly);
-					assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
-					break;
-				case signal_types::not_:
-					gen_instruction(it.right(), assembly);
-					assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
-					break;
-				case signal_types::dot_:
-					gen_instruction(it.left(), assembly);
-					assembly.push_back(new instruction_sig_dot(it.right().data(), runtime));
-					break;
-				case signal_types::arrow_:
-					gen_instruction(it.left(), assembly);
-					assembly.push_back(new instruction_sig_arrow(it.right().data(), runtime));
-					break;
-				case signal_types::choice_:{
-					std::vector<instruction_base*> assembly_true, assembly_false;
-					gen_instruction(it.right().right(), assembly_false);
-					gen_instruction(it.right().left(), assembly_true);
-					gen_instruction(it.left(), assembly);
-					assembly.push_back(new instruction_sig_choice(assembly_true, assembly_false, runtime));
-					break;
-				}
-				case signal_types::fcall_:{
-					auto& arglist=static_cast<token_arglist *>(it.right().data())->get_arglist();
-					for(auto it=arglist.rbegin();it!=arglist.rend();++it)
-						gen_instruction(it->root(), assembly);
-					gen_instruction(it.left(), assembly);
-					assembly.push_back(new instruction_sig_fcall(arglist.size(), runtime));
-					break;
-				}
+			default:
+				gen_instruction(it.right(), assembly);
+				gen_instruction(it.left(), assembly);
+				assembly.push_back(
+				    new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
+				break;
+			case signal_types::minus_:
+				gen_instruction(it.right(), assembly);
+				assembly.push_back(
+				    new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
+				break;
+			case signal_types::escape_:
+				gen_instruction(it.right(), assembly);
+				assembly.push_back(
+				    new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
+				break;
+			case signal_types::typeid_:
+				gen_instruction(it.right(), assembly);
+				assembly.push_back(
+				    new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
+				break;
+			case signal_types::new_:
+				gen_instruction(it.right(), assembly);
+				assembly.push_back(
+				    new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
+				break;
+			case signal_types::gcnew_:
+				gen_instruction(it.right(), assembly);
+				assembly.push_back(
+				    new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
+				break;
+			case signal_types::not_:
+				gen_instruction(it.right(), assembly);
+				assembly.push_back(
+				    new instruction_signal(static_cast<token_signal *>(token)->get_signal(), runtime));
+				break;
+			case signal_types::dot_:
+				gen_instruction(it.left(), assembly);
+				assembly.push_back(new instruction_sig_dot(it.right().data(), runtime));
+				break;
+			case signal_types::arrow_:
+				gen_instruction(it.left(), assembly);
+				assembly.push_back(new instruction_sig_arrow(it.right().data(), runtime));
+				break;
+			case signal_types::choice_: {
+				std::vector<instruction_base *> assembly_true, assembly_false;
+				gen_instruction(it.right().right(), assembly_false);
+				gen_instruction(it.right().left(), assembly_true);
+				gen_instruction(it.left(), assembly);
+				assembly.push_back(new instruction_sig_choice(assembly_true, assembly_false, runtime));
+				break;
+			}
+			case signal_types::fcall_: {
+				auto &arglist = static_cast<token_arglist *>(it.right().data())->get_arglist();
+				for (auto it = arglist.rbegin(); it != arglist.rend(); ++it)
+					gen_instruction(it->root(), assembly);
+				gen_instruction(it.left(), assembly);
+				assembly.push_back(new instruction_sig_fcall(arglist.size(), runtime));
+				break;
+			}
 			}
 			break;
 		}
@@ -637,7 +643,7 @@ namespace cs {
 	void instruction_array::exec()
 	{
 		array arr;
-		for(std::size_t i=0; i<m_size; ++i) {
+		for (std::size_t i = 0; i < m_size; ++i) {
 			arr.push_back(copy(runtime->stack.top()));
 			runtime->stack.pop();
 		}
@@ -650,237 +656,237 @@ namespace cs {
 		default:
 			break;
 		case signal_types::add_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_add(left, right)));
 			break;
 		}
 		case signal_types::addasi_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(runtime->parse_addasi(left, right));
 			break;
 		}
 		case signal_types::sub_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			return runtime->stack.push(rvalue(runtime->parse_sub(left, right)));
 			break;
 		}
 		case signal_types::subasi_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(runtime->parse_subasi(left, right));
 			break;
 		}
 		case signal_types::minus_: {
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_minus(right)));
 			break;
 		}
 		case signal_types::mul_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_mul(left, right)));
 			break;
 		}
 		case signal_types::mulasi_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(runtime->parse_mulasi(left, right));
 			break;
 		}
 		case signal_types::escape_: {
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(runtime->parse_escape(right));
 			break;
 		}
 		case signal_types::div_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_div(left, right)));
 			break;
 		}
 		case signal_types::divasi_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(runtime->parse_divasi(left, right));
 			break;
 		}
 		case signal_types::mod_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_mod(left, right)));
 			break;
 		}
 		case signal_types::modasi_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(runtime->parse_modasi(left, right));
 			break;
 		}
 		case signal_types::pow_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_pow(left, right)));
 			break;
 		}
 		case signal_types::powasi_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(runtime->parse_powasi(left, right));
 			break;
 		}
 		case signal_types::typeid_: {
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_typeid(right)));
 			break;
 		}
 		case signal_types::new_: {
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_new(right)));
 			break;
 		}
 		case signal_types::gcnew_: {
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_gcnew(right)));
 			break;
 		}
 		case signal_types::und_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_und(left, right)));
 			break;
 		}
 		case signal_types::abo_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_abo(left, right)));
 			break;
 		}
 		case signal_types::asi_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(runtime->parse_asi(left, right));
 			break;
 		}
 		case signal_types::pair_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_pair(left, right)));
 			break;
 		}
 		case signal_types::equ_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_equ(left, right)));
 			break;
 		}
 		case signal_types::ueq_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_ueq(left, right)));
 			break;
 		}
 		case signal_types::aeq_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_aeq(left, right)));
 			break;
 		}
 		case signal_types::neq_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_neq(left, right)));
 			break;
 		}
 		case signal_types::and_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_and(left, right)));
 			break;
 		}
 		case signal_types::or_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_or(left, right)));
 			break;
 		}
 		case signal_types::not_: {
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(rvalue(runtime->parse_not(right)));
 			break;
 		}
 		case signal_types::inc_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(runtime->parse_inc(left, right));
 			break;
 		}
 		case signal_types::dec_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(runtime->parse_dec(left, right));
 			break;
 		}
 		case signal_types::access_: {
-			auto& left=runtime->stack.top();
+			auto &left = runtime->stack.top();
 			runtime->stack.pop();
-			auto& right=runtime->stack.top();
+			auto &right = runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(runtime->parse_access(left, right));
 			break;
@@ -888,31 +894,32 @@ namespace cs {
 		}
 	}
 
-	void instruction_sig_dot::exec(){
-		auto& left=runtime->stack.top();
+	void instruction_sig_dot::exec()
+	{
+		auto &left = runtime->stack.top();
 		runtime->stack.pop();
 		runtime->stack.push(runtime->parse_dot(left, m_token));
 	}
 
-	void instruction_sig_arrow::exec(){
-		auto& left=runtime->stack.top();
+	void instruction_sig_arrow::exec()
+	{
+		auto &left = runtime->stack.top();
 		runtime->stack.pop();
 		runtime->stack.push(runtime->parse_arrow(left, m_token));
 	}
 
-	void instruction_sig_choice::exec(){
-		auto& cond=runtime->stack.top();
+	void instruction_sig_choice::exec()
+	{
+		auto &cond = runtime->stack.top();
 		runtime->stack.pop();
 		if (cond.type() == typeid(boolean)) {
-			if (cond.const_val<boolean>())
-			{
-				for(auto& it:m_assembly_true)
+			if (cond.const_val<boolean>()) {
+				for (auto &it:m_assembly_true)
 					it->exec();
 				runtime->stack.push(runtime->stack.top());
 			}
-			else
-			{
-				for(auto& it:m_assembly_false)
+			else {
+				for (auto &it:m_assembly_false)
 					it->exec();
 				runtime->stack.push(runtime->stack.top());
 			}
@@ -922,13 +929,14 @@ namespace cs {
 			throw runtime_error("Unsupported operator operations(Choice).");
 	}
 
-	void instruction_sig_fcall::exec(){
-		auto& func=runtime->stack.top();
+	void instruction_sig_fcall::exec()
+	{
+		auto &func = runtime->stack.top();
 		runtime->stack.pop();
 		if (func.type() == typeid(callable)) {
 			vector args;
 			args.reserve(m_size);
-			for(std::size_t i=0; i<m_size; ++i) {
+			for (std::size_t i = 0; i < m_size; ++i) {
 				args.push_back(lvalue(runtime->stack.top()));
 				runtime->stack.pop();
 			}
@@ -938,7 +946,7 @@ namespace cs {
 			const auto &om = func.const_val<object_method>();
 			vector args{om.object};
 			args.reserve(m_size);
-			for(std::size_t i=0; i<m_size; ++i) {
+			for (std::size_t i = 0; i < m_size; ++i) {
 				args.push_back(lvalue(runtime->stack.top()));
 				runtime->stack.pop();
 			}

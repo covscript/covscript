@@ -24,7 +24,7 @@
 
 namespace cs {
 	class domain_manager {
-		std::deque<set_t < string>> m_set;
+		std::deque<set_t<string>> m_set;
 		std::deque<domain_t> m_data;
 	public:
 		domain_manager()
@@ -297,103 +297,133 @@ namespace cs {
 	};
 
 	class instruction_executor final {
-		std::vector<instruction_base*> m_assembly;
-		void gen_instruction(const cov::tree<token_base*>::iterator &, std::vector<instruction_base*>&);
-		void gen_instruction(const cov::tree<token_base*>::iterator &it)
+		std::vector<instruction_base *> m_assembly;
+
+		void gen_instruction(const cov::tree<token_base *>::iterator &, std::vector<instruction_base *> &);
+
+		void gen_instruction(const cov::tree<token_base *>::iterator &it)
 		{
 			gen_instruction(it, m_assembly);
 		}
-		runtime_type* runtime=nullptr;
+
+		runtime_type *runtime = nullptr;
 	public:
-		instruction_executor()=delete;
-		instruction_executor(runtime_type* rt, const cov::tree<token_base*>::iterator &it):runtime(rt)
+		instruction_executor() = delete;
+
+		instruction_executor(runtime_type *rt, const cov::tree<token_base *>::iterator &it) : runtime(rt)
 		{
 			gen_instruction(it);
 		}
+
 		var operator()()
 		{
-			for(auto& it:m_assembly)
+			for (auto &it:m_assembly)
 				it->exec();
-			var result=runtime->stack.top();
+			var result = runtime->stack.top();
 			runtime->stack.pop();
 			return result;
 		}
 	};
 
-	class instruction_push:public instruction_base {
+	class instruction_push : public instruction_base {
 		var m_value;
 	public:
-		instruction_push()=delete;
-		instruction_push(const var& val, runtime_type* rt):instruction_base(rt), m_value(val) {}
+		instruction_push() = delete;
+
+		instruction_push(const var &val, runtime_type *rt) : instruction_base(rt), m_value(val) {}
+
 		void exec() override
 		{
 			runtime->stack.push(m_value);
 		}
 	};
 
-	class instruction_pop:public instruction_base {
+	class instruction_pop : public instruction_base {
 	public:
-		instruction_pop()=delete;
-		instruction_pop(runtime_type* rt):instruction_base(rt) {}
+		instruction_pop() = delete;
+
+		instruction_pop(runtime_type *rt) : instruction_base(rt) {}
+
 		void exec() override
 		{
 			runtime->stack.pop();
 		}
 	};
 
-	class instruction_id:public instruction_base {
+	class instruction_id : public instruction_base {
 		std::string m_id;
 	public:
-		instruction_id()=delete;
-		instruction_id(const std::string& id, runtime_type* rt):instruction_base(rt), m_id(id) {}
+		instruction_id() = delete;
+
+		instruction_id(const std::string &id, runtime_type *rt) : instruction_base(rt), m_id(id) {}
+
 		void exec() override;
 	};
 
-	class instruction_array:public instruction_base {
+	class instruction_array : public instruction_base {
 		std::size_t m_size;
 	public:
-		instruction_array()=delete;
-		instruction_array(std::size_t size, runtime_type* rt):instruction_base(rt), m_size(size) {}
+		instruction_array() = delete;
+
+		instruction_array(std::size_t size, runtime_type *rt) : instruction_base(rt), m_size(size) {}
+
 		void exec() override;
 	};
 
-	class instruction_signal:public instruction_base {
+	class instruction_signal : public instruction_base {
 		signal_types m_signal;
 	public:
-		instruction_signal()=delete;
-		instruction_signal(signal_types signal, runtime_type* rt):instruction_base(rt), m_signal(signal) {}
+		instruction_signal() = delete;
+
+		instruction_signal(signal_types signal, runtime_type *rt) : instruction_base(rt), m_signal(signal) {}
+
 		void exec() override;
 	};
 
-	class instruction_sig_dot:public instruction_base {
-		token_base *m_token=nullptr;
+	class instruction_sig_dot : public instruction_base {
+		token_base *m_token = nullptr;
 	public:
-		instruction_sig_dot()=delete;
-		instruction_sig_dot(token_base* token, runtime_type* rt):instruction_base(rt), m_token(token) {}
+		instruction_sig_dot() = delete;
+
+		instruction_sig_dot(token_base *token, runtime_type *rt) : instruction_base(rt), m_token(token) {}
+
 		void exec() override;
 	};
 
-	class instruction_sig_arrow:public instruction_base {
-		token_base *m_token=nullptr;
+	class instruction_sig_arrow : public instruction_base {
+		token_base *m_token = nullptr;
 	public:
-		instruction_sig_arrow()=delete;
-		instruction_sig_arrow(token_base* token, runtime_type* rt):instruction_base(rt), m_token(token) {}
+		instruction_sig_arrow() = delete;
+
+		instruction_sig_arrow(token_base *token, runtime_type *rt) : instruction_base(rt), m_token(token) {}
+
 		void exec() override;
 	};
 
-	class instruction_sig_choice:public instruction_base {
-		std::vector<instruction_base*> m_assembly_true, m_assembly_false;
+	class instruction_sig_choice : public instruction_base {
+		std::vector<instruction_base *> m_assembly_true, m_assembly_false;
 	public:
-		instruction_sig_choice()=delete;
-		instruction_sig_choice(std::vector<instruction_base*> assembly_true, std::vector<instruction_base*> assembly_false, runtime_type* rt):instruction_base(rt), m_assembly_true(std::move(assembly_true)), m_assembly_false(std::move(assembly_false)) {}
+		instruction_sig_choice() = delete;
+
+		instruction_sig_choice(std::vector<instruction_base *> assembly_true,
+		                       std::vector<instruction_base *> assembly_false, runtime_type *rt) : instruction_base(rt),
+			m_assembly_true(
+			    std::move(
+			        assembly_true)),
+			m_assembly_false(
+			    std::move(
+			        assembly_false)) {}
+
 		void exec() override;
 	};
 
-	class instruction_sig_fcall:public instruction_base {
+	class instruction_sig_fcall : public instruction_base {
 		std::size_t m_size;
 	public:
-		instruction_sig_fcall()=delete;
-		instruction_sig_fcall(size_t size, runtime_type* rt):instruction_base(rt), m_size(size) {}
+		instruction_sig_fcall() = delete;
+
+		instruction_sig_fcall(size_t size, runtime_type *rt) : instruction_base(rt), m_size(size) {}
+
 		void exec() override;
 	};
 }

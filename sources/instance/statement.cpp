@@ -99,7 +99,7 @@ namespace cs {
 
 	void statement_expression::repl_run()
 	{
-		var result=mExecutor();
+		var result = mExecutor();
 		try {
 			std::cout << result.to_string() << std::endl;
 		}
