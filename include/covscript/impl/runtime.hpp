@@ -252,7 +252,7 @@ namespace cs {
 
 		var parse_dot(const var &, token_base *);
 
-		var parse_arraw(const var &, token_base *);
+		var parse_arrow(const var &, token_base *);
 
 		var parse_typeid(const var &);
 
@@ -294,7 +294,7 @@ namespace cs {
 
 		var parse_expr(const cov::tree<token_base *>::iterator &);
 
-		cov::static_stack<variant<var, token_base*, cov::tree<token_base *>::iterator>, 1024> stack;
+		cov::static_stack<var, 1024> stack;
 	};
 
 	class instruction_executor final {
@@ -323,14 +323,13 @@ namespace cs {
 	};
 
 	class instruction_push:public instruction_base {
-		variant<var, token_base*, cov::tree<token_base *>::iterator> mVal;
+		var m_value;
 	public:
 		instruction_push()=delete;
-		template<typename T>
-		instruction_push(T&& val, runtime_type* rt):instruction_base(rt), mVal(std::forward<T>(val)) {}
+		instruction_push(const var& val, runtime_type* rt):instruction_base(rt), m_value(val) {}
 		void exec() override
 		{
-			runtime->stack.push(mVal);
+			runtime->stack.push(m_value);
 		}
 	};
 
@@ -352,14 +351,6 @@ namespace cs {
 		void exec() override;
 	};
 
-	class instruction_value:public instruction_base {
-		var m_value;
-	public:
-		instruction_value()=delete;
-		instruction_value(const var& value, runtime_type* rt):instruction_base(rt), m_value(value) {}
-		void exec() override;
-	};
-
 	class instruction_array:public instruction_base {
 		std::size_t m_size;
 	public:
@@ -373,6 +364,37 @@ namespace cs {
 	public:
 		instruction_signal()=delete;
 		instruction_signal(signal_types signal, runtime_type* rt):instruction_base(rt), m_signal(signal) {}
+		void exec() override;
+	};
+
+	class instruction_sig_dot:public instruction_base {
+		token_base *m_token=nullptr;
+	public:
+		instruction_sig_dot()=delete;
+		instruction_sig_dot(token_base* token, runtime_type* rt):instruction_base(rt), m_token(token) {}
+		void exec() override;
+	};
+
+	class instruction_sig_arrow:public instruction_base {
+		token_base *m_token=nullptr;
+	public:
+		instruction_sig_arrow()=delete;
+		instruction_sig_arrow(token_base* token, runtime_type* rt):instruction_base(rt), m_token(token) {}
+		void exec() override;
+	};
+
+	class instruction_sig_choice:public instruction_base {
+	public:
+		instruction_sig_choice()=delete;
+		instruction_sig_choice(runtime_type* rt):instruction_base(rt) {}
+		void exec() override;
+	};
+
+	class instruction_sig_fcall:public instruction_base {
+		std::size_t m_size;
+	public:
+		instruction_sig_fcall()=delete;
+		instruction_sig_fcall(size_t size, runtime_type* rt):instruction_base(rt), m_size(size) {}
 		void exec() override;
 	};
 }

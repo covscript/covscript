@@ -163,7 +163,7 @@ namespace cs {
 		}
 	}
 
-	var runtime_type::parse_arraw(const var &a, token_base *b)
+	var runtime_type::parse_arrow(const var &a, token_base *b)
 	{
 		if (a.type() == typeid(pointer))
 			return parse_dot(a.const_val<pointer>().data, b);
@@ -465,7 +465,7 @@ namespace cs {
 				return parse_dot(parse_expr(it.left()), it.right().data());
 				break;
 			case signal_types::arrow_:
-				return parse_arraw(parse_expr(it.left()), it.right().data());
+				return parse_arrow(parse_expr(it.left()), it.right().data());
 				break;
 			case signal_types::typeid_:
 				return rvalue(parse_typeid(parse_expr(it.right())));
@@ -547,15 +547,15 @@ namespace cs {
 			m_assembly.push_back(new instruction_id(static_cast<token_id *>(token)->get_id(), rt));
 			break;
 		case token_types::value:
-			m_assembly.push_back(new instruction_value(static_cast<token_value *>(token)->get_value(), rt));
+			m_assembly.push_back(new instruction_push(static_cast<token_value *>(token)->get_value(), rt));
 			break;
 		case token_types::expr:
 			gen_instruction(rt, static_cast<token_expr *>(token)->get_tree().root());
 			break;
 		case token_types::array: {
 			auto& arr=static_cast<token_array *>(token)->get_array();
-			for (auto &tree:arr)
-				gen_instruction(rt, tree.root());
+			for(auto it=arr.rbegin();it!=arr.rend();++it)
+				gen_instruction(rt, it->root());
 			m_assembly.push_back(new instruction_array(arr.size(), rt));
 			break;
 		}
@@ -568,7 +568,7 @@ namespace cs {
 			}
 			break;
 		}
-		case token_types::signal:
+		case token_types::signal:{
 			switch (static_cast<token_signal *>(token)->get_signal()) {
 				default:
 					gen_instruction(rt, it.right());
@@ -576,39 +576,36 @@ namespace cs {
 					m_assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), rt));
 					break;
 				case signal_types::dot_:
-					m_assembly.push_back(new instruction_push(it.right().data(), rt));
 					gen_instruction(rt, it.left());
-					m_assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), rt));
+					m_assembly.push_back(new instruction_sig_dot(it.right().data(), rt));
 					break;
 				case signal_types::arrow_:
-					m_assembly.push_back(new instruction_push(it.right().data(), rt));
 					gen_instruction(rt, it.left());
-					m_assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), rt));
+					m_assembly.push_back(new instruction_sig_arrow(it.right().data(), rt));
 					break;
 				case signal_types::choice_:
-					m_assembly.push_back(new instruction_push(it.right(), rt));
+					gen_instruction(rt, it.right().right());
+					gen_instruction(rt, it.right().left());
 					gen_instruction(rt, it.left());
-					m_assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), rt));
+					m_assembly.push_back(new instruction_sig_choice(rt));
 					break;
-				case signal_types::fcall_:
-					m_assembly.push_back(new instruction_push(it.right().data(), rt));
+				case signal_types::fcall_:{
+					auto& arglist=static_cast<token_arglist *>(it.right().data())->get_arglist();
+					for(auto it=arglist.rbegin();it!=arglist.rend();++it)
+						gen_instruction(rt, it->root());
 					gen_instruction(rt, it.left());
-					m_assembly.push_back(new instruction_signal(static_cast<token_signal *>(token)->get_signal(), rt));
+					m_assembly.push_back(new instruction_sig_fcall(arglist.size(), rt));
 					break;
+				}
 			}
 			break;
 		}
-		//throw internal_error("Unrecognized expression.");
+		}
 	}
 
 	void instruction_id::exec()
 	{
 		runtime->stack.push(runtime->storage.get_var(m_id));
-	}
-
-	void instruction_value::exec()
-	{
-		runtime->stack.push(m_value);
 	}
 
 	void instruction_array::exec()
@@ -734,22 +731,6 @@ namespace cs {
 			runtime->stack.push(runtime->parse_powasi(left, right));
 			break;
 		}
-		case signal_types::dot_: {
-			auto& left=runtime->stack.top();
-			runtime->stack.pop();
-			auto& right=runtime->stack.top();
-			runtime->stack.pop();
-			runtime->stack.push(runtime->parse_dot(left, right));
-			break;
-		}
-		case signal_types::arrow_: {
-			auto& left=runtime->stack.top();
-			runtime->stack.pop();
-			auto& right=runtime->stack.top();
-			runtime->stack.pop();
-			runtime->stack.push(runtime->parse_arraw(left, right));
-			break;
-		}
 		case signal_types::typeid_: {
 			auto& right=runtime->stack.top();
 			runtime->stack.pop();
@@ -790,14 +771,6 @@ namespace cs {
 			auto& right=runtime->stack.top();
 			runtime->stack.pop();
 			runtime->stack.push(runtime->parse_asi(left, right));
-			break;
-		}
-		case signal_types::choice_: {
-			auto& left=runtime->stack.top();
-			runtime->stack.pop();
-			auto& right=runtime->stack.top();
-			runtime->stack.pop();
-			runtime->stack.push(runtime->parse_choice(left, right));
 			break;
 		}
 		case signal_types::pair_: {
@@ -878,14 +851,6 @@ namespace cs {
 			runtime->stack.push(runtime->parse_dec(left, right));
 			break;
 		}
-		case signal_types::fcall_: {
-			auto& left=runtime->stack.top();
-			runtime->stack.pop();
-			auto& right=runtime->stack.top();
-			runtime->stack.pop();
-			runtime->stack.push(runtime->parse_fcall(left, right));
-			break;
-		}
 		case signal_types::access_: {
 			auto& left=runtime->stack.top();
 			runtime->stack.pop();
@@ -895,5 +860,60 @@ namespace cs {
 			break;
 		}
 		}
+	}
+
+	void instruction_sig_dot::exec(){
+		auto& left=runtime->stack.top();
+		runtime->stack.pop();
+		runtime->stack.push(runtime->parse_dot(left, m_token));
+	}
+
+	void instruction_sig_arrow::exec(){
+		auto& left=runtime->stack.top();
+		runtime->stack.pop();
+		runtime->stack.push(runtime->parse_arrow(left, m_token));
+	}
+
+	void instruction_sig_choice::exec(){
+		auto& cond=runtime->stack.top();
+		runtime->stack.pop();
+		auto& left=runtime->stack.top();
+		runtime->stack.pop();
+		auto& right=runtime->stack.top();
+		runtime->stack.pop();
+		if (cond.type() == typeid(boolean)) {
+			if (cond.const_val<boolean>())
+				runtime->stack.push(left);
+			else
+				runtime->stack.push(right);
+		}
+		else
+			throw runtime_error("Unsupported operator operations(Choice).");
+	}
+
+	void instruction_sig_fcall::exec(){
+		auto& func=runtime->stack.top();
+		runtime->stack.pop();
+		if (func.type() == typeid(callable)) {
+			vector args;
+			args.reserve(m_size);
+			for(std::size_t i=0; i<m_size; ++i) {
+				args.push_back(lvalue(runtime->stack.top()));
+				runtime->stack.pop();
+			}
+			runtime->stack.push(func.const_val<callable>().call(args));
+		}
+		else if (func.type() == typeid(object_method)) {
+			const auto &om = func.const_val<object_method>();
+			vector args{om.object};
+			args.reserve(m_size);
+			for(std::size_t i=0; i<m_size; ++i) {
+				args.push_back(lvalue(runtime->stack.top()));
+				runtime->stack.pop();
+			}
+			runtime->stack.push(om.callable.const_val<callable>().call(args));
+		}
+		else
+			throw runtime_error("Unsupported operator operations(Fcall).");
 	}
 }
