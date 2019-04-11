@@ -21,7 +21,6 @@
 */
 #include <covscript/impl/symbols.hpp>
 #include <covscript/impl/variant.hpp>
-#include <iostream>
 
 namespace cs {
 	class domain_manager {
@@ -305,17 +304,12 @@ namespace cs {
 		instruction_executor()=delete;
 		instruction_executor(runtime_type* rt, const cov::tree<token_base*>::iterator &it):runtime(rt)
 		{
-			//std::cout<<__func__<<std::endl;
 			gen_instruction(rt, it);
 		}
 		var operator()()
 		{
-			//std::cout<<__func__<<std::endl;
 			for(auto& it:m_assembly)
-			{
-				//std::cout<<cs_impl::cxx_demangle(typeid(*it).name())<<std::endl;
 				it->exec();
-			}
 			var result=runtime->stack.top();
 			runtime->stack.pop();
 			return result;
