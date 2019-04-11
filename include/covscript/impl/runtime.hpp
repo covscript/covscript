@@ -315,6 +315,12 @@ namespace cs {
 			gen_instruction(it);
 		}
 
+		~instruction_executor()
+		{
+			for (auto &it:m_assembly)
+				delete it;
+		}
+
 		var operator()()
 		{
 			for (auto &it:m_assembly)
@@ -413,6 +419,14 @@ namespace cs {
 			m_assembly_false(
 			    std::move(
 			        assembly_false)) {}
+
+		~instruction_sig_choice()
+		{
+			for(auto& it:m_assembly_true)
+				delete it;
+			for(auto& it:m_assembly_false)
+				delete it;
+		}
 
 		void exec() override;
 	};
