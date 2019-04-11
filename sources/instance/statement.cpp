@@ -94,13 +94,11 @@ namespace cs {
 	void statement_expression::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		//context->instance->parse_expr(mTree.root());
 		mExecutor();
 	}
 
 	void statement_expression::repl_run()
 	{
-		//const var &result = context->instance->parse_expr(mTree.root());
 		var result=mExecutor();
 		try {
 			std::cout << result.to_string() << std::endl;
@@ -121,7 +119,7 @@ namespace cs {
 	void statement_involve::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		var ns = context->instance->parse_expr(mTree.root());
+		var ns = mExecutor();
 		if (ns.type() == typeid(namespace_t))
 			context->instance->storage.involve_domain(ns.const_val<namespace_t>()->get_domain(), mOverride);
 		else
@@ -257,7 +255,7 @@ namespace cs {
 	void statement_if::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		if (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
+		if (mExecutor().const_val<boolean>()) {
 			scope_guard scope(context);
 			for (auto &ptr:mBlock) {
 				try {
@@ -289,7 +287,7 @@ namespace cs {
 	void statement_ifelse::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		if (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
+		if (mExecutor().const_val<boolean>()) {
 			scope_guard scope(context);
 			for (auto &ptr:mBlock) {
 				try {
@@ -341,7 +339,7 @@ namespace cs {
 	void statement_switch::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		var key = context->instance->parse_expr(mTree.root());
+		var key = mExecutor();
 		if (mCases.count(key) > 0)
 			mCases[key]->run();
 		else if (mDefault != nullptr)
@@ -385,7 +383,7 @@ namespace cs {
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
 		scope_guard scope(context);
-		while (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
+		while (mExecutor().const_val<boolean>()) {
 			scope.clear();
 			for (auto &ptr:mBlock) {
 				try {
@@ -651,7 +649,7 @@ namespace cs {
 		CS_DEBUGGER_STEP(this);
 		if (context->instance->fcall_stack.empty())
 			throw runtime_error("Return outside function.");
-		context->instance->fcall_stack.top() = context->instance->parse_expr(this->mTree.root());
+		context->instance->fcall_stack.top() = mExecutor();
 		context->instance->return_fcall = true;
 	}
 
@@ -714,7 +712,7 @@ namespace cs {
 	void statement_throw::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		var e = context->instance->parse_expr(this->mTree.root());
+		var e = mExecutor();
 		if (e.type() != typeid(lang_error))
 			throw runtime_error("Throwing unsupported exception.");
 		else
