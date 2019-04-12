@@ -428,6 +428,49 @@ namespace cs {
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
 		scope_guard scope(context);
+		while(true) {
+			scope.clear();
+			for (auto &ptr:mBlock) {
+				try {
+					ptr->run();
+				}
+				catch (const cs::exception &e) {
+					throw e;
+				}
+				catch (const std::exception &e) {
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+				}
+				if (context->instance->return_fcall) {
+					return;
+				}
+				if (context->instance->break_block) {
+					context->instance->break_block = false;
+					return;
+				}
+				if (context->instance->continue_block) {
+					context->instance->continue_block = false;
+					break;
+				}
+			}
+		}
+	}
+
+	void statement_loop::dump(std::ostream &o) const
+	{
+		o << "< BeginLoop >\n";
+		for (auto &ptr:mBlock)
+			ptr->dump(o);
+		o << "< EndLoop >\n";
+	}
+
+	void statement_loop_until::run()
+	{
+		CS_DEBUGGER_STEP(this);
+		if (context->instance->break_block)
+			context->instance->break_block = false;
+		if (context->instance->continue_block)
+			context->instance->continue_block = false;
+		scope_guard scope(context);
 		do {
 			scope.clear();
 			for (auto &ptr:mBlock) {
@@ -453,19 +496,17 @@ namespace cs {
 				}
 			}
 		}
-		while (!(mExpr != nullptr && context->instance->parse_expr(mExpr->get_tree().root()).const_val<boolean>()));
+		while (!mExecutor().const_val<boolean>());
 	}
 
-	void statement_loop::dump(std::ostream &o) const
+	void statement_loop_until::dump(std::ostream &o) const
 	{
 		o << "< BeginLoop >\n";
 		for (auto &ptr:mBlock)
 			ptr->dump(o);
-		if (mExpr != nullptr) {
-			o << "< Until: Condition = ";
-			compiler_type::dump_expr(mExpr->get_tree().root(), o);
-			o << " >\n";
-		}
+		o << "< Until: Condition = ";
+		compiler_type::dump_expr(mExpr.root(), o);
+		o << " >\n";
 		o << "< EndLoop >\n";
 	}
 
@@ -477,11 +518,11 @@ namespace cs {
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
 		scope_guard scope(context);
-		var val = copy(context->instance->parse_expr(mDvp.expr.root()));
+		var val = copy(mExecutor[0]());
 		while (true) {
 			scope.clear();
 			context->instance->storage.add_var(mDvp.id, val);
-			if (!context->instance->parse_expr(mParallel[1].root()).const_val<boolean>())
+			if (!mExecutor[1]().const_val<boolean>())
 				break;
 			for (auto &ptr:mBlock) {
 				try {
@@ -505,7 +546,7 @@ namespace cs {
 					break;
 				}
 			}
-			context->instance->parse_expr(mParallel[2].root());
+			mExecutor[2]();
 		}
 	}
 
@@ -566,7 +607,7 @@ namespace cs {
 	void statement_foreach::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		const var &obj = context->instance->parse_expr(this->mObj.root());
+		const var &obj = mExecutor();
 		if (obj.type() == typeid(string))
 			foreach_helper<string, char>(context, this->mIt, obj, this->mBlock);
 		else if (obj.type() == typeid(list))

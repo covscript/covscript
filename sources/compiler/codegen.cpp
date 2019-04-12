@@ -312,7 +312,7 @@ namespace cs {
 		token_base *ptr = tree.root().data();
 		if (ptr != nullptr && ptr->get_type() == token_types::value) {
 			if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
-				return new statement_loop(nullptr, body, context, raw.front().back());
+				return new statement_loop(body, context, raw.front().back());
 			else
 				return nullptr;
 		}
@@ -339,13 +339,13 @@ namespace cs {
 				if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
 					return new statement_block(body, context, raw.front().back());
 				else
-					return new statement_loop(nullptr, body, context, raw.front().back());
+					return new statement_loop(body, context, raw.front().back());
 			}
 			else
-				return new statement_loop(expr, body, context, raw.front().back());
+				return new statement_loop_until(expr->get_tree(), body, context, raw.front().back());
 		}
 		else
-			return new statement_loop(nullptr, body, context, raw.front().back());
+			return new statement_loop(body, context, raw.front().back());
 	}
 
 	void method_for::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
