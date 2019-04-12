@@ -20,6 +20,7 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/impl/impl.hpp>
+#include <iostream>
 
 namespace cs {
 	class statement_expression final : public statement_base {
@@ -69,12 +70,24 @@ namespace cs {
 	};
 
 	class statement_var final : public statement_base {
-		std::vector<compiler_type::define_var_profile> mDvp;
+		struct vardef
+		{
+			compiler_type::define_var_profile dvp;
+			instruction_executor executor;
+			vardef(const context_t& context, const compiler_type::define_var_profile& d):dvp(d), executor(context->instance.get(), dvp.expr.root()) {
+				std::cout<<__func__<<std::endl;
+			}
+		};
+		std::vector<vardef> mDvp;
 	public:
 		statement_var() = delete;
 
-		statement_var(std::vector<compiler_type::define_var_profile> dvp, context_t c, token_base *ptr)
-			: statement_base(std::move(c), ptr), mDvp(std::move(dvp)) {}
+		statement_var(const std::vector<compiler_type::define_var_profile>& dvp, context_t c, token_base *ptr)
+			: statement_base(std::move(c), ptr) {
+				std::cout<<__func__<<std::endl;
+				for(auto& it:dvp)
+					mDvp.emplace_back(context, it);
+			}
 
 		statement_types get_type() const noexcept override
 		{
