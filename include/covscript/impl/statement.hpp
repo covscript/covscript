@@ -70,24 +70,29 @@ namespace cs {
 	};
 
 	class statement_var final : public statement_base {
-		struct vardef
-		{
+		struct vardef {
 			compiler_type::define_var_profile dvp;
 			instruction_executor executor;
-			vardef(const context_t& context, const compiler_type::define_var_profile& d):dvp(d), executor(context->instance.get(), dvp.expr.root()) {
-				std::cout<<__func__<<std::endl;
+
+			vardef(const context_t &context, compiler_type::define_var_profile d) : dvp(std::move(d)),
+				executor(context->instance.get(),
+				         dvp.expr.root())
+			{
+				std::cout << __func__ << std::endl;
 			}
 		};
+
 		std::vector<vardef> mDvp;
 	public:
 		statement_var() = delete;
 
-		statement_var(const std::vector<compiler_type::define_var_profile>& dvp, context_t c, token_base *ptr)
-			: statement_base(std::move(c), ptr) {
-				std::cout<<__func__<<std::endl;
-				for(auto& it:dvp)
-					mDvp.emplace_back(context, it);
-			}
+		statement_var(const std::vector<compiler_type::define_var_profile> &dvp, context_t c, token_base *ptr)
+			: statement_base(std::move(c), ptr)
+		{
+			std::cout << __func__ << std::endl;
+			for (auto &it:dvp)
+				mDvp.emplace_back(context, it);
+		}
 
 		statement_types get_type() const noexcept override
 		{
@@ -432,7 +437,9 @@ namespace cs {
 	public:
 		statement_loop_until() = delete;
 
-		statement_loop_until(const cov::tree<token_base *>& expr, std::deque<statement_base *> b, context_t c, token_base *ptr) : statement_base(std::move(c), ptr), mExpr(expr), mExecutor(context->instance.get(), mExpr.root()), mBlock(std::move(b)) {}
+		statement_loop_until(cov::tree<token_base *> expr, std::deque<statement_base *> b, context_t c, token_base *ptr)
+			: statement_base(std::move(c), ptr), mExpr(
+			      std::move(expr)), mExecutor(context->instance.get(), mExpr.root()), mBlock(std::move(b)) {}
 
 		statement_types get_type() const noexcept override
 		{
@@ -480,7 +487,10 @@ namespace cs {
 	public:
 		statement_foreach() = delete;
 
-		statement_foreach(std::string it, cov::tree<token_base *> tree, std::deque<statement_base *> b, context_t c, token_base *ptr) : statement_base(std::move(c), ptr), mIt(std::move(it)), mObj(std::move(tree)), mExecutor(context->instance.get(), mObj.root()), mBlock(std::move(b)) {}
+		statement_foreach(std::string it, cov::tree<token_base *> tree, std::deque<statement_base *> b, context_t c,
+		                  token_base *ptr) : statement_base(std::move(c), ptr), mIt(std::move(it)),
+			mObj(std::move(tree)), mExecutor(context->instance.get(), mObj.root()),
+			mBlock(std::move(b)) {}
 
 		statement_types get_type() const noexcept override
 		{

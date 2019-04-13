@@ -19,7 +19,6 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/impl/statement.hpp>
-#include <iostream>
 
 namespace cs {
 	var function::call(vector &args) const
@@ -428,7 +427,7 @@ namespace cs {
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
 		scope_guard scope(context);
-		while(true) {
+		while (true) {
 			scope.clear();
 			for (auto &ptr:mBlock) {
 				try {

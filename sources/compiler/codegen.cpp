@@ -342,7 +342,7 @@ namespace cs {
 					return new statement_loop(body, context, raw.front().back());
 			}
 			else
-				return new statement_loop_until(expr->get_tree(), body, context, raw.front().back());
+				return new statement_loop_until(tree, body, context, raw.front().back());
 		}
 		else
 			return new statement_loop(body, context, raw.front().back());

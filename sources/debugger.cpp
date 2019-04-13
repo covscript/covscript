@@ -101,10 +101,10 @@ public:
 		if (function.type() == typeid(cs::object_method))
 			function = function.const_val<cs::object_method>().callable;
 		else if (function.type() != typeid(cs::callable))
-			throw cs::lang_error("Debugger just can break at specific line or function.");
+			throw cs::runtime_error("Debugger just can break at specific line or function.");
 		const cs::callable::function_type &target = function.const_val<cs::callable>().get_raw_data();
 		if (target.target_type() != typeid(cs::function))
-			throw cs::lang_error("Debugger can not break at CNI function.");
+			throw cs::runtime_error("Debugger can not break at CNI function.");
 		target.target<cs::function>()->set_debugger_state(true);
 		m_breakpoints.emplace_front(++m_id, function);
 		return m_id;

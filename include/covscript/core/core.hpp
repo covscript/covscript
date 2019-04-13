@@ -591,7 +591,8 @@ namespace cs {
 			dll_compatible_check_t dll_check = reinterpret_cast<dll_compatible_check_t>(m_dll.get_address(
 			                                       dll_compatible_check));
 			if (dll_check == nullptr || dll_check() != COVSCRIPT_ABI_VERSION)
-				throw runtime_error("Incompatible Covariant Script Extension.(Target: "+std::to_string(dll_check())+", Current: "+std::to_string(COVSCRIPT_ABI_VERSION)+")");
+				throw runtime_error("Incompatible Covariant Script Extension.(Target: " + std::to_string(dll_check()) +
+				                    ", Current: " + std::to_string(COVSCRIPT_ABI_VERSION) + ")");
 			dll_main_entrance_t dll_main = reinterpret_cast<dll_main_entrance_t>(m_dll.get_address(dll_main_entrance));
 			if (dll_main != nullptr) {
 				dll_main(this, current_process);

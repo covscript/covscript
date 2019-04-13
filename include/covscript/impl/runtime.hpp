@@ -336,7 +336,7 @@ namespace cs {
 	public:
 		instruction_push() = delete;
 
-		instruction_push(const var &val, runtime_type *rt) : instruction_base(rt), m_value(val) {}
+		instruction_push(var val, runtime_type *rt) : instruction_base(rt), m_value(std::move(val)) {}
 
 		void exec() override
 		{
@@ -348,7 +348,7 @@ namespace cs {
 	public:
 		instruction_pop() = delete;
 
-		instruction_pop(runtime_type *rt) : instruction_base(rt) {}
+		explicit instruction_pop(runtime_type *rt) : instruction_base(rt) {}
 
 		void exec() override
 		{
@@ -361,7 +361,7 @@ namespace cs {
 	public:
 		instruction_id() = delete;
 
-		instruction_id(const std::string &id, runtime_type *rt) : instruction_base(rt), m_id(id) {}
+		instruction_id(std::string id, runtime_type *rt) : instruction_base(rt), m_id(std::move(id)) {}
 
 		void exec() override;
 	};
@@ -420,11 +420,11 @@ namespace cs {
 			    std::move(
 			        assembly_false)) {}
 
-		~instruction_sig_choice()
+		~instruction_sig_choice() override
 		{
-			for(auto& it:m_assembly_true)
+			for (auto &it:m_assembly_true)
 				delete it;
-			for(auto& it:m_assembly_false)
+			for (auto &it:m_assembly_false)
 				delete it;
 		}
 
