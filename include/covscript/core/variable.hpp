@@ -19,7 +19,6 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <covscript/import/mozart/memory.hpp>
 #include <type_traits>
 
 namespace cs_impl {
@@ -136,13 +135,13 @@ namespace cs_impl {
 		struct matcher;
 
 		template<typename T>
-		static constexpr bool match(T *)
+		static constexpr bool match(T *) noexcept
 		{
 			return false;
 		}
 
 		template<typename T>
-		static constexpr bool match(matcher<T, &std::hash<T>::operator()> *)
+		static constexpr bool match(matcher<T, &std::hash<T>::operator()> *) noexcept
 		{
 			return true;
 		}
@@ -288,9 +287,86 @@ namespace cs_impl {
 	* Github: https://github.com/mikecovlee/mozart
 	*/
 
+	template<typename T, std::size_t blck_size, std::size_t over_demand_threshold= static_cast<std::size_t>(blck_size*0.2), template<typename> class allocator_t=std::allocator>
+	class allocator final {
+		allocator_t<T> mAlloc;
+		std::array<T *, blck_size> mPool;
+		std::size_t mOffset = 0, mAllocThreshold=0, mFreeThreshold=0;
+	public:
+		inline void balance()
+		{
+			if (mOffset != 0.5 * blck_size) {
+				if (mOffset < 0.5 * blck_size) {
+					while (mOffset < 0.5 * blck_size)
+						mPool[mOffset++] = mAlloc.allocate(1);
+				}
+				else {
+					while (mOffset > 0.5 * blck_size)
+						mAlloc.deallocate(mPool[--mOffset], 1);
+				}
+			}
+		}
+
+		inline void clean()
+		{
+			while (mOffset > 0)
+				mAlloc.deallocate(mPool[--mOffset], 1);
+		}
+
+		allocator()
+		{
+			while (mOffset < 0.5 * blck_size)
+				mPool[mOffset++] = mAlloc.allocate(1);
+		}
+
+		allocator(const allocator &) = delete;
+
+		~allocator()
+		{
+			clean();
+		}
+
+		template<typename...ArgsT>
+		inline T *alloc(ArgsT &&...args)
+		{
+			T *ptr = nullptr;
+			if (mOffset > 0)
+				ptr = mPool[--mOffset];
+			else
+			{
+				ptr = mAlloc.allocate(1);
+				if(++mAllocThreshold>over_demand_threshold)
+				{
+					mAllocThreshold=0;
+					while (mOffset < 0.5 * blck_size)
+						mPool[mOffset++] = mAlloc.allocate(1);
+				}
+			}
+			mAlloc.construct(ptr, std::forward<ArgsT>(args)...);
+			return ptr;
+		}
+
+		inline void free(T *ptr)
+		{
+			mAlloc.destroy(ptr);
+			if (mOffset < blck_size)
+				mPool[mOffset++] = ptr;
+			else {
+				mAlloc.deallocate(ptr, 1);
+				if(++mFreeThreshold>over_demand_threshold)
+				{
+					mFreeThreshold=0;
+					while (mOffset > 0.5 * blck_size)
+						mAlloc.deallocate(mPool[--mOffset], 1);
+				}
+			}
+		}
+	};
+
 // Be careful when you adjust the buffer size.
-	constexpr std::size_t default_allocate_buffer_size = 64;
-	template<typename T> using default_allocator_provider=std::allocator<T>;
+    template<typename T> using default_allocator_provider=std::allocator<T>;
+	constexpr std::size_t default_allocate_buffer_size = 64, default_over_demand_threshold=8;
+	template<typename T> using default_allocator=allocator<T, default_allocate_buffer_size, default_over_demand_threshold, default_allocator_provider>;
 
 	class any final {
 		class baseHolder {
@@ -325,7 +401,7 @@ namespace cs_impl {
 		protected:
 			T mDat;
 		public:
-			static cov::allocator<holder<T>, default_allocate_buffer_size, default_allocator_provider> allocator;
+			static default_allocator<holder<T>> allocator;
 
 			holder() = default;
 
@@ -422,7 +498,7 @@ namespace cs_impl {
 			}
 		};
 
-		static cov::allocator<proxy, default_allocate_buffer_size, default_allocator_provider> allocator;
+		static default_allocator<proxy> allocator;
 		proxy *mDat = nullptr;
 
 		proxy *duplicate() const noexcept
@@ -792,7 +868,7 @@ namespace cs_impl {
 		using holder<std::type_index>::holder;
 	};
 
-	template<typename T> cov::allocator<any::holder<T>, default_allocate_buffer_size, default_allocator_provider> any::holder<T>::allocator;
+    template<typename T> default_allocator<any::holder<T>> any::holder<T>::allocator;
 }
 
 std::ostream &operator<<(std::ostream &, const cs_impl::any &);

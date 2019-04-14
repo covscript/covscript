@@ -226,7 +226,7 @@ namespace cs {
     	class iterator final {
     		friend class stack_type;
 			T* m_ptr=nullptr;
-    		explicit iterator(const T* ptr):m_ptr(ptr) {}
+    		explicit iterator(T* const ptr):m_ptr(ptr) {}
     	public:
 			iterator()=delete;
     		iterator(const iterator&)=default;
@@ -243,10 +243,19 @@ namespace cs {
 			inline iterator& operator++() noexcept
 			{
 				--m_ptr;
+				return *this;
 			}
 			inline const iterator operator++(int) noexcept
 			{
 				return iterator(m_ptr--);
+			}
+			inline bool operator==(const iterator& it) const noexcept
+			{
+				return m_ptr==it.m_ptr;
+			}
+			inline bool operator!=(const iterator& it) const noexcept
+			{
+				return m_ptr!=it.m_ptr;
 			}
     	};
 
