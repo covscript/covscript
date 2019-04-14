@@ -56,6 +56,12 @@
 #include <covscript/core/variable.hpp>
 #include <covscript/core/version.hpp>
 
+#ifndef COVSCRIPT_DEBUG
+#define COVSCRIPT_NOEXCEPT noexcept
+#else
+#define COVSCRIPT_NOEXCEPT
+#endif
+
 namespace cs {
 // Process Context
 	struct process_context final {

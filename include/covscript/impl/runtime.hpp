@@ -277,44 +277,52 @@ namespace cs {
             return m_current-m_start==m_size;
         }
 
-        inline T &top() const
+        inline T &top() const COVSCRIPT_NOEXCEPT
         {
+#ifdef COVSCRIPT_DEBUG
             if (empty())
                 throw cov::error("E000H");
+#endif
             return *(m_current-1);
         }
 
         template<typename...ArgsT>
-        void push(ArgsT&&...args)
+        inline void push(ArgsT&&...args) COVSCRIPT_NOEXCEPT
         {
+#ifdef COVSCRIPT_DEBUG
             if (full())
                 throw cov::error("E000I");
+#endif
             ::new (m_current++) T(std::forward<ArgsT>(args)...);
         }
 
-        T pop()
+        inline T pop() COVSCRIPT_NOEXCEPT
         {
+#ifdef COVSCRIPT_DEBUG
             if (empty())
                 throw cov::error("E000H");
+#endif
             --m_current;
             T data(std::move(*m_current));
             m_current->~T();
             return std::move(data);
         }
 
-        void pop_no_return()
+        inline void pop_no_return() COVSCRIPT_NOEXCEPT
         {
+#ifdef COVSCRIPT_DEBUG
             if (empty())
                 throw cov::error("E000H");
+#endif
             (--m_current)->~T();
         }
 
-        iterator begin() const
+        iterator begin() const noexcept
         {
             return iterator(m_current-1);
         }
 
-        iterator end() const
+        iterator end() const noexcept
         {
             return iterator(m_start-1);
         }
