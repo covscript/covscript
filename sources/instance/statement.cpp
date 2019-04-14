@@ -19,6 +19,7 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/impl/statement.hpp>
+#include <iostream>
 
 namespace cs {
 	var function::call(vector &args) const
@@ -135,15 +136,15 @@ namespace cs {
 	void statement_var::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		for (std::size_t i=0;i<mDvp.size();++i)
-			context->instance->storage.add_var(mDvp[i].id, copy(mExecutor[i]()));
+		for (auto &it:m_data)
+			context->instance->storage.add_var(it.dvp.id, copy(it.executor()));
 	}
 
 	void statement_var::dump(std::ostream &o) const
 	{
-		for (auto &it:mDvp) {
-			o << "< Var: ID = \"" << it.id << "\", Value = ";
-			compiler_type::dump_expr(it.expr.root(), o);
+		for (auto &it:m_data) {
+			o << "< Var: ID = \"" << it.dvp.id << "\", Value = ";
+			compiler_type::dump_expr(it.dvp.expr.root(), o);
 			o << " >\n";
 		}
 	}

@@ -20,7 +20,6 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/impl/impl.hpp>
-#include <iostream>
 
 namespace cs {
 	class statement_expression final : public statement_base {
@@ -70,32 +69,25 @@ namespace cs {
 	};
 
 	class statement_var final : public statement_base {
-		/*struct vardef {
+		struct data_type {
 			compiler_type::define_var_profile dvp;
 			instruction_executor executor;
 
-			vardef(const context_t &context, compiler_type::define_var_profile d) : dvp(std::move(d)),
-				executor(context->instance.get(),
-				         dvp.expr.root())
-			{
-				std::cout << __func__ << std::endl;
-			}
-		};*/
+			data_type(const context_t &context, compiler_type::define_var_profile profile) : dvp(std::move(profile)),
+				executor(
+				    context->instance.get(),
+				    dvp.expr.root()) {}
+		};
 
-		std::vector<compiler_type::define_var_profile> mDvp;
-		std::vector<instruction_executor> mExecutor;
+		std::vector<data_type> m_data;
 	public:
 		statement_var() = delete;
 
-		statement_var(std::vector<compiler_type::define_var_profile> dvp, context_t c, token_base *ptr)
-			: statement_base(std::move(c), ptr), mDvp(std::move(dvp))
+		statement_var(const std::vector<compiler_type::define_var_profile> &dvp, context_t c, token_base *ptr)
+			: statement_base(std::move(c), ptr)
 		{
-			std::cout << __func__ << std::endl;
-			for (auto &it:mDvp) {
-				//compiler_type::dump_expr(it.expr.root(), std::cout);
-				//std::cout<<std::endl;
-				mExecutor.emplace_back(context->instance.get(), it.expr.root());
-			}
+			for (auto &it:dvp)
+				m_data.emplace_back(context, it);
 		}
 
 		statement_types get_type() const noexcept override
