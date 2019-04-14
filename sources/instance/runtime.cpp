@@ -659,17 +659,17 @@ namespace cs {
 			break;
 		}
 		case signal_types::addasi_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(runtime->parse_addasi(left, right));
 			break;
 		}
 		case signal_types::sub_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			return runtime->stack.push(rvalue(runtime->parse_sub(left, right)));
 			break;
 		}
 		case signal_types::subasi_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(runtime->parse_subasi(left, right));
 			break;
 		}
@@ -677,12 +677,12 @@ namespace cs {
 			runtime->stack.push(rvalue(runtime->parse_minus(runtime->stack.pop())));
 			break;
 		case signal_types::mul_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(rvalue(runtime->parse_mul(left, right)));
 			break;
 		}
 		case signal_types::mulasi_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(runtime->parse_mulasi(left, right));
 			break;
 		}
@@ -690,32 +690,32 @@ namespace cs {
 			runtime->stack.push(runtime->parse_escape(runtime->stack.pop()));
 			break;
 		case signal_types::div_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(rvalue(runtime->parse_div(left, right)));
 			break;
 		}
 		case signal_types::divasi_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(runtime->parse_divasi(left, right));
 			break;
 		}
 		case signal_types::mod_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(rvalue(runtime->parse_mod(left, right)));
 			break;
 		}
 		case signal_types::modasi_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(runtime->parse_modasi(left, right));
 			break;
 		}
 		case signal_types::pow_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(rvalue(runtime->parse_pow(left, right)));
 			break;
 		}
 		case signal_types::powasi_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(runtime->parse_powasi(left, right));
 			break;
 		}
@@ -729,52 +729,52 @@ namespace cs {
 			runtime->stack.push(rvalue(runtime->parse_gcnew(runtime->stack.pop())));
 			break;
 		case signal_types::und_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(rvalue(runtime->parse_und(left, right)));
 			break;
 		}
 		case signal_types::abo_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(rvalue(runtime->parse_abo(left, right)));
 			break;
 		}
 		case signal_types::asi_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(runtime->parse_asi(left, right));
 			break;
 		}
 		case signal_types::pair_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(rvalue(runtime->parse_pair(left, right)));
 			break;
 		}
 		case signal_types::equ_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(rvalue(runtime->parse_equ(left, right)));
 			break;
 		}
 		case signal_types::ueq_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(rvalue(runtime->parse_ueq(left, right)));
 			break;
 		}
 		case signal_types::aeq_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(rvalue(runtime->parse_aeq(left, right)));
 			break;
 		}
 		case signal_types::neq_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(rvalue(runtime->parse_neq(left, right)));
 			break;
 		}
 		case signal_types::and_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(rvalue(runtime->parse_and(left, right)));
 			break;
 		}
 		case signal_types::or_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(rvalue(runtime->parse_or(left, right)));
 			break;
 		}
@@ -782,17 +782,17 @@ namespace cs {
 			runtime->stack.push(rvalue(runtime->parse_not(runtime->stack.pop())));
 			break;
 		case signal_types::inc_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(runtime->parse_inc(left, right));
 			break;
 		}
 		case signal_types::dec_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(runtime->parse_dec(left, right));
 			break;
 		}
 		case signal_types::access_: {
-            var left(runtime->stack.pop()), right(runtime->stack.pop());
+			var left(runtime->stack.pop()), right(runtime->stack.pop());
 			runtime->stack.push(runtime->parse_access(left, right));
 			break;
 		}

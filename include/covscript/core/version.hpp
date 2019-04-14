@@ -31,5 +31,3 @@
 #define COVSCRIPT_VERSION_STR "3.2.0 John von Neumann(Preview) Build 3"
 #define COVSCRIPT_STD_VERSION 190101
 #define COVSCRIPT_ABI_VERSION 190400
-// Define when status not stable
-#define COVSCRIPT_DEBUG

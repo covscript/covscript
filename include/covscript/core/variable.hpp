@@ -287,43 +287,24 @@ namespace cs_impl {
 	* Github: https://github.com/mikecovlee/mozart
 	*/
 
-	template<typename T, std::size_t blck_size, std::size_t over_demand_threshold= static_cast<std::size_t>(blck_size*0.2), template<typename> class allocator_t=std::allocator>
-	class allocator final {
+	template<typename T, std::size_t blck_size, template<typename> class allocator_t=std::allocator>
+	class allocator_type final {
+		T *mPool[blck_size];
 		allocator_t<T> mAlloc;
-		std::array<T *, blck_size> mPool;
-		std::size_t mOffset = 0, mAllocThreshold=0, mFreeThreshold=0;
+		std::size_t mOffset = 0;
 	public:
-		inline void balance()
-		{
-			if (mOffset != 0.5 * blck_size) {
-				if (mOffset < 0.5 * blck_size) {
-					while (mOffset < 0.5 * blck_size)
-						mPool[mOffset++] = mAlloc.allocate(1);
-				}
-				else {
-					while (mOffset > 0.5 * blck_size)
-						mAlloc.deallocate(mPool[--mOffset], 1);
-				}
-			}
-		}
-
-		inline void clean()
-		{
-			while (mOffset > 0)
-				mAlloc.deallocate(mPool[--mOffset], 1);
-		}
-
-		allocator()
+		allocator_type()
 		{
 			while (mOffset < 0.5 * blck_size)
 				mPool[mOffset++] = mAlloc.allocate(1);
 		}
 
-		allocator(const allocator &) = delete;
+		allocator_type(const allocator_type &) = delete;
 
-		~allocator()
+		~allocator_type()
 		{
-			clean();
+			while (mOffset > 0)
+				mAlloc.deallocate(mPool[--mOffset], 1);
 		}
 
 		template<typename...ArgsT>
@@ -333,15 +314,7 @@ namespace cs_impl {
 			if (mOffset > 0)
 				ptr = mPool[--mOffset];
 			else
-			{
 				ptr = mAlloc.allocate(1);
-				if(++mAllocThreshold>over_demand_threshold)
-				{
-					mAllocThreshold=0;
-					while (mOffset < 0.5 * blck_size)
-						mPool[mOffset++] = mAlloc.allocate(1);
-				}
-			}
 			mAlloc.construct(ptr, std::forward<ArgsT>(args)...);
 			return ptr;
 		}
@@ -351,22 +324,15 @@ namespace cs_impl {
 			mAlloc.destroy(ptr);
 			if (mOffset < blck_size)
 				mPool[mOffset++] = ptr;
-			else {
+			else
 				mAlloc.deallocate(ptr, 1);
-				if(++mFreeThreshold>over_demand_threshold)
-				{
-					mFreeThreshold=0;
-					while (mOffset > 0.5 * blck_size)
-						mAlloc.deallocate(mPool[--mOffset], 1);
-				}
-			}
 		}
 	};
 
 // Be careful when you adjust the buffer size.
-    template<typename T> using default_allocator_provider=std::allocator<T>;
-	constexpr std::size_t default_allocate_buffer_size = 64, default_over_demand_threshold=8;
-	template<typename T> using default_allocator=allocator<T, default_allocate_buffer_size, default_over_demand_threshold, default_allocator_provider>;
+	constexpr std::size_t default_allocate_buffer_size = 64;
+	template<typename T> using default_allocator_provider=std::allocator<T>;
+	template<typename T> using default_allocator=allocator_type<T, default_allocate_buffer_size, default_allocator_provider>;
 
 	class any final {
 		class baseHolder {
@@ -868,7 +834,7 @@ namespace cs_impl {
 		using holder<std::type_index>::holder;
 	};
 
-    template<typename T> default_allocator<any::holder<T>> any::holder<T>::allocator;
+	template<typename T> default_allocator<any::holder<T>> any::holder<T>::allocator;
 }
 
 std::ostream &operator<<(std::ostream &, const cs_impl::any &);

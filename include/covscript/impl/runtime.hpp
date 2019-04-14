@@ -216,126 +216,132 @@ namespace cs {
 		}
 	};
 
-    template<typename T, typename AllocT=std::allocator<T>>
-    class stack_type final {
-    	AllocT m_alloc;
-        std::size_t m_size=0;
-        T* m_start=nullptr,*m_current=nullptr;
-    public:
+	template<typename T, typename AllocT=std::allocator<T>>
+	class stack_type final {
+		AllocT m_alloc;
+		std::size_t m_size = 0;
+		T *m_start = nullptr, *m_current = nullptr;
+	public:
 		constexpr static std::size_t default_size = 1024;
-    	class iterator final {
-    		friend class stack_type;
-			T* m_ptr=nullptr;
-    		explicit iterator(T* const ptr):m_ptr(ptr) {}
-    	public:
-			iterator()=delete;
-    		iterator(const iterator&)=default;
-    		iterator(iterator&&) noexcept=default;
-    		~iterator()=default;
-			inline T& operator*() const noexcept
+
+		class iterator final {
+			friend class stack_type;
+
+			T *m_ptr = nullptr;
+
+			explicit iterator(T *const ptr) : m_ptr(ptr) {}
+
+		public:
+			iterator() = delete;
+
+			iterator(const iterator &) = default;
+
+			iterator(iterator &&) noexcept = default;
+
+			~iterator() = default;
+
+			inline T &operator*() const noexcept
 			{
 				return *m_ptr;
 			}
-			inline T* operator->() const noexcept
+
+			inline T *operator->() const noexcept
 			{
 				return m_ptr;
 			}
-			inline iterator& operator++() noexcept
+
+			inline iterator &operator++() noexcept
 			{
 				--m_ptr;
 				return *this;
 			}
+
 			inline const iterator operator++(int) noexcept
 			{
 				return iterator(m_ptr--);
 			}
-			inline bool operator==(const iterator& it) const noexcept
+
+			inline bool operator==(const iterator &it) const noexcept
 			{
-				return m_ptr==it.m_ptr;
+				return m_ptr == it.m_ptr;
 			}
-			inline bool operator!=(const iterator& it) const noexcept
+
+			inline bool operator!=(const iterator &it) const noexcept
 			{
-				return m_ptr!=it.m_ptr;
+				return m_ptr != it.m_ptr;
 			}
-    	};
+		};
 
-        explicit stack_type(std::size_t size):m_size(size), m_start(m_alloc.allocate(size)), m_current(m_start) {}
+		explicit stack_type(std::size_t size) : m_size(size), m_start(m_alloc.allocate(size)), m_current(m_start) {}
 
-		stack_type():stack_type(default_size) {}
+		stack_type() : stack_type(default_size) {}
 
-        stack_type(const stack_type &) = delete;
+		stack_type(const stack_type &) = delete;
 
-        ~stack_type(){
-            while(m_current!=m_start)
-                (--m_current)->~T();
-            m_alloc.deallocate(m_start, m_size);
-        }
+		~stack_type()
+		{
+			while (m_current != m_start)
+				(--m_current)->~T();
+			m_alloc.deallocate(m_start, m_size);
+		}
 
-        inline bool empty() const
-        {
-            return m_current==m_start;
-        }
+		inline bool empty() const
+		{
+			return m_current == m_start;
+		}
 
-        inline std::size_t size() const
-        {
-            return m_current-m_start;
-        }
+		inline std::size_t size() const
+		{
+			return m_current - m_start;
+		}
 
-        inline bool full() const
-        {
-            return m_current-m_start==m_size;
-        }
+		inline bool full() const
+		{
+			return m_current - m_start == m_size;
+		}
 
-        inline T &top() const COVSCRIPT_NOEXCEPT
-        {
-#ifdef COVSCRIPT_DEBUG
-            if (empty())
-                throw cov::error("E000H");
-#endif
-            return *(m_current-1);
-        }
+		inline T &top() const
+		{
+			if (empty())
+				throw cov::error("E000H");
+			return *(m_current - 1);
+		}
 
-        template<typename...ArgsT>
-        inline void push(ArgsT&&...args) COVSCRIPT_NOEXCEPT
-        {
-#ifdef COVSCRIPT_DEBUG
-            if (full())
-                throw cov::error("E000I");
-#endif
-            ::new (m_current++) T(std::forward<ArgsT>(args)...);
-        }
+		template<typename...ArgsT>
+		inline void push(ArgsT &&...args)
+		{
+			if (full())
+				throw cov::error("E000I");
+			::new(m_current++) T(std::forward<ArgsT>(args)...);
+		}
 
-        inline T pop() COVSCRIPT_NOEXCEPT
-        {
-#ifdef COVSCRIPT_DEBUG
-            if (empty())
-                throw cov::error("E000H");
-#endif
-            --m_current;
-            T data(std::move(*m_current));
-            m_current->~T();
-            return std::move(data);
-        }
+		inline T pop()
+		{
+			if (empty())
+				throw cov::error("E000H");
+			--m_current;
+			T data(std::move(*m_current));
+			m_current->~T();
+			return std::move(data);
+		}
 
-        inline void pop_no_return() COVSCRIPT_NOEXCEPT
-        {
-#ifdef COVSCRIPT_DEBUG
-            if (empty())
-                throw cov::error("E000H");
-#endif
-            (--m_current)->~T();
-        }
+		inline void pop_no_return()
+		{
+			if (empty())
+				throw cov::error("E000H");
+			(--m_current)->~T();
+		}
 
-        iterator begin() const noexcept
-        {
-            return iterator(m_current-1);
-        }
+		iterator begin() const noexcept
+		{
+			return iterator(m_current - 1);
+		}
 
-        iterator end() const noexcept
-        {
-            return iterator(m_start-1);
-        }
-    };
+		iterator end() const noexcept
+		{
+			return iterator(m_start - 1);
+		}
+	};
 
 	class runtime_type {
 	public:
