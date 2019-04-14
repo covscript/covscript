@@ -25,7 +25,6 @@
 * cs_impl: Implement Namespace
 */
 // Mozart
-#include <covscript/import/mozart/static_stack.hpp>
 #include <covscript/import/mozart/traits.hpp>
 #include <covscript/import/mozart/tree.hpp>
 // LibDLL

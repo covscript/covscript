@@ -20,7 +20,6 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/impl/symbols.hpp>
-#include <covscript/impl/variant.hpp>
 
 namespace cs {
 	class domain_manager {
@@ -217,6 +216,110 @@ namespace cs {
 		}
 	};
 
+    template<typename T, typename AllocT=std::allocator<T>>
+    class stack_type final {
+    	AllocT m_alloc;
+        std::size_t m_size=0;
+        T* m_start=nullptr,*m_current=nullptr;
+    public:
+		constexpr static std::size_t default_size = 1024;
+    	class iterator final {
+    		friend class stack_type;
+			T* m_ptr=nullptr;
+    		explicit iterator(const T* ptr):m_ptr(ptr) {}
+    	public:
+			iterator()=delete;
+    		iterator(const iterator&)=default;
+    		iterator(iterator&&) noexcept=default;
+    		~iterator()=default;
+			inline T& operator*() const noexcept
+			{
+				return *m_ptr;
+			}
+			inline T* operator->() const noexcept
+			{
+				return m_ptr;
+			}
+			inline iterator& operator++() noexcept
+			{
+				--m_ptr;
+			}
+			inline const iterator operator++(int) noexcept
+			{
+				return iterator(m_ptr--);
+			}
+    	};
+
+        explicit stack_type(std::size_t size):m_size(size), m_start(m_alloc.allocate(size)), m_current(m_start) {}
+
+		stack_type():stack_type(default_size) {}
+
+        stack_type(const stack_type &) = delete;
+
+        ~stack_type(){
+            while(m_current!=m_start)
+                (--m_current)->~T();
+            m_alloc.deallocate(m_start, m_size);
+        }
+
+        inline bool empty() const
+        {
+            return m_current==m_start;
+        }
+
+        inline std::size_t size() const
+        {
+            return m_current-m_start;
+        }
+
+        inline bool full() const
+        {
+            return m_current-m_start==m_size;
+        }
+
+        inline T &top() const
+        {
+            if (empty())
+                throw cov::error("E000H");
+            return *(m_current-1);
+        }
+
+        template<typename...ArgsT>
+        void push(ArgsT&&...args)
+        {
+            if (full())
+                throw cov::error("E000I");
+            ::new (m_current++) T(std::forward<ArgsT>(args)...);
+        }
+
+        T pop()
+        {
+            if (empty())
+                throw cov::error("E000H");
+            --m_current;
+            T data(std::move(*m_current));
+            m_current->~T();
+            return std::move(data);
+        }
+
+        void pop_no_return()
+        {
+            if (empty())
+                throw cov::error("E000H");
+            (--m_current)->~T();
+        }
+
+        iterator begin() const
+        {
+            return iterator(m_current-1);
+        }
+
+        iterator end() const
+        {
+            return iterator(m_start-1);
+        }
+    };
+
 	class runtime_type {
 	public:
 		domain_manager storage;
@@ -293,7 +396,7 @@ namespace cs {
 
 		var parse_expr(const cov::tree<token_base *>::iterator &);
 
-		cov::static_stack<var, 1024> stack;
+		stack_type<var> stack;
 	};
 
 	class instruction_executor final {
@@ -332,9 +435,7 @@ namespace cs {
 			if (!m_assembly.empty()) {
 				for (auto &it:m_assembly)
 					it->exec();
-				var result = runtime->stack.top();
-				runtime->stack.pop();
-				return result;
+				return runtime->stack.pop();
 			}
 			else
 				return var();
@@ -362,7 +463,7 @@ namespace cs {
 
 		void exec() override
 		{
-			runtime->stack.pop();
+			runtime->stack.pop_no_return();
 		}
 	};
 

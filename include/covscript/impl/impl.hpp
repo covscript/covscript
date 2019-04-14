@@ -23,8 +23,6 @@
 #include <covscript/impl/runtime.hpp>
 
 namespace cs {
-	constexpr std::size_t fcall_stack_size = 1024;
-
 	class instance_type final : public runtime_type {
 		friend class repl;
 
@@ -38,9 +36,9 @@ namespace cs {
 		// Context
 		context_t context;
 		// Function Stack
-		cov::static_stack<var, fcall_stack_size> fcall_stack;
+		stack_type<var> fcall_stack;
 #ifdef CS_DEBUGGER
-		cov::static_stack<std::string, fcall_stack_size> stack_backtrace;
+		stack_type<std::string> stack_backtrace;
 #endif
 
 		// Constructor and destructor
@@ -147,8 +145,8 @@ namespace cs {
 
 		~fcall_guard()
 		{
-			context->instance->fcall_stack.pop();
-			context->instance->stack_backtrace.pop();
+			context->instance->fcall_stack.pop_no_return();
+			context->instance->stack_backtrace.pop_no_return();
 		}
 #else
 
@@ -159,7 +157,7 @@ namespace cs {
 
 		~fcall_guard()
 		{
-			context->instance->fcall_stack.pop();
+			context->instance->fcall_stack.pop_no_return();
 		}
 
 #endif
