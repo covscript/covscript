@@ -135,15 +135,15 @@ namespace cs {
 	void statement_var::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		for (auto &it:mDvp)
-			context->instance->storage.add_var(it.dvp.id, copy(it.executor()));
+		for (std::size_t i=0;i<mDvp.size();++i)
+			context->instance->storage.add_var(mDvp[i].id, copy(mExecutor[i]()));
 	}
 
 	void statement_var::dump(std::ostream &o) const
 	{
 		for (auto &it:mDvp) {
-			o << "< Var: ID = \"" << it.dvp.id << "\", Value = ";
-			compiler_type::dump_expr(it.dvp.expr.root(), o);
+			o << "< Var: ID = \"" << it.id << "\", Value = ";
+			compiler_type::dump_expr(it.expr.root(), o);
 			o << " >\n";
 		}
 	}

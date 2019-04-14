@@ -21,6 +21,7 @@
 */
 #include <covscript/impl/symbols.hpp>
 #include <covscript/impl/variant.hpp>
+#include <iostream>
 
 namespace cs {
 	class domain_manager {
@@ -299,16 +300,20 @@ namespace cs {
 	class instruction_executor final {
 		std::vector<instruction_base *> m_assembly;
 
+        runtime_type *runtime = nullptr;
+
 		void gen_instruction(const cov::tree<token_base *>::iterator &, std::vector<instruction_base *> &);
 
 		void gen_instruction(const cov::tree<token_base *>::iterator &it)
 		{
 			gen_instruction(it, m_assembly);
 		}
-
-		runtime_type *runtime = nullptr;
 	public:
 		instruction_executor() = delete;
+
+		instruction_executor(const instruction_executor&)=delete;
+
+		instruction_executor(instruction_executor&& ie) noexcept:m_assembly(std::move(ie.m_assembly)), runtime(ie.runtime) {}
 
 		instruction_executor(runtime_type *rt, const cov::tree<token_base *>::iterator &it) : runtime(rt)
 		{
@@ -323,11 +328,16 @@ namespace cs {
 
 		var operator()()
 		{
-			for (auto &it:m_assembly)
-				it->exec();
-			var result = runtime->stack.top();
-			runtime->stack.pop();
-			return result;
+		    if(!m_assembly.empty()) {
+                for (auto &it:m_assembly) {
+                    //std::cout<<cs_impl::cxx_demangle(typeid(*it).name())<<std::endl;
+                    it->exec();
+                }
+                var result = runtime->stack.top();
+                runtime->stack.pop();
+                return result;
+            } else
+                return var();
 		}
 	};
 

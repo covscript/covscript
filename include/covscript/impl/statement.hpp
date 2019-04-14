@@ -70,7 +70,7 @@ namespace cs {
 	};
 
 	class statement_var final : public statement_base {
-		struct vardef {
+		/*struct vardef {
 			compiler_type::define_var_profile dvp;
 			instruction_executor executor;
 
@@ -80,18 +80,22 @@ namespace cs {
 			{
 				std::cout << __func__ << std::endl;
 			}
-		};
+		};*/
 
-		std::vector<vardef> mDvp;
+		std::vector<compiler_type::define_var_profile> mDvp;
+		std::vector<instruction_executor> mExecutor;
 	public:
 		statement_var() = delete;
 
-		statement_var(const std::vector<compiler_type::define_var_profile> &dvp, context_t c, token_base *ptr)
-			: statement_base(std::move(c), ptr)
+		statement_var(std::vector<compiler_type::define_var_profile> dvp, context_t c, token_base *ptr)
+			: statement_base(std::move(c), ptr), mDvp(std::move(dvp))
 		{
 			std::cout << __func__ << std::endl;
-			for (auto &it:dvp)
-				mDvp.emplace_back(context, it);
+			for (auto &it:mDvp) {
+				//compiler_type::dump_expr(it.expr.root(), std::cout);
+				//std::cout<<std::endl;
+				mExecutor.emplace_back(context->instance.get(), it.expr.root());
+			}
 		}
 
 		statement_types get_type() const noexcept override
