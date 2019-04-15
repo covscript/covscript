@@ -135,6 +135,24 @@ namespace cs {
 			throw runtime_error("Use of undefined variable \"" + name + "\" in global domain.");
 		}
 
+		var get_var_optimizable(const string &name)
+		{
+			if(m_data.size()==m_set.size())
+			{
+				for(std::size_t i=0;i<m_data.size();++i)
+				{
+					if(m_set[i].count(name)>0)
+					{
+						if(m_data[i]->count(name)>0)
+							return m_data[i]->at(name);
+						else
+							break;
+					}
+				}
+			}
+			return var();
+		}
+
 		domain_manager &add_record(const string &name)
 		{
 			if (exist_record(name))

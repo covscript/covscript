@@ -61,3 +61,13 @@
 + 漏洞原理：代码生成器未给予优化器正确的参数
 + 漏洞状态：已修复
 + 影响范围：CovScript 1.2.1-3.0.0 Pantholops hodgsonii(Unstable) Build 3
+## CSVE-2019-04-01 ##
++ 触发方法：任何场景
++ 漏洞原理：编译器重复调用不必要的预处理函数，仅影响编译器性能
++ 漏洞状态：已修复
++ 影响范围：CovScript 1.0.3-3.2.0 John von Neumann(Preview) Build 3
+## CSVE-2019-04-02 ##
++ 触发方法：开启优化器且上层空间存同名在常量时会忽略当前作用域中的变量
++ 漏洞原理：优化器规则设计失误
++ 漏洞状态：已修复
++ 影响范围：CovScript 1.2.2(Beta4)-3.2.0 John von Neumann(Preview) Build 3

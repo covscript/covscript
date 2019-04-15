@@ -442,16 +442,9 @@ namespace cs {
 		default:
 			break;
 		case token_types::id: {
-			const std::string &id = static_cast<token_id *>(token)->get_id();
-			if (context->instance->storage.exist_record(id)) {
-				if (context->instance->storage.var_exist_current(id) &&
-				        context->instance->storage.get_var_current(id).is_protect())
-					it.data() = new_value(context->instance->storage.get_var(id));
-			}
-			else if (!context->instance->storage.exist_record_in_struct(id) &&
-			         context->instance->storage.var_exist(id) &&
-			         context->instance->storage.get_var(id).is_protect())
-				it.data() = new_value(context->instance->storage.get_var(id));
+			var value=context->instance->storage.get_var_optimizable(static_cast<token_id *>(token)->get_id());
+			if(value.usable()&&value.is_protect())
+				it.data() = new_value(value);
 			return;
 			break;
 		}
