@@ -19,7 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <type_traits>
+#include <covscript/import/mozart/traits.hpp>
 
 namespace cs_impl {
 // Name Demangle
@@ -287,52 +287,10 @@ namespace cs_impl {
 	* Github: https://github.com/mikecovlee/mozart
 	*/
 
-	template<typename T, std::size_t blck_size, template<typename> class allocator_t=std::allocator>
-	class allocator_type final {
-		T *mPool[blck_size];
-		allocator_t<T> mAlloc;
-		std::size_t mOffset = 0;
-	public:
-		allocator_type()
-		{
-			while (mOffset < 0.5 * blck_size)
-				mPool[mOffset++] = mAlloc.allocate(1);
-		}
-
-		allocator_type(const allocator_type &) = delete;
-
-		~allocator_type()
-		{
-			while (mOffset > 0)
-				mAlloc.deallocate(mPool[--mOffset], 1);
-		}
-
-		template<typename...ArgsT>
-		inline T *alloc(ArgsT &&...args)
-		{
-			T *ptr = nullptr;
-			if (mOffset > 0)
-				ptr = mPool[--mOffset];
-			else
-				ptr = mAlloc.allocate(1);
-			mAlloc.construct(ptr, std::forward<ArgsT>(args)...);
-			return ptr;
-		}
-
-		inline void free(T *ptr)
-		{
-			mAlloc.destroy(ptr);
-			if (mOffset < blck_size)
-				mPool[mOffset++] = ptr;
-			else
-				mAlloc.deallocate(ptr, 1);
-		}
-	};
-
 // Be careful when you adjust the buffer size.
 	constexpr std::size_t default_allocate_buffer_size = 64;
 	template<typename T> using default_allocator_provider=std::allocator<T>;
-	template<typename T> using default_allocator=allocator_type<T, default_allocate_buffer_size, default_allocator_provider>;
+	template<typename T> using default_allocator=cs::allocator_type<T, default_allocate_buffer_size, default_allocator_provider>;
 
 	class any final {
 		class baseHolder {

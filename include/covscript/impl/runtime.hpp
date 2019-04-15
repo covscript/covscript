@@ -234,133 +234,6 @@ namespace cs {
 		}
 	};
 
-	template<typename T, typename AllocT=std::allocator<T>>
-	class stack_type final {
-		AllocT m_alloc;
-		std::size_t m_size = 0;
-		T *m_start = nullptr, *m_current = nullptr;
-	public:
-		constexpr static std::size_t default_size = 1024;
-
-		class iterator final {
-			friend class stack_type;
-
-			T *m_ptr = nullptr;
-
-			explicit iterator(T *const ptr) : m_ptr(ptr) {}
-
-		public:
-			iterator() = delete;
-
-			iterator(const iterator &) = default;
-
-			iterator(iterator &&) noexcept = default;
-
-			~iterator() = default;
-
-			inline T &operator*() const noexcept
-			{
-				return *m_ptr;
-			}
-
-			inline T *operator->() const noexcept
-			{
-				return m_ptr;
-			}
-
-			inline iterator &operator++() noexcept
-			{
-				--m_ptr;
-				return *this;
-			}
-
-			inline const iterator operator++(int) noexcept
-			{
-				return iterator(m_ptr--);
-			}
-
-			inline bool operator==(const iterator &it) const noexcept
-			{
-				return m_ptr == it.m_ptr;
-			}
-
-			inline bool operator!=(const iterator &it) const noexcept
-			{
-				return m_ptr != it.m_ptr;
-			}
-		};
-
-		explicit stack_type(std::size_t size) : m_size(size), m_start(m_alloc.allocate(size)), m_current(m_start) {}
-
-		stack_type() : stack_type(default_size) {}
-
-		stack_type(const stack_type &) = delete;
-
-		~stack_type()
-		{
-			while (m_current != m_start)
-				(--m_current)->~T();
-			m_alloc.deallocate(m_start, m_size);
-		}
-
-		inline bool empty() const
-		{
-			return m_current == m_start;
-		}
-
-		inline std::size_t size() const
-		{
-			return m_current - m_start;
-		}
-
-		inline bool full() const
-		{
-			return m_current - m_start == m_size;
-		}
-
-		inline T &top() const
-		{
-			if (empty())
-				throw cov::error("E000H");
-			return *(m_current - 1);
-		}
-
-		template<typename...ArgsT>
-		inline void push(ArgsT &&...args)
-		{
-			if (full())
-				throw cov::error("E000I");
-			::new(m_current++) T(std::forward<ArgsT>(args)...);
-		}
-
-		inline T pop()
-		{
-			if (empty())
-				throw cov::error("E000H");
-			--m_current;
-			T data(std::move(*m_current));
-			m_current->~T();
-			return std::move(data);
-		}
-
-		inline void pop_no_return()
-		{
-			if (empty())
-				throw cov::error("E000H");
-			(--m_current)->~T();
-		}
-
-		iterator begin() const noexcept
-		{
-			return iterator(m_current - 1);
-		}
-
-		iterator end() const noexcept
-		{
-			return iterator(m_start - 1);
-		}
-	};
-
 	class runtime_type {
 	public:
 		domain_manager storage;
@@ -413,7 +286,7 @@ namespace cs {
 
 		var parse_asi(var, const var &);
 
-		var parse_choice(const var &, const cov::tree<token_base *>::iterator &);
+		var parse_choice(const var &, const tree_type<token_base *>::iterator &);
 
 		var parse_pair(const var &, const var &);
 
@@ -435,9 +308,7 @@ namespace cs {
 
 		var parse_access(var, const var &);
 
-		var parse_expr(const cov::tree<token_base *>::iterator &);
-
-		stack_type<var> stack;
+		var parse_expr(const tree_type<token_base *>::iterator &);
 	};
 
 	class instruction_executor final {
@@ -445,9 +316,9 @@ namespace cs {
 
 		runtime_type *runtime = nullptr;
 
-		void gen_instruction(const cov::tree<token_base *>::iterator &, std::vector<instruction_base *> &);
+		void gen_instruction(const tree_type<token_base *>::iterator &, std::vector<instruction_base *> &);
 
-		void gen_instruction(const cov::tree<token_base *>::iterator &it)
+		void gen_instruction(const tree_type<token_base *>::iterator &it)
 		{
 			gen_instruction(it, m_assembly);
 		}
@@ -460,7 +331,7 @@ namespace cs {
 		instruction_executor(instruction_executor &&ie) noexcept: m_assembly(std::move(ie.m_assembly)),
 			runtime(ie.runtime) {}
 
-		instruction_executor(runtime_type *rt, const cov::tree<token_base *>::iterator &it) : runtime(rt)
+		instruction_executor(runtime_type *rt, const tree_type<token_base *>::iterator &it) : runtime(rt)
 		{
 			gen_instruction(it);
 		}
@@ -476,7 +347,7 @@ namespace cs {
 			if (!m_assembly.empty()) {
 				for (auto &it:m_assembly)
 					it->exec();
-				return runtime->stack.pop();
+				return current_process->stack.pop();
 			}
 			else
 				return var();
@@ -492,7 +363,7 @@ namespace cs {
 
 		void exec() override
 		{
-			runtime->stack.push(m_value);
+			current_process->stack.push(m_value);
 		}
 	};
 
@@ -504,7 +375,7 @@ namespace cs {
 
 		void exec() override
 		{
-			runtime->stack.pop_no_return();
+			current_process->stack.pop_no_return();
 		}
 	};
 

@@ -292,10 +292,10 @@ void cs_debugger_step_callback(cs::statement_base *stmt)
 	if (!exec_by_step && stmt->get_file_path() == path && breakpoints.exist(stmt->get_line_num())) {
 		std::cout << "\nHit breakpoint, at \"" << stmt->get_file_path() << "\", line " << stmt->get_line_num()
 		          << std::endl;
-		current_level = context->instance->fcall_stack.size();
+		current_level = cs::current_process->stack.size();
 		exec_by_step = true;
 	}
-	if (exec_by_step && (step_into_function ? true : context->instance->fcall_stack.size() <= current_level)) {
+	if (exec_by_step && (step_into_function ? true : cs::current_process->stack.size() <= current_level)) {
 		std::cout << stmt->get_line_num() << "\t" << stmt->get_raw_code() << std::endl;
 		while (covscript_debugger());
 	}
@@ -310,7 +310,7 @@ void cs_debugger_func_callback(const std::string &decl, cs::statement_base *stmt
 {
 	std::cout << "\nHit breakpoint, at \"" << stmt->get_file_path() << "\", line " << stmt->get_line_num() << ", "
 	          << decl << std::endl;
-	current_level = context->instance->fcall_stack.size();
+	current_level = cs::current_process->stack.size();
 	exec_by_step = true;
 }
 
@@ -440,7 +440,7 @@ void covscript_main(int args_size, const char *args[])
 		func_map.add_func("backtrace", "bt", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
-			for (auto &func:context->instance->stack_backtrace)
+			for (auto &func:cs::current_process->stack_backtrace)
 				std::cout << func << std::endl;
 			std::cout << "function main()" << std::endl;
 			return true;

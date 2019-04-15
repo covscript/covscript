@@ -35,11 +35,6 @@ namespace cs {
 		bool continue_block = false;
 		// Context
 		context_t context;
-		// Function Stack
-		stack_type<var> fcall_stack;
-#ifdef CS_DEBUGGER
-		stack_type<std::string> stack_backtrace;
-#endif
 
 		// Constructor and destructor
 		instance_type() = delete;
@@ -139,32 +134,32 @@ namespace cs {
 #ifdef CS_DEBUGGER
 		explicit fcall_guard(context_t c, const std::string &decl) : context(std::move(std::move(c)))
 		{
-			context->instance->fcall_stack.push(null_pointer);
-			context->instance->stack_backtrace.push(decl);
+			current_process->stack.push(null_pointer);
+			current_process->stack_backtrace.push(decl);
 		}
 
 		~fcall_guard()
 		{
-			context->instance->fcall_stack.pop_no_return();
-			context->instance->stack_backtrace.pop_no_return();
+			current_process->stack.pop_no_return();
+			current_process->stack_backtrace.pop_no_return();
 		}
 #else
 
 		explicit fcall_guard(context_t c) : context(std::move(std::move(c)))
 		{
-			context->instance->fcall_stack.push(null_pointer);
+			current_process->stack.push(null_pointer);
 		}
 
 		~fcall_guard()
 		{
-			context->instance->fcall_stack.pop_no_return();
+			current_process->stack.pop_no_return();
 		}
 
 #endif
 
 		var get() const
 		{
-			return context->instance->fcall_stack.top();
+			return current_process->stack.top();
 		}
 	};
 }

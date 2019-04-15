@@ -23,12 +23,12 @@
 
 namespace cs {
 	class statement_expression final : public statement_base {
-		cov::tree<token_base *> mTree;
+		tree_type<token_base *> mTree;
 		instruction_executor mExecutor;
 	public:
 		statement_expression() = delete;
 
-		statement_expression(cov::tree<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c),
+		statement_expression(tree_type<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c),
 			        ptr),
 			mTree(std::move(tree)),
 			mExecutor(
@@ -49,12 +49,12 @@ namespace cs {
 
 	class statement_involve final : public statement_base {
 		bool mOverride = false;
-		cov::tree<token_base *> mTree;
+		tree_type<token_base *> mTree;
 		instruction_executor mExecutor;
 	public:
 		statement_involve() = delete;
 
-		statement_involve(cov::tree<token_base *> tree, bool is_override, context_t c, token_base *ptr)
+		statement_involve(tree_type<token_base *> tree, bool is_override, context_t c, token_base *ptr)
 			: statement_base(std::move(c), ptr), mOverride(is_override), mTree(std::move(tree)),
 			  mExecutor(context->instance.get(), mTree.root()) {}
 
@@ -195,13 +195,13 @@ namespace cs {
 	};
 
 	class statement_if final : public statement_base {
-		cov::tree<token_base *> mTree;
+		tree_type<token_base *> mTree;
 		instruction_executor mExecutor;
 		std::deque<statement_base *> mBlock;
 	public:
 		statement_if() = delete;
 
-		statement_if(cov::tree<token_base *> tree, std::deque<statement_base *> block, context_t c,
+		statement_if(tree_type<token_base *> tree, std::deque<statement_base *> block, context_t c,
 		             token_base *ptr) : statement_base(std::move(c), ptr), mTree(std::move(tree)),
 			mExecutor(context->instance.get(), mTree.root()), mBlock(std::move(block)) {}
 
@@ -216,14 +216,14 @@ namespace cs {
 	};
 
 	class statement_ifelse final : public statement_base {
-		cov::tree<token_base *> mTree;
+		tree_type<token_base *> mTree;
 		instruction_executor mExecutor;
 		std::deque<statement_base *> mBlock;
 		std::deque<statement_base *> mElseBlock;
 	public:
 		statement_ifelse() = delete;
 
-		statement_ifelse(cov::tree<token_base *> tree, std::deque<statement_base *> btrue,
+		statement_ifelse(tree_type<token_base *> tree, std::deque<statement_base *> btrue,
 		                 std::deque<statement_base *> bfalse, context_t c, token_base *ptr) : statement_base(
 			                     std::move(c),
 			                     ptr),
@@ -266,14 +266,14 @@ namespace cs {
 	};
 
 	class statement_switch final : public statement_base {
-		cov::tree<token_base *> mTree;
+		tree_type<token_base *> mTree;
 		instruction_executor mExecutor;
 		statement_block *mDefault = nullptr;
 		map_t<var, statement_block *> mCases;
 	public:
 		statement_switch() = delete;
 
-		statement_switch(cov::tree<token_base *> tree, map_t<var, statement_block *> cases,
+		statement_switch(tree_type<token_base *> tree, map_t<var, statement_block *> cases,
 		                 statement_block *dptr, context_t c, token_base *ptr) : statement_base(std::move(c), ptr),
 			mTree(std::move(tree)),
 			mExecutor(context->instance.get(),
@@ -359,13 +359,13 @@ namespace cs {
 	};
 
 	class statement_while final : public statement_base {
-		cov::tree<token_base *> mTree;
+		tree_type<token_base *> mTree;
 		instruction_executor mExecutor;
 		std::deque<statement_base *> mBlock;
 	public:
 		statement_while() = delete;
 
-		statement_while(cov::tree<token_base *> tree, std::deque<statement_base *> b, context_t c,
+		statement_while(tree_type<token_base *> tree, std::deque<statement_base *> b, context_t c,
 		                token_base *ptr) : statement_base(std::move(c), ptr), mTree(std::move(tree)),
 			mExecutor(context->instance.get(), mTree.root()), mBlock(std::move(b)) {}
 
@@ -427,13 +427,13 @@ namespace cs {
 	};
 
 	class statement_loop_until final : public statement_base {
-		cov::tree<token_base *> mExpr;
+		tree_type<token_base *> mExpr;
 		instruction_executor mExecutor;
 		std::deque<statement_base *> mBlock;
 	public:
 		statement_loop_until() = delete;
 
-		statement_loop_until(cov::tree<token_base *> expr, std::deque<statement_base *> b, context_t c, token_base *ptr)
+		statement_loop_until(tree_type<token_base *> expr, std::deque<statement_base *> b, context_t c, token_base *ptr)
 			: statement_base(std::move(c), ptr), mExpr(
 			      std::move(expr)), mExecutor(context->instance.get(), mExpr.root()), mBlock(std::move(b)) {}
 
@@ -450,12 +450,12 @@ namespace cs {
 	class statement_for final : public statement_base {
 		compiler_type::define_var_profile mDvp;
 		std::deque<instruction_executor> mExecutor;
-		std::deque<cov::tree<token_base *>> mParallel;
+		std::deque<tree_type<token_base *>> mParallel;
 		std::deque<statement_base *> mBlock;
 	public:
 		statement_for() = delete;
 
-		statement_for(std::deque<cov::tree<token_base *>> parallel_list, std::deque<statement_base *> block,
+		statement_for(std::deque<tree_type<token_base *>> parallel_list, std::deque<statement_base *> block,
 		              context_t c, token_base *ptr) : statement_base(std::move(c), ptr),
 			mParallel(std::move(parallel_list)), mBlock(std::move(block))
 		{
@@ -477,13 +477,13 @@ namespace cs {
 
 	class statement_foreach final : public statement_base {
 		std::string mIt;
-		cov::tree<token_base *> mObj;
+		tree_type<token_base *> mObj;
 		instruction_executor mExecutor;
 		std::deque<statement_base *> mBlock;
 	public:
 		statement_foreach() = delete;
 
-		statement_foreach(std::string it, cov::tree<token_base *> tree, std::deque<statement_base *> b, context_t c,
+		statement_foreach(std::string it, tree_type<token_base *> tree, std::deque<statement_base *> b, context_t c,
 		                  token_base *ptr) : statement_base(std::move(c), ptr), mIt(std::move(it)),
 			mObj(std::move(tree)), mExecutor(context->instance.get(), mObj.root()),
 			mBlock(std::move(b)) {}
@@ -501,12 +501,12 @@ namespace cs {
 	class statement_struct final : public statement_base {
 		std::string mName;
 		struct_builder mBuilder;
-		cov::tree<token_base *> mParent;
+		tree_type<token_base *> mParent;
 		std::deque<statement_base *> mBlock;
 	public:
 		statement_struct() = delete;
 
-		statement_struct(const std::string &name, const cov::tree<token_base *> &tree,
+		statement_struct(const std::string &name, const tree_type<token_base *> &tree,
 		                 const std::deque<statement_base *> &method, const context_t &c, token_base *ptr)
 			: statement_base(c,
 			                 ptr),
@@ -581,12 +581,12 @@ namespace cs {
 	};
 
 	class statement_return final : public statement_base {
-		cov::tree<token_base *> mTree;
+		tree_type<token_base *> mTree;
 		instruction_executor mExecutor;
 	public:
 		statement_return() = delete;
 
-		statement_return(cov::tree<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c),
+		statement_return(tree_type<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c),
 			        ptr),
 			mTree(std::move(tree)),
 			mExecutor(
@@ -678,12 +678,12 @@ namespace cs {
 	};
 
 	class statement_throw final : public statement_base {
-		cov::tree<token_base *> mTree;
+		tree_type<token_base *> mTree;
 		instruction_executor mExecutor;
 	public:
 		statement_throw() = delete;
 
-		statement_throw(cov::tree<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c), ptr),
+		statement_throw(tree_type<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c), ptr),
 			mTree(std::move(tree)),
 			mExecutor(context->instance.get(),
 			          mTree.root()) {}

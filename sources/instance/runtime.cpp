@@ -235,7 +235,7 @@ namespace cs {
 		return a;
 	}
 
-	var runtime_type::parse_choice(const var &a, const cov::tree<token_base *>::iterator &b)
+	var runtime_type::parse_choice(const var &a, const tree_type<token_base *>::iterator &b)
 	{
 		if (a.type() == typeid(boolean)) {
 			if (a.const_val<boolean>())
@@ -383,7 +383,7 @@ namespace cs {
 			throw runtime_error("Access non-array or string object.");
 	}
 
-	var runtime_type::parse_expr(const cov::tree<token_base *>::iterator &it)
+	var runtime_type::parse_expr(const tree_type<token_base *>::iterator &it)
 	{
 		if (!it.usable())
 			throw internal_error("The expression tree is not available.");
@@ -530,7 +530,7 @@ namespace cs {
 		throw internal_error("Unrecognized expression.");
 	}
 
-	void instruction_executor::gen_instruction(const cov::tree<token_base *>::iterator &it,
+	void instruction_executor::gen_instruction(const tree_type<token_base *>::iterator &it,
 	        std::vector<instruction_base *> &assembly)
 	{
 		if (!it.usable())
@@ -637,15 +637,15 @@ namespace cs {
 
 	void instruction_id::exec()
 	{
-		runtime->stack.push(runtime->storage.get_var(m_id));
+		current_process->stack.push(runtime->storage.get_var(m_id));
 	}
 
 	void instruction_array::exec()
 	{
 		array arr;
 		for (std::size_t i = 0; i < m_size; ++i)
-			arr.push_back(copy(runtime->stack.pop()));
-		runtime->stack.push(rvalue(var::make<array>(std::move(arr))));
+			arr.push_back(copy(current_process->stack.pop()));
+		current_process->stack.push(rvalue(var::make<array>(std::move(arr))));
 	}
 
 	void instruction_signal::exec()
@@ -654,146 +654,146 @@ namespace cs {
 		default:
 			break;
 		case signal_types::add_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(rvalue(runtime->parse_add(left, right)));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(rvalue(runtime->parse_add(left, right)));
 			break;
 		}
 		case signal_types::addasi_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(runtime->parse_addasi(left, right));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(runtime->parse_addasi(left, right));
 			break;
 		}
 		case signal_types::sub_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			return runtime->stack.push(rvalue(runtime->parse_sub(left, right)));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			return current_process->stack.push(rvalue(runtime->parse_sub(left, right)));
 			break;
 		}
 		case signal_types::subasi_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(runtime->parse_subasi(left, right));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(runtime->parse_subasi(left, right));
 			break;
 		}
 		case signal_types::minus_:
-			runtime->stack.push(rvalue(runtime->parse_minus(runtime->stack.pop())));
+			current_process->stack.push(rvalue(runtime->parse_minus(current_process->stack.pop())));
 			break;
 		case signal_types::mul_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(rvalue(runtime->parse_mul(left, right)));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(rvalue(runtime->parse_mul(left, right)));
 			break;
 		}
 		case signal_types::mulasi_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(runtime->parse_mulasi(left, right));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(runtime->parse_mulasi(left, right));
 			break;
 		}
 		case signal_types::escape_:
-			runtime->stack.push(runtime->parse_escape(runtime->stack.pop()));
+			current_process->stack.push(runtime->parse_escape(current_process->stack.pop()));
 			break;
 		case signal_types::div_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(rvalue(runtime->parse_div(left, right)));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(rvalue(runtime->parse_div(left, right)));
 			break;
 		}
 		case signal_types::divasi_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(runtime->parse_divasi(left, right));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(runtime->parse_divasi(left, right));
 			break;
 		}
 		case signal_types::mod_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(rvalue(runtime->parse_mod(left, right)));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(rvalue(runtime->parse_mod(left, right)));
 			break;
 		}
 		case signal_types::modasi_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(runtime->parse_modasi(left, right));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(runtime->parse_modasi(left, right));
 			break;
 		}
 		case signal_types::pow_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(rvalue(runtime->parse_pow(left, right)));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(rvalue(runtime->parse_pow(left, right)));
 			break;
 		}
 		case signal_types::powasi_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(runtime->parse_powasi(left, right));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(runtime->parse_powasi(left, right));
 			break;
 		}
 		case signal_types::typeid_:
-			runtime->stack.push(rvalue(runtime->parse_typeid(runtime->stack.pop())));
+			current_process->stack.push(rvalue(runtime->parse_typeid(current_process->stack.pop())));
 			break;
 		case signal_types::new_:
-			runtime->stack.push(rvalue(runtime->parse_new(runtime->stack.pop())));
+			current_process->stack.push(rvalue(runtime->parse_new(current_process->stack.pop())));
 			break;
 		case signal_types::gcnew_:
-			runtime->stack.push(rvalue(runtime->parse_gcnew(runtime->stack.pop())));
+			current_process->stack.push(rvalue(runtime->parse_gcnew(current_process->stack.pop())));
 			break;
 		case signal_types::und_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(rvalue(runtime->parse_und(left, right)));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(rvalue(runtime->parse_und(left, right)));
 			break;
 		}
 		case signal_types::abo_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(rvalue(runtime->parse_abo(left, right)));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(rvalue(runtime->parse_abo(left, right)));
 			break;
 		}
 		case signal_types::asi_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(runtime->parse_asi(left, right));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(runtime->parse_asi(left, right));
 			break;
 		}
 		case signal_types::pair_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(rvalue(runtime->parse_pair(left, right)));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(rvalue(runtime->parse_pair(left, right)));
 			break;
 		}
 		case signal_types::equ_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(rvalue(runtime->parse_equ(left, right)));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(rvalue(runtime->parse_equ(left, right)));
 			break;
 		}
 		case signal_types::ueq_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(rvalue(runtime->parse_ueq(left, right)));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(rvalue(runtime->parse_ueq(left, right)));
 			break;
 		}
 		case signal_types::aeq_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(rvalue(runtime->parse_aeq(left, right)));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(rvalue(runtime->parse_aeq(left, right)));
 			break;
 		}
 		case signal_types::neq_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(rvalue(runtime->parse_neq(left, right)));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(rvalue(runtime->parse_neq(left, right)));
 			break;
 		}
 		case signal_types::and_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(rvalue(runtime->parse_and(left, right)));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(rvalue(runtime->parse_and(left, right)));
 			break;
 		}
 		case signal_types::or_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(rvalue(runtime->parse_or(left, right)));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(rvalue(runtime->parse_or(left, right)));
 			break;
 		}
 		case signal_types::not_:
-			runtime->stack.push(rvalue(runtime->parse_not(runtime->stack.pop())));
+			current_process->stack.push(rvalue(runtime->parse_not(current_process->stack.pop())));
 			break;
 		case signal_types::inc_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(runtime->parse_inc(left, right));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(runtime->parse_inc(left, right));
 			break;
 		}
 		case signal_types::dec_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(runtime->parse_dec(left, right));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(runtime->parse_dec(left, right));
 			break;
 		}
 		case signal_types::access_: {
-			var left(runtime->stack.pop()), right(runtime->stack.pop());
-			runtime->stack.push(runtime->parse_access(left, right));
+			var left(current_process->stack.pop()), right(current_process->stack.pop());
+			current_process->stack.push(runtime->parse_access(left, right));
 			break;
 		}
 		}
@@ -801,17 +801,17 @@ namespace cs {
 
 	void instruction_sig_dot::exec()
 	{
-		runtime->stack.push(runtime->parse_dot(runtime->stack.pop(), m_token));
+		current_process->stack.push(runtime->parse_dot(current_process->stack.pop(), m_token));
 	}
 
 	void instruction_sig_arrow::exec()
 	{
-		runtime->stack.push(runtime->parse_arrow(runtime->stack.pop(), m_token));
+		current_process->stack.push(runtime->parse_arrow(current_process->stack.pop(), m_token));
 	}
 
 	void instruction_sig_choice::exec()
 	{
-		var cond(runtime->stack.pop());
+		var cond(current_process->stack.pop());
 		if (cond.type() == typeid(boolean)) {
 			if (cond.const_val<boolean>()) {
 				for (auto &it:m_assembly_true)
@@ -828,21 +828,21 @@ namespace cs {
 
 	void instruction_sig_fcall::exec()
 	{
-		var func(runtime->stack.pop());
+		var func(current_process->stack.pop());
 		if (func.type() == typeid(callable)) {
 			vector args;
 			args.reserve(m_size);
 			for (std::size_t i = 0; i < m_size; ++i)
-				args.push_back(lvalue(runtime->stack.pop()));
-			runtime->stack.push(func.const_val<callable>().call(args));
+				args.push_back(lvalue(current_process->stack.pop()));
+			current_process->stack.push(func.const_val<callable>().call(args));
 		}
 		else if (func.type() == typeid(object_method)) {
 			const auto &om = func.const_val<object_method>();
 			vector args{om.object};
 			args.reserve(m_size);
 			for (std::size_t i = 0; i < m_size; ++i)
-				args.push_back(lvalue(runtime->stack.pop()));
-			runtime->stack.push(om.callable.const_val<callable>().call(args));
+				args.push_back(lvalue(current_process->stack.pop()));
+			current_process->stack.push(om.callable.const_val<callable>().call(args));
 		}
 		else
 			throw runtime_error("Unsupported operator operations(Fcall).");

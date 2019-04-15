@@ -295,14 +295,14 @@ namespace cs {
 
 		void split_token(std::deque<token_base *> &raw, std::deque<token_base *> &, std::deque<token_base *> &);
 
-		void build_tree(cov::tree<token_base *> &, std::deque<token_base *> &, std::deque<token_base *> &);
+		void build_tree(tree_type<token_base *> &, std::deque<token_base *> &, std::deque<token_base *> &);
 
-		void gen_tree(cov::tree<token_base *> &, std::deque<token_base *> &);
+		void gen_tree(tree_type<token_base *> &, std::deque<token_base *> &);
 
 		void kill_expr(std::deque<token_base *> &);
 
 		// Optimizer
-		bool optimizable(const cov::tree<token_base *>::iterator &it)
+		bool optimizable(const tree_type<token_base *>::iterator &it)
 		{
 			if (!it.usable())
 				return false;
@@ -319,21 +319,21 @@ namespace cs {
 			return false;
 		}
 
-		void trim_expression(cov::tree<token_base *> &tree)
+		void trim_expression(tree_type<token_base *> &tree)
 		{
 			trim_expr(tree, tree.root());
 		}
 
-		void optimize_expression(cov::tree<token_base *> &tree)
+		void optimize_expression(tree_type<token_base *> &tree)
 		{
 			trim_expr(tree, tree.root());
 			if (!disable_optimizer && !no_optimize)
 				opt_expr(tree, tree.root());
 		}
 
-		void trim_expr(cov::tree<token_base *> &, cov::tree<token_base *>::iterator);
+		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator);
 
-		void opt_expr(cov::tree<token_base *> &, cov::tree<token_base *>::iterator);
+		void opt_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator);
 
 	public:
 		compiler_type() = delete;
@@ -384,13 +384,13 @@ namespace cs {
 		// Var definition
 		struct define_var_profile {
 			std::string id;
-			cov::tree<token_base *> expr;
+			tree_type<token_base *> expr;
 		};
 
-		void parse_define_var(cov::tree<token_base *> &, define_var_profile &);
+		void parse_define_var(tree_type<token_base *> &, define_var_profile &);
 
 		// Wrapped Method
-		void build_expr(const std::deque<char> &buff, cov::tree<token_base *> &tree)
+		void build_expr(const std::deque<char> &buff, tree_type<token_base *> &tree)
 		{
 			std::deque<token_base *> tokens;
 			process_char_buff(buff, tokens);
@@ -451,6 +451,6 @@ namespace cs {
 		}
 
 		// AST Debugger
-		static void dump_expr(cov::tree<token_base *>::const_iterator, std::ostream &);
+		static void dump_expr(tree_type<token_base *>::iterator, std::ostream &);
 	};
 }

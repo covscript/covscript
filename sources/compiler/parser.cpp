@@ -92,13 +92,13 @@ namespace cs {
 				for (auto &list:static_cast<token_sblist *>(ptr)->get_list())
 					kill_brackets(list);
 				if (expected_fcall) {
-					std::deque<cov::tree<token_base *>> tlist;
+					std::deque<tree_type<token_base *>> tlist;
 					if (expected_fdef) {
 						expected_fdef = false;
 						no_optimize = true;
 					}
 					for (auto &list:static_cast<token_sblist *>(ptr)->get_list()) {
-						cov::tree<token_base *> tree;
+						tree_type<token_base *> tree;
 						gen_tree(tree, list);
 						tlist.push_back(tree);
 					}
@@ -118,7 +118,7 @@ namespace cs {
 				if (mbl->get_list().size() != 1)
 					throw runtime_error("There are no more elements in middle bracket.");
 				kill_brackets(mbl->get_list().front());
-				cov::tree<token_base *> tree;
+				tree_type<token_base *> tree;
 				gen_tree(tree, mbl->get_list().front());
 				tokens.push_back(new token_signal(signal_types::access_));
 				tokens.push_back(new token_expr(tree));
@@ -128,9 +128,9 @@ namespace cs {
 			case token_types::lblist: {
 				for (auto &list:static_cast<token_lblist *>(ptr)->get_list())
 					kill_brackets(list);
-				std::deque<cov::tree<token_base *>> tlist;
+				std::deque<tree_type<token_base *>> tlist;
 				for (auto &list:static_cast<token_lblist *>(ptr)->get_list()) {
-					cov::tree<token_base *> tree;
+					tree_type<token_base *> tree;
 					gen_tree(tree, list);
 					tlist.push_back(tree);
 				}
@@ -211,7 +211,7 @@ namespace cs {
 			objects.push_back(nullptr);
 	}
 
-	void compiler_type::build_tree(cov::tree<token_base *> &tree, std::deque<token_base *> &signals,
+	void compiler_type::build_tree(tree_type<token_base *> &tree, std::deque<token_base *> &signals,
 	                               std::deque<token_base *> &objects)
 	{
 		if (objects.empty() || signals.empty() || objects.size() != signals.size() + 1)
@@ -221,7 +221,7 @@ namespace cs {
 				auto *sbl = static_cast<token_sblist *>(obj);
 				if (sbl->get_list().size() != 1)
 					throw runtime_error("There are no more elements in small bracket.");
-				cov::tree<token_base *> t;
+				tree_type<token_base *> t;
 				gen_tree(t, sbl->get_list().front());
 				obj = new token_expr(t);
 			}
@@ -230,13 +230,13 @@ namespace cs {
 		tree.emplace_root_left(tree.root(), signals.front());
 		tree.emplace_left_left(tree.root(), objects.front());
 		for (std::size_t i = 1; i < signals.size(); ++i) {
-			for (typename cov::tree<token_base *>::iterator it = tree.root(); it.usable(); it = it.right()) {
+			for (typename tree_type<token_base *>::iterator it = tree.root(); it.usable(); it = it.right()) {
 				if (!it.right().usable()) {
 					tree.emplace_right_right(it, objects.at(i));
 					break;
 				}
 			}
-			for (typename cov::tree<token_base *>::iterator it = tree.root(); it.usable(); it = it.right()) {
+			for (typename tree_type<token_base *>::iterator it = tree.root(); it.usable(); it = it.right()) {
 				if (!it.right().usable()) {
 					tree.emplace_root_left(it, signals.at(i));
 					break;
@@ -254,7 +254,7 @@ namespace cs {
 				}
 			}
 		}
-		for (typename cov::tree<token_base *>::iterator it = tree.root(); it.usable(); it = it.right()) {
+		for (typename tree_type<token_base *>::iterator it = tree.root(); it.usable(); it = it.right()) {
 			if (!it.right().usable()) {
 				tree.emplace_right_right(it, objects.back());
 				break;
@@ -262,7 +262,7 @@ namespace cs {
 		}
 	}
 
-	void compiler_type::gen_tree(cov::tree<token_base *> &tree, std::deque<token_base *> &raw)
+	void compiler_type::gen_tree(tree_type<token_base *> &tree, std::deque<token_base *> &raw)
 	{
 		tree.clear();
 		if (raw.size() == 1) {
@@ -271,7 +271,7 @@ namespace cs {
 				auto *sbl = static_cast<token_sblist *>(obj);
 				if (sbl->get_list().size() != 1)
 					throw runtime_error("There are no more elements in small bracket.");
-				cov::tree<token_base *> t;
+				tree_type<token_base *> t;
 				gen_tree(t, sbl->get_list().front());
 				obj = new token_expr(t);
 			}
@@ -293,7 +293,7 @@ namespace cs {
 		for (auto &ptr:oldt) {
 			if (ptr->get_type() == token_types::action || ptr->get_type() == token_types::endline) {
 				if (!expr.empty()) {
-					cov::tree<token_base *> tree;
+					tree_type<token_base *> tree;
 					gen_tree(tree, expr);
 					tokens.push_back(new token_expr(tree));
 					expr.clear();

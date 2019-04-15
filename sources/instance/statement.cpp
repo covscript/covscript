@@ -688,9 +688,9 @@ namespace cs {
 	void statement_return::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		if (context->instance->fcall_stack.empty())
+		if (current_process->stack.empty())
 			throw runtime_error("Return outside function.");
-		context->instance->fcall_stack.top() = mExecutor();
+		current_process->stack.top() = mExecutor();
 		context->instance->return_fcall = true;
 	}
 

@@ -373,18 +373,18 @@ namespace cs {
 	};
 
 	class token_expr final : public token_base {
-		cov::tree<token_base *> mTree;
+		tree_type<token_base *> mTree;
 	public:
 		token_expr() = delete;
 
-		explicit token_expr(cov::tree<token_base *> tree) : mTree(std::move(tree)) {}
+		explicit token_expr(tree_type<token_base *> tree) : mTree(std::move(tree)) {}
 
 		token_types get_type() const noexcept override
 		{
 			return token_types::expr;
 		}
 
-		cov::tree<token_base *> &get_tree() noexcept
+		tree_type<token_base *> &get_tree() noexcept
 		{
 			return this->mTree;
 		}
@@ -393,18 +393,18 @@ namespace cs {
 	};
 
 	class token_arglist final : public token_base {
-		std::deque<cov::tree<token_base *>> mTreeList;
+		std::deque<tree_type<token_base *>> mTreeList;
 	public:
 		token_arglist() = default;
 
-		explicit token_arglist(std::deque<cov::tree<token_base *>> tlist) : mTreeList(std::move(tlist)) {}
+		explicit token_arglist(std::deque<tree_type<token_base *>> tlist) : mTreeList(std::move(tlist)) {}
 
 		token_types get_type() const noexcept override
 		{
 			return token_types::arglist;
 		}
 
-		std::deque<cov::tree<token_base *>> &get_arglist() noexcept
+		std::deque<tree_type<token_base *>> &get_arglist() noexcept
 		{
 			return this->mTreeList;
 		}
@@ -413,18 +413,18 @@ namespace cs {
 	};
 
 	class token_array final : public token_base {
-		std::deque<cov::tree<token_base *>> mTreeList;
+		std::deque<tree_type<token_base *>> mTreeList;
 	public:
 		token_array() = default;
 
-		explicit token_array(std::deque<cov::tree<token_base *>> tlist) : mTreeList(std::move(tlist)) {}
+		explicit token_array(std::deque<tree_type<token_base *>> tlist) : mTreeList(std::move(tlist)) {}
 
 		token_types get_type() const noexcept override
 		{
 			return token_types::array;
 		}
 
-		std::deque<cov::tree<token_base *>> &get_array() noexcept
+		std::deque<tree_type<token_base *>> &get_array() noexcept
 		{
 			return this->mTreeList;
 		}
@@ -433,18 +433,18 @@ namespace cs {
 	};
 
 	class token_parallel final : public token_base {
-		std::deque<cov::tree<token_base *>> mTreeList;
+		std::deque<tree_type<token_base *>> mTreeList;
 	public:
 		token_parallel() = default;
 
-		explicit token_parallel(std::deque<cov::tree<token_base *>> tlist) : mTreeList(std::move(tlist)) {}
+		explicit token_parallel(std::deque<tree_type<token_base *>> tlist) : mTreeList(std::move(tlist)) {}
 
 		token_types get_type() const noexcept override
 		{
 			return token_types::parallel;
 		}
 
-		std::deque<cov::tree<token_base *>> &get_parallel() noexcept
+		std::deque<tree_type<token_base *>> &get_parallel() noexcept
 		{
 			return this->mTreeList;
 		}
