@@ -676,8 +676,10 @@ namespace cs {
 					statement_base *sptr = nullptr;
 					if (level > 0) {
 						if (m->get_target_type() == statement_types::end_) {
-							context->instance->storage.remove_set();
-							context->instance->storage.remove_domain();
+							if (raw) {
+								context->instance->storage.remove_set();
+								context->instance->storage.remove_domain();
+							}
 							--level;
 						}
 						if (level == 0) {
@@ -687,7 +689,8 @@ namespace cs {
 							method = nullptr;
 						}
 						else {
-							m->preprocess(context, {line});
+							if (raw)
+								m->preprocess(context, {line});
 							tmp.push_back(line);
 						}
 					}
@@ -710,9 +713,11 @@ namespace cs {
 						method = m;
 					}
 					++level;
-					context->instance->storage.add_domain();
-					context->instance->storage.add_set();
-					m->preprocess(context, {line});
+					if (raw) {
+						context->instance->storage.add_domain();
+						context->instance->storage.add_set();
+						m->preprocess(context, {line});
+					}
 					tmp.push_back(line);
 				}
 				break;
