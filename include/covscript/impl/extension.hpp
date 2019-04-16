@@ -375,5 +375,44 @@ namespace cs_impl {
 		return "cs::system::path_info";
 	}
 
+	template<> void gc_mark_reachable<cs::pointer>(cs::pointer& ptr)
+	{
+		ptr.data.gc_mark_reachable();
+	}
+
+	template<> void gc_mark_reachable<cs::structure>(cs::structure& s)
+	{
+		s.gc_mark_reachable();
+	}
+
+	template<> void gc_mark_reachable<cs::namespace_t>(cs::namespace_t & ns)
+	{
+		ns->gc_mark_reachable();
+	}
+
+	template<> void gc_mark_reachable<cs::array>(cs::array& arr)
+	{
+		for(auto& it:arr)
+			it.gc_mark_reachable();
+	}
+
+	template<> void gc_mark_reachable<cs::list>(cs::list& lst)
+	{
+		for(auto& it:lst)
+			it.gc_mark_reachable();
+	}
+
+	template<> void gc_mark_reachable<cs::hash_map >(cs::hash_map & map)
+	{
+		for(auto& it:map)
+			it.second.gc_mark_reachable();
+	}
+
+	template<> void gc_mark_reachable<cs::pair>(cs::pair& p)
+	{
+		p.first.gc_mark_reachable();
+		p.second.gc_mark_reachable();
+	}
+
 	void init_extensions();
 }

@@ -844,6 +844,11 @@ namespace cs_impl {
 			return val.hash();
 		}
 
+		void gc(const context_t &context)
+		{
+			context->instance->storage.start_gc();
+		}
+
 		var build(const context_t &context, const string &expr)
 		{
 			std::deque<char> buff;
@@ -879,11 +884,13 @@ namespace cs_impl {
 			.add_var("delay", make_cni(delay))
 			.add_var("exception", make_cni(exception))
 			.add_var("hash", make_cni(hash, true))
+			.add_var("gc", make_cni(gc))
 			.add_var("build", make_cni(build))
 			.add_var("solve", make_cni(solve))
 			.add_var("cmd_args", make_cni(cmd_args, true))
 			.add_var("advance_import", make_cni(advance_import, true));
 			(*context_ext)
+			.add_var("gc", make_cni(gc))
 			.add_var("build", make_cni(build))
 			.add_var("solve", make_cni(solve))
 			.add_var("cmd_args", make_cni(cmd_args, true))

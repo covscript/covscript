@@ -317,7 +317,7 @@ namespace cs {
 
 		const var &get_tag() const
 		{
-			return this->mTag;
+			return this->mTag.value;
 		}
 
 		statement_block *get_block() const

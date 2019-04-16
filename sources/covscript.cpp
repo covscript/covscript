@@ -76,8 +76,10 @@ std::ostream &operator<<(std::ostream &out, const cs_impl::any &val)
 }
 
 namespace cs_impl {
+    std::size_t any::gc_count=0;
 	std::vector<any::proxy*> any::root_set;
 	default_allocator<any::proxy> any::allocator;
+    any::any(const any_guard& v):any(v.value) {}
 	cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t array_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t array_iterator_ext = cs::make_shared_namespace<cs::name_space>();

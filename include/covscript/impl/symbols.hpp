@@ -281,19 +281,19 @@ namespace cs {
 
 		var &get_value() noexcept
 		{
-			return this->mVal;
+			return this->mVal.value;
 		}
 
 		bool dump(std::ostream &o) const override
 		{
 			o << "< Value = \"";
 			try {
-				o << mVal.to_string();
+				o << mVal.value.to_string();
 			}
 			catch (cov::error &e) {
 				if (!std::strcmp(e.what(), "E000D"))
 					throw e;
-				o << "[" << cs_impl::cxx_demangle(mVal.type().name()) << "]";
+				o << "[" << cs_impl::cxx_demangle(mVal.value.type().name()) << "]";
 			}
 			o << "\" >";
 			return true;

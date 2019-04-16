@@ -36,6 +36,22 @@ namespace cs {
 
 		~domain_manager() = default;
 
+		void start_gc()
+		{
+			if(var::gc_require())
+			{
+				var::gc_start();
+				for(auto& it:current_process->stack)
+					it.gc_mark_reachable();
+				for(auto& domain:m_data)
+				{
+					for(auto& it:*domain)
+						it.second.gc_mark_reachable();
+				}
+				var::gc_clean();
+			}
+		}
+
 		bool is_initial() const
 		{
 			return m_data.size() == 1;
@@ -69,6 +85,7 @@ namespace cs {
 		void remove_domain()
 		{
 			m_data.pop_front();
+			start_gc();
 		}
 
 		void clear_set()
@@ -79,6 +96,7 @@ namespace cs {
 		void clear_domain()
 		{
 			m_data.front()->clear();
+			start_gc();
 		}
 
 		bool exist_record(const string &name)

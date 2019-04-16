@@ -67,7 +67,7 @@ namespace cs {
 // Import Path
 		std::string import_path = ".";
 		// Stack
-        stack_type<var_guard> stack;
+        stack_type<var> stack;
 #ifdef CS_DEBUGGER
         stack_type<std::string> stack_backtrace;
 #endif
@@ -266,7 +266,7 @@ namespace cs {
 
 // Type and struct
 	struct pointer final {
-		var_guard data;
+		var data;
 
 		pointer() = default;
 
@@ -274,7 +274,7 @@ namespace cs {
 
 		bool operator==(const pointer &ptr) const
 		{
-			return data.value.is_same(ptr.data.value);
+			return data.is_same(ptr.data);
 		}
 	};
 
@@ -433,6 +433,12 @@ namespace cs {
 				invoke((*m_data)["finalize"], var::make<structure>(this));
 		}
 
+		void gc_mark_reachable()
+		{
+			for(auto& it:*m_data)
+				it.second.gc_mark_reachable();
+		}
+
 		bool operator==(const structure &s) const
 		{
 			if (s.m_id != m_id)
@@ -512,6 +518,12 @@ namespace cs {
 		explicit name_space(domain_t dat) : m_data(std::move(dat)) {}
 
 		virtual ~name_space() = default;
+
+		void gc_mark_reachable()
+		{
+			for(auto& it:*m_data)
+				it.second.gc_mark_reachable();
+		}
 
 		name_space &add_var(const std::string &name, const var &var)
 		{

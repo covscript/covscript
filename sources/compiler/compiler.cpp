@@ -575,7 +575,7 @@ namespace cs {
 								args.push_back(lvalue(context->instance->parse_expr(tree.root())));
 							token_base *oldt = it.data();
 							try {
-								it.data() = new_value(om.callable.const_val<callable>().call(args));
+								it.data() = new_value(om.callable.value.const_val<callable>().call(args));
 							}
 							catch (...) {
 								it.data() = oldt;

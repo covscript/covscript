@@ -336,7 +336,7 @@ namespace cs {
 			args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
 			for (auto &tree:static_cast<token_arglist *>(b)->get_arglist())
 				args.push_back(lvalue(parse_expr(tree.root())));
-			return om.callable.const_val<callable>().call(args);
+			return om.callable.value.const_val<callable>().call(args);
 		}
 		else
 			throw runtime_error("Unsupported operator operations(Fcall).");
@@ -565,6 +565,8 @@ namespace cs {
 				gen_instruction(tree.root(), assembly);
 				assembly.push_back(new instruction_pop(runtime));
 			}
+			delete assembly.back();
+			assembly.pop_back();
 			break;
 		}
 		case token_types::signal: {
@@ -842,7 +844,7 @@ namespace cs {
 			args.reserve(m_size);
 			for (std::size_t i = 0; i < m_size; ++i)
 				args.push_back(lvalue(current_process->stack.pop()));
-			current_process->stack.push(om.callable.const_val<callable>().call(args));
+			current_process->stack.push(om.callable.value.const_val<callable>().call(args));
 		}
 		else
 			throw runtime_error("Unsupported operator operations(Fcall).");

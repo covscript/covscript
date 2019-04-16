@@ -286,7 +286,7 @@ namespace cs_impl {
 	};
 
 	template<typename T>
-	void gc_mark_reachable(T&){}
+	static void gc_mark_reachable(T&){}
 
 	/*
 	* Implementation of Any Container
@@ -437,6 +437,8 @@ namespace cs_impl {
 			}
 		};
 
+		constexpr static std::size_t gc_threshold=128;
+		static std::size_t gc_count;
 		static std::vector<proxy*> root_set;
 		static default_allocator<proxy> allocator;
 		proxy *mDat = nullptr;
@@ -444,6 +446,7 @@ namespace cs_impl {
 		static inline proxy* add_to_root_set(proxy* ptr)
         {
 		    root_set.emplace_back(ptr);
+		    ++gc_count;
 		    return ptr;
         }
 
@@ -482,12 +485,18 @@ namespace cs_impl {
 			if (mDat != nullptr) {
 				if (mDat->protect_level > 2)
 					throw cov::error("E000L");
-				mDat = add_to_root_set(allocator.alloc(1, mDat->data->duplicate()));
+				mDat = add_to_root_set(allocator.alloc(mDat->data->duplicate()));
 			}
 		}
 
+		static bool gc_require()
+        {
+		    return gc_count>=gc_threshold;
+        }
+
 		static void gc_start()
         {
+		    gc_count=0;
 		    for(auto& it:root_set)
 		        if(it->status!=gc_status::deposit)
 		            it->status = gc_status::recycle;
@@ -581,9 +590,11 @@ namespace cs_impl {
 		constexpr any() = default;
 
 		template<typename T>
-		any(const T &dat):mDat(add_to_root_set(allocator.alloc(1, holder<T>::allocator.alloc(dat)))) {}
+		any(const T &dat):mDat(add_to_root_set(allocator.alloc(holder<T>::allocator.alloc(dat)))) {}
 
 		any(const any &v) : mDat(v.duplicate()) {}
+
+		any(const any_guard&);
 
 		any(any &&v) noexcept
 		{
@@ -780,7 +791,7 @@ namespace cs_impl {
 				}
 				else {
 					if (obj.mDat != nullptr)
-						mDat = add_to_root_set(allocator.alloc(1, obj.mDat->data->duplicate()));
+						mDat = add_to_root_set(allocator.alloc(obj.mDat->data->duplicate()));
 					else
 						mDat = nullptr;
 				}
@@ -797,7 +808,7 @@ namespace cs_impl {
 				mDat->data = holder<T>::allocator.alloc(dat);
 			}
 			else
-				mDat = add_to_root_set(allocator.alloc(1, holder<T>::allocator.alloc(dat)));
+				mDat = add_to_root_set(allocator.alloc(holder<T>::allocator.alloc(dat)));
 		}
 
 		template<typename T>
