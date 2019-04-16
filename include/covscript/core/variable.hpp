@@ -437,7 +437,7 @@ namespace cs_impl {
 			}
 		};
 
-		constexpr static std::size_t gc_threshold=128;
+		constexpr static std::size_t gc_threshold=64;
 		static std::size_t gc_count;
 		static std::vector<proxy*> root_set;
 		static default_allocator<proxy> allocator;
