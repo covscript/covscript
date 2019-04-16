@@ -281,6 +281,13 @@ namespace cs_impl {
 		static inline void convert(X &&) noexcept {}
 	};
 
+	enum class gc_status {
+	    reachable, deposit, recycle
+	};
+
+	template<typename T>
+	void gc_mark_reachable(T&){}
+
 	/*
 	* Implementation of Any Container
 	* A customized version of Mozart Any(cov::any)
@@ -318,6 +325,8 @@ namespace cs_impl {
 			virtual cs::namespace_t &get_ext() const = 0;
 
 			virtual const char *get_type_name() const = 0;
+
+			virtual void gc_mark_reachable() = 0;
 		};
 
 		template<typename T>
@@ -387,6 +396,11 @@ namespace cs_impl {
 				return cs_impl::get_name_of_type<T>();
 			}
 
+            void gc_mark_reachable() override
+            {
+			    cs_impl::gc_mark_reachable(mDat);
+            }
+
 			T &data()
 			{
 				return mDat;
@@ -406,14 +420,15 @@ namespace cs_impl {
 		struct proxy {
 			bool is_rvalue = false;
 			short protect_level = 0;
-			std::size_t refcount = 1;
+            std::size_t refcount = 1;
 			baseHolder *data = nullptr;
+            gc_status status=gc_status::reachable;
 
 			proxy() = default;
 
-			proxy(std::size_t rc, baseHolder *d) : refcount(rc), data(d) {}
+			proxy(baseHolder *d) : data(d) {}
 
-			proxy(short pl, std::size_t rc, baseHolder *d) : protect_level(pl), refcount(rc), data(d) {}
+			proxy(short pl, baseHolder *d) : protect_level(pl), data(d) {}
 
 			~proxy()
 			{
@@ -422,27 +437,20 @@ namespace cs_impl {
 			}
 		};
 
+		static std::vector<proxy*> root_set;
 		static default_allocator<proxy> allocator;
 		proxy *mDat = nullptr;
 
-		proxy *duplicate() const noexcept
-		{
-			if (mDat != nullptr) {
-				++mDat->refcount;
-			}
-			return mDat;
-		}
+		static inline proxy* add_to_root_set(proxy* ptr)
+        {
+		    root_set.emplace_back(ptr);
+		    return ptr;
+        }
 
-		void recycle() noexcept
-		{
-			if (mDat != nullptr) {
-				--mDat->refcount;
-				if (mDat->refcount == 0) {
-					allocator.free(mDat);
-					mDat = nullptr;
-				}
-			}
-		}
+        inline proxy *duplicate() const noexcept
+        {
+            return mDat;
+        }
 
 		explicit any(proxy *dat) : mDat(dat) {}
 
@@ -452,15 +460,10 @@ namespace cs_impl {
 			if (this->mDat != nullptr && obj.mDat != nullptr && raw) {
 				if (this->mDat->protect_level > 0 || obj.mDat->protect_level > 0)
 					throw cov::error("E000J");
-				baseHolder *tmp = this->mDat->data;
-				this->mDat->data = obj.mDat->data;
-				obj.mDat->data = tmp;
+				std::swap(this->mDat->data, obj.mDat->data);
 			}
-			else {
-				proxy *tmp = this->mDat;
-				this->mDat = obj.mDat;
-				obj.mDat = tmp;
-			}
+			else
+			    std::swap(this->mDat, obj.mDat);
 		}
 
 		void swap(any &&obj, bool raw = false)
@@ -468,15 +471,10 @@ namespace cs_impl {
 			if (this->mDat != nullptr && obj.mDat != nullptr && raw) {
 				if (this->mDat->protect_level > 0 || obj.mDat->protect_level > 0)
 					throw cov::error("E000J");
-				baseHolder *tmp = this->mDat->data;
-				this->mDat->data = obj.mDat->data;
-				obj.mDat->data = tmp;
+                std::swap(this->mDat->data, obj.mDat->data);
 			}
-			else {
-				proxy *tmp = this->mDat;
-				this->mDat = obj.mDat;
-				obj.mDat = tmp;
-			}
+			else
+                std::swap(this->mDat, obj.mDat);
 		}
 
 		void clone()
@@ -484,15 +482,68 @@ namespace cs_impl {
 			if (mDat != nullptr) {
 				if (mDat->protect_level > 2)
 					throw cov::error("E000L");
-				proxy *dat = allocator.alloc(1, mDat->data->duplicate());
-				recycle();
-				mDat = dat;
+				mDat = add_to_root_set(allocator.alloc(1, mDat->data->duplicate()));
 			}
 		}
 
+		static void gc_start()
+        {
+		    for(auto& it:root_set)
+		        if(it->status!=gc_status::deposit)
+		            it->status = gc_status::recycle;
+                else
+                    it->data->gc_mark_reachable();
+        }
+
+        static void gc_clean()
+        {
+		    std::vector<proxy*> new_set;
+            for(auto& it:root_set) {
+                if (it->status == gc_status::recycle)
+                    allocator.free(it);
+                else
+                    new_set.emplace_back(it);
+            }
+            std::swap(root_set, new_set);
+        }
+
+        void gc_deposit_join() const
+        {
+            if(mDat!= nullptr)
+            {
+                if(mDat->status != gc_status::deposit)
+                {
+                    mDat->status=gc_status::deposit;
+                    mDat->refcount=1;
+                } else
+                    ++mDat->refcount;
+            }
+		}
+
+        void gc_deposit_leave() const
+        {
+            if(mDat!= nullptr)
+            {
+                if(mDat->status == gc_status::deposit&&--mDat->refcount==0)
+                    mDat->status=gc_status::recycle;
+            }
+        }
+
+        void gc_mark_reachable() const
+        {
+		    if(mDat!= nullptr)
+            {
+                if(mDat->status!=gc_status::deposit)
+                {
+                    mDat->status=gc_status ::reachable;
+                    mDat->data->gc_mark_reachable();
+                }
+            }
+        }
+
 		void try_move() const
 		{
-			if (mDat != nullptr && mDat->refcount == 1) {
+			if (mDat != nullptr) {
 				mDat->protect_level = 0;
 				mDat->is_rvalue = true;
 			}
@@ -506,31 +557,31 @@ namespace cs_impl {
 		template<typename T, typename...ArgsT>
 		static any make(ArgsT &&...args)
 		{
-			return any(allocator.alloc(1, holder<T>::allocator.alloc(std::forward<ArgsT>(args)...)));
+			return any(add_to_root_set(allocator.alloc(holder<T>::allocator.alloc(std::forward<ArgsT>(args)...))));
 		}
 
 		template<typename T, typename...ArgsT>
 		static any make_protect(ArgsT &&...args)
 		{
-			return any(allocator.alloc(1, 1, holder<T>::allocator.alloc(std::forward<ArgsT>(args)...)));
+			return any(add_to_root_set(allocator.alloc(1, holder<T>::allocator.alloc(std::forward<ArgsT>(args)...))));
 		}
 
 		template<typename T, typename...ArgsT>
 		static any make_constant(ArgsT &&...args)
 		{
-			return any(allocator.alloc(2, 1, holder<T>::allocator.alloc(std::forward<ArgsT>(args)...)));
+			return any(add_to_root_set(allocator.alloc(2, holder<T>::allocator.alloc(std::forward<ArgsT>(args)...))));
 		}
 
 		template<typename T, typename...ArgsT>
 		static any make_single(ArgsT &&...args)
 		{
-			return any(allocator.alloc(3, 1, holder<T>::allocator.alloc(std::forward<ArgsT>(args)...)));
+			return any(add_to_root_set(allocator.alloc(3, holder<T>::allocator.alloc(std::forward<ArgsT>(args)...))));
 		}
 
 		constexpr any() = default;
 
 		template<typename T>
-		any(const T &dat):mDat(allocator.alloc(1, holder<T>::allocator.alloc(dat))) {}
+		any(const T &dat):mDat(add_to_root_set(allocator.alloc(1, holder<T>::allocator.alloc(dat)))) {}
 
 		any(const any &v) : mDat(v.duplicate()) {}
 
@@ -539,10 +590,7 @@ namespace cs_impl {
 			swap(std::forward<any>(v));
 		}
 
-		~any()
-		{
-			recycle();
-		}
+		~any()=default;
 
 		const std::type_info &type() const
 		{
@@ -654,10 +702,8 @@ namespace cs_impl {
 
 		any &operator=(const any &var)
 		{
-			if (&var != this) {
-				recycle();
+			if (&var != this)
 				mDat = var.duplicate();
-			}
 			return *this;
 		}
 
@@ -733,9 +779,8 @@ namespace cs_impl {
 					mDat->data = obj.mDat->data->duplicate();
 				}
 				else {
-					recycle();
 					if (obj.mDat != nullptr)
-						mDat = allocator.alloc(1, obj.mDat->data->duplicate());
+						mDat = add_to_root_set(allocator.alloc(1, obj.mDat->data->duplicate()));
 					else
 						mDat = nullptr;
 				}
@@ -751,10 +796,8 @@ namespace cs_impl {
 				mDat->data->kill();
 				mDat->data = holder<T>::allocator.alloc(dat);
 			}
-			else {
-				recycle();
-				mDat = allocator.alloc(1, holder<T>::allocator.alloc(dat));
-			}
+			else
+				mDat = add_to_root_set(allocator.alloc(1, holder<T>::allocator.alloc(dat)));
 		}
 
 		template<typename T>
@@ -763,6 +806,37 @@ namespace cs_impl {
 			assign(dat);
 			return *this;
 		}
+	};
+
+    struct any_guard final {
+        any value;
+        any_guard(){
+            value.gc_deposit_join();
+        }
+        any_guard(const any& val):value(val) {
+            value.gc_deposit_join();
+        }
+        any_guard(const any_guard& guard):value(guard.value){
+            value.gc_deposit_join();
+        }
+        any_guard(any_guard&& guard) noexcept{
+            std::swap(value, guard.value);
+        }
+        ~any_guard(){
+            value.gc_deposit_leave();
+        }
+        any_guard& operator=(const any_guard& guard)
+        {
+            value.gc_deposit_leave();
+            value=guard.value;
+            value.gc_deposit_join();
+            return *this;
+        }
+        any_guard& operator=(any_guard&& guard)
+        {
+            std::swap(value, guard.value);
+            return *this;
+        }
 	};
 
 	template<>

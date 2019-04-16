@@ -29,6 +29,8 @@
 namespace cs_impl {
 	class any;
 
+	class any_guard;
+
 	class cni;
 }
 namespace cs {
@@ -51,6 +53,7 @@ namespace cs {
 	template<typename _kT, typename _vT> using map_t=spp::sparse_hash_map<_kT, _vT>;
 	template<typename _Tp> using set_t=spp::sparse_hash_set<_Tp>;
 	using var=cs_impl::any;
+	using var_guard=cs_impl::any_guard;
 	using number=long double;
 	using boolean=bool;
 	using string=std::string;

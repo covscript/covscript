@@ -57,7 +57,7 @@ namespace cs_function_invoker_impl {
 
 	template<typename RetT, typename...ArgsT>
 	class function_invoker<RetT(ArgsT...)> {
-		cs::var m_func;
+		cs::var_guard m_func;
 	public:
 		function_invoker() = default;
 

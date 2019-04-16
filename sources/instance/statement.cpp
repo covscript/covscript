@@ -60,15 +60,15 @@ namespace cs {
 	{
 		scope_guard scope(mContext);
 		if (mParent.root().usable()) {
-			var builder = mContext->instance->parse_expr(mParent.root());
-			if (builder.type() == typeid(type)) {
-				const auto &t = builder.const_val<type>();
+			var_guard builder = mContext->instance->parse_expr(mParent.root());
+			if (builder.value.type() == typeid(type)) {
+				const auto &t = builder.value.const_val<type>();
 				if (mTypeId == t.id)
 					throw runtime_error("Can not inherit itself.");
-				var parent = t.constructor();
-				if (parent.type() == typeid(structure)) {
-					parent.protect();
-					mContext->instance->storage.involve_domain(parent.const_val<structure>().get_domain());
+				var_guard parent = t.constructor();
+				if (parent.value.type() == typeid(structure)) {
+					parent.value.protect();
+					mContext->instance->storage.involve_domain(parent.value.const_val<structure>().get_domain());
 					mContext->instance->storage.add_var("parent", parent, true);
 				}
 				else
@@ -339,9 +339,9 @@ namespace cs {
 	void statement_switch::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		var key = mExecutor();
-		if (mCases.count(key) > 0)
-			mCases[key]->run();
+		var_guard key = mExecutor();
+		if (mCases.count(key.value) > 0)
+			mCases[key.value]->run();
 		else if (mDefault != nullptr)
 			mDefault->run();
 	}
@@ -518,7 +518,7 @@ namespace cs {
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
 		scope_guard scope(context);
-		var val = copy(mExecutor[0]());
+		var_guard val = copy(mExecutor[0]());
 		while (true) {
 			scope.clear();
 			context->instance->storage.add_var(mDvp.id, val);
@@ -607,7 +607,8 @@ namespace cs {
 	void statement_foreach::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		const var &obj = mExecutor();
+		var_guard _obj = mExecutor();
+		var obj=_obj.value;
 		if (obj.type() == typeid(string))
 			foreach_helper<string, char>(context, this->mIt, obj, this->mBlock);
 		else if (obj.type() == typeid(list))

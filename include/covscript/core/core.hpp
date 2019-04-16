@@ -67,7 +67,7 @@ namespace cs {
 // Import Path
 		std::string import_path = ".";
 		// Stack
-        stack_type<var> stack;
+        stack_type<var_guard> stack;
 #ifdef CS_DEBUGGER
         stack_type<std::string> stack_backtrace;
 #endif
@@ -98,7 +98,7 @@ namespace cs {
 		std::deque<string> file_buff;
 		string file_path = "<Unknown>";
 		string package_name;
-		var cmd_args;
+		var_guard cmd_args;
 
 		context_type() = default;
 
@@ -223,8 +223,8 @@ namespace cs {
 	};
 
 	struct object_method final {
-		var object;
-		var callable;
+		var_guard object;
+		var_guard callable;
 		bool is_constant = false;
 
 		object_method() = delete;
@@ -258,7 +258,7 @@ namespace cs {
 		else if (func.type() == typeid(object_method)) {
 			const auto &om = func.const_val<object_method>();
 			vector args{om.object, std::forward<ArgsT>(_args)...};
-			return om.callable.const_val<callable>().call(args);
+			return om.callable.value.const_val<callable>().call(args);
 		}
 		else
 			throw runtime_error("Invoke non-callable object.");
@@ -266,7 +266,7 @@ namespace cs {
 
 // Type and struct
 	struct pointer final {
-		var data;
+		var_guard data;
 
 		pointer() = default;
 
@@ -274,7 +274,7 @@ namespace cs {
 
 		bool operator==(const pointer &ptr) const
 		{
-			return data.is_same(ptr.data);
+			return data.value.is_same(ptr.data.value);
 		}
 	};
 

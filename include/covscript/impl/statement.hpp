@@ -292,7 +292,7 @@ namespace cs {
 	};
 
 	class statement_case final : public statement_base {
-		var mTag;
+		var_guard mTag;
 		statement_block *mBlock;
 	public:
 		statement_case() = delete;

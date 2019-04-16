@@ -268,7 +268,7 @@ namespace cs {
 	};
 
 	class token_value final : public token_base {
-		var mVal;
+		var_guard mVal;
 	public:
 		token_value() = delete;
 
