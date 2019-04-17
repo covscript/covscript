@@ -450,11 +450,6 @@ namespace cs_impl {
 		    return ptr;
         }
 
-        inline proxy *duplicate() const noexcept
-        {
-            return mDat;
-        }
-
 		explicit any(proxy *dat) : mDat(dat) {}
 
 	public:
@@ -552,7 +547,7 @@ namespace cs_impl {
 
 		void try_move() const
 		{
-			if (mDat != nullptr) {
+			if (mDat != nullptr&&mDat->status!=gc_status::deposit) {
 				mDat->protect_level = 0;
 				mDat->is_rvalue = true;
 			}
@@ -592,7 +587,7 @@ namespace cs_impl {
 		template<typename T>
 		any(const T &dat):mDat(add_to_root_set(allocator.alloc(holder<T>::allocator.alloc(dat)))) {}
 
-		any(const any &v) : mDat(v.duplicate()) {}
+		any(const any &v) : mDat(v.mDat) {}
 
 		any(const any_guard&);
 
@@ -714,7 +709,7 @@ namespace cs_impl {
 		any &operator=(const any &var)
 		{
 			if (&var != this)
-				mDat = var.duplicate();
+				mDat = var.mDat;
 			return *this;
 		}
 
@@ -741,7 +736,7 @@ namespace cs_impl {
 		}
 
 		template<typename T>
-		T &val(bool raw = false)
+		T &val() const
 		{
 			if (typeid(T) != this->type())
 				throw cov::error("E0006");
@@ -749,19 +744,7 @@ namespace cs_impl {
 				throw cov::error("E0005");
 			if (this->mDat->protect_level > 1)
 				throw cov::error("E000K");
-			if (!raw)
-				clone();
 			return static_cast<holder<T> *>(this->mDat->data)->data();
-		}
-
-		template<typename T>
-		const T &val(bool raw = false) const
-		{
-			if (typeid(T) != this->type())
-				throw cov::error("E0006");
-			if (this->mDat == nullptr)
-				throw cov::error("E0005");
-			return static_cast<const holder<T> *>(this->mDat->data)->data();
 		}
 
 		template<typename T>
@@ -789,12 +772,8 @@ namespace cs_impl {
 					mDat->data->kill();
 					mDat->data = obj.mDat->data->duplicate();
 				}
-				else {
-					if (obj.mDat != nullptr)
-						mDat = add_to_root_set(allocator.alloc(obj.mDat->data->duplicate()));
-					else
-						mDat = nullptr;
-				}
+				else
+					mDat = obj.mDat;
 			}
 		}
 

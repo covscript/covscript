@@ -375,6 +375,12 @@ namespace cs_impl {
 		return "cs::system::path_info";
 	}
 
+// GC Marking
+	template<> void gc_mark_reachable<cs::object_method>(cs::object_method& om)
+	{
+		om.object.gc_mark_reachable();
+		om.callable.gc_mark_reachable();
+	}
 	template<> void gc_mark_reachable<cs::pointer>(cs::pointer& ptr)
 	{
 		ptr.data.gc_mark_reachable();

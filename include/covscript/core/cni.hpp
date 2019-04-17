@@ -57,7 +57,7 @@ namespace cs_impl {
 	struct convert_helper<T &> {
 		static inline T &get_val(any &val)
 		{
-			return val.val<T>(true);
+			return val.val<T>();
 		}
 	};
 

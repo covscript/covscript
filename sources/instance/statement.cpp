@@ -607,17 +607,16 @@ namespace cs {
 	void statement_foreach::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		var_guard _obj = mExecutor();
-		var obj=_obj.value;
-		if (obj.type() == typeid(string))
+		var_guard obj = mExecutor();
+		if (obj.value.type() == typeid(string))
 			foreach_helper<string, char>(context, this->mIt, obj, this->mBlock);
-		else if (obj.type() == typeid(list))
+		else if (obj.value.type() == typeid(list))
 			foreach_helper<list, var>(context, this->mIt, obj, this->mBlock);
-		else if (obj.type() == typeid(array))
+		else if (obj.value.type() == typeid(array))
 			foreach_helper<array, var>(context, this->mIt, obj, this->mBlock);
-		else if (obj.type() == typeid(hash_map))
+		else if (obj.value.type() == typeid(hash_map))
 			foreach_helper<hash_map, pair>(context, this->mIt, obj, this->mBlock);
-		else if (obj.type() == typeid(range_type))
+		else if (obj.value.type() == typeid(range_type))
 			foreach_helper<range_type, number>(context, this->mIt, obj, this->mBlock);
 		else
 			throw runtime_error("Unsupported type(foreach)");
