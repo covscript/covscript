@@ -67,9 +67,9 @@ namespace cs {
 // Import Path
 		std::string import_path = ".";
 		// Stack
-        stack_type<var> stack;
+		stack_type<var> stack;
 #ifdef CS_DEBUGGER
-        stack_type<std::string> stack_backtrace;
+		stack_type<std::string> stack_backtrace;
 #endif
 
 // Exception Handling

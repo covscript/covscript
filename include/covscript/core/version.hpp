@@ -28,6 +28,6 @@
 *
 */
 #define COVSCRIPT_VERSION_NUM 3,1,2,1
-#define COVSCRIPT_VERSION_STR "3.1.2 Ovis ammon(Stable) Build 1"
+#define COVSCRIPT_VERSION_STR "3.1.2 Ovis ammon(Unstable) Build 1"
 #define COVSCRIPT_STD_VERSION 190101
 #define COVSCRIPT_ABI_VERSION 190417

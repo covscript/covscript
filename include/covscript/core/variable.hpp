@@ -406,9 +406,9 @@ namespace cs_impl {
 		struct proxy {
 			bool is_rvalue = false;
 			short protect_level = 0;
-            std::size_t refcount = 1;
+			std::size_t refcount = 1;
 			baseHolder *data = nullptr;
- 
+
 			proxy() = default;
 
 			proxy(std::size_t rc, baseHolder *d) : refcount(rc), data(d) {}
@@ -425,7 +425,7 @@ namespace cs_impl {
 		static default_allocator<proxy> allocator;
 		proxy *mDat = nullptr;
 
-        proxy *duplicate() const noexcept
+		proxy *duplicate() const noexcept
 		{
 			if (mDat != nullptr) {
 				++mDat->refcount;
@@ -455,7 +455,7 @@ namespace cs_impl {
 				std::swap(this->mDat->data, obj.mDat->data);
 			}
 			else
-			    std::swap(this->mDat, obj.mDat);
+				std::swap(this->mDat, obj.mDat);
 		}
 
 		void swap(any &&obj, bool raw = false)
@@ -463,10 +463,10 @@ namespace cs_impl {
 			if (this->mDat != nullptr && obj.mDat != nullptr && raw) {
 				if (this->mDat->protect_level > 0 || obj.mDat->protect_level > 0)
 					throw cov::error("E000J");
-                std::swap(this->mDat->data, obj.mDat->data);
+				std::swap(this->mDat->data, obj.mDat->data);
 			}
 			else
-                std::swap(this->mDat, obj.mDat);
+				std::swap(this->mDat, obj.mDat);
 		}
 
 		void clone()

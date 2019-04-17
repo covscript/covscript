@@ -23,7 +23,7 @@
 
 namespace cs {
 	class domain_manager {
-		std::deque<set_t<string>> m_set;
+		std::deque<set_t < string>> m_set;
 		std::deque<domain_t> m_data;
 	public:
 		domain_manager()
@@ -137,13 +137,10 @@ namespace cs {
 
 		var get_var_optimizable(const string &name)
 		{
-			if(m_data.size()==m_set.size())
-			{
-				for(std::size_t i=0;i<m_data.size();++i)
-				{
-					if(m_set[i].count(name)>0)
-					{
-						if(m_data[i]->count(name)>0)
+			if (m_data.size() == m_set.size()) {
+				for (std::size_t i = 0; i < m_data.size(); ++i) {
+					if (m_set[i].count(name) > 0) {
+						if (m_data[i]->count(name) > 0)
 							return m_data[i]->at(name);
 						else
 							break;

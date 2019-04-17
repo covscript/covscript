@@ -123,11 +123,11 @@ public:
 			const cs::callable::function_type &target = function.const_val<cs::callable>().get_raw_data();
 			target.target<cs::function>()->set_debugger_state(true);
 			auto key = m_pending.find(name);
-			if(key->second.second) {
+			if (key->second.second) {
 				for (auto &it:m_breakpoints) {
 					if (it.id == key->second.first) {
 						it.data.emplace<cs::var>(function);
-						key->second.second=false;
+						key->second.second = false;
 						break;
 					}
 				}
@@ -145,11 +145,11 @@ public:
 				m_pending.erase(m_pending.find(b.data.get<std::string>()));
 			return b.id == id;
 		});
-		auto it=m_pending.begin();
-		for(; it!=m_pending.end(); ++it)
-			if(it->second.first==id)
+		auto it = m_pending.begin();
+		for (; it != m_pending.end(); ++it)
+			if (it->second.first == id)
 				break;
-		if(it!=m_pending.end())
+		if (it != m_pending.end())
 			m_pending.erase(it);
 	}
 
@@ -180,10 +180,10 @@ public:
 
 	void reset()
 	{
-		for(auto& it:m_pending) {
-			it.second.second=true;
-			for(auto& b:m_breakpoints) {
-				if(b.id==it.second.first) {
+		for (auto &it:m_pending) {
+			it.second.second = true;
+			for (auto &b:m_breakpoints) {
+				if (b.id == it.second.first) {
 					b.data.emplace<std::string>(it.first);
 					break;
 				}
@@ -239,9 +239,9 @@ breakpoint_recorder breakpoints;
 
 void reset_status()
 {
-	exec_by_step=false;
-	current_level=0;
-	step_into_function=false;
+	exec_by_step = false;
+	current_level = 0;
+	step_into_function = false;
 	breakpoints.reset();
 }
 

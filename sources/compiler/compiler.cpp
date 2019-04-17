@@ -442,8 +442,8 @@ namespace cs {
 		default:
 			break;
 		case token_types::id: {
-			var value=context->instance->storage.get_var_optimizable(static_cast<token_id *>(token)->get_id());
-			if(value.usable()&&value.is_protect())
+			var value = context->instance->storage.get_var_optimizable(static_cast<token_id *>(token)->get_id());
+			if (value.usable() && value.is_protect())
 				it.data() = new_value(value);
 			return;
 			break;

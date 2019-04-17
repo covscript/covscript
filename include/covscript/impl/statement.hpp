@@ -448,7 +448,8 @@ namespace cs {
 		statement_foreach() = delete;
 
 		statement_foreach(std::string it, tree_type<token_base *> tree, std::deque<statement_base *> b, context_t c,
-		                  token_base *ptr) : statement_base(std::move(c), ptr), mIt(std::move(it)), mObj(std::move(tree)), mBlock(std::move(b)) {}
+		                  token_base *ptr) : statement_base(std::move(c), ptr), mIt(std::move(it)),
+			mObj(std::move(tree)), mBlock(std::move(b)) {}
 
 		statement_types get_type() const noexcept override
 		{
