@@ -24,19 +24,18 @@
 * cs: Main Namespace
 * cs_impl: Implement Namespace
 */
-// Mozart
-#include <covscript/import/mozart/static_stack.hpp>
-#include <covscript/import/mozart/traits.hpp>
-#include <covscript/import/mozart/tree.hpp>
 // LibDLL
 #include <covscript/import/libdll/dll.hpp>
 // Sparsepp
 #include <covscript/import/sparsepp/spp.h>
 // STL
 #include <forward_list>
+#include <type_traits>
 #include <functional>
 #include <typeindex>
 #include <algorithm>
+#include <exception>
+#include <stdexcept>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -52,7 +51,7 @@
 #include <list>
 #include <map>
 // CovScript Headers
-#include <covscript/core/exceptions.hpp>
+#include <covscript/core/components.hpp>
 #include <covscript/core/definition.hpp>
 #include <covscript/core/variable.hpp>
 #include <covscript/core/version.hpp>
@@ -67,6 +66,11 @@ namespace cs {
 		int output_precision = 8;
 // Import Path
 		std::string import_path = ".";
+		// Stack
+        stack_type<var> stack;
+#ifdef CS_DEBUGGER
+        stack_type<std::string> stack_backtrace;
+#endif
 
 // Exception Handling
 		static void cs_defalt_exception_handler(const lang_error &e)
@@ -468,12 +472,12 @@ namespace cs {
 		context_t mContext;
 		type_id mTypeId;
 		std::string mName;
-		cov::tree<token_base *> mParent;
+		tree_type<token_base *> mParent;
 		std::deque<statement_base *> mMethod;
 	public:
 		struct_builder() = delete;
 
-		struct_builder(context_t c, std::string name, cov::tree<token_base *> parent,
+		struct_builder(context_t c, std::string name, tree_type<token_base *> parent,
 		               std::deque<statement_base *> method) : mContext(std::move(std::move(c))),
 			mTypeId(typeid(structure), ++mCount),
 			mName(std::move(name)),
@@ -495,35 +499,6 @@ namespace cs {
 		}
 
 		var operator()();
-	};
-
-// Internal Garbage Collection
-	template<typename T>
-	class garbage_collector final {
-		std::forward_list<T *> table_new;
-		std::forward_list<T *> table_delete;
-	public:
-		garbage_collector() = default;
-
-		garbage_collector(const garbage_collector &) = delete;
-
-		~garbage_collector()
-		{
-			for (auto &ptr:table_delete)
-				table_new.remove(ptr);
-			for (auto &ptr:table_new)
-				delete ptr;
-		}
-
-		void add(void *ptr)
-		{
-			table_new.push_front(static_cast<T *>(ptr));
-		}
-
-		void remove(void *ptr)
-		{
-			table_delete.push_front(static_cast<T *>(ptr));
-		}
 	};
 
 // Namespace and extensions
@@ -591,13 +566,14 @@ namespace cs {
 			dll_compatible_check_t dll_check = reinterpret_cast<dll_compatible_check_t>(m_dll.get_address(
 			                                       dll_compatible_check));
 			if (dll_check == nullptr || dll_check() != COVSCRIPT_ABI_VERSION)
-				throw lang_error("Incompatible Covariant Script Extension.");
+				throw runtime_error("Incompatible Covariant Script Extension.(Target: " + std::to_string(dll_check()) +
+				                    ", Current: " + std::to_string(COVSCRIPT_ABI_VERSION) + ")");
 			dll_main_entrance_t dll_main = reinterpret_cast<dll_main_entrance_t>(m_dll.get_address(dll_main_entrance));
 			if (dll_main != nullptr) {
 				dll_main(this, current_process);
 			}
 			else
-				throw lang_error("Broken Covariant Script Extension.");
+				throw runtime_error("Broken Covariant Script Extension.");
 		}
 	};
 

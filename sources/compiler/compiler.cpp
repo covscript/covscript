@@ -219,7 +219,7 @@ namespace cs {
 		return true;
 	}
 
-	void compiler_type::trim_expr(cov::tree<token_base *> &tree, cov::tree<token_base *>::iterator it)
+	void compiler_type::trim_expr(tree_type<token_base *> &tree, tree_type<token_base *>::iterator it)
 	{
 		if (!it.usable())
 			return;
@@ -241,7 +241,7 @@ namespace cs {
 			break;
 		}
 		case token_types::expr: {
-			cov::tree<token_base *> &t = static_cast<token_expr *>(it.data())->get_tree();
+			tree_type<token_base *> &t = static_cast<token_expr *>(it.data())->get_tree();
 			trim_expression(t);
 			tree.merge(it, t);
 			return;
@@ -302,7 +302,7 @@ namespace cs {
 					if (lptr != nullptr && lptr->get_type() == token_types::parallel)
 						parallel_list = static_cast<token_parallel *>(lptr);
 					else if (lptr != nullptr)
-						parallel_list = new token_parallel({cov::tree<token_base *>(it.left())});
+						parallel_list = new token_parallel({tree_type<token_base *>(it.left())});
 					else
 						parallel_list = new token_parallel();
 					if (rptr != nullptr && rptr->get_type() == token_types::parallel)
@@ -404,7 +404,7 @@ namespace cs {
 							throw runtime_error("Redefinition of function argument.");
 					args.push_back(str);
 				}
-				statement_base *ret = new statement_return(cov::tree<token_base *>(it.right()), context,
+				statement_base *ret = new statement_return(tree_type<token_base *>(it.right()), context,
 				        new token_endline(token->get_line_num()));
 #ifdef CS_DEBUGGER
 				std::string decl="function [lambda](";
@@ -431,7 +431,7 @@ namespace cs {
 		trim_expr(tree, it.right());
 	}
 
-	void compiler_type::opt_expr(cov::tree<token_base *> &tree, cov::tree<token_base *>::iterator it)
+	void compiler_type::opt_expr(tree_type<token_base *> &tree, tree_type<token_base *>::iterator it)
 	{
 		if (!it.usable())
 			return;
@@ -442,16 +442,9 @@ namespace cs {
 		default:
 			break;
 		case token_types::id: {
-			const std::string &id = static_cast<token_id *>(token)->get_id();
-			if (context->instance->storage.exist_record(id)) {
-				if (context->instance->storage.var_exist_current(id) &&
-				        context->instance->storage.get_var_current(id).is_protect())
-					it.data() = new_value(context->instance->storage.get_var(id));
-			}
-			else if (!context->instance->storage.exist_record_in_struct(id) &&
-			         context->instance->storage.var_exist(id) &&
-			         context->instance->storage.get_var(id).is_protect())
-				it.data() = new_value(context->instance->storage.get_var(id));
+			var value=context->instance->storage.get_var_optimizable(static_cast<token_id *>(token)->get_id());
+			if(value.usable()&&value.is_protect())
+				it.data() = new_value(value);
 			return;
 			break;
 		}
@@ -614,7 +607,7 @@ namespace cs {
 		}
 	}
 
-	void compiler_type::parse_define_var(cov::tree<token_base *> &tree, define_var_profile &dvp)
+	void compiler_type::parse_define_var(tree_type<token_base *> &tree, define_var_profile &dvp)
 	{
 		const auto &it = tree.root();
 		token_base *root = it.data();
@@ -626,10 +619,10 @@ namespace cs {
 		if (left == nullptr || right.data() == nullptr || left->get_type() != token_types::id)
 			throw runtime_error("Wrong grammar for variable definition.");
 		dvp.id = static_cast<token_id *>(left)->get_id();
-		dvp.expr = cov::tree<token_base *>(right);
+		dvp.expr = tree_type<token_base *>(right);
 	}
 
-	void compiler_type::dump_expr(cov::tree<token_base *>::const_iterator it, std::ostream &stream)
+	void compiler_type::dump_expr(tree_type<token_base *>::iterator it, std::ostream &stream)
 	{
 		if (!it.usable()) {
 			stream << "< Empty Expression >";
@@ -676,8 +669,10 @@ namespace cs {
 					statement_base *sptr = nullptr;
 					if (level > 0) {
 						if (m->get_target_type() == statement_types::end_) {
-							context->instance->storage.remove_set();
-							context->instance->storage.remove_domain();
+							if (raw) {
+								context->instance->storage.remove_set();
+								context->instance->storage.remove_domain();
+							}
 							--level;
 						}
 						if (level == 0) {
@@ -687,7 +682,8 @@ namespace cs {
 							method = nullptr;
 						}
 						else {
-							m->preprocess(context, {line});
+							if (raw)
+								m->preprocess(context, {line});
 							tmp.push_back(line);
 						}
 					}
@@ -710,9 +706,11 @@ namespace cs {
 						method = m;
 					}
 					++level;
-					context->instance->storage.add_domain();
-					context->instance->storage.add_set();
-					m->preprocess(context, {line});
+					if (raw) {
+						context->instance->storage.add_domain();
+						context->instance->storage.add_set();
+						m->preprocess(context, {line});
+					}
 					tmp.push_back(line);
 				}
 				break;

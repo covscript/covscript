@@ -30,11 +30,11 @@ namespace cs {
 
 	void method_import::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		std::vector<std::pair<std::string, var>> var_list;
-		auto process = [&context, &var_list](cov::tree<token_base *> &t) {
+		auto process = [&context, &var_list](tree_type<token_base *> &t) {
 			token_base *token = t.root().data();
 			if (token == nullptr || token->get_type() != token_types::id)
 				throw runtime_error("Wrong grammar for import statement.");
@@ -72,7 +72,7 @@ namespace cs {
 
 	void method_involve::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_value *vptr = dynamic_cast<token_value *>(tree.root().data());
 		if (vptr != nullptr) {
 			var ns = vptr->get_value();
@@ -94,7 +94,7 @@ namespace cs {
 
 	void method_var::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (tree.root().data()->get_type() == token_types::parallel) {
@@ -112,7 +112,7 @@ namespace cs {
 
 	statement_base *method_var::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		std::vector<compiler_type::define_var_profile> dvp_list;
@@ -132,11 +132,11 @@ namespace cs {
 
 	void method_constant::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		std::vector<std::pair<std::string, var>> var_list;
-		auto process = [&context, &var_list](cov::tree<token_base *> &t) {
+		auto process = [&context, &var_list](tree_type<token_base *> &t) {
 			compiler_type::define_var_profile dvp;
 			context->compiler->parse_define_var(t, dvp);
 			if (dvp.expr.root().data()->get_type() != token_types::value)
@@ -201,7 +201,7 @@ namespace cs {
 					throw runtime_error("Multi Else Grammar.");
 			}
 		}
-		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_base *ptr = tree.root().data();
 		if (have_else) {
 			std::deque<statement_base *> body_true;
@@ -284,7 +284,7 @@ namespace cs {
 
 	statement_base *method_case::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data()->get_type() != token_types::value) {
 			std::size_t line_num = static_cast<token_endline *>(raw.front().back())->get_line_num();
 			const char *what = "Case Tag must be a constant value.";
@@ -308,11 +308,11 @@ namespace cs {
 	{
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_base *ptr = tree.root().data();
 		if (ptr != nullptr && ptr->get_type() == token_types::value) {
 			if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
-				return new statement_loop(nullptr, body, context, raw.front().back());
+				return new statement_loop(body, context, raw.front().back());
 			else
 				return nullptr;
 		}
@@ -333,24 +333,24 @@ namespace cs {
 		if (!body.empty() && body.back()->get_type() == statement_types::until_) {
 			token_expr *expr = static_cast<statement_until *>(body.back())->get_expr();
 			body.pop_back();
-			cov::tree<token_base *> &tree = expr->get_tree();
+			tree_type<token_base *> &tree = expr->get_tree();
 			token_base *ptr = tree.root().data();
 			if (ptr != nullptr && ptr->get_type() == token_types::value) {
 				if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
 					return new statement_block(body, context, raw.front().back());
 				else
-					return new statement_loop(nullptr, body, context, raw.front().back());
+					return new statement_loop(body, context, raw.front().back());
 			}
 			else
-				return new statement_loop(expr, body, context, raw.front().back());
+				return new statement_loop_until(tree, body, context, raw.front().back());
 		}
 		else
-			return new statement_loop(nullptr, body, context, raw.front().back());
+			return new statement_loop(body, context, raw.front().back());
 	}
 
 	void method_for::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (tree.root().data()->get_type() != token_types::parallel)
@@ -367,7 +367,7 @@ namespace cs {
 	{
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
 		return new statement_for(parallel_list, body, context, raw.front().back());
 	}
@@ -375,7 +375,7 @@ namespace cs {
 	statement_base *
 	method_for_do::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (tree.root().data()->get_type() != token_types::parallel)
@@ -391,7 +391,7 @@ namespace cs {
 
 	void method_foreach::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_signal *sig = dynamic_cast<token_signal *>(t.root().data());
 		if (sig == nullptr || sig->get_signal() != signal_types::pair_)
 			throw runtime_error("Wrong grammar(foreach)");
@@ -405,17 +405,17 @@ namespace cs {
 	statement_base *
 	method_foreach::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		const std::string &it = static_cast<token_id *>(t.root().left().data())->get_id();
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		return new statement_foreach(it, cov::tree<token_base *>(t.root().right()), body, context, raw.front().back());
+		return new statement_foreach(it, tree_type<token_base *>(t.root().right()), body, context, raw.front().back());
 	}
 
 	statement_base *
 	method_foreach_do::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_signal *sig = dynamic_cast<token_signal *>(t.root().data());
 		if (sig == nullptr || sig->get_signal() != signal_types::pair_)
 			throw runtime_error("Wrong grammar(foreach)");
@@ -426,7 +426,7 @@ namespace cs {
 		const std::string &it = static_cast<token_id *>(t.root().left().data())->get_id();
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		return new statement_foreach(it, cov::tree<token_base *>(t.root().right()), {
+		return new statement_foreach(it, tree_type<token_base *>(t.root().right()), {
 			new statement_expression(static_cast<token_expr *>(raw.front().at(3))->get_tree(),
 			                         context, raw.front().back())
 		}, context,
@@ -446,7 +446,7 @@ namespace cs {
 
 	void method_function::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::signal ||
@@ -478,7 +478,7 @@ namespace cs {
 	statement_base *
 	method_function::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		std::string name = static_cast<token_id *>(t.root().left().data())->get_id();
 		std::vector<std::string> args;
 		for (auto &it:static_cast<token_arglist *>(t.root().right().data())->get_arglist())
@@ -513,7 +513,7 @@ namespace cs {
 	statement_base *
 	method_return_no_value::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> tree;
+		tree_type<token_base *> tree;
 		tree.emplace_root_left(tree.root(), new token_value(null_pointer));
 		return new statement_return(tree, context, raw.front().back());
 	}
@@ -526,7 +526,7 @@ namespace cs {
 	statement_base *
 	method_struct::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::id)
@@ -557,7 +557,7 @@ namespace cs {
 			return new statement_struct(name, static_cast<token_expr *>(raw.front().at(3))->get_tree(), body, context,
 			                            raw.front().back());
 		else
-			return new statement_struct(name, cov::tree<token_base *>(), body, context, raw.front().back());
+			return new statement_struct(name, tree_type<token_base *>(), body, context, raw.front().back());
 	}
 
 	statement_base *method_try::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
@@ -585,7 +585,7 @@ namespace cs {
 
 	statement_base *method_catch::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		cov::tree<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::id)

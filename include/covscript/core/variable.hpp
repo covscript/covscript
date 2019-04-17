@@ -19,8 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <covscript/import/mozart/memory.hpp>
-#include <type_traits>
+#include <covscript/import/mozart/traits.hpp>
 
 namespace cs_impl {
 // Name Demangle
@@ -136,13 +135,13 @@ namespace cs_impl {
 		struct matcher;
 
 		template<typename T>
-		static constexpr bool match(T *)
+		static constexpr bool match(T *) noexcept
 		{
 			return false;
 		}
 
 		template<typename T>
-		static constexpr bool match(matcher<T, &std::hash<T>::operator()> *)
+		static constexpr bool match(matcher<T, &std::hash<T>::operator()> *) noexcept
 		{
 			return true;
 		}
@@ -291,6 +290,7 @@ namespace cs_impl {
 // Be careful when you adjust the buffer size.
 	constexpr std::size_t default_allocate_buffer_size = 64;
 	template<typename T> using default_allocator_provider=std::allocator<T>;
+	template<typename T> using default_allocator=cs::allocator_type<T, default_allocate_buffer_size, default_allocator_provider>;
 
 	class any final {
 		class baseHolder {
@@ -325,7 +325,7 @@ namespace cs_impl {
 		protected:
 			T mDat;
 		public:
-			static cov::allocator<holder<T>, default_allocate_buffer_size, default_allocator_provider> allocator;
+			static default_allocator<holder<T>> allocator;
 
 			holder() = default;
 
@@ -406,9 +406,9 @@ namespace cs_impl {
 		struct proxy {
 			bool is_rvalue = false;
 			short protect_level = 0;
-			std::size_t refcount = 1;
+            std::size_t refcount = 1;
 			baseHolder *data = nullptr;
-
+ 
 			proxy() = default;
 
 			proxy(std::size_t rc, baseHolder *d) : refcount(rc), data(d) {}
@@ -422,10 +422,10 @@ namespace cs_impl {
 			}
 		};
 
-		static cov::allocator<proxy, default_allocate_buffer_size, default_allocator_provider> allocator;
+		static default_allocator<proxy> allocator;
 		proxy *mDat = nullptr;
 
-		proxy *duplicate() const noexcept
+        proxy *duplicate() const noexcept
 		{
 			if (mDat != nullptr) {
 				++mDat->refcount;
@@ -452,15 +452,10 @@ namespace cs_impl {
 			if (this->mDat != nullptr && obj.mDat != nullptr && raw) {
 				if (this->mDat->protect_level > 0 || obj.mDat->protect_level > 0)
 					throw cov::error("E000J");
-				baseHolder *tmp = this->mDat->data;
-				this->mDat->data = obj.mDat->data;
-				obj.mDat->data = tmp;
+				std::swap(this->mDat->data, obj.mDat->data);
 			}
-			else {
-				proxy *tmp = this->mDat;
-				this->mDat = obj.mDat;
-				obj.mDat = tmp;
-			}
+			else
+			    std::swap(this->mDat, obj.mDat);
 		}
 
 		void swap(any &&obj, bool raw = false)
@@ -468,15 +463,10 @@ namespace cs_impl {
 			if (this->mDat != nullptr && obj.mDat != nullptr && raw) {
 				if (this->mDat->protect_level > 0 || obj.mDat->protect_level > 0)
 					throw cov::error("E000J");
-				baseHolder *tmp = this->mDat->data;
-				this->mDat->data = obj.mDat->data;
-				obj.mDat->data = tmp;
+                std::swap(this->mDat->data, obj.mDat->data);
 			}
-			else {
-				proxy *tmp = this->mDat;
-				this->mDat = obj.mDat;
-				obj.mDat = tmp;
-			}
+			else
+                std::swap(this->mDat, obj.mDat);
 		}
 
 		void clone()
@@ -792,7 +782,7 @@ namespace cs_impl {
 		using holder<std::type_index>::holder;
 	};
 
-	template<typename T> cov::allocator<any::holder<T>, default_allocate_buffer_size, default_allocator_provider> any::holder<T>::allocator;
+	template<typename T> default_allocator<any::holder<T>> any::holder<T>::allocator;
 }
 
 std::ostream &operator<<(std::ostream &, const cs_impl::any &);

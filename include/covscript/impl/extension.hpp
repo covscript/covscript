@@ -352,7 +352,7 @@ namespace cs_impl {
 	}
 
 	template<>
-	constexpr const char *get_name_of_type<cov::tree<cs::token_base *>>()
+	constexpr const char *get_name_of_type<cs::tree_type<cs::token_base *>>()
 	{
 		return "cs::expression";
 	}

@@ -59,7 +59,7 @@ namespace cs {
 	using pair=std::pair<var, var>;
 	using hash_map=map_t<var, var>;
 	using vector=std::vector<var>;
-	using expression_t=cov::tree<token_base *>;
+	using expression_t=tree_type<token_base *>;
 	using compiler_t=std::shared_ptr<compiler_type>;
 	using instance_t=std::shared_ptr<instance_type>;
 	using context_t=std::shared_ptr<context_type>;

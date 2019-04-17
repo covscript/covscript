@@ -163,7 +163,7 @@ namespace cs {
 		}
 	}
 
-	var runtime_type::parse_arraw(const var &a, token_base *b)
+	var runtime_type::parse_arrow(const var &a, token_base *b)
 	{
 		if (a.type() == typeid(pointer))
 			return parse_dot(a.const_val<pointer>().data, b);
@@ -235,7 +235,7 @@ namespace cs {
 		return a;
 	}
 
-	var runtime_type::parse_choice(const var &a, const cov::tree<token_base *>::iterator &b)
+	var runtime_type::parse_choice(const var &a, const tree_type<token_base *>::iterator &b)
 	{
 		if (a.type() == typeid(boolean)) {
 			if (a.const_val<boolean>())
@@ -383,7 +383,7 @@ namespace cs {
 			throw runtime_error("Access non-array or string object.");
 	}
 
-	var runtime_type::parse_expr(const cov::tree<token_base *>::iterator &it)
+	var runtime_type::parse_expr(const tree_type<token_base *>::iterator &it)
 	{
 		if (!it.usable())
 			throw internal_error("The expression tree is not available.");
@@ -465,7 +465,7 @@ namespace cs {
 				return parse_dot(parse_expr(it.left()), it.right().data());
 				break;
 			case signal_types::arrow_:
-				return parse_arraw(parse_expr(it.left()), it.right().data());
+				return parse_arrow(parse_expr(it.left()), it.right().data());
 				break;
 			case signal_types::typeid_:
 				return rvalue(parse_typeid(parse_expr(it.right())));

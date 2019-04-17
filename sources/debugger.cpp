@@ -85,7 +85,7 @@ class breakpoint_recorder final {
 
 	static std::size_t m_id;
 	std::forward_list<breakpoint> m_breakpoints;
-	cs::map_t<std::string, std::size_t> m_pending;
+	cs::map_t<std::string, std::pair<std::size_t, bool>> m_pending;
 public:
 
 	breakpoint_recorder() = default;
@@ -101,10 +101,10 @@ public:
 		if (function.type() == typeid(cs::object_method))
 			function = function.const_val<cs::object_method>().callable;
 		else if (function.type() != typeid(cs::callable))
-			throw cs::lang_error("Debugger just can break at specific line or function.");
+			throw cs::runtime_error("Debugger just can break at specific line or function.");
 		const cs::callable::function_type &target = function.const_val<cs::callable>().get_raw_data();
 		if (target.target_type() != typeid(cs::function))
-			throw cs::lang_error("Debugger can not break at CNI function.");
+			throw cs::runtime_error("Debugger can not break at CNI function.");
 		target.target<cs::function>()->set_debugger_state(true);
 		m_breakpoints.emplace_front(++m_id, function);
 		return m_id;
@@ -113,7 +113,7 @@ public:
 	std::size_t add_pending(const std::string &func)
 	{
 		m_breakpoints.emplace_front(++m_id, func);
-		m_pending.emplace(func, m_id);
+		m_pending.emplace(func, std::pair<std::size_t, bool>(m_id, true));
 		return m_id;
 	}
 
@@ -123,13 +123,15 @@ public:
 			const cs::callable::function_type &target = function.const_val<cs::callable>().get_raw_data();
 			target.target<cs::function>()->set_debugger_state(true);
 			auto key = m_pending.find(name);
-			for (auto &it:m_breakpoints) {
-				if (it.id == key->second) {
-					it.data.emplace<cs::var>(function);
-					break;
+			if(key->second.second) {
+				for (auto &it:m_breakpoints) {
+					if (it.id == key->second.first) {
+						it.data.emplace<cs::var>(function);
+						key->second.second=false;
+						break;
+					}
 				}
 			}
-			m_pending.erase(key);
 		}
 	}
 
@@ -143,6 +145,12 @@ public:
 				m_pending.erase(m_pending.find(b.data.get<std::string>()));
 			return b.id == id;
 		});
+		auto it=m_pending.begin();
+		for(; it!=m_pending.end(); ++it)
+			if(it->second.first==id)
+				break;
+		if(it!=m_pending.end())
+			m_pending.erase(it);
 	}
 
 	bool exist(std::size_t line_num) const
@@ -167,6 +175,19 @@ public:
 				std::cout << "\"" << b.data.get<std::string>() << "\"(pending)" << std::endl;
 			else
 				std::cout << "line " << b.data.get<std::size_t>() << std::endl;
+		}
+	}
+
+	void reset()
+	{
+		for(auto& it:m_pending) {
+			it.second.second=true;
+			for(auto& b:m_breakpoints) {
+				if(b.id==it.second.first) {
+					b.data.emplace<std::string>(it.first);
+					break;
+				}
+			}
 		}
 	}
 };
@@ -216,6 +237,14 @@ bool step_into_function = false;
 function_map_t func_map;
 breakpoint_recorder breakpoints;
 
+void reset_status()
+{
+	exec_by_step=false;
+	current_level=0;
+	step_into_function=false;
+	breakpoints.reset();
+}
+
 bool covscript_debugger()
 {
 	std::string cmd, func, args;
@@ -263,10 +292,10 @@ void cs_debugger_step_callback(cs::statement_base *stmt)
 	if (!exec_by_step && stmt->get_file_path() == path && breakpoints.exist(stmt->get_line_num())) {
 		std::cout << "\nHit breakpoint, at \"" << stmt->get_file_path() << "\", line " << stmt->get_line_num()
 		          << std::endl;
-		current_level = context->instance->fcall_stack.size();
+		current_level = cs::current_process->stack.size();
 		exec_by_step = true;
 	}
-	if (exec_by_step && (step_into_function ? true : context->instance->fcall_stack.size() <= current_level)) {
+	if (exec_by_step && (step_into_function ? true : cs::current_process->stack.size() <= current_level)) {
 		std::cout << stmt->get_line_num() << "\t" << stmt->get_raw_code() << std::endl;
 		while (covscript_debugger());
 	}
@@ -281,7 +310,7 @@ void cs_debugger_func_callback(const std::string &decl, cs::statement_base *stmt
 {
 	std::cout << "\nHit breakpoint, at \"" << stmt->get_file_path() << "\", line " << stmt->get_line_num() << ", "
 	          << decl << std::endl;
-	current_level = context->instance->fcall_stack.size();
+	current_level = cs::current_process->stack.size();
 	exec_by_step = true;
 }
 
@@ -411,7 +440,7 @@ void covscript_main(int args_size, const char *args[])
 		func_map.add_func("backtrace", "bt", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
-			for (auto &func:context->instance->stack_backtrace)
+			for (auto &func:cs::current_process->stack_backtrace)
 				std::cout << func << std::endl;
 			std::cout << "function main()" << std::endl;
 			return true;
@@ -503,11 +532,13 @@ void covscript_main(int args_size, const char *args[])
 				std::cerr << "The interpreter instance has exited unexpectedly, up to " << time() - start_time << "ms."
 				          << std::endl;
 				context = nullptr;
+				reset_status();
 				throw;
 			}
 			std::cout << "The interpreter instance has exited normally, up to " << time() - start_time << "ms."
 			          << std::endl;
 			context = nullptr;
+			reset_status();
 			return true;
 		});
 		func_map.add_func("print", "p", [](const std::string &cmd) -> bool {

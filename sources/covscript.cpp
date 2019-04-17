@@ -76,7 +76,7 @@ std::ostream &operator<<(std::ostream &out, const cs_impl::any &val)
 }
 
 namespace cs_impl {
-	cov::allocator<any::proxy, default_allocate_buffer_size, default_allocator_provider> any::allocator;
+    default_allocator<any::proxy> any::allocator;
 	cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t array_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t array_iterator_ext = cs::make_shared_namespace<cs::name_space>();
@@ -297,21 +297,21 @@ namespace cs {
 		// Init Grammars
 		(*context->compiler)
 		// Expression Grammar
-		.add_method({new token_expr(cov::tree<token_base *>()), new token_endline(0)},
+		.add_method({new token_expr(tree_type<token_base *>()), new token_endline(0)},
 		new method_expression)
 		// Import Grammar
-		.add_method({new token_action(action_types::import_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::import_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_import)
 		// Package Grammar
-		.add_method({new token_action(action_types::package_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::package_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_package)
 		// Involve Grammar
-		.add_method({new token_action(action_types::using_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::using_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_involve)
 		// Var Grammar
-		.add_method({new token_action(action_types::var_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::var_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_var)
-		.add_method({new token_action(action_types::constant_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::constant_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)},
 		new method_constant)
 		// End Grammar
@@ -319,40 +319,40 @@ namespace cs {
 		// Block Grammar
 		.add_method({new token_action(action_types::block_), new token_endline(0)}, new method_block)
 		// Namespace Grammar
-		.add_method({new token_action(action_types::namespace_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::namespace_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_namespace)
 		// If Grammar
-		.add_method({new token_action(action_types::if_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::if_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_if)
 		// Else Grammar
 		.add_method({new token_action(action_types::else_), new token_endline(0)}, new method_else)
 		// Switch Grammar
-		.add_method({new token_action(action_types::switch_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::switch_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_switch)
 		// Case Grammar
-		.add_method({new token_action(action_types::case_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::case_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_case)
 		// Default Grammar
 		.add_method({new token_action(action_types::default_), new token_endline(0)},
 		new method_default)
 		// While Grammar
-		.add_method({new token_action(action_types::while_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::while_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_while)
 		// Until Grammar
-		.add_method({new token_action(action_types::until_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::until_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_until)
 		// Loop Grammar
 		.add_method({new token_action(action_types::loop_), new token_endline(0)}, new method_loop)
 		// For Grammar
-		.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::for_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_for)
-		.add_method({new token_action(action_types::for_), new token_expr(cov::tree<token_base *>()),
-			            new token_action(action_types::do_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::for_), new token_expr(tree_type<token_base *>()),
+			            new token_action(action_types::do_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_for_do)
-		.add_method({new token_action(action_types::foreach_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::foreach_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_foreach)
-		.add_method({new token_action(action_types::foreach_), new token_expr(cov::tree<token_base *>()),
-			            new token_action(action_types::do_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::foreach_), new token_expr(tree_type<token_base *>()),
+			            new token_action(action_types::do_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_foreach_do)
 		// Break Grammar
 		.add_method({new token_action(action_types::break_), new token_endline(0)}, new method_break)
@@ -360,29 +360,29 @@ namespace cs {
 		.add_method({new token_action(action_types::continue_), new token_endline(0)},
 		new method_continue)
 		// Function Grammar
-		.add_method({new token_action(action_types::function_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::function_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_function)
-		.add_method({new token_action(action_types::function_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::function_), new token_expr(tree_type<token_base *>()),
 			            new token_action(action_types::override_), new token_endline(0)},
 		new method_function)
 		// Return Grammar
-		.add_method({new token_action(action_types::return_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::return_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_return)
 		.add_method({new token_action(action_types::return_), new token_endline(0)},
 		new method_return_no_value)
 		// Struct Grammar
-		.add_method({new token_action(action_types::struct_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::struct_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_struct)
-		.add_method({new token_action(action_types::struct_), new token_expr(cov::tree<token_base *>()),
-			            new token_action(action_types::extends_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::struct_), new token_expr(tree_type<token_base *>()),
+			            new token_action(action_types::extends_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_struct)
 		// Try Grammar
 		.add_method({new token_action(action_types::try_), new token_endline(0)}, new method_try)
 		// Catch Grammar
-		.add_method({new token_action(action_types::catch_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::catch_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_catch)
 		// Throw Grammar
-		.add_method({new token_action(action_types::throw_), new token_expr(cov::tree<token_base *>()),
+		.add_method({new token_action(action_types::throw_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_throw);
 		// Init Runtime
 		context->instance->storage
@@ -464,7 +464,7 @@ namespace cs {
 
 	cs::var eval(const context_t &context, const std::string &expr)
 	{
-		cov::tree<cs::token_base *> tree;
+		tree_type<cs::token_base *> tree;
 		std::deque<char> buff;
 		for (auto &ch:expr)
 			buff.push_back(ch);
