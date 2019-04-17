@@ -104,6 +104,33 @@ namespace cs_impl {
 	cs::namespace_t path_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t path_type_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t path_info_ext = cs::make_shared_namespace<cs::name_space>();
+	void gc_mark_reachable_static()
+	{
+		except_ext->gc_mark_reachable();
+		array_ext->gc_mark_reachable();
+		array_iterator_ext->gc_mark_reachable();
+		char_ext->gc_mark_reachable();
+		math_ext->gc_mark_reachable();
+		math_const_ext->gc_mark_reachable();
+		list_ext->gc_mark_reachable();
+		list_iterator_ext->gc_mark_reachable();
+		hash_map_ext->gc_mark_reachable();
+		pair_ext->gc_mark_reachable();
+		context_ext->gc_mark_reachable();
+		runtime_ext->gc_mark_reachable();
+		string_ext->gc_mark_reachable();
+		iostream_ext->gc_mark_reachable();
+		seekdir_ext->gc_mark_reachable();
+		openmode_ext->gc_mark_reachable();
+		istream_ext->gc_mark_reachable();
+		ostream_ext->gc_mark_reachable();
+		system_ext->gc_mark_reachable();
+		console_ext->gc_mark_reachable();
+		file_ext->gc_mark_reachable();
+		path_ext->gc_mark_reachable();
+		path_type_ext->gc_mark_reachable();
+		path_info_ext->gc_mark_reachable();
+	}
 }
 
 namespace cs {

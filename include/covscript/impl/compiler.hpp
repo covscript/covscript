@@ -239,7 +239,7 @@ namespace cs {
 			signal_types::and_, signal_types::or_
 		};
 		// Constants Pool
-		std::vector<var> constant_pool;
+		std::vector<var_guard> constant_pool;
 		// Status
 		bool inside_lambda = false;
 		bool no_optimize = false;
@@ -363,15 +363,15 @@ namespace cs {
 		void utilize_metadata()
 		{
 			for (auto &it:constant_pool)
-				it.constant();
+				it.value.constant();
 		}
 
 		void add_constant(const var &val)
 		{
 			if (!val.is_protect()) {
 				constant_pool.push_back(val);
-				constant_pool.back().protect();
-				constant_pool.back().mark_as_rvalue(false);
+				constant_pool.back().value.protect();
+				constant_pool.back().value.mark_as_rvalue(false);
 			}
 		}
 

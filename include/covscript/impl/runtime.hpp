@@ -20,6 +20,7 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/impl/symbols.hpp>
+#include <iostream>
 
 namespace cs {
 	class domain_manager {
@@ -40,15 +41,17 @@ namespace cs {
 		{
 			if(var::gc_require())
 			{
+				//std::cerr<<"GC Start"<<std::endl;
 				var::gc_start();
 				for(auto& it:current_process->stack)
 					it.gc_mark_reachable();
 				for(auto& domain:m_data)
 				{
 					for(auto& it:*domain)
-						it.second.gc_mark_reachable();
+					    it.second.gc_mark_reachable();
 				}
 				var::gc_clean();
+				//std::cerr<<"GC Finish"<<std::endl;
 			}
 		}
 
@@ -95,8 +98,8 @@ namespace cs {
 
 		void clear_domain()
 		{
+            start_gc();
 			m_data.front()->clear();
-			start_gc();
 		}
 
 		bool exist_record(const string &name)

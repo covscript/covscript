@@ -20,6 +20,7 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/import/mozart/traits.hpp>
+#include <iostream>
 
 namespace cs_impl {
 // Name Demangle
@@ -288,6 +289,8 @@ namespace cs_impl {
 	template<typename T>
 	static void gc_mark_reachable(T&){}
 
+	void gc_mark_reachable_static();
+
 	/*
 	* Implementation of Any Container
 	* A customized version of Mozart Any(cov::any)
@@ -424,7 +427,9 @@ namespace cs_impl {
 			baseHolder *data = nullptr;
             gc_status status=gc_status::reachable;
 
-			proxy() = default;
+			proxy() = delete;
+
+			proxy(const proxy&)=delete;
 
 			proxy(baseHolder *d) : data(d) {}
 
@@ -501,11 +506,13 @@ namespace cs_impl {
 
         static void gc_clean()
         {
+		    gc_mark_reachable_static();
 		    std::vector<proxy*> new_set;
             for(auto& it:root_set) {
-                if (it->status == gc_status::recycle)
+                if (it->status == gc_status::recycle) {
+                    //std::cout<<"Free Object:"<<cxx_demangle(it->data->type().name())<<std::endl;
                     allocator.free(it);
-                else
+                }else
                     new_set.emplace_back(it);
             }
             std::swap(root_set, new_set);
@@ -539,7 +546,7 @@ namespace cs_impl {
             {
                 if(mDat->status!=gc_status::deposit)
                 {
-                    mDat->status=gc_status ::reachable;
+                    mDat->status=gc_status::reachable;
                     mDat->data->gc_mark_reachable();
                 }
             }

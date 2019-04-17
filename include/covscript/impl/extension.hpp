@@ -386,6 +386,12 @@ namespace cs_impl {
 		ptr.data.gc_mark_reachable();
 	}
 
+	template<> void gc_mark_reachable<cs::type>(cs::type& t)
+	{
+		if(t.extensions.get() != nullptr)
+			t.extensions->gc_mark_reachable();
+	}
+
 	template<> void gc_mark_reachable<cs::structure>(cs::structure& s)
 	{
 		s.gc_mark_reachable();
@@ -411,7 +417,10 @@ namespace cs_impl {
 	template<> void gc_mark_reachable<cs::hash_map >(cs::hash_map & map)
 	{
 		for(auto& it:map)
+		{
+			it.first.gc_mark_reachable();
 			it.second.gc_mark_reachable();
+		}
 	}
 
 	template<> void gc_mark_reachable<cs::pair>(cs::pair& p)
