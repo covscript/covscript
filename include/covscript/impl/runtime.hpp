@@ -235,7 +235,7 @@ namespace cs {
 		void involve_domain(const domain_type &domain, bool is_override = false)
 		{
 			for (auto &it:domain)
-				add_var(it.first, it.second, is_override);
+				add_var(it.first, domain.get_var_by_id(it.second), is_override);
 		}
 	};
 
