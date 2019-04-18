@@ -506,7 +506,7 @@ namespace cs {
 
 #ifdef CS_DEBUGGER
 		statement_function(std::string name, std::string decl, const std::vector<std::string> &args,
-		                   const std::deque<statement_base *> &body, bool is_override, bool is_vargs const context_t &c,
+		                   const std::deque<statement_base *> &body, bool is_override, bool is_vargs, const context_t &c,
 		                   token_base *ptr)
 			: statement_base(c, ptr), mName(std::move(name)), mFunc(c, decl, this, args, body, is_vargs), mOverride(is_override), mDecl(decl), mArgs(args), mBlock(body) {}
 #else

@@ -164,7 +164,7 @@ namespace cs {
 		function(const function &) = default;
 
 #ifdef CS_DEBUGGER
-		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs=false):mContext(std::move(std::move(c))), mDecl(std::move(decl)), mStmt(stmt), mArgs(std::move(args)), mArgs(std::move(args)), mBody(std::move(body)) {}
+		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs=false):mContext(std::move(std::move(c))), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mArgs(std::move(args)), mBody(std::move(body)) {}
 #else
 
 		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs=false) : mContext(
