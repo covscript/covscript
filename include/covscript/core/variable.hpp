@@ -409,8 +409,6 @@ namespace cs_impl {
 			std::size_t refcount = 1;
 			baseHolder *data = nullptr;
 
-			proxy() = default;
-
 			proxy(std::size_t rc, baseHolder *d) : refcount(rc), data(d) {}
 
 			proxy(short pl, std::size_t rc, baseHolder *d) : protect_level(pl), refcount(rc), data(d) {}
@@ -674,7 +672,7 @@ namespace cs_impl {
 		}
 
 		template<typename T>
-		T &val(bool raw = false)
+		T &val() const
 		{
 			if (typeid(T) != this->type())
 				throw cov::error("E0006");
@@ -682,19 +680,7 @@ namespace cs_impl {
 				throw cov::error("E0005");
 			if (this->mDat->protect_level > 1)
 				throw cov::error("E000K");
-			if (!raw)
-				clone();
 			return static_cast<holder<T> *>(this->mDat->data)->data();
-		}
-
-		template<typename T>
-		const T &val(bool raw = false) const
-		{
-			if (typeid(T) != this->type())
-				throw cov::error("E0006");
-			if (this->mDat == nullptr)
-				throw cov::error("E0005");
-			return static_cast<const holder<T> *>(this->mDat->data)->data();
 		}
 
 		template<typename T>
@@ -704,7 +690,7 @@ namespace cs_impl {
 				throw cov::error("E0006");
 			if (this->mDat == nullptr)
 				throw cov::error("E0005");
-			return static_cast<const holder<T> *>(this->mDat->data)->data();
+			return static_cast<holder<T> *>(this->mDat->data)->data();
 		}
 
 		template<typename T>

@@ -404,9 +404,9 @@ namespace cs {
 		{
 			if (s.m_data->count("parent") > 0) {
 				var &_p = (*s.m_data)["parent"];
-				auto &_parent = _p.val<structure>(true);
+				auto &_parent = _p.val<structure>();
 				var p = copy(_p);
-				auto &parent = p.val<structure>(true);
+				auto &parent = p.val<structure>();
 				m_data->emplace("parent", p);
 				for (auto &it:*parent.m_data) {
 					// Handle overriding

@@ -144,11 +144,11 @@ namespace cs {
 			}
 		}
 		else if (a.type() == typeid(namespace_t))
-			return a.val<namespace_t>(true)->get_var(static_cast<token_id *>(b)->get_id());
+			return a.val<namespace_t>()->get_var(static_cast<token_id *>(b)->get_id());
 		else if (a.type() == typeid(type))
-			return a.val<type>(true).get_var(static_cast<token_id *>(b)->get_id());
+			return a.val<type>().get_var(static_cast<token_id *>(b)->get_id());
 		else if (a.type() == typeid(structure)) {
-			var &val = a.val<structure>(true).get_var(static_cast<token_id *>(b)->get_id());
+			var &val = a.val<structure>().get_var(static_cast<token_id *>(b)->get_id());
 			if (val.type() == typeid(callable) && val.const_val<callable>().is_member_fn())
 				return var::make_protect<object_method>(a, val);
 			else
@@ -295,13 +295,13 @@ namespace cs {
 			if (b.usable())
 				throw runtime_error("Unsupported operator operations(Inc).");
 			else
-				return a.val<number>(true)++;
+				return a.val<number>()++;
 		}
 		else {
 			if (!b.usable())
 				throw runtime_error("Unsupported operator operations(Inc).");
 			else
-				return ++b.val<number>(true);
+				return ++b.val<number>();
 		}
 	}
 
@@ -311,13 +311,13 @@ namespace cs {
 			if (b.usable())
 				throw runtime_error("Unsupported operator operations(Dec).");
 			else
-				return a.val<number>(true)--;
+				return a.val<number>()--;
 		}
 		else {
 			if (!b.usable())
 				throw runtime_error("Unsupported operator operations(Dec).");
 			else
-				return --b.val<number>(true);
+				return --b.val<number>();
 		}
 	}
 
@@ -352,7 +352,7 @@ namespace cs {
 			if (b.const_val<number>() >= 0) {
 				posit = b.const_val<number>();
 				if (posit >= carr.size()) {
-					auto &arr = a.val<array>(true);
+					auto &arr = a.val<array>();
 					for (std::size_t i = posit - arr.size() + 1; i > 0; --i)
 						arr.emplace_back(number(0));
 				}
@@ -367,7 +367,7 @@ namespace cs {
 		else if (a.type() == typeid(hash_map)) {
 			const auto &cmap = a.const_val<hash_map>();
 			if (cmap.count(b) == 0)
-				a.val<hash_map>(true).emplace(copy(b), number(0));
+				a.val<hash_map>().emplace(copy(b), number(0));
 			return cmap.at(b);
 		}
 		else if (a.type() == typeid(string)) {
