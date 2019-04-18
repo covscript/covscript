@@ -332,7 +332,7 @@ namespace cs {
 
 		var_id &operator=(const var_id &) = default;
 
-		var_id &operator=(var_id &&) noexcept = default;
+		var_id &operator=(var_id &&) = default;
 
 		inline void set_id(const std::string &id)
 		{
