@@ -310,35 +310,46 @@ namespace cs {
 	};
 
 	struct domain_ref final {
-		domain_type* domain=nullptr;
-		domain_ref(domain_type* ptr):domain(ptr) {}
+		domain_type *domain = nullptr;
+
+		domain_ref(domain_type *ptr) : domain(ptr) {}
 	};
 
 	class var_id final {
 		friend class domain_type;
+
 		mutable std::shared_ptr<domain_ref> m_ref;
-		mutable std::size_t m_slot_id=0;
+		mutable std::size_t m_slot_id = 0;
 		std::string m_id;
 	public:
-		var_id()=delete;
-		var_id(const std::string& name):m_id(name) {}
-		var_id(const var_id&)=default;
-		var_id(var_id&&) noexcept=default;
-		var_id& operator=(const var_id&)=default;
-		var_id& operator=(var_id&&) noexcept=default;
-		inline void set_id(const std::string& id)
+		var_id() = delete;
+
+		var_id(const std::string &name) : m_id(name) {}
+
+		var_id(const var_id &) = default;
+
+		var_id(var_id &&) noexcept = default;
+
+		var_id &operator=(const var_id &) = default;
+
+		var_id &operator=(var_id &&) noexcept = default;
+
+		inline void set_id(const std::string &id)
 		{
-			m_id=id;
+			m_id = id;
 		}
-		inline const std::string& get_id() const noexcept
+
+		inline const std::string &get_id() const noexcept
 		{
 			return m_id;
 		}
-		inline operator std::string&() noexcept
+
+		inline operator std::string &() noexcept
 		{
 			return m_id;
 		}
-		inline operator const std::string&() const noexcept
+
+		inline operator const std::string &() const noexcept
 		{
 			return m_id;
 		}
@@ -348,138 +359,161 @@ namespace cs {
 		map_t<std::string, std::size_t> m_reflect;
 		std::shared_ptr<domain_ref> m_ref;
 		std::vector<var> m_slot;
-		inline std::size_t get_slot_id(const std::string& name) const
+
+		inline std::size_t get_slot_id(const std::string &name) const
 		{
 			if (m_reflect.count(name) > 0)
 				return m_reflect.at(name);
 			else
 				throw runtime_error("Use of undefined variable \"" + name + "\".");
 		}
+
 	public:
-		domain_type():m_ref(std::make_shared<domain_ref>(this)) {}
-		domain_type(const domain_type& domain):m_reflect(domain.m_reflect), m_ref(std::make_shared<domain_ref>(this)), m_slot(domain.m_slot) {}
-		domain_type(domain_type&& domain) noexcept
+		domain_type() : m_ref(std::make_shared<domain_ref>(this)) {}
+
+		domain_type(const domain_type &domain) : m_reflect(domain.m_reflect), m_ref(std::make_shared<domain_ref>(this)),
+			m_slot(domain.m_slot) {}
+
+		domain_type(domain_type &&domain) noexcept
 		{
 			std::swap(m_reflect, domain.m_reflect);
 			std::swap(m_slot, domain.m_slot);
 			std::swap(m_ref, domain.m_ref);
-			m_ref->domain=this;
+			m_ref->domain = this;
 		}
+
 		~domain_type()
 		{
-			m_ref->domain=nullptr;
+			m_ref->domain = nullptr;
 		}
+
 		void clear()
 		{
 			m_reflect.clear();
 			m_slot.clear();
 		}
-		bool exist(const std::string& name) const
+
+		bool exist(const std::string &name) const
 		{
-			return m_reflect.count(name)>0;
+			return m_reflect.count(name) > 0;
 		}
-		bool exist(const var_id& id) const
+
+		bool exist(const var_id &id) const
 		{
-			if(id.m_ref!=m_ref)
-				return m_reflect.count(id.m_id)>0;
+			if (id.m_ref != m_ref)
+				return m_reflect.count(id.m_id) > 0;
 			else
 				return true;
 		}
-		domain_type& add_var(const std::string& name, const var& val)
+
+		domain_type &add_var(const std::string &name, const var &val)
 		{
-			if(m_reflect.count(name)==0) {
+			if (m_reflect.count(name) == 0) {
 				m_slot.push_back(val);
-				m_reflect.emplace(name, m_slot.size()-1);
+				m_reflect.emplace(name, m_slot.size() - 1);
 			}
 			else
-				m_slot[m_reflect[name]]=val;
+				m_slot[m_reflect[name]] = val;
 			return *this;
 		}
-		domain_type& add_var(const var_id& id, const var& val)
+
+		domain_type &add_var(const var_id &id, const var &val)
 		{
-			if(m_reflect.count(id.m_id)==0) {
+			if (m_reflect.count(id.m_id) == 0) {
 				m_slot.push_back(val);
-				m_reflect.emplace(id.m_id, m_slot.size()-1);
-				id.m_slot_id=m_slot.size()-1;
-				id.m_ref=m_ref;
+				m_reflect.emplace(id.m_id, m_slot.size() - 1);
+				id.m_slot_id = m_slot.size() - 1;
+				id.m_ref = m_ref;
 			}
 			else {
-				if(id.m_ref!=m_ref) {
-					id.m_slot_id=m_reflect[id.m_id];
-					id.m_ref=m_ref;
+				if (id.m_ref != m_ref) {
+					id.m_slot_id = m_reflect[id.m_id];
+					id.m_ref = m_ref;
 				}
-				m_slot[id.m_slot_id]=val;
+				m_slot[id.m_slot_id] = val;
 			}
 			return *this;
 		}
-		var& get_var(const var_id& id) noexcept
+
+		var &get_var(const var_id &id) noexcept
 		{
-			if(id.m_ref!=m_ref) {
-				id.m_slot_id=get_slot_id(id.m_id);
-				id.m_ref=m_ref;
+			if (id.m_ref != m_ref) {
+				id.m_slot_id = get_slot_id(id.m_id);
+				id.m_ref = m_ref;
 			}
 			return m_slot[id.m_slot_id];
 		}
-		const var& get_var(const var_id& id) const noexcept
+
+		const var &get_var(const var_id &id) const noexcept
 		{
-			if(id.m_ref!=m_ref) {
-				id.m_slot_id=get_slot_id(id.m_id);
-				id.m_ref=m_ref;
+			if (id.m_ref != m_ref) {
+				id.m_slot_id = get_slot_id(id.m_id);
+				id.m_ref = m_ref;
 			}
 			return m_slot[id.m_slot_id];
 		}
-		var& get_var(const std::string& name)
+
+		var &get_var(const std::string &name)
 		{
 			if (m_reflect.count(name) > 0)
 				return m_slot[m_reflect.at(name)];
 			else
 				throw runtime_error("Use of undefined variable \"" + name + "\".");
 		}
-		const var& get_var(const std::string& name) const
+
+		const var &get_var(const std::string &name) const
 		{
 			if (m_reflect.count(name) > 0)
 				return m_slot[m_reflect.at(name)];
 			else
 				throw runtime_error("Use of undefined variable \"" + name + "\".");
 		}
-		var& get_var_no_check(const var_id& id) noexcept
+
+		var &get_var_no_check(const var_id &id) noexcept
 		{
-			if(id.m_ref!=m_ref) {
-				id.m_slot_id=m_reflect.at(id.m_id);
-				id.m_ref=m_ref;
+			if (id.m_ref != m_ref) {
+				id.m_slot_id = m_reflect.at(id.m_id);
+				id.m_ref = m_ref;
 			}
 			return m_slot[id.m_slot_id];
 		}
-		const var& get_var_no_check(const var_id& id) const noexcept
+
+		const var &get_var_no_check(const var_id &id) const noexcept
 		{
-			if(id.m_ref!=m_ref) {
-				id.m_slot_id=m_reflect.at(id.m_id);
-				id.m_ref=m_ref;
+			if (id.m_ref != m_ref) {
+				id.m_slot_id = m_reflect.at(id.m_id);
+				id.m_ref = m_ref;
 			}
 			return m_slot[id.m_slot_id];
 		}
-		var& get_var_no_check(const std::string& name)
+
+		var &get_var_no_check(const std::string &name)
 		{
 			return m_slot[m_reflect.at(name)];
 		}
-		const var& get_var_no_check(const std::string& name) const
+
+		const var &get_var_no_check(const std::string &name) const
 		{
 			return m_slot[m_reflect.at(name)];
 		}
+
 		auto begin() const
 		{
 			return m_reflect.cbegin();
 		}
+
 		auto end() const
 		{
 			return m_reflect.cend();
 		}
+
 		// Caution! Only use for traverse!
-		inline var& get_var_by_id(std::size_t id)
+		inline var &get_var_by_id(std::size_t id)
 		{
 			return m_slot[id];
 		}
-		inline const var& get_var_by_id(std::size_t id) const
+
+		inline const var &get_var_by_id(std::size_t id) const
 		{
 			return m_slot[id];
 		}
@@ -697,7 +731,7 @@ namespace cs {
 			return *this;
 		}
 
-		name_space &add_var(const var_id& id, const var &var)
+		name_space &add_var(const var_id &id, const var &var)
 		{
 			m_data->add_var(id, var);
 			return *this;
@@ -713,12 +747,12 @@ namespace cs {
 			return m_data->get_var(name);
 		}
 
-		var &get_var(const var_id& id)
+		var &get_var(const var_id &id)
 		{
 			return m_data->get_var(id);
 		}
 
-		const var &get_var(const var_id& id) const
+		const var &get_var(const var_id &id) const
 		{
 			return m_data->get_var(id);
 		}
@@ -730,7 +764,8 @@ namespace cs {
 	};
 
 	template<typename T>
-	var& type::get_var(T && name) const {
+	var &type::get_var(T &&name) const
+	{
 		if (extensions.get() != nullptr)
 			return extensions->get_var(name);
 		else

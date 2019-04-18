@@ -211,7 +211,8 @@ namespace cs {
 		}
 
 		template<typename T>
-		domain_manager &add_type(T &&name, const std::function<var()> &func, const std::type_index &id, namespace_t ext)
+		domain_manager &
+		add_type(T &&name, const std::function<var()> &func, const std::type_index &id, namespace_t ext)
 		{
 			return add_var(name, var::make_protect<type>(func, id, ext));
 		}
@@ -224,7 +225,8 @@ namespace cs {
 		}
 
 		template<typename T>
-		domain_manager &add_buildin_type(T &&name, const std::function<var()> &func, const std::type_index &id, namespace_t ext)
+		domain_manager &
+		add_buildin_type(T &&name, const std::function<var()> &func, const std::type_index &id, namespace_t ext)
 		{
 			add_record(name);
 			return add_var(name, var::make_protect<type>(func, id, ext));
