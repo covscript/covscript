@@ -393,12 +393,12 @@ namespace cs {
 			m_slot.clear();
 		}
 
-		bool exist(const std::string &name) const
+		bool exist(const std::string &name) const noexcept
 		{
 			return m_reflect.count(name) > 0;
 		}
 
-		bool exist(const var_id &id) const
+		bool exist(const var_id &id) const noexcept
 		{
 			if (id.m_ref != m_ref)
 				return m_reflect.count(id.m_id) > 0;
@@ -435,7 +435,7 @@ namespace cs {
 			return *this;
 		}
 
-		var &get_var(const var_id &id) noexcept
+		var &get_var(const var_id &id)
 		{
 			if (id.m_ref != m_ref) {
 				id.m_slot_id = get_slot_id(id.m_id);
@@ -444,7 +444,7 @@ namespace cs {
 			return m_slot[id.m_slot_id];
 		}
 
-		const var &get_var(const var_id &id) const noexcept
+		const var &get_var(const var_id &id) const
 		{
 			if (id.m_ref != m_ref) {
 				id.m_slot_id = get_slot_id(id.m_id);
@@ -487,12 +487,12 @@ namespace cs {
 			return m_slot[id.m_slot_id];
 		}
 
-		var &get_var_no_check(const std::string &name)
+		var &get_var_no_check(const std::string &name) noexcept
 		{
 			return m_slot[m_reflect.at(name)];
 		}
 
-		const var &get_var_no_check(const std::string &name) const
+		const var &get_var_no_check(const std::string &name) const noexcept
 		{
 			return m_slot[m_reflect.at(name)];
 		}
