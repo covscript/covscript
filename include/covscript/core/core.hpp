@@ -374,12 +374,10 @@ namespace cs {
 		domain_type(const domain_type &domain) : m_reflect(domain.m_reflect), m_ref(std::make_shared<domain_ref>(this)),
 			m_slot(domain.m_slot) {}
 
-		domain_type(domain_type &&domain) noexcept
+		domain_type(domain_type &&domain) noexcept:m_ref(std::make_shared<domain_ref>(this))
 		{
 			std::swap(m_reflect, domain.m_reflect);
 			std::swap(m_slot, domain.m_slot);
-			std::swap(m_ref, domain.m_ref);
-			m_ref->domain = this;
 		}
 
 		~domain_type()
