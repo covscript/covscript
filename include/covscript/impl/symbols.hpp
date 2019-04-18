@@ -23,7 +23,7 @@
 
 namespace cs {
 	enum class token_types {
-		null, endline, action, signal, id, value, sblist, mblist, lblist, expr, arglist, array, parallel
+		null, endline, action, signal, id, vargs, expand, value, sblist, mblist, lblist, expr, arglist, array, parallel
 	};
 	enum class action_types {
 		import_,
@@ -104,7 +104,9 @@ namespace cs {
 		escape_,
 		minus_,
 		vardef_,
-		varprt_
+		varprt_,
+		vargs_,
+		error_
 	};
 	enum class constant_values {
 		local_namepace, global_namespace
@@ -226,7 +228,10 @@ namespace cs {
 	public:
 		token_signal() = delete;
 
-		explicit token_signal(signal_types t) : mType(t) {}
+		explicit token_signal(signal_types t) : mType(t) {
+			if(t==signal_types::error_)
+				throw runtime_error("Wrong grammar for signals.");
+		}
 
 		token_signal(signal_types t, std::size_t line) : token_base(line), mType(t) {}
 
@@ -266,6 +271,50 @@ namespace cs {
 			return true;
 		}
 	};
+
+    class token_vargs final : public token_base {
+        std::string mId;
+    public:
+        token_vargs() = delete;
+
+        explicit token_vargs(const std::string &id) : mId(id) {}
+
+        token_types get_type() const noexcept override
+        {
+            return token_types::vargs;
+        }
+
+        const std::string &get_id() const noexcept
+        {
+            return this->mId;
+        }
+
+        bool dump(std::ostream &o) const override
+        {
+            o << "< Variable Arguments List, ID = \"" << mId << "\" >";
+            return true;
+        }
+    };
+
+    class token_expand final : public token_base {
+        tree_type<token_base *> mTree;
+    public:
+        token_expand() = delete;
+
+        explicit token_expand(tree_type<token_base *> tree) : mTree(std::move(tree)) {}
+
+        token_types get_type() const noexcept override
+        {
+            return token_types::expand;
+        }
+
+        tree_type<token_base *> &get_tree() noexcept
+        {
+            return this->mTree;
+        }
+
+        bool dump(std::ostream &) const override;
+    };
 
 	class token_value final : public token_base {
 		var mVal;

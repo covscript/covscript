@@ -325,17 +325,35 @@ namespace cs {
 	{
 		if (a.type() == typeid(callable)) {
 			vector args;
+			token_base *ptr = nullptr;
 			args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
-			for (auto &tree:static_cast<token_arglist *>(b)->get_arglist())
-				args.push_back(lvalue(parse_expr(tree.root())));
+			for (auto &tree:static_cast<token_arglist *>(b)->get_arglist()) {
+				ptr = tree.root().data();
+				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
+					const array &arr = parse_expr(
+							static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
+					for (auto &it:arr)
+						args.push_back(lvalue(it));
+				} else
+					args.push_back(lvalue(parse_expr(tree.root())));
+			}
 			return a.const_val<callable>().call(args);
 		}
 		else if (a.type() == typeid(object_method)) {
 			const auto &om = a.const_val<object_method>();
 			vector args{om.object};
+			token_base *ptr = nullptr;
 			args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
-			for (auto &tree:static_cast<token_arglist *>(b)->get_arglist())
-				args.push_back(lvalue(parse_expr(tree.root())));
+			for (auto &tree:static_cast<token_arglist *>(b)->get_arglist()) {
+				ptr = tree.root().data();
+				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
+					const array &arr = parse_expr(
+							static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
+					for (auto &it:arr)
+						args.push_back(lvalue(it));
+				} else
+					args.push_back(lvalue(parse_expr(tree.root())));
+			}
 			return om.callable.const_val<callable>().call(args);
 		}
 		else

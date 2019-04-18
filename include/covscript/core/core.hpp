@@ -155,6 +155,7 @@ namespace cs {
 		std::string mDecl;
 		statement_base *mStmt;
 #endif
+		bool mIsVargs=false;
 		std::vector<std::string> mArgs;
 		std::deque<statement_base *> mBody;
 	public:
@@ -163,11 +164,11 @@ namespace cs {
 		function(const function &) = default;
 
 #ifdef CS_DEBUGGER
-		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body):mContext(std::move(std::move(c))), mDecl(std::move(decl)), mStmt(stmt), mArgs(std::move(args)), mBody(std::move(body)) {}
+		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs=false):mContext(std::move(std::move(c))), mDecl(std::move(decl)), mStmt(stmt), mArgs(std::move(args)), mArgs(std::move(args)), mBody(std::move(body)) {}
 #else
 
-		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body) : mContext(
-			    std::move(std::move(c))), mArgs(std::move(args)), mBody(std::move(body)) {}
+		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs=false) : mContext(
+			    std::move(std::move(c))), mIsVargs(is_vargs), mArgs(std::move(args)), mBody(std::move(body)) {}
 
 #endif
 

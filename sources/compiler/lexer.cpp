@@ -19,6 +19,7 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/impl/compiler.hpp>
+#include <iostream>
 
 namespace cs {
 	void compiler_type::process_char_buff(const std::deque<char> &buff, std::deque<token_base *> &tokens)
@@ -125,31 +126,28 @@ namespace cs {
 				tokens.push_back(new token_id(tmp));
 				tmp.clear();
 				break;
-			case token_types::signal:
-				if (issignal(buff[i])) {
-					if (tmp.size() == 1) {
-						if (signal_map.exist(tmp + buff[i])) {
-							tokens.push_back(new token_signal(signal_map.match(tmp + buff[i])));
-							tmp.clear();
-						}
-						else {
-							if (signal_map.exist(tmp)) {
-								tokens.push_back(new token_signal(signal_map.match(tmp)));
-								tmp.clear();
-							}
-							tmp += buff[i];
-						}
-					}
-					else
-						tmp += buff[i];
-					++i;
-					continue;
-				}
-				type = token_types::null;
-				if (!tmp.empty())
-					tokens.push_back(new token_signal(signal_map.match(tmp)));
-				tmp.clear();
-				break;
+			case token_types::signal: {
+                if (issignal(buff[i])) {
+                    tmp += buff[i];
+                    ++i;
+                    continue;
+                }
+                type = token_types::null;
+                std::string sig;
+                for(auto& ch:tmp)
+                {
+                    if(!signal_map.exist(sig+ch))
+                    {
+                        tokens.push_back(new token_signal(signal_map.match(sig)));
+                        sig=ch;
+                    } else
+                        sig += ch;
+                }
+                if (!sig.empty())
+                    tokens.push_back(new token_signal(signal_map.match(sig)));
+                tmp.clear();
+                break;
+            }
 			case token_types::value:
 				if (std::isdigit(buff[i]) || buff[i] == '.') {
 					tmp += buff[i];
@@ -183,9 +181,21 @@ namespace cs {
 			}
 			tokens.push_back(new token_id(tmp));
 			break;
-		case token_types::signal:
-			tokens.push_back(new token_signal(signal_map.match(tmp)));
-			break;
+		case token_types::signal:{
+            std::string sig;
+            for(auto& ch:tmp)
+            {
+                if(!signal_map.exist(sig+ch))
+                {
+                    tokens.push_back(new token_signal(signal_map.match(sig)));
+                    sig=ch;
+                } else
+                    sig += ch;
+            }
+            if (!sig.empty())
+                tokens.push_back(new token_signal(signal_map.match(sig)));
+            break;
+		}
 		case token_types::value:
 			tokens.push_back(new_value(parse_number(tmp)));
 			break;

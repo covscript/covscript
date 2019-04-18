@@ -120,7 +120,9 @@ namespace cs {
 			{"--", signal_types::dec_},
 			{":",  signal_types::pair_},
 			{"?",  signal_types::choice_},
-			{"->", signal_types::arrow_}
+			{"->", signal_types::arrow_},
+            {"..", signal_types::error_},
+			{"...",signal_types::vargs_}
 		};
 		mapping<std::string, action_types> action_map = {
 			{"import",    action_types::import_},
@@ -230,7 +232,8 @@ namespace cs {
 			{signal_types::access_, 15},
 			{signal_types::typeid_, 14},
 			{signal_types::new_,    14},
-			{signal_types::gcnew_,  14}
+			{signal_types::gcnew_,  14},
+			{signal_types::vargs_,  20}
 		};
 		std::deque<signal_types> signal_left_associative = {
 			signal_types::asi_, signal_types::addasi_, signal_types::subasi_, signal_types::mulasi_,
