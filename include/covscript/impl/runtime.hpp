@@ -117,11 +117,11 @@ namespace cs {
 		}
 
 		template<typename T>
-		var &get_var(T &&name)
+		inline var &get_var(T &&name)
 		{
 			for (auto &domain:m_data)
 				if (domain->exist(name))
-					return domain->get_var(name);
+					return domain->get_var_no_check(name);
 			throw runtime_error("Use of undefined variable \"" + std::string(name) + "\".");
 		}
 
@@ -144,7 +144,7 @@ namespace cs {
 				for (std::size_t i = 0; i < m_data.size(); ++i) {
 					if (m_set[i].count(name)) {
 						if (m_data[i]->exist(name))
-							return m_data[i]->get_var(name);
+							return m_data[i]->get_var_no_check(name);
 						else
 							break;
 					}
@@ -172,7 +172,7 @@ namespace cs {
 		{
 			if (var_exist_current(name)) {
 				if (is_override)
-					m_data.front()->get_var(name) = val;
+					m_data.front()->get_var_no_check(name) = val;
 				else
 					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 			}

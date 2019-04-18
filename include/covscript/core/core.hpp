@@ -310,13 +310,13 @@ namespace cs {
 	};
 
 	struct domain_ref final {
-	    domain_type* domain=nullptr;
-	    domain_ref(domain_type* ptr):domain(ptr) {}
+		domain_type* domain=nullptr;
+		domain_ref(domain_type* ptr):domain(ptr) {}
 	};
 
 	class var_id final {
-	    friend class domain_type;
-	    mutable std::shared_ptr<domain_ref> m_ref;
+		friend class domain_type;
+		mutable std::shared_ptr<domain_ref> m_ref;
 		mutable std::size_t m_slot_id=0;
 		std::string m_id;
 	public:
@@ -346,9 +346,10 @@ namespace cs {
 
 	class domain_type final {
 		map_t<std::string, std::size_t> m_reflect;
-        std::shared_ptr<domain_ref> m_ref;
+		std::shared_ptr<domain_ref> m_ref;
 		std::vector<var> m_slot;
-		inline std::size_t get_slot_id(const std::string& name) const {
+		inline std::size_t get_slot_id(const std::string& name) const
+		{
 			if (m_reflect.count(name) > 0)
 				return m_reflect.at(name);
 			else
@@ -361,32 +362,32 @@ namespace cs {
 		{
 			std::swap(m_reflect, domain.m_reflect);
 			std::swap(m_slot, domain.m_slot);
-            std::swap(m_ref, domain.m_ref);
-            m_ref->domain=this;
+			std::swap(m_ref, domain.m_ref);
+			m_ref->domain=this;
 		}
 		~domain_type()
-        {
-		    m_ref->domain=nullptr;
-        }
+		{
+			m_ref->domain=nullptr;
+		}
 		void clear()
-        {
-		    m_reflect.clear();
-		    m_slot.clear();
-        }
+		{
+			m_reflect.clear();
+			m_slot.clear();
+		}
 		bool exist(const std::string& name) const
-        {
-            return m_reflect.count(name)>0;
-        }
-        bool exist(const var_id& id) const
-        {
-		    if(id.m_ref!=m_ref)
-		        return m_reflect.count(id.m_id)>0;
-            else
-                return true;
-        }
+		{
+			return m_reflect.count(name)>0;
+		}
+		bool exist(const var_id& id) const
+		{
+			if(id.m_ref!=m_ref)
+				return m_reflect.count(id.m_id)>0;
+			else
+				return true;
+		}
 		domain_type& add_var(const std::string& name, const var& val)
 		{
-			if(m_reflect.count(name)==0){
+			if(m_reflect.count(name)==0) {
 				m_slot.push_back(val);
 				m_reflect.emplace(name, m_slot.size()-1);
 			}
@@ -396,67 +397,88 @@ namespace cs {
 		}
 		domain_type& add_var(const var_id& id, const var& val)
 		{
-			if(m_reflect.count(id.m_id)==0){
+			if(m_reflect.count(id.m_id)==0) {
 				m_slot.push_back(val);
 				m_reflect.emplace(id.m_id, m_slot.size()-1);
 				id.m_slot_id=m_slot.size()-1;
-                id.m_ref=m_ref;
+				id.m_ref=m_ref;
 			}
-			else{
-				if(id.m_ref!=m_ref)
-				{
+			else {
+				if(id.m_ref!=m_ref) {
 					id.m_slot_id=m_reflect[id.m_id];
-                    id.m_ref=m_ref;
+					id.m_ref=m_ref;
 				}
 				m_slot[id.m_slot_id]=val;
 			}
 			return *this;
 		}
-        var& get_var(const var_id& id) noexcept
-        {
-			if(id.m_ref!=m_ref)
-			{
+		var& get_var(const var_id& id) noexcept
+		{
+			if(id.m_ref!=m_ref) {
 				id.m_slot_id=get_slot_id(id.m_id);
-                id.m_ref=m_ref;
+				id.m_ref=m_ref;
 			}
 			return m_slot[id.m_slot_id];
-        }
-        const var& get_var(const var_id& id) const noexcept
-        {
-            if(id.m_ref!=m_ref)
-            {
-                id.m_slot_id=get_slot_id(id.m_id);
-                id.m_ref=m_ref;
-            }
-            return m_slot[id.m_slot_id];
-        }
-        var& get_var(const std::string& name)
-        {
-            if (m_reflect.count(name) > 0)
-                return m_slot[m_reflect.at(name)];
-            else
-                throw runtime_error("Use of undefined variable \"" + name + "\".");
-        }
-        const var& get_var(const std::string& name) const
-        {
-            if (m_reflect.count(name) > 0)
-                return m_slot[m_reflect.at(name)];
-            else
-                throw runtime_error("Use of undefined variable \"" + name + "\".");
-        }
-        auto begin() const
-        {
+		}
+		const var& get_var(const var_id& id) const noexcept
+		{
+			if(id.m_ref!=m_ref) {
+				id.m_slot_id=get_slot_id(id.m_id);
+				id.m_ref=m_ref;
+			}
+			return m_slot[id.m_slot_id];
+		}
+		var& get_var(const std::string& name)
+		{
+			if (m_reflect.count(name) > 0)
+				return m_slot[m_reflect.at(name)];
+			else
+				throw runtime_error("Use of undefined variable \"" + name + "\".");
+		}
+		const var& get_var(const std::string& name) const
+		{
+			if (m_reflect.count(name) > 0)
+				return m_slot[m_reflect.at(name)];
+			else
+				throw runtime_error("Use of undefined variable \"" + name + "\".");
+		}
+		var& get_var_no_check(const var_id& id) noexcept
+		{
+			if(id.m_ref!=m_ref) {
+				id.m_slot_id=m_reflect.at(id.m_id);
+				id.m_ref=m_ref;
+			}
+			return m_slot[id.m_slot_id];
+		}
+		const var& get_var_no_check(const var_id& id) const noexcept
+		{
+			if(id.m_ref!=m_ref) {
+				id.m_slot_id=m_reflect.at(id.m_id);
+				id.m_ref=m_ref;
+			}
+			return m_slot[id.m_slot_id];
+		}
+		var& get_var_no_check(const std::string& name)
+		{
+			return m_slot[m_reflect.at(name)];
+		}
+		const var& get_var_no_check(const std::string& name) const
+		{
+			return m_slot[m_reflect.at(name)];
+		}
+		auto begin() const
+		{
 			return m_reflect.cbegin();
-        }
-        auto end() const
+		}
+		auto end() const
 		{
 			return m_reflect.cend();
 		}
 		// Caution! Only use for traverse!
-        inline var& get_var_by_id(std::size_t id)
-        {
-            return m_slot[id];
-        }
+		inline var& get_var_by_id(std::size_t id)
+		{
+			return m_slot[id];
+		}
 		inline const var& get_var_by_id(std::size_t id) const
 		{
 			return m_slot[id];
@@ -475,7 +497,8 @@ namespace cs {
 		type(std::function<var()> c, const type_id &i, namespace_t ext) : constructor(std::move(c)), id(i),
 			extensions(std::move(std::move(ext))) {}
 
-		var &get_var(const std::string &) const;
+		template<typename T>
+		var &get_var(T &&) const;
 	};
 
 	class range_iterator final {
@@ -612,22 +635,14 @@ namespace cs {
 			return m_id;
 		}
 
-		var &get_var(const std::string &name) const
+		template<typename T>
+		var &get_var(T &&name) const
 		{
 			if (m_data->exist(name))
-				return m_data->get_var(name);
+				return m_data->get_var_no_check(name);
 			else
-				throw runtime_error("Struct \"" + m_name + "\" have no member called \"" + name + "\".");
+				throw runtime_error("Struct \"" + m_name + "\" have no member called \"" + std::string(name) + "\".");
 		}
-
-        var &get_var(const var_id& id) const
-        {
-            try {
-                return m_data->get_var(id);
-            }catch(...) {
-                throw runtime_error("Struct \"" + m_name + "\" have no member called \"" + id.get_id() + "\".");
-            }
-        }
 	};
 
 	class struct_builder final {
@@ -682,11 +697,11 @@ namespace cs {
 			return *this;
 		}
 
-        name_space &add_var(const var_id& id, const var &var)
-        {
-            m_data->add_var(id, var);
-            return *this;
-        }
+		name_space &add_var(const var_id& id, const var &var)
+		{
+			m_data->add_var(id, var);
+			return *this;
+		}
 
 		var &get_var(const std::string &name)
 		{
@@ -698,21 +713,29 @@ namespace cs {
 			return m_data->get_var(name);
 		}
 
-        var &get_var(const var_id& id)
-        {
-            return m_data->get_var(id);
-        }
+		var &get_var(const var_id& id)
+		{
+			return m_data->get_var(id);
+		}
 
-        const var &get_var(const var_id& id) const
-        {
-            return m_data->get_var(id);
-        }
+		const var &get_var(const var_id& id) const
+		{
+			return m_data->get_var(id);
+		}
 
 		domain_t get_domain() const
 		{
 			return m_data;
 		}
 	};
+
+	template<typename T>
+	var& type::get_var(T && name) const {
+		if (extensions.get() != nullptr)
+			return extensions->get_var(name);
+		else
+			throw runtime_error("Type does not support the extension");
+	}
 
 	namespace dll_resources {
 		constexpr char dll_compatible_check[] = "__CS_ABI_COMPATIBLE__";

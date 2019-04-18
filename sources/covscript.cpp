@@ -153,14 +153,6 @@ namespace cs {
 		return var::make_protect<namespace_t>(ns);
 	}
 
-	var &type::get_var(const std::string &name) const
-	{
-		if (extensions.get() != nullptr)
-			return extensions->get_var(name);
-		else
-			throw runtime_error("Type does not support the extension");
-	}
-
 	number parse_number(const std::string &str)
 	{
 		int point_count = 0;
