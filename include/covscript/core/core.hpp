@@ -814,3 +814,13 @@ namespace cs {
 // Literal format
 	number parse_number(const std::string &);
 }
+namespace cs_impl {
+    template<>
+    std::size_t hash<cs::type_id>(const cs::type_id& id)
+    {
+        if (id.type_hash == 0)
+            return id.type_idx.hash_code();
+        else
+            throw cov::error("E000F");
+    }
+}
