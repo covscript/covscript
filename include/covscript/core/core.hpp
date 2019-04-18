@@ -602,9 +602,9 @@ namespace cs {
 	public:
 		structure() = delete;
 
-		structure(const type_id &id, const std::string &name, domain_t data) : m_id(id),
+		structure(const type_id &id, const std::string &name, const domain_type& data) : m_id(id),
 			m_name(typeid(structure).name() +
-			       name), m_data(std::move(data))
+			       name), m_data(std::make_shared<domain_type>(data))
 		{
 			if (m_data->exist("initialize"))
 				invoke(m_data->get_var("initialize"), var::make<structure>(this));
@@ -659,9 +659,9 @@ namespace cs {
 			}
 		}
 
-		const domain_t &get_domain() const
+		const domain_type &get_domain() const
 		{
-			return m_data;
+			return *m_data;
 		}
 
 		const type_id &get_id() const
@@ -715,49 +715,49 @@ namespace cs {
 
 // Namespace and extensions
 	class name_space {
-		domain_t m_data;
+		domain_type m_data;
 	public:
-		name_space() : m_data(std::make_shared<domain_type>()) {}
+		name_space()=default;
 
 		name_space(const name_space &) = delete;
 
-		explicit name_space(domain_t dat) : m_data(std::move(dat)) {}
+		explicit name_space(domain_type dat) : m_data(std::move(dat)) {}
 
 		virtual ~name_space() = default;
 
 		name_space &add_var(const std::string &name, const var &var)
 		{
-			m_data->add_var(name, var);
+			m_data.add_var(name, var);
 			return *this;
 		}
 
 		name_space &add_var(const var_id &id, const var &var)
 		{
-			m_data->add_var(id, var);
+			m_data.add_var(id, var);
 			return *this;
 		}
 
 		var &get_var(const std::string &name)
 		{
-			return m_data->get_var(name);
+			return m_data.get_var(name);
 		}
 
 		const var &get_var(const std::string &name) const
 		{
-			return m_data->get_var(name);
+			return m_data.get_var(name);
 		}
 
 		var &get_var(const var_id &id)
 		{
-			return m_data->get_var(id);
+			return m_data.get_var(id);
 		}
 
 		const var &get_var(const var_id &id) const
 		{
-			return m_data->get_var(id);
+			return m_data.get_var(id);
 		}
 
-		domain_t get_domain() const
+		const domain_type& get_domain() const
 		{
 			return m_data;
 		}

@@ -115,7 +115,7 @@ namespace cs {
 			context->instance->storage.remove_domain();
 		}
 
-		domain_t get() const
+		const domain_type& get() const
 		{
 			return context->instance->storage.get_domain();
 		}
