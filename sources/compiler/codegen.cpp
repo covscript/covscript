@@ -38,7 +38,7 @@ namespace cs {
 			token_base *token = t.root().data();
 			if (token == nullptr || token->get_type() != token_types::id)
 				throw runtime_error("Wrong grammar for import statement.");
-			const std::string &package_name = static_cast<token_id *>(token)->get_id();
+			const var_id &package_name = static_cast<token_id *>(token)->get_id();
 			const var &ext = make_namespace(context->instance->import(current_process->import_path, package_name));
 			context->compiler->add_constant(ext);
 			context->instance->storage.add_var(package_name, ext);

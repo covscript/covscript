@@ -244,25 +244,25 @@ namespace cs {
 	};
 
 	class token_id final : public token_base {
-		std::string mId;
+		var_id mId;
 	public:
 		token_id() = delete;
 
-		explicit token_id(std::string id) : mId(std::move(id)) {}
+		explicit token_id(const std::string &id) : mId(id) {}
 
 		token_types get_type() const noexcept override
 		{
 			return token_types::id;
 		}
 
-		const std::string &get_id() const noexcept
+		const var_id &get_id() const noexcept
 		{
 			return this->mId;
 		}
 
 		bool dump(std::ostream &o) const override
 		{
-			o << "< ID = \"" << mId << "\" >";
+			o << "< ID = \"" << mId.get_id() << "\" >";
 			return true;
 		}
 	};

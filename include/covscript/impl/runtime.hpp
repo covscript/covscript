@@ -29,7 +29,7 @@ namespace cs {
 		domain_manager()
 		{
 			m_set.emplace_front();
-			m_data.emplace_front(std::make_shared<map_t<string, var >>());
+			m_data.emplace_front(std::make_shared<domain_type>());
 		}
 
 		domain_manager(const domain_manager &) = delete;
@@ -48,7 +48,7 @@ namespace cs {
 
 		void add_domain()
 		{
-			m_data.emplace_front(std::make_shared<map_t<string, var >>());
+			m_data.emplace_front(std::make_shared<domain_type>());
 		}
 
 		domain_t &get_domain()
@@ -95,53 +95,56 @@ namespace cs {
 			return false;
 		}
 
-		bool var_exist(const string &name)
+		template<typename T>
+		bool var_exist(T &&name)
 		{
 			for (auto &domain:m_data)
-				if (domain->count(name) > 0)
+				if (domain->exist(name))
 					return true;
 			return false;
 		}
 
-		bool var_exist_current(const string &name)
+		template<typename T>
+		bool var_exist_current(T &&name)
 		{
-			return m_data.front()->count(name) > 0;
+			return m_data.front()->exist(name);
 		}
 
-		bool var_exist_global(const string &name)
+		template<typename T>
+		bool var_exist_global(T &&name)
 		{
-			return m_data.back()->count(name) > 0;
+			return m_data.back()->exist(name);
 		}
 
-		var &get_var(const string &name)
+		template<typename T>
+		var &get_var(T &&name)
 		{
 			for (auto &domain:m_data)
-				if (domain->count(name) > 0)
-					return (*domain)[name];
-			throw runtime_error("Use of undefined variable \"" + name + "\".");
+				if (domain->exist(name))
+					return domain->get_var(name);
+			throw runtime_error("Use of undefined variable \"" + std::string(name) + "\".");
 		}
 
-		var &get_var_current(const string &name)
+		template<typename T>
+		var &get_var_current(T &&name)
 		{
-			if (m_data.front()->count(name) > 0)
-				return (*m_data.front())[name];
-			throw runtime_error("Use of undefined variable \"" + name + "\" in current domain.");
+			return m_data.front()->get_var(name);
 		}
 
-		var &get_var_global(const string &name)
+		template<typename T>
+		var &get_var_global(T &&name)
 		{
-			if (m_data.back()->count(name) > 0)
-				return (*m_data.back())[name];
-			throw runtime_error("Use of undefined variable \"" + name + "\" in global domain.");
+			return m_data.back()->get_var(name);
 		}
 
-		var get_var_optimizable(const string &name)
+		template<typename T>
+		var get_var_optimizable(T &&name)
 		{
 			if (m_data.size() == m_set.size()) {
 				for (std::size_t i = 0; i < m_data.size(); ++i) {
-					if (m_set[i].count(name) > 0) {
-						if (m_data[i]->count(name) > 0)
-							return m_data[i]->at(name);
+					if (m_set[i].count(name)) {
+						if (m_data[i]->exist(name))
+							return m_data[i]->get_var(name);
 						else
 							break;
 					}
@@ -164,61 +167,64 @@ namespace cs {
 			add_record("__PRAGMA_CS_STRUCT_DEFINITION__");
 		}
 
-		domain_manager &add_var(const string &name, const var &val, bool is_override = false)
+		template<typename T>
+		domain_manager &add_var(T &&name, const var &val, bool is_override = false)
 		{
 			if (var_exist_current(name)) {
 				if (is_override)
-					(*m_data.front())[name] = val;
+					m_data.front()->get_var(name) = val;
 				else
-					throw runtime_error("Target domain exist variable \"" + name + "\".");
+					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 			}
 			else
-				m_data.front()->emplace(name, val);
+				m_data.front()->add_var(name, val);
 			return *this;
 		}
 
-		domain_manager &add_var_global(const string &name, const var &var)
+		template<typename T>
+		domain_manager &add_var_global(T &&name, const var &var)
 		{
 			if (var_exist_global(name))
-				throw runtime_error("Target domain exist variable \"" + name + "\".");
+				throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 			else
-				m_data.back()->emplace(name, var);
+				m_data.back()->add_var(name, var);
 			return *this;
 		}
 
-		domain_manager &add_buildin_var(const string &name, const var &var)
+		template<typename T>
+		domain_manager &add_buildin_var(T &&name, const var &var)
 		{
 			add_record(name);
 			return add_var_global(name, var);
 		}
 
-		domain_manager &add_struct(const std::string &name, const struct_builder &builder)
+		template<typename T>
+		domain_manager &add_struct(T &&name, const struct_builder &builder)
 		{
 			return add_var(name, var::make_protect<type>(builder, builder.get_id()));
 		}
 
-		domain_manager &add_type(const std::string &name, const std::function<var()> &func, const std::type_index &id)
+		template<typename T>
+		domain_manager &add_type(T &&name, const std::function<var()> &func, const std::type_index &id)
 		{
 			return add_var(name, var::make_protect<type>(func, id));
 		}
 
-		domain_manager &
-		add_type(const std::string &name, const std::function<var()> &func, const std::type_index &id,
-		         namespace_t ext)
+		template<typename T>
+		domain_manager &add_type(T &&name, const std::function<var()> &func, const std::type_index &id, namespace_t ext)
 		{
 			return add_var(name, var::make_protect<type>(func, id, ext));
 		}
 
-		domain_manager &
-		add_buildin_type(const std::string &name, const std::function<var()> &func, const std::type_index &id)
+		template<typename T>
+		domain_manager &add_buildin_type(T &&name, const std::function<var()> &func, const std::type_index &id)
 		{
 			add_record(name);
 			return add_var(name, var::make_protect<type>(func, id));
 		}
 
-		domain_manager &
-		add_buildin_type(const std::string &name, const std::function<var()> &func, const std::type_index &id,
-		                 namespace_t ext)
+		template<typename T>
+		domain_manager &add_buildin_type(T &&name, const std::function<var()> &func, const std::type_index &id, namespace_t ext)
 		{
 			add_record(name);
 			return add_var(name, var::make_protect<type>(func, id, ext));

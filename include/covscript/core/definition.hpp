@@ -46,6 +46,8 @@ namespace cs {
 
 	class callable;
 
+	class domain_type;
+
 	class name_space;
 
 	template<typename _kT, typename _vT> using map_t=spp::sparse_hash_map<_kT, _vT>;
@@ -63,7 +65,7 @@ namespace cs {
 	using compiler_t=std::shared_ptr<compiler_type>;
 	using instance_t=std::shared_ptr<instance_type>;
 	using context_t=std::shared_ptr<context_type>;
-	using domain_t=std::shared_ptr<map_t<string, var>>;
+	using domain_t=std::shared_ptr<domain_type>;
 	using namespace_t=std::shared_ptr<name_space>;
 	using istream=std::shared_ptr<std::istream>;
 	using ostream=std::shared_ptr<std::ostream>;
