@@ -155,6 +155,7 @@ namespace cs {
 		std::string mDecl;
 		statement_base *mStmt;
 #endif
+		bool mIsVargs = false;
 		std::vector<std::string> mArgs;
 		std::deque<statement_base *> mBody;
 	public:
@@ -163,11 +164,12 @@ namespace cs {
 		function(const function &) = default;
 
 #ifdef CS_DEBUGGER
-		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body):mContext(std::move(std::move(c))), mDecl(std::move(decl)), mStmt(stmt), mArgs(std::move(args)), mBody(std::move(body)) {}
+		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs=false):mContext(std::move(std::move(c))), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mArgs(std::move(args)), mBody(std::move(body)) {}
 #else
 
-		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body) : mContext(
-			    std::move(std::move(c))), mArgs(std::move(args)), mBody(std::move(body)) {}
+		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false)
+			: mContext(
+			      std::move(std::move(c))), mIsVargs(is_vargs), mArgs(std::move(args)), mBody(std::move(body)) {}
 
 #endif
 
@@ -374,12 +376,10 @@ namespace cs {
 		domain_type(const domain_type &domain) : m_reflect(domain.m_reflect), m_ref(std::make_shared<domain_ref>(this)),
 			m_slot(domain.m_slot) {}
 
-		domain_type(domain_type &&domain) noexcept
+		domain_type(domain_type &&domain) noexcept: m_ref(std::make_shared<domain_ref>(this))
 		{
 			std::swap(m_reflect, domain.m_reflect);
 			std::swap(m_slot, domain.m_slot);
-			std::swap(m_ref, domain.m_ref);
-			m_ref->domain = this;
 		}
 
 		~domain_type()
@@ -393,12 +393,12 @@ namespace cs {
 			m_slot.clear();
 		}
 
-		bool exist(const std::string &name) const
+		bool exist(const std::string &name) const noexcept
 		{
 			return m_reflect.count(name) > 0;
 		}
 
-		bool exist(const var_id &id) const
+		bool exist(const var_id &id) const noexcept
 		{
 			if (id.m_ref != m_ref)
 				return m_reflect.count(id.m_id) > 0;
@@ -435,7 +435,7 @@ namespace cs {
 			return *this;
 		}
 
-		var &get_var(const var_id &id) noexcept
+		var &get_var(const var_id &id)
 		{
 			if (id.m_ref != m_ref) {
 				id.m_slot_id = get_slot_id(id.m_id);
@@ -444,7 +444,7 @@ namespace cs {
 			return m_slot[id.m_slot_id];
 		}
 
-		const var &get_var(const var_id &id) const noexcept
+		const var &get_var(const var_id &id) const
 		{
 			if (id.m_ref != m_ref) {
 				id.m_slot_id = get_slot_id(id.m_id);
@@ -487,12 +487,12 @@ namespace cs {
 			return m_slot[id.m_slot_id];
 		}
 
-		var &get_var_no_check(const std::string &name)
+		var &get_var_no_check(const std::string &name) noexcept
 		{
 			return m_slot[m_reflect.at(name)];
 		}
 
-		const var &get_var_no_check(const std::string &name) const
+		const var &get_var_no_check(const std::string &name) const noexcept
 		{
 			return m_slot[m_reflect.at(name)];
 		}
@@ -602,9 +602,11 @@ namespace cs {
 	public:
 		structure() = delete;
 
-		structure(const type_id &id, const std::string &name, domain_t data) : m_id(id),
+		structure(const type_id &id, const std::string &name, const domain_type &data) : m_id(id),
 			m_name(typeid(structure).name() +
-			       name), m_data(std::move(data))
+			       name),
+			m_data(std::make_shared<domain_type>(
+			           data))
 		{
 			if (m_data->exist("initialize"))
 				invoke(m_data->get_var("initialize"), var::make<structure>(this));
@@ -659,9 +661,9 @@ namespace cs {
 			}
 		}
 
-		const domain_t &get_domain() const
+		const domain_type &get_domain() const
 		{
-			return m_data;
+			return *m_data;
 		}
 
 		const type_id &get_id() const
@@ -715,49 +717,49 @@ namespace cs {
 
 // Namespace and extensions
 	class name_space {
-		domain_t m_data;
+		domain_type m_data;
 	public:
-		name_space() : m_data(std::make_shared<domain_type>()) {}
+		name_space() = default;
 
 		name_space(const name_space &) = delete;
 
-		explicit name_space(domain_t dat) : m_data(std::move(dat)) {}
+		explicit name_space(domain_type dat) : m_data(std::move(dat)) {}
 
 		virtual ~name_space() = default;
 
 		name_space &add_var(const std::string &name, const var &var)
 		{
-			m_data->add_var(name, var);
+			m_data.add_var(name, var);
 			return *this;
 		}
 
 		name_space &add_var(const var_id &id, const var &var)
 		{
-			m_data->add_var(id, var);
+			m_data.add_var(id, var);
 			return *this;
 		}
 
 		var &get_var(const std::string &name)
 		{
-			return m_data->get_var(name);
+			return m_data.get_var(name);
 		}
 
 		const var &get_var(const std::string &name) const
 		{
-			return m_data->get_var(name);
+			return m_data.get_var(name);
 		}
 
 		var &get_var(const var_id &id)
 		{
-			return m_data->get_var(id);
+			return m_data.get_var(id);
 		}
 
 		const var &get_var(const var_id &id) const
 		{
-			return m_data->get_var(id);
+			return m_data.get_var(id);
 		}
 
-		domain_t get_domain() const
+		const domain_type &get_domain() const
 		{
 			return m_data;
 		}
@@ -815,4 +817,14 @@ namespace cs {
 
 // Literal format
 	number parse_number(const std::string &);
+}
+namespace cs_impl {
+	template<>
+	std::size_t hash<cs::type_id>(const cs::type_id &id)
+	{
+		if (id.type_hash == 0)
+			return id.type_idx.hash_code();
+		else
+			throw cov::error("E000F");
+	}
 }

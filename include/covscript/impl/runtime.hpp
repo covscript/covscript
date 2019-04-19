@@ -24,12 +24,12 @@
 namespace cs {
 	class domain_manager {
 		std::deque<set_t < string>> m_set;
-		std::deque<domain_t> m_data;
+		std::deque<domain_type> m_data;
 	public:
 		domain_manager()
 		{
 			m_set.emplace_front();
-			m_data.emplace_front(std::make_shared<domain_type>());
+			m_data.emplace_front();
 		}
 
 		domain_manager(const domain_manager &) = delete;
@@ -48,15 +48,15 @@ namespace cs {
 
 		void add_domain()
 		{
-			m_data.emplace_front(std::make_shared<domain_type>());
+			m_data.emplace_front();
 		}
 
-		domain_t &get_domain()
+		const domain_type &get_domain() const
 		{
 			return m_data.front();
 		}
 
-		domain_t &get_global()
+		const domain_type &get_global() const
 		{
 			return m_data.back();
 		}
@@ -78,7 +78,7 @@ namespace cs {
 
 		void clear_domain()
 		{
-			m_data.front()->clear();
+			m_data.front().clear();
 		}
 
 		bool exist_record(const string &name)
@@ -99,7 +99,7 @@ namespace cs {
 		bool var_exist(T &&name)
 		{
 			for (auto &domain:m_data)
-				if (domain->exist(name))
+				if (domain.exist(name))
 					return true;
 			return false;
 		}
@@ -107,34 +107,34 @@ namespace cs {
 		template<typename T>
 		bool var_exist_current(T &&name)
 		{
-			return m_data.front()->exist(name);
+			return m_data.front().exist(name);
 		}
 
 		template<typename T>
 		bool var_exist_global(T &&name)
 		{
-			return m_data.back()->exist(name);
+			return m_data.back().exist(name);
 		}
 
 		template<typename T>
 		inline var &get_var(T &&name)
 		{
 			for (auto &domain:m_data)
-				if (domain->exist(name))
-					return domain->get_var_no_check(name);
+				if (domain.exist(name))
+					return domain.get_var_no_check(name);
 			throw runtime_error("Use of undefined variable \"" + std::string(name) + "\".");
 		}
 
 		template<typename T>
 		var &get_var_current(T &&name)
 		{
-			return m_data.front()->get_var(name);
+			return m_data.front().get_var(name);
 		}
 
 		template<typename T>
 		var &get_var_global(T &&name)
 		{
-			return m_data.back()->get_var(name);
+			return m_data.back().get_var(name);
 		}
 
 		template<typename T>
@@ -143,8 +143,8 @@ namespace cs {
 			if (m_data.size() == m_set.size()) {
 				for (std::size_t i = 0; i < m_data.size(); ++i) {
 					if (m_set[i].count(name)) {
-						if (m_data[i]->exist(name))
-							return m_data[i]->get_var_no_check(name);
+						if (m_data[i].exist(name))
+							return m_data[i].get_var_no_check(name);
 						else
 							break;
 					}
@@ -172,12 +172,12 @@ namespace cs {
 		{
 			if (var_exist_current(name)) {
 				if (is_override)
-					m_data.front()->get_var_no_check(name) = val;
+					m_data.front().get_var_no_check(name) = val;
 				else
 					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 			}
 			else
-				m_data.front()->add_var(name, val);
+				m_data.front().add_var(name, val);
 			return *this;
 		}
 
@@ -187,7 +187,7 @@ namespace cs {
 			if (var_exist_global(name))
 				throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 			else
-				m_data.back()->add_var(name, var);
+				m_data.back().add_var(name, var);
 			return *this;
 		}
 
@@ -232,10 +232,10 @@ namespace cs {
 			return add_var(name, var::make_protect<type>(func, id, ext));
 		}
 
-		void involve_domain(const domain_t &domain, bool is_override = false)
+		void involve_domain(const domain_type &domain, bool is_override = false)
 		{
-			for (auto &it:*domain)
-				add_var(it.first, it.second, is_override);
+			for (auto &it:domain)
+				add_var(it.first, domain.get_var_by_id(it.second), is_override);
 		}
 	};
 

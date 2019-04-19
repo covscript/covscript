@@ -175,6 +175,14 @@ namespace cs {
 		return false;
 	}
 
+	bool token_expand::dump(std::ostream &o) const
+	{
+		o << "< ExpandExpression = ";
+		compiler_type::dump_expr(mTree.root(), o);
+		o << " >";
+		return true;
+	}
+
 	bool token_expr::dump(std::ostream &o) const
 	{
 		o << "< ChildExpression = ";
@@ -238,20 +246,17 @@ namespace cs {
 				tree.emplace_right_right(it, token);
 			}
 			return;
-			break;
 		}
 		case token_types::expr: {
 			tree_type<token_base *> &t = static_cast<token_expr *>(it.data())->get_tree();
 			trim_expression(t);
 			tree.merge(it, t);
 			return;
-			break;
 		}
 		case token_types::array: {
 			for (auto &tree:static_cast<token_array *>(token)->get_array())
 				trim_expression(tree);
 			return;
-			break;
 		}
 		case token_types::signal: {
 			switch (static_cast<token_signal *>(token)->get_signal()) {
@@ -289,7 +294,6 @@ namespace cs {
 				trim_expr(tree, it.left());
 				trim_expr(tree, it.right());
 				return;
-				break;
 			case signal_types::com_: {
 				trim_expr(tree, it.left());
 				trim_expr(tree, it.right());
@@ -313,7 +317,6 @@ namespace cs {
 					it.data() = parallel_list;
 				}
 				return;
-				break;
 			}
 			case signal_types::choice_: {
 				token_signal *sig = dynamic_cast<token_signal *>(it.right().data());
@@ -323,7 +326,6 @@ namespace cs {
 				trim_expr(tree, it.right().left());
 				trim_expr(tree, it.right().right());
 				return;
-				break;
 			}
 			case signal_types::vardef_: {
 				if (it.left().data() != nullptr)
@@ -334,7 +336,6 @@ namespace cs {
 				context->instance->storage.add_record(static_cast<token_id *>(rptr)->get_id());
 				it.data() = rptr;
 				return;
-				break;
 			}
 			case signal_types::varprt_: {
 				if (it.left().data() != nullptr)
@@ -344,7 +345,6 @@ namespace cs {
 					throw runtime_error("Wrong grammar for variable definition.");
 				it.data() = rptr;
 				return;
-				break;
 			}
 			case signal_types::arrow_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr ||
@@ -352,14 +352,12 @@ namespace cs {
 					throw runtime_error("Wrong grammar for arrow expression.");
 				trim_expr(tree, it.left());
 				return;
-				break;
 			case signal_types::dot_: {
 				trim_expr(tree, it.left());
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
 					throw runtime_error("Wrong grammar for dot expression.");
 				return;
-				break;
 			}
 			case signal_types::fcall_: {
 				trim_expr(tree, it.left());
@@ -369,7 +367,18 @@ namespace cs {
 				if (lptr == nullptr || rptr == nullptr || rptr->get_type() != token_types::arglist)
 					throw runtime_error("Wrong syntax for function call.");
 				return;
-				break;
+			}
+			case signal_types::vargs_: {
+				if (it.left().data() == nullptr) {
+					token_base *rptr = it.right().data();
+					if (rptr == nullptr || rptr->get_type() != token_types::id)
+						throw runtime_error("Wrong grammar for vargs expression.");
+					it.data() = new token_vargs(static_cast<token_id *>(rptr)->get_id());
+
+				}
+				else
+					it.data() = new token_expand(tree_type<token_base *>(it.left()));
+				return;
 			}
 			case signal_types::emb_: {
 				trim_expr(tree, it.left());
@@ -381,7 +390,6 @@ namespace cs {
 					throw runtime_error("Wrong grammar for lambda expression.");
 				it.data() = rptr;
 				return;
-				break;
 			}
 			case signal_types::lambda_: {
 				inside_lambda = true;
@@ -422,7 +430,6 @@ namespace cs {
 				                          function(context, args, std::deque<statement_base *> {ret})));
 #endif
 				return;
-				break;
 			}
 			}
 		}
@@ -446,7 +453,11 @@ namespace cs {
 			if (value.usable() && value.is_protect())
 				it.data() = new_value(value);
 			return;
-			break;
+		}
+		case token_types::expand: {
+			tree_type<token_base *> &tree = static_cast<token_expand *>(token)->get_tree();
+			opt_expr(tree, tree.root());
+			return;
 		}
 		case token_types::array: {
 			bool is_optimizable = true;
@@ -463,7 +474,6 @@ namespace cs {
 				it.data() = new_value(var::make<array>(std::move(arr)));
 			}
 			return;
-			break;
 		}
 		case token_types::signal: {
 			switch (static_cast<token_signal *>(token)->get_signal()) {
@@ -474,14 +484,12 @@ namespace cs {
 					throw runtime_error("Wrong grammar for gcnew expression.");
 				opt_expr(tree, it.right());
 				return;
-				break;
 			case signal_types::asi_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr)
 					throw runtime_error("Wrong grammar for assign expression.");
 				opt_expr(tree, it.left());
 				opt_expr(tree, it.right());
 				return;
-				break;
 			case signal_types::choice_: {
 				token_signal *sig = dynamic_cast<token_signal *>(it.right().data());
 				if (sig == nullptr || sig->get_signal() != signal_types::pair_)
@@ -502,7 +510,6 @@ namespace cs {
 						throw runtime_error("Choice condition must be boolean.");
 				}
 				return;
-				break;
 			}
 			case signal_types::arrow_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr ||
@@ -510,7 +517,6 @@ namespace cs {
 					throw runtime_error("Wrong grammar for arrow expression.");
 				opt_expr(tree, it.left());
 				return;
-				break;
 			case signal_types::dot_: {
 				opt_expr(tree, it.left());
 				token_base *lptr = it.left().data();
@@ -530,7 +536,6 @@ namespace cs {
 					}
 				}
 				return;
-				break;
 			}
 			case signal_types::fcall_: {
 				opt_expr(tree, it.left());
@@ -542,49 +547,73 @@ namespace cs {
 				if (lptr->get_type() == token_types::value) {
 					var &a = static_cast<token_value *>(lptr)->get_value();
 					if (a.type() == typeid(callable) && a.const_val<callable>().is_constant()) {
-						bool is_optimizable = true;
-						for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
-							if (is_optimizable && !optimizable(tree.root()))
-								is_optimizable = false;
-						}
-						if (is_optimizable) {
-							vector args;
-							args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
-							for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
-								args.push_back(lvalue(context->instance->parse_expr(tree.root())));
-							token_base *oldt = it.data();
-							try {
-								it.data() = new_value(a.const_val<callable>().call(args));
-							}
-							catch (...) {
-								it.data() = oldt;
-							}
-						}
-					}
+                        token_base *ptr = nullptr;
+                        for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
+                            ptr = tree.root().data();
+                            if (ptr != nullptr && ptr->get_type() == token_types::expand) {
+                                if (!optimizable(static_cast<token_expand *>(ptr)->get_tree().root()))
+                                    return;
+                            } else {
+                                if (!optimizable(tree.root()))
+                                    return;
+                            }
+                        }
+                        token_base *oldt = it.data();
+                        try {
+                            vector args;
+
+                            args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
+                            for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
+                                ptr = tree.root().data();
+                                if (ptr != nullptr && ptr->get_type() == token_types::expand) {
+                                    const array &arr = context->instance->parse_expr(
+                                            static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
+                                    for (auto &it:arr)
+                                        args.push_back(lvalue(it));
+                                } else
+                                    args.push_back(lvalue(context->instance->parse_expr(tree.root())));
+                            }
+                            it.data() = new_value(a.const_val<callable>().call(args));
+                        }
+                        catch (...) {
+                            it.data() = oldt;
+                        }
+                    }
 					else if (a.type() == typeid(object_method) && a.const_val<object_method>().is_constant) {
-						bool is_optimizable = true;
-						for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
-							if (is_optimizable && !optimizable(tree.root()))
-								is_optimizable = false;
-						}
-						if (is_optimizable) {
-							const auto &om = a.const_val<object_method>();
-							vector args{om.object};
-							args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
-							for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist())
-								args.push_back(lvalue(context->instance->parse_expr(tree.root())));
-							token_base *oldt = it.data();
-							try {
-								it.data() = new_value(om.callable.const_val<callable>().call(args));
-							}
-							catch (...) {
-								it.data() = oldt;
-							}
-						}
-					}
+                        token_base *ptr = nullptr;
+                        for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
+                            ptr = tree.root().data();
+                            if (ptr != nullptr && ptr->get_type() == token_types::expand) {
+                                if (!optimizable(static_cast<token_expand *>(ptr)->get_tree().root()))
+                                    return;
+                            } else {
+                                if (!optimizable(tree.root()))
+                                    return;
+                            }
+                        }
+                        token_base *oldt = it.data();
+                        try {
+                            const auto &om = a.const_val<object_method>();
+                            vector args{om.object};
+                            args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
+                            for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
+                                ptr = tree.root().data();
+                                if (ptr != nullptr && ptr->get_type() == token_types::expand) {
+                                    const array &arr = context->instance->parse_expr(
+                                            static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
+                                    for (auto &it:arr)
+                                        args.push_back(lvalue(it));
+                                } else
+                                    args.push_back(lvalue(context->instance->parse_expr(tree.root())));
+                            }
+                            it.data() = new_value(om.callable.const_val<callable>().call(args));
+                        }
+                        catch (...) {
+                            it.data() = oldt;
+                        }
+                    }
 				}
 				return;
-				break;
 			}
 			}
 		}

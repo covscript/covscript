@@ -76,9 +76,15 @@ namespace cs {
 		token_value *vptr = dynamic_cast<token_value *>(tree.root().data());
 		if (vptr != nullptr) {
 			var ns = vptr->get_value();
-			if (ns.type() == typeid(namespace_t))
-				context->instance->storage.involve_domain(ns.const_val<namespace_t>()->get_domain());
-			else
+			if (ns.type() == typeid(namespace_t)) {
+				auto& domain=ns.const_val<namespace_t>()->get_domain();
+				for(auto& it:domain)
+				{
+					if(domain.get_var_by_id(it.second).is_protect())
+						context->instance->storage.add_record(it.first);
+				}
+				context->instance->storage.involve_domain(domain);
+			}else
 				throw runtime_error("Only support involve namespace.");
 			mResult = new statement_involve(tree, true, context, raw.front().back());
 		}
@@ -464,14 +470,23 @@ namespace cs {
 		for (auto &it:static_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
 			if (it.root().data() == nullptr)
 				throw internal_error("Null pointer accessed.");
-			if (it.root().data()->get_type() != token_types::id)
+			if (it.root().data()->get_type() == token_types::id) {
+				const std::string &str = static_cast<token_id *>(it.root().data())->get_id();
+				for (auto &it:args)
+					if (it == str)
+						throw runtime_error("Redefinition of function argument.");
+				context->instance->storage.add_record(str);
+				args.push_back(str);
+			}
+			else if (it.root().data()->get_type() == token_types::vargs) {
+				const std::string &str = static_cast<token_vargs *>(it.root().data())->get_id();
+				if (!args.empty())
+					throw runtime_error("Redefinition of function argument(Multi-define of vargs).");
+				context->instance->storage.add_record(str);
+				args.push_back(str);
+			}
+			else
 				throw runtime_error("Wrong grammar for function definition.");
-			const std::string &str = static_cast<token_id *>(it.root().data())->get_id();
-			for (auto &it:args)
-				if (it == str)
-					throw runtime_error("Redefinition of function argument.");
-			context->instance->storage.add_record(str);
-			args.push_back(str);
 		}
 	}
 
@@ -481,8 +496,15 @@ namespace cs {
 		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		std::string name = static_cast<token_id *>(t.root().left().data())->get_id();
 		std::vector<std::string> args;
-		for (auto &it:static_cast<token_arglist *>(t.root().right().data())->get_arglist())
-			args.push_back(static_cast<token_id *>(it.root().data())->get_id());
+		bool is_vargs = false;
+		for (auto &it:static_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
+			if (it.root().data()->get_type() == token_types::id)
+				args.push_back(static_cast<token_id *>(it.root().data())->get_id());
+			else if (it.root().data()->get_type() == token_types::vargs) {
+				args.push_back(static_cast<token_vargs *>(it.root().data())->get_id());
+				is_vargs = true;
+			}
+		}
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 #ifdef CS_DEBUGGER
@@ -497,9 +519,9 @@ namespace cs {
 			decl+=")";
 		if(raw.front().size() == 4)
 			decl+=" override";
-		return new statement_function(name, decl, args, body, raw.front().size() == 4, context, raw.front().back());
+		return new statement_function(name, decl, args, body, raw.front().size() == 4, is_vargs, context, raw.front().back());
 #else
-		return new statement_function(name, args, body, raw.front().size() == 4, context, raw.front().back());
+		return new statement_function(name, args, body, raw.front().size() == 4, is_vargs, context, raw.front().back());
 #endif
 	}
 
