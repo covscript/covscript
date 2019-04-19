@@ -24,7 +24,7 @@
 namespace cs {
 	var function::call(vector &args) const
 	{
-		if (!mIsVargs&&args.size() != this->mArgs.size())
+		if (!mIsVargs && args.size() != this->mArgs.size())
 			throw runtime_error(
 			    "Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
 			    std::to_string(args.size()));
@@ -36,14 +36,14 @@ namespace cs {
 #else
 		fcall_guard fcall(mContext);
 #endif
-		if (mIsVargs)
-		{
-			var arg_list=var::make<cs::array>();
-			cs::array &arr=arg_list.val<cs::array>();
-			for(auto& it:args)
+		if (mIsVargs) {
+			var arg_list = var::make<cs::array>();
+			cs::array &arr = arg_list.val<cs::array>();
+			for (auto &it:args)
 				arr.push_back(it);
 			mContext->instance->storage.add_var(this->mArgs.front(), arg_list);
-		}else {
+		}
+		else {
 			for (std::size_t i = 0; i < args.size(); ++i)
 				mContext->instance->storage.add_var(this->mArgs[i], args[i]);
 		}

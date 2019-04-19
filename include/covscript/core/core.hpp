@@ -155,7 +155,7 @@ namespace cs {
 		std::string mDecl;
 		statement_base *mStmt;
 #endif
-		bool mIsVargs=false;
+		bool mIsVargs = false;
 		std::vector<std::string> mArgs;
 		std::deque<statement_base *> mBody;
 	public:
@@ -167,8 +167,9 @@ namespace cs {
 		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs=false):mContext(std::move(std::move(c))), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mArgs(std::move(args)), mBody(std::move(body)) {}
 #else
 
-		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs=false) : mContext(
-			    std::move(std::move(c))), mIsVargs(is_vargs), mArgs(std::move(args)), mBody(std::move(body)) {}
+		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false)
+			: mContext(
+			      std::move(std::move(c))), mIsVargs(is_vargs), mArgs(std::move(args)), mBody(std::move(body)) {}
 
 #endif
 
@@ -375,7 +376,7 @@ namespace cs {
 		domain_type(const domain_type &domain) : m_reflect(domain.m_reflect), m_ref(std::make_shared<domain_ref>(this)),
 			m_slot(domain.m_slot) {}
 
-		domain_type(domain_type &&domain) noexcept:m_ref(std::make_shared<domain_ref>(this))
+		domain_type(domain_type &&domain) noexcept: m_ref(std::make_shared<domain_ref>(this))
 		{
 			std::swap(m_reflect, domain.m_reflect);
 			std::swap(m_slot, domain.m_slot);
@@ -601,9 +602,11 @@ namespace cs {
 	public:
 		structure() = delete;
 
-		structure(const type_id &id, const std::string &name, const domain_type& data) : m_id(id),
+		structure(const type_id &id, const std::string &name, const domain_type &data) : m_id(id),
 			m_name(typeid(structure).name() +
-			       name), m_data(std::make_shared<domain_type>(data))
+			       name),
+			m_data(std::make_shared<domain_type>(
+			           data))
 		{
 			if (m_data->exist("initialize"))
 				invoke(m_data->get_var("initialize"), var::make<structure>(this));
@@ -716,7 +719,7 @@ namespace cs {
 	class name_space {
 		domain_type m_data;
 	public:
-		name_space()=default;
+		name_space() = default;
 
 		name_space(const name_space &) = delete;
 
@@ -756,7 +759,7 @@ namespace cs {
 			return m_data.get_var(id);
 		}
 
-		const domain_type& get_domain() const
+		const domain_type &get_domain() const
 		{
 			return m_data;
 		}
@@ -816,12 +819,12 @@ namespace cs {
 	number parse_number(const std::string &);
 }
 namespace cs_impl {
-    template<>
-    std::size_t hash<cs::type_id>(const cs::type_id& id)
-    {
-        if (id.type_hash == 0)
-            return id.type_idx.hash_code();
-        else
-            throw cov::error("E000F");
-    }
+	template<>
+	std::size_t hash<cs::type_id>(const cs::type_id &id)
+	{
+		if (id.type_hash == 0)
+			return id.type_idx.hash_code();
+		else
+			throw cov::error("E000F");
+	}
 }

@@ -512,9 +512,11 @@ namespace cs {
 #else
 
 		statement_function(std::string name, const std::vector<std::string> &args,
-		                   const std::deque<statement_base *> &body, bool is_override, bool is_vargs, const context_t &c,
+		                   const std::deque<statement_base *> &body, bool is_override, bool is_vargs,
+		                   const context_t &c,
 		                   token_base *ptr)
-			: statement_base(c, ptr), mName(std::move(name)), mFunc(c, args, body, is_vargs), mOverride(is_override),
+			: statement_base(c, ptr), mName(std::move(name)), mFunc(c, args, body, is_vargs),
+			  mOverride(is_override),
 			  mArgs(args),
 			  mBlock(body) {}
 

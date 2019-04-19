@@ -127,27 +127,26 @@ namespace cs {
 				tmp.clear();
 				break;
 			case token_types::signal: {
-                if (issignal(buff[i])) {
-                    tmp += buff[i];
-                    ++i;
-                    continue;
-                }
-                type = token_types::null;
-                std::string sig;
-                for(auto& ch:tmp)
-                {
-                    if(!signal_map.exist(sig+ch))
-                    {
-                        tokens.push_back(new token_signal(signal_map.match(sig)));
-                        sig=ch;
-                    } else
-                        sig += ch;
-                }
-                if (!sig.empty())
-                    tokens.push_back(new token_signal(signal_map.match(sig)));
-                tmp.clear();
-                break;
-            }
+				if (issignal(buff[i])) {
+					tmp += buff[i];
+					++i;
+					continue;
+				}
+				type = token_types::null;
+				std::string sig;
+				for (auto &ch:tmp) {
+					if (!signal_map.exist(sig + ch)) {
+						tokens.push_back(new token_signal(signal_map.match(sig)));
+						sig = ch;
+					}
+					else
+						sig += ch;
+				}
+				if (!sig.empty())
+					tokens.push_back(new token_signal(signal_map.match(sig)));
+				tmp.clear();
+				break;
+			}
 			case token_types::value:
 				if (std::isdigit(buff[i]) || buff[i] == '.') {
 					tmp += buff[i];
@@ -181,20 +180,19 @@ namespace cs {
 			}
 			tokens.push_back(new token_id(tmp));
 			break;
-		case token_types::signal:{
-            std::string sig;
-            for(auto& ch:tmp)
-            {
-                if(!signal_map.exist(sig+ch))
-                {
-                    tokens.push_back(new token_signal(signal_map.match(sig)));
-                    sig=ch;
-                } else
-                    sig += ch;
-            }
-            if (!sig.empty())
-                tokens.push_back(new token_signal(signal_map.match(sig)));
-            break;
+		case token_types::signal: {
+			std::string sig;
+			for (auto &ch:tmp) {
+				if (!signal_map.exist(sig + ch)) {
+					tokens.push_back(new token_signal(signal_map.match(sig)));
+					sig = ch;
+				}
+				else
+					sig += ch;
+			}
+			if (!sig.empty())
+				tokens.push_back(new token_signal(signal_map.match(sig)));
+			break;
 		}
 		case token_types::value:
 			tokens.push_back(new_value(parse_number(tmp)));

@@ -228,8 +228,9 @@ namespace cs {
 	public:
 		token_signal() = delete;
 
-		explicit token_signal(signal_types t) : mType(t) {
-			if(t==signal_types::error_)
+		explicit token_signal(signal_types t) : mType(t)
+		{
+			if (t == signal_types::error_)
 				throw runtime_error("Wrong grammar for signals.");
 		}
 
@@ -272,49 +273,49 @@ namespace cs {
 		}
 	};
 
-    class token_vargs final : public token_base {
-        std::string mId;
-    public:
-        token_vargs() = delete;
+	class token_vargs final : public token_base {
+		std::string mId;
+	public:
+		token_vargs() = delete;
 
-        explicit token_vargs(const std::string &id) : mId(id) {}
+		explicit token_vargs(const std::string &id) : mId(id) {}
 
-        token_types get_type() const noexcept override
-        {
-            return token_types::vargs;
-        }
+		token_types get_type() const noexcept override
+		{
+			return token_types::vargs;
+		}
 
-        const std::string &get_id() const noexcept
-        {
-            return this->mId;
-        }
+		const std::string &get_id() const noexcept
+		{
+			return this->mId;
+		}
 
-        bool dump(std::ostream &o) const override
-        {
-            o << "< Variable Arguments List, ID = \"" << mId << "\" >";
-            return true;
-        }
-    };
+		bool dump(std::ostream &o) const override
+		{
+			o << "< Variable Arguments List, ID = \"" << mId << "\" >";
+			return true;
+		}
+	};
 
-    class token_expand final : public token_base {
-        tree_type<token_base *> mTree;
-    public:
-        token_expand() = delete;
+	class token_expand final : public token_base {
+		tree_type<token_base *> mTree;
+	public:
+		token_expand() = delete;
 
-        explicit token_expand(tree_type<token_base *> tree) : mTree(std::move(tree)) {}
+		explicit token_expand(tree_type<token_base *> tree) : mTree(std::move(tree)) {}
 
-        token_types get_type() const noexcept override
-        {
-            return token_types::expand;
-        }
+		token_types get_type() const noexcept override
+		{
+			return token_types::expand;
+		}
 
-        tree_type<token_base *> &get_tree() noexcept
-        {
-            return this->mTree;
-        }
+		tree_type<token_base *> &get_tree() noexcept
+		{
+			return this->mTree;
+		}
 
-        bool dump(std::ostream &) const override;
-    };
+		bool dump(std::ostream &) const override;
+	};
 
 	class token_value final : public token_base {
 		var mVal;

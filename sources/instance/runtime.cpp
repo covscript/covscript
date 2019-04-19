@@ -331,10 +331,11 @@ namespace cs {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 					const array &arr = parse_expr(
-							static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
+					                       static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
 					for (auto &it:arr)
 						args.push_back(lvalue(it));
-				} else
+				}
+				else
 					args.push_back(lvalue(parse_expr(tree.root())));
 			}
 			return a.const_val<callable>().call(args);
@@ -348,10 +349,11 @@ namespace cs {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 					const array &arr = parse_expr(
-							static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
+					                       static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
 					for (auto &it:arr)
 						args.push_back(lvalue(it));
-				} else
+				}
+				else
 					args.push_back(lvalue(parse_expr(tree.root())));
 			}
 			return om.callable.const_val<callable>().call(args);
