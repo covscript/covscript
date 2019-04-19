@@ -19,7 +19,7 @@ switch system.in.input()
 	case {to_integer(3.14),2}.at(0)
 		system.out.println("3")
 	end
-	case {darwin.pixel(' ',darwin.white,darwin.black),"Darwin"}.at(1)
+	case {darwin.pixel({' ',darwin.white,darwin.black}...),"Darwin"}.at(1)
 		system.out.println("Darwin")
 	end
 	case "x"+(to_string(math.constants.pi)).cut(5)
