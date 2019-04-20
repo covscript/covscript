@@ -263,12 +263,12 @@ namespace cs {
 		{
 			if (offset>=size())
 				throw std::out_of_range("Stack out of range.");
-			return *(m_start + offset);
+			return *(m_current - offset - 1);
 		}
 
 		inline T &operator[](std::size_t offset) const
 		{
-			return *(m_start + offset);
+			return *(m_current - offset - 1);
 		}
 
 		template<typename...ArgsT>
