@@ -374,10 +374,12 @@ namespace cs {
 					if (rptr == nullptr || rptr->get_type() != token_types::id)
 						throw runtime_error("Wrong grammar for vargs expression.");
 					it.data() = new token_vargs(static_cast<token_id *>(rptr)->get_id());
-
 				}
-				else
+				else{
+					if (it.right().data()!=nullptr)
+						throw runtime_error("Wrong grammar for vargs expression.");
 					it.data() = new token_expand(tree_type<token_base *>(it.left()));
+				}
 				return;
 			}
 			case signal_types::emb_: {
@@ -460,18 +462,40 @@ namespace cs {
 			return;
 		}
 		case token_types::array: {
-			bool is_optimizable = true;
+			token_base *ptr = nullptr;
 			for (auto &tree:static_cast<token_array *>(token)->get_array()) {
-				optimize_expression(tree);
-				if (is_optimizable && !optimizable(tree.root()))
-					is_optimizable = false;
+				ptr = tree.root().data();
+				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
+					auto& child_tree=static_cast<token_expand *>(ptr)->get_tree();
+					optimize_expression(child_tree);
+					if (!optimizable(child_tree.root()))
+						return;
+				}
+				else {
+					optimize_expression(tree);
+					if (!optimizable(tree.root()))
+						return;
+				}
 			}
-			if (is_optimizable) {
-				array
-				arr;
-				for (auto &tree:static_cast<token_array *>(token)->get_array())
-					arr.push_back((new_value(copy(context->instance->parse_expr(tree.root()))))->get_value());
+			token_base *oldt = it.data();
+			try {
+				array arr;
+				for (auto &tree:static_cast<token_array *>(token)->get_array()) {
+					ptr = tree.root().data();
+					if (ptr != nullptr && ptr->get_type() == token_types::expand) {
+						const array &child_arr = context->instance->parse_expr(static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
+						for (auto &it:child_arr)
+							arr.push_back(copy(it));
+					}
+					else
+						arr.push_back(copy(context->instance->parse_expr(tree.root())));
+				}
+				for(auto& it:arr)
+					add_constant(it);
 				it.data() = new_value(var::make<array>(std::move(arr)));
+			}
+			catch (...) {
+				it.data() = oldt;
 			}
 			return;
 		}
@@ -562,7 +586,6 @@ namespace cs {
 						token_base *oldt = it.data();
 						try {
 							vector args;
-
 							args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
 							for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
 								ptr = tree.root().data();

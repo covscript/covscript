@@ -330,8 +330,8 @@ namespace cs {
 			for (auto &tree:static_cast<token_arglist *>(b)->get_arglist()) {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
-					const array &arr = parse_expr(
-					                       static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
+					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
+					const array &arr = val.const_val<array>();
 					for (auto &it:arr)
 						args.push_back(lvalue(it));
 				}
@@ -348,8 +348,8 @@ namespace cs {
 			for (auto &tree:static_cast<token_arglist *>(b)->get_arglist()) {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
-					const array &arr = parse_expr(
-					                       static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
+					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
+					const array &arr = val.const_val<array>();
 					for (auto &it:arr)
 						args.push_back(lvalue(it));
 				}
@@ -413,6 +413,12 @@ namespace cs {
 		switch (token->get_type()) {
 		default:
 			break;
+		case token_types::vargs:
+			throw runtime_error("Wrong declaration of variable argument list.");
+			break;
+		case token_types::expand:
+			throw runtime_error("Wrong expanding position.");
+			break;
 		case token_types::id:
 			return storage.get_var(static_cast<token_id *>(token)->get_id());
 			break;
@@ -423,10 +429,19 @@ namespace cs {
 			return parse_expr(static_cast<token_expr *>(token)->get_tree().root());
 			break;
 		case token_types::array: {
-			array
-			arr;
-			for (auto &tree:static_cast<token_array *>(token)->get_array())
-				arr.push_back(copy(parse_expr(tree.root())));
+			array arr;
+			token_base* ptr=nullptr;
+			for (auto &tree:static_cast<token_array *>(token)->get_array()) {
+				ptr = tree.root().data();
+				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
+					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
+					const array &child_arr = val.const_val<array>();
+					for (auto &it:child_arr)
+						arr.push_back(copy(it));
+				}
+				else
+					arr.push_back(copy(parse_expr(tree.root())));
+			}
 			return rvalue(var::make<array>(std::move(arr)));
 		}
 		case token_types::parallel: {
