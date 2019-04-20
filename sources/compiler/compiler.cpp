@@ -375,7 +375,7 @@ namespace cs {
 						throw runtime_error("Wrong grammar for vargs expression.");
 					it.data() = new token_vargs(static_cast<token_id *>(rptr)->get_id());
 				}
-				else{
+				else {
 					if (it.right().data()!=nullptr)
 						throw runtime_error("Wrong grammar for vargs expression.");
 					it.data() = new token_expand(tree_type<token_base *>(it.left()));
@@ -403,16 +403,25 @@ namespace cs {
 				if (lptr == nullptr || rptr == nullptr || lptr->get_type() != token_types::arglist)
 					throw runtime_error("Wrong grammar for lambda expression.");
 				std::vector<std::string> args;
+				bool is_vargs = false;
 				for (auto &it:static_cast<token_arglist *>(lptr)->get_arglist()) {
 					if (it.root().data() == nullptr)
 						throw internal_error("Null pointer accessed.");
-					if (it.root().data()->get_type() != token_types::id)
+					if (it.root().data()->get_type() == token_types::id) {
+						const std::string &str = static_cast<token_id *>(it.root().data())->get_id();
+						for (auto &it:args)
+							if (it == str)
+								throw runtime_error("Redefinition of function argument.");
+						args.push_back(str);
+					}else if(it.root().data()->get_type() == token_types::vargs) {
+						const std::string &str = static_cast<token_vargs *>(it.root().data())->get_id();
+						if (!args.empty())
+							throw runtime_error("Redefinition of function argument(Multi-define of vargs).");
+						context->instance->storage.add_record(str);
+						args.push_back(str);
+						is_vargs=true;
+					}else
 						throw runtime_error("Wrong grammar for function definition.");
-					const std::string &str = static_cast<token_id *>(it.root().data())->get_id();
-					for (auto &it:args)
-						if (it == str)
-							throw runtime_error("Redefinition of function argument.");
-					args.push_back(str);
 				}
 				statement_base *ret = new statement_return(tree_type<token_base *>(it.right()), context,
 				        new token_endline(token->get_line_num()));
@@ -426,10 +435,10 @@ namespace cs {
 				}
 				else
 					decl+=")";
-				it.data() = new_value(var::make_protect<callable>(function(context, decl, ret, args, std::deque<statement_base *> {ret})));
+				it.data() = new_value(var::make_protect<callable>(function(context, decl, ret, args, std::deque<statement_base *> {ret}, is_vargs)));
 #else
 				it.data() = new_value(var::make_protect<callable>(
-				                          function(context, args, std::deque<statement_base *> {ret})));
+				                          function(context, args, std::deque<statement_base *> {ret}, is_vargs)));
 #endif
 				return;
 			}

@@ -3,19 +3,23 @@ function test(...args)
         system.out.print(to_string(args.front())+"\t")
         args.pop_front()
         test(args...)
+    else
+        system.out.println("")
     end
 end
-system.out.println("Test1")
-test(1,2,3,4,5,6,7)
-system.out.println("")
-system.out.println("Test2")
-test(1,2,{3,4,5}...,6,7)
-system.out.println("")
-system.out.println("Test3")
-constant c={1,{2,{3,{4}...,5}...,6}...,7}
-test(c...)
-system.out.println("")
-system.out.println("Test4")
+constant print=[](...args)->test(args...)
+system.out.println("Test 1")
+print(1,2,3,4,5,6,7)
+system.out.println("Test 2")
+print(1,2,{3,4,5}...,6,7)
+system.out.println("Test 3")
+constant a={1,{2,{3,{4}...,5}...,6}...,7}
+print(a...)
+system.out.println("Test 4")
 var b=5
-test({1,{2,{3,4,b++}...,b}...,7}...)
-system.out.println("")
+print({1,{2,{3,4,{b++}...}...,b}...,7}...)
+system.out.println("Test 5")
+var c={1,{2,{3,4,{--b}...}...,b}...,7}
+print(c...)
+system.out.println("Test 6")
+print({c...}...)
