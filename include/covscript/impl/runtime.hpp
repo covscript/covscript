@@ -23,13 +23,13 @@
 
 namespace cs {
 	class domain_manager {
-		std::deque<set_t < string>> m_set;
-		std::deque<domain_type> m_data;
+		stack_type<set_t < string>> m_set;
+		stack_type<domain_type> m_data;
 	public:
 		domain_manager()
 		{
-			m_set.emplace_front();
-			m_data.emplace_front();
+			m_set.push();
+			m_data.push();
 		}
 
 		domain_manager(const domain_manager &) = delete;
@@ -43,47 +43,47 @@ namespace cs {
 
 		void add_set()
 		{
-			m_set.emplace_front();
+			m_set.push();
 		}
 
 		void add_domain()
 		{
-			m_data.emplace_front();
+			m_data.push();
 		}
 
 		const domain_type &get_domain() const
 		{
-			return m_data.front();
+			return m_data.top();
 		}
 
 		const domain_type &get_global() const
 		{
-			return m_data.back();
+			return m_data.top();
 		}
 
 		void remove_set()
 		{
-			m_set.pop_front();
+			m_set.pop_no_return();
 		}
 
 		void remove_domain()
 		{
-			m_data.pop_front();
+			m_data.pop_no_return();
 		}
 
 		void clear_set()
 		{
-			m_set.front().clear();
+			m_set.top().clear();
 		}
 
 		void clear_domain()
 		{
-			m_data.front().clear();
+			m_data.top().clear();
 		}
 
 		bool exist_record(const string &name)
 		{
-			return m_set.front().count(name) > 0;
+			return m_set.top().count(name) > 0;
 		}
 
 		bool exist_record_in_struct(const string &name)
@@ -107,13 +107,13 @@ namespace cs {
 		template<typename T>
 		bool var_exist_current(T &&name)
 		{
-			return m_data.front().exist(name);
+			return m_data.top().exist(name);
 		}
 
 		template<typename T>
 		bool var_exist_global(T &&name)
 		{
-			return m_data.back().exist(name);
+			return m_data.bottom().exist(name);
 		}
 
 		template<typename T>
@@ -128,13 +128,13 @@ namespace cs {
 		template<typename T>
 		var &get_var_current(T &&name)
 		{
-			return m_data.front().get_var(name);
+			return m_data.top().get_var(name);
 		}
 
 		template<typename T>
 		var &get_var_global(T &&name)
 		{
-			return m_data.back().get_var(name);
+			return m_data.bottom().get_var(name);
 		}
 
 		template<typename T>
@@ -158,7 +158,7 @@ namespace cs {
 			if (exist_record(name))
 				throw runtime_error("Redefinition of variable \"" + name + "\".");
 			else
-				m_set.front().emplace(name);
+				m_set.top().emplace(name);
 			return *this;
 		}
 
@@ -172,12 +172,12 @@ namespace cs {
 		{
 			if (var_exist_current(name)) {
 				if (is_override)
-					m_data.front().get_var_no_check(name) = val;
+					m_data.top().get_var_no_check(name) = val;
 				else
 					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 			}
 			else
-				m_data.front().add_var(name, val);
+				m_data.top().add_var(name, val);
 			return *this;
 		}
 
@@ -187,7 +187,7 @@ namespace cs {
 			if (var_exist_global(name))
 				throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 			else
-				m_data.back().add_var(name, var);
+				m_data.bottom().add_var(name, var);
 			return *this;
 		}
 
