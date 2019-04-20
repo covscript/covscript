@@ -261,7 +261,7 @@ namespace cs {
 
 		inline T &at(std::size_t offset) const
 		{
-			if (offset>=size())
+			if (offset >= size())
 				throw std::out_of_range("Stack out of range.");
 			return *(m_current - offset - 1);
 		}

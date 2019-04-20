@@ -77,14 +77,14 @@ namespace cs {
 		if (vptr != nullptr) {
 			var ns = vptr->get_value();
 			if (ns.type() == typeid(namespace_t)) {
-				auto& domain=ns.const_val<namespace_t>()->get_domain();
-				for(auto& it:domain)
-				{
-					if(domain.get_var_by_id(it.second).is_protect())
+				auto &domain = ns.const_val<namespace_t>()->get_domain();
+				for (auto &it:domain) {
+					if (domain.get_var_by_id(it.second).is_protect())
 						context->instance->storage.add_record(it.first);
 				}
 				context->instance->storage.involve_domain(domain);
-			}else
+			}
+			else
 				throw runtime_error("Only support involve namespace.");
 			mResult = new statement_involve(tree, true, context, raw.front().back());
 		}

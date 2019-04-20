@@ -319,9 +319,10 @@ namespace cs {
 
 	class var_id final {
 		friend class domain_type;
+
 		friend class domain_manager;
 
-		mutable std::size_t m_domain_id=0, m_slot_id = 0;
+		mutable std::size_t m_domain_id = 0, m_slot_id = 0;
 		mutable std::shared_ptr<domain_ref> m_ref;
 		std::string m_id;
 	public:
@@ -394,10 +395,10 @@ namespace cs {
 			m_slot.clear();
 		}
 
-		bool consistence(const var_id& id) const noexcept
-        {
-		    return id.m_ref == m_ref;
-        }
+		bool consistence(const var_id &id) const noexcept
+		{
+			return id.m_ref == m_ref;
+		}
 
 		bool exist(const std::string &name) const noexcept
 		{
@@ -493,15 +494,15 @@ namespace cs {
 			return m_slot[id.m_slot_id];
 		}
 
-        var &get_var_no_check(const var_id &id, std::size_t domain_id) noexcept
-        {
-		    id.m_domain_id=domain_id;
-            if (id.m_ref != m_ref) {
-                id.m_slot_id = m_reflect.at(id.m_id);
-                id.m_ref = m_ref;
-            }
-            return m_slot[id.m_slot_id];
-        }
+		var &get_var_no_check(const var_id &id, std::size_t domain_id) noexcept
+		{
+			id.m_domain_id = domain_id;
+			if (id.m_ref != m_ref) {
+				id.m_slot_id = m_reflect.at(id.m_id);
+				id.m_ref = m_ref;
+			}
+			return m_slot[id.m_slot_id];
+		}
 
 		var &get_var_no_check(const std::string &name) noexcept
 		{

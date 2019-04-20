@@ -19,7 +19,6 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/impl/compiler.hpp>
-#include <iostream>
 
 namespace cs {
 	void compiler_type::process_char_buff(const std::deque<char> &buff, std::deque<token_base *> &tokens)

@@ -23,9 +23,9 @@
 
 namespace cs {
 	class domain_manager {
-		stack_type<set_t < string>> m_set;
-		stack_type<domain_type> m_data;
-		bool m_cache_refresh=false;
+		stack_type <set_t<string>> m_set;
+		stack_type <domain_type> m_data;
+		bool m_cache_refresh = false;
 	public:
 		domain_manager()
 		{
@@ -50,7 +50,7 @@ namespace cs {
 		void add_domain()
 		{
 			m_data.push();
-			m_cache_refresh=true;
+			m_cache_refresh = true;
 		}
 
 		const domain_type &get_domain() const
@@ -71,7 +71,7 @@ namespace cs {
 		void remove_domain()
 		{
 			m_data.pop_no_return();
-			m_cache_refresh=true;
+			m_cache_refresh = true;
 		}
 
 		void clear_set()
@@ -127,17 +127,17 @@ namespace cs {
 			throw runtime_error("Use of undefined variable \"" + name + "\".");
 		}
 
-        inline var &get_var(const var_id &id)
-        {
-		    if(!m_cache_refresh&&id.m_domain_id<m_data.size()&&m_data[id.m_domain_id].consistence(id))
-		    	return m_data[id.m_domain_id].get_var_by_id(id.m_slot_id);
-		    if(m_cache_refresh)
-		    	m_cache_refresh=false;
-			for(std::size_t i=0, size=m_data.size();i<size;++i)
-		        if(m_data[i].exist(id))
-		            return m_data[i].get_var_no_check(id, i);
-            throw runtime_error("Use of undefined variable \"" + id.get_id() + "\".");
-        }
+		inline var &get_var(const var_id &id)
+		{
+			if (!m_cache_refresh && id.m_domain_id < m_data.size() && m_data[id.m_domain_id].consistence(id))
+				return m_data[id.m_domain_id].get_var_by_id(id.m_slot_id);
+			if (m_cache_refresh)
+				m_cache_refresh = false;
+			for (std::size_t i = 0, size = m_data.size(); i < size; ++i)
+				if (m_data[i].exist(id))
+					return m_data[i].get_var_no_check(id, i);
+			throw runtime_error("Use of undefined variable \"" + id.get_id() + "\".");
+		}
 
 		template<typename T>
 		var &get_var_current(T &&name)
@@ -155,8 +155,8 @@ namespace cs {
 		var get_var_optimizable(T &&name)
 		{
 			if (m_data.size() == m_set.size()) {
-				for (std::size_t i=0, size=m_data.size();i<size;++i) {
-					if (m_set[i].count(name)>0) {
+				for (std::size_t i = 0, size = m_data.size(); i < size; ++i) {
+					if (m_set[i].count(name) > 0) {
 						if (m_data[i].exist(name))
 							return m_data[i].get_var_no_check(name);
 						else
