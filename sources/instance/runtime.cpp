@@ -430,7 +430,7 @@ namespace cs {
 			break;
 		case token_types::array: {
 			array arr;
-			token_base* ptr=nullptr;
+			token_base *ptr = nullptr;
 			for (auto &tree:static_cast<token_array *>(token)->get_array()) {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {

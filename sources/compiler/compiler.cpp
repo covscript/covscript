@@ -376,7 +376,7 @@ namespace cs {
 					it.data() = new token_vargs(static_cast<token_id *>(rptr)->get_id());
 				}
 				else {
-					if (it.right().data()!=nullptr)
+					if (it.right().data() != nullptr)
 						throw runtime_error("Wrong grammar for vargs expression.");
 					it.data() = new token_expand(tree_type<token_base *>(it.left()));
 				}
@@ -413,14 +413,16 @@ namespace cs {
 							if (it == str)
 								throw runtime_error("Redefinition of function argument.");
 						args.push_back(str);
-					}else if(it.root().data()->get_type() == token_types::vargs) {
+					}
+					else if (it.root().data()->get_type() == token_types::vargs) {
 						const std::string &str = static_cast<token_vargs *>(it.root().data())->get_id();
 						if (!args.empty())
 							throw runtime_error("Redefinition of function argument(Multi-define of vargs).");
 						context->instance->storage.add_record(str);
 						args.push_back(str);
-						is_vargs=true;
-					}else
+						is_vargs = true;
+					}
+					else
 						throw runtime_error("Wrong grammar for function definition.");
 				}
 				statement_base *ret = new statement_return(tree_type<token_base *>(it.right()), context,
@@ -475,7 +477,7 @@ namespace cs {
 			for (auto &tree:static_cast<token_array *>(token)->get_array()) {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
-					auto& child_tree=static_cast<token_expand *>(ptr)->get_tree();
+					auto &child_tree = static_cast<token_expand *>(ptr)->get_tree();
 					optimize_expression(child_tree);
 					if (!optimizable(child_tree.root()))
 						return;
@@ -492,14 +494,15 @@ namespace cs {
 				for (auto &tree:static_cast<token_array *>(token)->get_array()) {
 					ptr = tree.root().data();
 					if (ptr != nullptr && ptr->get_type() == token_types::expand) {
-						const array &child_arr = context->instance->parse_expr(static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
+						const array &child_arr = context->instance->parse_expr(
+						                             static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
 						for (auto &it:child_arr)
 							arr.push_back(copy(it));
 					}
 					else
 						arr.push_back(copy(context->instance->parse_expr(tree.root())));
 				}
-				for(auto& it:arr)
+				for (auto &it:arr)
 					add_constant(it);
 				it.data() = new_value(var::make<array>(std::move(arr)));
 			}
