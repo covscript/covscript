@@ -13,22 +13,6 @@ function step1(n)
     return to_integer(score/n)
 end
 function step2(n,k)
-    function recursion(n)
-        if n>0
-            return recursion(n-1)
-        else
-            return
-        end
-    end
-    var score=0
-    foreach i:range(1,k+1)
-        var ts=runtime.time()
-        recursion(n)
-        score=score+runtime.time()-ts
-    end
-    return to_integer(score/k)
-end
-function step3(n,k)
     var precision=10^(-n)
     function integral(func,begin,end_)
         var sum=0
@@ -75,7 +59,7 @@ function quicksort(a,m,n)
     quicksort(a,m,j)
     quicksort(a,i+1,n)
 end
-function step4(n,k)
+function step3(n,k)
     var score=0
     foreach i:range(1,k+1)
         var a={}
@@ -95,7 +79,7 @@ function fibonacci(count)
     foreach it:sum do it.second()>max.second()?(max=it):null
     return max.first()
 end
-function step5(n,k)
+function step4(n,k)
     var score=0
     foreach i:range(1,k+1)
         var ts=runtime.time()
@@ -104,7 +88,7 @@ function step5(n,k)
     end
     return to_integer(score/k)
 end
-function step6(n,k)
+function step5(n,k)
     var score=0,fib=[](n)->n>2?fib(n-1)+fib(n-2):1
     foreach i:range(1,k+1)
         var ts=runtime.time()
@@ -116,13 +100,11 @@ end
 system.out.println("Covariant Script Performance Benchmark")
 system.out.println("Step 1:Speed of simple statement execution")
 system.out.println("Result:"+to_string(step1(5)))
-system.out.println("Step 2:Speed of function recursion")
-system.out.println("Result:"+to_string(step2(1000,5)))
-system.out.println("Step 3:Speed of integral")
-system.out.println("Result:"+to_string(step3(5,5)))
-system.out.println("Step 4:Speed of quick sort(10000 Data)")
+system.out.println("Step 2:Speed of integral")
+system.out.println("Result:"+to_string(step2(5,5)))
+system.out.println("Step 3:Speed of quick sort(10000 Data)")
+system.out.println("Result:"+to_string(step3(10000,5)))
+system.out.println("Step 4:Speed of fibonacci(10000 Data)")
 system.out.println("Result:"+to_string(step4(10000,5)))
-system.out.println("Step 5:Speed of fibonacci(10000 Data)")
-system.out.println("Result:"+to_string(step5(10000,5)))
-system.out.println("Step 6:Speed of fibonacci(Depth 30)")
-system.out.println("Result:"+to_string(step6(30,5)))
+system.out.println("Step 5:Speed of fibonacci(Depth 30)")
+system.out.println("Result:"+to_string(step5(30,5)))

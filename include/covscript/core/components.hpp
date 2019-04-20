@@ -167,7 +167,7 @@ namespace cs {
 	};
 
 // Static Stack
-	template<typename T, std::size_t m_size = 1024>
+	template<typename T, std::size_t m_size = 512>
 	class stack_type final {
 		typename std::aligned_storage<sizeof(T), alignof(T)>::type m_data[m_size];
 		T *m_start = nullptr, *m_current = nullptr;
@@ -250,6 +250,25 @@ namespace cs {
 			if (empty())
 				throw cov::error("E000H");
 			return *(m_current - 1);
+		}
+
+		inline T &bottom() const
+		{
+			if (empty())
+				throw cov::error("E000H");
+			return *m_start;
+		}
+
+		inline T &at(std::size_t offset) const
+		{
+			if (offset>=size())
+				throw std::out_of_range("Stack out of range.");
+			return *(m_current - offset - 1);
+		}
+
+		inline T &operator[](std::size_t offset) const
+		{
+			return *(m_current - offset - 1);
 		}
 
 		template<typename...ArgsT>
