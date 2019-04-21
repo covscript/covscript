@@ -649,7 +649,7 @@ namespace cs_impl {
 			return *this;
 		}
 
-		any &operator=(any &&var)
+		any &operator=(any &&var) noexcept
 		{
 			if (&var != this)
 				swap(std::forward<any>(var));

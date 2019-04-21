@@ -328,7 +328,7 @@ namespace cs {
 	public:
 		var_id() = delete;
 
-		var_id(const std::string &name) : m_id(name) {}
+		var_id(std::string name) : m_id(std::move(name)) {}
 
 		var_id(const var_id &) = default;
 

@@ -278,7 +278,7 @@ namespace cs {
 	public:
 		token_vargs() = delete;
 
-		explicit token_vargs(const std::string &id) : mId(id) {}
+		explicit token_vargs(std::string id) : mId(std::move(id)) {}
 
 		token_types get_type() const noexcept override
 		{

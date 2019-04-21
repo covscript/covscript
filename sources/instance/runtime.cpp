@@ -331,7 +331,7 @@ namespace cs {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
-					const array &arr = val.const_val<array>();
+					const auto &arr = val.const_val<array>();
 					for (auto &it:arr)
 						args.push_back(lvalue(it));
 				}
@@ -349,7 +349,7 @@ namespace cs {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
-					const array &arr = val.const_val<array>();
+					const auto &arr = val.const_val<array>();
 					for (auto &it:arr)
 						args.push_back(lvalue(it));
 				}
@@ -435,7 +435,7 @@ namespace cs {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
-					const array &child_arr = val.const_val<array>();
+					const auto &child_arr = val.const_val<array>();
 					for (auto &it:child_arr)
 						arr.push_back(copy(it));
 				}

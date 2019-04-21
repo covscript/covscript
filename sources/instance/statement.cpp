@@ -38,7 +38,7 @@ namespace cs {
 #endif
 		if (mIsVargs) {
 			var arg_list = var::make<cs::array>();
-			cs::array &arr = arg_list.val<cs::array>();
+			auto &arr = arg_list.val<cs::array>();
 			for (auto &it:args)
 				arr.push_back(it);
 			mContext->instance->storage.add_var(this->mArgs.front(), arg_list);
