@@ -1146,6 +1146,8 @@ namespace cs_impl {
 		array scan(const string &path)
 		{
 			DIR *dir = ::opendir(path.c_str());
+			if (dir == nullptr)
+				throw cs::lang_error("Path does not exist.");
 			array
 			entries;
 			for (dirent *dp = ::readdir(dir); dp != nullptr; dp = ::readdir(dir))

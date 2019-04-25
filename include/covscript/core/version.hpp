@@ -28,6 +28,6 @@
 *
 */
 #define COVSCRIPT_VERSION_NUM 3,1,2,5
-#define COVSCRIPT_VERSION_STR "3.1.2 Ursus arctos(Stable) Build 5"
+#define COVSCRIPT_VERSION_STR "3.1.2 Ursus arctos(Stable) Build 6"
 #define COVSCRIPT_STD_VERSION 190401
 #define COVSCRIPT_ABI_VERSION 190421

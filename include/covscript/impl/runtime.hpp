@@ -23,8 +23,8 @@
 
 namespace cs {
 	class domain_manager {
-		stack_type <set_t<string>> m_set;
-		stack_type <domain_type> m_data;
+		stack_type<set_t<string>> m_set;
+		stack_type<domain_type> m_data;
 		bool m_cache_refresh = false;
 	public:
 		domain_manager()
