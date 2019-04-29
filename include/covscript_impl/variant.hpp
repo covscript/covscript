@@ -75,82 +75,74 @@ namespace variant_impl {
 		static void emplace(byte_t *, X &&) {}
 	};
 
+	class base_holder {
+	public:
+		virtual const std::type_info &get_type() const noexcept = 0;
+
+		virtual void copy_data(byte_t *) = 0;
+
+		virtual ~base_holder() = default;
+	};
+
+	template<typename T>
+	class holder : public base_holder {
+	public:
+		T data;
+
+		template<typename... _ArgsT>
+		holder(_ArgsT &&... args) : data(std::forward<_ArgsT>(args)...) {}
+
+		const std::type_info &get_type() const noexcept override
+		{
+			return typeid(T);
+		}
+
+		void copy_data(byte_t *dest) override
+		{
+			::new(dest) T(data);
+		}
+	};
+
 	template<typename... ArgsT>
 	struct template_args_iterator;
 
 	template<typename T>
-	struct template_args_iterator<T> {
+	struct template_args_iterator<holder<T>> {
 		static constexpr std::size_t get_max_size(std::size_t size = 0)
 		{
-			if (sizeof(T) > size)
-				return sizeof(T);
+			if (sizeof(holder<T>) > size)
+				return sizeof(holder<T>);
 			else
 				return size;
 		}
 
 		template<typename X>
-		static std::type_index emplace(byte_t *src, X &&dat)
+		static void emplace(byte_t *src, X &&dat)
 		{
-			if (convertible<X, T>::value) {
-				convert_if<convertible<X, T>::value, T>::emplace(src, std::forward<X>(dat));
-				return typeid(T);
-			}
+			if (convertible<X, T>::value)
+				convert_if<convertible<X, T>::value, holder<T>>::emplace(src, std::forward<X>(dat));
 			else
 				throw std::logic_error("Internal Error: No matching types(emplace).");
-		}
-
-		static void copy_data(const std::type_index &ti, const byte_t *src, byte_t *dest)
-		{
-			if (ti == typeid(T))
-				::new(dest) T(*reinterpret_cast<const T *>(src));
-			else
-				throw std::logic_error("Internal Error: No matching types(copy).");
-		}
-
-		static void destroy_data(const std::type_index &ti, byte_t *src)
-		{
-			if (ti == typeid(T))
-				reinterpret_cast<T *>(src)->~T();
-			else
-				throw std::logic_error("Internal Error: No matching types(destroy).");
 		}
 	};
 
 	template<typename T, typename... ArgsT>
-	struct template_args_iterator<T, ArgsT...> {
+	struct template_args_iterator<holder<T>, ArgsT...> {
 		static constexpr std::size_t get_max_size(std::size_t size = 0)
 		{
-			if (sizeof(T) > size)
-				return template_args_iterator<ArgsT...>::get_max_size(sizeof(T));
+			if (sizeof(holder<T>) > size)
+				return template_args_iterator<ArgsT...>::get_max_size(sizeof(holder<T>));
 			else
 				return template_args_iterator<ArgsT...>::get_max_size(size);
 		}
 
 		template<typename X>
-		static std::type_index emplace(byte_t *src, X &&dat)
+		static void emplace(byte_t *src, X &&dat)
 		{
-			if (convertible<X, T>::value) {
-				convert_if<convertible<X, T>::value, T>::emplace(src, std::forward<X>(dat));
-				return typeid(T);
-			}
+			if (convertible<X, T>::value)
+				convert_if<convertible<X, T>::value, holder<T>>::emplace(src, std::forward<X>(dat));
 			else
-				return template_args_iterator<ArgsT...>::emplace(src, std::forward<X>(dat));
-		}
-
-		static void copy_data(const std::type_index &ti, const byte_t *src, byte_t *dest)
-		{
-			if (ti == typeid(T))
-				::new(dest) T(*reinterpret_cast<const T *>(src));
-			else
-				template_args_iterator<ArgsT...>::copy_data(ti, src, dest);
-		}
-
-		static void destroy_data(const std::type_index &ti, byte_t *src)
-		{
-			if (ti == typeid(T))
-				reinterpret_cast<T *>(src)->~T();
-			else
-				template_args_iterator<ArgsT...>::destroy_data(ti, src);
+				template_args_iterator<ArgsT...>::emplace(src, std::forward<X>(dat));
 		}
 	};
 
@@ -159,40 +151,37 @@ namespace variant_impl {
 
 	template<typename... ArgsT>
 	class variant final {
-		using template_iterator_t = template_args_iterator<monostate, ArgsT...>;
-		std::type_index current_type = typeid(monostate);
+		using template_iterator_t = template_args_iterator<holder<monostate>, holder<ArgsT>...>;
 		byte_t data_container[template_iterator_t::get_max_size()];
+		base_holder *data_ptr = reinterpret_cast<base_holder *>(data_container);
 
 	public:
 		variant()
 		{
-			::new(data_container) monostate;
+			::new(data_container) holder<monostate>;
 		}
 
 		variant(const variant &var)
 		{
-			template_iterator_t::copy_data(var.current_type, var.data_container, data_container);
-			current_type = var.current_type;
+			data_ptr->copy_data(data_container);
 		}
 
 		template<typename T>
 		variant(const T &t)
 		{
-			::new(data_container) T(t);
-			current_type = typeid(T);
+			::new(data_container) holder<T>(t);
 		}
 
 		~variant()
 		{
-			template_iterator_t::destroy_data(current_type, data_container);
+			data_ptr->~base_holder();
 		}
 
 		variant &operator=(const variant &var)
 		{
 			if (&var != this) {
-				template_iterator_t::destroy_data(current_type, data_container);
-				template_iterator_t::copy_data(var.current_type, var.data_container, data_container);
-				current_type = var.current_type;
+				data_ptr->~base_holder();
+				var.data_ptr->copy_data(data_container);
 			}
 			return *this;
 		}
@@ -200,46 +189,35 @@ namespace variant_impl {
 		template<typename T>
 		variant &operator=(const T &t)
 		{
-			template_iterator_t::destroy_data(current_type, data_container);
-			::new(data_container) T(t);
-			current_type = typeid(T);
+			data_ptr->~base_holder();
+			::new(data_container) holder<T>(t);
 			return *this;
 		}
 
 		template<typename T, typename... ElementT>
 		void emplace(ElementT &&... args)
 		{
-			template_iterator_t::destroy_data(current_type, data_container);
-			::new(data_container) T(std::forward<ElementT>(args)...);
-			current_type = typeid(T);
+			data_ptr->~base_holder();
+			::new(data_container) holder<T>(std::forward<ElementT>(args)...);
 		}
 
 		template<typename T>
 		void force_emplace(T &&dat)
 		{
-			template_iterator_t::destroy_data(current_type, data_container);
-			current_type = template_iterator_t::emplace(data_container, std::forward<T>(dat));
+			data_ptr->~base_holder();
+			template_iterator_t::emplace(data_container, std::forward<T>(dat));
 		}
 
-		const std::type_index &type() const
+		const std::type_info &type() const
 		{
-			return current_type;
-		}
-
-		template<typename T>
-		T &get()
-		{
-			if (current_type == typeid(T))
-				return *reinterpret_cast<T *>(data_container);
-			else
-				throw std::logic_error("Type does not match.");
+			return data_ptr->get_type();
 		}
 
 		template<typename T>
-		const T &get() const
+		T &get() const
 		{
-			if (current_type == typeid(T))
-				return *reinterpret_cast<T const *>(data_container);
+			if (data_ptr->get_type() == typeid(T))
+				return static_cast<holder<T> *>(data_ptr)->data;
 			else
 				throw std::logic_error("Type does not match.");
 		}
