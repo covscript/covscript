@@ -7,7 +7,6 @@ function step1(n)
         loop
             fc++
         until runtime.time()-ts>=1000
-        end
         score=score+fc
     end
     return to_integer(score/n)
@@ -42,14 +41,12 @@ function quicksort(a,m,n)
                 break
             end
         until a[i]>=v
-        end
         loop
             --j
             if j<0
                 break
             end
         until a[j]<=v
-        end
         if i>=j
             break
         end

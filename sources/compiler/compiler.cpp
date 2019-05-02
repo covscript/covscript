@@ -745,7 +745,10 @@ namespace cs {
 						}
 						if (level == 0) {
 							line_num = method_line_num;
-							sptr = method->translate(context, tmp);
+							if (m->get_target_type() == statement_types::end_)
+								sptr = static_cast<method_end *>(m)->translate_end(method, context, tmp, line);
+							else
+								sptr = method->translate(context, tmp);
 							tmp.clear();
 							method = nullptr;
 						}

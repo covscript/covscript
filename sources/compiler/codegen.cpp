@@ -168,11 +168,6 @@ namespace cs {
 		return mResult;
 	}
 
-	statement_base *method_end::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
-	{
-		return new statement_end;
-	}
-
 	statement_base *method_block::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
@@ -327,31 +322,34 @@ namespace cs {
 			                           raw.front().back());
 	}
 
-	statement_base *method_until::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_until::translate_end(method_base* method, const context_t &context, std::deque<std::deque<token_base *>> &raw, std::deque<token_base *> &code)
 	{
-		return new statement_until(static_cast<token_expr *>(raw.front().at(1)), context, raw.front().back());
+		if(method!=nullptr&&method->get_target_type()==statement_types::loop_)
+			return static_cast<method_loop*>(method)->translate(context, raw, static_cast<token_expr *>(code.at(1))->get_tree());
+		else
+			throw runtime_error("Wrong grammar(loop-until)");
 	}
 
 	statement_base *method_loop::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		if (!body.empty() && body.back()->get_type() == statement_types::until_) {
-			token_expr *expr = static_cast<statement_until *>(body.back())->get_expr();
-			body.pop_back();
-			tree_type<token_base *> &tree = expr->get_tree();
-			token_base *ptr = tree.root().data();
-			if (ptr != nullptr && ptr->get_type() == token_types::value) {
-				if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
-					return new statement_block(body, context, raw.front().back());
-				else
-					return new statement_loop(body, context, raw.front().back());
-			}
+		return new statement_loop(body, context, raw.front().back());
+	}
+
+	statement_base *method_loop::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw, const tree_type<token_base *> &cond)
+	{
+		std::deque<statement_base *> body;
+		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
+		token_base *ptr = cond.root().data();
+		if (ptr != nullptr && ptr->get_type() == token_types::value) {
+			if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
+				return new statement_block(body, context, raw.front().back());
 			else
-				return new statement_loop_until(tree, body, context, raw.front().back());
+				return new statement_loop(body, context, raw.front().back());
 		}
 		else
-			return new statement_loop(body, context, raw.front().back());
+			return new statement_loop_until(cond, body, context, raw.front().back());
 	}
 
 	void method_for::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)

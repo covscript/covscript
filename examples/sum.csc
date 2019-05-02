@@ -10,6 +10,5 @@ loop
     end
     ++n
 until r<10^(-6)
-end
 system.out.println(s)
 system.out.println(math.constants.pi/4)

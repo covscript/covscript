@@ -20,7 +20,6 @@ function exec_sql(db,sql,callback,arg)
         stmt.exec()
         callback(stmt,arg)
     until stmt.done()
-    end
 end
 
 function create_table(db,path)

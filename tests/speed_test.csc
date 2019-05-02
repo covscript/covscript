@@ -4,6 +4,5 @@ loop
     loop
         fc++
     until runtime.time()-ts>=1000
-    end
     system.out.println(fc)
 end

@@ -136,23 +136,6 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_end final : public method_base {
-	public:
-		using method_base::method_base;
-
-		method_types get_type() const noexcept override
-		{
-			return method_types::single;
-		}
-
-		statement_types get_target_type() const noexcept override
-		{
-			return statement_types::end_;
-		}
-
-		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
-	};
-
 	class method_block final : public method_base {
 	public:
 		using method_base::method_base;
@@ -291,21 +274,11 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_until final : public method_base {
+	class method_until final : public method_end {
 	public:
-		using method_base::method_base;
+		using method_end::method_end;
 
-		method_types get_type() const noexcept override
-		{
-			return method_types::single;
-		}
-
-		statement_types get_target_type() const noexcept override
-		{
-			return statement_types::until_;
-		}
-
-		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
+		statement_base *translate_end(method_base*, const context_t &, std::deque<std::deque<token_base *>> &, std::deque<token_base *> &) override;
 	};
 
 	class method_loop final : public method_base {
@@ -323,6 +296,8 @@ namespace cs {
 		}
 
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
+
+		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &, const tree_type<token_base *> &);
 	};
 
 	class method_for final : public method_base {

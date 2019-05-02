@@ -16,7 +16,6 @@ loop
         a=c
     end
 until b-a<10^(-6)
-end
 system.out.println("Finish.Press any key to show the result...")
 system.console.getch()
 darwin.load()

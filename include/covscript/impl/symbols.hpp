@@ -617,4 +617,29 @@ namespace cs {
 
 		virtual statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) = 0;
 	};
+
+	class method_end : public method_base {
+	public:
+		using method_base::method_base;
+
+		method_types get_type() const noexcept override
+		{
+			return method_types::single;
+		}
+
+		statement_types get_target_type() const noexcept override
+		{
+			return statement_types::end_;
+		}
+
+		virtual statement_base *translate_end(method_base* method, const context_t &context, std::deque<std::deque<token_base *>> &raw, std::deque<token_base *> &code)
+		{
+			return method->translate(context, raw);
+		}
+
+		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override
+		{
+			return nullptr;
+		}
+	};
 }

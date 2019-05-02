@@ -564,26 +564,6 @@ namespace cs {
 		void dump(std::ostream &) const override;
 	};
 
-	class statement_end final : public statement_base {
-	public:
-		statement_end() = default;
-
-		statement_types get_type() const noexcept override
-		{
-			return statement_types::end_;
-		}
-
-		void run() override
-		{
-			throw runtime_error("Do not allowed standalone end statement.");
-		}
-
-		void dump(std::ostream &) const override
-		{
-			throw runtime_error("Do not allowed standalone end statement.");
-		}
-	};
-
 	class statement_try final : public statement_base {
 		std::string mName;
 		std::deque<statement_base *> mTryBody;

@@ -10,7 +10,6 @@ loop
         a=c
     end
 until b-a<10^(-8)
-end
 system.out.println(b)
 loop
     var c=(a+b)/2
@@ -20,5 +19,4 @@ loop
         a=c
     end
 until b-a<10^(-18)
-end
 system.out.println(b)

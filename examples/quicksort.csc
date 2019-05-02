@@ -12,14 +12,12 @@ function quicksort(a,m,n)
 				break
 			end
 		until a[i]>=v
-		end
 		loop
 			--j
 			if j<0
 				break
 			end
 		until a[j]<=v
-		end
 		if i>=j
 			break
 		end
