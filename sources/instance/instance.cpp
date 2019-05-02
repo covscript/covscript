@@ -158,7 +158,10 @@ namespace cs {
 						--level;
 					}
 					if (level == 0) {
-						statement = method->translate(context, tmp);
+						if (m->get_target_type() == statement_types::end_)
+							statement = static_cast<method_end *>(m)->translate_end(method, context, tmp, line);
+						else
+							statement = method->translate(context, tmp);
 						tmp.clear();
 						method = nullptr;
 					}
