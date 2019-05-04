@@ -1,14 +1,21 @@
-dist: xenial
-language: cpp
+os:
+  - osx
+  - linux
+  - windows
 compiler:
   - clang
   - gcc
-install:
-  - mkdir build
-  - cd build
-  - cmake -G "Unix Makefiles" ..
-  - make -j4
-  - cd ..
+dist: xenial
+language: cpp
+osx_image: xcode10
+matrix:
+  include:
+    - os: osx
+      install: bash csbuild/make.sh
+    - os: linux
+      install: bash csbuild/make.sh
+    - os: windows
+      install: bash csbuild/make.bat
 script:
   - ./build/cs -v
   - ./build/cs -h
@@ -17,6 +24,3 @@ script:
   - ./build/cs_repl -v
   - ./build/cs_repl -h
   - ./build/cs ./examples/benchmark.csc
-  - echo "runtime.info()" | ./build/cs_repl -s
-  - ./build/cs --import-path ./build ./tests/extension.csc
-  - ./build/test-covscript ./tests/function_invoker.csc
