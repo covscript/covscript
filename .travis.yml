@@ -8,14 +8,14 @@ compiler:
 dist: xenial
 language: cpp
 osx_image: xcode10
-matrix:
+jobs:
   include:
     - os: osx
       install: bash csbuild/make.sh
     - os: linux
       install: bash csbuild/make.sh
     - os: windows
-      install: bash csbuild/make.bat
+      install: csbuild/make.bat
 script:
   - ./build/cs -v
   - ./build/cs -h
