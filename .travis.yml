@@ -1,38 +1,17 @@
-language: cpp
-martix:
+language: c++
+jobs:
   include:
-    - os: osx
-      osx_image: xcode10
-      install: bash csbuild/make.sh
-      script:
-        - ./build/cs -v
-        - ./build/cs -h
-        - ./build/cs_dbg -v
-        - ./build/cs_dbg -h
-        - ./build/cs_repl -v
-        - ./build/cs_repl -h
-        - ./build/cs ./examples/benchmark.csc
     - os: linux
       dist: xenial
       compiler:
-        - clang
         - gcc
-      install: bash csbuild/make.sh
-      script:
-        - ./build/cs -v
-        - ./build/cs -h
-        - ./build/cs_dbg -v
-        - ./build/cs_dbg -h
-        - ./build/cs_repl -v
-        - ./build/cs_repl -h
-        - ./build/cs ./examples/benchmark.csc
+        - clang
+      install:
+        - bash ./csbuild/make.sh
+    - os: osx
+      osx_image: xcode10
+      install:
+        - bash ./csbuild/make.sh
     - os: windows
-      install: csbuild/make.bat
-      script:
-        - .\build\cs -v
-        - .\build\cs -h
-        - .\build\cs_dbg -v
-        - .\build\cs_dbg -h
-        - .\build\cs_repl -v
-        - .\build\cs_repl -h
-        - .\build\cs .\examples\benchmark.csc
+      install:
+        - csbuild\make.bat
