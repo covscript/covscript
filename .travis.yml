@@ -50,7 +50,6 @@ jobs:
       script: *sh
     - os: windows
       install:
-        - powershell
         - mkdir build
         - cd build
         - cmake -G "Visual Studio 15 2017" ..
