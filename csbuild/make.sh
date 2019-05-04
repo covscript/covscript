@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-mkdir cmake-build/unix
-cd    cmake-build/unix
+mkdir -p cmake-build/unix
+cd       cmake-build/unix
 cmake -G "Unix Makefiles" ../..
 cmake --build . --target covscript        -- -j4
 cmake --build . --target covscript_debug  -- -j4
