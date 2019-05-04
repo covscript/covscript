@@ -536,16 +536,16 @@ namespace cs {
 		}
 	};
 
-	struct type final {
+	struct type_t final {
 		std::function<var()> constructor;
 		namespace_t extensions;
 		type_id id;
 
-		type() = delete;
+		type_t() = delete;
 
-		type(std::function<var()> c, const type_id &i) : constructor(std::move(c)), id(i) {}
+		type_t(std::function<var()> c, const type_id &i) : constructor(std::move(c)), id(i) {}
 
-		type(std::function<var()> c, const type_id &i, namespace_t ext) : constructor(std::move(c)), id(i),
+		type_t(std::function<var()> c, const type_id &i, namespace_t ext) : constructor(std::move(c)), id(i),
 			extensions(std::move(std::move(ext))) {}
 
 		template<typename T>
@@ -783,7 +783,7 @@ namespace cs {
 	};
 
 	template<typename T>
-	var &type::get_var(T &&name) const
+	var &type_t::get_var(T &&name) const
 	{
 		if (extensions.get() != nullptr)
 			return extensions->get_var(name);

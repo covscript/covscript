@@ -172,7 +172,7 @@ namespace cs_impl {
 	}
 
 	template<>
-	constexpr const char *get_name_of_type<cs::type>()
+	constexpr const char *get_name_of_type<cs::type_t>()
 	{
 		return "cs::type";
 	}

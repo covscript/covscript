@@ -70,8 +70,8 @@ namespace cs {
 		scope_guard scope(mContext);
 		if (mParent.root().usable()) {
 			var builder = mContext->instance->parse_expr(mParent.root());
-			if (builder.type() == typeid(type)) {
-				const auto &t = builder.const_val<type>();
+			if (builder.type() == typeid(type_t)) {
+				const auto &t = builder.const_val<type_t>();
 				if (mTypeId == t.id)
 					throw runtime_error("Can not inherit itself.");
 				var parent = t.constructor();

@@ -1,19 +1,15 @@
 @echo off
-mkdir bin
-mkdir lib
-mkdir tmp
-cd tmp
-set CXX_ARGS=-std=c++14 -I ..\include -static -s -O3
-windres -I ..\include ..\sources\win32_rc\standalone.rc cs.o
-windres -I ..\include ..\sources\win32_rc\repl.rc cs_repl.o
-windres -I ..\include ..\sources\win32_rc\debugger.rc cs_dbg.o
-g++ %CXX_ARGS% -fPIC -c ..\sources\compiler\*.cpp ..\sources\instance\*.cpp ..\sources\covscript.cpp
-ar -ro ..\lib\libcovscript.a *.o
-g++ %CXX_ARGS% -fPIC -DCS_DEBUGGER -c ..\sources\compiler\*.cpp ..\sources\instance\*.cpp ..\sources\covscript.cpp
-ar -ro ..\lib\libcovscript_debug.a *.o
-g++ %CXX_ARGS% -fPIE ..\sources\standalone.cpp cs.o -o ..\bin\cs.exe -L..\lib -lcovscript
-g++ %CXX_ARGS% -fPIE ..\sources\repl.cpp cs_repl.o -o ..\bin\cs_repl.exe -L..\lib -lcovscript
-g++ %CXX_ARGS% -fPIE ..\sources\debugger.cpp cs_dbg.o -o ..\bin\cs_dbg.exe -L..\lib -lcovscript_debug
-cd ..
-rd /S /Q .\tmp
-@echo on
+mkdir cmake-build\mingw-w64
+cd    cmake-build\mingw-w64
+cmake -G "MinGW Makefiles" ..\..
+cmake --build . --target covscript        -- -j4
+cmake --build . --target covscript_debug  -- -j4
+cmake --build . --target cs               -- -j4
+cmake --build . --target cs_repl          -- -j4
+cmake --build . --target cs_dbg           -- -j4
+cd ..\..
+rd /S /Q build
+mkdir build\bin
+mkdir build\lib
+xcopy /Y cmake-build\mingw-w64\*.exe build\bin\
+xcopy /Y cmake-build\mingw-w64\*.a   build\lib\

@@ -37,11 +37,13 @@ target_compile_definitions(covscript_debug PRIVATE CS_DEBUGGER)
 if (MSVC)
     set(rc_flags "/nologo /c65001")
     set(CMAKE_RC_FLAGS ${rc_flags})
+endif()
 
+if (WIN32)
     add_executable(cs sources/standalone.cpp sources/win32_rc/standalone.rc)
     add_executable(cs_repl sources/repl.cpp sources/win32_rc/repl.rc)
     add_executable(cs_dbg sources/debugger.cpp sources/win32_rc/debugger.rc)
-else ()
+else()
     add_executable(cs sources/standalone.cpp)
     add_executable(cs_repl sources/repl.cpp)
     add_executable(cs_dbg sources/debugger.cpp)
@@ -69,8 +71,3 @@ if (UNIX OR APPLE)
     target_link_libraries(cs_repl dl)
     target_link_libraries(test-covscript dl)
 endif ()
-
-install(TARGETS cs cs_repl covscript
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)

@@ -145,8 +145,8 @@ namespace cs {
 		}
 		else if (a.type() == typeid(namespace_t))
 			return a.val<namespace_t>()->get_var(static_cast<token_id *>(b)->get_id());
-		else if (a.type() == typeid(type))
-			return a.val<type>().get_var(static_cast<token_id *>(b)->get_id());
+		else if (a.type() == typeid(type_t))
+			return a.val<type_t>().get_var(static_cast<token_id *>(b)->get_id());
 		else if (a.type() == typeid(structure)) {
 			var &val = a.val<structure>().get_var(static_cast<token_id *>(b)->get_id());
 			if (val.type() == typeid(callable) && val.const_val<callable>().is_member_fn())
@@ -173,8 +173,8 @@ namespace cs {
 
 	var runtime_type::parse_typeid(const var &b)
 	{
-		if (b.type() == typeid(type))
-			return b.const_val<type>().id;
+		if (b.type() == typeid(type_t))
+			return b.const_val<type_t>().id;
 		else if (b.type() == typeid(structure))
 			return b.const_val<structure>().get_id();
 		else
@@ -183,16 +183,16 @@ namespace cs {
 
 	var runtime_type::parse_new(const var &b)
 	{
-		if (b.type() == typeid(type))
-			return b.const_val<type>().constructor();
+		if (b.type() == typeid(type_t))
+			return b.const_val<type_t>().constructor();
 		else
 			throw runtime_error("Unsupported operator operations(New).");
 	}
 
 	var runtime_type::parse_gcnew(const var &b)
 	{
-		if (b.type() == typeid(type))
-			return var::make<pointer>(b.const_val<type>().constructor());
+		if (b.type() == typeid(type_t))
+			return var::make<pointer>(b.const_val<type_t>().constructor());
 		else
 			throw runtime_error("Unsupported operator operations(GcNew).");
 	}

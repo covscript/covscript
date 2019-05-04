@@ -215,27 +215,27 @@ namespace cs {
 		template<typename T>
 		domain_manager &add_struct(T &&name, const struct_builder &builder)
 		{
-			return add_var(name, var::make_protect<type>(builder, builder.get_id()));
+			return add_var(name, var::make_protect<type_t>(builder, builder.get_id()));
 		}
 
 		template<typename T>
 		domain_manager &add_type(T &&name, const std::function<var()> &func, const std::type_index &id)
 		{
-			return add_var(name, var::make_protect<type>(func, id));
+			return add_var(name, var::make_protect<type_t>(func, id));
 		}
 
 		template<typename T>
 		domain_manager &
 		add_type(T &&name, const std::function<var()> &func, const std::type_index &id, namespace_t ext)
 		{
-			return add_var(name, var::make_protect<type>(func, id, ext));
+			return add_var(name, var::make_protect<type_t>(func, id, ext));
 		}
 
 		template<typename T>
 		domain_manager &add_buildin_type(T &&name, const std::function<var()> &func, const std::type_index &id)
 		{
 			add_record(name);
-			return add_var(name, var::make_protect<type>(func, id));
+			return add_var(name, var::make_protect<type_t>(func, id));
 		}
 
 		template<typename T>
@@ -243,7 +243,7 @@ namespace cs {
 		add_buildin_type(T &&name, const std::function<var()> &func, const std::type_index &id, namespace_t ext)
 		{
 			add_record(name);
-			return add_var(name, var::make_protect<type>(func, id, ext));
+			return add_var(name, var::make_protect<type_t>(func, id, ext));
 		}
 
 		void involve_domain(const domain_type &domain, bool is_override = false)

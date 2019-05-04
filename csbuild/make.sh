@@ -1,66 +1,15 @@
 #!/usr/bin/env bash
-
-set -e
-SELF_DIR="$(dirname $(readlink -f $0))"
-cd "$SELF_DIR"/..
-
-function set_flag() {
-    local append=false
-
-    if [[ "$1" == "--append" ]]; then
-        shift
-        append=true
-    fi
-
-    local var="$1"; shift
-    declare -n ref="$var" 
-    if [[ "$ref" == "" ]]; then
-        ref="$@"
-    elif [[ "$append" == true ]]; then
-        ref="$ref $@"
-    fi
-}
-
-DEFAULT_PREFIX="/usr"
-DEFAULT_CXXFLAGS="-std=c++14 -I ../include -s -O3"
-DEFAULT_LDFLAGS="-ldl"
-DEFAULT_CXX=g++
-
-CS_LDFLAGS="-L../lib -lcovscript"
-CS_DBG_LDFLAGS="-L../lib -lcovscript_debug"
-
-set_flag CXX $DEFAULT_CXX
-set_flag PREFIX $DEFAULT_PREFIX
-set_flag --append CXXFLAGS $DEFAULT_CXXFLAGS
-set_flag --append LDFLAGS $DEFAULT_LDFLAGS
-
-while [[ "$1"x != ""x ]]; do
-    arg="$1"; shift
-    case "$arg" in
-        --prefix=* ) PREFIX="${arg##--prefix=}" ;;
-        --cxxflags=* ) CXXFLAGS="${arg##--cxxflags=}" ;;
-        --ldflags=* ) LDFLAGS="${arg##--ldflags=}" ;;
-        "--" ) break ;;
-    esac
-done
-
-mkdir -p bin
-mkdir -p lib
-mkdir -p tmp
-cd ./tmp
-$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIC -c ../sources/instance/*.cpp &
-$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIC -c ../sources/compiler/*.cpp &
-$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIC -c ../sources/covscript.cpp &
-wait
-ar -ro ../lib/libcovscript.a *.o
-$CXX $CXXFLAGS -DCS_DEBUGGER -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIC -c ../sources/instance/*.cpp &
-$CXX $CXXFLAGS -DCS_DEBUGGER -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIC -c ../sources/compiler/*.cpp &
-$CXX $CXXFLAGS -DCS_DEBUGGER -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIC -c ../sources/covscript.cpp &
-wait
-ar -ro ../lib/libcovscript_debug.a *.o
-$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIE ../sources/standalone.cpp $CS_LDFLAGS $LDFLAGS -o ../bin/cs &
-$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIE ../sources/repl.cpp $CS_LDFLAGS $LDFLAGS -o ../bin/cs_repl &
-$CXX $CXXFLAGS -DCOVSCRIPT_HOME="\"$PREFIX/share/covscript\"" -fPIE ../sources/debugger.cpp $CS_DBG_LDFLAGS $LDFLAGS -o ../bin/cs_dbg &
-wait
-cd ..
-rm -rf ./tmp
+mkdir cmake-build/unix
+cd    cmake-build/unix
+cmake -G "Unix Makefiles" ../..
+cmake --build . --target covscript        -- -j4
+cmake --build . --target covscript_debug  -- -j4
+cmake --build . --target cs               -- -j4
+cmake --build . --target cs_repl          -- -j4
+cmake --build . --target cs_dbg           -- -j4
+cd ../..
+rm -rf build
+mkdir -p build/bin
+mkdir -p build/lib
+cp cmake-build/unix/cs* build/bin/
+cp cmake-build/unix/*.a build/lib/
