@@ -1,4 +1,22 @@
 language: cpp
+sh: &sh
+  - ./build/cs -v
+  - ./build/cs -h
+  - ./build/cs_dbg -h
+  - ./build/cs_repl -v
+  - ./build/cs_repl -h
+  - ./build/cs examples/benchmark.csc
+  - ./build/cs -i build tests/extension.csc
+  - ./build/test-covscript tests/function_invoker.csc
+bat: &bat
+  - build\cs -v
+  - build\cs -h
+  - build\cs_dbg -h
+  - build\cs_repl -v
+  - build\cs_repl -h
+  - build\cs examples\benchmark.csc
+  - build\cs -i build tests\extension.csc
+  - build\test-covscript tests\function_invoker.csc
 jobs:
   include:
     - os: linux
@@ -10,6 +28,7 @@ jobs:
         - cmake -G "Unix Makefiles" ..
         - cmake --build . -- -j4
         - cd ..
+      script: *sh
     - os: linux
       dist: xenial
       compiler: clang
@@ -19,6 +38,7 @@ jobs:
         - cmake -G "Unix Makefiles" ..
         - cmake --build . -- -j4
         - cd ..
+      script: *sh
     - os: osx
       osx_image: xcode10
       install:
@@ -27,14 +47,7 @@ jobs:
         - cmake -G "Unix Makefiles" ..
         - cmake --build . -- -j4
         - cd ..
-    - os: windows
-      install:
-        - powershell
-        - mkdir build
-        - cd build
-        - cmake -G "MinGW Makefiles" ..
-        - cmake --build . -- -j4
-        - cd ..
+      script: *sh
     - os: windows
       install:
         - powershell
@@ -43,14 +56,4 @@ jobs:
         - cmake -G "Visual Studio 15 2017" ..
         - cmake --build . --config MinSizeRel
         - cd ..
-script:
-  - ./build/cs -v
-  - ./build/cs -h
-  - ./build/cs_dbg -h
-  - ./build/cs_repl -v
-  - ./build/cs_repl -h
-  - ./build/cs ./examples/benchmark.csc
-  - echo "runtime.info()" | ./build/cs_repl -s
-  - ./build/cs --import-path ./build ./tests/extension.csc
-  - ./build/test-covscript ./tests/function_invoker.csc
-  - ./build/cs ./examples/benchmark.csc
+      script: *bat
