@@ -50,8 +50,13 @@ namespace cs {
 
 	class name_space;
 
+#ifndef CS_COMPATIBILITY_MODE
 	template<typename _kT, typename _vT> using map_t=spp::sparse_hash_map<_kT, _vT>;
 	template<typename _Tp> using set_t=spp::sparse_hash_set<_Tp>;
+#else
+	template<typename _kT, typename _vT> using map_t=std::unordered_map<_kT, _vT>;
+	template<typename _Tp> using set_t=std::unordered_set<_Tp>;
+#endif
 	using var=cs_impl::any;
 	using number=long double;
 	using boolean=bool;

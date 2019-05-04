@@ -13,3 +13,8 @@ mkdir build\bin
 mkdir build\lib
 xcopy /Y cmake-build\mingw-w64\*.exe build\bin\
 xcopy /Y cmake-build\mingw-w64\*.a   build\lib\
+rd /S /Q csdev
+mkdir csdev\include\covscript
+mkdir csdev\lib
+xcopy /E /Y include\covscript csdev\include\covscript
+xcopy /E /Y build\lib         csdev\lib\

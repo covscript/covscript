@@ -15,6 +15,10 @@ else ()
     set(CMAKE_CXX_FLAGS "-fPIC -O3")
 endif ()
 
+if(DEFINED ENV{CS_COMPATIBILITY_MODE})
+    add_compile_definitions(CS_COMPATIBILITY_MODE)
+endif()
+
 # Source Code
 set(SOURCE_CODE
         sources/compiler/codegen.cpp

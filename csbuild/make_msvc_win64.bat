@@ -2,7 +2,7 @@
 set config=MinSizeRel
 mkdir cmake-build\msvc
 cd    cmake-build\msvc
-cmake -G "Visual Studio 16 2019" ..\..
+cmake -G "Visual Studio 15 2017 Win64" ..\..
 cmake --build . --config %config% --target covscript
 cmake --build . --config %config% --target covscript_debug
 cmake --build . --config %config% --target cs
@@ -14,3 +14,8 @@ mkdir build\bin
 mkdir build\lib
 xcopy /Y cmake-build\msvc\%config%\*.exe build\bin\
 xcopy /Y cmake-build\msvc\%config%\*.lib build\lib\
+rd /S /Q csdev
+mkdir csdev\include\covscript
+mkdir csdev\lib
+xcopy /E /Y include\covscript csdev\include\covscript
+xcopy /E /Y build\lib         csdev\lib\

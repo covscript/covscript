@@ -26,8 +26,13 @@
 */
 // LibDLL
 #include <covscript/import/libdll/dll.hpp>
-// Sparsepp
+// Hash Map and Set
+#ifndef CS_COMPATIBILITY_MODE
 #include <covscript/import/sparsepp/spp.h>
+#else
+#include <unordered_map>
+#include <unordered_set>
+#endif
 // STL
 #include <forward_list>
 #include <type_traits>
