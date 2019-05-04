@@ -1,20 +1,19 @@
-os:
-  - osx
-  - linux
-  - windows
-compiler:
-  - clang
-  - gcc
-dist: xenial
 language: cpp
-osx_image: xcode10
 jobs:
   include:
-    - os: osx
+    - stage: osx_build
+      os: osx
+      osx_image: xcode10
       install: bash csbuild/make.sh
-    - os: linux
+    - stage: linux_build
+      os: linux
+      dist: xenial
+      compiler:
+        - clang
+        - gcc
       install: bash csbuild/make.sh
-    - os: windows
+    - stage: windows_build
+      os: windows
       install: csbuild/make.bat
 script:
   - ./build/cs -v
