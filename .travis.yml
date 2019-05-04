@@ -3,15 +3,52 @@ jobs:
   include:
     - os: linux
       dist: xenial
-      compiler:
-        - gcc
-        - clang
+      compiler: gcc
       install:
-        - bash ./csbuild/make.sh
+        - mkdir build
+        - cd build
+        - cmake -G "Unix Makefiles" ..
+        - cmake --build . -- -j4
+        - cd ..
+    - os: linux
+      dist: xenial
+      compiler: clang
+      install:
+        - mkdir build
+        - cd build
+        - cmake -G "Unix Makefiles" ..
+        - cmake --build . -- -j4
+        - cd ..
     - os: osx
       osx_image: xcode10
       install:
-        - bash ./csbuild/make.sh
+        - mkdir build
+        - cd build
+        - cmake -G "Unix Makefiles" ..
+        - cmake --build . -- -j4
+        - cd ..
     - os: windows
       install:
-        - csbuild\make.bat
+        - mkdir build
+        - cd build
+        - cmake -G "MinGW Makefiles" ..
+        - cmake --build . -- -j4
+        - cd ..
+    - os: windows
+      install:
+        - mkdir build
+        - cd build
+        - cmake -G "Visual Studio 15 2017" ..
+        - cmake --build . --config MinSizeRel
+        - cd ..
+script:
+  - ./build/cs -v
+  - ./build/cs -h
+  - ./build/cs_dbg -h
+  - ./build/cs_repl -v
+  - ./build/cs_repl -h
+  - ./build/cs ./examples/benchmark.csc
+  - echo "runtime.info()" | ./build/cs_repl -s
+  - ./build/cs --import-path ./build ./tests/extension.csc
+  - ./build/test-covscript ./tests/function_invoker.csc
+  - ./build/cs ./examples/benchmark.csc
