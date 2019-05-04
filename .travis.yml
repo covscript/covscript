@@ -29,6 +29,7 @@ jobs:
         - cd ..
     - os: windows
       install:
+        - powershell
         - mkdir build
         - cd build
         - cmake -G "MinGW Makefiles" ..
@@ -36,6 +37,7 @@ jobs:
         - cd ..
     - os: windows
       install:
+        - powershell
         - mkdir build
         - cd build
         - cmake -G "Visual Studio 15 2017" ..
