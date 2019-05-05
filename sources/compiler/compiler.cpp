@@ -170,6 +170,12 @@ namespace cs {
 		case signal_types::varprt_:
 			o << "[varprt]";
 			break;
+		case signal_types::vargs_:
+			o << "[vargs]";
+			break;
+		case signal_types::error_:
+			o << "[error]";
+			break;
 		}
 		o << "\" >";
 		return false;

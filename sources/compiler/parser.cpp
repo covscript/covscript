@@ -220,8 +220,7 @@ namespace cs {
 			if (obj != nullptr && obj->get_type() == token_types::sblist) {
 				auto *sbl = static_cast<token_sblist *>(obj);
 				std::deque<token_base *> tokens;
-				for(auto& list:sbl->get_list())
-				{
+				for(auto& list:sbl->get_list()) {
 					for(auto& it:list)
 						tokens.push_back(it);
 					tokens.push_back(new token_signal(signal_types::com_));
@@ -276,8 +275,7 @@ namespace cs {
 			if (obj != nullptr && obj->get_type() == token_types::sblist) {
 				auto *sbl = static_cast<token_sblist *>(obj);
 				std::deque<token_base *> tokens;
-				for(auto& list:sbl->get_list())
-				{
+				for(auto& list:sbl->get_list()) {
 					for(auto& it:list)
 						tokens.push_back(it);
 					tokens.push_back(new token_signal(signal_types::com_));
