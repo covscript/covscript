@@ -313,9 +313,9 @@ namespace cs {
 
 		var parse_neq(const var &, const var &);
 
-		var parse_and(const var &, const var &);
+		var parse_and(const tree_type<token_base *>::iterator &, const tree_type<token_base *>::iterator &);
 
-		var parse_or(const var &, const var &);
+		var parse_or(const tree_type<token_base *>::iterator &, const tree_type<token_base *>::iterator &);
 
 		var parse_not(const var &);
 

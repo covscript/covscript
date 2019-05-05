@@ -219,10 +219,16 @@ namespace cs {
 		for (auto &obj:objects) {
 			if (obj != nullptr && obj->get_type() == token_types::sblist) {
 				auto *sbl = static_cast<token_sblist *>(obj);
-				if (sbl->get_list().size() != 1)
-					throw runtime_error("There are no more elements in small bracket.");
+				std::deque<token_base *> tokens;
+				for(auto& list:sbl->get_list())
+				{
+					for(auto& it:list)
+						tokens.push_back(it);
+					tokens.push_back(new token_signal(signal_types::com_));
+				}
+				tokens.pop_back();
 				tree_type<token_base *> t;
-				gen_tree(t, sbl->get_list().front());
+				gen_tree(t, tokens);
 				obj = new token_expr(t);
 			}
 		}
@@ -269,10 +275,16 @@ namespace cs {
 			token_base *obj = raw.front();
 			if (obj != nullptr && obj->get_type() == token_types::sblist) {
 				auto *sbl = static_cast<token_sblist *>(obj);
-				if (sbl->get_list().size() != 1)
-					throw runtime_error("There are no more elements in small bracket.");
+				std::deque<token_base *> tokens;
+				for(auto& list:sbl->get_list())
+				{
+					for(auto& it:list)
+						tokens.push_back(it);
+					tokens.push_back(new token_signal(signal_types::com_));
+				}
+				tokens.pop_back();
 				tree_type<token_base *> t;
-				gen_tree(t, sbl->get_list().front());
+				gen_tree(t, tokens);
 				obj = new token_expr(t);
 			}
 			tree.emplace_root_left(tree.root(), obj);

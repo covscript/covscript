@@ -265,20 +265,14 @@ namespace cs {
 		return boolean(!a.compare(b));
 	}
 
-	var runtime_type::parse_and(const var &a, const var &b)
+	var runtime_type::parse_and(const tree_type<token_base *>::iterator &a, const tree_type<token_base *>::iterator &b)
 	{
-		if (a.type() == typeid(boolean) && b.type() == typeid(boolean))
-			return boolean(a.const_val<boolean>() && b.const_val<boolean>());
-		else
-			throw runtime_error("Unsupported operator operations(And).");
+		return var::make<boolean>(parse_expr(a).const_val<boolean>() && parse_expr(b).const_val<boolean>());
 	}
 
-	var runtime_type::parse_or(const var &a, const var &b)
+	var runtime_type::parse_or(const tree_type<token_base *>::iterator &a, const tree_type<token_base *>::iterator &b)
 	{
-		if (a.type() == typeid(boolean) && b.type() == typeid(boolean))
-			return boolean(a.const_val<boolean>() || b.const_val<boolean>());
-		else
-			throw runtime_error("Unsupported operator operations(Or).");
+		return var::make<boolean>(parse_expr(a).const_val<boolean>() || parse_expr(b).const_val<boolean>());
 	}
 
 	var runtime_type::parse_not(const var &b)
@@ -539,10 +533,10 @@ namespace cs {
 				return rvalue(parse_neq(parse_expr(it.left()), parse_expr(it.right())));
 				break;
 			case signal_types::and_:
-				return rvalue(parse_and(parse_expr(it.left()), parse_expr(it.right())));
+				return rvalue(parse_and(it.left(), it.right()));
 				break;
 			case signal_types::or_:
-				return rvalue(parse_or(parse_expr(it.left()), parse_expr(it.right())));
+				return rvalue(parse_or(it.left(), it.right()));
 				break;
 			case signal_types::not_:
 				return rvalue(parse_not(parse_expr(it.right())));
