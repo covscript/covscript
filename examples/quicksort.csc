@@ -34,6 +34,6 @@ end
 var ts=runtime.time()
 quicksort(a,0,a.size()-1)
 system.out.println("Time spend:"+to_string(runtime.time()-ts))
-foreach it:a
+foreach it in a
 	system.out.println(it)
 end

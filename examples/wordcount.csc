@@ -11,6 +11,6 @@ while !in.eof()
         end
     end
 end
-foreach it:table
+foreach it in table
     system.out.println(it.first()+":"+it.second())
 end
