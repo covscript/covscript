@@ -417,6 +417,7 @@ namespace cs {
 		void build_line(const std::deque<char> &buff, std::deque<token_base *> &line, std::size_t line_num = 1)
 		{
 			process_char_buff(buff, line);
+			translator.match_grammar(context, line);
 			line.push_back(new token_endline(line_num));
 			process_line(line);
 		}

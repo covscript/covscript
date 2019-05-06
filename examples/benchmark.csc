@@ -13,9 +13,9 @@ function step1(n)
 end
 function step2(n,k)
     var precision=10^(-n)
-    function integral(func,begin,end_)
+    function integral(func,begin,end)
         var sum=0
-        for x=begin,x<=end_,x=x+precision do sum+=func(x)*precision
+        for x=begin,x<=end,x=x+precision do sum+=func(x)*precision
         return sum
     end
     function f(x)

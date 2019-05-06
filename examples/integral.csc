@@ -1,9 +1,9 @@
 iostream.setprecision(10)
 constant precision=10^(-6)
-function integral(func,begin,end_)
+function integral(func,begin,end)
     var sum=0
     var x=begin
-    while(x<=end_)
+    while(x<=end)
         sum=sum+func(x)*precision
         x=x+precision
     end

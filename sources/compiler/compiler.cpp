@@ -740,7 +740,7 @@ namespace cs {
 									        static_cast<token_action *>(it)->get_action())
 										break;
 								}
-								else if(raw[i]->get_type() == token_types::action)
+								else if (raw[i]->get_type() == token_types::action)
 									break;
 							}
 						}
@@ -771,6 +771,8 @@ namespace cs {
 					if (failed)
 						break;
 				}
+				if ((skip_useless && i == raw.size()) || (!skip_useless && i < raw.size()))
+					matched = false;
 			}
 			if (matched) {
 				bool skip_useless = false;
