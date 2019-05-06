@@ -57,6 +57,7 @@ namespace cs {
 		throw_
 	};
 	enum class signal_types {
+		endline_,
 		add_,
 		addasi_,
 		sub_,

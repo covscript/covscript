@@ -300,6 +300,15 @@ namespace cs {
 	void compiler_type::translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens)
 	{
 		preprocessor(context, *this, char_buff, tokens);
+		std::deque<token_base *> new_tokens;
+		for(auto& it:tokens)
+		{
+			if(it!=nullptr&&it->get_type()==token_types::signal&&static_cast<token_signal*>(it)->get_signal()==signal_types::endline_)
+				new_tokens.push_back(new token_endline);
+			else
+				new_tokens.push_back(it);
+		}
+		std::swap(tokens, new_tokens);
 	}
 
 	void compiler_type::process_empty_brackets(std::deque<token_base *> &tokens)

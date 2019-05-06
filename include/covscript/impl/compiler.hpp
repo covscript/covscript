@@ -83,6 +83,7 @@ namespace cs {
 	class compiler_type final {
 		// Symbol Table
 		mapping<std::string, signal_types> signal_map = {
+			{";",   signal_types::endline_},
 			{"+",   signal_types::add_},
 			{"+=",  signal_types::addasi_},
 			{"-",   signal_types::sub_},
@@ -194,7 +195,7 @@ namespace cs {
 		};
 		std::deque<char> signals = {
 			'+', '-', '*', '/', '%', '^', ',', '.', '>', '<', '=', '&', '|', '!', '(', ')', '[', ']', '{', '}', ':',
-			'?'
+			'?', ';'
 		};
 		mapping<signal_types, int> signal_level_map = {
 			{signal_types::add_,    10},
