@@ -721,6 +721,42 @@ namespace cs {
 		stream << " >";
 	}
 
+	void translator_type::match_grammar(const context_t &context, std::deque<token_base*>& raw)
+	{
+		for(auto& dat:m_data)
+		{
+			bool matched=true;
+			for(std::size_t i=0, j=0;matched&&i<dat->first.size()&&j<raw.size();++i)
+			{
+				matched=false;
+				switch(dat->first[i]->get_type())
+				{
+					case token_types::action:{
+						if(raw[j++]->get_type()==token_types::id)
+						{
+							auto& id=static_cast<token_id*>(raw[j])->get_id();
+							if(context->compiler->action_map.exist(id)&&context->compiler->action_map.match(id)==static_cast<token_action*>(dat->first[i])->get_action())
+								matched=true;
+						}
+						break;
+					}
+					case token_types::expr:{
+						if(dat->first[i+1]->get_type()!=token_types::endline){
+							do ++j;
+							while(j<raw.size()&&raw[j]->get_type()!=token_types::id);
+						}
+						matched=true;
+						break;
+					}
+				}
+			}
+			if(matched)
+			{
+				
+			}
+		}
+	}
+
 	void translator_type::translate(const context_t &context, const std::deque<std::deque<token_base *>> &lines,
 	                                std::deque<statement_base *> &statements, bool raw)
 	{

@@ -302,6 +302,7 @@ namespace cs {
 	void compiler_type::translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens)
 	{
 		preprocessor(context, *this, char_buff, tokens);
+		translator.match_grammar(context, tokens);
 		std::deque<token_base *> new_tokens;
 		for(auto& it:tokens)
 		{
