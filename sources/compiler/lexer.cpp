@@ -114,11 +114,6 @@ namespace cs {
 					continue;
 				}
 				type = token_types::null;
-				if (action_map.exist(tmp)) {
-					tokens.push_back(new token_action(action_map.match(tmp)));
-					tmp.clear();
-					break;
-				}
 				if (reserved_map.exist(tmp)) {
 					tokens.push_back(reserved_map.match(tmp)());
 					tmp.clear();
@@ -170,10 +165,6 @@ namespace cs {
 		default:
 			break;
 		case token_types::id:
-			if (action_map.exist(tmp)) {
-				tokens.push_back(new token_action(action_map.match(tmp)));
-				break;
-			}
 			if (reserved_map.exist(tmp)) {
 				tokens.push_back(reserved_map.match(tmp)());
 				tmp.clear();
@@ -302,16 +293,24 @@ namespace cs {
 	void compiler_type::translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens)
 	{
 		preprocessor(context, *this, char_buff, tokens);
-		translator.match_grammar(context, tokens);
-		std::deque<token_base *> new_tokens;
-		for(auto& it:tokens)
-		{
-			if(it!=nullptr&&it->get_type()==token_types::signal&&static_cast<token_signal*>(it)->get_signal()==signal_types::endline_)
-				new_tokens.push_back(new token_endline);
-			else
-				new_tokens.push_back(it);
-		}
-		std::swap(tokens, new_tokens);
+        std::deque<token_base *> oldt, expr;
+        std::swap(tokens, oldt);
+        tokens.clear();
+        for (auto &ptr:oldt) {
+            if(ptr->get_type() == token_types::signal && static_cast<token_signal *>(ptr)->get_signal() == signal_types::endline_)
+                ptr=new token_endline(ptr->get_line_num());
+            if (ptr->get_type() == token_types::action || ptr->get_type() == token_types::endline) {
+                if (!expr.empty()) {
+                    translator.match_grammar(context, expr);
+                    for(auto& it:expr)
+                        tokens.push_back(it);
+                    expr.clear();
+                }
+                tokens.push_back(ptr);
+            }
+            else
+                expr.push_back(ptr);
+        }
 	}
 
 	void compiler_type::process_empty_brackets(std::deque<token_base *> &tokens)
