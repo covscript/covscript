@@ -723,7 +723,6 @@ namespace cs {
 
 	void translator_type::match_grammar(const context_t &context, std::deque<token_base*>& raw)
 	{
-		std::list<std::shared_ptr<data_type>> stack;
 		for(auto& dat:m_data) {
 			bool matched = false;
 			{
