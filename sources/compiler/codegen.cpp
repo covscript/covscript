@@ -396,45 +396,37 @@ namespace cs {
 	void method_foreach::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
-		token_signal *sig = dynamic_cast<token_signal *>(t.root().data());
-		if (sig == nullptr || sig->get_signal() != signal_types::pair_)
-			throw runtime_error("Wrong grammar(foreach)");
-		if (t.root().left().data() == nullptr)
+		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
-		if (t.root().left().data()->get_type() != token_types::id)
+		if (t.root().data()->get_type() != token_types::id)
 			throw runtime_error("Wrong grammar(foreach)");
-		context->instance->storage.add_record(static_cast<token_id *>(t.root().left().data())->get_id());
+		context->instance->storage.add_record(static_cast<token_id *>(t.root().data())->get_id());
 	}
 
 	statement_base *
 	method_foreach::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
-		const std::string &it = static_cast<token_id *>(t.root().left().data())->get_id();
+		const std::string &it = static_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		return new statement_foreach(it, tree_type<token_base *>(t.root().right()), body, context, raw.front().back());
+		return new statement_foreach(it, static_cast<token_expr *>(raw.front().at(3))->get_tree(), body, context, raw.front().back());
 	}
 
 	statement_base *
-	method_foreach_do::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
-	{
+	method_foreach_do::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw) {
 		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
-		token_signal *sig = dynamic_cast<token_signal *>(t.root().data());
-		if (sig == nullptr || sig->get_signal() != signal_types::pair_)
-			throw runtime_error("Wrong grammar(foreach)");
-		if (t.root().left().data() == nullptr)
+		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
-		if (t.root().left().data()->get_type() != token_types::id)
+		if (t.root().data()->get_type() != token_types::id)
 			throw runtime_error("Wrong grammar(foreach)");
-		const std::string &it = static_cast<token_id *>(t.root().left().data())->get_id();
+		const std::string &it = static_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		return new statement_foreach(it, tree_type<token_base *>(t.root().right()), {
-			new statement_expression(static_cast<token_expr *>(raw.front().at(3))->get_tree(),
-			                         context, raw.front().back())
-		}, context,
-		raw.front().back());
+		return new statement_foreach(it, static_cast<token_expr *>(raw.front().at(3))->get_tree(),
+									 {new statement_expression(static_cast<token_expr *>(raw.front().at(5))->get_tree(),
+															   context, raw.front().back())}, context,
+									 raw.front().back());
 	}
 
 	statement_base *method_break::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)

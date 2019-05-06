@@ -46,13 +46,13 @@ struct db_editor extends picasso.base_window
         end
         columns(column_info.size(),"",true)
         separator()
-        foreach it:column_info
+        foreach it in column_info
             text(it.name)
             next_column()
         end
         var id=0
-        foreach row:result
-		    foreach it:row
+        foreach row in result
+		    foreach it in row
 			    if get_column_index()==0
                     separator()
                 end
@@ -129,7 +129,7 @@ struct db_editor extends picasso.base_window
 		    end
 	    end
         separator()
-        foreach it:column_info
+        foreach it in column_info
             opened=false
             selectable(it.data,opened)
             if is_item_hovered()&&is_mouse_clicked(0)
@@ -154,12 +154,12 @@ struct db_editor extends picasso.base_window
         separator()
         if button("Insert")
             var sql="insert into "+table_name+"("
-            foreach it:column_info
+            foreach it in column_info
                 sql+=it.name+","
             end
             sql.cut(1)
             sql+=") values("
-            foreach it:column_info
+            foreach it in column_info
                 sql+="\'"+it.data+"\',"
                 it.data=new string
             end
@@ -203,8 +203,8 @@ struct db_viewer extends picasso.base_window
         end
         var tables=sqlite_ext.exec(db,"select name from sqlite_master where type=\'table\' order by name")
         table_list=new array
-        foreach row:tables
-            foreach col:row
+        foreach row in tables
+            foreach col in row
                 table_list.push_back(col.data)
             end
         end

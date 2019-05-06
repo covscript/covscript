@@ -153,6 +153,7 @@ namespace cs {
 			{"loop",      action_types::loop_},
 			{"for",       action_types::for_},
 			{"foreach",   action_types::foreach_},
+			{"in",        action_types::in_},
 			{"break",     action_types::break_},
 			{"continue",  action_types::continue_},
 			{"function",  action_types::function_},

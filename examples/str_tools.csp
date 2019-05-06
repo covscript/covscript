@@ -25,7 +25,7 @@ function ston(str)
 	var ipart=new string
 	var fpart=new string
 	var dot_count=0
-	foreach ch:str
+	foreach ch in str
 		if ch!='.'
 			if !ch.isdigit()
 				throw runtime.exception("Illegal string")
@@ -54,7 +54,7 @@ end
 function split(str)
 	var arr=new array
 	var tmp=new string
-	foreach ch:str
+	foreach ch in str
 		if(ch.isspace())
 			if(!tmp.empty())
 				arr.push_back(tmp)

@@ -26,6 +26,7 @@ namespace cs {
 		null, endline, action, signal, id, vargs, expand, value, sblist, mblist, lblist, expr, arglist, array, parallel
 	};
 	enum class action_types {
+		placeholder_,
 		import_,
 		package_,
 		using_,
@@ -47,6 +48,7 @@ namespace cs {
 		until_,
 		for_,
 		foreach_,
+		in_,
 		break_,
 		continue_,
 		function_,

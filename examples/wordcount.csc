@@ -5,7 +5,7 @@ end
 var table=new hash_map
 while !in.eof()
     var str_arr=((in.getline()).tolower()).split({' ','\t','\n','\v','\f','\r'})
-    foreach str:str_arr
+    foreach str in str_arr
         if(!str.empty())
             ++table[str]
         end

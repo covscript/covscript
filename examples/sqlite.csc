@@ -32,8 +32,8 @@ stmt=null
 loop
 	system.out.print(">>")
 	var result=sqlite_ext.exec(db,system.in.getline())
-	foreach row:result
-		foreach it:row
+	foreach row in result
+		foreach it in row
 			system.out.print(it.type+"\t")
 			system.out.print(it.name)
 			system.out.print("=\t")
