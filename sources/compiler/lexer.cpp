@@ -73,6 +73,8 @@ namespace cs {
 				++i;
 				continue;
 			}
+			if(buff[i]=='#')
+				break;
 			switch (type) {
 			default:
 				break;
