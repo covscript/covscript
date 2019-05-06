@@ -293,24 +293,24 @@ namespace cs {
 	void compiler_type::translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens)
 	{
 		preprocessor(context, *this, char_buff, tokens);
-        std::deque<token_base *> oldt, expr;
-        std::swap(tokens, oldt);
-        tokens.clear();
-        for (auto &ptr:oldt) {
-            if(ptr->get_type() == token_types::signal && static_cast<token_signal *>(ptr)->get_signal() == signal_types::endline_)
-                ptr=new token_endline(ptr->get_line_num());
-            if (ptr->get_type() == token_types::action || ptr->get_type() == token_types::endline) {
-                if (!expr.empty()) {
-                    translator.match_grammar(context, expr);
-                    for(auto& it:expr)
-                        tokens.push_back(it);
-                    expr.clear();
-                }
-                tokens.push_back(ptr);
-            }
-            else
-                expr.push_back(ptr);
-        }
+		std::deque<token_base *> oldt, expr;
+		std::swap(tokens, oldt);
+		tokens.clear();
+		for (auto &ptr:oldt) {
+			if(ptr->get_type() == token_types::signal && static_cast<token_signal *>(ptr)->get_signal() == signal_types::endline_)
+				ptr=new token_endline(ptr->get_line_num());
+			if (ptr->get_type() == token_types::action || ptr->get_type() == token_types::endline) {
+				if (!expr.empty()) {
+					translator.match_grammar(context, expr);
+					for(auto& it:expr)
+						tokens.push_back(it);
+					expr.clear();
+				}
+				tokens.push_back(ptr);
+			}
+			else
+				expr.push_back(ptr);
+		}
 	}
 
 	void compiler_type::process_empty_brackets(std::deque<token_base *> &tokens)

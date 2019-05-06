@@ -723,66 +723,93 @@ namespace cs {
 
 	void translator_type::match_grammar(const context_t &context, std::deque<token_base*>& raw)
 	{
+		std::list<std::shared_ptr<data_type>> stack;
 		for(auto& dat:m_data) {
-            bool matched = false;
-            {
-                bool failed = false, skip_useless = false;
-                std::size_t i = 0;
-                for (auto &it:dat->first) {
-                    switch (it->get_type()) {
-                        case token_types::action: {
-                            if (skip_useless)
-                                for (; i < raw.size() && raw[i]->get_type() != token_types::id; ++i);
-                            if (i >= raw.size()) {
-                                failed = true;
-                                break;
-                            }
-                            if (raw[i]->get_type() == token_types::id) {
-                                auto &id = static_cast<token_id *>(raw[i])->get_id();
-                                if (!context->compiler->action_map.exist(id) ||
-                                    context->compiler->action_map.match(id) !=
-                                    static_cast<token_action *>(it)->get_action()) {
-                                    matched = false;
-                                    failed = true;
-                                } else
-                                    matched = true;
-                            }
-                            skip_useless = false;
-                            ++i;
-                            break;
-                        }
-                        case token_types::expr:
-                            skip_useless = true;
-                            break;
-                    }
-                    if (failed)
-                        break;
-                }
-            }
-            if (matched) {
-                bool skip_useless = false;
-                std::size_t i = 0;
-                for (auto &it:dat->first) {
-                    switch (it->get_type()) {
-                        case token_types::action: {
-                            if (skip_useless)
-                                for (; i < raw.size() && raw[i]->get_type() != token_types::id; ++i);
-                            auto &id = static_cast<token_id *>(raw[i])->get_id();
-                            if (context->compiler->action_map.exist(id) &&
-                                context->compiler->action_map.match(id) ==
-                                static_cast<token_action *>(it)->get_action())
-                                raw[i] = it;
-                            skip_useless = false;
-                            ++i;
-                            break;
-                        }
-                        case token_types::expr:
-                            skip_useless = true;
-                            break;
-                    }
-                }
-            }
-        }
+			bool matched = false;
+			{
+				bool failed = false, skip_useless = false;
+				std::size_t i = 0;
+				for (auto &it:dat->first) {
+					switch (it->get_type()) {
+					case token_types::action: {
+						if (skip_useless) {
+							for (; i < raw.size(); ++i) {
+								if (raw[i]->get_type() == token_types::id) {
+									auto &id = static_cast<token_id *>(raw[i])->get_id();
+									if (context->compiler->action_map.exist(id) &&
+									        context->compiler->action_map.match(id) ==
+									        static_cast<token_action *>(it)->get_action())
+										break;
+								}
+								else if(raw[i]->get_type() == token_types::action)
+									break;
+							}
+						}
+						if (i >= raw.size()) {
+							failed = true;
+							break;
+						}
+						if (raw[i]->get_type() == token_types::id) {
+							auto &id = static_cast<token_id *>(raw[i])->get_id();
+							if (!context->compiler->action_map.exist(id) ||
+							        context->compiler->action_map.match(id) !=
+							        static_cast<token_action *>(it)->get_action()) {
+								matched = false;
+								failed = true;
+							}
+							else {
+								matched = true;
+							}
+						}
+						skip_useless = false;
+						++i;
+						break;
+					}
+					case token_types::expr:
+						skip_useless = true;
+						break;
+					}
+					if (failed)
+						break;
+				}
+			}
+			if (matched) {
+				bool skip_useless = false;
+				std::size_t i = 0;
+				for (auto &it:dat->first) {
+					switch (it->get_type()) {
+					case token_types::action: {
+						if (skip_useless) {
+							for (; i < raw.size(); ++i) {
+								if (raw[i]->get_type() == token_types::id) {
+									auto &id = static_cast<token_id *>(raw[i])->get_id();
+									if (context->compiler->action_map.exist(id) &&
+									        context->compiler->action_map.match(id) ==
+									        static_cast<token_action *>(it)->get_action())
+										break;
+								}
+								else if(raw[i]->get_type() == token_types::action)
+									break;
+							}
+						}
+						if (raw[i]->get_type() == token_types::id) {
+							auto &id = static_cast<token_id *>(raw[i])->get_id();
+							if (context->compiler->action_map.exist(id) &&
+							        context->compiler->action_map.match(id) ==
+							        static_cast<token_action *>(it)->get_action())
+								raw[i] = it;
+						}
+						skip_useless = false;
+						++i;
+						break;
+					}
+					case token_types::expr:
+						skip_useless = true;
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	void translator_type::translate(const context_t &context, const std::deque<std::deque<token_base *>> &lines,
