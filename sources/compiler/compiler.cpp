@@ -732,6 +732,7 @@ namespace cs {
 					switch (it->get_type()) {
 					case token_types::action: {
 						if (skip_useless) {
+							// Keep looking for id token or action token that have been replaced.
 							for (; i < raw.size(); ++i) {
 								if (raw[i]->get_type() == token_types::id) {
 									auto &id = static_cast<token_id *>(raw[i])->get_id();
@@ -748,6 +749,7 @@ namespace cs {
 							failed = true;
 							break;
 						}
+						// The "matched" condition is satisfied only if the target token is an id and it can match the grammar rule.
 						if (raw[i]->get_type() == token_types::id) {
 							auto &id = static_cast<token_id *>(raw[i])->get_id();
 							if (!context->compiler->action_map.exist(id) ||
@@ -756,10 +758,13 @@ namespace cs {
 								matched = false;
 								failed = true;
 							}
-							else {
+							else
 								matched = true;
-							}
 						}
+						else if (raw[i]->get_type() == token_types::action)
+							failed= static_cast<token_action*>(raw[i])->get_action()!=static_cast<token_action *>(it)->get_action();
+						else
+							failed=true;
 						skip_useless = false;
 						++i;
 						break;
@@ -775,12 +780,14 @@ namespace cs {
 					matched = false;
 			}
 			if (matched) {
+				// If matched, find and replace all id token with correspondent action token.
 				bool skip_useless = false;
 				std::size_t i = 0;
 				for (auto &it:dat->first) {
 					switch (it->get_type()) {
 					case token_types::action: {
 						if (skip_useless) {
+							// Keep looking for id token or action token that have been replaced.
 							for (; i < raw.size(); ++i) {
 								if (raw[i]->get_type() == token_types::id) {
 									auto &id = static_cast<token_id *>(raw[i])->get_id();

@@ -414,7 +414,8 @@ namespace cs {
 	}
 
 	statement_base *
-	method_foreach_do::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw) {
+	method_foreach_do::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	{
 		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
@@ -423,10 +424,11 @@ namespace cs {
 		const std::string &it = static_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		return new statement_foreach(it, static_cast<token_expr *>(raw.front().at(3))->get_tree(),
-									 {new statement_expression(static_cast<token_expr *>(raw.front().at(5))->get_tree(),
-															   context, raw.front().back())}, context,
-									 raw.front().back());
+		return new statement_foreach(it, static_cast<token_expr *>(raw.front().at(3))->get_tree(), {
+			new statement_expression(static_cast<token_expr *>(raw.front().at(5))->get_tree(),
+			                         context, raw.front().back())
+		}, context,
+		raw.front().back());
 	}
 
 	statement_base *method_break::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)

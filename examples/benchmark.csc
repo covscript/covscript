@@ -73,7 +73,7 @@ function fibonacci(count)
     var sum=new hash_map
     for i=2,i<fib.size(),++i do ++sum[to_string(fib.at(i)/fib.at(i-1))]
     var max=0:0
-    foreach it in sum do it.second()>max.second()?(max=it) in null
+    foreach it in sum do it.second()>max.second()?(max=it):null
     return max.first()
 end
 function step4(n,k)
