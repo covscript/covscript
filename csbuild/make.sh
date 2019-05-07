@@ -13,3 +13,8 @@ mkdir -p build/bin
 mkdir -p build/lib
 cp cmake-build/unix/cs* build/bin/
 cp cmake-build/unix/*.a build/lib/
+rm -rf csdev
+mkdir -p csdev/include/covscript
+mkdir -p csdev/lib
+cp -r include/covscript csdev/include/
+cp -r build/lib         csdev/
