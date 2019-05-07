@@ -76,13 +76,16 @@ namespace cs {
 			return stack.front()->second;
 		}
 
+		void match_grammar(const context_t &, std::deque<token_base*>&);
+
 		void translate(const context_t &, const std::deque<std::deque<token_base *>> &, std::deque<statement_base *> &,
 		               bool);
 	};
 
 	class compiler_type final {
+	public:
 		// Symbol Table
-		mapping<std::string, signal_types> signal_map = {
+		const mapping<std::string, signal_types> signal_map = {
 			{";",   signal_types::endline_},
 			{"+",   signal_types::add_},
 			{"+=",  signal_types::addasi_},
@@ -127,7 +130,7 @@ namespace cs {
 			{"..",  signal_types::error_},
 			{"...", signal_types::vargs_}
 		};
-		mapping<std::string, action_types> action_map = {
+		const mapping<std::string, action_types> action_map = {
 			{"import",    action_types::import_},
 			{"package",   action_types::package_},
 			{"using",     action_types::using_},
@@ -150,6 +153,7 @@ namespace cs {
 			{"loop",      action_types::loop_},
 			{"for",       action_types::for_},
 			{"foreach",   action_types::foreach_},
+			{"in",        action_types::in_},
 			{"break",     action_types::break_},
 			{"continue",  action_types::continue_},
 			{"function",  action_types::function_},
@@ -159,7 +163,7 @@ namespace cs {
 			{"catch",     action_types::catch_},
 			{"throw",     action_types::throw_}
 		};
-		mapping<std::string, std::function<token_base *()>> reserved_map = {
+		const mapping<std::string, std::function<token_base *()>> reserved_map = {
 			{"and",    []() -> token_base * { return new token_signal(signal_types::and_); }},
 			{"or",     []() -> token_base * { return new token_signal(signal_types::or_); }},
 			{"not",    []() -> token_base * { return new token_signal(signal_types::not_); }},
@@ -180,7 +184,7 @@ namespace cs {
 			{"true",   []() -> token_base * { return new token_value(var::make_constant<bool>(true)); }},
 			{"false",  []() -> token_base * { return new token_value(var::make_constant<bool>(false)); }}
 		};
-		mapping<char, char> escape_map = {
+		const mapping<char, char> escape_map = {
 			{'a',  '\a'},
 			{'b',  '\b'},
 			{'f',  '\f'},
@@ -193,11 +197,11 @@ namespace cs {
 			{'\"', '\"'},
 			{'0',  '\0'}
 		};
-		std::deque<char> signals = {
+		const std::vector<char> signals = {
 			'+', '-', '*', '/', '%', '^', ',', '.', '>', '<', '=', '&', '|', '!', '(', ')', '[', ']', '{', '}', ':',
 			'?', ';'
 		};
-		mapping<signal_types, int> signal_level_map = {
+		const mapping<signal_types, int> signal_level_map = {
 			{signal_types::add_,    10},
 			{signal_types::addasi_, 1},
 			{signal_types::sub_,    10},
@@ -238,10 +242,11 @@ namespace cs {
 			{signal_types::gcnew_,  14},
 			{signal_types::vargs_,  20}
 		};
-		std::deque<signal_types> signal_left_associative = {
+		const std::vector<signal_types> signal_left_associative = {
 			signal_types::asi_, signal_types::addasi_, signal_types::subasi_, signal_types::mulasi_,
 			signal_types::divasi_, signal_types::modasi_, signal_types::powasi_
 		};
+	private:
 		// Constants Pool
 		std::vector<var> constant_pool;
 		// Status
@@ -413,6 +418,7 @@ namespace cs {
 		void build_line(const std::deque<char> &buff, std::deque<token_base *> &line, std::size_t line_num = 1)
 		{
 			process_char_buff(buff, line);
+			translator.match_grammar(context, line);
 			line.push_back(new token_endline(line_num));
 			process_line(line);
 		}

@@ -140,7 +140,7 @@ function gui()
             items=new array
             packages=new array
             var info=system.path.scan(path)
-            foreach it:info
+            foreach it in info
                 if it.type()==system.path.type.reg
                     var pack_info=get_package_info(it.name())
                     packages.push_back(pack_info)
@@ -344,13 +344,13 @@ switch context.cmd_args().at(1)
         draw_separator()
         var info=system.path.scan(path)
         var packages=new array
-        foreach it:info
+        foreach it in info
             if it.type()==system.path.type.reg
                 packages.push_back(get_package_info(it.name()))
             end
         end
         var max_size=0
-        foreach it:packages
+        foreach it in packages
             if it->name.size()>max_size
                 max_size=it->name.size()
             end
@@ -361,7 +361,7 @@ switch context.cmd_args().at(1)
         end
         system.out.println("Type")
         draw_separator()
-        foreach it:packages
+        foreach it in packages
             system.out.print(it->name)
             for i=0,i<=max_size-it->name.size(),++i
                 system.out.print(" ")

@@ -215,7 +215,7 @@ namespace cs {
 	                               std::deque<token_base *> &objects)
 	{
 		if (objects.empty() || signals.empty() || objects.size() != signals.size() + 1)
-			throw runtime_error("Symbols do not match the object.");
+			throw runtime_error("Wrong grammar.");
 		for (auto &obj:objects) {
 			if (obj != nullptr && obj->get_type() == token_types::sblist) {
 				auto *sbl = static_cast<token_sblist *>(obj);

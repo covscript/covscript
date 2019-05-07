@@ -341,11 +341,8 @@ namespace cs {
 		.add_method({new token_action(action_types::for_), new token_expr(tree_type<token_base *>()),
 			            new token_action(action_types::do_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_for_do)
-		.add_method({new token_action(action_types::foreach_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_foreach)
-		.add_method({new token_action(action_types::foreach_), new token_expr(tree_type<token_base *>()),
-			            new token_action(action_types::do_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_foreach_do)
+		.add_method({new token_action(action_types::foreach_), new token_expr(tree_type<token_base *>()), new token_action(action_types::in_), new token_expr(tree_type<token_base *>()), new token_endline(0)}, new method_foreach)
+		.add_method({new token_action(action_types::foreach_), new token_expr(tree_type<token_base *>()), new token_action(action_types::in_), new token_expr(tree_type<token_base *>()), new token_action(action_types::do_), new token_expr(tree_type<token_base *>()), new token_endline(0)}, new method_foreach_do)
 		// Break Grammar
 		.add_method({new token_action(action_types::break_), new token_endline(0)}, new method_break)
 		// Continue Grammar

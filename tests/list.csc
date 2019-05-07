@@ -13,15 +13,15 @@ end
 lst.push_front("Hello")
 lst.push_front(0)
 lst.front()=2
-foreach it:lst
+foreach it in lst
 	system.out.println(it)
 end
 lst.pop_front()
 lst.push_front("Hahaha")
-foreach it:lst
+foreach it in lst
 	system.out.println(it)
 end
 lst.reverse()
-foreach it:lst
+foreach it in lst
 	system.out.println(it)
 end

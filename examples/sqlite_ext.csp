@@ -15,8 +15,8 @@ end
 function table_list(db)
     var tables=exec(db,"select name from sqlite_master where type=\'table\' order by name")
     var table_list=new array
-    foreach row:tables
-        foreach col:row
+    foreach row in tables
+        foreach col in row
             table_list.push_back(col.data)
         end
     end
@@ -26,7 +26,7 @@ function column_info(db,table)
     var info=exec(db,"select sql from sqlite_master where tbl_name = \'"+table+"\' and type=\'table\'")[0][0].data
     var list=regex.build("^.+\\((.*)\\)$").match(info).str(1).split({','})
     var res=new array
-    foreach it:list
+    foreach it in list
         var col=new column
         var _col=it.split({' ','\t','\n'})
         col.name=_col[0]

@@ -47,6 +47,7 @@ namespace cs {
 		until_,
 		for_,
 		foreach_,
+		in_,
 		break_,
 		continue_,
 		function_,

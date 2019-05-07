@@ -1,7 +1,7 @@
 iostream.setprecision(64)
 function step1(n)
     var score=0
-    foreach i:range(1,n+1)
+    foreach i in range(1,n+1)
         var ts=runtime.time()
         var fc=0
         loop
@@ -13,16 +13,16 @@ function step1(n)
 end
 function step2(n,k)
     var precision=10^(-n)
-    function integral(func,begin,end_)
+    function integral(func,begin,end)
         var sum=0
-        for x=begin,x<=end_,x=x+precision do sum+=func(x)*precision
+        for x=begin,x<=end,x=x+precision do sum+=func(x)*precision
         return sum
     end
     function f(x)
         return math.sqrt(1-x^2)
     end
     var score=0
-    foreach i:range(1,k+1)
+    foreach i in range(1,k+1)
         var ts=runtime.time()
         integral(f,0,1)
         score=score+runtime.time()-ts
@@ -58,7 +58,7 @@ function quicksort(a,m,n)
 end
 function step3(n,k)
     var score=0
-    foreach i:range(1,k+1)
+    foreach i in range(1,k+1)
         var a={}
         for i=0,i<=n,++i do a.push_back(math.randint(0,n))
         var ts=runtime.time()
@@ -73,12 +73,12 @@ function fibonacci(count)
     var sum=new hash_map
     for i=2,i<fib.size(),++i do ++sum[to_string(fib.at(i)/fib.at(i-1))]
     var max=0:0
-    foreach it:sum do it.second()>max.second()?(max=it):null
+    foreach it in sum do it.second()>max.second()?(max=it):null
     return max.first()
 end
 function step4(n,k)
     var score=0
-    foreach i:range(1,k+1)
+    foreach i in range(1,k+1)
         var ts=runtime.time()
         fibonacci(n)
         score=score+runtime.time()-ts
@@ -87,7 +87,7 @@ function step4(n,k)
 end
 function step5(n,k)
     var score=0,fib=[](n)->n>2?fib(n-1)+fib(n-2):1
-    foreach i:range(1,k+1)
+    foreach i in range(1,k+1)
         var ts=runtime.time()
         fib(n)
         score+=runtime.time()-ts

@@ -9,7 +9,7 @@ function fibonacci(count)
         ++sum[to_string(fib.at(i)/fib.at(i-1))]
     end
     var max=0:0
-    foreach it:sum
+    foreach it in sum
         if it.second()>max.second()
             max=it
         end

@@ -721,6 +721,105 @@ namespace cs {
 		stream << " >";
 	}
 
+	void translator_type::match_grammar(const context_t &context, std::deque<token_base*>& raw)
+	{
+		for(auto& dat:m_data) {
+			bool matched = false;
+			{
+				bool failed = false, skip_useless = false;
+				std::size_t i = 0;
+				for (auto &it:dat->first) {
+					switch (it->get_type()) {
+					case token_types::action: {
+						if (skip_useless) {
+							// Keep looking for id token or action token that have been replaced.
+							for (; i < raw.size(); ++i) {
+								if (raw[i]->get_type() == token_types::id) {
+									auto &id = static_cast<token_id *>(raw[i])->get_id();
+									if (context->compiler->action_map.exist(id) &&
+									        context->compiler->action_map.match(id) ==
+									        static_cast<token_action *>(it)->get_action())
+										break;
+								}
+								else if (raw[i]->get_type() == token_types::action)
+									break;
+							}
+						}
+						if (i >= raw.size()) {
+							failed = true;
+							break;
+						}
+						// The "matched" condition is satisfied only if the target token is an id and it can match the grammar rule.
+						if (raw[i]->get_type() == token_types::id) {
+							auto &id = static_cast<token_id *>(raw[i])->get_id();
+							if (!context->compiler->action_map.exist(id) ||
+							        context->compiler->action_map.match(id) !=
+							        static_cast<token_action *>(it)->get_action()) {
+								matched = false;
+								failed = true;
+							}
+							else
+								matched = true;
+						}
+						else if (raw[i]->get_type() == token_types::action)
+							failed= static_cast<token_action*>(raw[i])->get_action()!=static_cast<token_action *>(it)->get_action();
+						else
+							failed=true;
+						skip_useless = false;
+						++i;
+						break;
+					}
+					case token_types::expr:
+						skip_useless = true;
+						break;
+					}
+					if (failed)
+						break;
+				}
+				if ((skip_useless && i == raw.size()) || (!skip_useless && i < raw.size()))
+					matched = false;
+			}
+			if (matched) {
+				// If matched, find and replace all id token with correspondent action token.
+				bool skip_useless = false;
+				std::size_t i = 0;
+				for (auto &it:dat->first) {
+					switch (it->get_type()) {
+					case token_types::action: {
+						if (skip_useless) {
+							// Keep looking for id token or action token that have been replaced.
+							for (; i < raw.size(); ++i) {
+								if (raw[i]->get_type() == token_types::id) {
+									auto &id = static_cast<token_id *>(raw[i])->get_id();
+									if (context->compiler->action_map.exist(id) &&
+									        context->compiler->action_map.match(id) ==
+									        static_cast<token_action *>(it)->get_action())
+										break;
+								}
+								else if(raw[i]->get_type() == token_types::action)
+									break;
+							}
+						}
+						if (raw[i]->get_type() == token_types::id) {
+							auto &id = static_cast<token_id *>(raw[i])->get_id();
+							if (context->compiler->action_map.exist(id) &&
+							        context->compiler->action_map.match(id) ==
+							        static_cast<token_action *>(it)->get_action())
+								raw[i] = it;
+						}
+						skip_useless = false;
+						++i;
+						break;
+					}
+					case token_types::expr:
+						skip_useless = true;
+						break;
+					}
+				}
+			}
+		}
+	}
+
 	void translator_type::translate(const context_t &context, const std::deque<std::deque<token_base *>> &lines,
 	                                std::deque<statement_base *> &statements, bool raw)
 	{
