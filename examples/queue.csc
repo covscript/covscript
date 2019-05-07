@@ -1,6 +1,6 @@
 function push(lst,val)
     var it=lst.begin()
-    while it!=lst.term()
+    while it!=lst.end()
         if val<=it.data()
             break
         end

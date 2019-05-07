@@ -51,7 +51,7 @@ namespace cs_impl {
 			return arr.begin();
 		}
 
-		array::iterator term(array &arr)
+		array::iterator end(array &arr)
 		{
 			return arr.end();
 		}
@@ -156,7 +156,7 @@ namespace cs_impl {
 			.add_var("front", make_cni(front, true))
 			.add_var("back", make_cni(back, true))
 			.add_var("begin", make_cni(begin, true))
-			.add_var("term", make_cni(term, true))
+			.add_var("end", make_cni(end, true))
 			.add_var("empty", make_cni(empty, true))
 			.add_var("size", make_cni(size, true))
 			.add_var("clear", make_cni(clear, true))
@@ -550,7 +550,7 @@ namespace cs_impl {
 			return lst.begin();
 		}
 
-		list::iterator term(list &lst)
+		list::iterator end(list &lst)
 		{
 			return lst.end();
 		}
@@ -644,7 +644,7 @@ namespace cs_impl {
 			.add_var("front", make_cni(front, true))
 			.add_var("back", make_cni(back, true))
 			.add_var("begin", make_cni(begin, true))
-			.add_var("term", make_cni(term, true))
+			.add_var("end", make_cni(end, true))
 			.add_var("empty", make_cni(empty, true))
 			.add_var("size", make_cni(size, true))
 			.add_var("clear", make_cni(clear, true))

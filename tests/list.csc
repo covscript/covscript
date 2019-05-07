@@ -1,7 +1,7 @@
 var lst={0,1,1,2,3,3,3,5}.to_list()
 lst.unique()
 var it=lst.begin()
-while it!=lst.term()
+while it!=lst.end()
 	if(it.data()==3)
 		it=lst.insert(it.forward(),4)
 	end
