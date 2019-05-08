@@ -21,6 +21,8 @@
 */
 #include <covscript/core/core.hpp>
 
+// Define this macro to disable all standard type conversion
+#ifndef CNI_DISABLE_STD_CONVERSION
 namespace cs_impl {
 // Compatible Type Conversions
 // bool->cs::boolean
@@ -175,6 +177,7 @@ namespace cs_impl {
 		}
 	};
 }
+#endif
 
 namespace cni_namespace_impl {
 	class cni_register final {
