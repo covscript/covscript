@@ -4,6 +4,7 @@ using system
 using iostream
 var sock=new tcp.socket
 var a=tcp.acceptor(tcp.endpoint("127.0.0.1",1024))
+sock.set_timeout(120000)
 sock.accept(a)
 var size=sock.receive(32)
 size.cut(size.size()-size.find(" ", 0))
