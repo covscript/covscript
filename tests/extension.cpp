@@ -43,7 +43,7 @@ BEGIN_CNI_ROOT_NAMESPACE {
 
         CNI_VALUE_CONST(val, 30)
 
-        CNI_VALUE_CONST_V(val_v, cs::number, 30)
+        CNI_VALUE_CONST_V(val_v, double, 30)
 
         class foo
         {

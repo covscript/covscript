@@ -142,6 +142,45 @@ namespace cs_impl {
 			    std::to_string(args.size()));
 	}
 
+	template<typename _TargetT, typename _SourceT, typename _CheckT, std::size_t index>
+	struct try_convert_and_check {
+		inline static _TargetT convert(cs::var &val)
+		{
+			if (val.type() == typeid(_SourceT))
+				return type_convertor<_SourceT, _TargetT>::convert(convert_helper<_SourceT>::get_val(val));
+			else if (val.type() == typeid(_TargetT))
+				return convert_helper<_TargetT>::get_val(val);
+			else
+				throw cs::runtime_error("Invalid Argument. At " + std::to_string(index + 1) + ". Expected " +
+				                        cxx_demangle(get_name_of_type<_TargetT>()) + ", compatible with " +
+				                        cxx_demangle(get_name_of_type<_SourceT>()) + ", provided " +
+				                        val.get_type_name());
+		}
+	};
+
+	template<typename _TargetT, typename _CheckT, std::size_t index>
+	struct try_convert_and_check<_TargetT, _TargetT, _CheckT, index> {
+		inline static _TargetT convert(cs::var &val)
+		{
+			if (val.type() == typeid(_TargetT))
+				return convert_helper<_TargetT>::get_val(val);
+			else
+				throw cs::runtime_error("Invalid Argument. At " + std::to_string(index + 1) + ". Expected " +
+				                        cxx_demangle(get_name_of_type<_TargetT>()) + ", provided " +
+				                        val.get_type_name());
+		}
+	};
+
+    template<typename _TargetT, std::size_t index>
+    struct try_convert_and_check<_TargetT, _TargetT, cs::var, index> {
+        inline static _TargetT convert(cs::var &val)
+        {
+            return val;
+        }
+    };
+
+    template<typename _TargetT, typename _SourceT, std::size_t index>using try_convert=try_convert_and_check<_TargetT, _SourceT, typename cov::remove_constant<typename cov::remove_reference<_TargetT>::type>::type, index>;
+
 // Static argument check
 	template<typename RetT, typename...ArgsT>
 	constexpr int count_args_size(RetT(*)(ArgsT...))
@@ -173,8 +212,7 @@ namespace cs_impl {
 		template<int...S>
 		void _call(cs::vector &args, const cov::sequence<S...> &) const
 		{
-			mFunc(type_convertor<_Source_ArgsT, _Target_ArgsT>::convert(
-			          convert_helper<_Source_ArgsT>::get_val(args[S]))...);
+			mFunc(try_convert<_Target_ArgsT, _Source_ArgsT, S>::convert(args[S])...);
 		}
 
 	public:
@@ -186,7 +224,10 @@ namespace cs_impl {
 
 		any call(cs::vector &args) const
 		{
-			check_args<_Source_ArgsT...>(args);
+			if(args.size()!=sizeof...(_Target_ArgsT))
+				throw cs::runtime_error(
+				    "Wrong size of the arguments. Expected " + std::to_string(sizeof...(_Target_ArgsT)) + ", provided " +
+				    std::to_string(args.size()));
 			_call(args, cov::make_sequence<sizeof...(_Source_ArgsT)>::result);
 			return cs::null_pointer;
 		}
@@ -199,9 +240,7 @@ namespace cs_impl {
 		template<int...S>
 		_Source_RetT _call(cs::vector &args, const cov::sequence<S...> &) const
 		{
-			return std::move(type_convertor<_Target_RetT, _Source_RetT>::convert(
-			                     mFunc(type_convertor<_Source_ArgsT, _Target_ArgsT>::convert(
-			                               convert_helper<_Source_ArgsT>::get_val(args[S]))...)));
+			return std::move(type_convertor<_Target_RetT, _Source_RetT>::convert(mFunc(try_convert<_Target_ArgsT, _Source_ArgsT, S>::convert(args[S])...)));
 		}
 
 	public:
@@ -213,7 +252,10 @@ namespace cs_impl {
 
 		any call(cs::vector &args) const
 		{
-			check_args<_Source_ArgsT...>(args);
+			if(args.size()!=sizeof...(_Target_ArgsT))
+				throw cs::runtime_error(
+				    "Wrong size of the arguments. Expected " + std::to_string(sizeof...(_Target_ArgsT)) + ", provided " +
+				    std::to_string(args.size()));
 			return std::move(_call(args, cov::make_sequence<sizeof...(_Source_ArgsT)>::result));
 		}
 	};

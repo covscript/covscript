@@ -190,27 +190,27 @@ namespace cni_namespace_impl {
 
 	template<typename T>
 	cs::var make_var_normal(const T& val)
-    {
-	    return cs::var::make<typename cs_impl::type_conversion_cpp<T>::target_type>(val);
-    }
+	{
+		return cs::var::make<typename cs_impl::type_conversion_cpp<T>::target_type>(val);
+	}
 
-    template<typename T, typename X>
-    cs::var make_var_normal_v(X&& val)
-    {
-        return cs::var::make<T>(std::forward<X>(val));
-    }
+	template<typename T, typename X>
+	cs::var make_var_normal_v(X&& val)
+	{
+		return cs::var::make<T>(std::forward<X>(val));
+	}
 
-    template<typename T>
-    cs::var make_var_const(const T& val)
-    {
-        return cs::var::make_constant<typename cs_impl::type_conversion_cpp<T>::target_type>(val);
-    }
+	template<typename T>
+	cs::var make_var_const(const T& val)
+	{
+		return cs::var::make_constant<typename cs_impl::type_conversion_cpp<T>::target_type>(val);
+	}
 
-    template<typename T, typename X>
-    cs::var make_var_const_v(X&& val)
-    {
-        return cs::var::make_constant<T>(std::forward<X>(val));
-    }
+	template<typename T, typename X>
+	cs::var make_var_const_v(X&& val)
+	{
+		return cs::var::make_constant<T>(std::forward<X>(val));
+	}
 }
 
 #define CNI_NAME_MIXER(PREFIX, NAME) static cni_namespace_impl::cni_register PREFIX##NAME
