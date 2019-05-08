@@ -265,7 +265,8 @@ namespace cs {
 		return boolean(!a.compare(b));
 	}
 
-	var runtime_type::parse_and(const tree_type<token_base *>::iterator &a, const tree_type<token_base *>::iterator &b)
+	var
+	runtime_type::parse_and(const tree_type<token_base *>::iterator &a, const tree_type<token_base *>::iterator &b)
 	{
 		return var::make<boolean>(parse_expr(a).const_val<boolean>() && parse_expr(b).const_val<boolean>());
 	}

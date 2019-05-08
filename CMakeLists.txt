@@ -15,9 +15,9 @@ else ()
     set(CMAKE_CXX_FLAGS "-fPIC -O3")
 endif ()
 
-if(DEFINED ENV{CS_COMPATIBILITY_MODE})
+if (DEFINED ENV{CS_COMPATIBILITY_MODE})
     add_compile_definitions(CS_COMPATIBILITY_MODE)
-endif()
+endif ()
 
 # Source Code
 set(SOURCE_CODE
@@ -41,13 +41,13 @@ target_compile_definitions(covscript_debug PRIVATE CS_DEBUGGER)
 if (MSVC)
     set(rc_flags "/nologo /c65001")
     set(CMAKE_RC_FLAGS ${rc_flags})
-endif()
+endif ()
 
 if (WIN32)
     add_executable(cs sources/standalone.cpp sources/win32_rc/standalone.rc)
     add_executable(cs_repl sources/repl.cpp sources/win32_rc/repl.rc)
     add_executable(cs_dbg sources/debugger.cpp sources/win32_rc/debugger.rc)
-else()
+else ()
     add_executable(cs sources/standalone.cpp)
     add_executable(cs_repl sources/repl.cpp)
     add_executable(cs_dbg sources/debugger.cpp)

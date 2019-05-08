@@ -634,7 +634,9 @@ namespace cs {
 			return statement_types::end_;
 		}
 
-		virtual statement_base *translate_end(method_base* method, const context_t &context, std::deque<std::deque<token_base *>> &raw, std::deque<token_base *> &code)
+		virtual statement_base *
+		translate_end(method_base *method, const context_t &context, std::deque<std::deque<token_base *>> &raw,
+		              std::deque<token_base *> &code)
 		{
 			return method->translate(context, raw);
 		}

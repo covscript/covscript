@@ -278,7 +278,8 @@ namespace cs {
 	public:
 		using method_end::method_end;
 
-		statement_base *translate_end(method_base*, const context_t &, std::deque<std::deque<token_base *>> &, std::deque<token_base *> &) override;
+		statement_base *translate_end(method_base *, const context_t &, std::deque<std::deque<token_base *>> &,
+		                              std::deque<token_base *> &) override;
 	};
 
 	class method_loop final : public method_base {
@@ -297,7 +298,8 @@ namespace cs {
 
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 
-		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &, const tree_type<token_base *> &);
+		statement_base *
+		translate(const context_t &, const std::deque<std::deque<token_base *>> &, const tree_type<token_base *> &);
 	};
 
 	class method_for final : public method_base {

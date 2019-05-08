@@ -28,7 +28,9 @@
 #include <covscript/import/libdll/dll.hpp>
 // Hash Map and Set
 #ifndef CS_COMPATIBILITY_MODE
+
 #include <covscript/import/sparsepp/spp.h>
+
 #else
 #include <unordered_map>
 #include <unordered_set>
@@ -786,9 +788,9 @@ namespace cs {
 			return m_data;
 		}
 
-		void copy_namespace(const name_space& ns)
+		void copy_namespace(const name_space &ns)
 		{
-			for(auto& it:ns.m_data)
+			for (auto &it:ns.m_data)
 				m_data.add_var(it.first, ns.m_data.get_var_by_id(it.second));
 		}
 	};

@@ -73,7 +73,7 @@ namespace cs {
 				++i;
 				continue;
 			}
-			if(buff[i]=='#')
+			if (buff[i] == '#')
 				break;
 			switch (type) {
 			default:
@@ -297,12 +297,13 @@ namespace cs {
 		std::swap(tokens, oldt);
 		tokens.clear();
 		for (auto &ptr:oldt) {
-			if(ptr->get_type() == token_types::signal && static_cast<token_signal *>(ptr)->get_signal() == signal_types::endline_)
-				ptr=new token_endline(ptr->get_line_num());
+			if (ptr->get_type() == token_types::signal &&
+			        static_cast<token_signal *>(ptr)->get_signal() == signal_types::endline_)
+				ptr = new token_endline(ptr->get_line_num());
 			if (ptr->get_type() == token_types::action || ptr->get_type() == token_types::endline) {
 				if (!expr.empty()) {
 					translator.match_grammar(context, expr);
-					for(auto& it:expr)
+					for (auto &it:expr)
 						tokens.push_back(it);
 					expr.clear();
 				}

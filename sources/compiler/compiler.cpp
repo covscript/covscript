@@ -721,9 +721,9 @@ namespace cs {
 		stream << " >";
 	}
 
-	void translator_type::match_grammar(const context_t &context, std::deque<token_base*>& raw)
+	void translator_type::match_grammar(const context_t &context, std::deque<token_base *> &raw)
 	{
-		for(auto& dat:m_data) {
+		for (auto &dat:m_data) {
 			bool matched = false;
 			{
 				bool failed = false, skip_useless = false;
@@ -762,9 +762,10 @@ namespace cs {
 								matched = true;
 						}
 						else if (raw[i]->get_type() == token_types::action)
-							failed= static_cast<token_action*>(raw[i])->get_action()!=static_cast<token_action *>(it)->get_action();
+							failed = static_cast<token_action *>(raw[i])->get_action() !=
+							         static_cast<token_action *>(it)->get_action();
 						else
-							failed=true;
+							failed = true;
 						skip_useless = false;
 						++i;
 						break;
@@ -796,7 +797,7 @@ namespace cs {
 									        static_cast<token_action *>(it)->get_action())
 										break;
 								}
-								else if(raw[i]->get_type() == token_types::action)
+								else if (raw[i]->get_type() == token_types::action)
 									break;
 							}
 						}

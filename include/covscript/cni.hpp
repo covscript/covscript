@@ -159,19 +159,18 @@ namespace cs_impl {
 // std::string->cs::string
 // const char*->cs::string
 	template<>
-	struct type_conversion_cs<const char*> {
+	struct type_conversion_cs<const char *> {
 		using source_type=cs::string;
 	};
 
 	template<>
-	struct type_conversion_cpp<const char*> {
+	struct type_conversion_cpp<const char *> {
 		using target_type=cs::string;
 	};
 
 	template<>
-	struct type_convertor<cs::string, const char*> {
-		template<typename T>
-		static const char* convert(const cs::string& str)
+	struct type_convertor<cs::string, const char *> {
+		static const char *convert(const cs::string &str)
 		{
 			return str.c_str();
 		}
@@ -183,18 +182,50 @@ namespace cni_namespace_impl {
 	class cni_register final {
 	public:
 		template<typename T>
-		cni_register(const cs::namespace_t& ns, const char* name, T&& val)
+		cni_register(const cs::namespace_t &ns, const char *name, T &&val)
 		{
 			ns->add_var(name, std::forward<T>(val));
 		}
 	};
+
+	template<typename T>
+	cs::var make_var_normal(const T& val)
+    {
+	    return cs::var::make<typename cs_impl::type_conversion_cpp<T>::target_type>(val);
+    }
+
+    template<typename T, typename X>
+    cs::var make_var_normal_v(X&& val)
+    {
+        return cs::var::make<T>(std::forward<X>(val));
+    }
+
+    template<typename T>
+    cs::var make_var_const(const T& val)
+    {
+        return cs::var::make_constant<typename cs_impl::type_conversion_cpp<T>::target_type>(val);
+    }
+
+    template<typename T, typename X>
+    cs::var make_var_const_v(X&& val)
+    {
+        return cs::var::make_constant<T>(std::forward<X>(val));
+    }
 }
 
 #define CNI_NAME_MIXER(PREFIX, NAME) static cni_namespace_impl::cni_register PREFIX##NAME
 #define CNI_REGISTER(NAME, ARGS) CNI_NAME_MIXER(_cni_register_, NAME)(__cni_namespace, #NAME, ARGS);
-#define BEGIN_CNI_ROOT_NAMESPACE namespace __cni_root_namespace{cs::namespace_t __cni_namespace=cs::make_shared_namespace<cs::name_space>();
-#define END_CNI_ROOT_NAMESAPCE }void cs_extension_main(cs::name_space *ns) {ns->copy_namespace(*__cni_root_namespace::__cni_namespace);}
-#define BEGIN_CNI_NAMESPACE(NAME) namespace NAME{cs::namespace_t __cni_namespace=cs::make_shared_namespace<cs::name_space>();
-#define END_CNI_NAMESPACE(NAME) } CNI_REGISTER(NAME, cs::make_namespace(NAME::__cni_namespace))
-#define CNI_NORMAL(NAME) CNI_REGISTER(NAME, cs::make_cni(NAME, false))
+#define BEGIN_CNI_ROOT_NAMESPACE namespace cni_root_namespace{static cs::namespace_t __cni_namespace=cs::make_shared_namespace<cs::name_space>();}void cs_extension_main(cs::name_space *ns) {ns->copy_namespace(*cni_root_namespace::__cni_namespace);} namespace cni_root_namespace
+#define BEGIN_CNI_NAMESPACE(NAME) namespace NAME{static cs::namespace_t __cni_namespace=cs::make_shared_namespace<cs::name_space>();} CNI_REGISTER(NAME, cs::make_namespace(NAME::__cni_namespace)) namespace NAME
+#define BEGIN_CNI_TYPE_EXT(NAME, TYPE, FUNC) namespace NAME{static cs::namespace_t __cni_namespace=cs::make_shared_namespace<cs::name_space>();} CNI_REGISTER(NAME, cs::var::make_constant<cs::type_t>([]()->cs::var{return FUNC;}, cs::type_id(typeid(TYPE)), NAME::__cni_namespace)) namespace NAME
+#define BEGIN_CNI_TYPE_EXT_V(NAME, TYPE, TYPE_NAME, FUNC) namespace NAME{static cs::namespace_t __cni_namespace=cs::make_shared_namespace<cs::name_space>();} CNI_NAME_MIXER(_cni_register_, NAME)(__cni_namespace, #TYPE_NAME, cs::var::make_constant<cs::type_t>([]()->cs::var{return FUNC;}, cs::type_id(typeid(TYPE)), NAME::__cni_namespace)); namespace NAME
+#define CNI(NAME) CNI_REGISTER(NAME, cs::make_cni(NAME, false))
 #define CNI_CONST(NAME) CNI_REGISTER(NAME, cs::make_cni(NAME, true))
+#define CNI_V(NAME, ARGS) CNI_REGISTER(NAME, cs::make_cni(ARGS, false))
+#define CNI_CONST_V(NAME, ARGS) CNI_REGISTER(NAME, cs::make_cni(ARGS, true))
+#define CNI_VALUE(NAME, ARGS) CNI_REGISTER(NAME, cni_namespace_impl::make_var_normal(ARGS))
+#define CNI_VALUE_CONST(NAME, ARGS) CNI_REGISTER(NAME, cni_namespace_impl::make_var_const(ARGS))
+#define CNI_VALUE_V(NAME, TYPE, ARGS) CNI_REGISTER(NAME, cni_namespace_impl::make_var_normal_v<TYPE>(ARGS))
+#define CNI_VALUE_CONST_V(NAME, TYPE, ARGS) CNI_REGISTER(NAME, cni_namespace_impl::make_var_const_v<TYPE>(ARGS))
+#define CNI_ENABLE_TYPE_EXT(NS, TYPE) namespace cs_impl{template<>constexpr const char* get_name_of_type<TYPE>(){return #TYPE;} template<>cs::namespace_t &get_ext<TYPE>(){return cni_root_namespace::NS::__cni_namespace;}}
+#define CNI_ENABLE_TYPE_EXT_V(NS, TYPE, NAME) namespace cs_impl{template<>constexpr const char* get_name_of_type<TYPE>(){return #NAME;} template<>cs::namespace_t &get_ext<TYPE>(){return cni_root_namespace::NS::__cni_namespace;}}

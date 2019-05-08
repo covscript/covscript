@@ -322,10 +322,13 @@ namespace cs {
 			                           raw.front().back());
 	}
 
-	statement_base *method_until::translate_end(method_base* method, const context_t &context, std::deque<std::deque<token_base *>> &raw, std::deque<token_base *> &code)
+	statement_base *method_until::translate_end(method_base *method, const context_t &context,
+	        std::deque<std::deque<token_base *>> &raw,
+	        std::deque<token_base *> &code)
 	{
-		if(method!=nullptr&&method->get_target_type()==statement_types::loop_)
-			return static_cast<method_loop*>(method)->translate(context, raw, static_cast<token_expr *>(code.at(1))->get_tree());
+		if (method != nullptr && method->get_target_type() == statement_types::loop_)
+			return static_cast<method_loop *>(method)->translate(context, raw,
+			        static_cast<token_expr *>(code.at(1))->get_tree());
 		else
 			throw runtime_error("Wrong grammar(loop-until)");
 	}
@@ -337,7 +340,8 @@ namespace cs {
 		return new statement_loop(body, context, raw.front().back());
 	}
 
-	statement_base *method_loop::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw, const tree_type<token_base *> &cond)
+	statement_base *method_loop::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw,
+	                                       const tree_type<token_base *> &cond)
 	{
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
@@ -410,7 +414,8 @@ namespace cs {
 		const std::string &it = static_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		return new statement_foreach(it, static_cast<token_expr *>(raw.front().at(3))->get_tree(), body, context, raw.front().back());
+		return new statement_foreach(it, static_cast<token_expr *>(raw.front().at(3))->get_tree(), body, context,
+		                             raw.front().back());
 	}
 
 	statement_base *
