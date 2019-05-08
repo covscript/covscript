@@ -16,11 +16,9 @@ BEGIN_CNI_ROOT_NAMESPACE {
 
     CNI_VALUE_V(val_v, cs::number, 30)
 
-    class foo_t
-    {
+    class foo_t {
     public:
-        float test(float c)
-        {
+        float test(float c) {
             std::cout << c << std::endl;
             return c - 0.5;
         }
@@ -45,11 +43,9 @@ BEGIN_CNI_ROOT_NAMESPACE {
 
         CNI_VALUE_CONST_V(val_v, double, 30)
 
-        class foo
-        {
+        class foo {
         public:
-            const char* test(const char* str)
-            {
+            const char *test(const char *str) {
                 std::cout << str;
                 return ",World";
             }

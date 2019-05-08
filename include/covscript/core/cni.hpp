@@ -171,15 +171,15 @@ namespace cs_impl {
 		}
 	};
 
-    template<typename _TargetT, std::size_t index>
-    struct try_convert_and_check<_TargetT, _TargetT, cs::var, index> {
-        inline static _TargetT convert(cs::var &val)
-        {
-            return val;
-        }
-    };
+	template<typename _TargetT, std::size_t index>
+	struct try_convert_and_check<_TargetT, _TargetT, cs::var, index> {
+		inline static _TargetT convert(cs::var &val)
+		{
+			return val;
+		}
+	};
 
-    template<typename _TargetT, typename _SourceT, std::size_t index>using try_convert=try_convert_and_check<_TargetT, _SourceT, typename cov::remove_constant<typename cov::remove_reference<_TargetT>::type>::type, index>;
+	template<typename _TargetT, typename _SourceT, std::size_t index> using try_convert=try_convert_and_check<_TargetT, _SourceT, typename cov::remove_constant<typename cov::remove_reference<_TargetT>::type>::type, index>;
 
 // Static argument check
 	template<typename RetT, typename...ArgsT>
@@ -224,9 +224,10 @@ namespace cs_impl {
 
 		any call(cs::vector &args) const
 		{
-			if(args.size()!=sizeof...(_Target_ArgsT))
+			if (args.size() != sizeof...(_Target_ArgsT))
 				throw cs::runtime_error(
-				    "Wrong size of the arguments. Expected " + std::to_string(sizeof...(_Target_ArgsT)) + ", provided " +
+				    "Wrong size of the arguments. Expected " + std::to_string(sizeof...(_Target_ArgsT)) +
+				    ", provided " +
 				    std::to_string(args.size()));
 			_call(args, cov::make_sequence<sizeof...(_Source_ArgsT)>::result);
 			return cs::null_pointer;
@@ -240,7 +241,8 @@ namespace cs_impl {
 		template<int...S>
 		_Source_RetT _call(cs::vector &args, const cov::sequence<S...> &) const
 		{
-			return std::move(type_convertor<_Target_RetT, _Source_RetT>::convert(mFunc(try_convert<_Target_ArgsT, _Source_ArgsT, S>::convert(args[S])...)));
+			return std::move(type_convertor<_Target_RetT, _Source_RetT>::convert(
+			                     mFunc(try_convert<_Target_ArgsT, _Source_ArgsT, S>::convert(args[S])...)));
 		}
 
 	public:
@@ -252,9 +254,10 @@ namespace cs_impl {
 
 		any call(cs::vector &args) const
 		{
-			if(args.size()!=sizeof...(_Target_ArgsT))
+			if (args.size() != sizeof...(_Target_ArgsT))
 				throw cs::runtime_error(
-				    "Wrong size of the arguments. Expected " + std::to_string(sizeof...(_Target_ArgsT)) + ", provided " +
+				    "Wrong size of the arguments. Expected " + std::to_string(sizeof...(_Target_ArgsT)) +
+				    ", provided " +
 				    std::to_string(args.size()));
 			return std::move(_call(args, cov::make_sequence<sizeof...(_Source_ArgsT)>::result));
 		}
