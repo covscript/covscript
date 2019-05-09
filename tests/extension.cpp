@@ -2,7 +2,7 @@
 #include <covscript/dll.hpp>
 #include <iostream>
 
-BEGIN_CNI_ROOT_NAMESPACE {
+CNI_ROOT_NAMESPACE {
     int test(int a) {
         std::cout << a << std::endl;
         return a + 1;
@@ -24,11 +24,11 @@ BEGIN_CNI_ROOT_NAMESPACE {
         }
     };
 
-    BEGIN_CNI_TYPE_EXT(foo, foo_t, foo_t()) {
+    CNI_TYPE_EXT(foo, foo_t, foo_t()) {
         CNI_V(test, &foo_t::test)
     }
 
-    BEGIN_CNI_NAMESPACE(child) {
+    CNI_NAMESPACE(child) {
 
         double test(double b) {
             std::cout << b << std::endl;
@@ -51,7 +51,7 @@ BEGIN_CNI_ROOT_NAMESPACE {
             }
         };
 
-        BEGIN_CNI_TYPE_EXT_V(foo_ext, foo, foo, foo()) {
+        CNI_TYPE_EXT_V(foo_ext, foo, foo, foo()) {
             CNI_V(test, &foo::test)
         }
     }
