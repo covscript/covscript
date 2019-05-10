@@ -14,11 +14,13 @@ This project is an officially maintained Covariant Script interpreter.
 + Powerful and bloat-free extension system
 + Good compatibility -- written in C++14
 + Dependency-free and efficient compiler front-end
-+ Serialize optimized AST
++ Exportable compilation results
++ Support compile-time optimization
++ Runtime hotspot optimization
 + Efficient memory management system
 + Compile-time optimization
 + Reference count garbage collection system
-+ C/**C++** Native Interface (CNI)
++ C/**C++** Native Interface(CNI)
 ## Extensions ##
 + [Darwin Universal CGL](https://github.com/covscript/covscript-darwin)
 + [Regular Expression](https://github.com/covscript/covscript-regex)
@@ -28,7 +30,7 @@ This project is an officially maintained Covariant Script interpreter.
 + [ASIO Network](https://github.com/covscript/covscript-network)
 + [Streams API](https://github.com/covscript/covscript-streams)
 ## Documentation ##
-[CovScript Online Documents](http://covscript.org/docs/)  
+[CovScript Online Documents](https://covscript.org/docs/)  
 ## Installation ##
 + Download the precompiled executable on the [Latest Release](https://github.com/covscript/covscript/releases/latest)
 + Directly compile source code with CMake toolchain
@@ -94,13 +96,8 @@ The [examples](./examples) folder contains several example programs written by C
 ## Thanks ##
 **Ordered by contribution.**  
 + Consultant: [@ice1000](https://github.com/ice1000/), [@imkiva](https://github.com/imkiva/)
-+ Testing: Shi Youcheng, [@imkiva](https://github.com/imkiva/)
++ Testing: Weicheng Shi, [@imkiva](https://github.com/imkiva/)
 + Douments: [@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
 + Streams API Extension: [@imkiva](https://github.com/imkiva/)
 + IntelliJ Plugin: [@ice1000](https://github.com/ice1000/)
-## Comments ##
-Comments by [@ice1000](https://github.com/ice1000/):
-> This is a programming language created by my friend Michael Lee, written in C++. The detailed description is on its website so I’ll just put some comments here. This is a C-like language (at least the function call syntax is of C style), while functions, structs, namespaces are ends with end like Ruby, and it has the concepts of package import using (the module system).  
-Its parser is hand-written (very complex, although parsers are trivial), which impressed me (I didn’t even think of that when working on Lice, I just wrote an AST evaluator).  
-This language supports invoking functions written in C++, like JNI.  
-CovScript mostly features its powerful standard library, which has database, GUI, web access, regular expressions.
++ Cross-platform Support: [@MouriNaruto](https://github.com/MouriNaruto)

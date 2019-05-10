@@ -15,10 +15,11 @@
 + 独立、高效的编译器前端
 + 可导出编译结果
 + 支持编译期优化
++ 运行时热点优化
 + 高效的内存管理系统
 + 引用计数垃圾回收器
 + 强大易用的扩展系统
-+ C/**C++** 原生接口 (CNI)
++ C/**C++** 原生接口(CNI)
 ## 扩展 ##
 + [Dear ImGui图形用户界面](https://github.com/covscript/covscript-imgui)
 + [Darwin通用字符图形库](https://github.com/covscript/covscript-darwin)
@@ -28,7 +29,7 @@
 + [正则表达式](https://github.com/covscript/covscript-regex)
 + [流式API](https://github.com/covscript/covscript-streams)
 ## 文档 ##
-[CovScript在线文档](http://covscript.org/docs/)  
+[CovScript在线文档](https://covscript.org/docs/)  
 ## 安装 ##
 + 在[Latest Release](https://github.com/covscript/covscript/releases/latest)里下载预编译的二进制文件
 + 使用CMake工具链直接编译源代码
@@ -98,11 +99,4 @@ IntelliJ插件现已可用：
 + 文档：[@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
 + 流式API扩展：[@imkiva](https://github.com/imkiva/)
 + IntelliJ插件：[@ice1000](https://github.com/ice1000/)
-## 评论 ##
-[@ice1000](https://github.com/ice1000/)的评论：
->这是我的朋友李登淳创造的一门编程语言，用 C++ 实现，具体介绍在官网还是比较详细的，我在这里就只写点我自己的看法吧。  
-这门语言本身是类 C 的（至少表达式和函数调用是 C 风格），而函数、结构体、命名空间定义等是 Ruby 风格的 end 结尾，并有 package import using 的概念（也就是模块系统）。  
-老李的 Parser 是手写的（可以说复杂度很高了，虽然 Parser 是很 trivial 的），让我对他的耐力很佩服（同为高二学生， 我在写 Lice 的时候就没有这份心思，只是做了个很灵活的 AST evaluator 而已）。  
-这门语言支持调用 C++ 实现的函数，形式类似 JNI 。  
-CovScript 的类 C 语法让它能写起来很愉快，再加上对 lambda 的支持，可以说是一个 real-world 的编程语言了（ 不像 Lice 这种，是以辅助另一门语言为目标的）。  
-最大的特色应该是它功能齐全的标准库，有数据库、 GUI （有个命令行的图形库，感觉碉堡）、网络编程、正则等库，感觉写程序很方便。
++ 跨平台支持：[@MouriNaruto](https://github.com/MouriNaruto)
