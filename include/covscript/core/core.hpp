@@ -29,7 +29,7 @@
 // Hash Map and Set
 #ifndef CS_COMPATIBILITY_MODE
 
-#include <covscript/import/sparsepp/spp.h>
+#include <covscript/import/parallel_hashmap/phmap.h>
 
 #else
 #include <unordered_map>
