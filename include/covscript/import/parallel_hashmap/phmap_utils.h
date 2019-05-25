@@ -20,62 +20,60 @@
 // ---------------------------------------------------------------------------
 
 #if defined(__APPLE__)
-    // forward declaration of std::hash does not work on mac. It is not really supposed 
-    // to work, I know, but it is nice to reduce the amount of headers included.
-    #include <functional>
+// forward declaration of std::hash does not work on mac. It is not really supposed
+// to work, I know, but it is nice to reduce the amount of headers included.
+#include <functional>
 #else
-    #include <cstddef>  // for size_t
+#include <cstddef>  // for size_t
 
-    namespace std
-    {
-        template<class Key> struct hash;
-    } 
+namespace std {
+	template<class Key> struct hash;
+}
 #endif
 
-namespace phmap
-{
+namespace phmap {
 
-template <class H, int sz> struct Combiner
-{
-    H operator()(H seed, size_t value);
-};
+	template <class H, int sz> struct Combiner {
+		H operator()(H seed, size_t value);
+	};
 
-template <class H> struct Combiner<H, 4>
-{
-    H operator()(H seed, size_t value)
-    {
-        return seed ^ (value + 0x9e3779b9 + (seed << 6) + (seed >> 2));
-    }
-};
+	template <class H> struct Combiner<H, 4> {
+		H operator()(H seed, size_t value)
+		{
+			return seed ^ (value + 0x9e3779b9 + (seed << 6) + (seed >> 2));
+		}
+	};
 
-template <class H> struct Combiner<H, 8>
-{
-    H operator()(H seed, size_t value)
-    {
-        return seed ^ (value + size_t(0xc6a4a7935bd1e995) + (seed << 6) + (seed >> 2));
-    }
-};
+	template <class H> struct Combiner<H, 8> {
+		H operator()(H seed, size_t value)
+		{
+			return seed ^ (value + size_t(0xc6a4a7935bd1e995) + (seed << 6) + (seed >> 2));
+		}
+	};
 
 
 // -----------------------------------------------------------------------------
-template <typename H>
-class HashStateBase {
-public:
-    template <typename T, typename... Ts>
-    static H combine(H state, const T& value, const Ts&... values);
+	template <typename H>
+	class HashStateBase {
+	public:
+		template <typename T, typename... Ts>
+		static H combine(H state, const T& value, const Ts&... values);
 
-    static H combine(H state) { return state; }
-};
+		static H combine(H state)
+		{
+			return state;
+		}
+	};
 
-template <typename H>
-template <typename T, typename... Ts>
-H HashStateBase<H>::combine(H seed, const T& v, const Ts&... vs)
-{
-    return HashStateBase<H>::combine(Combiner<H, sizeof(H)>()(
-                                         seed, std::hash<T>()(v)),  vs...);
-}
+	template <typename H>
+	template <typename T, typename... Ts>
+	H HashStateBase<H>::combine(H seed, const T& v, const Ts&... vs)
+	{
+		return HashStateBase<H>::combine(Combiner<H, sizeof(H)>()(
+		                                     seed, std::hash<T>()(v)),  vs...);
+	}
 
-using HashState = HashStateBase<size_t>;
+	using HashState = HashStateBase<size_t>;
 
 }  // namespace phmap
 
