@@ -176,6 +176,9 @@ namespace cs {
 		case signal_types::error_:
 			o << "[error]";
 			break;
+		case signal_types::endline_:
+			o << "[endline]";
+			break;
 		}
 		o << "\" >";
 		return false;
@@ -730,6 +733,8 @@ namespace cs {
 				std::size_t i = 0;
 				for (auto &it:dat->first) {
 					switch (it->get_type()) {
+					default:
+						break;
 					case token_types::action: {
 						if (skip_useless) {
 							// Keep looking for id token or action token that have been replaced.
@@ -786,6 +791,8 @@ namespace cs {
 				std::size_t i = 0;
 				for (auto &it:dat->first) {
 					switch (it->get_type()) {
+					default:
+						break;
 					case token_types::action: {
 						if (skip_useless) {
 							// Keep looking for id token or action token that have been replaced.
