@@ -365,12 +365,14 @@ void covscript_main(int args_size, const char *args[])
 			std::cout << "limitations under the License.\n";
 			std::cout << "Please visit http://covscript.org for more information.\n";
 			std::cout << "\nMetadata:\n";
-			std::cout << "  Standard Version  STD" << cs::current_process->std_version << "\n";
-			std::cout << "  Import Path       " << cs::current_process->import_path << "\n";
+			std::cout << "  Import Path: " << cs::current_process->import_path << "\n";
+			std::cout << "  STD Version: " << cs::current_process->std_version << "\n";
+			std::cout << "  API Version: " << COVSCRIPT_API_VERSION << "\n";
+			std::cout << "  ABI Version: " << COVSCRIPT_ABI_VERSION << "\n";
 #ifdef COVSCRIPT_PLATFORM_WIN32
-			std::cout << "  Platform          Win32\n";
+			std::cout << "  Runtime Env: WIN32\n";
 #else
-			std::cout << "  Platform          Unix\n";
+			std::cout << "  Runtime Env: UNIX\n";
 #endif
 			std::cout << std::endl;
 			return;
