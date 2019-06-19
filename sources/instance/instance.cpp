@@ -28,6 +28,10 @@
 #include <unistd.h>
 #endif
 
+#if defined(__APPLE__) || defined(__MACH__)
+#include <mach-o/loader.h>
+#endif
+
 namespace cs {
 	const std::string &statement_base::get_file_path() const noexcept
 	{
@@ -51,19 +55,36 @@ namespace cs {
 			throw fatal_error("Failed to open file.");
 		}
 
-		char header[8] = {0};
-		int nread = read(fd, header, sizeof(header));
+#if defined(_WIN32) || defined(WIN32)
+		char header[2] = {0};
+#elif defined(__APPLE__) || defined(__MACH__)
+		uint32_t header;
+#elif defined(linux) || defined(__linux) || defined(__linux__)
+		char header[4] = {0};
+#endif
+		int nread = read(fd, reinterpret_cast<void*>(&header), sizeof(header));
 		close(fd);
 
 		if (nread < 0) {
 			throw fatal_error("Failed to read file header.");
 		}
 
-		if (header[0] == 'p' && header[1] == 'a' 
-			&& header[2] == 'c' && header[3] == 'k'
-			&& header[4] == 'a' && header[5] == 'g'
-			&& header[6] == 'e' && header[7] == ' ') {
-			// is package
+#if defined(_WIN32) || defined(WIN32)
+		if (header[0] == 'M' && header[1] == 'Z') {
+#elif defined(__APPLE__) || defined(__MACH__)
+		if (header == MH_MAGIC || header == MH_CIGAM
+			|| header == MH_MAGIC_64 || header == MH_CIGAM_64) {
+#elif defined(linux) || defined(__linux) || defined(__linux__)
+		if (header[0] == 0x7f
+		 	&& header[1] == 'E'
+		 	&& header[2] == 'L'
+		 	&& header[3] == 'F') {
+#endif
+			// is extension file
+			return std::make_shared<extension>(filePath);
+
+		} else {
+			// is package file
 			context_t rt = create_subcontext(context);
 			rt->compiler->swap_context(rt);
 			try {
@@ -78,9 +99,6 @@ namespace cs {
 			if (rt->package_name.empty())
 				throw runtime_error("Target file is not a package.");
 			return std::make_shared<name_space>(rt->instance->storage.get_global());
-		
-		} else {
-			return std::make_shared<extension>(filePath);
 		}
 	}
 
