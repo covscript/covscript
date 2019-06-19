@@ -19,6 +19,14 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/covscript.hpp>
+#include <fcntl.h>
+#include <stdio.h>
+
+#if defined(_WIN32) || defined(WIN32)
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
 namespace cs {
 	const std::string &statement_base::get_file_path() const noexcept
@@ -34,6 +42,46 @@ namespace cs {
 	const std::string &statement_base::get_raw_code() const noexcept
 	{
 		return context->file_buff.at(line_num - 1);
+	}
+
+	namespace_t instance_type::import_source(const std::string &filePath)
+	{
+		int fd = open(filePath.c_str(), O_RDONLY);
+		if (fd < 0) {
+			throw fatal_error("Failed to open file.");
+		}
+
+		char header[8] = {0};
+		int nread = read(fd, header, sizeof(header));
+		close(fd);
+
+		if (nread < 0) {
+			throw fatal_error("Failed to read file header.");
+		}
+
+		if (header[0] == 'p' && header[1] == 'a' 
+			&& header[2] == 'c' && header[3] == 'k'
+			&& header[4] == 'a' && header[5] == 'g'
+			&& header[6] == 'e' && header[7] == ' ') {
+			// is package
+			context_t rt = create_subcontext(context);
+			rt->compiler->swap_context(rt);
+			try {
+				rt->instance->compile(filePath);
+			}
+			catch (...) {
+				context->compiler->swap_context(context);
+				throw;
+			}
+			context->compiler->swap_context(context);
+			rt->instance->interpret();
+			if (rt->package_name.empty())
+				throw runtime_error("Target file is not a package.");
+			return std::make_shared<name_space>(rt->instance->storage.get_global());
+		
+		} else {
+			return std::make_shared<extension>(filePath);
+		}
 	}
 
 	namespace_t instance_type::import(const std::string &path, const std::string &name)
