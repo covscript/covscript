@@ -48,9 +48,9 @@ namespace cs {
 		return context->file_buff.at(line_num - 1);
 	}
 
-	namespace_t instance_type::import_source(const std::string &filePath)
+	namespace_t instance_type::source_import(const std::string &path)
 	{
-		int fd = open(filePath.c_str(), O_RDONLY);
+		int fd = open(path.c_str(), O_RDONLY);
 		if (fd < 0) {
 			throw fatal_error("Failed to open file.");
 		}
@@ -73,22 +73,23 @@ namespace cs {
 		if (header[0] == 'M' && header[1] == 'Z') {
 #elif defined(__APPLE__) || defined(__MACH__)
 		if (header == MH_MAGIC || header == MH_CIGAM
-			|| header == MH_MAGIC_64 || header == MH_CIGAM_64) {
+		        || header == MH_MAGIC_64 || header == MH_CIGAM_64) {
 #elif defined(linux) || defined(__linux) || defined(__linux__)
 		if (header[0] == 0x7f
-		 	&& header[1] == 'E'
-		 	&& header[2] == 'L'
-		 	&& header[3] == 'F') {
+		        && header[1] == 'E'
+		        && header[2] == 'L'
+		        && header[3] == 'F') {
 #endif
 			// is extension file
-			return std::make_shared<extension>(filePath);
+			return std::make_shared<extension>(path);
 
-		} else {
+		}
+		else {
 			// is package file
 			context_t rt = create_subcontext(context);
 			rt->compiler->swap_context(rt);
 			try {
-				rt->instance->compile(filePath);
+				rt->instance->compile(path);
 			}
 			catch (...) {
 				context->compiler->swap_context(context);
@@ -102,8 +103,7 @@ namespace cs {
 		}
 	}
 
-	namespace_t instance_type::import(const std::string &path, const std::string &name)
-	{
+	namespace_t instance_type::import(const std::string &path, const std::string &name) {
 		std::vector<std::string> collection;
 		{
 			std::string tmp;
@@ -143,8 +143,7 @@ namespace cs {
 		throw fatal_error("No such file or directory.");
 	}
 
-	void instance_type::compile(const std::string &path)
-	{
+	void instance_type::compile(const std::string &path) {
 		context->file_path = path;
 		// Read from file
 		std::deque<char> buff;
@@ -161,8 +160,7 @@ namespace cs {
 		context->compiler->utilize_metadata();
 	}
 
-	void instance_type::interpret()
-	{
+	void instance_type::interpret() {
 		// Run the instruction
 		for (auto &ptr:statements) {
 			try {
@@ -180,8 +178,7 @@ namespace cs {
 		}
 	}
 
-	void instance_type::dump_ast(std::ostream &stream)
-	{
+	void instance_type::dump_ast(std::ostream &stream) {
 		stream << "< Covariant Script AST Dump >\n< BeginMetaData >\n< Version: " << current_process->version
 		       << " >\n< Standard Version: "
 		       << current_process->std_version
@@ -199,8 +196,7 @@ namespace cs {
 		stream << std::flush;
 	}
 
-	void repl::run(const string &code)
-	{
+	void repl::run(const string &code) {
 		if (code.empty())
 			return;
 		std::deque<char> buff;
@@ -278,8 +274,7 @@ namespace cs {
 		context->compiler->utilize_metadata();
 	}
 
-	void repl::exec(const string &code)
-	{
+	void repl::exec(const string &code) {
 		// Preprocess
 		++line_num;
 		int mode = 0;

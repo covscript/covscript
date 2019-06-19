@@ -864,14 +864,14 @@ namespace cs_impl {
 			return context->cmd_args;
 		}
 
-		var advance_import(const context_t &context, const string &path, const string &name)
+		var import(const context_t &context, const string &dir, const string &name)
 		{
-			return make_namespace(context->instance->import(path, name));
+			return make_namespace(context->instance->import(dir, name));
 		}
 
-		var source_import(const context_t &context, const string &filePath)
+		var source_import(const context_t &context, const string &path)
 		{
-			return make_namespace(context->instance->import_source(filePath));
+			return make_namespace(context->instance->source_import(path));
 		}
 
 		void init()
@@ -893,7 +893,7 @@ namespace cs_impl {
 			.add_var("build", make_cni(build))
 			.add_var("solve", make_cni(solve))
 			.add_var("cmd_args", make_cni(cmd_args, true))
-			.add_var("advance_import", make_cni(advance_import, true))
+			.add_var("import", make_cni(import, true))
 			.add_var("source_import", make_cni(source_import, true));
 		}
 	}

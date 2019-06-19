@@ -51,8 +51,7 @@ namespace cs {
 		// Wrapped Method
 		namespace_t import(const std::string &, const std::string &);
 
-		// Wrapped Method
-		namespace_t import_source(const std::string &);
+		namespace_t source_import(const std::string &);
 
 		void compile(const std::string &);
 
