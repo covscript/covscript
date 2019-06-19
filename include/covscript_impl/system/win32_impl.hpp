@@ -1,6 +1,6 @@
 #pragma once
 /*
-* Covariant Script Console
+* Covariant Script OS Support: Microsoft Windows
 *
 * Licensed under the Covariant Innovation General Public License,
 * Version 1.0 (the "License");
