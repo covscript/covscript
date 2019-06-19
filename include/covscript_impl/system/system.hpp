@@ -1,6 +1,6 @@
 #pragma once
 /*
-* Covariant Script Console
+* Covariant Script OS Support
 *
 * Licensed under the Covariant Innovation General Public License,
 * Version 1.0 (the "License");
@@ -21,10 +21,10 @@
 */
 #if defined(_WIN32) || defined(WIN32)
 
-#include "./win32_conio.hpp"
+#include "./win32_impl.hpp"
 
 #else
 
-#include "./unix_conio.hpp"
+#include "./unix_impl.hpp"
 
 #endif
