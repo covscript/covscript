@@ -28,3 +28,17 @@
 #include "./unix_impl.hpp"
 
 #endif
+
+#include <sys/stat.h>
+
+namespace cs_impl {
+    namespace filesystem {
+        bool is_directory(const std::string &path) {
+            struct stat s{};
+            if (stat(path.c_str(), &s) == 0) {
+                return S_ISDIR(s.st_mode);
+            }
+            return false;
+        }
+    }
+}
