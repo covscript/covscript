@@ -47,7 +47,7 @@ function gui()
     # Force disable the optimization to avoid
     # the problems in some devices which do not support the opengl.
     var ext_name="picasso"
-    var picasso=context.advance_import(runtime.get_import_path(),ext_name)
+    var picasso=context.import(runtime.get_import_path(),ext_name)
     using picasso.imgui
     # About Window
     struct about_win extends picasso.message_box
