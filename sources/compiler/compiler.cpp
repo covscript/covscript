@@ -427,7 +427,6 @@ namespace cs {
 						const std::string &str = static_cast<token_vargs *>(it.root().data())->get_id();
 						if (!args.empty())
 							throw runtime_error("Redefinition of function argument(Multi-define of vargs).");
-						context->instance->storage.add_record(str);
 						args.push_back(str);
 						is_vargs = true;
 					}
