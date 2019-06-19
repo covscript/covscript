@@ -887,7 +887,7 @@ namespace cs_impl {
 			.add_var("build", make_cni(build))
 			.add_var("solve", make_cni(solve))
 			.add_var("cmd_args", make_cni(cmd_args, true))
-			.add_var("advance_import", make_cni(advance_import, true))
+			.add_var("import", make_cni(import, true))
 			.add_var("source_import", make_cni(source_import, true));
 			(*context_ext)
 			.add_var("build", make_cni(build))
