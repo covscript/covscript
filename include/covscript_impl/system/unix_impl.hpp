@@ -143,7 +143,7 @@ namespace cs_impl {
             return ::mkdir(path.c_str(), mode) == 0;
         }
 
-        static std::string getcwd()
+        static std::string get_current_dir()
         {
             char temp[PATH_MAX] = "";
 

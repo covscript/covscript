@@ -122,7 +122,7 @@ namespace cs_impl {
             return false;
         }
 
-        static std::string getcwd()
+        static std::string get_current_dir()
         {
             char path[MAX_PATH] = "";
 	        GetCurrentDirectoryA(MAX_PATH, path);
