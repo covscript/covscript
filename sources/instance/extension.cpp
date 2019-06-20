@@ -889,7 +889,7 @@ namespace cs_impl {
 			.add_var("cmd_args", make_cni(cmd_args, true))
 			.add_var("import", make_cni(import, true))
 			.add_var("source_import", make_cni(source_import, true))
-			.add_var("get_current_dir", make_cni(filesystem::getcwd));
+			.add_var("get_current_dir", make_cni(filesystem::get_current_dir));
 			(*context_ext)
 			.add_var("build", make_cni(build))
 			.add_var("solve", make_cni(solve))
