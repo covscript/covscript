@@ -1097,6 +1097,25 @@ namespace cs_impl {
 		using namespace cs;
 		using namespace cs_impl;
 
+		unsigned int parse_mode(const string &modeString) {
+		    const char *perm = modeString.c_str();
+		    unsigned int mode = 0;
+
+		    if (std::isdigit(perm[0])) {
+                const char *p = perm;
+		        while (*p) {
+		            mode = mode * 8 + *p++ - '0';
+		        }
+		    } else {
+		        if (modeString.size() == 9) {
+		            mode =(((perm[0] == 'r') * 4 | (perm[1] == 'w') * 2 | (perm[2] == 'x')) << 6) |
+		                (((perm[3] == 'r') * 4 | (perm[4] == 'w') * 2 | (perm[5] == 'x')) << 3) |
+		                (((perm[6] == 'r') * 4 | (perm[7] == 'w') * 2 | (perm[8] == 'x')));
+		        }
+		    }
+            return mode;
+		}
+
 		bool copy(const string &source, const string &dest)
 		{
 			std::ifstream in(source, std::ios_base::in | std::ios_base::binary);
@@ -1161,14 +1180,14 @@ namespace cs_impl {
             return filesystem::mkdir_parent(path, 0755);
         }
 
-        bool chmod(const string &path, cs::number mode)
+        bool chmod(const string &path, const string &mode)
         {
-            return filesystem::chmod_impl(path, static_cast<int>(mode));
+            return filesystem::chmod_impl(path, parse_mode(mode));
         }
 
-        bool chmod_recursive(const string &path, cs::number mode)
+        bool chmod_recursive(const string &path, const string &mode)
         {
-            return filesystem::chmod_recursive(path, static_cast<int>(mode));
+            return filesystem::chmod_recursive(path, parse_mode(mode));
         }
 
 		void init()

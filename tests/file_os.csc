@@ -19,8 +19,7 @@ end
 
 gen_file()
 
-# dec(511) == oct(777)
-if File.chmod("./file_os/test/test.txt", 511)
+if File.chmod("./file_os/test/test.txt", "rwxr-xr-x")
 	system.out.println("chmod 1 succeed")
 end
 
@@ -36,7 +35,7 @@ if File.can_execute("./file_os/test/test.txt")
 	system.out.println("can_execute 1 succeed")
 end
 
-if File.chmod("./file_os/test/test.txt", 0)
+if File.chmod("./file_os/test/test.txt", "0000")
 	system.out.println("chmod 2 succeed")
 end
 
