@@ -305,6 +305,8 @@ namespace cs {
 
 		var parse_asi(var, const var &);
 
+		var parse_bind(token_base *, const var &);
+
 		var parse_choice(const var &, const tree_type<token_base *>::iterator &);
 
 		var parse_pair(const var &, const var &);

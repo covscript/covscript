@@ -108,6 +108,7 @@ namespace cs {
 		vardef_,
 		varprt_,
 		vargs_,
+		bind_,
 		error_
 	};
 	enum class constant_values {

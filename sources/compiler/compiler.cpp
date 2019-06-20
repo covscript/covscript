@@ -173,6 +173,9 @@ namespace cs {
 		case signal_types::vargs_:
 			o << "[vargs]";
 			break;
+		case signal_types::bind_:
+			o << "=";
+			break;
 		case signal_types::error_:
 			o << "[error]";
 			break;
@@ -301,6 +304,8 @@ namespace cs {
 				if (it.left().data() == nullptr || it.right().data() == nullptr)
 					throw runtime_error("Wrong grammar for assign expression.");
 				trim_expr(tree, it.left());
+				if (it.left().data()->get_type() == token_types::parallel)
+					it.data() = new token_signal(signal_types::bind_);
 				trim_expr(tree, it.right());
 				return;
 			case signal_types::com_: {

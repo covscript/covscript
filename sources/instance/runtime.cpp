@@ -235,6 +235,19 @@ namespace cs {
 		return a;
 	}
 
+	var runtime_type::parse_bind(token_base *a, const var &b)
+	{
+		if (b.type() != typeid(array))
+			throw runtime_error("Only support structured binding with array.");
+		auto& pl=static_cast<token_parallel *>(a)->get_parallel();
+		auto& arr=b.const_val<array>();
+		if(pl.size()!=arr.size())
+			throw runtime_error("Unmatched structured binding.");
+		for(std::size_t i=0; i<pl.size(); ++i)
+			parse_asi(parse_expr(pl[i].root()), arr[i]);
+		return b;
+	}
+
 	var runtime_type::parse_choice(const var &a, const tree_type<token_base *>::iterator &b)
 	{
 		if (a.type() == typeid(boolean)) {
@@ -514,6 +527,9 @@ namespace cs {
 				break;
 			case signal_types::asi_:
 				return parse_asi(parse_expr(it.left()), parse_expr(it.right()));
+				break;
+			case signal_types::bind_:
+				return parse_bind(it.left().data(), parse_expr(it.right()));
 				break;
 			case signal_types::choice_:
 				return parse_choice(parse_expr(it.left()), it.right());
