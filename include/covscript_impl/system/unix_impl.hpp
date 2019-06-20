@@ -28,7 +28,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <cstdio>
+#include <climits>
 #include <string>
+#include <cerrno>
+#include <sstream>
+
+#include <covscript/core/core.hpp>
 
 static void terminal_lnbuf(int yn)
 {
@@ -136,6 +141,30 @@ namespace cs_impl {
         static bool mkdir_impl(const std::string &path, mode_t mode)
         {
             return ::mkdir(path.c_str(), mode) == 0;
+        }
+
+        static std::string getcwd()
+        {
+            char temp[PATH_MAX] = "";
+
+            if (::getcwd(temp, PATH_MAX) != nullptr) {
+                return std::string(temp);
+            }
+
+            int error = errno;
+            switch (error) {
+                case EACCES:
+                    throw cs::runtime_error("Permission denied");
+
+                case ENOMEM:
+                    throw cs::runtime_error("Out of memory");
+
+                default: {
+                    std::stringstream str;
+                    str << "Unrecognised errno: " << error;
+                    throw cs::runtime_error(str.str());
+                }
+            }
         }
 	}
 }

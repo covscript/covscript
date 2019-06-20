@@ -21,9 +21,14 @@
 */
 #if defined(_WIN32) || defined(WIN32)
 #include <windows.h>
+#include <Shlwapi.h>
+#pragma comment(lib, "shlwapi.lib")
+
+#include <cstdio>
 #include <cstring>
-#include <conio.h>
 #include <cstdlib>
+#include <string>
+#include <conio.h>
 
 namespace cs_impl {
 	namespace conio {
@@ -115,6 +120,14 @@ namespace cs_impl {
         static bool mkdir_impl(const std::string &path, mode_t mode)
         {
             return false;
+        }
+
+        static std::string getcwd()
+        {
+            char path[MAX_PATH] = "";
+	        GetCurrentDirectoryA(MAX_PATH, path);
+	        PathAddBackslashA(path);
+	        return path;
         }
 	}
 }
