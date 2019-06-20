@@ -19,11 +19,16 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <cstdio>
+#if !defined(_WIN32) && !defined(WIN32)
+
 #include <unistd.h>
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <cstdio>
+#include <string>
 
 static void terminal_lnbuf(int yn)
 {
@@ -106,4 +111,33 @@ namespace cs_impl {
 			return ret;
 		}
 	}
+
+	namespace filesystem {
+        static bool can_read(const std::string &path)
+        {
+            return access(path.c_str(), R_OK) == 0;
+        }
+
+        static bool can_write(const std::string &path)
+        {
+            return access(path.c_str(), W_OK) == 0;
+        }
+
+        static bool can_execute(const std::string &path)
+        {
+            return access(path.c_str(), X_OK) == 0;
+        }
+
+        static bool chmod_impl(const std::string &path, mode_t mode)
+        {
+            return ::chmod(path.c_str(), mode) == 0;
+        }
+
+        static bool mkdir_impl(const std::string &path, mode_t mode)
+        {
+            return ::mkdir(path.c_str(), mode) == 0;
+        }
+	}
 }
+
+#endif

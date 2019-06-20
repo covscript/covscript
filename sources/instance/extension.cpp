@@ -1112,9 +1112,9 @@ namespace cs_impl {
 		}
 
 		bool remove(const string &path)
-		{
-			return std::remove(path.c_str()) == 0;
-		}
+        {
+            return std::remove(path.c_str()) == 0;
+        }
 
 		bool exists(const string &path)
 		{
@@ -1126,13 +1126,67 @@ namespace cs_impl {
 			return std::rename(source.c_str(), dest.c_str()) == 0;
 		}
 
+        bool is_directory(const string &path)
+        {
+            return filesystem::is_directory(path);
+        }
+
+        bool is_file(const string &path)
+        {
+            return !is_directory(path);
+        }
+
+        bool can_read(const string &path)
+        {
+            return filesystem::can_read(path);
+        }
+
+        bool can_write(const string &path)
+        {
+            return filesystem::can_write(path);
+        }
+
+        bool can_execute(const string &path)
+        {
+            return filesystem::can_execute(path);
+        }
+
+        bool mkdir(const string &path)
+        {
+            return filesystem::mkdir_recursive(path, 0755);
+        }
+
+        bool mkdir_parent(const string &path)
+        {
+            return filesystem::mkdir_parent(path, 0755);
+        }
+
+        bool chmod(const string &path, cs::number mode)
+        {
+            return filesystem::chmod_impl(path, static_cast<int>(mode));
+        }
+
+        bool chmod_recursive(const string &path, cs::number mode)
+        {
+            return filesystem::chmod_recursive(path, static_cast<int>(mode));
+        }
+
 		void init()
 		{
 			(*file_ext)
 			.add_var("copy", make_cni(copy))
 			.add_var("remove", make_cni(remove))
 			.add_var("exists", make_cni(exists))
-			.add_var("rename", make_cni(rename));
+			.add_var("rename", make_cni(rename))
+			.add_var("is_file", make_cni(is_file))
+			.add_var("is_directory", make_cni(is_directory))
+			.add_var("can_read", make_cni(can_read))
+			.add_var("can_write", make_cni(can_write))
+            .add_var("can_execute", make_cni(can_execute))
+            .add_var("mkdir", make_cni(mkdir))
+            .add_var("mkdir_parent", make_cni(mkdir_parent))
+            .add_var("chmod", make_cni(chmod))
+            .add_var("chmod_r", make_cni(chmod_recursive));
 		}
 	}
 

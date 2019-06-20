@@ -27,8 +27,8 @@
 * Master
 *
 */
-#define COVSCRIPT_VERSION_NUM 3,2,1,3
-#define COVSCRIPT_VERSION_STR "3.2.1 Psephurus gladius(Unstable) Build 3"
+#define COVSCRIPT_VERSION_NUM 3,2,1,4
+#define COVSCRIPT_VERSION_STR "3.2.1 Psephurus gladius(Unstable) Build 4"
 #define COVSCRIPT_STD_VERSION 190501
 #define COVSCRIPT_API_VERSION 190619
 #define COVSCRIPT_ABI_VERSION 190510

@@ -19,6 +19,7 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
+#if defined(_WIN32) || defined(WIN32)
 #include <windows.h>
 #include <cstring>
 #include <conio.h>
@@ -89,4 +90,32 @@ namespace cs_impl {
 			return ::kbhit();
 		}
 	}
+
+	namespace filesystem {
+	    static bool can_read(const std::string &path)
+	    {
+            return false;
+        }
+
+        static bool can_write(const std::string &path)
+        {
+            return false;
+        }
+
+        static bool can_execute(const std::string &path)
+        {
+            return false;
+        }
+
+        static bool chmod_impl(const std::string &path, mode_t mode)
+        {
+            return false;
+        }
+
+        static bool mkdir_impl(const std::string &path, mode_t mode)
+        {
+            return false;
+        }
+	}
 }
+#endif
