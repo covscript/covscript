@@ -159,4 +159,38 @@ namespace cs_impl {
             return true;
         }
     }
+
+    namespace os {
+        static bool is_platform_windows()
+        {
+#if defined(_WIN32) || defined(WIN32)
+            return true;
+#else
+            return false;
+#endif
+        }
+
+        static bool is_platform_linux()
+        {
+#if defined(linux) || defined(__linux) || defined(__linux__)
+            return true;
+#else
+            return false;
+#endif
+        }
+
+        static bool is_platform_darwin()
+        {
+#if defined(__APPLE__) || defined(__MACH__)
+            return true;
+#else
+            return false;
+#endif
+        }
+
+        static bool is_platform_unix()
+        {
+            return is_platform_linux() || is_platform_darwin();
+        }
+    }
 }

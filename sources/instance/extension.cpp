@@ -1292,7 +1292,11 @@ namespace cs_impl {
 			.add_var("out", var::make_protect<ostream>(&std::cout, [](std::ostream *) {}))
 			.add_var("run", make_cni(run))
 			.add_var("getenv", make_cni(getenv))
-			.add_var("exit", make_cni(exit));
+			.add_var("exit", make_cni(exit))
+			.add_var("is_platform_windows", make_cni(os::is_platform_windows))
+			.add_var("is_platform_linux", make_cni(os::is_platform_linux))
+			.add_var("is_platform_darwin", make_cni(os::is_platform_darwin))
+			.add_var("is_platform_unix", make_cni(os::is_platform_unix));
 		}
 	}
 
