@@ -97,8 +97,6 @@ namespace cs {
 			}
 			context->compiler->swap_context(context);
 			rt->instance->interpret();
-			if (rt->package_name.empty())
-				throw runtime_error("Target file is not a package.");
 			return std::make_shared<name_space>(rt->instance->storage.get_global());
 		}
 	}
