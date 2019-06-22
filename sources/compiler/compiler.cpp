@@ -250,21 +250,19 @@ namespace cs {
 		default:
 			break;
 		case token_types::id: {
-			if(do_trim!=trim_type::no_id_fold) {
-				const std::string &id = static_cast<token_id *>(token)->get_id();
-				if (!context->instance->storage.exist_record(id) &&
-				        context->instance->storage.exist_record_in_struct(id)) {
-					it.data() = new token_signal(signal_types::dot_);
-					tree.emplace_left_left(it, new token_id("this"));
-					tree.emplace_right_right(it, token);
-				}
-			}
-			return;
-		}
+            const std::string &id = static_cast<token_id *>(token)->get_id();
+            if (!context->instance->storage.exist_record(id) &&
+                context->instance->storage.exist_record_in_struct(id)) {
+                it.data() = new token_signal(signal_types::dot_);
+                tree.emplace_left_left(it, new token_id("this"));
+                tree.emplace_right_right(it, token);
+            }
+            return;
+        }
 		case token_types::expr: {
 			if(do_trim!=trim_type::no_expr_fold) {
 				tree_type<token_base *> &t = static_cast<token_expr *>(it.data())->get_tree();
-				trim_expression(t);
+				trim_expr(t, t.root(), do_trim);
 				tree.merge(it, t);
 			}
 			return;
@@ -285,7 +283,7 @@ namespace cs {
 			case signal_types::gcnew_:
 				if (it.left().data() != nullptr)
 					throw runtime_error("Wrong grammar for gcnew expression.");
-				trim_expr(tree, it.right());
+				trim_expr(tree, it.right(), do_trim);
 				return;
 				break;
 			case signal_types::typeid_:
@@ -307,10 +305,10 @@ namespace cs {
 			case signal_types::asi_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr)
 					throw runtime_error("Wrong grammar for assign expression.");
-				trim_expr(tree, it.left());
+				trim_expr(tree, it.left(), do_trim);
 				if (it.left().data()->get_type() == token_types::parallel)
 					it.data() = new token_signal(signal_types::bind_);
-				trim_expr(tree, it.right());
+				trim_expr(tree, it.right(), do_trim);
 				return;
 			case signal_types::com_: {
 				trim_expr(tree, it.left(), trim_type::no_expr_fold);
@@ -333,7 +331,7 @@ namespace cs {
 					else if (rptr != nullptr)
 						parallel_list->get_parallel().emplace_back(it.right());
 					for(auto& lst:parallel_list->get_parallel())
-						trim_expr(lst, lst.root());
+						trim_expr(lst, lst.root(), do_trim);
 					it.data() = parallel_list;
 				}
 				return;
@@ -342,15 +340,14 @@ namespace cs {
 				token_signal *sig = dynamic_cast<token_signal *>(it.right().data());
 				if (sig == nullptr || sig->get_signal() != signal_types::pair_)
 					throw runtime_error("Wrong grammar for choice expression.");
-				trim_expr(tree, it.left());
-				trim_expr(tree, it.right().left());
-				trim_expr(tree, it.right().right());
+				trim_expr(tree, it.left(), do_trim);
+				trim_expr(tree, it.right().left(), do_trim);
+				trim_expr(tree, it.right().right(), do_trim);
 				return;
 			}
 			case signal_types::vardef_: {
 				if (it.left().data() != nullptr)
 					throw runtime_error("Wrong grammar for variable definition.");
-				trim_expr(tree, it.right(), trim_type::no_id_fold);
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
 					throw runtime_error("Wrong grammar for variable definition.");
@@ -361,7 +358,6 @@ namespace cs {
 			case signal_types::varprt_: {
 				if (it.left().data() != nullptr)
 					throw runtime_error("Wrong grammar for variable definition.");
-				trim_expr(tree, it.right(), trim_type::no_id_fold);
 				it.data() = it.right().data();
 				return;
 			}
@@ -369,18 +365,18 @@ namespace cs {
 				if (it.left().data() == nullptr || it.right().data() == nullptr ||
 				        it.right().data()->get_type() != token_types::id)
 					throw runtime_error("Wrong grammar for arrow expression.");
-				trim_expr(tree, it.left());
+				trim_expr(tree, it.left(), do_trim);
 				return;
 			case signal_types::dot_: {
-				trim_expr(tree, it.left());
+				trim_expr(tree, it.left(), do_trim);
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
 					throw runtime_error("Wrong grammar for dot expression.");
 				return;
 			}
 			case signal_types::fcall_: {
-				trim_expr(tree, it.left());
-				trim_expr(tree, it.right());
+				trim_expr(tree, it.left(), do_trim);
+				trim_expr(tree, it.right(), do_trim);
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
 				if (lptr == nullptr || rptr == nullptr || rptr->get_type() != token_types::arglist)
@@ -402,8 +398,8 @@ namespace cs {
 				return;
 			}
 			case signal_types::emb_: {
-				trim_expr(tree, it.left());
-				trim_expr(tree, it.right());
+				trim_expr(tree, it.left(), do_trim);
+				trim_expr(tree, it.right(), do_trim);
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
 				if (!inside_lambda || lptr != nullptr || rptr == nullptr ||
@@ -414,9 +410,9 @@ namespace cs {
 			}
 			case signal_types::lambda_: {
 				inside_lambda = true;
-				trim_expr(tree, it.left());
+				trim_expr(tree, it.left(), do_trim);
 				inside_lambda = false;
-				trim_expr(tree, it.right());
+				trim_expr(tree, it.right(), do_trim);
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
 				if (lptr == nullptr || rptr == nullptr || lptr->get_type() != token_types::arglist)
@@ -465,8 +461,8 @@ namespace cs {
 			}
 		}
 		}
-		trim_expr(tree, it.left());
-		trim_expr(tree, it.right());
+		trim_expr(tree, it.left(), do_trim);
+		trim_expr(tree, it.right(), do_trim);
 	}
 
 	void compiler_type::opt_expr(tree_type<token_base *> &tree, tree_type<token_base *>::iterator it)
@@ -742,7 +738,7 @@ namespace cs {
 			switch (static_cast<token_signal *>(root)->get_signal()) {
 			case signal_types::asi_: {
 				const var& val=constant?static_cast<token_value*>(it.right().data())->get_value():context->instance->parse_expr(it.right());
-				context->instance->storage.add_var(static_cast<token_id*>(it.left().data())->get_id(), constant?val:copy(val));
+				context->instance->storage.add_var(static_cast<token_id*>(it.left().data())->get_id(), constant?val:copy(val), constant);
 				break;
 			}
 			case signal_types::bind_: {
@@ -791,7 +787,7 @@ namespace cs {
 				if(pl[i].root().data()->get_type()==token_types::parallel)
 					process(pl[i].root(), arr[i]);
 				else
-					context->instance->storage.add_var(static_cast<token_id*>(pl[i].root().data())->get_id(), constant?arr[i]:copy(arr[i]));
+					context->instance->storage.add_var(static_cast<token_id*>(pl[i].root().data())->get_id(), constant?arr[i]:copy(arr[i]), constant);
 			}
 		};
 		const var& val=constant?static_cast<token_value*>(it.right().data())->get_value():context->instance->parse_expr(it.right());

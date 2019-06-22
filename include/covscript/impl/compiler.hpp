@@ -330,21 +330,21 @@ namespace cs {
 
 		void trim_expression(tree_type<token_base *> &tree)
 		{
-			trim_expr(tree, tree.root());
+			trim_expr(tree, tree.root(), trim_type::normal);
 		}
 
 		void optimize_expression(tree_type<token_base *> &tree)
 		{
-			trim_expr(tree, tree.root());
+			trim_expr(tree, tree.root(), trim_type::normal);
 			if (!disable_optimizer && !no_optimize)
 				opt_expr(tree, tree.root());
 		}
 
 		enum class trim_type {
-			normal, no_expr_fold, no_id_fold
+			normal, no_expr_fold, no_value_fold
 		};
 
-		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, trim_type=trim_type::normal);
+		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, trim_type);
 
 		void opt_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator);
 
