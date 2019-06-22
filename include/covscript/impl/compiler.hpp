@@ -342,7 +342,7 @@ namespace cs {
 		}
 
 		enum class trim_type {
-			normal, no_expr_fold, no_value_fold
+			normal, no_expr_fold
 		};
 
 		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, trim_type);

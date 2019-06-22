@@ -239,12 +239,12 @@ namespace cs {
 	{
 		if (b.type() != typeid(array))
 			throw runtime_error("Only support structured binding with array.");
-		auto& pl=static_cast<token_parallel *>(a)->get_parallel();
-		auto& arr=b.const_val<array>();
-		if(pl.size()!=arr.size())
+		auto &pl = static_cast<token_parallel *>(a)->get_parallel();
+		auto &arr = b.const_val<array>();
+		if (pl.size() != arr.size())
 			throw runtime_error("Unmatched structured binding.");
-		for(std::size_t i=0; i<pl.size(); ++i) {
-			if(pl[i].root().data()->get_type()==token_types::parallel)
+		for (std::size_t i = 0; i < pl.size(); ++i) {
+			if (pl[i].root().data()->get_type() == token_types::parallel)
 				parse_bind(pl[i].root().data(), arr[i]);
 			else
 				parse_asi(parse_expr(pl[i].root()), arr[i]);

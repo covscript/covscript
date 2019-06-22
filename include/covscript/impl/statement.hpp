@@ -48,7 +48,8 @@ namespace cs {
 	public:
 		statement_import() = delete;
 
-		statement_import(std::vector<std::pair<std::string, var>> var_list, context_t c, token_base *ptr) : statement_base(std::move(c), ptr), m_var_list(std::move(var_list)) {}
+		statement_import(std::vector<std::pair<std::string, var>> var_list, context_t c, token_base *ptr)
+			: statement_base(std::move(c), ptr), m_var_list(std::move(var_list)) {}
 
 		statement_types get_type() const noexcept override
 		{
@@ -84,7 +85,8 @@ namespace cs {
 	public:
 		statement_var() = delete;
 
-		statement_var(tree_type<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c), ptr), mTree(std::move(tree)) {}
+		statement_var(tree_type<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c), ptr),
+			mTree(std::move(tree)) {}
 
 		statement_types get_type() const noexcept override
 		{
@@ -101,7 +103,9 @@ namespace cs {
 	public:
 		statement_constant() = delete;
 
-		statement_constant(tree_type<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c), ptr), mTree(std::move(tree)) {}
+		statement_constant(tree_type<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c),
+			        ptr),
+			mTree(std::move(tree)) {}
 
 		statement_types get_type() const noexcept override
 		{

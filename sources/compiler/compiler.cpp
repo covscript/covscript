@@ -242,7 +242,8 @@ namespace cs {
 		return true;
 	}
 
-	void compiler_type::trim_expr(tree_type<token_base *> &tree, tree_type<token_base *>::iterator it, trim_type do_trim)
+	void
+	compiler_type::trim_expr(tree_type<token_base *> &tree, tree_type<token_base *>::iterator it, trim_type do_trim)
 	{
 		if (!it.usable())
 			return;
@@ -263,7 +264,7 @@ namespace cs {
 			return;
 		}
 		case token_types::expr: {
-			if(do_trim!=trim_type::no_expr_fold) {
+			if (do_trim != trim_type::no_expr_fold) {
 				tree_type<token_base *> &t = static_cast<token_expr *>(it.data())->get_tree();
 				trim_expr(t, t.root(), do_trim);
 				tree.merge(it, t);
@@ -333,7 +334,7 @@ namespace cs {
 							parallel_list->get_parallel().push_back(tree);
 					else if (rptr != nullptr)
 						parallel_list->get_parallel().emplace_back(it.right());
-					for(auto& lst:parallel_list->get_parallel())
+					for (auto &lst:parallel_list->get_parallel())
 						trim_expr(lst, lst.root(), do_trim);
 					it.data() = parallel_list;
 				}

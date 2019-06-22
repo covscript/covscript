@@ -149,7 +149,7 @@ namespace cs {
 						tokens.push_back(new token_signal(signal_types::vardef_));
 						continue;
 					}
-					else if(insert_varchk) {
+					else if (insert_varchk) {
 						tokens.push_back(ptr);
 						tokens.push_back(new token_signal(signal_types::varchk_));
 						continue;
