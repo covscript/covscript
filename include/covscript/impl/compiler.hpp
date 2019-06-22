@@ -340,7 +340,11 @@ namespace cs {
 				opt_expr(tree, tree.root());
 		}
 
-		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator);
+		enum class trim_type {
+		    normal, no_expr_fold, no_id_fold
+		};
+
+		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, trim_type=trim_type::normal);
 
 		void opt_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator);
 
@@ -391,12 +395,13 @@ namespace cs {
 		}
 
 		// Var definition
-		struct define_var_profile {
-			std::string id;
-			tree_type<token_base *> expr;
-		};
+		void check_define_var(tree_type<token_base*>::iterator, bool=false, bool=false);
 
-		void parse_define_var(tree_type<token_base *> &, define_var_profile &);
+		void parse_define_var(tree_type<token_base*>::iterator, bool=false);
+
+        void check_define_structured_binding(tree_type<token_base*>::iterator, bool=false, bool=false);
+
+        void parse_define_structured_binding(tree_type<token_base*>::iterator, bool=false);
 
 		// Wrapped Method
 		void build_expr(const std::deque<char> &buff, tree_type<token_base *> &tree)

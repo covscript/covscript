@@ -48,12 +48,12 @@ namespace cs {
 				case action_types::var_:
 					insert_vardef = true;
 					tokens.push_back(ptr);
-					tokens.push_back(new token_signal(signal_types::vardef_));
+					tokens.push_back(new token_signal(signal_types::varprt_));
 					continue;
 				case action_types::constant_:
 					insert_vardef = true;
 					tokens.push_back(ptr);
-					tokens.push_back(new token_signal(signal_types::vardef_));
+					tokens.push_back(new token_signal(signal_types::varprt_));
 					continue;
 				case action_types::for_:
 					tokens.push_back(ptr);
