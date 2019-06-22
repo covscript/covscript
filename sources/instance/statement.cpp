@@ -157,7 +157,7 @@ namespace cs {
 	void statement_var::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		context->compiler->parse_define_var(mTree.root());
+		context->instance->parse_define_var(mTree.root());
 	}
 
 	void statement_var::dump(std::ostream &o) const
@@ -170,7 +170,7 @@ namespace cs {
 	void statement_constant::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		context->compiler->parse_define_var(mTree.root(), true);
+		context->instance->parse_define_var(mTree.root(), true);
 	}
 
 	void statement_constant::dump(std::ostream &o) const
@@ -526,7 +526,7 @@ namespace cs {
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
 		scope_guard top_scope(context);
-		context->compiler->parse_define_var(mParallel[0].root());
+		context->instance->parse_define_var(mParallel[0].root());
 		scope_guard scope(context);
 		while (true) {
 			scope.clear();

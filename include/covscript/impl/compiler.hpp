@@ -228,6 +228,7 @@ namespace cs {
 			{signal_types::neq_,    9},
 			{signal_types::lambda_, 2},
 			{signal_types::vardef_, 20},
+			{signal_types::varchk_, 20},
 			{signal_types::varprt_, 20},
 			{signal_types::or_,     6},
 			{signal_types::and_,    7},
@@ -393,15 +394,6 @@ namespace cs {
 			add_constant(val);
 			return new token_value(val);
 		}
-
-		// Var definition
-		void check_define_var(tree_type<token_base*>::iterator, bool=false, bool=false);
-
-		void parse_define_var(tree_type<token_base*>::iterator, bool=false);
-
-		void check_define_structured_binding(tree_type<token_base*>::iterator, bool=false, bool=false);
-
-		void parse_define_structured_binding(tree_type<token_base*>::iterator, bool=false);
 
 		// Wrapped Method
 		void build_expr(const std::deque<char> &buff, tree_type<token_base *> &tree)

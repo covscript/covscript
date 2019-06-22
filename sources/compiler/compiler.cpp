@@ -167,6 +167,9 @@ namespace cs {
 		case signal_types::vardef_:
 			o << "[vardef]";
 			break;
+		case signal_types::varchk_:
+			o << "[varchk]";
+			break;
 		case signal_types::varprt_:
 			o << "[varprt]";
 			break;
@@ -250,15 +253,15 @@ namespace cs {
 		default:
 			break;
 		case token_types::id: {
-            const std::string &id = static_cast<token_id *>(token)->get_id();
-            if (!context->instance->storage.exist_record(id) &&
-                context->instance->storage.exist_record_in_struct(id)) {
-                it.data() = new token_signal(signal_types::dot_);
-                tree.emplace_left_left(it, new token_id("this"));
-                tree.emplace_right_right(it, token);
-            }
-            return;
-        }
+			const std::string &id = static_cast<token_id *>(token)->get_id();
+			if (!context->instance->storage.exist_record(id) &&
+			        context->instance->storage.exist_record_in_struct(id)) {
+				it.data() = new token_signal(signal_types::dot_);
+				tree.emplace_left_left(it, new token_id("this"));
+				tree.emplace_right_right(it, token);
+			}
+			return;
+		}
 		case token_types::expr: {
 			if(do_trim!=trim_type::no_expr_fold) {
 				tree_type<token_base *> &t = static_cast<token_expr *>(it.data())->get_tree();
@@ -347,17 +350,24 @@ namespace cs {
 			}
 			case signal_types::vardef_: {
 				if (it.left().data() != nullptr)
-					throw runtime_error("Wrong grammar for variable definition.");
+					throw runtime_error("Wrong grammar for variable declaration.");
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
-					throw runtime_error("Wrong grammar for variable definition.");
+					throw runtime_error("Wrong grammar for variable declaration.");
 				context->instance->storage.add_record(static_cast<token_id *>(rptr)->get_id());
 				it.data() = rptr;
 				return;
 			}
+			case signal_types::varchk_: {
+				if (it.left().data() != nullptr)
+					throw runtime_error("Wrong grammar for variable declaration.");
+				context->instance->check_declar_var(it.right(), true);
+				it.data() = it.right().data();
+				return;
+			}
 			case signal_types::varprt_: {
 				if (it.left().data() != nullptr)
-					throw runtime_error("Wrong grammar for variable definition.");
+					throw runtime_error("Wrong grammar for variable declaration.");
 				it.data() = it.right().data();
 				return;
 			}
@@ -687,111 +697,6 @@ namespace cs {
 				it.data() = oldt;
 			}
 		}
-	}
-
-	void compiler_type::check_define_var(tree_type<token_base*>::iterator it, bool regist, bool constant)
-	{
-		if (it.data() == nullptr)
-			throw internal_error("Null pointer accessed.");
-		if (it.data()->get_type() == token_types::parallel) {
-			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
-			for (auto &t:parallel_list)
-				check_define_var(t.root(), regist, constant);
-		}
-		else {
-			token_base *root = it.data();
-			if (root == nullptr)
-				throw internal_error("Null pointer accessed.");
-			if (root->get_type() != token_types::signal)
-				throw runtime_error("Wrong grammar for variable definition(1).");
-			switch (static_cast<token_signal *>(root)->get_signal()) {
-			case signal_types::asi_: {
-				token_base *left = it.left().data();
-				token_base *right = it.right().data();
-				if (left == nullptr || right== nullptr || left->get_type() != token_types::id)
-					throw runtime_error("Wrong grammar for variable definition(2).");
-				if (constant && right->get_type()!=token_types::value)
-					throw runtime_error("Wrong grammar for constant variable definition(3).");
-				if(regist)
-					context->instance->storage.add_record(static_cast<token_id*>(left)->get_id());
-				break;
-			}
-			case signal_types::bind_: {
-				check_define_structured_binding(it.left(), constant);
-				break;
-			}
-			default:
-				throw runtime_error("Wrong grammar for variable definition(4).");
-			}
-		}
-	}
-
-	void compiler_type::parse_define_var(tree_type<token_base*>::iterator it, bool constant)
-	{
-		if (it.data()->get_type() == token_types::parallel) {
-			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
-			for (auto &t:parallel_list)
-				parse_define_var(t.root(), constant);
-		}
-		else {
-			token_base *root = it.data();
-			switch (static_cast<token_signal *>(root)->get_signal()) {
-			case signal_types::asi_: {
-				const var& val=constant?static_cast<token_value*>(it.right().data())->get_value():context->instance->parse_expr(it.right());
-				context->instance->storage.add_var(static_cast<token_id*>(it.left().data())->get_id(), constant?val:copy(val), constant);
-				break;
-			}
-			case signal_types::bind_: {
-				parse_define_structured_binding(it, constant);
-				break;
-			}
-			default:
-				throw runtime_error("Wrong grammar for variable definition(5).");
-			}
-		}
-	}
-
-	void compiler_type::check_define_structured_binding(tree_type<token_base*>::iterator it, bool regist, bool constant)
-	{
-		for (auto &p_it:static_cast<token_parallel *>(it.data())->get_parallel()) {
-			token_base *root = p_it.root().data();
-			if (root == nullptr)
-				throw runtime_error("Wrong grammar for variable definition(6).");
-			if (root->get_type() != token_types::id) {
-				if (root->get_type() == token_types::parallel)
-					check_define_structured_binding(p_it.root(), regist, constant);
-				else
-					throw runtime_error("Wrong grammar for variable definition(7).");
-			}
-			else if(regist)
-				context->instance->storage.add_record(static_cast<token_id*>(root)->get_id());
-		}
-		if(constant) {
-			token_base *right=it.right().data();
-			if(right == nullptr || right->get_type()!=token_types::value || static_cast<token_value*>(right)->get_value().type() != typeid(array))
-				throw runtime_error("Wrong grammar for constant variable definition(8).");
-		}
-	}
-
-	void compiler_type::parse_define_structured_binding(tree_type<token_base*>::iterator it, bool constant)
-	{
-		std::function<void(tree_type<token_base *>::iterator, const var&)> process;
-		process=[&process, this, constant](tree_type<token_base *>::iterator it, const var& val) {
-			auto& pl=static_cast<token_parallel *>(it.data())->get_parallel();
-			if(val.type()!=typeid(array))
-				throw runtime_error("Only support structured binding with array while variable definition.");
-			auto& arr=val.const_val<array>();
-			if(pl.size()!=arr.size())
-				throw runtime_error("Unmatched structured binding while variable definition.");
-			for(std::size_t i=0; i<pl.size(); ++i) {
-				if(pl[i].root().data()->get_type()==token_types::parallel)
-					process(pl[i].root(), arr[i]);
-				else
-					context->instance->storage.add_var(static_cast<token_id*>(pl[i].root().data())->get_id(), constant?arr[i]:copy(arr[i]), constant);
-			}
-		};
-		const var& val=constant?static_cast<token_value*>(it.right().data())->get_value():context->instance->parse_expr(it.right());
-		process(it.left(), val);
 	}
 
 	void compiler_type::dump_expr(tree_type<token_base *>::iterator it, std::ostream &stream)

@@ -194,6 +194,124 @@ namespace cs {
 		stream << std::flush;
 	}
 
+	void instance_type::check_declar_var(tree_type<token_base*>::iterator it, bool regist) {
+		if (it.data() == nullptr)
+			throw internal_error("Null pointer accessed.");
+		if (it.data()->get_type() == token_types::parallel) {
+			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
+			for (auto &t:parallel_list)
+				check_declar_var(t.root(), regist);
+		}
+		else {
+			token_base *root = it.data();
+			if (root == nullptr || root->get_type() != token_types::id)
+				throw runtime_error("Wrong grammar for variable declaration.");
+			if(regist)
+				storage.add_record(static_cast<token_id*>(root)->get_id());
+		}
+	}
+
+	void instance_type::check_define_var(tree_type<token_base*>::iterator it, bool regist, bool constant) {
+		if (it.data() == nullptr)
+			throw internal_error("Null pointer accessed.");
+		if (it.data()->get_type() == token_types::parallel) {
+			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
+			for (auto &t:parallel_list)
+				check_define_var(t.root(), regist, constant);
+		}
+		else {
+			token_base *root = it.data();
+			if (root == nullptr)
+				throw internal_error("Null pointer accessed.");
+			if (root->get_type() != token_types::signal)
+				throw runtime_error("Wrong grammar for variable definition(1).");
+			switch (static_cast<token_signal *>(root)->get_signal()) {
+			case signal_types::asi_: {
+				token_base *left = it.left().data();
+				token_base *right = it.right().data();
+				if (left == nullptr || right== nullptr || left->get_type() != token_types::id)
+					throw runtime_error("Wrong grammar for variable definition(2).");
+				if (constant && right->get_type()!=token_types::value)
+					throw runtime_error("Wrong grammar for constant variable definition(3).");
+				if(regist)
+					storage.add_record(static_cast<token_id*>(left)->get_id());
+				break;
+			}
+			case signal_types::bind_: {
+				check_define_structured_binding(it.left(), constant);
+				break;
+			}
+			default:
+				throw runtime_error("Wrong grammar for variable definition(4).");
+			}
+		}
+	}
+
+	void instance_type::parse_define_var(tree_type<token_base*>::iterator it, bool constant) {
+		if (it.data()->get_type() == token_types::parallel) {
+			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
+			for (auto &t:parallel_list)
+				parse_define_var(t.root(), constant);
+		}
+		else {
+			token_base *root = it.data();
+			switch (static_cast<token_signal *>(root)->get_signal()) {
+			case signal_types::asi_: {
+				const var& val=constant?static_cast<token_value*>(it.right().data())->get_value():parse_expr(it.right());
+				storage.add_var(static_cast<token_id*>(it.left().data())->get_id(), constant?val:copy(val), constant);
+				break;
+			}
+			case signal_types::bind_: {
+				parse_define_structured_binding(it, constant);
+				break;
+			}
+			default:
+				throw runtime_error("Wrong grammar for variable definition(5).");
+			}
+		}
+	}
+
+	void instance_type::check_define_structured_binding(tree_type<token_base*>::iterator it, bool regist, bool constant) {
+		for (auto &p_it:static_cast<token_parallel *>(it.data())->get_parallel()) {
+			token_base *root = p_it.root().data();
+			if (root == nullptr)
+				throw runtime_error("Wrong grammar for variable definition(6).");
+			if (root->get_type() != token_types::id) {
+				if (root->get_type() == token_types::parallel)
+					check_define_structured_binding(p_it.root(), regist, constant);
+				else
+					throw runtime_error("Wrong grammar for variable definition(7).");
+			}
+			else if(regist)
+				storage.add_record(static_cast<token_id*>(root)->get_id());
+		}
+		if(constant) {
+			token_base *right=it.right().data();
+			if(right == nullptr || right->get_type()!=token_types::value || static_cast<token_value*>(right)->get_value().type() != typeid(array))
+				throw runtime_error("Wrong grammar for constant variable definition(8).");
+		}
+	}
+
+	void instance_type::parse_define_structured_binding(tree_type<token_base*>::iterator it, bool constant) {
+		std::function<void(tree_type<token_base *>::iterator, const var&)> process;
+		process=[&process, this, constant](tree_type<token_base *>::iterator it, const var& val) {
+			auto& pl=static_cast<token_parallel *>(it.data())->get_parallel();
+			if(val.type()!=typeid(array))
+				throw runtime_error("Only support structured binding with array while variable definition.");
+			auto& arr=val.const_val<array>();
+			if(pl.size()!=arr.size())
+				throw runtime_error("Unmatched structured binding while variable definition.");
+			for(std::size_t i=0; i<pl.size(); ++i) {
+				if(pl[i].root().data()->get_type()==token_types::parallel)
+					process(pl[i].root(), arr[i]);
+				else
+					storage.add_var(static_cast<token_id*>(pl[i].root().data())->get_id(), constant?arr[i]:copy(arr[i]), constant);
+			}
+		};
+		const var& val=constant?static_cast<token_value*>(it.right().data())->get_value():parse_expr(it.right());
+		process(it.left(), val);
+	}
+
 	void repl::run(const string &code) {
 		if (code.empty())
 			return;

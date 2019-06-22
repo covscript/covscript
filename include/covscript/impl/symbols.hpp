@@ -106,6 +106,7 @@ namespace cs {
 		escape_,
 		minus_,
 		vardef_,
+		varchk_,
 		varprt_,
 		vargs_,
 		bind_,
