@@ -721,7 +721,7 @@ namespace cs {
 				break;
 			}
 			case signal_types::bind_: {
-				check_define_structured_binding(it, constant);
+				check_define_structured_binding(it.left(), constant);
 				break;
 			}
 			default:
@@ -757,7 +757,7 @@ namespace cs {
 
 	void compiler_type::check_define_structured_binding(tree_type<token_base*>::iterator it, bool regist, bool constant)
 	{
-		for (auto &p_it:static_cast<token_parallel *>(it.left().data())->get_parallel()) {
+		for (auto &p_it:static_cast<token_parallel *>(it.data())->get_parallel()) {
 			token_base *root = p_it.root().data();
 			if (root == nullptr)
 				throw runtime_error("Wrong grammar for variable definition(6).");
