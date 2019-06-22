@@ -17,3 +17,8 @@ system.out.println(b)
 system.out.println(c)
 system.out.println(d)
 for (i, j)={0, 1}, i+j<10, i=j++ do system.out.println(to_string(i)+":"+to_string(j))
+constant (e, (f, g), h)={1, {2, 3}, 4}
+system.out.println(e)
+system.out.println(f)
+system.out.println(g)
+system.out.println(h)

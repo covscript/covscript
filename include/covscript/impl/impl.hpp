@@ -66,7 +66,7 @@ namespace cs {
 
 		void parse_define_var(tree_type<token_base *>::iterator, bool= false);
 
-		void check_define_structured_binding(tree_type<token_base *>::iterator, bool= false, bool= false);
+		void check_define_structured_binding(tree_type<token_base *>::iterator, bool= false);
 
 		void parse_define_structured_binding(tree_type<token_base *>::iterator, bool= false);
 	};

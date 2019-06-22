@@ -240,11 +240,14 @@ namespace cs {
 				break;
 			}
 			case signal_types::bind_: {
-				check_define_structured_binding(it.left(), constant);
+				token_base *right = it.right().data();
+				if (constant && (right == nullptr || right->get_type() != token_types::value))
+					throw runtime_error("Wrong grammar for constant variable definition(4).");
+				check_define_structured_binding(it.left(), regist);
 				break;
 			}
 			default:
-				throw runtime_error("Wrong grammar for variable definition(4).");
+				throw runtime_error("Wrong grammar for variable definition(5).");
 			}
 		}
 	}
@@ -270,31 +273,25 @@ namespace cs {
 				break;
 			}
 			default:
-				throw runtime_error("Wrong grammar for variable definition(5).");
+				throw runtime_error("Wrong grammar for variable definition(6).");
 			}
 		}
 	}
 
 	void
-	instance_type::check_define_structured_binding(tree_type<token_base *>::iterator it, bool regist, bool constant) {
+	instance_type::check_define_structured_binding(tree_type<token_base *>::iterator it, bool regist) {
 		for (auto &p_it:static_cast<token_parallel *>(it.data())->get_parallel()) {
 			token_base *root = p_it.root().data();
 			if (root == nullptr)
-				throw runtime_error("Wrong grammar for variable definition(6).");
+				throw runtime_error("Wrong grammar for variable definition(7).");
 			if (root->get_type() != token_types::id) {
 				if (root->get_type() == token_types::parallel)
-					check_define_structured_binding(p_it.root(), regist, constant);
+					check_define_structured_binding(p_it.root(), regist);
 				else
-					throw runtime_error("Wrong grammar for variable definition(7).");
+					throw runtime_error("Wrong grammar for variable definition(8).");
 			}
 			else if (regist)
 				storage.add_record(static_cast<token_id *>(root)->get_id());
-		}
-		if (constant) {
-			token_base *right = it.right().data();
-			if (right == nullptr || right->get_type() != token_types::value ||
-			        static_cast<token_value *>(right)->get_value().type() != typeid(array))
-				throw runtime_error("Wrong grammar for constant variable definition(8).");
 		}
 	}
 
