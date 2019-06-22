@@ -98,23 +98,12 @@ namespace cs {
 			return false;
 		}
 
-		template<typename T>
-		bool var_exist(T &&name)
-		{
-			for (auto &domain:m_data)
-				if (domain.exist(name))
-					return true;
-			return false;
-		}
-
-		template<typename T>
-		bool var_exist_current(T &&name)
+		inline bool var_exist_current(const string &name) noexcept
 		{
 			return m_data.top().exist(name);
 		}
 
-		template<typename T>
-		bool var_exist_global(T &&name)
+		inline bool var_exist_global(const string &name) noexcept
 		{
 			return m_data.bottom().exist(name);
 		}
