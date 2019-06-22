@@ -33,7 +33,7 @@ function quicksort(a,m,n)
     if n<=m
         return 0
     end
-    var i=m-1,j=n,v=a[n]
+    var (i,j,v)={m-1,n,a[n]}
     loop
         loop
             ++i
