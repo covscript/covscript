@@ -28,7 +28,8 @@ namespace cs {
 		std::swap(tokens, oldt);
 		tokens.clear();
 		bool insert_vardef = false;
-		bool expected_fdef = false;
+        bool insert_varprt = false;
+        bool expected_fdef = false;
 		bool expected_fcall = false;
 		bool expected_lambda = false;
 		for (auto &ptr:oldt) {
@@ -46,12 +47,12 @@ namespace cs {
 					tokens.push_back(new token_signal(signal_types::vardef_));
 					continue;
 				case action_types::var_:
-					insert_vardef = true;
+					insert_varprt = true;
 					tokens.push_back(ptr);
 					tokens.push_back(new token_signal(signal_types::varprt_));
 					continue;
 				case action_types::constant_:
-					insert_vardef = true;
+					insert_varprt = true;
 					tokens.push_back(ptr);
 					tokens.push_back(new token_signal(signal_types::varprt_));
 					continue;
@@ -148,7 +149,11 @@ namespace cs {
 						tokens.push_back(new token_signal(signal_types::vardef_));
 						continue;
 					}
-					else
+					else if(insert_varprt) {
+                        tokens.push_back(ptr);
+                        tokens.push_back(new token_signal(signal_types::varprt_));
+                        continue;
+					}else
 						break;
 				case signal_types::arrow_:
 					if (expected_lambda) {
