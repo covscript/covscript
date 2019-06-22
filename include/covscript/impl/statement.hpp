@@ -43,22 +43,22 @@ namespace cs {
 		void dump(std::ostream &) const override;
 	};
 
-    class statement_import final : public statement_base {
-        std::vector<std::pair<std::string, var>> m_var_list;
-    public:
-        statement_import() = delete;
+	class statement_import final : public statement_base {
+		std::vector<std::pair<std::string, var>> m_var_list;
+	public:
+		statement_import() = delete;
 
-        statement_import(std::vector<std::pair<std::string, var>> var_list, context_t c, token_base *ptr) : statement_base(std::move(c), ptr), m_var_list(std::move(var_list)) {}
+		statement_import(std::vector<std::pair<std::string, var>> var_list, context_t c, token_base *ptr) : statement_base(std::move(c), ptr), m_var_list(std::move(var_list)) {}
 
-        statement_types get_type() const noexcept override
-        {
-            return statement_types::expression_;
-        }
+		statement_types get_type() const noexcept override
+		{
+			return statement_types::expression_;
+		}
 
-        void run() override;
+		void run() override;
 
-        void dump(std::ostream &) const override;
-    };
+		void dump(std::ostream &) const override;
+	};
 
 	class statement_involve final : public statement_base {
 		bool mOverride = false;
@@ -97,7 +97,7 @@ namespace cs {
 	};
 
 	class statement_constant final : public statement_base {
-        tree_type<token_base *> mTree;
+		tree_type<token_base *> mTree;
 	public:
 		statement_constant() = delete;
 

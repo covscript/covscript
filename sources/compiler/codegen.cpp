@@ -111,8 +111,8 @@ namespace cs {
 	void method_constant::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
-        context->compiler->check_define_var(tree.root(), true, true);
-        context->compiler->parse_define_var(tree.root(), true);
+		context->compiler->check_define_var(tree.root(), true, true);
+		context->compiler->parse_define_var(tree.root(), true);
 		mResult = new statement_constant(tree, context, raw.front().back());
 	}
 
@@ -343,7 +343,7 @@ namespace cs {
 		auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
 		if (parallel_list.size() != 3)
 			throw runtime_error("Wrong grammar(for)");
-        context->compiler->check_define_var(parallel_list[0].root());
+		context->compiler->check_define_var(parallel_list[0].root());
 		return new statement_for(parallel_list, {
 			new statement_expression(static_cast<token_expr *>(raw.front().at(3))->get_tree(),
 			                         context, raw.front().back())

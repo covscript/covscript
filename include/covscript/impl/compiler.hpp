@@ -341,7 +341,7 @@ namespace cs {
 		}
 
 		enum class trim_type {
-		    normal, no_expr_fold, no_id_fold
+			normal, no_expr_fold, no_id_fold
 		};
 
 		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, trim_type=trim_type::normal);
@@ -399,9 +399,9 @@ namespace cs {
 
 		void parse_define_var(tree_type<token_base*>::iterator, bool=false);
 
-        void check_define_structured_binding(tree_type<token_base*>::iterator, bool=false, bool=false);
+		void check_define_structured_binding(tree_type<token_base*>::iterator, bool=false, bool=false);
 
-        void parse_define_structured_binding(tree_type<token_base*>::iterator, bool=false);
+		void parse_define_structured_binding(tree_type<token_base*>::iterator, bool=false);
 
 		// Wrapped Method
 		void build_expr(const std::deque<char> &buff, tree_type<token_base *> &tree)

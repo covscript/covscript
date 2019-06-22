@@ -243,13 +243,12 @@ namespace cs {
 		auto& arr=b.const_val<array>();
 		if(pl.size()!=arr.size())
 			throw runtime_error("Unmatched structured binding.");
-		for(std::size_t i=0; i<pl.size(); ++i)
-        {
-            if(pl[i].root().data()->get_type()==token_types::parallel)
-                parse_bind(pl[i].root().data(), arr[i]);
-            else
-                parse_asi(parse_expr(pl[i].root()), arr[i]);
-        }
+		for(std::size_t i=0; i<pl.size(); ++i) {
+			if(pl[i].root().data()->get_type()==token_types::parallel)
+				parse_bind(pl[i].root().data(), arr[i]);
+			else
+				parse_asi(parse_expr(pl[i].root()), arr[i]);
+		}
 		return b;
 	}
 
