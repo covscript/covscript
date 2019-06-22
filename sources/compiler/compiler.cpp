@@ -351,6 +351,7 @@ namespace cs {
 			case signal_types::vardef_: {
 				if (it.left().data() != nullptr)
 					throw runtime_error("Wrong grammar for variable declaration.");
+				trim_expr(tree, it.right(), do_trim);
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
 					throw runtime_error("Wrong grammar for variable declaration.");
@@ -361,6 +362,7 @@ namespace cs {
 			case signal_types::varchk_: {
 				if (it.left().data() != nullptr)
 					throw runtime_error("Wrong grammar for variable declaration.");
+				trim_expr(tree, it.right(), do_trim);
 				context->instance->check_declar_var(it.right(), true);
 				it.data() = it.right().data();
 				return;
@@ -368,6 +370,7 @@ namespace cs {
 			case signal_types::varprt_: {
 				if (it.left().data() != nullptr)
 					throw runtime_error("Wrong grammar for variable declaration.");
+				trim_expr(tree, it.right(), do_trim);
 				it.data() = it.right().data();
 				return;
 			}
