@@ -167,6 +167,9 @@ namespace cs {
 		case signal_types::vardef_:
 			o << "[vardef]";
 			break;
+		case signal_types::varchk_:
+			o << "[varchk]";
+			break;
 		case signal_types::varprt_:
 			o << "[varprt]";
 			break;
@@ -239,7 +242,8 @@ namespace cs {
 		return true;
 	}
 
-	void compiler_type::trim_expr(tree_type<token_base *> &tree, tree_type<token_base *>::iterator it)
+	void
+	compiler_type::trim_expr(tree_type<token_base *> &tree, tree_type<token_base *>::iterator it, trim_type do_trim)
 	{
 		if (!it.usable())
 			return;
@@ -260,9 +264,11 @@ namespace cs {
 			return;
 		}
 		case token_types::expr: {
-			tree_type<token_base *> &t = static_cast<token_expr *>(it.data())->get_tree();
-			trim_expression(t);
-			tree.merge(it, t);
+			if (do_trim != trim_type::no_expr_fold) {
+				tree_type<token_base *> &t = static_cast<token_expr *>(it.data())->get_tree();
+				trim_expr(t, t.root(), do_trim);
+				tree.merge(it, t);
+			}
 			return;
 		}
 		case token_types::array: {
@@ -281,7 +287,7 @@ namespace cs {
 			case signal_types::gcnew_:
 				if (it.left().data() != nullptr)
 					throw runtime_error("Wrong grammar for gcnew expression.");
-				trim_expr(tree, it.right());
+				trim_expr(tree, it.right(), do_trim);
 				return;
 				break;
 			case signal_types::typeid_:
@@ -303,14 +309,14 @@ namespace cs {
 			case signal_types::asi_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr)
 					throw runtime_error("Wrong grammar for assign expression.");
-				trim_expr(tree, it.left());
+				trim_expr(tree, it.left(), do_trim);
 				if (it.left().data()->get_type() == token_types::parallel)
 					it.data() = new token_signal(signal_types::bind_);
-				trim_expr(tree, it.right());
+				trim_expr(tree, it.right(), do_trim);
 				return;
 			case signal_types::com_: {
-				trim_expr(tree, it.left());
-				trim_expr(tree, it.right());
+				trim_expr(tree, it.left(), trim_type::no_expr_fold);
+				trim_expr(tree, it.right(), trim_type::no_expr_fold);
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
 				if (lptr == nullptr && rptr == nullptr)
@@ -328,6 +334,8 @@ namespace cs {
 							parallel_list->get_parallel().push_back(tree);
 					else if (rptr != nullptr)
 						parallel_list->get_parallel().emplace_back(it.right());
+					for (auto &lst:parallel_list->get_parallel())
+						trim_expr(lst, lst.root(), do_trim);
 					it.data() = parallel_list;
 				}
 				return;
@@ -336,46 +344,53 @@ namespace cs {
 				token_signal *sig = dynamic_cast<token_signal *>(it.right().data());
 				if (sig == nullptr || sig->get_signal() != signal_types::pair_)
 					throw runtime_error("Wrong grammar for choice expression.");
-				trim_expr(tree, it.left());
-				trim_expr(tree, it.right().left());
-				trim_expr(tree, it.right().right());
+				trim_expr(tree, it.left(), do_trim);
+				trim_expr(tree, it.right().left(), do_trim);
+				trim_expr(tree, it.right().right(), do_trim);
 				return;
 			}
 			case signal_types::vardef_: {
 				if (it.left().data() != nullptr)
-					throw runtime_error("Wrong grammar for variable definition.");
+					throw runtime_error("Wrong grammar for variable declaration.");
+				trim_expr(tree, it.right(), do_trim);
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
-					throw runtime_error("Wrong grammar for variable definition.");
+					throw runtime_error("Wrong grammar for variable declaration.");
 				context->instance->storage.add_record(static_cast<token_id *>(rptr)->get_id());
 				it.data() = rptr;
 				return;
 			}
+			case signal_types::varchk_: {
+				if (it.left().data() != nullptr)
+					throw runtime_error("Wrong grammar for variable declaration.");
+				trim_expr(tree, it.right(), do_trim);
+				context->instance->check_declar_var(it.right(), true);
+				it.data() = it.right().data();
+				return;
+			}
 			case signal_types::varprt_: {
 				if (it.left().data() != nullptr)
-					throw runtime_error("Wrong grammar for variable definition.");
-				token_base *rptr = it.right().data();
-				if (rptr == nullptr || rptr->get_type() != token_types::id)
-					throw runtime_error("Wrong grammar for variable definition.");
-				it.data() = rptr;
+					throw runtime_error("Wrong grammar for variable declaration.");
+				trim_expr(tree, it.right(), do_trim);
+				it.data() = it.right().data();
 				return;
 			}
 			case signal_types::arrow_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr ||
 				        it.right().data()->get_type() != token_types::id)
 					throw runtime_error("Wrong grammar for arrow expression.");
-				trim_expr(tree, it.left());
+				trim_expr(tree, it.left(), do_trim);
 				return;
 			case signal_types::dot_: {
-				trim_expr(tree, it.left());
+				trim_expr(tree, it.left(), do_trim);
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
 					throw runtime_error("Wrong grammar for dot expression.");
 				return;
 			}
 			case signal_types::fcall_: {
-				trim_expr(tree, it.left());
-				trim_expr(tree, it.right());
+				trim_expr(tree, it.left(), do_trim);
+				trim_expr(tree, it.right(), do_trim);
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
 				if (lptr == nullptr || rptr == nullptr || rptr->get_type() != token_types::arglist)
@@ -397,8 +412,8 @@ namespace cs {
 				return;
 			}
 			case signal_types::emb_: {
-				trim_expr(tree, it.left());
-				trim_expr(tree, it.right());
+				trim_expr(tree, it.left(), do_trim);
+				trim_expr(tree, it.right(), do_trim);
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
 				if (!inside_lambda || lptr != nullptr || rptr == nullptr ||
@@ -409,9 +424,9 @@ namespace cs {
 			}
 			case signal_types::lambda_: {
 				inside_lambda = true;
-				trim_expr(tree, it.left());
+				trim_expr(tree, it.left(), do_trim);
 				inside_lambda = false;
-				trim_expr(tree, it.right());
+				trim_expr(tree, it.right(), do_trim);
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
 				if (lptr == nullptr || rptr == nullptr || lptr->get_type() != token_types::arglist)
@@ -460,8 +475,8 @@ namespace cs {
 			}
 		}
 		}
-		trim_expr(tree, it.left());
-		trim_expr(tree, it.right());
+		trim_expr(tree, it.left(), do_trim);
+		trim_expr(tree, it.right(), do_trim);
 	}
 
 	void compiler_type::opt_expr(tree_type<token_base *> &tree, tree_type<token_base *>::iterator it)
@@ -686,21 +701,6 @@ namespace cs {
 				it.data() = oldt;
 			}
 		}
-	}
-
-	void compiler_type::parse_define_var(tree_type<token_base *> &tree, define_var_profile &dvp)
-	{
-		const auto &it = tree.root();
-		token_base *root = it.data();
-		if (root == nullptr || root->get_type() != token_types::signal ||
-		        static_cast<token_signal *>(root)->get_signal() != signal_types::asi_)
-			throw runtime_error("Wrong grammar for variable definition.");
-		token_base *left = it.left().data();
-		const auto &right = it.right();
-		if (left == nullptr || right.data() == nullptr || left->get_type() != token_types::id)
-			throw runtime_error("Wrong grammar for variable definition.");
-		dvp.id = static_cast<token_id *>(left)->get_id();
-		dvp.expr = tree_type<token_base *>(right);
 	}
 
 	void compiler_type::dump_expr(tree_type<token_base *>::iterator it, std::ostream &stream)

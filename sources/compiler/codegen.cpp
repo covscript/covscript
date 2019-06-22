@@ -51,7 +51,7 @@ namespace cs {
 		}
 		else
 			process(tree);
-		mResult = new statement_constant(var_list, context, raw.front().back());
+		mResult = new statement_import(var_list, context, raw.front().back());
 	}
 
 	statement_base *
@@ -100,66 +100,20 @@ namespace cs {
 
 	void method_var::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
-		if (tree.root().data() == nullptr)
-			throw internal_error("Null pointer accessed.");
-		if (tree.root().data()->get_type() == token_types::parallel) {
-			auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
-			for (auto &t:parallel_list) {
-				compiler_type::define_var_profile dvp;
-				context->compiler->parse_define_var(t, dvp);
-			}
-		}
-		else {
-			compiler_type::define_var_profile dvp;
-			context->compiler->parse_define_var(tree, dvp);
-		}
+		context->instance->check_define_var(static_cast<token_expr *>(raw.front().at(1))->get_tree().root());
 	}
 
 	statement_base *method_var::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
-		if (tree.root().data() == nullptr)
-			throw internal_error("Null pointer accessed.");
-		std::vector<compiler_type::define_var_profile> dvp_list;
-		if (tree.root().data()->get_type() == token_types::parallel) {
-			auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
-			for (auto &t:parallel_list) {
-				dvp_list.emplace_back();
-				context->compiler->parse_define_var(t, dvp_list.back());
-			}
-		}
-		else {
-			dvp_list.emplace_back();
-			context->compiler->parse_define_var(tree, dvp_list.back());
-		}
-		return new statement_var(dvp_list, context, raw.front().back());
+		return new statement_var(static_cast<token_expr *>(raw.front().at(1))->get_tree(), context, raw.front().back());
 	}
 
 	void method_constant::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
-		if (tree.root().data() == nullptr)
-			throw internal_error("Null pointer accessed.");
-		std::vector<std::pair<std::string, var>> var_list;
-		auto process = [&context, &var_list](tree_type<token_base *> &t) {
-			compiler_type::define_var_profile dvp;
-			context->compiler->parse_define_var(t, dvp);
-			if (dvp.expr.root().data()->get_type() != token_types::value)
-				throw runtime_error("Constant variable must have an constant value.");
-			const var &val = static_cast<token_value *>(dvp.expr.root().data())->get_value();
-			context->compiler->add_constant(val);
-			context->instance->storage.add_var(dvp.id, val);
-			var_list.emplace_back(dvp.id, val);
-		};
-		if (tree.root().data()->get_type() == token_types::parallel) {
-			auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
-			for (auto &t:parallel_list)
-				process(t);
-		}
-		else
-			process(tree);
-		mResult = new statement_constant(var_list, context, raw.front().back());
+		context->instance->check_define_var(tree.root(), false, true);
+		context->instance->parse_define_var(tree.root(), true);
+		mResult = new statement_constant(tree, context, raw.front().back());
 	}
 
 	statement_base *
@@ -366,9 +320,7 @@ namespace cs {
 		auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
 		if (parallel_list.size() != 3)
 			throw runtime_error("Wrong grammar(for)");
-		compiler_type::define_var_profile dvp;
-		context->compiler->parse_define_var(parallel_list[0], dvp);
-		context->instance->storage.add_record(dvp.id);
+		context->instance->check_define_var(parallel_list[0].root(), true);
 	}
 
 	statement_base *method_for::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
@@ -391,6 +343,7 @@ namespace cs {
 		auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
 		if (parallel_list.size() != 3)
 			throw runtime_error("Wrong grammar(for)");
+		context->instance->check_define_var(parallel_list[0].root());
 		return new statement_for(parallel_list, {
 			new statement_expression(static_cast<token_expr *>(raw.front().at(3))->get_tree(),
 			                         context, raw.front().back())

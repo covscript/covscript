@@ -43,6 +43,24 @@ namespace cs {
 		void dump(std::ostream &) const override;
 	};
 
+	class statement_import final : public statement_base {
+		std::vector<std::pair<std::string, var>> m_var_list;
+	public:
+		statement_import() = delete;
+
+		statement_import(std::vector<std::pair<std::string, var>> var_list, context_t c, token_base *ptr)
+			: statement_base(std::move(c), ptr), m_var_list(std::move(var_list)) {}
+
+		statement_types get_type() const noexcept override
+		{
+			return statement_types::expression_;
+		}
+
+		void run() override;
+
+		void dump(std::ostream &) const override;
+	};
+
 	class statement_involve final : public statement_base {
 		bool mOverride = false;
 		tree_type<token_base *> mTree;
@@ -63,12 +81,12 @@ namespace cs {
 	};
 
 	class statement_var final : public statement_base {
-		std::vector<compiler_type::define_var_profile> mDvp;
+		tree_type<token_base *> mTree;
 	public:
 		statement_var() = delete;
 
-		statement_var(std::vector<compiler_type::define_var_profile> dvp, context_t c, token_base *ptr)
-			: statement_base(std::move(c), ptr), mDvp(std::move(dvp)) {}
+		statement_var(tree_type<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c), ptr),
+			mTree(std::move(tree)) {}
 
 		statement_types get_type() const noexcept override
 		{
@@ -81,12 +99,13 @@ namespace cs {
 	};
 
 	class statement_constant final : public statement_base {
-		std::vector<std::pair<std::string, var>> mVal;
+		tree_type<token_base *> mTree;
 	public:
 		statement_constant() = delete;
 
-		statement_constant(std::vector<std::pair<std::string, var>> val, context_t c, token_base *ptr) : statement_base(
-			    std::move(c), ptr), mVal(std::move(val)) {}
+		statement_constant(tree_type<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c),
+			        ptr),
+			mTree(std::move(tree)) {}
 
 		statement_types get_type() const noexcept override
 		{
@@ -417,7 +436,6 @@ namespace cs {
 	};
 
 	class statement_for final : public statement_base {
-		compiler_type::define_var_profile mDvp;
 		std::deque<tree_type<token_base *>> mParallel;
 		std::deque<statement_base *> mBlock;
 	public:
@@ -425,10 +443,7 @@ namespace cs {
 
 		statement_for(std::deque<tree_type<token_base *>> parallel_list, std::deque<statement_base *> block,
 		              context_t c, token_base *ptr) : statement_base(std::move(c), ptr),
-			mParallel(std::move(parallel_list)), mBlock(std::move(block))
-		{
-			context->compiler->parse_define_var(mParallel[0], mDvp);
-		}
+			mParallel(std::move(parallel_list)), mBlock(std::move(block)) {}
 
 		statement_types get_type() const noexcept override
 		{

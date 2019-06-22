@@ -125,6 +125,18 @@ namespace cs {
 		o << " >\n";
 	}
 
+	void statement_import::run()
+	{
+		for (auto &val:m_var_list)
+			context->instance->storage.add_var(val.first, val.second, true);
+	}
+
+	void statement_import::dump(std::ostream &o) const
+	{
+		for (auto &val:m_var_list)
+			o << "< Import: Name = \"" << val.first << "\" >\n";
+	}
+
 	void statement_involve::run()
 	{
 		CS_DEBUGGER_STEP(this);
@@ -145,40 +157,27 @@ namespace cs {
 	void statement_var::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		for (auto &dvp:mDvp)
-			context->instance->storage.add_var(dvp.id, copy(context->instance->parse_expr(dvp.expr.root())));
+		context->instance->parse_define_var(mTree.root());
 	}
 
 	void statement_var::dump(std::ostream &o) const
 	{
-		for (auto &dvp:mDvp) {
-			o << "< Var: ID = \"" << dvp.id << "\", Value = ";
-			compiler_type::dump_expr(dvp.expr.root(), o);
-			o << " >\n";
-		}
+		o << "< Var: ";
+		compiler_type::dump_expr(mTree.root(), o);
+		o << " >\n";
 	}
 
 	void statement_constant::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		for (auto &val:mVal)
-			context->instance->storage.add_var(val.first, val.second, true);
+		context->instance->parse_define_var(mTree.root(), true);
 	}
 
 	void statement_constant::dump(std::ostream &o) const
 	{
-		for (auto &val:mVal) {
-			o << "< Const Var: ID = \"" << val.first << "\", Value = \"";
-			try {
-				o << val.second.to_string();
-			}
-			catch (cov::error &e) {
-				if (!std::strcmp(e.what(), "E000D"))
-					throw e;
-				o << "[" << cs_impl::cxx_demangle(val.second.type().name()) << "]";
-			}
-			o << "\" >\n";
-		}
+		o << "< Constant: ";
+		compiler_type::dump_expr(mTree.root(), o);
+		o << " >\n";
 	}
 
 	void statement_break::run()
@@ -526,11 +525,11 @@ namespace cs {
 			context->instance->break_block = false;
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
+		scope_guard top_scope(context);
+		context->instance->parse_define_var(mParallel[0].root());
 		scope_guard scope(context);
-		var val = copy(context->instance->parse_expr(mDvp.expr.root()));
 		while (true) {
 			scope.clear();
-			context->instance->storage.add_var(mDvp.id, val);
 			if (!context->instance->parse_expr(mParallel[1].root()).const_val<boolean>())
 				break;
 			for (auto &ptr:mBlock) {
@@ -562,8 +561,8 @@ namespace cs {
 	void statement_for::dump(std::ostream &o) const
 	{
 		o << "< BeginFor >\n";
-		o << "< IteratorID = \"" << mDvp.id << "\", IteratorValue = ";
-		compiler_type::dump_expr(mDvp.expr.root(), o);
+		o << "< Iterator = ";
+		compiler_type::dump_expr(mParallel[0].root(), o);
 		o << " >\n< Condition = ";
 		compiler_type::dump_expr(mParallel[1].root(), o);
 		o << " >\n< Increment = ";

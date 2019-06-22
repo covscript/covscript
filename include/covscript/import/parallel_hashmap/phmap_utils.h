@@ -24,27 +24,32 @@
 // to work, I know, but it is nice to reduce the amount of headers included.
 #include <functional>
 #else
+
 #include <cstddef>  // for size_t
 
 namespace std {
-	template<class Key> struct hash;
+	template<class Key>
+	struct hash;
 }
 #endif
 
 namespace phmap {
 
-	template <class H, int sz> struct Combiner {
+	template<class H, int sz>
+	struct Combiner {
 		H operator()(H seed, size_t value);
 	};
 
-	template <class H> struct Combiner<H, 4> {
+	template<class H>
+	struct Combiner<H, 4> {
 		H operator()(H seed, size_t value)
 		{
 			return seed ^ (value + 0x9e3779b9 + (seed << 6) + (seed >> 2));
 		}
 	};
 
-	template <class H> struct Combiner<H, 8> {
+	template<class H>
+	struct Combiner<H, 8> {
 		H operator()(H seed, size_t value)
 		{
 			return seed ^ (value + size_t(0xc6a4a7935bd1e995) + (seed << 6) + (seed >> 2));
@@ -53,11 +58,11 @@ namespace phmap {
 
 
 // -----------------------------------------------------------------------------
-	template <typename H>
+	template<typename H>
 	class HashStateBase {
 	public:
-		template <typename T, typename... Ts>
-		static H combine(H state, const T& value, const Ts&... values);
+		template<typename T, typename... Ts>
+		static H combine(H state, const T &value, const Ts &... values);
 
 		static H combine(H state)
 		{
@@ -65,12 +70,12 @@ namespace phmap {
 		}
 	};
 
-	template <typename H>
-	template <typename T, typename... Ts>
-	H HashStateBase<H>::combine(H seed, const T& v, const Ts&... vs)
+	template<typename H>
+	template<typename T, typename... Ts>
+	H HashStateBase<H>::combine(H seed, const T &v, const Ts &... vs)
 	{
 		return HashStateBase<H>::combine(Combiner<H, sizeof(H)>()(
-		                                     seed, std::hash<T>()(v)),  vs...);
+		                                     seed, std::hash<T>()(v)), vs...);
 	}
 
 	using HashState = HashStateBase<size_t>;

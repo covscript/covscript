@@ -228,6 +228,7 @@ namespace cs {
 			{signal_types::neq_,    9},
 			{signal_types::lambda_, 2},
 			{signal_types::vardef_, 20},
+			{signal_types::varchk_, 20},
 			{signal_types::varprt_, 20},
 			{signal_types::or_,     6},
 			{signal_types::and_,    7},
@@ -330,17 +331,21 @@ namespace cs {
 
 		void trim_expression(tree_type<token_base *> &tree)
 		{
-			trim_expr(tree, tree.root());
+			trim_expr(tree, tree.root(), trim_type::normal);
 		}
 
 		void optimize_expression(tree_type<token_base *> &tree)
 		{
-			trim_expr(tree, tree.root());
+			trim_expr(tree, tree.root(), trim_type::normal);
 			if (!disable_optimizer && !no_optimize)
 				opt_expr(tree, tree.root());
 		}
 
-		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator);
+		enum class trim_type {
+			normal, no_expr_fold
+		};
+
+		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, trim_type);
 
 		void opt_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator);
 
@@ -389,14 +394,6 @@ namespace cs {
 			add_constant(val);
 			return new token_value(val);
 		}
-
-		// Var definition
-		struct define_var_profile {
-			std::string id;
-			tree_type<token_base *> expr;
-		};
-
-		void parse_define_var(tree_type<token_base *> &, define_var_profile &);
 
 		// Wrapped Method
 		void build_expr(const std::deque<char> &buff, tree_type<token_base *> &tree)
