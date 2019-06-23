@@ -6,6 +6,7 @@ class test
         system.out.println("Init "+this.id)
     end
     function duplicate(orig)
+        id=++id_count
         system.out.println("Copy "+orig.id)
     end
     function finalize()
@@ -17,4 +18,3 @@ block
     var b=a
     var c=move(a)
 end
-system.out.println("Hello")
