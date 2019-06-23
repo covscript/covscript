@@ -284,7 +284,7 @@ namespace cs {
 			if (empty())
 				throw cov::error("E000H");
 			T data(std::move(*m_current));
-			(m_current-1)->~T();
+			(m_current - 1)->~T();
 			--m_current;
 			return std::move(data);
 		}
@@ -293,7 +293,7 @@ namespace cs {
 		{
 			if (empty())
 				throw cov::error("E000H");
-			(m_current-1)->~T();
+			(m_current - 1)->~T();
 			--m_current;
 		}
 

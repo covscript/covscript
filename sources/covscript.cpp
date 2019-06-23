@@ -456,6 +456,18 @@ namespace cs {
 		return context;
 	}
 
+	void collect_context(context_t &context)
+	{
+		if (context) {
+			context->instance->storage.remove_domain();
+			context->compiler->swap_context(nullptr);
+			context->instance->context = nullptr;
+			context->compiler = nullptr;
+			context->instance = nullptr;
+			context = nullptr;
+		}
+	}
+
 	cs::var eval(const context_t &context, const std::string &expr)
 	{
 		tree_type<cs::token_base *> tree;

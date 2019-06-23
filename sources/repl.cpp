@@ -146,7 +146,12 @@ void covscript_main(int args_size, const char *args[])
 			}
 			std::cerr << e.what() << std::endl;
 		}
+		catch (...) {
+			cs::collect_context(context);
+			throw;
+		}
 	}
+	cs::collect_context(context);
 }
 
 int main(int args_size, const char *args[])

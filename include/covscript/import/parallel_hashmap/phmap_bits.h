@@ -40,6 +40,7 @@
 #elif defined(__APPLE__)
 // Mac OS X / Darwin features
 #include <libkern/OSByteOrder.h>
+
 #elif defined(__FreeBSD__)
 #include <sys/endian.h>
 #elif defined(__GLIBC__)

@@ -99,6 +99,8 @@ namespace cs {
 
 	context_t create_subcontext(const context_t &);
 
+	void collect_context(context_t &);
+
 	cs::var eval(const context_t &, const std::string &);
 
 	using cs_function_invoker_impl::function_invoker;

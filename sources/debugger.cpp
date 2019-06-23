@@ -533,13 +533,13 @@ void covscript_main(int args_size, const char *args[])
 				        << std::endl;
 				std::cerr << "The interpreter instance has exited unexpectedly, up to " << time() - start_time << "ms."
 				          << std::endl;
-				context = nullptr;
+				cs::collect_context(context);
 				reset_status();
 				throw;
 			}
 			std::cout << "The interpreter instance has exited normally, up to " << time() - start_time << "ms."
 			          << std::endl;
-			context = nullptr;
+			cs::collect_context(context);
 			reset_status();
 			return true;
 		});

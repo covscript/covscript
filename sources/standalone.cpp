@@ -136,17 +136,24 @@ void covscript_main(int args_size, const char *args[])
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::context_t context = cs::create_context(arg);
 		context->compiler->disable_optimizer = no_optimize;
-		context->instance->compile(path);
-		if (dump_ast) {
-			if (!log_path.empty()) {
-				std::ofstream out(::log_path);
-				context->instance->dump_ast(out);
+		try {
+			context->instance->compile(path);
+			if (dump_ast) {
+				if (!log_path.empty()) {
+					std::ofstream out(::log_path);
+					context->instance->dump_ast(out);
+				}
+				else
+					context->instance->dump_ast(std::cout);
 			}
-			else
-				context->instance->dump_ast(std::cout);
+			if (!compile_only)
+				context->instance->interpret();
 		}
-		if (!compile_only)
-			context->instance->interpret();
+		catch (...) {
+			cs::collect_context(context);
+			throw;
+		}
+		cs::collect_context(context);
 	}
 	else
 		throw cs::fatal_error("no input file.");
