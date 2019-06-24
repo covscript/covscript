@@ -39,9 +39,9 @@ namespace cs {
 
 		void clear_all_data()
 		{
-			while(!m_set.empty())
+			while (!m_set.empty())
 				m_set.pop_no_return();
-			while(!m_data.empty())
+			while (!m_data.empty())
 				m_data.pop_no_return();
 			m_cache_refresh = true;
 		}

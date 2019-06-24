@@ -82,7 +82,7 @@ namespace cs {
 #endif
 
 // Event Handling
-		static bool on_process_exit_default_handler(void*);
+		static bool on_process_exit_default_handler(void *);
 
 		event_type on_process_exit;
 
@@ -865,9 +865,10 @@ namespace cs {
 		explicit extension(const std::string &path)
 		{
 			using namespace dll_resources;
-			cov::dll *dll=new cov::dll(path);
+			cov::dll *dll = new cov::dll(path);
 			gc.add(dll);
-			dll_compatible_check_t dll_check = reinterpret_cast<dll_compatible_check_t>(dll->get_address(dll_compatible_check));
+			dll_compatible_check_t dll_check = reinterpret_cast<dll_compatible_check_t>(dll->get_address(
+			                                       dll_compatible_check));
 			if (dll_check == nullptr || dll_check() != COVSCRIPT_ABI_VERSION)
 				throw runtime_error("Incompatible Covariant Script Extension.(Target: " + std::to_string(dll_check()) +
 				                    ", Current: " + std::to_string(COVSCRIPT_ABI_VERSION) + ")");

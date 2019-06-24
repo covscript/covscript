@@ -1203,7 +1203,7 @@ namespace cs_impl {
 
 		void exit(number exit_code)
 		{
-			int code=exit_code;
+			int code = exit_code;
 			current_process->on_process_exit.touch(&code);
 		}
 

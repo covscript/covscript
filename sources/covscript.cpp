@@ -104,16 +104,16 @@ namespace cs_impl {
 }
 
 namespace cs {
-	bool process_context::on_process_exit_default_handler(void* code)
+	bool process_context::on_process_exit_default_handler(void *code)
 	{
-		while(!current_process->stack.empty())
+		while (!current_process->stack.empty())
 			current_process->stack.pop_no_return();
 #ifdef CS_DEBUGGER
 		while(!current_process->stack_backtrace.empty())
 			current_process->stack_backtrace.pop_no_return();
 #endif
 		collect_garbage();
-		std::exit(*static_cast<int*>(code));
+		std::exit(*static_cast<int *>(code));
 		return true;
 	}
 
@@ -481,7 +481,7 @@ namespace cs {
 
 	void collect_garbage(context_t &context)
 	{
-		while(!current_process->stack.empty())
+		while (!current_process->stack.empty())
 			current_process->stack.pop_no_return();
 #ifdef CS_DEBUGGER
 		while(!current_process->stack_backtrace.empty())
