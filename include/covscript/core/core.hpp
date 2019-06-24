@@ -811,7 +811,7 @@ namespace cs {
 			throw runtime_error("Type does not support the extension");
 	}
 
-	// Internal Garbage Collection
+// Internal Garbage Collection
 	template<typename T>
 	class garbage_collector final {
 		set_t<T *> table;

@@ -135,6 +135,10 @@ void covscript_main(int args_size, const char *args[])
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::context_t context = cs::create_context(arg);
+		cs::current_process->on_process_exit.add_listener([&context](void*)->bool{
+			throw cs::fatal_error("CS_EXIT");
+			return true;
+		});
 		context->compiler->disable_optimizer = no_optimize;
 		try {
 			context->instance->compile(path);
@@ -148,6 +152,10 @@ void covscript_main(int args_size, const char *args[])
 			}
 			if (!compile_only)
 				context->instance->interpret();
+		}
+		catch (const std::exception& e) {
+			if(std::strstr(e.what(), "CS_EXIT")==nullptr)
+				throw;
 		}
 		catch (...) {
 			cs::collect_garbage(context);

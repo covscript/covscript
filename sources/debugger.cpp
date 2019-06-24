@@ -387,6 +387,10 @@ void covscript_main(int args_size, const char *args[])
 		          "Please visit <http://covscript.org/> for more information."
 		          << std::endl;
 		path = cs::process_path(args[index]);
+		cs::current_process->on_process_exit.add_listener([](void*)->bool{
+			throw cs::fatal_error("CS_DEBUGGER_EXIT");
+			return true;
+		});
 		func_map.add_func("quit", "q", [](const std::string &cmd) -> bool {
 			if (context.get() != nullptr)
 			{
@@ -526,20 +530,33 @@ void covscript_main(int args_size, const char *args[])
 				start_time = time();
 				context->instance->interpret();
 			}
+			catch (const std::exception& e)
+			{
+				if(std::strstr(e.what(), "CS_DEBUGGER_EXIT")==nullptr) {
+					cs::collect_garbage(context);
+					std::cerr
+					        << "\nFatal Error: An exception was detected, the interpreter instance will terminate immediately."
+					        << std::endl;
+					std::cerr << "The interpreter instance has exited unexpectedly, up to " << time() - start_time << "ms."
+					          << std::endl;
+					reset_status();
+					throw;
+				}
+			}
 			catch (...)
 			{
+				cs::collect_garbage(context);
 				std::cerr
 				        << "\nFatal Error: An exception was detected, the interpreter instance will terminate immediately."
 				        << std::endl;
 				std::cerr << "The interpreter instance has exited unexpectedly, up to " << time() - start_time << "ms."
 				          << std::endl;
-				cs::collect_garbage(context);
 				reset_status();
 				throw;
 			}
+			cs::collect_garbage(context);
 			std::cout << "The interpreter instance has exited normally, up to " << time() - start_time << "ms."
 			          << std::endl;
-			cs::collect_garbage(context);
 			reset_status();
 			return true;
 		});

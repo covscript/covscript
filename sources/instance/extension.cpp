@@ -1201,10 +1201,10 @@ namespace cs_impl {
 			return str;
 		}
 
-		void exit(number code)
+		void exit(number exit_code)
 		{
-			current_process->on_process_exit.touch(nullptr);
-			std::exit(code);
+			int code=exit_code;
+			current_process->on_process_exit.touch(&code);
 		}
 
 		void init()
