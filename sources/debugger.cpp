@@ -387,7 +387,8 @@ void covscript_main(int args_size, const char *args[])
 		          "Please visit <http://covscript.org/> for more information."
 		          << std::endl;
 		path = cs::process_path(args[index]);
-		cs::current_process->on_process_exit.add_listener([](void*)->bool{
+		cs::current_process->on_process_exit.add_listener([](void* code)->bool{
+			cs::current_process->exit_code=*static_cast<int*>(code);
 			throw cs::fatal_error("CS_DEBUGGER_EXIT");
 			return true;
 		});
@@ -400,13 +401,11 @@ void covscript_main(int args_size, const char *args[])
 				while (!cs_impl::conio::kbhit());
 				switch (std::tolower(cs_impl::conio::getch())) {
 				case 'y':
-					std::exit(0);
 					return false;
 				default:
 					return true;
 				}
 			}
-			std::exit(0);
 			return false;
 		});
 		func_map.add_func("help", "h", [](const std::string &cmd) -> bool {
@@ -520,6 +519,7 @@ void covscript_main(int args_size, const char *args[])
 			std::size_t start_time = 0;
 			try
 			{
+				cs::current_process->exit_code=0;
 				context = cs::create_context(split(cmd));
 				context->compiler->disable_optimizer = no_optimize;
 				std::cout << "Compiling..." << std::endl;
@@ -555,7 +555,7 @@ void covscript_main(int args_size, const char *args[])
 				throw;
 			}
 			cs::collect_garbage(context);
-			std::cout << "The interpreter instance has exited normally, up to " << time() - start_time << "ms."
+			std::cout << "\nThe interpreter instance has exited normally with exit code "<< cs::current_process->exit_code <<", up to " << time() - start_time << "ms."
 			          << std::endl;
 			reset_status();
 			return true;

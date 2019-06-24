@@ -71,6 +71,8 @@ namespace cs {
 		const number std_version = COVSCRIPT_STD_VERSION;
 // Output Precision
 		int output_precision = 8;
+// Exit code
+		int exit_code = 0;
 // Import Path
 		std::string import_path = ".";
 		// Stack

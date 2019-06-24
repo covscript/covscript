@@ -125,7 +125,8 @@ void covscript_main(int args_size, const char *args[])
 	for (; index < args_size; ++index)
 		arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 	cs::context_t context = cs::create_context(arg);
-	cs::current_process->on_process_exit.add_listener([&context](void*)->bool{
+	cs::current_process->on_process_exit.add_listener([&context](void* code)->bool{
+		cs::current_process->exit_code=*static_cast<int*>(code);
 		throw cs::fatal_error("CS_REPL_EXIT");
 		return true;
 	});
@@ -167,6 +168,7 @@ int main(int args_size, const char *args[])
 	int errorcode = 0;
 	try {
 		covscript_main(args_size, args);
+		errorcode = cs::current_process->exit_code;
 	}
 	catch (const std::exception &e) {
 		if (!log_path.empty()) {
