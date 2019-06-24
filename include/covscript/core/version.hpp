@@ -27,8 +27,8 @@
 * Master
 *
 */
-#define COVSCRIPT_VERSION_NUM 3,2,1,7
-#define COVSCRIPT_VERSION_STR "3.2.1 Ailuropoda melanoleuca(Unstable) Build 7"
+#define COVSCRIPT_VERSION_NUM 3,2,1,8
+#define COVSCRIPT_VERSION_STR "3.2.1 Ailuropoda melanoleuca(Unstable) Build 8"
 #define COVSCRIPT_STD_VERSION 190601
-#define COVSCRIPT_API_VERSION 190623
-#define COVSCRIPT_ABI_VERSION 190510
+#define COVSCRIPT_API_VERSION 190624
+#define COVSCRIPT_ABI_VERSION 190624
