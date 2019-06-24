@@ -788,33 +788,4 @@ namespace cs {
 			return subroot;
 		}
 	};
-
-// Internal Garbage Collection
-	template<typename T>
-	class garbage_collector final {
-		std::forward_list<T *> table_new;
-		std::forward_list<T *> table_delete;
-	public:
-		garbage_collector() = default;
-
-		garbage_collector(const garbage_collector &) = delete;
-
-		~garbage_collector()
-		{
-			for (auto &ptr:table_delete)
-				table_new.remove(ptr);
-			for (auto &ptr:table_new)
-				delete ptr;
-		}
-
-		void add(void *ptr)
-		{
-			table_new.push_front(static_cast<T *>(ptr));
-		}
-
-		void remove(void *ptr)
-		{
-			table_delete.push_front(static_cast<T *>(ptr));
-		}
-	};
 }

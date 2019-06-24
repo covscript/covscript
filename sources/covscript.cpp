@@ -165,6 +165,8 @@ namespace cs {
 		return std::stold(str);
 	}
 
+	garbage_collector<cov::dll> extension::gc;
+
 	garbage_collector<token_base> token_base::gc;
 
 	garbage_collector<statement_base> statement_base::gc;
@@ -460,11 +462,15 @@ namespace cs {
 	{
 		if (context) {
 			context->instance->storage.remove_domain();
+			statement_base::gc.collect();
+			method_base::gc.collect();
+			token_base::gc.collect();
 			context->compiler->swap_context(nullptr);
 			context->instance->context = nullptr;
 			context->compiler = nullptr;
 			context->instance = nullptr;
 			context = nullptr;
+			extension::gc.collect();
 		}
 	}
 

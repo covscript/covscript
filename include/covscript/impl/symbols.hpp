@@ -146,10 +146,11 @@ namespace cs {
 	};
 
 	class token_base {
-		static garbage_collector<token_base> gc;
 	protected:
 		std::size_t line_num = 1;
 	public:
+		static garbage_collector<token_base> gc;
+
 		static void *operator new(std::size_t size)
 		{
 			void *ptr = ::operator new(size);
@@ -538,11 +539,12 @@ namespace cs {
 	};
 
 	class statement_base {
-		static garbage_collector<statement_base> gc;
 	protected:
 		context_t context;
 		std::size_t line_num = 1;
 	public:
+		static garbage_collector<statement_base> gc;
+
 		static void *operator new(std::size_t size)
 		{
 			void *ptr = ::operator new(size);
@@ -592,8 +594,9 @@ namespace cs {
 	};
 
 	class method_base {
-		static garbage_collector<method_base> gc;
 	public:
+		static garbage_collector<method_base> gc;
+
 		static void *operator new(std::size_t size)
 		{
 			void *ptr = ::operator new(size);
