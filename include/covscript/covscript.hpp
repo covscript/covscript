@@ -99,7 +99,9 @@ namespace cs {
 
 	context_t create_subcontext(const context_t &);
 
-	void collect_context(context_t &);
+	void collect_garbage();
+
+	void collect_garbage(context_t &);
 
 	cs::var eval(const context_t &, const std::string &);
 

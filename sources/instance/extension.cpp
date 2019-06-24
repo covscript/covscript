@@ -1203,6 +1203,7 @@ namespace cs_impl {
 
 		void exit(number code)
 		{
+			current_process->on_process_exit.touch(nullptr);
 			std::exit(code);
 		}
 

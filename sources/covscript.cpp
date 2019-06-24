@@ -104,6 +104,18 @@ namespace cs_impl {
 }
 
 namespace cs {
+	bool process_context::on_process_exit_default_handler(void*)
+	{
+		while(!current_process->stack.empty())
+			current_process->stack.pop_no_return();
+#ifdef CS_DEBUGGER
+		while(!current_process->stack_backtrace.empty())
+			current_process->stack_backtrace.pop_no_return();
+#endif
+		collect_garbage();
+		return true;
+	}
+
 	process_context this_process;
 	process_context *current_process = &this_process;
 
@@ -458,20 +470,31 @@ namespace cs {
 		return context;
 	}
 
-	void collect_context(context_t &context)
+	void collect_garbage()
 	{
+		statement_base::gc.collect();
+		method_base::gc.collect();
+		token_base::gc.collect();
+		extension::gc.collect();
+	}
+
+	void collect_garbage(context_t &context)
+	{
+		while(!current_process->stack.empty())
+			current_process->stack.pop_no_return();
+#ifdef CS_DEBUGGER
+		while(!current_process->stack_backtrace.empty())
+			current_process->stack_backtrace.pop_no_return();
+#endif
 		if (context) {
-			context->instance->storage.remove_domain();
-			statement_base::gc.collect();
-			method_base::gc.collect();
-			token_base::gc.collect();
+			context->instance->storage.clear_all_data();
 			context->compiler->swap_context(nullptr);
 			context->instance->context = nullptr;
 			context->compiler = nullptr;
 			context->instance = nullptr;
 			context = nullptr;
-			extension::gc.collect();
 		}
+		collect_garbage();
 	}
 
 	cs::var eval(const context_t &context, const std::string &expr)

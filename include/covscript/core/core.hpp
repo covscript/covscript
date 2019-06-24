@@ -79,6 +79,11 @@ namespace cs {
 		stack_type<std::string> stack_backtrace;
 #endif
 
+// Event Handling
+		static bool on_process_exit_default_handler(void*);
+
+		event_type on_process_exit;
+
 // Exception Handling
 		static void cs_defalt_exception_handler(const lang_error &e)
 		{
@@ -92,6 +97,8 @@ namespace cs {
 
 		std_exception_handler std_eh_callback = &std_defalt_exception_handler;
 		cs_exception_handler cs_eh_callback = &cs_defalt_exception_handler;
+
+		process_context() : on_process_exit(&on_process_exit_default_handler) {}
 	};
 
 	extern process_context this_process;

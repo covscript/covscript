@@ -10,6 +10,6 @@ int main(int argc, const char *argv[]) {
     int result = test(1, 2);
     cs::function_invoker<void(cs::number)> println(cs::eval(context, "system.out.println"));
     println(result);
-    cs::collect_context(context);
+    cs::collect_garbage(context);
     return 0;
 }

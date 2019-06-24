@@ -150,10 +150,10 @@ void covscript_main(int args_size, const char *args[])
 				context->instance->interpret();
 		}
 		catch (...) {
-			cs::collect_context(context);
+			cs::collect_garbage(context);
 			throw;
 		}
-		cs::collect_context(context);
+		cs::collect_garbage(context);
 	}
 	else
 		throw cs::fatal_error("no input file.");

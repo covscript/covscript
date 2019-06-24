@@ -147,11 +147,11 @@ void covscript_main(int args_size, const char *args[])
 			std::cerr << e.what() << std::endl;
 		}
 		catch (...) {
-			cs::collect_context(context);
+			cs::collect_garbage(context);
 			throw;
 		}
 	}
-	cs::collect_context(context);
+	cs::collect_garbage(context);
 }
 
 int main(int args_size, const char *args[])
