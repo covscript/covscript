@@ -254,12 +254,14 @@ namespace cs {
 		default:
 			break;
 		case token_types::id: {
-			const std::string &id = static_cast<token_id *>(token)->get_id();
-			if (!context->instance->storage.exist_record(id) &&
-			        context->instance->storage.exist_record_in_struct(id)) {
-				it.data() = new token_signal(signal_types::dot_);
-				tree.emplace_left_left(it, new token_id("this"));
-				tree.emplace_right_right(it, token);
+			if (do_trim != trim_type::no_this_deduce) {
+				const std::string &id = static_cast<token_id *>(token)->get_id();
+				if (!context->instance->storage.exist_record(id) &&
+				        context->instance->storage.exist_record_in_struct(id)) {
+					it.data() = new token_signal(signal_types::dot_);
+					tree.emplace_left_left(it, new token_id("this"));
+					tree.emplace_right_right(it, token);
+				}
 			}
 			return;
 		}
@@ -352,7 +354,7 @@ namespace cs {
 			case signal_types::vardef_: {
 				if (it.left().data() != nullptr)
 					throw runtime_error("Wrong grammar for variable declaration.");
-				trim_expr(tree, it.right(), do_trim);
+				trim_expr(tree, it.right(), trim_type::no_this_deduce);
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
 					throw runtime_error("Wrong grammar for variable declaration.");
@@ -363,7 +365,7 @@ namespace cs {
 			case signal_types::varchk_: {
 				if (it.left().data() != nullptr)
 					throw runtime_error("Wrong grammar for variable declaration.");
-				trim_expr(tree, it.right(), do_trim);
+				trim_expr(tree, it.right(), trim_type::no_this_deduce);
 				context->instance->check_declar_var(it.right(), true);
 				it.data() = it.right().data();
 				return;
@@ -371,7 +373,7 @@ namespace cs {
 			case signal_types::varprt_: {
 				if (it.left().data() != nullptr)
 					throw runtime_error("Wrong grammar for variable declaration.");
-				trim_expr(tree, it.right(), do_trim);
+				trim_expr(tree, it.right(), trim_type::no_this_deduce);
 				it.data() = it.right().data();
 				return;
 			}

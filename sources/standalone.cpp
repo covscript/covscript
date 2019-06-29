@@ -135,18 +135,34 @@ void covscript_main(int args_size, const char *args[])
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::context_t context = cs::create_context(arg);
+		cs::current_process->on_process_exit.add_listener([&context](void *code) -> bool {
+			cs::current_process->exit_code = *static_cast<int *>(code);
+			throw cs::fatal_error("CS_EXIT");
+			return true;
+		});
 		context->compiler->disable_optimizer = no_optimize;
-		context->instance->compile(path);
-		if (dump_ast) {
-			if (!log_path.empty()) {
-				std::ofstream out(::log_path);
-				context->instance->dump_ast(out);
+		try {
+			context->instance->compile(path);
+			if (dump_ast) {
+				if (!log_path.empty()) {
+					std::ofstream out(::log_path);
+					context->instance->dump_ast(out);
+				}
+				else
+					context->instance->dump_ast(std::cout);
 			}
-			else
-				context->instance->dump_ast(std::cout);
+			if (!compile_only)
+				context->instance->interpret();
 		}
-		if (!compile_only)
-			context->instance->interpret();
+		catch (const std::exception &e) {
+			if (std::strstr(e.what(), "CS_EXIT") == nullptr)
+				throw;
+		}
+		catch (...) {
+			cs::collect_garbage(context);
+			throw;
+		}
+		cs::collect_garbage(context);
 	}
 	else
 		throw cs::fatal_error("no input file.");
@@ -157,6 +173,7 @@ int main(int args_size, const char *args[])
 	int errorcode = 0;
 	try {
 		covscript_main(args_size, args);
+		errorcode = cs::current_process->exit_code;
 	}
 	catch (const std::exception &e) {
 		if (!log_path.empty()) {

@@ -283,9 +283,9 @@ namespace cs {
 		{
 			if (empty())
 				throw cov::error("E000H");
-			--m_current;
 			T data(std::move(*m_current));
-			m_current->~T();
+			(m_current - 1)->~T();
+			--m_current;
 			return std::move(data);
 		}
 
@@ -293,7 +293,8 @@ namespace cs {
 		{
 			if (empty())
 				throw cov::error("E000H");
-			(--m_current)->~T();
+			(m_current - 1)->~T();
+			--m_current;
 		}
 
 		iterator begin() const noexcept
@@ -788,32 +789,32 @@ namespace cs {
 		}
 	};
 
-// Internal Garbage Collection
-	template<typename T>
-	class garbage_collector final {
-		std::forward_list<T *> table_new;
-		std::forward_list<T *> table_delete;
+	class event_type final {
 	public:
-		garbage_collector() = default;
+		using listener_type=std::function<bool(void *)>;
+	private:
+		stack_type<listener_type> m_listener;
+	public:
+		event_type() = delete;
 
-		garbage_collector(const garbage_collector &) = delete;
+		event_type(const event_type &) = delete;
 
-		~garbage_collector()
+		explicit event_type(listener_type default_listener)
 		{
-			for (auto &ptr:table_delete)
-				table_new.remove(ptr);
-			for (auto &ptr:table_new)
-				delete ptr;
+			m_listener.push(std::move(default_listener));
 		}
 
-		void add(void *ptr)
+		void add_listener(listener_type listener)
 		{
-			table_new.push_front(static_cast<T *>(ptr));
+			m_listener.push(std::move(listener));
 		}
 
-		void remove(void *ptr)
+		bool touch(void *arg)
 		{
-			table_delete.push_front(static_cast<T *>(ptr));
+			for (auto &listener:m_listener)
+				if (listener(arg))
+					return true;
+			return false;
 		}
 	};
 }

@@ -71,6 +71,8 @@ namespace cs {
 		const number std_version = COVSCRIPT_STD_VERSION;
 // Output Precision
 		int output_precision = 8;
+// Exit code
+		int exit_code = 0;
 // Import Path
 		std::string import_path = ".";
 		// Stack
@@ -78,6 +80,11 @@ namespace cs {
 #ifdef CS_DEBUGGER
 		stack_type<std::string> stack_backtrace;
 #endif
+
+// Event Handling
+		static bool on_process_exit_default_handler(void *);
+
+		event_type on_process_exit;
 
 // Exception Handling
 		static void cs_defalt_exception_handler(const lang_error &e)
@@ -92,6 +99,8 @@ namespace cs {
 
 		std_exception_handler std_eh_callback = &std_defalt_exception_handler;
 		cs_exception_handler cs_eh_callback = &cs_defalt_exception_handler;
+
+		process_context() : on_process_exit(&on_process_exit_default_handler) {}
 	};
 
 	extern process_context this_process;
@@ -804,6 +813,38 @@ namespace cs {
 			throw runtime_error("Type does not support the extension");
 	}
 
+// Internal Garbage Collection
+	template<typename T>
+	class garbage_collector final {
+		set_t<T *> table;
+	public:
+		garbage_collector() = default;
+
+		garbage_collector(const garbage_collector &) = delete;
+
+		~garbage_collector()
+		{
+			collect();
+		}
+
+		void collect()
+		{
+			for (auto &ptr:table)
+				delete ptr;
+			table.clear();
+		}
+
+		void add(void *ptr)
+		{
+			table.emplace(static_cast<T *>(ptr));
+		}
+
+		void remove(void *ptr)
+		{
+			table.erase(static_cast<T *>(ptr));
+		}
+	};
+
 	namespace dll_resources {
 		constexpr char dll_compatible_check[] = "__CS_ABI_COMPATIBLE__";
 		constexpr char dll_main_entrance[] = "__CS_EXTENSION_MAIN__";
@@ -814,21 +855,24 @@ namespace cs {
 	}
 
 	class extension final : public name_space {
-		cov::dll m_dll;
 	public:
+		static garbage_collector<cov::dll> gc;
+
 		extension() = delete;
 
 		extension(const extension &) = delete;
 
-		explicit extension(const std::string &path) : m_dll(path)
+		explicit extension(const std::string &path)
 		{
 			using namespace dll_resources;
-			dll_compatible_check_t dll_check = reinterpret_cast<dll_compatible_check_t>(m_dll.get_address(
+			cov::dll *dll = new cov::dll(path);
+			gc.add(dll);
+			dll_compatible_check_t dll_check = reinterpret_cast<dll_compatible_check_t>(dll->get_address(
 			                                       dll_compatible_check));
 			if (dll_check == nullptr || dll_check() != COVSCRIPT_ABI_VERSION)
 				throw runtime_error("Incompatible Covariant Script Extension.(Target: " + std::to_string(dll_check()) +
 				                    ", Current: " + std::to_string(COVSCRIPT_ABI_VERSION) + ")");
-			dll_main_entrance_t dll_main = reinterpret_cast<dll_main_entrance_t>(m_dll.get_address(dll_main_entrance));
+			dll_main_entrance_t dll_main = reinterpret_cast<dll_main_entrance_t>(dll->get_address(dll_main_entrance));
 			if (dll_main != nullptr) {
 				dll_main(this, current_process);
 			}

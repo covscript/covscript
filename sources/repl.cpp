@@ -125,6 +125,11 @@ void covscript_main(int args_size, const char *args[])
 	for (; index < args_size; ++index)
 		arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 	cs::context_t context = cs::create_context(arg);
+	cs::current_process->on_process_exit.add_listener([&context](void *code) -> bool {
+		cs::current_process->exit_code = *static_cast<int *>(code);
+		throw cs::fatal_error("CS_REPL_EXIT");
+		return true;
+	});
 	cs::repl repl(context);
 	std::ofstream log_stream;
 	std::string line;
@@ -136,17 +141,26 @@ void covscript_main(int args_size, const char *args[])
 			repl.exec(line);
 		}
 		catch (const std::exception &e) {
-			if (!log_path.empty()) {
-				if (!log_stream.is_open())
-					log_stream.open(::log_path);
-				if (log_stream)
-					log_stream << e.what() << std::endl;
-				else
-					std::cerr << "Write log failed." << std::endl;
+			if (std::strstr(e.what(), "CS_REPL_EXIT") == nullptr) {
+				if (!log_path.empty()) {
+					if (!log_stream.is_open())
+						log_stream.open(::log_path);
+					if (log_stream)
+						log_stream << e.what() << std::endl;
+					else
+						std::cerr << "Write log failed." << std::endl;
+				}
+				std::cerr << e.what() << std::endl;
 			}
-			std::cerr << e.what() << std::endl;
+			else
+				break;
+		}
+		catch (...) {
+			cs::collect_garbage(context);
+			throw;
 		}
 	}
+	cs::collect_garbage(context);
 }
 
 int main(int args_size, const char *args[])
@@ -154,6 +168,7 @@ int main(int args_size, const char *args[])
 	int errorcode = 0;
 	try {
 		covscript_main(args_size, args);
+		errorcode = cs::current_process->exit_code;
 	}
 	catch (const std::exception &e) {
 		if (!log_path.empty()) {
