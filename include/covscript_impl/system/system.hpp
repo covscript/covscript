@@ -19,6 +19,14 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
+
+#include <covscript/core/core.hpp>
+#include <covscript_impl/dirent/dirent.hpp>
+#include <sys/stat.h>
+#include <string>
+#include <sstream>
+#include <vector>
+
 #if defined(_WIN32) || defined(WIN32)
 
 #include "./win32_impl.hpp"
@@ -28,13 +36,6 @@
 #include "./unix_impl.hpp"
 
 #endif
-
-#include <covscript/core/core.hpp>
-#include <covscript_impl/dirent/dirent.hpp>
-#include <sys/stat.h>
-#include <string>
-#include <sstream>
-#include <vector>
 
 static std::vector<std::string> split(const std::string &string, char delimiter, bool drop_last)
 {

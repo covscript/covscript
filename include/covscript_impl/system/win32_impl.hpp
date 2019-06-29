@@ -20,10 +20,10 @@
 * Github: https://github.com/mikecovlee
 */
 #if defined(_WIN32) || defined(WIN32)
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <windows.h>
-#include <Shlwapi.h>
-#pragma comment(lib, "shlwapi.lib")
-
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -97,37 +97,53 @@ namespace cs_impl {
 	}
 
 	namespace filesystem {
-	    static bool can_read(const std::string &path)
-	    {
-            return false;
+        static bool can_read(const std::string &path)
+        {
+            return access(path.c_str(), R_OK) == 0;
         }
 
         static bool can_write(const std::string &path)
         {
-            return false;
+            return access(path.c_str(), W_OK) == 0;
         }
 
         static bool can_execute(const std::string &path)
         {
-            return false;
+            return access(path.c_str(), X_OK) == 0;
         }
 
         static bool chmod_impl(const std::string &path, mode_t mode)
         {
-            return false;
+            return ::chmod(path.c_str(), mode) == 0;
         }
 
         static bool mkdir_impl(const std::string &path, mode_t mode)
         {
-            return false;
+            return ::mkdir(path.c_str()) == 0;
         }
 
         static std::string get_current_dir()
         {
-            char path[MAX_PATH] = "";
-	        GetCurrentDirectoryA(MAX_PATH, path);
-	        PathAddBackslashA(path);
-	        return path;
+            char temp[PATH_MAX] = "";
+
+            if (::getcwd(temp, PATH_MAX) != nullptr) {
+                return std::string(temp);
+            }
+
+            int error = errno;
+            switch (error) {
+                case EACCES:
+                    throw cs::runtime_error("Permission denied");
+
+                case ENOMEM:
+                    throw cs::runtime_error("Out of memory");
+
+                default: {
+                    std::stringstream str;
+                    str << "Unrecognised errno: " << error;
+                    throw cs::runtime_error(str.str());
+                }
+            }
         }
 	}
 }
