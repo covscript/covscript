@@ -65,7 +65,7 @@ namespace cs_function_invoker_impl {
 
 		function_invoker &operator=(const function_invoker &) = default;
 
-		explicit function_invoker(const cs::var &func) : m_func(func) {}
+		explicit function_invoker(cs::var func) : m_func(std::move(func)) {}
 
 		void assign(const cs::var &func)
 		{

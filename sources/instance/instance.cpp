@@ -20,7 +20,7 @@
 */
 #include <covscript/covscript.hpp>
 #include <fcntl.h>
-#include <stdio.h>
+#include <cstdio>
 
 #if defined(_WIN32) || defined(WIN32)
 

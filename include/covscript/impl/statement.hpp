@@ -521,7 +521,7 @@ namespace cs {
 
 #ifdef CS_DEBUGGER
 
-		statement_function(std::string name, std::string decl, const std::vector<std::string> &args,
+		statement_function(std::string name, const std::string &decl, const std::vector<std::string> &args,
 		                   const std::deque<statement_base *> &body, bool is_override, bool is_vargs,
 		                   const context_t &c,
 		                   token_base *ptr)

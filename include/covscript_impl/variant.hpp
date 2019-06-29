@@ -63,7 +63,7 @@ namespace variant_impl {
 	template<typename T>
 	struct convert_if<true, T> {
 		template<typename X>
-		static void emplace(byte_t *src, X &&dat)
+		static void emplace(const byte_t *src, X &&dat)
 		{
 			::new(src) T(std::forward<X>(dat));
 		}
