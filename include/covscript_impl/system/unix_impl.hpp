@@ -21,17 +21,18 @@
 */
 #if !defined(_WIN32) && !defined(WIN32)
 
-#include <unistd.h>
-#include <termios.h>
-#include <sys/ioctl.h>
 #include <sys/select.h>
+#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <cstdio>
+#include <termios.h>
+#include <unistd.h>
+#include <sstream>
 #include <climits>
+#include <cstdio>
 #include <string>
 #include <cerrno>
-#include <sstream>
+
 
 #include <covscript/core/core.hpp>
 

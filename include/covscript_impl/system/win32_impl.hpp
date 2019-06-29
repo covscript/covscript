@@ -20,15 +20,13 @@
 * Github: https://github.com/mikecovlee
 */
 #if defined(_WIN32) || defined(WIN32)
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+
 #include <windows.h>
-#include <cstdio>
+#include <conio.h>
 #include <cstring>
 #include <cstdlib>
 #include <string>
-#include <conio.h>
+#include <cstdio>
 
 namespace cs_impl {
 	namespace conio {
