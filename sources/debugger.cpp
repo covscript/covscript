@@ -21,8 +21,8 @@
 */
 #define CS_DEBUGGER
 
-#include <covscript_impl/system/system.hpp>
 #include <covscript_impl/variant.hpp>
+#include <covscript_impl/system.hpp>
 #include <covscript/covscript.hpp>
 #include <iostream>
 #include <chrono>
