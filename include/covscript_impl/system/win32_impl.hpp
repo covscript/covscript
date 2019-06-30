@@ -30,8 +30,10 @@
 #include <direct.h>
 #include <io.h>
 
+#ifdef _MSC_VER
 // Windows specific
 typedef int mode_t;
+#endif
 
 namespace cs_impl {
 	namespace conio {
