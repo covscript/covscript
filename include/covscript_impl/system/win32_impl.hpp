@@ -21,12 +21,17 @@
 */
 #if defined(_WIN32) || defined(WIN32)
 
-#include <windows.h>
+#include <Windows.h>
 #include <conio.h>
 #include <cstring>
 #include <cstdlib>
 #include <string>
 #include <cstdio>
+#include <direct.h>
+#include <io.h>
+
+// Windows specific
+typedef int mode_t;
 
 namespace cs_impl {
 	namespace conio {
@@ -97,34 +102,41 @@ namespace cs_impl {
 	namespace filesystem {
         static bool can_read(const std::string &path)
         {
-            return access(path.c_str(), R_OK) == 0;
+			// Reference: https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/access-s-waccess-s
+            return _access_s(path.c_str(), 4) == 0;
         }
 
         static bool can_write(const std::string &path)
         {
-            return access(path.c_str(), W_OK) == 0;
+			// Reference: https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/access-s-waccess-s
+            return _access_s(path.c_str(), 2) == 0;
         }
 
         static bool can_execute(const std::string &path)
         {
-            return access(path.c_str(), X_OK) == 0;
+			// Reference: https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/access-s-waccess-s
+			// Windows don't support the file execute permission.
+			return false;
         }
 
         static bool chmod_impl(const std::string &path, mode_t mode)
         {
-            return ::chmod(path.c_str(), mode) == 0;
+			// Reference: https://stackoverflow.com/a/593017/9740633
+			static const mode_t MS_MODE_MASK = 0x0000ffff;
+
+            return ::_chmod(path.c_str(), (mode & MS_MODE_MASK)) == 0;
         }
 
         static bool mkdir_impl(const std::string &path, mode_t mode)
         {
-            return ::mkdir(path.c_str()) == 0;
+            return ::_mkdir(path.c_str()) == 0;
         }
 
         static std::string get_current_dir()
         {
             char temp[PATH_MAX] = "";
 
-            if (::getcwd(temp, PATH_MAX) != nullptr) {
+            if (::_getcwd(temp, PATH_MAX) != nullptr) {
                 return std::string(temp);
             }
 
