@@ -159,15 +159,17 @@ namespace cs_impl {
 		bool chmod_r(const std::string &path, const std::string &mode)
 		{
 			auto dirs = cs_system_impl::split(path, cs::path_separator, false);
+            std::stringstream ss;
+
 			for (auto &dir : dirs) {
-				if(dir.empty())
-					continue;
-				if(dir[dir.size()-1]!=cs::path_separator)
-					dir += cs::path_separator;
-				if (cs_system_impl::is_directory(dir))
-					continue;
-				if (!cs_system_impl::chmod_impl(dir, cs_system_impl::parse_mode(mode)))
-					return false;
+                ss << dir << cs::path_separator;
+
+                // DO NOT SKIP when dir is a directory
+                // directory has permissions too
+
+				if (!cs_system_impl::chmod_impl(ss.str(), cs_system_impl::parse_mode(mode))) {
+                    return false;
+                }
 			}
 			return true;
 		}
