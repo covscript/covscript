@@ -20,8 +20,25 @@
 * Github: https://github.com/mikecovlee
 */
 
-#if defined(_WIN32) || defined(WIN32)
+// Platform detection
+
+#if defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
 #define COVSCRIPT_PLATFORM_WIN32
+#define COVSCRIPT_PLATFORM_NAME "Win32"
+#endif
+
+#if defined(__linux) || defined(__linux__) || defined(linux)
+#define COVSCRIPT_PLATFORM_LINUX
+#define COVSCRIPT_PLATFORM_NAME "Linux"
+#endif
+
+#if defined(__APPLE__) || defined(__MACH__)
+#define COVSCRIPT_PLATFORM_DARWIN
+#define COVSCRIPT_PLATFORM_NAME "Darwin"
+#endif
+
+#if defined(COVSCRIPT_PLATFORM_LINUX) || defined(COVSCRIPT_PLATFORM_DARWIN)
+#define COVSCRIPT_PLATFORM_UNIX
 #endif
 
 // Types

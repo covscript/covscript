@@ -23,6 +23,7 @@
 // forward declaration of std::hash does not work on mac. It is not really supposed
 // to work, I know, but it is nice to reduce the amount of headers included.
 #include <functional>
+
 #else
 
 #include <cstddef>  // for size_t

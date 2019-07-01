@@ -28,7 +28,7 @@
 
 namespace cov {
 	namespace random {
-		static std::default_random_engine random_engine(time(nullptr));
+		static std::random_device random_engine;
 		template<typename T, bool is_integral>
 		struct random_traits;
 

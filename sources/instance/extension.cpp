@@ -18,10 +18,10 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
-#include <covscript_impl/system/system.hpp>
 #include <covscript_impl/dirent/dirent.hpp>
 #include <covscript_impl/mozart/random.hpp>
 #include <covscript_impl/mozart/timer.hpp>
+#include <covscript_impl/system.hpp>
 #include <covscript/impl/impl.hpp>
 #include <iostream>
 
@@ -889,7 +889,7 @@ namespace cs_impl {
 			.add_var("cmd_args", make_cni(cmd_args, true))
 			.add_var("import", make_cni(import, true))
 			.add_var("source_import", make_cni(source_import, true))
-			.add_var("get_current_dir", make_cni(filesystem::get_current_dir));
+			.add_var("get_current_dir", make_cni(file_system::get_current_dir));
 			(*context_ext)
 			.add_var("build", make_cni(build))
 			.add_var("solve", make_cni(solve))
@@ -1098,115 +1098,25 @@ namespace cs_impl {
 		using namespace cs;
 		using namespace cs_impl;
 
-		unsigned int parse_mode(const string &modeString) {
-		    const char *perm = modeString.c_str();
-		    unsigned int mode = 0;
-
-		    if (std::isdigit(perm[0])) {
-                const char *p = perm;
-		        while (*p) {
-		            mode = mode * 8 + *p++ - '0';
-		        }
-		    } else {
-		        if (modeString.size() == 9) {
-		            mode =(((perm[0] == 'r') * 4 | (perm[1] == 'w') * 2 | (perm[2] == 'x')) << 6) |
-		                (((perm[3] == 'r') * 4 | (perm[4] == 'w') * 2 | (perm[5] == 'x')) << 3) |
-		                (((perm[6] == 'r') * 4 | (perm[7] == 'w') * 2 | (perm[8] == 'x')));
-		        }
-		    }
-            return mode;
-		}
-
-		bool copy(const string &source, const string &dest)
-		{
-			std::ifstream in(source, std::ios_base::in | std::ios_base::binary);
-			std::ofstream out(dest, std::ios_base::out | std::ios_base::binary);
-			if (!in || !out)
-				return false;
-			char buffer[256];
-			while (!in.eof()) {
-				in.read(buffer, 256);
-				out.write(buffer, in.gcount());
-			}
-			return true;
-		}
-
-		bool remove(const string &path)
-        {
-            return std::remove(path.c_str()) == 0;
-        }
-
-		bool exists(const string &path)
-		{
-			return std::ifstream(path).is_open();
-		}
-
-		bool rename(const string &source, const string &dest)
-		{
-			return std::rename(source.c_str(), dest.c_str()) == 0;
-		}
-
-        bool is_directory(const string &path)
-        {
-            return filesystem::is_directory(path);
-        }
-
-        bool is_file(const string &path)
-        {
-            return !is_directory(path);
-        }
-
-        bool can_read(const string &path)
-        {
-            return filesystem::can_read(path);
-        }
-
-        bool can_write(const string &path)
-        {
-            return filesystem::can_write(path);
-        }
-
-        bool can_execute(const string &path)
-        {
-            return filesystem::can_execute(path);
-        }
-
-        bool mkdir(const string &path)
-        {
-            return filesystem::mkdir_recursive(path, 0755);
-        }
-
-        bool mkdir_parent(const string &path)
-        {
-            return filesystem::mkdir_parent(path, 0755);
-        }
-
-        bool chmod(const string &path, const string &mode)
-        {
-            return filesystem::chmod_impl(path, parse_mode(mode));
-        }
-
-        bool chmod_recursive(const string &path, const string &mode)
-        {
-            return filesystem::chmod_recursive(path, parse_mode(mode));
-        }
-
 		void init()
 		{
+			using namespace cs_impl::file_system;
 			(*file_ext)
 			.add_var("copy", make_cni(copy))
 			.add_var("remove", make_cni(remove))
 			.add_var("exists", make_cni(exists))
-			.add_var("rename", make_cni(rename))
-			.add_var("is_file", make_cni(is_file))
-			.add_var("is_directory", make_cni(is_directory))
+			.add_var("rename", make_cni(move))
+			.add_var("is_file", make_cni([](const std::string& path) {
+				return !is_dir(path);
+			}))
+			.add_var("is_directory", make_cni(is_dir))
 			.add_var("can_read", make_cni(can_read))
 			.add_var("can_write", make_cni(can_write))
-            .add_var("can_execute", make_cni(can_execute))
-            .add_var("mkdir", make_cni(mkdir))
-            .add_var("mkdir_parent", make_cni(mkdir_parent))
-            .add_var("chmod", make_cni(chmod))
-            .add_var("chmod_r", make_cni(chmod_recursive));
+			.add_var("can_execute", make_cni(can_execute))
+			.add_var("mkdir", make_cni(mkdir))
+			.add_var("mkdir_p", make_cni(mkdir_p))
+			.add_var("chmod", make_cni(chmod))
+			.add_var("chmod_r", make_cni(chmod_r));
 		}
 	}
 
@@ -1275,9 +1185,10 @@ namespace cs_impl {
 			return str;
 		}
 
-		void exit(number code)
+		void exit(number exit_code)
 		{
-			std::exit(code);
+			int code = exit_code;
+			current_process->on_process_exit.touch(&code);
 		}
 
 		void init()
@@ -1294,10 +1205,10 @@ namespace cs_impl {
 			.add_var("run", make_cni(run))
 			.add_var("getenv", make_cni(getenv))
 			.add_var("exit", make_cni(exit))
-			.add_var("is_platform_windows", make_cni(os::is_platform_windows))
-			.add_var("is_platform_linux", make_cni(os::is_platform_linux))
-			.add_var("is_platform_darwin", make_cni(os::is_platform_darwin))
-			.add_var("is_platform_unix", make_cni(os::is_platform_unix));
+			.add_var("is_platform_windows", make_cni(platform::is_platform_win32))
+			.add_var("is_platform_linux", make_cni(platform::is_platform_linux))
+			.add_var("is_platform_darwin", make_cni(platform::is_platform_darwin))
+			.add_var("is_platform_unix", make_cni(platform::is_platform_unix));
 		}
 	}
 

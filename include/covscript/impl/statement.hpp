@@ -520,10 +520,14 @@ namespace cs {
 		statement_function() = delete;
 
 #ifdef CS_DEBUGGER
-		statement_function(std::string name, std::string decl, const std::vector<std::string> &args,
-		                   const std::deque<statement_base *> &body, bool is_override, bool is_vargs, const context_t &c,
+
+		statement_function(std::string name, const std::string &decl, const std::vector<std::string> &args,
+		                   const std::deque<statement_base *> &body, bool is_override, bool is_vargs,
+		                   const context_t &c,
 		                   token_base *ptr)
-			: statement_base(c, ptr), mName(std::move(name)), mFunc(c, decl, this, args, body, is_vargs), mOverride(is_override), mDecl(decl), mArgs(args), mBlock(body) {}
+			: statement_base(c, ptr), mName(std::move(name)), mFunc(c, decl, this, args, body, is_vargs),
+			  mOverride(is_override), mDecl(decl), mArgs(args), mBlock(body) {}
+
 #else
 
 		statement_function(std::string name, const std::vector<std::string> &args,
@@ -553,10 +557,12 @@ namespace cs {
 		void dump(std::ostream &) const override;
 
 #ifdef CS_DEBUGGER
-		const std::string& get_decl() const
+
+		const std::string &get_decl() const
 		{
 			return mDecl;
 		}
+
 #endif
 	};
 

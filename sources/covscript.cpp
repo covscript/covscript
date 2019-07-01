@@ -104,6 +104,19 @@ namespace cs_impl {
 }
 
 namespace cs {
+	bool process_context::on_process_exit_default_handler(void *code)
+	{
+		while (!current_process->stack.empty())
+			current_process->stack.pop_no_return();
+#ifdef CS_DEBUGGER
+		while(!current_process->stack_backtrace.empty())
+			current_process->stack_backtrace.pop_no_return();
+#endif
+		collect_garbage();
+		std::exit(*static_cast<int *>(code));
+		return true;
+	}
+
 	process_context this_process;
 	process_context *current_process = &this_process;
 
@@ -164,6 +177,8 @@ namespace cs {
 		}
 		return std::stold(str);
 	}
+
+	garbage_collector<cov::dll> extension::gc;
 
 	garbage_collector<token_base> token_base::gc;
 
@@ -454,6 +469,33 @@ namespace cs {
 		.add_buildin_var("runtime", make_namespace(cs_impl::runtime_ext))
 		.add_buildin_var("math", make_namespace(cs_impl::math_ext));
 		return context;
+	}
+
+	void collect_garbage()
+	{
+		statement_base::gc.collect();
+		method_base::gc.collect();
+		token_base::gc.collect();
+		extension::gc.collect();
+	}
+
+	void collect_garbage(context_t &context)
+	{
+		while (!current_process->stack.empty())
+			current_process->stack.pop_no_return();
+#ifdef CS_DEBUGGER
+		while(!current_process->stack_backtrace.empty())
+			current_process->stack_backtrace.pop_no_return();
+#endif
+		if (context) {
+			context->instance->storage.clear_all_data();
+			context->compiler->swap_context(nullptr);
+			context->instance->context = nullptr;
+			context->compiler = nullptr;
+			context->instance = nullptr;
+			context = nullptr;
+		}
+		collect_garbage();
 	}
 
 	cs::var eval(const context_t &context, const std::string &expr)
