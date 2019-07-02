@@ -847,12 +847,20 @@ namespace cs {
 
 	namespace dll_resources {
 		constexpr char dll_compatible_check[] = "__CS_ABI_COMPATIBLE__";
+		constexpr char dll_extension_info[] = "__CS_EXTENSION_INFO__";
 		constexpr char dll_main_entrance[] = "__CS_EXTENSION_MAIN__";
 
 		typedef int(*dll_compatible_check_t)();
 
 		typedef void(*dll_main_entrance_t)(name_space *, process_context *);
 	}
+
+	struct dll_info {
+	    unsigned int major=1, minor=0, patch=0, build=1;
+        std::string version="1.0.0.1";
+        std::string author="Anonymous";
+        std::string name="CovScript Extension";
+	};
 
 	class extension final : public name_space {
 	public:
