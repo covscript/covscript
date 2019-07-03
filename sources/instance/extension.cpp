@@ -1227,37 +1227,37 @@ namespace cs_impl {
         using namespace cs;
         using namespace cs_impl;
 
-        string name(const dll_info &info)
+        string get_name(const dll_info &info)
         {
             return info.name;
         }
 
-        string author(const dll_info &info)
+        string get_author(const dll_info &info)
         {
             return info.author;
         }
 
-        string version(const dll_info &info)
+        string get_version(const dll_info &info)
         {
             return info.version;
         }
 
-        int major(const dll_info &info)
+        int get_major(const dll_info &info)
         {
             return static_cast<int>(info.major);
         }
 
-        int minor(const dll_info &info)
+        int get_minor(const dll_info &info)
         {
             return static_cast<int>(info.minor);
         }
 
-        int patch(const dll_info &info)
+        int get_patch(const dll_info &info)
         {
             return static_cast<int>(info.patch);
         }
 
-        int build(const dll_info &info)
+        int get_build(const dll_info &info)
         {
             return static_cast<int>(info.build);
         }
@@ -1271,13 +1271,13 @@ namespace cs_impl {
         void init()
         {
             (*extension_info_ext)
-                .add_var("name", make_cni(cs_impl::extension_cs_ext::name))
-                .add_var("version", make_cni(cs_impl::extension_cs_ext::version))
-                .add_var("author", make_cni(cs_impl::extension_cs_ext::author))
-                .add_var("major", make_cni(cs_impl::extension_cs_ext::major))
-                .add_var("minor", make_cni(cs_impl::extension_cs_ext::minor))
-                .add_var("patch", make_cni(cs_impl::extension_cs_ext::patch))
-                .add_var("build", make_cni(cs_impl::extension_cs_ext::build));
+                .add_var("name", make_cni(get_name))
+                .add_var("version", make_cni(get_version))
+                .add_var("author", make_cni(get_author))
+                .add_var("major", make_cni(get_major))
+                .add_var("minor", make_cni(get_minor))
+                .add_var("patch", make_cni(get_patch))
+                .add_var("build", make_cni(get_build));
             (*extension_ext)
                 .add_var("get_extension_info", make_cni(get_extension_info));
         }
