@@ -904,6 +904,8 @@ namespace cs {
             }
 		}
 
+		dll_info get_info() const { return m_dll_info; }
+
         unsigned int get_major_version() const { return m_dll_info.major; }
 
         unsigned int get_minor_version() const { return m_dll_info.minor; }

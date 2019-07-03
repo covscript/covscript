@@ -1223,6 +1223,65 @@ namespace cs_impl {
 			.add_var("exit", make_cni(exit));
 		}
 	}
+    namespace extension_cs_ext {
+        using namespace cs;
+        using namespace cs_impl;
+
+        string name(const dll_info &info)
+        {
+            return info.name;
+        }
+
+        string author(const dll_info &info)
+        {
+            return info.author;
+        }
+
+        string version(const dll_info &info)
+        {
+            return info.version;
+        }
+
+        unsigned int major(const dll_info &info)
+        {
+            return info.major;
+        }
+
+        unsigned int minor(const dll_info &info)
+        {
+            return info.minor;
+        }
+
+        unsigned int patch(const dll_info &info)
+        {
+            return info.patch;
+        }
+
+        unsigned int build(const dll_info &info)
+        {
+            return info.build;
+        }
+
+        dll_info get_extension_info(const std::string &path)
+        {
+            cs::extension extension(path);
+            return extension.get_info();
+        }
+
+        void init()
+        {
+            (*extension_info_ext)
+                .add_var("name", make_cni(name))
+                .add_var("version", make_cni(version))
+                .add_var("author", make_cni(author))
+                .add_var("major", make_cni(major))
+                .add_var("minor", make_cni(minor))
+                .add_var("patch", make_cni(patch))
+                .add_var("build", make_cni(build));
+            (*extension_ext)
+                .add_var("get_extension_info", make_cni(get_extension_info));
+        }
+    }
 
 	static bool extensions_initiator = true;
 
@@ -1237,6 +1296,7 @@ namespace cs_impl {
 			system_cs_ext::init();
 			runtime_cs_ext::init();
 			math_cs_ext::init();
+			extension_cs_ext::init();
 #endif
 			except_cs_ext::init();
 			char_cs_ext::init();
