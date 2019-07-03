@@ -1242,24 +1242,24 @@ namespace cs_impl {
             return info.version;
         }
 
-        unsigned int major(const dll_info &info)
+        int major(const dll_info &info)
         {
-            return info.major;
+            return static_cast<int>(info.major);
         }
 
-        unsigned int minor(const dll_info &info)
+        int minor(const dll_info &info)
         {
-            return info.minor;
+            return static_cast<int>(info.minor);
         }
 
-        unsigned int patch(const dll_info &info)
+        int patch(const dll_info &info)
         {
-            return info.patch;
+            return static_cast<int>(info.patch);
         }
 
-        unsigned int build(const dll_info &info)
+        int build(const dll_info &info)
         {
-            return info.build;
+            return static_cast<int>(info.build);
         }
 
         dll_info get_extension_info(const std::string &path)

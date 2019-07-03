@@ -859,14 +859,14 @@ namespace cs {
 
 		using dll_compatible_check_t = int(*)();
 
-		using dll_extension_info_t = dll_info(*)();
+		using dll_extension_info_t = dll_info*(*)();
 
 		using dll_main_entrance_t = void(*)(name_space *, process_context *);
 	}
 
 	class extension final : public name_space {
     private:
-	    dll_info m_dll_info;
+	    dll_info *m_dll_info;
 
 	public:
 		static garbage_collector<cov::dll> gc;
@@ -904,21 +904,21 @@ namespace cs {
             }
 		}
 
-		dll_info get_info() const { return m_dll_info; }
+		dll_info get_info() const { return *m_dll_info; }
 
-        unsigned int get_major_version() const { return m_dll_info.major; }
+        unsigned int get_major_version() const { return m_dll_info->major; }
 
-        unsigned int get_minor_version() const { return m_dll_info.minor; }
+        unsigned int get_minor_version() const { return m_dll_info->minor; }
 
-        unsigned int get_patch_version() const { return m_dll_info.patch; }
+        unsigned int get_patch_version() const { return m_dll_info->patch; }
 
-        unsigned int get_build_version() const { return m_dll_info.build; }
+        unsigned int get_build_version() const { return m_dll_info->build; }
 
-        const std::string& get_version() const { return m_dll_info.version; }
+        const std::string& get_version() const { return m_dll_info->version; }
 
-        const std::string& get_name() const { return m_dll_info.name; }
+        const std::string& get_name() const { return m_dll_info->name; }
 
-        const std::string& get_author() const { return m_dll_info.author; }
+        const std::string& get_author() const { return m_dll_info->author; }
 	};
 
 	var make_namespace(const namespace_t &);
