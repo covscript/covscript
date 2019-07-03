@@ -1271,13 +1271,13 @@ namespace cs_impl {
         void init()
         {
             (*extension_info_ext)
-                .add_var("name", make_cni(name))
-                .add_var("version", make_cni(version))
-                .add_var("author", make_cni(author))
-                .add_var("major", make_cni(major))
-                .add_var("minor", make_cni(minor))
-                .add_var("patch", make_cni(patch))
-                .add_var("build", make_cni(build));
+                .add_var("name", make_cni(cs_impl::extension_cs_ext::name))
+                .add_var("version", make_cni(cs_impl::extension_cs_ext::version))
+                .add_var("author", make_cni(cs_impl::extension_cs_ext::author))
+                .add_var("major", make_cni(cs_impl::extension_cs_ext::major))
+                .add_var("minor", make_cni(cs_impl::extension_cs_ext::minor))
+                .add_var("patch", make_cni(cs_impl::extension_cs_ext::patch))
+                .add_var("build", make_cni(cs_impl::extension_cs_ext::build));
             (*extension_ext)
                 .add_var("get_extension_info", make_cni(get_extension_info));
         }
