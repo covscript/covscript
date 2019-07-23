@@ -1223,65 +1223,6 @@ namespace cs_impl {
 			.add_var("exit", make_cni(exit));
 		}
 	}
-    namespace extension_cs_ext {
-        using namespace cs;
-        using namespace cs_impl;
-
-        string name(const dll_info &info)
-        {
-            return info.name;
-        }
-
-        string author(const dll_info &info)
-        {
-            return info.author;
-        }
-
-        string version(const dll_info &info)
-        {
-            return info.version;
-        }
-
-        int major(const dll_info &info)
-        {
-            return static_cast<int>(info.major);
-        }
-
-        int minor(const dll_info &info)
-        {
-            return static_cast<int>(info.minor);
-        }
-
-        int patch(const dll_info &info)
-        {
-            return static_cast<int>(info.patch);
-        }
-
-        int build(const dll_info &info)
-        {
-            return static_cast<int>(info.build);
-        }
-
-        dll_info get_extension_info(const std::string &path)
-        {
-            cs::extension extension(path);
-            return extension.get_info();
-        }
-
-        void init()
-        {
-            (*extension_info_ext)
-                .add_var("name", make_cni(cs_impl::extension_cs_ext::name))
-                .add_var("version", make_cni(cs_impl::extension_cs_ext::version))
-                .add_var("author", make_cni(cs_impl::extension_cs_ext::author))
-                .add_var("major", make_cni(cs_impl::extension_cs_ext::major))
-                .add_var("minor", make_cni(cs_impl::extension_cs_ext::minor))
-                .add_var("patch", make_cni(cs_impl::extension_cs_ext::patch))
-                .add_var("build", make_cni(cs_impl::extension_cs_ext::build));
-            (*extension_ext)
-                .add_var("get_extension_info", make_cni(get_extension_info));
-        }
-    }
 
 	static bool extensions_initiator = true;
 
@@ -1296,7 +1237,6 @@ namespace cs_impl {
 			system_cs_ext::init();
 			runtime_cs_ext::init();
 			math_cs_ext::init();
-			extension_cs_ext::init();
 #endif
 			except_cs_ext::init();
 			char_cs_ext::init();

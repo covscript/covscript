@@ -845,29 +845,16 @@ namespace cs {
 		}
 	};
 
-    struct dll_info {
-        unsigned int major=1, minor=0, patch=0, build=1;
-        std::string version="1.0.0.1";
-        std::string author="Anonymous(No Author Provided)";
-        std::string name="CovScript Extension(No Name Provided)";
-    };
-
 	namespace dll_resources {
 		constexpr char dll_compatible_check[] = "__CS_ABI_COMPATIBLE__";
-		constexpr char dll_extension_info[] = "__CS_EXTENSION_INFO__";
 		constexpr char dll_main_entrance[] = "__CS_EXTENSION_MAIN__";
 
-		using dll_compatible_check_t = int(*)();
+		typedef int(*dll_compatible_check_t)();
 
-		using dll_extension_info_t = dll_info*(*)();
-
-		using dll_main_entrance_t = void(*)(name_space *, process_context *);
+		typedef void(*dll_main_entrance_t)(name_space *, process_context *);
 	}
 
 	class extension final : public name_space {
-    private:
-	    dll_info *m_dll_info;
-
 	public:
 		static garbage_collector<cov::dll> gc;
 
@@ -880,45 +867,18 @@ namespace cs {
 			using namespace dll_resources;
 			cov::dll *dll = new cov::dll(path);
 			gc.add(dll);
-
-			auto dll_check = reinterpret_cast<dll_compatible_check_t>(dll->get_address(dll_compatible_check));
-			if (dll_check == nullptr || dll_check() != COVSCRIPT_ABI_VERSION) {
-                throw runtime_error("Incompatible Covariant Script Extension.(Target: " + std::to_string(dll_check()) +
-                                    ", Current: " + std::to_string(COVSCRIPT_ABI_VERSION) + ")");
-            }
-
-			auto dll_info_t = reinterpret_cast<dll_extension_info_t>(dll->get_address(dll_extension_info));
-			if (dll_info_t != nullptr) {
-                m_dll_info = dll_info_t();
-			} else {
-			    // for backward compatibility
-			    //throw runtime_error(std::string("Incomplete Covariant Script Extension due to the lack of ")
-                //                    + dll_extension_info);
-			}
-
-			auto dll_main = reinterpret_cast<dll_main_entrance_t>(dll->get_address(dll_main_entrance));
+			dll_compatible_check_t dll_check = reinterpret_cast<dll_compatible_check_t>(dll->get_address(
+			                                       dll_compatible_check));
+			if (dll_check == nullptr || dll_check() != COVSCRIPT_ABI_VERSION)
+				throw runtime_error("Incompatible Covariant Script Extension.(Target: " + std::to_string(dll_check()) +
+				                    ", Current: " + std::to_string(COVSCRIPT_ABI_VERSION) + ")");
+			dll_main_entrance_t dll_main = reinterpret_cast<dll_main_entrance_t>(dll->get_address(dll_main_entrance));
 			if (dll_main != nullptr) {
 				dll_main(this, current_process);
-			} else {
-                throw runtime_error("Broken Covariant Script Extension.");
-            }
+			}
+			else
+				throw runtime_error("Broken Covariant Script Extension.");
 		}
-
-		dll_info get_info() const { return *m_dll_info; }
-
-        unsigned int get_major_version() const { return m_dll_info->major; }
-
-        unsigned int get_minor_version() const { return m_dll_info->minor; }
-
-        unsigned int get_patch_version() const { return m_dll_info->patch; }
-
-        unsigned int get_build_version() const { return m_dll_info->build; }
-
-        const std::string& get_version() const { return m_dll_info->version; }
-
-        const std::string& get_name() const { return m_dll_info->name; }
-
-        const std::string& get_author() const { return m_dll_info->author; }
 	};
 
 	var make_namespace(const namespace_t &);

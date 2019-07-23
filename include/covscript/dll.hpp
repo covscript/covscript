@@ -21,15 +21,6 @@
 */
 #include <covscript/impl/extension.hpp>
 
-static cs::dll_info __cs_dll_info__;
-
-namespace cs {
-    void set_extension_info(const dll_info& info)
-    {
-        __cs_dll_info__=info;
-    }
-}
-
 void cs_extension_main(cs::name_space *);
 
 extern "C"
@@ -38,10 +29,6 @@ extern "C"
 	{
 		return COVSCRIPT_ABI_VERSION;
 	}
-    cs::dll_info *__CS_EXTENSION_INFO__()
-    {
-        return &__cs_dll_info__;
-    }
 	void __CS_EXTENSION_MAIN__(cs::name_space *ext, cs::process_context *context)
 	{
 		cs_impl::init_extensions();
