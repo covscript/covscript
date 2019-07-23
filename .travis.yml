@@ -49,7 +49,7 @@ script:
   - mkdir lib
   - cp *.a ./lib
   - cd ../tests
-  - export CS_DEV_PATH=../build
+  - export CS_DEV_PATH=../../../build
   - ../build/cs -i ../examples ../examples/csbuild.csc check
   - ../build/cs -i ../examples ../examples/csbuild.csc generate
   - ../build/cs -i ../examples ../examples/csbuild.csc make
