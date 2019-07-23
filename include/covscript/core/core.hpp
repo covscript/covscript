@@ -583,7 +583,7 @@ namespace cs {
 
 		bool operator!=(const range_iterator &it) const
 		{
-			return m_index != it.m_index || m_step != it.m_step;
+			return m_index < it.m_index;
 		}
 
 		range_iterator &operator++()

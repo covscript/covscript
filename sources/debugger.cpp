@@ -230,6 +230,7 @@ std::string path;
 cs::context_t context;
 std::ofstream log_stream;
 
+bool quit_sig = false;
 bool exec_by_step = false;
 std::size_t current_level = 0;
 bool step_into_function = false;
@@ -273,16 +274,20 @@ bool covscript_debugger()
 			return func_map.call(func, args);
 		}
 		catch (const std::exception &e) {
-			if (!log_path.empty()) {
-				if (!log_stream.is_open())
-					log_stream.open(::log_path);
-				if (log_stream)
-					log_stream << e.what() << std::endl;
-				else
-					std::cerr << "Write log failed." << std::endl;
+			if (context.get() == nullptr) {
+				if (!log_path.empty()) {
+					if (!log_stream.is_open())
+						log_stream.open(::log_path);
+					if (log_stream)
+						log_stream << e.what() << std::endl;
+					else
+						std::cerr << "Write log failed." << std::endl;
+				}
+				std::cerr << e.what() << std::endl;
+				return true;
 			}
-			std::cerr << e.what() << std::endl;
-			return true;
+			else
+				throw;
 		}
 	}
 }
@@ -400,8 +405,12 @@ void covscript_main(int args_size, const char *args[])
 				        << std::endl;
 				while (!cs_impl::conio::kbhit());
 				switch (std::tolower(cs_impl::conio::getch())) {
-				case 'y':
+				case 'y': {
+					quit_sig = true;
+					int code = 0;
+					cs::current_process->on_process_exit.touch(&code);
 					return false;
+				}
 				default:
 					return true;
 				}
@@ -560,7 +569,7 @@ void covscript_main(int args_size, const char *args[])
 			          << cs::current_process->exit_code << ", up to " << time() - start_time << "ms."
 			          << std::endl;
 			reset_status();
-			return true;
+			return !quit_sig;
 		});
 		func_map.add_func("print", "p", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
