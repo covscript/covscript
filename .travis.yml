@@ -56,7 +56,7 @@ script:
   - ./build/cs examples/benchmark.csc
   - ./build/cs -i build tests/extension.csc
   - ./build/test-covscript tests/function_invoker.csc
-  - export CS_DEV_PATH="$(echo 'runtime.get_current_dir()' | ./cs_repl -s)"/build
+  - export CS_DEV_PATH="$(echo 'runtime.get_current_dir()' | ./build/cs_repl -s)"/build
   - cd tests
   - ../build/cs -i ../examples ../examples/csbuild.csc check
   - ../build/cs -i ../examples ../examples/csbuild.csc generate
