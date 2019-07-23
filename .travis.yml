@@ -48,9 +48,8 @@ script:
   - cp -r ../include .
   - mkdir lib
   - cp *.a ./lib
-  - CURR_PATH="$(echo \"runtime.get_current_dir()\" | ./build/cs_repl -s)"
-  - export CS_DEV_PATH=$CURR_PATH/build
-  - cd tests
+  - export CS_DEV_PATH="$(echo 'runtime.get_current_dir()' | ./cs_repl -s)"
+  - cd ../tests
   - ../build/cs -i ../examples ../examples/csbuild.csc check
   - ../build/cs -i ../examples ../examples/csbuild.csc generate
   - ../build/cs -i ../examples ../examples/csbuild.csc make
