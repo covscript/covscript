@@ -8,7 +8,10 @@ jobs:
         - mkdir build
         - cd build
         - cmake -G "Unix Makefiles" ..
-        - cmake --build . -- -j4
+        - cmake --build . -- -j8
+        - cp -r ../include .
+        - mkdir lib
+        - cp *.a ./lib
         - cd ..
     - os: linux
       dist: xenial
@@ -17,7 +20,10 @@ jobs:
         - mkdir build
         - cd build
         - cmake -G "Unix Makefiles" ..
-        - cmake --build . -- -j4
+        - cmake --build . -- -j8
+        - cp -r ../include .
+        - mkdir lib
+        - cp *.a ./lib
         - cd ..
     - os: osx
       osx_image: xcode10
@@ -25,7 +31,10 @@ jobs:
         - mkdir build
         - cd build
         - cmake -G "Unix Makefiles" ..
-        - cmake --build . -- -j4
+        - cmake --build . -- -j8
+        - cp -r ../include .
+        - mkdir lib
+        - cp *.a ./lib
         - cd ..
     - os: windows
       install:
@@ -34,6 +43,9 @@ jobs:
         - cmake -G "Visual Studio 15 2017 Win64" ..
         - cmake --build . --config MinSizeRel
         - cp ./MinSizeRel/* .
+        - cp -r ../include .
+        - mkdir lib
+        - cp *.lib ./lib
         - cd ..
 script:
   - ./build/cs -v
@@ -44,12 +56,8 @@ script:
   - ./build/cs examples/benchmark.csc
   - ./build/cs -i build tests/extension.csc
   - ./build/test-covscript tests/function_invoker.csc
-  - cd build
-  - cp -r ../include .
-  - mkdir lib
-  - cp *.a ./lib
-  - export CS_DEV_PATH="$(echo 'runtime.get_current_dir()' | ./cs_repl -s)"
-  - cd ../tests
+  - export CS_DEV_PATH="$(echo 'runtime.get_current_dir()' | ./cs_repl -s)"/build
+  - cd tests
   - ../build/cs -i ../examples ../examples/csbuild.csc check
   - ../build/cs -i ../examples ../examples/csbuild.csc generate
   - ../build/cs -i ../examples ../examples/csbuild.csc make
