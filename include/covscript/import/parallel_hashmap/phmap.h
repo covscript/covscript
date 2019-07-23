@@ -36,7 +36,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cstdint>
 #include <cstring>
 #include <iterator>
 #include <limits>
@@ -45,10 +44,9 @@
 #include <type_traits>
 #include <utility>
 #include <array>
-#include <functional>
 #include <cassert>
 
-#include "phmap_bits.h"
+#include "phmap_utils.h"
 #include "phmap_base.h"
 #include "phmap_fwd_decl.h"
 
@@ -57,244 +55,6 @@
 #endif
 
 namespace phmap {
-
-// ---------------------------------------------------------------
-// ---------------------------------------------------------------
-	template<int n>
-	struct phmap_mix {
-		inline size_t operator()(size_t) const;
-	};
-
-	template<>
-	struct phmap_mix<4> {
-		inline size_t operator()(size_t a) const
-		{
-			static constexpr uint64_t kmul = 0xcc9e2d51UL;
-			// static constexpr uint64_t kmul = 0x3B9ACB93UL; // [greg] my own random prime
-			uint64_t l = a * kmul;
-			return static_cast<size_t>(l ^ (l >> 32));
-		}
-	};
-
-#if defined(PHMAP_HAS_UMUL128)
-
-	template<>
-	struct phmap_mix<8> {
-		// Very fast mixing (similar to Abseil)
-		inline size_t operator()(size_t a) const
-		{
-			static constexpr uint64_t k = 0xde5fb9d2630458e9ULL;
-			// static constexpr uint64_t k = 0x7C9D0BF0567102A5ULL; // [greg] my own random prime
-			uint64_t h;
-			uint64_t l = umul128(a, k, &h);
-			return static_cast<size_t>(h + l);
-		}
-	};
-
-#else
-	template<>
-	struct phmap_mix<8> {
-		inline size_t operator()(size_t a) const
-		{
-			a = (~a) + (a << 21); // a = (a << 21) - a - 1;
-			a = a ^ (a >> 24);
-			a = (a + (a << 3)) + (a << 8); // a * 265
-			a = a ^ (a >> 14);
-			a = (a + (a << 2)) + (a << 4); // a * 21
-			a = a ^ (a >> 28);
-			a = a + (a << 31);
-			return static_cast<size_t>(a);
-		}
-	};
-#endif
-
-// --------------------------------------------
-	template<int n>
-	struct fold_if_needed {
-		inline size_t operator()(uint64_t) const;
-	};
-
-	template<>
-	struct fold_if_needed<4> {
-		inline size_t operator()(uint64_t a) const
-		{
-			return static_cast<size_t>(a ^ (a >> 32));
-		}
-	};
-
-	template<>
-	struct fold_if_needed<8> {
-		inline size_t operator()(uint64_t a) const
-		{
-			return static_cast<size_t>(a);
-		}
-	};
-
-// ---------------------------------------------------------------
-// see if class T has a hash_value() friend method
-// ---------------------------------------------------------------
-	template<typename T>
-	struct has_hash_value {
-	private:
-		typedef std::true_type yes;
-		typedef std::false_type no;
-
-		template<typename U>
-		static auto test(int) -> decltype(hash_value(std::declval<U &>()) == 1, yes());
-
-		template<typename>
-		static no test(...);
-
-	public:
-		static constexpr bool value = std::is_same<decltype(test<T>(0)), yes>::value;
-	};
-
-// ---------------------------------------------------------------
-//               phmap::Hash
-// ---------------------------------------------------------------
-	template<class T>
-	struct Hash {
-		template<class U, typename std::enable_if<has_hash_value<U>::value, int>::type = 0>
-		size_t _hash(const T &val) const
-		{
-			return hash_value(val);
-		}
-
-		template<class U, typename std::enable_if<!has_hash_value<U>::value, int>::type = 0>
-		size_t _hash(const T &val) const {
-			return std::hash<T>()(val);
-		}
-
-		inline size_t operator()(const T &val) const
-		{
-			return _hash<T>(val);
-		}
-	};
-
-	template<class T>
-	struct Hash<T *> {
-		inline size_t operator()(const T *val) const noexcept
-		{
-			return static_cast<size_t>(reinterpret_cast<const uintptr_t>(val));
-		}
-	};
-
-	template<class ArgumentType, class ResultType>
-	struct phmap_unary_function {
-		typedef ArgumentType argument_type;
-		typedef ResultType result_type;
-	};
-
-	template<>
-	struct Hash<bool> : public phmap_unary_function<bool, size_t> {
-		inline size_t operator()(bool val) const noexcept
-		{
-			return static_cast<size_t>(val);
-		}
-	};
-
-	template<>
-	struct Hash<char> : public phmap_unary_function<char, size_t> {
-		inline size_t operator()(char val) const noexcept
-		{
-			return static_cast<size_t>(val);
-		}
-	};
-
-	template<>
-	struct Hash<signed char> : public phmap_unary_function<signed char, size_t> {
-		inline size_t operator()(signed char val) const noexcept
-		{
-			return static_cast<size_t>(val);
-		}
-	};
-
-	template<>
-	struct Hash<unsigned char> : public phmap_unary_function<unsigned char, size_t> {
-		inline size_t operator()(unsigned char val) const noexcept
-		{
-			return static_cast<size_t>(val);
-		}
-	};
-
-	template<>
-	struct Hash<wchar_t> : public phmap_unary_function<wchar_t, size_t> {
-		inline size_t operator()(wchar_t val) const noexcept
-		{
-			return static_cast<size_t>(val);
-		}
-	};
-
-	template<>
-	struct Hash<int16_t> : public phmap_unary_function<int16_t, size_t> {
-		inline size_t operator()(int16_t val) const noexcept
-		{
-			return static_cast<size_t>(val);
-		}
-	};
-
-	template<>
-	struct Hash<uint16_t> : public phmap_unary_function<uint16_t, size_t> {
-		inline size_t operator()(uint16_t val) const noexcept
-		{
-			return static_cast<size_t>(val);
-		}
-	};
-
-	template<>
-	struct Hash<int32_t> : public phmap_unary_function<int32_t, size_t> {
-		inline size_t operator()(int32_t val) const noexcept
-		{
-			return static_cast<size_t>(val);
-		}
-	};
-
-	template<>
-	struct Hash<uint32_t> : public phmap_unary_function<uint32_t, size_t> {
-		inline size_t operator()(uint32_t val) const noexcept
-		{
-			return static_cast<size_t>(val);
-		}
-	};
-
-	template<>
-	struct Hash<int64_t> : public phmap_unary_function<int64_t, size_t> {
-		inline size_t operator()(int64_t val) const noexcept
-		{
-			return fold_if_needed<sizeof(size_t)>()(static_cast<uint64_t>(val));
-		}
-	};
-
-	template<>
-	struct Hash<uint64_t> : public phmap_unary_function<uint64_t, size_t> {
-		inline size_t operator()(uint64_t val) const noexcept
-		{
-			return fold_if_needed<sizeof(size_t)>()(val);
-		}
-	};
-
-	template<>
-	struct Hash<float> : public phmap_unary_function<float, size_t> {
-		inline size_t operator()(float val) const noexcept
-		{
-			// -0.0 and 0.0 should return same hash
-			uint32_t *as_int = reinterpret_cast<uint32_t *>(&val);
-			return (val == 0) ? static_cast<size_t>(0) :
-			       static_cast<size_t>(*as_int);
-		}
-	};
-
-	template<>
-	struct Hash<double> : public phmap_unary_function<double, size_t> {
-		inline size_t operator()(double val) const noexcept
-		{
-			// -0.0 and 0.0 should return same hash
-			uint64_t *as_int = reinterpret_cast<uint64_t *>(&val);
-			return (val == 0) ? static_cast<size_t>(0) :
-			       fold_if_needed<sizeof(size_t)>()(*as_int);
-		}
-	};
-
 
 	namespace container_internal {
 
@@ -2742,6 +2502,8 @@ namespace phmap {
 			using KeyArgImpl =
 			    KeyArg<IsTransparent<Eq>::value && IsTransparent<Hash>::value>;
 
+			using Base = raw_hash_set<Policy, Hash, Eq, Alloc>;
+
 		public:
 			using key_type = typename Policy::key_type;
 			using mapped_type = typename Policy::mapped_type;
@@ -2758,7 +2520,7 @@ namespace phmap {
 
 			raw_hash_map() {}
 
-			using raw_hash_map::raw_hash_set::raw_hash_set;
+			using Base::raw_hash_set; // use raw_hash_set constructor
 
 			// The last two template parameters ensure that both arguments are rvalues
 			// (lvalue arguments are handled by the overloads below). This is necessary
@@ -4077,7 +3839,11 @@ namespace phmap {
 
 			parallel_hash_map() {}
 
+#ifdef __INTEL_COMPILER
+			using Base::parallel_hash_set;
+#else
 			using parallel_hash_map::parallel_hash_set::parallel_hash_set;
+#endif
 
 			// The last two template parameters ensure that both arguments are rvalues
 			// (lvalue arguments are handled by the overloads below). This is necessary
@@ -5029,7 +4795,11 @@ namespace phmap {
 	public:
 		flat_hash_set() {}
 
+#ifdef __INTEL_COMPILER
+		using Base::raw_hash_set;
+#else
 		using Base::Base;
+#endif
 		using Base::begin;
 		using Base::cbegin;
 		using Base::cend;
@@ -5089,7 +4859,11 @@ namespace phmap {
 	public:
 		flat_hash_map() {}
 
+#ifdef __INTEL_COMPILER
+		using Base::raw_hash_map;
+#else
 		using Base::Base;
+#endif
 		using Base::begin;
 		using Base::cbegin;
 		using Base::cend;
@@ -5148,7 +4922,11 @@ namespace phmap {
 	public:
 		node_hash_set() {}
 
+#ifdef __INTEL_COMPILER
+		using Base::raw_hash_set;
+#else
 		using Base::Base;
+#endif
 		using Base::begin;
 		using Base::cbegin;
 		using Base::cend;
@@ -5215,7 +4993,11 @@ namespace phmap {
 	public:
 		node_hash_map() {}
 
+#ifdef __INTEL_COMPILER
+		using Base::raw_hash_map;
+#else
 		using Base::Base;
+#endif
 		using Base::begin;
 		using Base::cbegin;
 		using Base::cend;
@@ -5274,7 +5056,11 @@ namespace phmap {
 	public:
 		parallel_flat_hash_set() {}
 
+#ifdef __INTEL_COMPILER
+		using Base::parallel_hash_set;
+#else
 		using Base::Base;
+#endif
 		using Base::hash;
 		using Base::subidx;
 		using Base::subcnt;
@@ -5321,7 +5107,11 @@ namespace phmap {
 	public:
 		parallel_flat_hash_map() {}
 
+#ifdef __INTEL_COMPILER
+		using Base::parallel_hash_map;
+#else
 		using Base::Base;
+#endif
 		using Base::hash;
 		using Base::subidx;
 		using Base::subcnt;
@@ -5372,7 +5162,11 @@ namespace phmap {
 	public:
 		parallel_node_hash_set() {}
 
+#ifdef __INTEL_COMPILER
+		using Base::parallel_hash_set;
+#else
 		using Base::Base;
+#endif
 		using Base::hash;
 		using Base::subidx;
 		using Base::subcnt;
@@ -5430,7 +5224,11 @@ namespace phmap {
 	public:
 		parallel_node_hash_map() {}
 
+#ifdef __INTEL_COMPILER
+		using Base::parallel_hash_map;
+#else
 		using Base::Base;
+#endif
 		using Base::hash;
 		using Base::subidx;
 		using Base::subcnt;

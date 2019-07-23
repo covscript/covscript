@@ -50,6 +50,12 @@
 
 #include "phmap_config.h"
 
+#ifdef PHMAP_HAVE_SHARED_MUTEX
+
+#include <shared_mutex>  // after "phmap_config.h"
+
+#endif
+
 namespace phmap {
 
 	template<class T> using Allocator = typename std::allocator<T>;
@@ -790,14 +796,18 @@ namespace phmap {
 
 		namespace {
 			template<typename T>
+#ifdef PHMAP_HAVE_EXCEPTIONS
 			[[noreturn]] void Throw(const T &error)
 			{
-#ifdef PHMAP_HAVE_EXCEPTIONS
 				throw error;
-#else
-				std::abort();
-#endif
 			}
+
+#else
+			[[noreturn]] void Throw(const T&)
+			{
+				std::abort();
+			}
+#endif
 		}  // namespace
 
 		static inline void ThrowStdLogicError(const std::string &what_arg)
@@ -1501,10 +1511,11 @@ namespace phmap {
 			using type = typename RebindFirstArg<T, U>::type;
 		};
 
-		template<typename T, typename U>
-		struct RebindAlloc<T, U, true> {
-			using type = typename T::template rebind<U>::other;
+		template<typename A, typename U>
+		struct RebindAlloc<A, U, true> {
+			using type = typename std::allocator_traits<A>::template rebind_alloc<U>;
 		};
+
 
 	}  // namespace memory_internal
 
@@ -1728,7 +1739,7 @@ namespace phmap {
 		                           Args &&... args)
 		-> decltype(a.construct(std::forward<Args>(args)...))
 		{
-			a.construct(std::forward<Args>(args)...);
+			std::allocator_traits<A>::construct(a, std::forward<Args>(args)...);
 		}
 
 		template<typename T, typename... Args>
@@ -1741,7 +1752,7 @@ namespace phmap {
 		static auto destroy_impl(int, A &a,  // NOLINT(runtime/references)
 		                         T *p) -> decltype(a.destroy(p))
 		{
-			a.destroy(p);
+			std::allocator_traits<A>::destroy(a, p);
 		}
 
 		template<typename T>
@@ -2745,7 +2756,7 @@ namespace phmap {
 		template<typename U>
 		T value_or(U &&v) && { // NOLINT(build/c++11)
 			static_assert(std::is_move_constructible<value_type>::value,
-			              "optional<T>::value_or: T must by copy constructible");
+			              "optional<T>::value_or: T must by move constructible");
 			static_assert(std::is_convertible<U &&, value_type>::value,
 			              "optional<T>::value_or: U must be convertible to T");
 			return static_cast<bool>(*this) ? std::move(**this)
@@ -4695,7 +4706,13 @@ namespace phmap {
 			template<typename T>
 			constexpr bool ShouldUseBase()
 			{
+#ifdef __INTEL_COMPILER
+				// avoid crash in Intel compiler
+				// assertion failed at: "shared/cfe/edgcpfe/lower_init.c", line 7013
+				return false;
+#else
 				return std::is_class<T>::value && std::is_empty<T>::value && !IsFinal<T>();
+#endif
 			}
 
 // The storage class provides two specializations:
@@ -5414,6 +5431,26 @@ namespace phmap {
 		using SharedLocks     = typename Base::ReadLocks;
 		using UniqueLocks     = typename Base::WriteLocks;
 		using UpgradeToUnique = boost::upgrade_to_unique_lock<mutex_type>;
+	};
+#endif
+
+// --------------------------------------------------------------------------
+//         std::shared_mutex support (read and write lock support)
+// --------------------------------------------------------------------------
+#ifdef PHMAP_HAVE_SHARED_MUTEX
+
+// ---------------------------------------------------------------------------
+	template <>
+	class  LockableImpl<std::shared_mutex> : public std::shared_mutex {
+	public:
+		using mutex_type      = std::shared_mutex;
+		using Base            = LockableBaseImpl<std::shared_mutex>;
+		using SharedLock      = std::shared_lock<mutex_type>;
+		using UpgradeLock     = std::unique_lock<mutex_type>; // assume can't upgrade
+		using UniqueLock      = std::unique_lock<mutex_type>;
+		using SharedLocks     = typename Base::ReadLocks;
+		using UniqueLocks     = typename Base::WriteLocks;
+		using UpgradeToUnique = typename Base::DoNothing;  // we already have unique ownership
 	};
 #endif
 
