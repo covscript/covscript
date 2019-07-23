@@ -44,3 +44,13 @@ script:
   - ./build/cs examples/benchmark.csc
   - ./build/cs -i build tests/extension.csc
   - ./build/test-covscript tests/function_invoker.csc
+  - cd build
+  - cp -r ../include .
+  - mkdir lib
+  - cp *.a ./lib
+  - cd ../tests
+  - export CS_DEV_PATH=../build
+  - ../build/cs -i ../examples ../examples/csbuild.csc check
+  - ../build/cs -i ../examples ../examples/csbuild.csc generate
+  - ../build/cs -i ../examples ../examples/csbuild.csc make
+  - ../build/cs -i gen/build extension.csc
