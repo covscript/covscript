@@ -101,6 +101,8 @@ namespace cs_impl {
 	cs::namespace_t path_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t path_type_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t path_info_ext = cs::make_shared_namespace<cs::name_space>();
+    cs::namespace_t extension_ext = cs::make_shared_namespace<cs::name_space>();
+    cs::namespace_t extension_info_ext = cs::make_shared_namespace<cs::name_space>();
 }
 
 namespace cs {
@@ -425,7 +427,8 @@ namespace cs {
 		.add_buildin_var("iostream", make_namespace(cs_impl::iostream_ext))
 		.add_buildin_var("system", make_namespace(cs_impl::system_ext))
 		.add_buildin_var("runtime", make_namespace(cs_impl::runtime_ext))
-		.add_buildin_var("math", make_namespace(cs_impl::math_ext));
+		.add_buildin_var("math", make_namespace(cs_impl::math_ext))
+		.add_buildin_var("extension", make_namespace(cs_impl::extension_ext));
 		return context;
 	}
 
@@ -467,7 +470,8 @@ namespace cs {
 		.add_buildin_var("iostream", make_namespace(cs_impl::iostream_ext))
 		.add_buildin_var("system", make_namespace(cs_impl::system_ext))
 		.add_buildin_var("runtime", make_namespace(cs_impl::runtime_ext))
-		.add_buildin_var("math", make_namespace(cs_impl::math_ext));
+		.add_buildin_var("math", make_namespace(cs_impl::math_ext))
+		.add_buildin_var("extension", make_namespace(cs_impl::extension_ext));
 		return context;
 	}
 

@@ -245,6 +245,8 @@ namespace cs_impl {
 	extern cs::namespace_t path_ext;
 	extern cs::namespace_t path_type_ext;
 	extern cs::namespace_t path_info_ext;
+	extern cs::namespace_t extension_ext;
+	extern cs::namespace_t extension_info_ext;
 
 	namespace path_cs_ext {
 		struct path_info final {
@@ -374,6 +376,18 @@ namespace cs_impl {
 	{
 		return "cs::system::path_info";
 	}
+
+    template<>
+    cs::namespace_t &get_ext<cs::dll_info>()
+    {
+        return extension_info_ext;
+    }
+
+    template<>
+    constexpr const char *get_name_of_type<cs::dll_info>()
+    {
+        return "cs::extension::dll_info";
+    }
 
 	void init_extensions();
 }
