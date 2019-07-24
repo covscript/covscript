@@ -3,6 +3,7 @@
 import csbuild
 
 constant VERSION = "1.0"
+var CSBUILD_RUNNING_IN_MINGW_MSYS = false
 
 constant echo = system.out.println
 constant echon = system.out.print
@@ -51,6 +52,7 @@ constant TEMPLATE_CMAKE_HEAD =
 "##############################################\n" +
 "##############################################\n" +
 "cmake_minimum_required(VERSION 3.4)\n" +
+"project(CovScriptExtension)\n" +
 "\n" +
 "include_directories(include)\n" +
 "\n" +
@@ -130,6 +132,9 @@ function fixPath(path)
         end
     end
 
+    if path[path.size() - 1] == '/' || path[path.size() - 1] == '\\'
+        path = path.substr(0, path.size() - 1)
+    end
     return path
 end
 
@@ -148,6 +153,9 @@ function csbuild_command_gate(command, args)
             # what if the source directory is named "help"?
             # we need this '--' options
             case "--"; args.pop_front(); parsing = false; end
+            case "--mingw"; args.pop_front(); CSBUILD_RUNNING_IN_MINGW_MSYS = true; end
+            case "--cygwin"; args.pop_front(); CSBUILD_RUNNING_IN_MINGW_MSYS = true; end
+            case "--msys"; args.pop_front(); CSBUILD_RUNNING_IN_MINGW_MSYS = true; end
             case "help"; echo("No help for command `" + command + "' currently :)"); return 0; end
             default; parsing = false; end
         end
@@ -259,10 +267,21 @@ function csbuild_generate_target(stream, path, target)
     var libName = target->name
 
     var cmakeCode = "# Extension Target: " + libName + "\n"
+    var sourcePath = ""
+
+    # Replace windows path separator with Linux standard path separator
+    # see: https://github.com/covscript/csbuild/issues/2
+    # see: https://stackoverflow.com/questions/13737370/cmake-error-invalid-escape-sequence-u
+    if system.is_platform_windows()
+        var parts = path.split({Path.separator})
+        foreach item in parts
+            sourcePath += item + "/"
+        end
+    end
 
     cmakeCode += "add_library(" + libName + " SHARED "
     foreach item in target->source
-        cmakeCode += path + Path.separator + item + " ";
+        cmakeCode += sourcePath + item + " ";
     end
     cmakeCode += ")\n"
 
@@ -321,6 +340,21 @@ function csbuild_make_check_envs()
     end
 end
 
+function csbuild_make_is_mingw_or_msys()
+    #if !system.is_platform_windows()
+    #    return false
+    #end
+    #
+    #try
+    #    var osType = system.getenv("OSTYPE").tolower()
+    #    echo(":: os type = " + osType)
+    #    return osType.find("msys", 0) >= 0 || osType.find("mingw", 0) >= 0 || osType.find("cygwin", 0) >= 0
+    #catch ignore
+    #    return false
+    #end
+    return CSBUILD_RUNNING_IN_MINGW_MSYS
+end
+
 function csbuild_make(path, cfg, args)
     if !csbuild_make_check_binaries()
         echo("It seems that your system lacks cmake or make. Please install them before make.")
@@ -355,7 +389,13 @@ function csbuild_make(path, cfg, args)
 
     echo(":: Building in " + buildDir)
 
-    var cmakeCommand = "cmake -H" +  genDir + " -B" + buildDir
+    var cmakeFlags = ""
+    if csbuild_make_is_mingw_or_msys()
+        echo(":: Detected we are building in MinGW/MSYS/Cygwin")
+        cmakeFlags = " -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -G \"Unix Makefiles\""
+    end
+
+    var cmakeCommand = "cmake -H" +  genDir + " -B" + buildDir + " " + cmakeFlags
     echo(":: Running command: " + cmakeCommand)
     if system.run(cmakeCommand) != 0
         echo("\n\n:: Failed: cmake")
