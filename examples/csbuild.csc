@@ -277,6 +277,8 @@ function csbuild_generate_target(stream, path, target)
         foreach item in parts
             sourcePath += item + "/"
         end
+    else
+        sourcePath = path + "/"
     end
 
     cmakeCode += "add_library(" + libName + " SHARED "
