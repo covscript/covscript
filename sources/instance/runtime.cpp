@@ -421,7 +421,12 @@ namespace cs {
 			throw internal_error("The expression tree is not available.");
 		token_base *token = it.data();
 		if (token == nullptr)
-			return var();
+        {
+		    var result;
+		    if(m_previous_result.usable())
+		        result.swap(m_previous_result);
+		    return result;
+        }
 		switch (token->get_type()) {
 		default:
 			break;
