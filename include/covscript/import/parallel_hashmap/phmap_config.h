@@ -313,6 +313,10 @@
 #define PHMAP_HAVE_STD_STRING_VIEW 1
 #endif
 
+#if (defined(_MSVC_LANG) && _MSVC_LANG >= 201402) || __cplusplus >= 201402
+#define PHMAP_HAVE_SHARED_MUTEX 1
+#endif
+
 #ifndef PHMAP_HAVE_STD_STRING_VIEW
 #define PHMAP_HAVE_STD_STRING_VIEW 0
 #endif
@@ -556,24 +560,12 @@
 #define PHMAP_ATTRIBUTE_COLD
 #endif
 
-#if PHMAP_HAVE_CPP_ATTRIBUTE(clang::xray_always_instrument) && \
-    !defined(PHMAP_NO_XRAY_ATTRIBUTES)
-#define PHMAP_XRAY_ALWAYS_INSTRUMENT [[clang::xray_always_instrument]]
-#define PHMAP_XRAY_NEVER_INSTRUMENT [[clang::xray_never_instrument]]
-#if PHMAP_HAVE_CPP_ATTRIBUTE(clang::xray_log_args)
-#define PHMAP_XRAY_LOG_ARGS(N) \
-            [[clang::xray_always_instrument, clang::xray_log_args(N)]]
-#else
-#define PHMAP_XRAY_LOG_ARGS(N) [[clang::xray_always_instrument]]
-#endif
-#else
-#define PHMAP_XRAY_ALWAYS_INSTRUMENT
-#define PHMAP_XRAY_NEVER_INSTRUMENT
-#define PHMAP_XRAY_LOG_ARGS(N)
-#endif
-
+#if defined(__clang__)
 #if PHMAP_HAVE_CPP_ATTRIBUTE(clang::reinitializes)
 #define PHMAP_ATTRIBUTE_REINITIALIZES [[clang::reinitializes]]
+#else
+#define PHMAP_ATTRIBUTE_REINITIALIZES
+#endif
 #else
 #define PHMAP_ATTRIBUTE_REINITIALIZES
 #endif
@@ -602,13 +594,6 @@
 #else
 #define PHMAP_ATTRIBUTE_FUNC_ALIGN(bytes)
 #endif
-
-#if PHMAP_HAVE_CPP_ATTRIBUTE(clang::require_constant_initialization)
-#define PHMAP_CONST_INIT [[clang::require_constant_initialization]]
-#else
-#define PHMAP_CONST_INIT
-#endif  // PHMAP_HAVE_CPP_ATTRIBUTE(clang::require_constant_initialization)
-
 
 // ----------------------------------------------------------------------
 // Figure out SSE support
