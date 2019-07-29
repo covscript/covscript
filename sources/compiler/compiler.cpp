@@ -385,9 +385,12 @@ namespace cs {
 				return;
 			case signal_types::dot_: {
 				trim_expr(tree, it.left(), do_trim);
+				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
 					throw runtime_error("Wrong grammar for dot expression.");
+				if (lptr == nullptr)
+                    it.left().data()=new token_autofill;
 				return;
 			}
 			case signal_types::fcall_: {

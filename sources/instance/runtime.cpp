@@ -421,15 +421,15 @@ namespace cs {
 			throw internal_error("The expression tree is not available.");
 		token_base *token = it.data();
 		if (token == nullptr)
-        {
-		    var result;
-		    if(m_previous_result.usable())
-		        result.swap(m_previous_result);
-		    return result;
-        }
+            return var();
 		switch (token->get_type()) {
 		default:
 			break;
+		case token_types::autofill: {
+            var result=std::move(m_previous_result);
+		    return result;
+            break;
+        }
 		case token_types::vargs:
 			throw runtime_error("Wrong declaration of variable argument list.");
 			break;
