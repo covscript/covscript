@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 trap 'onCtrlC' INT
 function onCtrlC ()
 {
