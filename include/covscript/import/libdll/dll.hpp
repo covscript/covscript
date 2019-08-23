@@ -111,7 +111,7 @@ namespace cov {
 		{
 			if (m_handle != nullptr)
 				::dlclose(m_handle);
-			m_handle = ::dlopen(path.c_str(), RTLD_NOW);
+			m_handle = ::dlopen(path.c_str(), RTLD_LAZY | RTLD_DEEPBIND);
 			if (m_handle == nullptr)
 				throw std::logic_error(::dlerror());
 		}
