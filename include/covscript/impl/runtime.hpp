@@ -252,7 +252,7 @@ namespace cs {
 	};
 
 	class runtime_type {
-	    var m_previous_result;
+		var m_previous_result;
 	public:
 		domain_manager storage;
 
@@ -331,13 +331,13 @@ namespace cs {
 		var parse_expr(const tree_type<token_base *>::iterator &);
 
 		inline void do_expression(const tree_type<token_base*> &tree)
-        {
-		    m_previous_result=parse_expr(tree.root());
-        }
+		{
+			m_previous_result=parse_expr(tree.root());
+		}
 
-        inline const var& do_expression_repl(const tree_type<token_base*> &tree)
-        {
-            return m_previous_result=parse_expr(tree.root());
-        }
+		inline const var& do_expression_repl(const tree_type<token_base*> &tree)
+		{
+			return m_previous_result=parse_expr(tree.root());
+		}
 	};
 }

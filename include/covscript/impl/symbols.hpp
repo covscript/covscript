@@ -254,21 +254,21 @@ namespace cs {
 		bool dump(std::ostream &) const override;
 	};
 
-    class token_autofill final : public token_base {
-    public:
-        token_autofill() = default;
+	class token_autofill final : public token_base {
+	public:
+		token_autofill() = default;
 
-        token_types get_type() const noexcept override
-        {
-            return token_types::autofill;
-        }
+		token_types get_type() const noexcept override
+		{
+			return token_types::autofill;
+		}
 
-        bool dump(std::ostream &o) const override
-        {
-            o << "< Auto Fill Token >";
-            return true;
-        }
-    };
+		bool dump(std::ostream &o) const override
+		{
+			o << "< Auto Fill Token >";
+			return true;
+		}
+	};
 
 	class token_id final : public token_base {
 		var_id mId;

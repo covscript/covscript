@@ -390,7 +390,7 @@ namespace cs {
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
 					throw runtime_error("Wrong grammar for dot expression.");
 				if (lptr == nullptr)
-                    it.left().data()=new token_autofill;
+					it.left().data()=new token_autofill;
 				return;
 			}
 			case signal_types::fcall_: {
