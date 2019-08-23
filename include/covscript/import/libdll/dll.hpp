@@ -83,6 +83,12 @@ namespace cov {
 
 #include <dlfcn.h>
 
+#if defined(__APPLE__) || defined(__MACH__)
+#define COVLIBDLL_DLOPEN_ARGUMENTS (RTLD_LAZY)
+#else
+#define COVLIBDLL_DLOPEN_ARGUMENTS (RTLD_LAZY | RTLD_DEEPBIND)
+#endif
+
 namespace cov {
 	class dll final {
 		void *m_handle = nullptr;
@@ -111,7 +117,7 @@ namespace cov {
 		{
 			if (m_handle != nullptr)
 				::dlclose(m_handle);
-			m_handle = ::dlopen(path.c_str(), RTLD_LAZY | RTLD_DEEPBIND);
+			m_handle = ::dlopen(path.c_str(), COVLIBDLL_DLOPEN_ARGUMENTS);
 			if (m_handle == nullptr)
 				throw std::logic_error(::dlerror());
 		}
