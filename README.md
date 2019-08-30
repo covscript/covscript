@@ -93,6 +93,8 @@ The [examples](./examples) folder contains several example programs written by C
 ## Copyright ##
 **The author of the Covariant Script Programming Language is [@mikecovlee](https://github.com/mikecovlee/).**  
 **Copyright © 2019 Michael Lee**
+## By me a coffee #
+![](https://github.com/covscript/covscript/raw/master/docs/Donation.png)
 ## Thanks ##
 **Ordered by contribution.**  
 + Consultant: [@ice1000](https://github.com/ice1000/), [@imkiva](https://github.com/imkiva/)
