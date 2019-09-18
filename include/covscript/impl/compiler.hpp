@@ -301,17 +301,13 @@ namespace cs {
 			return false;
 		}
 
-        enum class trim_type {
-            normal, no_expr_fold, no_this_deduce
-        };
-
 		void kill_brackets(std::deque<token_base *> &, std::size_t= 1);
 
 		void split_token(std::deque<token_base *> &raw, std::deque<token_base *> &, std::deque<token_base *> &);
 
 		void build_tree(tree_type<token_base *> &, std::deque<token_base *> &, std::deque<token_base *> &);
 
-		void gen_tree(tree_type<token_base *> &, std::deque<token_base *> &, trim_type=trim_type::normal);
+		void gen_tree(tree_type<token_base *> &, std::deque<token_base *> &);
 
 		void kill_expr(std::deque<token_base *> &);
 
@@ -338,12 +334,16 @@ namespace cs {
 			trim_expr(tree, tree.root(), trim_type::normal);
 		}
 
-		void optimize_expression(tree_type<token_base *> &tree, trim_type do_trim=trim_type::normal)
+		void optimize_expression(tree_type<token_base *> &tree)
 		{
-			trim_expr(tree, tree.root(), do_trim);
+			trim_expr(tree, tree.root(), trim_type::normal);
 			if (!disable_optimizer && !no_optimize)
 				opt_expr(tree, tree.root());
 		}
+
+		enum class trim_type {
+			normal, no_expr_fold, no_this_deduce
+		};
 
 		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, trim_type);
 
