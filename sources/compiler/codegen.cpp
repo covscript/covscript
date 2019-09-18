@@ -420,6 +420,7 @@ namespace cs {
 		for (auto &it:static_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
 			if (it.root().data() == nullptr)
 				throw internal_error("Null pointer accessed.");
+            context->compiler->try_fix_this_deduction(it.root());
 			if (it.root().data()->get_type() == token_types::id) {
 				const std::string &str = static_cast<token_id *>(it.root().data())->get_id();
 				for (auto &it:args)

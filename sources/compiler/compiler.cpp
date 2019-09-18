@@ -20,6 +20,7 @@
 */
 #include <covscript/impl/compiler.hpp>
 #include <covscript/impl/codegen.hpp>
+#include <iostream>
 
 namespace cs {
 	bool token_signal::dump(std::ostream &o) const
@@ -438,6 +439,7 @@ namespace cs {
 				for (auto &it:static_cast<token_arglist *>(lptr)->get_arglist()) {
 					if (it.root().data() == nullptr)
 						throw internal_error("Null pointer accessed.");
+					try_fix_this_deduction(it.root());
 					if (it.root().data()->get_type() == token_types::id) {
 						const std::string &str = static_cast<token_id *>(it.root().data())->get_id();
 						for (auto &it:args)
@@ -703,6 +705,19 @@ namespace cs {
 				it.data() = oldt;
 			}
 		}
+	}
+
+	void compiler_type::try_fix_this_deduction(cs::tree_type<cs::token_base *>::iterator it) {
+        if (!it.usable())
+            return;
+        token_signal *sig = dynamic_cast<token_signal*>(it.data());
+        if (sig == nullptr || sig->get_signal() != signal_types::dot_)
+            return;
+        token_id *id = dynamic_cast<token_id*>(it.left().data());
+        if (id == nullptr || id->get_id().get_id() != "this")
+            return;
+        it.data() = it.right().data();
+        std::cout<<"Fixed: "<< dynamic_cast<token_id*>(it.data())->get_id().get_id() <<std::endl;
 	}
 
 	void compiler_type::dump_expr(tree_type<token_base *>::iterator it, std::ostream &stream)

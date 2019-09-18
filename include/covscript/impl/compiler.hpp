@@ -350,6 +350,8 @@ namespace cs {
 		void opt_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator);
 
 	public:
+        void try_fix_this_deduction(tree_type<token_base *>::iterator);
+
 		compiler_type() = delete;
 
 		explicit compiler_type(context_t c) : context(std::move(c)) {}
