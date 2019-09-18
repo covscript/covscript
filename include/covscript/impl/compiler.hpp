@@ -329,9 +329,13 @@ namespace cs {
 			return false;
 		}
 
-		void trim_expression(tree_type<token_base *> &tree)
+		enum class trim_type {
+			normal, no_expr_fold, no_this_deduce
+		};
+
+		void trim_expression(tree_type<token_base *> &tree, trim_type do_trim=trim_type::normal)
 		{
-			trim_expr(tree, tree.root(), trim_type::normal);
+			trim_expr(tree, tree.root(), do_trim);
 		}
 
 		void optimize_expression(tree_type<token_base *> &tree)
@@ -341,16 +345,14 @@ namespace cs {
 				opt_expr(tree, tree.root());
 		}
 
-		enum class trim_type {
-			normal, no_expr_fold, no_this_deduce
-		};
-
 		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, trim_type);
+
+		void try_fix_this_deduction(tree_type<token_base *>::iterator, const std::string&);
 
 		void opt_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator);
 
 	public:
-        void try_fix_this_deduction(tree_type<token_base *>::iterator);
+		void try_fix_this_deduction(tree_type<token_base *>::iterator);
 
 		compiler_type() = delete;
 

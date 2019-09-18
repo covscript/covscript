@@ -101,8 +101,8 @@ namespace cs {
 		bool exist_record_in_struct(const string &name)
 		{
 			for (auto &set:m_set) {
-			    if (set.count(name) > 0)
-				    return set.count("__PRAGMA_CS_STRUCT_DEFINITION__") > 0;
+				if (set.count(name) > 0)
+					return set.count("__PRAGMA_CS_STRUCT_DEFINITION__") > 0;
 			}
 			return false;
 		}

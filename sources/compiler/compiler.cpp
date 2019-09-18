@@ -20,7 +20,6 @@
 */
 #include <covscript/impl/compiler.hpp>
 #include <covscript/impl/codegen.hpp>
-#include <iostream>
 
 namespace cs {
 	bool token_signal::dump(std::ostream &o) const
@@ -269,14 +268,14 @@ namespace cs {
 		case token_types::expr: {
 			if (do_trim != trim_type::no_expr_fold) {
 				tree_type<token_base *> &t = static_cast<token_expr *>(it.data())->get_tree();
-				trim_expr(t, t.root(), do_trim);
+				trim_expression(t, do_trim);
 				tree.merge(it, t);
 			}
 			return;
 		}
 		case token_types::array: {
 			for (auto &tree:static_cast<token_array *>(token)->get_array())
-				trim_expression(tree);
+				trim_expression(tree, do_trim);
 			return;
 		}
 		case token_types::signal: {
@@ -429,28 +428,30 @@ namespace cs {
 				inside_lambda = true;
 				trim_expr(tree, it.left(), do_trim);
 				inside_lambda = false;
-				trim_expr(tree, it.right(), do_trim);
 				token_base *lptr = it.left().data();
+				trim_expr(tree, it.right(), trim_type::no_this_deduce);
 				token_base *rptr = it.right().data();
 				if (lptr == nullptr || rptr == nullptr || lptr->get_type() != token_types::arglist)
 					throw runtime_error("Wrong grammar for lambda expression.");
 				std::vector<std::string> args;
 				bool is_vargs = false;
-				for (auto &it:static_cast<token_arglist *>(lptr)->get_arglist()) {
-					if (it.root().data() == nullptr)
+				for (auto &item:static_cast<token_arglist *>(lptr)->get_arglist()) {
+					if (item.root().data() == nullptr)
 						throw internal_error("Null pointer accessed.");
-					try_fix_this_deduction(it.root());
-					if (it.root().data()->get_type() == token_types::id) {
-						const std::string &str = static_cast<token_id *>(it.root().data())->get_id();
+					try_fix_this_deduction(item.root());
+					if (item.root().data()->get_type() == token_types::id) {
+						const std::string &str = static_cast<token_id *>(item.root().data())->get_id();
 						for (auto &it:args)
 							if (it == str)
 								throw runtime_error("Redefinition of function argument.");
+						try_fix_this_deduction(it.right(), str);
 						args.push_back(str);
 					}
-					else if (it.root().data()->get_type() == token_types::vargs) {
-						const std::string &str = static_cast<token_vargs *>(it.root().data())->get_id();
+					else if (item.root().data()->get_type() == token_types::vargs) {
+						const std::string &str = static_cast<token_vargs *>(item.root().data())->get_id();
 						if (!args.empty())
 							throw runtime_error("Redefinition of function argument(Multi-define of vargs).");
+						try_fix_this_deduction(it.right(), str);
 						args.push_back(str);
 						is_vargs = true;
 					}
@@ -481,6 +482,51 @@ namespace cs {
 		}
 		trim_expr(tree, it.left(), do_trim);
 		trim_expr(tree, it.right(), do_trim);
+	}
+
+	void compiler_type::try_fix_this_deduction(cs::tree_type<cs::token_base *>::iterator it, const std::string& orig)
+	{
+		if (!it.usable())
+			return;
+		token_base *token = it.data();
+		if (token == nullptr)
+			return;
+		switch (token->get_type()) {
+		default:
+			break;
+		case token_types::expr: {
+			try_fix_this_deduction(static_cast<token_expr *>(it.data())->get_tree().root(), orig);
+			return;
+		}
+		case token_types::array: {
+			for (auto &tree:static_cast<token_array *>(token)->get_array())
+				try_fix_this_deduction(tree.root(), orig);
+			return;
+		}
+		case token_types::parallel: {
+			for (auto &tree:static_cast<token_parallel *>(token)->get_parallel())
+				try_fix_this_deduction(tree.root(), orig);
+			return;
+		}
+		case token_types::signal: {
+			switch (static_cast<token_signal *>(token)->get_signal()) {
+			default:
+				break;
+			case signal_types::dot_: {
+				token_id *id = dynamic_cast<token_id*>(it.left().data());
+				if (id != nullptr && id->get_id().get_id() == "this") {
+					token_id *name = dynamic_cast<token_id*>(it.right().data());
+					if (name != nullptr && name->get_id().get_id() == orig) {
+						it.data() = it.right().data();
+						return;
+					}
+				}
+			}
+			}
+		}
+		}
+		try_fix_this_deduction(it.left(), orig);
+		try_fix_this_deduction(it.right(), orig);
 	}
 
 	void compiler_type::opt_expr(tree_type<token_base *> &tree, tree_type<token_base *>::iterator it)
@@ -541,6 +587,11 @@ namespace cs {
 			catch (...) {
 				it.data() = oldt;
 			}
+			return;
+		}
+		case token_types::parallel: {
+			for (auto &tree:static_cast<token_parallel *>(token)->get_parallel())
+				optimize_expression(tree);
 			return;
 		}
 		case token_types::signal: {
@@ -707,17 +758,17 @@ namespace cs {
 		}
 	}
 
-	void compiler_type::try_fix_this_deduction(cs::tree_type<cs::token_base *>::iterator it) {
-        if (!it.usable())
-            return;
-        token_signal *sig = dynamic_cast<token_signal*>(it.data());
-        if (sig == nullptr || sig->get_signal() != signal_types::dot_)
-            return;
-        token_id *id = dynamic_cast<token_id*>(it.left().data());
-        if (id == nullptr || id->get_id().get_id() != "this")
-            return;
-        it.data() = it.right().data();
-        std::cout<<"Fixed: "<< dynamic_cast<token_id*>(it.data())->get_id().get_id() <<std::endl;
+	void compiler_type::try_fix_this_deduction(cs::tree_type<cs::token_base *>::iterator it)
+	{
+		if (!it.usable())
+			return;
+		token_signal *sig = dynamic_cast<token_signal*>(it.data());
+		if (sig == nullptr || sig->get_signal() != signal_types::dot_)
+			return;
+		token_id *id = dynamic_cast<token_id*>(it.left().data());
+		if (id == nullptr || id->get_id().get_id() != "this")
+			return;
+		it.data() = it.right().data();
 	}
 
 	void compiler_type::dump_expr(tree_type<token_base *>::iterator it, std::ostream &stream)
