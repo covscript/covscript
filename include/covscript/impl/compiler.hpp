@@ -346,9 +346,7 @@ namespace cs {
 		}
 
 		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, trim_type);
-
-		void try_fix_this_deduction(tree_type<token_base *>::iterator, const std::string&);
-
+		
 		void opt_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator);
 
 	public:
