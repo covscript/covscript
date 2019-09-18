@@ -100,7 +100,7 @@ namespace cs {
 					}
 					for (auto &list:static_cast<token_sblist *>(ptr)->get_list()) {
 						tree_type<token_base *> tree;
-						gen_tree(tree, list);
+						gen_tree(tree, list, trim_type::no_this_deduce);
 						tlist.push_back(tree);
 					}
 					no_optimize = false;
@@ -273,7 +273,7 @@ namespace cs {
 		}
 	}
 
-	void compiler_type::gen_tree(tree_type<token_base *> &tree, std::deque<token_base *> &raw)
+	void compiler_type::gen_tree(tree_type<token_base *> &tree, std::deque<token_base *> &raw, trim_type do_trim)
 	{
 		tree.clear();
 		if (raw.size() == 1) {
@@ -298,7 +298,7 @@ namespace cs {
 			split_token(raw, signals, objects);
 			build_tree(tree, signals, objects);
 		}
-		optimize_expression(tree);
+		optimize_expression(tree, do_trim);
 	}
 
 	void compiler_type::kill_expr(std::deque<token_base *> &tokens)

@@ -426,7 +426,7 @@ namespace cs {
 			}
 			case signal_types::lambda_: {
 				inside_lambda = true;
-				trim_expr(tree, it.left(), do_trim);
+				trim_expr(tree, it.left(), trim_type::no_this_deduce);
 				inside_lambda = false;
 				trim_expr(tree, it.right(), do_trim);
 				token_base *lptr = it.left().data();
@@ -453,7 +453,7 @@ namespace cs {
 						is_vargs = true;
 					}
 					else
-						throw runtime_error("Wrong grammar for function definition.");
+						throw runtime_error("Wrong grammar for lambda definition.");
 				}
 				statement_base *ret = new statement_return(tree_type<token_base *>(it.right()), context,
 				        new token_endline(token->get_line_num()));
