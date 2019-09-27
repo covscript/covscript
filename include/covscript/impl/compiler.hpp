@@ -333,7 +333,7 @@ namespace cs {
 			normal, no_expr_fold, no_this_deduce
 		};
 
-		void trim_expression(tree_type<token_base *> &tree, trim_type do_trim=trim_type::normal)
+		void trim_expression(tree_type<token_base *> &tree, trim_type do_trim = trim_type::normal)
 		{
 			trim_expr(tree, tree.root(), do_trim);
 		}
@@ -346,7 +346,7 @@ namespace cs {
 		}
 
 		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, trim_type);
-		
+
 		void opt_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator);
 
 	public:
