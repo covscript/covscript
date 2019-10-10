@@ -415,7 +415,7 @@ namespace cs {
 			throw runtime_error("Access non-array or string object.");
 	}
 
-	var runtime_type::parse_expr(const tree_type<token_base *>::iterator &it)
+	var runtime_type::parse_expr(const tree_type<token_base *>::iterator &it, bool disable_parallel)
 	{
 		if (!it.usable())
 			throw internal_error("The expression tree is not available.");
@@ -457,6 +457,8 @@ namespace cs {
 			return rvalue(var::make<array>(std::move(arr)));
 		}
 		case token_types::parallel: {
+			if (disable_parallel)
+				throw runtime_error("Do not allowed parallel list.");
 			var result;
 			for (auto &tree:static_cast<token_parallel *>(token)->get_parallel())
 				result = parse_expr(tree.root());

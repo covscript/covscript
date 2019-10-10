@@ -140,7 +140,7 @@ namespace cs {
 	void statement_involve::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		var ns = context->instance->parse_expr(mTree.root());
+		var ns = context->instance->parse_expr(mTree.root(), true);
 		if (ns.type() == typeid(namespace_t))
 			context->instance->storage.involve_domain(ns.const_val<namespace_t>()->get_domain(), mOverride);
 		else

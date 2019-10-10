@@ -327,6 +327,6 @@ namespace cs {
 
 		var parse_access(var, const var &);
 
-		var parse_expr(const tree_type<token_base *>::iterator &);
+		var parse_expr(const tree_type<token_base *>::iterator &, bool= false);
 	};
 }
