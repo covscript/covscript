@@ -5,10 +5,9 @@ end
 class calculator
     var op_stack = new array
     var num_stack = new array
-    var bracket_lev = 0
 
     function lex(expr)
-        var status = 0, last_status = 2
+        var status = 0, last_status = 2, bracket_lev = 0
         var buff = ""
         for i = 0, i < expr.size(), null
             var ch = expr[i]
