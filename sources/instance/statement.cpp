@@ -39,8 +39,11 @@ namespace cs {
 		if (mIsVargs) {
 			var arg_list = var::make<cs::array>();
 			auto &arr = arg_list.val<cs::array>();
-			for (auto &it:args)
-				arr.push_back(it);
+			std::size_t i = 0;
+			if (mIsMemFn)
+				mContext->instance->storage.add_var("this", args[i++]);
+			for (; i < args.size(); ++i)
+				arr.push_back(args[i]);
 			mContext->instance->storage.add_var(this->mArgs.front(), arg_list);
 		}
 		else {

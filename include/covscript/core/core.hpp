@@ -155,12 +155,10 @@ namespace cs {
 			return mFunc(args);
 		}
 
-#ifdef CS_DEBUGGER
 		const function_type& get_raw_data() const
 		{
 			return mFunc;
 		}
-#endif
 	};
 
 	class function final {
@@ -171,6 +169,7 @@ namespace cs {
 		std::string mDecl;
 		statement_base *mStmt;
 #endif
+		bool mIsMemFn = false;
 		bool mIsVargs = false;
 		std::vector<std::string> mArgs;
 		std::deque<statement_base *> mBody;
@@ -200,26 +199,34 @@ namespace cs {
 
 		void add_this()
 		{
-			std::vector<std::string> args{"this"};
-			args.reserve(mArgs.size());
-			for (auto &name:mArgs) {
-				if (name != "this")
-					args.push_back(name);
-				else
-					throw runtime_error("Overwrite the default argument \"this\".");
+			mIsMemFn = true;
+			if (!mIsVargs){
+				std::vector<std::string> args{"this"};
+				args.reserve(mArgs.size());
+				for (auto &name:mArgs) {
+					if (name != "this")
+						args.push_back(name);
+					else
+						throw runtime_error("Overwrite the default argument \"this\".");
+				}
+				std::swap(mArgs, args);
 			}
-			std::swap(mArgs, args);
 #ifdef CS_DEBUGGER
 			std::string prefix, suffix;
 			auto lpos=mDecl.find('(')+1;
 			auto rpos=mDecl.rfind(')');
 			prefix=mDecl.substr(0, lpos);
 			suffix=mDecl.substr(rpos);
-			if(args.size()>1)
+			if(mArgs.size()>2)
 				mDecl=prefix+"this, "+mDecl.substr(lpos, rpos-lpos)+suffix;
 			else
 				mDecl=prefix+"this"+mDecl.substr(lpos, rpos-lpos)+suffix;
 #endif
+		}
+
+		std::size_t argument_count() const noexcept
+		{
+			return mArgs.size();
 		}
 
 #ifdef CS_DEBUGGER

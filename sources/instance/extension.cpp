@@ -874,6 +874,26 @@ namespace cs_impl {
 			return make_namespace(context->instance->source_import(path));
 		}
 
+		number argument_count(const var& func)
+		{
+			if (func.type() == typeid(object_method))
+			{
+				const callable::function_type &target = func.const_val<object_method>().callable.const_val<callable>().get_raw_data();
+				if (target.target_type() == typeid(function))
+					return target.target<function>()->argument_count();
+				else
+					return target.target<cni>()->argument_count();
+			} else if(func.type() == typeid(callable))
+			{
+				const callable::function_type &target = func.const_val<callable>().get_raw_data();
+				if (target.target_type() == typeid(function))
+					return target.target<function>()->argument_count();
+				else
+					return target.target<cni>()->argument_count();
+			} else
+				throw lang_error("Not a function.");
+		}
+
 		void init()
 		{
 			(*runtime_ext)
@@ -888,7 +908,8 @@ namespace cs_impl {
 			.add_var("solve", make_cni(solve))
 			.add_var("cmd_args", make_cni(cmd_args, true))
 			.add_var("import", make_cni(import, true))
-			.add_var("source_import", make_cni(source_import, true));
+			.add_var("source_import", make_cni(source_import, true))
+			.add_var("argument_count", make_cni(argument_count, true));
 			(*context_ext)
 			.add_var("build", make_cni(build))
 			.add_var("solve", make_cni(solve))
