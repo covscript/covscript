@@ -880,9 +880,9 @@ namespace cs_impl {
 			{
 				const callable::function_type &target = func.const_val<object_method>().callable.const_val<callable>().get_raw_data();
 				if (target.target_type() == typeid(function))
-					return target.target<function>()->argument_count();
+					return target.target<function>()->argument_count()-1;
 				else
-					return target.target<cni>()->argument_count();
+					return target.target<cni>()->argument_count()-1;
 			} else if(func.type() == typeid(callable))
 			{
 				const callable::function_type &target = func.const_val<callable>().get_raw_data();
