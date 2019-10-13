@@ -874,23 +874,23 @@ namespace cs_impl {
 			return make_namespace(context->instance->source_import(path));
 		}
 
-		number argument_count(const var& func)
+		number argument_count(const var &func)
 		{
-			if (func.type() == typeid(object_method))
-			{
+			if (func.type() == typeid(object_method)) {
 				const callable::function_type &target = func.const_val<object_method>().callable.const_val<callable>().get_raw_data();
 				if (target.target_type() == typeid(function))
-					return target.target<function>()->argument_count()-1;
+					return target.target<function>()->argument_count() - 1;
 				else
-					return target.target<cni>()->argument_count()-1;
-			} else if(func.type() == typeid(callable))
-			{
+					return target.target<cni>()->argument_count() - 1;
+			}
+			else if (func.type() == typeid(callable)) {
 				const callable::function_type &target = func.const_val<callable>().get_raw_data();
 				if (target.target_type() == typeid(function))
 					return target.target<function>()->argument_count();
 				else
 					return target.target<cni>()->argument_count();
-			} else
+			}
+			else
 				throw lang_error("Not a function.");
 		}
 

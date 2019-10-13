@@ -155,7 +155,7 @@ namespace cs {
 			return mFunc(args);
 		}
 
-		const function_type& get_raw_data() const
+		const function_type &get_raw_data() const
 		{
 			return mFunc;
 		}
@@ -200,7 +200,7 @@ namespace cs {
 		void add_this()
 		{
 			mIsMemFn = true;
-			if (!mIsVargs){
+			if (!mIsVargs) {
 				std::vector<std::string> args{"this"};
 				args.reserve(mArgs.size());
 				for (auto &name:mArgs) {
