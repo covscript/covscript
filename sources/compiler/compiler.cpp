@@ -410,6 +410,7 @@ namespace cs {
 				else {
 					if (it.right().data() != nullptr)
 						throw runtime_error("Wrong grammar for vargs expression.");
+					trim_expr(tree, it.left(), do_trim);
 					it.data() = new token_expand(tree_type<token_base *>(it.left()));
 				}
 				return;
