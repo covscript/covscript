@@ -71,3 +71,8 @@
 + 漏洞原理：优化器规则设计失误
 + 漏洞状态：已修复
 + 影响范围：CovScript 1.2.2(Beta4)-3.2.0 John von Neumann(Preview) Build 3
+## CSVE-2019-10-01 ##
++ 触发方法：在结构体中声明变参函数
++ 漏洞原理：参数入栈时未考虑this参数
++ 漏洞状态：已修复
++ 影响范围：CovScript 3.1.2 Ovis ammon(Unstable) Build 2-3.2.1 Giant panda(Stable) Build 12
