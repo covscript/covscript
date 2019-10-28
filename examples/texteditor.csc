@@ -1,5 +1,7 @@
+# Simple Text Editor using Darwin UCGL
+# Written in Covariant Script by Michael Lee
 import darwin
-
+# Key Mapping
 namespace keymap
     constant key_esc = char.from_ascii(27)
     constant key_enter = char.from_ascii(10)
@@ -15,7 +17,7 @@ namespace keymap
     constant key_find = 'f'
     constant key_info = 'v'
 end
-
+# FSM Status
 namespace await_process_type
     constant normal = 0
     constant quit = 1
@@ -32,29 +34,32 @@ namespace editor_status_type
     constant finding = 6
     constant replace = 7
 end
-
+# Process Class
 class texteditor
+# Cursors
     var cursor_visible = true, cursor_time = 0, cursor_x = 0, cursor_y = 0
+# Rendering
     var render_border = 0, render_offx = 0, render_offy = 0
     var last_win_width = 0, last_win_height = 0
+# Buffers
     var find_target = new string
     var char_buffer = new string
     var file_buffer = new array
     var file_path = new string
+# Status
+	var await_process = await_process_type.normal
+    var editor_status = editor_status_type.normal
     var find_x = 0, find_y = 0
     var text_modified = false
     var insert_mode = false
     var found_text = false
     var expect_txt = false
+# Screen Buffer
     var pic = null
-
-    var await_process = await_process_type.normal
-    
-    var editor_status = editor_status_type.normal
-
+# Settings
     var tab_indent = 4
-
-    function load(path)
+# Files
+    function load_file(path)
         var in = iostream.fstream(file_path, iostream.openmode.in)
         for line = new string, !in.eof(), file_buffer.push_back(line)
             line = in.getline()
@@ -67,6 +72,13 @@ class texteditor
         end
     end
 
+	function save_file(path)
+        var out = iostream.fstream(path, iostream.openmode.out)
+        for idx = 0, idx < file_buffer.size() - 1, ++idx do out.println(file_buffer[idx])
+        out.print(file_buffer[file_buffer.size() - 1])
+        text_modified = false
+    end
+# Attributes
     function text_area_width()
         return pic.get_width() - render_border - 5
     end
@@ -86,12 +98,9 @@ class texteditor
     function current_line()
         return file_buffer[text_offset_y()]
     end
-
-    function save_file(path)
-        var out = iostream.fstream(path, iostream.openmode.out)
-        for idx = 0, idx < file_buffer.size() - 1, ++idx do out.println(file_buffer[idx])
-        out.print(file_buffer[file_buffer.size() - 1])
-        text_modified = false
+# Utilities
+	function is_validate_path_char(ch)
+        return char.isalnum(ch) || ch == ' ' || ch == '\\' || ch == '/'
     end
 
     function force_refresh()
@@ -123,7 +132,7 @@ class texteditor
             end
         end
     end
-
+# Keyboard Events
     function key_up()
         if cursor_y > 0
             --cursor_y
@@ -192,7 +201,47 @@ class texteditor
             end
         end
     end
+# Text Finding
+	function reset_find()
+        find_x = find_y = 0
+        found_text = false
+        expect_txt = false
+    end
 
+    function find()
+        while find_y < file_buffer.size()
+            var line = file_buffer[find_y]
+            var pos = line.find(find_target, expect_txt ? find_x + 1 : 0)
+            if pos != -1
+                if !expect_txt || pos > find_x
+                    found_text = true
+                    expect_txt = true
+                    find_x = pos
+                    break
+                end
+            end
+            expect_txt = false
+            find_x = 0
+            ++find_y
+        end
+        if found_text
+            if find_y == file_buffer.size()
+                reset_find()
+                find()
+            end
+            cursor_x = render_offx = 0
+            cursor_y = 0
+            if find_y < file_buffer.size() - text_area_height()
+                render_offy = find_y > 4 ? find_y - 4 : 0
+            else
+                render_offy = file_buffer.size() - text_area_height()
+            end
+            if find_x + find_target.size() > text_area_width()
+                render_offx = find_x + find_target.size() - text_area_width() + 1
+            end
+        end
+    end
+# Events
     function window_resized()
         if last_win_width != pic.get_width() || last_win_height != pic.get_height()
             last_win_width = pic.get_width()
@@ -277,7 +326,7 @@ class texteditor
                             editor_status = editor_status_type.asking
                         else
                             file_buffer.clear()
-                            load(file_path)
+                            load_file(file_path)
                         end
                     end
                     case keymap.key_quit
@@ -318,7 +367,7 @@ class texteditor
             return false
         end
     end
-
+# Rendering
     function render_linenum()
         render_border = to_string(file_buffer.size()).size()
         for i = 0, i < text_area_height(), ++i
@@ -367,7 +416,7 @@ class texteditor
         render_linenum()
         render_text()
     end
-
+# Event Handling
     function exec_await_process()
         switch (await_process)
             case await_process_type.quit
@@ -376,12 +425,12 @@ class texteditor
             case await_process_type.reload
                 text_modified = false
                 file_buffer.clear()
-                load(file_path)
+                load_file(file_path)
             end
         end
         await_process = await_process_type.normal
     end
-
+# Running Status
     function run_normal()
         darwin.fit_drawable()
         if window_resized() || keyboard_input() || cursor_timer()
@@ -425,10 +474,6 @@ class texteditor
         darwin.update_drawable()
     end
 
-    function is_validate_path_char(ch)
-        return char.isalnum(ch) || ch == ' ' || ch == '\\' || ch == '/'
-    end
-
     function run_unsaved_confirm()
         darwin.fit_drawable()
         draw_basic_frame()
@@ -456,46 +501,6 @@ class texteditor
             end
         end
         darwin.update_drawable()
-    end
-
-    function reset_find()
-        find_x = find_y = 0
-        found_text = false
-        expect_txt = false
-    end
-
-    function find()
-        while find_y < file_buffer.size()
-            var line = file_buffer[find_y]
-            var pos = line.find(find_target, expect_txt ? find_x + 1 : 0)
-            if pos != -1
-                if !expect_txt || pos > find_x
-                    found_text = true
-                    expect_txt = true
-                    find_x = pos
-                    break
-                end
-            end
-            expect_txt = false
-            find_x = 0
-            ++find_y
-        end
-        if found_text
-            if find_y == file_buffer.size()
-                reset_find()
-                find()
-            end
-            cursor_x = render_offx = 0
-            cursor_y = 0
-            if find_y < file_buffer.size() - text_area_height()
-                render_offy = find_y > 4 ? find_y - 4 : 0
-            else
-                render_offy = file_buffer.size() - text_area_height()
-            end
-            if find_x + find_target.size() > text_area_width()
-                render_offx = find_x + find_target.size() - text_area_width() + 1
-            end
-        end
     end
 
     function run_find_setup()
@@ -596,7 +601,7 @@ class texteditor
                             editor_status = editor_status_type.finding
                         else
                             reset_find()
-                            if (text_offset_x() > current_line().size())
+                            if text_offset_x() > current_line().size()
                                 adjust_cursor(current_line().size())
                             end
                             editor_status = editor_status_type.notfound
@@ -626,7 +631,7 @@ class texteditor
         end
         darwin.update_drawable()
     end
-
+# Main Function
     function run(args)
         if args.size() > 2
             system.out.println("Wrong Arguments")
@@ -638,7 +643,7 @@ class texteditor
         else
             file_path = darwin.ui.input_box("Darwin UCGL Text Editor", "Please enter a file path: ", "", false)
         end
-        load(file_path)
+        load_file(file_path)
         darwin.fit_drawable()
         pic = darwin.get_drawable()
         loop
@@ -671,5 +676,5 @@ class texteditor
         end
     end
 end
-
+# Start Process
 (new texteditor).run(context.cmd_args())
