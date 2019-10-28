@@ -6,6 +6,7 @@ namespace keymap
     constant key_esc = char.from_ascii(27)
     constant key_enter = char.from_ascii(10)
     constant key_delete = char.from_ascii(127)
+    constant key_tab = '\t'
     constant key_up = 'w'
     constant key_down = 's'
     constant key_left = 'a'
@@ -266,16 +267,17 @@ class texteditor
                 var key = darwin.get_kb_hit()
                 if key != keymap.key_esc
                     var line = current_line()
-                    if key == keymap.key_enter
-                        var line_current = line.substr(0, text_offset_x())
-                        var line_next = line.substr(text_offset_x(), line.size())
-                        current_line() = line_current
-                        file_buffer.insert(file_buffer.begin().forward_n(text_offset_y() + 1), line_next)
-                        key_down()
-                        cursor_x = render_offx = 0
-                        text_modified = true
-                    else
-                        if key == keymap.key_delete
+                    switch key
+                        case keymap.key_enter
+                            var line_current = line.substr(0, text_offset_x())
+                            var line_next = line.substr(text_offset_x(), line.size())
+                            current_line() = line_current
+                            file_buffer.insert(file_buffer.begin().forward_n(text_offset_y() + 1), line_next)
+                            key_down()
+                            cursor_x = render_offx = 0
+                            text_modified = true
+                        end
+                        case keymap.key_delete
                             if cursor_x + render_offx == 0
                                 if text_offset_y() != 0
                                     key_up()
@@ -291,9 +293,15 @@ class texteditor
                                     text_modified = true
                                 end
                             end
-                        else
+                        end
+                        case keymap.key_tab
+                            foreach i in range(tab_indent) do current_line().insert(text_offset_x(), ' ')
+                            adjust_cursor(text_offset_x() + tab_indent);
+                            text_modified = true
+                        end
+                        default
                             current_line().insert(text_offset_x(), key)
-                            key_right()
+                            adjust_cursor(text_offset_x() + 1);
                             text_modified = true
                         end
                     end
