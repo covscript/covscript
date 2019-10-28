@@ -747,6 +747,31 @@ namespace cs_impl {
 			return cov::rand<long>(b, e);
 		}
 
+        number bitwise_and32(number x, number y)
+        {
+            return static_cast<int32_t>(x) & static_cast<int32_t>(y);
+        }
+
+		number bitwise_or32(number x, number y)
+        {
+            return static_cast<int32_t>(x) | static_cast<int32_t>(y);
+        }
+
+		number bitwise_xor32(number x, number y)
+        {
+            return static_cast<int32_t>(x) ^ static_cast<int32_t>(y);
+        }
+
+		number bitwise_lshift32(number x, number y)
+        {
+            return static_cast<int32_t>(x) << static_cast<int32_t>(y);
+        }
+
+		number bitwise_rshift32(number x, number y)
+        {
+            return static_cast<int32_t>(x) >> static_cast<int32_t>(y);
+        }
+
 		void init()
 		{
 			(*math_const_ext)
@@ -774,7 +799,12 @@ namespace cs_impl {
 			.add_var("min", make_cni(_min, true))
 			.add_var("max", make_cni(_max, true))
 			.add_var("rand", make_cni(rand))
-			.add_var("randint", make_cni(randint));
+			.add_var("randint", make_cni(randint))
+			.add_var("bitwise_and32", make_cni(bitwise_and32, true))
+			.add_var("bitwise_or32", make_cni(bitwise_or32, true))
+			.add_var("bitwise_xor32", make_cni(bitwise_xor32, true))
+			.add_var("bitwise_lshift32", make_cni(bitwise_lshift32, true))
+			.add_var("bitwise_rshift32", make_cni(bitwise_rshift32, true));
 		}
 	}
 	namespace pair_cs_ext {
@@ -1042,6 +1072,11 @@ namespace cs_impl {
 			return std::move(arr);
 		}
 
+        char char_at(const string &str, number position)
+        {
+            return str.at(static_cast<size_t>(position));
+        }
+
 		void init()
 		{
 			(*string_ext)
@@ -1059,7 +1094,8 @@ namespace cs_impl {
 			.add_var("tolower", make_cni(tolower, true))
 			.add_var("toupper", make_cni(toupper, true))
 			.add_var("to_number", make_cni(to_number, true))
-			.add_var("split", make_cni(split, true));
+			.add_var("split", make_cni(split, true))
+            .add_var("char_at", make_cni(char_at, true));
 		}
 	}
 	namespace console_cs_ext {
