@@ -60,8 +60,8 @@ class texteditor
 			line = in.getline()
 			for i = 0, i < line.size(), ++i
 				if line[i] == '\t'
-					line[i] = ' '
-					for count = 0, count < tab_indent - 1, ++count do line.insert(line.begin() + i, ' ')
+					line.assign(i, ' ')
+					for count = 0, count < tab_indent - 1, ++count do line.insert(i, ' ')
 				end
 			end
 		end

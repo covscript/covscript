@@ -933,6 +933,12 @@ namespace cs_impl {
 	namespace string_cs_ext {
 		using namespace cs;
 
+		string assign(string &str, number posit, char ch)
+		{
+			str.at(posit) = ch;
+			return str;
+		}
+
 		string append(string &str, const var &val)
 		{
 			str.append(val.to_string());
@@ -1057,6 +1063,7 @@ namespace cs_impl {
 		void init()
 		{
 			(*string_ext)
+			.add_var("assign", make_cni(assign, true))
 			.add_var("append", make_cni(append, true))
 			.add_var("insert", make_cni(insert, true))
 			.add_var("erase", make_cni(erase, true))
