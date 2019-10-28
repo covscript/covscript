@@ -4,8 +4,10 @@ import darwin
 # Key Mapping
 namespace keymap
     constant key_esc = char.from_ascii(27)
-    constant key_enter = char.from_ascii(10)
-    constant key_delete = char.from_ascii(127)
+    constant key_enter_unix = '\r'
+    constant key_enter_win32 = '\n'
+    constant key_delete_unix = char.from_ascii(127)
+    constant key_delete_win32 = '\b'
     constant key_tab = '\t'
     constant key_up = 'w'
     constant key_down = 's'
@@ -202,6 +204,34 @@ class texteditor
             end
         end
     end
+    function key_enter()
+        var line = current_line()
+        var line_current = line.substr(0, text_offset_x())
+        var line_next = line.substr(text_offset_x(), line.size())
+        current_line() = line_current
+        file_buffer.insert(file_buffer.begin().forward_n(text_offset_y() + 1), line_next)
+        key_down()
+        cursor_x = render_offx = 0
+        text_modified = true
+    end
+    function key_delete()
+        var line = current_line()
+        if cursor_x + render_offx == 0
+            if text_offset_y() != 0
+                key_up()
+                adjust_cursor(current_line().size())
+                current_line().append(line)
+                file_buffer.erase(file_buffer.begin().forward_n(text_offset_y() + 1))
+                text_modified = true
+            end
+        else
+            if line.size() > 0
+                current_line().erase(text_offset_x() - 1, 1)
+                key_left()
+                text_modified = true
+            end
+        end
+    end
 # Text Finding
 	function reset_find()
         find_x = find_y = 0
@@ -266,33 +296,18 @@ class texteditor
             if insert_mode
                 var key = darwin.get_kb_hit()
                 if key != keymap.key_esc
-                    var line = current_line()
                     switch key
-                        case keymap.key_enter
-                            var line_current = line.substr(0, text_offset_x())
-                            var line_next = line.substr(text_offset_x(), line.size())
-                            current_line() = line_current
-                            file_buffer.insert(file_buffer.begin().forward_n(text_offset_y() + 1), line_next)
-                            key_down()
-                            cursor_x = render_offx = 0
-                            text_modified = true
+                        case keymap.key_enter_unix
+                            key_enter()
                         end
-                        case keymap.key_delete
-                            if cursor_x + render_offx == 0
-                                if text_offset_y() != 0
-                                    key_up()
-                                    adjust_cursor(current_line().size())
-                                    current_line().append(line)
-                                    file_buffer.erase(file_buffer.begin().forward_n(text_offset_y() + 1))
-                                    text_modified = true
-                                end
-                            else
-                                if line.size() > 0
-                                    current_line().erase(text_offset_x() - 1, 1)
-                                    key_left()
-                                    text_modified = true
-                                end
-                            end
+                        case keymap.key_enter_win32
+                            key_enter()
+                        end
+                        case keymap.key_delete_unix
+                            key_delete()
+                        end
+                        case keymap.key_delete_win32
+                            key_delete()
                         end
                         case keymap.key_tab
                             foreach i in range(tab_indent) do current_line().insert(text_offset_x(), ' ')
@@ -490,12 +505,23 @@ class texteditor
         if darwin.is_kb_hit()
             var key = 0
             switch key = char.tolower(darwin.get_kb_hit())
-                case keymap.key_delete
+                case keymap.key_delete_unix
                     if !char_buffer.empty()
                         char_buffer.cut(1)
                     end
                 end
-                case keymap.key_enter
+                case keymap.key_delete_win32
+                    if !char_buffer.empty()
+                        char_buffer.cut(1)
+                    end
+                end
+                case keymap.key_enter_unix
+                    save_file(char_buffer)
+                    exec_await_process()
+                    editor_status = editor_status_type.normal
+                    force_refresh()
+                end
+                case keymap.key_enter_win32
                     save_file(char_buffer)
                     exec_await_process()
                     editor_status = editor_status_type.normal
@@ -519,12 +545,30 @@ class texteditor
         if darwin.is_kb_hit()
             var key = 0
             switch key = char.tolower(darwin.get_kb_hit())
-                case keymap.key_delete
+                case keymap.key_delete_unix
                     if !find_target.empty()
                         find_target.cut(1)
                     end
                 end
-                case keymap.key_enter
+                case keymap.key_delete_win32
+                    if !find_target.empty()
+                        find_target.cut(1)
+                    end
+                end
+                case keymap.key_enter_unix
+                    if find_target.empty()
+                        editor_status = editor_status_type.normal
+                        force_refresh()
+                        break
+                    end
+                    find()
+                    if (found_text)
+                        editor_status = editor_status_type.finding
+                    else
+                        editor_status = editor_status_type.notfound
+                    end
+                end
+                case keymap.key_enter_win32
                     if find_target.empty()
                         editor_status = editor_status_type.normal
                         force_refresh()
@@ -595,12 +639,33 @@ class texteditor
         if darwin.is_kb_hit()
             var key = 0
             switch key = char.tolower(darwin.get_kb_hit())
-                case keymap.key_delete
+                case keymap.key_delete_unix
                     if !char_buffer.empty()
                         char_buffer.cut(1)
                     end
                 end
-                case keymap.key_enter
+                case keymap.key_delete_win32
+                    if !char_buffer.empty()
+                        char_buffer.cut(1)
+                    end
+                end
+                case keymap.key_enter_unix
+                    if char_buffer != find_target
+                        text_modified = true
+                        file_buffer[find_y].replace(find_x, find_target.size(), char_buffer)
+                        find()
+                        if found_text
+                            editor_status = editor_status_type.finding
+                        else
+                            reset_find()
+                            if text_offset_x() > current_line().size()
+                                adjust_cursor(current_line().size())
+                            end
+                            editor_status = editor_status_type.notfound
+                        end
+                    end
+                end
+                case keymap.key_enter_win32
                     if char_buffer != find_target
                         text_modified = true
                         file_buffer[find_y].replace(find_x, find_target.size(), char_buffer)
