@@ -125,7 +125,6 @@ class texteditor
 	end
 
 	function key_up()
-		force_refresh()
 		if cursor_y > 0
 			--cursor_y
 		else
@@ -139,7 +138,6 @@ class texteditor
 	end
 
 	function key_down()
-		force_refresh()
 		if cursor_y < text_area_height() - 1
 			++cursor_y
 		else
@@ -153,7 +151,6 @@ class texteditor
 	end
 
 	function key_left()
-		force_refresh()
 		if cursor_x > 0
 			--cursor_x
 		else
@@ -175,7 +172,6 @@ class texteditor
 	end
 
 	function key_right()
-		force_refresh()
 		if cursor_x < text_area_width()
 			if text_offset_x() < current_line().size()
 				++cursor_x
