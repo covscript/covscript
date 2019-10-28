@@ -864,10 +864,9 @@ namespace cs {
 	void translator_type::translate(const context_t &context, const std::deque<std::deque<token_base *>> &lines,
 	                                std::deque<statement_base *> &statements, bool raw)
 	{
-		std::deque<std::deque<token_base *>> tmp;
-		method_base *method = nullptr;
 		std::size_t method_line_num = 0, line_num = 0;
-		int level = 0;
+		std::deque<std::deque<token_base *>> tmp;
+		std::stack<method_base *> methods;
 		for (auto &it:lines) {
 			std::deque<token_base *> line = it;
 			line_num = static_cast<token_endline *>(line.back())->get_line_num();
@@ -881,22 +880,25 @@ namespace cs {
 					break;
 				case method_types::single: {
 					statement_base *sptr = nullptr;
-					if (level > 0) {
+					if (methods.size() > 0) {
+						method_base *expected_method = nullptr;
 						if (m->get_target_type() == statement_types::end_) {
 							if (raw) {
 								context->instance->storage.remove_set();
+								domain_type domain = std::move(context->instance->storage.get_domain());
 								context->instance->storage.remove_domain();
+								methods.top()->postprocess(context, domain);
 							}
-							--level;
+							expected_method = methods.top();
+							methods.pop();
 						}
-						if (level == 0) {
+						if (methods.size() == 0) {
 							line_num = method_line_num;
 							if (m->get_target_type() == statement_types::end_)
-								sptr = static_cast<method_end *>(m)->translate_end(method, context, tmp, line);
+								sptr = static_cast<method_end *>(m)->translate_end(expected_method, context, tmp, line);
 							else
-								sptr = method->translate(context, tmp);
+								sptr = expected_method->translate(context, tmp);
 							tmp.clear();
-							method = nullptr;
 						}
 						else {
 							if (raw)
@@ -918,15 +920,13 @@ namespace cs {
 				}
 				break;
 				case method_types::block: {
-					if (level == 0) {
+					if (methods.size() == 0)
 						method_line_num = static_cast<token_endline *>(line.back())->get_line_num();
-						method = m;
-					}
-					++level;
+					methods.push(m);
 					if (raw) {
 						context->instance->storage.add_domain();
 						context->instance->storage.add_set();
-						m->preprocess(context, {line});
+						methods.top()->preprocess(context, {line});
 					}
 					tmp.push_back(line);
 				}
@@ -943,7 +943,7 @@ namespace cs {
 				throw exception(line_num, context->file_path, context->file_buff.at(line_num - 1), e.what());
 			}
 		}
-		if (level != 0)
+		if (methods.size() != 0)
 			throw runtime_error("Lack of the \"end\" signal.");
 	}
 }

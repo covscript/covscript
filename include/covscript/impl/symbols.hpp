@@ -623,6 +623,8 @@ namespace cs {
 		virtual void preprocess(const context_t &, const std::deque<std::deque<token_base *>> &) {}
 
 		virtual statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) = 0;
+
+		virtual void postprocess(const context_t &, const domain_type &) {}
 	};
 
 	class method_end : public method_base {
