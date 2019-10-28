@@ -167,7 +167,11 @@ namespace cs {
 			return statement_types::namespace_;
 		}
 
+		void preprocess(const context_t &, const std::deque<std::deque<token_base *>> &) override;
+
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
+
+		void postprocess(const context_t &, const domain_type &) override;
 	};
 
 	class method_if final : public method_base {

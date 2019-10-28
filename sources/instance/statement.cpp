@@ -252,7 +252,7 @@ namespace cs {
 				}
 			}
 			return scope.get();
-		}())));
+		}())), true);
 	}
 
 	void statement_namespace::dump(std::ostream &o) const

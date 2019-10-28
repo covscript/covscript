@@ -61,9 +61,19 @@ namespace cs_impl {
 			return ++it;
 		}
 
+		array::iterator forward_n(array::iterator &it, number offset)
+		{
+			return it += offset;
+		}
+
 		array::iterator backward(array::iterator &it)
 		{
 			return --it;
+		}
+
+		array::iterator backward_n(array::iterator &it, number offset)
+		{
+			return it -= offset;
 		}
 
 		var data(array::iterator &it)
@@ -148,7 +158,9 @@ namespace cs_impl {
 		{
 			(*array_iterator_ext)
 			.add_var("forward", make_cni(forward, true))
+			.add_var("forward_n", make_cni(forward_n, true))
 			.add_var("backward", make_cni(backward, true))
+			.add_var("backward_n", make_cni(backward_n, true))
 			.add_var("data", make_cni(data, true));
 			(*array_ext)
 			.add_var("iterator", make_namespace(array_iterator_ext))
@@ -951,6 +963,12 @@ namespace cs_impl {
 	namespace string_cs_ext {
 		using namespace cs;
 
+		string assign(string &str, number posit, char ch)
+		{
+			str.at(posit) = ch;
+			return str;
+		}
+
 		string append(string &str, const var &val)
 		{
 			str.append(val.to_string());
@@ -1080,6 +1098,7 @@ namespace cs_impl {
 		void init()
 		{
 			(*string_ext)
+			.add_var("assign", make_cni(assign, true))
 			.add_var("append", make_cni(append, true))
 			.add_var("insert", make_cni(insert, true))
 			.add_var("erase", make_cni(erase, true))
