@@ -50,7 +50,7 @@ class texteditor
     var file_buffer = new array
     var file_path = new string
 # Status
-	var await_process = await_process_type.normal
+    var await_process = await_process_type.normal
     var editor_status = editor_status_type.normal
     var find_x = 0, find_y = 0
     var text_modified = false
@@ -75,7 +75,7 @@ class texteditor
         end
     end
 
-	function save_file(path)
+    function save_file(path)
         var out = iostream.fstream(path, iostream.openmode.out)
         for idx = 0, idx < file_buffer.size() - 1, ++idx do out.println(file_buffer[idx])
         out.print(file_buffer[file_buffer.size() - 1])
@@ -102,7 +102,7 @@ class texteditor
         return file_buffer[text_offset_y()]
     end
 # Utilities
-	function is_validate_path_char(ch)
+    function is_validate_path_char(ch)
         return char.isalnum(ch) || ch == ' ' || ch == '\\' || ch == '/'
     end
 
@@ -233,7 +233,7 @@ class texteditor
         end
     end
 # Text Finding
-	function reset_find()
+    function reset_find()
         find_x = find_y = 0
         found_text = false
         expect_txt = false
