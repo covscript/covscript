@@ -96,8 +96,7 @@ namespace cs_impl {
 	template<>
 	std::string to_string<cs::structure>(const cs::structure &stut)
 	{
-		if (stut.get_domain().exist("to_string"))
-		{
+		if (stut.get_domain().exist("to_string")) {
 			cs::var func = stut.get_domain().get_var("to_string");
 			if (func.type() == typeid(cs::callable))
 				return cs::invoke(func, cs::var::make<cs::structure>(&stut)).to_string();

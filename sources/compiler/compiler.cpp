@@ -895,7 +895,8 @@ namespace cs {
 						if (methods.size() == 0) {
 							line_num = method_line_num;
 							if (m->get_target_type() == statement_types::end_)
-								sptr = static_cast<method_end *>(m)->translate_end(expected_method, context, tmp, line);
+								sptr = static_cast<method_end *>(m)->translate_end(expected_method, context, tmp,
+								        line);
 							else
 								sptr = expected_method->translate(context, tmp);
 							tmp.clear();
