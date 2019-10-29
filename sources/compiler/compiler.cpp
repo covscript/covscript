@@ -866,7 +866,7 @@ namespace cs {
 	{
 		std::size_t method_line_num = 0, line_num = 0;
 		std::deque<std::deque<token_base *>> tmp;
-		std::stack<method_base *> methods;
+		stack_type<method_base *> methods;
 		for (auto &it:lines) {
 			std::deque<token_base *> line = it;
 			line_num = static_cast<token_endline *>(line.back())->get_line_num();
