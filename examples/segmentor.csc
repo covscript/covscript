@@ -23,7 +23,7 @@ class String
 
     ##### private:
     function __assert(cond)
-        if !cond; throw "assertion failed"; end
+        if !cond; throw runtime.exception("assertion failed"); end
     end
 
     function __bitwiseAnd8(x, y)
