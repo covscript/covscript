@@ -290,9 +290,9 @@ namespace cs {
 		}
 	};
 
-	void compiler_type::translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens)
+	void
+	compiler_type::process_token_buff(std::deque<token_base *> &tokens, std::deque<std::deque<token_base *>> &ast)
 	{
-		preprocessor(context, *this, char_buff, tokens);
 		std::deque<token_base *> oldt, expr;
 		std::swap(tokens, oldt);
 		tokens.clear();
@@ -312,6 +312,22 @@ namespace cs {
 			else
 				expr.push_back(ptr);
 		}
+		std::deque<token_base *> tmp;
+		for (auto &ptr:tokens) {
+			tmp.push_back(ptr);
+			if (ptr != nullptr && ptr->get_type() == token_types::endline) {
+				if (tmp.size() > 1)
+					ast.push_back(tmp);
+				tmp.clear();
+			}
+		}
+		if (tmp.size() > 1)
+			ast.push_back(tmp);
+	}
+
+	void compiler_type::translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens)
+	{
+		preprocessor(context, *this, char_buff, tokens);
 	}
 
 	void compiler_type::process_empty_brackets(std::deque<token_base *> &tokens)
