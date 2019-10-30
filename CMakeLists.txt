@@ -51,7 +51,7 @@ endif ()
 
 # Main Executable
 if (WIN32)
-    add_executable(cs sources/standalone.cpp sources/win32_rc/interpreter.rc)
+    add_executable(cs sources/interpreter.cpp sources/win32_rc/interpreter.rc)
     add_executable(cs_dbg sources/debugger.cpp sources/win32_rc/debugger.rc)
 else ()
     add_executable(cs sources/interpreter.cpp)

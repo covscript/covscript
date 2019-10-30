@@ -66,7 +66,8 @@ int covscript_args(int args_size, const char *args[])
 			if (std::strcmp(args[index], "--args") == 0 || std::strcmp(args[index], "-a") == 0) {
 				repl = true;
 				return ++index;
-		 	} else if ((std::strcmp(args[index], "--silent") == 0 || std::strcmp(args[index], "-s") == 0) && !silent)
+			}
+			else if ((std::strcmp(args[index], "--silent") == 0 || std::strcmp(args[index], "-s") == 0) && !silent)
 				silent = true;
 			else if ((std::strcmp(args[index], "--dump-ast") == 0 || std::strcmp(args[index], "-d") == 0) && !dump_ast)
 				dump_ast = true;
