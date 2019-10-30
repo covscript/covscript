@@ -131,7 +131,8 @@ namespace cs {
 
 	void method_namespace::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		std::string name = static_cast<token_id *>(static_cast<token_expr *>(raw.front().at(1))->get_tree().root().data())->get_id();
+		std::string name = static_cast<token_id *>(static_cast<token_expr *>(raw.front().at(
+		                       1))->get_tree().root().data())->get_id();
 		context->instance->storage.add_var("__PRAGMA_CS_NAMESPACE_DEFINITION__", name);
 	}
 
@@ -149,8 +150,10 @@ namespace cs {
 		                               context, raw.front().back());
 	}
 
-	void method_namespace::postprocess(const context_t &context, const domain_type &domain) {
-		context->instance->storage.add_var(domain.get_var("__PRAGMA_CS_NAMESPACE_DEFINITION__").const_val<string>(), make_namespace(make_shared_namespace<name_space>(domain)));
+	void method_namespace::postprocess(const context_t &context, const domain_type &domain)
+	{
+		context->instance->storage.add_var(domain.get_var("__PRAGMA_CS_NAMESPACE_DEFINITION__").const_val<string>(),
+		                                   make_namespace(make_shared_namespace<name_space>(domain)));
 	}
 
 	statement_base *method_if::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)

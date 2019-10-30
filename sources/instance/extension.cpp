@@ -993,12 +993,12 @@ namespace cs_impl {
 			return str;
 		}
 
-		string substr(string &str, number b, number e)
+		string substr(const string &str, number b, number e)
 		{
 			return str.substr(b, e);
 		}
 
-		number find(string &str, const string &s, number posit)
+		number find(const string &str, const string &s, number posit)
 		{
 			auto pos = str.find(s, posit);
 			if (pos == std::string::npos)
@@ -1007,7 +1007,7 @@ namespace cs_impl {
 				return pos;
 		}
 
-		number rfind(string &str, const string &s, number posit)
+		number rfind(const string &str, const string &s, number posit)
 		{
 			std::size_t pos = 0;
 			if (posit == -1)

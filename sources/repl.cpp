@@ -22,6 +22,51 @@
 #include <covscript_impl/console/conio.hpp>
 #include <covscript/covscript.hpp>
 #include <iostream>
+#include <csetjmp>
+
+std::jmp_buf jump_buffer;
+
+#ifdef COVSCRIPT_PLATFORM_WIN32
+
+#include <windows.h>
+
+bool ctrlhandler(DWORD fdwctrltype)
+{
+	switch (fdwctrltype)
+	{
+	case CTRL_C_EVENT:
+		std::longjmp(jump_buffer, 0);
+		return true;
+	default:
+		return false;
+	}
+}
+
+void activate_sigint_handler()
+{
+	::SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrlhandler, true);
+}
+
+#else
+
+#include <unistd.h>
+#include <signal.h>
+
+void signal_handler(int sig)
+{
+	std::longjmp(jump_buffer, 0);
+}
+
+void activate_sigint_handler()
+{
+	struct sigaction sa_usr {};
+	sa_usr.sa_handler = &signal_handler;
+    sigemptyset(&sa_usr.sa_mask);
+    sa_usr.sa_flags = SA_RESTART;
+	sigaction(SIGINT, &sa_usr, NULL);
+}
+
+#endif
 
 std::string log_path;
 bool silent = false;
@@ -125,6 +170,7 @@ void covscript_main(int args_size, const char *args[])
 	for (; index < args_size; ++index)
 		arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 	cs::context_t context = cs::create_context(arg);
+    activate_sigint_handler();
 	cs::current_process->on_process_exit.add_listener([&context](void *code) -> bool {
 		cs::current_process->exit_code = *static_cast<int *>(code);
 		throw cs::fatal_error("CS_REPL_EXIT");
@@ -134,6 +180,11 @@ void covscript_main(int args_size, const char *args[])
 	std::ofstream log_stream;
 	std::string line;
 	while (std::cin) {
+		if (setjmp(jump_buffer) > 0) {
+			repl.reset_status();
+        	std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
+        	activate_sigint_handler();
+		}
 		if (!silent)
 			std::cout << std::string(repl.get_level() * 2, '.') << "> " << std::flush;
 		std::getline(std::cin, line);

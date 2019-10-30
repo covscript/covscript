@@ -74,12 +74,13 @@ namespace cs {
 // Repl
 	class repl final {
 		std::deque<std::deque<token_base *>> tmp;
-		method_base *method = nullptr;
+		stack_type<method_base *> methods;
 		std::size_t line_num = 0;
 		bool multi_line = false;
 		string line_buff;
 		string cmd_buff;
-		int level = 0;
+
+		void interpret(const string &, std::deque<token_base *> &);
 
 		void run(const string &);
 
@@ -104,11 +105,13 @@ namespace cs {
 			this->~repl();
 			::new(this) repl(__context);
 			line_num = __line_num;
+			context->compiler->utilize_metadata();
+			context->instance->storage.clear_set();
 		}
 
 		int get_level() const
 		{
-			return level;
+			return methods.size();
 		}
 	};
 
