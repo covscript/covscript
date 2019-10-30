@@ -51,17 +51,14 @@ endif ()
 
 # Main Executable
 if (WIN32)
-    add_executable(cs sources/standalone.cpp sources/win32_rc/standalone.rc)
-    add_executable(cs_repl sources/repl.cpp sources/win32_rc/repl.rc)
+    add_executable(cs sources/standalone.cpp sources/win32_rc/interpreter.rc)
     add_executable(cs_dbg sources/debugger.cpp sources/win32_rc/debugger.rc)
 else ()
-    add_executable(cs sources/standalone.cpp)
-    add_executable(cs_repl sources/repl.cpp)
+    add_executable(cs sources/interpreter.cpp)
     add_executable(cs_dbg sources/debugger.cpp)
 endif ()
 
 target_link_libraries(cs covscript)
-target_link_libraries(cs_repl covscript)
 target_link_libraries(cs_dbg covscript_debug)
 
 # Tests
