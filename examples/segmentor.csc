@@ -69,19 +69,19 @@ class String
     end
 
     function __getChar8String(csStr, position)
-        return clone(csStr).substr(position, 1)
+        return csStr.substr(position, 1)
     end
 
     function __getChar16String(csStr, position)
-        return clone(csStr).substr(position, 2)
+        return csStr.substr(position, 2)
     end
 
     function __getChar24String(csStr, position)
-        return clone(csStr).substr(position, 3)
+        return csStr.substr(position, 3)
     end
 
     function __getChar32String(csStr, position)
-        return clone(csStr).substr(position, 4)
+        return csStr.substr(position, 4)
     end
 
     function __initWithCSString(csStr)
