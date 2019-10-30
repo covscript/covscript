@@ -105,6 +105,8 @@ namespace cs {
 			this->~repl();
 			::new(this) repl(__context);
 			line_num = __line_num;
+			context->compiler->utilize_metadata();
+			context->instance->storage.clear_set();
 		}
 
 		int get_level() const

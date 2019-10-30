@@ -414,20 +414,14 @@ namespace cs {
 		}
 		catch (const lang_error &le) {
 			reset_status();
-			context->compiler->utilize_metadata();
-			context->instance->storage.clear_set();
 			throw fatal_error(std::string("Uncaught exception: ") + le.what());
 		}
 		catch (const cs::exception &e) {
 			reset_status();
-			context->compiler->utilize_metadata();
-			context->instance->storage.clear_set();
 			throw e;
 		}
 		catch (const std::exception &e) {
 			reset_status();
-			context->compiler->utilize_metadata();
-			context->instance->storage.clear_set();
 			throw exception(line_num, context->file_path, code, e.what());
 		}
 	}
