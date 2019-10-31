@@ -23,7 +23,22 @@
 
 namespace cs {
 	enum class token_types {
-		null, endline, action, signal, id, vargs, expand, value, sblist, mblist, lblist, expr, arglist, array, parallel, autofill
+		null,
+		endline,
+		action,
+		signal,
+		id,
+		vargs,
+		expand,
+		value,
+		sblist,
+		mblist,
+		lblist,
+		expr,
+		arglist,
+		array,
+		parallel,
+		autofill
 	};
 	enum class action_types {
 		import_,
@@ -253,22 +268,6 @@ namespace cs {
 
 		bool dump(std::ostream &) const override;
 	};
-
-    class token_autofill final : public token_base {
-    public:
-        token_autofill() = default;
-
-        token_types get_type() const noexcept override
-        {
-            return token_types::autofill;
-        }
-
-        bool dump(std::ostream &o) const override
-        {
-            o << "< Auto Fill Token >";
-            return true;
-        }
-    };
 
 	class token_id final : public token_base {
 		var_id mId;

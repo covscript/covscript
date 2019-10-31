@@ -1146,7 +1146,7 @@ namespace cs_impl {
 			.add_var("remove", make_cni(remove))
 			.add_var("exists", make_cni(exists))
 			.add_var("rename", make_cni(move))
-			.add_var("is_file", make_cni([](const std::string& path) {
+			.add_var("is_file", make_cni([](const std::string &path) {
 				return !is_dir(path);
 			}))
 			.add_var("is_directory", make_cni(is_dir))

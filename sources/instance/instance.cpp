@@ -39,7 +39,7 @@ namespace cs {
 
 	namespace_t instance_type::source_import(const std::string &path)
 	{
-		if(cs_impl::file_system::is_exe(path)) {
+		if (cs_impl::file_system::is_exe(path)) {
 			// is extension file
 			return std::make_shared<extension>(path);
 		}
@@ -282,7 +282,8 @@ namespace cs {
 		process(it.left(), val);
 	}
 
-	void repl::interpret(const string &code, std::deque<token_base *> &line) {
+	void repl::interpret(const string &code, std::deque<token_base *> &line)
+	{
 		statement_base *sptr = nullptr;
 		try {
 			method_base *m = context->compiler->match_method(line);
@@ -361,7 +362,8 @@ namespace cs {
 		context->instance->storage.clear_set();
 	}
 
-	void repl::run(const string &code) {
+	void repl::run(const string &code)
+	{
 		if (code.empty())
 			return;
 		std::deque<char> buff;
@@ -388,7 +390,8 @@ namespace cs {
 		}
 	}
 
-	void repl::exec(const string &code) {
+	void repl::exec(const string &code)
+	{
 		// Preprocess
 		++line_num;
 		int mode = 0;

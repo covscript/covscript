@@ -26,13 +26,15 @@
 
 namespace cs_system_impl {
 	bool mkdir_impl(const std::string &, unsigned int);
+
 	bool chmod_impl(const std::string &, unsigned int);
 }
 
 
-
 #ifdef COVSCRIPT_PLATFORM_WIN32
+
 #include "./win32/common.cpp"
+
 #else
 #ifndef COVSCRIPT_PLATFORM_UNIX
 #warning Compatible Mode for Unix Platform
@@ -129,9 +131,9 @@ namespace cs_system_impl {
 		}
 		else {
 			if (modeString.size() == 9) {
-				mode =(((perm[0] == 'r') * 4 | (perm[1] == 'w') * 2 | (perm[2] == 'x')) << 6) |
-				      (((perm[3] == 'r') * 4 | (perm[4] == 'w') * 2 | (perm[5] == 'x')) << 3) |
-				      (((perm[6] == 'r') * 4 | (perm[7] == 'w') * 2 | (perm[8] == 'x')));
+				mode = (((perm[0] == 'r') * 4 | (perm[1] == 'w') * 2 | (perm[2] == 'x')) << 6) |
+				       (((perm[3] == 'r') * 4 | (perm[4] == 'w') * 2 | (perm[5] == 'x')) << 3) |
+				       (((perm[6] == 'r') * 4 | (perm[7] == 'w') * 2 | (perm[8] == 'x')));
 			}
 		}
 		return mode;
@@ -159,28 +161,31 @@ namespace cs_impl {
 		bool chmod_r(const std::string &path, const std::string &mode)
 		{
 			auto dirs = cs_system_impl::split(path, cs::path_separator, false);
-            std::stringstream ss;
+			std::stringstream ss;
 
 			for (auto &dir : dirs) {
-                ss << dir << cs::path_separator;
+				ss << dir << cs::path_separator;
 
-                // DO NOT SKIP when dir is a directory
-                // directory has permissions too
+				// DO NOT SKIP when dir is a directory
+				// directory has permissions too
 
 				if (!cs_system_impl::chmod_impl(ss.str(), cs_system_impl::parse_mode(mode))) {
-                    return false;
-                }
+					return false;
+				}
 			}
 			return true;
 		}
+
 		bool chmod(const std::string &path, const std::string &mode)
 		{
 			return cs_system_impl::chmod_impl(path, cs_system_impl::parse_mode(mode));
 		}
+
 		bool move(const std::string &source, const std::string &dest)
 		{
 			return std::rename(source.c_str(), dest.c_str()) == 0;
 		}
+
 		bool copy(const std::string &source, const std::string &dest)
 		{
 			std::ifstream in(source, std::ios_base::in | std::ios_base::binary);
@@ -194,22 +199,27 @@ namespace cs_impl {
 			}
 			return true;
 		}
+
 		bool remove(const std::string &path)
 		{
 			return std::remove(path.c_str()) == 0;
 		}
+
 		bool mkdir_p(const std::string &path)
 		{
 			return cs_system_impl::mkdir_dirs(cs_system_impl::split(path, cs::path_separator, true), 0755);
 		}
+
 		bool mkdir(const std::string &path)
 		{
 			return cs_system_impl::mkdir_dirs(cs_system_impl::split(path, cs::path_separator, false), 0755);
 		}
+
 		bool exists(const std::string &path)
 		{
 			return std::ifstream(path).is_open();
 		}
+
 		bool is_dir(const std::string &path)
 		{
 			return cs_system_impl::is_directory(path);

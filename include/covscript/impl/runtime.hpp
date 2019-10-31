@@ -252,7 +252,6 @@ namespace cs {
 	};
 
 	class runtime_type {
-	    var m_previous_result;
 	public:
 		domain_manager storage;
 

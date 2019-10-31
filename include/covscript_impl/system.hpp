@@ -24,7 +24,7 @@
 
 namespace cs_impl {
 	namespace platform {
-		inline constexpr  bool is_platform_win32()
+		inline constexpr bool is_platform_win32()
 		{
 #ifdef COVSCRIPT_PLATFORM_WIN32
 			return true;
@@ -62,30 +62,49 @@ namespace cs_impl {
 	}
 	namespace conio {
 		int terminal_width();
+
 		int terminal_height();
+
 		void gotoxy(int, int);
+
 		void echo(bool);
+
 		void clrscr();
+
 		int getch();
+
 		int kbhit();
 	}
 	namespace file_system {
 // Detection
-		bool exists(const std::string&);
-		bool is_dir(const std::string&);
-		bool is_exe(const std::string&);
-		bool can_read(const std::string&);
-		bool can_write(const std::string&);
-		bool can_execute(const std::string&);
+		bool exists(const std::string &);
+
+		bool is_dir(const std::string &);
+
+		bool is_exe(const std::string &);
+
+		bool can_read(const std::string &);
+
+		bool can_write(const std::string &);
+
+		bool can_execute(const std::string &);
+
 // Files
-		bool chmod_r(const std::string&, const std::string&);
-		bool chmod(const std::string&, const std::string&);
-		bool move(const std::string&, const std::string&);
-		bool copy(const std::string&, const std::string&);
-		bool remove(const std::string&);
+		bool chmod_r(const std::string &, const std::string &);
+
+		bool chmod(const std::string &, const std::string &);
+
+		bool move(const std::string &, const std::string &);
+
+		bool copy(const std::string &, const std::string &);
+
+		bool remove(const std::string &);
+
 // Directories
-		bool mkdir_p(const std::string&);
-		bool mkdir(const std::string&);
+		bool mkdir_p(const std::string &);
+
+		bool mkdir(const std::string &);
+
 		std::string get_current_dir();
 	}
 }
