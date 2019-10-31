@@ -23,22 +23,7 @@
 
 namespace cs {
 	enum class token_types {
-		null,
-		endline,
-		action,
-		signal,
-		id,
-		vargs,
-		expand,
-		value,
-		sblist,
-		mblist,
-		lblist,
-		expr,
-		arglist,
-		array,
-		parallel,
-		autofill
+		null, endline, action, signal, id, vargs, expand, value, sblist, mblist, lblist, expr, arglist, array, parallel
 	};
 	enum class action_types {
 		import_,
