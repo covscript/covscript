@@ -23,20 +23,50 @@
 #include <covscript/covscript.hpp>
 #include <iostream>
 #include <csetjmp>
-#include <csignal>
 
 std::jmp_buf jump_buffer;
 
-void signal_handler(int sig)
+#ifdef COVSCRIPT_PLATFORM_WIN32
+
+#include <windows.h>
+
+bool ctrlhandler(DWORD fdwctrltype)
 {
-	std::signal(SIGINT, &signal_handler);
-	std::longjmp(jump_buffer, sig);
+    switch (fdwctrltype)
+    {
+        case CTRL_C_EVENT:
+            std::longjmp(jump_buffer, 0);
+            return true;
+        default:
+            return false;
+    }
 }
 
 void activate_sigint_handler()
 {
-	std::signal(SIGINT, &signal_handler);
+    ::SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrlhandler, true);
 }
+
+#else
+
+#include <unistd.h>
+#include <signal.h>
+
+void signal_handler(int sig)
+{
+	std::longjmp(jump_buffer, 0);
+}
+
+void activate_sigint_handler()
+{
+	struct sigaction sa_usr {};
+	sa_usr.sa_handler = &signal_handler;
+    sigemptyset(&sa_usr.sa_mask);
+    sa_usr.sa_flags = SA_RESTART | SA_NODEFER;
+	sigaction(SIGINT, &sa_usr, NULL);
+}
+
+#endif
 
 std::string log_path;
 bool repl = false;
