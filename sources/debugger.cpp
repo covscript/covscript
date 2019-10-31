@@ -36,19 +36,18 @@ std::jmp_buf jump_buffer;
 
 bool ctrlhandler(DWORD fdwctrltype)
 {
-    switch (fdwctrltype)
-    {
-        case CTRL_C_EVENT:
-            std::longjmp(jump_buffer, 0);
-            return true;
-        default:
-            return false;
-    }
+	switch (fdwctrltype) {
+	case CTRL_C_EVENT:
+		std::longjmp(jump_buffer, 0);
+		return true;
+	default:
+		return false;
+	}
 }
 
 void activate_sigint_handler()
 {
-    ::SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrlhandler, true);
+	::SetConsoleCtrlHandler((PHANDLER_ROUTINE) ctrlhandler, true);
 }
 
 #else
@@ -65,8 +64,8 @@ void activate_sigint_handler()
 {
 	struct sigaction sa_usr {};
 	sa_usr.sa_handler = &signal_handler;
-    sigemptyset(&sa_usr.sa_mask);
-    sa_usr.sa_flags = SA_RESTART | SA_NODEFER;
+	sigemptyset(&sa_usr.sa_mask);
+	sa_usr.sa_flags = SA_RESTART | SA_NODEFER;
 	sigaction(SIGINT, &sa_usr, NULL);
 }
 
@@ -293,13 +292,12 @@ void reset_status()
 
 bool covscript_debugger()
 {
-    if (setjmp(jump_buffer) > 0)
-    {
-        cs::collect_garbage(context);
-        reset_status();
-        std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
-        activate_sigint_handler();
-    }
+	if (setjmp(jump_buffer) > 0) {
+		cs::collect_garbage(context);
+		reset_status();
+		std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
+		activate_sigint_handler();
+	}
 	std::string cmd, func, args;
 	step_into_function = false;
 	std::cout << "> " << std::flush;

@@ -32,19 +32,18 @@ std::jmp_buf jump_buffer;
 
 bool ctrlhandler(DWORD fdwctrltype)
 {
-    switch (fdwctrltype)
-    {
-        case CTRL_C_EVENT:
-            std::longjmp(jump_buffer, 0);
-            return true;
-        default:
-            return false;
-    }
+	switch (fdwctrltype) {
+	case CTRL_C_EVENT:
+		std::longjmp(jump_buffer, 0);
+		return true;
+	default:
+		return false;
+	}
 }
 
 void activate_sigint_handler()
 {
-    ::SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrlhandler, true);
+	::SetConsoleCtrlHandler((PHANDLER_ROUTINE) ctrlhandler, true);
 }
 
 #else
@@ -61,8 +60,8 @@ void activate_sigint_handler()
 {
 	struct sigaction sa_usr {};
 	sa_usr.sa_handler = &signal_handler;
-    sigemptyset(&sa_usr.sa_mask);
-    sa_usr.sa_flags = SA_RESTART | SA_NODEFER;
+	sigemptyset(&sa_usr.sa_mask);
+	sa_usr.sa_flags = SA_RESTART | SA_NODEFER;
 	sigaction(SIGINT, &sa_usr, NULL);
 }
 
@@ -101,15 +100,20 @@ int covscript_args(int args_size, const char *args[])
 				silent = true;
 			else if ((std::strcmp(args[index], "--dump-ast") == 0 || std::strcmp(args[index], "-d") == 0) && !dump_ast)
 				dump_ast = true;
-			else if ((std::strcmp(args[index], "--no-optimize") == 0 || std::strcmp(args[index], "-o") == 0) && !no_optimize)
+			else if ((std::strcmp(args[index], "--no-optimize") == 0 || std::strcmp(args[index], "-o") == 0) &&
+			         !no_optimize)
 				no_optimize = true;
-			else if ((std::strcmp(args[index], "--compile-only") == 0 || std::strcmp(args[index], "-c") == 0) && !compile_only)
+			else if ((std::strcmp(args[index], "--compile-only") == 0 || std::strcmp(args[index], "-c") == 0) &&
+			         !compile_only)
 				compile_only = true;
-			else if ((std::strcmp(args[index], "--help") == 0 || std::strcmp(args[index], "-h") == 0) && !show_help_info)
+			else if ((std::strcmp(args[index], "--help") == 0 || std::strcmp(args[index], "-h") == 0) &&
+			         !show_help_info)
 				show_help_info = true;
-			else if ((std::strcmp(args[index], "--wait-before-exit") == 0 || std::strcmp(args[index], "-w") == 0) && !wait_before_exit)
+			else if ((std::strcmp(args[index], "--wait-before-exit") == 0 || std::strcmp(args[index], "-w") == 0) &&
+			         !wait_before_exit)
 				wait_before_exit = true;
-			else if ((std::strcmp(args[index], "--version") == 0 || std::strcmp(args[index], "-v") == 0) && !show_version_info)
+			else if ((std::strcmp(args[index], "--version") == 0 || std::strcmp(args[index], "-v") == 0) &&
+			         !show_version_info)
 				show_version_info = true;
 			else if ((std::strcmp(args[index], "--log-path") == 0 || std::strcmp(args[index], "-l") == 0) &&
 			         expect_log_path == 0)
@@ -224,7 +228,8 @@ void covscript_main(int args_size, const char *args[])
 	}
 	else {
 		if (!silent)
-			std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: " << cs::current_process->version
+			std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: "
+			          << cs::current_process->version
 			          << "\n"
 			          "Copyright (C) 2019 Michael Lee. All rights reserved.\n"
 			          "Please visit <http://covscript.org/> for more information."
