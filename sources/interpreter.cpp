@@ -19,7 +19,7 @@
 * Github: https://github.com/mikecovlee
 * Website: http://covscript.org
 */
-#include <covscript_impl/console/conio.hpp>
+#include <covscript_impl/system.hpp>
 #include <covscript/covscript.hpp>
 #include <iostream>
 #include <csetjmp>
