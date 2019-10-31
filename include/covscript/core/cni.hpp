@@ -222,6 +222,11 @@ namespace cs_impl {
 
 		explicit cni_helper(const std::function<void(_Target_ArgsT...)> &func) : mFunc(func) {}
 
+		std::size_t argument_count() const noexcept
+		{
+			return sizeof...(_Source_ArgsT);
+		}
+
 		any call(cs::vector &args) const
 		{
 			if (args.size() != sizeof...(_Target_ArgsT))
@@ -252,6 +257,11 @@ namespace cs_impl {
 
 		explicit cni_helper(const std::function<_Target_RetT(_Target_ArgsT...)> &func) : mFunc(func) {}
 
+		std::size_t argument_count() const noexcept
+		{
+			return sizeof...(_Source_ArgsT);
+		}
+
 		any call(cs::vector &args) const
 		{
 			if (args.size() != sizeof...(_Target_ArgsT))
@@ -272,6 +282,8 @@ namespace cs_impl {
 
 		virtual ~cni_holder_base() = default;
 
+		virtual std::size_t argument_count() const noexcept = 0;
+
 		virtual cni_holder_base *clone() = 0;
 
 		virtual any call(cs::vector &) const = 0;
@@ -288,6 +300,11 @@ namespace cs_impl {
 		explicit cni_holder(const T &func) : mCni(func) {}
 
 		~cni_holder() override = default;
+
+		std::size_t argument_count() const noexcept override
+		{
+			return mCni.argument_count();
+		}
 
 		cni_holder_base *clone() override
 		{
@@ -363,6 +380,11 @@ namespace cs_impl {
 		~cni()
 		{
 			delete mCni;
+		}
+
+		std::size_t argument_count() const noexcept
+		{
+			return mCni->argument_count();
 		}
 
 		any operator()(cs::vector &args) const

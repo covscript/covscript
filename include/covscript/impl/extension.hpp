@@ -93,6 +93,17 @@ namespace cs_impl {
 		return std::move(str);
 	}
 
+	template<>
+	std::string to_string<cs::structure>(const cs::structure &stut)
+	{
+		if (stut.get_domain().exist("to_string")) {
+			cs::var func = stut.get_domain().get_var("to_string");
+			if (func.type() == typeid(cs::callable))
+				return cs::invoke(func, cs::var::make<cs::structure>(&stut)).to_string();
+		}
+		throw cs::lang_error("Undefined \"to_string\" method.");
+	}
+
 // To Integer
 	template<>
 	long to_integer<std::string>(const std::string &str)

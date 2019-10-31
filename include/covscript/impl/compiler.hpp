@@ -272,6 +272,8 @@ namespace cs {
 
 		void process_char_buff(const std::deque<char> &, std::deque<token_base *> &);
 
+		void process_token_buff(std::deque<token_base *> &, std::deque<std::deque<token_base *>> &);
+
 		void translate_into_tokens(const std::deque<char> &, std::deque<token_base *> &);
 
 		void process_empty_brackets(std::deque<token_base *> &);
@@ -329,9 +331,13 @@ namespace cs {
 			return false;
 		}
 
-		void trim_expression(tree_type<token_base *> &tree)
+		enum class trim_type {
+			normal, no_expr_fold, no_this_deduce
+		};
+
+		void trim_expression(tree_type<token_base *> &tree, trim_type do_trim = trim_type::normal)
 		{
-			trim_expr(tree, tree.root(), trim_type::normal);
+			trim_expr(tree, tree.root(), do_trim);
 		}
 
 		void optimize_expression(tree_type<token_base *> &tree)
@@ -341,15 +347,13 @@ namespace cs {
 				opt_expr(tree, tree.root());
 		}
 
-		enum class trim_type {
-			normal, no_expr_fold, no_this_deduce
-		};
-
 		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, trim_type);
 
 		void opt_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator);
 
 	public:
+		void try_fix_this_deduction(tree_type<token_base *>::iterator);
+
 		compiler_type() = delete;
 
 		explicit compiler_type(context_t c) : context(std::move(c)) {}
@@ -412,28 +416,22 @@ namespace cs {
 			kill_expr(line);
 		}
 
-		void build_line(const std::deque<char> &buff, std::deque<token_base *> &line, std::size_t line_num = 1)
+		void
+		build_line(const std::deque<char> &buff, std::deque<std::deque<token_base *>> &ast, std::size_t line_num = 1)
 		{
-			process_char_buff(buff, line);
-			translator.match_grammar(context, line);
-			line.push_back(new token_endline(line_num));
-			process_line(line);
+			std::deque<token_base *> tokens;
+			process_char_buff(buff, tokens);
+			tokens.push_back(new token_endline(line_num));
+			process_token_buff(tokens, ast);
+			for (auto &line:ast)
+				process_line(line);
 		}
 
 		void build_ast(const std::deque<char> &buff, std::deque<std::deque<token_base *>> &ast)
 		{
 			std::deque<token_base *> tokens, tmp;
 			translate_into_tokens(buff, tokens);
-			for (auto &ptr:tokens) {
-				tmp.push_back(ptr);
-				if (ptr != nullptr && ptr->get_type() == token_types::endline) {
-					if (tmp.size() > 1)
-						ast.push_back(tmp);
-					tmp.clear();
-				}
-			}
-			if (tmp.size() > 1)
-				ast.push_back(tmp);
+			process_token_buff(tokens, ast);
 		}
 
 		compiler_type &add_method(const std::deque<token_base *> &grammar, method_base *method)

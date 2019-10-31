@@ -282,37 +282,32 @@ namespace cs {
 		process(it.left(), val);
 	}
 
-	void repl::run(const string &code)
-	{
-		if (code.empty())
-			return;
-		std::deque<char> buff;
-		for (auto &ch:code)
-			buff.push_back(ch);
-		statement_base *statement = nullptr;
+	void repl::interpret(const string &code, std::deque<token_base *> &line) {
+		statement_base *sptr = nullptr;
 		try {
-			std::deque<token_base *> line;
-			context->compiler->clear_metadata();
-			context->compiler->build_line(buff, line);
 			method_base *m = context->compiler->match_method(line);
 			switch (m->get_type()) {
 			case method_types::null:
 				throw runtime_error("Null type of grammar.");
 				break;
 			case method_types::single: {
-				if (level > 0) {
+				if (methods.size() > 0) {
+					method_base *expected_method = nullptr;
 					if (m->get_target_type() == statement_types::end_) {
 						context->instance->storage.remove_set();
+						domain_type domain = std::move(context->instance->storage.get_domain());
 						context->instance->storage.remove_domain();
-						--level;
+						methods.top()->postprocess(context, domain);
+						expected_method = methods.top();
+						methods.pop();
 					}
-					if (level == 0) {
+					if (methods.size() == 0) {
 						if (m->get_target_type() == statement_types::end_)
-							statement = static_cast<method_end *>(m)->translate_end(method, context, tmp, line);
+							sptr = static_cast<method_end *>(m)->translate_end(expected_method, context, tmp,
+							        line);
 						else
-							statement = method->translate(context, tmp);
+							sptr = expected_method->translate(context, tmp);
 						tmp.clear();
-						method = nullptr;
 					}
 					else {
 						m->preprocess(context, {line});
@@ -324,18 +319,16 @@ namespace cs {
 						throw runtime_error("Hanging end statement.");
 					else {
 						m->preprocess(context, {line});
-						statement = m->translate(context, {line});
+						sptr = m->translate(context, {line});
 					}
 				}
 			}
 			break;
 			case method_types::block: {
-				if (level == 0)
-					method = m;
-				++level;
+				methods.push(m);
 				context->instance->storage.add_domain();
 				context->instance->storage.add_set();
-				m->preprocess(context, {line});
+				methods.top()->preprocess(context, {line});
 				tmp.push_back(line);
 			}
 			break;
@@ -343,8 +336,8 @@ namespace cs {
 				m->translate(context, {line});
 				break;
 			}
-			if (statement != nullptr)
-				statement->repl_run();
+			if (sptr != nullptr)
+				sptr->repl_run();
 		}
 		catch (const lang_error &le) {
 			reset_status();
@@ -368,8 +361,34 @@ namespace cs {
 		context->instance->storage.clear_set();
 	}
 
-	void repl::exec(const string &code)
-	{
+	void repl::run(const string &code) {
+		if (code.empty())
+			return;
+		std::deque<char> buff;
+		for (auto &ch:code)
+			buff.push_back(ch);
+		try {
+			std::deque<std::deque<token_base *>> ast;
+			context->compiler->clear_metadata();
+			context->compiler->build_line(buff, ast);
+			for (auto &line:ast)
+				interpret(code, line);
+		}
+		catch (const lang_error &le) {
+			reset_status();
+			throw fatal_error(std::string("Uncaught exception: ") + le.what());
+		}
+		catch (const cs::exception &e) {
+			reset_status();
+			throw e;
+		}
+		catch (const std::exception &e) {
+			reset_status();
+			throw exception(line_num, context->file_path, code, e.what());
+		}
+	}
+
+	void repl::exec(const string &code) {
 		// Preprocess
 		++line_num;
 		int mode = 0;

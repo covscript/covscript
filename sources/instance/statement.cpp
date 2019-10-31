@@ -39,8 +39,11 @@ namespace cs {
 		if (mIsVargs) {
 			var arg_list = var::make<cs::array>();
 			auto &arr = arg_list.val<cs::array>();
-			for (auto &it:args)
-				arr.push_back(it);
+			std::size_t i = 0;
+			if (mIsMemFn)
+				mContext->instance->storage.add_var("this", args[i++]);
+			for (; i < args.size(); ++i)
+				arr.push_back(args[i]);
 			mContext->instance->storage.add_var(this->mArgs.front(), arg_list);
 		}
 		else {
@@ -140,7 +143,7 @@ namespace cs {
 	void statement_involve::run()
 	{
 		CS_DEBUGGER_STEP(this);
-		var ns = context->instance->parse_expr(mTree.root());
+		var ns = context->instance->parse_expr(mTree.root(), true);
 		if (ns.type() == typeid(namespace_t))
 			context->instance->storage.involve_domain(ns.const_val<namespace_t>()->get_domain(), mOverride);
 		else
@@ -249,7 +252,7 @@ namespace cs {
 				}
 			}
 			return scope.get();
-		}())));
+		}())), true);
 	}
 
 	void statement_namespace::dump(std::ostream &o) const

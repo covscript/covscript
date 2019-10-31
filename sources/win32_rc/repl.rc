@@ -1,5 +1,0 @@
-#include "./resources.rc"
-
-A ICON
-"../icon/covariant_script_repl.ico"
-MY_VERSION_INFO_APP("Covariant Script REPL", "cs_repl")

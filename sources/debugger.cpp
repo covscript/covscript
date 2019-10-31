@@ -25,7 +25,51 @@
 #include <covscript_impl/system.hpp>
 #include <covscript/covscript.hpp>
 #include <iostream>
+#include <csetjmp>
 #include <chrono>
+
+std::jmp_buf jump_buffer;
+
+#ifdef COVSCRIPT_PLATFORM_WIN32
+
+#include <windows.h>
+
+bool ctrlhandler(DWORD fdwctrltype)
+{
+	switch (fdwctrltype) {
+	case CTRL_C_EVENT:
+		std::longjmp(jump_buffer, 0);
+		return true;
+	default:
+		return false;
+	}
+}
+
+void activate_sigint_handler()
+{
+	::SetConsoleCtrlHandler((PHANDLER_ROUTINE) ctrlhandler, true);
+}
+
+#else
+
+#include <unistd.h>
+#include <signal.h>
+
+void signal_handler(int sig)
+{
+	std::longjmp(jump_buffer, 0);
+}
+
+void activate_sigint_handler()
+{
+	struct sigaction sa_usr {};
+	sa_usr.sa_handler = &signal_handler;
+	sigemptyset(&sa_usr.sa_mask);
+	sa_usr.sa_flags = SA_RESTART | SA_NODEFER;
+	sigaction(SIGINT, &sa_usr, NULL);
+}
+
+#endif
 
 std::string log_path;
 bool no_optimize = false;
@@ -248,6 +292,12 @@ void reset_status()
 
 bool covscript_debugger()
 {
+	if (setjmp(jump_buffer) > 0) {
+		cs::collect_garbage(context);
+		reset_status();
+		std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
+		activate_sigint_handler();
+	}
 	std::string cmd, func, args;
 	step_into_function = false;
 	std::cout << "> " << std::flush;
@@ -582,6 +632,7 @@ void covscript_main(int args_size, const char *args[])
 			std::cout << context->instance->parse_expr(tree.root()) << std::endl;
 			return true;
 		});
+		activate_sigint_handler();
 		while (covscript_debugger());
 	}
 	else

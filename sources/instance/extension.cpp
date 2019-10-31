@@ -61,9 +61,19 @@ namespace cs_impl {
 			return ++it;
 		}
 
+		array::iterator forward_n(array::iterator &it, number offset)
+		{
+			return it += offset;
+		}
+
 		array::iterator backward(array::iterator &it)
 		{
 			return --it;
+		}
+
+		array::iterator backward_n(array::iterator &it, number offset)
+		{
+			return it -= offset;
 		}
 
 		var data(array::iterator &it)
@@ -148,7 +158,9 @@ namespace cs_impl {
 		{
 			(*array_iterator_ext)
 			.add_var("forward", make_cni(forward, true))
+			.add_var("forward_n", make_cni(forward_n, true))
 			.add_var("backward", make_cni(backward, true))
+			.add_var("backward_n", make_cni(backward_n, true))
 			.add_var("data", make_cni(data, true));
 			(*array_ext)
 			.add_var("iterator", make_namespace(array_iterator_ext))
@@ -874,6 +886,26 @@ namespace cs_impl {
 			return make_namespace(context->instance->source_import(path));
 		}
 
+		number argument_count(const var &func)
+		{
+			if (func.type() == typeid(object_method)) {
+				const callable::function_type &target = func.const_val<object_method>().callable.const_val<callable>().get_raw_data();
+				if (target.target_type() == typeid(function))
+					return target.target<function>()->argument_count() - 1;
+				else
+					return target.target<cni>()->argument_count() - 1;
+			}
+			else if (func.type() == typeid(callable)) {
+				const callable::function_type &target = func.const_val<callable>().get_raw_data();
+				if (target.target_type() == typeid(function))
+					return target.target<function>()->argument_count();
+				else
+					return target.target<cni>()->argument_count();
+			}
+			else
+				throw lang_error("Not a function.");
+		}
+
 		void init()
 		{
 			(*runtime_ext)
@@ -889,6 +921,7 @@ namespace cs_impl {
 			.add_var("cmd_args", make_cni(cmd_args, true))
 			.add_var("import", make_cni(import, true))
 			.add_var("source_import", make_cni(source_import, true))
+			.add_var("argument_count", make_cni(argument_count, true))
 			.add_var("get_current_dir", make_cni(file_system::get_current_dir));
 			(*context_ext)
 			.add_var("build", make_cni(build))
@@ -900,6 +933,12 @@ namespace cs_impl {
 	}
 	namespace string_cs_ext {
 		using namespace cs;
+
+		string assign(string &str, number posit, char ch)
+		{
+			str.at(posit) = ch;
+			return str;
+		}
 
 		string append(string &str, const var &val)
 		{
@@ -925,12 +964,12 @@ namespace cs_impl {
 			return str;
 		}
 
-		string substr(string &str, number b, number e)
+		string substr(const string &str, number b, number e)
 		{
 			return str.substr(b, e);
 		}
 
-		number find(string &str, const string &s, number posit)
+		number find(const string &str, const string &s, number posit)
 		{
 			auto pos = str.find(s, posit);
 			if (pos == std::string::npos)
@@ -939,7 +978,7 @@ namespace cs_impl {
 				return pos;
 		}
 
-		number rfind(string &str, const string &s, number posit)
+		number rfind(const string &str, const string &s, number posit)
 		{
 			std::size_t pos = 0;
 			if (posit == -1)
@@ -1025,6 +1064,7 @@ namespace cs_impl {
 		void init()
 		{
 			(*string_ext)
+			.add_var("assign", make_cni(assign, true))
 			.add_var("append", make_cni(append, true))
 			.add_var("insert", make_cni(insert, true))
 			.add_var("erase", make_cni(erase, true))

@@ -101,8 +101,8 @@ namespace cs {
 		bool exist_record_in_struct(const string &name)
 		{
 			for (auto &set:m_set) {
-				if (set.count("__PRAGMA_CS_STRUCT_DEFINITION__") > 0)
-					return set.count(name) > 0;
+				if (set.count(name) > 0)
+					return set.count("__PRAGMA_CS_STRUCT_DEFINITION__") > 0;
 			}
 			return false;
 		}
@@ -328,16 +328,6 @@ namespace cs {
 
 		var parse_access(var, const var &);
 
-		var parse_expr(const tree_type<token_base *>::iterator &);
-
-		inline void do_expression(const tree_type<token_base*> &tree)
-        {
-		    m_previous_result=parse_expr(tree.root());
-        }
-
-        inline const var& do_expression_repl(const tree_type<token_base*> &tree)
-        {
-            return m_previous_result=parse_expr(tree.root());
-        }
+		var parse_expr(const tree_type<token_base *>::iterator &, bool= false);
 	};
 }

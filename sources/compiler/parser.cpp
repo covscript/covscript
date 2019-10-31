@@ -91,7 +91,7 @@ namespace cs {
 				break;
 			case token_types::sblist: {
 				for (auto &list:static_cast<token_sblist *>(ptr)->get_list())
-					kill_brackets(list);
+					kill_brackets(list, line_num);
 				if (expected_fcall) {
 					std::deque<tree_type<token_base *>> tlist;
 					if (expected_fdef) {
@@ -118,7 +118,7 @@ namespace cs {
 				auto *mbl = static_cast<token_mblist *>(ptr);
 				if (mbl->get_list().size() != 1)
 					throw runtime_error("There are no more elements in middle bracket.");
-				kill_brackets(mbl->get_list().front());
+				kill_brackets(mbl->get_list().front(), line_num);
 				tree_type<token_base *> tree;
 				gen_tree(tree, mbl->get_list().front());
 				tokens.push_back(new token_signal(signal_types::access_));
@@ -128,7 +128,7 @@ namespace cs {
 			}
 			case token_types::lblist: {
 				for (auto &list:static_cast<token_lblist *>(ptr)->get_list())
-					kill_brackets(list);
+					kill_brackets(list, line_num);
 				std::deque<tree_type<token_base *>> tlist;
 				for (auto &list:static_cast<token_lblist *>(ptr)->get_list()) {
 					tree_type<token_base *> tree;
