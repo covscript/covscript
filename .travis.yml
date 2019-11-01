@@ -41,8 +41,8 @@ jobs:
         - mkdir build
         - cd build
         - cmake ..
-        - cmake --build . --config MinSizeRel
-        - cp ./MinSizeRel/* .
+        - cmake --build .
+        - cp ./Debug/* .
         - cp -r ../include .
         - mkdir lib
         - cp *.lib ./lib
