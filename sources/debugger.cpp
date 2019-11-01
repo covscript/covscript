@@ -21,8 +21,8 @@
 */
 #define CS_DEBUGGER
 
-#include <covscript_impl/console/conio.hpp>
 #include <covscript_impl/variant.hpp>
+#include <covscript_impl/system.hpp>
 #include <covscript/covscript.hpp>
 #include <iostream>
 #include <csetjmp>

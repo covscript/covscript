@@ -1,0 +1,123 @@
+package csbuild
+
+class target
+    var name = new string
+    var source = new list
+    var libs = new list
+    var coptions = new string
+
+    function compile(files)
+        foreach file in files
+            source.push_back(file)
+        end
+        return this
+    end
+
+    function link(lib)
+        libs.push_back(lib)
+        return this
+    end
+
+    function compile_options(opt)
+        coptions += " " + opt
+        return this
+    end
+
+    function link_options(opt)
+        loptions += " " + opt
+        return this
+    end
+
+    function windows(callback)
+        if system.is_platform_windows()
+            callback(this)
+        end
+        return this
+    end
+
+    function linux(callback)
+        if system.is_platform_linux()
+            callback(this)
+        end
+        return this
+    end
+
+    function darwin(callback)
+        if system.is_platform_darwin()
+            callback(this)
+        end
+        return this
+    end
+
+    function unix(callback)
+        if system.is_platform_unix()
+            callback(this)
+        end
+        return this
+    end
+
+    function compile_windows(files)
+        return this.windows([](t) -> t.compile(files))
+    end
+
+    function compile_linux(files)
+        return this.linux([](t) -> t.compile(files))
+    end
+
+    function compile_darwin(files)
+        return this.darwin([](t) -> t.compile(files))
+    end
+
+    function compile_unix(files)
+        return this.unix([](t) -> t.compile(files))
+    end
+
+    function link_windows(lib)
+        return this.windows([](t) -> t.link(lib))
+    end
+
+    function link_linux(lib)
+        return this.linux([](t) -> t.link(lib))
+    end
+
+    function link_darwin(lib)
+        return this.darwin([](t) -> t.link(lib))
+    end
+
+    function link_unix(lib)
+        return this.unix([](t) -> t.link(lib))
+    end
+
+    function compile_options_windows(opt)
+        return this.windows([](t) -> t.compile_options(opt))
+    end
+
+    function compile_options_linux(opt)
+        return this.linux([](t) -> t.compile_options(opt))
+    end
+
+    function compile_options_darwin(opt)
+        return this.darwin([](t) -> t.compile_options(opt))
+    end
+
+    function compile_options_unix(opt)
+        return this.unix([](t) -> t.compile_options(opt))
+    end
+end
+
+class config
+    var name = new string
+    var author = new string
+    var version = new string
+    var version_code = 0
+    var targets = new hash_map
+
+    function target(name, source)
+        var target = gcnew target
+        target->name = name
+        target->source = source
+        this.targets.insert(target->name, target)
+        return *target
+    end
+end
+
