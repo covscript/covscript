@@ -7,7 +7,7 @@ class calculator
     var num_stack = new array
 
     function lex(expr)
-        var status = 0, last_status = 2, bracket_lev = 0
+        var status = 0, last_status = 2, bracket_lev = 0, expected_neg = true
         var buff = ""
         for i = 0, i < expr.size(), null
             var ch = expr[i]
@@ -26,6 +26,7 @@ class calculator
                     end
                     if ch == '(' 
                         status = 3
+                        expected_neg = true
                         continue
                     end
                     if ch == ')' 
@@ -39,7 +40,7 @@ class calculator
                         throw runtime.exception("Wrong Format Expression")
                     end
                     if !char.isdigit(ch)
-                        num_stack.push_back(buff.to_number())
+                        num_stack.push_back(last_status == -1 ? -buff.to_number() : buff.to_number())
                         last_status = status
                         status = 0
                         buff = ""
@@ -49,8 +50,21 @@ class calculator
                     end
                 end
                 case 2
-                    if last_status == 2
-                        throw runtime.exception("Wrong Format Expression")
+                    if expected_neg && ch == '-'
+                        last_status = -1
+                        status = 0
+                        ++i
+                        continue
+                    end
+                    if last_status == 2 || last_status == -1
+                        if ch == '-'
+                            last_status = -1
+                            status = 0
+                            ++i
+                            continue
+                        else
+                            throw runtime.exception("Wrong Format Expression")
+                        end
                     end
                     op_stack.push_back(ch)
                     last_status = status
@@ -63,6 +77,7 @@ class calculator
                     last_status = 2
                     status = 0
                     ++i
+                    continue
                 end
                 case 4
                     --bracket_lev
@@ -72,9 +87,10 @@ class calculator
                     ++i
                 end
             end
+            expected_neg = false
         end
         if status == 1
-            num_stack.push_back(buff.to_number())
+            num_stack.push_back(last_status == -1 ? -buff.to_number() : buff.to_number())
             last_status = status
         end
         if last_status == 2

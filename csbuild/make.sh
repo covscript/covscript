@@ -5,7 +5,6 @@ cmake -G "Unix Makefiles" ../..
 cmake --build . --target covscript        -- -j4
 cmake --build . --target covscript_debug  -- -j4
 cmake --build . --target cs               -- -j4
-cmake --build . --target cs_repl          -- -j4
 cmake --build . --target cs_dbg           -- -j4
 cd ../..
 rm -rf build
