@@ -442,6 +442,7 @@ void covscript_main(int args_size, const char *args[])
 		          "Please visit <http://covscript.org/> for more information."
 		          << std::endl;
 		path = cs::process_path(args[index]);
+        cs::prepend_import_path(path, cs::current_process);
 		cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
 			cs::current_process->exit_code = *static_cast<int *>(code);
 			throw cs::fatal_error("CS_DEBUGGER_EXIT");
