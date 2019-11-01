@@ -392,9 +392,14 @@ function csbuild_make(path, cfg, args)
     echo(":: Building in " + buildDir)
 
     var cmakeFlags = ""
+    var cmakeBuildFlags = ""
     if csbuild_make_is_mingw_or_msys()
         echo(":: Detected we are building in MinGW/MSYS/Cygwin")
         cmakeFlags = " -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -G \"Unix Makefiles\""
+    else
+        if system.is_platform_windows()
+            cmakeBuildFlags = " --config MinSizeRel"
+        end
     end
 
     var cmakeCommand = "cmake -H" +  genDir + " -B" + buildDir + " " + cmakeFlags
@@ -404,7 +409,7 @@ function csbuild_make(path, cfg, args)
         return 1
     end
 
-    var makeCommand = "cmake --build " + buildDir
+    var makeCommand = "cmake --build " + buildDir + cmakeBuildFlags
     echo(":: Running command: " + makeCommand)
     if system.run(makeCommand) != 0
         echo("\n\n:: Faild: make (also cmake --build)")
