@@ -42,7 +42,7 @@ jobs:
         - cd build
         - cmake -G "Visual Studio 15 2017 Win64" ..
         - cmake --build . --config MinSizeRel
-        - cp ./Debug/* .
+        - cp ./MinSizeRel/* .
         - cp -r ../include .
         - mkdir lib
         - cp *.lib ./lib
