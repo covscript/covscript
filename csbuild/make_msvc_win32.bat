@@ -6,7 +6,6 @@ cmake -G "Visual Studio 15 2017" ..\..
 cmake --build . --config %config% --target covscript
 cmake --build . --config %config% --target covscript_debug
 cmake --build . --config %config% --target cs
-cmake --build . --config %config% --target cs_repl
 cmake --build . --config %config% --target cs_dbg
 cd ..\..
 rd /S /Q build
