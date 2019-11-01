@@ -398,6 +398,7 @@ function csbuild_make(path, cfg, args)
         cmakeFlags = " -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -G \"Unix Makefiles\""
     else
         if system.is_platform_windows()
+            cmakeFlags = " -G \"Visual Studio 15 2017 Win64\""
             cmakeBuildFlags = " --config MinSizeRel"
         end
     end

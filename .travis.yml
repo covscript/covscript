@@ -40,8 +40,8 @@ jobs:
       install:
         - mkdir build
         - cd build
-        - cmake ..
-        - cmake --build .
+        - cmake -G "Visual Studio 15 2017 Win64" ..
+        - cmake --build . --config MinSizeRel
         - cp ./Debug/* .
         - cp -r ../include .
         - mkdir lib
