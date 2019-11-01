@@ -113,13 +113,13 @@ namespace cs {
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		context->instance->check_define_var(tree.root(), false, true);
 		context->instance->parse_define_var(tree.root(), true);
-		mResult = new statement_constant(tree, context, raw.front().back());
 	}
 
 	statement_base *
 	method_constant::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		return mResult;
+		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		return new statement_constant(tree, context, raw.front().back());
 	}
 
 	statement_base *method_block::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
