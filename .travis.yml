@@ -13,6 +13,8 @@ jobs:
         - mkdir lib
         - cp *.a ./lib
         - cd ..
+      deploy:
+        - ../build/cs -i gen/build extension.csc
     - os: linux
       dist: xenial
       compiler: clang
@@ -25,6 +27,8 @@ jobs:
         - mkdir lib
         - cp *.a ./lib
         - cd ..
+      deploy:
+        - ../build/cs -i gen/build extension.csc
     - os: osx
       osx_image: xcode10
       install:
@@ -36,6 +40,8 @@ jobs:
         - mkdir lib
         - cp *.a ./lib
         - cd ..
+      deploy:
+        - ../build/cs -i gen/build extension.csc
     - os: windows
       install:
         - mkdir build
@@ -47,6 +53,8 @@ jobs:
         - mkdir lib
         - cp *.lib ./lib
         - cd ..
+      deploy:
+        - ../build/cs -i gen/build/MinSizeRel extension.csc
 script:
   - ./build/cs -v
   - ./build/cs -h
@@ -60,4 +68,3 @@ script:
   - ../build/cs -i ../examples ../examples/csbuild.csc check
   - ../build/cs -i ../examples ../examples/csbuild.csc generate
   - ../build/cs -i ../examples ../examples/csbuild.csc make
-  - ../build/cs -i gen/build extension.csc
