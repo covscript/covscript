@@ -8,18 +8,18 @@ class String
     ##### private:
     var __chars = {}
 
-    var __0x80 = 128
-    var __0xA0 = 160
-    var __0xB0 = 176
-    var __0xC0 = 192
-    var __0xD0 = 208
-    var __0xE0 = 224
-    var __0xF0 = 240
-    var __0xED = 237
-    var __0x10000 = 65536
-    var __0x0f = 15
-    var __0x1f = 31
-    var __0x3f = 63
+    constant __0x80 = 128
+    constant __0xA0 = 160
+    constant __0xB0 = 176
+    constant __0xC0 = 192
+    constant __0xD0 = 208
+    constant __0xE0 = 224
+    constant __0xF0 = 240
+    constant __0xED = 237
+    constant __0x10000 = 65536
+    constant __0x0f = 15
+    constant __0x1f = 31
+    constant __0x3f = 63
 
     ##### private:
     function __assert(cond)
