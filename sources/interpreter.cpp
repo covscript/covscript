@@ -34,7 +34,10 @@ bool ctrlhandler(DWORD fdwctrltype)
 {
 	switch (fdwctrltype) {
 	case CTRL_C_EVENT:
-		std::longjmp(jump_buffer, 0);
+		//std::longjmp(jump_buffer, 0);
+		return true;
+	case CTRL_BREAK_EVENT:
+		//std::longjmp(jump_buffer, 0);
 		return true;
 	default:
 		return false;
@@ -249,7 +252,7 @@ void covscript_main(int args_size, const char *args[])
 		cs::repl repl(context);
 		std::ofstream log_stream;
 		std::string line;
-		while (std::cin) {
+		for (;;) {
 			if (setjmp(jump_buffer) > 0) {
 				repl.reset_status();
 				std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
@@ -257,7 +260,14 @@ void covscript_main(int args_size, const char *args[])
 			}
 			if (!silent)
 				std::cout << std::string(repl.get_level() * 2, '.') << "> " << std::flush;
-			std::getline(std::cin, line);
+			// Workaround: https://stackoverflow.com/a/26763490
+			for (;;) {
+				std::getline(std::cin, line);
+				if (!(std::cin.fail() || std::cin.eof())) {
+					break;
+				}
+				std::cin.clear(); // reset cin state
+			}
 			try {
 				repl.exec(line);
 			}
