@@ -34,10 +34,7 @@ bool ctrlhandler(DWORD fdwctrltype)
 {
 	switch (fdwctrltype) {
 	case CTRL_C_EVENT:
-		//std::longjmp(jump_buffer, 0);
-		return true;
-	case CTRL_BREAK_EVENT:
-		//std::longjmp(jump_buffer, 0);
+		// std::longjmp(jump_buffer, 0);
 		return true;
 	default:
 		return false;
@@ -263,9 +260,8 @@ void covscript_main(int args_size, const char *args[])
 			// Workaround: https://stackoverflow.com/a/26763490
 			for (;;) {
 				std::getline(std::cin, line);
-				if (!(std::cin.fail() || std::cin.eof())) {
+				if (!std::cin.fail())
 					break;
-				}
 				std::cin.clear(); // reset cin state
 			}
 			try {
