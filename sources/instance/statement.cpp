@@ -24,6 +24,7 @@
 namespace cs {
 	var function::call(vector &args) const
 	{
+        current_process->pull_event();
 		if (!mIsVargs && args.size() != this->mArgs.size())
 			throw runtime_error(
 			    "Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
@@ -103,13 +104,13 @@ namespace cs {
 		return var::make<structure>(this->mTypeId, this->mName, scope.get());
 	}
 
-	void statement_expression::run()
+	void statement_expression::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		context->instance->parse_expr(mTree.root());
 	}
 
-	void statement_expression::repl_run()
+	void statement_expression::repl_run_impl()
 	{
 		const var &result = context->instance->parse_expr(mTree.root());
 		try {
@@ -128,7 +129,7 @@ namespace cs {
 		o << " >\n";
 	}
 
-	void statement_import::run()
+	void statement_import::run_impl()
 	{
 		for (auto &val:m_var_list)
 			context->instance->storage.add_var(val.first, val.second, true);
@@ -140,7 +141,7 @@ namespace cs {
 			o << "< Import: Name = \"" << val.first << "\" >\n";
 	}
 
-	void statement_involve::run()
+	void statement_involve::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		var ns = context->instance->parse_expr(mTree.root(), true);
@@ -157,7 +158,7 @@ namespace cs {
 		o << " >\n";
 	}
 
-	void statement_var::run()
+	void statement_var::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		context->instance->parse_define_var(mTree.root());
@@ -170,7 +171,7 @@ namespace cs {
 		o << " >\n";
 	}
 
-	void statement_constant::run()
+	void statement_constant::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		context->instance->parse_define_var(mTree.root(), true);
@@ -183,7 +184,7 @@ namespace cs {
 		o << " >\n";
 	}
 
-	void statement_break::run()
+	void statement_break::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		context->instance->break_block = true;
@@ -194,7 +195,7 @@ namespace cs {
 		o << "< Break >\n";
 	}
 
-	void statement_continue::run()
+	void statement_continue::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		context->instance->continue_block = true;
@@ -205,7 +206,7 @@ namespace cs {
 		o << "< Continue >\n";
 	}
 
-	void statement_block::run()
+	void statement_block::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		scope_guard scope(context);
@@ -232,7 +233,7 @@ namespace cs {
 		o << "< EndBlock >\n";
 	}
 
-	void statement_namespace::run()
+	void statement_namespace::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		context->instance->storage.add_var(this->mName,
@@ -263,7 +264,7 @@ namespace cs {
 		o << "< EndNamespace >\n";
 	}
 
-	void statement_if::run()
+	void statement_if::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		if (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
@@ -295,7 +296,7 @@ namespace cs {
 		o << "< EndIf >\n";
 	}
 
-	void statement_ifelse::run()
+	void statement_ifelse::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		if (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
@@ -347,7 +348,7 @@ namespace cs {
 		o << "< EndIfElse >\n";
 	}
 
-	void statement_switch::run()
+	void statement_switch::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		var key = context->instance->parse_expr(mTree.root());
@@ -386,7 +387,7 @@ namespace cs {
 		o << "< EndSwitch >\n";
 	}
 
-	void statement_while::run()
+	void statement_while::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		if (context->instance->break_block)
@@ -396,6 +397,7 @@ namespace cs {
 		scope_guard scope(context);
 		while (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
 			scope.clear();
+			current_process->pull_event();
 			for (auto &ptr:mBlock) {
 				try {
 					ptr->run();
@@ -431,7 +433,7 @@ namespace cs {
 		o << "< EndWhile >\n";
 	}
 
-	void statement_loop::run()
+	void statement_loop::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		if (context->instance->break_block)
@@ -441,6 +443,7 @@ namespace cs {
 		scope_guard scope(context);
 		while (true) {
 			scope.clear();
+            current_process->pull_event();
 			for (auto &ptr:mBlock) {
 				try {
 					ptr->run();
@@ -474,7 +477,7 @@ namespace cs {
 		o << "< EndLoop >\n";
 	}
 
-	void statement_loop_until::run()
+	void statement_loop_until::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		if (context->instance->break_block)
@@ -484,6 +487,7 @@ namespace cs {
 		scope_guard scope(context);
 		do {
 			scope.clear();
+            current_process->pull_event();
 			for (auto &ptr:mBlock) {
 				try {
 					ptr->run();
@@ -521,7 +525,7 @@ namespace cs {
 		o << "< EndLoop >\n";
 	}
 
-	void statement_for::run()
+	void statement_for::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		if (context->instance->break_block)
@@ -533,6 +537,7 @@ namespace cs {
 		scope_guard scope(context);
 		while (true) {
 			scope.clear();
+            current_process->pull_event();
 			if (!context->instance->parse_expr(mParallel[1].root()).const_val<boolean>())
 				break;
 			for (auto &ptr:mBlock) {
@@ -589,6 +594,7 @@ namespace cs {
 		scope_guard scope(context);
 		for (const X &it:obj.const_val<T>()) {
 			scope.clear();
+            current_process->pull_event();
 			context->instance->storage.add_var(iterator, it);
 			for (auto &ptr:body) {
 				try {
@@ -615,7 +621,7 @@ namespace cs {
 		}
 	}
 
-	void statement_foreach::run()
+	void statement_foreach::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		const var &obj = context->instance->parse_expr(this->mObj.root());
@@ -644,7 +650,7 @@ namespace cs {
 		o << "< EndForEach >\n";
 	}
 
-	void statement_struct::run()
+	void statement_struct::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		context->instance->storage.add_struct(this->mName, this->mBuilder);
@@ -663,7 +669,7 @@ namespace cs {
 		o << "< EndStruct >\n";
 	}
 
-	void statement_function::run()
+	void statement_function::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		if (this->mIsMemFn)
@@ -696,7 +702,7 @@ namespace cs {
 		o << "< EndFunction >\n";
 	}
 
-	void statement_return::run()
+	void statement_return::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		if (current_process->stack.empty())
@@ -712,7 +718,7 @@ namespace cs {
 		o << " >\n";
 	}
 
-	void statement_try::run()
+	void statement_try::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		scope_guard scope(context);
@@ -761,7 +767,7 @@ namespace cs {
 		o << "< EndTry >\n";
 	}
 
-	void statement_throw::run()
+	void statement_throw::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
 		var e = context->instance->parse_expr(this->mTree.root());

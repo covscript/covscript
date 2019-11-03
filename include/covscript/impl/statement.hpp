@@ -36,9 +36,9 @@ namespace cs {
 			return statement_types::expression_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
-		void repl_run() override;
+		void repl_run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -56,7 +56,7 @@ namespace cs {
 			return statement_types::expression_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -75,7 +75,7 @@ namespace cs {
 			return statement_types::involve_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -93,7 +93,7 @@ namespace cs {
 			return statement_types::var_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -112,7 +112,7 @@ namespace cs {
 			return statement_types::var_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -128,7 +128,7 @@ namespace cs {
 			return statement_types::break_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -144,7 +144,7 @@ namespace cs {
 			return statement_types::continue_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -163,7 +163,7 @@ namespace cs {
 			return statement_types::block_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 
@@ -188,7 +188,7 @@ namespace cs {
 			return statement_types::namespace_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -208,7 +208,7 @@ namespace cs {
 			return statement_types::if_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -234,7 +234,7 @@ namespace cs {
 			return statement_types::if_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -248,7 +248,7 @@ namespace cs {
 			return statement_types::else_;
 		}
 
-		void run() override
+		void run_impl() override
 		{
 			throw runtime_error("Do not allowed standalone else statement.");
 		}
@@ -277,7 +277,7 @@ namespace cs {
 			return statement_types::switch_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -296,7 +296,7 @@ namespace cs {
 			return statement_types::case_;
 		}
 
-		void run() override
+		void run_impl() override
 		{
 			throw runtime_error("Do not allowed standalone case statement.");
 		}
@@ -333,7 +333,7 @@ namespace cs {
 			return statement_types::default_;
 		}
 
-		void run() override
+		void run_impl() override
 		{
 			throw runtime_error("Do not allowed standalone default statement.");
 		}
@@ -364,7 +364,7 @@ namespace cs {
 			return statement_types::while_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -387,7 +387,7 @@ namespace cs {
 			return mExpr;
 		}
 
-		void run() override
+		void run_impl() override
 		{
 			throw runtime_error("Do not allowed standalone until statement.");
 		}
@@ -411,7 +411,7 @@ namespace cs {
 			return statement_types::loop_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -430,7 +430,7 @@ namespace cs {
 			return statement_types::loop_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -450,7 +450,7 @@ namespace cs {
 			return statement_types::for_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -471,7 +471,7 @@ namespace cs {
 			return statement_types::foreach_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -500,7 +500,7 @@ namespace cs {
 			return statement_types::struct_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -552,7 +552,7 @@ namespace cs {
 			mIsMemFn = true;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 
@@ -580,7 +580,7 @@ namespace cs {
 			return statement_types::return_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -605,7 +605,7 @@ namespace cs {
 			return statement_types::try_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
@@ -628,7 +628,7 @@ namespace cs {
 			return this->mName;
 		}
 
-		void run() override
+		void run_impl() override
 		{
 			throw runtime_error("Do not allowed standalone catch statement.");
 		}
@@ -652,7 +652,7 @@ namespace cs {
 			return statement_types::throw_;
 		}
 
-		void run() override;
+		void run_impl() override;
 
 		void dump(std::ostream &) const override;
 	};
