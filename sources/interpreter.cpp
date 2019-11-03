@@ -31,9 +31,14 @@ bool ctrlhandler(DWORD fdwctrltype)
 {
 	switch (fdwctrltype) {
 	case CTRL_C_EVENT:
-        std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
+		std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
 		cs::current_process->raise_sigint();
 		return true;
+	case CTRL_BREAK_EVENT: {
+		int code = 0;
+		cs::process_context::on_process_exit_default_handler(&code);
+		return true;
+	}
 	default:
 		return false;
 	}
@@ -51,7 +56,7 @@ void activate_sigint_handler()
 
 void signal_handler(int sig)
 {
-    std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
+	std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
 	cs::current_process->raise_sigint();
 }
 
@@ -60,7 +65,7 @@ void activate_sigint_handler()
 	struct sigaction sa_usr {};
 	sa_usr.sa_handler = &signal_handler;
 	sigemptyset(&sa_usr.sa_mask);
-	sa_usr.sa_flags = SA_RESTART | SA_NODEFER;
+	// sa_usr.sa_flags = SA_RESTART | SA_NODEFER;
 	sigaction(SIGINT, &sa_usr, NULL);
 }
 
@@ -239,36 +244,52 @@ void covscript_main(int args_size, const char *args[])
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::context_t context = cs::create_context(arg);
 		activate_sigint_handler();
-		cs::current_process->on_process_exit.add_listener([&context](void *code) -> bool {
+		cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
 			cs::current_process->exit_code = *static_cast<int *>(code);
 			throw cs::fatal_error("CS_EXIT");
 		});
-        cs::current_process->on_process_sigint.add_listener([&context](void *) -> bool {
-            throw cs::fatal_error("CS_SIGINT");
-        });
+		cs::current_process->on_process_sigint.add_listener([](void *) -> bool {
+			throw cs::fatal_error("CS_SIGINT");
+		});
+		cs::current_process->on_process_sigint.add_listener([](void *) -> bool {
+			std::cin.clear();
+			return false;
+		});
 		context->compiler->disable_optimizer = no_optimize;
 		cs::repl repl(context);
 		std::ofstream log_stream;
 		std::string line;
-		for (;;) {
-			if (!silent)
-				std::cout << std::string(repl.get_level() * 2, '.') << "> " << std::flush;
-			// Workaround: https://stackoverflow.com/a/26763490
-			for (;;) {
-				std::getline(std::cin, line);
-				if (!std::cin.fail())
-					break;
-				std::cin.clear(); // reset cin state
-			}
+		while (true) {
 			try {
+#ifdef COVSCRIPT_PLATFORM_WIN32
+				if (!silent)
+					std::cout << std::string(repl.get_level() * 2, '.') << "> " << std::flush;
+				// Workaround: https://stackoverflow.com/a/26763490
+				while (true) {
+					cs::current_process->poll_event();
+					std::getline(std::cin, line);
+					if (std::cin)
+						break;
+				}
+#else
+				if (!std::cin) {
+					int code = 0;
+					cs::process_context::on_process_exit_default_handler(&code);
+				}
+				if (!silent)
+					std::cout << std::string(repl.get_level() * 2, '.') << "> " << std::flush;
+				std::getline(std::cin, line);
+				cs::current_process->poll_event();
+#endif
 				repl.exec(line);
 			}
 			catch (const std::exception &e) {
-                if (std::strstr(e.what(), "CS_SIGINT") != nullptr) {
-                    repl.reset_status();
-                    activate_sigint_handler();
-                }
-                else if (std::strstr(e.what(), "CS_EXIT") == nullptr) {
+				if (std::strstr(e.what(), "CS_SIGINT") != nullptr) {
+					cs::process_context::cleanup_context();
+					repl.reset_status();
+					activate_sigint_handler();
+				}
+				else if (std::strstr(e.what(), "CS_EXIT") == nullptr) {
 					if (!log_path.empty()) {
 						if (!log_stream.is_open())
 							log_stream.open(::log_path);

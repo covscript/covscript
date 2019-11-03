@@ -104,7 +104,7 @@ namespace cs_impl {
 }
 
 namespace cs {
-	bool process_context::on_process_exit_default_handler(void *code)
+	void process_context::cleanup_context()
 	{
 		while (!current_process->stack.empty())
 			current_process->stack.pop_no_return();
@@ -112,6 +112,11 @@ namespace cs {
 		while(!current_process->stack_backtrace.empty())
 			current_process->stack_backtrace.pop_no_return();
 #endif
+	}
+
+	bool process_context::on_process_exit_default_handler(void *code)
+	{
+		cleanup_context();
 		collect_garbage();
 		std::exit(*static_cast<int *>(code));
 		return true;

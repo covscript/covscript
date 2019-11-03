@@ -24,7 +24,7 @@
 namespace cs {
 	var function::call(vector &args) const
 	{
-        current_process->pull_event();
+		current_process->poll_event();
 		if (!mIsVargs && args.size() != this->mArgs.size())
 			throw runtime_error(
 			    "Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
@@ -397,7 +397,7 @@ namespace cs {
 		scope_guard scope(context);
 		while (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
 			scope.clear();
-			current_process->pull_event();
+			current_process->poll_event();
 			for (auto &ptr:mBlock) {
 				try {
 					ptr->run();
@@ -443,7 +443,7 @@ namespace cs {
 		scope_guard scope(context);
 		while (true) {
 			scope.clear();
-            current_process->pull_event();
+			current_process->poll_event();
 			for (auto &ptr:mBlock) {
 				try {
 					ptr->run();
@@ -487,7 +487,7 @@ namespace cs {
 		scope_guard scope(context);
 		do {
 			scope.clear();
-            current_process->pull_event();
+			current_process->poll_event();
 			for (auto &ptr:mBlock) {
 				try {
 					ptr->run();
@@ -537,7 +537,7 @@ namespace cs {
 		scope_guard scope(context);
 		while (true) {
 			scope.clear();
-            current_process->pull_event();
+			current_process->poll_event();
 			if (!context->instance->parse_expr(mParallel[1].root()).const_val<boolean>())
 				break;
 			for (auto &ptr:mBlock) {
@@ -594,7 +594,7 @@ namespace cs {
 		scope_guard scope(context);
 		for (const X &it:obj.const_val<T>()) {
 			scope.clear();
-            current_process->pull_event();
+			current_process->poll_event();
 			context->instance->storage.add_var(iterator, it);
 			for (auto &ptr:body) {
 				try {

@@ -67,7 +67,7 @@
 namespace cs {
 // Process Context
 	class process_context final {
-	    std::atomic<bool> m_is_sigint_raised;
+		std::atomic<bool> is_sigint_raised;
 	public:
 // Version
 		const std::string version = COVSCRIPT_VERSION_STR;
@@ -85,6 +85,8 @@ namespace cs {
 #endif
 
 // Event Handling
+		static void cleanup_context();
+
 		static bool on_process_exit_default_handler(void *);
 
 		event_type on_process_exit;
@@ -92,18 +94,18 @@ namespace cs {
 		// DO NOT TOUCH THIS EVENT DIRECTLY!!
 		event_type on_process_sigint;
 
-		inline void pull_event()
-        {
-            if (m_is_sigint_raised) {
-                m_is_sigint_raised = false;
-                on_process_sigint.touch(nullptr);
-            }
-        }
+		inline void poll_event()
+		{
+			if (is_sigint_raised) {
+				is_sigint_raised = false;
+				on_process_sigint.touch(nullptr);
+			}
+		}
 
-        inline void raise_sigint()
-        {
-            m_is_sigint_raised = true;
-        }
+		inline void raise_sigint()
+		{
+			is_sigint_raised = true;
+		}
 
 // Exception Handling
 		static void cs_defalt_exception_handler(const lang_error &e)
@@ -119,8 +121,10 @@ namespace cs {
 		std_exception_handler std_eh_callback = &std_defalt_exception_handler;
 		cs_exception_handler cs_eh_callback = &cs_defalt_exception_handler;
 
-		process_context() : on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler) {
-            m_is_sigint_raised = false;
+		process_context() : on_process_exit(&on_process_exit_default_handler),
+			on_process_sigint(&on_process_exit_default_handler)
+		{
+			is_sigint_raised = false;
 		}
 	};
 

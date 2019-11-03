@@ -583,10 +583,10 @@ namespace cs {
 		virtual void run_impl() = 0;
 
 		inline void run()
-        {
-		    current_process->pull_event();
-		    this->run_impl();
-        }
+		{
+			current_process->poll_event();
+			this->run_impl();
+		}
 
 		virtual void repl_run_impl()
 		{
@@ -594,10 +594,10 @@ namespace cs {
 		}
 
 		inline void repl_run()
-        {
-		    current_process->pull_event();
-		    this->repl_run_impl();
-        }
+		{
+			current_process->poll_event();
+			this->repl_run_impl();
+		}
 
 		virtual void dump(std::ostream &o) const
 		{
