@@ -177,6 +177,11 @@ namespace cs_impl {
 			return access(path.c_str(), X_OK) == 0;
 		}
 
+        bool is_absolute_path(const std::string &path)
+        {
+            return !path.empty() && path[0] == '/';
+        }
+
 		std::string get_current_dir()
 		{
 			char temp[PATH_MAX] = "";

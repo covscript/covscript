@@ -89,6 +89,8 @@ namespace cs_impl {
 
 		bool can_execute(const std::string &);
 
+		bool is_absolute_path(const std::string &);
+
 // Files
 		bool chmod_r(const std::string &, const std::string &);
 

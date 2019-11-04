@@ -20,6 +20,7 @@
 * Website: http://covscript.org
 */
 #include <covscript/impl/codegen.hpp>
+#include <covscript_impl/system.hpp>
 #include <covscript/covscript.hpp>
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
@@ -246,7 +247,7 @@ namespace cs {
             return;
 	    }
 
-	    if (script[0] == cs::path_separator) {
+	    if (cs_impl::file_system::is_absolute_path(script)) {
             // If it's absolute path
             auto pos = script.find_last_of(cs::path_separator);
 
@@ -261,8 +262,9 @@ namespace cs {
 
 	    } else {
 	        // If it's relative path
-	        // TODO: merge os-support
-//	         prepend_import_path(get_current_diir() + cs::path_separator + script, context);
+	         prepend_import_path(cs_impl::file_system::get_current_dir()
+	             + cs::path_separator
+	             + script, context);
 	    }
 	}
 
