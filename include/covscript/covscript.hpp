@@ -93,6 +93,8 @@ namespace cs {
 
 	std::string get_import_path();
 
+	void prepend_import_path(const std::string &script, cs::process_context *context);
+
 	array parse_cmd_args(int, const char *[]);
 
 	context_t create_context(const array &);

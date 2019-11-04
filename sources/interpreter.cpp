@@ -196,8 +196,8 @@ void covscript_main(int args_size, const char *args[])
 	}
 	if (!repl && index != args_size) {
 		std::string path = cs::process_path(args[index]);
-		cs::array
-		arg;
+		cs::prepend_import_path(path, cs::current_process);
+		cs::array arg;
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::context_t context = cs::create_context(arg);

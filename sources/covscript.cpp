@@ -20,6 +20,7 @@
 * Website: http://covscript.org
 */
 #include <covscript/impl/codegen.hpp>
+#include <covscript_impl/system.hpp>
 #include <covscript/covscript.hpp>
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
@@ -238,6 +239,35 @@ namespace cs {
 			return process_path(import_path);
 		else
 			return process_path(get_sdk_path() + cs::path_separator + "imports");
+	}
+
+	void prepend_import_path(const std::string &script, cs::process_context *context)
+	{
+		if (script.empty()) {
+			return;
+		}
+
+		if (cs_impl::file_system::is_absolute_path(script)) {
+			// If it's absolute path
+			auto pos = script.find_last_of(cs::path_separator);
+
+			// in case of: /main.csc
+			if (pos > 0) {
+				context->import_path = script.substr(0, pos)
+				                       + cs::path_delimiter + context->import_path;
+			}
+			else {
+				context->import_path = std::to_string(cs::path_separator)
+				                       + cs::path_delimiter + context->import_path;
+			}
+
+		}
+		else {
+			// If it's relative path
+			prepend_import_path(cs_impl::file_system::get_current_dir()
+			                    + cs::path_separator
+			                    + script, context);
+		}
 	}
 
 	array parse_cmd_args(int argc, const char *argv[])
