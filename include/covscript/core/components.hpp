@@ -543,7 +543,7 @@ namespace cs {
 				it.mData->root->left = node;
 			else
 				it.mData->root->right = node;
-			it.mData.root = node;
+			it.mData->root = node;
 			return node;
 		}
 
@@ -560,7 +560,7 @@ namespace cs {
 				it.mData->root->left = node;
 			else
 				it.mData->root->right = node;
-			it.mData.root = node;
+			it.mData->root = node;
 			return node;
 		}
 
