@@ -207,14 +207,30 @@ namespace cs_impl {
 			return std::remove(path.c_str()) == 0;
 		}
 
-		bool mkdir_p(const std::string &path)
+		bool mkdir_p(std::string path)
 		{
-			return cs_system_impl::mkdir_dirs(cs_system_impl::split(path, cs::path_separator, true), 0755);
+			std::string::size_type pos;
+			while(true) {
+				pos = path.find('\\');
+				if (pos != std::string::npos)
+					path[pos] = '/';
+				else
+					break;
+			}
+			return cs_system_impl::mkdir_dirs(cs_system_impl::split(path, '/', true), 0755);
 		}
 
-		bool mkdir(const std::string &path)
+		bool mkdir(std::string path)
 		{
-			return cs_system_impl::mkdir_dirs(cs_system_impl::split(path, cs::path_separator, false), 0755);
+			std::string::size_type pos;
+			while(true) {
+				pos = path.find('\\');
+				if (pos != std::string::npos)
+					path[pos] = '/';
+				else
+					break;
+			}
+			return cs_system_impl::mkdir_dirs(cs_system_impl::split(path, '/', false), 0755);
 		}
 
 		bool exists(const std::string &path)

@@ -103,9 +103,9 @@ namespace cs_impl {
 		bool remove(const std::string &);
 
 // Directories
-		bool mkdir_p(const std::string &);
+		bool mkdir_p(std::string);
 
-		bool mkdir(const std::string &);
+		bool mkdir(std::string);
 
 		std::string get_current_dir();
 	}
