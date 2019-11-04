@@ -115,6 +115,16 @@ namespace cs_impl {
 		return std::stol(str);
 	}
 
+// Hash
+	template<>
+	std::size_t hash<cs::type_id>(const cs::type_id &id)
+	{
+		if (id.type_hash == 0)
+			return id.type_idx.hash_code();
+		else
+			throw cov::error("E000F");
+	}
+
 // Type name
 	template<>
 	constexpr const char *get_name_of_type<cs::context_t>()

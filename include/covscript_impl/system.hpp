@@ -20,7 +20,7 @@
 * Github: https://github.com/mikecovlee
 */
 
-#include <covscript/core/core.hpp>
+#include <covscript/impl/extension.hpp>
 
 namespace cs_impl {
 	namespace platform {
