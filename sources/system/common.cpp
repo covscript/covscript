@@ -39,7 +39,9 @@ namespace cs_system_impl {
 #ifndef COVSCRIPT_PLATFORM_UNIX
 #warning Compatible Mode for Unix Platform
 #endif
+
 #include "./unix/common.cpp"
+
 #endif
 
 namespace cs_system_impl {

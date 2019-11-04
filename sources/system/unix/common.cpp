@@ -32,7 +32,9 @@
 #include <cerrno>
 
 #ifdef COVSCRIPT_PLATFORM_DARWIN
+
 #include <mach-o/loader.h>
+
 #endif
 
 namespace cs_system_impl {

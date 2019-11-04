@@ -484,7 +484,8 @@ namespace cs {
 		trim_expr(tree, it.right(), do_trim);
 	}
 
-	void compiler_type::opt_expr(tree_type<token_base *> &tree, tree_type<token_base *>::iterator it, optm_type do_optm)
+	void
+	compiler_type::opt_expr(tree_type<token_base *> &tree, tree_type<token_base *>::iterator it, optm_type do_optm)
 	{
 		if (!it.usable())
 			return;
@@ -496,9 +497,9 @@ namespace cs {
 			break;
 		case token_types::id: {
 			var value = context->instance->storage.get_var_optimizable(static_cast<token_id *>(token)->get_id());
-			if (value.usable() && value.is_protect())
-			{
-				if (do_optm == optm_type::enable_namespace_optm || value.type() != typeid(namespace_t) || !value.const_val<namespace_t>()->get_domain().exist("__PRAGMA_CS_NAMESPACE_DEFINITION__"))
+			if (value.usable() && value.is_protect()) {
+				if (do_optm == optm_type::enable_namespace_optm || value.type() != typeid(namespace_t) ||
+				        !value.const_val<namespace_t>()->get_domain().exist("__PRAGMA_CS_NAMESPACE_DEFINITION__"))
 					it.data() = new_value(value);
 			}
 			return;
