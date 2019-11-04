@@ -134,14 +134,14 @@ namespace cs_impl {
 			close(fd);
 			if (nread < 0)
 				return false;
-            return header[0] == 'M' && header[1] == 'Z';
+			return header[0] == 'M' && header[1] == 'Z';
 		}
 
-        bool is_absolute_path(const std::string &path)
-        {
-            return (!path.empty() && path[0] == '/')    // for mingw, cygwin
-                || (path.size() >= 3 && path[1] == ':' && path[2] == '\\');
-        }
+		bool is_absolute_path(const std::string &path)
+		{
+			return (!path.empty() && path[0] == '/')    // for mingw, cygwin
+			       || (path.size() >= 3 && path[1] == ':' && path[2] == '\\');
+		}
 
 		std::string get_current_dir()
 		{
