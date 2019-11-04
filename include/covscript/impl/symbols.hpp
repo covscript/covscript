@@ -580,11 +580,23 @@ namespace cs {
 
 		virtual statement_types get_type() const noexcept = 0;
 
-		virtual void run() = 0;
+		virtual void run_impl() = 0;
 
-		virtual void repl_run()
+		inline void run()
 		{
-			this->run();
+			current_process->poll_event();
+			this->run_impl();
+		}
+
+		virtual void repl_run_impl()
+		{
+			this->run_impl();
+		}
+
+		inline void repl_run()
+		{
+			current_process->poll_event();
+			this->repl_run_impl();
 		}
 
 		virtual void dump(std::ostream &o) const

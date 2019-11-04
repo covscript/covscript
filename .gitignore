@@ -51,6 +51,7 @@ cmake-build-debug/
 cmake-build/
 build/
 csdev/
+tests/gen/
 
 # macOS Files
 .DS_Store

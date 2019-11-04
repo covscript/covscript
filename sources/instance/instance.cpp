@@ -18,25 +18,8 @@
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
+#include <covscript_impl/system.hpp>
 #include <covscript/covscript.hpp>
-#include <fcntl.h>
-#include <cstdio>
-
-#if defined(_WIN32) || defined(WIN32)
-
-#include <io.h>
-
-#else
-
-#include <unistd.h>
-
-#endif
-
-#if defined(__APPLE__) || defined(__MACH__)
-
-#include <mach-o/loader.h>
-
-#endif
 
 namespace cs {
 	const std::string &statement_base::get_file_path() const noexcept
@@ -56,39 +39,9 @@ namespace cs {
 
 	namespace_t instance_type::source_import(const std::string &path)
 	{
-		int fd = open(path.c_str(), O_RDONLY);
-		if (fd < 0) {
-			throw fatal_error("Failed to open file.");
-		}
-
-#if defined(_WIN32) || defined(WIN32)
-		char header[2] = {0};
-#elif defined(__APPLE__) || defined(__MACH__)
-		uint32_t header;
-#elif defined(linux) || defined(__linux) || defined(__linux__)
-		char header[4] = {0};
-#endif
-		int nread = read(fd, reinterpret_cast<void *>(&header), sizeof(header));
-		close(fd);
-
-		if (nread < 0) {
-			throw fatal_error("Failed to read file header.");
-		}
-
-#if defined(_WIN32) || defined(WIN32)
-		if (header[0] == 'M' && header[1] == 'Z') {
-#elif defined(__APPLE__) || defined(__MACH__)
-		if (header == MH_MAGIC || header == MH_CIGAM
-		        || header == MH_MAGIC_64 || header == MH_CIGAM_64) {
-#elif defined(linux) || defined(__linux) || defined(__linux__)
-		if (header[0] == 0x7f
-		        && header[1] == 'E'
-		        && header[2] == 'L'
-		        && header[3] == 'F') {
-#endif
+		if (cs_impl::file_system::is_exe(path)) {
 			// is extension file
 			return std::make_shared<extension>(path);
-
 		}
 		else {
 			// is package file
@@ -107,7 +60,8 @@ namespace cs {
 		}
 	}
 
-	namespace_t instance_type::import(const std::string &path, const std::string &name) {
+	namespace_t instance_type::import(const std::string &path, const std::string &name)
+	{
 		std::vector<std::string> collection;
 		{
 			std::string tmp;
@@ -147,7 +101,8 @@ namespace cs {
 		throw fatal_error("No such file or directory.");
 	}
 
-	void instance_type::compile(const std::string &path) {
+	void instance_type::compile(const std::string &path)
+	{
 		context->file_path = path;
 		// Read from file
 		std::deque<char> buff;
@@ -164,7 +119,8 @@ namespace cs {
 		context->compiler->utilize_metadata();
 	}
 
-	void instance_type::interpret() {
+	void instance_type::interpret()
+	{
 		// Run the instruction
 		for (auto &ptr:statements) {
 			try {
@@ -182,7 +138,8 @@ namespace cs {
 		}
 	}
 
-	void instance_type::dump_ast(std::ostream &stream) {
+	void instance_type::dump_ast(std::ostream &stream)
+	{
 		stream << "< Covariant Script AST Dump >\n< BeginMetaData >\n< Version: " << current_process->version
 		       << " >\n< Standard Version: "
 		       << current_process->std_version
@@ -200,7 +157,8 @@ namespace cs {
 		stream << std::flush;
 	}
 
-	void instance_type::check_declar_var(tree_type<token_base *>::iterator it, bool regist) {
+	void instance_type::check_declar_var(tree_type<token_base *>::iterator it, bool regist)
+	{
 		if (it.data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (it.data()->get_type() == token_types::parallel) {
@@ -217,7 +175,8 @@ namespace cs {
 		}
 	}
 
-	void instance_type::check_define_var(tree_type<token_base *>::iterator it, bool regist, bool constant) {
+	void instance_type::check_define_var(tree_type<token_base *>::iterator it, bool regist, bool constant)
+	{
 		if (it.data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (it.data()->get_type() == token_types::parallel) {
@@ -256,7 +215,8 @@ namespace cs {
 		}
 	}
 
-	void instance_type::parse_define_var(tree_type<token_base *>::iterator it, bool constant) {
+	void instance_type::parse_define_var(tree_type<token_base *>::iterator it, bool constant)
+	{
 		if (it.data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
 			for (auto &t:parallel_list)
@@ -283,7 +243,8 @@ namespace cs {
 	}
 
 	void
-	instance_type::check_define_structured_binding(tree_type<token_base *>::iterator it, bool regist) {
+	instance_type::check_define_structured_binding(tree_type<token_base *>::iterator it, bool regist)
+	{
 		for (auto &p_it:static_cast<token_parallel *>(it.data())->get_parallel()) {
 			token_base *root = p_it.root().data();
 			if (root == nullptr)
@@ -299,7 +260,8 @@ namespace cs {
 		}
 	}
 
-	void instance_type::parse_define_structured_binding(tree_type<token_base *>::iterator it, bool constant) {
+	void instance_type::parse_define_structured_binding(tree_type<token_base *>::iterator it, bool constant)
+	{
 		std::function<void(tree_type<token_base *>::iterator, const var &)> process;
 		process = [&process, this, constant](tree_type<token_base *>::iterator it, const var &val) {
 			auto &pl = static_cast<token_parallel *>(it.data())->get_parallel();
@@ -320,7 +282,8 @@ namespace cs {
 		process(it.left(), val);
 	}
 
-	void repl::interpret(const string &code, std::deque<token_base *> &line) {
+	void repl::interpret(const string &code, std::deque<token_base *> &line)
+	{
 		statement_base *sptr = nullptr;
 		try {
 			method_base *m = context->compiler->match_method(line);
@@ -329,7 +292,7 @@ namespace cs {
 				throw runtime_error("Null type of grammar.");
 				break;
 			case method_types::single: {
-				if (methods.size() > 0) {
+				if (!methods.empty()) {
 					method_base *expected_method = nullptr;
 					if (m->get_target_type() == statement_types::end_) {
 						context->instance->storage.remove_set();
@@ -339,7 +302,7 @@ namespace cs {
 						expected_method = methods.top();
 						methods.pop();
 					}
-					if (methods.size() == 0) {
+					if (methods.empty()) {
 						if (m->get_target_type() == statement_types::end_)
 							sptr = static_cast<method_end *>(m)->translate_end(expected_method, context, tmp,
 							        line);
@@ -399,7 +362,8 @@ namespace cs {
 		context->instance->storage.clear_set();
 	}
 
-	void repl::run(const string &code) {
+	void repl::run(const string &code)
+	{
 		if (code.empty())
 			return;
 		std::deque<char> buff;
@@ -426,7 +390,8 @@ namespace cs {
 		}
 	}
 
-	void repl::exec(const string &code) {
+	void repl::exec(const string &code)
+	{
 		// Preprocess
 		++line_num;
 		int mode = 0;

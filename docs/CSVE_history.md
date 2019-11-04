@@ -76,3 +76,8 @@
 + 漏洞原理：参数入栈时未考虑this参数
 + 漏洞状态：已修复
 + 影响范围：CovScript 3.1.2 Ovis ammon(Unstable) Build 2-3.2.1 Giant panda(Stable) Build 12
+## CSVE-2019-11-01 ##
++ 触发方法：声明多于一个常量，并以动态形式访问
++ 漏洞原理：代码生成器错误，生成多个重复的语句(修复CSVE-2018-08-02时带来的问题)
++ 漏洞状态：已修复
++ 影响范围：CovScript 1.3.0 Panthera uncia(Unstable) Build 2-3.3.1 Manis pentadactyla(Unstable) Build 5

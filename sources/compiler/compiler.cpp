@@ -484,7 +484,8 @@ namespace cs {
 		trim_expr(tree, it.right(), do_trim);
 	}
 
-	void compiler_type::opt_expr(tree_type<token_base *> &tree, tree_type<token_base *>::iterator it)
+	void
+	compiler_type::opt_expr(tree_type<token_base *> &tree, tree_type<token_base *>::iterator it, optm_type do_optm)
 	{
 		if (!it.usable())
 			return;
@@ -496,13 +497,16 @@ namespace cs {
 			break;
 		case token_types::id: {
 			var value = context->instance->storage.get_var_optimizable(static_cast<token_id *>(token)->get_id());
-			if (value.usable() && value.is_protect())
-				it.data() = new_value(value);
+			if (value.usable() && value.is_protect()) {
+				if (do_optm == optm_type::enable_namespace_optm || value.type() != typeid(namespace_t) ||
+				        !value.const_val<namespace_t>()->get_domain().exist("__PRAGMA_CS_NAMESPACE_DEFINITION__"))
+					it.data() = new_value(value);
+			}
 			return;
 		}
 		case token_types::expand: {
 			tree_type<token_base *> &tree = static_cast<token_expand *>(token)->get_tree();
-			opt_expr(tree, tree.root());
+			opt_expr(tree, tree.root(), do_optm);
 			return;
 		}
 		case token_types::array: {
@@ -511,12 +515,12 @@ namespace cs {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 					auto &child_tree = static_cast<token_expand *>(ptr)->get_tree();
-					optimize_expression(child_tree);
+					optimize_expression(child_tree, do_optm);
 					if (!optimizable(child_tree.root()))
 						return;
 				}
 				else {
-					optimize_expression(tree);
+					optimize_expression(tree, do_optm);
 					if (!optimizable(tree.root()))
 						return;
 				}
@@ -546,7 +550,7 @@ namespace cs {
 		}
 		case token_types::parallel: {
 			for (auto &tree:static_cast<token_parallel *>(token)->get_parallel())
-				optimize_expression(tree);
+				optimize_expression(tree, do_optm);
 			return;
 		}
 		case token_types::signal: {
@@ -556,21 +560,21 @@ namespace cs {
 			case signal_types::gcnew_:
 				if (it.left().data() != nullptr)
 					throw runtime_error("Wrong grammar for gcnew expression.");
-				opt_expr(tree, it.right());
+				opt_expr(tree, it.right(), do_optm);
 				return;
 			case signal_types::asi_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr)
 					throw runtime_error("Wrong grammar for assign expression.");
-				opt_expr(tree, it.left());
-				opt_expr(tree, it.right());
+				opt_expr(tree, it.left(), do_optm);
+				opt_expr(tree, it.right(), do_optm);
 				return;
 			case signal_types::choice_: {
 				token_signal *sig = dynamic_cast<token_signal *>(it.right().data());
 				if (sig == nullptr || sig->get_signal() != signal_types::pair_)
 					throw runtime_error("Wrong grammar for choice expression.");
-				opt_expr(tree, it.left());
-				opt_expr(tree, it.right().left());
-				opt_expr(tree, it.right().right());
+				opt_expr(tree, it.left(), do_optm);
+				opt_expr(tree, it.right().left(), do_optm);
+				opt_expr(tree, it.right().right(), do_optm);
 				token_value *val = dynamic_cast<token_value *>(it.left().data());
 				if (val != nullptr) {
 					if (val->get_value().type() == typeid(boolean)) {
@@ -589,10 +593,11 @@ namespace cs {
 				if (it.left().data() == nullptr || it.right().data() == nullptr ||
 				        it.right().data()->get_type() != token_types::id)
 					throw runtime_error("Wrong grammar for arrow expression.");
-				opt_expr(tree, it.left());
+				opt_expr(tree, it.left(), do_optm);
 				return;
 			case signal_types::dot_: {
-				opt_expr(tree, it.left());
+				tree_type<token_base *> ltree(it.left());
+				opt_expr(tree, it.left(), optm_type::enable_namespace_optm);
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
@@ -607,13 +612,14 @@ namespace cs {
 					}
 					catch (...) {
 						it.data() = orig_ptr;
+						tree.merge(it.left(), ltree);
 					}
 				}
 				return;
 			}
 			case signal_types::fcall_: {
-				opt_expr(tree, it.left());
-				opt_expr(tree, it.right());
+				opt_expr(tree, it.left(), do_optm);
+				opt_expr(tree, it.right(), do_optm);
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
 				if (lptr == nullptr || rptr == nullptr || rptr->get_type() != token_types::arglist)
@@ -695,8 +701,8 @@ namespace cs {
 			}
 		}
 		}
-		opt_expr(tree, it.left());
-		opt_expr(tree, it.right());
+		opt_expr(tree, it.left(), do_optm);
+		opt_expr(tree, it.right(), do_optm);
 		if (optimizable(it.left()) && optimizable(it.right())) {
 			token_base *oldt = it.data();
 			try {
@@ -880,7 +886,7 @@ namespace cs {
 					break;
 				case method_types::single: {
 					statement_base *sptr = nullptr;
-					if (methods.size() > 0) {
+					if (!methods.empty()) {
 						method_base *expected_method = nullptr;
 						if (m->get_target_type() == statement_types::end_) {
 							if (raw) {
@@ -892,7 +898,7 @@ namespace cs {
 							expected_method = methods.top();
 							methods.pop();
 						}
-						if (methods.size() == 0) {
+						if (methods.empty()) {
 							line_num = method_line_num;
 							if (m->get_target_type() == statement_types::end_)
 								sptr = static_cast<method_end *>(m)->translate_end(expected_method, context, tmp,
@@ -921,7 +927,7 @@ namespace cs {
 				}
 				break;
 				case method_types::block: {
-					if (methods.size() == 0)
+					if (methods.empty())
 						method_line_num = static_cast<token_endline *>(line.back())->get_line_num();
 					methods.push(m);
 					if (raw) {
@@ -944,7 +950,7 @@ namespace cs {
 				throw exception(line_num, context->file_path, context->file_buff.at(line_num - 1), e.what());
 			}
 		}
-		if (methods.size() != 0)
+		if (!methods.empty())
 			throw runtime_error("Lack of the \"end\" signal.");
 	}
 }

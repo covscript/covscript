@@ -36,36 +36,33 @@ This project is an officially maintained Covariant Script interpreter.
 + Directly compile source code with CMake toolchain
 ## Run ##
 ### Basic command ###
-`cs [options...] <FILE> [arguments...]`
+`cs [options...] <FILE> [arguments...]`  
+`cs [options...]`
 #### Options ####
+##### Interpreter #####
 Option|Mnemonic|Function
 :---:|:---:|:--:
 `--compile-only`|`-c`|Only compile
+`--dump-ast`|`-d`|Export abstract syntax tree
+
+##### Interpreter REPL #####
+Option|Mnemonic|Function
+:---:|:---:|:--:
+`--silent`|`-s`|Close the command prompt
+`--args <...>`|`-a <...>`|Set the covscript arguments
+
+**Note that everything you set after option `--args` or its mnemonic `-a` will be regarded as arguments.**
+##### Common #####
+Option|Mnemonic|Function
+:---:|:---:|:--:
 `--no-optimize`|`-o`|Disable optimizer
 `--help`|`-h`|Show help infomation
 `--version`|`-v`|Show version infomation
 `--wait-before-exit`|`-w`|Wait before process exit
-`--dump-ast`|`-d`|Export abstract syntax tree
 `--log-path <PATH>`|`-l <PATH>` |Set the log and AST exporting path
 `--import-path <PATH>`|`-i <PATH>`|Set the import path
 
 **Note that if you do not set the log and AST exporting path, both will be printed to stdout.**
-### Repl ###
-`cs_repl [options...]`
-#### Options ####
-Option|Mnemonic|Function
-:---:|:---:|:--:
-`--help`|`-h`|Show help infomation
-`--version`|`-v`|Show version infomation
-`--silent`|`-s`|Close the command prompt
-`--wait-before-exit`|`-w`|Wait before process exit
-`--args <...>`|`-a <...>`|Set the covscript arguments
-`--log-path <PATH>`|`-l <PATH>`|Set the log path
-`--import-path <PATH>`|`-i <PATH>`|Set the import path
-
-**Note:**
-- Everything you set after option `--args` or its mnemonic `-a` will be regarded as arguments.
-- If you do not set a log path, it will be printed to stdout.
 ### Debugger ###
 `cs_dbg [options...] <FILE>`
 #### Options ####

@@ -335,21 +335,25 @@ namespace cs {
 			normal, no_expr_fold, no_this_deduce
 		};
 
+		enum class optm_type {
+			normal, enable_namespace_optm
+		};
+
 		void trim_expression(tree_type<token_base *> &tree, trim_type do_trim = trim_type::normal)
 		{
 			trim_expr(tree, tree.root(), do_trim);
 		}
 
-		void optimize_expression(tree_type<token_base *> &tree)
+		void optimize_expression(tree_type<token_base *> &tree, optm_type do_optm = optm_type::normal)
 		{
 			trim_expr(tree, tree.root(), trim_type::normal);
 			if (!disable_optimizer && !no_optimize)
-				opt_expr(tree, tree.root());
+				opt_expr(tree, tree.root(), do_optm);
 		}
 
 		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, trim_type);
 
-		void opt_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator);
+		void opt_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, optm_type);
 
 	public:
 		void try_fix_this_deduction(tree_type<token_base *>::iterator);
