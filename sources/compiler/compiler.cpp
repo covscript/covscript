@@ -880,7 +880,7 @@ namespace cs {
 					break;
 				case method_types::single: {
 					statement_base *sptr = nullptr;
-					if (methods.size() > 0) {
+					if (!methods.empty()) {
 						method_base *expected_method = nullptr;
 						if (m->get_target_type() == statement_types::end_) {
 							if (raw) {
@@ -892,7 +892,7 @@ namespace cs {
 							expected_method = methods.top();
 							methods.pop();
 						}
-						if (methods.size() == 0) {
+						if (methods.empty()) {
 							line_num = method_line_num;
 							if (m->get_target_type() == statement_types::end_)
 								sptr = static_cast<method_end *>(m)->translate_end(expected_method, context, tmp,
@@ -921,7 +921,7 @@ namespace cs {
 				}
 				break;
 				case method_types::block: {
-					if (methods.size() == 0)
+					if (methods.empty())
 						method_line_num = static_cast<token_endline *>(line.back())->get_line_num();
 					methods.push(m);
 					if (raw) {
@@ -944,7 +944,7 @@ namespace cs {
 				throw exception(line_num, context->file_path, context->file_buff.at(line_num - 1), e.what());
 			}
 		}
-		if (methods.size() != 0)
+		if (!methods.empty())
 			throw runtime_error("Lack of the \"end\" signal.");
 	}
 }

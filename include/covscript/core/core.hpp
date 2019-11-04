@@ -67,7 +67,7 @@
 namespace cs {
 // Process Context
 	class process_context final {
-		std::atomic<bool> is_sigint_raised;
+		std::atomic<bool> is_sigint_raised{};
 	public:
 // Version
 		const std::string version = COVSCRIPT_VERSION_STR;

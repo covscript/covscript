@@ -292,7 +292,7 @@ namespace cs {
 				throw runtime_error("Null type of grammar.");
 				break;
 			case method_types::single: {
-				if (methods.size() > 0) {
+				if (!methods.empty()) {
 					method_base *expected_method = nullptr;
 					if (m->get_target_type() == statement_types::end_) {
 						context->instance->storage.remove_set();
@@ -302,7 +302,7 @@ namespace cs {
 						expected_method = methods.top();
 						methods.pop();
 					}
-					if (methods.size() == 0) {
+					if (methods.empty()) {
 						if (m->get_target_type() == statement_types::end_)
 							sptr = static_cast<method_end *>(m)->translate_end(expected_method, context, tmp,
 							        line);
