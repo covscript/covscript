@@ -21,14 +21,11 @@
 */
 #define CS_DEBUGGER
 
-#include <covscript_impl/console/conio.hpp>
 #include <covscript_impl/variant.hpp>
+#include <covscript_impl/system.hpp>
 #include <covscript/covscript.hpp>
 #include <iostream>
-#include <csetjmp>
 #include <chrono>
-
-std::jmp_buf jump_buffer;
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
 
@@ -38,8 +35,14 @@ bool ctrlhandler(DWORD fdwctrltype)
 {
 	switch (fdwctrltype) {
 	case CTRL_C_EVENT:
-		std::longjmp(jump_buffer, 0);
+		std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
+		cs::current_process->raise_sigint();
 		return true;
+	case CTRL_BREAK_EVENT: {
+		int code = 0;
+		cs::process_context::on_process_exit_default_handler(&code);
+		return true;
+	}
 	default:
 		return false;
 	}
@@ -57,7 +60,8 @@ void activate_sigint_handler()
 
 void signal_handler(int sig)
 {
-	std::longjmp(jump_buffer, 0);
+	std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
+	cs::current_process->raise_sigint();
 }
 
 void activate_sigint_handler()
@@ -65,7 +69,7 @@ void activate_sigint_handler()
 	struct sigaction sa_usr {};
 	sa_usr.sa_handler = &signal_handler;
 	sigemptyset(&sa_usr.sa_mask);
-	sa_usr.sa_flags = SA_RESTART | SA_NODEFER;
+	// sa_usr.sa_flags = SA_RESTART | SA_NODEFER;
 	sigaction(SIGINT, &sa_usr, NULL);
 }
 
@@ -292,16 +296,26 @@ void reset_status()
 
 bool covscript_debugger()
 {
-	if (setjmp(jump_buffer) > 0) {
-		cs::collect_garbage(context);
-		reset_status();
-		std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
-		activate_sigint_handler();
-	}
 	std::string cmd, func, args;
 	step_into_function = false;
+#ifdef COVSCRIPT_PLATFORM_WIN32
+	std::cout << "> " << std::flush;
+	// Workaround: https://stackoverflow.com/a/26763490
+	while (true) {
+		cs::current_process->poll_event();
+		std::getline(std::cin, cmd);
+		if (std::cin)
+			break;
+	}
+#else
+	if (!std::cin) {
+		int code = 0;
+		cs::process_context::on_process_exit_default_handler(&code);
+	}
 	std::cout << "> " << std::flush;
 	std::getline(std::cin, cmd);
+	cs::current_process->poll_event();
+#endif
 	std::size_t posit = 0;
 	for (; posit < cmd.size(); ++posit)
 		if (std::isspace(cmd[posit]))
@@ -447,6 +461,13 @@ void covscript_main(int args_size, const char *args[])
 			throw cs::fatal_error("CS_DEBUGGER_EXIT");
 			return true;
 		});
+		cs::current_process->on_process_sigint.add_listener([](void *) -> bool {
+			throw cs::fatal_error("CS_SIGINT");
+		});
+		cs::current_process->on_process_sigint.add_listener([](void *) -> bool {
+			std::cin.clear();
+			return false;
+		});
 		func_map.add_func("quit", "q", [](const std::string &cmd) -> bool {
 			if (context.get() != nullptr)
 			{
@@ -591,7 +612,11 @@ void covscript_main(int args_size, const char *args[])
 			}
 			catch (const std::exception &e)
 			{
-				if (std::strstr(e.what(), "CS_DEBUGGER_EXIT") == nullptr) {
+				if (std::strstr(e.what(), "CS_SIGINT") != nullptr) {
+					cs::process_context::cleanup_context();
+					activate_sigint_handler();
+				}
+				else if (std::strstr(e.what(), "CS_DEBUGGER_EXIT") == nullptr) {
 					cs::collect_garbage(context);
 					std::cerr
 					        << "\nFatal Error: An exception was detected, the interpreter instance will terminate immediately."
@@ -633,7 +658,21 @@ void covscript_main(int args_size, const char *args[])
 			return true;
 		});
 		activate_sigint_handler();
-		while (covscript_debugger());
+		for (bool result = true; result;) {
+			try {
+				result = covscript_debugger();
+			}
+			catch (const std::exception &e) {
+				if (std::strstr(e.what(), "CS_SIGINT") != nullptr) {
+					cs::process_context::cleanup_context();
+					cs::collect_garbage(context);
+					reset_status();
+					activate_sigint_handler();
+				}
+				else
+					throw;
+			}
+		}
 	}
 	else
 		throw cs::fatal_error("no input file.");

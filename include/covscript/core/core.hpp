@@ -49,6 +49,7 @@
 #include <istream>
 #include <ostream>
 #include <utility>
+#include <atomic>
 #include <cctype>
 #include <string>
 #include <vector>
@@ -65,8 +66,10 @@
 
 namespace cs {
 // Process Context
-	struct process_context final {
-		// Version
+	class process_context final {
+		std::atomic<bool> is_sigint_raised{};
+	public:
+// Version
 		const std::string version = COVSCRIPT_VERSION_STR;
 		const number std_version = COVSCRIPT_STD_VERSION;
 // Output Precision
@@ -82,9 +85,27 @@ namespace cs {
 #endif
 
 // Event Handling
+		static void cleanup_context();
+
 		static bool on_process_exit_default_handler(void *);
 
 		event_type on_process_exit;
+
+		// DO NOT TOUCH THIS EVENT DIRECTLY!!
+		event_type on_process_sigint;
+
+		inline void poll_event()
+		{
+			if (is_sigint_raised) {
+				is_sigint_raised = false;
+				on_process_sigint.touch(nullptr);
+			}
+		}
+
+		inline void raise_sigint()
+		{
+			is_sigint_raised = true;
+		}
 
 // Exception Handling
 		static void cs_defalt_exception_handler(const lang_error &e)
@@ -100,7 +121,11 @@ namespace cs {
 		std_exception_handler std_eh_callback = &std_defalt_exception_handler;
 		cs_exception_handler cs_eh_callback = &cs_defalt_exception_handler;
 
-		process_context() : on_process_exit(&on_process_exit_default_handler) {}
+		process_context() : on_process_exit(&on_process_exit_default_handler),
+			on_process_sigint(&on_process_exit_default_handler)
+		{
+			is_sigint_raised = false;
+		}
 	};
 
 	extern process_context this_process;
