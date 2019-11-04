@@ -264,13 +264,13 @@ void covscript_main(int args_size, const char *args[])
 		std::string line;
 		bool valid_line = true;
 		if (!history_file.empty()) {
-            linenoise::LoadHistory(history_file.c_str());
-        }
+			linenoise::LoadHistory(history_file.c_str());
+		}
 		linenoise::SetMultiLine(true);
 		linenoise::SetHistoryMaxLen(history_size);
 		while (true) {
 			try {
-                std::string prompt = std::string(repl.get_level() * 2, '.') + "> ";
+				std::string prompt = std::string(repl.get_level() * 2, '.') + "> ";
 #ifdef COVSCRIPT_PLATFORM_WIN32
 				if (!silent)
 					std::cout << prompt << std::flush;
@@ -288,21 +288,21 @@ void covscript_main(int args_size, const char *args[])
 				}
 
 				valid_line = false;
-                bool quit = linenoise::Readline(prompt.c_str(), line);
+				bool quit = linenoise::Readline(prompt.c_str(), line);
 
 				if (!quit || errno == EAGAIN) {
-				    // If errno == EAGAIN
-				    // Ctrl-C was pressed
-				    valid_line = true;
-				    errno = 0;
+					// If errno == EAGAIN
+					// Ctrl-C was pressed
+					valid_line = true;
+					errno = 0;
 				}
 
 				cs::current_process->poll_event();
 #endif
-                if (valid_line) {
-                    linenoise::AddHistory(line.c_str());
-                    repl.exec(line);
-                }
+				if (valid_line) {
+					linenoise::AddHistory(line.c_str());
+					repl.exec(line);
+				}
 			}
 			catch (const std::exception &e) {
 				if (std::strstr(e.what(), "CS_SIGINT") != nullptr) {
@@ -329,9 +329,9 @@ void covscript_main(int args_size, const char *args[])
 				throw;
 			}
 		}
-        if (!history_file.empty()) {
-            linenoise::SaveHistory(history_file.c_str());
-        }
+		if (!history_file.empty()) {
+			linenoise::SaveHistory(history_file.c_str());
+		}
 		cs::collect_garbage(context);
 	}
 }
