@@ -1673,7 +1673,8 @@ namespace linenoise {
 		}
 
 		GetConsoleMode(hIn, &consolemodeIn);
-		DWORD consolemodeInWithRaw = consolemodeIn & ~ENABLE_PROCESSED_INPUT;
+		DWORD consolemodeInWithRaw;
+		consolemodeInWithRaw = consolemodeIn & ~ENABLE_PROCESSED_INPUT;
 		SetConsoleMode(hIn, consolemodeInWithRaw);
 
 		rawmode = true;
