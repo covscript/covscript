@@ -147,8 +147,8 @@ end
 
 function csbuild_command_gate(command, args)
     # common options come here
-    var parsing = args.size() > 0 ? true : false
-    while parsing
+    var parsing = true
+    while parsing && !args.empty()
         switch args.front()
             # what if the source directory is named "help"?
             # we need this '--' options
@@ -204,8 +204,8 @@ function csbuild_init(args)
     var path = "."
     var force = false
 
-    foreach it in args
-        var arg = it
+    while !args.empty()
+        var arg = args.front()
         args.pop_front()
         switch arg
             case "help"; echo("No help currently :)"); return 0; end
@@ -395,7 +395,7 @@ function csbuild_make(path, cfg, args)
     var cmakeBuildFlags = ""
     if csbuild_make_is_mingw_or_msys()
         echo(":: Detected we are building in MinGW/MSYS/Cygwin")
-        cmakeFlags = " -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -G \"Unix Makefiles\""
+        cmakeFlags = " -G \"MinGW Makefiles\""
     else
         if system.is_platform_windows()
             cmakeFlags = " -G \"Visual Studio 15 2017 Win64\""
@@ -435,8 +435,8 @@ end
 
 function main(args)
     args.pop_front()
-    foreach it in args
-        var arg = it
+    while !args.empty()
+        var arg = args.front()
         args.pop_front()
         switch arg
             case "init"; return csbuild_init(args); end
