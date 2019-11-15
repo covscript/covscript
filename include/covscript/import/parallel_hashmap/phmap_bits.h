@@ -40,7 +40,6 @@
 #elif defined(__APPLE__)
 // Mac OS X / Darwin features
 #include <libkern/OSByteOrder.h>
-
 #elif defined(__FreeBSD__)
 #include <sys/endian.h>
 #elif defined(__GLIBC__)
@@ -59,7 +58,7 @@
 // then a load and a store.
 // -----------------------------------------------------------------------------
 
-#if defined(ADDRESS_SANITIZER) || defined(THREAD_SANITIZER) || \
+#if defined(ADDRESS_SANITIZER) || defined(THREAD_SANITIZER) ||\
     defined(MEMORY_SANITIZER)
 #include <stdint.h>
 
@@ -168,6 +167,102 @@ namespace phmap {
 #define PHMAP_INTERNAL_UNALIGNED_STORE32(_p, _val) (phmap::bits::UnalignedStore32(_p, _val))
 #define PHMAP_INTERNAL_UNALIGNED_STORE64(_p, _val) (phmap::bits::UnalignedStore64(_p, _val))
 
+#endif
+
+// -----------------------------------------------------------------------------
+// File: optimization.h
+// -----------------------------------------------------------------------------
+
+#if defined(__pnacl__)
+#define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION() if (volatile int x = 0) { (void)x; }
+#elif defined(__clang__)
+// Clang will not tail call given inline volatile assembly.
+#define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION() __asm__ __volatile__("")
+#elif defined(__GNUC__)
+// GCC will not tail call given inline volatile assembly.
+#define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION() __asm__ __volatile__("")
+#elif defined(_MSC_VER)
+#include <intrin.h>
+// The __nop() intrinsic blocks the optimisation.
+#define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION() __nop()
+#else
+#define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION() if (volatile int x = 0) { (void)x; }
+#endif
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+
+#ifdef PHMAP_HAVE_INTRINSIC_INT128
+__extension__ typedef unsigned __int128 phmap_uint128;
+inline uint64_t umul128(uint64_t a, uint64_t b, uint64_t* high)
+{
+	auto result = static_cast<phmap_uint128>(a) * static_cast<phmap_uint128>(b);
+	*high = static_cast<uint64_t>(result >> 64);
+	return static_cast<uint64_t>(result);
+}
+#define PHMAP_HAS_UMUL128 1
+#elif (defined(_MSC_VER))
+#if defined(_M_X64)
+#pragma intrinsic(_umul128)
+inline uint64_t umul128(uint64_t a, uint64_t b, uint64_t* high)
+{
+	return _umul128(a, b, high);
+}
+#define PHMAP_HAS_UMUL128 1
+#endif
+#endif
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
+#if defined(__GNUC__)
+// Cache line alignment
+#if defined(__i386__) || defined(__x86_64__)
+#define PHMAP_CACHELINE_SIZE 64
+#elif defined(__powerpc64__)
+#define PHMAP_CACHELINE_SIZE 128
+#elif defined(__aarch64__)
+// We would need to read special register ctr_el0 to find out L1 dcache size.
+// This value is a good estimate based on a real aarch64 machine.
+#define PHMAP_CACHELINE_SIZE 64
+#elif defined(__arm__)
+// Cache line sizes for ARM: These values are not strictly correct since
+// cache line sizes depend on implementations, not architectures.  There
+// are even implementations with cache line sizes configurable at boot
+// time.
+#if defined(__ARM_ARCH_5T__)
+#define PHMAP_CACHELINE_SIZE 32
+#elif defined(__ARM_ARCH_7A__)
+#define PHMAP_CACHELINE_SIZE 64
+#endif
+#endif
+
+#ifndef PHMAP_CACHELINE_SIZE
+// A reasonable default guess.  Note that overestimates tend to waste more
+// space, while underestimates tend to waste more time.
+#define PHMAP_CACHELINE_SIZE 64
+#endif
+
+#define PHMAP_CACHELINE_ALIGNED __attribute__((aligned(PHMAP_CACHELINE_SIZE)))
+#elif defined(_MSC_VER)
+#define PHMAP_CACHELINE_SIZE 64
+#define PHMAP_CACHELINE_ALIGNED __declspec(align(PHMAP_CACHELINE_SIZE))
+#else
+#define PHMAP_CACHELINE_SIZE 64
+#define PHMAP_CACHELINE_ALIGNED
+#endif
+
+
+#if PHMAP_HAVE_BUILTIN(__builtin_expect) || \
+    (defined(__GNUC__) && !defined(__clang__))
+#define PHMAP_PREDICT_FALSE(x) (__builtin_expect(x, 0))
+#define PHMAP_PREDICT_TRUE(x) (__builtin_expect(!!(x), 1))
+#else
+#define PHMAP_PREDICT_FALSE(x) (x)
+#define PHMAP_PREDICT_TRUE(x) (x)
 #endif
 
 // -----------------------------------------------------------------------------
@@ -339,103 +434,6 @@ namespace phmap {
 }  // namespace phmap
 
 // -----------------------------------------------------------------------------
-// File: optimization.h
-// -----------------------------------------------------------------------------
-
-#if defined(__pnacl__)
-#define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION() if (volatile int x = 0) { (void)x; }
-#elif defined(__clang__)
-// Clang will not tail call given inline volatile assembly.
-#define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION() __asm__ __volatile__("")
-#elif defined(__GNUC__)
-// GCC will not tail call given inline volatile assembly.
-#define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION() __asm__ __volatile__("")
-#elif defined(_MSC_VER)
-#include <intrin.h>
-// The __nop() intrinsic blocks the optimisation.
-#define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION() __nop()
-#else
-#define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION() if (volatile int x = 0) { (void)x; }
-#endif
-
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#endif
-
-#ifdef PHMAP_HAVE_INTRINSIC_INT128
-
-inline uint64_t umul128(uint64_t a, uint64_t b, uint64_t *high)
-{
-	auto result = static_cast<unsigned __int128>(a) * static_cast<unsigned __int128>(b);
-	*high = static_cast<uint64_t>(result >> 64);
-	return static_cast<uint64_t>(result);
-}
-
-#define PHMAP_HAS_UMUL128 1
-#elif (defined(_MSC_VER))
-#if defined(_M_X64)
-#pragma intrinsic(_umul128)
-inline uint64_t umul128(uint64_t a, uint64_t b, uint64_t* high)
-{
-	return _umul128(a, b, high);
-}
-#define PHMAP_HAS_UMUL128 1
-#endif
-#endif
-
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
-
-#if defined(__GNUC__)
-// Cache line alignment
-#if defined(__i386__) || defined(__x86_64__)
-#define PHMAP_CACHELINE_SIZE 64
-#elif defined(__powerpc64__)
-#define PHMAP_CACHELINE_SIZE 128
-#elif defined(__aarch64__)
-// We would need to read special register ctr_el0 to find out L1 dcache size.
-// This value is a good estimate based on a real aarch64 machine.
-#define PHMAP_CACHELINE_SIZE 64
-#elif defined(__arm__)
-// Cache line sizes for ARM: These values are not strictly correct since
-// cache line sizes depend on implementations, not architectures.  There
-// are even implementations with cache line sizes configurable at boot
-// time.
-#if defined(__ARM_ARCH_5T__)
-#define PHMAP_CACHELINE_SIZE 32
-#elif defined(__ARM_ARCH_7A__)
-#define PHMAP_CACHELINE_SIZE 64
-#endif
-#endif
-
-#ifndef PHMAP_CACHELINE_SIZE
-// A reasonable default guess.  Note that overestimates tend to waste more
-// space, while underestimates tend to waste more time.
-#define PHMAP_CACHELINE_SIZE 64
-#endif
-
-#define PHMAP_CACHELINE_ALIGNED __attribute__((aligned(PHMAP_CACHELINE_SIZE)))
-#elif defined(_MSC_VER)
-#define PHMAP_CACHELINE_SIZE 64
-#define PHMAP_CACHELINE_ALIGNED __declspec(align(PHMAP_CACHELINE_SIZE))
-#else
-#define PHMAP_CACHELINE_SIZE 64
-#define PHMAP_CACHELINE_ALIGNED
-#endif
-
-
-#if PHMAP_HAVE_BUILTIN(__builtin_expect) || \
-    (defined(__GNUC__) && !defined(__clang__))
-#define PHMAP_PREDICT_FALSE(x) (__builtin_expect(x, 0))
-#define PHMAP_PREDICT_TRUE(x) (__builtin_expect(!!(x), 1))
-#else
-#define PHMAP_PREDICT_FALSE(x) (x)
-#define PHMAP_PREDICT_TRUE(x) (x)
-#endif
-
-// -----------------------------------------------------------------------------
 // File: endian.h
 // -----------------------------------------------------------------------------
 
@@ -453,12 +451,10 @@ namespace phmap {
 	{
 		return __builtin_bswap64(host_int);
 	}
-
 	inline uint32_t gbswap_32(uint32_t host_int)
 	{
 		return __builtin_bswap32(host_int);
 	}
-
 	inline uint16_t gbswap_16(uint16_t host_int)
 	{
 		return __builtin_bswap16(host_int);
@@ -558,12 +554,10 @@ namespace phmap {
 	{
 		return gbswap_16(x);
 	}
-
 	inline uint32_t ghtonl(uint32_t x)
 	{
 		return gbswap_32(x);
 	}
-
 	inline uint64_t ghtonll(uint64_t x)
 	{
 		return gbswap_64(x);
@@ -597,12 +591,10 @@ namespace phmap {
 	{
 		return ghtons(x);
 	}
-
 	inline uint32_t gntohl(uint32_t x)
 	{
 		return ghtonl(x);
 	}
-
 	inline uint64_t gntohll(uint64_t x)
 	{
 		return ghtonll(x);
@@ -620,7 +612,6 @@ namespace phmap {
 		{
 			return x;
 		}
-
 		inline uint16_t ToHost16(uint16_t x)
 		{
 			return x;
@@ -630,7 +621,6 @@ namespace phmap {
 		{
 			return x;
 		}
-
 		inline uint32_t ToHost32(uint32_t x)
 		{
 			return x;
@@ -640,7 +630,6 @@ namespace phmap {
 		{
 			return x;
 		}
-
 		inline uint64_t ToHost64(uint64_t x)
 		{
 			return x;
@@ -731,7 +720,6 @@ namespace phmap {
 		{
 			return gbswap_16(x);
 		}
-
 		inline uint16_t ToHost16(uint16_t x)
 		{
 			return gbswap_16(x);
@@ -741,7 +729,6 @@ namespace phmap {
 		{
 			return gbswap_32(x);
 		}
-
 		inline uint32_t ToHost32(uint32_t x)
 		{
 			return gbswap_32(x);
@@ -751,7 +738,6 @@ namespace phmap {
 		{
 			return gbswap_64(x);
 		}
-
 		inline uint64_t ToHost64(uint64_t x)
 		{
 			return gbswap_64(x);
