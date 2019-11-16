@@ -23,6 +23,7 @@
 #include <fstream>
 #include <sstream>
 #include "phmap.h"
+
 namespace phmap {
 
 	namespace type_traits_internal {
@@ -30,10 +31,12 @@ namespace phmap {
 #if defined(__GLIBCXX__) && __GLIBCXX__ < 20150801
 		template<typename T> struct IsTriviallyCopyable : public std::integral_constant<bool, __has_trivial_copy(T)> {};
 #else
-		template<typename T> struct IsTriviallyCopyable : public std::is_trivially_copyable<T> {};
+		template<typename T>
+		struct IsTriviallyCopyable : public std::is_trivially_copyable<T> {
+		};
 #endif
 
-		template <class T1, class T2>
+		template<class T1, class T2>
 		struct IsTriviallyCopyable<std::pair<T1, T2>> {
 			static constexpr bool value = IsTriviallyCopyable<T1>::value && IsTriviallyCopyable<T2>::value;
 		};
@@ -44,9 +47,9 @@ namespace phmap {
 // ------------------------------------------------------------------------
 // dump/load for raw_hash_set
 // ------------------------------------------------------------------------
-		template <class Policy, class Hash, class Eq, class Alloc>
+		template<class Policy, class Hash, class Eq, class Alloc>
 		template<typename OutputArchive>
-		bool raw_hash_set<Policy, Hash, Eq, Alloc>::dump(OutputArchive& ar)
+		bool raw_hash_set<Policy, Hash, Eq, Alloc>::dump(OutputArchive &ar)
 		{
 			static_assert(type_traits_internal::IsTriviallyCopyable<value_type>::value,
 			              "value_type should be trivially copyable");
@@ -62,13 +65,13 @@ namespace phmap {
 				std::cerr << "Failed to dump capacity_" << std::endl;
 				return false;
 			}
-			if (!ar.dump(reinterpret_cast<char*>(ctrl_),
+			if (!ar.dump(reinterpret_cast<char *>(ctrl_),
 			             sizeof(ctrl_t) * (capacity_ + Group::kWidth + 1))) {
 
 				std::cerr << "Failed to dump ctrl_" << std::endl;
 				return false;
 			}
-			if (!ar.dump(reinterpret_cast<char*>(slots_),
+			if (!ar.dump(reinterpret_cast<char *>(slots_),
 			             sizeof(slot_type) * capacity_)) {
 				std::cerr << "Failed to dump slot_" << std::endl;
 				return false;
@@ -76,9 +79,9 @@ namespace phmap {
 			return true;
 		}
 
-		template <class Policy, class Hash, class Eq, class Alloc>
+		template<class Policy, class Hash, class Eq, class Alloc>
 		template<typename InputArchive>
-		bool raw_hash_set<Policy, Hash, Eq, Alloc>::load(InputArchive& ar)
+		bool raw_hash_set<Policy, Hash, Eq, Alloc>::load(InputArchive &ar)
 		{
 			static_assert(type_traits_internal::IsTriviallyCopyable<value_type>::value,
 			              "value_type should be trivially copyable");
@@ -97,12 +100,12 @@ namespace phmap {
 
 			// allocate memory for ctrl_ and slots_
 			initialize_slots();
-			if (!ar.load(reinterpret_cast<char*>(ctrl_),
+			if (!ar.load(reinterpret_cast<char *>(ctrl_),
 			             sizeof(ctrl_t) * (capacity_ + Group::kWidth + 1))) {
 				std::cerr << "Failed to load ctrl" << std::endl;
 				return false;
 			}
-			if (!ar.load(reinterpret_cast<char*>(slots_),
+			if (!ar.load(reinterpret_cast<char *>(slots_),
 			             sizeof(slot_type) * capacity_)) {
 				std::cerr << "Failed to load slot" << std::endl;
 				return false;
@@ -113,23 +116,23 @@ namespace phmap {
 // ------------------------------------------------------------------------
 // dump/load for parallel_hash_set
 // ------------------------------------------------------------------------
-		template <size_t N,
-		          template <class, class, class, class> class RefSet,
-		          class Mtx_,
-		          class Policy, class Hash, class Eq, class Alloc>
+		template<size_t N,
+		         template<class, class, class, class> class RefSet,
+		         class Mtx_,
+		         class Policy, class Hash, class Eq, class Alloc>
 		template<typename OutputArchive>
-		bool parallel_hash_set<N, RefSet, Mtx_, Policy, Hash, Eq, Alloc>::dump(OutputArchive& ar)
+		bool parallel_hash_set<N, RefSet, Mtx_, Policy, Hash, Eq, Alloc>::dump(OutputArchive &ar)
 		{
 			static_assert(type_traits_internal::IsTriviallyCopyable<value_type>::value,
 			              "value_type should be trivially copyable");
 
-			if (! ar.dump(subcnt())) {
+			if (!ar.dump(subcnt())) {
 				std::cerr << "Failed to dump meta!" << std::endl;
 				return false;
 			}
 			for (size_t i = 0; i < sets_.size(); ++i) {
-				auto& inner = sets_[i];
-				typename Lockable::UniqueLock m(const_cast<Inner&>(inner));
+				auto &inner = sets_[i];
+				typename Lockable::UniqueLock m(const_cast<Inner &>(inner));
 				if (!inner.set_.dump(ar)) {
 					std::cerr << "Failed to dump submap " << i << std::endl;
 					return false;
@@ -138,12 +141,12 @@ namespace phmap {
 			return true;
 		}
 
-		template <size_t N,
-		          template <class, class, class, class> class RefSet,
-		          class Mtx_,
-		          class Policy, class Hash, class Eq, class Alloc>
+		template<size_t N,
+		         template<class, class, class, class> class RefSet,
+		         class Mtx_,
+		         class Policy, class Hash, class Eq, class Alloc>
 		template<typename InputArchive>
-		bool parallel_hash_set<N, RefSet, Mtx_, Policy, Hash, Eq, Alloc>::load(InputArchive& ar)
+		bool parallel_hash_set<N, RefSet, Mtx_, Policy, Hash, Eq, Alloc>::load(InputArchive &ar)
 		{
 			static_assert(type_traits_internal::IsTriviallyCopyable<value_type>::value,
 			              "value_type should be trivially copyable");
@@ -160,8 +163,8 @@ namespace phmap {
 			}
 
 			for (size_t i = 0; i < submap_count; ++i) {
-				auto& inner = sets_[i];
-				typename Lockable::UniqueLock m(const_cast<Inner&>(inner));
+				auto &inner = sets_[i];
+				typename Lockable::UniqueLock m(const_cast<Inner &>(inner));
 				if (!inner.set_.load(ar)) {
 					std::cerr << "Failed to load submap " << i << std::endl;
 					return false;
@@ -195,7 +198,7 @@ namespace phmap {
 
 		template<typename V>
 		typename std::enable_if<type_traits_internal::IsTriviallyCopyable<V>::value, bool>::type
-		dump(const V& v)
+		dump(const V &v)
 		{
 			ofs_.write(reinterpret_cast<const char *>(&v), sizeof(V));
 			return true;
@@ -208,12 +211,12 @@ namespace phmap {
 
 	class BinaryInputArchive {
 	public:
-		BinaryInputArchive(const char * file_path)
+		BinaryInputArchive(const char *file_path)
 		{
 			ifs_.open(file_path, std::ios_base::binary);
 		}
 
-		bool load(char* p, size_t sz)
+		bool load(char *p, size_t sz)
 		{
 			ifs_.read(p, sz);
 			return true;
@@ -221,7 +224,7 @@ namespace phmap {
 
 		template<typename V>
 		typename std::enable_if<type_traits_internal::IsTriviallyCopyable<V>::value, bool>::type
-		load(V* v)
+		load(V *v)
 		{
 			ifs_.read(reinterpret_cast<char *>(v), sizeof(V));
 			return true;

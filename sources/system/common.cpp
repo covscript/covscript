@@ -210,7 +210,7 @@ namespace cs_impl {
 		bool mkdir_p(std::string path)
 		{
 			std::string::size_type pos;
-			while(true) {
+			while (true) {
 				pos = path.find('\\');
 				if (pos != std::string::npos)
 					path[pos] = '/';
@@ -223,7 +223,7 @@ namespace cs_impl {
 		bool mkdir(std::string path)
 		{
 			std::string::size_type pos;
-			while(true) {
+			while (true) {
 				pos = path.find('\\');
 				if (pos != std::string::npos)
 					path[pos] = '/';

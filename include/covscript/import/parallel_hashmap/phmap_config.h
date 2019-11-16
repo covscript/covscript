@@ -44,6 +44,7 @@
 #ifdef __cplusplus
 // Included for __GLIBCXX__, _LIBCPP_VERSION
 #include <cstddef>
+
 #endif  // __cplusplus
 
 #if defined(__APPLE__)
@@ -51,6 +52,7 @@
 // __IPHONE_8_0.
 #include <Availability.h>
 #include <TargetConditionals.h>
+
 #endif
 
 #define PHMAP_XSTR(x) PHMAP_STR(x)
@@ -124,9 +126,9 @@
 // ----------------------------------------------------------------
 #ifdef PHMAP_HAVE_STD_IS_TRIVIALLY_DESTRUCTIBLE
 #error PHMAP_HAVE_STD_IS_TRIVIALLY_DESTRUCTIBLE cannot be directly set
-#elif defined(_LIBCPP_VERSION) ||                                        \
+#elif defined(_LIBCPP_VERSION) || \
     (!defined(__clang__) && defined(__GNUC__) && defined(__GLIBCXX__) && \
-     (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8))) ||        \
+     (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8))) || \
     defined(_MSC_VER)
 #define PHMAP_HAVE_STD_IS_TRIVIALLY_DESTRUCTIBLE 1
 #endif
@@ -139,10 +141,10 @@
 #error PHMAP_HAVE_STD_IS_TRIVIALLY_CONSTRUCTIBLE cannot be directly set
 #elif defined(PHMAP_HAVE_STD_IS_TRIVIALLY_ASSIGNABLE)
 #error PHMAP_HAVE_STD_IS_TRIVIALLY_ASSIGNABLE cannot directly set
-#elif (defined(__clang__) && defined(_LIBCPP_VERSION)) ||        \
-    (!defined(__clang__) && defined(__GNUC__) &&                 \
+#elif (defined(__clang__) && defined(_LIBCPP_VERSION)) || \
+    (!defined(__clang__) && defined(__GNUC__) && \
      (__GNUC__ > 5 || (__GNUC__ == 5 && __GNUC_MINOR__ >= 1)) && \
-     (defined(_LIBCPP_VERSION) || defined(__GLIBCXX__))) ||      \
+     (defined(_LIBCPP_VERSION) || defined(__GLIBCXX__))) || \
     (defined(_MSC_VER) && !defined(__NVCC__))
 #define PHMAP_HAVE_STD_IS_TRIVIALLY_CONSTRUCTIBLE 1
 #define PHMAP_HAVE_STD_IS_TRIVIALLY_ASSIGNABLE 1
@@ -185,7 +187,7 @@
 #error PHMAP_HAVE_INTRINSIC_INT128 cannot be directly set
 #elif defined(__SIZEOF_INT128__)
 #if (defined(__clang__) && !defined(_WIN32) && !defined(__aarch64__)) || \
-        (defined(__CUDACC__) && __CUDACC_VER_MAJOR__ >= 9) ||                \
+        (defined(__CUDACC__) && __CUDACC_VER_MAJOR__ >= 9) || \
         (defined(__GNUC__) && !defined(__clang__) && !defined(__CUDACC__))
 #define PHMAP_HAVE_INTRINSIC_INT128 1
 #elif defined(__CUDACC__)
@@ -204,7 +206,7 @@
 #if defined(__EXCEPTIONS) && __has_feature(cxx_exceptions)
 #define PHMAP_HAVE_EXCEPTIONS 1
 #endif  // defined(__EXCEPTIONS) && __has_feature(cxx_exceptions)
-#elif !(defined(__GNUC__) && (__GNUC__ < 5) && !defined(__EXCEPTIONS)) &&    \
+#elif !(defined(__GNUC__) && (__GNUC__ < 5) && !defined(__EXCEPTIONS)) && \
     !(defined(__GNUC__) && (__GNUC__ >= 5) && !defined(__cpp_exceptions)) && \
     !(defined(_MSC_VER) && !defined(_CPPUNWIND))
 #define PHMAP_HAVE_EXCEPTIONS 1
@@ -217,7 +219,7 @@
 // -----------------------------------------------------------------------
 #ifdef PHMAP_HAVE_MMAP
 #error PHMAP_HAVE_MMAP cannot be directly set
-#elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) ||   \
+#elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || \
     defined(__ros__) || defined(__native_client__) || defined(__asmjs__) || \
     defined(__wasm__) || defined(__Fuchsia__) || defined(__sun) || \
     defined(__ASYLO__)
@@ -248,7 +250,7 @@
 #endif
 
 #if defined(__APPLE__) && defined(_LIBCPP_VERSION) && \
-    defined(__MAC_OS_X_VERSION_MIN_REQUIRED__) &&     \
+    defined(__MAC_OS_X_VERSION_MIN_REQUIRED__) && \
     __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101400
 #define PHMAP_INTERNAL_MACOS_CXX17_TYPES_UNAVAILABLE 1
 #else
@@ -485,7 +487,7 @@
 
 #ifdef PHMAP_HAVE_ATTRIBUTE_SECTION
 #error PHMAP_HAVE_ATTRIBUTE_SECTION cannot be directly set
-#elif (PHMAP_HAVE_ATTRIBUTE(section) ||                \
+#elif (PHMAP_HAVE_ATTRIBUTE(section) || \
        (defined(__GNUC__) && !defined(__clang__))) && \
     !defined(__APPLE__) && PHMAP_HAVE_ATTRIBUTE_WEAK
 #define PHMAP_HAVE_ATTRIBUTE_SECTION 1
@@ -597,7 +599,7 @@
 // Figure out SSE support
 // ----------------------------------------------------------------------
 #ifndef PHMAP_HAVE_SSE2
-#if defined(__SSE2__) ||  \
+#if defined(__SSE2__) || \
         (defined(_MSC_VER) && \
          (defined(_M_X64) || (defined(_M_IX86) && _M_IX86_FP >= 2)))
 #define PHMAP_HAVE_SSE2 1
@@ -619,11 +621,15 @@
 #endif
 
 #if PHMAP_HAVE_SSE2
+
 #include <emmintrin.h>
+
 #endif
 
 #if PHMAP_HAVE_SSSE3
+
 #include <tmmintrin.h>
+
 #endif
 
 
@@ -643,7 +649,7 @@ namespace phmap {
 	namespace macros_internal {
 // Note: this internal template function declaration is used by PHMAP_ARRAYSIZE.
 // The function doesn't need a definition, as we only use its type.
-		template <typename T, size_t N>
+		template<typename T, size_t N>
 		auto ArraySizeHelper(const T (&array)[N]) -> char (&)[N];
 	}  // namespace macros_internal
 }  // namespace phmap

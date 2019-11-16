@@ -47,6 +47,7 @@ namespace phmap {
 	};
 
 #if defined(PHMAP_HAS_UMUL128)
+
 	template<>
 	struct phmap_mix<8> {
 		// Very fast mixing (similar to Abseil)
@@ -59,6 +60,7 @@ namespace phmap {
 			return static_cast<size_t>(h + l);
 		}
 	};
+
 #else
 	template<>
 	struct phmap_mix<8> {
@@ -107,9 +109,11 @@ namespace phmap {
 		typedef std::true_type yes;
 		typedef std::false_type no;
 
-		template<typename U> static auto test(int) -> decltype(hash_value(std::declval<U&>()) == 1, yes());
+		template<typename U>
+		static auto test(int) -> decltype(hash_value(std::declval<U &>()) == 1, yes());
 
-		template<typename> static no test(...);
+		template<typename>
+		static no test(...);
 
 	public:
 		static constexpr bool value = std::is_same<decltype(test<T>(0)), yes>::value;
@@ -121,29 +125,30 @@ namespace phmap {
 	};
 	template <class T> using Hash = absl::Hash<T>;
 #else
+
 // ---------------------------------------------------------------
 //               phmap::Hash
 // ---------------------------------------------------------------
-	template <class T>
+	template<class T>
 	struct Hash {
-		template <class U, typename std::enable_if<has_hash_value<U>::value, int>::type = 0>
-		size_t _hash(const T& val) const
+		template<class U, typename std::enable_if<has_hash_value<U>::value, int>::type = 0>
+		size_t _hash(const T &val) const
 		{
 			return hash_value(val);
 		}
 
-		template <class U, typename std::enable_if<!has_hash_value<U>::value, int>::type = 0>
-		size_t _hash(const T& val) const {
+		template<class U, typename std::enable_if<!has_hash_value<U>::value, int>::type = 0>
+		size_t _hash(const T &val) const {
 			return std::hash<T>()(val);
 		}
 
-		inline size_t operator()(const T& val) const
+		inline size_t operator()(const T &val) const
 		{
 			return _hash<T>(val);
 		}
 	};
 
-	template <class T>
+	template<class T>
 	struct Hash<T *> {
 		inline size_t operator()(const T *val) const noexcept
 		{
@@ -157,7 +162,7 @@ namespace phmap {
 		typedef ResultType result_type;
 	};
 
-	template <>
+	template<>
 	struct Hash<bool> : public phmap_unary_function<bool, size_t> {
 		inline size_t operator()(bool val) const noexcept
 		{
@@ -165,7 +170,7 @@ namespace phmap {
 		}
 	};
 
-	template <>
+	template<>
 	struct Hash<char> : public phmap_unary_function<char, size_t> {
 		inline size_t operator()(char val) const noexcept
 		{
@@ -173,7 +178,7 @@ namespace phmap {
 		}
 	};
 
-	template <>
+	template<>
 	struct Hash<signed char> : public phmap_unary_function<signed char, size_t> {
 		inline size_t operator()(signed char val) const noexcept
 		{
@@ -181,7 +186,7 @@ namespace phmap {
 		}
 	};
 
-	template <>
+	template<>
 	struct Hash<unsigned char> : public phmap_unary_function<unsigned char, size_t> {
 		inline size_t operator()(unsigned char val) const noexcept
 		{
@@ -189,7 +194,7 @@ namespace phmap {
 		}
 	};
 
-	template <>
+	template<>
 	struct Hash<wchar_t> : public phmap_unary_function<wchar_t, size_t> {
 		inline size_t operator()(wchar_t val) const noexcept
 		{
@@ -197,7 +202,7 @@ namespace phmap {
 		}
 	};
 
-	template <>
+	template<>
 	struct Hash<int16_t> : public phmap_unary_function<int16_t, size_t> {
 		inline size_t operator()(int16_t val) const noexcept
 		{
@@ -205,7 +210,7 @@ namespace phmap {
 		}
 	};
 
-	template <>
+	template<>
 	struct Hash<uint16_t> : public phmap_unary_function<uint16_t, size_t> {
 		inline size_t operator()(uint16_t val) const noexcept
 		{
@@ -213,7 +218,7 @@ namespace phmap {
 		}
 	};
 
-	template <>
+	template<>
 	struct Hash<int32_t> : public phmap_unary_function<int32_t, size_t> {
 		inline size_t operator()(int32_t val) const noexcept
 		{
@@ -221,7 +226,7 @@ namespace phmap {
 		}
 	};
 
-	template <>
+	template<>
 	struct Hash<uint32_t> : public phmap_unary_function<uint32_t, size_t> {
 		inline size_t operator()(uint32_t val) const noexcept
 		{
@@ -229,7 +234,7 @@ namespace phmap {
 		}
 	};
 
-	template <>
+	template<>
 	struct Hash<int64_t> : public phmap_unary_function<int64_t, size_t> {
 		inline size_t operator()(int64_t val) const noexcept
 		{
@@ -237,7 +242,7 @@ namespace phmap {
 		}
 	};
 
-	template <>
+	template<>
 	struct Hash<uint64_t> : public phmap_unary_function<uint64_t, size_t> {
 		inline size_t operator()(uint64_t val) const noexcept
 		{
@@ -245,7 +250,7 @@ namespace phmap {
 		}
 	};
 
-	template <>
+	template<>
 	struct Hash<float> : public phmap_unary_function<float, size_t> {
 		inline size_t operator()(float val) const noexcept
 		{
@@ -256,7 +261,7 @@ namespace phmap {
 		}
 	};
 
-	template <>
+	template<>
 	struct Hash<double> : public phmap_unary_function<double, size_t> {
 		inline size_t operator()(double val) const noexcept
 		{
@@ -269,18 +274,21 @@ namespace phmap {
 
 #endif
 
-	template <class H, int sz> struct Combiner {
+	template<class H, int sz>
+	struct Combiner {
 		H operator()(H seed, size_t value);
 	};
 
-	template <class H> struct Combiner<H, 4> {
+	template<class H>
+	struct Combiner<H, 4> {
 		H operator()(H seed, size_t value)
 		{
 			return seed ^ (value + 0x9e3779b9 + (seed << 6) + (seed >> 2));
 		}
 	};
 
-	template <class H> struct Combiner<H, 8> {
+	template<class H>
+	struct Combiner<H, 8> {
 		H operator()(H seed, size_t value)
 		{
 			return seed ^ (value + size_t(0xc6a4a7935bd1e995) + (seed << 6) + (seed >> 2));
@@ -289,11 +297,11 @@ namespace phmap {
 
 // define HashState to combine member hashes... see example below
 // -----------------------------------------------------------------------------
-	template <typename H>
+	template<typename H>
 	class HashStateBase {
 	public:
-		template <typename T, typename... Ts>
-		static H combine(H state, const T& value, const Ts&... values);
+		template<typename T, typename... Ts>
+		static H combine(H state, const T &value, const Ts &... values);
 
 		static H combine(H state)
 		{
@@ -301,9 +309,9 @@ namespace phmap {
 		}
 	};
 
-	template <typename H>
-	template <typename T, typename... Ts>
-	H HashStateBase<H>::combine(H seed, const T& v, const Ts&... vs)
+	template<typename H>
+	template<typename T, typename... Ts>
+	H HashStateBase<H>::combine(H seed, const T &v, const Ts &... vs)
 	{
 		return HashStateBase<H>::combine(Combiner<H, sizeof(H)>()(
 		                                     seed, phmap::Hash<T>()(v)),
@@ -320,7 +328,7 @@ namespace phmap {
 // -------------------------
 	template<class T1, class T2>
 	struct Hash<std::pair<T1, T2>> {
-		size_t operator()(std::pair<T1, T2> const& p) const noexcept
+		size_t operator()(std::pair<T1, T2> const &p) const noexcept
 		{
 			return phmap::HashState().combine(phmap::Hash<T1>()(p.first), p.second);
 		}
@@ -330,7 +338,7 @@ namespace phmap {
 // --------------------------
 	template<class... T>
 	struct Hash<std::tuple<T...>> {
-		size_t operator()(std::tuple<T...> const& t) const noexcept
+		size_t operator()(std::tuple<T...> const &t) const noexcept
 		{
 			return _hash_helper(t);
 		}
@@ -350,7 +358,7 @@ namespace phmap {
 			const auto &el = std::get<I>(t);
 			using el_type = typename std::remove_cv<typename std::remove_reference<decltype(el)>::type>::type;
 			return Combiner<size_t, sizeof(size_t)>()(
-			           phmap::Hash<el_type>()(el),  _hash_helper<I + 1>(t));
+			           phmap::Hash<el_type>()(el), _hash_helper<I + 1>(t));
 		}
 	};
 

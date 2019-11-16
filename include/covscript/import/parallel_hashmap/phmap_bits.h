@@ -40,6 +40,7 @@
 #elif defined(__APPLE__)
 // Mac OS X / Darwin features
 #include <libkern/OSByteOrder.h>
+
 #elif defined(__FreeBSD__)
 #include <sys/endian.h>
 #elif defined(__GLIBC__)
@@ -58,7 +59,7 @@
 // then a load and a store.
 // -----------------------------------------------------------------------------
 
-#if defined(ADDRESS_SANITIZER) || defined(THREAD_SANITIZER) ||\
+#if defined(ADDRESS_SANITIZER) || defined(THREAD_SANITIZER) || \
     defined(MEMORY_SANITIZER)
 #include <stdint.h>
 
@@ -196,12 +197,14 @@ namespace phmap {
 
 #ifdef PHMAP_HAVE_INTRINSIC_INT128
 __extension__ typedef unsigned __int128 phmap_uint128;
-inline uint64_t umul128(uint64_t a, uint64_t b, uint64_t* high)
+
+inline uint64_t umul128(uint64_t a, uint64_t b, uint64_t *high)
 {
 	auto result = static_cast<phmap_uint128>(a) * static_cast<phmap_uint128>(b);
 	*high = static_cast<uint64_t>(result >> 64);
 	return static_cast<uint64_t>(result);
 }
+
 #define PHMAP_HAS_UMUL128 1
 #elif (defined(_MSC_VER))
 #if defined(_M_X64)
@@ -451,10 +454,12 @@ namespace phmap {
 	{
 		return __builtin_bswap64(host_int);
 	}
+
 	inline uint32_t gbswap_32(uint32_t host_int)
 	{
 		return __builtin_bswap32(host_int);
 	}
+
 	inline uint16_t gbswap_16(uint16_t host_int)
 	{
 		return __builtin_bswap16(host_int);
@@ -554,10 +559,12 @@ namespace phmap {
 	{
 		return gbswap_16(x);
 	}
+
 	inline uint32_t ghtonl(uint32_t x)
 	{
 		return gbswap_32(x);
 	}
+
 	inline uint64_t ghtonll(uint64_t x)
 	{
 		return gbswap_64(x);
@@ -591,10 +598,12 @@ namespace phmap {
 	{
 		return ghtons(x);
 	}
+
 	inline uint32_t gntohl(uint32_t x)
 	{
 		return ghtonl(x);
 	}
+
 	inline uint64_t gntohll(uint64_t x)
 	{
 		return ghtonll(x);
@@ -612,6 +621,7 @@ namespace phmap {
 		{
 			return x;
 		}
+
 		inline uint16_t ToHost16(uint16_t x)
 		{
 			return x;
@@ -621,6 +631,7 @@ namespace phmap {
 		{
 			return x;
 		}
+
 		inline uint32_t ToHost32(uint32_t x)
 		{
 			return x;
@@ -630,6 +641,7 @@ namespace phmap {
 		{
 			return x;
 		}
+
 		inline uint64_t ToHost64(uint64_t x)
 		{
 			return x;
@@ -720,6 +732,7 @@ namespace phmap {
 		{
 			return gbswap_16(x);
 		}
+
 		inline uint16_t ToHost16(uint16_t x)
 		{
 			return gbswap_16(x);
@@ -729,6 +742,7 @@ namespace phmap {
 		{
 			return gbswap_32(x);
 		}
+
 		inline uint32_t ToHost32(uint32_t x)
 		{
 			return gbswap_32(x);
@@ -738,6 +752,7 @@ namespace phmap {
 		{
 			return gbswap_64(x);
 		}
+
 		inline uint64_t ToHost64(uint64_t x)
 		{
 			return gbswap_64(x);
