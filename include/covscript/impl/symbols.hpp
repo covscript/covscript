@@ -345,9 +345,7 @@ namespace cs {
 			try {
 				o << mVal.to_string();
 			}
-			catch (cov::error &e) {
-				if (!std::strcmp(e.what(), "E000D"))
-					throw e;
+			catch (...) {
 				o << "[" << cs_impl::cxx_demangle(mVal.type().name()) << "]";
 			}
 			o << "\" >";
