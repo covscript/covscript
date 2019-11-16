@@ -25,6 +25,20 @@
 #include <covscript/impl/impl.hpp>
 #include <iostream>
 
+#define COVSCRIPT_SANDBOX
+
+#ifdef COVSCRIPT_SANDBOX
+namespace cs_sandbox {
+	cs::var sandbox_hook(cs::vector&)
+	{
+		throw cs::runtime_error("Target function was rejected by covscript sandbox.");
+	}
+}
+#define CNI_SANDBOX(expr) cs::var::make_protect<cs::callable>(cs_sandbox::sandbox_hook, cs::callable::types::constant)
+#else
+#define CNI_SANDBOX(expr) (expr)
+#endif
+
 namespace cs_impl {
 	namespace array_cs_ext {
 		using namespace cs;
@@ -387,7 +401,7 @@ namespace cs_impl {
 			.add_var("out", var::make_constant<std::ios_base::openmode>(std::ios_base::out))
 			.add_var("app", var::make_constant<std::ios_base::openmode>(std::ios_base::app));
 			(*iostream_ext)
-			.add_var("fstream", make_cni(fstream))
+			.add_var("fstream", CNI_SANDBOX(make_cni(fstream)))
 			.add_var("setprecision", make_cni(setprecision));
 		}
 	}
@@ -920,15 +934,15 @@ namespace cs_impl {
 			.add_var("solve", make_cni(solve))
 			.add_var("cmd_args", make_cni(cmd_args, true))
 			.add_var("import", make_cni(import, true))
-			.add_var("source_import", make_cni(source_import, true))
+			.add_var("source_import", CNI_SANDBOX(make_cni(source_import, true)))
 			.add_var("argument_count", make_cni(argument_count, true))
-			.add_var("get_current_dir", make_cni(file_system::get_current_dir));
+			.add_var("get_current_dir", CNI_SANDBOX(make_cni(file_system::get_current_dir)));
 			(*context_ext)
 			.add_var("build", make_cni(build))
 			.add_var("solve", make_cni(solve))
 			.add_var("cmd_args", make_cni(cmd_args, true))
 			.add_var("import", make_cni(import, true))
-			.add_var("source_import", make_cni(source_import, true));
+			.add_var("source_import", CNI_SANDBOX(make_cni(source_import, true)));
 		}
 	}
 	namespace string_cs_ext {
@@ -1124,13 +1138,13 @@ namespace cs_impl {
 		void init()
 		{
 			(*console_ext)
-			.add_var("terminal_width", make_cni(terminal_width))
-			.add_var("terminal_height", make_cni(terminal_height))
-			.add_var("gotoxy", make_cni(gotoxy))
-			.add_var("echo", make_cni(echo))
-			.add_var("clrscr", make_cni(clrscr))
-			.add_var("getch", make_cni(getch))
-			.add_var("kbhit", make_cni(kbhit));
+			.add_var("terminal_width", CNI_SANDBOX(make_cni(terminal_width)))
+			.add_var("terminal_height", CNI_SANDBOX(make_cni(terminal_height)))
+			.add_var("gotoxy", CNI_SANDBOX(make_cni(gotoxy)))
+			.add_var("echo", CNI_SANDBOX(make_cni(echo)))
+			.add_var("clrscr", CNI_SANDBOX(make_cni(clrscr)))
+			.add_var("getch", CNI_SANDBOX(make_cni(getch)))
+			.add_var("kbhit", CNI_SANDBOX(make_cni(kbhit)));
 		}
 	}
 
@@ -1142,21 +1156,21 @@ namespace cs_impl {
 		{
 			using namespace cs_impl::file_system;
 			(*file_ext)
-			.add_var("copy", make_cni(copy))
-			.add_var("remove", make_cni(remove))
-			.add_var("exists", make_cni(exists))
-			.add_var("rename", make_cni(move))
-			.add_var("is_file", make_cni([](const std::string &path) {
+			.add_var("copy", CNI_SANDBOX(make_cni(copy)))
+			.add_var("remove", CNI_SANDBOX(make_cni(remove)))
+			.add_var("exists", CNI_SANDBOX(make_cni(exists)))
+			.add_var("rename", CNI_SANDBOX(make_cni(move)))
+			.add_var("is_file", CNI_SANDBOX(make_cni([](const std::string &path) {
 				return !is_dir(path);
-			}))
-			.add_var("is_directory", make_cni(is_dir))
-			.add_var("can_read", make_cni(can_read))
-			.add_var("can_write", make_cni(can_write))
-			.add_var("can_execute", make_cni(can_execute))
-			.add_var("mkdir", make_cni(mkdir))
-			.add_var("mkdir_p", make_cni(mkdir_p))
-			.add_var("chmod", make_cni(chmod))
-			.add_var("chmod_r", make_cni(chmod_r));
+			})))
+			.add_var("is_directory", CNI_SANDBOX(make_cni(is_dir)))
+			.add_var("can_read", CNI_SANDBOX(make_cni(can_read)))
+			.add_var("can_write", CNI_SANDBOX(make_cni(can_write)))
+			.add_var("can_execute", CNI_SANDBOX(make_cni(can_execute)))
+			.add_var("mkdir", CNI_SANDBOX(make_cni(mkdir)))
+			.add_var("mkdir_p", CNI_SANDBOX(make_cni(mkdir_p)))
+			.add_var("chmod", CNI_SANDBOX(make_cni(chmod)))
+			.add_var("chmod_r", CNI_SANDBOX(make_cni(chmod_r)));
 		}
 	}
 
@@ -1206,7 +1220,7 @@ namespace cs_impl {
 			.add_var("info", make_namespace(path_info_ext))
 			.add_var("separator", var::make_constant<char>(path_separator))
 			.add_var("delimiter", var::make_constant<char>(path_delimiter))
-			.add_var("scan", make_cni(scan));
+			.add_var("scan", CNI_SANDBOX(make_cni(scan)));
 		}
 	}
 	namespace system_cs_ext {
@@ -1242,8 +1256,8 @@ namespace cs_impl {
 			.add_var("path", make_namespace(path_ext))
 			.add_var("in", var::make_protect<istream>(&std::cin, [](std::istream *) {}))
 			.add_var("out", var::make_protect<ostream>(&std::cout, [](std::ostream *) {}))
-			.add_var("run", make_cni(run))
-			.add_var("getenv", make_cni(getenv))
+			.add_var("run", CNI_SANDBOX(make_cni(run)))
+			.add_var("getenv", CNI_SANDBOX(make_cni(getenv)))
 			.add_var("exit", make_cni(exit))
 			.add_var("is_platform_windows", make_cni(platform::is_platform_win32))
 			.add_var("is_platform_linux", make_cni(platform::is_platform_linux))
