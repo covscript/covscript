@@ -365,19 +365,7 @@ namespace cs_impl {
 
 		var fstream(const string &path, std::ios_base::openmode openmode)
 		{
-			switch (openmode) {
-			case std::ios_base::in:
-				return var::make<istream>(new std::ifstream(path, std::ios_base::in));
-				break;
-			case std::ios_base::out:
-				return var::make<ostream>(new std::ofstream(path, std::ios_base::out));
-				break;
-			case std::ios_base::app:
-				return var::make<ostream>(new std::ofstream(path, std::ios_base::app));
-				break;
-			default:
-				throw lang_error("Unsupported openmode.");
-			}
+			throw lang_error("SANDBOX_MODE");
 		}
 
 		void setprecision(number pre)
@@ -897,7 +885,7 @@ namespace cs_impl {
 
 		var source_import(const context_t &context, const string &path)
 		{
-			return make_namespace(context->instance->source_import(path));
+			throw lang_error("SANDBOX_MODE");
 		}
 
 		number argument_count(const var &func)
@@ -1190,6 +1178,8 @@ namespace cs_impl {
 
 		array scan(const string &path)
 		{
+			if (path != ".")
+				throw lang_error("SANDBOX_MODE");
 			DIR *dir = ::opendir(path.c_str());
 			if (dir == nullptr)
 				throw cs::lang_error("Path does not exist.");
@@ -1228,15 +1218,12 @@ namespace cs_impl {
 
 		number run(const string &str)
 		{
-			return std::system(str.c_str());
+			throw lang_error("SANDBOX_MODE");
 		}
 
 		string getenv(const string &name)
 		{
-			const char *str = std::getenv(name.c_str());
-			if (str == nullptr)
-				throw lang_error("Environment variable \"" + name + "\" is not exist.");
-			return str;
+			throw lang_error("SANDBOX_MODE");
 		}
 
 		void exit(number exit_code)
