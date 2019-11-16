@@ -73,69 +73,137 @@ namespace cs_impl {
 	namespace conio {
 		int terminal_width()
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			struct winsize size;
+			ioctl(STDIN_FILENO, TIOCGWINSZ, &size);
+			return size.ws_col;
 		}
 
 		int terminal_height()
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			struct winsize size;
+			ioctl(STDIN_FILENO, TIOCGWINSZ, &size);
+			return size.ws_row - 1;
 		}
 
 		void gotoxy(int x, int y)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			printf("\x1B[%d;%df", y + 1, x + 1);
 		}
 
 		void echo(bool in)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			if (in)
+				printf("\33[?25h");
+			else
+				printf("\33[?25l");
 		}
 
 		void clrscr()
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			printf("\x1B[2J\x1B[0;0f");
 		}
 
 		int getch()
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			terminal_lnbuf(0);
+			terminal_echo(0);
+			int ch = getchar();
+			terminal_lnbuf(1);
+			terminal_echo(1);
+			return ch;
 		}
 
 		int kbhit()
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			fd_set fds;
+			terminal_lnbuf(0);
+			terminal_echo(0);
+			struct timeval tv;
+			tv.tv_sec = 0;
+			tv.tv_usec = 0;
+			FD_ZERO(&fds);
+			FD_SET(0, &fds);
+			select(1, &fds, 0, 0, &tv);
+			int ret = FD_ISSET(0, &fds);
+			terminal_lnbuf(1);
+			terminal_echo(1);
+			return ret;
 		}
 	}
 
 	namespace file_system {
 		bool is_exe(const std::string &path)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			int fd = open(path.c_str(), O_RDONLY);
+			if (fd < 0)
+				return false;
+#ifdef COVSCRIPT_PLATFORM_DARWIN
+			uint32_t header;
+#else
+#ifndef COVSCRIPT_PLATFORM_LINUX
+#warning Compatible Mode for Linux System
+#endif
+			char header[4] = {0};
+#endif
+			int nread = read(fd, reinterpret_cast<void *>(&header), sizeof(header));
+			close(fd);
+			if (nread < 0)
+				return false;
+#ifdef COVSCRIPT_PLATFORM_DARWIN
+			if (header == MH_MAGIC || header == MH_CIGAM || header == MH_MAGIC_64 || header == MH_CIGAM_64)
+				return true;
+#else
+#ifndef COVSCRIPT_PLATFORM_LINUX
+#warning Compatible Mode for Linux System
+#endif
+			if (header[0] == 0x7f && header[1] == 'E' && header[2] == 'L' && header[3] == 'F')
+				return true;
+#endif
+			return false;
 		}
 
 		bool can_read(const std::string &path)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			return access(path.c_str(), R_OK) == 0;
 		}
 
 		bool can_write(const std::string &path)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			return access(path.c_str(), W_OK) == 0;
 		}
 
 		bool can_execute(const std::string &path)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			return access(path.c_str(), X_OK) == 0;
 		}
 
 		bool is_absolute_path(const std::string &path)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			return !path.empty() && path[0] == '/';
 		}
 
 		std::string get_current_dir()
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			char temp[PATH_MAX] = "";
+
+			if (::getcwd(temp, PATH_MAX) != nullptr) {
+				return std::string(temp);
+			}
+
+			int error = errno;
+			switch (error) {
+			case EACCES:
+				throw cs::runtime_error("Permission denied");
+
+			case ENOMEM:
+				throw cs::runtime_error("Out of memory");
+
+			default: {
+				std::stringstream str;
+				str << "Unrecognised errno: " << error;
+				throw cs::runtime_error(str.str());
+			}
+			}
 		}
 	}
 }

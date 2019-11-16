@@ -111,32 +111,60 @@ namespace cs_impl {
 	namespace file_system {
 		bool is_exe(const std::string &path)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			return can_execute(path);
 		}
 
 		bool can_read(const std::string &path)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			return _access_s(path.c_str(), 4) == 0;
 		}
 
 		bool can_write(const std::string &path)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			return _access_s(path.c_str(), 2) == 0;
 		}
 
 		bool can_execute(const std::string &path)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			int fd = open(path.c_str(), O_RDONLY);
+			if (fd < 0)
+				return false;
+			char header[2] = {0};
+			int nread = read(fd, reinterpret_cast<void *>(&header), sizeof(header));
+			close(fd);
+			if (nread < 0)
+				return false;
+			return header[0] == 'M' && header[1] == 'Z';
 		}
 
 		bool is_absolute_path(const std::string &path)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			return (!path.empty() && path[0] == '/')    // for mingw, cygwin
+			       || (path.size() >= 3 && path[1] == ':' && path[2] == '\\');
 		}
 
 		std::string get_current_dir()
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			char temp[PATH_MAX] = "";
+
+			if (::_getcwd(temp, PATH_MAX) != nullptr) {
+				return std::string(temp);
+			}
+
+			int error = errno;
+			switch (error) {
+			case EACCES:
+				throw cs::runtime_error("Permission denied");
+
+			case ENOMEM:
+				throw cs::runtime_error("Out of memory");
+
+			default: {
+				std::stringstream str;
+				str << "Unrecognised errno: " << error;
+				throw cs::runtime_error(str.str());
+			}
+			}
 		}
 	}
 }

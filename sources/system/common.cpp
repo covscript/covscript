@@ -162,47 +162,85 @@ namespace cs_impl {
 	namespace file_system {
 		bool chmod_r(const std::string &path, const std::string &mode)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			auto dirs = cs_system_impl::split(path, cs::path_separator, false);
+			std::stringstream ss;
+
+			for (auto &dir : dirs) {
+				ss << dir << cs::path_separator;
+
+				// DO NOT SKIP when dir is a directory
+				// directory has permissions too
+
+				if (!cs_system_impl::chmod_impl(ss.str(), cs_system_impl::parse_mode(mode))) {
+					return false;
+				}
+			}
+			return true;
 		}
 
 		bool chmod(const std::string &path, const std::string &mode)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			return cs_system_impl::chmod_impl(path, cs_system_impl::parse_mode(mode));
 		}
 
 		bool move(const std::string &source, const std::string &dest)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			return std::rename(source.c_str(), dest.c_str()) == 0;
 		}
 
 		bool copy(const std::string &source, const std::string &dest)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			std::ifstream in(source, std::ios_base::in | std::ios_base::binary);
+			std::ofstream out(dest, std::ios_base::out | std::ios_base::binary);
+			if (!in || !out)
+				return false;
+			char buffer[256];
+			while (!in.eof()) {
+				in.read(buffer, 256);
+				out.write(buffer, in.gcount());
+			}
+			return true;
 		}
 
 		bool remove(const std::string &path)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			return std::remove(path.c_str()) == 0;
 		}
 
 		bool mkdir_p(std::string path)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			std::string::size_type pos;
+			while(true) {
+				pos = path.find('\\');
+				if (pos != std::string::npos)
+					path[pos] = '/';
+				else
+					break;
+			}
+			return cs_system_impl::mkdir_dirs(cs_system_impl::split(path, '/', true), 0755);
 		}
 
 		bool mkdir(std::string path)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			std::string::size_type pos;
+			while(true) {
+				pos = path.find('\\');
+				if (pos != std::string::npos)
+					path[pos] = '/';
+				else
+					break;
+			}
+			return cs_system_impl::mkdir_dirs(cs_system_impl::split(path, '/', false), 0755);
 		}
 
 		bool exists(const std::string &path)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			return std::ifstream(path).is_open();
 		}
 
 		bool is_dir(const std::string &path)
 		{
-			throw cs::lang_error("SANDBOX_MODE");
+			return cs_system_impl::is_directory(path);
 		}
 	}
 }
