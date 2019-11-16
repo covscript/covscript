@@ -14,10 +14,21 @@
 #include <memory>
 #include <utility>
 
+#if defined(PHMAP_USE_ABSL_HASH)
+namespace absl {
+	template <class T> struct Hash;
+};
+#endif
+
 namespace phmap {
 
+#if defined(PHMAP_USE_ABSL_HASH)
+	template <class T> using Hash = absl::Hash<T>;
+#else
 	template<class T>
 	struct Hash;
+#endif
+
 	template<class T>
 	struct EqualTo;
 	template<class T> using Allocator      = typename std::allocator<T>;
@@ -30,13 +41,8 @@ namespace phmap {
 // The hash of an object of type T is computed by using phmap::Hash.
 		template<class T, class E = void>
 		struct HashEq {
-#if defined(PHMAP_USE_ABSL_HASHEQ)
-			using Hash = absl::Hash<T>;
-			using Eq   = phmap::EqualTo<T>;
-#else
 			using Hash = phmap::Hash<T>;
 			using Eq   = phmap::EqualTo<T>;
-#endif
 		};
 
 		template<class T>

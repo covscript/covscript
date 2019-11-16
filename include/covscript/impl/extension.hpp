@@ -101,7 +101,7 @@ namespace cs_impl {
 			if (func.type() == typeid(cs::callable))
 				return cs::invoke(func, cs::var::make<cs::structure>(&stut)).to_string();
 		}
-		throw cs::lang_error("Undefined \"to_string\" method.");
+		throw cov::error("E000D");
 	}
 
 // To Integer

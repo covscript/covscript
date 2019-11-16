@@ -149,7 +149,7 @@ namespace cs {
 	protected:
 		std::size_t line_num = 1;
 	public:
-		static garbage_collector<token_base> gc;
+		static garbage_collector <token_base> gc;
 
 		static void *operator new(std::size_t size)
 		{
@@ -448,18 +448,24 @@ namespace cs {
 	};
 
 	class token_arglist final : public token_base {
-		std::deque<tree_type<token_base *>> mTreeList;
+		std::deque<tree_type < token_base * >> mTreeList;
 	public:
 		token_arglist() = default;
 
-		explicit token_arglist(std::deque<tree_type<token_base *>> tlist) : mTreeList(std::move(tlist)) {}
+		explicit token_arglist(std::deque<tree_type < token_base * >>
+
+		                       tlist) :
+
+			mTreeList (std::move(tlist)) {}
 
 		token_types get_type() const noexcept override
 		{
 			return token_types::arglist;
 		}
 
-		std::deque<tree_type<token_base *>> &get_arglist() noexcept
+		std::deque<tree_type < token_base * >> &
+
+		                                    get_arglist() noexcept
 		{
 			return this->mTreeList;
 		}
@@ -468,18 +474,24 @@ namespace cs {
 	};
 
 	class token_array final : public token_base {
-		std::deque<tree_type<token_base *>> mTreeList;
+		std::deque<tree_type < token_base * >> mTreeList;
 	public:
 		token_array() = default;
 
-		explicit token_array(std::deque<tree_type<token_base *>> tlist) : mTreeList(std::move(tlist)) {}
+		explicit token_array(std::deque<tree_type < token_base * >>
+
+		                     tlist) :
+
+			mTreeList (std::move(tlist)) {}
 
 		token_types get_type() const noexcept override
 		{
 			return token_types::array;
 		}
 
-		std::deque<tree_type<token_base *>> &get_array() noexcept
+		std::deque<tree_type < token_base * >> &
+
+		                                    get_array() noexcept
 		{
 			return this->mTreeList;
 		}
@@ -488,18 +500,24 @@ namespace cs {
 	};
 
 	class token_parallel final : public token_base {
-		std::deque<tree_type<token_base *>> mTreeList;
+		std::deque<tree_type < token_base * >> mTreeList;
 	public:
 		token_parallel() = default;
 
-		explicit token_parallel(std::deque<tree_type<token_base *>> tlist) : mTreeList(std::move(tlist)) {}
+		explicit token_parallel(std::deque<tree_type < token_base * >>
+
+		                        tlist) :
+
+			mTreeList (std::move(tlist)) {}
 
 		token_types get_type() const noexcept override
 		{
 			return token_types::parallel;
 		}
 
-		std::deque<tree_type<token_base *>> &get_parallel() noexcept
+		std::deque<tree_type < token_base * >> &
+
+		                                    get_parallel() noexcept
 		{
 			return this->mTreeList;
 		}
@@ -543,7 +561,7 @@ namespace cs {
 		context_t context;
 		std::size_t line_num = 1;
 	public:
-		static garbage_collector<statement_base> gc;
+		static garbage_collector <statement_base> gc;
 
 		static void *operator new(std::size_t size)
 		{
@@ -607,7 +625,7 @@ namespace cs {
 
 	class method_base {
 	public:
-		static garbage_collector<method_base> gc;
+		static garbage_collector <method_base> gc;
 
 		static void *operator new(std::size_t size)
 		{

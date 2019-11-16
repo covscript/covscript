@@ -45,10 +45,11 @@
 #include <utility>
 #include <array>
 #include <cassert>
+#include <atomic>
 
+#include "phmap_fwd_decl.h"
 #include "phmap_utils.h"
 #include "phmap_base.h"
-#include "phmap_fwd_decl.h"
 
 #if PHMAP_HAVE_STD_STRING_VIEW
 #include <string_view>
@@ -354,7 +355,7 @@ namespace phmap {
 #pragma GCC diagnostic ignored "-Woverflow"
 
 			if (std::is_unsigned<char>::value) {
-				const __m128i mask = _mm_set1_epi8(0x80);
+				const __m128i mask = _mm_set1_epi8(static_cast<char>(0x80));
 				const __m128i diff = _mm_subs_epi8(b, a);
 				return _mm_cmpeq_epi8(_mm_and_si128(diff, mask), mask);
 			}
@@ -394,7 +395,7 @@ namespace phmap {
 				return BitMask<uint32_t, kWidth>(
 				           _mm_movemask_epi8(_mm_sign_epi8(ctrl, ctrl)));
 #else
-				return Match(kEmpty);
+				return Match(static_cast<h2_t>(kEmpty));
 #endif
 			}
 
@@ -1404,6 +1405,8 @@ namespace phmap {
 				// compared to destruction of the elements of the container. So we pick the
 				// largest bucket_count() threshold for which iteration is still fast and
 				// past that we simply deallocate the array.
+				if (empty())
+					return;
 				if (capacity_ > 127) {
 					destroy_slots();
 				}
@@ -1774,6 +1777,16 @@ namespace phmap {
 				}
 			}
 
+#ifndef PHMAP_NON_DETERMINISTIC
+
+			template<typename OutputArchive>
+			bool dump(OutputArchive &);
+
+			template<typename InputArchive>
+			bool load(InputArchive &);
+
+#endif
+
 			void rehash(size_t n)
 			{
 				if (n == 0 && capacity_ == 0) return;
@@ -1784,7 +1797,7 @@ namespace phmap {
 				}
 				// bitor is a faster way of doing `max` here. We will round up to the next
 				// power-of-2-minus-1, so bitor is good enough.
-				auto m = NormalizeCapacity(n | GrowthToLowerboundCapacity(size()));
+				auto m = NormalizeCapacity((std::max)(n, size()));
 				// n == 0 unconditionally rehashes as per the standard.
 				if (n == 0 || m > capacity_) {
 					resize(m);
@@ -2612,7 +2625,8 @@ namespace phmap {
 			MappedReference<P> at(const key_arg<K> &key)
 			{
 				auto it = this->find(key);
-				if (it == this->end()) std::abort();
+				if (it == this->end())
+					phmap::base_internal::ThrowStdOutOfRange("phmap at(): lookup non-existent key");
 				return Policy::value(&*it);
 			}
 
@@ -2620,7 +2634,8 @@ namespace phmap {
 			MappedConstReference<P> at(const key_arg<K> &key) const
 			{
 				auto it = this->find(key);
-				if (it == this->end()) std::abort();
+				if (it == this->end())
+					phmap::base_internal::ThrowStdOutOfRange("phmap at(): lookup non-existent key");
 				return Policy::value(&*it);
 			}
 
@@ -3477,7 +3492,9 @@ namespace phmap {
 
 			void reserve(size_t n)
 			{
-				rehash(GrowthToLowerboundCapacity(n));
+				size_t target = GrowthToLowerboundCapacity(n);
+				size_t normalized = 16 * NormalizeCapacity(n / num_tables);
+				rehash(normalized > target ? normalized : target);
 			}
 
 			// Extension API: support for heterogeneous keys.
@@ -3630,6 +3647,16 @@ namespace phmap {
 			{
 				a.swap(b);
 			}
+
+#ifndef PHMAP_NON_DETERMINISTIC
+
+			template<typename OutputArchive>
+			bool dump(OutputArchive &ar);
+
+			template<typename InputArchive>
+			bool load(InputArchive &ar);
+
+#endif
 
 		private:
 			template<class Container, typename Enabler>
@@ -3935,7 +3962,8 @@ namespace phmap {
 			MappedReference<P> at(const key_arg<K> &key)
 			{
 				auto it = this->find(key);
-				if (it == this->end()) std::abort();
+				if (it == this->end())
+					phmap::base_internal::ThrowStdOutOfRange("phmap at(): lookup non-existent key");
 				return Policy::value(&*it);
 			}
 
@@ -3943,7 +3971,8 @@ namespace phmap {
 			MappedConstReference<P> at(const key_arg<K> &key) const
 			{
 				auto it = this->find(key);
-				if (it == this->end()) std::abort();
+				if (it == this->end())
+					phmap::base_internal::ThrowStdOutOfRange("phmap at(): lookup non-existent key");
 				return Policy::value(&*it);
 			}
 
@@ -4599,41 +4628,29 @@ namespace phmap {
 //  hash_default
 // --------------------------------------------------------------------------
 
-#if 0
-
-		struct int64_t_hash {
-			using is_transparent = void;
-			size_t operator()(int64_t v) const
-			{
-				return (size_t)v;
-			}
-		};
-
-		template <>
-		struct HashEq<int64_t> {
-			using Hash = int64_t_hash;
-			using Eq   = std::equal_to<int64_t>;
-		};
-
-#endif
-
 #if PHMAP_HAVE_STD_STRING_VIEW
 
-		struct StringHash {
+// support char16_t wchar_t ....
+		template<class CharT>
+		struct StringHashT {
 			using is_transparent = void;
 
-			size_t operator()(std::string_view v) const
+			size_t operator()(std::basic_string_view<CharT> v) const
 			{
-				return phmap::Hash<std::string_view> {}(v);
+				std::string_view bv{reinterpret_cast<const char*>(v.data()), v.size() * sizeof(CharT)};
+				return std::hash<std::string_view>()(bv);
 			}
 		};
 
-// Supports heterogeneous lookup for string-like elements.
-		struct StringHashEq {
-			using Hash = StringHash;
+// Supports heterogeneous lookup for basic_string<T>-like elements.
+		template<class CharT>
+		struct StringHashEqT {
+			using Hash = StringHashT<CharT>;
+
 			struct Eq {
 				using is_transparent = void;
-				bool operator()(std::string_view lhs, std::string_view rhs) const
+
+				bool operator()(std::basic_string_view<CharT> lhs, std::basic_string_view<CharT> rhs) const
 				{
 					return lhs == rhs;
 				}
@@ -4641,14 +4658,29 @@ namespace phmap {
 		};
 
 		template <>
-		struct HashEq<std::string> : StringHashEq {};
+		struct HashEq<std::string> : StringHashEqT<char> {};
 
 		template <>
-		struct HashEq<std::string_view> : StringHashEq {};
+		struct HashEq<std::string_view> : StringHashEqT<char> {};
+
+// char16_t
+		template <>
+		struct HashEq<std::u16string> : StringHashEqT<char16_t> {};
+
+		template <>
+		struct HashEq<std::u16string_view> : StringHashEqT<char16_t> {};
+
+// wchar_t
+		template <>
+		struct HashEq<std::wstring> : StringHashEqT<wchar_t> {};
+
+		template <>
+		struct HashEq<std::wstring_view> : StringHashEqT<wchar_t> {};
 
 #endif
 
 // Supports heterogeneous lookup for pointers and smart pointers.
+// -------------------------------------------------------------
 		template<class T>
 		struct HashEq<T *> {
 			struct Hash {
@@ -4776,7 +4808,6 @@ namespace phmap {
 // Its interface is similar to that of `std::unordered_set<T>` with the
 // following notable differences:
 //
-// * Requires keys that are CopyConstructible
 // * Supports heterogeneous lookup, through `find()`, `operator[]()` and
 //   `insert()`, provided that the set is provided a compatible heterogeneous
 //   hashing function and equality operator.
@@ -4784,7 +4815,7 @@ namespace phmap {
 //   `rehash()`.
 // * Contains a `capacity()` member function indicating the number of element
 //   slots (open, deleted, and empty) within the hash set.
-// * Returns `void` from the `erase(iterator)` overload.
+// * Returns `void` from the `_erase(iterator)` overload.
 // -----------------------------------------------------------------------------
 	template<class T, class Hash, class Eq, class Alloc> // default values in phmap_fwd_decl.h
 	class flat_hash_set
@@ -4839,8 +4870,6 @@ namespace phmap {
 // cases. Its interface is similar to that of `std::unordered_map<K, V>` with
 // the following notable differences:
 //
-// * Requires keys that are CopyConstructible
-// * Requires values that are MoveConstructible
 // * Supports heterogeneous lookup, through `find()`, `operator[]()` and
 //   `insert()`, provided that the map is provided a compatible heterogeneous
 //   hashing function and equality operator.
@@ -4848,7 +4877,7 @@ namespace phmap {
 //   `rehash()`.
 // * Contains a `capacity()` member function indicating the number of element
 //   slots (open, deleted, and empty) within the hash map.
-// * Returns `void` from the `erase(iterator)` overload.
+// * Returns `void` from the `_erase(iterator)` overload.
 // -----------------------------------------------------------------------------
 	template<class K, class V, class Hash, class Eq, class Alloc> // default values in phmap_fwd_decl.h
 	class flat_hash_map : public phmap::container_internal::raw_hash_map<
