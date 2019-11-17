@@ -153,7 +153,7 @@ namespace cs {
 	public:
 		using function_type=std::function<var(vector &)>;
 		enum class types {
-			normal, constant, member_fn
+			normal, request_fold, member_fn
 		};
 	private:
 		function_type mFunc;
@@ -165,9 +165,9 @@ namespace cs {
 
 		explicit callable(function_type func, types type = types::normal) : mFunc(std::move(func)), mType(type) {}
 
-		bool is_constant() const
+		bool is_request_fold() const
 		{
-			return mType == types::constant;
+			return mType == types::request_fold;
 		}
 
 		bool is_member_fn() const
@@ -275,12 +275,12 @@ namespace cs {
 	struct object_method final {
 		var object;
 		var callable;
-		bool is_constant = false;
+		bool is_request_fold = false;
 
 		object_method() = delete;
 
-		object_method(var obj, var func, bool constant = false) : object(std::move(obj)), callable(std::move(func)),
-			is_constant(constant) {}
+		object_method(var obj, var func, bool request_fold= false) : object(std::move(obj)), callable(std::move(func)),
+			is_request_fold(request_fold) {}
 
 		~object_method() = default;
 	};

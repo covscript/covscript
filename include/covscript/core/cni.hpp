@@ -426,15 +426,15 @@ namespace cs {
 	using cs_impl::cni;
 
 	template<typename T>
-	var make_cni(T &&func, bool constant = false)
+	var make_cni(T &&func, bool request_fold = false)
 	{
-		return var::make_protect<callable>(cni(func), constant ? callable::types::constant : callable::types::normal);
+		return var::make_protect<callable>(cni(func), request_fold ? callable::types::request_fold : callable::types::normal);
 	}
 
 	template<typename T, typename X>
-	var make_cni(T &&func, const cni_type<X> &type, bool constant = false)
+	var make_cni(T &&func, const cni_type<X> &type, bool request_fold = false)
 	{
 		return var::make_protect<callable>(cni(func, type),
-		                                   constant ? callable::types::constant : callable::types::normal);
+		                                   request_fold ? callable::types::request_fold : callable::types::normal);
 	}
 }

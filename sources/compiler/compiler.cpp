@@ -626,7 +626,7 @@ namespace cs {
 					throw runtime_error("Wrong syntax for function call.");
 				if (lptr->get_type() == token_types::value) {
 					var &a = static_cast<token_value *>(lptr)->get_value();
-					if (a.type() == typeid(callable) && a.const_val<callable>().is_constant()) {
+					if (a.type() == typeid(callable) && a.const_val<callable>().is_request_fold()) {
 						token_base *ptr = nullptr;
 						for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
 							ptr = tree.root().data();
@@ -660,7 +660,7 @@ namespace cs {
 							it.data() = oldt;
 						}
 					}
-					else if (a.type() == typeid(object_method) && a.const_val<object_method>().is_constant) {
+					else if (a.type() == typeid(object_method) && a.const_val<object_method>().is_request_fold) {
 						token_base *ptr = nullptr;
 						for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
 							ptr = tree.root().data();

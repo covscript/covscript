@@ -157,7 +157,7 @@ namespace cs {
 		else {
 			var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
 			if (val.type() == typeid(callable))
-				return var::make_protect<object_method>(a, val, val.const_val<callable>().is_constant());
+				return var::make_protect<object_method>(a, val, val.const_val<callable>().is_request_fold());
 			else
 				return val;
 		}
