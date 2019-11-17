@@ -53,7 +53,7 @@ namespace cs {
 
 		statement_types get_type() const noexcept override
 		{
-			return statement_types::expression_;
+			return statement_types::import_;
 		}
 
 		void run_impl() override;

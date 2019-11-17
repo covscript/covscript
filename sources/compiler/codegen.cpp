@@ -24,8 +24,11 @@ namespace cs {
 	statement_base *
 	method_expression::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		return new statement_expression(static_cast<token_expr *>(raw.front().front())->get_tree(), context,
-		                                raw.front().back());
+		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().front())->get_tree();
+		if (tree.root().usable() && tree.root().data()->get_type() != token_types::value)
+			return new statement_expression(tree, context, raw.front().back());
+		else
+			return nullptr;
 	}
 
 	void method_import::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
@@ -51,13 +54,15 @@ namespace cs {
 		}
 		else
 			process(tree);
-		mResult = new statement_import(var_list, context, raw.front().back());
+		mResult.emplace_back(new statement_import(var_list, context, raw.front().back()));
 	}
 
 	statement_base *
 	method_import::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		return mResult;
+		statement_base *ptr = mResult.front();
+		mResult.pop_front();
+		return ptr;
 	}
 
 	statement_base *
@@ -86,16 +91,18 @@ namespace cs {
 			}
 			else
 				throw runtime_error("Only support involve namespace.");
-			mResult = new statement_involve(tree, true, context, raw.front().back());
+			mResult.emplace_back(new statement_involve(tree, true, context, raw.front().back()));
 		}
 		else
-			mResult = new statement_involve(tree, false, context, raw.front().back());
+			mResult.emplace_back(new statement_involve(tree, false, context, raw.front().back()));
 	}
 
 	statement_base *
 	method_involve::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		return mResult;
+		statement_base *ptr = mResult.front();
+		mResult.pop_front();
+		return ptr;
 	}
 
 	void method_var::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
