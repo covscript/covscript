@@ -16,7 +16,7 @@ class calculator
                     if char.isspace(ch)
                         continue
                     end
-                    if char.isdigit(ch)
+                    if char.isdigit(ch) || ch == '.'
                         status = 1
                         continue
                     end
@@ -39,7 +39,7 @@ class calculator
                     if last_status == 1
                         throw runtime.exception("Wrong Format Expression")
                     end
-                    if !char.isdigit(ch)
+                    if !char.isdigit(ch)&&ch!='.'
                         num_stack.push_back(last_status == -1 ? -buff.to_number() : buff.to_number())
                         last_status = status
                         status = 0
