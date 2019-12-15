@@ -208,8 +208,10 @@ namespace cs {
 		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false) : mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)) {}
 #else
 
-		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
-			: mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)) {}
+		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false,
+		         bool is_lambda = false)
+			: mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)),
+			  mBody(std::move(body)) {}
 
 #endif
 
@@ -279,7 +281,7 @@ namespace cs {
 
 		object_method() = delete;
 
-		object_method(var obj, var func, bool request_fold= false) : object(std::move(obj)), callable(std::move(func)),
+		object_method(var obj, var func, bool request_fold = false) : object(std::move(obj)), callable(std::move(func)),
 			is_request_fold(request_fold) {}
 
 		~object_method() = default;
@@ -593,7 +595,8 @@ namespace cs {
 
 		type_t(std::function<var()> c, const type_id &i) : constructor(std::move(c)), id(i) {}
 
-		type_t(std::function<var()> c, const type_id &i, namespace_t ext) : constructor(std::move(c)), id(i), extensions(std::move(ext)) {}
+		type_t(std::function<var()> c, const type_id &i, namespace_t ext) : constructor(std::move(c)), id(i),
+			extensions(std::move(ext)) {}
 
 		template<typename T>
 		var &get_var(T &&) const;

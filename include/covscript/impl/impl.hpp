@@ -159,6 +159,7 @@ namespace cs {
 			current_process->stack_backtrace.pop_no_return();
 		}
 #else
+
 		fcall_guard()
 		{
 			current_process->stack.push(null_pointer);
@@ -168,7 +169,9 @@ namespace cs {
 		{
 			current_process->stack.pop_no_return();
 		}
+
 #endif
+
 		var get() const
 		{
 			return current_process->stack.top();
