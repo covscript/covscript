@@ -121,7 +121,7 @@ namespace cs {
 	public:
 		scope_guard() = delete;
 
-		explicit scope_guard(context_t c) : context(std::move(std::move(c)))
+		explicit scope_guard(context_t c) : context(std::move(c))
 		{
 			context->instance->storage.add_domain();
 		}
@@ -143,12 +143,11 @@ namespace cs {
 	};
 
 	class fcall_guard final {
-		context_t context;
 	public:
+#ifdef CS_DEBUGGER
 		fcall_guard() = delete;
 
-#ifdef CS_DEBUGGER
-		explicit fcall_guard(context_t c, const std::string &decl) : context(std::move(std::move(c)))
+		explicit fcall_guard(const std::string &decl)
 		{
 			current_process->stack.push(null_pointer);
 			current_process->stack_backtrace.push(decl);
@@ -160,8 +159,7 @@ namespace cs {
 			current_process->stack_backtrace.pop_no_return();
 		}
 #else
-
-		explicit fcall_guard(context_t c) : context(std::move(std::move(c)))
+		fcall_guard()
 		{
 			current_process->stack.push(null_pointer);
 		}
@@ -170,9 +168,7 @@ namespace cs {
 		{
 			current_process->stack.pop_no_return();
 		}
-
 #endif
-
 		var get() const
 		{
 			return current_process->stack.top();

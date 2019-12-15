@@ -470,11 +470,15 @@ namespace cs {
 				}
 				else
 					decl+=")";
-				it.data() = new_value(var::make_protect<callable>(function(context, decl, ret, args, std::deque<statement_base *> {ret}, is_vargs)));
+				function func(context, decl, ret, args, std::deque<statement_base *> {ret}, is_vargs, true);
 #else
-				it.data() = new_value(var::make_protect<callable>(
-				                          function(context, args, std::deque<statement_base *> {ret}, is_vargs)));
+				function func(context, args, std::deque<statement_base *> {ret}, is_vargs, true);
 #endif
+				func.add_reserve("self");
+				var lambda = var::make<object_method>(var(), var::make_protect<callable>(func));
+				lambda.val<object_method>().object = lambda;
+				lambda.protect();
+				it.data() = new_value(lambda);
 				return;
 			}
 			}

@@ -194,6 +194,7 @@ namespace cs {
 		std::string mDecl;
 		statement_base *mStmt;
 #endif
+		bool mIsLambda = false;
 		bool mIsMemFn = false;
 		bool mIsVargs = false;
 		std::vector<std::string> mArgs;
@@ -204,12 +205,11 @@ namespace cs {
 		function(const function &) = default;
 
 #ifdef CS_DEBUGGER
-		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs=false):mContext(std::move(std::move(c))), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mArgs(std::move(args)), mBody(std::move(body)) {}
+		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false) : mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)) {}
 #else
 
-		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false)
-			: mContext(
-			      std::move(std::move(c))), mIsVargs(is_vargs), mArgs(std::move(args)), mBody(std::move(body)) {}
+		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
+			: mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)) {}
 
 #endif
 
@@ -222,17 +222,17 @@ namespace cs {
 			return call(args);
 		}
 
-		void add_this()
+		void add_reserve(const std::string &reserve, bool is_mem_fn = false)
 		{
-			mIsMemFn = true;
+			mIsMemFn = is_mem_fn;
 			if (!mIsVargs) {
-				std::vector<std::string> args{"this"};
+				std::vector<std::string> args{reserve};
 				args.reserve(mArgs.size());
 				for (auto &name:mArgs) {
-					if (name != "this")
+					if (name != reserve)
 						args.push_back(name);
 					else
-						throw runtime_error("Overwrite the default argument \"this\".");
+						throw runtime_error(std::string("Overwrite the default argument \"") + reserve + "\".");
 				}
 				std::swap(mArgs, args);
 			}
@@ -593,8 +593,7 @@ namespace cs {
 
 		type_t(std::function<var()> c, const type_id &i) : constructor(std::move(c)), id(i) {}
 
-		type_t(std::function<var()> c, const type_id &i, namespace_t ext) : constructor(std::move(c)), id(i),
-			extensions(std::move(std::move(ext))) {}
+		type_t(std::function<var()> c, const type_id &i, namespace_t ext) : constructor(std::move(c)), id(i), extensions(std::move(ext)) {}
 
 		template<typename T>
 		var &get_var(T &&) const;
@@ -757,7 +756,7 @@ namespace cs {
 		struct_builder() = delete;
 
 		struct_builder(context_t c, std::string name, tree_type<token_base *> parent,
-		               std::deque<statement_base *> method) : mContext(std::move(std::move(c))),
+		               std::deque<statement_base *> method) : mContext(std::move(c)),
 			mTypeId(typeid(structure), ++mCount),
 			mName(std::move(name)),
 			mParent(std::move(parent)),
