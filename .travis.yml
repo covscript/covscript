@@ -62,6 +62,7 @@ script:
   - ./build/cs_dbg -h
   - ./build/cs examples/benchmark.csc
   - ./build/cs -i build tests/extension.csc
+  - ./build/cs -i build tests/reflection.csc
   - ./build/test-covscript tests/function_invoker.csc
   - export CS_DEV_PATH="$(echo 'runtime.get_current_dir(); system.exit(0)' | ./build/cs -s)"/build
   - cd tests
