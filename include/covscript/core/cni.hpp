@@ -246,8 +246,7 @@ namespace cs_impl {
 		template<int...S>
 		_Source_RetT _call(cs::vector &args, const cov::sequence<S...> &) const
 		{
-			return std::move(type_convertor<_Target_RetT, _Source_RetT>::convert(
-			                     mFunc(try_convert<_Target_ArgsT, _Source_ArgsT, S>::convert(args[S])...)));
+			return type_convertor<_Target_RetT, _Source_RetT>::convert(mFunc(try_convert<_Target_ArgsT, _Source_ArgsT, S>::convert(args[S])...));
 		}
 
 	public:
@@ -269,7 +268,7 @@ namespace cs_impl {
 				    "Wrong size of the arguments. Expected " + std::to_string(sizeof...(_Target_ArgsT)) +
 				    ", provided " +
 				    std::to_string(args.size()));
-			return std::move(_call(args, cov::make_sequence<sizeof...(_Source_ArgsT)>::result));
+			return _call(args, cov::make_sequence<sizeof...(_Source_ArgsT)>::result);
 		}
 	};
 
