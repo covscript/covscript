@@ -664,7 +664,8 @@ namespace cs {
 							it.data() = oldt;
 						}
 					}
-					else if (a.type() == typeid(object_method) && a.const_val<object_method>().is_request_fold) {
+					else if (a.type() == typeid(object_method) &&
+					         a.const_val<object_method>().is_request_fold) {
 						token_base *ptr = nullptr;
 						for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
 							ptr = tree.root().data();

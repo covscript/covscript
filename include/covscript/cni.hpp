@@ -180,10 +180,12 @@ namespace cs_impl {
 
 namespace cs {
 	namespace cni_convertor {
-		template<typename T>auto to_covscript(T&& val)
+		template<typename T>
+		auto to_covscript(T &&val)
 		{
 			using decay_t = typename std::decay<T>::type;
-			return cs_impl::type_convertor<decay_t, typename cs_impl::type_conversion_cpp<decay_t>::target_type>::convert(std::forward<T>(val));
+			return cs_impl::type_convertor<decay_t, typename cs_impl::type_conversion_cpp<decay_t>::target_type>::convert(
+			           std::forward<T>(val));
 		}
 	}
 }

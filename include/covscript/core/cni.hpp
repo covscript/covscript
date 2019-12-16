@@ -246,7 +246,8 @@ namespace cs_impl {
 		template<int...S>
 		_Source_RetT _call(cs::vector &args, const cov::sequence<S...> &) const
 		{
-			return type_convertor<_Target_RetT, _Source_RetT>::convert(mFunc(try_convert<_Target_ArgsT, _Source_ArgsT, S>::convert(args[S])...));
+			return type_convertor<_Target_RetT, _Source_RetT>::convert(
+			           mFunc(try_convert<_Target_ArgsT, _Source_ArgsT, S>::convert(args[S])...));
 		}
 
 	public:
