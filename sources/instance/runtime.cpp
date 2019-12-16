@@ -147,13 +147,6 @@ namespace cs {
 			return a.val<namespace_t>()->get_var(static_cast<token_id *>(b)->get_id());
 		else if (a.type() == typeid(type_t))
 			return a.val<type_t>().get_var(static_cast<token_id *>(b)->get_id());
-		else if (a.type() == typeid(hash_map)) {
-			const auto &cmap = a.const_val<hash_map>();
-			const string &str = static_cast<token_id *>(b)->get_id().get_id();
-			if (cmap.count(str) == 0)
-				throw runtime_error(std::string("Key \"") + str + "\" does not exist.");
-			return cmap.at(str);
-		}
 		else if (a.type() == typeid(structure)) {
 			var &val = a.val<structure>().get_var(static_cast<token_id *>(b)->get_id());
 			if (val.type() == typeid(callable) && val.const_val<callable>().is_member_fn())
@@ -162,11 +155,22 @@ namespace cs {
 				return val;
 		}
 		else {
-			var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
-			if (val.type() == typeid(callable))
-				return var::make_protect<object_method>(a, val, val.const_val<callable>().is_request_fold());
-			else
-				return val;
+			try {
+				var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
+				if (val.type() == typeid(callable))
+					return var::make_protect<object_method>(a, val, val.const_val<callable>().is_request_fold());
+				else
+					return val;
+			} catch(...) {
+				if (a.type() == typeid(hash_map)) {
+					const auto &cmap = a.const_val<hash_map>();
+					const string &str = static_cast<token_id *>(b)->get_id().get_id();
+					if (cmap.count(str) == 0)
+						throw runtime_error(std::string("Key \"") + str + "\" does not exist.");
+					return cmap.at(str);
+				} else
+					throw;
+			}
 		}
 	}
 
