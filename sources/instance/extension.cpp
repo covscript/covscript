@@ -34,7 +34,7 @@ namespace cs_sandbox {
 		throw cs::runtime_error("Target function was rejected by covscript sandbox.");
 	}
 }
-#define CNI_SANDBOX(expr) cs::var::make_protect<cs::callable>(cs_sandbox::sandbox_hook, cs::callable::types::constant)
+#define CNI_SANDBOX(expr) cs::var::make_protect<cs::callable>(cs_sandbox::sandbox_hook, cs::callable::types::request_fold)
 #else
 #define CNI_SANDBOX(expr) (expr)
 #endif
