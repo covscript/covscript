@@ -5,7 +5,8 @@
 [![](https://img.shields.io/github/languages/top/covscript/covscript.svg)](http://www.cplusplus.com/)  
 **欢迎使用Covariant Script编程语言!**  
 **Covariant Script**是一种开源的跨平台编程语言  
-此项目为官方维护的Covariant Script解释器
+此项目为官方维护的Covariant Script解释器  
+你可以在 http://dev.covariant.cn/ 中尝试Covariant Script 
 ## 切换语言 ##
 - [简体中文](https://github.com/covscript/covscript/blob/master/docs/README.zh_CN.md)
 - [English](https://github.com/covscript/covscript/blob/master/README.md)
@@ -23,8 +24,8 @@
 ## 扩展 ##
 + [Dear ImGui图形用户界面](https://github.com/covscript/covscript-imgui)
 + [Darwin通用字符图形库](https://github.com/covscript/covscript-darwin)
++ [Base64/Json编解码](https://github.com/covscript/covscript-codec)
 + [SQLite3数据库](https://github.com/covscript/covscript-sqlite)
-+ [Base64编解码](https://github.com/covscript/covscript-codec)
 + [ASIO网络库](https://github.com/covscript/covscript-network)
 + [正则表达式](https://github.com/covscript/covscript-regex)
 + [流式API](https://github.com/covscript/covscript-streams)
