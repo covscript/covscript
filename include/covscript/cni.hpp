@@ -178,6 +178,26 @@ namespace cs_impl {
 }
 #endif
 
+namespace cs {
+	/**
+	 * CNI Convertor
+	 * Available in Standard 191201 or later
+	 * Provided a convenient way to convert types from C++ to CovScript
+	 * Note: This function will follow CNI Standard Conversion Mechanism,
+	 * 		 if you don't want any type conversion, please using constru-
+	 * 		 ctor of cs::var directly.
+	 */
+	namespace cni_convertor {
+		template<typename T>
+		auto to_covscript(T &&val)
+		{
+			using decay_t = typename std::decay<T>::type;
+			return cs_impl::type_convertor<decay_t, typename cs_impl::type_conversion_cpp<decay_t>::target_type>::convert(
+			           std::forward<T>(val));
+		}
+	}
+}
+
 namespace cni_namespace_impl {
 	class cni_register final {
 	public:
@@ -217,6 +237,7 @@ namespace cni_namespace_impl {
 #define CNI_REGISTER(NAME, ARGS) CNI_NAME_MIXER(_cni_register_, NAME)(__cni_namespace, #NAME, ARGS);
 #define CNI_ROOT_NAMESPACE namespace cni_root_namespace{static cs::namespace_t __cni_namespace=cs::make_shared_namespace<cs::name_space>();}void cs_extension_main(cs::name_space *ns) {ns->copy_namespace(*cni_root_namespace::__cni_namespace);} namespace cni_root_namespace
 #define CNI_NAMESPACE(NAME) namespace NAME{static cs::namespace_t __cni_namespace=cs::make_shared_namespace<cs::name_space>();} CNI_REGISTER(NAME, cs::make_namespace(NAME::__cni_namespace)) namespace NAME
+#define CNI_NAMESPACE_ALIAS(NAME, ALIAS) CNI_REGISTER(ALIAS, cs::make_namespace(NAME::__cni_namespace))
 #define CNI_TYPE_EXT(NAME, TYPE, FUNC) namespace NAME{static cs::namespace_t __cni_namespace=cs::make_shared_namespace<cs::name_space>();} CNI_REGISTER(NAME, cs::var::make_constant<cs::type_t>([]()->cs::var{return FUNC;}, cs::type_id(typeid(TYPE)), NAME::__cni_namespace)) namespace NAME
 #define CNI_TYPE_EXT_V(NAME, TYPE, TYPE_NAME, FUNC) namespace NAME{static cs::namespace_t __cni_namespace=cs::make_shared_namespace<cs::name_space>();} CNI_NAME_MIXER(_cni_register_, NAME)(__cni_namespace, #TYPE_NAME, cs::var::make_constant<cs::type_t>([]()->cs::var{return FUNC;}, cs::type_id(typeid(TYPE)), NAME::__cni_namespace)); namespace NAME
 #define CNI(NAME) CNI_REGISTER(NAME, cs::make_cni(NAME, false))

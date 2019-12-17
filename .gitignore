@@ -33,6 +33,7 @@
 
 # CovScript intermediate files
 tests/test.txt
+tests/out.json
 *.cse
 
 # Darwin Picture File

@@ -155,11 +155,24 @@ namespace cs {
 				return val;
 		}
 		else {
-			var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
-			if (val.type() == typeid(callable))
-				return var::make_protect<object_method>(a, val, val.const_val<callable>().is_request_fold());
-			else
-				return val;
+			try {
+				var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
+				if (val.type() == typeid(callable))
+					return var::make_protect<object_method>(a, val, val.const_val<callable>().is_request_fold());
+				else
+					return val;
+			}
+			catch (...) {
+				if (a.type() == typeid(hash_map)) {
+					const auto &cmap = a.const_val<hash_map>();
+					const string &str = static_cast<token_id *>(b)->get_id().get_id();
+					if (cmap.count(str) == 0)
+						throw runtime_error(std::string("Key \"") + str + "\" does not exist.");
+					return cmap.at(str);
+				}
+				else
+					throw;
+			}
 		}
 	}
 

@@ -31,11 +31,11 @@ namespace cs {
 			    std::to_string(args.size()));
 		scope_guard scope(mContext);
 #ifdef CS_DEBUGGER
-		fcall_guard fcall(mContext, mDecl);
+		fcall_guard fcall(mDecl);
 		if(mMatch)
 			cs_debugger_func_callback(mDecl, mStmt);
 #else
-		fcall_guard fcall(mContext);
+		fcall_guard fcall;
 #endif
 		if (mIsVargs) {
 			var arg_list = var::make<cs::array>();
@@ -43,6 +43,8 @@ namespace cs {
 			std::size_t i = 0;
 			if (mIsMemFn)
 				mContext->instance->storage.add_var("this", args[i++]);
+			if (mIsLambda)
+				mContext->instance->storage.add_var("self", args[i++]);
 			for (; i < args.size(); ++i)
 				arr.push_back(args[i]);
 			mContext->instance->storage.add_var(this->mArgs.front(), arg_list);

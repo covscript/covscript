@@ -64,11 +64,17 @@ target_link_libraries(cs_dbg covscript_debug)
 
 # Tests
 add_library(test-extension SHARED tests/extension.cpp)
+add_library(test-reflection SHARED tests/reflection.cpp)
 add_executable(test-covscript tests/function_invoker.cpp)
 
 target_link_libraries(test-extension covscript)
+target_link_libraries(test-reflection covscript)
 target_link_libraries(test-covscript covscript)
 
 set_target_properties(test-extension PROPERTIES OUTPUT_NAME my_ext)
 set_target_properties(test-extension PROPERTIES PREFIX "")
 set_target_properties(test-extension PROPERTIES SUFFIX ".cse")
+
+set_target_properties(test-reflection PROPERTIES OUTPUT_NAME reflect)
+set_target_properties(test-reflection PROPERTIES PREFIX "")
+set_target_properties(test-reflection PROPERTIES SUFFIX ".cse")
