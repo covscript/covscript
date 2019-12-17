@@ -153,7 +153,7 @@ namespace cs {
 	public:
 		using function_type=std::function<var(vector &)>;
 		enum class types {
-			normal, constant, member_fn
+			normal, request_fold, member_fn
 		};
 	private:
 		function_type mFunc;
@@ -165,9 +165,9 @@ namespace cs {
 
 		explicit callable(function_type func, types type = types::normal) : mFunc(std::move(func)), mType(type) {}
 
-		bool is_constant() const
+		bool is_request_fold() const
 		{
-			return mType == types::constant;
+			return mType == types::request_fold;
 		}
 
 		bool is_member_fn() const
@@ -194,6 +194,7 @@ namespace cs {
 		std::string mDecl;
 		statement_base *mStmt;
 #endif
+		bool mIsLambda = false;
 		bool mIsMemFn = false;
 		bool mIsVargs = false;
 		std::vector<std::string> mArgs;
@@ -204,12 +205,13 @@ namespace cs {
 		function(const function &) = default;
 
 #ifdef CS_DEBUGGER
-		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs=false):mContext(std::move(std::move(c))), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mArgs(std::move(args)), mBody(std::move(body)) {}
+		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body,
+		         bool is_vargs = false, bool is_lambda = false) : mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs),
+			mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)) {}
 #else
 
-		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false)
-			: mContext(
-			      std::move(std::move(c))), mIsVargs(is_vargs), mArgs(std::move(args)), mBody(std::move(body)) {}
+		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
+			: mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)) {}
 
 #endif
 
@@ -222,17 +224,17 @@ namespace cs {
 			return call(args);
 		}
 
-		void add_this()
+		void add_reserve_var(const std::string &reserve, bool is_mem_fn = false)
 		{
-			mIsMemFn = true;
+			mIsMemFn = is_mem_fn;
 			if (!mIsVargs) {
-				std::vector<std::string> args{"this"};
+				std::vector<std::string> args{reserve};
 				args.reserve(mArgs.size());
 				for (auto &name:mArgs) {
-					if (name != "this")
+					if (name != reserve)
 						args.push_back(name);
 					else
-						throw runtime_error("Overwrite the default argument \"this\".");
+						throw runtime_error(std::string("Overwrite the default argument \"") + reserve + "\".");
 				}
 				std::swap(mArgs, args);
 			}
@@ -275,12 +277,12 @@ namespace cs {
 	struct object_method final {
 		var object;
 		var callable;
-		bool is_constant = false;
+		bool is_request_fold = false;
 
 		object_method() = delete;
 
-		object_method(var obj, var func, bool constant = false) : object(std::move(obj)), callable(std::move(func)),
-			is_constant(constant) {}
+		object_method(var obj, var func, bool request_fold = false) : object(std::move(obj)), callable(std::move(func)),
+			is_request_fold(request_fold) {}
 
 		~object_method() = default;
 	};
@@ -594,7 +596,7 @@ namespace cs {
 		type_t(std::function<var()> c, const type_id &i) : constructor(std::move(c)), id(i) {}
 
 		type_t(std::function<var()> c, const type_id &i, namespace_t ext) : constructor(std::move(c)), id(i),
-			extensions(std::move(std::move(ext))) {}
+			extensions(std::move(ext)) {}
 
 		template<typename T>
 		var &get_var(T &&) const;
@@ -757,7 +759,7 @@ namespace cs {
 		struct_builder() = delete;
 
 		struct_builder(context_t c, std::string name, tree_type<token_base *> parent,
-		               std::deque<statement_base *> method) : mContext(std::move(std::move(c))),
+		               std::deque<statement_base *> method) : mContext(std::move(c)),
 			mTypeId(typeid(structure), ++mCount),
 			mName(std::move(name)),
 			mParent(std::move(parent)),

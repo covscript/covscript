@@ -41,7 +41,7 @@ namespace cs {
 	};
 
 	class method_import final : public method_base {
-		statement_base *mResult = nullptr;
+		std::deque<statement_base *> mResult;
 	public:
 		using method_base::method_base;
 
@@ -78,7 +78,7 @@ namespace cs {
 	};
 
 	class method_involve final : public method_base {
-		statement_base *mResult = nullptr;
+		std::deque<statement_base *> mResult;
 	public:
 		using method_base::method_base;
 

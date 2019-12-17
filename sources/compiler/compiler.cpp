@@ -470,11 +470,15 @@ namespace cs {
 				}
 				else
 					decl+=")";
-				it.data() = new_value(var::make_protect<callable>(function(context, decl, ret, args, std::deque<statement_base *> {ret}, is_vargs)));
+				function func(context, decl, ret, args, std::deque<statement_base *> {ret}, is_vargs, true);
 #else
-				it.data() = new_value(var::make_protect<callable>(
-				                          function(context, args, std::deque<statement_base *> {ret}, is_vargs)));
+				function func(context, args, std::deque<statement_base *> {ret}, is_vargs, true);
 #endif
+				func.add_reserve_var("self");
+				var lambda = var::make<object_method>(var(), var::make_protect<callable>(func));
+				lambda.val<object_method>().object = lambda;
+				lambda.protect();
+				it.data() = new_value(lambda);
 				return;
 			}
 			}
@@ -626,7 +630,7 @@ namespace cs {
 					throw runtime_error("Wrong syntax for function call.");
 				if (lptr->get_type() == token_types::value) {
 					var &a = static_cast<token_value *>(lptr)->get_value();
-					if (a.type() == typeid(callable) && a.const_val<callable>().is_constant()) {
+					if (a.type() == typeid(callable) && a.const_val<callable>().is_request_fold()) {
 						token_base *ptr = nullptr;
 						for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
 							ptr = tree.root().data();
@@ -660,7 +664,8 @@ namespace cs {
 							it.data() = oldt;
 						}
 					}
-					else if (a.type() == typeid(object_method) && a.const_val<object_method>().is_constant) {
+					else if (a.type() == typeid(object_method) &&
+					         a.const_val<object_method>().is_request_fold) {
 						token_base *ptr = nullptr;
 						for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
 							ptr = tree.root().data();

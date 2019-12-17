@@ -402,6 +402,12 @@ namespace cs_impl {
 			.add_var("app", var::make_constant<std::ios_base::openmode>(std::ios_base::app));
 			(*iostream_ext)
 			.add_var("fstream", CNI_SANDBOX(make_cni(fstream)))
+			.add_var("ifstream", CNI_SANDBOX(make_cni([](const string &path) {
+				return var::make<istream>(new std::ifstream(path, std::ios_base::in));
+			})))
+			.add_var("ofstream", CNI_SANDBOX(make_cni([](const string &path) {
+				return var::make<ostream>(new std::ofstream(path, std::ios_base::out));
+			})))
 			.add_var("setprecision", make_cni(setprecision));
 		}
 	}

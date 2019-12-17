@@ -1,0 +1,23 @@
+{
+  "null": null,
+  "bool": true,
+  "int": 12345,
+  "real": 3.14,
+  "string": "Hello",
+  "array": [
+    {
+      "null": null,
+      "bool": true
+    },
+    {
+      "int": 12345,
+      "real": 3.14
+    }
+  ],
+  "object": {
+    "null": null,
+    "bool": true,
+    "int": 12345,
+    "real": 3.14
+  }
+}

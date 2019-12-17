@@ -5,7 +5,8 @@
 [![](https://img.shields.io/github/languages/top/covscript/covscript.svg)](http://www.cplusplus.com/)  
 **Welcome to the Covariant Script programming language!**  
 **Covariant Script** is an open source, cross-platform programming language.  
-This project is an officially maintained Covariant Script interpreter.
+This project is an officially maintained Covariant Script interpreter.  
+You can try Covariant Script at http://dev.covariant.cn/ 
 ## Switch language ##
 - [简体中文](https://github.com/covscript/covscript/blob/master/docs/README.zh_CN.md)
 - [English](https://github.com/covscript/covscript/blob/master/README.md)
@@ -23,10 +24,10 @@ This project is an officially maintained Covariant Script interpreter.
 + C/**C++** Native Interface(CNI)
 ## Extensions ##
 + [Darwin Universal CGL](https://github.com/covscript/covscript-darwin)
++ [Base64/Json Codec](https://github.com/covscript/covscript-codec)
 + [Regular Expression](https://github.com/covscript/covscript-regex)
 + [SQLite3 Database](https://github.com/covscript/covscript-sqlite)
 + [Dear ImGui GUI](https://github.com/covscript/covscript-imgui)
-+ [Base64 Codec](https://github.com/covscript/covscript-codec)
 + [ASIO Network](https://github.com/covscript/covscript-network)
 + [Streams API](https://github.com/covscript/covscript-streams)
 ## Documentation ##

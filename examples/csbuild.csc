@@ -368,7 +368,11 @@ function csbuild_make(path, cfg, args)
         echo("It seems that you have environment variable CS_DEV_PATH unset")
         echo("CovScript Extension requires that to build.")
         echo("note: set CS_DEV_PATH to /path/to/covscript-source/csdev after building CovScript")
-        return 1
+        if system.is_platform_linux()
+            echo("warning: set csdev environment to default system path.")
+        else
+            return 1
+        end
     end
 
     var genDir = path + Path.separator + "gen"

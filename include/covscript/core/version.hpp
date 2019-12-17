@@ -20,15 +20,15 @@
 * Github: https://github.com/mikecovlee
 *
 * Version Format:
-*   1 . 0 . 0 [Version Code](Preview/Unstable/Stable) Build 1
-*   |   |   |                           |
-*   |   | Minor                       Status
+*   1 . 0 . 0 [Version Code](Preview/Unstable/Stable [Patch 1]) Build 1
+*   |   |   |                               |
+*   |   | Minor                           Status
 *   | Major
 * Master
 *
 */
-#define COVSCRIPT_VERSION_NUM 3,3,1,10
-#define COVSCRIPT_VERSION_STR "3.3.1 Manis pentadactyla(Stable) Build 10"
-#define COVSCRIPT_STD_VERSION 191101
-#define COVSCRIPT_API_VERSION 191104
-#define COVSCRIPT_ABI_VERSION 191116
+#define COVSCRIPT_VERSION_NUM 3,3,2,3
+#define COVSCRIPT_VERSION_STR "3.3.2 Manis pentadactyla(Stable) Build 3"
+#define COVSCRIPT_STD_VERSION 191201
+#define COVSCRIPT_API_VERSION 191217
+#define COVSCRIPT_ABI_VERSION 191217
