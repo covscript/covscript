@@ -474,7 +474,7 @@ namespace cs {
 #else
 				function func(context, args, std::deque<statement_base *> {ret}, is_vargs, true);
 #endif
-				func.add_reserve("self");
+				func.add_reserve_var("self");
 				var lambda = var::make<object_method>(var(), var::make_protect<callable>(func));
 				lambda.val<object_method>().object = lambda;
 				lambda.protect();

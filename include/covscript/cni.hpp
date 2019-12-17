@@ -179,6 +179,14 @@ namespace cs_impl {
 #endif
 
 namespace cs {
+	/**
+	 * CNI Convertor
+	 * Available in Standard 191201 or later
+	 * Provided a convenient way to convert types from C++ to CovScript
+	 * Note: This function will follow CNI Standard Conversion Mechanism,
+	 * 		 if you don't want any type conversion, please using constru-
+	 * 		 ctor of cs::var directly.
+	 */
 	namespace cni_convertor {
 		template<typename T>
 		auto to_covscript(T &&val)

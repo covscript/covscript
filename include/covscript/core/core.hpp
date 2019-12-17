@@ -205,13 +205,13 @@ namespace cs {
 		function(const function &) = default;
 
 #ifdef CS_DEBUGGER
-		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false) : mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)) {}
+		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body,
+		         bool is_vargs = false, bool is_lambda = false) : mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs),
+			mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)) {}
 #else
 
-		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false,
-		         bool is_lambda = false)
-			: mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)),
-			  mBody(std::move(body)) {}
+		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
+			: mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)) {}
 
 #endif
 
@@ -224,7 +224,7 @@ namespace cs {
 			return call(args);
 		}
 
-		void add_reserve(const std::string &reserve, bool is_mem_fn = false)
+		void add_reserve_var(const std::string &reserve, bool is_mem_fn = false)
 		{
 			mIsMemFn = is_mem_fn;
 			if (!mIsVargs) {

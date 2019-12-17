@@ -548,7 +548,7 @@ namespace cs {
 
 		void set_mem_fn()
 		{
-			mFunc.add_reserve("this", true);
+			mFunc.add_reserve_var("this", true);
 			mIsMemFn = true;
 		}
 
