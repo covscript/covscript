@@ -1,25 +1,76 @@
-import network
+import network, regex, codec
+
 using network
-function http_request(host,port,page)
-    var sock=new tcp.socket
-    sock.connect(tcp.resolve(host,port))
+using codec
+
+function http_request(method, host, page, data)
+    var sock = new tcp.socket
+    sock.connect(tcp.resolve(host, "http"))
     @begin
     var head=
-    "GET "+page+" HTTP/1.1\r\n"+
-    "Host: "+host+"\r\n"+
-    "Accept: */*\r\n"+
-    "Pragma: no-cache\r\n"+
-    "Cache-Control: no-cache\r\n"+
-    "Connection: close\r\n"+
-    "\r\n"
+        method + " " + page + " HTTP/1.1\r\n" +
+        "Host: " + host + "\r\n" +
+        "Connection: Close\r\n" +
+        "Content-Length: " + data.size() + "\r\n" +
+        "Accept: */*\r\n" +
+        "Pragma: no-cache\r\n" +
+        "Cache-Control: no-cache\r\n" +
+        "\r\n" + data
     @end
     sock.send(head)
+    var response = new string
     try
         loop
-            system.out.print(sock.receive(32))
+            response += sock.receive(32)
         end
     catch e
-            system.out.println(e.what())
+        return response
     end
 end
-http_request("covscript.org","http","/")
+
+function http_response(response)
+    var response_header = regex.build("^HTTP/(\\S+) (\\S+) (\\S+)\r\n")
+    var header = response_header.match(response)
+    system.out.println("HTTP Version: " + header.str(1))
+    system.out.println("Status Code : " + header.str(2))
+    system.out.println("Description : " + header.str(3))
+    var response_data = regex.build("\r\n\r\n")
+    var data = response_data.search(response)
+    system.out.println("Content Data:\n" + data.suffix())
+end
+
+@begin
+
+var data = 
+{
+    # STDIN, base64 encode
+    "stdin" : base64.standard.encode("
+        {
+            \"username\":\"mikecovlee\",
+            \"password\":\"helloworld\"
+        }
+    "),
+    # CovScript Code, base64 encode
+    "code"  : base64.standard.encode("
+        import codec;
+        var json = codec.json.to_var(codec.json.from_string(system.in.getline()));
+        system.out.println(\"UserName = \" + json.username);
+        system.out.println(\"Password = \" + json.password);
+    ")
+}
+.to_hash_map();
+
+http_response(
+    http_request(
+        # GET/POST
+        "POST",
+        # Host Name
+        "dev.covariant.cn",
+        # Host Url
+        "/cgi/cs-online",
+        # Data in string
+        json.to_string(json.from_var(data))
+    )
+);
+
+@end
