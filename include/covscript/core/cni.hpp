@@ -274,21 +274,6 @@ namespace cs_impl {
 	};
 
 // CNI Holder
-	class cni_holder_base {
-	public:
-		cni_holder_base() = default;
-
-		cni_holder_base(const cni_holder_base &) = default;
-
-		virtual ~cni_holder_base() = default;
-
-		virtual std::size_t argument_count() const noexcept = 0;
-
-		virtual cni_holder_base *clone() = 0;
-
-		virtual any call(cs::vector &) const = 0;
-	};
-
 	template<typename T, typename X>
 	class cni_holder final {
 		using cni_type = cni_helper<typename cov::function_parser<T>::type::common_type, typename cov::function_parser<X>::type::common_type>;
