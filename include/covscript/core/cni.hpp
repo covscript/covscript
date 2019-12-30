@@ -290,30 +290,72 @@ namespace cs_impl {
 	};
 
 	template<typename T, typename X>
-	class cni_holder final : public cni_holder_base {
-		cni_helper<typename cov::function_parser<T>::type::common_type, typename cov::function_parser<X>::type::common_type> mCni;
+	class cni_holder final {
+		using cni_type = cni_helper<typename cov::function_parser<T>::type::common_type, typename cov::function_parser<X>::type::common_type>;
 	public:
-		cni_holder() = delete;
-
-		cni_holder(const cni_holder &) = default;
-
-		explicit cni_holder(const T &func) : mCni(func) {}
-
-		~cni_holder() override = default;
-
-		std::size_t argument_count() const noexcept override
+		static void *make_holder(const T&func)
 		{
-			return mCni.argument_count();
+			return reinterpret_cast<void *>(new cni_type(func));
 		}
 
-		cni_holder_base *clone() override
+		static void disposer(void *data) noexcept
 		{
-			return new cni_holder(*this);
+			delete reinterpret_cast<cni_type *>(data);
 		}
 
-		any call(cs::vector &args) const override
+		static std::size_t argument_count(void *data) noexcept
 		{
-			return mCni.call(args);
+			return reinterpret_cast<cni_type *>(data)->argument_count();
+		}
+
+		static void *replicator(void *data) noexcept
+		{
+			return reinterpret_cast<void *>(new cni_type(*reinterpret_cast<cni_type *>(data)));
+		}
+
+		static any invoker(void *data, cs::vector &args)
+		{
+			return reinterpret_cast<cni_type *>(data)->call(args);
+		}
+	};
+
+	struct cni_dispatcher
+	{
+		void *data = nullptr;
+		std::size_t argument_count;
+		void (*disposer)(void *) noexcept = nullptr;
+		void *(*replicator)(void *) noexcept = nullptr;
+		any (*invoker)(void *, cs::vector &) = nullptr;
+		template<typename T, typename X>
+		void dispatch(const T &func)
+		{
+			this->~cni_dispatcher();
+			::new (this) cni_dispatcher();
+			using holder = cni_holder<T, X>;
+			data = holder::make_holder(func);
+			argument_count = holder::argument_count(data);
+			disposer = &holder::disposer;
+			replicator = &holder::replicator;
+			invoker = &holder::invoker;
+		}
+		void clone(const cni_dispatcher &dispatcher)
+		{
+			argument_count = dispatcher.argument_count;
+			disposer = dispatcher.disposer;
+			replicator = dispatcher.replicator;
+			invoker = dispatcher.invoker;
+			if (replicator != nullptr)
+				data = replicator(dispatcher.data);
+		}
+		cni_dispatcher() = default;
+		cni_dispatcher(const cni_dispatcher &dispatcher)
+		{
+			clone(dispatcher);
+		}
+		~cni_dispatcher()
+		{
+			if (disposer != nullptr)
+				disposer(data);
 		}
 	};
 
@@ -326,7 +368,7 @@ namespace cs_impl {
 		template<typename T>
 		struct construct_helper {
 			template<typename X, typename RetT, typename...ArgsT>
-			static cni_holder_base *_construct(X &&val, RetT(*target_function)(ArgsT...))
+			static void _construct(cni_dispatcher& dispatcher, X &&val, RetT(*target_function)(ArgsT...))
 			{
 				using source_function_type=typename type_conversion_cpp<RetT>::target_type(*)(
 				                               typename type_conversion_cs<ArgsT>::source_type...);
@@ -335,32 +377,33 @@ namespace cs_impl {
 				              "Invalid conversion.");
 				// Argument type
 				check_conversion(target_function, source_function_type(nullptr));
-				return new cni_holder<T, source_function_type>(std::forward<X>(val));
+				return dispatcher.dispatch<T, source_function_type>(std::forward<X>(val));
 			}
 
 			template<typename X>
-			static cni_holder_base *construct(X &&val)
+			static void construct(cni_dispatcher& dispatcher, X &&val)
 			{
-				return _construct(std::forward<X>(val), typename cov::function_parser<T>::type::common_type(nullptr));
+				return _construct(dispatcher, std::forward<X>(val), typename cov::function_parser<T>::type::common_type(nullptr));
 			}
 		};
 
-		cni_holder_base *mCni = nullptr;
+		cni_dispatcher mCni;
 	public:
 		cni() = delete;
 
-		cni(const cni &c) : mCni(c.mCni->clone()) {}
+		cni(const cni &) = default;
+
+		~cni() = default;
 
 		template<typename T>
-		explicit cni(T &&val):mCni(
-			    construct_helper<typename cni_modify<typename cov::remove_reference<T>::type>::type>::construct(
-			        std::forward<T>(val))) {}
+		explicit cni(T &&val) {
+			construct_helper<typename cni_modify<typename cov::remove_reference<T>::type>::type>::construct(mCni, std::forward<T>(val));
+		}
 
 		template<typename T, typename X>
-		cni(T &&val, cni_type<X>):mCni(
-			    new cni_holder<typename cni_modify<typename cov::remove_reference<T>::type>::type, typename cni_modify<X>::type>(
-			        std::forward<T>(val)))
+		cni(T &&val, cni_type<X>)
 		{
+			mCni.dispatch<typename cni_modify<typename cov::remove_reference<T>::type>::type, typename cni_modify<X>::type>(std::forward<T>(val));
 			// Analysis the function
 			using target_function_type=typename cov::function_parser<typename cni_modify<typename cov::remove_reference<T>::type>::type>::type::common_type;
 			using source_function_type=typename cov::function_parser<typename cni_modify<X>::type>::type::common_type;
@@ -377,20 +420,15 @@ namespace cs_impl {
 			check_conversion(target_function_type(nullptr), source_function_type(nullptr));
 		}
 
-		~cni()
+		inline std::size_t argument_count() const noexcept
 		{
-			delete mCni;
-		}
-
-		std::size_t argument_count() const noexcept
-		{
-			return mCni->argument_count();
+			return mCni.argument_count;
 		}
 
 		any operator()(cs::vector &args) const
 		{
 			try {
-				return cs::try_move(mCni->call(args));
+				return cs::try_move(mCni.invoker(mCni.data, args));
 			}
 			catch (const cs::lang_error &e) {
 				cs::current_process->cs_eh_callback(e);
@@ -407,17 +445,17 @@ namespace cs_impl {
 
 	template<>
 	struct cni::construct_helper<const cni> {
-		static cni_holder_base *construct(const cni &c)
+		static void construct(cni_dispatcher &dispatcher, const cni &c)
 		{
-			return c.mCni->clone();
+			dispatcher.clone(c.mCni);
 		}
 	};
 
 	template<>
 	struct cni::construct_helper<cni> {
-		static cni_holder_base *construct(const cni &c)
+		static void construct(cni_dispatcher &dispatcher, const cni &c)
 		{
-			return c.mCni->clone();
+			dispatcher.clone(c.mCni);
 		}
 	};
 }
