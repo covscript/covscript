@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2019 Michael Lee(李登淳)
+* Copyright (C) 2020 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
@@ -827,7 +827,7 @@ namespace cs_impl {
 		{
 			std::cout << "Covariant Script Programming Language Interpreter\nVersion: " << current_process->version
 			          << "\n"
-			          "Copyright (C) 2019 Michael Lee. All rights reserved.\n"
+			          "Copyright (C) 2020 Michael Lee. All rights reserved.\n"
 			          "Licensed under the Covariant Innovation General Public License,\n"
 			          "Version 1.0 (the \"License\");\n"
 			          "you may not use this file except in compliance with the License.\n"

@@ -8,7 +8,7 @@
 #define MY_VFT_DLL  0x00000002L
 
 #define MY_AUTHOR_NAME "Michael Lee"
-#define MY_COPYRIGHT "Copyright (C) 2019 Michael Lee"
+#define MY_COPYRIGHT "Copyright (C) 2020 Michael Lee"
 
 #define MY_VERSION COVSCRIPT_VERSION_STR
 #define MY_VER COVSCRIPT_VERSION_NUM

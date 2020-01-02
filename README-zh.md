@@ -89,7 +89,7 @@ IntelliJ插件现已可用：
 `examples`文件夹包含了数个使用CovScript编写的示例程序。
 ## 版权 ##
 **Covariant Script编程语言的作者是[@mikecovlee](https://github.com/mikecovlee/).**  
-**版权所有 © 2019 李登淳**
+**版权所有 © 2020 李登淳**
 ## 捐献 #
 ![](https://github.com/covscript/covscript/raw/master/docs/Donation.png)
 ## 感谢 ##
