@@ -12,9 +12,9 @@ jobs:
     steps:
     - uses: actions/checkout@v1
 
-    - name: build-win32
+    - name: build-win64
       if: matrix.os == 'windows-latest'
-      run: csbuild/make.bat
+      run: csbuild/make_msvc_win64.bat
 
     - name: build-unix
       if: matrix.os != 'windows-latest'

@@ -1,6 +1,7 @@
 ![](https://github.com/covscript/covscript/raw/master/icon/covariant_script_wide.png)
 # Covariant Script Programming Language: The Interpreter #
 [![Build Status](https://travis-ci.org/covscript/covscript.svg?branch=master)](https://travis-ci.org/covscript/covscript)
+[![Action Status](https://github.com/covscript/covscript/workflows/build/badge.svg)](https://github.com/covscript/covscript/actions)
 [![](https://img.shields.io/badge/license-Covariant%20Innovation%20GPL-blue.svg)](https://github.com/covscript/covscript/blob/master/LICENSE)
 [![](https://img.shields.io/github/languages/top/covscript/covscript.svg)](http://www.cplusplus.com/)  
 **Welcome to the Covariant Script programming language!**  
