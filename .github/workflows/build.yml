@@ -1,0 +1,39 @@
+name: build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+    
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: build-win64
+      if: matrix.os == 'windows-latest'
+      run: .github/workflows/make_msvc_win64.bat
+
+    - name: build-unix
+      if: matrix.os != 'windows-latest'
+      run: bash csbuild/make.sh
+
+    - uses: actions/upload-artifact@master
+      if: matrix.os == 'ubuntu-latest'
+      with:
+        name: covscript-ubuntu
+        path: build
+
+    - uses: actions/upload-artifact@master
+      if: matrix.os == 'macOS-latest'
+      with:
+        name: covscript-macos
+        path: build
+
+    - uses: actions/upload-artifact@master
+      if: matrix.os == 'windows-latest'
+      with:
+        name: covscript-windows
+        path: build
