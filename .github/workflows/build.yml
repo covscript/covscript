@@ -14,7 +14,7 @@ jobs:
 
     - name: build-win64
       if: matrix.os == 'windows-latest'
-      run: csbuild/make_msvc_win64.bat
+      run: .github/workflows/make_msvc_win64.bat
 
     - name: build-unix
       if: matrix.os != 'windows-latest'
