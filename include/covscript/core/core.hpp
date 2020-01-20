@@ -210,8 +210,10 @@ namespace cs {
 			mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)) {}
 #else
 
-		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
-			: mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)) {}
+		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false,
+		         bool is_lambda = false)
+			: mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)),
+			  mBody(std::move(body)) {}
 
 #endif
 

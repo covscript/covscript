@@ -132,6 +132,7 @@ namespace cs {
 		};
 		const mapping<std::string, action_types> action_map = {
 			{"import",    action_types::import_},
+			{"as",        action_types::as_},
 			{"package",   action_types::package_},
 			{"using",     action_types::using_},
 			{"namespace", action_types::namespace_},

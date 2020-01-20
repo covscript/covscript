@@ -37,11 +37,16 @@ namespace cs {
 		return context->file_buff.at(line_num - 1);
 	}
 
+// TODO: prevent self importing
 	namespace_t instance_type::source_import(const std::string &path)
 	{
+		if (modules.count(path) > 0)
+			return modules[path];
 		if (cs_impl::file_system::is_exe(path)) {
 			// is extension file
-			return std::make_shared<extension>(path);
+			namespace_t module = std::make_shared<extension>(path);
+			modules.emplace(path, module);
+			return module;
 		}
 		else {
 			// is package file
@@ -56,10 +61,13 @@ namespace cs {
 			}
 			context->compiler->swap_context(context);
 			rt->instance->interpret();
-			return std::make_shared<name_space>(rt->instance->storage.get_global());
+			namespace_t module = std::make_shared<name_space>(rt->instance->storage.get_global());
+			modules.emplace(path, module);
+			return module;
 		}
 	}
 
+// TODO: prevent self importing
 	namespace_t instance_type::import(const std::string &path, const std::string &name)
 	{
 		std::vector<std::string> collection;
@@ -77,6 +85,8 @@ namespace cs {
 		}
 		for (auto &it:collection) {
 			std::string package_path = it + path_separator + name;
+			if (modules.count(package_path) > 0)
+				return modules[package_path];
 			if (std::ifstream(package_path + ".csp")) {
 				context_t rt = create_subcontext(context);
 				rt->compiler->swap_context(rt);
@@ -93,10 +103,15 @@ namespace cs {
 					throw runtime_error("Target file is not a package.");
 				if (rt->package_name != name)
 					throw runtime_error("Package name is different from file name.");
-				return std::make_shared<name_space>(rt->instance->storage.get_global());
+				namespace_t module = std::make_shared<name_space>(rt->instance->storage.get_global());
+				modules.emplace(package_path, module);
+				return module;
 			}
-			else if (std::ifstream(package_path + ".cse"))
-				return std::make_shared<extension>(package_path + ".cse");
+			else if (std::ifstream(package_path + ".cse")) {
+				namespace_t module = std::make_shared<extension>(package_path + ".cse");
+				modules.emplace(package_path, module);
+				return module;
+			}
 		}
 		throw fatal_error("No such file or directory.");
 	}
