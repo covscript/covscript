@@ -78,6 +78,7 @@ bool dump_ast = false;
 bool no_optimize = false;
 bool compile_only = false;
 bool show_help_info = false;
+bool dump_dependency = false;
 bool wait_before_exit = false;
 bool show_version_info = false;
 
@@ -104,6 +105,9 @@ int covscript_args(int args_size, const char *args[])
 				silent = true;
 			else if ((std::strcmp(args[index], "--dump-ast") == 0 || std::strcmp(args[index], "-d") == 0) && !dump_ast)
 				dump_ast = true;
+			else if ((std::strcmp(args[index], "--dependency") == 0 || std::strcmp(args[index], "-r") == 0) &&
+			         !dump_dependency)
+				dump_dependency = true;
 			else if ((std::strcmp(args[index], "--no-optimize") == 0 || std::strcmp(args[index], "-o") == 0) &&
 			         !no_optimize)
 				no_optimize = true;
@@ -216,6 +220,17 @@ void covscript_main(int args_size, const char *args[])
 				}
 				else
 					context->instance->dump_ast(std::cout);
+			}
+			if (dump_dependency) {
+				if (!log_path.empty()) {
+					std::ofstream out(::log_path);
+					for (auto &it:cs::current_process->modules)
+						out << it.first << std::endl;
+				}
+				else {
+					for (auto &it:cs::current_process->modules)
+						std::cout << it.first << std::endl;
+				}
 			}
 			if (!compile_only)
 				context->instance->interpret();

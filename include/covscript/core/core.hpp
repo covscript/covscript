@@ -78,6 +78,8 @@ namespace cs {
 		int exit_code = 0;
 // Import Path
 		std::string import_path = ".";
+		// Modules
+		map_t<string, namespace_t> modules;
 		// Stack
 		stack_type<var> stack;
 #ifdef CS_DEBUGGER
@@ -210,8 +212,10 @@ namespace cs {
 			mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)) {}
 #else
 
-		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
-			: mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)) {}
+		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false,
+		         bool is_lambda = false)
+			: mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)),
+			  mBody(std::move(body)) {}
 
 #endif
 
@@ -784,57 +788,69 @@ namespace cs {
 
 // Namespace and extensions
 	class name_space {
-		domain_type m_data;
+		domain_type *m_data = nullptr;
+		bool is_ref = false;
 	public:
-		name_space() = default;
+		name_space() : m_data(new domain_type) {}
 
 		name_space(const name_space &) = delete;
 
-		explicit name_space(domain_type dat) : m_data(std::move(dat)) {}
+		explicit name_space(domain_type dat) : m_data(new domain_type(std::move(dat))) {}
 
-		virtual ~name_space() = default;
+		explicit name_space(domain_type *dat) : m_data(dat), is_ref(true) {}
+
+		virtual ~name_space()
+		{
+			if (!is_ref)
+				delete m_data;
+		}
 
 		name_space &add_var(const std::string &name, const var &var)
 		{
-			m_data.add_var(name, var);
+			m_data->add_var(name, var);
 			return *this;
 		}
 
 		name_space &add_var(const var_id &id, const var &var)
 		{
-			m_data.add_var(id, var);
+			m_data->add_var(id, var);
 			return *this;
 		}
 
 		var &get_var(const std::string &name)
 		{
-			return m_data.get_var(name);
+			return m_data->get_var(name);
 		}
 
 		const var &get_var(const std::string &name) const
 		{
-			return m_data.get_var(name);
+			return m_data->get_var(name);
 		}
 
 		var &get_var(const var_id &id)
 		{
-			return m_data.get_var(id);
+			return m_data->get_var(id);
 		}
 
 		const var &get_var(const var_id &id) const
 		{
-			return m_data.get_var(id);
+			return m_data->get_var(id);
 		}
 
-		const domain_type &get_domain() const
+		domain_type &get_domain() const
 		{
-			return m_data;
+			return *m_data;
 		}
 
-		void copy_namespace(const name_space &ns)
+		inline void copy_namespace(const name_space &ns)
 		{
-			for (auto &it:ns.m_data)
-				m_data.add_var(it.first, ns.m_data.get_var_by_id(it.second));
+			copy_domain(*ns.m_data);
+		}
+
+		void copy_domain(const domain_type &domain)
+		{
+			for (auto &it:domain)
+				m_data->add_var(it.first, domain.get_var_by_id(it.second));
 		}
 	};
 

@@ -62,12 +62,12 @@ namespace cs {
 			m_cache_refresh = true;
 		}
 
-		const domain_type &get_domain() const
+		domain_type &get_domain() const
 		{
 			return m_data.top();
 		}
 
-		const domain_type &get_global() const
+		domain_type &get_global() const
 		{
 			return m_data.top();
 		}

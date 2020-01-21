@@ -1,7 +1,8 @@
-import network, regex, codec
+import network, regex
+import codec.base64.standard as base64
+import codec.json as json
 
 using network
-using codec
 
 function http_request(method, host, page, data)
     var sock = new tcp.socket
@@ -44,14 +45,14 @@ end
 var data = 
 {
     # STDIN, base64 encode
-    "stdin" : base64.standard.encode("
+    "stdin" : base64.encode("
         {
             \"username\":\"mikecovlee\",
             \"password\":\"helloworld\"
         }
     "),
     # CovScript Code, base64 encode
-    "code"  : base64.standard.encode("
+    "code"  : base64.encode("
         import codec;
         var json = codec.json.to_var(codec.json.from_string(system.in.getline()));
         system.out.println(\"UserName = \" + json.username);

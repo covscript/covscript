@@ -27,6 +27,7 @@ namespace cs {
 	};
 	enum class action_types {
 		import_,
+		as_,
 		package_,
 		using_,
 		namespace_,

@@ -32,7 +32,8 @@ namespace cs {
 		bool expected_fdef = false;
 		bool expected_fcall = false;
 		bool expected_lambda = false;
-		for (auto &ptr:oldt) {
+		for (auto oldt_it = oldt.begin(); oldt_it != oldt.end(); ++oldt_it) {
+			token_base *ptr = *oldt_it;
 			switch (ptr->get_type()) {
 			default:
 				break;
@@ -41,8 +42,27 @@ namespace cs {
 				switch (static_cast<token_action *>(ptr)->get_action()) {
 				default:
 					break;
-				case action_types::import_:
-					insert_vardef = true;
+				case action_types::import_: {
+					// Look Ahead
+					bool found_as = false;
+					for (auto it = oldt_it + 1; it != oldt.end(); ++it) {
+						token_base *token = *it;
+						if (token->get_type() == token_types::endline)
+							break;
+						if (token->get_type() == token_types::action &&
+						        static_cast<token_action *>(token)->get_action() == action_types::as_) {
+							found_as = true;
+							break;
+						}
+					}
+					tokens.push_back(ptr);
+					if (!found_as) {
+						insert_vardef = true;
+						tokens.push_back(new token_signal(signal_types::vardef_));
+					}
+					continue;
+				}
+				case action_types::as_:
 					tokens.push_back(ptr);
 					tokens.push_back(new token_signal(signal_types::vardef_));
 					continue;

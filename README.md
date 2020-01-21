@@ -2,6 +2,7 @@
 # Covariant Script Programming Language: The Interpreter #
 [![Build Status](https://travis-ci.org/covscript/covscript.svg?branch=master)](https://travis-ci.org/covscript/covscript)
 [![Action Status](https://github.com/covscript/covscript/workflows/build/badge.svg)](https://github.com/covscript/covscript/actions)
+[![Schedule Status](https://github.com/covscript/csbuild/workflows/schedule/badge.svg)](https://github.com/covscript/csbuild/actions)
 [![](https://img.shields.io/badge/license-Covariant%20Innovation%20GPL-blue.svg)](https://github.com/covscript/covscript/blob/master/LICENSE)
 [![](https://img.shields.io/github/languages/top/covscript/covscript.svg)](http://www.cplusplus.com/)  
 **Welcome to the Covariant Script programming language!**  
@@ -33,7 +34,10 @@ You can try Covariant Script at http://dev.covariant.cn/
 + [Streams API](https://github.com/covscript/covscript-streams)
 ## Documentation ##
 [CovScript Online Documents](https://covscript.org/docs/)  
+[CovScript Official Document(PDF)](http://mirrors.covariant.cn/covscript/comm_dist/cs_docs.pdf)  
 ## Installation ##
++ **[Recommend]** Download installation package from [covscript.org](http://covscript.org)
++ Download [nightly build installation package](https://github.com/covscript/csbuild/releases/download/schedule/covscript-amd64.deb) for debian-like system on x86_64 machine
 + Download the precompiled executable on the [Latest Release](https://github.com/covscript/covscript/releases/latest)
 + Directly compile source code with CMake toolchain
 ## Run ##
@@ -46,6 +50,7 @@ Option|Mnemonic|Function
 :---:|:---:|:--:
 `--compile-only`|`-c`|Only compile
 `--dump-ast`|`-d`|Export abstract syntax tree
+`--dependency`|`-r`|Export module dependency
 
 ##### Interpreter REPL #####
 Option|Mnemonic|Function
@@ -77,16 +82,6 @@ Option|Mnemonic|Function
 `--import-path <PATH>`|`-i <PATH>`|Set the import path
 
 **Note that if you do not set the log path, it will be printed to stdout.**
-### Installer ###
-Covariant Script Installer provides a simple toolchain configuration method for the Microsoft Windows platform. You can download, install, upgrade and uninstall the toolchain by simply pushing a button. You can download the latest installer from the [CovScript Programming Language Home](http://covscript.org). For more information, visit the [Covariant Script Installer](https://github.com/covscript/covscript-installer).
-### GUI ###
-Covariant Script provides a one-stop code editing, running, debugging experience for the Microsoft Windows platform . The CovScript Installer will automatically download the CovScript GUI for you. For more information, please visit [Covariant Script GUI](https://github.com/covscript/covscript-gui).
-### Package Manager ###
-`cspkg` is a package manager written in Covariant Script whose main function is to manage extensions or packages for Covariant Script. `cspkg` will be released with the latest version of Covariant Script. For more information, please visit [Covariant Script Package Manager](https://github.com/covscript/cspkg).
-### IntelliJ Plugin ###
-The IntelliJ Plugin is available now:
-+ [Source Code](https://github.com/covscript/covscript-intellij)
-+ [Plugin Repository](https://plugins.jetbrains.com/plugin/10326-covscript)
 ## Examples ##
 The [examples](./examples) folder contains several example programs written by CovScript.
 ## Copyright ##

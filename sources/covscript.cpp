@@ -344,6 +344,9 @@ namespace cs {
 		// Import Grammar
 		.add_method({new token_action(action_types::import_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_import)
+		.add_method({new token_action(action_types::import_), new token_expr(tree_type<token_base *>()),
+			            new token_action(action_types::as_), new token_expr(tree_type<token_base *>()),
+			            new token_endline(0)}, new method_import_as)
 		// Package Grammar
 		.add_method({new token_action(action_types::package_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_package)
@@ -516,6 +519,7 @@ namespace cs {
 
 	void collect_garbage(context_t &context)
 	{
+		current_process->modules.clear();
 		while (!current_process->stack.empty())
 			current_process->stack.pop_no_return();
 #ifdef CS_DEBUGGER
