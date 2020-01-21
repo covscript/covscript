@@ -10,8 +10,8 @@
 此项目为官方维护的Covariant Script解释器  
 你可以在 http://dev.covariant.cn/ 中尝试Covariant Script 
 ## 切换语言 ##
-- [简体中文](https://github.com/covscript/covscript/blob/master/docs/README.zh_CN.md)
-- [English](https://github.com/covscript/covscript/blob/master/README.md)
+- [简体中文](./README-zh.md)
+- [English](./README.md)
 ## 特点 ##
 + 跨平台，支持大部分主流操作系统
 + 使用C++14编写，兼容性更好

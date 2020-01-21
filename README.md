@@ -10,8 +10,8 @@
 This project is an officially maintained Covariant Script interpreter.  
 You can try Covariant Script at http://dev.covariant.cn/ 
 ## Switch language ##
-- [简体中文](https://github.com/covscript/covscript/blob/master/docs/README.zh_CN.md)
-- [English](https://github.com/covscript/covscript/blob/master/README.md)
+- [简体中文](./README-zh.md)
+- [English](./README.md)
 ## Features ##
 + Cross-platform, supporting most mainstream Operating Systems
 + Powerful and bloat-free extension system
