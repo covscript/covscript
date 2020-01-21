@@ -28,9 +28,6 @@ namespace cs {
 
 		// Statements
 		std::deque<statement_base *> statements;
-
-		// Modules
-		map_t<string, namespace_t> modules;
 	public:
 		// Status
 		bool return_fcall = false;

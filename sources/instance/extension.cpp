@@ -37,11 +37,15 @@ namespace cs_impl {
 
 		var front(const array &arr)
 		{
+			if (arr.empty())
+				throw lang_error("Call front() on empty array.");
 			return arr.front();
 		}
 
 		var back(const array &arr)
 		{
+			if (arr.empty())
+				throw lang_error("Call back() on empty array.");
 			return arr.back();
 		}
 
@@ -554,11 +558,15 @@ namespace cs_impl {
 // Element access
 		var front(const list &lst)
 		{
+			if (lst.empty())
+				throw lang_error("Call front() on empty list.");
 			return lst.front();
 		}
 
 		var back(const list &lst)
 		{
+			if (lst.empty())
+				throw lang_error("Call back() on empty list.");
 			return lst.back();
 		}
 
