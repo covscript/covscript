@@ -6,6 +6,7 @@ using network
 
 function http_request(method, host, page, data)
     var sock = new tcp.socket
+    sock.set_timeout(2000)
     sock.connect(tcp.resolve(host, "http"))
     @begin
     var head=

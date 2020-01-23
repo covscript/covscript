@@ -519,7 +519,6 @@ namespace cs {
 
 	void collect_garbage(context_t &context)
 	{
-		current_process->modules.clear();
 		while (!current_process->stack.empty())
 			current_process->stack.pop_no_return();
 #ifdef CS_DEBUGGER
@@ -532,6 +531,7 @@ namespace cs {
 			context->instance->context = nullptr;
 			context->compiler = nullptr;
 			context->instance = nullptr;
+			context->modules.clear();
 			context = nullptr;
 		}
 		collect_garbage();

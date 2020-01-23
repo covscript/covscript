@@ -78,9 +78,7 @@ namespace cs {
 		int exit_code = 0;
 // Import Path
 		std::string import_path = ".";
-		// Modules
-		map_t<string, namespace_t> modules;
-		// Stack
+// Stack
 		stack_type<var> stack;
 #ifdef CS_DEBUGGER
 		stack_type<std::string> stack_backtrace;
@@ -136,6 +134,7 @@ namespace cs {
 // Context
 	class context_type final {
 	public:
+		map_t<string, namespace_t> modules;
 		compiler_t compiler = nullptr;
 		instance_t instance = nullptr;
 		std::deque<string> file_buff;
