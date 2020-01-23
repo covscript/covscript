@@ -39,19 +39,19 @@ namespace cs {
 
 	namespace_t instance_type::source_import(const std::string &path)
 	{
-		if (context->modules.count(path) > 0)
-			return context->modules[path];
+		if (context->compiler->modules.count(path) > 0)
+			return context->compiler->modules[path];
 		if (cs_impl::file_system::is_exe(path)) {
 			// is extension file
 			namespace_t module = std::make_shared<extension>(path);
-			context->modules.emplace(path, module);
+			context->compiler->modules.emplace(path, module);
 			return module;
 		}
 		else {
 			// is package file
 			context_t rt = create_subcontext(context);
 			namespace_t module = std::make_shared<name_space>(&rt->instance->storage.get_global());
-			context->modules.emplace(path, module);
+			context->compiler->modules.emplace(path, module);
 			rt->compiler->swap_context(rt);
 			try {
 				rt->instance->compile(path);
@@ -83,12 +83,12 @@ namespace cs {
 		}
 		for (auto &it:collection) {
 			std::string package_path = it + path_separator + name;
-			if (context->modules.count(package_path) > 0)
-				return context->modules[package_path];
+			if (context->compiler->modules.count(package_path) > 0)
+				return context->compiler->modules[package_path];
 			if (std::ifstream(package_path + ".csp")) {
 				context_t rt = create_subcontext(context);
 				namespace_t module = std::make_shared<name_space>(&rt->instance->storage.get_global());
-				context->modules.emplace(package_path, module);
+				context->compiler->modules.emplace(package_path, module);
 				rt->compiler->swap_context(rt);
 				try {
 					rt->instance->compile(package_path + ".csp");
@@ -107,7 +107,7 @@ namespace cs {
 			}
 			else if (std::ifstream(package_path + ".cse")) {
 				namespace_t module = std::make_shared<extension>(package_path + ".cse");
-				context->modules.emplace(package_path, module);
+				context->compiler->modules.emplace(package_path, module);
 				return module;
 			}
 		}

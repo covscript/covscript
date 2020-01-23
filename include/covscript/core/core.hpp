@@ -134,7 +134,6 @@ namespace cs {
 // Context
 	class context_type final {
 	public:
-		map_t<string, namespace_t> modules;
 		compiler_t compiler = nullptr;
 		instance_t instance = nullptr;
 		std::deque<string> file_buff;

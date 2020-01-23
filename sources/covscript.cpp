@@ -527,11 +527,11 @@ namespace cs {
 #endif
 		if (context) {
 			context->instance->storage.clear_all_data();
+			context->compiler->modules.clear();
 			context->compiler->swap_context(nullptr);
 			context->instance->context = nullptr;
 			context->compiler = nullptr;
 			context->instance = nullptr;
-			context->modules.clear();
 			context = nullptr;
 		}
 		collect_garbage();

@@ -357,6 +357,8 @@ namespace cs {
 		void opt_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, optm_type);
 
 	public:
+		map_t<string, namespace_t> modules;
+
 		void try_fix_this_deduction(tree_type<token_base *>::iterator);
 
 		compiler_type() = delete;
