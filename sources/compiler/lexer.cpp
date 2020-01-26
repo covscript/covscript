@@ -19,6 +19,7 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/impl/compiler.hpp>
+#include <cwctype>
 
 namespace cs {
 	void compiler_type::process_char_buff(const std::deque<char> &_buff, std::deque<token_base *> &tokens)
@@ -155,7 +156,7 @@ namespace cs {
 				break;
 			}
 			case token_types::value:
-				if (std::isdigit(buff[i]) || buff[i] == '.') {
+				if (std::iswdigit(buff[i]) || buff[i] == '.') {
 					tmp += buff[i];
 					++i;
 					continue;
