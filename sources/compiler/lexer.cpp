@@ -21,39 +21,19 @@
 #include <covscript/impl/compiler.hpp>
 
 namespace cs {
-    std::string wide2local(const std::wstring &str)
-    {
-        const wchar_t *wstr = str.c_str();
-        std::mbstate_t state = std::mbstate_t();
-        std::size_t len = 1 + std::wcsrtombs(nullptr, &wstr, 0, &state);
-        std::string mbstr(len, ' ');
-        std::wcsrtombs(&mbstr[0], &wstr, mbstr.size(), &state);
-        return std::move(mbstr);
-    }
-
-    std::wstring local2wide(const std::string &str)
-    {
-        const char *mbstr = str.c_str();
-        std::mbstate_t state = std::mbstate_t();
-        std::size_t len = 1 + std::mbsrtowcs(nullptr, &mbstr, 0, &state);
-        std::wstring wstr(len, ' ');
-        std::mbsrtowcs(&wstr[0], &mbstr, wstr.size(), &state);
-        return std::move(wstr);
-    }
-
 	void compiler_type::process_char_buff(const std::deque<char> &_buff, std::deque<token_base *> &tokens)
 	{
 		if (_buff.empty())
 			throw runtime_error("Received empty character buffer.");
 		std::deque<wchar_t> buff;
-        {
-            std::string str;
-            for (auto &ch:_buff)
-                str.push_back(ch);
-            std::wstring wstr = local2wide(str);
-            for (auto &ch:wstr)
-                buff.push_back(ch);
-        }
+		{
+			std::string str;
+			for (auto &ch:_buff)
+				str.push_back(ch);
+			std::wstring wstr = local2wide(str);
+			for (auto &ch:wstr)
+				buff.push_back(ch);
+		}
 		std::wstring tmp;
 		token_types type = token_types::null;
 		bool inside_char = false;
@@ -73,7 +53,9 @@ namespace cs {
 						throw runtime_error("Do not allow empty character.");
 					if (tmp.size() > 1)
 						throw runtime_error("Char must be a single character.");
-					tokens.push_back(new_value(tmp[0]));
+					if (tmp[0] > CHAR_MAX)
+						throw runtime_error("Do not support unicode character. Please using string instead.");
+					tokens.push_back(new_value((char)tmp[0]));
 					tmp.clear();
 					inside_char = false;
 				}
@@ -92,7 +74,7 @@ namespace cs {
 					escape = true;
 				}
 				else if (buff[i] == '\"') {
-					tokens.push_back(new_value(tmp));
+					tokens.push_back(new_value(wide2local(tmp)));
 					tmp.clear();
 					inside_str = false;
 				}
@@ -118,7 +100,7 @@ namespace cs {
 					++i;
 					continue;
 				}
-				if (std::isspace(buff[i])) {
+				if (std::iswspace(buff[i])) {
 					++i;
 					continue;
 				}
@@ -126,29 +108,29 @@ namespace cs {
 					type = token_types::signal;
 					continue;
 				}
-				if (std::isdigit(buff[i])) {
+				if (std::iswdigit(buff[i])) {
 					type = token_types::value;
 					continue;
 				}
-				if (std::isalpha(buff[i]) || buff[i] == '_') {
+				if (isidentifier(buff[i])) {
 					type = token_types::id;
 					continue;
 				}
 				throw runtime_error("Uknown character.");
 				break;
 			case token_types::id:
-				if (std::isalnum(buff[i]) || buff[i] == '_') {
+				if (isidentifier(buff[i])) {
 					tmp += buff[i];
 					++i;
 					continue;
 				}
 				type = token_types::null;
-				if (reserved_map.exist(tmp)) {
-					tokens.push_back(reserved_map.match(tmp)());
+				if (reserved_map.exist(wide2local(tmp))) {
+					tokens.push_back(reserved_map.match(wide2local(tmp))());
 					tmp.clear();
 					break;
 				}
-				tokens.push_back(new token_id(tmp));
+				tokens.push_back(new token_id(wide2local(tmp)));
 				tmp.clear();
 				break;
 			case token_types::signal: {
@@ -158,17 +140,17 @@ namespace cs {
 					continue;
 				}
 				type = token_types::null;
-				std::string sig;
+				std::wstring sig;
 				for (auto &ch:tmp) {
-					if (!signal_map.exist(sig + ch)) {
-						tokens.push_back(new token_signal(signal_map.match(sig)));
+					if (!signal_map.exist(wide2local(sig + ch))) {
+						tokens.push_back(new token_signal(signal_map.match(wide2local(sig))));
 						sig = ch;
 					}
 					else
 						sig += ch;
 				}
 				if (!sig.empty())
-					tokens.push_back(new token_signal(signal_map.match(sig)));
+					tokens.push_back(new token_signal(signal_map.match(wide2local(sig))));
 				tmp.clear();
 				break;
 			}
@@ -179,7 +161,7 @@ namespace cs {
 					continue;
 				}
 				type = token_types::null;
-				tokens.push_back(new_value(parse_number(tmp)));
+				tokens.push_back(new_value(parse_number(wide2local(tmp))));
 				tmp.clear();
 				break;
 			}
@@ -194,29 +176,29 @@ namespace cs {
 		default:
 			break;
 		case token_types::id:
-			if (reserved_map.exist(tmp)) {
-				tokens.push_back(reserved_map.match(tmp)());
+			if (reserved_map.exist(wide2local(tmp))) {
+				tokens.push_back(reserved_map.match(wide2local(tmp))());
 				tmp.clear();
 				break;
 			}
-			tokens.push_back(new token_id(tmp));
+			tokens.push_back(new token_id(wide2local(tmp)));
 			break;
 		case token_types::signal: {
-			std::string sig;
+			std::wstring sig;
 			for (auto &ch:tmp) {
-				if (!signal_map.exist(sig + ch)) {
-					tokens.push_back(new token_signal(signal_map.match(sig)));
+				if (!signal_map.exist(wide2local(sig + ch))) {
+					tokens.push_back(new token_signal(signal_map.match(wide2local(sig))));
 					sig = ch;
 				}
 				else
 					sig += ch;
 			}
 			if (!sig.empty())
-				tokens.push_back(new token_signal(signal_map.match(sig)));
+				tokens.push_back(new token_signal(signal_map.match(wide2local(sig))));
 			break;
 		}
 		case token_types::value:
-			tokens.push_back(new_value(parse_number(tmp)));
+			tokens.push_back(new_value(parse_number(wide2local(tmp))));
 			break;
 		}
 	}
