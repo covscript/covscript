@@ -21,11 +21,40 @@
 #include <covscript/impl/compiler.hpp>
 
 namespace cs {
-	void compiler_type::process_char_buff(const std::deque<char> &buff, std::deque<token_base *> &tokens)
+    std::string wide2local(const std::wstring &str)
+    {
+        const wchar_t *wstr = str.c_str();
+        std::mbstate_t state = std::mbstate_t();
+        std::size_t len = 1 + std::wcsrtombs(nullptr, &wstr, 0, &state);
+        std::string mbstr(len, ' ');
+        std::wcsrtombs(&mbstr[0], &wstr, mbstr.size(), &state);
+        return std::move(mbstr);
+    }
+
+    std::wstring local2wide(const std::string &str)
+    {
+        const char *mbstr = str.c_str();
+        std::mbstate_t state = std::mbstate_t();
+        std::size_t len = 1 + std::mbsrtowcs(nullptr, &mbstr, 0, &state);
+        std::wstring wstr(len, ' ');
+        std::mbsrtowcs(&wstr[0], &mbstr, wstr.size(), &state);
+        return std::move(wstr);
+    }
+
+	void compiler_type::process_char_buff(const std::deque<char> &_buff, std::deque<token_base *> &tokens)
 	{
-		if (buff.empty())
+		if (_buff.empty())
 			throw runtime_error("Received empty character buffer.");
-		std::string tmp;
+		std::deque<wchar_t> buff;
+        {
+            std::string str;
+            for (auto &ch:_buff)
+                str.push_back(ch);
+            std::wstring wstr = local2wide(str);
+            for (auto &ch:wstr)
+                buff.push_back(ch);
+        }
+		std::wstring tmp;
 		token_types type = token_types::null;
 		bool inside_char = false;
 		bool inside_str = false;

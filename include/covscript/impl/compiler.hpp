@@ -185,7 +185,7 @@ namespace cs {
 			{"true",   []() -> token_base * { return new token_value(var::make_constant<bool>(true)); }},
 			{"false",  []() -> token_base * { return new token_value(var::make_constant<bool>(false)); }}
 		};
-		const mapping<char, char> escape_map = {
+		const mapping<wchar_t, wchar_t> escape_map = {
 			{'a',  '\a'},
 			{'b',  '\b'},
 			{'f',  '\f'},
@@ -198,7 +198,7 @@ namespace cs {
 			{'\"', '\"'},
 			{'0',  '\0'}
 		};
-		const std::vector<char> signals = {
+		const set_t<wchar_t> signals = {
 			'+', '-', '*', '/', '%', '^', ',', '.', '>', '<', '=', '&', '|', '!', '(', ')', '[', ']', '{', '}', ':',
 			'?', ';'
 		};
@@ -263,12 +263,9 @@ namespace cs {
 		class preprocessor;
 
 		// Lexer
-		bool issignal(char ch)
+		bool issignal(wchar_t ch)
 		{
-			for (auto &c:signals)
-				if (c == ch)
-					return true;
-			return false;
+			return signals.contains(ch);
 		}
 
 		void process_char_buff(const std::deque<char> &, std::deque<token_base *> &);
