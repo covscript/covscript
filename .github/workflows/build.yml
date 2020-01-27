@@ -26,7 +26,7 @@ jobs:
       - name: test-win64
         if: matrix.os == 'windows-latest'
         run: build/bin/cs examples/benchmark_gbk.csc
-      
+
       - name: test-unix
         if: matrix.os != 'windows-latest'
         run: build/bin/cs examples/benchmark_utf8.csc

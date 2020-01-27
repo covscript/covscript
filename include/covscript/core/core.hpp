@@ -91,7 +91,7 @@ namespace cs {
 
 		event_type on_process_exit;
 
-		// DO NOT TOUCH THIS EVENT DIRECTLY!!
+// DO NOT TOUCH THIS EVENT DIRECTLY!!
 		event_type on_process_sigint;
 
 		inline void poll_event()

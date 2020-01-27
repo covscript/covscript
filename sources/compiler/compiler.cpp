@@ -242,33 +242,6 @@ namespace cs {
 		return true;
 	}
 
-	std::string wide2local(const std::wstring &wstr)
-	{
-		std::string str;
-		std::mbstate_t state {};
-		for(wchar_t wc : wstr) {
-			std::string mb(MB_CUR_MAX, '\0');
-			std::size_t ret = std::wcrtomb(&mb[0], wc, &state);
-			str.append(mb);
-		}
-		return std::move(str);
-	}
-
-	std::wstring local2wide(const std::string &str)
-	{
-		std::wstring wstr;
-		const char *ptr = str.c_str();
-		std::mbstate_t state = std::mbstate_t();
-		const char* end = ptr + str.size();
-		int len;
-		wchar_t wc;
-		while((len = std::mbrtowc(&wc, ptr, end-ptr, &state)) > 0) {
-			wstr.push_back(wc);
-			ptr += len;
-		}
-		return std::move(wstr);
-	}
-
 	const mapping<std::string, signal_types> compiler_type::signal_map = {
 		{";",   signal_types::endline_},
 		{"+",   signal_types::add_},
@@ -372,7 +345,7 @@ namespace cs {
 		{"false",  []() -> token_base * { return new token_value(var::make_constant<bool>(false)); }}
 	};
 
-	const mapping<wchar_t, wchar_t> compiler_type::escape_map = {
+	const mapping<char32_t, char32_t> compiler_type::escape_map = {
 		{'a',  '\a'},
 		{'b',  '\b'},
 		{'f',  '\f'},
@@ -386,7 +359,7 @@ namespace cs {
 		{'0',  '\0'}
 	};
 
-	const set_t<wchar_t> compiler_type::signals = {
+	const set_t<char32_t> compiler_type::signals = {
 		'+', '-', '*', '/', '%', '^', ',', '.', '>', '<', '=', '&', '|', '!', '(', ')', '[', ']', '{', '}', ':',
 		'?', ';'
 	};

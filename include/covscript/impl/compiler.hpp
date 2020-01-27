@@ -22,10 +22,6 @@
 #include <covscript/impl/symbols.hpp>
 
 namespace cs {
-	std::string wide2local(const std::wstring &);
-
-	std::wstring local2wide(const std::string &);
-
 	class translator_type final {
 		using data_type=std::pair<std::deque<token_base *>, method_base *>;
 
@@ -86,16 +82,27 @@ namespace cs {
 		               bool);
 	};
 
+	enum class charset {
+		ascii, utf8, gbk
+	};
+
 	class compiler_type final {
 	public:
 		// Symbol Table
 		static const mapping<std::string, signal_types> signal_map;
 		static const mapping<std::string, action_types> action_map;
 		static const mapping<std::string, std::function<token_base *()>> reserved_map;
-		static const mapping<wchar_t, wchar_t> escape_map;
-		static const set_t<wchar_t> signals;
+		static const mapping<char32_t, char32_t> escape_map;
+		static const set_t<char32_t> signals;
 		static const mapping<signal_types, int> signal_level_map;
 		static const std::vector<signal_types> signal_left_associative;
+
+		// Lexer
+		static bool issignal(char32_t ch)
+		{
+			return signals.contains(ch);
+		}
+
 	private:
 		// Constants Pool
 		std::vector<var> constant_pool;
@@ -111,26 +118,11 @@ namespace cs {
 		class preprocessor;
 
 		// Lexer
-		static bool issignal(wchar_t ch)
-		{
-			return signals.contains(ch);
-		}
-
-		static bool isidentifier(wchar_t ch)
-		{
-			if (issignal(ch))
-				return false;
-			if (ch < 128)
-				return ch == '_' || std::isalnum(ch);
-			else
-				return true;
-		}
-
-		void process_char_buff(const std::deque<char> &, std::deque<token_base *> &);
+		void process_char_buff(const std::deque<char> &, std::deque<token_base *> &, charset);
 
 		void process_token_buff(std::deque<token_base *> &, std::deque<std::deque<token_base *>> &);
 
-		void translate_into_tokens(const std::deque<char> &, std::deque<token_base *> &);
+		void translate_into_tokens(const std::deque<char> &, std::deque<token_base *> &, charset);
 
 		void process_empty_brackets(std::deque<token_base *> &);
 
@@ -262,10 +254,10 @@ namespace cs {
 		}
 
 		// Wrapped Method
-		void build_expr(const std::deque<char> &buff, tree_type<token_base *> &tree)
+		void build_expr(const std::deque<char> &buff, tree_type<token_base *> &tree, charset encoding = charset::utf8)
 		{
 			std::deque<token_base *> tokens;
-			process_char_buff(buff, tokens);
+			process_char_buff(buff, tokens, encoding);
 			process_brackets(tokens);
 			kill_brackets(tokens);
 			gen_tree(tree, tokens);
@@ -279,20 +271,22 @@ namespace cs {
 		}
 
 		void
-		build_line(const std::deque<char> &buff, std::deque<std::deque<token_base *>> &ast, std::size_t line_num = 1)
+		build_line(const std::deque<char> &buff, std::deque<std::deque<token_base *>> &ast, std::size_t line_num = 1,
+		           charset encoding = charset::utf8)
 		{
 			std::deque<token_base *> tokens;
-			process_char_buff(buff, tokens);
+			process_char_buff(buff, tokens, encoding);
 			tokens.push_back(new token_endline(line_num));
 			process_token_buff(tokens, ast);
 			for (auto &line:ast)
 				process_line(line);
 		}
 
-		void build_ast(const std::deque<char> &buff, std::deque<std::deque<token_base *>> &ast)
+		void build_ast(const std::deque<char> &buff, std::deque<std::deque<token_base *>> &ast,
+		               charset encoding = charset::utf8)
 		{
 			std::deque<token_base *> tokens, tmp;
-			translate_into_tokens(buff, tokens);
+			translate_into_tokens(buff, tokens, encoding);
 			process_token_buff(tokens, ast);
 		}
 

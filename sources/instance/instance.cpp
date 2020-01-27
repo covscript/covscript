@@ -119,10 +119,10 @@ namespace cs {
 		context->file_path = path;
 		// Read from file
 		std::deque<char> buff;
-		std::ifstream in(path);
+		std::ifstream in(path, std::ios::binary);
 		if (!in.is_open())
 			throw fatal_error(path + ": No such file or directory");
-		for (int ch = in.get(); ch != std::char_traits<char>::eof(); ch = in.get())
+		for (int ch = in.get(); in; ch = in.get())
 			buff.push_back(ch);
 		std::deque<std::deque<token_base *>> ast;
 		// Compile

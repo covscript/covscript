@@ -1,3 +1,4 @@
+@charset:gbk
 iostream.setprecision(64)
 function 第一步(n)
     var 得分=0

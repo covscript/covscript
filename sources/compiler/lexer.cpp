@@ -19,150 +19,268 @@
 * Github: https://github.com/mikecovlee
 */
 #include <covscript/impl/compiler.hpp>
+#include <codecvt>
 #include <cwctype>
 
 namespace cs {
-	void compiler_type::process_char_buff(const std::deque<char> &_buff, std::deque<token_base *> &tokens)
+	namespace codecvt {
+		class charset {
+		public:
+			virtual ~charset() = default;
+
+			virtual std::u32string local2wide(const std::deque<char> &) = 0;
+
+			virtual std::string wide2local(const std::u32string &) = 0;
+
+			virtual bool is_identifier(char32_t) = 0;
+		};
+
+		class ascii final : public charset {
+		public:
+			std::u32string local2wide(const std::deque<char> &local) override
+			{
+				return std::u32string(local.begin(), local.end());
+			}
+
+			std::string wide2local(const std::u32string &str) override
+			{
+				return std::string(str.begin(), str.end());
+			}
+
+			bool is_identifier(char32_t ch) override
+			{
+				return ch == '_' || std::iswalnum(ch);
+			}
+		};
+
+		class utf8 final : public charset {
+			std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> cvt;
+		public:
+			std::u32string local2wide(const std::deque<char> &local) override
+			{
+				std::string str(local.begin(), local.end());
+				return cvt.from_bytes(str);
+			}
+
+			std::string wide2local(const std::u32string &str) override
+			{
+				return cvt.to_bytes(str);
+			}
+
+			bool is_identifier(char32_t ch) override
+			{
+				if (compiler_type::issignal(ch))
+					return false;
+				if (ch >= 128)
+					return (ch >= 0x4E00 && ch <= 0x9FA5) || (ch >= 0x9FA6 && ch <= 0x9FEF) || ch == 0x3007;
+				else
+					return ch == '_' || std::iswalnum(ch);
+			}
+		};
+
+		class gbk final : public charset {
+			inline char32_t set_zero(char32_t ch)
+			{
+				return ch & 0x0000ffff;
+			}
+
+		public:
+			std::u32string local2wide(const std::deque<char> &local) override
+			{
+				std::u32string wide;
+				uint32_t head = 0;
+				int status = 0;
+				for (auto it = local.begin(); it != local.end();) {
+					switch (status) {
+					case 0:
+						head = *(it++);
+						if (head & 0x80)
+							status = 1;
+						else
+							wide.push_back(set_zero(head));
+						break;
+					case 1: {
+						uint8_t tail = *(it++);
+						wide.push_back(set_zero(head << 8 | tail));
+						status = 0;
+						break;
+					}
+					}
+				}
+				if (status == 1)
+					throw runtime_error("Codecvt: Bad encoding.");
+				return std::move(wide);
+			}
+
+			std::string wide2local(const std::u32string &wide) override
+			{
+				std::string local;
+				for (auto &ch:wide) {
+					if (ch & 0x8000)
+						local.push_back(ch >> 8);
+					local.push_back(ch);
+				}
+				return std::move(local);
+			}
+
+			bool is_identifier(char32_t ch) override
+			{
+				if (compiler_type::issignal(ch))
+					return false;
+				if (ch & 0x8000)
+					return (ch >= 0xB0A1 && ch <= 0xF7FE) || (ch >= 0x8140 && ch <= 0xA0FE) || ch == 0xA996;
+				else
+					return ch == '_' || std::iswalnum(ch);
+			}
+		};
+	}
+
+	void compiler_type::process_char_buff(const std::deque<char> &raw_buff, std::deque<token_base *> &tokens,
+	                                      charset encoding)
 	{
-		if (_buff.empty())
+		if (raw_buff.empty())
 			throw runtime_error("Received empty character buffer.");
-		std::deque<wchar_t> buff;
-		{
-			std::string str;
-			for (auto &ch:_buff)
-				str.push_back(ch);
-			std::wstring wstr = local2wide(str);
-			for (auto &ch:wstr)
-				buff.push_back(ch);
+		std::unique_ptr<codecvt::charset> cvt = nullptr;
+		switch (encoding) {
+		case charset::ascii:
+			cvt = std::make_unique<codecvt::ascii>();
+			break;
+		case charset::utf8:
+			cvt = std::make_unique<codecvt::utf8>();
+			break;
+		case charset::gbk:
+			cvt = std::make_unique<codecvt::gbk>();
+			break;
 		}
-		std::wstring tmp;
+		std::u32string buff = cvt->local2wide(raw_buff);
+		std::u32string tmp;
 		token_types type = token_types::null;
 		bool inside_char = false;
 		bool inside_str = false;
 		bool escape = false;
-		for (std::size_t i = 0; i < buff.size();) {
+		for (auto it = buff.begin(); it != buff.end();) {
 			if (inside_char) {
 				if (escape) {
-					tmp += escape_map.match(buff[i]);
+					tmp += escape_map.match(*it);
 					escape = false;
 				}
-				else if (buff[i] == '\\') {
+				else if (*it == '\\') {
 					escape = true;
 				}
-				else if (buff[i] == '\'') {
+				else if (*it == '\'') {
 					if (tmp.empty())
 						throw runtime_error("Do not allow empty character.");
 					if (tmp.size() > 1)
 						throw runtime_error("Char must be a single character.");
 					if (tmp[0] > CHAR_MAX)
 						throw runtime_error("Do not support unicode character. Please using string instead.");
-					tokens.push_back(new_value((char)tmp[0]));
+					tokens.push_back(new_value((char) tmp[0]));
 					tmp.clear();
 					inside_char = false;
 				}
 				else {
-					tmp += buff[i];
+					tmp += *it;
 				}
-				++i;
+				++it;
 				continue;
 			}
 			if (inside_str) {
 				if (escape) {
-					tmp += escape_map.match(buff[i]);
+					tmp += escape_map.match(*it);
 					escape = false;
 				}
-				else if (buff[i] == '\\') {
+				else if (*it == '\\') {
 					escape = true;
 				}
-				else if (buff[i] == '\"') {
-					tokens.push_back(new_value(wide2local(tmp)));
+				else if (*it == '\"') {
+					tokens.push_back(new_value(cvt->wide2local(tmp)));
 					tmp.clear();
 					inside_str = false;
 				}
 				else {
-					tmp += buff[i];
+					tmp += *it;
 				}
-				++i;
+				++it;
 				continue;
 			}
-			if (buff[i] == '#')
+			if (*it == '#')
 				break;
 			switch (type) {
 			default:
 				break;
 			case token_types::null:
-				if (buff[i] == '\"') {
+				if (*it == '\"') {
 					inside_str = true;
-					++i;
+					++it;
 					continue;
 				}
-				if (buff[i] == '\'') {
+				if (*it == '\'') {
 					inside_char = true;
-					++i;
+					++it;
 					continue;
 				}
-				if (std::iswspace(buff[i])) {
-					++i;
+				if (std::iswspace(*it)) {
+					++it;
 					continue;
 				}
-				if (issignal(buff[i])) {
+				if (issignal(*it)) {
 					type = token_types::signal;
 					continue;
 				}
-				if (std::iswdigit(buff[i])) {
+				if (std::iswdigit(*it)) {
 					type = token_types::value;
 					continue;
 				}
-				if (isidentifier(buff[i])) {
+				if (cvt->is_identifier(*it)) {
 					type = token_types::id;
 					continue;
 				}
-				throw runtime_error("Uknown character.");
+				throw runtime_error(std::string("Uknown character: " + cvt->wide2local(std::u32string(1, *it))));
 				break;
 			case token_types::id:
-				if (isidentifier(buff[i])) {
-					tmp += buff[i];
-					++i;
+				if (cvt->is_identifier(*it)) {
+					tmp += *it;
+					++it;
 					continue;
 				}
 				type = token_types::null;
-				if (reserved_map.exist(wide2local(tmp))) {
-					tokens.push_back(reserved_map.match(wide2local(tmp))());
+				if (reserved_map.exist(cvt->wide2local(tmp))) {
+					tokens.push_back(reserved_map.match(cvt->wide2local(tmp))());
 					tmp.clear();
 					break;
 				}
-				tokens.push_back(new token_id(wide2local(tmp)));
+				tokens.push_back(new token_id(cvt->wide2local(tmp)));
 				tmp.clear();
 				break;
 			case token_types::signal: {
-				if (issignal(buff[i])) {
-					tmp += buff[i];
-					++i;
+				if (issignal(*it)) {
+					tmp += *it;
+					++it;
 					continue;
 				}
 				type = token_types::null;
-				std::wstring sig;
+				std::u32string sig;
 				for (auto &ch:tmp) {
-					if (!signal_map.exist(wide2local(sig + ch))) {
-						tokens.push_back(new token_signal(signal_map.match(wide2local(sig))));
+					if (!signal_map.exist(cvt->wide2local(sig + ch))) {
+						tokens.push_back(new token_signal(signal_map.match(cvt->wide2local(sig))));
 						sig = ch;
 					}
 					else
 						sig += ch;
 				}
 				if (!sig.empty())
-					tokens.push_back(new token_signal(signal_map.match(wide2local(sig))));
+					tokens.push_back(new token_signal(signal_map.match(cvt->wide2local(sig))));
 				tmp.clear();
 				break;
 			}
 			case token_types::value:
-				if (std::iswdigit(buff[i]) || buff[i] == '.') {
-					tmp += buff[i];
-					++i;
+				if (std::iswdigit(*it) || *it == '.') {
+					tmp += *it;
+					++it;
 					continue;
 				}
 				type = token_types::null;
-				tokens.push_back(new_value(parse_number(wide2local(tmp))));
+				tokens.push_back(new_value(parse_number(cvt->wide2local(tmp))));
 				tmp.clear();
 				break;
 			}
@@ -177,29 +295,29 @@ namespace cs {
 		default:
 			break;
 		case token_types::id:
-			if (reserved_map.exist(wide2local(tmp))) {
-				tokens.push_back(reserved_map.match(wide2local(tmp))());
+			if (reserved_map.exist(cvt->wide2local(tmp))) {
+				tokens.push_back(reserved_map.match(cvt->wide2local(tmp))());
 				tmp.clear();
 				break;
 			}
-			tokens.push_back(new token_id(wide2local(tmp)));
+			tokens.push_back(new token_id(cvt->wide2local(tmp)));
 			break;
 		case token_types::signal: {
-			std::wstring sig;
+			std::u32string sig;
 			for (auto &ch:tmp) {
-				if (!signal_map.exist(wide2local(sig + ch))) {
-					tokens.push_back(new token_signal(signal_map.match(wide2local(sig))));
+				if (!signal_map.exist(cvt->wide2local(sig + ch))) {
+					tokens.push_back(new token_signal(signal_map.match(cvt->wide2local(sig))));
 					sig = ch;
 				}
 				else
 					sig += ch;
 			}
 			if (!sig.empty())
-				tokens.push_back(new token_signal(signal_map.match(wide2local(sig))));
+				tokens.push_back(new token_signal(signal_map.match(cvt->wide2local(sig))));
 			break;
 		}
 		case token_types::value:
-			tokens.push_back(new_value(parse_number(wide2local(tmp))));
+			tokens.push_back(new_value(parse_number(cvt->wide2local(tmp))));
 			break;
 		}
 	}
@@ -222,7 +340,8 @@ namespace cs {
 			++line_num;
 		}
 
-		void process_endline(const context_t &context, compiler_type &compiler, std::deque<token_base *> &tokens)
+		void process_endline(const context_t &context, compiler_type &compiler, std::deque<token_base *> &tokens,
+		                     charset &encoding)
 		{
 			if (is_annotation) {
 				is_annotation = false;
@@ -235,6 +354,12 @@ namespace cs {
 					multi_line = true;
 				else if (command == "end" && multi_line)
 					multi_line = false;
+				else if (command == "charset:ascii")
+					encoding = charset::ascii;
+				else if (command == "charset:utf8")
+					encoding = charset::utf8;
+				else if (command == "charset:gbk")
+					encoding = charset::gbk;
 				else
 					throw exception(line_num, context->file_path, command, "Wrong grammar for preprocessor command.");
 				command.clear();
@@ -244,7 +369,7 @@ namespace cs {
 				return;
 			}
 			try {
-				compiler.process_char_buff(buff, tokens);
+				compiler.process_char_buff(buff, tokens, encoding);
 			}
 			catch (const cs::exception &e) {
 				throw e;
@@ -263,11 +388,11 @@ namespace cs {
 
 	public:
 		explicit preprocessor(const context_t &context, compiler_type &compiler, const std::deque<char> &char_buff,
-		                      std::deque<token_base *> &tokens)
+		                      std::deque<token_base *> &tokens, charset encoding)
 		{
 			for (auto &ch:char_buff) {
 				if (ch == '\n') {
-					process_endline(context, compiler, tokens);
+					process_endline(context, compiler, tokens, encoding);
 					continue;
 				}
 				if (is_annotation)
@@ -296,7 +421,7 @@ namespace cs {
 					line.push_back(ch);
 				}
 			}
-			process_endline(context, compiler, tokens);
+			process_endline(context, compiler, tokens, encoding);
 			if (multi_line)
 				throw runtime_error("Lack of the @end command.");
 		}
@@ -337,9 +462,10 @@ namespace cs {
 			ast.push_back(tmp);
 	}
 
-	void compiler_type::translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens)
+	void compiler_type::translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens,
+	        charset encoding)
 	{
-		preprocessor(context, *this, char_buff, tokens);
+		preprocessor(context, *this, char_buff, tokens, encoding);
 	}
 
 	void compiler_type::process_empty_brackets(std::deque<token_base *> &tokens)
