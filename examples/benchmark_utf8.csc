@@ -1,108 +1,108 @@
 @charset:utf8
-iostream.setprecision(64)
-function 第一步(n)
-    var 得分=0
-    foreach i in range(1,n+1)
-        var 用时=runtime.time()
-        var fc=0
-        loop
+输入输出流.设置精度(64)
+函数 第一步(n)
+    变量 得分=0
+    遍历 i 在 范围(1,n+1)
+        变量 用时=运行时.时间()
+        变量 fc=0
+        循环
             fc++
-        until runtime.time()-用时>=1000
+        直到 运行时.时间()-用时>=1000
         得分=得分+fc
-    end
-    return to_integer(得分/n)
-end
-function 第二步(n,k)
-    var precision=10^(-n)
-    function integral(func,begin,end)
-        var sum=0
-        for x=begin,x<=end,x=x+precision do sum+=func(x)*precision
-        return sum
-    end
-    function f(x)
-        return math.sqrt(1-x^2)
-    end
-    var 得分=0
-    foreach i in range(1,k+1)
-        var 用时=runtime.time()
+    终
+    返回 转整数(得分/n)
+终
+函数 第二步(n,k)
+    变量 precision=10^(-n)
+    函数 integral(func, begin, end)
+        变量 sum=0
+        迭代 x=begin, x<=end, x=x+precision 则 sum+=func(x)*precision
+        返回 sum
+    终
+    函数 f(x)
+        返回 数学.sqrt(1-x^2)
+    终
+    变量 得分=0
+    遍历 i 在 范围(1,k+1)
+        变量 用时=运行时.时间()
         integral(f,0,1)
-        得分=得分+runtime.time()-用时
-    end
-    return to_integer(得分/k)
-end
-function 快速排序(a,m,n)
-    if n<=m
-        return 0
-    end
-    var (i,j,v)={m-1,n,a[n]}
-    loop
-        loop
+        得分=得分+运行时.时间()-用时
+    终
+    返回 转整数(得分/k)
+终
+函数 快速排序(a,m,n)
+    若 n<=m
+        返回 0
+    终
+    变量 (i,j,v)={m-1,n,a[n]}
+    循环
+        循环
             ++i
-            if i>=a.size()
-                break
-            end
-        until a[i]>=v
-        loop
+            若 i>=a.大小()
+                跳出
+            终
+        直到 a[i]>=v
+        循环
             --j
-            if j<0
-                break
-            end
-        until a[j]<=v
-        if i>=j
-            break
-        end
-        swap(a[i],a[j])
-    end
-    swap(a[i],a[n])
+            若 j<0
+                跳出
+            终
+        直到 a[j]<=v
+        若 i>=j
+            跳出
+        终
+        交换(a[i],a[j])
+    终
+    交换(a[i],a[n])
     快速排序(a,m,j)
     快速排序(a,i+1,n)
-end
-function 第三步(n,k)
-    var 得分=0
-    foreach i in range(1,k+1)
-        var a={}
-        for i=0,i<=n,++i do a.push_back(math.randint(0,n))
-        var 用时=runtime.time()
-        快速排序(a,0,a.size()-1)
-        得分=得分+runtime.time()-用时
-    end
-    return to_integer(得分/k)
-end
-function 斐波那契(count)
-    var fib={0,1}
-    for n=2,n<=count,++n do fib.push_back(fib.at(n-1)+fib.at(n-2))
-    var sum=new hash_map
-    for i=2,i<fib.size(),++i do ++sum[to_string(fib.at(i)/fib.at(i-1))]
-    var max=0:0
-    foreach it in sum do it.second()>max.second()?(max=it):null
-    return max.first()
-end
-function 第四步(n,k)
-    var 得分=0
-    foreach i in range(1,k+1)
-        var 用时=runtime.time()
+终
+函数 第三步(n,k)
+    变量 得分=0
+    遍历 i 在 范围(1,k+1)
+        变量 a={}
+        迭代 i=0,i<=n,++i 则 a.插入后面(数学.randint(0,n))
+        变量 用时=运行时.时间()
+        快速排序(a, 0, a.大小()-1)
+        得分=得分+运行时.时间()-用时
+    终
+    返回 转整数(得分/k)
+终
+函数 斐波那契(count)
+    变量 fib={0,1}
+    迭代 n=2,n<=count,++n 则 fib.插入后面(fib.访问(n-1)+fib.访问(n-2))
+    变量 sum=新建 哈希表
+    迭代 i=2,i<fib.大小(),++i 则 ++sum[转文字(fib.访问(i)/fib.访问(i-1))]
+    变量 max=0:0
+    遍历 it 在 sum 则 it.乙()>max.乙()?(max=it):空
+    返回 max.甲()
+终
+函数 第四步(n,k)
+    变量 得分=0
+    遍历 i 在 范围(1,k+1)
+        变量 用时=运行时.时间()
         斐波那契(n)
-        得分=得分+runtime.time()-用时
-    end
-    return to_integer(得分/k)
-end
-function 第五步(n,k)
-    var 得分=0, fib=[](n)->n>2?fib(n-1)+fib(n-2):1
-    foreach i in range(1,k+1)
-        var 用时=runtime.time()
+        得分=得分+运行时.时间()-用时
+    终
+    返回 转整数(得分/k)
+终
+函数 第五步(n,k)
+    变量 得分=0, fib=[](n)->n>2?fib(n-1)+fib(n-2):1
+    遍历 i 在 范围(1,k+1)
+        变量 用时=运行时.时间()
         fib(n)
-        得分+=runtime.time()-用时
-    end
-    return to_integer(得分/k)
-end
-system.out.println("Covariant Script 性能测试套件")
-system.out.println("第一步：顺序执行性能")
-system.out.println("结果："+to_string(第一步(5)))
-system.out.println("第二步：积分计算性能")
-system.out.println("结果："+to_string(第二步(5,5)))
-system.out.println("第三步：快速排序算法(10000 Data)")
-system.out.println("结果："+to_string(第三步(10000,5)))
-system.out.println("第四步：顺序斐波那契(10000 Data)")
-system.out.println("结果："+to_string(第四步(10000,5)))
-system.out.println("第五步：递归斐波那契(Depth 30)")
-system.out.println("结果："+to_string(第五步(30,5)))
+        得分+=运行时.时间()-用时
+    终
+    返回 转整数(得分/k)
+终
+系统.输出.输出一行("Covariant Script 性能测试套件")
+系统.输出.输出一行("第一步：顺序执行性能")
+系统.输出.输出一行("结果："+转文字(第一步(5)))
+系统.输出.输出一行("第二步：积分计算性能")
+系统.输出.输出一行("结果："+转文字(第二步(5,5)))
+系统.输出.输出一行("第三步：快速排序算法(10000 Data)")
+系统.输出.输出一行("结果："+转文字(第三步(10000,5)))
+系统.输出.输出一行("第四步：顺序斐波那契(10000 Data)")
+系统.输出.输出一行("结果："+转文字(第四步(10000,5)))
+系统.输出.输出一行("第五步：递归斐波那契(Depth 30)")
+系统.输出.输出一行("结果："+转文字(第五步(30,5)))

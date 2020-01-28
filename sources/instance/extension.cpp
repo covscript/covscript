@@ -161,29 +161,29 @@ namespace cs_impl {
 		void init()
 		{
 			(*array_iterator_ext)
-			.add_var("forward", make_cni(forward, true))
-			.add_var("forward_n", make_cni(forward_n, true))
-			.add_var("backward", make_cni(backward, true))
-			.add_var("backward_n", make_cni(backward_n, true))
-			.add_var("data", make_cni(data, true));
+			.add_var("向前", make_cni(forward, true))
+			.add_var("向前移动", make_cni(forward_n, true))
+			.add_var("向后", make_cni(backward, true))
+			.add_var("向后移动", make_cni(backward_n, true))
+			.add_var("数据", make_cni(data, true));
 			(*array_ext)
-			.add_var("iterator", make_namespace(array_iterator_ext))
-			.add_var("at", make_cni(at, true))
-			.add_var("front", make_cni(front, true))
-			.add_var("back", make_cni(back, true))
-			.add_var("begin", make_cni(begin, true))
-			.add_var("end", make_cni(end, true))
-			.add_var("empty", make_cni(empty, true))
-			.add_var("size", make_cni(size, true))
-			.add_var("clear", make_cni(clear, true))
-			.add_var("insert", make_cni(insert, true))
-			.add_var("erase", make_cni(erase, true))
-			.add_var("push_front", make_cni(push_front, true))
-			.add_var("pop_front", make_cni(pop_front, true))
-			.add_var("push_back", make_cni(push_back, true))
-			.add_var("pop_back", make_cni(pop_back, true))
-			.add_var("to_hash_map", make_cni(to_hash_map, true))
-			.add_var("to_list", make_cni(to_list, true));
+			.add_var("迭代器", make_namespace(array_iterator_ext))
+			.add_var("访问", make_cni(at, true))
+			.add_var("前", make_cni(front, true))
+			.add_var("后", make_cni(back, true))
+			.add_var("开始", make_cni(begin, true))
+			.add_var("结束", make_cni(end, true))
+			.add_var("空", make_cni(empty, true))
+			.add_var("大小", make_cni(size, true))
+			.add_var("清空", make_cni(clear, true))
+			.add_var("插入", make_cni(insert, true))
+			.add_var("擦除", make_cni(erase, true))
+			.add_var("插入前面", make_cni(push_front, true))
+			.add_var("删除前面", make_cni(pop_front, true))
+			.add_var("插入后面", make_cni(push_back, true))
+			.add_var("删除后面", make_cni(pop_back, true))
+			.add_var("转哈希表", make_cni(to_hash_map, true))
+			.add_var("转链表", make_cni(to_list, true));
 		}
 
 	}
@@ -265,20 +265,20 @@ namespace cs_impl {
 		void init()
 		{
 			(*char_ext)
-			.add_var("isalnum", make_cni(isalnum, true))
-			.add_var("isalpha", make_cni(isalpha, true))
-			.add_var("islower", make_cni(islower, true))
-			.add_var("isupper", make_cni(isupper, true))
-			.add_var("isdigit", make_cni(isdigit, true))
-			.add_var("iscntrl", make_cni(iscntrl, true))
-			.add_var("isgraph", make_cni(isgraph, true))
-			.add_var("isspace", make_cni(isspace, true))
-			.add_var("isblank", make_cni(isblank, true))
-			.add_var("isprint", make_cni(isprint, true))
-			.add_var("ispunct", make_cni(ispunct, true))
-			.add_var("tolower", make_cni(tolower, true))
-			.add_var("toupper", make_cni(toupper, true))
-			.add_var("from_ascii", make_cni(from_ascii, true));
+			.add_var("是否为字母或数字", make_cni(isalnum, true))
+			.add_var("是否为字母", make_cni(isalpha, true))
+			.add_var("是否为小写字母", make_cni(islower, true))
+			.add_var("是否为大写字母", make_cni(isupper, true))
+			.add_var("是否为小数点", make_cni(isdigit, true))
+			.add_var("是否为操控符", make_cni(iscntrl, true))
+			.add_var("是否为图形符", make_cni(isgraph, true))
+			.add_var("是否为空白符", make_cni(isspace, true))
+			.add_var("是否为空字符", make_cni(isblank, true))
+			.add_var("是否为可打印字符", make_cni(isprint, true))
+			.add_var("是否为标点符", make_cni(ispunct, true))
+			.add_var("转小写字母", make_cni(tolower, true))
+			.add_var("转大写字母", make_cni(toupper, true))
+			.add_var("转换自ASCII", make_cni(from_ascii, true));
 		}
 	}
 	namespace except_cs_ext {
@@ -341,13 +341,13 @@ namespace cs_impl {
 		void init()
 		{
 			(*hash_map_ext)
-			.add_var("empty", make_cni(empty, true))
-			.add_var("size", make_cni(size, true))
-			.add_var("clear", make_cni(clear, true))
-			.add_var("insert", make_cni(insert, true))
-			.add_var("erase", make_cni(erase, true))
-			.add_var("at", make_cni(at, true))
-			.add_var("exist", make_cni(exist, true));
+			.add_var("空", make_cni(empty, true))
+			.add_var("大小", make_cni(size, true))
+			.add_var("清空", make_cni(clear, true))
+			.add_var("插入", make_cni(insert, true))
+			.add_var("擦除", make_cni(erase, true))
+			.add_var("访问", make_cni(at, true))
+			.add_var("存在", make_cni(exist, true));
 		}
 	}
 	namespace iostream_cs_ext {
@@ -378,27 +378,27 @@ namespace cs_impl {
 		void init()
 		{
 			(*iostream_ext)
-			.add_var("istream", make_namespace(istream_ext))
-			.add_var("ostream", make_namespace(ostream_ext))
-			.add_var("seekdir", make_namespace(seekdir_ext))
-			.add_var("openmode", make_namespace(openmode_ext));
+			.add_var("输入流", make_namespace(istream_ext))
+			.add_var("输出流", make_namespace(ostream_ext))
+			.add_var("定位符", make_namespace(seekdir_ext))
+			.add_var("打开方式", make_namespace(openmode_ext));
 			(*seekdir_ext)
-			.add_var("start", var::make_constant<std::ios_base::seekdir>(std::ios_base::beg))
-			.add_var("finish", var::make_constant<std::ios_base::seekdir>(std::ios_base::end))
-			.add_var("present", var::make_constant<std::ios_base::seekdir>(std::ios_base::cur));
+			.add_var("开始", var::make_constant<std::ios_base::seekdir>(std::ios_base::beg))
+			.add_var("结束", var::make_constant<std::ios_base::seekdir>(std::ios_base::end))
+			.add_var("当前", var::make_constant<std::ios_base::seekdir>(std::ios_base::cur));
 			(*openmode_ext)
-			.add_var("in", var::make_constant<std::ios_base::openmode>(std::ios_base::in))
-			.add_var("out", var::make_constant<std::ios_base::openmode>(std::ios_base::out))
-			.add_var("app", var::make_constant<std::ios_base::openmode>(std::ios_base::app));
+			.add_var("读取", var::make_constant<std::ios_base::openmode>(std::ios_base::in))
+			.add_var("写入", var::make_constant<std::ios_base::openmode>(std::ios_base::out))
+			.add_var("追加", var::make_constant<std::ios_base::openmode>(std::ios_base::app));
 			(*iostream_ext)
-			.add_var("fstream", make_cni(fstream))
-			.add_var("ifstream", make_cni([](const string &path) {
+			.add_var("文件流", make_cni(fstream))
+			.add_var("读取文件流", make_cni([](const string &path) {
 				return var::make<istream>(new std::ifstream(path, std::ios_base::in));
 			}))
-			.add_var("ofstream", make_cni([](const string &path) {
+			.add_var("写入文件流", make_cni([](const string &path) {
 				return var::make<ostream>(new std::ofstream(path, std::ios_base::out));
 			}))
-			.add_var("setprecision", make_cni(setprecision));
+			.add_var("设置精度", make_cni(setprecision));
 		}
 	}
 	namespace istream_cs_ext {
@@ -406,9 +406,9 @@ namespace cs_impl {
 
 		var parse_value(const std::string &str)
 		{
-			if (str == "true")
+			if (str == "真")
 				return true;
-			if (str == "false")
+			if (str == "假")
 				return false;
 			try {
 				return parse_number(str);
@@ -482,17 +482,17 @@ namespace cs_impl {
 		void init()
 		{
 			(*istream_ext)
-			.add_var("get", make_cni(get))
-			.add_var("peek", make_cni(peek))
-			.add_var("unget", make_cni(unget))
-			.add_var("getline", make_cni(getline))
-			.add_var("tell", make_cni(tell))
-			.add_var("seek", make_cni(seek))
-			.add_var("seek_from", make_cni(seek_from))
-			.add_var("good", make_cni(good))
-			.add_var("eof", make_cni(eof))
-			.add_var("input", make_cni(input))
-			.add_var("ignore", make_cni(ignore));
+			.add_var("获取", make_cni(get))
+			.add_var("窥视", make_cni(peek))
+			.add_var("取消获取", make_cni(unget))
+			.add_var("获取一行", make_cni(getline))
+			.add_var("定位", make_cni(tell))
+			.add_var("查找", make_cni(seek))
+			.add_var("指定位置查找", make_cni(seek_from))
+			.add_var("正常", make_cni(good))
+			.add_var("结尾", make_cni(eof))
+			.add_var("输入", make_cni(input))
+			.add_var("忽略", make_cni(ignore));
 		}
 	}
 	namespace ostream_cs_ext {
@@ -542,14 +542,14 @@ namespace cs_impl {
 		void init()
 		{
 			(*ostream_ext)
-			.add_var("put", make_cni(put))
-			.add_var("tell", make_cni(tell))
-			.add_var("seek", make_cni(seek))
-			.add_var("seek_from", make_cni(seek_from))
-			.add_var("flush", make_cni(flush))
-			.add_var("good", make_cni(good))
-			.add_var("print", make_cni(print))
-			.add_var("println", make_cni(println));
+			.add_var("写入", make_cni(put))
+			.add_var("定位", make_cni(tell))
+			.add_var("查找", make_cni(seek))
+			.add_var("指定位置查找", make_cni(seek_from))
+			.add_var("刷新", make_cni(flush))
+			.add_var("正常", make_cni(good))
+			.add_var("输出", make_cni(print))
+			.add_var("输出一行", make_cni(println));
 		}
 	}
 	namespace list_cs_ext {
@@ -662,27 +662,27 @@ namespace cs_impl {
 		void init()
 		{
 			(*list_iterator_ext)
-			.add_var("forward", make_cni(forward, true))
-			.add_var("backward", make_cni(backward, true))
-			.add_var("data", make_cni(data, true));
+			.add_var("向前", make_cni(forward, true))
+			.add_var("向后", make_cni(backward, true))
+			.add_var("数据", make_cni(data, true));
 			(*list_ext)
-			.add_var("iterator", make_namespace(list_iterator_ext))
-			.add_var("front", make_cni(front, true))
-			.add_var("back", make_cni(back, true))
-			.add_var("begin", make_cni(begin, true))
-			.add_var("end", make_cni(end, true))
-			.add_var("empty", make_cni(empty, true))
-			.add_var("size", make_cni(size, true))
-			.add_var("clear", make_cni(clear, true))
-			.add_var("insert", make_cni(insert, true))
-			.add_var("erase", make_cni(erase, true))
-			.add_var("push_front", make_cni(push_front, true))
-			.add_var("pop_front", make_cni(pop_front, true))
-			.add_var("push_back", make_cni(push_back, true))
-			.add_var("pop_back", make_cni(pop_back, true))
-			.add_var("remove", make_cni(remove, true))
-			.add_var("reverse", make_cni(reverse, true))
-			.add_var("unique", make_cni(unique, true));
+			.add_var("迭代器", make_namespace(list_iterator_ext))
+			.add_var("前", make_cni(front, true))
+			.add_var("后", make_cni(back, true))
+			.add_var("开始", make_cni(begin, true))
+			.add_var("结束", make_cni(end, true))
+			.add_var("空", make_cni(empty, true))
+			.add_var("大小", make_cni(size, true))
+			.add_var("清空", make_cni(clear, true))
+			.add_var("插入", make_cni(insert, true))
+			.add_var("擦除", make_cni(erase, true))
+			.add_var("插入前面", make_cni(push_front, true))
+			.add_var("删除前面", make_cni(pop_front, true))
+			.add_var("插入后面", make_cni(push_back, true))
+			.add_var("删除后面", make_cni(pop_back, true))
+			.add_var("移除", make_cni(remove, true))
+			.add_var("反转", make_cni(reverse, true))
+			.add_var("移除重复", make_cni(unique, true));
 		}
 	}
 	namespace math_cs_ext {
@@ -776,14 +776,14 @@ namespace cs_impl {
 		void init()
 		{
 			(*math_const_ext)
-			.add_var("max", var::make_constant<number>((std::numeric_limits<number>::max)()))
-			.add_var("min", var::make_constant<number>((std::numeric_limits<number>::min)()))
-			.add_var("inf", var::make_constant<number>(std::numeric_limits<number>::infinity()))
+			.add_var("最大值", var::make_constant<number>((std::numeric_limits<number>::max)()))
+			.add_var("最小值", var::make_constant<number>((std::numeric_limits<number>::min)()))
+			.add_var("无穷", var::make_constant<number>(std::numeric_limits<number>::infinity()))
 			.add_var("nan", var::make_constant<number>(std::numeric_limits<number>::quiet_NaN()))
 			.add_var("pi", var::make_constant<number>(std::asin(number(1)) * 2))
 			.add_var("e", var::make_constant<number>(std::exp(number(1))));
 			(*math_ext)
-			.add_var("constants", make_namespace(math_const_ext))
+			.add_var("常量", make_namespace(math_const_ext))
 			.add_var("abs", make_cni(abs, true))
 			.add_var("ln", make_cni(ln, true))
 			.add_var("log10", make_cni(log10, true))
@@ -819,8 +819,8 @@ namespace cs_impl {
 		void init()
 		{
 			(*pair_ext)
-			.add_var("first", make_cni(first, true))
-			.add_var("second", make_cni(second, true));
+			.add_var("甲", make_cni(first, true))
+			.add_var("乙", make_cni(second, true));
 		}
 	}
 	namespace runtime_cs_ext {
@@ -923,26 +923,26 @@ namespace cs_impl {
 		void init()
 		{
 			(*runtime_ext)
-			.add_var("std_version", var::make_constant<number>(current_process->std_version))
-			.add_var("get_import_path", make_cni(get_import_path, true))
-			.add_var("info", make_cni(info))
-			.add_var("time", make_cni(time))
-			.add_var("delay", make_cni(delay))
-			.add_var("exception", make_cni(exception))
-			.add_var("hash", make_cni(hash, true))
-			.add_var("build", make_cni(build))
-			.add_var("solve", make_cni(solve))
-			.add_var("cmd_args", make_cni(cmd_args, true))
-			.add_var("import", make_cni(import, true))
-			.add_var("source_import", make_cni(source_import, true))
-			.add_var("argument_count", make_cni(argument_count, true))
-			.add_var("get_current_dir", make_cni(file_system::get_current_dir));
+			.add_var("标准版本", var::make_constant<number>(current_process->std_version))
+			.add_var("引入路径", make_cni(get_import_path, true))
+			.add_var("信息", make_cni(info))
+			.add_var("时间", make_cni(time))
+			.add_var("延迟", make_cni(delay))
+			.add_var("异常", make_cni(exception))
+			.add_var("哈希", make_cni(hash, true))
+			.add_var("构建", make_cni(build))
+			.add_var("求解", make_cni(solve))
+			.add_var("命令行参数", make_cni(cmd_args, true))
+			.add_var("引入", make_cni(import, true))
+			.add_var("高级引入", make_cni(source_import, true))
+			.add_var("参数数量", make_cni(argument_count, true))
+			.add_var("当前路径", make_cni(file_system::get_current_dir));
 			(*context_ext)
-			.add_var("build", make_cni(build))
-			.add_var("solve", make_cni(solve))
-			.add_var("cmd_args", make_cni(cmd_args, true))
-			.add_var("import", make_cni(import, true))
-			.add_var("source_import", make_cni(source_import, true));
+			.add_var("构建", make_cni(build))
+			.add_var("求解", make_cni(solve))
+			.add_var("命令行参数", make_cni(cmd_args, true))
+			.add_var("引入", make_cni(import, true))
+			.add_var("高级引入", make_cni(source_import, true));
 		}
 	}
 	namespace string_cs_ext {
@@ -1078,22 +1078,22 @@ namespace cs_impl {
 		void init()
 		{
 			(*string_ext)
-			.add_var("assign", make_cni(assign, true))
-			.add_var("append", make_cni(append, true))
-			.add_var("insert", make_cni(insert, true))
-			.add_var("erase", make_cni(erase, true))
-			.add_var("replace", make_cni(replace, true))
-			.add_var("substr", make_cni(substr, true))
-			.add_var("find", make_cni(find, true))
-			.add_var("rfind", make_cni(rfind, true))
-			.add_var("cut", make_cni(cut, true))
-			.add_var("empty", make_cni(empty, true))
-			.add_var("clear", make_cni(clear, true))
-			.add_var("size", make_cni(size, true))
-			.add_var("tolower", make_cni(tolower, true))
-			.add_var("toupper", make_cni(toupper, true))
-			.add_var("to_number", make_cni(to_number, true))
-			.add_var("split", make_cni(split, true));
+			.add_var("写入", make_cni(assign, true))
+			.add_var("追加", make_cni(append, true))
+			.add_var("插入", make_cni(insert, true))
+			.add_var("擦除", make_cni(erase, true))
+			.add_var("替换", make_cni(replace, true))
+			.add_var("字串", make_cni(substr, true))
+			.add_var("查找", make_cni(find, true))
+			.add_var("反向查找", make_cni(rfind, true))
+			.add_var("切断", make_cni(cut, true))
+			.add_var("空", make_cni(empty, true))
+			.add_var("清空", make_cni(clear, true))
+			.add_var("大小", make_cni(size, true))
+			.add_var("转小写", make_cni(tolower, true))
+			.add_var("转大写", make_cni(toupper, true))
+			.add_var("转数值", make_cni(to_number, true))
+			.add_var("分割", make_cni(split, true));
 		}
 	}
 	namespace console_cs_ext {
@@ -1138,13 +1138,13 @@ namespace cs_impl {
 		void init()
 		{
 			(*console_ext)
-			.add_var("terminal_width", make_cni(terminal_width))
-			.add_var("terminal_height", make_cni(terminal_height))
-			.add_var("gotoxy", make_cni(gotoxy))
-			.add_var("echo", make_cni(echo))
-			.add_var("clrscr", make_cni(clrscr))
-			.add_var("getch", make_cni(getch))
-			.add_var("kbhit", make_cni(kbhit));
+			.add_var("终端宽度", make_cni(terminal_width))
+			.add_var("终端高度", make_cni(terminal_height))
+			.add_var("移动光标", make_cni(gotoxy))
+			.add_var("隐藏光标", make_cni(echo))
+			.add_var("清空屏幕", make_cni(clrscr))
+			.add_var("键盘输入", make_cni(getch))
+			.add_var("按键按下", make_cni(kbhit));
 		}
 	}
 
@@ -1156,21 +1156,21 @@ namespace cs_impl {
 		{
 			using namespace cs_impl::file_system;
 			(*file_ext)
-			.add_var("copy", make_cni(copy))
-			.add_var("remove", make_cni(remove))
-			.add_var("exists", make_cni(exists))
-			.add_var("rename", make_cni(move))
-			.add_var("is_file", make_cni([](const std::string &path) {
+			.add_var("复制", make_cni(copy))
+			.add_var("删除", make_cni(remove))
+			.add_var("存在", make_cni(exists))
+			.add_var("重命名", make_cni(move))
+			.add_var("是否为文件", make_cni([](const std::string &path) {
 				return !is_dir(path);
 			}))
-			.add_var("is_directory", make_cni(is_dir))
-			.add_var("can_read", make_cni(can_read))
-			.add_var("can_write", make_cni(can_write))
-			.add_var("can_execute", make_cni(can_execute))
-			.add_var("mkdir", make_cni(mkdir))
-			.add_var("mkdir_p", make_cni(mkdir_p))
-			.add_var("chmod", make_cni(chmod))
-			.add_var("chmod_r", make_cni(chmod_r));
+			.add_var("是否为目录", make_cni(is_dir))
+			.add_var("能否读取", make_cni(can_read))
+			.add_var("能否写入", make_cni(can_write))
+			.add_var("能否执行", make_cni(can_execute))
+			.add_var("创建目录", make_cni(mkdir))
+			.add_var("递归创建目录", make_cni(mkdir_p))
+			.add_var("更改权限", make_cni(chmod))
+			.add_var("递归更改权限", make_cni(chmod_r));
 		}
 	}
 
@@ -1204,23 +1204,23 @@ namespace cs_impl {
 		void init()
 		{
 			(*path_type_ext)
-			.add_var("unknown", var::make_constant<int>(DT_UNKNOWN))
-			.add_var("fifo", var::make_constant<int>(DT_FIFO))
-			.add_var("sock", var::make_constant<int>(DT_SOCK))
-			.add_var("chr", var::make_constant<int>(DT_CHR))
-			.add_var("dir", var::make_constant<int>(DT_DIR))
-			.add_var("blk", var::make_constant<int>(DT_BLK))
-			.add_var("reg", var::make_constant<int>(DT_REG))
-			.add_var("lnk", var::make_constant<int>(DT_LNK));
+			.add_var("未知", var::make_constant<int>(DT_UNKNOWN))
+			.add_var("管道", var::make_constant<int>(DT_FIFO))
+			.add_var("套接字", var::make_constant<int>(DT_SOCK))
+			.add_var("字符集", var::make_constant<int>(DT_CHR))
+			.add_var("目录", var::make_constant<int>(DT_DIR))
+			.add_var("块", var::make_constant<int>(DT_BLK))
+			.add_var("注册表", var::make_constant<int>(DT_REG))
+			.add_var("链接", var::make_constant<int>(DT_LNK));
 			(*path_info_ext)
-			.add_var("name", make_cni(name))
-			.add_var("type", make_cni(type));
+			.add_var("文件名", make_cni(name))
+			.add_var("类型", make_cni(type));
 			(*path_ext)
-			.add_var("type", make_namespace(path_type_ext))
-			.add_var("info", make_namespace(path_info_ext))
-			.add_var("separator", var::make_constant<char>(path_separator))
-			.add_var("delimiter", var::make_constant<char>(path_delimiter))
-			.add_var("scan", make_cni(scan));
+			.add_var("类型", make_namespace(path_type_ext))
+			.add_var("信息", make_namespace(path_info_ext))
+			.add_var("分隔符", var::make_constant<char>(path_separator))
+			.add_var("定界符", var::make_constant<char>(path_delimiter))
+			.add_var("扫描", make_cni(scan));
 		}
 	}
 	namespace system_cs_ext {
@@ -1251,18 +1251,18 @@ namespace cs_impl {
 			file_cs_ext::init();
 			path_cs_ext::init();
 			(*system_ext)
-			.add_var("console", make_namespace(console_ext))
-			.add_var("file", make_namespace(file_ext))
-			.add_var("path", make_namespace(path_ext))
-			.add_var("in", var::make_protect<istream>(&std::cin, [](std::istream *) {}))
-			.add_var("out", var::make_protect<ostream>(&std::cout, [](std::ostream *) {}))
-			.add_var("run", make_cni(run))
-			.add_var("getenv", make_cni(getenv))
-			.add_var("exit", make_cni(exit))
-			.add_var("is_platform_windows", make_cni(platform::is_platform_win32))
-			.add_var("is_platform_linux", make_cni(platform::is_platform_linux))
-			.add_var("is_platform_darwin", make_cni(platform::is_platform_darwin))
-			.add_var("is_platform_unix", make_cni(platform::is_platform_unix));
+			.add_var("终端", make_namespace(console_ext))
+			.add_var("文件", make_namespace(file_ext))
+			.add_var("路径", make_namespace(path_ext))
+			.add_var("输入", var::make_protect<istream>(&std::cin, [](std::istream *) {}))
+			.add_var("输出", var::make_protect<ostream>(&std::cout, [](std::ostream *) {}))
+			.add_var("运行", make_cni(run))
+			.add_var("环境变量", make_cni(getenv))
+			.add_var("退出", make_cni(exit))
+			.add_var("是否为Windows", make_cni(platform::is_platform_win32))
+			.add_var("是否为Linux", make_cni(platform::is_platform_linux))
+			.add_var("是否为macOS", make_cni(platform::is_platform_darwin))
+			.add_var("是否为Unix", make_cni(platform::is_platform_unix));
 		}
 	}
 

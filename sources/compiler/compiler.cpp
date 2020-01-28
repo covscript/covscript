@@ -289,60 +289,60 @@ namespace cs {
 	};
 
 	const mapping<std::string, action_types> compiler_type::action_map = {
-		{"import",    action_types::import_},
-		{"as",        action_types::as_},
-		{"package",   action_types::package_},
-		{"using",     action_types::using_},
-		{"namespace", action_types::namespace_},
-		{"struct",    action_types::struct_},
-		{"class",     action_types::struct_},
-		{"extends",   action_types::extends_},
-		{"block",     action_types::block_},
-		{"end",       action_types::endblock_},
-		{"var",       action_types::var_},
-		{"constant",  action_types::constant_},
-		{"do",        action_types::do_},
-		{"if",        action_types::if_},
-		{"else",      action_types::else_},
-		{"switch",    action_types::switch_},
-		{"case",      action_types::case_},
-		{"default",   action_types::default_},
-		{"while",     action_types::while_},
-		{"until",     action_types::until_},
-		{"loop",      action_types::loop_},
-		{"for",       action_types::for_},
-		{"foreach",   action_types::foreach_},
-		{"in",        action_types::in_},
-		{"break",     action_types::break_},
-		{"continue",  action_types::continue_},
-		{"function",  action_types::function_},
-		{"override",  action_types::override_},
-		{"return",    action_types::return_},
-		{"try",       action_types::try_},
-		{"catch",     action_types::catch_},
-		{"throw",     action_types::throw_}
+		{"引入",    action_types::import_},
+		{"为",        action_types::as_},
+		{"包",   action_types::package_},
+		{"使用",     action_types::using_},
+		{"域", action_types::namespace_},
+		{"结构",    action_types::struct_},
+		{"类",     action_types::struct_},
+		{"继承",   action_types::extends_},
+		{"块",     action_types::block_},
+		{"终",       action_types::endblock_},
+		{"变量",       action_types::var_},
+		{"常量",  action_types::constant_},
+		{"则",        action_types::do_},
+		{"若",        action_types::if_},
+		{"反之",      action_types::else_},
+		{"匹配",    action_types::switch_},
+		{"情况",      action_types::case_},
+		{"默认",   action_types::default_},
+		{"当",     action_types::while_},
+		{"直到",     action_types::until_},
+		{"循环",      action_types::loop_},
+		{"迭代",       action_types::for_},
+		{"遍历",   action_types::foreach_},
+		{"在",        action_types::in_},
+		{"跳出",     action_types::break_},
+		{"继续",  action_types::continue_},
+		{"函数",  action_types::function_},
+		{"覆写",  action_types::override_},
+		{"返回",    action_types::return_},
+		{"尝试",       action_types::try_},
+		{"抓取",     action_types::catch_},
+		{"抛出",     action_types::throw_}
 	};
 
 	const mapping<std::string, std::function<token_base *()>> compiler_type::reserved_map = {
-		{"and",    []() -> token_base * { return new token_signal(signal_types::and_); }},
-		{"or",     []() -> token_base * { return new token_signal(signal_types::or_); }},
-		{"not",    []() -> token_base * { return new token_signal(signal_types::not_); }},
-		{"typeid", []() -> token_base * { return new token_signal(signal_types::typeid_); }},
-		{"new",    []() -> token_base * { return new token_signal(signal_types::new_); }},
-		{"gcnew",  []() -> token_base * { return new token_signal(signal_types::gcnew_); }},
+		{"与",    []() -> token_base * { return new token_signal(signal_types::and_); }},
+		{"或",     []() -> token_base * { return new token_signal(signal_types::or_); }},
+		{"非",    []() -> token_base * { return new token_signal(signal_types::not_); }},
+		{"类型信息", []() -> token_base * { return new token_signal(signal_types::typeid_); }},
+		{"新建",    []() -> token_base * { return new token_signal(signal_types::new_); }},
+		{"高级新建",  []() -> token_base * { return new token_signal(signal_types::gcnew_); }},
 		{
-			"local",  []() -> token_base * {
+			"当前",  []() -> token_base * {
 				return new token_value(var::make_constant<constant_values>(constant_values::local_namepace));
 			}
 		},
 		{
-			"global", []() -> token_base * {
+			"全局", []() -> token_base * {
 				return new token_value(var::make_constant<constant_values>(constant_values::global_namespace));
 			}
 		},
-		{"null",   []() -> token_base * { return new token_value(null_pointer); }},
-		{"true",   []() -> token_base * { return new token_value(var::make_constant<bool>(true)); }},
-		{"false",  []() -> token_base * { return new token_value(var::make_constant<bool>(false)); }}
+		{"空",   []() -> token_base * { return new token_value(null_pointer); }},
+		{"真",   []() -> token_base * { return new token_value(var::make_constant<bool>(true)); }},
+		{"假",  []() -> token_base * { return new token_value(var::make_constant<bool>(false)); }}
 	};
 
 	const mapping<char32_t, char32_t> compiler_type::escape_map = {

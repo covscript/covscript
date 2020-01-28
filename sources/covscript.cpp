@@ -434,36 +434,36 @@ namespace cs {
 		// Init Runtime
 		context->instance->storage
 		// Internal Types
-		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char),
+		.add_buildin_type("字符", []() -> var { return var::make<char>('\0'); }, typeid(char),
 		                  cs_impl::char_ext)
-		.add_buildin_type("number", []() -> var { return var::make<number>(0); }, typeid(number))
-		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
-		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
-		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string),
+		.add_buildin_type("数值", []() -> var { return var::make<number>(0); }, typeid(number))
+		.add_buildin_type("布尔", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
+		.add_buildin_type("指针", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
+		.add_buildin_type("文字", []() -> var { return var::make<string>(); }, typeid(string),
 		                  cs_impl::string_ext)
-		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), cs_impl::list_ext)
-		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array),
+		.add_buildin_type("链表", []() -> var { return var::make<list>(); }, typeid(list), cs_impl::list_ext)
+		.add_buildin_type("数组", []() -> var { return var::make<array>(); }, typeid(array),
 		                  cs_impl::array_ext)
-		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
+		.add_buildin_type("数值对", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
 		                  cs_impl::pair_ext)
-		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, typeid(hash_map),
+		.add_buildin_type("哈希表", []() -> var { return var::make<hash_map>(); }, typeid(hash_map),
 		                  cs_impl::hash_map_ext)
 		// Context
-		.add_buildin_var("context", var::make_constant<context_t>(context))
+		.add_buildin_var("上下文", var::make_constant<context_t>(context))
 		// Add Internal Functions to storage
-		.add_buildin_var("range", var::make_protect<callable>(range, callable::types::request_fold))
-		.add_buildin_var("to_integer", make_cni(to_integer, true))
-		.add_buildin_var("to_string", make_cni(to_string, true))
-		.add_buildin_var("type", make_cni(type, true))
-		.add_buildin_var("clone", make_cni(clone))
-		.add_buildin_var("move", make_cni(move))
-		.add_buildin_var("swap", make_cni(swap, true))
+		.add_buildin_var("范围", var::make_protect<callable>(range, callable::types::request_fold))
+		.add_buildin_var("转整数", make_cni(to_integer, true))
+		.add_buildin_var("转文字", make_cni(to_string, true))
+		.add_buildin_var("类型", make_cni(type, true))
+		.add_buildin_var("复制", make_cni(clone))
+		.add_buildin_var("移动", make_cni(move))
+		.add_buildin_var("交换", make_cni(swap, true))
 		// Add extensions to storage
-		.add_buildin_var("exception", make_namespace(cs_impl::except_ext))
-		.add_buildin_var("iostream", make_namespace(cs_impl::iostream_ext))
-		.add_buildin_var("system", make_namespace(cs_impl::system_ext))
-		.add_buildin_var("runtime", make_namespace(cs_impl::runtime_ext))
-		.add_buildin_var("math", make_namespace(cs_impl::math_ext));
+		.add_buildin_var("异常", make_namespace(cs_impl::except_ext))
+		.add_buildin_var("输入输出流", make_namespace(cs_impl::iostream_ext))
+		.add_buildin_var("系统", make_namespace(cs_impl::system_ext))
+		.add_buildin_var("运行时", make_namespace(cs_impl::runtime_ext))
+		.add_buildin_var("数学", make_namespace(cs_impl::math_ext));
 		return context;
 	}
 
@@ -477,35 +477,36 @@ namespace cs {
 		// Init Runtime
 		context->instance->storage
 		// Internal Types
-		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char),
+		.add_buildin_type("字符", []() -> var { return var::make<char>('\0'); }, typeid(char),
 		                  cs_impl::char_ext)
-		.add_buildin_type("number", []() -> var { return var::make<number>(0); }, typeid(number))
-		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
-		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
-		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string),
+		.add_buildin_type("数值", []() -> var { return var::make<number>(0); }, typeid(number))
+		.add_buildin_type("布尔", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
+		.add_buildin_type("指针", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
+		.add_buildin_type("文字", []() -> var { return var::make<string>(); }, typeid(string),
 		                  cs_impl::string_ext)
-		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), cs_impl::list_ext)
-		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array),
+		.add_buildin_type("链表", []() -> var { return var::make<list>(); }, typeid(list), cs_impl::list_ext)
+		.add_buildin_type("数组", []() -> var { return var::make<array>(); }, typeid(array),
 		                  cs_impl::array_ext)
-		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
+		.add_buildin_type("数值对", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
 		                  cs_impl::pair_ext)
-		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, typeid(hash_map),
+		.add_buildin_type("哈希表", []() -> var { return var::make<hash_map>(); }, typeid(hash_map),
 		                  cs_impl::hash_map_ext)
 		// Context
-		.add_buildin_var("context", var::make_constant<context_t>(context))
+		.add_buildin_var("上下文", var::make_constant<context_t>(context))
 		// Add Internal Functions to storage
-		.add_buildin_var("to_integer", make_cni(to_integer, true))
-		.add_buildin_var("to_string", make_cni(to_string, true))
-		.add_buildin_var("type", make_cni(type, true))
-		.add_buildin_var("clone", make_cni(clone))
-		.add_buildin_var("move", make_cni(move))
-		.add_buildin_var("swap", make_cni(swap, true))
+		.add_buildin_var("范围", var::make_protect<callable>(range, callable::types::request_fold))
+		.add_buildin_var("转整数", make_cni(to_integer, true))
+		.add_buildin_var("转文字", make_cni(to_string, true))
+		.add_buildin_var("类型", make_cni(type, true))
+		.add_buildin_var("复制", make_cni(clone))
+		.add_buildin_var("移动", make_cni(move))
+		.add_buildin_var("交换", make_cni(swap, true))
 		// Add extensions to storage
-		.add_buildin_var("exception", make_namespace(cs_impl::except_ext))
-		.add_buildin_var("iostream", make_namespace(cs_impl::iostream_ext))
-		.add_buildin_var("system", make_namespace(cs_impl::system_ext))
-		.add_buildin_var("runtime", make_namespace(cs_impl::runtime_ext))
-		.add_buildin_var("math", make_namespace(cs_impl::math_ext));
+		.add_buildin_var("异常", make_namespace(cs_impl::except_ext))
+		.add_buildin_var("输入输出流", make_namespace(cs_impl::iostream_ext))
+		.add_buildin_var("系统", make_namespace(cs_impl::system_ext))
+		.add_buildin_var("运行时", make_namespace(cs_impl::runtime_ext))
+		.add_buildin_var("数学", make_namespace(cs_impl::math_ext));
 		return context;
 	}
 
