@@ -22,11 +22,6 @@
 #include <codecvt>
 #include <cwctype>
 
-// Refer to https://stackoverflow.com/questions/32055357/visual-studio-c-2015-stdcodecvt-with-char16-t-or-char32-t
-#if (_MSC_VER >= 1900 /* VS 2015*/) && (_MSC_VER <= 1911 /* VS 2017 */)
-std::locale::id std::codecvt<char32_t, char, _Mbstatet>::id;
-#endif
-
 namespace cs {
 	namespace codecvt {
 		class charset {
