@@ -494,6 +494,7 @@ namespace cs {
 		// Context
 		.add_buildin_var("context", var::make_constant<context_t>(context))
 		// Add Internal Functions to storage
+		.add_buildin_var("range", var::make_protect<callable>(range, callable::types::request_fold))
 		.add_buildin_var("to_integer", make_cni(to_integer, true))
 		.add_buildin_var("to_string", make_cni(to_string, true))
 		.add_buildin_var("type", make_cni(type, true))
