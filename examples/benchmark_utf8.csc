@@ -13,10 +13,10 @@
     返回 转整数(得分/n)
 终
 函数 第二步(n,k)
-    变量 precision=10^(-n)
-    函数 integral(func, begin, end)
+    变量 精度=10^(-n)
+    函数 递归(func, begin, end)
         变量 sum=0
-        迭代 x=begin, x<=end, x=x+precision 则 sum+=func(x)*precision
+        迭代 x=begin, x<=end, x=x+精度 则 sum+=func(x)*精度
         返回 sum
     终
     函数 f(x)
@@ -25,7 +25,7 @@
     变量 得分=0
     遍历 i 在 范围(1,k+1)
         变量 用时=运行时.时间()
-        integral(f,0,1)
+        递归(f,0,1)
         得分=得分+运行时.时间()-用时
     终
     返回 转整数(得分/k)
