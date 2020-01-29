@@ -243,7 +243,7 @@ namespace cs {
 	}
 
 	const mapping<std::string, signal_types> compiler_type::signal_map = {
-		{";",   signal_types::endline_},
+		{"；",   signal_types::endline_},
 		{"+",   signal_types::add_},
 		{"+=",  signal_types::addasi_},
 		{"-",   signal_types::sub_},
@@ -261,29 +261,29 @@ namespace cs {
 		{"=",   signal_types::asi_},
 		{"&",   signal_types::error_},
 		{"|",   signal_types::error_},
-		{"&&",  signal_types::and_},
-		{"||",  signal_types::or_},
-		{"!",   signal_types::not_},
+		{"与",  signal_types::and_},
+		{"或",  signal_types::or_},
+		{"非",   signal_types::not_},
 		{"==",  signal_types::equ_},
 		{"!=",  signal_types::neq_},
 		{">=",  signal_types::aeq_},
 		{"<=",  signal_types::ueq_},
-		{"(",   signal_types::slb_},
-		{")",   signal_types::srb_},
-		{"[",   signal_types::mlb_},
-		{"]",   signal_types::mrb_},
+		{"（",   signal_types::slb_},
+		{"）",   signal_types::srb_},
+		{"【",   signal_types::mlb_},
+		{"】",   signal_types::mrb_},
 		{"{",   signal_types::llb_},
 		{"}",   signal_types::lrb_},
-		{",",   signal_types::com_},
-		{".",   signal_types::dot_},
-		{"()",  signal_types::esb_},
-		{"[]",  signal_types::emb_},
+		{"，",   signal_types::com_},
+		{"的",   signal_types::dot_},
+		{"（）",  signal_types::esb_},
+		{"【】",  signal_types::emb_},
 		{"{}",  signal_types::elb_},
 		{"++",  signal_types::inc_},
 		{"--",  signal_types::dec_},
-		{":",   signal_types::pair_},
+		{"：",   signal_types::pair_},
 		{"?",   signal_types::choice_},
-		{"->",  signal_types::arrow_},
+		{"→",  signal_types::arrow_},
 		{"..",  signal_types::error_},
 		{"...", signal_types::vargs_}
 	};
@@ -324,9 +324,12 @@ namespace cs {
 	};
 
 	const mapping<std::string, std::function<token_base *()>> compiler_type::reserved_map = {
-		{"与",    []() -> token_base * { return new token_signal(signal_types::and_); }},
-		{"或",     []() -> token_base * { return new token_signal(signal_types::or_); }},
-		{"非",    []() -> token_base * { return new token_signal(signal_types::not_); }},
+		{"执行",    []() -> token_base * { return new token_signal(signal_types::dot_); }},
+		{"等于",    []() -> token_base * { return new token_signal(signal_types::equ_); }},
+		{"大于",    []() -> token_base * { return new token_signal(signal_types::abo_); }},
+		{"小于",    []() -> token_base * { return new token_signal(signal_types::und_); }},
+		{"大于等于",    []() -> token_base * { return new token_signal(signal_types::aeq_); }},
+		{"小于等于",    []() -> token_base * { return new token_signal(signal_types::ueq_); }},
 		{"类型信息", []() -> token_base * { return new token_signal(signal_types::typeid_); }},
 		{"新建",    []() -> token_base * { return new token_signal(signal_types::new_); }},
 		{"高级新建",  []() -> token_base * { return new token_signal(signal_types::gcnew_); }},
@@ -361,7 +364,7 @@ namespace cs {
 
 	const set_t<char32_t> compiler_type::signals = {
 		'+', '-', '*', '/', '%', '^', ',', '.', '>', '<', '=', '&', '|', '!', '(', ')', '[', ']', '{', '}', ':',
-		'?', ';'
+		'?', ';', U'→', U'，', U'的', U'与', U'或', U'非', U'；', U'：', U'（', U'）', U'【', U'】', U'‘', U'’', U'“', U'”'
 	};
 
 	const mapping<signal_types, int> compiler_type::signal_level_map = {
