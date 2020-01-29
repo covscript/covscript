@@ -751,9 +751,9 @@ namespace cs_impl {
 	std::string to_string<bool>(const bool &v)
 	{
 		if (v)
-			return "true";
+			return "真";
 		else
-			return "false";
+			return "假";
 	}
 
 	template<int N>
