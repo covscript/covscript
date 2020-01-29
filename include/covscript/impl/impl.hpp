@@ -75,6 +75,7 @@ namespace cs {
 	class repl final {
 		std::deque<std::deque<token_base *>> tmp;
 		stack_type<method_base *> methods;
+		charset encoding = charset::utf8;
 		std::size_t line_num = 0;
 		bool multi_line = false;
 		string line_buff;
@@ -101,9 +102,11 @@ namespace cs {
 		void reset_status()
 		{
 			context_t __context = context;
+			charset __encoding = encoding;
 			std::size_t __line_num = line_num;
 			this->~repl();
 			::new(this) repl(__context);
+			encoding = __encoding;
 			line_num = __line_num;
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
