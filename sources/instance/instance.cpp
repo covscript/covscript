@@ -119,10 +119,10 @@ namespace cs {
 		context->file_path = path;
 		// Read from file
 		std::deque<char> buff;
-		std::ifstream in(path);
+		std::ifstream in(path, std::ios::binary);
 		if (!in.is_open())
 			throw fatal_error(path + ": No such file or directory");
-		for (int ch = in.get(); ch != std::char_traits<char>::eof(); ch = in.get())
+		for (int ch = in.get(); in; ch = in.get())
 			buff.push_back(ch);
 		std::deque<std::deque<token_base *>> ast;
 		// Compile
@@ -385,7 +385,7 @@ namespace cs {
 		try {
 			std::deque<std::deque<token_base *>> ast;
 			context->compiler->clear_metadata();
-			context->compiler->build_line(buff, ast);
+			context->compiler->build_line(buff, ast, 1, encoding);
 			for (auto &line:ast)
 				interpret(code, line);
 		}
@@ -435,20 +435,31 @@ namespace cs {
 			break;
 		case 0:
 			return;
-		case 1:
-			if (cmd_buff == "begin" && !multi_line) {
+		case 1: {
+			std::string cmd;
+			std::swap(cmd_buff, cmd);
+			if (cmd == "begin" && !multi_line) {
 				multi_line = true;
 				context->file_buff.emplace_back();
 			}
-			else if (cmd_buff == "end" && multi_line) {
+			else if (cmd == "end" && multi_line) {
 				multi_line = false;
 				this->run(line_buff);
 				line_buff.clear();
 			}
-			else
-				throw exception(line_num, context->file_path, cmd_buff, "Wrong grammar for preprocessor command.");
-			cmd_buff.clear();
+			else {
+				if (cmd == "charset:ascii")
+					encoding = charset::ascii;
+				else if (cmd == "charset:utf8")
+					encoding = charset::utf8;
+				else if (cmd == "charset:gbk")
+					encoding = charset::gbk;
+				else
+					throw exception(line_num, context->file_path, cmd, "Wrong grammar for preprocessor command.");
+				context->file_buff.emplace_back();
+			}
 			return;
+		}
 		}
 		if (multi_line) {
 			context->file_buff.emplace_back();

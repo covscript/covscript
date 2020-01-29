@@ -242,6 +242,176 @@ namespace cs {
 		return true;
 	}
 
+	const mapping<std::string, signal_types> compiler_type::signal_map = {
+		{";",   signal_types::endline_},
+		{"+",   signal_types::add_},
+		{"+=",  signal_types::addasi_},
+		{"-",   signal_types::sub_},
+		{"-=",  signal_types::subasi_},
+		{"*",   signal_types::mul_},
+		{"*=",  signal_types::mulasi_},
+		{"/",   signal_types::div_},
+		{"/=",  signal_types::divasi_},
+		{"%",   signal_types::mod_},
+		{"%=",  signal_types::modasi_},
+		{"^",   signal_types::pow_},
+		{"^=",  signal_types::powasi_},
+		{">",   signal_types::abo_},
+		{"<",   signal_types::und_},
+		{"=",   signal_types::asi_},
+		{"&",   signal_types::error_},
+		{"|",   signal_types::error_},
+		{"&&",  signal_types::and_},
+		{"||",  signal_types::or_},
+		{"!",   signal_types::not_},
+		{"==",  signal_types::equ_},
+		{"!=",  signal_types::neq_},
+		{">=",  signal_types::aeq_},
+		{"<=",  signal_types::ueq_},
+		{"(",   signal_types::slb_},
+		{")",   signal_types::srb_},
+		{"[",   signal_types::mlb_},
+		{"]",   signal_types::mrb_},
+		{"{",   signal_types::llb_},
+		{"}",   signal_types::lrb_},
+		{",",   signal_types::com_},
+		{".",   signal_types::dot_},
+		{"()",  signal_types::esb_},
+		{"[]",  signal_types::emb_},
+		{"{}",  signal_types::elb_},
+		{"++",  signal_types::inc_},
+		{"--",  signal_types::dec_},
+		{":",   signal_types::pair_},
+		{"?",   signal_types::choice_},
+		{"->",  signal_types::arrow_},
+		{"..",  signal_types::error_},
+		{"...", signal_types::vargs_}
+	};
+
+	const mapping<std::string, action_types> compiler_type::action_map = {
+		{"import",    action_types::import_},
+		{"as",        action_types::as_},
+		{"package",   action_types::package_},
+		{"using",     action_types::using_},
+		{"namespace", action_types::namespace_},
+		{"struct",    action_types::struct_},
+		{"class",     action_types::struct_},
+		{"extends",   action_types::extends_},
+		{"block",     action_types::block_},
+		{"end",       action_types::endblock_},
+		{"var",       action_types::var_},
+		{"constant",  action_types::constant_},
+		{"do",        action_types::do_},
+		{"if",        action_types::if_},
+		{"else",      action_types::else_},
+		{"switch",    action_types::switch_},
+		{"case",      action_types::case_},
+		{"default",   action_types::default_},
+		{"while",     action_types::while_},
+		{"until",     action_types::until_},
+		{"loop",      action_types::loop_},
+		{"for",       action_types::for_},
+		{"foreach",   action_types::foreach_},
+		{"in",        action_types::in_},
+		{"break",     action_types::break_},
+		{"continue",  action_types::continue_},
+		{"function",  action_types::function_},
+		{"override",  action_types::override_},
+		{"return",    action_types::return_},
+		{"try",       action_types::try_},
+		{"catch",     action_types::catch_},
+		{"throw",     action_types::throw_}
+	};
+
+	const mapping<std::string, std::function<token_base *()>> compiler_type::reserved_map = {
+		{"and",    []() -> token_base * { return new token_signal(signal_types::and_); }},
+		{"or",     []() -> token_base * { return new token_signal(signal_types::or_); }},
+		{"not",    []() -> token_base * { return new token_signal(signal_types::not_); }},
+		{"typeid", []() -> token_base * { return new token_signal(signal_types::typeid_); }},
+		{"new",    []() -> token_base * { return new token_signal(signal_types::new_); }},
+		{"gcnew",  []() -> token_base * { return new token_signal(signal_types::gcnew_); }},
+		{
+			"local",  []() -> token_base * {
+				return new token_value(var::make_constant<constant_values>(constant_values::local_namepace));
+			}
+		},
+		{
+			"global", []() -> token_base * {
+				return new token_value(var::make_constant<constant_values>(constant_values::global_namespace));
+			}
+		},
+		{"null",   []() -> token_base * { return new token_value(null_pointer); }},
+		{"true",   []() -> token_base * { return new token_value(var::make_constant<bool>(true)); }},
+		{"false",  []() -> token_base * { return new token_value(var::make_constant<bool>(false)); }}
+	};
+
+	const mapping<char32_t, char32_t> compiler_type::escape_map = {
+		{'a',  '\a'},
+		{'b',  '\b'},
+		{'f',  '\f'},
+		{'n',  '\n'},
+		{'r',  '\r'},
+		{'t',  '\t'},
+		{'v',  '\v'},
+		{'\\', '\\'},
+		{'\'', '\''},
+		{'\"', '\"'},
+		{'0',  '\0'}
+	};
+
+	const set_t<char32_t> compiler_type::signals = {
+		'+', '-', '*', '/', '%', '^', ',', '.', '>', '<', '=', '&', '|', '!', '(', ')', '[', ']', '{', '}', ':',
+		'?', ';'
+	};
+
+	const mapping<signal_types, int> compiler_type::signal_level_map = {
+		{signal_types::add_,    10},
+		{signal_types::addasi_, 1},
+		{signal_types::sub_,    10},
+		{signal_types::subasi_, 1},
+		{signal_types::mul_,    11},
+		{signal_types::mulasi_, 1},
+		{signal_types::div_,    11},
+		{signal_types::divasi_, 1},
+		{signal_types::mod_,    12},
+		{signal_types::modasi_, 1},
+		{signal_types::pow_,    12},
+		{signal_types::powasi_, 1},
+		{signal_types::com_,    0},
+		{signal_types::dot_,    15},
+		{signal_types::arrow_,  15},
+		{signal_types::und_,    9},
+		{signal_types::abo_,    9},
+		{signal_types::asi_,    1},
+		{signal_types::choice_, 3},
+		{signal_types::pair_,   4},
+		{signal_types::equ_,    9},
+		{signal_types::ueq_,    9},
+		{signal_types::aeq_,    9},
+		{signal_types::neq_,    9},
+		{signal_types::lambda_, 2},
+		{signal_types::vardef_, 20},
+		{signal_types::varchk_, 20},
+		{signal_types::varprt_, 20},
+		{signal_types::or_,     6},
+		{signal_types::and_,    7},
+		{signal_types::not_,    8},
+		{signal_types::inc_,    13},
+		{signal_types::dec_,    13},
+		{signal_types::fcall_,  15},
+		{signal_types::emb_,    15},
+		{signal_types::access_, 15},
+		{signal_types::typeid_, 14},
+		{signal_types::new_,    14},
+		{signal_types::gcnew_,  14},
+		{signal_types::vargs_,  20}
+	};
+
+	const std::vector<signal_types> compiler_type::signal_left_associative = {
+		signal_types::asi_, signal_types::addasi_, signal_types::subasi_, signal_types::mulasi_,
+		signal_types::divasi_, signal_types::modasi_, signal_types::powasi_
+	};
+
 	void
 	compiler_type::trim_expr(tree_type<token_base *> &tree, tree_type<token_base *>::iterator it, trim_type do_trim)
 	{
