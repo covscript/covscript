@@ -343,7 +343,7 @@ namespace cs {
 				return new token_value(var::make_constant<constant_values>(constant_values::global_namespace));
 			}
 		},
-		{"空",   []() -> token_base * { return new token_value(null_pointer); }},
+		{"虚",   []() -> token_base * { return new token_value(null_pointer); }},
 		{"真",   []() -> token_base * { return new token_value(var::make_constant<bool>(true)); }},
 		{"假",  []() -> token_base * { return new token_value(var::make_constant<bool>(false)); }}
 	};
@@ -364,7 +364,7 @@ namespace cs {
 
 	const set_t<char32_t> compiler_type::signals = {
 		'+', '-', '*', '/', '%', '^', ',', '.', '>', '<', '=', '&', '|', '!', '(', ')', '[', ']', '{', '}', ':',
-		'?', ';', U'→', U'，', U'的', U'与', U'或', U'非', U'；', U'：', U'（', U'）', U'【', U'】', U'‘', U'’', U'“', U'”'
+		'?', ';', U'→', U'，', U'的', U'与', U'或', U'非', U'；', U'：', U'（', U'）', U'【', U'】'
 	};
 
 	const mapping<signal_types, int> compiler_type::signal_level_map = {

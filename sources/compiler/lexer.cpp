@@ -167,7 +167,7 @@ namespace cs {
 				else if (*it == '\\') {
 					escape = true;
 				}
-				else if (*it == '\'') {
+				else if (*it == U'’') {
 					if (tmp.empty())
 						throw runtime_error("Do not allow empty character.");
 					if (tmp.size() > 1)
@@ -192,7 +192,7 @@ namespace cs {
 				else if (*it == '\\') {
 					escape = true;
 				}
-				else if (*it == '\"') {
+				else if (*it == U'”') {
 					tokens.push_back(new_value(cvt->wide2local(tmp)));
 					tmp.clear();
 					inside_str = false;
@@ -209,12 +209,12 @@ namespace cs {
 			default:
 				break;
 			case token_types::null:
-				if (*it == '\"') {
+				if (*it == U'“') {
 					inside_str = true;
 					++it;
 					continue;
 				}
-				if (*it == '\'') {
+				if (*it == U'‘') {
 					inside_char = true;
 					++it;
 					continue;

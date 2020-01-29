@@ -1,16 +1,17 @@
-var in=iostream.fstream("../LICENSE",iostream.openmode.in)
-if !in.good()
-    throw runtime.exception("File is not exist")
-end
-var table=new hash_map
-while !in.eof()
-    var str_arr=((in.getline()).tolower()).split({' ','\t','\n','\v','\f','\r'})
-    foreach str in str_arr
-        if(!str.empty())
-            ++table[str]
-        end
-    end
-end
-foreach it in table
-    system.out.println(it.first()+":"+it.second())
-end
+@charset:utf8
+变量 入=输入输出流的文件流（“../LICENSE”，输入输出流的打开方式的读取）
+若 非 入 执行 正常（）
+    抛出 运行时的异常（“文件不存在”）
+终
+变量 表格=新建 哈希表
+当 非 入 执行 结尾（）
+    变量 文字列表=入 执行 获取一行（）执行 转小写（）执行 分割（{‘ ’，‘\t’，‘\n’，‘\v’，‘\f’，‘\r’}）
+    遍历 词 在 文字列表
+        若非词的空（）
+            ++表格【词】
+        终
+    终
+终
+遍历 迭 在 表格
+    系统的输出 执行 输出一行（迭的甲（） + “:” + 迭的乙（））
+终
