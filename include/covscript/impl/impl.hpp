@@ -120,11 +120,11 @@ namespace cs {
 
 // Guarder
 	class scope_guard final {
-		context_t context;
+		const context_t &context;
 	public:
 		scope_guard() = delete;
 
-		explicit scope_guard(context_t c) : context(std::move(c))
+		explicit scope_guard(const context_t &c) : context(c)
 		{
 			context->instance->storage.add_domain();
 		}
@@ -175,7 +175,7 @@ namespace cs {
 
 #endif
 
-		var get() const
+		var &get() const
 		{
 			return current_process->stack.top();
 		}
