@@ -421,8 +421,7 @@ namespace cs_impl {
 		}
 	};
 
-	class member_visitor final
-	{
+	class member_visitor final {
 		std::function<any()> m_getter;
 		std::function<void(const any &)> m_setter;
 	public:

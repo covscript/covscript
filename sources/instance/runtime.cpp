@@ -157,16 +157,16 @@ namespace cs {
 		else {
 			try {
 				var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
-				if (val.type() == typeid(callable))
-				{
+				if (val.type() == typeid(callable)) {
 					const callable& func = val.const_val<callable>();
-					if (func.type() == callable::types::member_visitor)
-					{
+					if (func.type() == callable::types::member_visitor) {
 						vector args{a};
 						return func.call(args);
-					} else
+					}
+					else
 						return var::make_protect<object_method>(a, val, func.is_request_fold());
-				}else
+				}
+				else
 					return val;
 			}
 			catch (...) {
