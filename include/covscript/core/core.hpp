@@ -153,7 +153,7 @@ namespace cs {
 	public:
 		using function_type=std::function<var(vector &)>;
 		enum class types {
-			normal, request_fold, member_fn
+			normal, request_fold, member_fn, member_visitor
 		};
 	private:
 		function_type mFunc;
@@ -173,6 +173,11 @@ namespace cs {
 		bool is_member_fn() const
 		{
 			return mType == types::member_fn;
+		}
+
+		types type() const
+		{
+			return mType;
 		}
 
 		var call(vector &args) const

@@ -10,3 +10,6 @@ system.out.println(type(foo0))
 var foo1=new my_ext.child.foo
 system.out.println(foo1.test("Hello"))
 system.out.println(type(foo1))
+system.out.println(foo1.val.get())
+foo1.val.set(20)
+system.out.println(foo1.val.get())

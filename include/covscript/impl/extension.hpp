@@ -242,6 +242,7 @@ namespace cs_impl {
 
 // Extended Type Support
 
+	extern cs::namespace_t member_visitor_ext;
 	extern cs::namespace_t except_ext;
 	extern cs::namespace_t array_ext;
 	extern cs::namespace_t array_iterator_ext;
@@ -276,6 +277,12 @@ namespace cs_impl {
 
 			path_info(const char *n, int t) : name(n), type(t) {}
 		};
+	}
+
+	template<>
+	cs::namespace_t &get_ext<cs::member_visitor>()
+	{
+		return member_visitor_ext;
 	}
 
 	template<>

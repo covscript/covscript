@@ -420,10 +420,47 @@ namespace cs_impl {
 			return c.mCni->clone();
 		}
 	};
+
+	class member_visitor final
+	{
+		std::function<any()> m_getter;
+		std::function<void(const any &)> m_setter;
+	public:
+		member_visitor() = delete;
+		template<typename _Class, typename _Member>
+		member_visitor(_Class& obj, _Member _Class::* mem_ptr)
+		{
+			m_getter = [&obj, mem_ptr]()->any {
+				return any::make_constant<_Member>(obj.*mem_ptr);
+			};
+			m_setter = [&obj, mem_ptr](const any &val) {
+				obj.*mem_ptr = val.const_val<typename type_conversion_cs<_Member>::source_type>();
+			};
+		}
+		template<typename _Class, typename _Member>
+		member_visitor(const _Class& obj, _Member _Class::* mem_ptr)
+		{
+			m_getter = [&obj, mem_ptr]()->any {
+				return any::make_constant<_Member>(obj.*mem_ptr);
+			};
+			m_setter = [&obj, mem_ptr](const any &) {
+				throw cs::runtime_error("CNI Member Visitor: Can not change the value of constant object.");
+			};
+		}
+		any get() const
+		{
+			return m_getter();
+		}
+		void set(const any& val) const
+		{
+			m_setter(val);
+		}
+	};
 }
 namespace cs {
 	using cs_impl::cni_type;
 	using cs_impl::cni;
+	using cs_impl::member_visitor;
 
 	template<typename T>
 	var make_cni(T &&func, bool request_fold = false)

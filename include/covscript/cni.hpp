@@ -244,6 +244,8 @@ namespace cni_namespace_impl {
 #define CNI_CONST(NAME) CNI_REGISTER(NAME, cs::make_cni(NAME, true))
 #define CNI_V(NAME, ARGS) CNI_REGISTER(NAME, cs::make_cni(ARGS, false))
 #define CNI_CONST_V(NAME, ARGS) CNI_REGISTER(NAME, cs::make_cni(ARGS, true))
+#define CNI_CLASS_MEMBER(CLASS, MEMBER) CNI_REGISTER(MEMBER, cs::var::make_protect<cs::callable>(cs::cni([](CLASS &__this){return cs::var::make_constant<cs::member_visitor>(__this, &CLASS::MEMBER);}), cs::callable::types::member_visitor))
+#define CNI_CLASS_MEMBER_CONST(CLASS, MEMBER) CNI_REGISTER(MEMBER, cs::var::make_protect<cs::callable>(cs::cni([](const CLASS &__this){return cs::var::make_constant<cs::member_visitor>(__this, &CLASS::MEMBER);}), cs::callable::types::member_visitor))
 #define CNI_VALUE(NAME, ARGS) CNI_REGISTER(NAME, cni_namespace_impl::make_var_normal(ARGS))
 #define CNI_VALUE_CONST(NAME, ARGS) CNI_REGISTER(NAME, cni_namespace_impl::make_var_const(ARGS))
 #define CNI_VALUE_V(NAME, TYPE, ARGS) CNI_REGISTER(NAME, cni_namespace_impl::make_var_normal_v<TYPE>(ARGS))

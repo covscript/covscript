@@ -26,6 +26,17 @@
 #include <iostream>
 
 namespace cs_impl {
+	namespace member_visitor_cs_ext {
+		using namespace cs;
+
+		void init()
+		{
+			(*member_visitor_ext)
+			.add_var("get", make_cni(&member_visitor::get, true))
+			.add_var("set", make_cni(&member_visitor::set, true));
+		}
+	}
+
 	namespace array_cs_ext {
 		using namespace cs;
 
@@ -1272,14 +1283,13 @@ namespace cs_impl {
 	{
 		if (extensions_initiator) {
 			extensions_initiator = false;
-#ifndef CS_EXTENSIONS_MINIMAL
+			member_visitor_cs_ext::init();
 			iostream_cs_ext::init();
 			istream_cs_ext::init();
 			ostream_cs_ext::init();
 			system_cs_ext::init();
 			runtime_cs_ext::init();
 			math_cs_ext::init();
-#endif
 			except_cs_ext::init();
 			char_cs_ext::init();
 			string_cs_ext::init();
