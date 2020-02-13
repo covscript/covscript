@@ -3,7 +3,7 @@ cd "%~dp0\.."
 set config=MinSizeRel
 mkdir cmake-build\msvc_win64
 cd    cmake-build\msvc_win64
-cmake -G "Visual Studio 15 2017 Win64" ..\..
+cmake -G "Visual Studio 16 2019" -A "x64" ..\..
 cmake --build . --config %config% --target covscript
 cmake --build . --config %config% --target covscript_debug
 cmake --build . --config %config% --target cs
