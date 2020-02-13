@@ -1,4 +1,5 @@
 @echo off
+cd "%~dp0\.."
 set config=MinSizeRel
 mkdir cmake-build\msvc_arm
 cd    cmake-build\msvc_arm
