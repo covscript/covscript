@@ -13,7 +13,7 @@ if (MSVC)
     set(CMAKE_RC_FLAGS ${rc_flags})
 elseif (CMAKE_COMPILER_IS_GNUCXX)
     if (WIN32)
-        set(CMAKE_CXX_FLAGS "--static -fPIC -s -O3")
+        set(CMAKE_CXX_FLAGS "--static -fPIC -s -O3 -Wl,-allow-multiple-definition")
     else ()
         set(CMAKE_CXX_FLAGS "-fPIC -s -O3")
     endif ()
@@ -39,7 +39,7 @@ set(SOURCE_CODE
         sources/covscript.cpp)
 
 # Static Library
-add_library(covscript STATIC ${SOURCE_CODE})
+add_library(covscript SHARED ${SOURCE_CODE})
 add_library(covscript_debug STATIC ${SOURCE_CODE})
 
 target_compile_definitions(covscript_debug PRIVATE CS_DEBUGGER)
