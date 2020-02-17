@@ -24,6 +24,7 @@
 #include <covscript_impl/system.hpp>
 #include <covscript/impl/impl.hpp>
 #include <iostream>
+#include <future>
 
 namespace cs_impl {
 	namespace member_visitor_cs_ext {
@@ -931,6 +932,60 @@ namespace cs_impl {
 				throw lang_error("Not a function.");
 		}
 
+		cs::var wait_for_impl(std::size_t mill_sec, const cs::callable &func, cs::vector &args)
+		{
+			std::future<cs::var> future = std::async(std::launch::async, [&func, &args] {
+				return func.call(args);
+			});
+			if (future.wait_for(std::chrono::milliseconds(mill_sec)) != std::future_status::ready)
+				throw cs::lang_error("Target function deferred or timeout.");
+			else
+				return future.get();
+		}
+
+		cs::var wait_until_impl(std::size_t mill_sec, const cs::callable &func, cs::vector &args)
+		{
+			std::future<cs::var> future = std::async(std::launch::async, [&func, &args] {
+				return func.call(args);
+			});
+			if (future.wait_until(std::chrono::system_clock::now() + std::chrono::milliseconds(mill_sec)) != std::future_status::ready)
+				throw cs::lang_error("Target function deferred or timeout.");
+			else
+				return future.get();
+		}
+
+		cs::var wait_for(cs::number mill_sec, const cs::var &func, const cs::array &argument)
+		{
+			if (func.type() == typeid(cs::callable)) {
+				cs::vector args(argument.begin(), argument.end());
+				return wait_for_impl(mill_sec, func.const_val<cs::callable>(), args);
+			}
+			else if (func.type() == typeid(cs::object_method)) {
+				const auto &om = func.const_val<cs::object_method>();
+				cs::vector args{om.object};
+				args.insert(args.end(), argument.begin(), argument.end());
+				return wait_for_impl(mill_sec, om.callable.const_val<cs::callable>(), args);
+			}
+			else
+				throw cs::lang_error("Invoke non-callable object.");
+		}
+
+		cs::var wait_until(cs::number mill_sec, const cs::var &func, const cs::array &argument)
+		{
+			if (func.type() == typeid(cs::callable)) {
+				cs::vector args(argument.begin(), argument.end());
+				return wait_until_impl(mill_sec, func.const_val<cs::callable>(), args);
+			}
+			else if (func.type() == typeid(cs::object_method)) {
+				const auto &om = func.const_val<cs::object_method>();
+				cs::vector args{om.object};
+				args.insert(args.end(), argument.begin(), argument.end());
+				return wait_for_impl(mill_sec, om.callable.const_val<cs::callable>(), args);
+			}
+			else
+				throw cs::lang_error("Invoke non-callable object.");
+		}
+
 		void init()
 		{
 			(*runtime_ext)
@@ -947,7 +1002,9 @@ namespace cs_impl {
 			.add_var("import", make_cni(import, true))
 			.add_var("source_import", make_cni(source_import, true))
 			.add_var("argument_count", make_cni(argument_count, true))
-			.add_var("get_current_dir", make_cni(file_system::get_current_dir));
+			.add_var("get_current_dir", make_cni(file_system::get_current_dir))
+			.add_var("wait_for", make_cni(wait_for))
+			.add_var("wait_until", make_cni(wait_until));
 			(*context_ext)
 			.add_var("build", make_cni(build))
 			.add_var("solve", make_cni(solve))
