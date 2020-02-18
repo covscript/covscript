@@ -6,8 +6,7 @@ using network
 
 function http_request(method, host, page, data)
     var sock = new tcp.socket
-    sock.set_timeout(2000)
-    sock.connect(tcp.resolve(host, "http"))
+    runtime.wait_for(2000, []()->sock.connect(tcp.resolve(host, "http"), {})
     @begin
     var head=
         method + " " + page + " HTTP/1.1\r\n" +
@@ -23,7 +22,7 @@ function http_request(method, host, page, data)
     var response = new string
     try
         loop
-            response += sock.receive(32)
+            runtime.wait_until(100, []()->response += sock.receive(32), {})
         end
     catch e
         return response
