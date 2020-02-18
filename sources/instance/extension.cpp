@@ -350,7 +350,7 @@ namespace cs_impl {
 		{
 			(*hash_map_ext)
 			.add_var("empty", make_cni(empty, true))
-			.add_var("size", make_cni(size, true))
+			.add_var("size", make_cni(size, callable::types::member_visitor))
 			.add_var("clear", make_cni(clear, true))
 			.add_var("insert", make_cni(insert, true))
 			.add_var("erase", make_cni(erase, true))
