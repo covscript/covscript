@@ -22,7 +22,7 @@ function http_request(method, host, page, data)
     var response = new string
     try
         loop
-            runtime.wait_until(100, []()->response += sock.receive(32), {})
+            runtime.wait_until(100, []()->(response += sock.receive(32)), {})
         end
     catch e
         return response
