@@ -201,6 +201,18 @@ namespace cs_impl {
 		result_container(check_conversion_base<_Target_ArgsT, _Source_ArgsT>()...);
 	}
 
+	template<typename T>
+	static inline any return_to_cs(const T &val)
+	{
+		return any::make_constant<T>(val);
+	}
+
+	template<>
+	inline any return_to_cs<any>(const any &val)
+	{
+		return val;
+	}
+
 // CNI Helper
 	template<typename _Target, typename _Source>
 	class cni_helper;
@@ -269,7 +281,7 @@ namespace cs_impl {
 				    "Wrong size of the arguments. Expected " + std::to_string(sizeof...(_Target_ArgsT)) +
 				    ", provided " +
 				    std::to_string(args.size()));
-			return _call(args, cov::make_sequence<sizeof...(_Source_ArgsT)>::result);
+			return return_to_cs(_call(args, cov::make_sequence<sizeof...(_Source_ArgsT)>::result));
 		}
 	};
 
