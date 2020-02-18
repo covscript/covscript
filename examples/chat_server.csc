@@ -17,7 +17,7 @@ var id_count=10000
 function broadcast(msg)
     system.out.println(msg)
     foreach it in cilent_profile
-        it.second()->add_msg(msg)
+        it.second->add_msg(msg)
     end
 end
 function join(name,ep)
@@ -33,7 +33,7 @@ function recv_msg(id,msg)
     var sd=cilent_profile.at(id)
     var m="["+id+"@"+sd->name+"]:"+msg
     foreach it in cilent_profile
-        it.second()->add_msg(m)
+        it.second->add_msg(m)
     end
 end
 function sync(sock,id)
@@ -49,18 +49,18 @@ function exit(id)
     broadcast("["+id+"@"+cilent_profile.at(id)->name+"] Left CovScript Chat Room.")
     cilent_profile.erase(id)
 end
-if context.cmd_args().size()!=3
+if context.cmd_args.size!=3
     system.out.println("Argument syntax error.Usage: <method> <port>")
     system.exit(0)
 end
 var sock=new udp.socket
 sock.open_v4()
-switch context.cmd_args().at(1)
+switch context.cmd_args.at(1)
     case "local"
-        sock.bind(udp.endpoint("127.0.0.1",context.cmd_args().at(2).to_number()))
+        sock.bind(udp.endpoint("127.0.0.1",context.cmd_args.at(2).to_number()))
     end
     case "online"
-        sock.bind(udp.endpoint_v4(context.cmd_args().at(2).to_number()))
+        sock.bind(udp.endpoint_v4(context.cmd_args.at(2).to_number()))
     end
     default
         system.out.println("Argument syntax error.Usage: <method> <port>")

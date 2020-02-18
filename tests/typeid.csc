@@ -12,5 +12,5 @@ try
 	system.out.println("ok")
 	test(1)
 catch e
-	system.out.println(e.what())
+	system.out.println(e.what)
 end

@@ -24,9 +24,9 @@ constant fatalPathInvalid = [](path) -> (
 
 @begin
 constant print = [](...msg) -> 
-    msg.size() > 1 ? 
-    (system.out.print(msg.front()), msg.pop_front(), echo(msg...)) :
-    system.out.println(msg.front())
+    msg.size > 1 ? 
+    (system.out.print(msg.front), msg.pop_front(), echo(msg...)) :
+    system.out.println(msg.front)
 @end
 
 @begin
@@ -90,12 +90,12 @@ constant TEMPLATE_CMAKE_HEAD =
 
 function removeRecursive(path)
     foreach i in Path.scan(path)
-        var name = i.name()
+        var name = i.name
         if name == "." || name == ".."
             continue
         end
 
-        if i.type() == Path.type.dir
+        if i.type == Path.type.dir
             if !removeRecursive(path + Path.separator + name)
                 return false
             end
@@ -122,7 +122,7 @@ function fixPath(path)
 
     if system.is_platform_windows()
         # path is not an absolute path
-        if path[0] != Path.separator && (path.size() < 3 || (path[1] != ':' || path[2] != '\\'))
+        if path[0] != Path.separator && (path.size < 3 || (path[1] != ':' || path[2] != '\\'))
             return runtime.get_current_dir() + Path.separator + path 
         end
     else
@@ -132,8 +132,8 @@ function fixPath(path)
         end
     end
 
-    if path[path.size() - 1] == '/' || path[path.size() - 1] == '\\'
-        path = path.substr(0, path.size() - 1)
+    if path[path.size - 1] == '/' || path[path.size - 1] == '\\'
+        path = path.substr(0, path.size - 1)
     end
     return path
 end
@@ -149,7 +149,7 @@ function csbuild_command_gate(command, args)
     # common options come here
     var parsing = true
     while parsing && !args.empty()
-        switch args.front()
+        switch args.front
             # what if the source directory is named "help"?
             # we need this '--' options
             case "--"; args.pop_front(); parsing = false; end
@@ -161,8 +161,8 @@ function csbuild_command_gate(command, args)
         end
     end
 
-    var path = args.size() > 0 ? args.front() : "."
-    if (args.size() > 0); args.pop_front(); end
+    var path = args.size > 0 ? args.front : "."
+    if (args.size > 0); args.pop_front(); end
 
     path = fixPath(path)
 
@@ -205,7 +205,7 @@ function csbuild_init(args)
     var force = false
 
     while !args.empty()
-        var arg = args.front()
+        var arg = args.front
         args.pop_front()
         switch arg
             case "help"; echo("No help currently :)"); return 0; end
@@ -246,7 +246,7 @@ function csbuild_check(path, cfg, args)
     echo("  > Extension Version:   " + cfg.version)
     echo("  > Extension Targets:   ")
     foreach item in cfg.targets
-        var target = item.second()
+        var target = item.second
         echo("    > " + target->name)
         echon("        source: ")
         foreach item in target->source
@@ -312,7 +312,7 @@ function csbuild_generate(path, cfg, args)
     stream.println(TEMPLATE_CMAKE_HEAD)
 
     foreach item in cfg.targets
-        var target = item.second()
+        var target = item.second
         csbuild_generate_target(stream, path, target)
     end
 
@@ -440,7 +440,7 @@ end
 function main(args)
     args.pop_front()
     while !args.empty()
-        var arg = args.front()
+        var arg = args.front
         args.pop_front()
         switch arg
             case "init"; return csbuild_init(args); end
@@ -462,4 +462,4 @@ function main(args)
     return 1
 end
 
-system.exit(main(clone(context.cmd_args())))
+system.exit(main(clone(context.cmd_args)))

@@ -38,7 +38,7 @@ function 快速排序(a,m,n)
     loop
         loop
             ++i
-            if i>=a.size()
+            if i>=a.size
                 break
             end
         until a[i]>=v
@@ -63,7 +63,7 @@ function 第三步(n,k)
         var a={}
         for i=0,i<=n,++i do a.push_back(math.randint(0,n))
         var 用时=runtime.time()
-        快速排序(a,0,a.size()-1)
+        快速排序(a,0,a.size-1)
         得分=得分+runtime.time()-用时
     end
     return to_integer(得分/k)
@@ -72,10 +72,10 @@ function 斐波那契(count)
     var fib={0,1}
     for n=2,n<=count,++n do fib.push_back(fib.at(n-1)+fib.at(n-2))
     var sum=new hash_map
-    for i=2,i<fib.size(),++i do ++sum[to_string(fib.at(i)/fib.at(i-1))]
+    for i=2,i<fib.size,++i do ++sum[to_string(fib.at(i)/fib.at(i-1))]
     var max=0:0
-    foreach it in sum do it.second()>max.second()?(max=it):null
-    return max.first()
+    foreach it in sum do it.second>max.second?(max=it):null
+    return max.first
 end
 function 第四步(n,k)
     var 得分=0

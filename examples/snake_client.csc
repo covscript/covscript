@@ -29,8 +29,8 @@ function die()
 		end
 		pic.clear()
 		pic.fill(darwin.pixel(' ',darwin.white,darwin.red))
-		pic.draw_string(0.5*(pic.get_width()-str0.size()),0.5*pic.get_height(),str0,darwin.pixel(' ',darwin.white,darwin.red))
-		pic.draw_string(0.5*(pic.get_width()-str1.size()),pic.get_height()-1,str1,darwin.pixel(' ',darwin.white,darwin.red))
+		pic.draw_string(0.5*(pic.get_width()-str0.size),0.5*pic.get_height(),str0,darwin.pixel(' ',darwin.white,darwin.red))
+		pic.draw_string(0.5*(pic.get_width()-str1.size),pic.get_height()-1,str1,darwin.pixel(' ',darwin.white,darwin.red))
                                     client.transfer(pic)
 		darwin.update_drawable()
 	end
@@ -168,8 +168,8 @@ function start()
 	end
 end
 
-for i=1,i<context.cmd_args().size(),++i
-	switch context.cmd_args().at(i)
+for i=1,i<context.cmd_args.size,++i
+	switch context.cmd_args.at(i)
 		case "--god-mode"
 			god_mode=true
 		end

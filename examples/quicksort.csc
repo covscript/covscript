@@ -8,7 +8,7 @@ function quicksort(a,m,n)
 	loop
 		loop
 			++i
-			if i>=a.size()
+			if i>=a.size
 				break
 			end
 		until a[i]>=v
@@ -32,7 +32,7 @@ for i=0,i<=100,++i
 	a.push_back(math.randint(0,100))
 end
 var ts=runtime.time()
-quicksort(a,0,a.size()-1)
+quicksort(a,0,a.size-1)
 system.out.println("Time spend:"+to_string(runtime.time()-ts))
 foreach it in a
 	system.out.println(it)

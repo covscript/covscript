@@ -21,11 +21,11 @@ struct tetris
     var changed=false
     var blockbag={blocks.I,blocks.O,blocks.J,blocks.L,blocks.Z,blocks.S,blocks.T}
     function moveable(x,y,b)
-        if y+b.size()>height or x<0 or x+b[0].size()>width
+        if y+b.size>height or x<0 or x+b[0].size>width
             return false
         end
-        for i=0,i<b.size(),i++
-            for j=0,j<b[0].size(),j++
+        for i=0,i<b.size,i++
+            for j=0,j<b[0].size,j++
                 if board[i+y][j+x]!=0 and b[i][j]!=0
                     return false
                 end
@@ -36,7 +36,7 @@ struct tetris
     function newblock()
         nowid=math.randint(0,699)%7
         now=clone(blockbag[nowid])
-        nowx=to_integer((width-now[0].size())/2)
+        nowx=to_integer((width-now[0].size)/2)
         nowy=0
         if not moveable(nowx,nowy,now)
             lose=true
@@ -62,8 +62,8 @@ struct tetris
         end
     end
     function put()
-        for i=0,i<now.size(),i++
-            for j=0,j<now[0].size(),j++
+        for i=0,i<now.size,i++
+            for j=0,j<now[0].size,j++
                 if now[i][j]!=0
                     board[i+nowy][j+nowx]=now[i][j]
                 end
@@ -74,19 +74,19 @@ struct tetris
     function holdblock()
         if store==7
             var ls=math.randint(0,699)%7
-            if moveable(to_integer((width-blockbag[ls][0].size())/2),0,blockbag[ls])
+            if moveable(to_integer((width-blockbag[ls][0].size)/2),0,blockbag[ls])
                 store=nowid
                 nowid=ls
                 now=blockbag[nowid]
-                nowx=to_integer((width-now[0].size())/2)
+                nowx=to_integer((width-now[0].size)/2)
                 nowy=0
                 changed=true
             end
         else
-            if moveable(to_integer((width-blockbag[store][0].size())/2),0,blockbag[store])
+            if moveable(to_integer((width-blockbag[store][0].size)/2),0,blockbag[store])
                 swap(nowid,store)
                 now=blockbag[nowid]
-                nowx=to_integer((width-now[0].size())/2)
+                nowx=to_integer((width-now[0].size)/2)
                 nowy=0
                 changed=true
             end
@@ -94,11 +94,11 @@ struct tetris
     end
     function spin()
         var ls=new array
-        for i=0,i<now[0].size(),i++
+        for i=0,i<now[0].size,i++
             ls[i]=new array
-            ls[i][now.size()-1]
-            for j=0,j<now.size(),j++
-                ls[i][j]=now[now.size()-j-1][i]
+            ls[i][now.size-1]
+            for j=0,j<now.size,j++
+                ls[i][j]=now[now.size-j-1][i]
             end
         end
         if moveable(nowx,nowy,ls)
@@ -217,16 +217,16 @@ loop
             end
             dp=i
         end
-        for i=0,i<t.now[0].size(),i++
-            for j=0,j<t.now.size(),j++
+        for i=0,i<t.now[0].size,i++
+            for j=0,j<t.now.size,j++
                 if t.now[j][i]!=0
                     draw.draw_pixel((i+t.nowx)*2+1+xspace,j+dp+1+yspace,pixel('[',color[t.now[j][i]],color[t.now[j][i]]))
                     draw.draw_pixel((i+t.nowx)*2+2+xspace,j+dp+1+yspace,pixel(']',color[t.now[j][i]],color[t.now[j][i]]))
                 end
             end
         end
-        for i=0,i<t.now[0].size(),i++
-            for j=0,j<t.now.size(),j++
+        for i=0,i<t.now[0].size,i++
+            for j=0,j<t.now.size,j++
                 if t.now[j][i]!=0
                     draw.draw_pixel((i+t.nowx)*2+1+xspace,j+t.nowy+1+yspace,pixel(' ',color[t.now[j][i]],color[t.now[j][i]]))
                     draw.draw_pixel((i+t.nowx)*2+2+xspace,j+t.nowy+1+yspace,pixel(' ',color[t.now[j][i]],color[t.now[j][i]]))
@@ -234,8 +234,8 @@ loop
             end
         end
         if t.store!=7
-            for i=0,i<t.blockbag[t.store][0].size(),i++
-                for j=0,j<t.blockbag[t.store].size(),j++
+            for i=0,i<t.blockbag[t.store][0].size,i++
+                for j=0,j<t.blockbag[t.store].size,j++
                     if t.blockbag[t.store][j][i]!=0
                         draw.draw_pixel((i+t.width)*2+2+xspace,j+yspace+1,pixel(' ',color[t.blockbag[t.store][j][i]],color[t.blockbag[t.store][j][i]]))
                         draw.draw_pixel((i+t.width)*2+3+xspace,j+yspace+1,pixel(' ',color[t.blockbag[t.store][j][i]],color[t.blockbag[t.store][j][i]]))

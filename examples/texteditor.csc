@@ -66,7 +66,7 @@ class texteditor
         var in = iostream.fstream(file_path, iostream.openmode.in)
         for line = new string, !in.eof(), file_buffer.push_back(line)
             line = in.getline()
-            for i = 0, i < line.size(), ++i
+            for i = 0, i < line.size, ++i
                 if line[i] == '\t'
                     line.assign(i, ' ')
                     for count = 0, count < tab_indent - 1, ++count do line.insert(i, ' ')
@@ -77,8 +77,8 @@ class texteditor
 
     function save_file(path)
         var out = iostream.fstream(path, iostream.openmode.out)
-        for idx = 0, idx < file_buffer.size() - 1, ++idx do out.println(file_buffer[idx])
-        out.print(file_buffer[file_buffer.size() - 1])
+        for idx = 0, idx < file_buffer.size - 1, ++idx do out.println(file_buffer[idx])
+        out.print(file_buffer[file_buffer.size - 1])
         text_modified = false
     end
 # Attributes
@@ -130,7 +130,7 @@ class texteditor
             while cursor_x + render_offx < x_offset && cursor_x < pic.get_width() - 1
                 ++cursor_x
             end
-            while cursor_x + render_offx < x_offset && cursor_x + render_offx < current_line().size()
+            while cursor_x + render_offx < x_offset && cursor_x + render_offx < current_line().size
                 ++render_offx
             end
         end
@@ -144,8 +144,8 @@ class texteditor
                 --render_offy
             end
         end
-        if cursor_x + render_offx > current_line().size()
-            adjust_cursor(current_line().size())
+        if cursor_x + render_offx > current_line().size
+            adjust_cursor(current_line().size)
         end
     end
 
@@ -153,12 +153,12 @@ class texteditor
         if cursor_y < text_area_height() - 1
             ++cursor_y
         else
-            if render_offy + text_area_height() < file_buffer.size()
+            if render_offy + text_area_height() < file_buffer.size
                 ++render_offy
             end
         end
-        if cursor_x + render_offx > current_line().size()
-            adjust_cursor(current_line().size())
+        if cursor_x + render_offx > current_line().size
+            adjust_cursor(current_line().size)
         end
     end
 
@@ -177,7 +177,7 @@ class texteditor
                             --cursor_y
                         end
                     end
-                    adjust_cursor(current_line().size())
+                    adjust_cursor(current_line().size)
                 end
             end
         end
@@ -185,19 +185,19 @@ class texteditor
 
     function key_right()
         if cursor_x < text_area_width()
-            if text_offset_x() < current_line().size()
+            if text_offset_x() < current_line().size
                 ++cursor_x
             else
-                if text_offset_y() < file_buffer.size() - 1
+                if text_offset_y() < file_buffer.size - 1
                     cursor_x = render_offx = 0
                     key_down()
                 end
             end
         else
-            if (text_offset_x() < current_line().size())
+            if (text_offset_x() < current_line().size)
                 ++render_offx
             else
-                if render_offy + text_area_height() < file_buffer.size()
+                if render_offy + text_area_height() < file_buffer.size
                     render_offx = 0
                     ++render_offy
                 end
@@ -207,9 +207,9 @@ class texteditor
     function key_enter()
         var line = current_line()
         var line_current = line.substr(0, text_offset_x())
-        var line_next = line.substr(text_offset_x(), line.size())
+        var line_next = line.substr(text_offset_x(), line.size)
         current_line() = line_current
-        file_buffer.insert(file_buffer.begin().forward_n(text_offset_y() + 1), line_next)
+        file_buffer.insert(file_buffer.begin.next_n(text_offset_y() + 1), line_next)
         key_down()
         cursor_x = render_offx = 0
         text_modified = true
@@ -219,13 +219,13 @@ class texteditor
         if cursor_x + render_offx == 0
             if text_offset_y() != 0
                 key_up()
-                adjust_cursor(current_line().size())
+                adjust_cursor(current_line().size)
                 current_line().append(line)
-                file_buffer.erase(file_buffer.begin().forward_n(text_offset_y() + 1))
+                file_buffer.erase(file_buffer.begin.next_n(text_offset_y() + 1))
                 text_modified = true
             end
         else
-            if line.size() > 0
+            if line.size > 0
                 current_line().erase(text_offset_x() - 1, 1)
                 key_left()
                 text_modified = true
@@ -240,7 +240,7 @@ class texteditor
     end
 
     function find()
-        while find_y < file_buffer.size()
+        while find_y < file_buffer.size
             var line = file_buffer[find_y]
             var pos = line.find(find_target, expect_txt ? find_x + 1 : 0)
             if pos != -1
@@ -256,19 +256,19 @@ class texteditor
             ++find_y
         end
         if found_text
-            if find_y == file_buffer.size()
+            if find_y == file_buffer.size
                 reset_find()
                 find()
             end
             cursor_x = render_offx = 0
             cursor_y = 0
-            if find_y < file_buffer.size() - text_area_height()
+            if find_y < file_buffer.size - text_area_height()
                 render_offy = find_y > 4 ? find_y - 4 : 0
             else
-                render_offy = file_buffer.size() - text_area_height()
+                render_offy = file_buffer.size - text_area_height()
             end
-            if find_x + find_target.size() > text_area_width()
-                render_offx = find_x + find_target.size() - text_area_width() + 1
+            if find_x + find_target.size > text_area_width()
+                render_offx = find_x + find_target.size - text_area_width() + 1
             end
         end
     end
@@ -367,8 +367,8 @@ class texteditor
                     end
                     case keymap.key_info
                         var char_count = 0
-                        foreach line in file_buffer do char_count += line.size()
-                        char_buffer = to_string(file_buffer.size()) + " line(s), " + to_string(char_count) + " character(s)"
+                        foreach line in file_buffer do char_count += line.size
+                        char_buffer = to_string(file_buffer.size) + " line(s), " + to_string(char_count) + " character(s)"
                         editor_status = editor_status_type.info
                     end
                     default
@@ -392,19 +392,19 @@ class texteditor
     end
 # Rendering
     function render_linenum()
-        render_border = to_string(file_buffer.size()).size()
+        render_border = to_string(file_buffer.size).size
         for i = 0, i < text_area_height(), ++i
             pic.draw_line(2, i + 1, 1 + render_border, i + 1, darwin.pixel(' ', darwin.white, darwin.white))
             var txt = to_string(render_offy + i + 1)
-            pic.draw_string(2 + (render_border - txt.size()), i + 1, txt, darwin.pixel(' ', darwin.black, darwin.white))
+            pic.draw_string(2 + (render_border - txt.size), i + 1, txt, darwin.pixel(' ', darwin.black, darwin.white))
         end
     end
 
     function render_text()
-        for y = 0, y < text_area_height() && y + render_offy < file_buffer.size(), ++y
-            for x = 0, x < text_area_width() && x + render_offx < file_buffer[y + render_offy].size(), ++x
+        for y = 0, y < text_area_height() && y + render_offy < file_buffer.size, ++y
+            for x = 0, x < text_area_width() && x + render_offx < file_buffer[y + render_offy].size, ++x
                 var ch = file_buffer[y + render_offy][x + render_offx]
-                if found_text && x + render_offx >= find_x && x + render_offx < find_x + find_target.size() && y + render_offy == find_y
+                if found_text && x + render_offx >= find_x && x + render_offx < find_x + find_target.size && y + render_offy == find_y
                     pic.draw_pixel(x + 3 + render_border, y + 1, darwin.pixel(ch, darwin.white, darwin.pink))
                 else
                     pic.draw_pixel(x + 3 + render_border, y + 1, darwin.pixel(ch, darwin.white, darwin.black))
@@ -620,8 +620,8 @@ class texteditor
                 end
                 case 'q'
                     reset_find()
-                    if text_offset_x() > current_line().size()
-                        adjust_cursor(current_line().size())
+                    if text_offset_x() > current_line().size
+                        adjust_cursor(current_line().size)
                     end
                     editor_status = editor_status_type.normal
                     force_refresh()
@@ -652,14 +652,14 @@ class texteditor
                 case keymap.key_enter_unix
                     if char_buffer != find_target
                         text_modified = true
-                        file_buffer[find_y].replace(find_x, find_target.size(), char_buffer)
+                        file_buffer[find_y].replace(find_x, find_target.size, char_buffer)
                         find()
                         if found_text
                             editor_status = editor_status_type.finding
                         else
                             reset_find()
-                            if text_offset_x() > current_line().size()
-                                adjust_cursor(current_line().size())
+                            if text_offset_x() > current_line().size
+                                adjust_cursor(current_line().size)
                             end
                             editor_status = editor_status_type.notfound
                         end
@@ -668,14 +668,14 @@ class texteditor
                 case keymap.key_enter_win32
                     if char_buffer != find_target
                         text_modified = true
-                        file_buffer[find_y].replace(find_x, find_target.size(), char_buffer)
+                        file_buffer[find_y].replace(find_x, find_target.size, char_buffer)
                         find()
                         if found_text
                             editor_status = editor_status_type.finding
                         else
                             reset_find()
-                            if text_offset_x() > current_line().size()
-                                adjust_cursor(current_line().size())
+                            if text_offset_x() > current_line().size
+                                adjust_cursor(current_line().size)
                             end
                             editor_status = editor_status_type.notfound
                         end
@@ -706,12 +706,12 @@ class texteditor
     end
 # Main Function
     function run(args)
-        if args.size() > 2
+        if args.size > 2
             system.out.println("Wrong Arguments")
         end
         darwin.load()
         darwin.set_frame_limit(60)
-        if args.size() == 2
+        if args.size == 2
             file_path = args[1]
         else
             file_path = darwin.ui.input_box("Darwin UCGL Text Editor", "Please enter a file path: ", "", false)
@@ -750,4 +750,4 @@ class texteditor
     end
 end
 # Start Process
-(new texteditor).run(context.cmd_args())
+(new texteditor).run(context.cmd_args)

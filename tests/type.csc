@@ -20,8 +20,8 @@ var types=
     type(runtime.exception("")),
     type(system.in),
     type(system.out),
-    type({}.begin()),
-    type((new list).begin()),
+    type({}.begin),
+    type((new list).begin),
     type(iostream.seekdir.start),
     type(iostream.openmode.app),
     type(context.build("x"))

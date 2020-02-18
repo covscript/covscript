@@ -44,7 +44,7 @@ struct db_editor extends picasso.base_window
             selected=0
             table_list=sqlite_ext.table_list(db)
         end
-        columns(column_info.size(),"",true)
+        columns(column_info.size,"",true)
         separator()
         foreach it in column_info
             text(it.name)

@@ -13,7 +13,7 @@ function http_request(method, host, page, data)
         method + " " + page + " HTTP/1.1\r\n" +
         "Host: " + host + "\r\n" +
         "Connection: Close\r\n" +
-        "Content-Length: " + data.size() + "\r\n" +
+        "Content-Length: " + data.size + "\r\n" +
         "Accept: */*\r\n" +
         "Pragma: no-cache\r\n" +
         "Cache-Control: no-cache\r\n" +

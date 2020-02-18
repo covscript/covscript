@@ -5,15 +5,15 @@ function fibonacci(count)
         fib.push_back(fib.at(n-1)+fib.at(n-2))
     end
     var sum=new hash_map
-    for i=2,i<fib.size(),++i
+    for i=2,i<fib.size,++i
         ++sum[to_string(fib.at(i)/fib.at(i-1))]
     end
     var max=0:0
     foreach it in sum
-        if it.second()>max.second()
+        if it.second>max.second
             max=it
         end
     end
-    return max.first()
+    return max.first
 end
 system.out.println(fibonacci(10000))

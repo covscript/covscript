@@ -6,7 +6,7 @@ function char2num(ch)
 end
 function check(id)
     var sum = 0, examine = 0
-    if id.size() != 18
+    if id.size != 18
         throw runtime.exception("Bad format: size")
     end
     foreach i in range(1, 18)
@@ -22,6 +22,6 @@ loop
     try
         check(system.in.getline())
     catch e
-        system.out.println(e.what())
+        system.out.println(e.what)
     end
 end

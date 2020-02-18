@@ -1,10 +1,10 @@
 function push(lst,val)
-    var it=lst.begin()
-    while it!=lst.end()
-        if val<=it.data()
+    var it=lst.begin
+    while it!=lst.end
+        if val<=it.data
             break
         end
-        it.forward()
+        it.next
     end
     lst.insert(it,val)
 end
