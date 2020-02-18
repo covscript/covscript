@@ -24,6 +24,7 @@
 #include <covscript_impl/system.hpp>
 #include <covscript/impl/impl.hpp>
 #include <iostream>
+#include <future>
 
 namespace cs_impl {
 	namespace member_visitor_cs_ext {
@@ -71,22 +72,22 @@ namespace cs_impl {
 			return arr.end();
 		}
 
-		array::iterator forward(array::iterator &it)
+		array::iterator next(array::iterator &it)
 		{
 			return ++it;
 		}
 
-		array::iterator forward_n(array::iterator &it, number offset)
+		array::iterator next_n(array::iterator &it, number offset)
 		{
 			return it += offset;
 		}
 
-		array::iterator backward(array::iterator &it)
+		array::iterator prev(array::iterator &it)
 		{
 			return --it;
 		}
 
-		array::iterator backward_n(array::iterator &it, number offset)
+		array::iterator prev_n(array::iterator &it, number offset)
 		{
 			return it -= offset;
 		}
@@ -113,13 +114,9 @@ namespace cs_impl {
 			arr.clear();
 		}
 
-		array::iterator insert(array &arr, array::iterator &pos,
-		                       const var &val
-		                      )
+		array::iterator insert(array &arr, array::iterator &pos, const var &val)
 		{
-			return arr.
-			       insert(pos, copy(val)
-			             );
+			return arr.insert(pos, copy(val));
 		}
 
 		array::iterator erase(array &arr, array::iterator &pos)
@@ -172,20 +169,20 @@ namespace cs_impl {
 		void init()
 		{
 			(*array_iterator_ext)
-			.add_var("forward", make_cni(forward, true))
-			.add_var("forward_n", make_cni(forward_n, true))
-			.add_var("backward", make_cni(backward, true))
-			.add_var("backward_n", make_cni(backward_n, true))
-			.add_var("data", make_cni(data, true));
+			.add_var("next", make_cni(next, callable::types::member_visitor))
+			.add_var("next_n", make_cni(next_n, true))
+			.add_var("prev", make_cni(prev, callable::types::member_visitor))
+			.add_var("prev_n", make_cni(prev_n, true))
+			.add_var("data", make_cni(data, callable::types::member_visitor));
 			(*array_ext)
 			.add_var("iterator", make_namespace(array_iterator_ext))
 			.add_var("at", make_cni(at, true))
-			.add_var("front", make_cni(front, true))
-			.add_var("back", make_cni(back, true))
-			.add_var("begin", make_cni(begin, true))
-			.add_var("end", make_cni(end, true))
+			.add_var("front", make_cni(front, callable::types::member_visitor))
+			.add_var("back", make_cni(back, callable::types::member_visitor))
+			.add_var("begin", make_cni(begin, callable::types::member_visitor))
+			.add_var("end", make_cni(end, callable::types::member_visitor))
 			.add_var("empty", make_cni(empty, true))
-			.add_var("size", make_cni(size, true))
+			.add_var("size", make_cni(size, callable::types::member_visitor))
 			.add_var("clear", make_cni(clear, true))
 			.add_var("insert", make_cni(insert, true))
 			.add_var("erase", make_cni(erase, true))
@@ -302,7 +299,7 @@ namespace cs_impl {
 
 		void init()
 		{
-			except_ext->add_var("what", make_cni(what));
+			except_ext->add_var("what", make_cni(what, callable::types::member_visitor));
 		}
 	}
 	namespace hash_map_cs_ext {
@@ -353,7 +350,7 @@ namespace cs_impl {
 		{
 			(*hash_map_ext)
 			.add_var("empty", make_cni(empty, true))
-			.add_var("size", make_cni(size, true))
+			.add_var("size", make_cni(size, callable::types::member_visitor))
 			.add_var("clear", make_cni(clear, true))
 			.add_var("insert", make_cni(insert, true))
 			.add_var("erase", make_cni(erase, true))
@@ -592,12 +589,12 @@ namespace cs_impl {
 			return lst.end();
 		}
 
-		list::iterator forward(list::iterator &it)
+		list::iterator next(list::iterator &it)
 		{
 			return ++it;
 		}
 
-		list::iterator backward(list::iterator &it)
+		list::iterator prev(list::iterator &it)
 		{
 			return --it;
 		}
@@ -673,17 +670,17 @@ namespace cs_impl {
 		void init()
 		{
 			(*list_iterator_ext)
-			.add_var("forward", make_cni(forward, true))
-			.add_var("backward", make_cni(backward, true))
-			.add_var("data", make_cni(data, true));
+			.add_var("next", make_cni(next, callable::types::member_visitor))
+			.add_var("prev", make_cni(prev, callable::types::member_visitor))
+			.add_var("data", make_cni(data, callable::types::member_visitor));
 			(*list_ext)
 			.add_var("iterator", make_namespace(list_iterator_ext))
-			.add_var("front", make_cni(front, true))
-			.add_var("back", make_cni(back, true))
-			.add_var("begin", make_cni(begin, true))
-			.add_var("end", make_cni(end, true))
+			.add_var("front", make_cni(front, callable::types::member_visitor))
+			.add_var("back", make_cni(back, callable::types::member_visitor))
+			.add_var("begin", make_cni(begin, callable::types::member_visitor))
+			.add_var("end", make_cni(end, callable::types::member_visitor))
 			.add_var("empty", make_cni(empty, true))
-			.add_var("size", make_cni(size, true))
+			.add_var("size", make_cni(size, callable::types::member_visitor))
 			.add_var("clear", make_cni(clear, true))
 			.add_var("insert", make_cni(insert, true))
 			.add_var("erase", make_cni(erase, true))
@@ -815,23 +812,12 @@ namespace cs_impl {
 		}
 	}
 	namespace pair_cs_ext {
-		using namespace cs;
-
-		var first(const pair &p)
-		{
-			return p.first;
-		}
-
-		var second(const pair &p)
-		{
-			return p.second;
-		}
-
 		void init()
 		{
+			using namespace cs;
 			(*pair_ext)
-			.add_var("first", make_cni(first, true))
-			.add_var("second", make_cni(second, true));
+			.add_var("first", make_member_visitor(&pair::first))
+			.add_var("second", make_member_visitor(&pair::second));
 		}
 	}
 	namespace runtime_cs_ext {
@@ -931,6 +917,61 @@ namespace cs_impl {
 				throw lang_error("Not a function.");
 		}
 
+		cs::var wait_for_impl(std::size_t mill_sec, const cs::callable &func, cs::vector &args)
+		{
+			std::future<cs::var> future = std::async(std::launch::async, [&func, &args] {
+				return func.call(args);
+			});
+			if (future.wait_for(std::chrono::milliseconds(mill_sec)) != std::future_status::ready)
+				throw cs::lang_error("Target function deferred or timeout.");
+			else
+				return future.get();
+		}
+
+		cs::var wait_until_impl(std::size_t mill_sec, const cs::callable &func, cs::vector &args)
+		{
+			std::future<cs::var> future = std::async(std::launch::async, [&func, &args] {
+				return func.call(args);
+			});
+			if (future.wait_until(std::chrono::system_clock::now() + std::chrono::milliseconds(mill_sec)) !=
+			        std::future_status::ready)
+				throw cs::lang_error("Target function deferred or timeout.");
+			else
+				return future.get();
+		}
+
+		cs::var wait_for(cs::number mill_sec, const cs::var &func, const cs::array &argument)
+		{
+			if (func.type() == typeid(cs::callable)) {
+				cs::vector args(argument.begin(), argument.end());
+				return wait_for_impl(mill_sec, func.const_val<cs::callable>(), args);
+			}
+			else if (func.type() == typeid(cs::object_method)) {
+				const auto &om = func.const_val<cs::object_method>();
+				cs::vector args{om.object};
+				args.insert(args.end(), argument.begin(), argument.end());
+				return wait_for_impl(mill_sec, om.callable.const_val<cs::callable>(), args);
+			}
+			else
+				throw cs::lang_error("Invoke non-callable object.");
+		}
+
+		cs::var wait_until(cs::number mill_sec, const cs::var &func, const cs::array &argument)
+		{
+			if (func.type() == typeid(cs::callable)) {
+				cs::vector args(argument.begin(), argument.end());
+				return wait_until_impl(mill_sec, func.const_val<cs::callable>(), args);
+			}
+			else if (func.type() == typeid(cs::object_method)) {
+				const auto &om = func.const_val<cs::object_method>();
+				cs::vector args{om.object};
+				args.insert(args.end(), argument.begin(), argument.end());
+				return wait_for_impl(mill_sec, om.callable.const_val<cs::callable>(), args);
+			}
+			else
+				throw cs::lang_error("Invoke non-callable object.");
+		}
+
 		void init()
 		{
 			(*runtime_ext)
@@ -947,11 +988,13 @@ namespace cs_impl {
 			.add_var("import", make_cni(import, true))
 			.add_var("source_import", make_cni(source_import, true))
 			.add_var("argument_count", make_cni(argument_count, true))
-			.add_var("get_current_dir", make_cni(file_system::get_current_dir));
+			.add_var("get_current_dir", make_cni(file_system::get_current_dir))
+			.add_var("wait_for", make_cni(wait_for))
+			.add_var("wait_until", make_cni(wait_until));
 			(*context_ext)
 			.add_var("build", make_cni(build))
 			.add_var("solve", make_cni(solve))
-			.add_var("cmd_args", make_cni(cmd_args, true))
+			.add_var("cmd_args", make_cni(cmd_args, callable::types::member_visitor))
 			.add_var("import", make_cni(import, true))
 			.add_var("source_import", make_cni(source_import, true));
 		}
@@ -1100,7 +1143,7 @@ namespace cs_impl {
 			.add_var("cut", make_cni(cut, true))
 			.add_var("empty", make_cni(empty, true))
 			.add_var("clear", make_cni(clear, true))
-			.add_var("size", make_cni(size, true))
+			.add_var("size", make_cni(size, callable::types::member_visitor))
 			.add_var("tolower", make_cni(tolower, true))
 			.add_var("toupper", make_cni(toupper, true))
 			.add_var("to_number", make_cni(to_number, true))
@@ -1224,8 +1267,8 @@ namespace cs_impl {
 			.add_var("reg", var::make_constant<int>(DT_REG))
 			.add_var("lnk", var::make_constant<int>(DT_LNK));
 			(*path_info_ext)
-			.add_var("name", make_cni(name))
-			.add_var("type", make_cni(type));
+			.add_var("name", make_cni(name, callable::types::member_visitor))
+			.add_var("type", make_cni(type, callable::types::member_visitor));
 			(*path_ext)
 			.add_var("type", make_namespace(path_type_ext))
 			.add_var("info", make_namespace(path_info_ext))

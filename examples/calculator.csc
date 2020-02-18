@@ -9,7 +9,7 @@ class calculator
     function lex(expr)
         var status = 0, last_status = 2, bracket_lev = 0, expected_neg = true
         var buff = ""
-        for i = 0, i < expr.size(), null
+        for i = 0, i < expr.size, null
             var ch = expr[i]
             switch status
                 case 0
@@ -103,19 +103,19 @@ class calculator
 
     function parse(rec)
         while !num_stack.empty()
-            var lhs = num_stack.front()
+            var lhs = num_stack.front
             num_stack.pop_front()
             if lhs == '('
                 lhs = parse(0)
             end
-            if !num_stack.empty() && num_stack.front() == ')'
+            if !num_stack.empty() && num_stack.front == ')'
                 num_stack.pop_front()
                 return lhs
             end
             if op_stack.empty()
                 return lhs
             end
-            var op = op_stack.front()
+            var op = op_stack.front
             if op == '+' || op == '-'
                 if rec == 1
                     return lhs
@@ -129,7 +129,7 @@ class calculator
                 end
             else
                 op_stack.pop_front()
-                var rhs = num_stack.front()
+                var rhs = num_stack.front
                 num_stack.pop_front()
                 if rhs == '('
                     rhs = parse(0)

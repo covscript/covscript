@@ -6,14 +6,13 @@ using network
 
 function http_request(method, host, page, data)
     var sock = new tcp.socket
-    sock.set_timeout(2000)
-    sock.connect(tcp.resolve(host, "http"))
+    runtime.wait_for(2000, []()->sock.connect(tcp.resolve(host, "http")), {})
     @begin
     var head=
         method + " " + page + " HTTP/1.1\r\n" +
         "Host: " + host + "\r\n" +
         "Connection: Close\r\n" +
-        "Content-Length: " + data.size() + "\r\n" +
+        "Content-Length: " + data.size + "\r\n" +
         "Accept: */*\r\n" +
         "Pragma: no-cache\r\n" +
         "Cache-Control: no-cache\r\n" +

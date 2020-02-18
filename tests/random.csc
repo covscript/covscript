@@ -4,7 +4,7 @@ function test()
         var num=math.randint(math.constants.min,math.constants.max)
         foreach it in a
             if math.abs(num-it)<10000
-                return a.size()
+                return a.size
             end
         end
         a.push_back(num)

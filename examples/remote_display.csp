@@ -15,7 +15,7 @@ struct client
         pic.save_to_file("client_tmp.cdpf")
         var fs=fstream("client_tmp.cdpf",openmode.in)
         var buff=fs.getline()
-        sock.send(to_string(buff.size()))
+        sock.send(to_string(buff.size))
         if sock.receive(32)=="READY"
             sock.send(buff)
             if sock.receive(32)!="FINISH"

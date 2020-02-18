@@ -46,8 +46,8 @@ target_compile_definitions(covscript_debug PRIVATE CS_DEBUGGER)
 
 # Link libdl in UNIX and APPLE platform
 if (UNIX OR APPLE)
-    target_link_libraries(covscript dl)
-    target_link_libraries(covscript_debug dl)
+    target_link_libraries(covscript pthread dl)
+    target_link_libraries(covscript_debug pthread dl)
 endif ()
 
 # Main Executable

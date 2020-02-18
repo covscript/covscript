@@ -4,7 +4,7 @@ function cton(ch)
 end
 function reverse_str(str)
 	var s=new string
-	var i=str.size()-1
+	var i=str.size-1
 	while i>=0
 		s.append(str[i])
 		--i
@@ -17,7 +17,7 @@ function ston(str)
 	end
 	if str[0]=='-'
 		var tmp=new string
-		for i=1,i<str.size(),++i
+		for i=1,i<str.size,++i
 			tmp.append(str[i])
 		end
 		return -ston(tmp)
@@ -43,10 +43,10 @@ function ston(str)
 	end
 	var result=0
 	ipart=reverse_str(ipart)
-	for i=0,i<ipart.size(),++i
+	for i=0,i<ipart.size,++i
 		result=result+cton(ipart[i])*10^i
 	end
-	for i=0,i<fpart.size(),++i
+	for i=0,i<fpart.size,++i
 		result=result+cton(fpart[i])*10^(-i-1)
 	end
 	return result
@@ -72,7 +72,7 @@ function split(str)
 end
 function tolower(str)
     var s=str
-    for i=0,i<s.size(),++i
+    for i=0,i<s.size,++i
         s.replace(i,1,(s[i]).tolower())
     end
     return s

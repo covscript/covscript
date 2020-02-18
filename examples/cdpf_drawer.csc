@@ -33,7 +33,7 @@ function save()
 			end
 		end
 		pic.clear()
-		var str_size=math.max(str0.size()+2,buff.size()+2)
+		var str_size=math.max(str0.size+2,buff.size+2)
 		pic.draw_rect(0.5*(pic.get_width()-str_size-2),0.5*pic.get_height()-2,str_size+2,5,darwin.pixel(' ',darwin.black,darwin.blue))
 		pic.fill_rect(0.5*(pic.get_width()-str_size),0.5*pic.get_height()-1,str_size,3,darwin.pixel(' ',darwin.black,darwin.cyan))
 		pic.draw_string(0.5*(pic.get_width()-str_size-2)+1,0.5*pic.get_height()-2,str0,darwin.pixel(' ',darwin.white,darwin.blue))
@@ -52,7 +52,7 @@ function about()
 			run=false
 		end
 		pic.clear()
-		var str_size=math.max(str0.size()+2,buff.size()+2)
+		var str_size=math.max(str0.size+2,buff.size+2)
 		pic.draw_rect(0.5*(pic.get_width()-str_size-2),0.5*pic.get_height()-2,str_size+2,5,darwin.pixel(' ',darwin.black,darwin.blue))
 		pic.fill_rect(0.5*(pic.get_width()-str_size),0.5*pic.get_height()-1,str_size,3,darwin.pixel(' ',darwin.black,darwin.cyan))
 		pic.draw_string(0.5*(pic.get_width()-str_size-2)+1,0.5*pic.get_height()-2,str0,darwin.pixel(' ',darwin.white,darwin.blue))
@@ -93,7 +93,7 @@ function open_exist()
 			end
 		end
 		pic.clear()
-		var str_size=math.max(str0.size()+2,buff.size()+2)
+		var str_size=math.max(str0.size+2,buff.size+2)
 		pic.draw_rect(0.5*(pic.get_width()-str_size-2),0.5*pic.get_height()-2,str_size+2,5,darwin.pixel(' ',darwin.black,darwin.blue))
 		pic.fill_rect(0.5*(pic.get_width()-str_size),0.5*pic.get_height()-1,str_size,3,darwin.pixel(' ',darwin.black,darwin.cyan))
 		pic.draw_string(0.5*(pic.get_width()-str_size-2)+1,0.5*pic.get_height()-2,str0,darwin.pixel(' ',darwin.white,darwin.blue))
@@ -200,12 +200,12 @@ function new_picture()
 				default
 					switch select
 						case 0
-							if to_integer(ch)>47&&to_integer(ch)<58&&buff0.size()<limit
+							if to_integer(ch)>47&&to_integer(ch)<58&&buff0.size<limit
 								buff0+=ch
 							end
 						end
 						case 1
-							if to_integer(ch)>47&&to_integer(ch)<58&&buff1.size()<limit
+							if to_integer(ch)>47&&to_integer(ch)<58&&buff1.size<limit
 								buff1+=ch
 							end
 						end
@@ -231,17 +231,17 @@ function new_picture()
 		pic.draw_string(0.25*pic.get_width()+4,0.25*pic.get_height()+3,buff0,darwin.pixel(' ',darwin.black,darwin.white))
 		pic.draw_string(0.25*pic.get_width()+4,0.25*pic.get_height()+5,buff1,darwin.pixel(' ',darwin.black,darwin.white))
 		if select==2
-			pic.draw_rect(0.25*pic.get_width()+3,0.75*pic.get_height()-5,but0.size()+2,3,darwin.pixel('#',darwin.blue,darwin.blue))
+			pic.draw_rect(0.25*pic.get_width()+3,0.75*pic.get_height()-5,but0.size+2,3,darwin.pixel('#',darwin.blue,darwin.blue))
 		else
-			pic.draw_rect(0.25*pic.get_width()+3,0.75*pic.get_height()-5,but0.size()+2,3,darwin.pixel(' ',darwin.blue,darwin.blue))
+			pic.draw_rect(0.25*pic.get_width()+3,0.75*pic.get_height()-5,but0.size+2,3,darwin.pixel(' ',darwin.blue,darwin.blue))
 		end
 		pic.draw_string(0.25*pic.get_width()+4,0.75*pic.get_height()-4,but0,darwin.pixel(' ',darwin.white,darwin.blue))
 		if select==3
-			pic.draw_rect(0.25*pic.get_width()+3+but0.size()+4,0.75*pic.get_height()-5,but1.size()+2,3,darwin.pixel('#',darwin.blue,darwin.blue))
+			pic.draw_rect(0.25*pic.get_width()+3+but0.size+4,0.75*pic.get_height()-5,but1.size+2,3,darwin.pixel('#',darwin.blue,darwin.blue))
 		else
-			pic.draw_rect(0.25*pic.get_width()+3+but0.size()+4,0.75*pic.get_height()-5,but1.size()+2,3,darwin.pixel(' ',darwin.blue,darwin.blue))
+			pic.draw_rect(0.25*pic.get_width()+3+but0.size+4,0.75*pic.get_height()-5,but1.size+2,3,darwin.pixel(' ',darwin.blue,darwin.blue))
 		end
-		pic.draw_string(0.25*pic.get_width()+4+but0.size()+4,0.75*pic.get_height()-4,but1,darwin.pixel(' ',darwin.white,darwin.blue))
+		pic.draw_string(0.25*pic.get_width()+4+but0.size+4,0.75*pic.get_height()-4,but1,darwin.pixel(' ',darwin.white,darwin.blue))
 		if select<2
 			pic.draw_string(0.25*pic.get_width()+2,0.25*pic.get_height()+3+2*select,"->",darwin.pixel(' ',darwin.white,darwin.cyan))
 		end
@@ -713,29 +713,29 @@ function main()
 			pic.draw_line(0.5*pic.get_width()+2+vertex[0][0],0.5*pic.get_height()+vertex[0][1],0.5*pic.get_width()+cx+2,0.5*pic.get_height()+cy,pix)
 		end
 		case 4
-			str_size=math.max(str3.size()+2,buff.size()+2)
+			str_size=math.max(str3.size+2,buff.size+2)
 			pic.draw_rect(0.5*(pic.get_width()-str_size-2),0.5*pic.get_height()-2,str_size+2,5,darwin.pixel(' ',darwin.black,darwin.blue))
 			pic.fill_rect(0.5*(pic.get_width()-str_size),0.5*pic.get_height()-1,str_size,3,darwin.pixel(' ',darwin.black,darwin.cyan))
 			pic.draw_string(0.5*(pic.get_width()-str_size-2)+1,0.5*pic.get_height()-2,str3,darwin.pixel(' ',darwin.white,darwin.blue))
 			pic.draw_string(0.5*(pic.get_width()-str_size)+1,0.5*pic.get_height(),buff,darwin.pixel(' ',darwin.white,darwin.cyan))
 		end
 		case 5
-			pic.draw_rect(0.5*(pic.get_width()-str0.size()-2),0.5*pic.get_height()-2,str0.size()+2,5,darwin.pixel(' ',darwin.black,darwin.blue))
-			pic.fill_rect(0.5*(pic.get_width()-str0.size()),0.5*pic.get_height()-1,str0.size(),3,darwin.pixel(' ',darwin.black,darwin.cyan))
-			pic.draw_string(0.5*(pic.get_width()-str0.size()-2)+1,0.5*pic.get_height()-2,"Select Front Color",darwin.pixel(' ',darwin.white,darwin.blue))
-			pic.draw_string(0.5*(pic.get_width()-str0.size()),0.5*pic.get_height(),str0,darwin.pixel(' ',darwin.white,darwin.cyan))
+			pic.draw_rect(0.5*(pic.get_width()-str0.size-2),0.5*pic.get_height()-2,str0.size+2,5,darwin.pixel(' ',darwin.black,darwin.blue))
+			pic.fill_rect(0.5*(pic.get_width()-str0.size),0.5*pic.get_height()-1,str0.size,3,darwin.pixel(' ',darwin.black,darwin.cyan))
+			pic.draw_string(0.5*(pic.get_width()-str0.size-2)+1,0.5*pic.get_height()-2,"Select Front Color",darwin.pixel(' ',darwin.white,darwin.blue))
+			pic.draw_string(0.5*(pic.get_width()-str0.size),0.5*pic.get_height(),str0,darwin.pixel(' ',darwin.white,darwin.cyan))
 		end
 		case 6
-			pic.draw_rect(0.5*(pic.get_width()-str1.size()-2),0.5*pic.get_height()-2,str1.size()+2,5,darwin.pixel(' ',darwin.black,darwin.blue))
-			pic.fill_rect(0.5*(pic.get_width()-str1.size()),0.5*pic.get_height()-1,str1.size(),3,darwin.pixel(' ',darwin.black,darwin.cyan))
-			pic.draw_string(0.5*(pic.get_width()-str1.size()-2)+1,0.5*pic.get_height()-2,"Select Back Color",darwin.pixel(' ',darwin.white,darwin.blue))
-			pic.draw_string(0.5*(pic.get_width()-str1.size()),0.5*pic.get_height(),str1,darwin.pixel(' ',darwin.white,darwin.cyan))
+			pic.draw_rect(0.5*(pic.get_width()-str1.size-2),0.5*pic.get_height()-2,str1.size+2,5,darwin.pixel(' ',darwin.black,darwin.blue))
+			pic.fill_rect(0.5*(pic.get_width()-str1.size),0.5*pic.get_height()-1,str1.size,3,darwin.pixel(' ',darwin.black,darwin.cyan))
+			pic.draw_string(0.5*(pic.get_width()-str1.size-2)+1,0.5*pic.get_height()-2,"Select Back Color",darwin.pixel(' ',darwin.white,darwin.blue))
+			pic.draw_string(0.5*(pic.get_width()-str1.size),0.5*pic.get_height(),str1,darwin.pixel(' ',darwin.white,darwin.cyan))
 		end
 		case 7
-			pic.draw_rect(0.5*(pic.get_width()-str2.size()-2),0.5*pic.get_height()-2,str2.size()+2,5,darwin.pixel(' ',darwin.black,darwin.blue))
-			pic.fill_rect(0.5*(pic.get_width()-str2.size()),0.5*pic.get_height()-1,str2.size(),3,darwin.pixel(' ',darwin.black,darwin.cyan))
-			pic.draw_string(0.5*(pic.get_width()-str2.size()-2)+1,0.5*pic.get_height()-2,"Select Character",darwin.pixel(' ',darwin.white,darwin.blue))
-			pic.draw_string(0.5*(pic.get_width()-str2.size()),0.5*pic.get_height(),str2,darwin.pixel(' ',darwin.white,darwin.cyan))
+			pic.draw_rect(0.5*(pic.get_width()-str2.size-2),0.5*pic.get_height()-2,str2.size+2,5,darwin.pixel(' ',darwin.black,darwin.blue))
+			pic.fill_rect(0.5*(pic.get_width()-str2.size),0.5*pic.get_height()-1,str2.size,3,darwin.pixel(' ',darwin.black,darwin.cyan))
+			pic.draw_string(0.5*(pic.get_width()-str2.size-2)+1,0.5*pic.get_height()-2,"Select Character",darwin.pixel(' ',darwin.white,darwin.blue))
+			pic.draw_string(0.5*(pic.get_width()-str2.size),0.5*pic.get_height(),str2,darwin.pixel(' ',darwin.white,darwin.cyan))
 		end
 		case 11
 			pic.draw_line(0.5*pic.get_width()+2+vertex[0][0],0.5*pic.get_height()+vertex[0][1],0.5*pic.get_width()+cx+2,0.5*pic.get_height()+cy,pix)
@@ -764,6 +764,6 @@ try
 	start()
 	main()
 catch e
-	system.out.println(e.what())
+	system.out.println(e.what)
 end
 darwin.exit()

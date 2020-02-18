@@ -1,4 +1,4 @@
-var args=context.cmd_args()
+var args=context.cmd_args
 args.pop_front()
 var cmd=new string
 foreach it in args do cmd+=args+" "

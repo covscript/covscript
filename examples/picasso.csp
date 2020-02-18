@@ -131,7 +131,7 @@ struct file_explorer extends base_window
     var path_name=null
     var selected=0
     function read_path()
-        if path[path.size()-1]!=system.path.separator
+        if path[path.size-1]!=system.path.separator
             path+=system.path.separator
         end
         path_info=new array
@@ -143,11 +143,11 @@ struct file_explorer extends base_window
             regs.push_back(regex.build(it))
         end
         foreach it in info
-            if it.type()==system.path.type.dir
+            if it.type==system.path.type.dir
                 path_info.push_back(it)
             else
                 foreach reg in regs
-                    if !reg.match(it.name()).empty()
+                    if !reg.match(it.name).empty()
                         files.push_back(it)
                     end
                 end
@@ -157,10 +157,10 @@ struct file_explorer extends base_window
             path_info.push_back(it)
         end
         foreach it in path_info
-            if it.type()==system.path.type.dir
-                path_name.push_back(to_string(system.path.separator)+it.name())
+            if it.type==system.path.type.dir
+                path_name.push_back(to_string(system.path.separator)+it.name)
             else
-                path_name.push_back(it.name())
+                path_name.push_back(it.name)
             end
         end
     end
@@ -172,30 +172,30 @@ struct file_explorer extends base_window
     function on_draw() override
         var info=path_info.at(selected)
         if begin_popup_item("dir_list")
-            if menu_item("Enter","",info.type()==system.path.type.dir)
-                path+=info.name()
+            if menu_item("Enter","",info.type==system.path.type.dir)
+                path+=info.name
                 read_path()
                 selected=0
             end
-            if menu_item("Select","",info.type()!=system.path.type.dir)
-                this.on_close.activate(path+info.name())
+            if menu_item("Select","",info.type!=system.path.type.dir)
+                this.on_close.activate(path+info.name)
                 this.win_opened=false
             end
             end_popup()
         end
         if is_item_hovered()&&is_mouse_double_clicked(0)
-            if info.type()==system.path.type.dir
-                path+=info.name()
+            if info.type==system.path.type.dir
+                path+=info.name
                 read_path()
                 selected=0
             else
-                this.on_close.activate(path+info.name())
+                this.on_close.activate(path+info.name)
                 this.win_opened=false
             end
         end
         separator()
-        if menu_item("Select","",info.type()!=system.path.type.dir)
-            this.on_close.activate(path+info.name())
+        if menu_item("Select","",info.type!=system.path.type.dir)
+            this.on_close.activate(path+info.name)
             this.win_opened=false
         end
         separator()

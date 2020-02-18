@@ -57,7 +57,7 @@ loop
   	if(i!=0)
   		pic.draw_pixel(center_x+x_offset+2*i*zoom,center_y+y_offset,darwin.pixel('|',darwin.white,darwin.black))
   		var str=to_string(i)
-  		pic.draw_string(center_x+x_offset+2*i*zoom-0.5*str.size(),center_y+y_offset+1,str,darwin.pixel(' ',darwin.white,darwin.black))
+  		pic.draw_string(center_x+x_offset+2*i*zoom-0.5*str.size,center_y+y_offset+1,str,darwin.pixel(' ',darwin.white,darwin.black))
 	end
 	++i
   end
@@ -66,7 +66,7 @@ loop
 	if(i!=0)
   		pic.draw_pixel(center_x+x_offset,center_y+y_offset+i*zoom,darwin.pixel('-',darwin.white,darwin.black))
   		var str=to_string(-i)
-  		pic.draw_string(center_x+x_offset-str.size(),center_y+y_offset+i*zoom,str,darwin.pixel(' ',darwin.white,darwin.black))
+  		pic.draw_string(center_x+x_offset-str.size,center_y+y_offset+i*zoom,str,darwin.pixel(' ',darwin.white,darwin.black))
 	end
 	--i
   end

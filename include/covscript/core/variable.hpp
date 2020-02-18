@@ -448,7 +448,7 @@ namespace cs_impl {
 		void swap(any &obj, bool raw = false)
 		{
 			if (this->mDat != nullptr && obj.mDat != nullptr && raw) {
-				if (this->mDat->protect_level > 0 || obj.mDat->protect_level > 0)
+				if (mDat->is_rvalue || this->mDat->protect_level > 0 || obj.mDat->protect_level > 0)
 					throw cov::error("E000J");
 				std::swap(this->mDat->data, obj.mDat->data);
 			}
@@ -459,7 +459,7 @@ namespace cs_impl {
 		void swap(any &&obj, bool raw = false)
 		{
 			if (this->mDat != nullptr && obj.mDat != nullptr && raw) {
-				if (this->mDat->protect_level > 0 || obj.mDat->protect_level > 0)
+				if (mDat->is_rvalue || this->mDat->protect_level > 0 || obj.mDat->protect_level > 0)
 					throw cov::error("E000J");
 				std::swap(this->mDat->data, obj.mDat->data);
 			}
@@ -703,7 +703,7 @@ namespace cs_impl {
 		{
 			if (&obj != this && obj.mDat != mDat) {
 				if (mDat != nullptr && obj.mDat != nullptr && raw) {
-					if (this->mDat->protect_level > 0 || obj.mDat->protect_level > 0)
+					if (mDat->is_rvalue || this->mDat->protect_level > 0 || obj.mDat->protect_level > 0)
 						throw cov::error("E000J");
 					mDat->data->kill();
 					mDat->data = obj.mDat->data->duplicate();
@@ -722,7 +722,7 @@ namespace cs_impl {
 		void assign(const T &dat, bool raw = false)
 		{
 			if (mDat != nullptr && raw) {
-				if (this->mDat->protect_level > 0)
+				if (mDat->is_rvalue || this->mDat->protect_level > 0)
 					throw cov::error("E000J");
 				mDat->data->kill();
 				mDat->data = holder<T>::allocator.alloc(dat);
