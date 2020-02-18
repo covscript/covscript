@@ -158,7 +158,7 @@ namespace cs {
 			try {
 				var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
 				if (val.type() == typeid(callable)) {
-					const callable& func = val.const_val<callable>();
+					const callable &func = val.const_val<callable>();
 					if (func.type() == callable::types::member_visitor) {
 						vector args{a};
 						return func.call(args);

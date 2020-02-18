@@ -46,6 +46,7 @@ CNI_ROOT_NAMESPACE {
         class foo {
         public:
             int val = 10;
+
             const char *test(const char *str) {
                 std::cout << str;
                 return ",World";

@@ -426,31 +426,35 @@ namespace cs_impl {
 		std::function<void(const any &)> m_setter;
 	public:
 		member_visitor() = delete;
+
 		template<typename _Class, typename _Member>
-		member_visitor(_Class& obj, _Member _Class::* mem_ptr)
+		member_visitor(_Class &obj, _Member _Class::* mem_ptr)
 		{
-			m_getter = [&obj, mem_ptr]()->any {
+			m_getter = [&obj, mem_ptr]() -> any {
 				return any::make_constant<_Member>(obj.*mem_ptr);
 			};
 			m_setter = [&obj, mem_ptr](const any &val) {
 				obj.*mem_ptr = val.const_val<typename type_conversion_cs<_Member>::source_type>();
 			};
 		}
+
 		template<typename _Class, typename _Member>
-		member_visitor(const _Class& obj, _Member _Class::* mem_ptr)
+		member_visitor(const _Class &obj, _Member _Class::* mem_ptr)
 		{
-			m_getter = [&obj, mem_ptr]()->any {
+			m_getter = [&obj, mem_ptr]() -> any {
 				return any::make_constant<_Member>(obj.*mem_ptr);
 			};
 			m_setter = [&obj, mem_ptr](const any &) {
 				throw cs::runtime_error("CNI Member Visitor: Can not change the value of constant object.");
 			};
 		}
+
 		any get() const
 		{
 			return m_getter();
 		}
-		void set(const any& val) const
+
+		void set(const any &val) const
 		{
 			m_setter(val);
 		}
@@ -461,6 +465,13 @@ namespace cs {
 	using cs_impl::cni;
 	using cs_impl::member_visitor;
 
+	/**
+	 * Make Regular CNI Function
+	 * @tparam T
+	 * @param func
+	 * @param request_fold
+	 * @return cs::callable in variable
+	 */
 	template<typename T>
 	var make_cni(T &&func, bool request_fold = false)
 	{
@@ -468,10 +479,114 @@ namespace cs {
 		                                   request_fold ? callable::types::request_fold : callable::types::normal);
 	}
 
+	/**
+	 * Make Regular CNI Function
+	 * @tparam T
+	 * @param func
+	 * @param type
+	 * @return cs::callable in variable
+	 */
+	template<typename T>
+	var make_cni(T &&func, callable::types type)
+	{
+		return var::make_protect<callable>(cni(func), type);
+	}
+
+	/**
+	 * Make CNI Function with specific feature
+	 * @tparam T
+	 * @tparam X
+	 * @param func
+	 * @param type cs::cni_type<ReturnType(ArgumentType...)>
+	 * @param request_fold
+	 * @return cs::callable in variable
+	 */
 	template<typename T, typename X>
 	var make_cni(T &&func, const cni_type<X> &type, bool request_fold = false)
 	{
 		return var::make_protect<callable>(cni(func, type),
 		                                   request_fold ? callable::types::request_fold : callable::types::normal);
+	}
+
+	/**
+	 * Make CNI Function with specific feature
+	 * @tparam T
+	 * @tparam X
+	 * @param func
+	 * @param type cs::cni_type<ReturnType(ArgumentType...)>
+	 * @param callable_type
+	 * @return cs::callable in variable
+	 */
+	template<typename T, typename X>
+	var make_cni(T &&func, const cni_type<X> &type, callable::types callable_type)
+	{
+		return var::make_protect<callable>(cni(func, type), callable_type);
+	}
+
+	/**
+	 * Make CNI Member Visitor
+	 * @tparam _Class
+	 * @tparam _Member
+	 * @param member
+	 * @return cs::callable in variable
+	 */
+	template<typename _Class, typename _Member>
+	var make_member_visitor(_Member _Class::* member)
+	{
+		return var::make_protect<callable>(
+		cni([member](_Class &__this) {
+			return cs::var::make_constant<cs::member_visitor>(__this, member);
+		}),
+		cs::callable::types::member_visitor);
+	}
+
+	/**
+	 * Make CNI Member Visitor, variable specialization
+	 * @tparam _Class
+	 * @param member
+	 * @return cs::callable in variable
+	 */
+	template<typename _Class>
+	var make_member_visitor(var _Class::* member)
+	{
+		return var::make_protect<callable>(
+		cni([member](const _Class &__this) {
+			return __this.*member;
+		}),
+		cs::callable::types::member_visitor);
+	}
+
+	/**
+	 * Make CNI Const Member Visitor
+	 * @tparam _Class
+	 * @tparam _Member
+	 * @param member
+	 * @return cs::callable in variable
+	 */
+	template<typename _Class, typename _Member>
+	var make_const_member_visitor(_Member _Class::* member)
+	{
+		return var::make_protect<callable>(
+		cni([member](const _Class &__this) {
+			return cs::var::make_constant<cs::member_visitor>(__this, member);
+		}),
+		cs::callable::types::member_visitor);
+	}
+
+	/**
+	 * Make CNI Const Member Visitor, variable specialization
+	 * Note: this is identical to the non-const version
+	 * @tparam _Class
+	 * @param member
+	 * @return cs::callable in variable
+	 */
+	template<typename _Class>
+	var make_const_member_visitor(var _Class::* member)
+	{
+		return var::make_protect<callable>(
+		cni([member](const _Class &__this) {
+			return __this.*member;
+		}),
+		cs::callable::types::member_visitor);
 	}
 }
