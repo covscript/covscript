@@ -28,7 +28,7 @@
 *
 */
 #define COVSCRIPT_VERSION_NUM 3,3,3,10
-#define COVSCRIPT_VERSION_STR "3.3.3 Manis pentadactyla(Unstable) Build 10"
+#define COVSCRIPT_VERSION_STR "3.3.3 Manis pentadactyla(Stable) Build 10"
 #define COVSCRIPT_STD_VERSION 200301
 #define COVSCRIPT_API_VERSION 200205
 #define COVSCRIPT_ABI_VERSION 200203
