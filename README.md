@@ -65,10 +65,10 @@ Option|Mnemonic|Function
 `--help`|`-h`|Show help infomation
 `--version`|`-v`|Show version infomation
 `--wait-before-exit`|`-w`|Wait before process exit
-`--log-path <PATH>`|`-l <PATH>` |Set the log and AST exporting path
+`--log-path <PATH>`|`-l <PATH>` |Set the log path
 `--import-path <PATH>`|`-i <PATH>`|Set the import path
 
-**Note that if you do not set the log and AST exporting path, both will be printed to stdout.**
+**Note that if you do not set the log path, it will be directly output to the standard output stream.**
 ### Debugger ###
 `cs_dbg [options...] <FILE>`
 #### Options ####
