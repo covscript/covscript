@@ -153,6 +153,7 @@ void covscript_main(int args_size, const char *args[])
 		std::cout << "    Option               Mnemonic   Function\n";
 		std::cout << "  --compile-only        -c          Only compile\n";
 		std::cout << "  --dump-ast            -d          Export abstract syntax tree\n";
+		std::cout << "  --dependency          -r          Export module dependency\n";
 		std::cout << std::endl;
 		std::cout << "Interpreter REPL Options:" << std::endl;
 		std::cout << "    Option               Mnemonic   Function\n";
