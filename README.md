@@ -27,12 +27,12 @@ You can try Covariant Script at http://dev.covariant.cn/
 + [Darwin Universal CGL](https://github.com/covscript/covscript-darwin)
 + [Base64/Json Codec](https://github.com/covscript/covscript-codec)
 + [Regular Expression](https://github.com/covscript/covscript-regex)
++ [LibMozart Process](https://github.com/covscript/covscript-process)
 + [SQLite3 Database](https://github.com/covscript/covscript-sqlite)
 + [Dear ImGui GUI](https://github.com/covscript/covscript-imgui)
 + [ASIO Network](https://github.com/covscript/covscript-network)
 + [Streams API](https://github.com/covscript/covscript-streams)
 ## Documentation ##
-[CovScript Online Documents](https://covscript.org/docs/)  
 [CovScript Official Document(PDF)](http://mirrors.covariant.cn/covscript/comm_dist/cs_docs.pdf)  
 ## Installation ##
 + **[Recommend]** Download installation package from [covscript.org](http://covscript.org)
@@ -90,8 +90,8 @@ The [examples](./examples) folder contains several example programs written by C
 See [中文文档/捐献](https://github.com/covscript/covscript/blob/master/docs/README.zh_CN.md#%E6%8D%90%E7%8C%AE)
 ## Thanks ##
 **Ordered by contribution.**  
-+ Consultant: [@ice1000](https://github.com/ice1000/), [@imkiva](https://github.com/imkiva/)
-+ Testing: Weicheng Shi, [@imkiva](https://github.com/imkiva/)
++ Consultant: [@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
++ Testing: [@imkiva](https://github.com/imkiva/), Weicheng Shi
 + Douments: [@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
 + Streams API Extension: [@imkiva](https://github.com/imkiva/)
 + IntelliJ Plugin: [@ice1000](https://github.com/ice1000/)

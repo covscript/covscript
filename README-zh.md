@@ -26,12 +26,12 @@
 + [Dear ImGui图形用户界面](https://github.com/covscript/covscript-imgui)
 + [Darwin通用字符图形库](https://github.com/covscript/covscript-darwin)
 + [Base64/Json编解码](https://github.com/covscript/covscript-codec)
++ [LibMozart进程库](https://github.com/covscript/covscript-process)
 + [SQLite3数据库](https://github.com/covscript/covscript-sqlite)
 + [ASIO网络库](https://github.com/covscript/covscript-network)
 + [正则表达式](https://github.com/covscript/covscript-regex)
 + [流式API](https://github.com/covscript/covscript-streams)
 ## 文档 ##
-[CovScript在线文档](https://covscript.org/docs/)  
 [CovScript官方文档(PDF)](http://mirrors.covariant.cn/covscript/comm_dist/cs_docs.pdf)  
 ## 安装 ##
 + **[建议]** 从[covscript.org](http://covscript.org)下载安装包
@@ -89,8 +89,8 @@
 ![](https://github.com/covscript/covscript/raw/master/docs/Donation.png)
 ## 感谢 ##
 **按贡献排名。**  
-+ 顾问：[@ice1000](https://github.com/ice1000/), [@imkiva](https://github.com/imkiva/)
-+ 测试：史为成，[@imkiva](https://github.com/imkiva/)
++ 顾问：[@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
++ 测试：[@imkiva](https://github.com/imkiva/), 史为成
 + 文档：[@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
 + 流式API扩展：[@imkiva](https://github.com/imkiva/)
 + IntelliJ插件：[@ice1000](https://github.com/ice1000/)
