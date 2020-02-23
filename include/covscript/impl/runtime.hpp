@@ -252,7 +252,7 @@ namespace cs {
 	};
 
 	class runtime_type {
-		map_t<std::string, callable> literals;
+		map_t <std::string, callable> literals;
 	public:
 		domain_manager storage;
 

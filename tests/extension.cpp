@@ -3,7 +3,7 @@
 #include <iostream>
 
 CNI_ROOT_NAMESPACE {
-    CNI_CONST_V(hex_literal, [](const std::string &data){
+    CNI_CONST_V(hex_literal, [](const std::string &data) {
         if (data.size() < 3 && data[0] != '0' && data[1] != 'x')
             throw cs::lang_error("Wrong literal.");
         if (data.size() > 10)
@@ -18,7 +18,7 @@ CNI_ROOT_NAMESPACE {
                 n = n - 'a' + 10;
             else
                 throw cs::lang_error("Wrong literal.");
-            hex |= n << (28 - 4*i);
+            hex |= n << (28 - 4 * i);
         }
         return hex;
     })

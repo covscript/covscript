@@ -1,5 +1,5 @@
 import my_ext
-context.add_string_literal("hex", my_ext.hex_literal)
+context.add_literal("hex", my_ext.hex_literal)
 constant hex = "0x0f"hex
 system.out.println(hex)
 constant a=30

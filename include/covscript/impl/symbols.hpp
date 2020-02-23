@@ -23,7 +23,22 @@
 
 namespace cs {
 	enum class token_types {
-		null, endline, action, signal, id, vargs, expand, value, literal, sblist, mblist, lblist, expr, arglist, array, parallel
+		null,
+		endline,
+		action,
+		signal,
+		id,
+		vargs,
+		expand,
+		value,
+		literal,
+		sblist,
+		mblist,
+		lblist,
+		expr,
+		arglist,
+		array,
+		parallel
 	};
 	enum class action_types {
 		import_,
@@ -358,11 +373,12 @@ namespace cs {
 
 	class token_literal final : public token_base {
 		friend class compiler_type;
+
 		std::string m_data, m_literal;
 	public:
 		token_literal() = delete;
 
-		token_literal(const std::string& data, const std::string& literal) : m_data(data), m_literal(literal) {}
+		token_literal(const std::string &data, const std::string &literal) : m_data(data), m_literal(literal) {}
 
 		token_types get_type() const noexcept override
 		{
