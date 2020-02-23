@@ -49,6 +49,7 @@
 #include <istream>
 #include <ostream>
 #include <utility>
+#include <cstring>
 #include <atomic>
 #include <cctype>
 #include <string>
