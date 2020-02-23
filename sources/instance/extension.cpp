@@ -917,6 +917,11 @@ namespace cs_impl {
 				throw lang_error("Not a function.");
 		}
 
+		void add_string_literal(const context_t &context, const std::string &literal, const callable &func)
+		{
+			context->instance->add_string_literal(literal, func);
+		}
+
 		cs::var wait_for_impl(std::size_t mill_sec, const cs::callable &func, cs::vector &args)
 		{
 			std::future<cs::var> future = std::async(std::launch::async, [&func, &args] {
@@ -988,6 +993,7 @@ namespace cs_impl {
 			.add_var("import", make_cni(import, true))
 			.add_var("source_import", make_cni(source_import, true))
 			.add_var("argument_count", make_cni(argument_count, true))
+			.add_var("add_string_literal", make_cni(add_string_literal, true))
 			.add_var("get_current_dir", make_cni(file_system::get_current_dir))
 			.add_var("wait_for", make_cni(wait_for))
 			.add_var("wait_until", make_cni(wait_until));
@@ -996,7 +1002,8 @@ namespace cs_impl {
 			.add_var("solve", make_cni(solve))
 			.add_var("cmd_args", make_cni(cmd_args, callable::types::member_visitor))
 			.add_var("import", make_cni(import, true))
-			.add_var("source_import", make_cni(source_import, true));
+			.add_var("source_import", make_cni(source_import, true))
+			.add_var("add_string_literal", make_cni(add_string_literal, true));
 		}
 	}
 	namespace string_cs_ext {

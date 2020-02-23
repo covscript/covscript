@@ -3,6 +3,26 @@
 #include <iostream>
 
 CNI_ROOT_NAMESPACE {
+    CNI_CONST_V(hex_literal, [](const std::string &data){
+        if (data.size() < 3 && data[0] != '0' && data[1] != 'x')
+            throw cs::lang_error("Wrong literal.");
+        if (data.size() > 10)
+            throw cs::lang_error("Literal too long.");
+        std::uint32_t hex = 0x00000000;
+        int offset = 8 - (data.size() - 2);
+        for (int i = 7; i >= offset; --i) {
+            std::uint32_t n = std::tolower(data[i - offset + 2]);
+            if (n >= '0' && n <= '9')
+                n = n - '0';
+            else if (n >= 'a' && n <= 'f')
+                n = n - 'a' + 10;
+            else
+                throw cs::lang_error("Wrong literal.");
+            hex |= n << (28 - 4*i);
+        }
+        return hex;
+    })
+
     int test(int a) {
         std::cout << a << std::endl;
         return a + 1;

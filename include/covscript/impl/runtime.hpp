@@ -252,8 +252,27 @@ namespace cs {
 	};
 
 	class runtime_type {
+		map_t<std::string, callable> literals;
 	public:
 		domain_manager storage;
+
+		void add_string_literal(const std::string &literal, const callable &func)
+		{
+			if (literals.count(literal) > 0)
+				throw runtime_error("Duplicated String Literal.");
+			else
+				literals.emplace(literal, func);
+		}
+
+		var get_string_literal(const std::string &data, const std::string &literal)
+		{
+			if (literals.count(literal) > 0) {
+				vector arg{data};
+				return literals.at(literal).call(arg);
+			}
+			else
+				throw runtime_error("Undefined String Literal.");
+		}
 
 		var parse_add(const var &, const var &);
 

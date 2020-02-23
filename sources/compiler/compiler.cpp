@@ -678,6 +678,16 @@ namespace cs {
 			}
 			return;
 		}
+		case token_types::literal: {
+            token_literal *ptr = static_cast<token_literal *>(token);
+            token_base *oldt = it.data();
+            try{
+                it.data() = new_value(context->instance->get_string_literal(ptr->get_data(), ptr->get_literal()));
+            }catch(...){
+                it.data() = oldt;
+            }
+            return;
+		}
 		case token_types::expand: {
 			tree_type<token_base *> &tree = static_cast<token_expand *>(token)->get_tree();
 			opt_expr(tree, tree.root(), do_optm);
