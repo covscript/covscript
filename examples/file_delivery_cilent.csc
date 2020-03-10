@@ -12,7 +12,7 @@ function read_file(path)
 end
 function send_request(sock,length)
     var head=to_string(length)
-    while head.size()<32
+    while head.size<32
         head+=" "
     end
     sock.send(head)
@@ -25,7 +25,7 @@ end
 var sock=new tcp.socket
 sock.connect(tcp.endpoint("127.0.0.1",1024))
 var buff=read_file(in.getline())
-if send_request(sock,buff.size())
+if send_request(sock,buff.size)
     sock.send(buff)
     if sock.receive(32)!="FINISH"
         out.println("Error")

@@ -15,7 +15,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2019 Michael Lee(李登淳)
+* Copyright (C) 2020 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
@@ -27,6 +27,7 @@ namespace cs {
 	};
 	enum class action_types {
 		import_,
+		as_,
 		package_,
 		using_,
 		namespace_,

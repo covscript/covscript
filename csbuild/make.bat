@@ -1,4 +1,5 @@
 @echo off
+cd "%~dp0\.."
 mkdir cmake-build\mingw-w64
 cd    cmake-build\mingw-w64
 cmake -G "MinGW Makefiles" ..\..

@@ -15,7 +15,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2019 Michael Lee(李登淳)
+* Copyright (C) 2020 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
@@ -244,6 +244,8 @@ namespace cni_namespace_impl {
 #define CNI_CONST(NAME) CNI_REGISTER(NAME, cs::make_cni(NAME, true))
 #define CNI_V(NAME, ARGS) CNI_REGISTER(NAME, cs::make_cni(ARGS, false))
 #define CNI_CONST_V(NAME, ARGS) CNI_REGISTER(NAME, cs::make_cni(ARGS, true))
+#define CNI_CLASS_MEMBER(CLASS, MEMBER) CNI_REGISTER(MEMBER, cs::make_member_visitor(&CLASS::MEMBER))
+#define CNI_CLASS_MEMBER_CONST(CLASS, MEMBER) CNI_REGISTER(MEMBER, cs::make_const_member_visitor(&CLASS::MEMBER))
 #define CNI_VALUE(NAME, ARGS) CNI_REGISTER(NAME, cni_namespace_impl::make_var_normal(ARGS))
 #define CNI_VALUE_CONST(NAME, ARGS) CNI_REGISTER(NAME, cni_namespace_impl::make_var_const(ARGS))
 #define CNI_VALUE_V(NAME, TYPE, ARGS) CNI_REGISTER(NAME, cni_namespace_impl::make_var_normal_v<TYPE>(ARGS))

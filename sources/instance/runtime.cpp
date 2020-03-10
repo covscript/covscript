@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2019 Michael Lee(李登淳)
+* Copyright (C) 2020 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
@@ -157,8 +157,15 @@ namespace cs {
 		else {
 			try {
 				var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
-				if (val.type() == typeid(callable))
-					return var::make_protect<object_method>(a, val, val.const_val<callable>().is_request_fold());
+				if (val.type() == typeid(callable)) {
+					const callable &func = val.const_val<callable>();
+					if (func.type() == callable::types::member_visitor) {
+						vector args{a};
+						return func.call(args);
+					}
+					else
+						return var::make_protect<object_method>(a, val, func.is_request_fold());
+				}
 				else
 					return val;
 			}

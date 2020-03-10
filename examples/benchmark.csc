@@ -37,7 +37,7 @@ function quicksort(a,m,n)
     loop
         loop
             ++i
-            if i>=a.size()
+            if i>=a.size
                 break
             end
         until a[i]>=v
@@ -62,7 +62,7 @@ function step3(n,k)
         var a={}
         for i=0,i<=n,++i do a.push_back(math.randint(0,n))
         var ts=runtime.time()
-        quicksort(a,0,a.size()-1)
+        quicksort(a,0,a.size-1)
         score=score+runtime.time()-ts
     end
     return to_integer(score/k)
@@ -71,10 +71,10 @@ function fibonacci(count)
     var fib={0,1}
     for n=2,n<=count,++n do fib.push_back(fib.at(n-1)+fib.at(n-2))
     var sum=new hash_map
-    for i=2,i<fib.size(),++i do ++sum[to_string(fib.at(i)/fib.at(i-1))]
+    for i=2,i<fib.size,++i do ++sum[to_string(fib.at(i)/fib.at(i-1))]
     var max=0:0
-    foreach it in sum do it.second()>max.second()?(max=it):null
-    return max.first()
+    foreach it in sum do it.second>max.second?(max=it):null
+    return max.first
 end
 function step4(n,k)
     var score=0

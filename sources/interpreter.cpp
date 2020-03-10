@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2019 Michael Lee(李登淳)
+* Copyright (C) 2020 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 * Website: http://covscript.org
@@ -78,6 +78,7 @@ bool dump_ast = false;
 bool no_optimize = false;
 bool compile_only = false;
 bool show_help_info = false;
+bool dump_dependency = false;
 bool wait_before_exit = false;
 bool show_version_info = false;
 
@@ -104,6 +105,9 @@ int covscript_args(int args_size, const char *args[])
 				silent = true;
 			else if ((std::strcmp(args[index], "--dump-ast") == 0 || std::strcmp(args[index], "-d") == 0) && !dump_ast)
 				dump_ast = true;
+			else if ((std::strcmp(args[index], "--dependency") == 0 || std::strcmp(args[index], "-r") == 0) &&
+			         !dump_dependency)
+				dump_dependency = true;
 			else if ((std::strcmp(args[index], "--no-optimize") == 0 || std::strcmp(args[index], "-o") == 0) &&
 			         !no_optimize)
 				no_optimize = true;
@@ -149,6 +153,7 @@ void covscript_main(int args_size, const char *args[])
 		std::cout << "    Option               Mnemonic   Function\n";
 		std::cout << "  --compile-only        -c          Only compile\n";
 		std::cout << "  --dump-ast            -d          Export abstract syntax tree\n";
+		std::cout << "  --dependency          -r          Export module dependency\n";
 		std::cout << std::endl;
 		std::cout << "Interpreter REPL Options:" << std::endl;
 		std::cout << "    Option               Mnemonic   Function\n";
@@ -169,7 +174,7 @@ void covscript_main(int args_size, const char *args[])
 	else if (show_version_info) {
 		std::cout << "Covariant Script Programming Language Interpreter\n";
 		std::cout << "Version: " << cs::current_process->version << "\n";
-		std::cout << "Copyright (C) 2019 Michael Lee. All rights reserved.\n";
+		std::cout << "Copyright (C) 2020 Michael Lee. All rights reserved.\n";
 		std::cout << "Licensed under the Covariant Innovation General Public License,\n";
 		std::cout << "Version 1.0 (the \"License\");\n";
 		std::cout << "you may not use this file except in compliance with the License.\n";
@@ -217,6 +222,17 @@ void covscript_main(int args_size, const char *args[])
 				else
 					context->instance->dump_ast(std::cout);
 			}
+			if (dump_dependency) {
+				if (!log_path.empty()) {
+					std::ofstream out(::log_path);
+					for (auto &it:context->compiler->modules)
+						out << it.first << std::endl;
+				}
+				else {
+					for (auto &it:context->compiler->modules)
+						std::cout << it.first << std::endl;
+				}
+			}
 			if (!compile_only)
 				context->instance->interpret();
 		}
@@ -235,7 +251,7 @@ void covscript_main(int args_size, const char *args[])
 			std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: "
 			          << cs::current_process->version
 			          << "\n"
-			          "Copyright (C) 2019 Michael Lee. All rights reserved.\n"
+			          "Copyright (C) 2020 Michael Lee. All rights reserved.\n"
 			          "Please visit <http://covscript.org/> for more information."
 			          << std::endl;
 		cs::array

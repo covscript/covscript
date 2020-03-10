@@ -182,5 +182,5 @@ end
 try
     start_menu()
 catch e
-    println(e.what())
+    println(e.what)
 end

@@ -15,7 +15,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2019 Michael Lee(李登淳)
+* Copyright (C) 2020 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
@@ -62,12 +62,12 @@ namespace cs {
 			m_cache_refresh = true;
 		}
 
-		const domain_type &get_domain() const
+		domain_type &get_domain() const
 		{
 			return m_data.top();
 		}
 
-		const domain_type &get_global() const
+		domain_type &get_global() const
 		{
 			return m_data.top();
 		}

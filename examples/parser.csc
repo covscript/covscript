@@ -27,7 +27,7 @@ function parse(_line)
             if _r.empty()
                 run(s)
             else
-                (storage.front()).insert(_r.str(1),run(_r.str(2)))
+                (storage.front).insert(_r.str(1),run(_r.str(2)))
             end
         else
             var s=r.str(1)
@@ -53,5 +53,5 @@ if(system.in.input()>10){
 ")
 @end
 catch e
-    system.out.println(e.what())
+    system.out.println(e.what)
 end

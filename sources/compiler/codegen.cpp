@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2019 Michael Lee(李登淳)
+* Copyright (C) 2020 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
@@ -59,6 +59,56 @@ namespace cs {
 
 	statement_base *
 	method_import::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	{
+		statement_base *ptr = mResult.front();
+		mResult.pop_front();
+		return ptr;
+	}
+
+	var method_import_as::get_namespace(const context_t &context, tree_type<token_base *>::iterator it)
+	{
+		token_base *token = it.data();
+		if (token == nullptr)
+			return var();
+		if (token->get_type() == token_types::id) {
+			const var_id &package_name = static_cast<token_id *>(token)->get_id();
+			return make_namespace(context->instance->import(current_process->import_path, package_name));
+		}
+		else if (token->get_type() == token_types::signal &&
+		         static_cast<token_signal *>(token)->get_signal() == signal_types::dot_) {
+			const var &ext = get_namespace(context, it.left());
+			token_base *id = it.right().data();
+			if (id == nullptr || id->get_type() != token_types::id)
+				throw runtime_error(
+				    "Wrong grammar for import-as statement, expect <package name> or <package name>.<namespace id>...");
+			if (ext.type() == typeid(namespace_t))
+				return ext.const_val<namespace_t>()->get_var(static_cast<token_id *>(id)->get_id());
+			else
+				throw runtime_error("Access non-namespace object.");
+		}
+		else
+			throw runtime_error(
+			    "Wrong grammar for import-as statement, expect <package name> or <package name>.<namespace id>...");
+	}
+
+	void method_import_as::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	{
+		tree_type<token_base *> &tree_package = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		tree_type<token_base *> &tree_alias = static_cast<token_expr *>(raw.front().at(3))->get_tree();
+		if (tree_package.root().data() == nullptr || tree_alias.root().data() == nullptr)
+			throw internal_error("Null pointer accessed.");
+		token_base *token_alias = tree_alias.root().data();
+		if (token_alias->get_type() != token_types::id)
+			throw runtime_error("Wrong grammar for import-as statement, expect <id> in alias.");
+		const string &alias_name = static_cast<token_id *>(token_alias)->get_id().get_id();
+		var ext = get_namespace(context, tree_package.root());
+		context->compiler->add_constant(ext);
+		context->instance->storage.add_var(alias_name, ext);
+		mResult.emplace_back(new statement_import({{alias_name, ext}}, context, raw.front().back()));
+	}
+
+	statement_base *
+	method_import_as::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		statement_base *ptr = mResult.front();
 		mResult.pop_front();

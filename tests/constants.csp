@@ -1,4 +1,5 @@
 package constants
+import constants
 constant a={"World"}
 constant str="Hello"
-a.push_front(str)
+a.push_front(constants.str)

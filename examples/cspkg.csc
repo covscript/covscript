@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright (C) 2019 Michael Lee(李登淳)
+# Copyright (C) 2020 Michael Lee(李登淳)
 # Email: mikecovlee@163.com
 # Github: https://github.com/mikecovlee
 
@@ -31,18 +31,18 @@ function get_package_info(path)
         throw runtime.exception("Unrecongnized File.")
     end
     info->name=path.substr(0,pos)
-    info->type=path.substr(pos+1,path.size()-pos-1)
+    info->type=path.substr(pos+1,path.size-pos-1)
     return info
 end
 function get_file_name(path)
     var pos=path.rfind(to_string(system.path.separator),-1)
     if pos!=-1
-        return path.substr(pos+1,path.size()-pos-1)
+        return path.substr(pos+1,path.size-pos-1)
     else
         return path
     end
 end
-var path=runtime.get_import_path().split({system.path.delimiter}).back()
+var path=runtime.get_import_path().split({system.path.delimiter}).back
 function gui()
     # Force disable the optimization to avoid
     # the problems in some devices which do not support the opengl.
@@ -141,8 +141,8 @@ function gui()
             packages=new array
             var info=system.path.scan(path)
             foreach it in info
-                if it.type()==system.path.type.reg
-                    var pack_info=get_package_info(it.name())
+                if it.type==system.path.type.reg
+                    var pack_info=get_package_info(it.name)
                     packages.push_back(pack_info)
                     items.push_back(pack_info->name)
                 end
@@ -299,38 +299,38 @@ function draw_separator()
     system.out.println("")
 end
 # Main Program
-if context.cmd_args().size()<2
+if context.cmd_args.size<2
     system.out.println("Error: No command.")
     system.out.println("Enter \"--help\" to view help.")
     system.exit(-1)
 end
-switch context.cmd_args().at(1)
+switch context.cmd_args.at(1)
     default
         system.out.println("Unsupported Function.")
         system.exit(-1)
     end
     case "--install"
-        if context.cmd_args().size()!=3
+        if context.cmd_args.size!=3
             system.out.println("Wrong syntax.")
             system.exit(-1)
         end
-        var file_name=get_file_name(clone(context.cmd_args().at(2)))
+        var file_name=get_file_name(clone(context.cmd_args.at(2)))
         if system.file.exists(path+system.path.separator+file_name)
             if !answer("Target exists.Overwrite?")
                 system.out.println("Installation aborted.")
                 system.exit(0)
             end
         end
-        system.file.copy(context.cmd_args().at(2),path+system.path.separator+file_name)
+        system.file.copy(context.cmd_args.at(2),path+system.path.separator+file_name)
         system.out.println("Installation succeed.")
     end
     case "--uninstall"
-        if context.cmd_args().size()!=3
+        if context.cmd_args.size!=3
             system.out.println("Wrong syntax.")
             system.exit(-1)
         end
-        var extension_name=path+system.path.separator+context.cmd_args().at(2)+".cse"
-        var package_name=path+system.path.separator+context.cmd_args().at(2)+".csp"
+        var extension_name=path+system.path.separator+context.cmd_args.at(2)+".cse"
+        var package_name=path+system.path.separator+context.cmd_args.at(2)+".csp"
         if !system.file.remove(extension_name)&&!system.file.remove(package_name)
             system.out.println("Uninstall failed.")
             system.exit(-1)
@@ -345,14 +345,14 @@ switch context.cmd_args().at(1)
         var info=system.path.scan(path)
         var packages=new array
         foreach it in info
-            if it.type()==system.path.type.reg
-                packages.push_back(get_package_info(it.name()))
+            if it.type==system.path.type.reg
+                packages.push_back(get_package_info(it.name))
             end
         end
         var max_size=0
         foreach it in packages
-            if it->name.size()>max_size
-                max_size=it->name.size()
+            if it->name.size>max_size
+                max_size=it->name.size
             end
         end
         system.out.print("Name")
@@ -363,7 +363,7 @@ switch context.cmd_args().at(1)
         draw_separator()
         foreach it in packages
             system.out.print(it->name)
-            for i=0,i<=max_size-it->name.size(),++i
+            for i=0,i<=max_size-it->name.size,++i
                 system.out.print(" ")
             end
             system.out.print("    ")

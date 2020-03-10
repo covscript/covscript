@@ -12,5 +12,5 @@ while !in.eof()
     end
 end
 foreach it in table
-    system.out.println(it.first()+":"+it.second())
+    system.out.println(it.first+":"+it.second)
 end

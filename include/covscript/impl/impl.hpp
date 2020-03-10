@@ -15,7 +15,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2019 Michael Lee(李登淳)
+* Copyright (C) 2020 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
@@ -75,6 +75,7 @@ namespace cs {
 	class repl final {
 		std::deque<std::deque<token_base *>> tmp;
 		stack_type<method_base *> methods;
+		charset encoding = charset::utf8;
 		std::size_t line_num = 0;
 		bool multi_line = false;
 		string line_buff;
@@ -101,9 +102,11 @@ namespace cs {
 		void reset_status()
 		{
 			context_t __context = context;
+			charset __encoding = encoding;
 			std::size_t __line_num = line_num;
 			this->~repl();
 			::new(this) repl(__context);
+			encoding = __encoding;
 			line_num = __line_num;
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
@@ -117,11 +120,11 @@ namespace cs {
 
 // Guarder
 	class scope_guard final {
-		context_t context;
+		const context_t &context;
 	public:
 		scope_guard() = delete;
 
-		explicit scope_guard(context_t c) : context(std::move(c))
+		explicit scope_guard(const context_t &c) : context(c)
 		{
 			context->instance->storage.add_domain();
 		}
@@ -172,7 +175,7 @@ namespace cs {
 
 #endif
 
-		var get() const
+		var &get() const
 		{
 			return current_process->stack.top();
 		}

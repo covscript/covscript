@@ -1,6 +1,6 @@
 function test(...args)
-    if(args.size()>0)
-        system.out.print(to_string(args.front())+"\t")
+    if(args.size>0)
+        system.out.print(to_string(args.front)+"\t")
         args.pop_front()
         test(args...)
     else

@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2019 Michael Lee(李登淳)
+* Copyright (C) 2020 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 * Website: http://covscript.org
@@ -78,6 +78,7 @@ std::ostream &operator<<(std::ostream &out, const cs_impl::any &val)
 
 namespace cs_impl {
 	default_allocator<any::proxy> any::allocator;
+	cs::namespace_t member_visitor_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t array_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t array_iterator_ext = cs::make_shared_namespace<cs::name_space>();
@@ -344,6 +345,9 @@ namespace cs {
 		// Import Grammar
 		.add_method({new token_action(action_types::import_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_import)
+		.add_method({new token_action(action_types::import_), new token_expr(tree_type<token_base *>()),
+			            new token_action(action_types::as_), new token_expr(tree_type<token_base *>()),
+			            new token_endline(0)}, new method_import_as)
 		// Package Grammar
 		.add_method({new token_action(action_types::package_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_package)
@@ -491,6 +495,7 @@ namespace cs {
 		// Context
 		.add_buildin_var("context", var::make_constant<context_t>(context))
 		// Add Internal Functions to storage
+		.add_buildin_var("range", var::make_protect<callable>(range, callable::types::request_fold))
 		.add_buildin_var("to_integer", make_cni(to_integer, true))
 		.add_buildin_var("to_string", make_cni(to_string, true))
 		.add_buildin_var("type", make_cni(type, true))
@@ -524,6 +529,7 @@ namespace cs {
 #endif
 		if (context) {
 			context->instance->storage.clear_all_data();
+			context->compiler->modules.clear();
 			context->compiler->swap_context(nullptr);
 			context->instance->context = nullptr;
 			context->compiler = nullptr;

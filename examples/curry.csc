@@ -3,7 +3,7 @@ struct curry_impl
     var args = {}
     function exec(...arg)
         foreach it in arg do args.push_back(it)
-        if args.size() >= runtime.argument_count(func)
+        if args.size >= runtime.argument_count(func)
             return func(args...)
         else
             return exec    
@@ -36,13 +36,13 @@ struct bind_impl
     end
 end
 function bind(...args)
-    if args.size() < 2
+    if args.size < 2
         throw runtime.exception("Bind needs arguments")
     end
     var bnd = new bind_impl
-    bnd.func = args.front()
+    bnd.func = args.front
     args.pop_front()
-    if args.size() != runtime.argument_count(bnd.func)
+    if args.size != runtime.argument_count(bnd.func)
         throw runtime.exception("Must bind all of the arguments")
     end
     bnd.phs = args

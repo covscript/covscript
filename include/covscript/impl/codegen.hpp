@@ -15,7 +15,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2019 Michael Lee(李登淳)
+* Copyright (C) 2020 Michael Lee(李登淳)
 * Email: mikecovlee@163.com
 * Github: https://github.com/mikecovlee
 */
@@ -54,6 +54,28 @@ namespace cs {
 		{
 			return statement_types::import_;
 		}
+
+		void preprocess(const context_t &, const std::deque<std::deque<token_base *>> &) override;
+
+		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
+	};
+
+	class method_import_as final : public method_base {
+		std::deque<statement_base *> mResult;
+	public:
+		using method_base::method_base;
+
+		method_types get_type() const noexcept override
+		{
+			return method_types::single;
+		}
+
+		statement_types get_target_type() const noexcept override
+		{
+			return statement_types::import_;
+		}
+
+		var get_namespace(const context_t &, tree_type<token_base *>::iterator);
 
 		void preprocess(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 
