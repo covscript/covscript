@@ -4,22 +4,21 @@
 
 CNI_ROOT_NAMESPACE {
     CNI_CONST_V(hex_literal, [](const std::string &data) {
-        if (data.size() < 3 && data[0] != '0' && data[1] != 'x')
-            throw cs::lang_error("Wrong literal.");
-        if (data.size() > 10)
-            throw cs::lang_error("Literal too long.");
-        std::uint32_t hex = 0x00000000;
-        int offset = 8 - (data.size() - 2);
-        for (int i = 7; i >= offset; --i) {
-            std::uint32_t n = std::tolower(data[i - offset + 2]);
-            if (n >= '0' && n <= '9')
-                n = n - '0';
-            else if (n >= 'a' && n <= 'f')
-                n = n - 'a' + 10;
-            else
-                throw cs::lang_error("Wrong literal.");
-            hex |= n << (28 - 4 * i);
+        std::uint32_t hex = 0;
+        auto current = data.c_str() + 2;
+        auto end = current + data.length();
+
+        while (current < end && ((*current >= '0' && *current <= '9')
+                                 || (*current >= 'a' && *current <= 'f')
+                                 || (*current >= 'A' && *current <= 'F'))) {
+            hex = hex * 16
+                  + (*current & 15U)
+                  + (*current >= 'A' ? 9 : 0);
+            ++current;
         }
+
+        if (current != end)
+            throw cs::lang_error("Wrong literal.");
         return hex;
     })
 
@@ -30,7 +29,9 @@ CNI_ROOT_NAMESPACE {
 
     CNI(test)
 
-    CNI_V(test_v, [](int a) { return a + 1; })
+    CNI_V(test_v, [](int a) {
+        return a + 1;
+    })
 
     CNI_VALUE(val, 30)
 
@@ -57,7 +58,9 @@ CNI_ROOT_NAMESPACE {
 
         CNI_CONST(test)
 
-        CNI_CONST_V(test_v, [](double b) { return b - 0.1; })
+        CNI_CONST_V(test_v, [](double b) {
+            return b - 0.1;
+        })
 
         CNI_VALUE_CONST(val, 30)
 
