@@ -6,7 +6,7 @@ CNI_ROOT_NAMESPACE {
     CNI_CONST_V(hex_literal, [](const std::string &data) {
         std::uint32_t hex = 0;
         auto current = data.c_str() + 2;
-        auto end = current + data.length();
+        auto end = data.c_str() + data.length();
 
         while (current < end && ((*current >= '0' && *current <= '9')
                                  || (*current >= 'a' && *current <= 'f')
