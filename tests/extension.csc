@@ -1,4 +1,7 @@
 import my_ext
+context.add_literal("hex", my_ext.hex_literal)
+constant hex = "0x0f"hex
+system.out.println(hex)
 constant a=30
 var      b=my_ext.test(my_ext.val)
 constant c=my_ext.child.test(my_ext.child.val)

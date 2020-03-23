@@ -454,6 +454,10 @@ namespace cs {
 		case token_types::id:
 			return storage.get_var(static_cast<token_id *>(token)->get_id());
 			break;
+		case token_types::literal: {
+			token_literal *ptr = static_cast<token_literal *>(token);
+			return get_string_literal(ptr->get_data(), ptr->get_literal());
+		}
 		case token_types::value:
 			return static_cast<token_value *>(token)->get_value();
 			break;

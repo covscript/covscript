@@ -3,6 +3,25 @@
 #include <iostream>
 
 CNI_ROOT_NAMESPACE {
+    CNI_CONST_V(hex_literal, [](const std::string &data) {
+        std::uint32_t hex = 0;
+        auto current = data.c_str() + 2;
+        auto end = data.c_str() + data.length();
+
+        while (current < end && ((*current >= '0' && *current <= '9')
+                                 || (*current >= 'a' && *current <= 'f')
+                                 || (*current >= 'A' && *current <= 'F'))) {
+            hex = hex * 16
+                  + (*current & 15U)
+                  + (*current >= 'A' ? 9 : 0);
+            ++current;
+        }
+
+        if (current != end)
+            throw cs::lang_error("Wrong literal.");
+        return hex;
+    })
+
     int test(int a) {
         std::cout << a << std::endl;
         return a + 1;
@@ -10,7 +29,9 @@ CNI_ROOT_NAMESPACE {
 
     CNI(test)
 
-    CNI_V(test_v, [](int a) { return a + 1; })
+    CNI_V(test_v, [](int a) {
+        return a + 1;
+    })
 
     CNI_VALUE(val, 30)
 
@@ -37,7 +58,9 @@ CNI_ROOT_NAMESPACE {
 
         CNI_CONST(test)
 
-        CNI_CONST_V(test_v, [](double b) { return b - 0.1; })
+        CNI_CONST_V(test_v, [](double b) {
+            return b - 0.1;
+        })
 
         CNI_VALUE_CONST(val, 30)
 
