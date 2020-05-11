@@ -450,12 +450,14 @@ void covscript_main(int args_size, const char *args[])
 			throw cs::fatal_error("no input file.");
 		if (args_size - index > 1)
 			throw cs::fatal_error("argument syntax error.");
+		path = cs::process_path(args[index]);
+		if (!cs_impl::file_system::exists(path) || cs_impl::file_system::is_dir(path) || !cs_impl::file_system::can_read(path))
+			throw cs::fatal_error("invalid input file.");
 		std::cout << "Covariant Script Programming Language Debugger\nVersion: " << cs::current_process->version
 		          << "\n"
 		          "Copyright (C) 2020 Michael Lee. All rights reserved.\n"
 		          "Please visit <http://covscript.org/> for more information."
 		          << std::endl;
-		path = cs::process_path(args[index]);
 		cs::prepend_import_path(path, cs::current_process);
 		cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
 			cs::current_process->exit_code = *static_cast<int *>(code);
@@ -649,17 +651,20 @@ void covscript_main(int args_size, const char *args[])
 		func_map.add_func("print", "p", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
-			try {
-                std::deque<char> buff;
-                cs::expression_t tree;
-                for (auto &ch:cmd)
-                    buff.push_back(ch);
-                context->compiler->build_expr(buff, tree);
-                std::cout << context->instance->parse_expr(tree.root()) << std::endl;
-            } catch (std::exception &e) {
-                if (std::strstr(e.what(), "CS_SIGINT") != nullptr || std::strstr(e.what(), "CS_DEBUGGER_EXIT") != nullptr)
-                    throw;
-                std::cout << "Evaluation Failed: " << e.what() << std::endl;
+			try
+			{
+				std::deque<char> buff;
+				cs::expression_t tree;
+				for (auto &ch:cmd)
+					buff.push_back(ch);
+				context->compiler->build_expr(buff, tree);
+				std::cout << context->instance->parse_expr(tree.root()) << std::endl;
+			}
+			catch (std::exception &e)
+			{
+				if (std::strstr(e.what(), "CS_SIGINT") != nullptr || std::strstr(e.what(), "CS_DEBUGGER_EXIT") != nullptr)
+					throw;
+				std::cout << "Evaluation Failed: " << e.what() << std::endl;
 			}
 			return true;
 		});
