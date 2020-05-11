@@ -460,7 +460,6 @@ void covscript_main(int args_size, const char *args[])
 		cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
 			cs::current_process->exit_code = *static_cast<int *>(code);
 			throw cs::fatal_error("CS_DEBUGGER_EXIT");
-			return true;
 		});
 		cs::current_process->on_process_sigint.add_listener([](void *) -> bool {
 			throw cs::fatal_error("CS_SIGINT");
@@ -650,12 +649,18 @@ void covscript_main(int args_size, const char *args[])
 		func_map.add_func("print", "p", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
-			std::deque<char> buff;
-			cs::expression_t tree;
-			for (auto &ch:cmd)
-				buff.push_back(ch);
-			context->compiler->build_expr(buff, tree);
-			std::cout << context->instance->parse_expr(tree.root()) << std::endl;
+			try {
+                std::deque<char> buff;
+                cs::expression_t tree;
+                for (auto &ch:cmd)
+                    buff.push_back(ch);
+                context->compiler->build_expr(buff, tree);
+                std::cout << context->instance->parse_expr(tree.root()) << std::endl;
+            } catch (std::exception &e) {
+                if (std::strstr(e.what(), "CS_SIGINT") != nullptr || std::strstr(e.what(), "CS_DEBUGGER_EXIT") != nullptr)
+                    throw;
+                std::cout << "Evaluation Failed: " << e.what() << std::endl;
+			}
 			return true;
 		});
 		activate_sigint_handler();
