@@ -100,7 +100,7 @@ namespace cs {
 		// Lexer
 		static bool issignal(char32_t ch)
 		{
-			return signals.contains(ch);
+			return signals.count(ch) > 0;
 		}
 
 	private:

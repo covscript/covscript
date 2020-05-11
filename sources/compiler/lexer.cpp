@@ -208,9 +208,14 @@ namespace cs {
 					escape = true;
 				}
 				else if (*it == '\"') {
-					tokens.push_back(new_value(cvt->wide2local(tmp)));
-					tmp.clear();
 					inside_str = false;
+					if (cvt->is_identifier(*(it + 1))) {
+						tokens.push_back(new token_literal(cvt->wide2local(tmp), ""));
+						type = token_types::literal;
+					}
+					else
+						tokens.push_back(new_value(cvt->wide2local(tmp)));
+					tmp.clear();
 				}
 				else {
 					tmp += *it;
@@ -267,6 +272,16 @@ namespace cs {
 				tokens.push_back(new token_id(cvt->wide2local(tmp)));
 				tmp.clear();
 				break;
+			case token_types::literal:
+				if (cvt->is_identifier(*it)) {
+					tmp += *it;
+					++it;
+					continue;
+				}
+				type = token_types::null;
+				static_cast<token_literal *>(tokens.back())->m_literal = cvt->wide2local(tmp);
+				tmp.clear();
+				break;
 			case token_types::signal: {
 				if (issignal(*it)) {
 					tmp += *it;
@@ -316,6 +331,9 @@ namespace cs {
 				break;
 			}
 			tokens.push_back(new token_id(cvt->wide2local(tmp)));
+			break;
+		case token_types::literal:
+			static_cast<token_literal *>(tokens.back())->m_literal = cvt->wide2local(tmp);
 			break;
 		case token_types::signal: {
 			std::u32string sig;
