@@ -884,7 +884,7 @@ namespace cs {
 		void collect()
 		{
 			for (auto &ptr:table)
-				delete ptr;
+				::operator delete(ptr);
 			table.clear();
 		}
 
