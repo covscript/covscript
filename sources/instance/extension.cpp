@@ -74,7 +74,7 @@ namespace cs_impl {
 
 		array::iterator next(array::iterator &it)
 		{
-			return ++it;
+			return it++;
 		}
 
 		array::iterator next_n(array::iterator &it, number offset)
@@ -84,7 +84,7 @@ namespace cs_impl {
 
 		array::iterator prev(array::iterator &it)
 		{
-			return --it;
+			return it--;
 		}
 
 		array::iterator prev_n(array::iterator &it, number offset)
@@ -591,12 +591,12 @@ namespace cs_impl {
 
 		list::iterator next(list::iterator &it)
 		{
-			return ++it;
+			return it++;
 		}
 
 		list::iterator prev(list::iterator &it)
 		{
-			return --it;
+			return it--;
 		}
 
 		var data(list::iterator &it)
