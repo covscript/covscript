@@ -21,6 +21,7 @@
 * Website: http://covscript.org
 */
 #include <covscript/impl/impl.hpp>
+#include <initializer_list>
 
 namespace cs_function_invoker_impl {
 	template<typename T>
@@ -95,7 +96,7 @@ namespace cs {
 
 	void prepend_import_path(const std::string &script, cs::process_context *context);
 
-	array parse_cmd_args(int, const char *[]);
+	array parse_cmd_args(int, char *[]);
 
 	context_t create_context(const array &);
 
@@ -108,4 +109,24 @@ namespace cs {
 	cs::var eval(const context_t &, const std::string &);
 
 	using cs_function_invoker_impl::function_invoker;
+
+	class bootstrap final {
+	public:
+		context_t context;
+		// Bootstrap from string initializer list
+		bootstrap(std::initializer_list<std::string> l):context(create_context({l.begin(), l.end()})) {}
+		// Classic bootstrap from command line
+		bootstrap(int argc, char *argv[]):context(create_context(parse_cmd_args(argc, argv))) {}
+		// Zero initialization bootstrap
+		bootstrap():context(create_context({"<BOOTSTRAP_ENV>"})) {}
+		~bootstrap()
+		{
+			collect_garbage(context);
+		}
+		void run(const std::string& path)
+		{
+			context->instance->compile(path);
+			context->instance->interpret();
+		}
+	};
 }

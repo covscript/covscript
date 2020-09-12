@@ -81,7 +81,7 @@ bool show_help_info = false;
 bool wait_before_exit = false;
 bool show_version_info = false;
 
-int covscript_args(int args_size, const char *args[])
+int covscript_args(int args_size, char *args[])
 {
 	int expect_log_path = 0;
 	int expect_import_path = 0;
@@ -402,7 +402,7 @@ cs::array split(const std::string &str)
 	return std::move(arr);
 }
 
-void covscript_main(int args_size, const char *args[])
+void covscript_main(int args_size, char *args[])
 {
 	if (args_size > 1) {
 		int index = covscript_args(args_size, args);
@@ -689,7 +689,7 @@ void covscript_main(int args_size, const char *args[])
 		throw cs::fatal_error("no input file.");
 }
 
-int main(int args_size, const char *args[])
+int main(int args_size, char *args[])
 {
 	int errorcode = 0;
 	try {
