@@ -151,6 +151,14 @@ namespace cs {
 		}
 	}
 
+	void instance_type::run_flat()
+	{
+		flat_executor exec;
+		for (auto &it:statements)
+			it->gen_flat_ir(&exec);
+		exec.exec();
+	}
+
 	void instance_type::dump_ast(std::ostream &stream)
 	{
 		stream << "< Covariant Script AST Dump >\n< BeginMetaData >\n< Version: " << current_process->version

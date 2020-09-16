@@ -603,20 +603,83 @@ namespace cs {
 		throw_
 	};
 
-	struct flat_executor;
+	class flat_executor;
 
 	class instruct_base
 	{
 	public:
 		virtual void exec(flat_executor*) = 0;
+		virtual ~instruct_base() = default;
 	};
 
-	struct flat_executor final
+	enum class expect_tag
 	{
-		stack_type<std::size_t> scope_stack;
-		instance_type *instance = nullptr;
+		scope_exit, except_handler
+	};
+
+	class flat_executor final
+	{
 		std::vector<instruct_base*> irs;
+		struct scope
+		{
+			std::size_t scope_intro = 0;
+			std::vector<std::size_t*> scope_exit;
+			std::vector<std::size_t*> except_handler;
+			scope(std::size_t pc) : scope_intro(pc) {}
+		};
+	public:
+		instance_type *instance = nullptr;
+		stack_type<scope> scope_stack;
 		std::size_t pc = 0;
+
+		~flat_executor()
+		{
+			for(auto &it:irs)
+				delete it;
+		}
+
+		template<typename T, typename...ArgsT>
+		void push_ir(ArgsT&&...args)
+		{
+			irs.push_back(new T(this, std::forward<ArgsT>(args)...));
+			++pc;
+		}
+
+		void push_scope()
+		{
+			scope_stack.push(pc + 1);
+		}
+
+		std::size_t get_scope_intro()
+		{
+			return scope_stack.top().scope_intro;
+		}
+
+		void expect_scope_exit(std::size_t* tag)
+		{
+			scope_stack.top().scope_exit.push_back(tag);
+		}
+
+		void expect_except_handler(std::size_t* tag)
+		{
+			scope_stack.top().except_handler.push_back(tag);
+		}
+
+		void pop_scope()
+		{
+			for(auto &it:scope_stack.top().scope_exit)
+				*it = pc + 1;
+			for(auto &it:scope_stack.top().except_handler)
+				*it = pc + 1;
+			scope_stack.pop_no_return();
+		}
+
+		void exec()
+		{
+			pc = 0;
+			for (auto &it:irs)
+				it->exec(this);
+		}
 	};
 
 	class statement_base {

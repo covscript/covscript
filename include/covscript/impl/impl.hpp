@@ -57,6 +57,8 @@ namespace cs {
 
 		void interpret();
 
+		void run_flat();
+
 		void dump_ast(std::ostream &);
 
 		// Var definition
