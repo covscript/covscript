@@ -191,12 +191,12 @@ namespace cs_impl {
 
 	template<typename T>
 	struct hash_enum_resolver<T, true> {
-		using type=hash_if<std::size_t, T, true>;
+		using type = hash_if<std::size_t, T, true>;
 	};
 
 	template<typename T>
 	struct hash_enum_resolver<T, false> {
-		using type=hash_if<T, T, hash_helper<T>::value>;
+		using type = hash_if<T, T, hash_helper<T>::value>;
 	};
 
 	/*
@@ -225,7 +225,7 @@ namespace cs_impl {
 	template<typename T>
 	static std::size_t hash(const T &val)
 	{
-		using type=typename hash_enum_resolver<T, std::is_enum<T>::value>::type;
+		using type = typename hash_enum_resolver<T, std::is_enum<T>::value>::type;
 		return type::hash(val);
 	}
 
@@ -249,12 +249,12 @@ namespace cs_impl {
 
 	template<typename _Target>
 	struct type_conversion_cs {
-		using source_type=_Target;
+		using source_type = _Target;
 	};
 
 	template<typename _Source>
 	struct type_conversion_cpp {
-		using target_type=_Source;
+		using target_type = _Source;
 	};
 
 	template<typename _From, typename _To>
@@ -289,8 +289,8 @@ namespace cs_impl {
 
 // Be careful when you adjust the buffer size.
 	constexpr std::size_t default_allocate_buffer_size = 64;
-	template<typename T> using default_allocator_provider=std::allocator<T>;
-	template<typename T> using default_allocator=cs::allocator_type<T, default_allocate_buffer_size, default_allocator_provider>;
+	template<typename T> using default_allocator_provider = std::allocator<T>;
+	template<typename T> using default_allocator = cs::allocator_type<T, default_allocate_buffer_size, default_allocator_provider>;
 
 	class any final {
 		class baseHolder {

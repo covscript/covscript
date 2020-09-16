@@ -791,7 +791,7 @@ namespace cs {
 
 	class event_type final {
 	public:
-		using listener_type=std::function<bool(void *)>;
+		using listener_type = std::function<bool(void *)>;
 	private:
 		stack_type<listener_type> m_listener;
 	public:

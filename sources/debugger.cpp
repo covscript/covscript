@@ -240,7 +240,7 @@ public:
 	}
 };
 
-using callback_t=std::function<bool(const std::string &)>;
+using callback_t = std::function<bool(const std::string &)>;
 
 class function_map_t final {
 	cs::map_t<std::string, callback_t> m_map;
@@ -451,7 +451,8 @@ void covscript_main(int args_size, char *args[])
 		if (args_size - index > 1)
 			throw cs::fatal_error("argument syntax error.");
 		path = cs::process_path(args[index]);
-		if (!cs_impl::file_system::exists(path) || cs_impl::file_system::is_dir(path) || !cs_impl::file_system::can_read(path))
+		if (!cs_impl::file_system::exists(path) || cs_impl::file_system::is_dir(path) ||
+		        !cs_impl::file_system::can_read(path))
 			throw cs::fatal_error("invalid input file.");
 		std::cout << "Covariant Script Programming Language Debugger\nVersion: " << cs::current_process->version
 		          << "\n"
@@ -662,7 +663,8 @@ void covscript_main(int args_size, char *args[])
 			}
 			catch (std::exception &e)
 			{
-				if (std::strstr(e.what(), "CS_SIGINT") != nullptr || std::strstr(e.what(), "CS_DEBUGGER_EXIT") != nullptr)
+				if (std::strstr(e.what(), "CS_SIGINT") != nullptr ||
+				        std::strstr(e.what(), "CS_DEBUGGER_EXIT") != nullptr)
 					throw;
 				std::cout << "Evaluation Failed: " << e.what() << std::endl;
 			}

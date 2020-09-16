@@ -60,8 +60,8 @@ namespace cov {
 	struct resolver;
 	template<typename rT, typename...ArgsT>
 	struct resolver<rT(*)(ArgsT...)> {
-		using return_type=rT;
-		using args_type=cov::tuple<ArgsT...>;
+		using return_type = rT;
+		using args_type = cov::tuple<ArgsT...>;
 	};
 
 	template<int N, typename...Args>
@@ -73,8 +73,8 @@ namespace cov {
 
 	template<typename F, typename...Args>
 	class bind_t {
-		using func_t=cov::function<typename cov::function_parser<F>::type::common_type>;
-		using args_t=typename cov::type_list::make<Args...>::result;
+		using func_t = cov::function<typename cov::function_parser<F>::type::common_type>;
+		using args_t = typename cov::type_list::make<Args...>::result;
 		F mFunc;
 		cov::tuple<Args...> mArgs;
 

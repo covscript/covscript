@@ -28,12 +28,12 @@ namespace cs_impl {
 
 	template<typename T>
 	struct cni_modify {
-		using type=T;
+		using type = T;
 	};
 
 	template<typename RetT, typename...ArgsT>
 	struct cni_modify<RetT(ArgsT...)> {
-		using type=RetT(*)(ArgsT...);
+		using type = RetT(*)(ArgsT...);
 	};
 
 // Type conversion
@@ -179,7 +179,7 @@ namespace cs_impl {
 		}
 	};
 
-	template<typename _TargetT, typename _SourceT, std::size_t index> using try_convert=try_convert_and_check<_TargetT, _SourceT, typename cov::remove_constant<typename cov::remove_reference<_TargetT>::type>::type, index>;
+	template<typename _TargetT, typename _SourceT, std::size_t index> using try_convert = try_convert_and_check<_TargetT, _SourceT, typename cov::remove_constant<typename cov::remove_reference<_TargetT>::type>::type, index>;
 
 // Static argument check
 	template<typename RetT, typename...ArgsT>
@@ -340,8 +340,8 @@ namespace cs_impl {
 			template<typename X, typename RetT, typename...ArgsT>
 			static cni_holder_base *_construct(X &&val, RetT(*target_function)(ArgsT...))
 			{
-				using source_function_type=typename type_conversion_cpp<RetT>::target_type(*)(
-				                               typename type_conversion_cs<ArgsT>::source_type...);
+				using source_function_type = typename type_conversion_cpp<RetT>::target_type(*)(
+				                                 typename type_conversion_cs<ArgsT>::source_type...);
 				// Return type
 				static_assert(cni_convertible<RetT, typename type_conversion_cpp<RetT>::target_type>::value,
 				              "Invalid conversion.");
@@ -374,8 +374,8 @@ namespace cs_impl {
 			        std::forward<T>(val)))
 		{
 			// Analysis the function
-			using target_function_type=typename cov::function_parser<typename cni_modify<typename cov::remove_reference<T>::type>::type>::type::common_type;
-			using source_function_type=typename cov::function_parser<typename cni_modify<X>::type>::type::common_type;
+			using target_function_type = typename cov::function_parser<typename cni_modify<typename cov::remove_reference<T>::type>::type>::type::common_type;
+			using source_function_type = typename cov::function_parser<typename cni_modify<X>::type>::type::common_type;
 			// Check consistency
 			// Argument size
 			static_assert(

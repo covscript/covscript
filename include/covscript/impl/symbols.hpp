@@ -605,80 +605,116 @@ namespace cs {
 
 	class flat_executor;
 
-	class instruct_base
-	{
+	class instruct_base {
 	public:
-		virtual void exec(flat_executor*) = 0;
+		std::size_t cur_pc = 1;
+
+		virtual void exec(flat_executor *) = 0;
+
 		virtual ~instruct_base() = default;
+
+		virtual void dump(std::ostream &o) const
+		{
+			o << "<instruct>\n";
+		}
 	};
 
-	enum class expect_tag
-	{
+	enum class expect_tag {
 		scope_exit, except_handler
 	};
 
-	class flat_executor final
-	{
-		std::vector<instruct_base*> irs;
-		struct scope
-		{
+	enum class scope_type {
+		normal, except, loop
+	};
+
+	class flat_executor final {
+		std::vector<instruct_base *> irs;
+
+		struct scope {
 			std::size_t scope_intro = 0;
-			std::vector<std::size_t*> scope_exit;
-			std::vector<std::size_t*> except_handler;
-			scope(std::size_t pc) : scope_intro(pc) {}
+			scope_type type = scope_type::normal;
+			std::vector<std::size_t *> scope_exit;
+			std::vector<std::size_t *> except_handler;
+
+			scope(std::size_t pc, scope_type t) : scope_intro(pc), type(t) {}
 		};
+
 	public:
 		instance_type *instance = nullptr;
-		stack_type<scope> scope_stack;
+		stack_type <scope> scope_stack;
 		std::size_t pc = 0;
 
 		~flat_executor()
 		{
-			for(auto &it:irs)
+			for (auto &it:irs)
 				delete it;
 		}
 
 		template<typename T, typename...ArgsT>
-		void push_ir(ArgsT&&...args)
+		void push_ir(ArgsT &&...args)
 		{
 			irs.push_back(new T(this, std::forward<ArgsT>(args)...));
+			irs.back()->cur_pc = pc;
 			++pc;
 		}
 
-		void push_scope()
+		void push_scope(scope_type type = scope_type::normal)
 		{
-			scope_stack.push(pc + 1);
+			scope_stack.push(pc, type);
 		}
 
-		std::size_t get_scope_intro()
+		std::size_t get_scope_intro(scope_type type = scope_type::normal)
 		{
-			return scope_stack.top().scope_intro;
+			for (auto &it:scope_stack)
+				if (it.type == type)
+					return it.scope_intro;
+			throw runtime_error("No matching scope.");
 		}
 
-		void expect_scope_exit(std::size_t* tag)
+		void expect_scope_exit(std::size_t *tag, scope_type type = scope_type::normal)
 		{
-			scope_stack.top().scope_exit.push_back(tag);
+			for (auto &it:scope_stack)
+				if (it.type == type)
+					it.scope_exit.push_back(tag);
 		}
 
-		void expect_except_handler(std::size_t* tag)
+		void expect_except_handler(std::size_t *tag)
 		{
-			scope_stack.top().except_handler.push_back(tag);
+			for (auto &it:scope_stack)
+				if (it.type == scope_type::except)
+					it.except_handler.push_back(tag);
 		}
 
 		void pop_scope()
 		{
-			for(auto &it:scope_stack.top().scope_exit)
-				*it = pc + 1;
-			for(auto &it:scope_stack.top().except_handler)
-				*it = pc + 1;
+			for (auto &it:scope_stack.top().scope_exit)
+				*it = pc - 1;
+			for (auto &it:scope_stack.top().except_handler)
+				*it = pc - 1;
 			scope_stack.pop_no_return();
+		}
+
+		void print(std::ostream &o)
+		{
+			for (auto &it:irs) {
+				o << it->cur_pc << ": ";
+				it->dump(o);
+			}
+		}
+
+		void print_exec(std::ostream &o)
+		{
+			for (pc = 0; pc < irs.size(); ++pc) {
+				o << irs[pc]->cur_pc << ": ";
+				irs[pc]->dump(o);
+				irs[pc]->exec(this);
+			}
 		}
 
 		void exec()
 		{
-			pc = 0;
-			for (auto &it:irs)
-				it->exec(this);
+			for (pc = 0; pc < irs.size(); ++pc)
+				irs[pc]->exec(this);
 		}
 	};
 

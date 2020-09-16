@@ -68,29 +68,29 @@ namespace cs {
 	class name_space;
 
 #ifndef CS_COMPATIBILITY_MODE
-	template<typename _kT, typename _vT> using map_t=phmap::flat_hash_map<_kT, _vT>;
-	template<typename _Tp> using set_t=phmap::flat_hash_set<_Tp>;
+	template<typename _kT, typename _vT> using map_t = phmap::flat_hash_map<_kT, _vT>;
+	template<typename _Tp> using set_t = phmap::flat_hash_set<_Tp>;
 #else
 	template<typename _kT, typename _vT> using map_t=std::unordered_map<_kT, _vT>;
 	template<typename _Tp> using set_t=std::unordered_set<_Tp>;
 #endif
-	using var=cs_impl::any;
-	using number=long double;
-	using boolean=bool;
-	using string=std::string;
-	using list=std::list<var>;
-	using array=std::deque<var>;
-	using pair=std::pair<var, var>;
-	using hash_map=map_t<var, var>;
-	using vector=std::vector<var>;
-	using expression_t=tree_type<token_base *>;
-	using compiler_t=std::shared_ptr<compiler_type>;
-	using instance_t=std::shared_ptr<instance_type>;
-	using context_t=std::shared_ptr<context_type>;
-	using domain_t=std::shared_ptr<domain_type>;
-	using namespace_t=std::shared_ptr<name_space>;
-	using istream=std::shared_ptr<std::istream>;
-	using ostream=std::shared_ptr<std::ostream>;
+	using var = cs_impl::any;
+	using number = long double;
+	using boolean = bool;
+	using string = std::string;
+	using list = std::list<var>;
+	using array = std::deque<var>;
+	using pair = std::pair<var, var>;
+	using hash_map = map_t<var, var>;
+	using vector = std::vector<var>;
+	using expression_t = tree_type<token_base *>;
+	using compiler_t = std::shared_ptr<compiler_type>;
+	using instance_t = std::shared_ptr<instance_type>;
+	using context_t = std::shared_ptr<context_type>;
+	using domain_t = std::shared_ptr<domain_type>;
+	using namespace_t = std::shared_ptr<name_space>;
+	using istream = std::shared_ptr<std::istream>;
+	using ostream = std::shared_ptr<std::ostream>;
 
 	typedef void(*cs_exception_handler)(const lang_error &);
 

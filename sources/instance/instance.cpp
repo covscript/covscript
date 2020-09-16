@@ -151,12 +151,15 @@ namespace cs {
 		}
 	}
 
-	void instance_type::run_flat()
+	void instance_type::run_flat(std::ostream &o)
 	{
 		flat_executor exec;
+		exec.instance = this;
 		for (auto &it:statements)
 			it->gen_flat_ir(&exec);
-		exec.exec();
+		exec.print(o);
+		o << std::endl << "#### Begin Execution ####" << std::endl << std::endl;
+		exec.print_exec(o);
 	}
 
 	void instance_type::dump_ast(std::ostream &stream)

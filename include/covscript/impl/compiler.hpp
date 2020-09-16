@@ -23,7 +23,7 @@
 
 namespace cs {
 	class translator_type final {
-		using data_type=std::pair<std::deque<token_base *>, method_base *>;
+		using data_type = std::pair<std::deque<token_base *>, method_base *>;
 
 		static bool compare(const token_base *a, const token_base *b)
 		{

@@ -113,17 +113,22 @@ namespace cs {
 	class bootstrap final {
 	public:
 		context_t context;
+
 		// Bootstrap from string initializer list
-		bootstrap(std::initializer_list<std::string> l):context(create_context({l.begin(), l.end()})) {}
+		bootstrap(std::initializer_list<std::string> l) : context(create_context({l.begin(), l.end()})) {}
+
 		// Classic bootstrap from command line
-		bootstrap(int argc, char *argv[]):context(create_context(parse_cmd_args(argc, argv))) {}
+		bootstrap(int argc, char *argv[]) : context(create_context(parse_cmd_args(argc, argv))) {}
+
 		// Zero initialization bootstrap
-		bootstrap():context(create_context({"<BOOTSTRAP_ENV>"})) {}
+		bootstrap() : context(create_context({"<BOOTSTRAP_ENV>"})) {}
+
 		~bootstrap()
 		{
 			collect_garbage(context);
 		}
-		void run(const std::string& path)
+
+		void run(const std::string &path)
 		{
 			context->instance->compile(path);
 			context->instance->interpret();

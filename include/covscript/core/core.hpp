@@ -152,7 +152,7 @@ namespace cs {
 // Callable and Function
 	class callable final {
 	public:
-		using function_type=std::function<var(vector &)>;
+		using function_type = std::function<var(vector &)>;
 		enum class types {
 			normal, request_fold, member_fn, member_visitor
 		};

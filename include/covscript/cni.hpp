@@ -29,143 +29,143 @@ namespace cs_impl {
 // signed short int->cs::number
 	template<>
 	struct type_conversion_cs<signed short int> {
-		using source_type=cs::number;
+		using source_type = cs::number;
 	};
 
 	template<>
 	struct type_conversion_cpp<signed short int> {
-		using target_type=cs::number;
+		using target_type = cs::number;
 	};
 // unsigned short int->cs::number
 	template<>
 	struct type_conversion_cs<unsigned short int> {
-		using source_type=cs::number;
+		using source_type = cs::number;
 	};
 
 	template<>
 	struct type_conversion_cpp<unsigned short int> {
-		using target_type=cs::number;
+		using target_type = cs::number;
 	};
 // signed int->cs::number
 	template<>
 	struct type_conversion_cs<signed int> {
-		using source_type=cs::number;
+		using source_type = cs::number;
 	};
 
 	template<>
 	struct type_conversion_cpp<signed int> {
-		using target_type=cs::number;
+		using target_type = cs::number;
 	};
 // unsigned int->cs::number
 	template<>
 	struct type_conversion_cs<unsigned int> {
-		using source_type=cs::number;
+		using source_type = cs::number;
 	};
 
 	template<>
 	struct type_conversion_cpp<unsigned int> {
-		using target_type=cs::number;
+		using target_type = cs::number;
 	};
 // signed long int->cs::number
 	template<>
 	struct type_conversion_cs<signed long int> {
-		using source_type=cs::number;
+		using source_type = cs::number;
 	};
 
 	template<>
 	struct type_conversion_cpp<signed long int> {
-		using target_type=cs::number;
+		using target_type = cs::number;
 	};
 // unsigned long int->cs::number
 	template<>
 	struct type_conversion_cs<unsigned long int> {
-		using source_type=cs::number;
+		using source_type = cs::number;
 	};
 
 	template<>
 	struct type_conversion_cpp<unsigned long int> {
-		using target_type=cs::number;
+		using target_type = cs::number;
 	};
 // signed long long int->cs::number
 	template<>
 	struct type_conversion_cs<signed long long int> {
-		using source_type=cs::number;
+		using source_type = cs::number;
 	};
 
 	template<>
 	struct type_conversion_cpp<signed long long int> {
-		using target_type=cs::number;
+		using target_type = cs::number;
 	};
 // unsigned long long int->cs::number
 	template<>
 	struct type_conversion_cs<unsigned long long int> {
-		using source_type=cs::number;
+		using source_type = cs::number;
 	};
 
 	template<>
 	struct type_conversion_cpp<unsigned long long int> {
-		using target_type=cs::number;
+		using target_type = cs::number;
 	};
 // signed char->cs::char
 	template<>
 	struct type_conversion_cs<signed char> {
-		using source_type=char;
+		using source_type = char;
 	};
 
 	template<>
 	struct type_conversion_cpp<signed char> {
-		using target_type=char;
+		using target_type = char;
 	};
 // unsigned char->cs::char
 	template<>
 	struct type_conversion_cs<unsigned char> {
-		using source_type=char;
+		using source_type = char;
 	};
 
 	template<>
 	struct type_conversion_cpp<unsigned char> {
-		using target_type=char;
+		using target_type = char;
 	};
 // float->cs::number
 	template<>
 	struct type_conversion_cs<float> {
-		using source_type=cs::number;
+		using source_type = cs::number;
 	};
 
 	template<>
 	struct type_conversion_cpp<float> {
-		using target_type=cs::number;
+		using target_type = cs::number;
 	};
 // double->cs::number
 	template<>
 	struct type_conversion_cs<double> {
-		using source_type=cs::number;
+		using source_type = cs::number;
 	};
 
 	template<>
 	struct type_conversion_cpp<double> {
-		using target_type=cs::number;
+		using target_type = cs::number;
 	};
 // long double->cs::number
 	template<>
 	struct type_conversion_cs<long double> {
-		using source_type=cs::number;
+		using source_type = cs::number;
 	};
 
 	template<>
 	struct type_conversion_cpp<long double> {
-		using target_type=cs::number;
+		using target_type = cs::number;
 	};
 // std::string->cs::string
 // const char*->cs::string
 	template<>
 	struct type_conversion_cs<const char *> {
-		using source_type=cs::string;
+		using source_type = cs::string;
 	};
 
 	template<>
 	struct type_conversion_cpp<const char *> {
-		using target_type=cs::string;
+		using target_type = cs::string;
 	};
 
 	template<>
