@@ -603,6 +603,22 @@ namespace cs {
 		throw_
 	};
 
+	struct flat_executor;
+
+	class instruct_base
+	{
+	public:
+		virtual void exec(flat_executor*) = 0;
+	};
+
+	struct flat_executor final
+	{
+		stack_type<std::size_t> scope_stack;
+		instance_type *instance = nullptr;
+		std::vector<instruct_base*> irs;
+		std::size_t pc = 0;
+	};
+
 	class statement_base {
 	protected:
 		context_t context;
@@ -668,6 +684,8 @@ namespace cs {
 		{
 			o << "<statement>\n";
 		}
+
+		virtual void gen_flat_ir(flat_executor *) {}
 	};
 
 	class method_base {

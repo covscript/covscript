@@ -656,4 +656,71 @@ namespace cs {
 
 		void dump(std::ostream &) const override;
 	};
+
+	class instruct_push_scope final : public instruct_base
+	{
+	public:
+		void exec(flat_executor* fe) override
+		{
+			fe->scope_stack.push(fe->pc);
+			fe->instance->storage.add_domain();
+		}
+	};
+
+	class instruct_pop_scope final : public instruct_base
+	{
+	public:
+		void exec(flat_executor* fe) override
+		{
+			fe->scope_stack.pop_no_return();
+			fe->instance->storage.remove_domain();
+		}
+	};
+
+	class instruct_var final : public instruct_base
+	{
+		const tree_type<token_base *>& tree;
+	public:
+		instruct_var(const tree_type<token_base *>& t) : tree(t) {}
+		void exec(flat_executor* fe) override
+		{
+			fe->instance->parse_define_var(tree.root());
+		}
+	};
+
+	class instruct_eval final : public instruct_base
+	{
+		const tree_type<token_base *>& tree;
+	public:
+		instruct_eval(const tree_type<token_base *>& t) : tree(t) {}
+		void exec(flat_executor* fe) override
+		{
+			fe->instance->parse_expr(tree.root());
+		}
+	};
+
+	class instruct_jump final : public instruct_base
+	{
+		std::size_t tag = 0;
+	public:
+		instruct_jump(std::size_t pc) : tag(pc) {}
+		void exec(flat_executor* fe) override
+		{
+			fe->pc = tag;
+		}
+	};
+
+	class instruct_cond final : public instruct_base
+	{
+		const tree_type<token_base *>& tree;
+		std::size_t tag = 0;
+		bool cond = true;
+	public:
+		instruct_cond(const tree_type<token_base *>& t, std::size_t pc, bool c) : tree(t), tag(pc), cond(c) {}
+		void exec(flat_executor* fe) override
+		{
+			if (fe->instance->parse_expr(tree.root()).const_val<boolean>() == cond)
+				fe->pc = tag;
+		}
+	};
 }
