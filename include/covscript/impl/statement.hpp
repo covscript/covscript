@@ -791,7 +791,7 @@ namespace cs {
 				it->gen_flat_ir(fe);
 			fe->push_ir<instruct_internal>("foreach iterate", [&](flat_executor *fe) {
 				static var_id id("__PRAGMA_CS_FOREACH_ITERATOR_NEXT__");
-				fe->instance->storage.get_var(id).const_val<std::function<void()>>();
+				fe->instance->storage.get_var(id).const_val<std::function<void()>>()();
 			});
 			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop) + 1);
 			fe->push_ir<instruct_pop_scope>();
