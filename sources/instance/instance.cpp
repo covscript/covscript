@@ -159,7 +159,7 @@ namespace cs {
 			it->gen_flat_ir(&exec);
 		exec.print(o);
 		o << std::endl << "#### Begin Execution ####" << std::endl << std::endl;
-		exec.print_exec(o);
+		exec.exec();
 	}
 
 	void instance_type::dump_ast(std::ostream &stream)

@@ -22,6 +22,23 @@
 #include <covscript/impl/impl.hpp>
 
 namespace cs {
+	class instruct_internal final : public instruct_base {
+		std::function<void(flat_executor *)> m_exec;
+	public:
+		template<typename T>
+		instruct_internal(flat_executor *fe, T&& func) : m_exec(std::forward<T>(func)) {}
+
+		void exec(flat_executor *fe) override
+		{
+			m_exec(fe);
+		}
+
+		void dump(std::ostream &o) const override
+		{
+			o << "<internal function>\n";
+		}
+	};
+
 	class instruct_push_scope final : public instruct_base {
 		scope_type t;
 	public:
@@ -159,6 +176,37 @@ namespace cs {
 		void dump(std::ostream &o) const override
 		{
 			o << "<conditional jump: tag = " << tag + 1 << ", cond = " << (cond ? "true" : "false") << ">\n";
+		}
+	};
+
+	class instruct_cond_internal final : public instruct_base {
+		std::function<bool(flat_executor *)> cond;
+		std::size_t tag = 0;
+	public:
+		instruct_cond_internal(flat_executor *, std::function<bool(flat_executor *)> t, std::size_t pc) : cond(std::move(t)), tag(pc) {}
+
+		instruct_cond_internal(flat_executor *fe, std::function<bool(flat_executor *)> t, expect_tag e,
+		                       scope_type type = scope_type::normal) : cond(std::move(t))
+		{
+			switch (e) {
+			case expect_tag::scope_exit:
+				fe->expect_scope_exit(&tag, type);
+				break;
+			case expect_tag::except_handler:
+				fe->expect_except_handler(&tag);
+				break;
+			}
+		}
+
+		void exec(flat_executor *fe) override
+		{
+			if (cond(fe))
+				fe->pc = tag;
+		}
+
+		void dump(std::ostream &o) const override
+		{
+			o << "<internal conditional jump: tag = " << tag + 1 << ", cond = " << (cond ? "true" : "false") << ">\n";
 		}
 	};
 
@@ -692,6 +740,73 @@ namespace cs {
 		void run_impl() override;
 
 		void dump(std::ostream &) const override;
+
+		template<typename type, typename iterator_t>
+		void init_foreach(const var &obj, flat_executor *fe)
+		{
+			fe->instance->storage.add_var("__PRAGMA_CS_FOREACH_ITERATOR__", static_cast<iterator_t>(obj.const_val<type>().begin()));
+			fe->instance->storage.add_var("__PRAGMA_CS_FOREACH_ITERATOR_END__", static_cast<iterator_t>(obj.const_val<type>().end()));
+		}
+
+		void gen_flat_ir(flat_executor *fe) override
+		{
+			fe->push_ir<instruct_push_scope>(scope_type::loop);
+			fe->push_ir<instruct_internal>([&](flat_executor *fe) {
+				const var &obj = context->instance->parse_expr(this->mObj.root());
+				fe->instance->storage.add_var("__PRAGMA_CS_FOREACH_TYPE__", static_cast<std::type_index>(obj.type()));
+				if (obj.type() == typeid(string))
+					init_foreach<string, string::const_iterator>(obj, fe);
+				else if (obj.type() == typeid(list))
+					init_foreach<list, list::const_iterator>(obj, fe);
+				else if (obj.type() == typeid(array))
+					init_foreach<array, array::const_iterator>(obj, fe);
+				else if (obj.type() == typeid(hash_map))
+					init_foreach<hash_map, hash_map::const_iterator>(obj, fe);
+				else if (obj.type() == typeid(range_type))
+					init_foreach<range_type, range_iterator>(obj, fe);
+				else
+					throw runtime_error("Unsupported type(foreach)");
+			});
+			fe->push_ir<instruct_cond_internal>([&](flat_executor *fe) {
+				return fe->instance->storage.get_var("__PRAGMA_CS_FOREACH_ITERATOR__") == fe->instance->storage.get_var("__PRAGMA_CS_FOREACH_ITERATOR_END__");
+			}, expect_tag::scope_exit, scope_type::loop);
+			fe->push_ir<instruct_internal>([&](flat_executor *fe) {
+				auto it = fe->instance->storage.get_var("__PRAGMA_CS_FOREACH_ITERATOR__");
+				auto type = fe->instance->storage.get_var("__PRAGMA_CS_FOREACH_TYPE__");
+				if (type == typeid(string))
+					fe->instance->storage.add_var(mIt, *it.val<string::const_iterator>(), true);
+				else if (type == typeid(list))
+					fe->instance->storage.add_var(mIt, *it.val<list::const_iterator>(), true);
+				else if (type == typeid(array))
+					fe->instance->storage.add_var(mIt, *it.val<array::const_iterator>(), true);
+				else if (type == typeid(hash_map))
+					fe->instance->storage.add_var(mIt, static_cast<pair>(*it.val<hash_map ::const_iterator>()), true);
+				else if (type == typeid(range_type))
+					fe->instance->storage.add_var(mIt, *it.val<range_iterator>(), true);
+				else
+					throw runtime_error("Unsupported type(foreach)");
+			});
+			for (auto &it:mBlock)
+				it->gen_flat_ir(fe);
+			fe->push_ir<instruct_internal>([&](flat_executor *fe) {
+				auto it = fe->instance->storage.get_var("__PRAGMA_CS_FOREACH_ITERATOR__");
+				auto type = fe->instance->storage.get_var("__PRAGMA_CS_FOREACH_TYPE__");
+				if (type == typeid(string))
+					++it.val<string::const_iterator>();
+				else if (type == typeid(list))
+					++it.val<list::const_iterator>();
+				else if (type == typeid(array))
+					++it.val<array::const_iterator>();
+				else if (type == typeid(hash_map))
+					++it.val<hash_map ::const_iterator>();
+				else if (type == typeid(range_type))
+					++it.val<range_iterator>();
+				else
+					throw runtime_error("Unsupported type(foreach)");
+			});
+			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop) + 1);
+			fe->push_ir<instruct_pop_scope>();
+		}
 	};
 
 	class statement_struct final : public statement_base {
