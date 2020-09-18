@@ -650,6 +650,11 @@ namespace cs {
 				delete it;
 		}
 
+		instruct_base *get_current_ir()
+		{
+			return irs.back();
+		}
+
 		template<typename T, typename...ArgsT>
 		void push_ir(ArgsT &&...args)
 		{

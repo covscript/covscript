@@ -89,7 +89,7 @@ namespace cs {
 	};
 
 	class instruct_var final : public instruct_base {
-		const tree_type<token_base *> &tree;
+		tree_type<token_base *> tree;
 	public:
 		instruct_var(flat_executor *, const tree_type<token_base *> &t) : tree(t) {}
 
@@ -105,7 +105,7 @@ namespace cs {
 	};
 
 	class instruct_eval final : public instruct_base {
-		const tree_type<token_base *> &tree;
+		tree_type<token_base *> tree;
 	public:
 		instruct_eval(flat_executor *, const tree_type<token_base *> &t) : tree(t) {}
 
@@ -121,8 +121,9 @@ namespace cs {
 	};
 
 	class instruct_jump final : public instruct_base {
-		std::size_t tag = 0;
 	public:
+		std::size_t tag = 0;
+
 		instruct_jump(flat_executor *, std::size_t pc) : tag(pc) {}
 
 		instruct_jump(flat_executor *fe, expect_tag e, scope_type type = scope_type::normal)
@@ -149,10 +150,11 @@ namespace cs {
 	};
 
 	class instruct_cond final : public instruct_base {
-		const tree_type<token_base *> &tree;
-		std::size_t tag = 0;
+		tree_type<token_base *> tree;
 		bool cond = true;
 	public:
+		std::size_t tag = 0;
+
 		instruct_cond(flat_executor *, const tree_type<token_base *> &t, std::size_t pc, bool c) : tree(t), tag(pc),
 			cond(c) {}
 
@@ -177,7 +179,7 @@ namespace cs {
 
 		void dump(std::ostream &o) const override
 		{
-			o << "<conditional jump: tag = " << tag + 1 << ", cond = " << (cond ? "true" : "false") << ">\n";
+			o << "<conditional jump: tag = " << tag + 1 << ">\n";
 		}
 	};
 
@@ -209,7 +211,7 @@ namespace cs {
 
 		void dump(std::ostream &o) const override
 		{
-			o << "<conditional jump: tag = " << tag + 1 << ", cond = " << (cond ? "true" : "false") << ">\n";
+			o << "<conditional jump: tag = " << tag + 1 << ">\n";
 		}
 	};
 
@@ -469,11 +471,12 @@ namespace cs {
 		void gen_flat_ir(flat_executor *fe) override
 		{
 			fe->push_ir<instruct_push_scope>();
-			fe->push_ir<instruct_cond>(mTree, expect_tag::scope_exit, false);
+			fe->push_ir<instruct_cond>(mTree, 0, false);
+			instruct_cond *jmp = static_cast<instruct_cond*>(fe->get_current_ir());
 			for (auto &it:mBlock)
 				it->gen_flat_ir(fe);
-			fe->push_ir<instruct_pop_scope>();
-			fe->push_ir<instruct_push_scope>();
+			fe->push_ir<instruct_jump>(expect_tag::scope_exit);
+			jmp->tag = fe->pc - 1;
 			for (auto &it:mElseBlock)
 				it->gen_flat_ir(fe);
 			fe->push_ir<instruct_pop_scope>();
@@ -722,6 +725,18 @@ namespace cs {
 		void run_impl() override;
 
 		void dump(std::ostream &) const override;
+
+		void gen_flat_ir(flat_executor *fe) override
+		{
+			fe->push_ir<instruct_push_scope>(scope_type::loop);
+			fe->push_ir<instruct_var>(mParallel[0]);
+			fe->push_ir<instruct_cond>(mParallel[1], expect_tag::scope_exit, false, scope_type::loop);
+			for (auto &it:mBlock)
+				it->gen_flat_ir(fe);
+			fe->push_ir<instruct_eval>(mParallel[2]);
+			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop) + 1);
+			fe->push_ir<instruct_pop_scope>();
+		}
 	};
 
 	class statement_foreach final : public statement_base {
