@@ -617,6 +617,11 @@ namespace cs {
 		{
 			o << "<instruct>\n";
 		}
+
+		const std::type_info& type() const noexcept
+		{
+			return typeid(*this);
+		}
 	};
 
 	enum class expect_tag {
@@ -624,7 +629,7 @@ namespace cs {
 	};
 
 	enum class scope_type {
-		normal, except, loop
+		all, normal, except, loop
 	};
 
 	class flat_executor final {
@@ -668,10 +673,10 @@ namespace cs {
 			scope_stack.push(pc, type);
 		}
 
-		std::size_t get_scope_intro(scope_type type = scope_type::normal)
+		std::size_t get_scope_intro(scope_type type = scope_type::all)
 		{
 			for (auto &it:scope_stack)
-				if (it.type == type)
+				if (type == scope_type::all || it.type == type)
 					return it.scope_intro;
 			throw runtime_error("No matching scope.");
 		}
@@ -697,6 +702,15 @@ namespace cs {
 			for (auto &it:scope_stack.top().except_handler)
 				*it = pc - 1;
 			scope_stack.pop_no_return();
+		}
+
+		template<typename T>
+		bool has_instruct_in_scope()
+		{
+			for (std::size_t i = get_scope_intro(); i < irs.size(); ++i)
+				if (irs[i]->type() == typeid(T))
+					return true;
+			return false;
 		}
 
 		void print(std::ostream &o)

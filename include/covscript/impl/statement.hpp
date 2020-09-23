@@ -57,6 +57,7 @@ namespace cs {
 		void dump(std::ostream &o) const override
 		{
 			switch (t) {
+			case scope_type::all:
 			case scope_type::normal:
 				o << "<push scope>\n";
 				break;
@@ -674,6 +675,11 @@ namespace cs {
 			fe->push_ir<instruct_push_scope>(scope_type::loop);
 			for (auto &it:mBlock)
 				it->gen_flat_ir(fe);
+			if (fe->has_instruct_in_scope<instruct_var>()) {
+				fe->push_ir<instruct_internal>("Clear Scope", [](flat_executor *fe) {
+					fe->instance->storage.clear_domain();
+				});
+			}
 			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop));
 			fe->push_ir<instruct_pop_scope>();
 		}
@@ -702,6 +708,11 @@ namespace cs {
 			fe->push_ir<instruct_push_scope>(scope_type::loop);
 			for (auto &it:mBlock)
 				it->gen_flat_ir(fe);
+			if (fe->has_instruct_in_scope<instruct_var>()) {
+				fe->push_ir<instruct_internal>("Clear Scope", [](flat_executor *fe) {
+					fe->instance->storage.clear_domain();
+				});
+			}
 			fe->push_ir<instruct_cond>(mExpr, fe->get_scope_intro(scope_type::loop), false);
 			fe->push_ir<instruct_pop_scope>();
 		}
@@ -734,6 +745,11 @@ namespace cs {
 			for (auto &it:mBlock)
 				it->gen_flat_ir(fe);
 			fe->push_ir<instruct_eval>(mParallel[2]);
+			if (fe->has_instruct_in_scope<instruct_var>()) {
+				fe->push_ir<instruct_internal>("Clear Scope", [](flat_executor *fe) {
+					fe->instance->storage.clear_domain();
+				});
+			}
 			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop) + 1);
 			fe->push_ir<instruct_pop_scope>();
 		}
@@ -808,6 +824,11 @@ namespace cs {
 				static var_id id("__PRAGMA_CS_FOREACH_ITERATOR_NEXT__");
 				fe->instance->storage.get_var(id).const_val<std::function<void()>>()();
 			});
+			if (fe->has_instruct_in_scope<instruct_var>()) {
+				fe->push_ir<instruct_internal>("Clear Scope", [](flat_executor *fe) {
+					fe->instance->storage.clear_domain();
+				});
+			}
 			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop) + 1);
 			fe->push_ir<instruct_pop_scope>();
 		}
