@@ -82,7 +82,7 @@ bool dump_dependency = false;
 bool wait_before_exit = false;
 bool show_version_info = false;
 
-int covscript_args(int args_size, const char *args[])
+int covscript_args(int args_size, char *args[])
 {
 	int expect_log_path = 0;
 	int expect_import_path = 0;
@@ -140,7 +140,7 @@ int covscript_args(int args_size, const char *args[])
 	return index;
 }
 
-void covscript_main(int args_size, const char *args[])
+void covscript_main(int args_size, char *args[])
 {
 	int index = covscript_args(args_size, args);
 	cs::current_process->import_path += cs::path_delimiter + cs::get_import_path();
@@ -330,7 +330,7 @@ void covscript_main(int args_size, const char *args[])
 	}
 }
 
-int main(int args_size, const char *args[])
+int main(int args_size, char *args[])
 {
 	int errorcode = 0;
 	try {

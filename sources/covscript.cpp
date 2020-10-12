@@ -271,7 +271,7 @@ namespace cs {
 		}
 	}
 
-	array parse_cmd_args(int argc, const char *argv[])
+	array parse_cmd_args(int argc, char *argv[])
 	{
 		cs::array arg;
 		for (std::size_t i = 0; i < argc; ++i)

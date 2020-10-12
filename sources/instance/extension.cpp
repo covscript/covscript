@@ -129,9 +129,11 @@ namespace cs_impl {
 			arr.push_front(copy(val));
 		}
 
-		void pop_front(array &arr)
+		var pop_front(array &arr)
 		{
+			var fval = front(arr);
 			arr.pop_front();
+			return fval;
 		}
 
 		void push_back(array &arr, const var &val)
@@ -139,9 +141,11 @@ namespace cs_impl {
 			arr.push_back(copy(val));
 		}
 
-		void pop_back(array &arr)
+		var pop_back(array &arr)
 		{
+			var bval = back(arr);
 			arr.pop_back();
+			return bval;
 		}
 
 // Operations
@@ -169,9 +173,9 @@ namespace cs_impl {
 		void init()
 		{
 			(*array_iterator_ext)
-			.add_var("next", make_cni(next, callable::types::member_visitor))
+			.add_var("next", make_cni(next, true))
 			.add_var("next_n", make_cni(next_n, true))
-			.add_var("prev", make_cni(prev, callable::types::member_visitor))
+			.add_var("prev", make_cni(prev, true))
 			.add_var("prev_n", make_cni(prev_n, true))
 			.add_var("data", make_cni(data, callable::types::member_visitor));
 			(*array_ext)
@@ -636,9 +640,11 @@ namespace cs_impl {
 			lst.push_front(copy(val));
 		}
 
-		void pop_front(list &lst)
+		var pop_front(list &lst)
 		{
+			var fval = front(lst);
 			lst.pop_front();
+			return fval;
 		}
 
 		void push_back(list &lst, const var &val)
@@ -646,9 +652,11 @@ namespace cs_impl {
 			lst.push_back(copy(val));
 		}
 
-		void pop_back(list &lst)
+		var pop_back(list &lst)
 		{
+			var bval = back(lst);
 			lst.pop_back();
+			return bval;
 		}
 
 // Operations
@@ -670,8 +678,8 @@ namespace cs_impl {
 		void init()
 		{
 			(*list_iterator_ext)
-			.add_var("next", make_cni(next, callable::types::member_visitor))
-			.add_var("prev", make_cni(prev, callable::types::member_visitor))
+			.add_var("next", make_cni(next, true))
+			.add_var("prev", make_cni(prev, true))
 			.add_var("data", make_cni(data, callable::types::member_visitor));
 			(*list_ext)
 			.add_var("iterator", make_namespace(list_iterator_ext))

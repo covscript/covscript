@@ -4,7 +4,7 @@ function push(lst,val)
         if val<=it.data
             break
         end
-        it.next
+        it.next()
     end
     lst.insert(it,val)
 end
