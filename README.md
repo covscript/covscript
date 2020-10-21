@@ -7,13 +7,18 @@
 **Welcome to the Covariant Script programming language!**  
 **Covariant Script** is an open source, cross-platform programming language.  
 This project is an officially maintained Covariant Script interpreter.  
-You can try Covariant Script at http://dev.covariant.cn/ 
 ## Switch language ##
 - [简体中文](./README-zh.md)
 - [English](./README.md)
 ## Features ##
 + Cross-platform, supporting most mainstream Operating Systems
+  + GNU/Linux: x86, ARM, MIPS, Loongson 3A3000/4000
+  + Microsoft Windows: x86
+  + Apple macOS: x86
 + Powerful and bloat-free extension system
+  + C/**C++** Native Interface(CNI) System: translate invoking from both C/C++ and Covariant Script
+  + Interpreter Bootstrap: A portable way to access the Covariant Script Runtime from C++
+  + CNI Composer Macro: Combined the extension system and CNI system organically
 + Good compatibility -- written in C++14
 + Dependency-free and efficient compiler front-end
 + Exportable compilation results
@@ -22,7 +27,6 @@ You can try Covariant Script at http://dev.covariant.cn/
 + Efficient memory management system
 + Compile-time optimization
 + Reference count garbage collection system
-+ C/**C++** Native Interface(CNI)
 ## Extensions ##
 + [Darwin Universal CGL](https://github.com/covscript/covscript-darwin)
 + [Base64/Json Codec](https://github.com/covscript/covscript-codec)
@@ -32,6 +36,7 @@ You can try Covariant Script at http://dev.covariant.cn/
 + [Dear ImGui GUI](https://github.com/covscript/covscript-imgui)
 + [ASIO Network](https://github.com/covscript/covscript-network)
 + [Streams API](https://github.com/covscript/covscript-streams)
++ [wiringPi](https://github.com/covscript/covscript-wiringpi)
 ## Documentation ##
 [CovScript Official Document(PDF)](http://mirrors.covariant.cn/covscript/comm_dist/cs_docs.pdf)  
 ## Installation ##
