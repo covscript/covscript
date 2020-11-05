@@ -619,11 +619,11 @@ namespace cs {
 			fe->push_ir<instruct_cond>(mTree, expect_tag::scope_exit, false, scope_type::loop);
 			for (auto &it:mBlock)
 				it->gen_flat_ir(fe);
-            if (fe->has_instruct_in_scope<instruct_var>()) {
-                fe->push_ir<instruct_internal>("Clear Scope", [](flat_executor *fe) {
-                    fe->instance->storage.clear_domain();
-                });
-            }
+			if (fe->has_instruct_in_scope<instruct_var>()) {
+				fe->push_ir<instruct_internal>("Clear Scope", [](flat_executor *fe) {
+					fe->instance->storage.clear_domain();
+				});
+			}
 			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop));
 			fe->push_ir<instruct_pop_scope>();
 		}

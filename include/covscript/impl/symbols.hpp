@@ -737,6 +737,51 @@ namespace cs {
 		}
 	};
 
+	class instruct_var;
+
+	class child_executor final {
+		bool mHasScope = true;
+		bool mIsLambda = false;
+		bool mIsMemFn = false;
+		bool mIsVargs = false;
+		flat_executor* child = nullptr;
+		std::vector<std::string> mArgs;
+	public:
+		child_executor(std::vector<std::string> args, flat_executor* c, bool l, bool m, bool v) : mIsLambda(l), mIsMemFn(m), mIsVargs(v), child(c), mArgs(std::move(args))
+		{
+			if (!child->has_instruct_in_scope<instruct_var>()&&args.empty())
+				mHasScope = false;
+		}
+		var operator()(vector &args)
+		{
+			if (!mIsVargs && args.size() != this->mArgs.size())
+				throw runtime_error(
+				    "Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
+				    std::to_string(args.size()));
+			if (mHasScope)
+				child->push_scope();
+			if (mIsVargs) {
+				var arg_list = var::make<cs::array>();
+				auto &arr = arg_list.val<cs::array>();
+				std::size_t i = 0;
+				if (mIsMemFn)
+					child->instance->storage.add_var("this", args[i++]);
+				if (mIsLambda)
+					child->instance->storage.add_var("self", args[i++]);
+				for (; i < args.size(); ++i)
+					arr.push_back(args[i]);
+				child->instance->storage.add_var(this->mArgs.front(), arg_list);
+			}
+			else {
+				for (std::size_t i = 0; i < args.size(); ++i)
+					child->instance->storage.add_var(this->mArgs[i], args[i]);
+			}
+			child->exec();
+			if (mHasScope)
+				child->pop_scope();
+		}
+	};
+
 	class statement_base {
 	protected:
 		context_t context;
