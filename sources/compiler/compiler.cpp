@@ -742,6 +742,11 @@ namespace cs {
 			switch (static_cast<token_signal *>(token)->get_signal()) {
 			default:
 				break;
+			case signal_types::new_:
+				// Fix(2020-11-26): Terminate new expression optimization
+				if (it.left().data() != nullptr)
+					throw runtime_error("Wrong grammar for new expression.");
+				return;
 			case signal_types::gcnew_:
 				if (it.left().data() != nullptr)
 					throw runtime_error("Wrong grammar for gcnew expression.");
