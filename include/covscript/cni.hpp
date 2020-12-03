@@ -242,8 +242,10 @@ namespace cni_namespace_impl {
 #define CNI_TYPE_EXT_V(NAME, TYPE, TYPE_NAME, FUNC) namespace NAME{static cs::namespace_t __cni_namespace=cs::make_shared_namespace<cs::name_space>();} CNI_NAME_MIXER(_cni_register_, NAME)(__cni_namespace, #TYPE_NAME, cs::var::make_constant<cs::type_t>([]()->cs::var{return FUNC;}, cs::type_id(typeid(TYPE)), NAME::__cni_namespace)); namespace NAME
 #define CNI(NAME) CNI_REGISTER(NAME, cs::make_cni(NAME, false))
 #define CNI_CONST(NAME) CNI_REGISTER(NAME, cs::make_cni(NAME, true))
+#define CNI_VISITOR(NAME) CNI_REGISTER(NAME, cs::make_cni(NAME, cs::callable::types::member_visitor))
 #define CNI_V(NAME, ARGS) CNI_REGISTER(NAME, cs::make_cni(ARGS, false))
 #define CNI_CONST_V(NAME, ARGS) CNI_REGISTER(NAME, cs::make_cni(ARGS, true))
+#define CNI_VISITOR_V(NAME, ARGS) CNI_REGISTER(NAME, cs::make_cni(ARGS, cs::callable::types::member_visitor))
 #define CNI_CLASS_MEMBER(CLASS, MEMBER) CNI_REGISTER(MEMBER, cs::make_member_visitor(&CLASS::MEMBER))
 #define CNI_CLASS_MEMBER_CONST(CLASS, MEMBER) CNI_REGISTER(MEMBER, cs::make_const_member_visitor(&CLASS::MEMBER))
 #define CNI_VALUE(NAME, ARGS) CNI_REGISTER(NAME, cni_namespace_impl::make_var_normal(ARGS))
