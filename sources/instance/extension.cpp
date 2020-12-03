@@ -367,19 +367,14 @@ namespace cs_impl {
 
 		var fstream(const string &path, std::ios_base::openmode openmode)
 		{
-			switch (openmode) {
-			case std::ios_base::in:
-				return var::make<istream>(new std::ifstream(path, std::ios_base::in));
-				break;
-			case std::ios_base::out:
-				return var::make<ostream>(new std::ofstream(path, std::ios_base::out));
-				break;
-			case std::ios_base::app:
-				return var::make<ostream>(new std::ofstream(path, std::ios_base::app));
-				break;
-			default:
+			if (openmode & std::ios_base::in)
+				return var::make<istream>(new std::ifstream(path, openmode));
+			else if (openmode & std::ios_base::out)
+				return var::make<ostream>(new std::ofstream(path, openmode));
+			else if (openmode & std::ios_base::app)
+				return var::make<ostream>(new std::ofstream(path, openmode));
+			else
 				throw lang_error("Unsupported openmode.");
-			}
 		}
 
 		void setprecision(number pre)
@@ -400,9 +395,13 @@ namespace cs_impl {
 			.add_var("present", var::make_constant<std::ios_base::seekdir>(std::ios_base::cur));
 			(*openmode_ext)
 			.add_var("in", var::make_constant<std::ios_base::openmode>(std::ios_base::in))
+			.add_var("bin_in", var::make_constant<std::ios_base::openmode>(std::ios_base::in | std::ios_base::binary))
 			.add_var("out", var::make_constant<std::ios_base::openmode>(std::ios_base::out))
-			.add_var("app", var::make_constant<std::ios_base::openmode>(std::ios_base::app));
+			.add_var("bin_out", var::make_constant<std::ios_base::openmode>(std::ios_base::out | std::ios_base::binary))
+			.add_var("app", var::make_constant<std::ios_base::openmode>(std::ios_base::app))
+			.add_var("bin_app", var::make_constant<std::ios_base::openmode>(std::ios_base::app | std::ios_base::binary));
 			(*iostream_ext)
+			.add_var("char_buff", var::make_constant<type_t>([]()->var{return std::make_shared<std::stringstream>();}, type_id(typeid(char_buff)), charbuff_ext))
 			.add_var("fstream", make_cni(fstream))
 			.add_var("ifstream", make_cni([](const string &path) {
 				return var::make<istream>(new std::ifstream(path, std::ios_base::in));
@@ -411,6 +410,22 @@ namespace cs_impl {
 				return var::make<ostream>(new std::ofstream(path, std::ios_base::out));
 			}))
 			.add_var("setprecision", make_cni(setprecision));
+		}
+	}
+	namespace charbuff_cs_ext {
+		using namespace cs;
+		void init()
+		{
+			(*charbuff_ext)
+			.add_var("get_istream", make_cni([](char_buff& buff)->cs::istream {
+				return std::shared_ptr<std::istream>(buff.get(), [](std::istream*) {});
+			}))
+			.add_var("get_ostream", make_cni([](char_buff& buff)->cs::ostream {
+				return std::shared_ptr<std::ostream>(buff.get(), [](std::ostream*) {});
+			}))
+			.add_var("get_string", make_cni([](char_buff& buff)->cs::string {
+				return std::move(buff->str());
+			}));
 		}
 	}
 	namespace istream_cs_ext {
@@ -1343,6 +1358,7 @@ namespace cs_impl {
 			extensions_initiator = false;
 			member_visitor_cs_ext::init();
 			iostream_cs_ext::init();
+			charbuff_cs_ext::init();
 			istream_cs_ext::init();
 			ostream_cs_ext::init();
 			system_cs_ext::init();

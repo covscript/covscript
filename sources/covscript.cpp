@@ -95,6 +95,7 @@ namespace cs_impl {
 	cs::namespace_t iostream_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t seekdir_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t openmode_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t charbuff_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t istream_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t ostream_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t system_ext = cs::make_shared_namespace<cs::name_space>();

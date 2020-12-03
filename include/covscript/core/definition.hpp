@@ -89,6 +89,7 @@ namespace cs {
 	using context_t=std::shared_ptr<context_type>;
 	using domain_t=std::shared_ptr<domain_type>;
 	using namespace_t=std::shared_ptr<name_space>;
+	using char_buff=std::shared_ptr<std::stringstream>;
 	using istream=std::shared_ptr<std::istream>;
 	using ostream=std::shared_ptr<std::ostream>;
 

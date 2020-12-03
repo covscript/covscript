@@ -229,6 +229,12 @@ namespace cs_impl {
 	}
 
 	template<>
+	constexpr const char *get_name_of_type<cs::char_buff>()
+	{
+		return "cs::char_buff";
+	}
+
+	template<>
 	constexpr const char *get_name_of_type<cs::istream>()
 	{
 		return "cs::istream";
@@ -259,6 +265,7 @@ namespace cs_impl {
 	extern cs::namespace_t iostream_ext;
 	extern cs::namespace_t seekdir_ext;
 	extern cs::namespace_t openmode_ext;
+	extern cs::namespace_t charbuff_ext;
 	extern cs::namespace_t istream_ext;
 	extern cs::namespace_t ostream_ext;
 	extern cs::namespace_t system_ext;
@@ -343,6 +350,12 @@ namespace cs_impl {
 	cs::namespace_t &get_ext<cs::pair>()
 	{
 		return pair_ext;
+	}
+
+	template<>
+	cs::namespace_t &get_ext<cs::char_buff>()
+	{
+		return charbuff_ext;
 	}
 
 	template<>
