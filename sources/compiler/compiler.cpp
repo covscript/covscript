@@ -801,6 +801,7 @@ namespace cs {
 							it.data() = new_value(v);
 					}
 					catch (...) {
+						// Fix(2020-12-05): Broken AST structure caused by tree_type::merge
 						it.data() = orig_ptr;
 						tree.merge(it.left(), ltree);
 					}
