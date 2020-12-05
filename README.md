@@ -97,7 +97,7 @@ See [中文文档/捐献](https://github.com/covscript/covscript/blob/master/doc
 **Ordered by contribution.**  
 + Consultant: [@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
 + Testing: [@imkiva](https://github.com/imkiva/), Weicheng Shi
-+ Douments: [@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
++ Documents: [@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
 + Streams API Extension: [@imkiva](https://github.com/imkiva/)
 + IntelliJ Plugin: [@ice1000](https://github.com/ice1000/)
 + Cross-platform Support: [@MouriNaruto](https://github.com/MouriNaruto)
