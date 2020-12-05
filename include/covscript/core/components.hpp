@@ -774,22 +774,13 @@ namespace cs {
 		{
 			if (!it.usable())
 				throw cov::error("E000E");
-			tree_node *subroot = nullptr;
-			if (it.mData != mRoot) {
-				tree_node *root = it.mData->root;
-				if (root == nullptr)
-					throw cov::error("E000N");
-				subroot = copy(tree.mRoot, root);
-				if (it.mData == root->left)
-					root->left = subroot;
-				else
-					root->right = subroot;
-			} else {
-				subroot = copy(tree.mRoot, mRoot);
-				mRoot = subroot;
-			}
-			destroy(it.mData);
-			return subroot;
+			tree_node* root = tree.mRoot;
+			it.data() = root->data;
+			destroy(it.mData->left);
+			destroy(it.mData->right);
+			it.mData->left = copy(root->left, it.mData);
+			it.mData->right = copy(root->right, it.mData);
+			return it;
 		}
 	};
 
