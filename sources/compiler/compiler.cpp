@@ -22,6 +22,57 @@
 #include <covscript/impl/codegen.hpp>
 
 namespace cs {
+	const map_t<char, char> token_value::escape_char = {
+		{'\'', '\''},
+		{'\"', '\"'},
+		{'\?', '\?'},
+		{'\\', '\\'},
+		{'\a', 'a'},
+		{'\b', 'b'},
+		{'\f', 'f'},
+		{'\n', 'n'},
+		{'\r', 'r'},
+		{'\t', 't'},
+		{'\v', 'v'}
+	};
+
+	bool token_value::dump(std::ostream &o) const
+	{
+		o << "< Value = ";
+		if (mVal.type() == typeid(cs::string)) {
+			o << "\"";
+			const cs::string &str = mVal.const_val<cs::string>();
+			for (auto ch : str) {
+				if (escape_char.contains(ch))
+					o << '\\' << escape_char.at(ch);
+				else
+					o << ch;
+			}
+			o << "\"";
+		}
+		else if (mVal.type() == typeid(char)) {
+			o << "\'";
+			char ch = mVal.const_val<char>();
+			if (escape_char.contains(ch))
+				o << '\\' << escape_char.at(ch);
+			else
+				o << ch;
+			o << "\'";
+		}
+		else {
+			try {
+				o << mVal.to_string();
+			}
+			catch (cov::error &e) {
+				if (!std::strcmp(e.what(), "E000D"))
+					throw e;
+				o << "[" << cs_impl::cxx_demangle(mVal.type().name()) << "]";
+			}
+		}
+		o << ">";
+		return true;
+	}
+
 	bool token_signal::dump(std::ostream &o) const
 	{
 		o << "< Signal = \"";

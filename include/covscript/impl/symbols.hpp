@@ -339,6 +339,7 @@ namespace cs {
 	};
 
 	class token_value final : public token_base {
+		static const map_t<char, char> escape_char;
 		var mVal;
 	public:
 		token_value() = delete;
@@ -355,20 +356,7 @@ namespace cs {
 			return this->mVal;
 		}
 
-		bool dump(std::ostream &o) const override
-		{
-			o << "< Value = \"";
-			try {
-				o << mVal.to_string();
-			}
-			catch (cov::error &e) {
-				if (!std::strcmp(e.what(), "E000D"))
-					throw e;
-				o << "[" << cs_impl::cxx_demangle(mVal.type().name()) << "]";
-			}
-			o << "\" >";
-			return true;
-		}
+		bool dump(std::ostream &) const override;
 	};
 
 	class token_literal final : public token_base {
