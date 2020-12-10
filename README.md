@@ -1,4 +1,4 @@
-![](https://github.com/covscript/covscript/raw/master/icon/covariant_script_wide.png)
+![](https://github.com/covscript/covscript/raw/master/docs/covariant_script_wide.png)
 # Covariant Script Programming Language: The Interpreter #
 [![](https://github.com/covscript/covscript/workflows/build/badge.svg)](https://github.com/covscript/covscript/actions)
 [![](https://img.shields.io/github/stars/covscript/covscript?logo=GitHub)](https://github.com/covscript/covscript/stargazers)

@@ -1,4 +1,4 @@
-![](https://github.com/covscript/covscript/raw/master/icon/covariant_script_wide.png)
+![](https://github.com/covscript/covscript/raw/master/docs/covariant_script_wide.png)
 # Covariant Script 编程语言：解释器 #
 [![Action Status](https://github.com/covscript/covscript/workflows/build/badge.svg)](https://github.com/covscript/covscript/actions)
 [![Schedule Status](https://github.com/covscript/csbuild/workflows/schedule/badge.svg)](https://github.com/covscript/csbuild/actions)
