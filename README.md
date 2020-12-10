@@ -2,9 +2,9 @@
 # Covariant Script Programming Language: The Interpreter #
 [![](https://github.com/covscript/covscript/workflows/build/badge.svg)](https://github.com/covscript/covscript/actions)
 [![](https://img.shields.io/github/stars/covscript/covscript?logo=GitHub)](https://github.com/covscript/covscript/stargazers)
-[![](https://img.shields.io/github/v/release/covscript/covscript)](https://github.com/covscript/covscript/stargazers)
-[![](https://img.shields.io/github/languages/top/covscript/covscript)](http://www.cplusplus.com/)
-[![](https://img.shields.io/github/license/covscript/covscript)](http://www.apache.org/licenses/LICENSE-2.0)  
+[![](https://img.shields.io/github/license/covscript/covscript)](http://www.apache.org/licenses/LICENSE-2.0)
+[![](https://img.shields.io/github/v/release/covscript/covscript)](https://github.com/covscript/covscript/releases/latest)
+[![](https://img.shields.io/github/languages/top/covscript/covscript)](http://www.cplusplus.com/)  
 **Welcome to the Covariant Script programming language!**  
 **Covariant Script** is an open source, cross-platform programming language.  
 This project is an officially maintained Covariant Script interpreter.  
@@ -13,22 +13,22 @@ This project is an officially maintained Covariant Script interpreter.
 - [English](./README.md)
 ## Features ##
 + Cross-platform, supporting most mainstream Operating Systems
-  + GNU/Linux: x86, ARM, MIPS, Loongson 3A3000/4000
+  + Compatible with legacy compilers -- written in C++ 14
+  + Linux and Unix: x86, ARM, MIPS, Loongson ISA
   + Microsoft Windows: x86
-  + Apple macOS: x86
 + Powerful and bloat-free extension system
-  + C/**C++** Native Interface(CNI) System: translate invoking from both C/C++ and Covariant Script
+  + C/C++ Native Interface(CNI) System: translate invoking from both C/C++ and Covariant Script
   + Interpreter Bootstrap: A portable way to access the Covariant Script Runtime from C++
   + CNI Composer Macro: Combined the extension system and CNI system organically
-+ Good compatibility -- written in C++14
-+ Dependency-free and efficient compiler front-end
-+ Exportable compilation results
-+ Support compile-time optimization
-+ Runtime hotspot optimization
-+ Efficient memory management system
-+ Compile-time optimization
-+ Reference count garbage collection system
-## Extensions ##
++ Self-developed efficient compilation system
+  + Dependency-free and efficient compiler front-end
+  + Support compile-time optimization
+  + Exportable compilation results
++ High-performance runtime environment
+  + Hotspot optimization algorithm
+  + Efficient memory management system
+  + Reference count garbage collection system
+## Libraries ##
 ### Standard Library ##
 + [Darwin Universal CGL](https://github.com/covscript/covscript-darwin)
 + [Base64/Json Codec](https://github.com/covscript/covscript-codec)
@@ -98,10 +98,5 @@ The [examples](./examples) folder contains several example programs written by C
 **Copyright © 2017-2020 Michael Lee(李登淳)**  
 *This software is registered with the National Copyright Administration of the People's Republic of China(Registration Number: 2020SR0408026) and is protected by the Copyright Law of the People's Republic of China.*
 ## Thanks ##
-**Ordered by contribution.**  
-+ Consultant: [@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
-+ Testing: [@imkiva](https://github.com/imkiva/), Weicheng Shi
-+ Documents: [@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
-+ Streams API Extension: [@imkiva](https://github.com/imkiva/)
-+ IntelliJ Plugin: [@ice1000](https://github.com/ice1000/)
-+ Cross-platform Support: [@MouriNaruto](https://github.com/MouriNaruto)
+[Sichuan University](http://scu.edu.cn/), [freeCodeCamp Chengdu Community](https://china.freecodecamp.one/?city=chengdu)  
+[@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/), [@MouriNaruto](https://github.com/MouriNaruto), [@Access-Rend](https://github.com/Access-Rend), Weicheng Shi

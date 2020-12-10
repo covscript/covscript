@@ -1,43 +1,54 @@
 ![](https://github.com/covscript/covscript/raw/master/docs/covariant_script_wide.png)
 # Covariant Script 编程语言：解释器 #
-[![Action Status](https://github.com/covscript/covscript/workflows/build/badge.svg)](https://github.com/covscript/covscript/actions)
-[![Schedule Status](https://github.com/covscript/csbuild/workflows/schedule/badge.svg)](https://github.com/covscript/csbuild/actions)
-[![](https://img.shields.io/badge/license-Covariant%20Innovation%20GPL-blue.svg)](https://github.com/covscript/covscript/blob/master/LICENSE)
-[![](https://img.shields.io/github/languages/top/covscript/covscript.svg)](http://www.cplusplus.com/)  
+[![](https://github.com/covscript/covscript/workflows/build/badge.svg)](https://github.com/covscript/covscript/actions)
+[![](https://img.shields.io/github/stars/covscript/covscript?logo=GitHub)](https://github.com/covscript/covscript/stargazers)
+[![](https://img.shields.io/github/license/covscript/covscript)](http://www.apache.org/licenses/LICENSE-2.0)
+[![](https://img.shields.io/github/v/release/covscript/covscript)](https://github.com/covscript/covscript/releases/latest)
+[![](https://img.shields.io/github/languages/top/covscript/covscript)](http://www.cplusplus.com/)  
 **欢迎使用Covariant Script编程语言!**  
 **Covariant Script**是一种开源的跨平台编程语言  
 此项目为官方维护的Covariant Script解释器  
-你可以在 http://dev.covariant.cn/ 中尝试Covariant Script 
 ## 切换语言 ##
 - [简体中文](./README-zh.md)
 - [English](./README.md)
 ## 特点 ##
-+ 跨平台，支持大部分主流操作系统
-+ 使用C++14编写，兼容性更好
-+ 独立、高效的编译器前端
-+ 可导出编译结果
-+ 支持编译期优化
-+ 运行时热点优化
-+ 高效的内存管理系统
-+ 引用计数垃圾回收器
++ 全平台可用，支持大多数主流操作系统
+  + 使用 C++ 14 标准编写，支持版本较老的编译器
+  + Linux and Unix: x86, ARM, MIPS, Loongson ISA
+  + Microsoft Windows: x86
 + 强大易用的扩展系统
-+ C/**C++** 原生接口(CNI)
-## 扩展 ##
-+ [Dear ImGui图形用户界面](https://github.com/covscript/covscript-imgui)
-+ [Darwin通用字符图形库](https://github.com/covscript/covscript-darwin)
-+ [Base64/Json编解码](https://github.com/covscript/covscript-codec)
-+ [LibMozart进程库](https://github.com/covscript/covscript-process)
-+ [SQLite3数据库](https://github.com/covscript/covscript-sqlite)
-+ [ASIO网络库](https://github.com/covscript/covscript-network)
+  + C/C++ Native Interface(CNI) 系统：能够翻译 C/C++ 和 Covariant Script 之间的双向调用
+  + Interpreter Bootstrap：在 C++ 项目中集成 Covariant Script 运行时环境的帮手
+  + CNI 组成宏：将扩展系统与CNI系统有机结合，现已纳入语言标准
++ 自研高效编译系统
+  + 无依赖、高效的编译器前端
+  + 支持编译期优化
+  + 可导出编译结果
++ 高性能运行时环境
+  + 热点分析优化算法
+  + 高效的内存管理系统
+  + 引用计数垃圾回收器
+## 库环境 ##
+### 标准库 ##
++ [Dear ImGui 图形用户界面](https://github.com/covscript/covscript-imgui)
++ [Darwin 通用字符图形库](https://github.com/covscript/covscript-darwin)
++ [Base64/Json 编解码](https://github.com/covscript/covscript-codec)
++ [LibMozart 进程库](https://github.com/covscript/covscript-process)
++ [SQLite3 数据库](https://github.com/covscript/covscript-sqlite)
++ [Zip 压缩文件](https://github.com/covscript/covscript-zip)
++ [ASIO 网络库](https://github.com/covscript/covscript-network)
++ [cURL 网络库](https://github.com/covscript/covscript-curl)
 + [正则表达式](https://github.com/covscript/covscript-regex)
-+ [流式API](https://github.com/covscript/covscript-streams)
++ [流式 API](https://github.com/covscript/covscript-streams)
+### 平台依赖 ###
++ [wiringPi](https://github.com/covscript/covscript-wiringpi)
 ## 文档 ##
 [CovScript官方文档(PDF)](http://mirrors.covariant.cn/covscript/comm_dist/cs_docs.pdf)  
 ## 安装 ##
-+ **[建议]** 从[covscript.org](http://covscript.org)下载安装包
-+ 下载[64位类Debian系统滚动构建安装包](https://github.com/covscript/csbuild/releases/download/schedule/covscript-amd64.deb)
-+ 在[Latest Release](https://github.com/covscript/covscript/releases/latest)里下载预编译的二进制文件
-+ 使用CMake工具链直接编译源代码
++ **[建议]** 从 [covscript.org.cn](http://covscript.org.cn) 下载安装包
++ 下载 [64位类Debian系统滚动构建安装包](https://github.com/covscript/csbuild/releases/download/schedule/covscript-amd64.deb)
++ 在 [Latest Release](https://github.com/covscript/covscript/releases/latest) 里下载预编译的二进制文件
++ 使用 CMake 工具链直接编译源代码
 ## 运行 ##
 ### 解释器 ###
 `cs [选项...] <文件> [参数...]`  
@@ -81,17 +92,11 @@
 
 **若不设置日志路径，将直接输出至标准输出流**
 ## 示例 ##
-`examples`文件夹包含了数个使用CovScript编写的示例程序。
+`examples` 文件夹包含了数个使用 Covariant Script 编写的示例程序。
 ## 版权 ##
-**Covariant Script编程语言的作者是[@mikecovlee](https://github.com/mikecovlee/).**  
-**版权所有 © 2020 李登淳**
-## 捐献 #
-![](https://github.com/covscript/covscript/raw/master/docs/Donation.png)
+**Covariant Script 编程语言的作者是 [@mikecovlee](https://github.com/mikecovlee/)，基于 Apache 2.0 协议分发。**  
+**版权所有 © 2017-2020 李登淳(Michael Lee)**  
+*该软件已在中华人民共和国国家版权局注册（登记号：2020SR0408026），受中华人民共和国著作权法保护。*
 ## 感谢 ##
-**按贡献排名。**  
-+ 顾问：[@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
-+ 测试：[@imkiva](https://github.com/imkiva/), 史为成
-+ 文档：[@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
-+ 流式API扩展：[@imkiva](https://github.com/imkiva/)
-+ IntelliJ插件：[@ice1000](https://github.com/ice1000/)
-+ 跨平台支持：[@MouriNaruto](https://github.com/MouriNaruto)
+[四川大学](http://scu.edu.cn/), [freeCodeCamp 成都社区](https://china.freecodecamp.one/?city=chengdu)  
+[@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/), [@MouriNaruto](https://github.com/MouriNaruto), [@Access-Rend](https://github.com/Access-Rend), Weicheng Shi
