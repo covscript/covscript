@@ -1,22 +1,27 @@
 /*
 * Covariant Script Extension
 *
-* Licensed under the Covariant Innovation General Public License,
-* Version 1.0 (the "License");
+* Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
-*
-* https://covariant.cn/licenses/LICENSE-1.0
-*
+* 
+*     http://www.apache.org/licenses/LICENSE-2.0
+* 
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
+* 
+* Copyright (C) 2017-2020 Michael Lee(李登淳)
 *
-* Copyright (C) 2020 Michael Lee(李登淳)
-* Email: mikecovlee@163.com
-* Github: https://github.com/mikecovlee
+* This software is registered with the National Copyright Administration
+* of the People's Republic of China(Registration Number: 2020SR0408026)
+* and is protected by the Copyright Law of the People's Republic of China.
+* 
+* Email:   lee@covariant.cn, mikecovlee@163.com
+* Github:  https://github.com/mikecovlee
+* Website: http://covscript.org.cn
 */
 #include <covscript_impl/dirent/dirent.hpp>
 #include <covscript_impl/mozart/random.hpp>
@@ -88,7 +93,7 @@ namespace cs_impl {
 
 		array::iterator next(array::iterator &it)
 		{
-			return ++it;
+			return it++;
 		}
 
 		array::iterator next_n(array::iterator &it, number offset)
@@ -98,7 +103,7 @@ namespace cs_impl {
 
 		array::iterator prev(array::iterator &it)
 		{
-			return --it;
+			return it--;
 		}
 
 		array::iterator prev_n(array::iterator &it, number offset)
@@ -143,9 +148,11 @@ namespace cs_impl {
 			arr.push_front(copy(val));
 		}
 
-		void pop_front(array &arr)
+		var pop_front(array &arr)
 		{
+			var fval = front(arr);
 			arr.pop_front();
+			return fval;
 		}
 
 		void push_back(array &arr, const var &val)
@@ -153,9 +160,11 @@ namespace cs_impl {
 			arr.push_back(copy(val));
 		}
 
-		void pop_back(array &arr)
+		var pop_back(array &arr)
 		{
+			var bval = back(arr);
 			arr.pop_back();
+			return bval;
 		}
 
 // Operations
@@ -183,9 +192,9 @@ namespace cs_impl {
 		void init()
 		{
 			(*array_iterator_ext)
-			.add_var("next", make_cni(next, callable::types::member_visitor))
+			.add_var("next", make_cni(next, true))
 			.add_var("next_n", make_cni(next_n, true))
-			.add_var("prev", make_cni(prev, callable::types::member_visitor))
+			.add_var("prev", make_cni(prev, true))
 			.add_var("prev_n", make_cni(prev_n, true))
 			.add_var("data", make_cni(data, callable::types::member_visitor));
 			(*array_ext)
@@ -377,19 +386,14 @@ namespace cs_impl {
 
 		var fstream(const string &path, std::ios_base::openmode openmode)
 		{
-			switch (openmode) {
-			case std::ios_base::in:
-				return var::make<istream>(new std::ifstream(path, std::ios_base::in));
-				break;
-			case std::ios_base::out:
-				return var::make<ostream>(new std::ofstream(path, std::ios_base::out));
-				break;
-			case std::ios_base::app:
-				return var::make<ostream>(new std::ofstream(path, std::ios_base::app));
-				break;
-			default:
+			if (openmode & std::ios_base::in)
+				return var::make<istream>(new std::ifstream(path, openmode));
+			else if (openmode & std::ios_base::out)
+				return var::make<ostream>(new std::ofstream(path, openmode));
+			else if (openmode & std::ios_base::app)
+				return var::make<ostream>(new std::ofstream(path, openmode));
+			else
 				throw lang_error("Unsupported openmode.");
-			}
 		}
 
 		void setprecision(number pre)
@@ -410,9 +414,13 @@ namespace cs_impl {
 			.add_var("present", var::make_constant<std::ios_base::seekdir>(std::ios_base::cur));
 			(*openmode_ext)
 			.add_var("in", var::make_constant<std::ios_base::openmode>(std::ios_base::in))
+			.add_var("bin_in", var::make_constant<std::ios_base::openmode>(std::ios_base::in | std::ios_base::binary))
 			.add_var("out", var::make_constant<std::ios_base::openmode>(std::ios_base::out))
-			.add_var("app", var::make_constant<std::ios_base::openmode>(std::ios_base::app));
+			.add_var("bin_out", var::make_constant<std::ios_base::openmode>(std::ios_base::out | std::ios_base::binary))
+			.add_var("app", var::make_constant<std::ios_base::openmode>(std::ios_base::app))
+			.add_var("bin_app", var::make_constant<std::ios_base::openmode>(std::ios_base::app | std::ios_base::binary));
 			(*iostream_ext)
+			.add_var("char_buff", var::make_constant<type_t>([]()->var{return std::make_shared<std::stringstream>();}, type_id(typeid(char_buff)), charbuff_ext))
 			.add_var("fstream", CNI_SANDBOX(make_cni(fstream)))
 			.add_var("ifstream", CNI_SANDBOX(make_cni([](const string &path) {
 				return var::make<istream>(new std::ifstream(path, std::ios_base::in));
@@ -421,6 +429,22 @@ namespace cs_impl {
 				return var::make<ostream>(new std::ofstream(path, std::ios_base::out));
 			})))
 			.add_var("setprecision", make_cni(setprecision));
+		}
+	}
+	namespace charbuff_cs_ext {
+		using namespace cs;
+		void init()
+		{
+			(*charbuff_ext)
+			.add_var("get_istream", make_cni([](char_buff& buff)->cs::istream {
+				return std::shared_ptr<std::istream>(buff.get(), [](std::istream*) {});
+			}))
+			.add_var("get_ostream", make_cni([](char_buff& buff)->cs::ostream {
+				return std::shared_ptr<std::ostream>(buff.get(), [](std::ostream*) {});
+			}))
+			.add_var("get_string", make_cni([](char_buff& buff)->cs::string {
+				return std::move(buff->str());
+			}));
 		}
 	}
 	namespace istream_cs_ext {
@@ -605,12 +629,12 @@ namespace cs_impl {
 
 		list::iterator next(list::iterator &it)
 		{
-			return ++it;
+			return it++;
 		}
 
 		list::iterator prev(list::iterator &it)
 		{
-			return --it;
+			return it--;
 		}
 
 		var data(list::iterator &it)
@@ -650,9 +674,11 @@ namespace cs_impl {
 			lst.push_front(copy(val));
 		}
 
-		void pop_front(list &lst)
+		var pop_front(list &lst)
 		{
+			var fval = front(lst);
 			lst.pop_front();
+			return fval;
 		}
 
 		void push_back(list &lst, const var &val)
@@ -660,9 +686,11 @@ namespace cs_impl {
 			lst.push_back(copy(val));
 		}
 
-		void pop_back(list &lst)
+		var pop_back(list &lst)
 		{
+			var bval = back(lst);
 			lst.pop_back();
+			return bval;
 		}
 
 // Operations
@@ -684,8 +712,8 @@ namespace cs_impl {
 		void init()
 		{
 			(*list_iterator_ext)
-			.add_var("next", make_cni(next, callable::types::member_visitor))
-			.add_var("prev", make_cni(prev, callable::types::member_visitor))
+			.add_var("next", make_cni(next, true))
+			.add_var("prev", make_cni(prev, true))
 			.add_var("data", make_cni(data, callable::types::member_visitor));
 			(*list_ext)
 			.add_var("iterator", make_namespace(list_iterator_ext))
@@ -1349,6 +1377,7 @@ namespace cs_impl {
 			extensions_initiator = false;
 			member_visitor_cs_ext::init();
 			iostream_cs_ext::init();
+			charbuff_cs_ext::init();
 			istream_cs_ext::init();
 			ostream_cs_ext::init();
 			system_cs_ext::init();

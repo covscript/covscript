@@ -1,27 +1,83 @@
 /*
 * Covariant Script Compiler
 *
-* Licensed under the Covariant Innovation General Public License,
-* Version 1.0 (the "License");
+* Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
-*
-* https://covariant.cn/licenses/LICENSE-1.0
-*
+* 
+*     http://www.apache.org/licenses/LICENSE-2.0
+* 
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
+* 
+* Copyright (C) 2017-2020 Michael Lee(李登淳)
 *
-* Copyright (C) 2020 Michael Lee(李登淳)
-* Email: mikecovlee@163.com
-* Github: https://github.com/mikecovlee
+* This software is registered with the National Copyright Administration
+* of the People's Republic of China(Registration Number: 2020SR0408026)
+* and is protected by the Copyright Law of the People's Republic of China.
+* 
+* Email:   lee@covariant.cn, mikecovlee@163.com
+* Github:  https://github.com/mikecovlee
+* Website: http://covscript.org.cn
 */
 #include <covscript/impl/compiler.hpp>
 #include <covscript/impl/codegen.hpp>
 
 namespace cs {
+	const map_t<char, char> token_value::escape_char = {
+		{'\'', '\''},
+		{'\"', '\"'},
+		{'\?', '\?'},
+		{'\\', '\\'},
+		{'\a', 'a'},
+		{'\b', 'b'},
+		{'\f', 'f'},
+		{'\n', 'n'},
+		{'\r', 'r'},
+		{'\t', 't'},
+		{'\v', 'v'}
+	};
+
+	bool token_value::dump(std::ostream &o) const
+	{
+		o << "< Value = ";
+		if (mVal.type() == typeid(cs::string)) {
+			o << "\"";
+			const cs::string &str = mVal.const_val<cs::string>();
+			for (auto ch : str) {
+				if (escape_char.contains(ch))
+					o << '\\' << escape_char.at(ch);
+				else
+					o << ch;
+			}
+			o << "\"";
+		}
+		else if (mVal.type() == typeid(char)) {
+			o << "\'";
+			char ch = mVal.const_val<char>();
+			if (escape_char.contains(ch))
+				o << '\\' << escape_char.at(ch);
+			else
+				o << ch;
+			o << "\'";
+		}
+		else {
+			try {
+				o << mVal.to_string();
+			}
+			catch (cov::error &e) {
+				if (!std::strcmp(e.what(), "E000D"))
+					throw e;
+				o << "[" << cs_impl::cxx_demangle(mVal.type().name()) << "]";
+			}
+		}
+		o << ">";
+		return true;
+	}
+
 	bool token_signal::dump(std::ostream &o) const
 	{
 		o << "< Signal = \"";
@@ -742,6 +798,11 @@ namespace cs {
 			switch (static_cast<token_signal *>(token)->get_signal()) {
 			default:
 				break;
+			case signal_types::new_:
+				// Fix(2020-11-26): Terminate new expression optimization
+				if (it.left().data() != nullptr)
+					throw runtime_error("Wrong grammar for new expression.");
+				return;
 			case signal_types::gcnew_:
 				if (it.left().data() != nullptr)
 					throw runtime_error("Wrong grammar for gcnew expression.");
@@ -796,6 +857,7 @@ namespace cs {
 							it.data() = new_value(v);
 					}
 					catch (...) {
+						// Fix(2020-12-05): Broken AST structure caused by tree_type::merge
 						it.data() = orig_ptr;
 						tree.merge(it.left(), ltree);
 					}

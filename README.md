@@ -1,41 +1,52 @@
-![](https://github.com/covscript/covscript/raw/master/icon/covariant_script_wide.png)
+![](https://github.com/covscript/covscript/raw/master/docs/covariant_script_wide.png)
 # Covariant Script Programming Language: The Interpreter #
-[![Action Status](https://github.com/covscript/covscript/workflows/build/badge.svg)](https://github.com/covscript/covscript/actions)
-[![Schedule Status](https://github.com/covscript/csbuild/workflows/schedule/badge.svg)](https://github.com/covscript/csbuild/actions)
-[![](https://img.shields.io/badge/license-Covariant%20Innovation%20GPL-blue.svg)](https://github.com/covscript/covscript/blob/master/LICENSE)
-[![](https://img.shields.io/github/languages/top/covscript/covscript.svg)](http://www.cplusplus.com/)  
+![](https://github.com/covscript/covscript/workflows/build/badge.svg)
+[![](https://img.shields.io/github/stars/covscript/covscript?logo=GitHub)](https://github.com/covscript/covscript/stargazers)
+[![](https://img.shields.io/github/license/covscript/covscript)](http://www.apache.org/licenses/LICENSE-2.0)
+[![](https://img.shields.io/github/v/release/covscript/covscript)](https://github.com/covscript/covscript/releases/latest)
+![](https://github.com/covscript/covscript/workflows/CodeQL/badge.svg)
+[![](https://img.shields.io/github/languages/top/covscript/covscript)](http://www.cplusplus.com/)  
 **Welcome to the Covariant Script programming language!**  
 **Covariant Script** is an open source, cross-platform programming language.  
 This project is an officially maintained Covariant Script interpreter.  
-You can try Covariant Script at http://dev.covariant.cn/ 
 ## Switch language ##
 - [简体中文](./README-zh.md)
 - [English](./README.md)
 ## Features ##
 + Cross-platform, supporting most mainstream Operating Systems
+  + Compatible with legacy compilers -- written in C++ 14
+  + Linux and Unix: x86, ARM, MIPS, Loongson ISA
+  + Microsoft Windows: x86
 + Powerful and bloat-free extension system
-+ Good compatibility -- written in C++14
-+ Dependency-free and efficient compiler front-end
-+ Exportable compilation results
-+ Support compile-time optimization
-+ Runtime hotspot optimization
-+ Efficient memory management system
-+ Compile-time optimization
-+ Reference count garbage collection system
-+ C/**C++** Native Interface(CNI)
-## Extensions ##
+  + C/C++ Native Interface(CNI) System: translate invoking from both C/C++ and Covariant Script
+  + Interpreter Bootstrap: A portable way to access the Covariant Script Runtime from C++
+  + CNI Composer Macro: Combined the extension system and CNI system organically
++ Self-developed efficient compilation system
+  + Dependency-free and efficient compiler front-end
+  + Support compile-time optimization
+  + Exportable compilation results
++ High-performance runtime environment
+  + Hotspot optimization algorithm
+  + Efficient memory management system
+  + Reference count garbage collection system
+## Libraries ##
+### Standard Library ##
 + [Darwin Universal CGL](https://github.com/covscript/covscript-darwin)
 + [Base64/Json Codec](https://github.com/covscript/covscript-codec)
 + [Regular Expression](https://github.com/covscript/covscript-regex)
 + [LibMozart Process](https://github.com/covscript/covscript-process)
 + [SQLite3 Database](https://github.com/covscript/covscript-sqlite)
++ [Zip File Support](https://github.com/covscript/covscript-zip)
 + [Dear ImGui GUI](https://github.com/covscript/covscript-imgui)
 + [ASIO Network](https://github.com/covscript/covscript-network)
++ [cURL Network](https://github.com/covscript/covscript-curl)
 + [Streams API](https://github.com/covscript/covscript-streams)
+### Platform Specified ###
++ [wiringPi](https://github.com/covscript/covscript-wiringpi)
 ## Documentation ##
 [CovScript Official Document(PDF)](http://mirrors.covariant.cn/covscript/comm_dist/cs_docs.pdf)  
 ## Installation ##
-+ **[Recommend]** Download installation package from [covscript.org](http://covscript.org)
++ **[Recommend]** Download installation package from [covscript.org.cn](http://covscript.org.cn)
 + Download [nightly build installation package](https://github.com/covscript/csbuild/releases/download/schedule/covscript-amd64.deb) for debian-like system on x86_64 machine
 + Download the precompiled executable on the [Latest Release](https://github.com/covscript/covscript/releases/latest)
 + Directly compile source code with CMake toolchain
@@ -84,15 +95,9 @@ Option|Mnemonic|Function
 ## Examples ##
 The [examples](./examples) folder contains several example programs written by CovScript.
 ## Copyright ##
-**The author of the Covariant Script Programming Language is [@mikecovlee](https://github.com/mikecovlee/).**  
-**Copyright © 2020 Michael Lee**
-## By me a coffee #
-See [中文文档/捐献](https://github.com/covscript/covscript/blob/master/docs/README.zh_CN.md#%E6%8D%90%E7%8C%AE)
+**The author of the Covariant Script Programming Language is [@mikecovlee](https://github.com/mikecovlee/), licensed under Apache 2.0**  
+**Copyright © 2017-2020 Michael Lee(李登淳)**  
+*This software is registered with the National Copyright Administration of the People's Republic of China(Registration Number: 2020SR0408026) and is protected by the Copyright Law of the People's Republic of China.*
 ## Thanks ##
-**Ordered by contribution.**  
-+ Consultant: [@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
-+ Testing: [@imkiva](https://github.com/imkiva/), Weicheng Shi
-+ Douments: [@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
-+ Streams API Extension: [@imkiva](https://github.com/imkiva/)
-+ IntelliJ Plugin: [@ice1000](https://github.com/ice1000/)
-+ Cross-platform Support: [@MouriNaruto](https://github.com/MouriNaruto)
+[Sichuan University](http://scu.edu.cn/), [freeCodeCamp Chengdu Community](https://china.freecodecamp.one/?city=chengdu)  
+[@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/), [@MouriNaruto](https://github.com/MouriNaruto), [@Access-Rend](https://github.com/Access-Rend), Weicheng Shi

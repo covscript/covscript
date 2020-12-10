@@ -2,22 +2,27 @@
 /*
 * Covariant Script Core Extension
 *
-* Licensed under the Covariant Innovation General Public License,
-* Version 1.0 (the "License");
+* Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
-*
-* https://covariant.cn/licenses/LICENSE-1.0
-*
+* 
+*     http://www.apache.org/licenses/LICENSE-2.0
+* 
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
+* 
+* Copyright (C) 2017-2020 Michael Lee(李登淳)
 *
-* Copyright (C) 2020 Michael Lee(李登淳)
-* Email: mikecovlee@163.com
-* Github: https://github.com/mikecovlee
+* This software is registered with the National Copyright Administration
+* of the People's Republic of China(Registration Number: 2020SR0408026)
+* and is protected by the Copyright Law of the People's Republic of China.
+* 
+* Email:   lee@covariant.cn, mikecovlee@163.com
+* Github:  https://github.com/mikecovlee
+* Website: http://covscript.org.cn
 */
 #include <covscript/core/core.hpp>
 #include <covscript/core/cni.hpp>
@@ -229,6 +234,12 @@ namespace cs_impl {
 	}
 
 	template<>
+	constexpr const char *get_name_of_type<cs::char_buff>()
+	{
+		return "cs::char_buff";
+	}
+
+	template<>
 	constexpr const char *get_name_of_type<cs::istream>()
 	{
 		return "cs::istream";
@@ -259,6 +270,7 @@ namespace cs_impl {
 	extern cs::namespace_t iostream_ext;
 	extern cs::namespace_t seekdir_ext;
 	extern cs::namespace_t openmode_ext;
+	extern cs::namespace_t charbuff_ext;
 	extern cs::namespace_t istream_ext;
 	extern cs::namespace_t ostream_ext;
 	extern cs::namespace_t system_ext;
@@ -343,6 +355,12 @@ namespace cs_impl {
 	cs::namespace_t &get_ext<cs::pair>()
 	{
 		return pair_ext;
+	}
+
+	template<>
+	cs::namespace_t &get_ext<cs::char_buff>()
+	{
+		return charbuff_ext;
 	}
 
 	template<>

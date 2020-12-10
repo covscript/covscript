@@ -1,23 +1,27 @@
 /*
 * Covariant Script Programming Language Debugger
 *
-* Licensed under the Covariant Innovation General Public License,
-* Version 1.0 (the "License");
+* Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
-*
-* https://covariant.cn/licenses/LICENSE-1.0
-*
+* 
+*     http://www.apache.org/licenses/LICENSE-2.0
+* 
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
+* 
+* Copyright (C) 2017-2020 Michael Lee(李登淳)
 *
-* Copyright (C) 2020 Michael Lee(李登淳)
-* Email: mikecovlee@163.com
-* Github: https://github.com/mikecovlee
-* Website: http://covscript.org
+* This software is registered with the National Copyright Administration
+* of the People's Republic of China(Registration Number: 2020SR0408026)
+* and is protected by the Copyright Law of the People's Republic of China.
+* 
+* Email:   lee@covariant.cn, mikecovlee@163.com
+* Github:  https://github.com/mikecovlee
+* Website: http://covscript.org.cn
 */
 #define CS_DEBUGGER
 
@@ -81,7 +85,7 @@ bool show_help_info = false;
 bool wait_before_exit = false;
 bool show_version_info = false;
 
-int covscript_args(int args_size, const char *args[])
+int covscript_args(int args_size, char *args[])
 {
 	int expect_log_path = 0;
 	int expect_import_path = 0;
@@ -402,7 +406,7 @@ cs::array split(const std::string &str)
 	return std::move(arr);
 }
 
-void covscript_main(int args_size, const char *args[])
+void covscript_main(int args_size, char *args[])
 {
 	if (args_size > 1) {
 		int index = covscript_args(args_size, args);
@@ -689,7 +693,7 @@ void covscript_main(int args_size, const char *args[])
 		throw cs::fatal_error("no input file.");
 }
 
-int main(int args_size, const char *args[])
+int main(int args_size, char *args[])
 {
 	int errorcode = 0;
 	try {

@@ -1,23 +1,27 @@
 /*
 * Covariant Script Programming Language
 *
-* Licensed under the Covariant Innovation General Public License,
-* Version 1.0 (the "License");
+* Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
-*
-* https://covariant.cn/licenses/LICENSE-1.0
-*
+* 
+*     http://www.apache.org/licenses/LICENSE-2.0
+* 
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
+* 
+* Copyright (C) 2017-2020 Michael Lee(李登淳)
 *
-* Copyright (C) 2020 Michael Lee(李登淳)
-* Email: mikecovlee@163.com
-* Github: https://github.com/mikecovlee
-* Website: http://covscript.org
+* This software is registered with the National Copyright Administration
+* of the People's Republic of China(Registration Number: 2020SR0408026)
+* and is protected by the Copyright Law of the People's Republic of China.
+* 
+* Email:   lee@covariant.cn, mikecovlee@163.com
+* Github:  https://github.com/mikecovlee
+* Website: http://covscript.org.cn
 */
 #include <covscript/impl/codegen.hpp>
 #include <covscript_impl/system.hpp>
@@ -95,6 +99,7 @@ namespace cs_impl {
 	cs::namespace_t iostream_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t seekdir_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t openmode_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t charbuff_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t istream_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t ostream_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t system_ext = cs::make_shared_namespace<cs::name_space>();
@@ -271,7 +276,7 @@ namespace cs {
 		}
 	}
 
-	array parse_cmd_args(int argc, const char *argv[])
+	array parse_cmd_args(int argc, char *argv[])
 	{
 		cs::array arg;
 		for (std::size_t i = 0; i < argc; ++i)
