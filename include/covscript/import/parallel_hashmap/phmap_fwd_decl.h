@@ -39,7 +39,7 @@ namespace phmap {
 
 	template<class T>
 	struct EqualTo;
-	template<class T> using Allocator      = typename std::allocator<T>;
+	template<class T> using Allocator = typename std::allocator<T>;
 	template<class T1, class T2> using Pair = typename std::pair<T1, T2>;
 
 	class NullMutex;
@@ -50,7 +50,7 @@ namespace phmap {
 		template<class T, class E = void>
 		struct HashEq {
 			using Hash = phmap::Hash<T>;
-			using Eq   = phmap::EqualTo<T>;
+			using Eq = phmap::EqualTo<T>;
 		};
 
 		template<class T>

@@ -450,18 +450,18 @@ namespace phmap {
 
 		public:
 			// The actual object stored in the hash table.
-			using slot_type  = typename Policy::slot_type;
+			using slot_type = typename Policy::slot_type;
 
 			// The type of the keys stored in the hashtable.
-			using key_type   = typename Policy::key_type;
+			using key_type = typename Policy::key_type;
 
 			// The argument type for insertions into the hashtable. This is different
 			// from value_type for increased performance. See initializer_list constructor
 			// and insert() member functions for more details.
-			using init_type  = typename Policy::init_type;
+			using init_type = typename Policy::init_type;
 
-			using reference  = decltype(Policy::element(std::declval<slot_type *>()));
-			using pointer    = typename std::remove_reference<reference>::type *;
+			using reference = decltype(Policy::element(std::declval<slot_type *>()));
+			using pointer = typename std::remove_reference<reference>::type *;
 			using value_type = typename std::remove_reference<reference>::type;
 
 			// Policies can set this variable to tell raw_hash_set that all iterators
@@ -1848,7 +1848,7 @@ namespace phmap {
 			}
 
 			// dummy_ must be initialized for constexpr constructor.
-			constexpr optional_data_dtor_base() noexcept : engaged_(false), dummy_{{}} {}
+			constexpr optional_data_dtor_base() noexcept: engaged_(false), dummy_{{}} {}
 
 			template<typename... Args>
 			constexpr explicit optional_data_dtor_base(in_place_t, Args &&... args)
@@ -1884,7 +1884,7 @@ namespace phmap {
 			}
 
 			// dummy_ must be initialized for constexpr constructor.
-			constexpr optional_data_dtor_base() noexcept : engaged_(false), dummy_{{}} {}
+			constexpr optional_data_dtor_base() noexcept: engaged_(false), dummy_{{}} {}
 
 			template<typename... Args>
 			constexpr explicit optional_data_dtor_base(in_place_t, Args &&... args)
@@ -3448,7 +3448,7 @@ namespace phmap {
 
 		static const size_type npos = ~(size_type(0));
 
-		constexpr Span() noexcept : Span(nullptr, 0) {}
+		constexpr Span() noexcept: Span(nullptr, 0) {}
 
 		constexpr Span(pointer array, size_type length) noexcept
 			: ptr_(array), len_(length) {}
@@ -5339,10 +5339,10 @@ namespace phmap {
 				locked_ = true;
 			}
 
-			WriteLock(mutex_type &m, adopt_lock_t) noexcept :
+			WriteLock(mutex_type &m, adopt_lock_t) noexcept:
 				m_(&m), locked_(true) {}
 
-			WriteLock(mutex_type &m, defer_lock_t) noexcept :
+			WriteLock(mutex_type &m, defer_lock_t) noexcept:
 				m_(&m), locked_(false) {}
 
 			WriteLock(mutex_type &m, try_to_lock_t) :
@@ -5429,10 +5429,10 @@ namespace phmap {
 				locked_ = true;
 			}
 
-			ReadLock(mutex_type &m, adopt_lock_t) noexcept :
+			ReadLock(mutex_type &m, adopt_lock_t) noexcept:
 				m_(&m), locked_(true) {}
 
-			ReadLock(mutex_type &m, defer_lock_t) noexcept :
+			ReadLock(mutex_type &m, defer_lock_t) noexcept:
 				m_(&m), locked_(false) {}
 
 			ReadLock(mutex_type &m, try_to_lock_t) :
@@ -5590,13 +5590,13 @@ namespace phmap {
 	template<class Mtx_>
 	class LockableImpl : public Mtx_ {
 	public:
-		using mutex_type      = Mtx_;
-		using Base            = LockableBaseImpl<Mtx_>;
-		using SharedLock      = typename Base::WriteLock;
-		using UpgradeLock     = typename Base::WriteLock;
-		using UniqueLock      = typename Base::WriteLock;
-		using SharedLocks     = typename Base::WriteLocks;
-		using UniqueLocks     = typename Base::WriteLocks;
+		using mutex_type = Mtx_;
+		using Base = LockableBaseImpl<Mtx_>;
+		using SharedLock = typename Base::WriteLock;
+		using UpgradeLock = typename Base::WriteLock;
+		using UniqueLock = typename Base::WriteLock;
+		using SharedLocks = typename Base::WriteLocks;
+		using UniqueLocks = typename Base::WriteLocks;
 		using UpgradeToUnique = typename Base::DoNothing;        // we already have unique ownership
 	};
 
@@ -5606,14 +5606,14 @@ namespace phmap {
 	template<>
 	class LockableImpl<phmap::NullMutex> : public phmap::NullMutex {
 	public:
-		using mutex_type      = phmap::NullMutex;
-		using Base            = LockableBaseImpl<phmap::NullMutex>;
-		using SharedLock      = typename Base::DoNothing;
-		using UpgradeLock     = typename Base::DoNothing;
-		using UniqueLock      = typename Base::DoNothing;
+		using mutex_type = phmap::NullMutex;
+		using Base = LockableBaseImpl<phmap::NullMutex>;
+		using SharedLock = typename Base::DoNothing;
+		using UpgradeLock = typename Base::DoNothing;
+		using UniqueLock = typename Base::DoNothing;
 		using UpgradeToUnique = typename Base::DoNothing;
-		using SharedLocks     = typename Base::DoNothing;
-		using UniqueLocks     = typename Base::DoNothing;
+		using SharedLocks = typename Base::DoNothing;
+		using UniqueLocks = typename Base::DoNothing;
 	};
 
 // --------------------------------------------------------------------------

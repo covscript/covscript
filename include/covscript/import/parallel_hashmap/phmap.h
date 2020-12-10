@@ -2652,25 +2652,25 @@ namespace phmap {
 			constexpr static size_t mask = num_tables - 1;
 
 		public:
-			using EmbeddedSet     = RefSet<Policy, Hash, Eq, Alloc>;
-			using EmbeddedIterator= typename EmbeddedSet::iterator;
-			using EmbeddedConstIterator= typename EmbeddedSet::const_iterator;
-			using init_type       = typename PolicyTraits::init_type;
-			using key_type        = typename PolicyTraits::key_type;
-			using slot_type       = typename PolicyTraits::slot_type;
-			using allocator_type  = Alloc;
-			using size_type       = size_t;
+			using EmbeddedSet = RefSet<Policy, Hash, Eq, Alloc>;
+			using EmbeddedIterator = typename EmbeddedSet::iterator;
+			using EmbeddedConstIterator = typename EmbeddedSet::const_iterator;
+			using init_type = typename PolicyTraits::init_type;
+			using key_type = typename PolicyTraits::key_type;
+			using slot_type = typename PolicyTraits::slot_type;
+			using allocator_type = Alloc;
+			using size_type = size_t;
 			using difference_type = ptrdiff_t;
-			using hasher          = Hash;
-			using key_equal       = Eq;
-			using policy_type     = Policy;
-			using value_type      = typename PolicyTraits::value_type;
-			using reference       = value_type &;
+			using hasher = Hash;
+			using key_equal = Eq;
+			using policy_type = Policy;
+			using value_type = typename PolicyTraits::value_type;
+			using reference = value_type &;
 			using const_reference = const value_type &;
-			using pointer         = typename phmap::allocator_traits<
-			                        allocator_type>::template rebind_traits<value_type>::pointer;
-			using const_pointer   = typename phmap::allocator_traits<
-			                        allocator_type>::template rebind_traits<value_type>::const_pointer;
+			using pointer = typename phmap::allocator_traits<
+			                allocator_type>::template rebind_traits<value_type>::pointer;
+			using const_pointer = typename phmap::allocator_traits<
+			                      allocator_type>::template rebind_traits<value_type>::const_pointer;
 
 			// Alias used for heterogeneous lookup functions.
 			// `key_arg<K>` evaluates to `K` when the functors are transparent and to
@@ -2678,7 +2678,7 @@ namespace phmap {
 			// transparent case.
 			// --------------------------------------------------------------------
 			template<class K>
-			using key_arg         = typename KeyArgImpl::template type<K, key_type>;
+			using key_arg = typename KeyArgImpl::template type<K, key_type>;
 
 		protected:
 			using Lockable = phmap::LockableImpl<Mtx_>;
@@ -2701,7 +2701,7 @@ namespace phmap {
 
 			auto KeyTypeCanBeEq(const Eq &eq, const key_type &k) -> decltype(eq(k, k));
 
-			using AllocTraits     = phmap::allocator_traits<allocator_type>;
+			using AllocTraits = phmap::allocator_traits<allocator_type>;
 
 			static_assert(std::is_lvalue_reference<reference>::value,
 			              "Policy::element() must return a reference");
@@ -2745,15 +2745,15 @@ namespace phmap {
 
 			public:
 				using iterator_category = std::forward_iterator_tag;
-				using value_type        = typename parallel_hash_set::value_type;
-				using reference         =
+				using value_type = typename parallel_hash_set::value_type;
+				using reference =
 				    phmap::conditional_t<PolicyTraits::constant_iterators::value,
 				    const value_type &, value_type &>;
-				using pointer           = phmap::remove_reference_t<reference> *;
-				using difference_type   = typename parallel_hash_set::difference_type;
-				using Inner             = typename parallel_hash_set::Inner;
-				using EmbeddedSet       = typename parallel_hash_set::EmbeddedSet;
-				using EmbeddedIterator  = typename EmbeddedSet::iterator;
+				using pointer = phmap::remove_reference_t<reference> *;
+				using difference_type = typename parallel_hash_set::difference_type;
+				using Inner = typename parallel_hash_set::Inner;
+				using EmbeddedSet = typename parallel_hash_set::EmbeddedSet;
+				using EmbeddedIterator = typename EmbeddedSet::iterator;
 
 				iterator() {}
 
@@ -2827,11 +2827,11 @@ namespace phmap {
 
 			public:
 				using iterator_category = typename iterator::iterator_category;
-				using value_type        = typename parallel_hash_set::value_type;
-				using reference         = typename parallel_hash_set::const_reference;
-				using pointer           = typename parallel_hash_set::const_pointer;
-				using difference_type   = typename parallel_hash_set::difference_type;
-				using Inner             = typename parallel_hash_set::Inner;
+				using value_type = typename parallel_hash_set::value_type;
+				using reference = typename parallel_hash_set::const_reference;
+				using pointer = typename parallel_hash_set::const_pointer;
+				using difference_type = typename parallel_hash_set::difference_type;
+				using Inner = typename parallel_hash_set::Inner;
 
 				const_iterator() {}
 

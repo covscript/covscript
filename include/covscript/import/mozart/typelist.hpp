@@ -5,15 +5,15 @@
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
-* 
+*
 *     http://www.apache.org/licenses/LICENSE-2.0
-* 
+*
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-* 
+*
 * Copyright (C) 2017-2020 Michael Lee(李登淳)
 *
 * Email:   lee@covariant.cn, mikecovlee@163.com
@@ -36,11 +36,11 @@ namespace cov {
 		struct make;
 		template<typename T>
 		struct make<T> {
-			using result=tlist_node<T, tlist_final>;
+			using result = tlist_node<T, tlist_final>;
 		};
 		template<typename T, typename...Args>
 		struct make<T, Args...> {
-			using result=tlist_node<T, typename make<Args...>::result>;
+			using result = tlist_node<T, typename make<Args...>::result>;
 		};
 		template<typename T, int size = 0>
 		struct get_size;
@@ -73,88 +73,88 @@ namespace cov {
 		struct get_type;
 		template<int posit, typename fT, typename sT>
 		struct get_type<posit, tlist_node<fT, sT>> {
-			using result=typename get_type<posit - 1, sT>::result;
+			using result = typename get_type<posit - 1, sT>::result;
 		};
 		template<typename fT, typename sT>
 		struct get_type<0, tlist_node<fT, sT>> {
-			using result=fT;
+			using result = fT;
 		};
 		template<int posit, typename T, typename Arg>
 		struct change_type;
 		template<int posit, typename fT, typename sT, typename Arg>
 		struct change_type<posit, tlist_node<fT, sT>, Arg> {
-			using result=tlist_node<fT, typename change_type<posit - 1, sT, Arg>::result>;
+			using result = tlist_node<fT, typename change_type<posit - 1, sT, Arg>::result>;
 		};
 		template<typename fT, typename sT, typename Arg>
 		struct change_type<0, tlist_node<fT, sT>, Arg> {
-			using result=tlist_node<Arg, sT>;
+			using result = tlist_node<Arg, sT>;
 		};
 		template<typename T, typename Arg>
 		struct push_front {
-			using result=tlist_node<Arg, T>;
+			using result = tlist_node<Arg, T>;
 		};
 		template<typename T>
 		struct pop_front;
 		template<typename fT, typename sT>
 		struct pop_front<tlist_node<fT, sT>> {
-			using result=sT;
+			using result = sT;
 		};
 		template<typename T, typename Arg>
 		struct push_back;
 		template<typename fT, typename sT, typename Arg>
 		struct push_back<tlist_node<fT, sT>, Arg> {
-			using result=tlist_node<fT, typename push_back<sT, Arg>::result>;
+			using result = tlist_node<fT, typename push_back<sT, Arg>::result>;
 		};
 		template<typename T, typename Arg>
 		struct push_back<tlist_node<T, tlist_final>, Arg> {
-			using result=tlist_node<T, tlist_node<Arg, tlist_final>>;
+			using result = tlist_node<T, tlist_node<Arg, tlist_final>>;
 		};
 		template<typename T>
 		struct pop_back;
 		template<typename fT, typename sT>
 		struct pop_back<tlist_node<fT, sT>> {
-			using result=tlist_node<fT, typename pop_back<sT>::result>;
+			using result = tlist_node<fT, typename pop_back<sT>::result>;
 		};
 		template<typename T>
 		struct pop_back<tlist_node<T, tlist_final>> {
-			using result=tlist_final;
+			using result = tlist_final;
 		};
 		template<int posit, typename T>
 		struct erase;
 		template<int posit, typename fT, typename sT>
 		struct erase<posit, tlist_node<fT, sT>> {
-			using result=tlist_node<fT, typename erase<posit - 1, sT>::result>;
+			using result = tlist_node<fT, typename erase<posit - 1, sT>::result>;
 		};
 		template<typename fT, typename sT>
 		struct erase<0, tlist_node<fT, sT>> {
-			using result=sT;
+			using result = sT;
 		};
 		template<int posit, typename T, typename Arg>
 		struct insert;
 		template<int posit, typename fT, typename sT, typename Arg>
 		struct insert<posit, tlist_node<fT, sT>, Arg> {
-			using result=tlist_node<fT, typename insert<posit - 1, sT, Arg>::result>;
+			using result = tlist_node<fT, typename insert<posit - 1, sT, Arg>::result>;
 		};
 		template<typename fT, typename sT, typename Arg>
 		struct insert<0, tlist_node<fT, sT>, Arg> {
-			using result=tlist_node<fT, tlist_node<Arg, sT>>;
+			using result = tlist_node<fT, tlist_node<Arg, sT>>;
 		};
 		template<typename T, template<typename> class Helper>
 		struct remove_if;
 		template<typename fT, typename sT, template<typename> class Helper>
 		struct remove_if<tlist_node<fT, sT>, Helper> {
-			using result=typename replace_if<Helper<fT>::value, tlist_node<fT, typename remove_if<sT, Helper>::result>, typename remove_if<sT, Helper>::result>::result;
+			using result = typename replace_if<Helper<fT>::value, tlist_node<fT, typename remove_if<sT, Helper>::result>, typename remove_if<sT, Helper>::result>::result;
 		};
 		template<template<typename> class Helper>
 		struct remove_if<tlist_final, Helper> {
-			using result=tlist_final;
+			using result = tlist_final;
 		};
 
 		template<typename T, typename Arg>
 		class remove {
-			template<typename X> using Helper=is_same_type<Arg, X>;
+			template<typename X> using Helper = is_same_type<Arg, X>;
 		public:
-			using result=typename remove_if<T, Helper>::result;
+			using result = typename remove_if<T, Helper>::result;
 		};
 	}
 }

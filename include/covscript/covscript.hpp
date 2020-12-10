@@ -5,21 +5,21 @@
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
-* 
+*
 *     http://www.apache.org/licenses/LICENSE-2.0
-* 
+*
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-* 
+*
 * Copyright (C) 2017-2020 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
 * and is protected by the Copyright Law of the People's Republic of China.
-* 
+*
 * Email:   lee@covariant.cn, mikecovlee@163.com
 * Github:  https://github.com/mikecovlee
 * Website: http://covscript.org.cn
@@ -117,17 +117,22 @@ namespace cs {
 	class bootstrap final {
 	public:
 		context_t context;
+
 		// Bootstrap from string initializer list
-		bootstrap(std::initializer_list<std::string> l):context(create_context({l.begin(), l.end()})) {}
+		bootstrap(std::initializer_list<std::string> l) : context(create_context({l.begin(), l.end()})) {}
+
 		// Classic bootstrap from command line
-		bootstrap(int argc, char *argv[]):context(create_context(parse_cmd_args(argc, argv))) {}
+		bootstrap(int argc, char *argv[]) : context(create_context(parse_cmd_args(argc, argv))) {}
+
 		// Zero initialization bootstrap
-		bootstrap():context(create_context({"<BOOTSTRAP_ENV>"})) {}
+		bootstrap() : context(create_context({"<BOOTSTRAP_ENV>"})) {}
+
 		~bootstrap()
 		{
 			collect_garbage(context);
 		}
-		void run(const std::string& path)
+
+		void run(const std::string &path)
 		{
 			context->instance->compile(path);
 			context->instance->interpret();

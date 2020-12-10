@@ -93,7 +93,7 @@ Option|Mnemonic|Function
 
 **Note that if you do not set the log path, it will be printed to stdout.**
 ## Examples ##
-The [examples](./examples) folder contains several example programs written by CovScript.
+The [examples](./examples) folder contains several example programs written by Covariant Script.
 ## Copyright ##
 **The author of the Covariant Script Programming Language is [@mikecovlee](https://github.com/mikecovlee/), licensed under Apache 2.0**  
 **Copyright © 2017-2020 Michael Lee(李登淳)**  
