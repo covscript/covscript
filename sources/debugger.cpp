@@ -424,19 +424,8 @@ void covscript_main(int args_size, char *args[])
 		}
 		else if (show_version_info) {
 			std::cout << "Covariant Script Programming Language Debugger\n";
-			std::cout << "Version: " << cs::current_process->version << "\n";
-			std::cout << "Copyright (C) 2020 Michael Lee. All rights reserved.\n";
-			std::cout << "Licensed under the Covariant Innovation General Public License,\n";
-			std::cout << "Version 1.0 (the \"License\");\n";
-			std::cout << "you may not use this file except in compliance with the License.\n";
-			std::cout << "You may obtain a copy of the License at\n";
-			std::cout << "\nhttps://covariant.cn/licenses/LICENSE-1.0\n";
-			std::cout << "\nUnless required by applicable law or agreed to in writing, software\n";
-			std::cout << "distributed under the License is distributed on an \"AS IS\" BASIS,\n";
-			std::cout << "WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n";
-			std::cout << "See the License for the specific language governing permissions and\n";
-			std::cout << "limitations under the License.\n";
-			std::cout << "Please visit http://covscript.org for more information.\n";
+			std::cout << "Version: " << cs::current_process->version << std::endl;
+			std::cout << cs::copyright_info << std::endl;
 			std::cout << "\nMetadata:\n";
 			std::cout << "  Import Path: " << cs::current_process->import_path << "\n";
 			std::cout << "  STD Version: " << cs::current_process->std_version << "\n";
@@ -460,8 +449,8 @@ void covscript_main(int args_size, char *args[])
 			throw cs::fatal_error("invalid input file.");
 		std::cout << "Covariant Script Programming Language Debugger\nVersion: " << cs::current_process->version
 		          << "\n"
-		          "Copyright (C) 2020 Michael Lee. All rights reserved.\n"
-		          "Please visit <http://covscript.org/> for more information."
+		          "Copyright (C) 2017-2020 Michael Lee. All rights reserved.\n"
+		          "Please visit <http://covscript.org.cn/> for more information."
 		          << std::endl;
 		cs::prepend_import_path(path, cs::current_process);
 		cs::current_process->on_process_exit.add_listener([](void *code) -> bool {

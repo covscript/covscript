@@ -110,6 +110,22 @@ namespace cs {
 	constexpr char path_separator = '/';
 	constexpr char path_delimiter = ':';
 #endif
+
+	constexpr char copyright_info[] =
+	    "Licensed under the Apache License, Version 2.0 (the \"License\");\n"
+	    "you may not use this file except in compliance with the License.\n"
+	    "You may obtain a copy of the License at\n"
+	    "\nhttp://www.apache.org/licenses/LICENSE-2.0\n\n"
+	    "Unless required by applicable law or agreed to in writing, software\n"
+	    "distributed under the License is distributed on an \"AS IS\" BASIS,\n"
+	    "WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
+	    "See the License for the specific language governing permissions and\n"
+	    "limitations under the License.\n"
+	    "\nCopyright (C) 2017-2020 Michael Lee\n\n"
+	    "This software is registered with the National Copyright Administration\n"
+	    "of the People's Republic of China(Registration Number: 2020SR0408026)\n"
+	    "and is protected by the Copyright Law of the People's Republic of China.\n"
+	    "\nPlease visit http://covscript.org.cn for more information.";
 }
 
 // Debugger Hooks

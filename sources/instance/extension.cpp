@@ -864,21 +864,8 @@ namespace cs_impl {
 
 		void info()
 		{
-			std::cout << "Covariant Script Programming Language Interpreter\nVersion: " << current_process->version
-			          << "\n"
-			          "Copyright (C) 2020 Michael Lee. All rights reserved.\n"
-			          "Licensed under the Covariant Innovation General Public License,\n"
-			          "Version 1.0 (the \"License\");\n"
-			          "you may not use this file except in compliance with the License.\n"
-			          "You may obtain a copy of the License at\n"
-			          "\nhttps://covariant.cn/licenses/LICENSE-1.0\n"
-			          "Unless required by applicable law or agreed to in writing, software\n"
-			          "distributed under the License is distributed on an \"AS IS\" BASIS,\n"
-			          "WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
-			          "See the License for the specific language governing permissions and\n"
-			          "limitations under the License.\n"
-			          "Please visit http://covscript.org for more information."
-			          << std::endl;
+			std::cout << "Covariant Script Programming Language Interpreter\nVersion: " << current_process->version << std::endl;
+			std::cout << copyright_info << std::endl;
 		}
 
 		number time()
