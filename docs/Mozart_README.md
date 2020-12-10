@@ -1,34 +1,5 @@
-Covariant Mozart Utility Library Guide
------------------------------------------------
-**智锐科创：莫扎特 实用工具库指南**
-
-### 1:License(使用协议)
-**Licensed under the Covariant Innovation General Public License,**  
-**Version 1.0 (the "License");**  
-**you may not use this file except in compliance with the License.**  
-**You may obtain a copy of the License at**  
-  
-**https://covariant.cn/licenses/LICENSE-1.0**  
-  
-**Unless required by applicable law or agreed to in writing, software**  
-**distributed under the License is distributed on an "AS IS" BASIS,**  
-**WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.**  
-**See the License for the specific language governing permissions and**  
-**limitations under the License.**  
-
-**Copyright (C) 2020 Michael Lee(李登淳)**  
-
-Email: mikecovlee@163.com  
-Github: https://github.com/mikecovlee  
-
-### 2:Warning Codes and Error Codes Reference(警告码与错误码对照表)
-
-##### English:
->  
-*Note:  
-I am a Chinese guy.My English is very poor.So I can't complete this reference by myself.  
-Please contact me if you want to help me translate this guide. Thanks!*  
-
+# Warning Codes and Error Codes Reference(警告码与错误码对照表)
+## English:
 Code|Detail
 :---:|:---:
 W0001|Tag type is different from condition type  
@@ -55,7 +26,7 @@ E000K|It is not allowed to change the value of a constant.
 E000L|Duplicate singleton objects are not allowed.  
 E000M|Does not support conversion of the specified type to `long`.  
 
-##### 简体中文:
+## 简体中文:
 
 代码|含义
 :---:|:---:
