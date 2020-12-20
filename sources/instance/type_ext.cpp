@@ -1,5 +1,5 @@
 /*
-* Covariant Script Extension
+* Covariant Script Type Support
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -854,6 +854,68 @@ namespace cs_impl {
 			.add_var("second", make_member_visitor(&pair::second));
 		}
 	}
+	namespace time_cs_ext {
+		using namespace cs;
+
+		number sec(const std::tm& t)
+		{
+			return t.tm_sec;
+		}
+
+		number min(const std::tm& t)
+		{
+			return t.tm_min;
+		}
+
+		number hour(const std::tm& t)
+		{
+			return t.tm_hour;
+		}
+
+		number wday(const std::tm& t)
+		{
+			return t.tm_wday;
+		}
+
+		number mday(const std::tm& t)
+		{
+			return t.tm_mday;
+		}
+
+		number yday(const std::tm& t)
+		{
+			return t.tm_mday;
+		}
+
+		number mon(const std::tm& t)
+		{
+			return t.tm_mon;
+		}
+
+		number year(const std::tm& t)
+		{
+			return t.tm_year;
+		}
+
+		bool is_dst(const std::tm& t)
+		{
+			return t.tm_isdst;
+		}
+
+		void init()
+		{
+			(*time_ext)
+			.add_var("sec", make_cni(sec, callable::types::member_visitor))
+			.add_var("min", make_cni(min, callable::types::member_visitor))
+			.add_var("hour", make_cni(hour, callable::types::member_visitor))
+			.add_var("wday", make_cni(wday, callable::types::member_visitor))
+			.add_var("mday", make_cni(mday, callable::types::member_visitor))
+			.add_var("yday", make_cni(yday, callable::types::member_visitor))
+			.add_var("mon", make_cni(mon, callable::types::member_visitor))
+			.add_var("year", make_cni(year, callable::types::member_visitor))
+			.add_var("is_dst", make_cni(is_dst, callable::types::member_visitor));
+		}
+	}
 	namespace runtime_cs_ext {
 		using namespace cs;
 
@@ -871,6 +933,18 @@ namespace cs_impl {
 		number time()
 		{
 			return cov::timer::time(cov::timer::time_unit::milli_sec);
+		}
+
+		std::tm local_time()
+		{
+			std::time_t t = std::time(nullptr);
+			return *std::localtime(&t);
+		}
+
+		std::tm utc_time()
+		{
+			std::time_t t = std::time(nullptr);
+			return *std::gmtime(&t);
 		}
 
 		void delay(number time)
@@ -1001,10 +1075,13 @@ namespace cs_impl {
 		void init()
 		{
 			(*runtime_ext)
+			.add_var("time_type", make_namespace(time_ext))
 			.add_var("std_version", var::make_constant<number>(current_process->std_version))
 			.add_var("get_import_path", make_cni(get_import_path, true))
 			.add_var("info", make_cni(info))
 			.add_var("time", make_cni(time))
+			.add_var("local_time", make_cni(local_time))
+			.add_var("utc_time", make_cni(utc_time))
 			.add_var("delay", make_cni(delay))
 			.add_var("exception", make_cni(exception))
 			.add_var("hash", make_cni(hash, true))
@@ -1348,10 +1425,9 @@ namespace cs_impl {
 		}
 	}
 
-	static bool extensions_initiator = true;
-
 	void init_extensions()
 	{
+		static bool extensions_initiator = true;
 		if (extensions_initiator) {
 			extensions_initiator = false;
 			member_visitor_cs_ext::init();
@@ -1360,6 +1436,7 @@ namespace cs_impl {
 			istream_cs_ext::init();
 			ostream_cs_ext::init();
 			system_cs_ext::init();
+			time_cs_ext::init();
 			runtime_cs_ext::init();
 			math_cs_ext::init();
 			except_cs_ext::init();

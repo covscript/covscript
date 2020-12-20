@@ -24,7 +24,7 @@
 * Github:  https://github.com/mikecovlee
 * Website: http://covscript.org.cn
 */
-#include <covscript/impl/extension.hpp>
+#include <covscript/impl/type_ext.hpp>
 
 namespace cs {
 	enum class token_types {

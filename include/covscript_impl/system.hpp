@@ -25,7 +25,7 @@
 * Website: http://covscript.org.cn
 */
 
-#include <covscript/impl/extension.hpp>
+#include <covscript/core/core.hpp>
 
 namespace cs_impl {
 	namespace platform {
