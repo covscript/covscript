@@ -50,7 +50,11 @@ namespace cs {
 
 			std::string wide2local(const std::u32string &str) override
 			{
-				return std::string(str.begin(), str.end());
+				std::string local;
+				local.reserve(str.size());
+				for (auto ch:str)
+					local.push_back(ch);
+				return std::move(local);
 			}
 
 			bool is_identifier(char32_t ch) override

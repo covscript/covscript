@@ -1,6 +1,6 @@
-@charset: utf8
-var mons = {"ä¸€æœˆ", "äºŒæœˆ", "ä¸‰æœˆ", "å››æœˆ", "äº”æœˆ", "å…­æœˆ", "ä¸ƒæœˆ", "å…«æœˆ", "ä¹æœˆ", "åæœˆ", "åä¸€æœˆ", "åäºŒæœˆ"}
-var days = {"æ˜ŸæœŸå¤©", "æ˜ŸæœŸä¸€", "æ˜ŸæœŸäºŒ", "æ˜ŸæœŸä¸‰", "æ˜ŸæœŸå››", "æ˜ŸæœŸäº”", "æ˜ŸæœŸå…­"}
+@charset: gbk
+var mons = {"Ò»ÔÂ", "¶şÔÂ", "ÈıÔÂ", "ËÄÔÂ", "ÎåÔÂ", "ÁùÔÂ", "ÆßÔÂ", "°ËÔÂ", "¾ÅÔÂ", "Ê®ÔÂ", "Ê®Ò»ÔÂ", "Ê®¶şÔÂ"}
+var days = {"ĞÇÆÚÌì", "ĞÇÆÚÒ»", "ĞÇÆÚ¶ş", "ĞÇÆÚÈı", "ĞÇÆÚËÄ", "ĞÇÆÚÎå", "ĞÇÆÚÁù"}
 
 function align(str)
     if str.size == 1
@@ -13,16 +13,16 @@ end
 function get_time_str(t)
     var hour = null
     if t.hour < 13
-        hour = " ä¸Šåˆ " + align(to_string(t.hour))
+        hour = " ÉÏÎç " + align(to_string(t.hour))
     else
-        hour = " ä¸‹åˆ " + align(to_string(t.hour - 12))
+        hour = " ÏÂÎç " + align(to_string(t.hour - 12))
     end
-    return to_string(t.year + 1900) + "å¹´" + mons[t.mon] + to_string(t.mday) + "æ—¥ " + days[t.wday] + align(hour) + ":" + align(to_string(t.min)) + ":" + align(to_string(t.sec))
+    return to_string(t.year + 1900) + "Äê" + mons[t.mon] + to_string(t.mday) + "ÈÕ " + days[t.wday] + align(hour) + ":" + align(to_string(t.min)) + ":" + align(to_string(t.sec))
 end
 
 loop
     system.console.clrscr()
-    system.out.println("æœ¬åœ°æ—¶é—´ï¼š" + get_time_str(runtime.local_time()))
-    system.out.println("æ ‡å‡†æ—¶é—´ï¼š" + get_time_str(runtime.utc_time()))
+    system.out.println("±¾µØÊ±¼ä£º" + get_time_str(runtime.local_time()))
+    system.out.println("±ê×¼Ê±¼ä£º" + get_time_str(runtime.utc_time()))
     runtime.delay(100)
 end

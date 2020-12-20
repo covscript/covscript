@@ -862,7 +862,7 @@ namespace cs_impl {
 			return t.tm_sec;
 		}
 
-		number min(const std::tm &t)
+		number tm_min(const std::tm &t)
 		{
 			return t.tm_min;
 		}
@@ -906,7 +906,7 @@ namespace cs_impl {
 		{
 			(*time_ext)
 			.add_var("sec", make_cni(sec, callable::types::member_visitor))
-			.add_var("min", make_cni(min, callable::types::member_visitor))
+			.add_var("min", make_cni(tm_min, callable::types::member_visitor))
 			.add_var("hour", make_cni(hour, callable::types::member_visitor))
 			.add_var("wday", make_cni(wday, callable::types::member_visitor))
 			.add_var("mday", make_cni(mday, callable::types::member_visitor))
