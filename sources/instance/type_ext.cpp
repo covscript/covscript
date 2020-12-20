@@ -857,47 +857,47 @@ namespace cs_impl {
 	namespace time_cs_ext {
 		using namespace cs;
 
-		number sec(const std::tm& t)
+		number sec(const std::tm &t)
 		{
 			return t.tm_sec;
 		}
 
-		number min(const std::tm& t)
+		number min(const std::tm &t)
 		{
 			return t.tm_min;
 		}
 
-		number hour(const std::tm& t)
+		number hour(const std::tm &t)
 		{
 			return t.tm_hour;
 		}
 
-		number wday(const std::tm& t)
+		number wday(const std::tm &t)
 		{
 			return t.tm_wday;
 		}
 
-		number mday(const std::tm& t)
+		number mday(const std::tm &t)
 		{
 			return t.tm_mday;
 		}
 
-		number yday(const std::tm& t)
+		number yday(const std::tm &t)
 		{
 			return t.tm_mday;
 		}
 
-		number mon(const std::tm& t)
+		number mon(const std::tm &t)
 		{
 			return t.tm_mon;
 		}
 
-		number year(const std::tm& t)
+		number year(const std::tm &t)
 		{
 			return t.tm_year;
 		}
 
-		bool is_dst(const std::tm& t)
+		bool is_dst(const std::tm &t)
 		{
 			return t.tm_isdst;
 		}
@@ -926,7 +926,8 @@ namespace cs_impl {
 
 		void info()
 		{
-			std::cout << "Covariant Script Programming Language Interpreter\nVersion: " << current_process->version << std::endl;
+			std::cout << "Covariant Script Programming Language Interpreter\nVersion: " << current_process->version
+			          << std::endl;
 			std::cout << copyright_info << std::endl;
 		}
 
