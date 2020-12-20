@@ -31,7 +31,7 @@ set(SOURCE_CODE
         sources/compiler/compiler.cpp
         sources/compiler/lexer.cpp
         sources/compiler/parser.cpp
-        sources/instance/extension.cpp
+        sources/instance/type_ext.cpp
         sources/instance/instance.cpp
         sources/instance/runtime.cpp
         sources/instance/statement.cpp

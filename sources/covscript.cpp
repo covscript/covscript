@@ -93,6 +93,7 @@ namespace cs_impl {
 	cs::namespace_t list_iterator_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t hash_map_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t pair_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t time_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t context_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t runtime_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t string_ext = cs::make_shared_namespace<cs::name_space>();

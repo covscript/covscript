@@ -1,6 +1,6 @@
 #pragma once
 /*
-* Covariant Script Core Extension
+* Covariant Script Type Support
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -26,10 +26,51 @@
 */
 #include <covscript/core/core.hpp>
 #include <covscript/core/cni.hpp>
-
-// Basic Type Support
+#include <ctime>
 
 namespace cs_impl {
+	namespace path_cs_ext {
+		struct path_info final {
+			std::string name;
+			int type;
+
+			path_info() = delete;
+
+			path_info(const char *n, int t) : name(n), type(t) {}
+		};
+	}
+
+	void init_extensions();
+
+// Namespace declarations
+	extern cs::namespace_t member_visitor_ext;
+	extern cs::namespace_t except_ext;
+	extern cs::namespace_t array_ext;
+	extern cs::namespace_t array_iterator_ext;
+	extern cs::namespace_t char_ext;
+	extern cs::namespace_t math_ext;
+	extern cs::namespace_t math_const_ext;
+	extern cs::namespace_t list_ext;
+	extern cs::namespace_t list_iterator_ext;
+	extern cs::namespace_t hash_map_ext;
+	extern cs::namespace_t pair_ext;
+	extern cs::namespace_t time_ext;
+	extern cs::namespace_t context_ext;
+	extern cs::namespace_t runtime_ext;
+	extern cs::namespace_t string_ext;
+	extern cs::namespace_t iostream_ext;
+	extern cs::namespace_t seekdir_ext;
+	extern cs::namespace_t openmode_ext;
+	extern cs::namespace_t charbuff_ext;
+	extern cs::namespace_t istream_ext;
+	extern cs::namespace_t ostream_ext;
+	extern cs::namespace_t system_ext;
+	extern cs::namespace_t console_ext;
+	extern cs::namespace_t file_ext;
+	extern cs::namespace_t path_ext;
+	extern cs::namespace_t path_type_ext;
+	extern cs::namespace_t path_info_ext;
+
 // Detach
 	template<>
 	void detach<cs::pair>(cs::pair &val)
@@ -109,6 +150,12 @@ namespace cs_impl {
 		throw cov::error("E000D");
 	}
 
+	template<>
+	std::string to_string<std::tm>(const std::tm &t)
+	{
+		return std::asctime(&t);
+	}
+
 // To Integer
 	template<>
 	long to_integer<std::string>(const std::string &str)
@@ -174,9 +221,21 @@ namespace cs_impl {
 	}
 
 	template<>
+	constexpr const char *get_name_of_type<cs::list::iterator>()
+	{
+		return "cs::list::iterator";
+	}
+
+	template<>
 	constexpr const char *get_name_of_type<cs::list>()
 	{
 		return "cs::list";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<cs::array::iterator>()
+	{
+		return "cs::array::iterator";
 	}
 
 	template<>
@@ -251,45 +310,41 @@ namespace cs_impl {
 		return "cs::ostream";
 	}
 
-// Extended Type Support
-
-	extern cs::namespace_t member_visitor_ext;
-	extern cs::namespace_t except_ext;
-	extern cs::namespace_t array_ext;
-	extern cs::namespace_t array_iterator_ext;
-	extern cs::namespace_t char_ext;
-	extern cs::namespace_t math_ext;
-	extern cs::namespace_t math_const_ext;
-	extern cs::namespace_t list_ext;
-	extern cs::namespace_t list_iterator_ext;
-	extern cs::namespace_t hash_map_ext;
-	extern cs::namespace_t pair_ext;
-	extern cs::namespace_t context_ext;
-	extern cs::namespace_t runtime_ext;
-	extern cs::namespace_t string_ext;
-	extern cs::namespace_t iostream_ext;
-	extern cs::namespace_t seekdir_ext;
-	extern cs::namespace_t openmode_ext;
-	extern cs::namespace_t charbuff_ext;
-	extern cs::namespace_t istream_ext;
-	extern cs::namespace_t ostream_ext;
-	extern cs::namespace_t system_ext;
-	extern cs::namespace_t console_ext;
-	extern cs::namespace_t file_ext;
-	extern cs::namespace_t path_ext;
-	extern cs::namespace_t path_type_ext;
-	extern cs::namespace_t path_info_ext;
-
-	namespace path_cs_ext {
-		struct path_info final {
-			std::string name;
-			int type;
-
-			path_info() = delete;
-
-			path_info(const char *n, int t) : name(n), type(t) {}
-		};
+	template<>
+	constexpr const char *get_name_of_type<std::tm>()
+	{
+		return "cs::time_type";
 	}
+
+#ifndef _MSC_VER
+
+	template<>
+	constexpr const char *get_name_of_type<std::ios_base::seekdir>()
+	{
+		return "cs::iostream::seekdir";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<std::ios_base::openmode>()
+	{
+		return "cs::iostream::openmode";
+	}
+
+#endif
+
+	template<>
+	constexpr const char *get_name_of_type<cs::tree_type<cs::token_base *>>()
+	{
+		return "cs::expression";
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<path_cs_ext::path_info>()
+	{
+		return "cs::system::path_info";
+	}
+
+// Type Extensions
 
 	template<>
 	cs::namespace_t &get_ext<cs::member_visitor>()
@@ -313,12 +368,6 @@ namespace cs_impl {
 	cs::namespace_t &get_ext<cs::array::iterator>()
 	{
 		return array_iterator_ext;
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::array::iterator>()
-	{
-		return "cs::array::iterator";
 	}
 
 	template<>
@@ -346,12 +395,6 @@ namespace cs_impl {
 	}
 
 	template<>
-	constexpr const char *get_name_of_type<cs::list::iterator>()
-	{
-		return "cs::list::iterator";
-	}
-
-	template<>
 	cs::namespace_t &get_ext<cs::pair>()
 	{
 		return pair_ext;
@@ -375,32 +418,16 @@ namespace cs_impl {
 		return ostream_ext;
 	}
 
-#ifndef _MSC_VER
-
 	template<>
-	constexpr const char *get_name_of_type<std::ios_base::seekdir>()
+	cs::namespace_t &get_ext<std::tm>()
 	{
-		return "cs::iostream::seekdir";
+		return time_ext;
 	}
-
-	template<>
-	constexpr const char *get_name_of_type<std::ios_base::openmode>()
-	{
-		return "cs::iostream::openmode";
-	}
-
-#endif
 
 	template<>
 	cs::namespace_t &get_ext<cs::context_t>()
 	{
 		return context_ext;
-	}
-
-	template<>
-	constexpr const char *get_name_of_type<cs::tree_type<cs::token_base *>>()
-	{
-		return "cs::expression";
 	}
 
 	template<>
@@ -414,12 +441,4 @@ namespace cs_impl {
 	{
 		return path_info_ext;
 	}
-
-	template<>
-	constexpr const char *get_name_of_type<path_cs_ext::path_info>()
-	{
-		return "cs::system::path_info";
-	}
-
-	void init_extensions();
 }
