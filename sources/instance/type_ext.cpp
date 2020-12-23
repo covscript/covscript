@@ -884,7 +884,7 @@ namespace cs_impl {
 
 		number yday(const std::tm &t)
 		{
-			return t.tm_mday;
+			return t.tm_yday;
 		}
 
 		number mon(const std::tm &t)
