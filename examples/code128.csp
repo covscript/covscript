@@ -1,0 +1,97 @@
+package code128
+
+@begin
+constant bars = {
+    "212222", "222122", "222221", "121223", "121322", "131222",
+    "122213", "122312", "132212", "221213", "221312", "231212",
+    "112232", "122132", "122231", "113222", "123122", "123221",
+    "223211", "221132", "221231", "213212", "223112", "312131",
+    "311222", "321122", "321221", "312212", "322112", "322211",
+    "212123", "212321", "232121", "111323", "131123", "131321",
+    "112313", "132113", "132311", "211313", "231113", "231311",
+    "112133", "112331", "132131", "113123", "113321", "133121",
+    "313121", "211331", "231131", "213113", "213311", "213131",
+    "311123", "311321", "331121", "312113", "312311", "332111",
+    "314111", "221411", "431111", "111224", "111422", "121124",
+    "121421", "141122", "141221", "112214", "112412", "122114",
+    "122411", "142112", "142211", "241211", "221114", "413111",
+    "241112", "134111", "111242", "121142", "121241", "114212",
+    "124112", "124211", "411212", "421112", "421211", "212141",
+    "214121", "412121", "111143", "111341", "131141", "114113",
+    "114311", "411113", "411311", "113141", "114131", "311141",
+    "411131", "211412", "211214", "211232", "233111", "211133"
+}
+@end
+
+constant stop_bar = "2331112"
+constant start_code_a = 103, start_code_b = 104, start_code_c = 105
+
+function gen_code_ab(code, str)
+    var barcode = bars[code]
+    var checksum = code
+    foreach i in range(str.size)
+        var val = to_integer(str[i])
+        if code == start_code_a && val < 32
+            val = 64 + val
+        else
+            val = val - 32
+        end
+        barcode += bars[val]
+        checksum += (i + 1)*val
+    end
+    barcode += bars[checksum % 103]
+    return barcode + stop_bar
+end
+
+function gen_code_c(str)
+    var barcode = bars[start_code_c]
+    var checksum = start_code_c
+    foreach i in range(0, str.size, 2)
+        var val = (to_string(str[i]) + to_string(str[i + 1])).to_number()
+        barcode += bars[val]
+        checksum += (i/2 + 1)*val
+    end
+    barcode += bars[checksum % 103]
+    return barcode + stop_bar
+end
+
+function gen_smart(str)
+    var detect_b = false, detect_c = true
+    foreach ch in str
+        if !ch.isdigit()
+            detect_c = false
+        end
+        if to_integer(ch) > 95
+            detect_b = true
+        end
+        if detect_b && to_integer(ch) < 32
+            throw runtime.exception("Code128 Code-B not support character which ascii value less than 32.")
+        end
+    end
+    if detect_c && str.size % 2 == 0
+        return gen_code_c(str)
+    else
+        return gen_code_ab(detect_b ? start_code_b : start_code_a, str)
+    end
+end
+
+# func(x1, y1, x2, y2, color(true = white, false = black)), can draw a rectangle
+function draw_code(func, code, slice, height, padding, x, y, size)
+    var ts = 0
+    if size == null
+        foreach ch in code do ts += to_integer(ch) - to_integer('0')
+    else
+        ts = size
+    end
+    func(x, y, x + slice*(ts + 2*padding), y + height, true)
+    var sx = x + slice*padding
+    var color = true
+    foreach ch in code
+        var count = to_integer(ch) - to_integer('0')
+        if color
+            func(sx, y + padding*slice, sx + count*slice, y + height - padding*slice, false)
+        end
+        sx += count*slice
+        color = !color
+    end
+end
