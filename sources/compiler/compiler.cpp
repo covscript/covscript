@@ -40,7 +40,7 @@ namespace cs {
 			    "Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
 			    std::to_string(args.size()));
 		if (mHasScope)
-			child->push_scope();
+			child->instance->storage.add_domain();
 		fcall_guard fcall;
 		if (mIsVargs) {
 			var arg_list = var::make<cs::array>();
@@ -58,7 +58,7 @@ namespace cs {
 		}
 		child->exec();
 		if (mHasScope)
-			child->pop_scope();
+			child->instance->storage.remove_domain();
 		return fcall.get();
 	}
 

@@ -680,8 +680,6 @@ namespace cs {
 
 		std::size_t get_scope_intro(scope_type type = scope_type::all)
 		{
-			if (scope_stack.empty() && (type == scope_type::all || type == scope_type::normal))
-				return 0;
 			for (auto &it:scope_stack)
 				if (type == scope_type::all || it.type == type)
 					return it.scope_intro;

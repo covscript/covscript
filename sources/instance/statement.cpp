@@ -712,9 +712,11 @@ namespace cs {
 	void statement_function::gen_flat_ir(flat_executor *ptr)
 	{
 		flat_executor* child_fe = ptr->gen_child();
+		child_fe->push_scope();
 		for (auto& it:mBlock)
 			it->gen_flat_ir(child_fe);
 		child_executor child(mArgs, child_fe, mIsMemFn, mIsVargs);
+		child_fe->pop_scope();
 		ptr->push_ir<instruct_internal>("define function", [this, child](flat_executor *fe) {
 			if (this->mIsMemFn)
 				context->instance->storage.add_var(this->mName, var::make_protect<callable>(child, callable::types::member_fn), mOverride);
