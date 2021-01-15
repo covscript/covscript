@@ -627,6 +627,7 @@ namespace cs {
 
 	class flat_executor final {
 		std::vector<instruct_base *> irs;
+		std::vector<flat_executor *> child;
 
 		struct scope {
 			std::size_t scope_intro = 0;
@@ -642,10 +643,21 @@ namespace cs {
 		stack_type <scope> scope_stack;
 		std::size_t pc = 0;
 
+		flat_executor() = default;
+
 		~flat_executor()
 		{
 			for (auto &it:irs)
 				delete it;
+			for (auto &it:child)
+				delete it;
+		}
+
+		flat_executor* gen_child()
+		{
+			child.emplace_back(new flat_executor);
+			child.back()->instance = instance;
+			return child.back();
 		}
 
 		instruct_base *get_current_ir()
@@ -734,45 +746,13 @@ namespace cs {
 
 	class child_executor final {
 		bool mHasScope = true;
-		bool mIsLambda = false;
 		bool mIsMemFn = false;
 		bool mIsVargs = false;
 		flat_executor* child = nullptr;
 		std::vector<std::string> mArgs;
 	public:
-		child_executor(std::vector<std::string> args, flat_executor* c, bool l, bool m, bool v) : mIsLambda(l), mIsMemFn(m), mIsVargs(v), child(c), mArgs(std::move(args))
-		{
-			if (!child->has_instruct_in_scope<instruct_var>()&&args.empty())
-				mHasScope = false;
-		}
-		var operator()(vector &args)
-		{
-			if (!mIsVargs && args.size() != this->mArgs.size())
-				throw runtime_error(
-				    "Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
-				    std::to_string(args.size()));
-			if (mHasScope)
-				child->push_scope();
-			if (mIsVargs) {
-				var arg_list = var::make<cs::array>();
-				auto &arr = arg_list.val<cs::array>();
-				std::size_t i = 0;
-				if (mIsMemFn)
-					child->instance->storage.add_var("this", args[i++]);
-				if (mIsLambda)
-					child->instance->storage.add_var("self", args[i++]);
-				for (; i < args.size(); ++i)
-					arr.push_back(args[i]);
-				child->instance->storage.add_var(this->mArgs.front(), arg_list);
-			}
-			else {
-				for (std::size_t i = 0; i < args.size(); ++i)
-					child->instance->storage.add_var(this->mArgs[i], args[i]);
-			}
-			child->exec();
-			if (mHasScope)
-				child->pop_scope();
-		}
+		child_executor(std::vector<std::string>, flat_executor*, bool, bool);
+		var operator()(vector &);
 	};
 
 	class statement_base {

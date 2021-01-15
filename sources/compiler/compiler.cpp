@@ -27,6 +27,40 @@
 #include <covscript/impl/codegen.hpp>
 
 namespace cs {
+	child_executor::child_executor(std::vector<std::string> args, flat_executor* c, bool m, bool v) : mIsMemFn(m), mIsVargs(v), child(c), mArgs(std::move(args))
+	{
+		if (!child->has_instruct_in_scope<instruct_var>()&&args.empty())
+			mHasScope = false;
+	}
+
+	var child_executor::operator()(vector &args)
+	{
+		if (!mIsVargs && args.size() != this->mArgs.size())
+			throw runtime_error(
+			    "Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
+			    std::to_string(args.size()));
+		if (mHasScope)
+			child->push_scope();
+		if (mIsVargs) {
+			var arg_list = var::make<cs::array>();
+			auto &arr = arg_list.val<cs::array>();
+			std::size_t i = 0;
+			if (mIsMemFn)
+				child->instance->storage.add_var("this", args[i++]);
+			for (; i < args.size(); ++i)
+				arr.push_back(args[i]);
+			child->instance->storage.add_var(this->mArgs.front(), arg_list);
+		}
+		else {
+			for (std::size_t i = 0; i < args.size(); ++i)
+				child->instance->storage.add_var(this->mArgs[i], args[i]);
+		}
+		child->exec();
+		if (mHasScope)
+			child->pop_scope();
+		return null_pointer;
+	}
+
 	const map_t<char, char> token_value::escape_char = {
 		{'\'', '\''},
 		{'\"', '\"'},

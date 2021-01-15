@@ -411,7 +411,7 @@ namespace cs_impl {
 			(*iostream_ext)
 			.add_var("char_buff",
 			         var::make_protect<type_t>([]() -> var { return std::make_shared<std::stringstream>(); },
-			                                    type_id(typeid(char_buff)), charbuff_ext))
+			                                   type_id(typeid(char_buff)), charbuff_ext))
 			.add_var("fstream", make_cni(fstream))
 			.add_var("ifstream", make_cni([](const string &path) {
 				return var::make<istream>(new std::ifstream(path, std::ios_base::in));

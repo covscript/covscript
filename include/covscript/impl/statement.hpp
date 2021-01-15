@@ -878,6 +878,7 @@ namespace cs {
 		function mFunc;
 		bool mOverride = false;
 		bool mIsMemFn = false;
+		bool mIsVargs = false;
 		// Debug Information
 #ifdef CS_DEBUGGER
 		std::string mDecl;
@@ -894,7 +895,7 @@ namespace cs {
 		                   const context_t &c,
 		                   token_base *ptr)
 			: statement_base(c, ptr), mName(std::move(name)), mFunc(c, decl, this, args, body, is_vargs),
-			  mOverride(is_override), mDecl(decl), mArgs(args), mBlock(body) {}
+			  mOverride(is_override), mIsVargs(is_vargs), mDecl(decl), mArgs(args), mBlock(body) {}
 
 #else
 
@@ -903,7 +904,7 @@ namespace cs {
 		                   const context_t &c,
 		                   token_base *ptr)
 			: statement_base(c, ptr), mName(std::move(name)), mFunc(c, args, body, is_vargs),
-			  mOverride(is_override),
+			  mOverride(is_override), mIsVargs(is_vargs),
 			  mArgs(args),
 			  mBlock(body) {}
 
@@ -932,6 +933,17 @@ namespace cs {
 		}
 
 #endif
+		void gen_flat_ir(flat_executor *fe) override
+		{
+			flat_executor* child_fe = fe->gen_child();
+			for (auto& it:mBlock)
+				it->gen_flat_ir(child_fe);
+			child_executor child(mArgs, child_fe, mIsMemFn, mIsVargs);
+			if (this->mIsMemFn)
+				context->instance->storage.add_var(this->mName, var::make_protect<callable>(child, callable::types::member_fn), mOverride);
+			else
+				context->instance->storage.add_var(this->mName, var::make_protect<callable>(child), mOverride);
+		}
 	};
 
 	class statement_return final : public statement_base {
