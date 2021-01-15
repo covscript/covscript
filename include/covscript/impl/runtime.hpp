@@ -42,6 +42,18 @@ namespace cs {
 
 		~domain_manager() = default;
 
+		std::size_t get_size() const
+		{
+			return m_data.size();
+		}
+
+		void rewind(std::size_t target)
+		{
+			while (m_data.size() > target)
+				m_data.pop_no_return();
+			m_cache_refresh = true;
+		}
+
 		void clear_all_data()
 		{
 			while (!m_set.empty())

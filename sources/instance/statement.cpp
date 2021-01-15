@@ -712,17 +712,17 @@ namespace cs {
 	void statement_function::gen_flat_ir(flat_executor *ptr)
 	{
 		flat_executor* child_fe = ptr->gen_child();
+		child_fe->begin_task();
 		child_fe->push_scope();
 		for (auto& it:mBlock)
 			it->gen_flat_ir(child_fe);
+		child_fe->push_ir<instruct_internal>("return", [child_fe](flat_executor *) {
+			child_fe->end_exec();
+		});
 		child_executor child(mArgs, child_fe, mIsMemFn, mIsVargs);
 		child_fe->pop_scope();
-		ptr->push_ir<instruct_internal>("define function", [this, child](flat_executor *fe) {
-			if (this->mIsMemFn)
-				context->instance->storage.add_var(this->mName, var::make_protect<callable>(child, callable::types::member_fn), mOverride);
-			else
-				context->instance->storage.add_var(this->mName, var::make_protect<callable>(child), mOverride);
-		});
+		child_fe->end_task();
+		ptr->push_ir<instruct_function>(mName, mOverride, mIsMemFn, child);
 	}
 
 	void statement_return::run_impl()
@@ -743,9 +743,9 @@ namespace cs {
 
 	void statement_return::gen_flat_ir(flat_executor *ptr)
 	{
-		ptr->push_ir<instruct_internal>("return", [&](flat_executor *fe) {
+		ptr->push_ir<instruct_internal>("return", [this, ptr](flat_executor *fe) {
 			current_process->stack.top() = fe->instance->parse_expr(this->mTree.root());
-			fe->end_exec();
+			ptr->end_exec();
 		});
 	}
 

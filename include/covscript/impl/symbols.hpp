@@ -626,9 +626,9 @@ namespace cs {
 	};
 
 	class flat_executor final {
-		std::vector<instruct_base *> irs;
 		std::vector<flat_executor *> child;
-
+		bool resume = false;
+	public:
 		struct scope {
 			std::size_t scope_intro = 0;
 			scope_type type = scope_type::normal;
@@ -638,10 +638,10 @@ namespace cs {
 			scope(std::size_t pc, scope_type t) : scope_intro(pc), type(t) {}
 		};
 
-	public:
 		instance_type *instance = nullptr;
+		task_context *this_task = nullptr;
+		std::vector<instruct_base *> irs;
 		stack_type <scope> scope_stack;
-		std::size_t pc = 0;
 
 		flat_executor() = default;
 
@@ -669,13 +669,13 @@ namespace cs {
 		void push_ir(ArgsT &&...args)
 		{
 			irs.push_back(new T(this, std::forward<ArgsT>(args)...));
-			irs.back()->cur_pc = pc;
-			++pc;
+			irs.back()->cur_pc = this_task->pc;
+			++this_task->pc;
 		}
 
 		void push_scope(scope_type type = scope_type::normal)
 		{
-			scope_stack.push(pc, type);
+			scope_stack.push(this_task->pc, type);
 		}
 
 		std::size_t get_scope_intro(scope_type type = scope_type::all)
@@ -709,9 +709,9 @@ namespace cs {
 		void pop_scope()
 		{
 			for (auto &it:scope_stack.top().scope_exit)
-				*it = pc - 1;
+				*it = this_task->pc - 1;
 			for (auto &it:scope_stack.top().except_handler)
-				*it = pc - 1;
+				*it = this_task->pc - 1;
 			scope_stack.pop_no_return();
 		}
 
@@ -732,24 +732,41 @@ namespace cs {
 			}
 		}
 
+		void begin_task();
+
+		void resume_task();
+
+		void end_task()
+		{
+			current_process->task_stack.pop_no_return();
+			this_task = nullptr;
+		}
+
 		void print_exec(std::ostream &o)
 		{
-			for (pc = 0; pc < irs.size(); ++pc) {
-				o << irs[pc]->cur_pc << ": ";
-				irs[pc]->dump(o);
-				irs[pc]->exec(this);
+			begin_task();
+			for (; this_task->pc < irs.size(); ++this_task->pc) {
+				o << irs[this_task->pc]->cur_pc << ": ";
+				irs[this_task->pc]->dump(o);
+				irs[this_task->pc]->exec(this);
 			}
+			end_task();
+			resume_task();
 		}
 
 		void exec()
 		{
-			for (pc = 0; pc < irs.size(); ++pc)
-				irs[pc]->exec(this);
+			begin_task();
+			for (; this_task->pc < irs.size(); ++this_task->pc)
+				irs[this_task->pc]->exec(this);
+			end_task();
+			resume_task();
 		}
 
 		void end_exec()
 		{
-			pc = irs.size() - 1;
+			this_task->pc = irs.size() - 1;
+			resume = true;
 		}
 	};
 
@@ -763,6 +780,10 @@ namespace cs {
 		std::vector<std::string> mArgs;
 	public:
 		child_executor(std::vector<std::string>, flat_executor*, bool, bool);
+		flat_executor *get_parent() const
+		{
+			return child;
+		}
 		var operator()(vector &);
 	};
 

@@ -146,7 +146,7 @@ namespace cs {
 
 		void exec(flat_executor *fe) override
 		{
-			fe->pc = tag;
+			fe->this_task->pc = tag;
 		}
 
 		void dump(std::ostream &o) const override
@@ -180,7 +180,7 @@ namespace cs {
 		void exec(flat_executor *fe) override
 		{
 			if (fe->instance->parse_expr(tree.root()).const_val<boolean>() == cond)
-				fe->pc = tag;
+				fe->this_task->pc = tag;
 		}
 
 		void dump(std::ostream &o) const override
@@ -212,12 +212,40 @@ namespace cs {
 		void exec(flat_executor *fe) override
 		{
 			if (cond(fe))
-				fe->pc = tag;
+				fe->this_task->pc = tag;
 		}
 
 		void dump(std::ostream &o) const override
 		{
 			o << "<conditional jump: tag = " << tag + 1 << ">\n";
+		}
+	};
+
+	class instruct_function final : public instruct_base {
+		bool mOverride = false;
+		bool mIsMemFn = false;
+		child_executor mChild;
+		std::string mName;
+	public:
+		instruct_function(flat_executor *fe, const std::string name, bool override, bool mem_fn, child_executor child) : mName(name), mOverride(override), mIsMemFn(mem_fn), mChild(std::move(child)) {}
+
+		void exec(flat_executor *fe) override
+		{
+			if (this->mIsMemFn)
+				fe->instance->storage.add_var(this->mName, var::make_protect<callable>(mChild, callable::types::member_fn), mOverride);
+			else
+				fe->instance->storage.add_var(this->mName, var::make_protect<callable>(mChild), mOverride);
+		}
+
+		void dump(std::ostream &o) const override
+		{
+			o << "\n<begin function definition: name = " << mName << ", MemFn = " << (mIsMemFn ? "True" : "False") << ">\n";
+			std::size_t line = 0;
+			for (auto &it:mChild.get_parent()->irs) {
+				o << line++ << ": ";
+				it->dump(o);
+			}
+			o << "<end function definition>\n";
 		}
 	};
 
@@ -482,7 +510,7 @@ namespace cs {
 			for (auto &it:mBlock)
 				it->gen_flat_ir(fe);
 			fe->push_ir<instruct_jump>(expect_tag::scope_exit);
-			jmp->tag = fe->pc - 1;
+			jmp->tag = fe->this_task->pc - 1;
 			for (auto &it:mElseBlock)
 				it->gen_flat_ir(fe);
 			fe->push_ir<instruct_pop_scope>();

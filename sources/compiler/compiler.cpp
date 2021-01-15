@@ -27,6 +27,22 @@
 #include <covscript/impl/codegen.hpp>
 
 namespace cs {
+	void flat_executor::begin_task()
+	{
+		if (!current_process->task_stack.empty())
+			current_process->task_stack.top().ss = instance->storage.get_size();
+		current_process->task_stack.push();
+		this_task = &current_process->task_stack.top();
+	}
+
+	void flat_executor::resume_task()
+	{
+		if (resume) {
+			this_task = &current_process->task_stack.top();
+			instance->storage.rewind(this_task->ss);
+			resume = false;
+		}
+	}
 	child_executor::child_executor(std::vector<std::string> args, flat_executor* c, bool m, bool v) : mIsMemFn(m), mIsVargs(v), child(c), mArgs(std::move(args))
 	{
 		if (!child->has_instruct_in_scope<instruct_var>()&&args.empty())

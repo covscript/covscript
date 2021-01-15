@@ -160,8 +160,10 @@ namespace cs {
 	{
 		flat_executor exec;
 		exec.instance = this;
+		exec.begin_task();
 		for (auto &it:statements)
 			it->gen_flat_ir(&exec);
+		exec.end_task();
 		if (context->compiler->disable_optimizer) {
 			exec.print(o);
 			o << std::endl << "#### Begin Execution ####" << std::endl << std::endl;
