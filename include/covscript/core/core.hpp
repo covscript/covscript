@@ -629,9 +629,14 @@ namespace cs {
 
 		range_iterator &operator=(const range_iterator &) = default;
 
+		bool operator==(const range_iterator &it) const
+		{
+			return m_index == it.m_index;
+		}
+		
 		bool operator!=(const range_iterator &it) const
 		{
-			return m_index < it.m_index;
+			return m_index != it.m_index;
 		}
 
 		range_iterator &operator++()
