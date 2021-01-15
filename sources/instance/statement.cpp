@@ -709,6 +709,20 @@ namespace cs {
 		o << "< EndFunction >\n";
 	}
 
+	void statement_function::gen_flat_ir(flat_executor *ptr)
+	{
+		ptr->push_ir<instruct_internal>("define function", [&](flat_executor *fe) {
+			flat_executor* child_fe = fe->gen_child();
+			for (auto& it:mBlock)
+				it->gen_flat_ir(child_fe);
+			child_executor child(mArgs, child_fe, mIsMemFn, mIsVargs);
+			if (this->mIsMemFn)
+				context->instance->storage.add_var(this->mName, var::make_protect<callable>(child, callable::types::member_fn), mOverride);
+			else
+				context->instance->storage.add_var(this->mName, var::make_protect<callable>(child), mOverride);
+		});
+	}
+
 	void statement_return::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
@@ -723,6 +737,14 @@ namespace cs {
 		o << "< Return: ";
 		compiler_type::dump_expr(mTree.root(), o);
 		o << " >\n";
+	}
+
+	void statement_return::gen_flat_ir(flat_executor *ptr)
+	{
+		ptr->push_ir<instruct_internal>("return", [&](flat_executor *fe) {
+			current_process->stack.top() = fe->instance->parse_expr(this->mTree.root());
+			fe->end_exec();
+		});
 	}
 
 	void statement_try::run_impl()

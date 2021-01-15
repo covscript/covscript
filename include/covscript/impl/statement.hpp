@@ -933,17 +933,7 @@ namespace cs {
 		}
 
 #endif
-		void gen_flat_ir(flat_executor *fe) override
-		{
-			flat_executor* child_fe = fe->gen_child();
-			for (auto& it:mBlock)
-				it->gen_flat_ir(child_fe);
-			child_executor child(mArgs, child_fe, mIsMemFn, mIsVargs);
-			if (this->mIsMemFn)
-				context->instance->storage.add_var(this->mName, var::make_protect<callable>(child, callable::types::member_fn), mOverride);
-			else
-				context->instance->storage.add_var(this->mName, var::make_protect<callable>(child), mOverride);
-		}
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_return final : public statement_base {
@@ -963,6 +953,8 @@ namespace cs {
 		void run_impl() override;
 
 		void dump(std::ostream &) const override;
+
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_try final : public statement_base {

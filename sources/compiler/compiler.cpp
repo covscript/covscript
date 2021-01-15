@@ -41,6 +41,7 @@ namespace cs {
 			    std::to_string(args.size()));
 		if (mHasScope)
 			child->push_scope();
+		fcall_guard fcall;
 		if (mIsVargs) {
 			var arg_list = var::make<cs::array>();
 			auto &arr = arg_list.val<cs::array>();
@@ -58,7 +59,7 @@ namespace cs {
 		child->exec();
 		if (mHasScope)
 			child->pop_scope();
-		return null_pointer;
+		return fcall.get();
 	}
 
 	const map_t<char, char> token_value::escape_char = {
