@@ -1,12 +1,11 @@
 /*
-* Covariant Script Extension
+* Covariant Script Type Support
 *
-* Licensed under the Covariant Innovation General Public License,
-* Version 1.0 (the "License");
+* Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
 *
-* https://covariant.cn/licenses/LICENSE-1.0
+*     http://www.apache.org/licenses/LICENSE-2.0
 *
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,9 +13,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2020 Michael Lee(李登淳)
-* Email: mikecovlee@163.com
-* Github: https://github.com/mikecovlee
+* Copyright (C) 2017-2020 Michael Lee(李登淳)
+*
+* This software is registered with the National Copyright Administration
+* of the People's Republic of China(Registration Number: 2020SR0408026)
+* and is protected by the Copyright Law of the People's Republic of China.
+*
+* Email:   lee@covariant.cn, mikecovlee@163.com
+* Github:  https://github.com/mikecovlee
+* Website: http://covscript.org.cn
 */
 #include <covscript_impl/dirent/dirent.hpp>
 #include <covscript_impl/mozart/random.hpp>
@@ -367,19 +372,14 @@ namespace cs_impl {
 
 		var fstream(const string &path, std::ios_base::openmode openmode)
 		{
-			switch (openmode) {
-			case std::ios_base::in:
-				return var::make<istream>(new std::ifstream(path, std::ios_base::in));
-				break;
-			case std::ios_base::out:
-				return var::make<ostream>(new std::ofstream(path, std::ios_base::out));
-				break;
-			case std::ios_base::app:
-				return var::make<ostream>(new std::ofstream(path, std::ios_base::app));
-				break;
-			default:
+			if (openmode & std::ios_base::in)
+				return var::make<istream>(new std::ifstream(path, openmode));
+			else if (openmode & std::ios_base::out)
+				return var::make<ostream>(new std::ofstream(path, openmode));
+			else if (openmode & std::ios_base::app)
+				return var::make<ostream>(new std::ofstream(path, openmode));
+			else
 				throw lang_error("Unsupported openmode.");
-			}
 		}
 
 		void setprecision(number pre)
@@ -400,9 +400,18 @@ namespace cs_impl {
 			.add_var("present", var::make_constant<std::ios_base::seekdir>(std::ios_base::cur));
 			(*openmode_ext)
 			.add_var("in", var::make_constant<std::ios_base::openmode>(std::ios_base::in))
+			.add_var("bin_in",
+			         var::make_constant<std::ios_base::openmode>(std::ios_base::in | std::ios_base::binary))
 			.add_var("out", var::make_constant<std::ios_base::openmode>(std::ios_base::out))
-			.add_var("app", var::make_constant<std::ios_base::openmode>(std::ios_base::app));
+			.add_var("bin_out",
+			         var::make_constant<std::ios_base::openmode>(std::ios_base::out | std::ios_base::binary))
+			.add_var("app", var::make_constant<std::ios_base::openmode>(std::ios_base::app))
+			.add_var("bin_app",
+			         var::make_constant<std::ios_base::openmode>(std::ios_base::app | std::ios_base::binary));
 			(*iostream_ext)
+			.add_var("char_buff",
+			         var::make_protect<type_t>([]() -> var { return std::make_shared<std::stringstream>(); },
+			                                    type_id(typeid(char_buff)), charbuff_ext))
 			.add_var("fstream", make_cni(fstream))
 			.add_var("ifstream", make_cni([](const string &path) {
 				return var::make<istream>(new std::ifstream(path, std::ios_base::in));
@@ -411,6 +420,23 @@ namespace cs_impl {
 				return var::make<ostream>(new std::ofstream(path, std::ios_base::out));
 			}))
 			.add_var("setprecision", make_cni(setprecision));
+		}
+	}
+	namespace charbuff_cs_ext {
+		using namespace cs;
+
+		void init()
+		{
+			(*charbuff_ext)
+			.add_var("get_istream", make_cni([](char_buff &buff) -> cs::istream {
+				return std::shared_ptr<std::istream>(buff.get(), [](std::istream *) {});
+			}))
+			.add_var("get_ostream", make_cni([](char_buff &buff) -> cs::ostream {
+				return std::shared_ptr<std::ostream>(buff.get(), [](std::ostream *) {});
+			}))
+			.add_var("get_string", make_cni([](char_buff &buff) -> cs::string {
+				return std::move(buff->str());
+			}));
 		}
 	}
 	namespace istream_cs_ext {
@@ -828,6 +854,68 @@ namespace cs_impl {
 			.add_var("second", make_member_visitor(&pair::second));
 		}
 	}
+	namespace time_cs_ext {
+		using namespace cs;
+
+		number sec(const std::tm &t)
+		{
+			return t.tm_sec;
+		}
+
+		number tm_min(const std::tm &t)
+		{
+			return t.tm_min;
+		}
+
+		number hour(const std::tm &t)
+		{
+			return t.tm_hour;
+		}
+
+		number wday(const std::tm &t)
+		{
+			return t.tm_wday;
+		}
+
+		number mday(const std::tm &t)
+		{
+			return t.tm_mday;
+		}
+
+		number yday(const std::tm &t)
+		{
+			return t.tm_yday;
+		}
+
+		number mon(const std::tm &t)
+		{
+			return t.tm_mon;
+		}
+
+		number year(const std::tm &t)
+		{
+			return t.tm_year;
+		}
+
+		bool is_dst(const std::tm &t)
+		{
+			return t.tm_isdst;
+		}
+
+		void init()
+		{
+			(*time_ext)
+			.add_var("sec", make_cni(sec, callable::types::member_visitor))
+			.add_var("min", make_cni(tm_min, callable::types::member_visitor))
+			.add_var("hour", make_cni(hour, callable::types::member_visitor))
+			.add_var("wday", make_cni(wday, callable::types::member_visitor))
+			.add_var("mday", make_cni(mday, callable::types::member_visitor))
+			.add_var("yday", make_cni(yday, callable::types::member_visitor))
+			.add_var("mon", make_cni(mon, callable::types::member_visitor))
+			.add_var("year", make_cni(year, callable::types::member_visitor))
+			.add_var("is_dst", make_cni(is_dst, callable::types::member_visitor));
+		}
+	}
 	namespace runtime_cs_ext {
 		using namespace cs;
 
@@ -839,25 +927,25 @@ namespace cs_impl {
 		void info()
 		{
 			std::cout << "Covariant Script Programming Language Interpreter\nVersion: " << current_process->version
-			          << "\n"
-			          "Copyright (C) 2020 Michael Lee. All rights reserved.\n"
-			          "Licensed under the Covariant Innovation General Public License,\n"
-			          "Version 1.0 (the \"License\");\n"
-			          "you may not use this file except in compliance with the License.\n"
-			          "You may obtain a copy of the License at\n"
-			          "\nhttps://covariant.cn/licenses/LICENSE-1.0\n"
-			          "Unless required by applicable law or agreed to in writing, software\n"
-			          "distributed under the License is distributed on an \"AS IS\" BASIS,\n"
-			          "WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
-			          "See the License for the specific language governing permissions and\n"
-			          "limitations under the License.\n"
-			          "Please visit http://covscript.org for more information."
 			          << std::endl;
+			std::cout << copyright_info << std::endl;
 		}
 
 		number time()
 		{
 			return cov::timer::time(cov::timer::time_unit::milli_sec);
+		}
+
+		std::tm local_time()
+		{
+			std::time_t t = std::time(nullptr);
+			return *std::localtime(&t);
+		}
+
+		std::tm utc_time()
+		{
+			std::time_t t = std::time(nullptr);
+			return *std::gmtime(&t);
 		}
 
 		void delay(number time)
@@ -988,10 +1076,13 @@ namespace cs_impl {
 		void init()
 		{
 			(*runtime_ext)
+			.add_var("time_type", make_namespace(time_ext))
 			.add_var("std_version", var::make_constant<number>(current_process->std_version))
 			.add_var("get_import_path", make_cni(get_import_path, true))
 			.add_var("info", make_cni(info))
 			.add_var("time", make_cni(time))
+			.add_var("local_time", make_cni(local_time))
+			.add_var("utc_time", make_cni(utc_time))
 			.add_var("delay", make_cni(delay))
 			.add_var("exception", make_cni(exception))
 			.add_var("hash", make_cni(hash, true))
@@ -1335,17 +1426,18 @@ namespace cs_impl {
 		}
 	}
 
-	static bool extensions_initiator = true;
-
 	void init_extensions()
 	{
+		static bool extensions_initiator = true;
 		if (extensions_initiator) {
 			extensions_initiator = false;
 			member_visitor_cs_ext::init();
 			iostream_cs_ext::init();
+			charbuff_cs_ext::init();
 			istream_cs_ext::init();
 			ostream_cs_ext::init();
 			system_cs_ext::init();
+			time_cs_ext::init();
 			runtime_cs_ext::init();
 			math_cs_ext::init();
 			except_cs_ext::init();

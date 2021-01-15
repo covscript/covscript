@@ -1,12 +1,11 @@
 /*
 * Covariant Script Programming Language Interpreter
 *
-* Licensed under the Covariant Innovation General Public License,
-* Version 1.0 (the "License");
+* Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
 *
-* https://covariant.cn/licenses/LICENSE-1.0
+*     http://www.apache.org/licenses/LICENSE-2.0
 *
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +13,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2020 Michael Lee(李登淳)
-* Email: mikecovlee@163.com
-* Github: https://github.com/mikecovlee
-* Website: http://covscript.org
+* Copyright (C) 2017-2020 Michael Lee(李登淳)
+*
+* This software is registered with the National Copyright Administration
+* of the People's Republic of China(Registration Number: 2020SR0408026)
+* and is protected by the Copyright Law of the People's Republic of China.
+*
+* Email:   lee@covariant.cn, mikecovlee@163.com
+* Github:  https://github.com/mikecovlee
+* Website: http://covscript.org.cn
 */
 #include <covscript_impl/system.hpp>
 #include <covscript/covscript.hpp>
@@ -172,20 +176,8 @@ void covscript_main(int args_size, char *args[])
 		return;
 	}
 	else if (show_version_info) {
-		std::cout << "Covariant Script Programming Language Interpreter\n";
-		std::cout << "Version: " << cs::current_process->version << "\n";
-		std::cout << "Copyright (C) 2020 Michael Lee. All rights reserved.\n";
-		std::cout << "Licensed under the Covariant Innovation General Public License,\n";
-		std::cout << "Version 1.0 (the \"License\");\n";
-		std::cout << "you may not use this file except in compliance with the License.\n";
-		std::cout << "You may obtain a copy of the License at\n";
-		std::cout << "\nhttps://covariant.cn/licenses/LICENSE-1.0\n";
-		std::cout << "\nUnless required by applicable law or agreed to in writing, software\n";
-		std::cout << "distributed under the License is distributed on an \"AS IS\" BASIS,\n";
-		std::cout << "WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n";
-		std::cout << "See the License for the specific language governing permissions and\n";
-		std::cout << "limitations under the License.\n";
-		std::cout << "Please visit http://covscript.org for more information.\n";
+		std::cout << "Version: " << cs::current_process->version << std::endl;
+		std::cout << cs::copyright_info << std::endl;
 		std::cout << "\nMetadata:\n";
 		std::cout << "  Import Path: " << cs::current_process->import_path << "\n";
 		std::cout << "  STD Version: " << cs::current_process->std_version << "\n";
@@ -254,8 +246,8 @@ void covscript_main(int args_size, char *args[])
 			std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: "
 			          << cs::current_process->version
 			          << "\n"
-			          "Copyright (C) 2020 Michael Lee. All rights reserved.\n"
-			          "Please visit <http://covscript.org/> for more information."
+			          "Copyright (C) 2017-2020 Michael Lee. All rights reserved.\n"
+			          "Please visit <http://covscript.org.cn/> for more information."
 			          << std::endl;
 		cs::array
 		arg{cs::var::make_constant<cs::string>("<REPL_ENV>")};

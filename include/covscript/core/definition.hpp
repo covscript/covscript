@@ -2,12 +2,11 @@
 /*
 * Covariant Script Definition
 *
-* Licensed under the Covariant Innovation General Public License,
-* Version 1.0 (the "License");
+* Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
 *
-* https://covariant.cn/licenses/LICENSE-1.0
+*     http://www.apache.org/licenses/LICENSE-2.0
 *
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,9 +14,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2020 Michael Lee(李登淳)
-* Email: mikecovlee@163.com
-* Github: https://github.com/mikecovlee
+* Copyright (C) 2017-2020 Michael Lee(李登淳)
+*
+* This software is registered with the National Copyright Administration
+* of the People's Republic of China(Registration Number: 2020SR0408026)
+* and is protected by the Copyright Law of the People's Republic of China.
+*
+* Email:   lee@covariant.cn, mikecovlee@163.com
+* Github:  https://github.com/mikecovlee
+* Website: http://covscript.org.cn
 */
 
 // Platform detection
@@ -71,8 +76,8 @@ namespace cs {
 	template<typename _kT, typename _vT> using map_t = phmap::flat_hash_map<_kT, _vT>;
 	template<typename _Tp> using set_t = phmap::flat_hash_set<_Tp>;
 #else
-	template<typename _kT, typename _vT> using map_t=std::unordered_map<_kT, _vT>;
-	template<typename _Tp> using set_t=std::unordered_set<_Tp>;
+	template<typename _kT, typename _vT> using map_t = std::unordered_map<_kT, _vT>;
+	template<typename _Tp> using set_t = std::unordered_set<_Tp>;
 #endif
 	using var = cs_impl::any;
 	using number = long double;
@@ -89,6 +94,7 @@ namespace cs {
 	using context_t = std::shared_ptr<context_type>;
 	using domain_t = std::shared_ptr<domain_type>;
 	using namespace_t = std::shared_ptr<name_space>;
+	using char_buff = std::shared_ptr<std::stringstream>;
 	using istream = std::shared_ptr<std::istream>;
 	using ostream = std::shared_ptr<std::ostream>;
 
@@ -104,6 +110,22 @@ namespace cs {
 	constexpr char path_separator = '/';
 	constexpr char path_delimiter = ':';
 #endif
+
+	constexpr char copyright_info[] =
+	    "Licensed under the Apache License, Version 2.0 (the \"License\");\n"
+	    "you may not use this file except in compliance with the License.\n"
+	    "You may obtain a copy of the License at\n"
+	    "\nhttp://www.apache.org/licenses/LICENSE-2.0\n\n"
+	    "Unless required by applicable law or agreed to in writing, software\n"
+	    "distributed under the License is distributed on an \"AS IS\" BASIS,\n"
+	    "WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
+	    "See the License for the specific language governing permissions and\n"
+	    "limitations under the License.\n"
+	    "\nCopyright (C) 2017-2020 Michael Lee\n\n"
+	    "This software is registered with the National Copyright Administration\n"
+	    "of the People's Republic of China(Registration Number: 2020SR0408026)\n"
+	    "and is protected by the Copyright Law of the People's Republic of China.\n"
+	    "\nPlease visit http://covscript.org.cn for more information.";
 }
 
 // Debugger Hooks

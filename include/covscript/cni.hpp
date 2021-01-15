@@ -2,12 +2,11 @@
 /*
 * Covariant Script C/C++ Native Interface Extension
 *
-* Licensed under the Covariant Innovation General Public License,
-* Version 1.0 (the "License");
+* Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
 *
-* https://covariant.cn/licenses/LICENSE-1.0
+*     http://www.apache.org/licenses/LICENSE-2.0
 *
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,9 +14,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2020 Michael Lee(李登淳)
-* Email: mikecovlee@163.com
-* Github: https://github.com/mikecovlee
+* Copyright (C) 2017-2020 Michael Lee(李登淳)
+*
+* This software is registered with the National Copyright Administration
+* of the People's Republic of China(Registration Number: 2020SR0408026)
+* and is protected by the Copyright Law of the People's Republic of China.
+*
+* Email:   lee@covariant.cn, mikecovlee@163.com
+* Github:  https://github.com/mikecovlee
+* Website: http://covscript.org.cn
 */
 #include <covscript/core/core.hpp>
 
@@ -242,8 +247,10 @@ namespace cni_namespace_impl {
 #define CNI_TYPE_EXT_V(NAME, TYPE, TYPE_NAME, FUNC) namespace NAME{static cs::namespace_t __cni_namespace=cs::make_shared_namespace<cs::name_space>();} CNI_NAME_MIXER(_cni_register_, NAME)(__cni_namespace, #TYPE_NAME, cs::var::make_constant<cs::type_t>([]()->cs::var{return FUNC;}, cs::type_id(typeid(TYPE)), NAME::__cni_namespace)); namespace NAME
 #define CNI(NAME) CNI_REGISTER(NAME, cs::make_cni(NAME, false))
 #define CNI_CONST(NAME) CNI_REGISTER(NAME, cs::make_cni(NAME, true))
+#define CNI_VISITOR(NAME) CNI_REGISTER(NAME, cs::make_cni(NAME, cs::callable::types::member_visitor))
 #define CNI_V(NAME, ARGS) CNI_REGISTER(NAME, cs::make_cni(ARGS, false))
 #define CNI_CONST_V(NAME, ARGS) CNI_REGISTER(NAME, cs::make_cni(ARGS, true))
+#define CNI_VISITOR_V(NAME, ARGS) CNI_REGISTER(NAME, cs::make_cni(ARGS, cs::callable::types::member_visitor))
 #define CNI_CLASS_MEMBER(CLASS, MEMBER) CNI_REGISTER(MEMBER, cs::make_member_visitor(&CLASS::MEMBER))
 #define CNI_CLASS_MEMBER_CONST(CLASS, MEMBER) CNI_REGISTER(MEMBER, cs::make_const_member_visitor(&CLASS::MEMBER))
 #define CNI_VALUE(NAME, ARGS) CNI_REGISTER(NAME, cni_namespace_impl::make_var_normal(ARGS))
