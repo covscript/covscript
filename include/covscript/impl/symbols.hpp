@@ -688,16 +688,22 @@ namespace cs {
 
 		void expect_scope_exit(std::size_t *tag, scope_type type = scope_type::normal)
 		{
-			for (auto &it:scope_stack)
-				if (it.type == type)
+			for (auto &it:scope_stack) {
+				if (type == scope_type::all || it.type == type) {
 					it.scope_exit.push_back(tag);
+					break;
+				}
+			}
 		}
 
 		void expect_except_handler(std::size_t *tag)
 		{
-			for (auto &it:scope_stack)
-				if (it.type == scope_type::except)
+			for (auto &it:scope_stack) {
+				if (it.type == scope_type::except) {
 					it.except_handler.push_back(tag);
+					break;
+				}
+			}
 		}
 
 		void pop_scope()

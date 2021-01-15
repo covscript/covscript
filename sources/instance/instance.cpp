@@ -162,12 +162,12 @@ namespace cs {
 		exec.instance = this;
 		for (auto &it:statements)
 			it->gen_flat_ir(&exec);
-		if (context->compiler->disable_optimizer)
-		{
+		if (context->compiler->disable_optimizer) {
 			exec.print(o);
 			o << std::endl << "#### Begin Execution ####" << std::endl << std::endl;
 			exec.print_exec(o);
-		} else
+		}
+		else
 			exec.exec();
 	}
 

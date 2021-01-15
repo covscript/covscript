@@ -749,18 +749,18 @@ namespace cs {
 
 		void gen_flat_ir(flat_executor *fe) override
 		{
-			fe->push_ir<instruct_push_scope>(scope_type::loop);
+			fe->push_ir<instruct_push_scope>();
 			fe->push_ir<instruct_var>(mParallel[0]);
+			fe->push_ir<instruct_push_scope>(scope_type::loop);
 			fe->push_ir<instruct_cond>(mParallel[1], expect_tag::scope_exit, false, scope_type::loop);
 			for (auto &it:mBlock)
 				it->gen_flat_ir(fe);
 			fe->push_ir<instruct_eval>(mParallel[2]);
-			if (fe->has_instruct_in_scope<instruct_var>()) {
-				fe->push_ir<instruct_internal>("Clear Scope", [](flat_executor *fe) {
-					fe->instance->storage.clear_domain();
-				});
-			}
-			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop) + 1);
+			fe->push_ir<instruct_internal>("clear scope", [](flat_executor *fe) {
+				fe->instance->storage.clear_domain();
+			});
+			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop));
+			fe->push_ir<instruct_pop_scope>();
 			fe->push_ir<instruct_pop_scope>();
 		}
 	};

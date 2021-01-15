@@ -633,7 +633,7 @@ namespace cs {
 		{
 			return m_index == it.m_index;
 		}
-		
+
 		bool operator!=(const range_iterator &it) const
 		{
 			return m_index != it.m_index;
