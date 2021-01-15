@@ -804,7 +804,7 @@ namespace cs {
 
 		void gen_flat_ir(flat_executor *fe) override
 		{
-			fe->push_ir<instruct_push_scope>(scope_type::loop);
+			fe->push_ir<instruct_push_scope>();
 			fe->push_ir<instruct_internal>("foreach init", [&](flat_executor *fe) {
 				const var &obj = context->instance->parse_expr(this->mObj.root());
 				if (obj.type() == typeid(string))
@@ -820,6 +820,7 @@ namespace cs {
 				else
 					throw runtime_error("Unsupported type(foreach)");
 			});
+			fe->push_ir<instruct_push_scope>(scope_type::loop);
 			fe->push_ir<instruct_cond_internal>([&](flat_executor *fe) {
 				static var_id beg_id("__PRAGMA_CS_FOREACH_ITERATOR__"), end_id("__PRAGMA_CS_FOREACH_ITERATOR_END__");
 				return fe->instance->storage.get_var(beg_id) == fe->instance->storage.get_var(end_id);
@@ -834,12 +835,11 @@ namespace cs {
 				static var_id id("__PRAGMA_CS_FOREACH_ITERATOR_NEXT__");
 				fe->instance->storage.get_var(id).const_val<std::function<void()>>()();
 			});
-			if (fe->has_instruct_in_scope<instruct_var>()) {
-				fe->push_ir<instruct_internal>("Clear Scope", [](flat_executor *fe) {
-					fe->instance->storage.clear_domain();
-				});
-			}
-			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop) + 1);
+			fe->push_ir<instruct_internal>("clear scope", [](flat_executor *fe) {
+				fe->instance->storage.clear_domain();
+			});
+			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop));
+			fe->push_ir<instruct_pop_scope>();
 			fe->push_ir<instruct_pop_scope>();
 		}
 	};
