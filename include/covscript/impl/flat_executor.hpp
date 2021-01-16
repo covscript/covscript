@@ -49,8 +49,6 @@ namespace cs {
 			std::function<void()> next;
 			std::function<var()> iterator;
 		};
-
-		struct task_context;
 	private:
 		instance_type *instance = nullptr;
 		std::vector<instruct_base *> irs;
@@ -200,6 +198,15 @@ namespace cs {
 			o << "\n## Register Info ##\n" << std::endl;
 			o << "Program Count: " << pc << std::endl;
 		}
+	};
+
+	class task_scheduler final {
+		struct task_context {
+			process_context t_context;
+			instance_type  t_instance;
+			flat_executor  t_executor;
+			// task_context(flat_executor *fe) : t_instance(*fe->get_instance()), t_executor(*fe) {}
+		};
 	};
 
 	class instruct_internal final : public instruct_base {
