@@ -24,7 +24,7 @@
 * Github:  https://github.com/mikecovlee
 * Website: http://covscript.org.cn
 */
-#include <covscript/impl/impl.hpp>
+#include <covscript/impl/flat_executor.hpp>
 #include <initializer_list>
 
 namespace cs_function_invoker_impl {

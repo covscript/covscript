@@ -27,215 +27,6 @@
 #include <covscript/impl/impl.hpp>
 
 namespace cs {
-	class instruct_internal final : public instruct_base {
-		std::function<void(flat_executor *)> m_exec;
-		std::string m_info;
-	public:
-		template<typename T>
-		instruct_internal(flat_executor *fe, const std::string &info, T &&func) : m_exec(std::forward<T>(func)),
-			m_info(info) {}
-
-		void exec(flat_executor *fe) override
-		{
-			m_exec(fe);
-		}
-
-		void dump(std::ostream &o) const override
-		{
-			o << "<" << m_info << ">\n";
-		}
-	};
-
-	class instruct_push_scope final : public instruct_base {
-		scope_type t;
-	public:
-		instruct_push_scope(flat_executor *fe, scope_type type = scope_type::normal) : t(type)
-		{
-			if (type == scope_type::all)
-				throw internal_error("Can't push scope using wildcard \"scope_type::all\".");
-			fe->push_scope(t);
-		}
-
-		void exec(flat_executor *fe) override
-		{
-			fe->push_frame(t);
-		}
-
-		void dump(std::ostream &o) const override
-		{
-			switch (t) {
-			case scope_type::normal:
-				o << "<push scope>\n";
-				break;
-			case scope_type::loop:
-				o << "<push loop>\n";
-				break;
-			case scope_type::except:
-				o << "<push except>\n";
-				break;
-			case scope_type::task:
-				o << "<push task>\n";
-				break;
-			}
-		}
-	};
-
-	class instruct_pop_scope final : public instruct_base {
-	public:
-		instruct_pop_scope(flat_executor *fe)
-		{
-			fe->pop_scope();
-		}
-
-		void exec(flat_executor *fe) override
-		{
-			fe->pop_frame();
-		}
-
-		void dump(std::ostream &o) const override
-		{
-			o << "<pop scope>\n";
-		}
-	};
-
-	class instruct_var final : public instruct_base {
-		tree_type<token_base *> tree;
-	public:
-		instruct_var(flat_executor *, const tree_type<token_base *> &t) : tree(t) {}
-
-		void exec(flat_executor *fe) override
-		{
-			fe->get_instance()->parse_define_var(tree.root());
-		}
-
-		void dump(std::ostream &o) const override
-		{
-			o << "<define var>\n";
-		}
-	};
-
-	class instruct_eval final : public instruct_base {
-		tree_type<token_base *> tree;
-	public:
-		instruct_eval(flat_executor *, const tree_type<token_base *> &t) : tree(t) {}
-
-		void exec(flat_executor *fe) override
-		{
-			fe->get_instance()->parse_expr(tree.root());
-		}
-
-		void dump(std::ostream &o) const override
-		{
-			o << "<expression>\n";
-		}
-	};
-
-	class instruct_jump final : public instruct_base {
-	public:
-		std::size_t tag = 0;
-
-		instruct_jump(flat_executor *, std::size_t pc) : tag(pc) {}
-
-		explicit instruct_jump(flat_executor *fe, scope_type type = scope_type::all)
-		{
-			fe->expect_scope_exit(&tag, type);
-		}
-
-		void exec(flat_executor *fe) override
-		{
-			fe->pc = tag;
-		}
-
-		void dump(std::ostream &o) const override
-		{
-			o << "<jump: tag = " << tag + 1 << ">\n";
-		}
-	};
-
-	class instruct_cond final : public instruct_base {
-		tree_type<token_base *> tree;
-		bool cond = true;
-	public:
-		std::size_t tag = 0;
-
-		instruct_cond(flat_executor *, const tree_type<token_base *> &t, std::size_t pc, bool c) : tree(t), tag(pc),
-			cond(c) {}
-
-		instruct_cond(flat_executor *fe, const tree_type<token_base *> &t, bool c, scope_type type = scope_type::all) : tree(t), cond(c)
-		{
-			fe->expect_scope_exit(&tag, type);
-		}
-
-		void exec(flat_executor *fe) override
-		{
-			if (fe->get_instance()->parse_expr(tree.root()).const_val<boolean>() == cond)
-				fe->pc = tag;
-		}
-
-		void dump(std::ostream &o) const override
-		{
-			o << "<conditional jump: tag = " << tag + 1 << ">\n";
-		}
-	};
-
-	class instruct_cond_internal final : public instruct_base {
-		std::function<bool(flat_executor *)> cond;
-		std::size_t tag = 0;
-	public:
-		instruct_cond_internal(flat_executor *, std::function<bool(flat_executor *)> t, std::size_t pc) : cond(
-			    std::move(t)), tag(pc) {}
-
-		instruct_cond_internal(flat_executor *fe, std::function<bool(flat_executor *)> t, scope_type type = scope_type::all) : cond(std::move(t))
-		{
-			fe->expect_scope_exit(&tag, type);
-		}
-
-		void exec(flat_executor *fe) override
-		{
-			if (cond(fe))
-				fe->pc = tag;
-		}
-
-		void dump(std::ostream &o) const override
-		{
-			o << "<conditional jump: tag = " << tag + 1 << ">\n";
-		}
-	};
-
-	class executor_proxy final {
-		flat_executor *parent = nullptr;
-		std::vector<std::string> mArgs;
-		bool mIsMemFn = false;
-		bool mIsVargs = false;
-		std::size_t tag = 0;
-	public:
-		executor_proxy() = delete;
-		executor_proxy(flat_executor *fe, std::vector<std::string> args, bool mem_fn, bool vargs, std::size_t t) : parent(fe), mArgs(std::move(args)), mIsMemFn(mem_fn), mIsVargs(vargs), tag(t) {}
-		var operator()(vector &);
-	};
-
-	class instruct_function_def final : public instruct_base {
-		bool mOverride = false;
-		bool mIsMemFn = false;
-		executor_proxy mFunc;
-		std::string mName;
-	public:
-		instruct_function_def(flat_executor *, const std::string& name, bool override, bool mem_fn, executor_proxy func) : mName(name), mOverride(override), mIsMemFn(mem_fn), mFunc(std::move(func)) {}
-
-		void exec(flat_executor *fe) override
-		{
-			if (this->mIsMemFn)
-				fe->get_instance()->storage.add_var(this->mName, var::make_protect<callable>(mFunc, callable::types::member_fn), mOverride);
-			else
-				fe->get_instance()->storage.add_var(this->mName, var::make_protect<callable>(mFunc), mOverride);
-		}
-
-		void dump(std::ostream &o) const override
-		{
-			o << "<function definition: name = " << mName << (mIsMemFn ? ", member function" : ", regular function") << ">\n";
-		}
-	};
-
 	class statement_expression final : public statement_base {
 		tree_type<token_base *> mTree;
 	public:
@@ -256,10 +47,7 @@ namespace cs {
 
 		void dump(std::ostream &) const override;
 
-		void gen_flat_ir(flat_executor *fe) override
-		{
-			fe->push_ir<instruct_eval>(mTree);
-		}
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_import final : public statement_base {
@@ -316,10 +104,7 @@ namespace cs {
 
 		void dump(std::ostream &) const override;
 
-		void gen_flat_ir(flat_executor *fe) override
-		{
-			fe->push_ir<instruct_var>(mTree);
-		}
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_constant final : public statement_base {
@@ -356,13 +141,7 @@ namespace cs {
 
 		void dump(std::ostream &) const override;
 
-		void gen_flat_ir(flat_executor *fe) override
-		{
-			fe->push_ir<instruct_internal>("break loop", [](flat_executor *fe) {
-				fe->stack_rewind(scope_type::loop, false);
-			});
-			fe->push_ir<instruct_jump>(scope_type::loop);
-		}
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_continue final : public statement_base {
@@ -380,13 +159,7 @@ namespace cs {
 
 		void dump(std::ostream &) const override;
 
-		void gen_flat_ir(flat_executor *fe) override
-		{
-			fe->push_ir<instruct_internal>("continue loop", [](flat_executor *fe) {
-				fe->stack_rewind(scope_type::loop, false);
-			});
-			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop));
-		}
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_block final : public statement_base {
@@ -412,13 +185,7 @@ namespace cs {
 			return this->mBlock;
 		}
 
-		void gen_flat_ir(flat_executor *fe) override
-		{
-			fe->push_ir<instruct_push_scope>();
-			for (auto &it:mBlock)
-				it->gen_flat_ir(fe);
-			fe->push_ir<instruct_pop_scope>();
-		}
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_namespace final : public statement_base {
@@ -460,14 +227,7 @@ namespace cs {
 
 		void dump(std::ostream &) const override;
 
-		void gen_flat_ir(flat_executor *fe) override
-		{
-			fe->push_ir<instruct_push_scope>();
-			fe->push_ir<instruct_cond>(mTree, false);
-			for (auto &it:mBlock)
-				it->gen_flat_ir(fe);
-			fe->push_ir<instruct_pop_scope>();
-		}
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_ifelse final : public statement_base {
@@ -495,19 +255,7 @@ namespace cs {
 
 		void dump(std::ostream &) const override;
 
-		void gen_flat_ir(flat_executor *fe) override
-		{
-			fe->push_ir<instruct_push_scope>();
-			fe->push_ir<instruct_cond>(mTree, 0, false);
-			instruct_cond *jmp = static_cast<instruct_cond*>(fe->get_current_ir());
-			for (auto &it:mBlock)
-				it->gen_flat_ir(fe);
-			fe->push_ir<instruct_jump>();
-			jmp->tag = fe->pc - 1;
-			for (auto &it:mElseBlock)
-				it->gen_flat_ir(fe);
-			fe->push_ir<instruct_pop_scope>();
-		}
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_else final : public statement_base {
@@ -639,20 +387,7 @@ namespace cs {
 
 		void dump(std::ostream &) const override;
 
-		void gen_flat_ir(flat_executor *fe) override
-		{
-			fe->push_ir<instruct_push_scope>(scope_type::loop);
-			fe->push_ir<instruct_cond>(mTree, false, scope_type::loop);
-			for (auto &it:mBlock)
-				it->gen_flat_ir(fe);
-			if (fe->has_instruct_in_scope<instruct_var>()) {
-				fe->push_ir<instruct_internal>("clear scope", [](flat_executor *fe) {
-					fe->get_instance()->storage.clear_domain();
-				});
-			}
-			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop));
-			fe->push_ir<instruct_pop_scope>();
-		}
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_until final : public statement_base {
@@ -701,19 +436,7 @@ namespace cs {
 
 		void dump(std::ostream &) const override;
 
-		void gen_flat_ir(flat_executor *fe) override
-		{
-			fe->push_ir<instruct_push_scope>(scope_type::loop);
-			for (auto &it:mBlock)
-				it->gen_flat_ir(fe);
-			if (fe->has_instruct_in_scope<instruct_var>()) {
-				fe->push_ir<instruct_internal>("clear scope", [](flat_executor *fe) {
-					fe->get_instance()->storage.clear_domain();
-				});
-			}
-			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop));
-			fe->push_ir<instruct_pop_scope>();
-		}
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_loop_until final : public statement_base {
@@ -734,19 +457,7 @@ namespace cs {
 
 		void dump(std::ostream &) const override;
 
-		void gen_flat_ir(flat_executor *fe) override
-		{
-			fe->push_ir<instruct_push_scope>(scope_type::loop);
-			for (auto &it:mBlock)
-				it->gen_flat_ir(fe);
-			if (fe->has_instruct_in_scope<instruct_var>()) {
-				fe->push_ir<instruct_internal>("clear scope", [](flat_executor *fe) {
-					fe->get_instance()->storage.clear_domain();
-				});
-			}
-			fe->push_ir<instruct_cond>(mExpr, fe->get_scope_intro(scope_type::loop), false);
-			fe->push_ir<instruct_pop_scope>();
-		}
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_for final : public statement_base {
@@ -768,24 +479,7 @@ namespace cs {
 
 		void dump(std::ostream &) const override;
 
-		void gen_flat_ir(flat_executor *fe) override
-		{
-			fe->push_ir<instruct_push_scope>();
-			fe->push_ir<instruct_var>(mParallel[0]);
-			fe->push_ir<instruct_push_scope>(scope_type::loop);
-			fe->push_ir<instruct_cond>(mParallel[1], false, scope_type::loop);
-			for (auto &it:mBlock)
-				it->gen_flat_ir(fe);
-			fe->push_ir<instruct_eval>(mParallel[2]);
-			if (fe->has_instruct_in_scope<instruct_var>()) {
-				fe->push_ir<instruct_internal>("clear scope", [](flat_executor *fe) {
-					fe->get_instance()->storage.clear_domain();
-				});
-			}
-			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop));
-			fe->push_ir<instruct_pop_scope>();
-			fe->push_ir<instruct_pop_scope>();
-		}
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_foreach final : public statement_base {
@@ -808,60 +502,7 @@ namespace cs {
 
 		void dump(std::ostream &) const override;
 
-		template<typename type, typename iterator_t, typename data_t>
-		void init_foreach(const var &obj, flat_executor *fe)
-		{
-			flat_executor::iterate_helper &it = fe->begin_iteration();
-			it.begin = var::make<iterator_t>(obj.const_val<type>().begin());
-			it.end = var::make<iterator_t>(obj.const_val<type>().end());
-			it.next = [&it]() {
-				++it.begin.val<iterator_t>();
-			};
-			it.iterator = [&it]() -> var {
-				return static_cast<data_t>(*it.begin.val<iterator_t>());
-			};
-		}
-
-		void gen_flat_ir(flat_executor *fe) override
-		{
-			fe->push_ir<instruct_internal>("foreach begin", [this](flat_executor *fe) {
-				const var &obj = context->instance->parse_expr(this->mObj.root());
-				if (obj.type() == typeid(string))
-					init_foreach<string, string::const_iterator, char>(obj, fe);
-				else if (obj.type() == typeid(list))
-					init_foreach<list, list::const_iterator, var>(obj, fe);
-				else if (obj.type() == typeid(array))
-					init_foreach<array, array::const_iterator, var>(obj, fe);
-				else if (obj.type() == typeid(hash_map))
-					init_foreach<hash_map, hash_map::const_iterator, pair>(obj, fe);
-				else if (obj.type() == typeid(range_type))
-					init_foreach<range_type, range_iterator, number>(obj, fe);
-				else
-					throw runtime_error("Unsupported type(foreach)");
-			});
-			fe->push_ir<instruct_push_scope>(scope_type::loop);
-			fe->push_ir<instruct_cond_internal>([](flat_executor *fe) {
-				return fe->current_iteration().begin == fe->current_iteration().end;
-			}, scope_type::loop);
-			fe->push_ir<instruct_internal>("foreach intro", [this](flat_executor *fe) {
-				fe->get_instance()->storage.add_var(mIt, fe->current_iteration().iterator(), true);
-			});
-			for (auto &it:mBlock)
-				it->gen_flat_ir(fe);
-			fe->push_ir<instruct_internal>("foreach iterate", [](flat_executor *fe) {
-				fe->current_iteration().next();
-			});
-			if (fe->has_instruct_in_scope<instruct_var>()) {
-				fe->push_ir<instruct_internal>("clear scope", [](flat_executor *fe) {
-					fe->get_instance()->storage.clear_domain();
-				});
-			}
-			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop));
-			fe->push_ir<instruct_pop_scope>();
-			fe->push_ir<instruct_internal>("foreach end", [](flat_executor *fe) {
-				fe->end_iteration();
-			});
-		}
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_struct final : public statement_base {

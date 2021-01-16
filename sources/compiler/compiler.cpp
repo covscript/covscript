@@ -27,30 +27,6 @@
 #include <covscript/impl/codegen.hpp>
 
 namespace cs {
-	void flat_executor::push_frame(scope_type type)
-	{
-		if (!stack.empty())
-			stack.top().pc = pc;
-		stack.push(type);
-		instance->storage.add_domain();
-	}
-
-	void flat_executor::pop_frame()
-	{
-		stack.pop_no_return();
-		instance->storage.remove_domain();
-	}
-
-	void flat_executor::stack_rewind(scope_type type, bool delete_cur)
-	{
-		while (!stack.empty() && stack.top().type < type)
-			pop_frame();
-		if (stack.size() < 2)
-			throw internal_error("No matching frame when stack rewinding.");
-		if (delete_cur)
-			pop_frame();
-	}
-
 	const map_t<char, char> token_value::escape_char = {
 		{'\'', '\''},
 		{'\"', '\"'},

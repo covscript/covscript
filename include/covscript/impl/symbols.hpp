@@ -596,6 +596,15 @@ namespace cs {
 		throw_
 	};
 
+// Value indicates the priority of stack rewinding
+	enum class scope_type : unsigned char {
+		all = 0b1111, normal = 0b0001, loop = 0b0010, except = 0b0100, task = 0b1000
+	};
+
+	enum class task_status {
+		normal, yield, finish
+	};
+
 	class flat_executor;
 
 	class instruct_base {
@@ -616,186 +625,6 @@ namespace cs {
 			return typeid(*this);
 		}
 	};
-
-// Value indicates the priority of stack rewinding
-	enum class scope_type : unsigned char {
-		all = 0b1111, normal = 0b0001, loop = 0b0010, except = 0b0100, task = 0b1000
-	};
-
-	class flat_executor final {
-	public:
-		struct scope {
-			std::size_t scope_intro = 0;
-			scope_type type = scope_type::normal;
-			std::vector<std::size_t *> scope_exit;
-
-			scope(std::size_t pc, scope_type t) : scope_intro(pc), type(t) {}
-		};
-
-		struct stack_frame {
-			scope_type type = scope_type::normal;
-			std::size_t pc = 0;
-
-			explicit stack_frame(scope_type t) : type(t) {}
-		};
-
-		struct iterate_helper {
-			var begin, end;
-			std::function<void()> next;
-			std::function<var()> iterator;
-		};
-	private:
-		instance_type *instance = nullptr;
-		std::vector<instruct_base *> irs;
-		stack_type <scope> scope_stack;
-		stack_type <stack_frame> stack;
-		stack_type <iterate_helper> it;
-
-		inline static bool same_scope(scope_type a, scope_type b)
-		{
-			return static_cast<unsigned char>(a) & static_cast<unsigned char>(b);
-		}
-	public:
-		std::size_t pc = 0;
-
-		flat_executor() = delete;
-
-		explicit flat_executor(instance_type *ptr) : instance(ptr) {}
-
-		~flat_executor()
-		{
-			for (auto &it:irs)
-				delete it;
-		}
-
-		// Code Generating
-		template<typename T, typename...ArgsT>
-		void push_ir(ArgsT &&...args)
-		{
-			irs.push_back(new T(this, std::forward<ArgsT>(args)...));
-			irs.back()->cur_pc = pc++;
-		}
-
-		void push_scope(scope_type type = scope_type::normal)
-		{
-			scope_stack.push(pc, type);
-		}
-
-		instruct_base *get_current_ir()
-		{
-			return irs.back();
-		}
-
-		std::size_t get_scope_intro(scope_type type = scope_type::all)
-		{
-			for (auto &it:scope_stack)
-				if (same_scope(it.type, type))
-					return it.scope_intro;
-			throw internal_error("No matching scope.");
-		}
-
-		void expect_scope_exit(std::size_t *tag, scope_type type = scope_type::all)
-		{
-			for (auto &it:scope_stack) {
-				if (same_scope(it.type, type)) {
-					it.scope_exit.push_back(tag);
-					break;
-				}
-			}
-		}
-
-		void pop_scope()
-		{
-			for (auto &it:scope_stack.top().scope_exit)
-				*it = pc - 1;
-			scope_stack.pop_no_return();
-		}
-
-		template<typename T>
-		bool has_instruct_in_scope()
-		{
-			for (std::size_t i = get_scope_intro(); i < irs.size(); ++i)
-				if (irs[i]->type() == typeid(T))
-					return true;
-			return false;
-		}
-
-		void print_irs(std::ostream &o)
-		{
-			for (auto &it:irs) {
-				o << it->cur_pc << ": ";
-				it->dump(o);
-			}
-		}
-
-		// Code Execution
-
-		instance_type* get_instance() const
-		{
-			return instance;
-		}
-
-		void push_frame(scope_type = scope_type::normal);
-
-		void pop_frame();
-
-		// Don't use it for normal frame pop
-		void stack_rewind(scope_type, bool = true);
-
-		void recover_register()
-		{
-			pc = stack.top().pc;
-		}
-
-		iterate_helper& begin_iteration()
-		{
-			it.push();
-			return it.top();
-		}
-
-		iterate_helper& current_iteration()
-		{
-			return it.top();
-		}
-
-		void end_iteration()
-		{
-			it.pop_no_return();
-		}
-
-		void print_exec(std::ostream &o)
-		{
-			for (; pc < irs.size(); ++pc) {
-				o << irs[pc]->cur_pc << ": ";
-				irs[pc]->dump(o);
-				irs[pc]->exec(this);
-			}
-		}
-
-		void exec()
-		{
-			for (; pc < irs.size(); ++pc)
-				irs[pc]->exec(this);
-		}
-
-		void end_exec()
-		{
-			pc = irs.size() - 1;
-		}
-
-		void info(std::ostream &o)
-		{
-			o << "\n## Flat Executor Info ##" << std::endl;
-			o << "\n## Stack Info ##" << std::endl;
-			o << "Scope   Stack: " << scope_stack.size() << std::endl;
-			o << "Frame   Stack: " << stack.size() << std::endl;
-			o << "Iterate Stack: " << it.size() << std::endl;
-			o << "\n## Register Info ##\n" << std::endl;
-			o << "Program Count: " << pc << std::endl;
-		}
-	};
-
-	class instruct_var;
 
 	class statement_base {
 	protected:
@@ -863,7 +692,10 @@ namespace cs {
 			o << "<statement>\n";
 		}
 
-		virtual void gen_flat_ir(flat_executor *) {}
+		virtual void gen_flat_ir(flat_executor *)
+		{
+			throw internal_error("Statement does not support flat executor yet!");
+		}
 	};
 
 	class method_base {

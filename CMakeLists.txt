@@ -35,6 +35,7 @@ set(SOURCE_CODE
         sources/instance/instance.cpp
         sources/instance/runtime.cpp
         sources/instance/statement.cpp
+        sources/instance/flat_executor.cpp
         sources/system/common.cpp
         sources/covscript.cpp)
 

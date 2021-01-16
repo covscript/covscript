@@ -111,35 +111,6 @@ namespace cs {
 		return var::make<structure>(this->mTypeId, this->mName, scope.get());
 	}
 
-	var executor_proxy::operator()(vector &args)
-	{
-		if (!mIsVargs && args.size() != this->mArgs.size())
-			throw runtime_error(
-			    "Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
-			    std::to_string(args.size()));
-		parent->push_frame(scope_type::task);
-		fcall_guard fcall;
-		if (mIsVargs) {
-			var arg_list = var::make<cs::array>();
-			auto &arr = arg_list.val<cs::array>();
-			std::size_t i = 0;
-			if (mIsMemFn)
-				parent->get_instance()->storage.add_var("this", args[i++]);
-			for (; i < args.size(); ++i)
-				arr.push_back(args[i]);
-			parent->get_instance()->storage.add_var(this->mArgs.front(), arg_list);
-		}
-		else {
-			for (std::size_t i = 0; i < args.size(); ++i)
-				parent->get_instance()->storage.add_var(this->mArgs[i], args[i]);
-		}
-		parent->pc = tag;
-		parent->exec();
-		parent->stack_rewind(scope_type::task);
-		parent->recover_register();
-		return fcall.get();
-	}
-
 	void statement_expression::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
@@ -738,19 +709,6 @@ namespace cs {
 		o << "< EndFunction >\n";
 	}
 
-	void statement_function::gen_flat_ir(flat_executor *fe)
-	{
-		fe->push_scope();
-		fe->push_ir<instruct_function_def>(mName, mOverride, mIsMemFn, executor_proxy(fe, mArgs, mIsMemFn, mIsVargs, fe->pc + 2));
-		fe->push_ir<instruct_jump>();
-		for (auto& it:mBlock)
-			it->gen_flat_ir(fe);
-		fe->push_ir<instruct_internal>("end function", [](flat_executor *fe) {
-			fe->end_exec();
-		});
-		fe->pop_scope();
-	}
-
 	void statement_return::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
@@ -765,14 +723,6 @@ namespace cs {
 		o << "< Return: ";
 		compiler_type::dump_expr(mTree.root(), o);
 		o << " >\n";
-	}
-
-	void statement_return::gen_flat_ir(flat_executor *fe)
-	{
-		fe->push_ir<instruct_internal>("return", [this](flat_executor *fe) {
-			current_process->stack.top() = fe->get_instance()->parse_expr(this->mTree.root());
-			fe->end_exec();
-		});
 	}
 
 	void statement_try::run_impl()
