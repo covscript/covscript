@@ -85,8 +85,15 @@ function step4(n,k)
     end
     return to_integer(score/k)
 end
+function fib(n)
+    if n>2
+        return fib(n-1)+fib(n-2)
+    else
+        return 1
+    end
+end
 function step5(n,k)
-    var score=0,fib=[](n)->n>2?fib(n-1)+fib(n-2):1
+    var score=0
     foreach i in range(1,k+1)
         var ts=runtime.time()
         fib(n)
