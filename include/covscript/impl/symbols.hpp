@@ -617,39 +617,39 @@ namespace cs {
 		}
 	};
 
-    // Value indicates the priority of stack rewinding
+// Value indicates the priority of stack rewinding
 	enum class scope_type : unsigned char {
 		all = 0b1111, normal = 0b0001, loop = 0b0010, except = 0b0100, task = 0b1000
 	};
 
 	class flat_executor final {
 	public:
-        struct scope {
-            std::size_t scope_intro = 0;
-            scope_type type = scope_type::normal;
-            std::vector<std::size_t *> scope_exit;
+		struct scope {
+			std::size_t scope_intro = 0;
+			scope_type type = scope_type::normal;
+			std::vector<std::size_t *> scope_exit;
 
-            scope(std::size_t pc, scope_type t) : scope_intro(pc), type(t) {}
-        };
+			scope(std::size_t pc, scope_type t) : scope_intro(pc), type(t) {}
+		};
 
-        struct stack_frame {
-            scope_type type = scope_type::normal;
-            std::size_t pc = 0;
+		struct stack_frame {
+			scope_type type = scope_type::normal;
+			std::size_t pc = 0;
 
-            explicit stack_frame(scope_type t) : type(t) {}
-        };
+			explicit stack_frame(scope_type t) : type(t) {}
+		};
 	private:
-        instance_type *instance = nullptr;
-        std::vector<instruct_base *> irs;
-        stack_type <scope> scope_stack;
-        stack_type <stack_frame> stack;
+		instance_type *instance = nullptr;
+		std::vector<instruct_base *> irs;
+		stack_type <scope> scope_stack;
+		stack_type <stack_frame> stack;
 
-        inline static bool same_scope(scope_type a, scope_type b)
-        {
-            return static_cast<unsigned char>(a) & static_cast<unsigned char>(b);
-        }
+		inline static bool same_scope(scope_type a, scope_type b)
+		{
+			return static_cast<unsigned char>(a) & static_cast<unsigned char>(b);
+		}
 	public:
-	    std::size_t pc = 0;
+		std::size_t pc = 0;
 
 		flat_executor() = delete;
 
@@ -661,7 +661,7 @@ namespace cs {
 				delete it;
 		}
 
-        // Code Generating
+		// Code Generating
 		template<typename T, typename...ArgsT>
 		void push_ir(ArgsT &&...args)
 		{
@@ -674,10 +674,10 @@ namespace cs {
 			scope_stack.push(pc, type);
 		}
 
-        instruct_base *get_current_ir()
-        {
-            return irs.back();
-        }
+		instruct_base *get_current_ir()
+		{
+			return irs.back();
+		}
 
 		std::size_t get_scope_intro(scope_type type = scope_type::all)
 		{
@@ -713,64 +713,50 @@ namespace cs {
 			return false;
 		}
 
-        void print_irs(std::ostream &o)
-        {
-            for (auto &it:irs) {
-                o << it->cur_pc << ": ";
-                it->dump(o);
-            }
-        }
+		void print_irs(std::ostream &o)
+		{
+			for (auto &it:irs) {
+				o << it->cur_pc << ": ";
+				it->dump(o);
+			}
+		}
 
-        // Code Execution
+		// Code Execution
 
-        instance_type* get_instance() const
-        {
-		    return instance;
-        }
+		instance_type* get_instance() const
+		{
+			return instance;
+		}
 
-        inline void push_frame(scope_type = scope_type::normal);
+		void push_frame(scope_type = scope_type::normal);
 
-        inline void pop_frame();
+		void pop_frame();
 
-        // Don't use it for normal frame pop
-        void stack_rewind(scope_type);
+		// Don't use it for normal frame pop
+		void stack_rewind(scope_type);
 
 		void print_exec(std::ostream &o)
 		{
-		    push_frame();
 			for (; pc < irs.size(); ++pc) {
 				o << irs[pc]->cur_pc << ": ";
 				irs[pc]->dump(o);
 				irs[pc]->exec(this);
 			}
-			pop_frame();
 		}
 
 		void exec()
 		{
-			push_frame();
 			for (; pc < irs.size(); ++pc)
 				irs[pc]->exec(this);
-			pop_frame();
+		}
+
+		void end_exec()
+		{
+			pc = irs.size() - 1;
 		}
 	};
 
 	class instruct_var;
-
-	class child_executor final {
-		bool mHasScope = true;
-		bool mIsMemFn = false;
-		bool mIsVargs = false;
-		flat_executor* child = nullptr;
-		std::vector<std::string> mArgs;
-	public:
-		child_executor(std::vector<std::string>, flat_executor*, bool, bool);
-		flat_executor *get_parent() const
-		{
-			return child;
-		}
-		var operator()(vector &);
-	};
 
 	class statement_base {
 	protected:

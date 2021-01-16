@@ -27,63 +27,28 @@
 #include <covscript/impl/codegen.hpp>
 
 namespace cs {
-    void flat_executor::push_frame(scope_type type)
-    {
-        if (!stack.empty())
-            stack.top().pc = pc;
-        stack.push(type);
-        instance->storage.add_domain();
-    }
-
-    void flat_executor::pop_frame()
-    {
-        stack.pop_no_return();
-        instance->storage.remove_domain();
-    }
-
-    void flat_executor::stack_rewind(scope_type type)
-    {
-        while (!stack.empty() && stack.top().type < type)
-            pop_frame();
-        if (stack.size() < 2)
-            throw internal_error("No matching frame when stack rewinding.");
-        pop_frame();
-        pc = stack.top().pc;
-    }
-
-	child_executor::child_executor(std::vector<std::string> args, flat_executor* c, bool m, bool v) : mIsMemFn(m), mIsVargs(v), child(c), mArgs(std::move(args))
+	void flat_executor::push_frame(scope_type type)
 	{
-		if (!child->has_instruct_in_scope<instruct_var>()&&args.empty())
-			mHasScope = false;
+		if (!stack.empty())
+			stack.top().pc = pc;
+		stack.push(type);
+		instance->storage.add_domain();
 	}
 
-	var child_executor::operator()(vector &args)
+	void flat_executor::pop_frame()
 	{
-		if (!mIsVargs && args.size() != this->mArgs.size())
-			throw runtime_error(
-			    "Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
-			    std::to_string(args.size()));
-		if (mHasScope)
-			child->instance->storage.add_domain();
-		fcall_guard fcall;
-		if (mIsVargs) {
-			var arg_list = var::make<cs::array>();
-			auto &arr = arg_list.val<cs::array>();
-			std::size_t i = 0;
-			if (mIsMemFn)
-				child->instance->storage.add_var("this", args[i++]);
-			for (; i < args.size(); ++i)
-				arr.push_back(args[i]);
-			child->instance->storage.add_var(this->mArgs.front(), arg_list);
-		}
-		else {
-			for (std::size_t i = 0; i < args.size(); ++i)
-				child->instance->storage.add_var(this->mArgs[i], args[i]);
-		}
-		child->exec();
-		if (mHasScope)
-			child->instance->storage.remove_domain();
-		return fcall.get();
+		stack.pop_no_return();
+		instance->storage.remove_domain();
+	}
+
+	void flat_executor::stack_rewind(scope_type type)
+	{
+		while (!stack.empty() && stack.top().type < type)
+			pop_frame();
+		if (stack.size() < 2)
+			throw internal_error("No matching frame when stack rewinding.");
+		pop_frame();
+		pc = stack.top().pc;
 	}
 
 	const map_t<char, char> token_value::escape_char = {

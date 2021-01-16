@@ -111,33 +111,33 @@ namespace cs {
 		return var::make<structure>(this->mTypeId, this->mName, scope.get());
 	}
 
-    var executor_proxy::operator()(vector &args)
-    {
-        if (!mIsVargs && args.size() != this->mArgs.size())
-            throw runtime_error(
-                    "Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
-                    std::to_string(args.size()));
-        parent->instance->storage.add_domain();
-        fcall_guard fcall;
-        if (mIsVargs) {
-            var arg_list = var::make<cs::array>();
-            auto &arr = arg_list.val<cs::array>();
-            std::size_t i = 0;
-            if (mIsMemFn)
-                parent->instance->storage.add_var("this", args[i++]);
-            for (; i < args.size(); ++i)
-                arr.push_back(args[i]);
-            parent->instance->storage.add_var(this->mArgs.front(), arg_list);
-        }
-        else {
-            for (std::size_t i = 0; i < args.size(); ++i)
-                parent->instance->storage.add_var(this->mArgs[i], args[i]);
-        }
-        parent->begin_task();
-        parent->this_task->pc = tag;
-        parent->instance->storage.remove_domain();
-        return fcall.get();
-    }
+	var executor_proxy::operator()(vector &args)
+	{
+		if (!mIsVargs && args.size() != this->mArgs.size())
+			throw runtime_error(
+			    "Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
+			    std::to_string(args.size()));
+		parent->push_frame(scope_type::task);
+		fcall_guard fcall;
+		if (mIsVargs) {
+			var arg_list = var::make<cs::array>();
+			auto &arr = arg_list.val<cs::array>();
+			std::size_t i = 0;
+			if (mIsMemFn)
+				parent->get_instance()->storage.add_var("this", args[i++]);
+			for (; i < args.size(); ++i)
+				arr.push_back(args[i]);
+			parent->get_instance()->storage.add_var(this->mArgs.front(), arg_list);
+		}
+		else {
+			for (std::size_t i = 0; i < args.size(); ++i)
+				parent->get_instance()->storage.add_var(this->mArgs[i], args[i]);
+		}
+		parent->pc = tag;
+		parent->exec();
+		parent->stack_rewind(scope_type::task);
+		return fcall.get();
+	}
 
 	void statement_expression::run_impl()
 	{
@@ -737,20 +737,16 @@ namespace cs {
 		o << "< EndFunction >\n";
 	}
 
-	void statement_function::gen_flat_ir(flat_executor *ptr)
+	void statement_function::gen_flat_ir(flat_executor *fe)
 	{
-		flat_executor* child_fe = ptr->gen_child();
-		child_fe->begin_task();
-		child_fe->push_scope();
+		fe->push_ir<instruct_function_def>(mName, mOverride, mIsMemFn, executor_proxy(fe, mArgs, mIsMemFn, mIsVargs, fe->pc + 1));
+		fe->push_scope();
 		for (auto& it:mBlock)
-			it->gen_flat_ir(child_fe);
-		child_fe->push_ir<instruct_internal>("return", [child_fe](flat_executor *) {
-			child_fe->end_exec();
+			it->gen_flat_ir(fe);
+		fe->push_ir<instruct_internal>("end function", [](flat_executor *fe) {
+			fe->end_exec();
 		});
-		child_executor child(mArgs, child_fe, mIsMemFn, mIsVargs);
-		child_fe->pop_scope();
-		child_fe->end_task();
-		ptr->push_ir<instruct_function>(mName, mOverride, mIsMemFn, child);
+		fe->pop_scope();
 	}
 
 	void statement_return::run_impl()
@@ -769,11 +765,11 @@ namespace cs {
 		o << " >\n";
 	}
 
-	void statement_return::gen_flat_ir(flat_executor *ptr)
+	void statement_return::gen_flat_ir(flat_executor *fe)
 	{
-		ptr->push_ir<instruct_internal>("return", [this, ptr](flat_executor *fe) {
-			current_process->stack.top() = fe->instance->parse_expr(this->mTree.root());
-			ptr->end_exec();
+		fe->push_ir<instruct_internal>("return", [this](flat_executor *fe) {
+			current_process->stack.top() = fe->get_instance()->parse_expr(this->mTree.root());
+			fe->end_exec();
 		});
 	}
 

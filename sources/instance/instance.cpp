@@ -158,19 +158,19 @@ namespace cs {
 
 	void instance_type::run_flat(std::ostream &o)
 	{
-		flat_executor exec;
-		exec.instance = this;
-		exec.begin_task();
+		flat_executor exec(this);
 		for (auto &it:statements)
 			it->gen_flat_ir(&exec);
-		exec.end_task();
+		exec.pc = 0;
+		exec.push_frame();
 		if (context->compiler->disable_optimizer) {
-			exec.print(o);
+			exec.print_irs(o);
 			o << std::endl << "#### Begin Execution ####" << std::endl << std::endl;
 			exec.print_exec(o);
 		}
 		else
 			exec.exec();
+		exec.pop_frame();
 	}
 
 	void instance_type::dump_ast(std::ostream &stream)

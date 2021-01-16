@@ -51,14 +51,14 @@ namespace cs {
 	public:
 		instruct_push_scope(flat_executor *fe, scope_type type = scope_type::normal) : t(type)
 		{
-		    if (type == scope_type::all)
-		        throw internal_error("Can't push scope using wildcard \"scope_type::all\".");
+			if (type == scope_type::all)
+				throw internal_error("Can't push scope using wildcard \"scope_type::all\".");
 			fe->push_scope(t);
 		}
 
 		void exec(flat_executor *fe) override
 		{
-            fe->push_frame(t);
+			fe->push_frame(t);
 		}
 
 		void dump(std::ostream &o) const override
@@ -73,9 +73,9 @@ namespace cs {
 			case scope_type::except:
 				o << "<push except>\n";
 				break;
-				case scope_type::task:
-                    o << "<push task>\n";
-                    break;
+			case scope_type::task:
+				o << "<push task>\n";
+				break;
 			}
 		}
 	};
@@ -138,7 +138,7 @@ namespace cs {
 
 		explicit instruct_jump(flat_executor *fe, scope_type type = scope_type::all)
 		{
-            fe->expect_scope_exit(&tag, type);
+			fe->expect_scope_exit(&tag, type);
 		}
 
 		void exec(flat_executor *fe) override
@@ -163,7 +163,7 @@ namespace cs {
 
 		instruct_cond(flat_executor *fe, const tree_type<token_base *> &t, bool c, scope_type type = scope_type::all) : tree(t), cond(c)
 		{
-            fe->expect_scope_exit(&tag, type);
+			fe->expect_scope_exit(&tag, type);
 		}
 
 		void exec(flat_executor *fe) override
@@ -202,50 +202,37 @@ namespace cs {
 		}
 	};
 
-    class instruct_function final : public instruct_base {
-    public:
-        instruct_function(flat_executor *fe) {
-
-        }
-    };
-
-    class executor_proxy final {
-        flat_executor *parent = nullptr;
-        std::vector<std::string> mArgs;
-        bool mIsMemFn = false;
-        bool mIsVargs = false;
-        std::size_t tag = 0;
-    public:
-        var operator()(vector &);
-    };
+	class executor_proxy final {
+		flat_executor *parent = nullptr;
+		std::vector<std::string> mArgs;
+		bool mIsMemFn = false;
+		bool mIsVargs = false;
+		std::size_t tag = 0;
+	public:
+		executor_proxy() = delete;
+		executor_proxy(flat_executor *fe, std::vector<std::string> args, bool mem_fn, bool vargs, std::size_t t) : parent(fe), mArgs(std::move(args)), mIsMemFn(mem_fn), mIsVargs(vargs), tag(t) {}
+		var operator()(vector &);
+	};
 
 	class instruct_function_def final : public instruct_base {
-        bool mOverride = false;
-        bool mIsMemFn = false;
-        bool mIsVargs = false;
+		bool mOverride = false;
+		bool mIsMemFn = false;
+		executor_proxy mFunc;
 		std::string mName;
 	public:
-        instruct_function_def(flat_executor *fe, const std::string name, bool override, bool mem_fn, child_executor child) : mName(name), mOverride(override), mIsMemFn(mem_fn), mChild(std::move(child)) {
-
-		}
+		instruct_function_def(flat_executor *, const std::string& name, bool override, bool mem_fn, executor_proxy func) : mName(name), mOverride(override), mIsMemFn(mem_fn), mFunc(std::move(func)) {}
 
 		void exec(flat_executor *fe) override
 		{
 			if (this->mIsMemFn)
-				fe->get_instance()->storage.add_var(this->mName, var::make_protect<callable>(mChild, callable::types::member_fn), mOverride);
+				fe->get_instance()->storage.add_var(this->mName, var::make_protect<callable>(mFunc, callable::types::member_fn), mOverride);
 			else
-                fe->get_instance()->storage.add_var(this->mName, var::make_protect<callable>(mChild), mOverride);
+				fe->get_instance()->storage.add_var(this->mName, var::make_protect<callable>(mFunc), mOverride);
 		}
 
 		void dump(std::ostream &o) const override
 		{
-			o << "\n<begin function definition: name = " << mName << ", MemFn = " << (mIsMemFn ? "True" : "False") << ">\n";
-			std::size_t line = 0;
-			for (auto &it:mChild.get_parent()->irs) {
-				o << line++ << ": ";
-				it->dump(o);
-			}
-			o << "<end function definition>\n";
+			o << "\n<function definition: name = " << mName << ", MemFn = " << (mIsMemFn ? "True" : "False") << ">\n";
 		}
 	};
 
@@ -371,7 +358,7 @@ namespace cs {
 
 		void gen_flat_ir(flat_executor *fe) override
 		{
-			fe->push_ir<instruct_jump>(expect_tag::scope_exit, scope_type::loop);
+			fe->push_ir<instruct_jump>(scope_type::loop);
 		}
 	};
 
@@ -470,7 +457,7 @@ namespace cs {
 		void gen_flat_ir(flat_executor *fe) override
 		{
 			fe->push_ir<instruct_push_scope>();
-			fe->push_ir<instruct_cond>(mTree, expect_tag::scope_exit, false);
+			fe->push_ir<instruct_cond>(mTree, false);
 			for (auto &it:mBlock)
 				it->gen_flat_ir(fe);
 			fe->push_ir<instruct_pop_scope>();
@@ -509,8 +496,8 @@ namespace cs {
 			instruct_cond *jmp = static_cast<instruct_cond*>(fe->get_current_ir());
 			for (auto &it:mBlock)
 				it->gen_flat_ir(fe);
-			fe->push_ir<instruct_jump>(expect_tag::scope_exit);
-			jmp->tag = fe->this_task->pc - 1;
+			fe->push_ir<instruct_jump>();
+			jmp->tag = fe->pc - 1;
 			for (auto &it:mElseBlock)
 				it->gen_flat_ir(fe);
 			fe->push_ir<instruct_pop_scope>();
@@ -649,12 +636,12 @@ namespace cs {
 		void gen_flat_ir(flat_executor *fe) override
 		{
 			fe->push_ir<instruct_push_scope>(scope_type::loop);
-			fe->push_ir<instruct_cond>(mTree, expect_tag::scope_exit, false, scope_type::loop);
+			fe->push_ir<instruct_cond>(mTree, false, scope_type::loop);
 			for (auto &it:mBlock)
 				it->gen_flat_ir(fe);
 			if (fe->has_instruct_in_scope<instruct_var>()) {
 				fe->push_ir<instruct_internal>("Clear Scope", [](flat_executor *fe) {
-					fe->instance->storage.clear_domain();
+					fe->get_instance()->storage.clear_domain();
 				});
 			}
 			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop));
@@ -715,7 +702,7 @@ namespace cs {
 				it->gen_flat_ir(fe);
 			if (fe->has_instruct_in_scope<instruct_var>()) {
 				fe->push_ir<instruct_internal>("Clear Scope", [](flat_executor *fe) {
-					fe->instance->storage.clear_domain();
+					fe->get_instance()->storage.clear_domain();
 				});
 			}
 			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop));
@@ -748,7 +735,7 @@ namespace cs {
 				it->gen_flat_ir(fe);
 			if (fe->has_instruct_in_scope<instruct_var>()) {
 				fe->push_ir<instruct_internal>("Clear Scope", [](flat_executor *fe) {
-					fe->instance->storage.clear_domain();
+					fe->get_instance()->storage.clear_domain();
 				});
 			}
 			fe->push_ir<instruct_cond>(mExpr, fe->get_scope_intro(scope_type::loop), false);
@@ -780,12 +767,12 @@ namespace cs {
 			fe->push_ir<instruct_push_scope>();
 			fe->push_ir<instruct_var>(mParallel[0]);
 			fe->push_ir<instruct_push_scope>(scope_type::loop);
-			fe->push_ir<instruct_cond>(mParallel[1], expect_tag::scope_exit, false, scope_type::loop);
+			fe->push_ir<instruct_cond>(mParallel[1], false, scope_type::loop);
 			for (auto &it:mBlock)
 				it->gen_flat_ir(fe);
 			fe->push_ir<instruct_eval>(mParallel[2]);
 			fe->push_ir<instruct_internal>("clear scope", [](flat_executor *fe) {
-				fe->instance->storage.clear_domain();
+				fe->get_instance()->storage.clear_domain();
 			});
 			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop));
 			fe->push_ir<instruct_pop_scope>();
@@ -818,15 +805,15 @@ namespace cs {
 		{
 			iterator_t begin = obj.const_val<type>().begin();
 			iterator_t end = obj.const_val<type>().end();
-			fe->instance->storage.add_var("__PRAGMA_CS_FOREACH_ITERATOR__", begin);
-			fe->instance->storage.add_var("__PRAGMA_CS_FOREACH_ITERATOR_END__", end);
-			fe->instance->storage.add_var("__PRAGMA_CS_FOREACH_ITERATOR_NEXT__", var::make<std::function<void()>>([fe]() {
+			fe->get_instance()->storage.add_var("__PRAGMA_CS_FOREACH_ITERATOR__", begin);
+			fe->get_instance()->storage.add_var("__PRAGMA_CS_FOREACH_ITERATOR_END__", end);
+			fe->get_instance()->storage.add_var("__PRAGMA_CS_FOREACH_ITERATOR_NEXT__", var::make<std::function<void()>>([fe]() {
 				static var_id id("__PRAGMA_CS_FOREACH_ITERATOR__");
-				++fe->instance->storage.get_var(id).val<iterator_t>();
+				++fe->get_instance()->storage.get_var(id).val<iterator_t>();
 			}));
-			fe->instance->storage.add_var("__PRAGMA_CS_FOREACH_ITERATOR_DATA__", var::make<std::function<var()>>([fe]() {
+			fe->get_instance()->storage.add_var("__PRAGMA_CS_FOREACH_ITERATOR_DATA__", var::make<std::function<var()>>([fe]() {
 				static var_id id("__PRAGMA_CS_FOREACH_ITERATOR__");
-				return static_cast<data_t>(*fe->instance->storage.get_var(id).val<iterator_t>());
+				return static_cast<data_t>(*fe->get_instance()->storage.get_var(id).val<iterator_t>());
 			}));
 		}
 
@@ -851,20 +838,20 @@ namespace cs {
 			fe->push_ir<instruct_push_scope>(scope_type::loop);
 			fe->push_ir<instruct_cond_internal>([&](flat_executor *fe) {
 				static var_id beg_id("__PRAGMA_CS_FOREACH_ITERATOR__"), end_id("__PRAGMA_CS_FOREACH_ITERATOR_END__");
-				return fe->instance->storage.get_var(beg_id) == fe->instance->storage.get_var(end_id);
-			}, expect_tag::scope_exit, scope_type::loop);
+				return fe->get_instance()->storage.get_var(beg_id) == fe->get_instance()->storage.get_var(end_id);
+			}, scope_type::loop);
 			fe->push_ir<instruct_internal>("foreach intro", [&](flat_executor *fe) {
 				static var_id id("__PRAGMA_CS_FOREACH_ITERATOR_DATA__");
-				fe->instance->storage.add_var(mIt, fe->instance->storage.get_var(id).const_val<std::function<var()>>()(), true);
+				fe->get_instance()->storage.add_var(mIt, fe->get_instance()->storage.get_var(id).const_val<std::function<var()>>()(), true);
 			});
 			for (auto &it:mBlock)
 				it->gen_flat_ir(fe);
 			fe->push_ir<instruct_internal>("foreach iterate", [&](flat_executor *fe) {
 				static var_id id("__PRAGMA_CS_FOREACH_ITERATOR_NEXT__");
-				fe->instance->storage.get_var(id).const_val<std::function<void()>>()();
+				fe->get_instance()->storage.get_var(id).const_val<std::function<void()>>()();
 			});
 			fe->push_ir<instruct_internal>("clear scope", [](flat_executor *fe) {
-				fe->instance->storage.clear_domain();
+				fe->get_instance()->storage.clear_domain();
 			});
 			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop));
 			fe->push_ir<instruct_pop_scope>();
