@@ -215,7 +215,9 @@ namespace cs {
 
 		compiler_type() = delete;
 
-		explicit compiler_type(context_t c) : context(std::move(c)) {}
+		explicit compiler_type(context_t c) : context(std::move(c)) {
+			struct_builder::reset_counter();
+		}
 
 		compiler_type(const compiler_type &) = delete;
 
