@@ -72,13 +72,6 @@
 #include <covscript/core/version.hpp>
 
 namespace cs {
-// Task Context
-	struct task_context {
-		// Stack Size
-		std::size_t ss = 0;
-		// Program Count
-		std::size_t pc = 0;
-	};
 // Process Context
 	class process_context final {
 		std::atomic<bool> is_sigint_raised{};
@@ -93,7 +86,6 @@ namespace cs {
 // Import Path
 		std::string import_path = ".";
 // Stack
-		stack_type<task_context> task_stack;
 		stack_type<var> stack;
 #ifdef CS_DEBUGGER
 		stack_type<std::string> stack_backtrace;

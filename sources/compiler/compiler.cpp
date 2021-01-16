@@ -27,22 +27,30 @@
 #include <covscript/impl/codegen.hpp>
 
 namespace cs {
-	void flat_executor::begin_task()
-	{
-		if (!current_process->task_stack.empty())
-			current_process->task_stack.top().ss = instance->storage.get_size();
-		current_process->task_stack.push();
-		this_task = &current_process->task_stack.top();
-	}
+    void flat_executor::push_frame(scope_type type)
+    {
+        if (!stack.empty())
+            stack.top().pc = pc;
+        stack.push(type);
+        instance->storage.add_domain();
+    }
 
-	void flat_executor::resume_task()
-	{
-		if (resume) {
-			this_task = &current_process->task_stack.top();
-			instance->storage.rewind(this_task->ss);
-			resume = false;
-		}
-	}
+    void flat_executor::pop_frame()
+    {
+        stack.pop_no_return();
+        instance->storage.remove_domain();
+    }
+
+    void flat_executor::stack_rewind(scope_type type)
+    {
+        while (!stack.empty() && stack.top().type < type)
+            pop_frame();
+        if (stack.size() < 2)
+            throw internal_error("No matching frame when stack rewinding.");
+        pop_frame();
+        pc = stack.top().pc;
+    }
+
 	child_executor::child_executor(std::vector<std::string> args, flat_executor* c, bool m, bool v) : mIsMemFn(m), mIsVargs(v), child(c), mArgs(std::move(args))
 	{
 		if (!child->has_instruct_in_scope<instruct_var>()&&args.empty())

@@ -617,90 +617,81 @@ namespace cs {
 		}
 	};
 
-	enum class expect_tag {
-		scope_exit, except_handler
-	};
-
-	enum class scope_type {
-		all, normal, except, loop
+    // Value indicates the priority of stack rewinding
+	enum class scope_type : unsigned char {
+		all = 0b1111, normal = 0b0001, loop = 0b0010, except = 0b0100, task = 0b1000
 	};
 
 	class flat_executor final {
-		std::vector<flat_executor *> child;
-		bool resume = false;
 	public:
-		struct scope {
-			std::size_t scope_intro = 0;
-			scope_type type = scope_type::normal;
-			std::vector<std::size_t *> scope_exit;
-			std::vector<std::size_t *> except_handler;
+        struct scope {
+            std::size_t scope_intro = 0;
+            scope_type type = scope_type::normal;
+            std::vector<std::size_t *> scope_exit;
 
-			scope(std::size_t pc, scope_type t) : scope_intro(pc), type(t) {}
-		};
+            scope(std::size_t pc, scope_type t) : scope_intro(pc), type(t) {}
+        };
 
-		instance_type *instance = nullptr;
-		task_context *this_task = nullptr;
-		std::vector<instruct_base *> irs;
-		stack_type <scope> scope_stack;
+        struct stack_frame {
+            scope_type type = scope_type::normal;
+            std::size_t pc = 0;
 
-		flat_executor() = default;
+            explicit stack_frame(scope_type t) : type(t) {}
+        };
+	private:
+        instance_type *instance = nullptr;
+        std::vector<instruct_base *> irs;
+        stack_type <scope> scope_stack;
+        stack_type <stack_frame> stack;
+
+        inline static bool same_scope(scope_type a, scope_type b)
+        {
+            return static_cast<unsigned char>(a) & static_cast<unsigned char>(b);
+        }
+	public:
+	    std::size_t pc = 0;
+
+		flat_executor() = delete;
+
+		explicit flat_executor(instance_type *ptr) : instance(ptr) {}
 
 		~flat_executor()
 		{
 			for (auto &it:irs)
 				delete it;
-			for (auto &it:child)
-				delete it;
 		}
 
-		flat_executor* gen_child()
-		{
-			child.emplace_back(new flat_executor);
-			child.back()->instance = instance;
-			return child.back();
-		}
-
-		instruct_base *get_current_ir()
-		{
-			return irs.back();
-		}
-
+        // Code Generating
 		template<typename T, typename...ArgsT>
 		void push_ir(ArgsT &&...args)
 		{
 			irs.push_back(new T(this, std::forward<ArgsT>(args)...));
-			irs.back()->cur_pc = this_task->pc;
-			++this_task->pc;
+			irs.back()->cur_pc = pc++;
 		}
 
 		void push_scope(scope_type type = scope_type::normal)
 		{
-			scope_stack.push(this_task->pc, type);
+			scope_stack.push(pc, type);
 		}
+
+        instruct_base *get_current_ir()
+        {
+            return irs.back();
+        }
 
 		std::size_t get_scope_intro(scope_type type = scope_type::all)
 		{
 			for (auto &it:scope_stack)
-				if (type == scope_type::all || it.type == type)
+				if (same_scope(it.type, type))
 					return it.scope_intro;
-			throw runtime_error("No matching scope.");
+			throw internal_error("No matching scope.");
 		}
 
-		void expect_scope_exit(std::size_t *tag, scope_type type = scope_type::normal)
+		void expect_scope_exit(std::size_t *tag, scope_type type = scope_type::all)
 		{
 			for (auto &it:scope_stack) {
-				if (type == scope_type::all || it.type == type) {
+				if (same_scope(it.type, type)) {
 					it.scope_exit.push_back(tag);
-					break;
-				}
-			}
-		}
-
-		void expect_except_handler(std::size_t *tag)
-		{
-			for (auto &it:scope_stack) {
-				if (it.type == scope_type::except) {
-					it.except_handler.push_back(tag);
 					break;
 				}
 			}
@@ -709,9 +700,7 @@ namespace cs {
 		void pop_scope()
 		{
 			for (auto &it:scope_stack.top().scope_exit)
-				*it = this_task->pc - 1;
-			for (auto &it:scope_stack.top().except_handler)
-				*it = this_task->pc - 1;
+				*it = pc - 1;
 			scope_stack.pop_no_return();
 		}
 
@@ -724,49 +713,45 @@ namespace cs {
 			return false;
 		}
 
-		void print(std::ostream &o)
-		{
-			for (auto &it:irs) {
-				o << it->cur_pc << ": ";
-				it->dump(o);
-			}
-		}
+        void print_irs(std::ostream &o)
+        {
+            for (auto &it:irs) {
+                o << it->cur_pc << ": ";
+                it->dump(o);
+            }
+        }
 
-		void begin_task();
+        // Code Execution
 
-		void resume_task();
+        instance_type* get_instance() const
+        {
+		    return instance;
+        }
 
-		void end_task()
-		{
-			current_process->task_stack.pop_no_return();
-			this_task = nullptr;
-		}
+        inline void push_frame(scope_type = scope_type::normal);
+
+        inline void pop_frame();
+
+        // Don't use it for normal frame pop
+        void stack_rewind(scope_type);
 
 		void print_exec(std::ostream &o)
 		{
-			begin_task();
-			for (; this_task->pc < irs.size(); ++this_task->pc) {
-				o << irs[this_task->pc]->cur_pc << ": ";
-				irs[this_task->pc]->dump(o);
-				irs[this_task->pc]->exec(this);
+		    push_frame();
+			for (; pc < irs.size(); ++pc) {
+				o << irs[pc]->cur_pc << ": ";
+				irs[pc]->dump(o);
+				irs[pc]->exec(this);
 			}
-			end_task();
-			resume_task();
+			pop_frame();
 		}
 
 		void exec()
 		{
-			begin_task();
-			for (; this_task->pc < irs.size(); ++this_task->pc)
-				irs[this_task->pc]->exec(this);
-			end_task();
-			resume_task();
-		}
-
-		void end_exec()
-		{
-			this_task->pc = irs.size() - 1;
-			resume = true;
+			push_frame();
+			for (; pc < irs.size(); ++pc)
+				irs[pc]->exec(this);
+			pop_frame();
 		}
 	};
 

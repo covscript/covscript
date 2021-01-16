@@ -51,27 +51,31 @@ namespace cs {
 	public:
 		instruct_push_scope(flat_executor *fe, scope_type type = scope_type::normal) : t(type)
 		{
-			fe->push_scope(type);
+		    if (type == scope_type::all)
+		        throw internal_error("Can't push scope using wildcard \"scope_type::all\".");
+			fe->push_scope(t);
 		}
 
 		void exec(flat_executor *fe) override
 		{
-			fe->instance->storage.add_domain();
+            fe->push_frame(t);
 		}
 
 		void dump(std::ostream &o) const override
 		{
 			switch (t) {
-			case scope_type::all:
 			case scope_type::normal:
 				o << "<push scope>\n";
 				break;
 			case scope_type::loop:
-				o << "<push loop scope>\n";
+				o << "<push loop>\n";
 				break;
 			case scope_type::except:
-				o << "<push except scope>\n";
+				o << "<push except>\n";
 				break;
+				case scope_type::task:
+                    o << "<push task>\n";
+                    break;
 			}
 		}
 	};
@@ -85,7 +89,7 @@ namespace cs {
 
 		void exec(flat_executor *fe) override
 		{
-			fe->instance->storage.remove_domain();
+			fe->pop_frame();
 		}
 
 		void dump(std::ostream &o) const override
@@ -101,7 +105,7 @@ namespace cs {
 
 		void exec(flat_executor *fe) override
 		{
-			fe->instance->parse_define_var(tree.root());
+			fe->get_instance()->parse_define_var(tree.root());
 		}
 
 		void dump(std::ostream &o) const override
@@ -117,7 +121,7 @@ namespace cs {
 
 		void exec(flat_executor *fe) override
 		{
-			fe->instance->parse_expr(tree.root());
+			fe->get_instance()->parse_expr(tree.root());
 		}
 
 		void dump(std::ostream &o) const override
@@ -132,21 +136,14 @@ namespace cs {
 
 		instruct_jump(flat_executor *, std::size_t pc) : tag(pc) {}
 
-		instruct_jump(flat_executor *fe, expect_tag e, scope_type type = scope_type::normal)
+		explicit instruct_jump(flat_executor *fe, scope_type type = scope_type::all)
 		{
-			switch (e) {
-			case expect_tag::scope_exit:
-				fe->expect_scope_exit(&tag, type);
-				break;
-			case expect_tag::except_handler:
-				fe->expect_except_handler(&tag);
-				break;
-			}
+            fe->expect_scope_exit(&tag, type);
 		}
 
 		void exec(flat_executor *fe) override
 		{
-			fe->this_task->pc = tag;
+			fe->pc = tag;
 		}
 
 		void dump(std::ostream &o) const override
@@ -164,23 +161,15 @@ namespace cs {
 		instruct_cond(flat_executor *, const tree_type<token_base *> &t, std::size_t pc, bool c) : tree(t), tag(pc),
 			cond(c) {}
 
-		instruct_cond(flat_executor *fe, const tree_type<token_base *> &t, expect_tag e, bool c,
-		              scope_type type = scope_type::normal) : tree(t), cond(c)
+		instruct_cond(flat_executor *fe, const tree_type<token_base *> &t, bool c, scope_type type = scope_type::all) : tree(t), cond(c)
 		{
-			switch (e) {
-			case expect_tag::scope_exit:
-				fe->expect_scope_exit(&tag, type);
-				break;
-			case expect_tag::except_handler:
-				fe->expect_except_handler(&tag);
-				break;
-			}
+            fe->expect_scope_exit(&tag, type);
 		}
 
 		void exec(flat_executor *fe) override
 		{
-			if (fe->instance->parse_expr(tree.root()).const_val<boolean>() == cond)
-				fe->this_task->pc = tag;
+			if (fe->get_instance()->parse_expr(tree.root()).const_val<boolean>() == cond)
+				fe->pc = tag;
 		}
 
 		void dump(std::ostream &o) const override
@@ -196,23 +185,15 @@ namespace cs {
 		instruct_cond_internal(flat_executor *, std::function<bool(flat_executor *)> t, std::size_t pc) : cond(
 			    std::move(t)), tag(pc) {}
 
-		instruct_cond_internal(flat_executor *fe, std::function<bool(flat_executor *)> t, expect_tag e,
-		                       scope_type type = scope_type::normal) : cond(std::move(t))
+		instruct_cond_internal(flat_executor *fe, std::function<bool(flat_executor *)> t, scope_type type = scope_type::all) : cond(std::move(t))
 		{
-			switch (e) {
-			case expect_tag::scope_exit:
-				fe->expect_scope_exit(&tag, type);
-				break;
-			case expect_tag::except_handler:
-				fe->expect_except_handler(&tag);
-				break;
-			}
+			fe->expect_scope_exit(&tag, type);
 		}
 
 		void exec(flat_executor *fe) override
 		{
 			if (cond(fe))
-				fe->this_task->pc = tag;
+				fe->pc = tag;
 		}
 
 		void dump(std::ostream &o) const override
@@ -221,20 +202,39 @@ namespace cs {
 		}
 	};
 
-	class instruct_function final : public instruct_base {
-		bool mOverride = false;
-		bool mIsMemFn = false;
-		child_executor mChild;
+    class instruct_function final : public instruct_base {
+    public:
+        instruct_function(flat_executor *fe) {
+
+        }
+    };
+
+    class executor_proxy final {
+        flat_executor *parent = nullptr;
+        std::vector<std::string> mArgs;
+        bool mIsMemFn = false;
+        bool mIsVargs = false;
+        std::size_t tag = 0;
+    public:
+        var operator()(vector &);
+    };
+
+	class instruct_function_def final : public instruct_base {
+        bool mOverride = false;
+        bool mIsMemFn = false;
+        bool mIsVargs = false;
 		std::string mName;
 	public:
-		instruct_function(flat_executor *fe, const std::string name, bool override, bool mem_fn, child_executor child) : mName(name), mOverride(override), mIsMemFn(mem_fn), mChild(std::move(child)) {}
+        instruct_function_def(flat_executor *fe, const std::string name, bool override, bool mem_fn, child_executor child) : mName(name), mOverride(override), mIsMemFn(mem_fn), mChild(std::move(child)) {
+
+		}
 
 		void exec(flat_executor *fe) override
 		{
 			if (this->mIsMemFn)
-				fe->instance->storage.add_var(this->mName, var::make_protect<callable>(mChild, callable::types::member_fn), mOverride);
+				fe->get_instance()->storage.add_var(this->mName, var::make_protect<callable>(mChild, callable::types::member_fn), mOverride);
 			else
-				fe->instance->storage.add_var(this->mName, var::make_protect<callable>(mChild), mOverride);
+                fe->get_instance()->storage.add_var(this->mName, var::make_protect<callable>(mChild), mOverride);
 		}
 
 		void dump(std::ostream &o) const override

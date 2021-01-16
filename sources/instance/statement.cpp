@@ -111,6 +111,34 @@ namespace cs {
 		return var::make<structure>(this->mTypeId, this->mName, scope.get());
 	}
 
+    var executor_proxy::operator()(vector &args)
+    {
+        if (!mIsVargs && args.size() != this->mArgs.size())
+            throw runtime_error(
+                    "Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
+                    std::to_string(args.size()));
+        parent->instance->storage.add_domain();
+        fcall_guard fcall;
+        if (mIsVargs) {
+            var arg_list = var::make<cs::array>();
+            auto &arr = arg_list.val<cs::array>();
+            std::size_t i = 0;
+            if (mIsMemFn)
+                parent->instance->storage.add_var("this", args[i++]);
+            for (; i < args.size(); ++i)
+                arr.push_back(args[i]);
+            parent->instance->storage.add_var(this->mArgs.front(), arg_list);
+        }
+        else {
+            for (std::size_t i = 0; i < args.size(); ++i)
+                parent->instance->storage.add_var(this->mArgs[i], args[i]);
+        }
+        parent->begin_task();
+        parent->this_task->pc = tag;
+        parent->instance->storage.remove_domain();
+        return fcall.get();
+    }
+
 	void statement_expression::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
