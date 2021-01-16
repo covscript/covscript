@@ -358,6 +358,9 @@ namespace cs {
 
 		void gen_flat_ir(flat_executor *fe) override
 		{
+			fe->push_ir<instruct_internal>("break loop", [](flat_executor *fe) {
+				fe->stack_rewind(scope_type::loop, false);
+			});
 			fe->push_ir<instruct_jump>(scope_type::loop);
 		}
 	};
@@ -379,6 +382,9 @@ namespace cs {
 
 		void gen_flat_ir(flat_executor *fe) override
 		{
+			fe->push_ir<instruct_internal>("continue loop", [](flat_executor *fe) {
+				fe->stack_rewind(scope_type::loop, false);
+			});
 			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop));
 		}
 	};
@@ -640,7 +646,7 @@ namespace cs {
 			for (auto &it:mBlock)
 				it->gen_flat_ir(fe);
 			if (fe->has_instruct_in_scope<instruct_var>()) {
-				fe->push_ir<instruct_internal>("Clear Scope", [](flat_executor *fe) {
+				fe->push_ir<instruct_internal>("clear scope", [](flat_executor *fe) {
 					fe->get_instance()->storage.clear_domain();
 				});
 			}
@@ -701,7 +707,7 @@ namespace cs {
 			for (auto &it:mBlock)
 				it->gen_flat_ir(fe);
 			if (fe->has_instruct_in_scope<instruct_var>()) {
-				fe->push_ir<instruct_internal>("Clear Scope", [](flat_executor *fe) {
+				fe->push_ir<instruct_internal>("clear scope", [](flat_executor *fe) {
 					fe->get_instance()->storage.clear_domain();
 				});
 			}
@@ -734,7 +740,7 @@ namespace cs {
 			for (auto &it:mBlock)
 				it->gen_flat_ir(fe);
 			if (fe->has_instruct_in_scope<instruct_var>()) {
-				fe->push_ir<instruct_internal>("Clear Scope", [](flat_executor *fe) {
+				fe->push_ir<instruct_internal>("clear scope", [](flat_executor *fe) {
 					fe->get_instance()->storage.clear_domain();
 				});
 			}
@@ -771,9 +777,11 @@ namespace cs {
 			for (auto &it:mBlock)
 				it->gen_flat_ir(fe);
 			fe->push_ir<instruct_eval>(mParallel[2]);
-			fe->push_ir<instruct_internal>("clear scope", [](flat_executor *fe) {
-				fe->get_instance()->storage.clear_domain();
-			});
+			if (fe->has_instruct_in_scope<instruct_var>()) {
+				fe->push_ir<instruct_internal>("clear scope", [](flat_executor *fe) {
+					fe->get_instance()->storage.clear_domain();
+				});
+			}
 			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop));
 			fe->push_ir<instruct_pop_scope>();
 			fe->push_ir<instruct_pop_scope>();
@@ -843,9 +851,11 @@ namespace cs {
 			fe->push_ir<instruct_internal>("foreach iterate", [](flat_executor *fe) {
 				fe->current_iteration().next();
 			});
-			fe->push_ir<instruct_internal>("clear scope", [](flat_executor *fe) {
-				fe->get_instance()->storage.clear_domain();
-			});
+			if (fe->has_instruct_in_scope<instruct_var>()) {
+				fe->push_ir<instruct_internal>("clear scope", [](flat_executor *fe) {
+					fe->get_instance()->storage.clear_domain();
+				});
+			}
 			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop));
 			fe->push_ir<instruct_pop_scope>();
 			fe->push_ir<instruct_internal>("foreach end", [](flat_executor *fe) {

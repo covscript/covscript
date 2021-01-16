@@ -41,14 +41,14 @@ namespace cs {
 		instance->storage.remove_domain();
 	}
 
-	void flat_executor::stack_rewind(scope_type type)
+	void flat_executor::stack_rewind(scope_type type, bool delete_cur)
 	{
 		while (!stack.empty() && stack.top().type < type)
 			pop_frame();
 		if (stack.size() < 2)
 			throw internal_error("No matching frame when stack rewinding.");
-		pop_frame();
-		pc = stack.top().pc;
+		if (delete_cur)
+			pop_frame();
 	}
 
 	const map_t<char, char> token_value::escape_char = {

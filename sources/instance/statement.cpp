@@ -136,6 +136,7 @@ namespace cs {
 		parent->pc = tag;
 		parent->exec();
 		parent->stack_rewind(scope_type::task);
+		parent->recover_register();
 		return fcall.get();
 	}
 

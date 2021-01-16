@@ -740,7 +740,12 @@ namespace cs {
 		void pop_frame();
 
 		// Don't use it for normal frame pop
-		void stack_rewind(scope_type);
+		void stack_rewind(scope_type, bool = true);
+
+		void recover_register()
+		{
+			pc = stack.top().pc;
+		}
 
 		iterate_helper& begin_iteration()
 		{

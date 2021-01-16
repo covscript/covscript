@@ -32,8 +32,8 @@
 * Master
 *
 */
-#define COVSCRIPT_VERSION_NUM 4,0,0,1
-#define COVSCRIPT_VERSION_STR "4.0.0 Cuon alpinus(Preview) Build 1"
+#define COVSCRIPT_VERSION_NUM 4,0,0,2
+#define COVSCRIPT_VERSION_STR "4.0.0 Cuon alpinus(Preview) Build 2"
 #define COVSCRIPT_STD_VERSION 201201
 #define COVSCRIPT_API_VERSION 210101
 #define COVSCRIPT_ABI_VERSION 200203
