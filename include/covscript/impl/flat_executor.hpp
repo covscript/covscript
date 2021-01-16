@@ -205,7 +205,7 @@ namespace cs {
 			process_context t_context;
 			instance_type  t_instance;
 			flat_executor  t_executor;
-			// task_context(flat_executor *fe) : t_instance(*fe->get_instance()), t_executor(*fe) {}
+			task_context(flat_executor *fe) : t_instance(*fe->get_instance()), t_executor(&t_instance) {}
 		};
 	};
 
