@@ -803,24 +803,20 @@ namespace cs {
 		template<typename type, typename iterator_t, typename data_t>
 		void init_foreach(const var &obj, flat_executor *fe)
 		{
-			iterator_t begin = obj.const_val<type>().begin();
-			iterator_t end = obj.const_val<type>().end();
-			fe->get_instance()->storage.add_var("__PRAGMA_CS_FOREACH_ITERATOR__", begin);
-			fe->get_instance()->storage.add_var("__PRAGMA_CS_FOREACH_ITERATOR_END__", end);
-			fe->get_instance()->storage.add_var("__PRAGMA_CS_FOREACH_ITERATOR_NEXT__", var::make<std::function<void()>>([fe]() {
-				static var_id id("__PRAGMA_CS_FOREACH_ITERATOR__");
-				++fe->get_instance()->storage.get_var(id).val<iterator_t>();
-			}));
-			fe->get_instance()->storage.add_var("__PRAGMA_CS_FOREACH_ITERATOR_DATA__", var::make<std::function<var()>>([fe]() {
-				static var_id id("__PRAGMA_CS_FOREACH_ITERATOR__");
-				return static_cast<data_t>(*fe->get_instance()->storage.get_var(id).val<iterator_t>());
-			}));
+			flat_executor::iterate_helper &it = fe->begin_iteration();
+			it.begin = var::make<iterator_t>(obj.const_val<type>().begin());
+			it.end = var::make<iterator_t>(obj.const_val<type>().end());
+			it.next = [&it]() {
+				++it.begin.val<iterator_t>();
+			};
+			it.iterator = [&it]() -> var {
+				return static_cast<data_t>(*it.begin.val<iterator_t>());
+			};
 		}
 
 		void gen_flat_ir(flat_executor *fe) override
 		{
-			fe->push_ir<instruct_push_scope>();
-			fe->push_ir<instruct_internal>("foreach init", [&](flat_executor *fe) {
+			fe->push_ir<instruct_internal>("foreach begin", [this](flat_executor *fe) {
 				const var &obj = context->instance->parse_expr(this->mObj.root());
 				if (obj.type() == typeid(string))
 					init_foreach<string, string::const_iterator, char>(obj, fe);
@@ -836,26 +832,25 @@ namespace cs {
 					throw runtime_error("Unsupported type(foreach)");
 			});
 			fe->push_ir<instruct_push_scope>(scope_type::loop);
-			fe->push_ir<instruct_cond_internal>([&](flat_executor *fe) {
-				static var_id beg_id("__PRAGMA_CS_FOREACH_ITERATOR__"), end_id("__PRAGMA_CS_FOREACH_ITERATOR_END__");
-				return fe->get_instance()->storage.get_var(beg_id) == fe->get_instance()->storage.get_var(end_id);
+			fe->push_ir<instruct_cond_internal>([](flat_executor *fe) {
+				return fe->current_iteration().begin == fe->current_iteration().end;
 			}, scope_type::loop);
-			fe->push_ir<instruct_internal>("foreach intro", [&](flat_executor *fe) {
-				static var_id id("__PRAGMA_CS_FOREACH_ITERATOR_DATA__");
-				fe->get_instance()->storage.add_var(mIt, fe->get_instance()->storage.get_var(id).const_val<std::function<var()>>()(), true);
+			fe->push_ir<instruct_internal>("foreach intro", [this](flat_executor *fe) {
+				fe->get_instance()->storage.add_var(mIt, fe->current_iteration().iterator(), true);
 			});
 			for (auto &it:mBlock)
 				it->gen_flat_ir(fe);
-			fe->push_ir<instruct_internal>("foreach iterate", [&](flat_executor *fe) {
-				static var_id id("__PRAGMA_CS_FOREACH_ITERATOR_NEXT__");
-				fe->get_instance()->storage.get_var(id).const_val<std::function<void()>>()();
+			fe->push_ir<instruct_internal>("foreach iterate", [](flat_executor *fe) {
+				fe->current_iteration().next();
 			});
 			fe->push_ir<instruct_internal>("clear scope", [](flat_executor *fe) {
 				fe->get_instance()->storage.clear_domain();
 			});
 			fe->push_ir<instruct_jump>(fe->get_scope_intro(scope_type::loop));
 			fe->push_ir<instruct_pop_scope>();
-			fe->push_ir<instruct_pop_scope>();
+			fe->push_ir<instruct_internal>("foreach end", [](flat_executor *fe) {
+				fe->end_iteration();
+			});
 		}
 	};
 

@@ -638,11 +638,18 @@ namespace cs {
 
 			explicit stack_frame(scope_type t) : type(t) {}
 		};
+
+		struct iterate_helper {
+			var begin, end;
+			std::function<void()> next;
+			std::function<var()> iterator;
+		};
 	private:
 		instance_type *instance = nullptr;
 		std::vector<instruct_base *> irs;
 		stack_type <scope> scope_stack;
 		stack_type <stack_frame> stack;
+		stack_type <iterate_helper> it;
 
 		inline static bool same_scope(scope_type a, scope_type b)
 		{
@@ -734,6 +741,22 @@ namespace cs {
 
 		// Don't use it for normal frame pop
 		void stack_rewind(scope_type);
+
+		iterate_helper& begin_iteration()
+		{
+			it.push();
+			return it.top();
+		}
+
+		iterate_helper& current_iteration()
+		{
+			return it.top();
+		}
+
+		void end_iteration()
+		{
+			it.pop_no_return();
+		}
 
 		void print_exec(std::ostream &o)
 		{
