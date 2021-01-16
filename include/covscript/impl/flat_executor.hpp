@@ -74,6 +74,11 @@ namespace cs {
 		}
 
 		// Code Generating
+		void clone_irs(const flat_executor &fe)
+		{
+			irs = fe.irs;
+		}
+
 		template<typename T, typename...ArgsT>
 		void push_ir(ArgsT &&...args)
 		{
@@ -202,10 +207,11 @@ namespace cs {
 
 	class task_scheduler final {
 		struct task_context {
-			process_context t_context;
-			instance_type  t_instance;
-			flat_executor  t_executor;
-			task_context(flat_executor *fe) : t_instance(*fe->get_instance()), t_executor(&t_instance) {}
+			flat_executor executor;
+			context_t t_context;
+			task_context(context_t &context, flat_executor *fe) : t_context(context), executor(context->instance.get()) {
+				executor.clone_irs(*fe);
+			}
 		};
 	};
 
