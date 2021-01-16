@@ -96,7 +96,7 @@
 `examples` 文件夹包含了数个使用 Covariant Script 编写的示例程序。
 ## 版权 ##
 **Covariant Script 编程语言的作者是 [@mikecovlee](https://github.com/mikecovlee/)，基于 Apache 2.0 协议分发。**  
-**版权所有 © 2017-2020 李登淳(Michael Lee)**  
+**版权所有 © 2017-2021 李登淳(Michael Lee)**  
 *该软件已在中华人民共和国国家版权局注册（登记号：2020SR0408026），受中华人民共和国著作权法保护。*
 ## 感谢 ##
 [四川大学](http://scu.edu.cn/), [freeCodeCamp 成都社区](https://china.freecodecamp.one/?city=chengdu)  
