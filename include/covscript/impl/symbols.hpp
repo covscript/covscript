@@ -782,6 +782,17 @@ namespace cs {
 		{
 			pc = irs.size() - 1;
 		}
+
+		void info(std::ostream &o)
+		{
+			o << "\n## Flat Executor Info ##" << std::endl;
+			o << "\n## Stack Info ##" << std::endl;
+			o << "Scope   Stack: " << scope_stack.size() << std::endl;
+			o << "Frame   Stack: " << stack.size() << std::endl;
+			o << "Iterate Stack: " << it.size() << std::endl;
+			o << "\n## Register Info ##\n" << std::endl;
+			o << "Program Count: " << pc << std::endl;
+		}
 	};
 
 	class instruct_var;

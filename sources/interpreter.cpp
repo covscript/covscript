@@ -228,8 +228,7 @@ void covscript_main(int args_size, char *args[])
 						std::cout << it.first << std::endl;
 				}
 			}
-			if (!compile_only)
-				context->instance->run_flat(std::cout);
+			context->instance->run_flat(std::cout, compile_only);
 		}
 		catch (const std::exception &e) {
 			if (std::strstr(e.what(), "CS_EXIT") == nullptr)

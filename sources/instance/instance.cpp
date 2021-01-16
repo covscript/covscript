@@ -156,7 +156,7 @@ namespace cs {
 		}
 	}
 
-	void instance_type::run_flat(std::ostream &o)
+	void instance_type::run_flat(std::ostream &o, bool compile_only)
 	{
 		flat_executor exec(this);
 		for (auto &it:statements)
@@ -165,12 +165,17 @@ namespace cs {
 		exec.push_frame();
 		if (context->compiler->disable_optimizer) {
 			exec.print_irs(o);
-			o << std::endl << "#### Begin Execution ####" << std::endl << std::endl;
-			exec.print_exec(o);
+			exec.info(o);
+			if (!compile_only) {
+				o << std::endl << "#### Begin Execution ####" << std::endl << std::endl;
+				exec.print_exec(o);
+			}
 		}
-		else
+		else if (!compile_only)
 			exec.exec();
 		exec.pop_frame();
+		if (!compile_only)
+			exec.info(o);
 	}
 
 	void instance_type::dump_ast(std::ostream &stream)

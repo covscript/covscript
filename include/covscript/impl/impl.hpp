@@ -62,7 +62,7 @@ namespace cs {
 
 		void interpret();
 
-		void run_flat(std::ostream &);
+		void run_flat(std::ostream &, bool = false);
 
 		void dump_ast(std::ostream &);
 
