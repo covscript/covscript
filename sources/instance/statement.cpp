@@ -739,8 +739,9 @@ namespace cs {
 
 	void statement_function::gen_flat_ir(flat_executor *fe)
 	{
-		fe->push_ir<instruct_function_def>(mName, mOverride, mIsMemFn, executor_proxy(fe, mArgs, mIsMemFn, mIsVargs, fe->pc + 1));
 		fe->push_scope();
+		fe->push_ir<instruct_function_def>(mName, mOverride, mIsMemFn, executor_proxy(fe, mArgs, mIsMemFn, mIsVargs, fe->pc + 2));
+		fe->push_ir<instruct_jump>();
 		for (auto& it:mBlock)
 			it->gen_flat_ir(fe);
 		fe->push_ir<instruct_internal>("end function", [](flat_executor *fe) {

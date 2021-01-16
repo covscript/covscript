@@ -232,7 +232,7 @@ namespace cs {
 
 		void dump(std::ostream &o) const override
 		{
-			o << "\n<function definition: name = " << mName << ", MemFn = " << (mIsMemFn ? "True" : "False") << ">\n";
+			o << "<function definition: name = " << mName << (mIsMemFn ? ", member function" : ", regular function") << ">\n";
 		}
 	};
 
