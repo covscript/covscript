@@ -44,7 +44,7 @@
 ### 平台依赖 ###
 + [wiringPi](https://github.com/covscript/covscript-wiringpi)
 ## 文档 ##
-[CovScript官方文档(PDF)](http://mirrors.covariant.cn/covscript/comm_dist/cs_docs.pdf)  
+[CovScript 在线知识库](http://wiki.csman.info)  
 ## 安装 ##
 + **[建议]** 从 [covscript.org.cn](http://covscript.org.cn) 下载安装包
 + 下载 [64位类Debian系统滚动构建安装包](https://github.com/covscript/csbuild/releases/download/schedule/covscript-amd64.deb)
