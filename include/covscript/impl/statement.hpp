@@ -641,6 +641,8 @@ namespace cs {
 		void run_impl() override;
 
 		void dump(std::ostream &) const override;
+
+        void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_catch final : public statement_base {
@@ -688,5 +690,7 @@ namespace cs {
 		void run_impl() override;
 
 		void dump(std::ostream &) const override;
+
+        void gen_flat_ir(flat_executor *) override;
 	};
 }

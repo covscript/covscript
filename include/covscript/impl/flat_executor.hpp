@@ -39,6 +39,7 @@ namespace cs {
 
 		struct stack_frame {
 			scope_type type = scope_type::normal;
+			std::size_t ss = 0;
 			std::size_t pc = 0;
 
 			explicit stack_frame(scope_type t) : type(t) {}
@@ -140,17 +141,28 @@ namespace cs {
 			return instance;
 		}
 
-		void push_frame(scope_type = scope_type::normal);
+		void push_frame(scope_type = scope_type::normal, long = 0);
 
 		void pop_frame();
 
 		// Don't use it for normal frame pop
+		stack_frame &get_current_frame()
+        {
+		    return stack.top();
+        }
+
 		void stack_rewind(scope_type, bool = true);
 
 		void recover_register()
 		{
 			pc = stack.top().pc;
 		}
+
+		void recover_stack()
+        {
+            while (current_process->stack.size() > stack.top().ss)
+                current_process->stack.pop_no_return();
+        }
 
 		iterate_helper& begin_iteration()
 		{
@@ -192,7 +204,8 @@ namespace cs {
 		{
 			o << "\n## Flat Executor Info ##" << std::endl;
 			o << "\n## Stack Info ##" << std::endl;
-			o << "Scope   Stack: " << scope_stack.size() << std::endl;
+            o << "Context Stack: " << current_process->stack.size() << std::endl;
+            o << "Scope   Stack: " << scope_stack.size() << std::endl;
 			o << "Frame   Stack: " << stack.size() << std::endl;
 			o << "Iterate Stack: " << it.size() << std::endl;
 			o << "\n## Register Info ##\n" << std::endl;

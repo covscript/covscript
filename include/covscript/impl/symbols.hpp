@@ -603,10 +603,6 @@ namespace cs {
 		all = 0b1111, normal = 0b0001, loop = 0b0010, except = 0b0100, task = 0b1000
 	};
 
-	enum class task_status {
-		normal, yield, finish
-	};
-
 	class flat_executor;
 
 	class instruct_base {

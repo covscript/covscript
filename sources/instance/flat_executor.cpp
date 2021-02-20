@@ -25,12 +25,15 @@
 */
 #include <covscript/impl/statement.hpp>
 #include <covscript/impl/flat_executor.hpp>
+#include <iostream>
 
 namespace cs {
-	void flat_executor::push_frame(scope_type type)
+	void flat_executor::push_frame(scope_type type, long offset)
 	{
-		if (!stack.empty())
-			stack.top().pc = pc;
+		if (!stack.empty()) {
+		    stack.top().ss = current_process->stack.size();
+            stack.top().pc = pc + offset;
+        }
 		stack.push(type);
 		instance->storage.add_domain();
 	}
@@ -75,7 +78,7 @@ namespace cs {
 		}
 		parent->pc = tag;
 		parent->exec();
-		parent->stack_rewind(scope_type::task);
+		parent->pop_frame();
 		parent->recover_register();
 		return fcall.get();
 	}
@@ -276,7 +279,57 @@ namespace cs {
 	{
 		fe->push_ir<instruct_internal>("return", [this](flat_executor *fe) {
 			current_process->stack.top() = fe->get_instance()->parse_expr(this->mTree.root());
-			fe->end_exec();
+            fe->stack_rewind(scope_type::task, false);
+            fe->end_exec();
 		});
+	}
+
+	void statement_try::gen_flat_ir(flat_executor *fe) {
+        fe->push_scope();
+	    fe->push_ir<instruct_internal>("init try", [this](flat_executor *fe) {
+	        std::size_t entry_pc = fe->pc;
+	        fe->push_frame(scope_type::except);
+	        fe->pc += 3;
+            fe->exec();
+            fe->info(std::cerr);
+            std::cerr << "SS: " << fe->get_current_frame().ss << std::endl;
+            if (current_process->stack.size() > fe->get_current_frame().ss) {
+                std::cerr << "Exception Accepted!" << std::endl;
+                fe->pc = entry_pc + 1;
+            } else
+                fe->recover_register();
+        });
+        fe->push_ir<instruct_jump>(0);
+        instruct_jump *jmp = static_cast<instruct_jump *>(fe->get_current_ir());
+        fe->push_ir<instruct_jump>();
+        for (auto &it:mTryBody)
+            it->gen_flat_ir(fe);
+        fe->push_ir<instruct_internal>("end try", [](flat_executor *fe) {
+            fe->pop_frame();
+            fe->end_exec();
+        });
+        fe->pop_scope();
+        fe->push_ir<instruct_push_scope>();
+        fe->push_ir<instruct_internal>("init catch", [this](flat_executor *fe) {
+            fe->get_instance()->storage.add_var(mName, current_process->stack.pop());
+        });
+        for (auto &it:mCatchBody)
+            it->gen_flat_ir(fe);
+        jmp->tag = fe->pc;
+        fe->push_ir<instruct_pop_scope>();
+	}
+
+	void statement_throw::gen_flat_ir(flat_executor *fe)
+	{
+        fe->push_ir<instruct_internal>("throw", [this](flat_executor *fe) {
+            var e = fe->get_instance()->parse_expr(this->mTree.root());
+            if (e.type() != typeid(lang_error))
+                throw runtime_error("Throwing unsupported exception.");
+            fe->stack_rewind(scope_type::except);
+            fe->recover_stack();
+            fe->end_exec();
+            current_process->stack.push(e);
+            fe->info(std::cerr);
+        });
 	}
 }
