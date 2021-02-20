@@ -449,8 +449,9 @@ namespace cs {
 			}
 			else if (cmd == "end" && multi_line) {
 				multi_line = false;
-				this->run(line_buff);
-				line_buff.clear();
+				std::string line;
+				std::swap(line_buff, line);
+				this->run(line);
 			}
 			else {
 				if (cmd == "charset:ascii")
@@ -471,7 +472,7 @@ namespace cs {
 			line_buff.append(code);
 		}
 		else {
-			context->file_buff.push_back(code);
+			context->file_buff.emplace_back(code);
 			this->run(code);
 		}
 	}
