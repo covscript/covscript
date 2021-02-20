@@ -1,22 +1,22 @@
 import codec
 @begin
 var json_str =
-"{
-    \"null\":null,
-    \"bool\":true,
-    \"int\":12345,
-    \"real\":3.14,
-    \"string\":\"Hello\",
-    \"array\":[
-        {\"null\":null, \"bool\":true},
-        {\"int\":12345, \"real\":3.14}
-    ],
-    \"object\":{
-        \"bool\":true,
-        \"int\":12345,
-        \"real\":3.14
-    }
-}"
+"{" +
+    "\"null\":null," +
+    "\"bool\":true," +
+    "\"int\":12345," +
+    "\"real\":3.14," +
+    "\"string\":\"Hello\"," +
+    "\"array\":[" +
+    "    {\"null\":null, \"bool\":true},"+
+    "    {\"int\":12345, \"real\":3.14}" +
+    "]," +
+    "\"object\":{" +
+        "\"bool\":true," +
+        "\"int\":12345," +
+        "\"real\":3.14"  +
+    "}" +
+"}"
 @end
 var json = null, obj = null
 json = codec.json.from_stream(iostream.ifstream("./test.json"))
@@ -46,3 +46,4 @@ obj = {
 }.to_hash_map()
 @end
 json.to_stream(system.out)
+system.out.println("")
