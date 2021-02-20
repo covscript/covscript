@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2020 Michael Lee(李登淳)
+* Copyright (C) 2017-2021 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -466,8 +466,9 @@ namespace cs {
 			}
 			else if (cmd == "end" && multi_line) {
 				multi_line = false;
-				this->run(line_buff);
-				line_buff.clear();
+				std::string line;
+				std::swap(line_buff, line);
+				this->run(line);
 			}
 			else {
 				if (cmd == "charset:ascii")
@@ -488,7 +489,7 @@ namespace cs {
 			line_buff.append(code);
 		}
 		else {
-			context->file_buff.push_back(code);
+			context->file_buff.emplace_back(code);
 			this->run(code);
 		}
 	}

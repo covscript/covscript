@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2020 Michael Lee(李登淳)
+* Copyright (C) 2017-2021 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -32,8 +32,8 @@
 * Master
 *
 */
-#define COVSCRIPT_VERSION_NUM 3,3,4,10
-#define COVSCRIPT_VERSION_STR "3.3.4 Manis pentadactyla(Stable) Build 10"
+#define COVSCRIPT_VERSION_NUM 3,3,4,13
+#define COVSCRIPT_VERSION_STR "3.3.4 Manis pentadactyla(Stable) Build 13"
 #define COVSCRIPT_STD_VERSION 201201
 #define COVSCRIPT_API_VERSION 201201
 #define COVSCRIPT_ABI_VERSION 200203

@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2020 Michael Lee(李登淳)
+* Copyright (C) 2017-2021 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -34,7 +34,7 @@ namespace cs {
 		exception() = delete;
 
 		exception(std::size_t line, const std::string &file, const std::string &code, const std::string &what) noexcept:
-			mWhat("File \"" + file + "\", line " + std::to_string(line) + "\n\t" + code + "\n\t^\n" + what) {}
+			mWhat("File \"" + file + "\", line " + std::to_string(line) + ": " + what + "\n>\t" + code + "\n") {}
 
 		exception(const exception &) = default;
 
