@@ -52,6 +52,7 @@
 // __IPHONE_8_0.
 #include <Availability.h>
 #include <TargetConditionals.h>
+
 #endif
 
 #define PHMAP_XSTR(x) PHMAP_STR(x)
@@ -626,7 +627,9 @@
 #endif
 
 #if PHMAP_HAVE_SSSE3
+
 #include <tmmintrin.h>
+
 #endif
 
 

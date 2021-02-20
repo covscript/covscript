@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2020 Michael Lee(李登淳)
+* Copyright (C) 2017-2021 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -411,7 +411,7 @@ namespace cs_impl {
 			(*iostream_ext)
 			.add_var("char_buff",
 			         var::make_protect<type_t>([]() -> var { return std::make_shared<std::stringstream>(); },
-			                                    type_id(typeid(char_buff)), charbuff_ext))
+			                                   type_id(typeid(char_buff)), charbuff_ext))
 			.add_var("fstream", make_cni(fstream))
 			.add_var("ifstream", make_cni([](const string &path) {
 				return var::make<istream>(new std::ifstream(path, std::ios_base::in));
