@@ -74,11 +74,6 @@ namespace cs {
 		}
 
 		// Code Generating
-		void clone_irs(const flat_executor &fe)
-		{
-			irs = fe.irs;
-		}
-
 		template<typename T, typename...ArgsT>
 		void push_ir(ArgsT &&...args)
 		{
@@ -205,16 +200,6 @@ namespace cs {
 		}
 	};
 
-	class task_scheduler final {
-		struct task_context {
-			flat_executor executor;
-			context_t t_context;
-			task_context(context_t &context, flat_executor *fe) : t_context(context), executor(context->instance.get()) {
-				executor.clone_irs(*fe);
-			}
-		};
-	};
-
 	class instruct_internal final : public instruct_base {
 		std::function<void(flat_executor *)> m_exec;
 		std::string m_info;
@@ -252,6 +237,7 @@ namespace cs {
 		void dump(std::ostream &o) const override
 		{
 			switch (t) {
+			case scope_type::all:
 			case scope_type::normal:
 				o << "<push scope>\n";
 				break;

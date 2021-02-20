@@ -29,13 +29,10 @@
 
 namespace cs {
 	class instance_type final : public runtime_type {
-		friend class task_context;
 		friend class repl;
 
 		// Statements
 		std::deque<statement_base *> statements;
-
-		instance_type(const instance_type &) = default;
 	public:
 		// Status
 		bool return_fcall = false;
