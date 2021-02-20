@@ -167,6 +167,7 @@ namespace cs {
 	};
 
 	class token_base {
+		friend class compiler_type;
 	protected:
 		std::size_t line_num = 1;
 	public:

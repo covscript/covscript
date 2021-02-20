@@ -420,6 +420,16 @@ namespace cs {
 			catch (const std::exception &e) {
 				throw exception(line_num, context->file_path, line, e.what());
 			}
+			for (auto it = tokens.rbegin(); it != tokens.rend(); ++it)
+			{
+				if (*it != nullptr)
+				{
+					if ((*it)->get_type() == token_types::endline)
+						break;
+					else
+						(*it)->line_num = line_num;
+				}
+			}
 			tokens.push_back(new token_endline(line_num));
 			context->file_buff.emplace_back(line);
 			++line_num;
