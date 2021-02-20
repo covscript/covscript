@@ -34,7 +34,7 @@ namespace cs {
 		exception() = delete;
 
 		exception(std::size_t line, const std::string &file, const std::string &code, const std::string &what) noexcept:
-			mWhat("File \"" + file + "\", line " + std::to_string(line) + "\n\t" + code + "\n\t^\n" + what) {}
+			mWhat("File \"" + file + "\", line " + std::to_string(line) + ": " + what + "\n>\t" + code + "\n") {}
 
 		exception(const exception &) = default;
 

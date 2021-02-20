@@ -44,7 +44,7 @@ This project is an officially maintained Covariant Script interpreter.
 ### Platform Specified ###
 + [wiringPi](https://github.com/covscript/covscript-wiringpi)
 ## Documentation ##
-[CovScript Official Document(PDF)](http://mirrors.covariant.cn/covscript/comm_dist/cs_docs.pdf)  
+[CovScript Wiki](http://wiki.csman.info)  
 ## Installation ##
 + **[Recommend]** Download installation package from [covscript.org.cn](http://covscript.org.cn)
 + Download [nightly build installation package](https://github.com/covscript/csbuild/releases/download/schedule/covscript-amd64.deb) for debian-like system on x86_64 machine

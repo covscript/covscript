@@ -49,6 +49,8 @@ namespace cs {
 
 		explicit instance_type(context_t c) : context(std::move(c)) {}
 
+		instance_type(const instance_type &) = delete;
+
 		~instance_type() = default;
 
 		// Wrapped Method

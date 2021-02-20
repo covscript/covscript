@@ -380,15 +380,15 @@ switch context.cmd_args.at(1)
     end
     case "--help"
 @begin
-system.out.print("
-Covariant Script Package Manager "+version_str+"\n
-    --install   <path>    Install a CovScript Package/Extension\n
-    --uninstall <name>    Uninstall a CovScript Package/Extension\n
-    --list                List Installed CovScript Package/Extension\n
-    --gui                 Run Cspkg GUI.\n
-    --help                Print help infomation.\n
-    --version             Print version info.\n
-")
+system.out.print(
+    "Covariant Script Package Manager "+version_str+"\n"+
+    "    --install   <path>    Install a CovScript Package/Extension\n"+
+    "    --uninstall <name>    Uninstall a CovScript Package/Extension\n"+
+    "    --list                List Installed CovScript Package/Extension\n"+
+    "    --gui                 Run Cspkg GUI.\n"+
+    "    --help                Print help infomation.\n"+
+    "    --version             Print version info.\n"
+)
 @end
     end
     case "--version"

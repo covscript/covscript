@@ -45,12 +45,12 @@ function parse(_line)
 end
 try
 @begin
-parse("
-var a=10;
-if(system.in.input()>10){
-    system.out.println(\"OK\");
-}
-")
+parse(
+    "var a=10;"+
+    "if(system.in.input()>10){"+
+    "   system.out.println(\"OK\");"+
+    "}"
+)
 @end
 catch e
     system.out.println(e.what)

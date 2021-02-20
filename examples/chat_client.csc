@@ -1,7 +1,48 @@
-import network
-import imgui
+@charset:utf8
+import network, imgui, imgui_font
 using network
 using imgui
+# String
+function escape_string(msg)
+    var str = new string
+    foreach ch in msg
+        switch ch
+            default
+                str += ch
+            end
+            case '@'
+                str += char.from_ascii(1)
+            end
+            case ':'
+                str += char.from_ascii(2)
+            end
+            case ';'
+                str += char.from_ascii(3)
+            end
+        end
+    end
+    return str
+end
+function unescape_string(msg)
+    var str = new string
+    foreach ch in msg
+        switch ch
+            default
+                str += ch
+            end
+            case char.from_ascii(1)
+                str += '@'
+            end
+            case char.from_ascii(2)
+                str += ':'
+            end
+            case char.from_ascii(3)
+                str += ';'
+            end
+        end
+    end
+    return str
+end
 # Network
 var sock=new udp.socket
 sock.open_v4()
@@ -9,22 +50,22 @@ var server=null
 # ImGui
 system.file.remove("./imgui.ini")
 var app=window_application(0.5*imgui.get_monitor_width(0),0.5*imgui.get_monitor_height(0),"CovScript Chat Room")
+var font=add_font_extend_cn(imgui_font.source_han_sans, 18)
 style_color_light()
 var show_confirm=false
 var show_about=false
-var name=new string
+var name=host_name()
 var msg=new string
 var id=0
 function config()
     var window_opened=true
-    var combo_choice=0
-    var addr=new string
-    var port="256"
+    var port="88088"
     loop
         if app.is_closed()
             system.exit(0)
         end
         app.prepare()
+        push_font(font)
         begin_main_menu_bar()
             menu_item("CovScript Chat Room: Configure","",false)
         end_main_menu_bar()
@@ -33,39 +74,27 @@ function config()
             set_window_size(vec2(app.get_window_width(),app.get_window_height()))
             text("Welcome to CovScript Chat Room!")
             separator()
-            combo_box("Connect Method",combo_choice,{"Local","Online"})
-            switch combo_choice
-                case 0
-                    input_text("Server Port",port,128)
-                end
-                case 1
-                    input_text("Server Name",addr,128)
-                    input_text("Server Port",port,128)
-                end
-            end
+            input_text("Server Port",port,128)
             separator()
             input_text("Your Name",name,128)
             separator()
             if button("Confirm") || is_key_pressed(get_key_index(keys.enter))
                 end_window()
+                pop_font()
                 app.render()
                 break
             end
         end_window()
+        pop_font()
         app.render()
     end
-    switch combo_choice
-        case 0
-            server=udp.endpoint("127.0.0.1",port.to_number())
-        end
-        case 1
-            server=udp.resolve(addr,port)
-        end
-    end
+    server=udp.endpoint_broadcast(port.to_number())
+    sock.set_opt_broadcast(true)
 end
 function connect()
     sock.send_to("JOIN@"+name,server)
     id=sock.receive_from(32,server)
+    sock.set_opt_broadcast(false)
 end
 var message=new string
 var keyboard_focus=true
@@ -95,7 +124,7 @@ function chatroom()
         same_line()
         if button("Send") || is_key_pressed(get_key_index(keys.enter))
             if !message.empty()
-                sock.send_to("MSG@"+id+":"+message,server)
+                sock.send_to("MSG@"+id+":"+escape_string(message),server)
                 message=new string
             end
             keyboard_focus=true
@@ -139,6 +168,7 @@ config()
 connect()
 loop
     app.prepare()
+    push_font(font)
     if app.is_closed()
         sock.send_to("EXIT@"+id,server)
         system.exit(0)
@@ -185,8 +215,9 @@ loop
     var buff=sock.receive_from(1000,server)
     if buff!="NULL"
         foreach it in buff.split({';'})
-            msg+=it+"\n"
+            msg+=unescape_string(it)+"\n"
         end
     end
+    pop_font()
     app.render()
 end

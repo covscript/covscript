@@ -1,5 +1,46 @@
-import network
+import network, regex
 using network
+var personal_msg = regex.build("^@([0-9]+):(.+)$")
+function escape_string(msg)
+    var str = new string
+    foreach ch in msg
+        switch ch
+            default
+                str += ch
+            end
+            case '@'
+                str += char.from_ascii(1)
+            end
+            case ':'
+                str += char.from_ascii(2)
+            end
+            case ';'
+                str += char.from_ascii(3)
+            end
+        end
+    end
+    return str
+end
+function unescape_string(msg)
+    var str = new string
+    foreach ch in msg
+        switch ch
+            default
+                str += ch
+            end
+            case char.from_ascii(1)
+                str += '@'
+            end
+            case char.from_ascii(2)
+                str += ':'
+            end
+            case char.from_ascii(3)
+                str += ';'
+            end
+        end
+    end
+    return str
+end
 struct cilent_data
     var name=null
     var ep=null
@@ -31,9 +72,21 @@ function join(name,ep)
 end
 function recv_msg(id,msg)
     var sd=cilent_profile.at(id)
+    var umsg=unescape_string(msg)
+    var r=personal_msg.match(umsg)
     var m="["+id+"@"+sd->name+"]:"+msg
-    foreach it in cilent_profile
-        it.second->add_msg(m)
+    if !r.empty()
+        var tid=r.str(1).to_number()
+        if cilent_profile.exist(tid)
+            cilent_profile.at(id)->add_msg(m)
+            cilent_profile.at(tid)->add_msg(m)
+        else
+            cilent_profile.at(id)->add_msg("[System Information]:Target User \"" + tid + "\" does not exist!")
+        end
+    else
+        foreach it in cilent_profile
+            it.second->add_msg(m)
+        end
     end
 end
 function sync(sock,id)
@@ -49,23 +102,14 @@ function exit(id)
     broadcast("["+id+"@"+cilent_profile.at(id)->name+"] Left CovScript Chat Room.")
     cilent_profile.erase(id)
 end
-if context.cmd_args.size!=3
-    system.out.println("Argument syntax error.Usage: <method> <port>")
-    system.exit(0)
-end
+# Main
 var sock=new udp.socket
-sock.open_v4()
-switch context.cmd_args.at(1)
-    case "local"
-        sock.bind(udp.endpoint("127.0.0.1",context.cmd_args.at(2).to_number()))
-    end
-    case "online"
-        sock.bind(udp.endpoint_v4(context.cmd_args.at(2).to_number()))
-    end
-    default
-        system.out.println("Argument syntax error.Usage: <method> <port>")
-    end
+var port=88088
+if context.cmd_args.size==2
+    port=context.cmd_args.at(2).to_number()
 end
+sock.open_v4()
+sock.bind(udp.endpoint_v4(port))
 loop
     var ep=udp.endpoint_v4(0)
     var dat=sock.receive_from(500,ep).split({'@'})

@@ -45,19 +45,19 @@ end
 var data = 
 {
     # STDIN, base64 encode
-    "stdin" : base64.encode("
-        {
-            \"username\":\"mikecovlee\",
-            \"password\":\"helloworld\"
-        }
-    "),
+    "stdin" : base64.encode(
+        "{" +
+        "    \"username\":\"mikecovlee\","+
+        "    \"password\":\"helloworld\"" +
+        "}"
+    ),
     # CovScript Code, base64 encode
-    "code"  : base64.encode("
-        import codec;
-        var json = codec.json.to_var(codec.json.from_string(system.in.getline()));
-        system.out.println(\"UserName = \" + json.username);
-        system.out.println(\"Password = \" + json.password);
-    ")
+    "code"  : base64.encode(
+        "import codec;" +
+        "var json = codec.json.to_var(codec.json.from_string(system.in.getline()));" +
+        "system.out.println(\"UserName = \" + json.username);" +
+        "system.out.println(\"Password = \" + json.password);"
+    )
 }
 .to_hash_map();
 
