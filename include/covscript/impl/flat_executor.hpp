@@ -39,10 +39,10 @@ namespace cs {
 
 		struct stack_frame {
 			scope_type type = scope_type::normal;
-			std::size_t ss = 0;
-			std::size_t pc = 0;
+			// Exception Exit, Stack Size, Program Count
+			std::size_t ee = 0, ss = 0, pc = 0;
 
-			explicit stack_frame(scope_type t) : type(t) {}
+			explicit stack_frame(scope_type t, std::size_t reg_ss) : type(t), ss(reg_ss) {}
 		};
 
 		struct iterate_helper {
@@ -141,28 +141,44 @@ namespace cs {
 			return instance;
 		}
 
-		void push_frame(scope_type = scope_type::normal, long = 0);
+		void push_frame(scope_type = scope_type::normal);
 
 		void pop_frame();
 
 		// Don't use it for normal frame pop
 		stack_frame &get_current_frame()
-        {
-		    return stack.top();
-        }
+		{
+			return stack.top();
+		}
 
 		void stack_rewind(scope_type, bool = true);
 
-		void recover_register()
+		void recover_pc()
 		{
 			pc = stack.top().pc;
 		}
 
+		bool recover_ee()
+		{
+			if (stack.top().ee != 0) {
+				pc = stack.top().ee;
+				return true;
+			}
+			else
+				return false;
+		}
+
 		void recover_stack()
-        {
-            while (current_process->stack.size() > stack.top().ss)
-                current_process->stack.pop_no_return();
-        }
+		{
+			while (current_process->stack.size() > stack.top().ss)
+				current_process->stack.pop_no_return();
+		}
+
+		void handle_exception()
+		{
+			stack_rewind(scope_type::except, false);
+			recover_stack();
+		}
 
 		iterate_helper& begin_iteration()
 		{
@@ -204,8 +220,8 @@ namespace cs {
 		{
 			o << "\n## Flat Executor Info ##" << std::endl;
 			o << "\n## Stack Info ##" << std::endl;
-            o << "Context Stack: " << current_process->stack.size() << std::endl;
-            o << "Scope   Stack: " << scope_stack.size() << std::endl;
+			o << "Context Stack: " << current_process->stack.size() << std::endl;
+			o << "Scope   Stack: " << scope_stack.size() << std::endl;
 			o << "Frame   Stack: " << stack.size() << std::endl;
 			o << "Iterate Stack: " << it.size() << std::endl;
 			o << "\n## Register Info ##\n" << std::endl;
@@ -420,6 +436,59 @@ namespace cs {
 		void dump(std::ostream &o) const override
 		{
 			o << "<function definition: name = " << mName << (mIsMemFn ? ", member function" : ", regular function") << ">\n";
+		}
+	};
+
+	class instruct_exception_beg final : public instruct_base {
+		std::size_t tag = 0;
+	public:
+		instruct_exception_beg(flat_executor *fe)
+		{
+			fe->push_scope(scope_type::except);
+			fe->expect_scope_exit(&tag);
+		}
+
+		void exec(flat_executor *fe) override
+		{
+			fe->push_frame(scope_type::except);
+			++fe->pc;
+			try {
+				fe->exec();
+				if (!fe->recover_ee())
+					return;
+			}
+			catch (const lang_error& le) {
+				fe->handle_exception();
+				fe->pc = tag + 1;
+				current_process->stack.push(le);
+			}
+			fe->pop_frame();
+		}
+
+		void dump(std::ostream &o) const override
+		{
+			o << "<begin try: entry = " << tag + 2 << ">\n";
+		}
+	};
+
+	class instruct_exception_end final : public instruct_base {
+		std::size_t tag = 0;
+	public:
+		instruct_exception_end(flat_executor *fe)
+		{
+			fe->pop_scope();
+			fe->expect_scope_exit(&tag);
+		}
+
+		void exec(flat_executor *fe) override
+		{
+			fe->end_exec();
+			fe->get_current_frame().ee = tag;
+		}
+
+		void dump(std::ostream &o) const override
+		{
+			o << "<end try: exit = " << tag + 1 << ">\n";
 		}
 	};
 }

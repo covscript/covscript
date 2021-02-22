@@ -162,22 +162,24 @@ namespace cs {
 		for (auto &it:statements)
 			it->gen_flat_ir(&exec);
 		try {
-            exec.pc = 0;
-            exec.push_frame();
-            if (context->compiler->disable_optimizer) {
-                exec.print_irs(o);
-                exec.info(o);
-                if (!compile_only) {
-                    o << std::endl << "#### Begin Execution ####" << std::endl << std::endl;
-                    exec.print_exec(o);
-                }
-            } else if (!compile_only)
-                exec.exec();
-            exec.pop_frame();
-        } catch (...) {
-            exec.info(o);
-            throw;
-        }
+			exec.pc = 0;
+			exec.push_frame();
+			if (context->compiler->disable_optimizer) {
+				exec.print_irs(o);
+				exec.info(o);
+				if (!compile_only) {
+					o << std::endl << "#### Begin Execution ####" << std::endl << std::endl;
+					exec.print_exec(o);
+				}
+			}
+			else if (!compile_only)
+				exec.exec();
+			exec.pop_frame();
+		}
+		catch (...) {
+			exec.info(o);
+			throw;
+		}
 		if (!compile_only)
 			exec.info(o);
 	}
