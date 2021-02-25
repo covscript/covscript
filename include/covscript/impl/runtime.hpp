@@ -179,9 +179,11 @@ namespace cs {
 			return *this;
 		}
 
-		void mark_set_as_struct()
+		void mark_set_as_struct(bool inherited = false)
 		{
 			add_record("__PRAGMA_CS_STRUCT_DEFINITION__");
+			if (inherited)
+				add_record("parent");
 		}
 
 		template<typename T>
