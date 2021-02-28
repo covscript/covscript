@@ -1,0 +1,93 @@
+
+# Standard Library Utilities
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Copyright (C) 2017-2021 Michael Lee(李登淳)
+#
+# Email:   lee@covariant.cn, mikecovlee@163.com
+# Github:  https://github.com/mikecovlee
+# Website: http://covscript.org.cn
+
+package stdutils
+
+# Print Vector into system.out
+# Return: null
+
+function print_vec(vec)
+    system.out.print("{")
+    for i = 0, i < vec.size, ++i
+        try
+            system.out.print(vec[i])
+        catch e
+            if typeid vec[i] == typeid array
+                print_vec(vec[i])
+            else
+                system.out.print(type(vec[i]))
+            end
+        end
+        if i != vec.size - 1
+            system.out.print(", ")
+        end
+    end
+    system.out.println("}")
+end
+
+# Create Multi-Dimension Vector
+# Return: Array filled by zero
+
+function create_vec(...dim)
+    if dim.size == 0
+        throw runtime.exception("stdutils.create_vec: unexpected argument size(= 0)")
+    end
+    if dim.size > 1
+        var d = dim.pop_front()
+        if d <= 0
+            throw runtime.exception("stdutils.create_vec: unexpected dimension(<= 0)")
+        end
+        var arr_ldim = create_vec(dim...), arr = new array
+        foreach i in range(d) do arr.push_back(arr_ldim)
+        return move(arr)
+    else
+        if dim[0] <= 0
+            throw runtime.exception("stdutils.create_vec: unexpected dimension(<= 0)")
+        end
+        var arr = new array
+        foreach i in range(dim[0]) do arr.push_back(0)
+        return move(arr)
+    end
+end
+
+# Insert val before pos in vec
+# Return: iterator pointing to inserted value
+
+function insert_vec(vec, pos, val)
+    if pos >= vec.size
+        throw runtime.exception("stdutils.insert_vec: out of range(pos >= vec.size)")
+    end
+    var it = vec.begin
+    it.next_n(pos)
+    return vec.insert(it, val)
+end
+
+# Insert val in vec[pos]
+# Return: iterator pointing to vec[pos + 1]
+
+function erase_vec(vec, pos)
+    if pos >= vec.size
+        throw runtime.exception("stdutils.insert_vec: out of range(pos >= vec.size)")
+    end
+    var it = vec.begin
+    it.next_n(pos)
+    return vec.erase(it)
+end
