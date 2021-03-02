@@ -5,21 +5,21 @@
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
-* 
+*
 *     http://www.apache.org/licenses/LICENSE-2.0
-* 
+*
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-* 
-* Copyright (C) 2017-2020 Michael Lee(李登淳)
+*
+* Copyright (C) 2017-2021 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
 * and is protected by the Copyright Law of the People's Republic of China.
-* 
+*
 * Email:   lee@covariant.cn, mikecovlee@163.com
 * Github:  https://github.com/mikecovlee
 * Website: http://covscript.org.cn
@@ -28,7 +28,7 @@
 
 namespace cs {
 	class translator_type final {
-		using data_type=std::pair<std::deque<token_base *>, method_base *>;
+		using data_type = std::pair<std::deque<token_base *>, method_base *>;
 
 		static bool compare(const token_base *a, const token_base *b)
 		{
@@ -38,7 +38,7 @@ namespace cs {
 				return a == nullptr;
 			if (a->get_type() != b->get_type())
 				return false;
-			return !(a->get_type() == token_types::action) || static_cast<const token_action *>(a)->get_action() ==
+			return a->get_type() != token_types::action || static_cast<const token_action *>(a)->get_action() ==
 			       static_cast<const token_action *>(b)->get_action();
 		}
 
@@ -100,7 +100,7 @@ namespace cs {
 		static const mapping<char32_t, char32_t> escape_map;
 		static const set_t<char32_t> signals;
 		static const mapping<signal_types, int> signal_level_map;
-		static const std::vector<signal_types> signal_left_associative;
+		static const set_t<signal_types> signal_left_associative;
 
 		// Lexer
 		static bool issignal(char32_t ch)
@@ -149,11 +149,7 @@ namespace cs {
 				throw runtime_error("Get the level of null token.");
 			if (ptr->get_type() != token_types::signal)
 				throw runtime_error("Get the level of non-signal token.");
-			signal_types s = static_cast<token_signal *>(ptr)->get_signal();
-			for (auto &t:signal_left_associative)
-				if (t == s)
-					return true;
-			return false;
+			return signal_left_associative.count(static_cast<token_signal *>(ptr)->get_signal()) > 0;
 		}
 
 		void kill_brackets(std::deque<token_base *> &, std::size_t= 1);
@@ -215,7 +211,10 @@ namespace cs {
 
 		compiler_type() = delete;
 
-		explicit compiler_type(context_t c) : context(std::move(c)) {}
+		explicit compiler_type(context_t c) : context(std::move(c))
+		{
+			struct_builder::reset_counter();
+		}
 
 		compiler_type(const compiler_type &) = delete;
 

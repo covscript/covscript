@@ -5,21 +5,21 @@
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
-* 
+*
 *     http://www.apache.org/licenses/LICENSE-2.0
-* 
+*
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-* 
-* Copyright (C) 2017-2020 Michael Lee(李登淳)
+*
+* Copyright (C) 2017-2021 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
 * and is protected by the Copyright Law of the People's Republic of China.
-* 
+*
 * Email:   lee@covariant.cn, mikecovlee@163.com
 * Github:  https://github.com/mikecovlee
 * Website: http://covscript.org.cn
@@ -196,12 +196,12 @@ namespace cs_impl {
 
 	template<typename T>
 	struct hash_enum_resolver<T, true> {
-		using type=hash_if<std::size_t, T, true>;
+		using type = hash_if<std::size_t, T, true>;
 	};
 
 	template<typename T>
 	struct hash_enum_resolver<T, false> {
-		using type=hash_if<T, T, hash_helper<T>::value>;
+		using type = hash_if<T, T, hash_helper<T>::value>;
 	};
 
 	/*
@@ -230,7 +230,7 @@ namespace cs_impl {
 	template<typename T>
 	static std::size_t hash(const T &val)
 	{
-		using type=typename hash_enum_resolver<T, std::is_enum<T>::value>::type;
+		using type = typename hash_enum_resolver<T, std::is_enum<T>::value>::type;
 		return type::hash(val);
 	}
 
@@ -254,12 +254,12 @@ namespace cs_impl {
 
 	template<typename _Target>
 	struct type_conversion_cs {
-		using source_type=_Target;
+		using source_type = _Target;
 	};
 
 	template<typename _Source>
 	struct type_conversion_cpp {
-		using target_type=_Source;
+		using target_type = _Source;
 	};
 
 	template<typename _From, typename _To>
@@ -294,8 +294,8 @@ namespace cs_impl {
 
 // Be careful when you adjust the buffer size.
 	constexpr std::size_t default_allocate_buffer_size = 64;
-	template<typename T> using default_allocator_provider=std::allocator<T>;
-	template<typename T> using default_allocator=cs::allocator_type<T, default_allocate_buffer_size, default_allocator_provider>;
+	template<typename T> using default_allocator_provider = std::allocator<T>;
+	template<typename T> using default_allocator = cs::allocator_type<T, default_allocate_buffer_size, default_allocator_provider>;
 
 	class any final {
 		class baseHolder {

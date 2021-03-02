@@ -1,9 +1,9 @@
 import regex
 var reg=regex.build("\\S+")
 @begin
-var s="Some people, when confronted with a problem, think 
-\"I know, I'll use regular expressions.\"
- Now they have two problems."
+var s="Some people, when confronted with a problem, think "+
+"\"I know, I'll use regular expressions.\""+
+" Now they have two problems."
 @end
 loop
     var res=reg.search(s)

@@ -4,21 +4,21 @@
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
-* 
+*
 *     http://www.apache.org/licenses/LICENSE-2.0
-* 
+*
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-* 
-* Copyright (C) 2017-2020 Michael Lee(李登淳)
+*
+* Copyright (C) 2017-2021 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
 * and is protected by the Copyright Law of the People's Republic of China.
-* 
+*
 * Email:   lee@covariant.cn, mikecovlee@163.com
 * Github:  https://github.com/mikecovlee
 * Website: http://covscript.org.cn
@@ -48,7 +48,7 @@ namespace cs {
 			o << "\"";
 			const cs::string &str = mVal.const_val<cs::string>();
 			for (auto ch : str) {
-				if (escape_char.contains(ch))
+				if (escape_char.count(ch) > 0)
 					o << '\\' << escape_char.at(ch);
 				else
 					o << ch;
@@ -58,7 +58,7 @@ namespace cs {
 		else if (mVal.type() == typeid(char)) {
 			o << "\'";
 			char ch = mVal.const_val<char>();
-			if (escape_char.contains(ch))
+			if (escape_char.count(ch) > 0)
 				o << '\\' << escape_char.at(ch);
 			else
 				o << ch;
@@ -463,7 +463,7 @@ namespace cs {
 		{signal_types::vargs_,  20}
 	};
 
-	const std::vector<signal_types> compiler_type::signal_left_associative = {
+	const set_t<signal_types> compiler_type::signal_left_associative = {
 		signal_types::asi_, signal_types::addasi_, signal_types::subasi_, signal_types::mulasi_,
 		signal_types::divasi_, signal_types::modasi_, signal_types::powasi_
 	};

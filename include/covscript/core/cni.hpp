@@ -5,21 +5,21 @@
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
-* 
+*
 *     http://www.apache.org/licenses/LICENSE-2.0
-* 
+*
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-* 
-* Copyright (C) 2017-2020 Michael Lee(李登淳)
+*
+* Copyright (C) 2017-2021 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
 * and is protected by the Copyright Law of the People's Republic of China.
-* 
+*
 * Email:   lee@covariant.cn, mikecovlee@163.com
 * Github:  https://github.com/mikecovlee
 * Website: http://covscript.org.cn
@@ -33,12 +33,12 @@ namespace cs_impl {
 
 	template<typename T>
 	struct cni_modify {
-		using type=T;
+		using type = T;
 	};
 
 	template<typename RetT, typename...ArgsT>
 	struct cni_modify<RetT(ArgsT...)> {
-		using type=RetT(*)(ArgsT...);
+		using type = RetT(*)(ArgsT...);
 	};
 
 // Type conversion
@@ -184,7 +184,7 @@ namespace cs_impl {
 		}
 	};
 
-	template<typename _TargetT, typename _SourceT, std::size_t index> using try_convert=try_convert_and_check<_TargetT, _SourceT, typename cov::remove_constant<typename cov::remove_reference<_TargetT>::type>::type, index>;
+	template<typename _TargetT, typename _SourceT, std::size_t index> using try_convert = try_convert_and_check<_TargetT, _SourceT, typename cov::remove_constant<typename cov::remove_reference<_TargetT>::type>::type, index>;
 
 // Static argument check
 	template<typename RetT, typename...ArgsT>
@@ -345,8 +345,8 @@ namespace cs_impl {
 			template<typename X, typename RetT, typename...ArgsT>
 			static cni_holder_base *_construct(X &&val, RetT(*target_function)(ArgsT...))
 			{
-				using source_function_type=typename type_conversion_cpp<RetT>::target_type(*)(
-				                               typename type_conversion_cs<ArgsT>::source_type...);
+				using source_function_type = typename type_conversion_cpp<RetT>::target_type(*)(
+				                                 typename type_conversion_cs<ArgsT>::source_type...);
 				// Return type
 				static_assert(cni_convertible<RetT, typename type_conversion_cpp<RetT>::target_type>::value,
 				              "Invalid conversion.");
@@ -379,8 +379,8 @@ namespace cs_impl {
 			        std::forward<T>(val)))
 		{
 			// Analysis the function
-			using target_function_type=typename cov::function_parser<typename cni_modify<typename cov::remove_reference<T>::type>::type>::type::common_type;
-			using source_function_type=typename cov::function_parser<typename cni_modify<X>::type>::type::common_type;
+			using target_function_type = typename cov::function_parser<typename cni_modify<typename cov::remove_reference<T>::type>::type>::type::common_type;
+			using source_function_type = typename cov::function_parser<typename cni_modify<X>::type>::type::common_type;
 			// Check consistency
 			// Argument size
 			static_assert(

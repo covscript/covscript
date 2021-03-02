@@ -44,7 +44,7 @@ end
 function about()
 	var pic=darwin.get_drawable()
 	var str0="About This Software"
-	var buff="Copyright (C) 2020 Covariant.CN"
+	var buff="Copyright (C) 2017-2021 Michael Lee"
 	var run=true
 	while run
 		if darwin.is_kb_hit()

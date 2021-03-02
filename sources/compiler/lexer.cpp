@@ -4,21 +4,21 @@
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
-* 
+*
 *     http://www.apache.org/licenses/LICENSE-2.0
-* 
+*
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-* 
-* Copyright (C) 2017-2020 Michael Lee(李登淳)
+*
+* Copyright (C) 2017-2021 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
 * and is protected by the Copyright Law of the People's Republic of China.
-* 
+*
 * Email:   lee@covariant.cn, mikecovlee@163.com
 * Github:  https://github.com/mikecovlee
 * Website: http://covscript.org.cn
@@ -50,7 +50,11 @@ namespace cs {
 
 			std::string wide2local(const std::u32string &str) override
 			{
-				return std::string(str.begin(), str.end());
+				std::string local;
+				local.reserve(str.size());
+				for (auto ch:str)
+					local.push_back(ch);
+				return std::move(local);
 			}
 
 			bool is_identifier(char32_t ch) override
@@ -362,7 +366,7 @@ namespace cs {
 	}
 
 	class compiler_type::preprocessor final {
-		std::size_t line_num = 1;
+		std::size_t last_line_num = 1, line_num = 1;
 		bool is_annotation = false;
 		bool is_command = false;
 		bool multi_line = false;
@@ -391,8 +395,10 @@ namespace cs {
 				is_command = false;
 				if (command == "begin" && !multi_line)
 					multi_line = true;
-				else if (command == "end" && multi_line)
+				else if (command == "end" && multi_line) {
+					tokens.push_back(new token_endline(last_line_num));
 					multi_line = false;
+				}
 				else if (command == "charset:ascii")
 					encoding = charset::ascii;
 				else if (command == "charset:utf8")
@@ -403,7 +409,7 @@ namespace cs {
 					throw exception(line_num, context->file_path, command, "Wrong grammar for preprocessor command.");
 				command.clear();
 			}
-			if (multi_line || empty_buff) {
+			if (empty_buff) {
 				new_empty_line(context);
 				return;
 			}
@@ -416,9 +422,24 @@ namespace cs {
 			catch (const std::exception &e) {
 				throw exception(line_num, context->file_path, line, e.what());
 			}
-			tokens.push_back(new token_endline(line_num));
+			for (auto it = tokens.rbegin(); it != tokens.rend(); ++it) {
+				if (*it != nullptr) {
+					token_base *ptr = *it;
+					if (ptr->get_type() == token_types::signal &&
+					        static_cast<token_signal *>(ptr)->get_signal() == signal_types::endline_) {
+						ptr->line_num = line_num;
+						break;
+					}
+					else if (ptr->get_type() == token_types::endline)
+						break;
+					else
+						ptr->line_num = line_num;
+				}
+			}
+			if (!multi_line)
+				tokens.push_back(new token_endline(line_num));
 			context->file_buff.emplace_back(line);
-			++line_num;
+			last_line_num = line_num++;
 			buff.clear();
 			line.clear();
 			empty_buff = true;

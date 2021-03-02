@@ -4,21 +4,21 @@
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
-* 
+*
 *     http://www.apache.org/licenses/LICENSE-2.0
-* 
+*
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-* 
-* Copyright (C) 2017-2020 Michael Lee(李登淳)
+*
+* Copyright (C) 2017-2021 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
 * and is protected by the Copyright Law of the People's Republic of China.
-* 
+*
 * Email:   lee@covariant.cn, mikecovlee@163.com
 * Github:  https://github.com/mikecovlee
 * Website: http://covscript.org.cn
@@ -93,6 +93,7 @@ namespace cs_impl {
 	cs::namespace_t list_iterator_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t hash_map_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t pair_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t time_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t context_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t runtime_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t string_ext = cs::make_shared_namespace<cs::name_space>();
@@ -181,9 +182,11 @@ namespace cs {
 	number parse_number(const std::string &str)
 	{
 		int point_count = 0;
-		for (auto &ch:str) {
-			if (!std::isdigit(ch)) {
-				if (ch != '.' || ++point_count > 1)
+		for (std::size_t i = 0; i < str.size(); ++i) {
+			if (!std::isdigit(str[i])) {
+				if (i == 0 && str[i] == '-')
+					continue;
+				else if (str[i] != '.' || ++point_count > 1)
 					throw runtime_error("Wrong literal format.");
 			}
 		}

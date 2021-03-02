@@ -8,7 +8,7 @@
 #define MY_VFT_DLL  0x00000002L
 
 #define MY_AUTHOR_NAME "Michael Lee"
-#define MY_COPYRIGHT "Copyright (C) 2020 Michael Lee"
+#define MY_COPYRIGHT "Copyright (C) 2017-2021 Michael Lee"
 
 #define MY_VERSION COVSCRIPT_VERSION_STR
 #define MY_VER COVSCRIPT_VERSION_NUM
@@ -27,13 +27,13 @@ BEGIN \
     BEGIN  \
         BLOCK "040904b0" \
         BEGIN \
-            VALUE "CompanyName", "Covariant.CN" \
+            VALUE "CompanyName", "Covariant Script Organization" \
             VALUE "FileDescription", descr \
             VALUE "FileVersion", MY_VERSION  \
             VALUE "InternalName", intName \
             VALUE "LegalCopyright", MY_COPYRIGHT \
             VALUE "OriginalFilename", origName \
-            VALUE "ProductName", "Covariant Script Programming Language" \
+            VALUE "ProductName", "Covariant Script Interpreter" \
             VALUE "ProductVersion", MY_VERSION \
         END \
     END \
