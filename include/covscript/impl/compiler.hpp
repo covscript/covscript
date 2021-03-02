@@ -100,7 +100,7 @@ namespace cs {
 		static const mapping<char32_t, char32_t> escape_map;
 		static const set_t<char32_t> signals;
 		static const mapping<signal_types, int> signal_level_map;
-		static const std::vector<signal_types> signal_left_associative;
+		static const set_t<signal_types> signal_left_associative;
 
 		// Lexer
 		static bool issignal(char32_t ch)
