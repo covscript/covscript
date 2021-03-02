@@ -149,11 +149,7 @@ namespace cs {
 				throw runtime_error("Get the level of null token.");
 			if (ptr->get_type() != token_types::signal)
 				throw runtime_error("Get the level of non-signal token.");
-			signal_types s = static_cast<token_signal *>(ptr)->get_signal();
-			for (auto &t:signal_left_associative)
-				if (t == s)
-					return true;
-			return false;
+			return signal_left_associative.count(static_cast<token_signal *>(ptr)->get_signal()) > 0;
 		}
 
 		void kill_brackets(std::deque<token_base *> &, std::size_t= 1);
