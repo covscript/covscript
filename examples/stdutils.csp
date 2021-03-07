@@ -21,22 +21,24 @@
 
 package stdutils
 
+namespace arr
+
 # Print Vector into system.out
 # Return: null
 
-function print_vec(vec)
+function print(arr)
     system.out.print("{")
-    for i = 0, i < vec.size, ++i
+    for i = 0, i < arr.size, ++i
         try
-            system.out.print(vec[i])
+            system.out.print(arr[i])
         catch e
-            if typeid vec[i] == typeid array
-                print_vec(vec[i])
+            if typeid arr[i] == typeid array
+                print(arr[i])
             else
-                system.out.print(type(vec[i]))
+                system.out.print(type(arr[i]))
             end
         end
-        if i != vec.size - 1
+        if i != arr.size - 1
             system.out.print(", ")
         end
     end
@@ -46,21 +48,21 @@ end
 # Create Multi-Dimension Vector
 # Return: Array filled by zero
 
-function create_vec(...dim)
+function create(...dim)
     if dim.size == 0
-        throw runtime.exception("stdutils.create_vec: unexpected argument size(= 0)")
+        throw runtime.exception("stdutils.arr.create: unexpected argument size(= 0)")
     end
     if dim.size > 1
         var d = dim.pop_front()
         if d <= 0
-            throw runtime.exception("stdutils.create_vec: unexpected dimension(<= 0)")
+            throw runtime.exception("stdutils.arr.create: unexpected dimension(<= 0)")
         end
-        var arr_ldim = create_vec(dim...), arr = new array
+        var arr_ldim = create(dim...), arr = new array
         foreach i in range(d) do arr.push_back(arr_ldim)
         return move(arr)
     else
         if dim[0] <= 0
-            throw runtime.exception("stdutils.create_vec: unexpected dimension(<= 0)")
+            throw runtime.exception("stdutils.arr.create: unexpected dimension(<= 0)")
         end
         var arr = new array
         foreach i in range(dim[0]) do arr.push_back(0)
@@ -68,26 +70,28 @@ function create_vec(...dim)
     end
 end
 
-# Insert val before pos in vec
+# Insert val before pos in arr
 # Return: iterator pointing to inserted value
 
-function insert_vec(vec, pos, val)
-    if pos >= vec.size
-        throw runtime.exception("stdutils.insert_vec: out of range(pos >= vec.size)")
+function insert(arr, pos, val)
+    if pos >= arr.size
+        throw runtime.exception("stdutils.arr.insert: out of range(pos >= arr.size)")
     end
-    var it = vec.begin
+    var it = arr.begin
     it.next_n(pos)
-    return vec.insert(it, val)
+    return arr.insert(it, val)
 end
 
-# Insert val in vec[pos]
-# Return: iterator pointing to vec[pos + 1]
+# Insert val in arr[pos]
+# Return: iterator pointing to arr[pos + 1]
 
-function erase_vec(vec, pos)
-    if pos >= vec.size
-        throw runtime.exception("stdutils.insert_vec: out of range(pos >= vec.size)")
+function erase(arr, pos)
+    if pos >= arr.size
+        throw runtime.exception("stdutils.arr.insert: out of range(pos >= arr.size)")
     end
-    var it = vec.begin
+    var it = arr.begin
     it.next_n(pos)
-    return vec.erase(it)
+    return arr.erase(it)
+end
+
 end
