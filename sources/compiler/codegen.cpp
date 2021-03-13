@@ -566,9 +566,9 @@ namespace cs {
 		return new statement_return(tree, context, raw.front().back());
 	}
 
-	void method_struct::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &)
+	void method_struct::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		context->instance->storage.mark_set_as_struct();
+		context->instance->storage.mark_set_as_struct(raw.front().size() == 5);
 	}
 
 	statement_base *

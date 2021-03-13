@@ -182,9 +182,11 @@ namespace cs {
 	number parse_number(const std::string &str)
 	{
 		int point_count = 0;
-		for (auto &ch:str) {
-			if (!std::isdigit(ch)) {
-				if (ch != '.' || ++point_count > 1)
+		for (std::size_t i = 0; i < str.size(); ++i) {
+			if (!std::isdigit(str[i])) {
+				if (i == 0 && str[i] == '-')
+					continue;
+				else if (str[i] != '.' || ++point_count > 1)
 					throw runtime_error("Wrong literal format.");
 			}
 		}

@@ -34,6 +34,8 @@ class child extends base
         system.out.println("Destroy child"+this.id)
     end
     function type() override
+        system.out.print("called from child: ")
+        parent.type()
         system.out.println("child"+this.id)
     end
 end

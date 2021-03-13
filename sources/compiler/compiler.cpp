@@ -463,7 +463,7 @@ namespace cs {
 		{signal_types::vargs_,  20}
 	};
 
-	const std::vector<signal_types> compiler_type::signal_left_associative = {
+	const set_t<signal_types> compiler_type::signal_left_associative = {
 		signal_types::asi_, signal_types::addasi_, signal_types::subasi_, signal_types::mulasi_,
 		signal_types::divasi_, signal_types::modasi_, signal_types::powasi_
 	};
