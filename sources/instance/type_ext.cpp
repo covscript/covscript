@@ -28,6 +28,7 @@
 #include <covscript_impl/mozart/timer.hpp>
 #include <covscript_impl/system.hpp>
 #include <covscript/impl/impl.hpp>
+#include <algorithm>
 #include <iostream>
 #include <future>
 
@@ -154,6 +155,13 @@ namespace cs_impl {
 		}
 
 // Operations
+		void sort(array &arr, const var &func)
+		{
+			std::sort(arr.begin(), arr.end(), [&](const var &lhs, const var &rhs)->bool {
+				return invoke(func, lhs, rhs).const_val<boolean>();
+			});
+		}
+
 		var to_hash_set(const array &arr)
 		{
 			hash_set set;
@@ -209,6 +217,7 @@ namespace cs_impl {
 			.add_var("pop_front", make_cni(pop_front, true))
 			.add_var("push_back", make_cni(push_back, true))
 			.add_var("pop_back", make_cni(pop_back, true))
+			.add_var("sort", make_cni(sort, true))
 			.add_var("to_hash_set", make_cni(to_hash_set, true))
 			.add_var("to_hash_map", make_cni(to_hash_map, true))
 			.add_var("to_list", make_cni(to_list, true));
@@ -796,6 +805,13 @@ namespace cs_impl {
 			lst.unique();
 		}
 
+		void sort(list &lst, const var &func)
+		{
+			lst.sort([&](const var &lhs, const var &rhs)->bool {
+				return invoke(func, lhs, rhs).const_val<boolean>();
+			});
+		}
+
 		void init()
 		{
 			(*list_iterator_ext)
@@ -819,7 +835,8 @@ namespace cs_impl {
 			.add_var("pop_back", make_cni(pop_back, true))
 			.add_var("remove", make_cni(remove, true))
 			.add_var("reverse", make_cni(reverse, true))
-			.add_var("unique", make_cni(unique, true));
+			.add_var("unique", make_cni(unique, true))
+			.add_var("sort", make_cni(sort, true));
 		}
 	}
 	namespace math_cs_ext {
