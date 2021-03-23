@@ -3,8 +3,6 @@ cd "%~dp0\.."
 mkdir cmake-build\mingw-w64
 cd    cmake-build\mingw-w64
 cmake -G "MinGW Makefiles" ..\..
-cmake --build . --target covscript        -- -j4
-cmake --build . --target covscript_debug  -- -j4
 cmake --build . --target cs               -- -j4
 cmake --build . --target cs_dbg           -- -j4
 cd ..\..
