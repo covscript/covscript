@@ -86,6 +86,7 @@ namespace cs {
 	using list = std::list<var>;
 	using array = std::deque<var>;
 	using pair = std::pair<var, var>;
+	using hash_set = set_t<var>;
 	using hash_map = map_t<var, var>;
 	using vector = std::vector<var>;
 	using expression_t = tree_type<token_base *>;
