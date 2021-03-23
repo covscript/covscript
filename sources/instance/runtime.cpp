@@ -226,7 +226,7 @@ namespace cs {
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return boolean(a.const_val<number>() < b.const_val<number>());
-		else if (a.type() == typeid(number) && b.type() == typeid(number))
+		else if (a.type() == typeid(string) && b.type() == typeid(string))
 			return boolean(a.const_val<string>() < b.const_val<string>());
 		else
 			throw runtime_error("Unsupported operator operations(Und).");
@@ -236,7 +236,7 @@ namespace cs {
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return boolean(a.const_val<number>() > b.const_val<number>());
-		else if (a.type() == typeid(number) && b.type() == typeid(number))
+		else if (a.type() == typeid(string) && b.type() == typeid(string))
 			return boolean(a.const_val<string>() > b.const_val<string>());
 		else
 			throw runtime_error("Unsupported operator operations(Abo).");
@@ -246,7 +246,7 @@ namespace cs {
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return boolean(a.const_val<number>() <= b.const_val<number>());
-		else if (a.type() == typeid(number) && b.type() == typeid(number))
+		else if (a.type() == typeid(string) && b.type() == typeid(string))
 			return boolean(a.const_val<string>() <= b.const_val<string>());
 		else
 			throw runtime_error("Unsupported operator operations(Ueq).");
@@ -256,7 +256,7 @@ namespace cs {
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return boolean(a.const_val<number>() >= b.const_val<number>());
-		else if (a.type() == typeid(number) && b.type() == typeid(number))
+		else if (a.type() == typeid(string) && b.type() == typeid(string))
 			return boolean(a.const_val<string>() >= b.const_val<string>());
 		else
 			throw runtime_error("Unsupported operator operations(Aeq).");
