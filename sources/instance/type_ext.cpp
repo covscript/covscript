@@ -154,6 +154,16 @@ namespace cs_impl {
 		}
 
 // Operations
+		var to_hash_set(const array &arr)
+		{
+			hash_set set;
+			for (auto &it:arr) {
+				if (set.count(it) == 0)
+					set.insert(copy(it));
+			}
+			return var::make<hash_set>(std::move(set));
+		}
+
 		var to_hash_map(const array &arr)
 		{
 			hash_map map;
@@ -199,6 +209,7 @@ namespace cs_impl {
 			.add_var("pop_front", make_cni(pop_front, true))
 			.add_var("push_back", make_cni(push_back, true))
 			.add_var("pop_back", make_cni(pop_back, true))
+			.add_var("to_hash_set", make_cni(to_hash_set, true))
 			.add_var("to_hash_map", make_cni(to_hash_map, true))
 			.add_var("to_list", make_cni(to_list, true));
 		}
@@ -311,6 +322,90 @@ namespace cs_impl {
 			except_ext->add_var("what", make_cni(what, callable::types::member_visitor));
 		}
 	}
+	namespace hash_set_cs_ext {
+		using namespace cs;
+
+// Capacity
+		bool empty(const hash_set &set)
+		{
+			return set.empty();
+		}
+
+		number size(const hash_set &set)
+		{
+			return set.size();
+		}
+
+// Modifiers
+		void clear(hash_set &set)
+		{
+			set.clear();
+		}
+
+		void insert(hash_set &set, const var &val)
+		{
+			set.insert(copy(val));
+		}
+
+		void erase(hash_set &set, const var &val)
+		{
+			set.erase(val);
+		}
+
+// Lookup
+		bool exist(hash_set &set, const var &val)
+		{
+			return set.count(val) > 0;
+		}
+
+// Set Operations
+		var intersect(const hash_set &lhs, const hash_set &rhs)
+		{
+			var ret = var::make<hash_set>();
+			hash_set &s = ret.val<hash_set>();
+			for (auto &it:lhs) {
+				if (rhs.count(it) > 0)
+					s.emplace(it);
+			}
+			return ret;
+		}
+
+		var merge(const hash_set &lhs, const hash_set &rhs)
+		{
+			var ret = var::make<hash_set>(lhs);
+			hash_set &s = ret.val<hash_set>();
+			for (auto &it:rhs) {
+				if (s.count(it) == 0)
+					s.emplace(it);
+			}
+			return ret;
+		}
+
+		var subtract(const hash_set &lhs, const hash_set &rhs)
+		{
+			var ret = var::make<hash_set>(lhs);
+			hash_set &s = ret.val<hash_set>();
+			for (auto &it:rhs) {
+				if (s.count(it) > 0)
+					s.erase(it);
+			}
+			return ret;
+		}
+
+		void init()
+		{
+			(*hash_set_ext)
+			.add_var("empty", make_cni(empty, true))
+			.add_var("size", make_cni(size, callable::types::member_visitor))
+			.add_var("clear", make_cni(empty, true))
+			.add_var("insert", make_cni(insert, true))
+			.add_var("erase", make_cni(erase, true))
+			.add_var("exist", make_cni(exist, true))
+			.add_var("intersect", make_cni(intersect, true))
+			.add_var("merge", make_cni(merge, true))
+			.add_var("subtract", make_cni(subtract, true));
+		}
+	};
 	namespace hash_map_cs_ext {
 		using namespace cs;
 
@@ -1446,6 +1541,7 @@ namespace cs_impl {
 			list_cs_ext::init();
 			array_cs_ext::init();
 			pair_cs_ext::init();
+			hash_set_cs_ext::init();
 			hash_map_cs_ext::init();
 		}
 	}

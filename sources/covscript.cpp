@@ -91,6 +91,7 @@ namespace cs_impl {
 	cs::namespace_t math_const_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t list_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t list_iterator_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t hash_set_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t hash_map_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t pair_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t time_ext = cs::make_shared_namespace<cs::name_space>();
@@ -455,6 +456,8 @@ namespace cs {
 		                  cs_impl::array_ext)
 		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
 		                  cs_impl::pair_ext)
+		.add_buildin_type("hash_set", []() -> var { return var::make<hash_set>(); }, typeid(hash_set),
+		                  cs_impl::hash_set_ext)
 		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, typeid(hash_map),
 		                  cs_impl::hash_map_ext)
 		// Context
@@ -498,6 +501,8 @@ namespace cs {
 		                  cs_impl::array_ext)
 		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
 		                  cs_impl::pair_ext)
+		.add_buildin_type("hash_set", []() -> var { return var::make<hash_set>(); }, typeid(hash_set),
+		                  cs_impl::hash_set_ext)
 		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, typeid(hash_map),
 		                  cs_impl::hash_map_ext)
 		// Context
