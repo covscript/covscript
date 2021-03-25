@@ -38,6 +38,13 @@ namespace cs {
 			m_data.push();
 		}
 
+		explicit domain_manager(std::size_t size)
+		{
+			m_set.push();
+			m_data.resize(size);
+			m_data.push();
+		}
+
 		domain_manager(const domain_manager &) = delete;
 
 		~domain_manager() = default;
@@ -262,6 +269,10 @@ namespace cs {
 		map_t <std::string, callable> literals;
 	public:
 		domain_manager storage;
+
+		runtime_type() = default;
+
+		explicit runtime_type(std::size_t size) : storage(size) {}
 
 		void add_string_literal(const std::string &literal, const callable &func)
 		{

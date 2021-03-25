@@ -164,12 +164,16 @@ namespace cs {
 				var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
 				if (val.type() == typeid(callable)) {
 					const callable &func = val.const_val<callable>();
-					if (func.type() == callable::types::member_visitor) {
+					switch (func.type()) {
+					case callable::types::member_visitor: {
 						vector args{a};
 						return func.call(args);
 					}
-					else
+					case callable::types::force_regular:
+						throw runtime_error("Cannot call regular function as member function.");
+					default:
 						return var::make_protect<object_method>(a, val, func.is_request_fold());
+					}
 				}
 				else
 					return val;
