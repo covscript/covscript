@@ -410,9 +410,9 @@ namespace cs_impl {
 			.add_var("insert", make_cni(insert, true))
 			.add_var("erase", make_cni(erase, true))
 			.add_var("exist", make_cni(exist, true))
-			.add_var("intersect", make_cni(intersect, true))
-			.add_var("merge", make_cni(merge, true))
-			.add_var("subtract", make_cni(subtract, true));
+			.add_var("intersect", make_cni(intersect, callable::types::force_regular))
+			.add_var("merge", make_cni(merge, callable::types::force_regular))
+			.add_var("subtract", make_cni(subtract, callable::types::force_regular));
 		}
 	};
 	namespace hash_map_cs_ext {

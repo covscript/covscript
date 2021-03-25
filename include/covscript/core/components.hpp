@@ -52,6 +52,30 @@ namespace cs {
 		}
 	};
 
+	class compile_error final : public std::exception {
+		std::string mWhat = "Compile Error";
+	public:
+		compile_error() = default;
+
+		explicit compile_error(const std::string &str) noexcept:
+			mWhat("Compile Error: " + str) {}
+
+		compile_error(const compile_error &) = default;
+
+		compile_error(compile_error &&) noexcept = default;
+
+		~compile_error() override = default;
+
+		compile_error &operator=(const compile_error &) = default;
+
+		compile_error &operator=(compile_error &&) = default;
+
+		const char *what() const noexcept override
+		{
+			return this->mWhat.c_str();
+		}
+	};
+
 	class runtime_error final : public std::exception {
 		std::string mWhat = "Runtime Error";
 	public:
@@ -172,10 +196,20 @@ namespace cs {
 	};
 
 // Static Stack
-	template<typename T, std::size_t m_size = 512>
+	template<typename T, template<typename> class allocator_t=std::allocator>
 	class stack_type final {
-		typename std::aligned_storage<sizeof(T), alignof(T)>::type m_data[m_size];
+		using aligned_type = typename std::aligned_storage<sizeof(T), alignof(T)>::type;
 		T *m_start = nullptr, *m_current = nullptr;
+		allocator_t<aligned_type> m_alloc;
+		aligned_type *m_data = nullptr;
+		std::size_t m_size = 0;
+
+		void destroy()
+		{
+			while (m_current != m_start)
+				(--m_current)->~T();
+			m_alloc.deallocate(m_data, m_size);
+		}
 	public:
 		class iterator final {
 			friend class stack_type;
@@ -225,14 +259,26 @@ namespace cs {
 			}
 		};
 
-		stack_type() : m_start(reinterpret_cast<T *>(m_data)), m_current(m_start) {}
+		void resize(std::size_t size)
+		{
+			if (m_data != nullptr)
+				destroy();
+			m_size = size;
+			m_data = m_alloc.allocate(m_size);
+			m_start = reinterpret_cast<T *>(m_data);
+			m_current = m_start;
+		}
+
+		stack_type()
+		{
+			resize(512);
+		}
 
 		stack_type(const stack_type &) = delete;
 
 		~stack_type()
 		{
-			while (m_current != m_start)
-				(--m_current)->~T();
+			destroy();
 		}
 
 		inline bool empty() const
