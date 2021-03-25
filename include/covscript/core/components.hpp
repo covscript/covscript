@@ -52,6 +52,30 @@ namespace cs {
 		}
 	};
 
+	class compile_error final : public std::exception {
+		std::string mWhat = "Compile Error";
+	public:
+		compile_error() = default;
+
+		explicit compile_error(const std::string &str) noexcept:
+			mWhat("Compile Error: " + str) {}
+
+		compile_error(const compile_error &) = default;
+
+		compile_error(compile_error &&) noexcept = default;
+
+		~compile_error() override = default;
+
+		compile_error &operator=(const compile_error &) = default;
+
+		compile_error &operator=(compile_error &&) = default;
+
+		const char *what() const noexcept override
+		{
+			return this->mWhat.c_str();
+		}
+	};
+
 	class runtime_error final : public std::exception {
 		std::string mWhat = "Runtime Error";
 	public:

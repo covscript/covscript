@@ -171,7 +171,7 @@ namespace cs {
 	public:
 		using function_type = std::function<var(vector &)>;
 		enum class types {
-			normal, request_fold, member_fn, member_visitor
+			normal, request_fold, member_fn, member_visitor, force_regular
 		};
 	private:
 		function_type mFunc;
@@ -886,7 +886,7 @@ namespace cs {
 		if (extensions.get() != nullptr)
 			return extensions->get_var(name);
 		else
-			throw runtime_error("Type does not support the extension");
+			throw runtime_error("Type dosen't have extension field.");
 	}
 
 // Internal Garbage Collection
