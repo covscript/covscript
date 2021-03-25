@@ -1185,6 +1185,16 @@ namespace cs_impl {
 				throw cs::lang_error("Invoke non-callable object.");
 		}
 
+		void link_var(const context_t &context, const string &a, const var &b)
+		{
+			context->instance->storage.get_var(a) = b;
+		}
+
+		void unlink_var(const context_t &context, const string &a)
+		{
+			context->instance->storage.get_var(a) = copy(null_pointer);
+		}
+
 		void init()
 		{
 			(*runtime_ext)
@@ -1214,7 +1224,9 @@ namespace cs_impl {
 			.add_var("cmd_args", make_cni(cmd_args, callable::types::member_visitor))
 			.add_var("import", make_cni(import, true))
 			.add_var("source_import", make_cni(source_import, true))
-			.add_var("add_literal", make_cni(add_string_literal, true));
+			.add_var("add_literal", make_cni(add_string_literal, true))
+			.add_var("link_var", make_cni(link_var))
+			.add_var("unlink_var", make_cni(unlink_var));
 		}
 	}
 	namespace string_cs_ext {
