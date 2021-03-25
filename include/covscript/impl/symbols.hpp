@@ -161,7 +161,7 @@ namespace cs {
 		const T &match(const Key &k) const
 		{
 			if (!exist(k))
-				throw runtime_error("Undefined Mapping.");
+				throw compile_error("Undefined Mapping.");
 			return mDat.at(k);
 		}
 	};
@@ -259,7 +259,7 @@ namespace cs {
 		explicit token_signal(signal_types t) : mType(t)
 		{
 			if (t == signal_types::error_)
-				throw runtime_error("Wrong grammar for signals.");
+				throw compile_error("Unknown signal.");
 		}
 
 		token_signal(signal_types t, std::size_t line) : token_base(line), mType(t) {}

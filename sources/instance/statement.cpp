@@ -638,6 +638,8 @@ namespace cs {
 			foreach_helper<list, var>(context, this->mIt, obj, this->mBlock);
 		else if (obj.type() == typeid(array))
 			foreach_helper<array, var>(context, this->mIt, obj, this->mBlock);
+		else if (obj.type() == typeid(hash_set))
+			foreach_helper<hash_set, var>(context, this->mIt, obj, this->mBlock);
 		else if (obj.type() == typeid(hash_map))
 			foreach_helper<hash_map, pair>(context, this->mIt, obj, this->mBlock);
 		else if (obj.type() == typeid(range_type))
