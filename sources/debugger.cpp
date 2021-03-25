@@ -89,6 +89,7 @@ int covscript_args(int args_size, char *args[])
 {
 	int expect_log_path = 0;
 	int expect_import_path = 0;
+	int expect_stack_resize = 0;
 	int index = 1;
 	for (; index < args_size; ++index) {
 		if (expect_log_path == 1) {
@@ -98,6 +99,10 @@ int covscript_args(int args_size, char *args[])
 		else if (expect_import_path == 1) {
 			cs::current_process->import_path += cs::path_delimiter + cs::process_path(args[index]);
 			expect_import_path = 2;
+		}
+		else if (expect_stack_resize == 1) {
+			cs::current_process->resize_stack(std::stoul(args[index]));
+			expect_stack_resize = 2;
 		}
 		else if (args[index][0] == '-') {
 			if ((std::strcmp(args[index], "--help") == 0 || std::strcmp(args[index], "-h") == 0) &&
@@ -115,13 +120,16 @@ int covscript_args(int args_size, char *args[])
 			else if ((std::strcmp(args[index], "--import-path") == 0 || std::strcmp(args[index], "-i") == 0) &&
 			         expect_import_path == 0)
 				expect_import_path = 1;
+			else if ((std::strcmp(args[index], "--stack-resize") == 0 || std::strcmp(args[index], "-S") == 0) &&
+			         expect_stack_resize == 0)
+				expect_stack_resize = 1;
 			else
 				throw cs::fatal_error("argument syntax error.");
 		}
 		else
 			break;
 	}
-	if (expect_log_path == 1 || expect_import_path == 1)
+	if (expect_log_path == 1 || expect_import_path == 1 || expect_import_path == 1)
 		throw cs::fatal_error("argument syntax error.");
 	return index;
 }
@@ -413,12 +421,13 @@ void covscript_main(int args_size, char *args[])
 		cs::current_process->import_path += cs::path_delimiter + cs::get_import_path();
 		if (show_help_info) {
 			std::cout << "Usage: cs_dbg [options...] <FILE>\n" << "Options:\n";
-			std::cout << "    Option               Mnemonic   Function\n";
-			std::cout << "  --help                -h          Show help infomation\n";
-			std::cout << "  --version             -v          Show version infomation\n";
-			std::cout << "  --wait-before-exit    -w          Wait before process exit\n";
-			std::cout << "  --log-path    <PATH>  -l <PATH>   Set the log path\n";
-			std::cout << "  --import-path <PATH>  -i <PATH>   Set the import path\n";
+			std::cout << "    Option                Mnemonic   Function\n";
+			std::cout << "  --help                 -h          Show help infomation\n";
+			std::cout << "  --version              -v          Show version infomation\n";
+			std::cout << "  --wait-before-exit     -w          Wait before process exit\n";
+			std::cout << "  --stack-resize <SIZE>  -S <SIZE>   Reset the size of runtime stack\n";
+			std::cout << "  --log-path     <PATH>  -l <PATH>   Set the log path\n";
+			std::cout << "  --import-path  <PATH>  -i <PATH>   Set the import path\n";
 			std::cout << std::endl;
 			return;
 		}

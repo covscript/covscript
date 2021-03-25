@@ -46,6 +46,8 @@ namespace cs {
 
 		explicit instance_type(context_t c) : context(std::move(c)) {}
 
+		instance_type(context_t c, std::size_t stack_size) : context(std::move(c)), runtime_type(stack_size) {}
+
 		instance_type(const instance_type &) = delete;
 
 		~instance_type() = default;

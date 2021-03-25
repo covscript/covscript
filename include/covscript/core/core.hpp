@@ -86,10 +86,21 @@ namespace cs {
 // Import Path
 		std::string import_path = ".";
 // Stack
+		std::size_t stack_size = 512;
+
 		stack_type<var> stack;
 #ifdef CS_DEBUGGER
 		stack_type<std::string> stack_backtrace;
 #endif
+// Stack Resize must before any context instance start
+		void resize_stack(std::size_t size)
+		{
+			stack_size = size;
+			stack.resize(size);
+#ifdef CS_DEBUGGER
+			stack_backtrace.resize(size);
+#endif
+		}
 
 // Event Handling
 		static void cleanup_context();
