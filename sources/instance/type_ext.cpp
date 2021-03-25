@@ -157,7 +157,7 @@ namespace cs_impl {
 // Operations
 		void sort(array &arr, const var &func)
 		{
-			std::sort(arr.begin(), arr.end(), [&](const var &lhs, const var &rhs)->bool {
+			std::sort(arr.begin(), arr.end(), [&](const var &lhs, const var &rhs) -> bool {
 				return invoke(func, lhs, rhs).const_val<boolean>();
 			});
 		}
@@ -807,7 +807,7 @@ namespace cs_impl {
 
 		void sort(list &lst, const var &func)
 		{
-			lst.sort([&](const var &lhs, const var &rhs)->bool {
+			lst.sort([&](const var &lhs, const var &rhs) -> bool {
 				return invoke(func, lhs, rhs).const_val<boolean>();
 			});
 		}
@@ -1192,7 +1192,8 @@ namespace cs_impl {
 
 		void unlink_var(const context_t &context, const string &a)
 		{
-			context->instance->storage.get_var(a) = copy(null_pointer);
+			var &_a = context->instance->storage.get_var(a);
+			_a = copy(_a);
 		}
 
 		void init()

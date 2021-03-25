@@ -167,7 +167,19 @@ namespace cs {
 
 	statement_base *method_var::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		return new statement_var(static_cast<token_expr *>(raw.front().at(1))->get_tree(), context, raw.front().back());
+		return new statement_var(static_cast<token_expr *>(raw.front().at(1))->get_tree(), context, false,
+		                         raw.front().back());
+	}
+
+	void method_link::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	{
+		context->instance->check_define_var(static_cast<token_expr *>(raw.front().at(1))->get_tree().root());
+	}
+
+	statement_base *method_link::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	{
+		return new statement_var(static_cast<token_expr *>(raw.front().at(1))->get_tree(), context, true,
+		                         raw.front().back());
 	}
 
 	void method_constant::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)

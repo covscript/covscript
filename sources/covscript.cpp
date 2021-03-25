@@ -366,6 +366,8 @@ namespace cs {
 		// Var Grammar
 		.add_method({new token_action(action_types::var_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_var)
+		.add_method({new token_action(action_types::link_), new token_expr(tree_type<token_base *>()),
+			            new token_endline(0)}, new method_link)
 		.add_method({new token_action(action_types::constant_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)},
 		new method_constant)

@@ -1,13 +1,21 @@
+function test(a)
+    ++a
+end
+
+function test_unlink(a)
+    context.unlink_var("a")
+    ++a
+end
+
 var a = 10
-var b = {20}
-context.link_var("a", b[0])
-++a
+test(a)
 system.out.println(a)
-system.out.println(b[0])
-a = "Hello"
+test_unlink(a)
 system.out.println(a)
-system.out.println(b[0])
-context.unlink_var("a")
-a = 10
+
+link b = a
+++b
 system.out.println(a)
-system.out.println(b[0])
+context.unlink_var("b")
+++b
+system.out.println(a)

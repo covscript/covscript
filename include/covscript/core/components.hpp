@@ -210,6 +210,7 @@ namespace cs {
 				(--m_current)->~T();
 			m_alloc.deallocate(m_data, m_size);
 		}
+
 	public:
 		class iterator final {
 			friend class stack_type;

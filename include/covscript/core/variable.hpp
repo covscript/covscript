@@ -249,7 +249,8 @@ namespace cs_impl {
 	template<typename T>
 	static cs::namespace_t &get_ext()
 	{
-		throw cs::runtime_error(std::string("Target type \"") + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + "\" dosen't have extension field.");
+		throw cs::runtime_error(std::string("Target type \"") + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) +
+		                        "\" dosen't have extension field.");
 	}
 
 	template<typename _Target>

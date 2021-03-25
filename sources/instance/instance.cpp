@@ -233,7 +233,7 @@ namespace cs {
 		}
 	}
 
-	void instance_type::parse_define_var(tree_type<token_base *>::iterator it, bool constant)
+	void instance_type::parse_define_var(tree_type<token_base *>::iterator it, bool constant, bool link)
 	{
 		if (it.data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
@@ -246,7 +246,10 @@ namespace cs {
 			case signal_types::asi_: {
 				const var &val = constant ? static_cast<token_value *>(it.right().data())->get_value() : parse_expr(
 				                     it.right());
-				storage.add_var(static_cast<token_id *>(it.left().data())->get_id(), constant ? val : copy(val),
+				if (link && val.is_protect())
+					throw runtime_error("Wrong grammar for variable definition: link with protected value.");
+				storage.add_var(static_cast<token_id *>(it.left().data())->get_id(),
+				                constant || link ? val : copy(val),
 				                constant);
 				break;
 			}

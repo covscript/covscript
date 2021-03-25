@@ -87,10 +87,12 @@ namespace cs {
 
 	class statement_var final : public statement_base {
 		tree_type<token_base *> mTree;
+		bool link = false;
 	public:
 		statement_var() = delete;
 
-		statement_var(tree_type<token_base *> tree, context_t c, token_base *ptr) : statement_base(std::move(c), ptr),
+		statement_var(tree_type<token_base *> tree, context_t c, bool _l, token_base *ptr) : statement_base(
+			    std::move(c), ptr), link(_l),
 			mTree(std::move(tree)) {}
 
 		statement_types get_type() const noexcept override

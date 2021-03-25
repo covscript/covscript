@@ -143,6 +143,25 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
+	class method_link final : public method_base {
+	public:
+		using method_base::method_base;
+
+		method_types get_type() const noexcept override
+		{
+			return method_types::single;
+		}
+
+		statement_types get_target_type() const noexcept override
+		{
+			return statement_types::link_;
+		}
+
+		void preprocess(const context_t &, const std::deque<std::deque<token_base *>> &) override;
+
+		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
+	};
+
 	class method_constant final : public method_base {
 	public:
 		using method_base::method_base;

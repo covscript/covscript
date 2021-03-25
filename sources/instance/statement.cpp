@@ -168,14 +168,14 @@ namespace cs {
 	void statement_var::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
-		context->instance->parse_define_var(mTree.root());
+		context->instance->parse_define_var(mTree.root(), false, link);
 	}
 
 	void statement_var::dump(std::ostream &o) const
 	{
 		o << "< Var: ";
 		compiler_type::dump_expr(mTree.root(), o);
-		o << " >\n";
+		o << (link ? ", type = link" : "") << " >\n";
 	}
 
 	void statement_constant::run_impl()
