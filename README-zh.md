@@ -42,6 +42,7 @@
 
 + [Dear ImGui 图形用户界面](https://github.com/covscript/covscript-imgui)
 + [Darwin 通用字符图形库](https://github.com/covscript/covscript-darwin)
++ [CovScript 通用数据库](https://github.com/covscript/covscript-database)
 + [Base64/Json 编解码](https://github.com/covscript/covscript-codec)
 + [LibMozart 进程库](https://github.com/covscript/covscript-process)
 + [SQLite3 数据库](https://github.com/covscript/covscript-sqlite)
@@ -49,7 +50,6 @@
 + [ASIO 网络库](https://github.com/covscript/covscript-network)
 + [cURL 网络库](https://github.com/covscript/covscript-curl)
 + [正则表达式](https://github.com/covscript/covscript-regex)
-+ [流式 API](https://github.com/covscript/covscript-streams)
 
 ### 平台依赖 ###
 
@@ -100,6 +100,7 @@
 `--help`|`-h`|显示帮助信息
 `--version`|`-v`|显示版本信息
 `--wait-before-exit`|`-w`|等待进程退出
+`--stack-resize <SIZE>`|`-S <SIZE>`|重设运行时栈大小
 `--log-path <PATH>`|`-l <PATH>` |设置日志输出路径
 `--import-path <PATH>`|`-i <PATH>`|设置引入查找路径
 
@@ -116,6 +117,7 @@
 `--help`|`-h`|显示帮助信息
 `--version`|`-v`|显示版本信息
 `--wait-before-exit`|`-w`|等待进程退出
+`--stack-resize <SIZE>`|`-S <SIZE>`|重设运行时栈大小
 `--log-path <PATH>`|`-l <PATH>`|设置日志路径
 `--import-path <PATH>`|`-i <PATH>`|设置引入查找路径
 
