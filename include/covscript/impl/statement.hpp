@@ -66,6 +66,8 @@ namespace cs {
 		void run_impl() override;
 
 		void dump(std::ostream &) const override;
+
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_involve final : public statement_base {
@@ -85,6 +87,8 @@ namespace cs {
 		void run_impl() override;
 
 		void dump(std::ostream &) const override;
+
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_var final : public statement_base {
@@ -124,6 +128,8 @@ namespace cs {
 		void run_impl() override;
 
 		void dump(std::ostream &) const override;
+
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_break final : public statement_base {
@@ -206,6 +212,8 @@ namespace cs {
 		void run_impl() override;
 
 		void dump(std::ostream &) const override;
+
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_if final : public statement_base {
@@ -299,6 +307,8 @@ namespace cs {
 		void run_impl() override;
 
 		void dump(std::ostream &) const override;
+
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_case final : public statement_base {
@@ -532,6 +542,8 @@ namespace cs {
 		void run_impl() override;
 
 		void dump(std::ostream &) const override;
+
+		void gen_flat_ir(flat_executor *) override;
 	};
 
 	class statement_function final : public statement_base {

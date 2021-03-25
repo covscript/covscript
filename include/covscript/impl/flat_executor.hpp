@@ -301,14 +301,54 @@ namespace cs {
 		}
 	};
 
-	class instruct_var final : public instruct_base {
-		tree_type<token_base *> tree;
+	class instruct_import final : public instruct_base {
+		std::vector<std::pair<std::string, var>> m_var_list;
 	public:
-		instruct_var(flat_executor *, const tree_type<token_base *> &t) : tree(t) {}
+		template<typename T>
+		instruct_import(flat_executor *, T &&vlist) : m_var_list(std::forward<T>(vlist)) {}
 
 		void exec(flat_executor *fe) override
 		{
-			fe->get_instance()->parse_define_var(tree.root());
+			for (auto &val:m_var_list)
+				fe->get_instance()->storage.add_var(val.first, val.second, true);
+		}
+
+		void dump(std::ostream &o) const override
+		{
+			o << "<import>\n";
+		}
+	};
+
+	class instruct_involve final : public instruct_base {
+		tree_type<token_base *> mTree;
+		bool mOverride = false;
+	public:
+		instruct_involve(flat_executor *, const tree_type<token_base *> &t, bool c) : mTree(t), mOverride(c) {}
+
+		void exec(flat_executor *fe) override
+		{
+			var ns = fe->get_instance()->parse_expr(mTree.root(), true);
+			if (ns.type() == typeid(namespace_t))
+				fe->get_instance()->storage.involve_domain(ns.const_val<namespace_t>()->get_domain(), mOverride);
+			else
+				throw runtime_error("Only support involve namespace.");
+		}
+
+		void dump(std::ostream &o) const override
+		{
+			o << "<using>\n";
+		}
+	};
+
+	class instruct_var final : public instruct_base {
+		tree_type<token_base *> tree;
+		bool constant = false;
+	public:
+		instruct_var(flat_executor *, const tree_type<token_base *> &t, bool c) : tree(t), constant(c) {}
+
+		void exec(flat_executor *fe) override
+		{
+			fe->get_instance()->parse_define_var(tree.root(), constant);
 		}
 
 		void dump(std::ostream &o) const override

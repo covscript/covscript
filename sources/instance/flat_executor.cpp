@@ -85,9 +85,24 @@ namespace cs {
 		fe->push_ir<instruct_eval>(mTree);
 	}
 
+	void statement_import::gen_flat_ir(flat_executor *fe)
+	{
+		fe->push_ir<instruct_import>(m_var_list);
+	}
+
+	void statement_involve::gen_flat_ir(flat_executor *fe)
+	{
+		fe->push_ir<instruct_involve>(mTree, mOverride);
+	}
+
 	void statement_var::gen_flat_ir(flat_executor *fe)
 	{
-		fe->push_ir<instruct_var>(mTree);
+		fe->push_ir<instruct_var>(mTree, false);
+	}
+
+	void statement_constant::gen_flat_ir(flat_executor *fe)
+	{
+		fe->push_ir<instruct_var>(mTree, true);
 	}
 
 	void statement_break::gen_flat_ir(flat_executor *fe)
