@@ -25,6 +25,7 @@
 */
 #include <covscript/impl/compiler.hpp>
 #include <codecvt>
+#include <cwctype>
 #include <climits>
 
 namespace cs {
