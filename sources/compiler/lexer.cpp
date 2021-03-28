@@ -25,7 +25,6 @@
 */
 #include <covscript/impl/compiler.hpp>
 #include <codecvt>
-#include <cwctype>
 #include <climits>
 
 namespace cs {
@@ -97,7 +96,7 @@ namespace cs {
 		};
 
 		class gbk final : public charset {
-			inline char32_t set_zero(char32_t ch)
+			static inline char32_t set_zero(char32_t ch)
 			{
 				return ch & 0x0000ffff;
 			}

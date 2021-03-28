@@ -26,7 +26,6 @@
 
 #include <covscript_impl/dirent/dirent.hpp>
 #include <covscript_impl/system.hpp>
-#include <sys/stat.h>
 #include <fcntl.h>
 
 namespace cs_system_impl {

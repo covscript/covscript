@@ -374,7 +374,7 @@ namespace cs {
 	public:
 		token_literal() = delete;
 
-		token_literal(const std::string &data, const std::string &literal) : m_data(data), m_literal(literal) {}
+		token_literal(std::string data, std::string literal) : m_data(std::move(data)), m_literal(std::move(literal)) {}
 
 		token_types get_type() const noexcept override
 		{

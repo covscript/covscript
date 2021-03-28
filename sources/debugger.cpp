@@ -177,7 +177,7 @@ public:
 		return m_id;
 	}
 
-	void replace_pending(const std::string &name, cs::var function)
+	void replace_pending(const std::string &name, const cs::var &function)
 	{
 		if (m_pending.count(name) > 0) {
 			const cs::callable::function_type &target = function.const_val<cs::callable>().get_raw_data();

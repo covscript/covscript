@@ -40,7 +40,7 @@ CNI_ROOT_NAMESPACE {
             throw;
         }
         set_protect(val, level);
-    });
+    })
 
     CNI_V(modify_mem_fn, [](cs::object_method &om, const cs::var &target) {
         if (target.type() == typeid(cs::object_method))
@@ -52,7 +52,7 @@ CNI_ROOT_NAMESPACE {
                             cs::callable::types::member_fn);
         else
             throw cs::lang_error("Not a callable object!");
-    });
+    })
 
     void proxy(cs::type_t &type, const cs::array &arr) {
         cs::map_t<cs::string, cs::var> map;
@@ -84,5 +84,5 @@ CNI_ROOT_NAMESPACE {
         };
     }
 
-    CNI(proxy);
+    CNI(proxy)
 }

@@ -414,7 +414,7 @@ namespace cs_impl {
 			.add_var("merge", make_cni(merge, callable::types::force_regular))
 			.add_var("subtract", make_cni(subtract, callable::types::force_regular));
 		}
-	};
+	}
 	namespace hash_map_cs_ext {
 		using namespace cs;
 

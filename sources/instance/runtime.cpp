@@ -139,13 +139,10 @@ namespace cs {
 			switch (a.const_val<constant_values>()) {
 			case constant_values::global_namespace:
 				return storage.get_var_global(static_cast<token_id *>(b)->get_id());
-				break;
 			case constant_values::local_namepace:
 				return storage.get_var_current(static_cast<token_id *>(b)->get_id());
-				break;
 			default:
 				throw runtime_error("Unsupported operator operations(Dot).");
-				break;
 			}
 		}
 		else if (a.type() == typeid(namespace_t))
@@ -338,7 +335,7 @@ namespace cs {
 			throw runtime_error("Unsupported operator operations(Not).");
 	}
 
-	var runtime_type::parse_inc(var a, var b)
+	var runtime_type::parse_inc(const var &a, const var &b)
 	{
 		if (a.usable()) {
 			if (b.usable())
@@ -354,7 +351,7 @@ namespace cs {
 		}
 	}
 
-	var runtime_type::parse_dec(var a, var b)
+	var runtime_type::parse_dec(const var &a, const var &b)
 	{
 		if (a.usable()) {
 			if (b.usable())
@@ -411,7 +408,7 @@ namespace cs {
 			throw runtime_error("Unsupported operator operations(Fcall).");
 	}
 
-	var runtime_type::parse_access(var a, const var &b)
+	var runtime_type::parse_access(const var &a, const var &b)
 	{
 		if (a.type() == typeid(array)) {
 			if (b.type() != typeid(number))

@@ -244,7 +244,7 @@ namespace cs {
 				return *this;
 			}
 
-			inline const iterator operator++(int) noexcept
+			inline iterator operator++(int) noexcept
 			{
 				return iterator(m_ptr--);
 			}
@@ -451,10 +451,11 @@ namespace cs {
 			friend class tree_type;
 
 			tree_node *mData = nullptr;
-		public:
-			iterator() = default;
 
 			iterator(tree_node *ptr) : mData(ptr) {}
+
+		public:
+			iterator() = default;
 
 			iterator(const iterator &) = default;
 

@@ -24,13 +24,10 @@
 * Website: http://covscript.org.cn
 */
 
-#include <Windows.h>
 #include <direct.h>
 #include <conio.h>
-#include <cstring>
 #include <cstdlib>
 #include <string>
-#include <cstdio>
 #include <io.h>
 
 namespace cs_system_impl {

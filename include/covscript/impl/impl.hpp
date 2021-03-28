@@ -105,13 +105,13 @@ namespace cs {
 
 		void reset_status()
 		{
-			context_t __context = context;
-			charset __encoding = encoding;
-			std::size_t __line_num = line_num;
+			context_t _context = context;
+			charset _encoding = encoding;
+			std::size_t _line_num = line_num;
 			this->~repl();
-			::new(this) repl(__context);
-			encoding = __encoding;
-			line_num = __line_num;
+			::new(this) repl(_context);
+			encoding = _encoding;
+			line_num = _line_num;
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
 		}

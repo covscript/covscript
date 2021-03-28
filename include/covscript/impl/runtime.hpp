@@ -356,13 +356,13 @@ namespace cs {
 
 		var parse_not(const var &);
 
-		var parse_inc(var, var);
+		var parse_inc(const var &, const var &);
 
-		var parse_dec(var, var);
+		var parse_dec(const var &, const var &);
 
 		var parse_fcall(const var &, token_base *);
 
-		var parse_access(var, const var &);
+		var parse_access(const var &, const var &);
 
 		var parse_expr(const tree_type<token_base *>::iterator &, bool= false);
 	};
