@@ -148,7 +148,7 @@ namespace cs {
 		else if (a.type() == typeid(namespace_t))
 			return a.val<namespace_t>()->get_var(static_cast<token_id *>(b)->get_id());
 		else if (a.type() == typeid(type_t))
-			return a.val<type_t>().get_var(static_cast<token_id *>(b)->get_id());
+			return a.const_val<type_t>().get_var(static_cast<token_id *>(b)->get_id());
 		else if (a.type() == typeid(structure)) {
 			var &val = a.val<structure>().get_var(static_cast<token_id *>(b)->get_id());
 			if (val.type() == typeid(callable) && val.const_val<callable>().is_member_fn())
