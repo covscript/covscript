@@ -36,33 +36,13 @@
     + 高效的内存管理系统
     + 引用计数垃圾回收器
 
-## 库环境 ##
-
-### 标准库 ##
-
-+ [Dear ImGui 图形用户界面](https://github.com/covscript/covscript-imgui)
-+ [Darwin 通用字符图形库](https://github.com/covscript/covscript-darwin)
-+ [CovScript 通用数据库](https://github.com/covscript/covscript-database)
-+ [Base64/Json 编解码](https://github.com/covscript/covscript-codec)
-+ [LibMozart 进程库](https://github.com/covscript/covscript-process)
-+ [SQLite3 数据库](https://github.com/covscript/covscript-sqlite)
-+ [Zip 压缩文件](https://github.com/covscript/covscript-zip)
-+ [ASIO 网络库](https://github.com/covscript/covscript-network)
-+ [cURL 网络库](https://github.com/covscript/covscript-curl)
-+ [正则表达式](https://github.com/covscript/covscript-regex)
-
-### 平台依赖 ###
-
-+ [wiringPi](https://github.com/covscript/covscript-wiringpi)
-
 ## 文档 ##
 
-[CovScript 在线知识库](http://wiki.csman.info)
+请访问 [Covariant Script 组织 README](https://github.com/covscript/README)
 
 ## 安装 ##
 
 + **[建议]** 从 [covscript.org.cn](http://covscript.org.cn) 下载安装包
-+ 下载 [64位类Debian系统滚动构建安装包](https://github.com/covscript/csbuild/releases/download/schedule/covscript-amd64.deb)
 + 在 [Latest Release](https://github.com/covscript/covscript/releases/latest) 里下载预编译的二进制文件
 + 使用 CMake 工具链直接编译源代码
 

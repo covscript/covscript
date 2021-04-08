@@ -36,34 +36,13 @@ This project is an officially maintained Covariant Script interpreter.
     + Efficient memory management system
     + Reference count garbage collection system
 
-## Libraries ##
+## Documents ##
 
-### Standard Library ##
-
-+ [Darwin Universal CGL](https://github.com/covscript/covscript-darwin)
-+ [CovScript Database](https://github.com/covscript/covscript-database)
-+ [Base64/Json Codec](https://github.com/covscript/covscript-codec)
-+ [Regular Expression](https://github.com/covscript/covscript-regex)
-+ [LibMozart Process](https://github.com/covscript/covscript-process)
-+ [SQLite3 Database](https://github.com/covscript/covscript-sqlite)
-+ [Zip File Support](https://github.com/covscript/covscript-zip)
-+ [Dear ImGui GUI](https://github.com/covscript/covscript-imgui)
-+ [ASIO Network](https://github.com/covscript/covscript-network)
-+ [cURL Network](https://github.com/covscript/covscript-curl)
-
-### Platform Specified ###
-
-+ [wiringPi](https://github.com/covscript/covscript-wiringpi)
-
-## Documentation ##
-
-[CovScript Wiki](http://wiki.csman.info)
+Please visit [Covariant Script Organization README](https://github.com/covscript/README)
 
 ## Installation ##
 
 + **[Recommend]** Download installation package from [covscript.org.cn](http://covscript.org.cn)
-+ Download [nightly build installation package](https://github.com/covscript/csbuild/releases/download/schedule/covscript-amd64.deb)
-for debian-like system on x86_64 machine
 + Download the precompiled executable on the [Latest Release](https://github.com/covscript/covscript/releases/latest)
 + Directly compile source code with CMake toolchain
 
