@@ -63,7 +63,7 @@ namespace cs {
 
 		void dump_ast(std::ostream &);
 
-		// Var definition
+		// Parse variable definition
 		void check_declar_var(tree_type<token_base *>::iterator, bool= false);
 
 		void check_define_var(tree_type<token_base *>::iterator, bool= false, bool= false);
@@ -72,7 +72,10 @@ namespace cs {
 
 		void check_define_structured_binding(tree_type<token_base *>::iterator, bool= false);
 
-		void parse_define_structured_binding(tree_type<token_base *>::iterator, bool= false);
+		void parse_define_structured_binding(tree_type<token_base *>::iterator, bool= false, bool= false);
+
+		// Parse using statement
+		void parse_using(tree_type<token_base *>::iterator, bool= false);
 	};
 
 // Repl

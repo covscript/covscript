@@ -124,8 +124,10 @@ namespace cs {
 			std::cout << result.to_string() << std::endl;
 		}
 		catch (cov::error &e) {
-			if (!std::strcmp(e.what(), "E000D"))
-				throw e;
+			if (std::strcmp(e.what(), "E000D"))
+				std::cout << "[" << result.get_type_name() << "]" << std::endl;
+			else
+				throw;
 		}
 	}
 
@@ -151,11 +153,7 @@ namespace cs {
 	void statement_involve::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
-		var ns = context->instance->parse_expr(mTree.root(), true);
-		if (ns.type() == typeid(namespace_t))
-			context->instance->storage.involve_domain(ns.const_val<namespace_t>()->get_domain(), mOverride);
-		else
-			throw runtime_error("Only support involve namespace.");
+		context->instance->parse_using(mTree.root(), mOverride);
 	}
 
 	void statement_involve::dump(std::ostream &o) const

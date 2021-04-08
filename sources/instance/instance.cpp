@@ -238,7 +238,7 @@ namespace cs {
 		if (it.data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
 			for (auto &t:parallel_list)
-				parse_define_var(t.root(), constant);
+				parse_define_var(t.root(), constant, link);
 		}
 		else {
 			token_base *root = it.data();
@@ -254,7 +254,7 @@ namespace cs {
 				break;
 			}
 			case signal_types::bind_: {
-				parse_define_structured_binding(it, constant);
+				parse_define_structured_binding(it, constant, link);
 				break;
 			}
 			default:
@@ -281,10 +281,10 @@ namespace cs {
 		}
 	}
 
-	void instance_type::parse_define_structured_binding(tree_type<token_base *>::iterator it, bool constant)
+	void instance_type::parse_define_structured_binding(tree_type<token_base *>::iterator it, bool constant, bool link)
 	{
 		std::function<void(tree_type<token_base *>::iterator, const var &)> process;
-		process = [&process, this, constant](tree_type<token_base *>::iterator it, const var &val) {
+		process = [&process, this, constant, link](tree_type<token_base *>::iterator it, const var &val) {
 			auto &pl = static_cast<token_parallel *>(it.data())->get_parallel();
 			if (val.type() != typeid(array))
 				throw runtime_error("Only support structured binding with array while variable definition.");
@@ -296,11 +296,27 @@ namespace cs {
 					process(pl[i].root(), arr[i]);
 				else
 					storage.add_var(static_cast<token_id *>(pl[i].root().data())->get_id(),
-					                constant ? arr[i] : copy(arr[i]), constant);
+					                constant || link ? arr[i] : copy(arr[i]), constant);
 			}
 		};
 		const var &val = constant ? static_cast<token_value *>(it.right().data())->get_value() : parse_expr(it.right());
 		process(it.left(), val);
+	}
+
+	void instance_type::parse_using(tree_type<token_base *>::iterator it, bool override)
+	{
+		if (it.data()->get_type() == token_types::parallel) {
+			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
+			for (auto &t:parallel_list)
+				parse_using(t.root());
+		}
+		else {
+			var ns = context->instance->parse_expr(it, true);
+			if (ns.type() == typeid(namespace_t))
+				context->instance->storage.involve_domain(ns.const_val<namespace_t>()->get_domain(), override);
+			else
+				throw runtime_error("Only support involve namespace.");
+		}
 	}
 
 	void repl::interpret(const string &code, std::deque<token_base *> &line)
