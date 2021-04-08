@@ -202,7 +202,7 @@ void covscript_main(int args_size, char *args[])
 	}
 	if (!repl && index != args_size) {
 		std::string path = cs::process_path(args[index]);
-		if (!cs_impl::file_system::exists(path) || cs_impl::file_system::is_dir(path) ||
+		if (!cs_impl::file_system::exist(path) || cs_impl::file_system::is_dir(path) ||
 		        !cs_impl::file_system::can_read(path))
 			throw cs::fatal_error("invalid input file.");
 		cs::prepend_import_path(path, cs::current_process);

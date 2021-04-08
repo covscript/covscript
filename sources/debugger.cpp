@@ -453,7 +453,7 @@ void covscript_main(int args_size, char *args[])
 		if (args_size - index > 1)
 			throw cs::fatal_error("argument syntax error.");
 		path = cs::process_path(args[index]);
-		if (!cs_impl::file_system::exists(path) || cs_impl::file_system::is_dir(path) ||
+		if (!cs_impl::file_system::exist(path) || cs_impl::file_system::is_dir(path) ||
 		        !cs_impl::file_system::can_read(path))
 			throw cs::fatal_error("invalid input file.");
 		std::cout << "Covariant Script Programming Language Debugger\nVersion: " << cs::current_process->version
