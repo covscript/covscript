@@ -77,7 +77,7 @@ CNI_ROOT_NAMESPACE {
         };
 
         CNI_TYPE_EXT_V(foo_ext, foo, foo, foo()) {
-            CNI_CLASS_MEMBER(foo, val);
+            CNI_CLASS_MEMBER(foo, val)
             CNI_V(test, &foo::test)
         }
     }

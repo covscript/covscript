@@ -36,35 +36,13 @@ This project is an officially maintained Covariant Script interpreter.
     + Efficient memory management system
     + Reference count garbage collection system
 
-## Libraries ##
+## Documents ##
 
-### Standard Library ##
-
-+ [Darwin Universal CGL](https://github.com/covscript/covscript-darwin)
-+ [Base64/Json Codec](https://github.com/covscript/covscript-codec)
-+ [Regular Expression](https://github.com/covscript/covscript-regex)
-+ [LibMozart Process](https://github.com/covscript/covscript-process)
-+ [SQLite3 Database](https://github.com/covscript/covscript-sqlite)
-+ [Zip File Support](https://github.com/covscript/covscript-zip)
-+ [Dear ImGui GUI](https://github.com/covscript/covscript-imgui)
-+ [ASIO Network](https://github.com/covscript/covscript-network)
-+ [cURL Network](https://github.com/covscript/covscript-curl)
-+ [Streams API](https://github.com/covscript/covscript-streams)
-
-### Platform Specified ###
-
-+ [wiringPi](https://github.com/covscript/covscript-wiringpi)
-
-## Documentation ##
-
-[CovScript Wiki](http://wiki.csman.info)
+Please visit [Covariant Script Organization README](https://github.com/covscript/README)
 
 ## Installation ##
 
 + **[Recommend]** Download installation package from [covscript.org.cn](http://covscript.org.cn)
-+
-Download [nightly build installation package](https://github.com/covscript/csbuild/releases/download/schedule/covscript-amd64.deb)
-for debian-like system on x86_64 machine
 + Download the precompiled executable on the [Latest Release](https://github.com/covscript/covscript/releases/latest)
 + Directly compile source code with CMake toolchain
 
@@ -102,6 +80,7 @@ Option|Mnemonic|Function
 `--help`|`-h`|Show help infomation
 `--version`|`-v`|Show version infomation
 `--wait-before-exit`|`-w`|Wait before process exit
+`--stack-resize <SIZE>`|`-S <SIZE>`|Reset the size of runtime stack
 `--log-path <PATH>`|`-l <PATH>` |Set the log path
 `--import-path <PATH>`|`-i <PATH>`|Set the import path
 
@@ -118,6 +97,7 @@ Option|Mnemonic|Function
 `--help`|`-h`|Show help infomation
 `--version`|`-v`|Show version infomation
 `--wait-before-exit`|`-w`|Wait before process exit
+`--stack-resize <SIZE>`|`-S <SIZE>`|Reset the size of runtime stack
 `--log-path <PATH>`|`-l <PATH>`|Set the log path
 `--import-path <PATH>`|`-i <PATH>`|Set the import path
 

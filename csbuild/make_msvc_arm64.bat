@@ -5,8 +5,6 @@ mkdir cmake-build\msvc_arm64
 cd    cmake-build\msvc_arm64
 set CS_COMPATIBILITY_MODE=ENABLE
 cmake -G "Visual Studio 16 2019" -A "ARM64" ..\..
-cmake --build . --config %config% --target covscript
-cmake --build . --config %config% --target covscript_debug
 cmake --build . --config %config% --target cs
 cmake --build . --config %config% --target cs_dbg
 cd ..\..

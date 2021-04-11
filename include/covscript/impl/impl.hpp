@@ -46,6 +46,8 @@ namespace cs {
 
 		explicit instance_type(context_t c) : context(std::move(c)) {}
 
+		instance_type(context_t c, std::size_t stack_size) : context(std::move(c)), runtime_type(stack_size) {}
+
 		instance_type(const instance_type &) = delete;
 
 		~instance_type() = default;
@@ -61,16 +63,19 @@ namespace cs {
 
 		void dump_ast(std::ostream &);
 
-		// Var definition
+		// Parse variable definition
 		void check_declar_var(tree_type<token_base *>::iterator, bool= false);
 
 		void check_define_var(tree_type<token_base *>::iterator, bool= false, bool= false);
 
-		void parse_define_var(tree_type<token_base *>::iterator, bool= false);
+		void parse_define_var(tree_type<token_base *>::iterator, bool= false, bool= false);
 
 		void check_define_structured_binding(tree_type<token_base *>::iterator, bool= false);
 
-		void parse_define_structured_binding(tree_type<token_base *>::iterator, bool= false);
+		void parse_define_structured_binding(tree_type<token_base *>::iterator, bool= false, bool= false);
+
+		// Parse using statement
+		void parse_using(tree_type<token_base *>::iterator, bool= false);
 	};
 
 // Repl
@@ -103,13 +108,13 @@ namespace cs {
 
 		void reset_status()
 		{
-			context_t __context = context;
-			charset __encoding = encoding;
-			std::size_t __line_num = line_num;
+			context_t _context = context;
+			charset _encoding = encoding;
+			std::size_t _line_num = line_num;
 			this->~repl();
-			::new(this) repl(__context);
-			encoding = __encoding;
-			line_num = __line_num;
+			::new(this) repl(_context);
+			encoding = _encoding;
+			line_num = _line_num;
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
 		}

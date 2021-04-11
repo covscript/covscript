@@ -356,6 +356,7 @@ namespace cs {
 		{"block",     action_types::block_},
 		{"end",       action_types::endblock_},
 		{"var",       action_types::var_},
+		{"link",      action_types::link_},
 		{"constant",  action_types::constant_},
 		{"do",        action_types::do_},
 		{"if",        action_types::if_},
@@ -511,21 +512,21 @@ namespace cs {
 				break;
 			case signal_types::new_:
 				if (it.left().data() != nullptr)
-					throw runtime_error("Wrong grammar for new expression.");
+					throw compile_error("Wrong grammar for new expression.");
 				break;
 			case signal_types::gcnew_:
 				if (it.left().data() != nullptr)
-					throw runtime_error("Wrong grammar for gcnew expression.");
+					throw compile_error("Wrong grammar for gcnew expression.");
 				trim_expr(tree, it.right(), do_trim);
 				return;
 				break;
 			case signal_types::typeid_:
 				if (it.left().data() != nullptr)
-					throw runtime_error("Wrong grammar for typeid expression.");
+					throw compile_error("Wrong grammar for typeid expression.");
 				break;
 			case signal_types::not_:
 				if (it.left().data() != nullptr)
-					throw runtime_error("Wrong grammar for not expression.");
+					throw compile_error("Wrong grammar for not expression.");
 				break;
 			case signal_types::sub_:
 				if (it.left().data() == nullptr)
@@ -537,7 +538,7 @@ namespace cs {
 				break;
 			case signal_types::asi_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr)
-					throw runtime_error("Wrong grammar for assign expression.");
+					throw compile_error("Wrong grammar for assign expression.");
 				trim_expr(tree, it.left(), do_trim);
 				if (it.left().data()->get_type() == token_types::parallel)
 					it.data() = new token_signal(signal_types::bind_);
@@ -572,7 +573,7 @@ namespace cs {
 			case signal_types::choice_: {
 				token_signal *sig = dynamic_cast<token_signal *>(it.right().data());
 				if (sig == nullptr || sig->get_signal() != signal_types::pair_)
-					throw runtime_error("Wrong grammar for choice expression.");
+					throw compile_error("Wrong grammar for choice expression.");
 				trim_expr(tree, it.left(), do_trim);
 				trim_expr(tree, it.right().left(), do_trim);
 				trim_expr(tree, it.right().right(), do_trim);
@@ -580,18 +581,18 @@ namespace cs {
 			}
 			case signal_types::vardef_: {
 				if (it.left().data() != nullptr)
-					throw runtime_error("Wrong grammar for variable declaration.");
+					throw compile_error("Wrong grammar for variable declaration.");
 				trim_expr(tree, it.right(), trim_type::no_this_deduce);
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
-					throw runtime_error("Wrong grammar for variable declaration.");
+					throw compile_error("Wrong grammar for variable declaration.");
 				context->instance->storage.add_record(static_cast<token_id *>(rptr)->get_id());
 				it.data() = rptr;
 				return;
 			}
 			case signal_types::varchk_: {
 				if (it.left().data() != nullptr)
-					throw runtime_error("Wrong grammar for variable declaration.");
+					throw compile_error("Wrong grammar for variable declaration.");
 				trim_expr(tree, it.right(), trim_type::no_this_deduce);
 				context->instance->check_declar_var(it.right(), true);
 				it.data() = it.right().data();
@@ -599,7 +600,7 @@ namespace cs {
 			}
 			case signal_types::varprt_: {
 				if (it.left().data() != nullptr)
-					throw runtime_error("Wrong grammar for variable declaration.");
+					throw compile_error("Wrong grammar for variable declaration.");
 				trim_expr(tree, it.right(), trim_type::no_this_deduce);
 				it.data() = it.right().data();
 				return;
@@ -607,14 +608,14 @@ namespace cs {
 			case signal_types::arrow_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr ||
 				        it.right().data()->get_type() != token_types::id)
-					throw runtime_error("Wrong grammar for arrow expression.");
+					throw compile_error("Wrong grammar for arrow expression.");
 				trim_expr(tree, it.left(), do_trim);
 				return;
 			case signal_types::dot_: {
 				trim_expr(tree, it.left(), do_trim);
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
-					throw runtime_error("Wrong grammar for dot expression.");
+					throw compile_error("Wrong grammar for dot expression.");
 				return;
 			}
 			case signal_types::fcall_: {
@@ -623,19 +624,19 @@ namespace cs {
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
 				if (lptr == nullptr || rptr == nullptr || rptr->get_type() != token_types::arglist)
-					throw runtime_error("Wrong syntax for function call.");
+					throw compile_error("Wrong syntax for function call.");
 				return;
 			}
 			case signal_types::vargs_: {
 				if (it.left().data() == nullptr) {
 					token_base *rptr = it.right().data();
 					if (rptr == nullptr || rptr->get_type() != token_types::id)
-						throw runtime_error("Wrong grammar for vargs expression.");
+						throw compile_error("Wrong grammar for vargs expression.");
 					it.data() = new token_vargs(static_cast<token_id *>(rptr)->get_id());
 				}
 				else {
 					if (it.right().data() != nullptr)
-						throw runtime_error("Wrong grammar for vargs expression.");
+						throw compile_error("Wrong grammar for vargs expression.");
 					trim_expr(tree, it.left(), do_trim);
 					it.data() = new token_expand(tree_type<token_base *>(it.left()));
 				}
@@ -648,7 +649,7 @@ namespace cs {
 				token_base *rptr = it.right().data();
 				if (!inside_lambda || lptr != nullptr || rptr == nullptr ||
 				        rptr->get_type() != token_types::arglist)
-					throw runtime_error("Wrong grammar for lambda expression.");
+					throw compile_error("Wrong grammar for lambda expression.");
 				it.data() = rptr;
 				return;
 			}
@@ -660,7 +661,7 @@ namespace cs {
 				trim_expr(tree, it.right(), trim_type::no_this_deduce);
 				token_base *rptr = it.right().data();
 				if (lptr == nullptr || rptr == nullptr || lptr->get_type() != token_types::arglist)
-					throw runtime_error("Wrong grammar for lambda expression.");
+					throw compile_error("Wrong grammar for lambda expression.");
 				std::vector<std::string> args;
 				bool is_vargs = false;
 				for (auto &item:static_cast<token_arglist *>(lptr)->get_arglist()) {
@@ -671,18 +672,18 @@ namespace cs {
 						const std::string &str = static_cast<token_id *>(item.root().data())->get_id();
 						for (auto &it:args)
 							if (it == str)
-								throw runtime_error("Redefinition of function argument.");
+								throw compile_error("Redefinition of function argument.");
 						args.push_back(str);
 					}
 					else if (item.root().data()->get_type() == token_types::vargs) {
 						const std::string &str = static_cast<token_vargs *>(item.root().data())->get_id();
 						if (!args.empty())
-							throw runtime_error("Redefinition of function argument(Multi-define of vargs).");
+							throw compile_error("Redefinition of function argument(Multi-define of vargs).");
 						args.push_back(str);
 						is_vargs = true;
 					}
 					else
-						throw runtime_error("Wrong grammar for function definition.");
+						throw compile_error("Unexpected element in function argument list.");
 				}
 				statement_base *ret = new statement_return(tree_type<token_base *>(it.right()), context,
 				        new token_endline(token->get_line_num()));
@@ -801,23 +802,23 @@ namespace cs {
 			case signal_types::new_:
 				// Fix(2020-11-26): Terminate new expression optimization
 				if (it.left().data() != nullptr)
-					throw runtime_error("Wrong grammar for new expression.");
+					throw compile_error("Wrong grammar for new expression.");
 				return;
 			case signal_types::gcnew_:
 				if (it.left().data() != nullptr)
-					throw runtime_error("Wrong grammar for gcnew expression.");
+					throw compile_error("Wrong grammar for gcnew expression.");
 				opt_expr(tree, it.right(), do_optm);
 				return;
 			case signal_types::asi_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr)
-					throw runtime_error("Wrong grammar for assign expression.");
+					throw compile_error("Wrong grammar for assign expression.");
 				opt_expr(tree, it.left(), do_optm);
 				opt_expr(tree, it.right(), do_optm);
 				return;
 			case signal_types::choice_: {
 				token_signal *sig = dynamic_cast<token_signal *>(it.right().data());
 				if (sig == nullptr || sig->get_signal() != signal_types::pair_)
-					throw runtime_error("Wrong grammar for choice expression.");
+					throw compile_error("Wrong grammar for choice expression.");
 				opt_expr(tree, it.left(), do_optm);
 				opt_expr(tree, it.right().left(), do_optm);
 				opt_expr(tree, it.right().right(), do_optm);
@@ -831,14 +832,14 @@ namespace cs {
 						tree.reserve_right(it);
 					}
 					else
-						throw runtime_error("Choice condition must be boolean.");
+						throw compile_error("Choice condition must be boolean.");
 				}
 				return;
 			}
 			case signal_types::arrow_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr ||
 				        it.right().data()->get_type() != token_types::id)
-					throw runtime_error("Wrong grammar for arrow expression.");
+					throw compile_error("Wrong grammar for arrow expression.");
 				opt_expr(tree, it.left(), do_optm);
 				return;
 			case signal_types::dot_: {
@@ -847,7 +848,7 @@ namespace cs {
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
-					throw runtime_error("Wrong grammar for dot expression.");
+					throw compile_error("Wrong grammar for dot expression.");
 				if (lptr != nullptr && lptr->get_type() == token_types::value) {
 					const var &a = static_cast<token_value *>(lptr)->get_value();
 					token_base *orig_ptr = it.data();
@@ -870,7 +871,7 @@ namespace cs {
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
 				if (lptr == nullptr || rptr == nullptr || rptr->get_type() != token_types::arglist)
-					throw runtime_error("Wrong syntax for function call.");
+					throw compile_error("Wrong syntax for function call.");
 				if (lptr->get_type() == token_types::value) {
 					var &a = static_cast<token_value *>(lptr)->get_value();
 					if (a.type() == typeid(callable) && a.const_val<callable>().is_request_fold()) {
@@ -981,7 +982,7 @@ namespace cs {
 		if (it.left().left().usable() && it.left().left().data() != nullptr &&
 		        it.left().left().data() == it.right().data()) {
 			// it.data() = it.right().data();
-			throw runtime_error(std::string("Symbol collision with structure member \"") +
+			throw compile_error(std::string("Symbol collision with structure member \"") +
 			                    static_cast<token_id *>(it.right().data())->get_id().get_id() + "\".");
 		}
 	}
@@ -1130,7 +1131,7 @@ namespace cs {
 				method_base *m = this->match(line);
 				switch (m->get_type()) {
 				case method_types::null:
-					throw runtime_error("Null type of grammar.");
+					throw compile_error("Null type of grammar.");
 					break;
 				case method_types::single: {
 					statement_base *sptr = nullptr;
@@ -1163,7 +1164,7 @@ namespace cs {
 					}
 					else {
 						if (m->get_target_type() == statement_types::end_)
-							throw runtime_error("Hanging end statement.");
+							throw compile_error("Hanging end statement.");
 						else {
 							if (raw)
 								m->preprocess(context, {line});
@@ -1199,6 +1200,6 @@ namespace cs {
 			}
 		}
 		if (!methods.empty())
-			throw runtime_error("Lack of the \"end\" signal.");
+			throw compile_error("Lack of the \"end\" signal.");
 	}
 }

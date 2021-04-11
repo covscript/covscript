@@ -82,7 +82,7 @@ namespace cs_impl {
 	}
 	namespace file_system {
 // Detection
-		bool exists(const std::string &);
+		bool exist(const std::string &);
 
 		bool is_dir(const std::string &);
 
@@ -108,7 +108,7 @@ namespace cs_impl {
 		bool remove(const std::string &);
 
 // Directories
-		bool mkdir_p(std::string);
+		bool mkdir_p(const std::string &);
 
 		bool mkdir(std::string);
 

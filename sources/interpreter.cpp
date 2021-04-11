@@ -90,6 +90,7 @@ int covscript_args(int args_size, char *args[])
 {
 	int expect_log_path = 0;
 	int expect_import_path = 0;
+	int expect_stack_resize = 0;
 	int index = 1;
 	for (; index < args_size; ++index) {
 		if (expect_log_path == 1) {
@@ -99,6 +100,10 @@ int covscript_args(int args_size, char *args[])
 		else if (expect_import_path == 1) {
 			cs::current_process->import_path += cs::path_delimiter + cs::process_path(args[index]);
 			expect_import_path = 2;
+		}
+		else if (expect_stack_resize == 1) {
+			cs::current_process->resize_stack(std::stoul(args[index]));
+			expect_stack_resize = 2;
 		}
 		else if (args[index][0] == '-') {
 			if (std::strcmp(args[index], "--args") == 0 || std::strcmp(args[index], "-a") == 0) {
@@ -133,13 +138,16 @@ int covscript_args(int args_size, char *args[])
 			else if ((std::strcmp(args[index], "--import-path") == 0 || std::strcmp(args[index], "-i") == 0) &&
 			         expect_import_path == 0)
 				expect_import_path = 1;
+			else if ((std::strcmp(args[index], "--stack-resize") == 0 || std::strcmp(args[index], "-S") == 0) &&
+			         expect_stack_resize == 0)
+				expect_stack_resize = 1;
 			else
 				throw cs::fatal_error("argument syntax error.");
 		}
 		else
 			break;
 	}
-	if (expect_log_path == 1 || expect_import_path == 1)
+	if (expect_log_path == 1 || expect_import_path == 1 || expect_import_path == 1)
 		throw cs::fatal_error("argument syntax error.");
 	return index;
 }
@@ -154,24 +162,25 @@ void covscript_main(int args_size, char *args[])
 		std::cout << "    cs [options...]\n";
 		std::cout << std::endl;
 		std::cout << "Interpreter Options:" << std::endl;
-		std::cout << "    Option               Mnemonic   Function\n";
-		std::cout << "  --compile-only        -c          Only compile\n";
-		std::cout << "  --dump-ast            -d          Export abstract syntax tree\n";
-		std::cout << "  --dependency          -r          Export module dependency\n";
+		std::cout << "    Option                Mnemonic   Function\n";
+		std::cout << "  --compile-only         -c          Only compile\n";
+		std::cout << "  --dump-ast             -d          Export abstract syntax tree\n";
+		std::cout << "  --dependency           -r          Export module dependency\n";
 		std::cout << std::endl;
 		std::cout << "Interpreter REPL Options:" << std::endl;
-		std::cout << "    Option               Mnemonic   Function\n";
-		std::cout << "  --silent              -s          Close the command prompt\n";
-		std::cout << "  --args <...>          -a <...>    Set the arguments\n";
+		std::cout << "    Option                Mnemonic   Function\n";
+		std::cout << "  --silent               -s          Close the command prompt\n";
+		std::cout << "  --args <...>           -a <...>    Set the arguments\n";
 		std::cout << std::endl;
 		std::cout << "Common Options:" << std::endl;
-		std::cout << "    Option               Mnemonic   Function\n";
-		std::cout << "  --no-optimize         -o          Disable optimizer\n";
-		std::cout << "  --help                -h          Show help infomation\n";
-		std::cout << "  --version             -v          Show version infomation\n";
-		std::cout << "  --wait-before-exit    -w          Wait before process exit\n";
-		std::cout << "  --log-path    <PATH>  -l <PATH>   Set the log and AST exporting path\n";
-		std::cout << "  --import-path <PATH>  -i <PATH>   Set the import path\n";
+		std::cout << "    Option                Mnemonic   Function\n";
+		std::cout << "  --no-optimize          -o          Disable optimizer\n";
+		std::cout << "  --help                 -h          Show help infomation\n";
+		std::cout << "  --version              -v          Show version infomation\n";
+		std::cout << "  --wait-before-exit     -w          Wait before process exit\n";
+		std::cout << "  --stack-resize <SIZE>  -S <SIZE>   Reset the size of runtime stack\n";
+		std::cout << "  --log-path     <PATH>  -l <PATH>   Set the log and AST exporting path\n";
+		std::cout << "  --import-path  <PATH>  -i <PATH>   Set the import path\n";
 		std::cout << std::endl;
 		return;
 	}
@@ -193,7 +202,7 @@ void covscript_main(int args_size, char *args[])
 	}
 	if (!repl && index != args_size) {
 		std::string path = cs::process_path(args[index]);
-		if (!cs_impl::file_system::exists(path) || cs_impl::file_system::is_dir(path) ||
+		if (!cs_impl::file_system::exist(path) || cs_impl::file_system::is_dir(path) ||
 		        !cs_impl::file_system::can_read(path))
 			throw cs::fatal_error("invalid input file.");
 		cs::prepend_import_path(path, cs::current_process);

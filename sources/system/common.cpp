@@ -26,7 +26,6 @@
 
 #include <covscript_impl/dirent/dirent.hpp>
 #include <covscript_impl/system.hpp>
-#include <sys/stat.h>
 #include <fcntl.h>
 
 namespace cs_system_impl {
@@ -50,18 +49,24 @@ namespace cs_system_impl {
 #endif
 
 namespace cs_system_impl {
-	std::vector<std::string> split(const std::string &string, char delimiter, bool drop_last)
+	std::vector<std::string> split(const std::string &str, cs::set_t<char> set)
 	{
 		std::vector<std::string> results;
-		size_t start = 0, end;
-
-		while ((end = string.find(delimiter, start)) != std::string::npos) {
-			results.push_back(string.substr(start, end - start));
-			start = end + 1;
+		std::string buff;
+		for (auto ch : str) {
+			if (set.count(ch) > 0) {
+				if (!buff.empty()) {
+					results.emplace_back(buff);
+					buff.clear();
+				}
+			}
+			else
+				buff.push_back(ch);
 		}
-
-		if (!drop_last)
-			results.push_back(string.substr(start));
+		if (!buff.empty()) {
+			results.emplace_back(buff);
+			buff.clear();
+		}
 		return std::move(results);
 	}
 
@@ -148,37 +153,38 @@ namespace cs_system_impl {
 
 	static bool mkdir_dirs(const std::vector<std::string> &dirs, unsigned int mode)
 	{
-		std::stringstream ss;
+		std::string path;
 		for (const auto &dir : dirs) {
-			ss << dir << cs::path_separator;
-			if (is_directory(ss.str())) {
+			path += dir + cs::path_separator;
+			if (is_directory(path))
 				continue;
-			}
-
-			if (!mkdir_impl(ss.str(), mode)) {
+			if (!mkdir_impl(path, mode))
 				return false;
-			}
 		}
 		return true;
 	}
 }
 
+#ifdef COVSCRIPT_PLATFORM_WIN32
+constexpr char path_separator_reversed = '/';
+constexpr char path_delimiter_reversed = ':';
+#else
+constexpr char path_separator_reversed = '\\';
+constexpr char path_delimiter_reversed = ';';
+#endif
+
 namespace cs_impl {
 	namespace file_system {
-		bool chmod_r(const std::string &path, const std::string &mode)
+		bool chmod_r(const std::string &path_input, const std::string &mode)
 		{
-			auto dirs = cs_system_impl::split(path, cs::path_separator, false);
-			std::stringstream ss;
-
+			auto dirs = cs_system_impl::split(path_input, {'/', '\\'});
+			std::string path;
 			for (auto &dir : dirs) {
-				ss << dir << cs::path_separator;
-
+				path += dir + cs::path_separator;
 				// DO NOT SKIP when dir is a directory
 				// directory has permissions too
-
-				if (!cs_system_impl::chmod_impl(ss.str(), cs_system_impl::parse_mode(mode))) {
+				if (!cs_system_impl::chmod_impl(path, cs_system_impl::parse_mode(mode)))
 					return false;
-				}
 			}
 			return true;
 		}
@@ -212,33 +218,21 @@ namespace cs_impl {
 			return std::remove(path.c_str()) == 0;
 		}
 
-		bool mkdir_p(std::string path)
+		bool mkdir_p(const std::string &path)
 		{
-			std::string::size_type pos;
-			while (true) {
-				pos = path.find('\\');
-				if (pos != std::string::npos)
-					path[pos] = '/';
-				else
-					break;
-			}
-			return cs_system_impl::mkdir_dirs(cs_system_impl::split(path, '/', true), 0755);
+			return cs_system_impl::mkdir_dirs(cs_system_impl::split(path, {'/', '\\'}), 0755);
 		}
 
 		bool mkdir(std::string path)
 		{
-			std::string::size_type pos;
-			while (true) {
-				pos = path.find('\\');
-				if (pos != std::string::npos)
-					path[pos] = '/';
-				else
-					break;
+			for (auto &ch : path) {
+				if (ch == path_separator_reversed)
+					ch = cs::path_separator;
 			}
-			return cs_system_impl::mkdir_dirs(cs_system_impl::split(path, '/', false), 0755);
+			return cs_system_impl::mkdir_impl(path, 0755);
 		}
 
-		bool exists(const std::string &path)
+		bool exist(const std::string &path)
 		{
 			return std::ifstream(path).is_open();
 		}

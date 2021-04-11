@@ -38,6 +38,13 @@ namespace cs {
 			m_data.push();
 		}
 
+		explicit domain_manager(std::size_t size)
+		{
+			m_set.push();
+			m_data.resize(size);
+			m_data.push();
+		}
+
 		domain_manager(const domain_manager &) = delete;
 
 		~domain_manager() = default;
@@ -263,6 +270,10 @@ namespace cs {
 	public:
 		domain_manager storage;
 
+		runtime_type() = default;
+
+		explicit runtime_type(std::size_t size) : storage(size) {}
+
 		void add_string_literal(const std::string &literal, const callable &func)
 		{
 			if (literals.count(literal) > 0)
@@ -345,13 +356,13 @@ namespace cs {
 
 		var parse_not(const var &);
 
-		var parse_inc(var, var);
+		var parse_inc(const var &, const var &);
 
-		var parse_dec(var, var);
+		var parse_dec(const var &, const var &);
 
 		var parse_fcall(const var &, token_base *);
 
-		var parse_access(var, const var &);
+		var parse_access(const var &, const var &);
 
 		var parse_expr(const tree_type<token_base *>::iterator &, bool= false);
 	};

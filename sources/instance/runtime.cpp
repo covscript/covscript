@@ -139,19 +139,16 @@ namespace cs {
 			switch (a.const_val<constant_values>()) {
 			case constant_values::global_namespace:
 				return storage.get_var_global(static_cast<token_id *>(b)->get_id());
-				break;
 			case constant_values::local_namepace:
 				return storage.get_var_current(static_cast<token_id *>(b)->get_id());
-				break;
 			default:
 				throw runtime_error("Unsupported operator operations(Dot).");
-				break;
 			}
 		}
 		else if (a.type() == typeid(namespace_t))
 			return a.val<namespace_t>()->get_var(static_cast<token_id *>(b)->get_id());
 		else if (a.type() == typeid(type_t))
-			return a.val<type_t>().get_var(static_cast<token_id *>(b)->get_id());
+			return a.const_val<type_t>().get_var(static_cast<token_id *>(b)->get_id());
 		else if (a.type() == typeid(structure)) {
 			var &val = a.val<structure>().get_var(static_cast<token_id *>(b)->get_id());
 			if (val.type() == typeid(callable) && val.const_val<callable>().is_member_fn())
@@ -164,12 +161,16 @@ namespace cs {
 				var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
 				if (val.type() == typeid(callable)) {
 					const callable &func = val.const_val<callable>();
-					if (func.type() == callable::types::member_visitor) {
+					switch (func.type()) {
+					case callable::types::member_visitor: {
 						vector args{a};
 						return func.call(args);
 					}
-					else
+					case callable::types::force_regular:
+						throw runtime_error("Cannot call regular function as member function.");
+					default:
 						return var::make_protect<object_method>(a, val, func.is_request_fold());
+					}
 				}
 				else
 					return val;
@@ -226,6 +227,8 @@ namespace cs {
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return boolean(a.const_val<number>() < b.const_val<number>());
+		else if (a.type() == typeid(string) && b.type() == typeid(string))
+			return boolean(a.const_val<string>() < b.const_val<string>());
 		else
 			throw runtime_error("Unsupported operator operations(Und).");
 	}
@@ -234,6 +237,8 @@ namespace cs {
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return boolean(a.const_val<number>() > b.const_val<number>());
+		else if (a.type() == typeid(string) && b.type() == typeid(string))
+			return boolean(a.const_val<string>() > b.const_val<string>());
 		else
 			throw runtime_error("Unsupported operator operations(Abo).");
 	}
@@ -242,6 +247,8 @@ namespace cs {
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return boolean(a.const_val<number>() <= b.const_val<number>());
+		else if (a.type() == typeid(string) && b.type() == typeid(string))
+			return boolean(a.const_val<string>() <= b.const_val<string>());
 		else
 			throw runtime_error("Unsupported operator operations(Ueq).");
 	}
@@ -250,6 +257,8 @@ namespace cs {
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return boolean(a.const_val<number>() >= b.const_val<number>());
+		else if (a.type() == typeid(string) && b.type() == typeid(string))
+			return boolean(a.const_val<string>() >= b.const_val<string>());
 		else
 			throw runtime_error("Unsupported operator operations(Aeq).");
 	}
@@ -326,7 +335,7 @@ namespace cs {
 			throw runtime_error("Unsupported operator operations(Not).");
 	}
 
-	var runtime_type::parse_inc(var a, var b)
+	var runtime_type::parse_inc(const var &a, const var &b)
 	{
 		if (a.usable()) {
 			if (b.usable())
@@ -342,7 +351,7 @@ namespace cs {
 		}
 	}
 
-	var runtime_type::parse_dec(var a, var b)
+	var runtime_type::parse_dec(const var &a, const var &b)
 	{
 		if (a.usable()) {
 			if (b.usable())
@@ -399,7 +408,7 @@ namespace cs {
 			throw runtime_error("Unsupported operator operations(Fcall).");
 	}
 
-	var runtime_type::parse_access(var a, const var &b)
+	var runtime_type::parse_access(const var &a, const var &b)
 	{
 		if (a.type() == typeid(array)) {
 			if (b.type() != typeid(number))

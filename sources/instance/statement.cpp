@@ -124,8 +124,10 @@ namespace cs {
 			std::cout << result.to_string() << std::endl;
 		}
 		catch (cov::error &e) {
-			if (!std::strcmp(e.what(), "E000D"))
-				throw e;
+			if (std::strcmp(e.what(), "E000D"))
+				std::cout << "[" << result.get_type_name() << "]" << std::endl;
+			else
+				throw;
 		}
 	}
 
@@ -151,11 +153,7 @@ namespace cs {
 	void statement_involve::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
-		var ns = context->instance->parse_expr(mTree.root(), true);
-		if (ns.type() == typeid(namespace_t))
-			context->instance->storage.involve_domain(ns.const_val<namespace_t>()->get_domain(), mOverride);
-		else
-			throw runtime_error("Only support involve namespace.");
+		context->instance->parse_using(mTree.root(), mOverride);
 	}
 
 	void statement_involve::dump(std::ostream &o) const
@@ -168,14 +166,14 @@ namespace cs {
 	void statement_var::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
-		context->instance->parse_define_var(mTree.root());
+		context->instance->parse_define_var(mTree.root(), false, link);
 	}
 
 	void statement_var::dump(std::ostream &o) const
 	{
 		o << "< Var: ";
 		compiler_type::dump_expr(mTree.root(), o);
-		o << " >\n";
+		o << (link ? ", type = link" : "") << " >\n";
 	}
 
 	void statement_constant::run_impl()
@@ -638,6 +636,8 @@ namespace cs {
 			foreach_helper<list, var>(context, this->mIt, obj, this->mBlock);
 		else if (obj.type() == typeid(array))
 			foreach_helper<array, var>(context, this->mIt, obj, this->mBlock);
+		else if (obj.type() == typeid(hash_set))
+			foreach_helper<hash_set, var>(context, this->mIt, obj, this->mBlock);
 		else if (obj.type() == typeid(hash_map))
 			foreach_helper<hash_map, pair>(context, this->mIt, obj, this->mBlock);
 		else if (obj.type() == typeid(range_type))

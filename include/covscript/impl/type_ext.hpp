@@ -52,6 +52,7 @@ namespace cs_impl {
 	extern cs::namespace_t math_const_ext;
 	extern cs::namespace_t list_ext;
 	extern cs::namespace_t list_iterator_ext;
+	extern cs::namespace_t hash_set_ext;
 	extern cs::namespace_t hash_map_ext;
 	extern cs::namespace_t pair_ext;
 	extern cs::namespace_t time_ext;
@@ -251,6 +252,12 @@ namespace cs_impl {
 	}
 
 	template<>
+	constexpr const char *get_name_of_type<cs::hash_set>()
+	{
+		return "cs::hash_set";
+	}
+
+	template<>
 	constexpr const char *get_name_of_type<cs::hash_map>()
 	{
 		return "cs::hash_map";
@@ -374,6 +381,12 @@ namespace cs_impl {
 	cs::namespace_t &get_ext<char>()
 	{
 		return char_ext;
+	}
+
+	template<>
+	cs::namespace_t &get_ext<cs::hash_set>()
+	{
+		return hash_set_ext;
 	}
 
 	template<>

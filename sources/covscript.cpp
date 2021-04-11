@@ -91,6 +91,7 @@ namespace cs_impl {
 	cs::namespace_t math_const_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t list_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t list_iterator_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t hash_set_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t hash_map_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t pair_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t time_ext = cs::make_shared_namespace<cs::name_space>();
@@ -343,7 +344,7 @@ namespace cs {
 		cs_impl::init_extensions();
 		context_t context = std::make_shared<context_type>();
 		context->compiler = std::make_shared<compiler_type>(context);
-		context->instance = std::make_shared<instance_type>(context);
+		context->instance = std::make_shared<instance_type>(context, current_process->stack_size);
 		context->cmd_args = cs::var::make_constant<cs::array>(args);
 		// Init Grammars
 		(*context->compiler)
@@ -365,6 +366,8 @@ namespace cs {
 		// Var Grammar
 		.add_method({new token_action(action_types::var_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)}, new method_var)
+		.add_method({new token_action(action_types::link_), new token_expr(tree_type<token_base *>()),
+			            new token_endline(0)}, new method_link)
 		.add_method({new token_action(action_types::constant_), new token_expr(tree_type<token_base *>()),
 			            new token_endline(0)},
 		new method_constant)
@@ -455,6 +458,8 @@ namespace cs {
 		                  cs_impl::array_ext)
 		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
 		                  cs_impl::pair_ext)
+		.add_buildin_type("hash_set", []() -> var { return var::make<hash_set>(); }, typeid(hash_set),
+		                  cs_impl::hash_set_ext)
 		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, typeid(hash_map),
 		                  cs_impl::hash_map_ext)
 		// Context
@@ -480,7 +485,7 @@ namespace cs {
 	{
 		cs_impl::init_extensions();
 		context_t context = std::make_shared<context_type>();
-		context->instance = std::make_shared<instance_type>(context);
+		context->instance = std::make_shared<instance_type>(context, current_process->stack_size);
 		context->compiler = cxt->compiler;
 		context->cmd_args = cxt->cmd_args;
 		// Init Runtime
@@ -498,6 +503,8 @@ namespace cs {
 		                  cs_impl::array_ext)
 		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
 		                  cs_impl::pair_ext)
+		.add_buildin_type("hash_set", []() -> var { return var::make<hash_set>(); }, typeid(hash_set),
+		                  cs_impl::hash_set_ext)
 		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, typeid(hash_map),
 		                  cs_impl::hash_map_ext)
 		// Context
