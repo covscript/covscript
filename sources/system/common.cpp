@@ -151,9 +151,11 @@ namespace cs_system_impl {
 		return mode;
 	}
 
-	static bool mkdir_dirs(const std::vector<std::string> &dirs, unsigned int mode)
+	static bool mkdir_dirs(const std::vector<std::string> &dirs, unsigned int mode, bool absolute_path = false)
 	{
 		std::string path;
+		if (absolute_path)
+			path = cs::path_separator;
 		for (const auto &dir : dirs) {
 			path += dir + cs::path_separator;
 			if (is_directory(path))
@@ -179,6 +181,8 @@ namespace cs_impl {
 		{
 			auto dirs = cs_system_impl::split(path_input, {'/', '\\'});
 			std::string path;
+			if (path_input.size() > 0 && (path_input[0] == '/' || path_input[0] == '\\'))
+				path = cs::path_separator;
 			for (auto &dir : dirs) {
 				path += dir + cs::path_separator;
 				// DO NOT SKIP when dir is a directory
@@ -220,7 +224,10 @@ namespace cs_impl {
 
 		bool mkdir_p(const std::string &path)
 		{
-			return cs_system_impl::mkdir_dirs(cs_system_impl::split(path, {'/', '\\'}), 0755);
+			if (path.size() > 0 && (path[0] == '/' || path[0] == '\\'))
+				return cs_system_impl::mkdir_dirs(cs_system_impl::split(path, {'/', '\\'}), 0755, true);
+			else
+				return cs_system_impl::mkdir_dirs(cs_system_impl::split(path, {'/', '\\'}), 0755, false);
 		}
 
 		bool mkdir(std::string path)
