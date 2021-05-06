@@ -86,7 +86,7 @@ namespace cs {
 // Import Path
 		std::string import_path = ".";
 // Stack
-		std::size_t stack_size = 512;
+		std::size_t stack_size = 1000;
 
 		stack_type<var> stack;
 #ifdef CS_DEBUGGER
@@ -757,6 +757,11 @@ namespace cs {
 						return false;
 				return true;
 			}
+		}
+
+		const std::string &type_name() const
+		{
+			return m_name;
 		}
 
 		const domain_type &get_domain() const

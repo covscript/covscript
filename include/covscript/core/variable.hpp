@@ -105,14 +105,6 @@ namespace cs_impl {
 		}
 	};
 
-	template<typename T>
-	struct to_string_if<T, false> {
-		static std::string to_string(const T &)
-		{
-			throw cov::error("E000D");
-		}
-	};
-
 // To Integer
 	template<typename, bool>
 	struct to_integer_if;
@@ -245,6 +237,14 @@ namespace cs_impl {
 	{
 		return typeid(T).name();
 	}
+
+	template<typename T>
+	struct to_string_if<T, false> {
+		static std::string to_string(const T &)
+		{
+			return "[" + cxx_demangle(get_name_of_type<T>()) + "]";
+		}
+	};
 
 	template<typename T>
 	static cs::namespace_t &get_ext()
