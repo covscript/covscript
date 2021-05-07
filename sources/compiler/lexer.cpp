@@ -399,14 +399,31 @@ namespace cs {
 					tokens.push_back(new token_endline(last_line_num));
 					multi_line = false;
 				}
-				else if (command == "charset:ascii")
-					encoding = charset::ascii;
-				else if (command == "charset:utf8")
-					encoding = charset::utf8;
-				else if (command == "charset:gbk")
-					encoding = charset::gbk;
-				else
-					throw exception(line_num, context->file_path, command, "Wrong grammar for preprocessor command.");
+				else {
+					auto pos = command.find(':');
+					std::string arg;
+					if (pos != std::string::npos) {
+						arg = command.substr(pos + 1);
+						command = command.substr(0, pos);
+					}
+					if (command == "charset") {
+						if (arg == "ascii")
+							encoding = charset::ascii;
+						else if (arg == "utf8")
+							encoding = charset::utf8;
+						else if (arg == "gbk")
+							encoding = charset::gbk;
+						else
+							throw exception(line_num, context->file_path, "@" + command + ": " + arg, "Unavailable encoding.");
+					}
+					else if (command == "require") {
+						std::string version_str = CS_GET_VERSION_STR(COVSCRIPT_STD_VERSION);
+						if (arg > version_str)
+							throw exception(line_num, context->file_path, "@" + command + ": " + arg, "Newer Language Standard required: " + arg + ", now on " + version_str);
+					}
+					else
+						throw exception(line_num, context->file_path, "@" + command + (arg.empty() ? "" : ": " + arg), "Wrong grammar for preprocessor command.");
+				}
 				command.clear();
 			}
 			if (empty_buff) {

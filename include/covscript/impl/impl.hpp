@@ -99,6 +99,7 @@ namespace cs {
 		explicit repl(context_t c) : context(std::move(c))
 		{
 			context->file_path = "<REPL_ENV>";
+			context->compiler->fold_expr = false;
 		}
 
 		repl(const repl &) = delete;

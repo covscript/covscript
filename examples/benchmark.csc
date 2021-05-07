@@ -1,3 +1,4 @@
+@require:210501
 iostream.setprecision(64)
 function step1(n)
     var score=0

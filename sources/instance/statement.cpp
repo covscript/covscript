@@ -120,7 +120,7 @@ namespace cs {
 	void statement_expression::repl_run_impl()
 	{
 		const var &result = context->instance->parse_expr(mTree.root());
-		std::cout << result.to_string() << std::endl;
+		std::cout << "Result: " << result.to_string() << std::endl;
 	}
 
 	void statement_expression::dump(std::ostream &o) const
