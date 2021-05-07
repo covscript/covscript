@@ -309,7 +309,6 @@ void reset_status()
 bool covscript_debugger()
 {
 	std::string cmd, func, args;
-	step_into_function = false;
 #ifdef COVSCRIPT_PLATFORM_WIN32
 	std::cout << "> " << std::flush;
 	// Workaround: https://stackoverflow.com/a/26763490
@@ -378,6 +377,8 @@ void cs_debugger_step_callback(cs::statement_base *stmt)
 	}
 	if (exec_by_step && (step_into_function || cs::current_process->stack.size() <= current_level)) {
 		std::cout << stmt->get_line_num() << "\t" << stmt->get_raw_code() << std::endl;
+		current_level = cs::current_process->stack.size();
+		step_into_function = false;
 		while (covscript_debugger());
 	}
 }
@@ -589,7 +590,10 @@ void covscript_main(int args_size, char *args[])
 		});
 		func_map.add_func("optimizer", "o", [](const std::string &cmd) -> bool {
 			if (context.get() != nullptr)
-				throw cs::runtime_error("Can not tuning optimizer while interpreter is running.");
+			{
+				std::cout << "Runtime Error: Can not tuning optimizer while interpreter is running." << std::endl;
+				return true;
+			}
 			if (cmd == "on")
 				no_optimize = false;
 			else if (cmd == "off")
@@ -600,7 +604,10 @@ void covscript_main(int args_size, char *args[])
 		});
 		func_map.add_func("run", "r", [](const std::string &cmd) -> bool {
 			if (context.get() != nullptr)
-				throw cs::runtime_error("Can not run two or more instance at the same time.");
+			{
+				std::cout << "Runtime Error: Can not run two or more instance at the same time." << std::endl;
+				return true;
+			}
 			std::size_t start_time = 0;
 			try
 			{
@@ -653,7 +660,10 @@ void covscript_main(int args_size, char *args[])
 		});
 		func_map.add_func("print", "p", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
-				throw cs::runtime_error("Please launch a interpreter instance first.");
+			{
+				std::cout << "Runtime Error: Please launch a interpreter instance first." << std::endl;
+				return true;
+			}
 			try
 			{
 				std::deque<char> buff;

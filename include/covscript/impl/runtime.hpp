@@ -28,8 +28,8 @@
 
 namespace cs {
 	class domain_manager {
-		stack_type <set_t<string>> m_set;
-		stack_type <domain_type> m_data;
+		stack_type<set_t<string>> m_set;
+		stack_type<domain_type> m_data;
 		bool m_cache_refresh = false;
 	public:
 		domain_manager()
@@ -266,7 +266,7 @@ namespace cs {
 	};
 
 	class runtime_type {
-		map_t <std::string, callable> literals;
+		map_t<std::string, callable> literals;
 	public:
 		domain_manager storage;
 

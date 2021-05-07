@@ -414,15 +414,18 @@ namespace cs {
 						else if (arg == "gbk")
 							encoding = charset::gbk;
 						else
-							throw exception(line_num, context->file_path, "@" + command + ": " + arg, "Unavailable encoding.");
+							throw exception(line_num, context->file_path, "@" + command + ": " + arg,
+							                "Unavailable encoding.");
 					}
 					else if (command == "require") {
 						std::string version_str = CS_GET_VERSION_STR(COVSCRIPT_STD_VERSION);
 						if (arg > version_str)
-							throw exception(line_num, context->file_path, "@" + command + ": " + arg, "Newer Language Standard required: " + arg + ", now on " + version_str);
+							throw exception(line_num, context->file_path, "@" + command + ": " + arg,
+							                "Newer Language Standard required: " + arg + ", now on " + version_str);
 					}
 					else
-						throw exception(line_num, context->file_path, "@" + command + (arg.empty() ? "" : ": " + arg), "Wrong grammar for preprocessor command.");
+						throw exception(line_num, context->file_path, "@" + command + (arg.empty() ? "" : ": " + arg),
+						                "Wrong grammar for preprocessor command.");
 				}
 				command.clear();
 			}

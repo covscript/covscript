@@ -281,7 +281,8 @@ namespace cs {
 		}
 	}
 
-	void instance_type::parse_define_structured_binding(tree_type<token_base *>::iterator it, bool constant, bool link)
+	void
+	instance_type::parse_define_structured_binding(tree_type<token_base *>::iterator it, bool constant, bool link)
 	{
 		std::function<void(tree_type<token_base *>::iterator, const var &)> process;
 		process = [&process, this, constant, link](tree_type<token_base *>::iterator it, const var &val) {
@@ -491,15 +492,18 @@ namespace cs {
 					else if (arg == "gbk")
 						encoding = charset::gbk;
 					else
-						throw exception(line_num, context->file_path, "@" + cmd + ": " + arg, "Unavailable encoding.");
+						throw exception(line_num, context->file_path, "@" + cmd + ": " + arg,
+						                "Unavailable encoding.");
 				}
 				else if (cmd == "require") {
 					std::string version_str = CS_GET_VERSION_STR(COVSCRIPT_STD_VERSION);
 					if (arg > version_str)
-						throw exception(line_num, context->file_path, "@" + cmd + ": " + arg, "Newer Language Standard required: " + arg + ", now on " + version_str);
+						throw exception(line_num, context->file_path, "@" + cmd + ": " + arg,
+						                "Newer Language Standard required: " + arg + ", now on " + version_str);
 				}
 				else
-					throw exception(line_num, context->file_path, "@" + cmd + (arg.empty() ? "" : ": " + arg), "Wrong grammar for preprocessor command.");
+					throw exception(line_num, context->file_path, "@" + cmd + (arg.empty() ? "" : ": " + arg),
+					                "Wrong grammar for preprocessor command.");
 				context->file_buff.emplace_back();
 			}
 			return;

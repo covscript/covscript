@@ -701,7 +701,9 @@ namespace cs {
 		structure() = delete;
 
 		structure(const type_id &id, const std::string &name, const domain_type &data) : m_id(id),
-			m_name(name), m_data(std::make_shared<domain_type>(data))
+			m_name(name),
+			m_data(std::make_shared<domain_type>(
+			           data))
 		{
 			if (m_data->exist("initialize"))
 				invoke(m_data->get_var("initialize"), var::make<structure>(this));
