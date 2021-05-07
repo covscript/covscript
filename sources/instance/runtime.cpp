@@ -30,7 +30,7 @@ namespace cs {
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
 			return a.const_val<number>() + b.const_val<number>();
-		else if (a.type() == typeid(string))
+		else if (a.type() == typeid(string) && b.usable())
 			return var::make<std::string>(a.const_val<string>() + b.to_string());
 		else
 			throw runtime_error("Unsupported operator operations(Add).");
