@@ -24,7 +24,6 @@
 * Github:  https://github.com/mikecovlee
 * Website: http://covscript.org.cn
 */
-#include <covscript/impl/compiler.hpp>
 #include <covscript/impl/runtime.hpp>
 
 namespace cs {

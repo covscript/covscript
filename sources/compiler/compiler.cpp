@@ -23,7 +23,6 @@
 * Github:  https://github.com/mikecovlee
 * Website: http://covscript.org.cn
 */
-#include <covscript/impl/compiler.hpp>
 #include <covscript/impl/codegen.hpp>
 
 namespace cs {
@@ -64,16 +63,8 @@ namespace cs {
 				o << ch;
 			o << "\'";
 		}
-		else {
-			try {
-				o << mVal.to_string();
-			}
-			catch (cov::error &e) {
-				if (!std::strcmp(e.what(), "E000D"))
-					throw e;
-				o << "[" << cs_impl::cxx_demangle(mVal.type().name()) << "]";
-			}
-		}
+		else
+			o << mVal.to_string();
 		o << ">";
 		return true;
 	}

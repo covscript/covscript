@@ -24,7 +24,6 @@
 * Github:  https://github.com/mikecovlee
 * Website: http://covscript.org.cn
 */
-#include <covscript/impl/symbols.hpp>
 #include <covscript/impl/statement.hpp>
 
 namespace cs {
