@@ -119,6 +119,73 @@ namespace cs_impl {
 	}
 
 	template<>
+	std::string to_string<cs::list>(const cs::list &lst)
+	{
+		if (lst.empty())
+			return "list => {}";
+		std::string str = "list => {";
+		for (const cs::var &it:lst)
+			str += it.to_string() + ", ";
+		str.resize(str.size() - 2);
+		str += "}";
+		return std::move(str);
+	}
+
+	template<>
+	std::string to_string<cs::array>(const cs::array &arr)
+	{
+		if (arr.empty())
+			return "{}";
+		std::string str = "{";
+		for (const cs::var &it:arr)
+			str += it.to_string() + ", ";
+		str.resize(str.size() - 2);
+		str += "}";
+		return std::move(str);
+	}
+
+	template<>
+	std::string to_string<cs::pair>(const cs::pair &p)
+	{
+		return p.first.to_string() + " : " + p.second.to_string();
+	}
+
+	template<>
+	std::string to_string<cs::hash_set>(const cs::hash_set &set)
+	{
+		if (set.empty())
+			return "hash_set => {}";
+		std::string str = "cs::hash_set => {";
+		for (const cs::var &it:set)
+			str += it.to_string() + ", ";
+		str.resize(str.size() - 2);
+		str += "}";
+		return std::move(str);
+	}
+
+	template<>
+	std::string to_string<cs::hash_map>(const cs::hash_map &map)
+	{
+		if (map.empty())
+			return "cs::hash_map => {}";
+		std::string str = "cs::hash_map => {";
+		for (const cs::pair &it:map)
+			str += cs_impl::to_string(it) + ", ";
+		str.resize(str.size() - 2);
+		str += "}";
+		return std::move(str);
+	}
+
+	template<>
+	std::string to_string<cs::pointer>(const cs::pointer &ptr)
+	{
+		if (ptr == cs::null_pointer)
+			return "null";
+		else
+			return "cs::pointer => " + ptr.data.to_string();
+	}
+
+	template<>
 	std::string to_string<cs::type_id>(const cs::type_id &id)
 	{
 		if (id.type_hash != 0)
@@ -131,24 +198,19 @@ namespace cs_impl {
 	std::string to_string<cs::range_type>(const cs::range_type &range)
 	{
 		if (range.empty())
-			return "[]";
-		std::string str = "[";
+			return "cs::range => {}";
+		std::string str = "cs::range => {";
 		for (cs::number it:range)
 			str += to_string(it) + ", ";
 		str.resize(str.size() - 2);
-		str += "]";
+		str += "}";
 		return std::move(str);
 	}
 
 	template<>
-	std::string to_string<cs::structure>(const cs::structure &stut)
+	std::string to_string<cs::char_buff>(const cs::char_buff &buff)
 	{
-		if (stut.get_domain().exist("to_string")) {
-			cs::var func = stut.get_domain().get_var("to_string");
-			if (func.type() == typeid(cs::callable))
-				return cs::invoke(func, cs::var::make<cs::structure>(&stut)).to_string();
-		}
-		throw cov::error("E000D");
+		return buff->str();
 	}
 
 	template<>

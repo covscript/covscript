@@ -701,10 +701,7 @@ namespace cs {
 		structure() = delete;
 
 		structure(const type_id &id, const std::string &name, const domain_type &data) : m_id(id),
-			m_name(typeid(structure).name() +
-			       name),
-			m_data(std::make_shared<domain_type>(
-			           data))
+			m_name(name), m_data(std::make_shared<domain_type>(data))
 		{
 			if (m_data->exist("initialize"))
 				invoke(m_data->get_var("initialize"), var::make<structure>(this));
@@ -973,4 +970,15 @@ namespace cs {
 
 // Literal format
 	number parse_number(const std::string &);
+}
+
+template<>
+std::string cs_impl::to_string<cs::structure>(const cs::structure &stut)
+{
+	if (stut.get_domain().exist("to_string")) {
+		cs::var func = stut.get_domain().get_var("to_string");
+		if (func.type() == typeid(cs::callable))
+			return cs::invoke(func, cs::var::make<cs::structure>(&stut)).to_string();
+	}
+	return "[cs::structure_" + stut.type_name() + "]";
 }
