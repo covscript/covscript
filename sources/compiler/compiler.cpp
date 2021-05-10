@@ -124,6 +124,9 @@ namespace cs {
 		case signal_types::asi_:
 			o << "=";
 			break;
+		case signal_types::lnkasi_:
+			o << ":=";
+			break;
 		case signal_types::equ_:
 			o << "==";
 			break;
@@ -192,6 +195,9 @@ namespace cs {
 			break;
 		case signal_types::typeid_:
 			o << "typeid";
+			break;
+		case signal_types::addr_:
+			o << "&";
 			break;
 		case signal_types::new_:
 			o << "new";
@@ -306,7 +312,8 @@ namespace cs {
 		{">",   signal_types::abo_},
 		{"<",   signal_types::und_},
 		{"=",   signal_types::asi_},
-		{"&",   signal_types::error_},
+		{":=",  signal_types::lnkasi_},
+		{"&",   signal_types::addr_},
 		{"|",   signal_types::error_},
 		{"&&",  signal_types::and_},
 		{"||",  signal_types::or_},
@@ -431,6 +438,7 @@ namespace cs {
 		{signal_types::und_,    9},
 		{signal_types::abo_,    9},
 		{signal_types::asi_,    1},
+		{signal_types::lnkasi_, 1},
 		{signal_types::choice_, 3},
 		{signal_types::pair_,   4},
 		{signal_types::equ_,    9},
@@ -446,6 +454,7 @@ namespace cs {
 		{signal_types::not_,    8},
 		{signal_types::inc_,    13},
 		{signal_types::dec_,    13},
+		{signal_types::addr_,   13},
 		{signal_types::fcall_,  15},
 		{signal_types::emb_,    15},
 		{signal_types::access_, 15},
@@ -456,7 +465,7 @@ namespace cs {
 	};
 
 	const set_t<signal_types> compiler_type::signal_left_associative = {
-		signal_types::asi_, signal_types::addasi_, signal_types::subasi_, signal_types::mulasi_,
+		signal_types::asi_, signal_types::lnkasi_, signal_types::addasi_, signal_types::subasi_, signal_types::mulasi_,
 		signal_types::divasi_, signal_types::modasi_, signal_types::powasi_
 	};
 
@@ -500,6 +509,10 @@ namespace cs {
 		case token_types::signal: {
 			switch (static_cast<token_signal *>(token)->get_signal()) {
 			default:
+				break;
+			case signal_types::addr_:
+				if (it.left().data() != nullptr)
+					throw compile_error("Wrong grammar for addr expression.");
 				break;
 			case signal_types::new_:
 				if (it.left().data() != nullptr)

@@ -348,7 +348,7 @@ namespace cs {
 
 		pointer() = default;
 
-		explicit pointer(var v) : data(std::move(v)) {}
+		explicit pointer(const var &v) : data(v) {}
 
 		bool operator==(const pointer &ptr) const
 		{

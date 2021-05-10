@@ -133,6 +133,51 @@ namespace cs {
 		return a;
 	}
 
+	var &runtime_type::parse_dot_lhs(const var &a, token_base *b)
+	{
+		if (a.type() == typeid(constant_values)) {
+			switch (a.const_val<constant_values>()) {
+			case constant_values::global_namespace:
+				return storage.get_var_global(static_cast<token_id *>(b)->get_id());
+			case constant_values::local_namepace:
+				return storage.get_var_current(static_cast<token_id *>(b)->get_id());
+			default:
+				throw runtime_error("Unknown scope tag.");
+			}
+		}
+		else if (a.type() == typeid(namespace_t))
+			return a.val<namespace_t>()->get_var(static_cast<token_id *>(b)->get_id());
+		else if (a.type() == typeid(type_t))
+			return a.const_val<type_t>().get_var(static_cast<token_id *>(b)->get_id());
+		else if (a.type() == typeid(structure)) {
+			var &val = a.val<structure>().get_var(static_cast<token_id *>(b)->get_id());
+			if (val.type() != typeid(callable) || !val.const_val<callable>().is_member_fn())
+				return val;
+			else
+				throw runtime_error("Can not visit member function as lvalue.");
+		}
+		else {
+			try {
+				var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
+				if (val.type() == typeid(callable))
+					throw runtime_error("Can not visit member function as lvalue.");
+				else
+					return val;
+			}
+			catch (...) {
+				if (a.type() == typeid(hash_map)) {
+					auto &cmap = a.val<hash_map>();
+					const string &str = static_cast<token_id *>(b)->get_id().get_id();
+					if (cmap.count(str) == 0)
+						throw runtime_error(std::string("Key \"") + str + "\" does not exist.");
+					return cmap.at(str);
+				}
+				else
+					throw;
+			}
+		}
+	}
+
 	var runtime_type::parse_dot(const var &a, token_base *b)
 	{
 		if (a.type() == typeid(constant_values)) {
@@ -142,7 +187,7 @@ namespace cs {
 			case constant_values::local_namepace:
 				return storage.get_var_current(static_cast<token_id *>(b)->get_id());
 			default:
-				throw runtime_error("Unsupported operator operations(Dot).");
+				throw runtime_error("Unknown scope tag.");
 			}
 		}
 		else if (a.type() == typeid(namespace_t))
@@ -269,6 +314,24 @@ namespace cs {
 		return a;
 	}
 
+	var runtime_type::parse_lnkasi(var &a, const var &b)
+	{
+		a = b;
+		return a;
+	}
+
+	var runtime_type::parse_lnkasi(tree_type<token_base *>::iterator a, const var &b)
+	{
+		token_base *token = a.data();
+		if (token != nullptr) {
+			if (token->get_type() == token_types::id)
+				return parse_lnkasi(storage.get_var(static_cast<token_id *>(token)->get_id()), b);
+			else if (token->get_type() == token_types::signal && static_cast<token_signal *>(token)->get_signal() == signal_types::dot_)
+				return parse_lnkasi(parse_dot_lhs(parse_expr(a.left()), a.right().data()), b);
+		}
+		throw runtime_error("Wrong operand in limited assign expression(Expect ID or Dot Expression).");
+	}
+
 	var runtime_type::parse_bind(token_base *a, const var &b)
 	{
 		if (b.type() != typeid(array))
@@ -365,6 +428,11 @@ namespace cs {
 			else
 				return --b.val<number>();
 		}
+	}
+
+	var runtime_type::parse_addr(const var &b)
+	{
+		return var::make<pointer>(b);
 	}
 
 	var runtime_type::parse_fcall(const var &a, token_base *b)
@@ -572,6 +640,9 @@ namespace cs {
 			case signal_types::asi_:
 				return parse_asi(parse_expr(it.left()), parse_expr(it.right()));
 				break;
+			case signal_types::lnkasi_:
+				return parse_lnkasi(it.left(), parse_expr(it.right()));
+				break;
 			case signal_types::bind_:
 				return parse_bind(it.left().data(), parse_expr(it.right()));
 				break;
@@ -607,6 +678,9 @@ namespace cs {
 				break;
 			case signal_types::dec_:
 				return parse_dec(parse_expr(it.left()), parse_expr(it.right()));
+				break;
+			case signal_types::addr_:
+				return rvalue(parse_addr(parse_expr(it.right())));
 				break;
 			case signal_types::fcall_:
 				return parse_fcall(parse_expr(it.left()), it.right().data());
