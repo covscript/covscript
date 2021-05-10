@@ -648,7 +648,7 @@ namespace cs_impl {
 
 		any &operator=(const any &var)
 		{
-			if (&var != this) {
+			if (!is_same(var)) {
 				recycle();
 				mDat = var.duplicate();
 			}

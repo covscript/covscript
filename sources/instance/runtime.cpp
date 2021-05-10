@@ -323,13 +323,19 @@ namespace cs {
 	var runtime_type::parse_lnkasi(tree_type<token_base *>::iterator a, const var &b)
 	{
 		token_base *token = a.data();
-		if (token != nullptr) {
-			if (token->get_type() == token_types::id)
-				return parse_lnkasi(storage.get_var(static_cast<token_id *>(token)->get_id()), b);
-			else if (token->get_type() == token_types::signal && static_cast<token_signal *>(token)->get_signal() == signal_types::dot_)
+		if (token->get_type() == token_types::id)
+			return parse_lnkasi(storage.get_var(static_cast<token_id *>(token)->get_id()), b);
+		else if (token->get_type() == token_types::signal) {
+			switch (static_cast<token_signal *>(token)->get_signal()) {
+			case signal_types::dot_:
 				return parse_lnkasi(parse_dot_lhs(parse_expr(a.left()), a.right().data()), b);
-		}
-		throw runtime_error("Wrong operand in limited assign expression(Expect ID or Dot Expression).");
+			case signal_types::access_:
+				return parse_lnkasi(parse_access_lhs(parse_expr(a.left()), parse_expr(a.right())), b);
+			default:
+				throw runtime_error("Unexpected left operand in link assign expression.");
+			}
+		} else
+			throw runtime_error("Unexpected left operand in link assign expression.");
 	}
 
 	var runtime_type::parse_bind(token_base *a, const var &b)
@@ -476,6 +482,39 @@ namespace cs {
 			throw runtime_error("Unsupported operator operations(Fcall).");
 	}
 
+	var &runtime_type::parse_access_lhs(const var &a, const var &b)
+	{
+		if (a.type() == typeid(array)) {
+			if (b.type() != typeid(number))
+				throw runtime_error("Index must be a number.");
+			auto &arr = a.val<array>();
+			std::size_t posit = 0;
+			if (b.const_val<number>() >= 0) {
+				posit = b.const_val<number>();
+				if (posit >= arr.size()) {
+					for (std::size_t i = posit - arr.size() + 1; i > 0; --i)
+						arr.emplace_back(number(0));
+				}
+			}
+			else {
+				if (-b.const_val<number>() > arr.size())
+					throw runtime_error("Out of range.");
+				posit = arr.size() + b.const_val<number>();
+			}
+			return arr[posit];
+		}
+		else if (a.type() == typeid(hash_map)) {
+			auto &map = a.val<hash_map>();
+			if (map.count(b) == 0)
+				map.emplace(copy(b), number(0));
+			return map.at(b);
+		}
+		else if (a.type() == typeid(string))
+			throw runtime_error("Access string object as lvalue.");
+		else
+			throw runtime_error("Access non-array or string object.");
+	}
+
 	var runtime_type::parse_access(const var &a, const var &b)
 	{
 		if (a.type() == typeid(array)) {
@@ -509,9 +548,9 @@ namespace cs {
 				throw runtime_error("Index must be a number.");
 			const auto &cstr = a.const_val<string>();
 			if (b.const_val<number>() >= 0)
-				return cstr[b.const_val<number>()];
+				return var::make_constant<char>(cstr[b.const_val<number>()]);
 			else
-				return cstr[cstr.size() + b.const_val<number>()];
+				return var::make_constant<char>(cstr[cstr.size() + b.const_val<number>()]);
 		}
 		else
 			throw runtime_error("Access non-array or string object.");

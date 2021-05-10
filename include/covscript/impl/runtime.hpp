@@ -370,6 +370,8 @@ namespace cs {
 
 		var parse_fcall(const var &, token_base *);
 
+		var &parse_access_lhs(const var &, const var &);
+
 		var parse_access(const var &, const var &);
 
 		var parse_expr(const tree_type<token_base *>::iterator &, bool= false);
