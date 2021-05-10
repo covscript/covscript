@@ -246,8 +246,6 @@ namespace cs {
 			case signal_types::asi_: {
 				const var &val = constant ? static_cast<token_value *>(it.right().data())->get_value() : parse_expr(
 				                     it.right());
-				if (link && val.is_protect())
-					throw runtime_error("Wrong grammar for variable definition: link with protected value.");
 				storage.add_var(static_cast<token_id *>(it.left().data())->get_id(),
 				                constant || link ? val : copy(val),
 				                constant);

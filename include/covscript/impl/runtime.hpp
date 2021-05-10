@@ -320,6 +320,8 @@ namespace cs {
 
 		var parse_powasi(var, const var &);
 
+		var &parse_dot_lhs(const var &, token_base *);
+
 		var parse_dot(const var &, token_base *);
 
 		var parse_arrow(const var &, token_base *);
@@ -339,6 +341,10 @@ namespace cs {
 		var parse_aeq(const var &, const var &);
 
 		var parse_asi(var, const var &);
+
+		var parse_lnkasi(var &, const var &);
+
+		var parse_lnkasi(tree_type<token_base *>::iterator, const var &);
 
 		var parse_bind(token_base *, const var &);
 
@@ -360,7 +366,11 @@ namespace cs {
 
 		var parse_dec(const var &, const var &);
 
+		var parse_addr(const var &);
+
 		var parse_fcall(const var &, token_base *);
+
+		var &parse_access_lhs(const var &, const var &);
 
 		var parse_access(const var &, const var &);
 
