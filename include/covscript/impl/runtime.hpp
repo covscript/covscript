@@ -30,6 +30,7 @@ namespace cs {
 	class domain_manager {
 		stack_type<set_t<string>> m_set;
 		stack_type<domain_type> m_data;
+		set_t<string> buildin_symbols;
 		bool m_cache_refresh = false;
 	public:
 		domain_manager()
@@ -81,7 +82,19 @@ namespace cs {
 
 		domain_type &get_global() const
 		{
-			return m_data.top();
+			return m_data.bottom();
+		}
+
+		namespace_t get_namespace() const
+		{
+			namespace_t nm = std::make_shared<name_space>();
+			const domain_type &global = m_data.bottom();
+			for (auto &it : global)
+			{
+				if (buildin_symbols.count(it.first) == 0)
+					nm->add_var(it.first, global.get_var_by_id(it.second));
+			}
+			return nm;
 		}
 
 		void remove_set()
@@ -221,6 +234,7 @@ namespace cs {
 		domain_manager &add_buildin_var(T &&name, const var &var)
 		{
 			add_record(name);
+			buildin_symbols.emplace(name);
 			return add_var_global(name, var);
 		}
 
@@ -247,6 +261,7 @@ namespace cs {
 		domain_manager &add_buildin_type(T &&name, const std::function<var()> &func, const std::type_index &id)
 		{
 			add_record(name);
+			buildin_symbols.emplace(name);
 			return add_var(name, var::make_protect<type_t>(func, id));
 		}
 
@@ -255,6 +270,7 @@ namespace cs {
 		add_buildin_type(T &&name, const std::function<var()> &func, const std::type_index &id, namespace_t ext)
 		{
 			add_record(name);
+			buildin_symbols.emplace(name);
 			return add_var(name, var::make_protect<type_t>(func, id, ext));
 		}
 

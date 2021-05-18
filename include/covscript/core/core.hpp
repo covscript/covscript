@@ -883,6 +883,16 @@ namespace cs {
 			for (auto &it:domain)
 				m_data->add_var(it.first, domain.get_var_by_id(it.second));
 		}
+
+		name_space &operator=(const name_space &ns)
+		{
+			if (&ns != this)
+			{
+				m_data->clear();
+				copy_namespace(ns);
+			}
+			return *this;
+		}
 	};
 
 	template<typename T>
