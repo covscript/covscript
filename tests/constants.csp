@@ -1,5 +1,8 @@
 package constants
-import constants
-constant a={"World"}
-constant str="Hello"
-a.push_front(constants.str)
+constant a = {"World"}
+constant str = "Hello"
+a.push_front(str)
+function test()
+    import constants
+    system.out.println(constants.a)
+end
