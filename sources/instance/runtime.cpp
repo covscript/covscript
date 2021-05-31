@@ -334,7 +334,8 @@ namespace cs {
 			default:
 				throw runtime_error("Unexpected left operand in link assign expression.");
 			}
-		} else
+		}
+		else
 			throw runtime_error("Unexpected left operand in link assign expression.");
 	}
 

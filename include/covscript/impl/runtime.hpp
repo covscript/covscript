@@ -86,8 +86,7 @@ namespace cs {
 		{
 			namespace_t nm = std::make_shared<name_space>();
 			const domain_type &global = m_data.bottom();
-			for (auto &it : global)
-			{
+			for (auto &it : global) {
 				if (buildin_symbols.count(it.first) == 0)
 					nm->add_var(it.first, global.get_var_by_id(it.second));
 			}

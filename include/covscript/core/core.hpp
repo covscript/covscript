@@ -886,8 +886,7 @@ namespace cs {
 
 		name_space &operator=(const name_space &ns)
 		{
-			if (&ns != this)
-			{
+			if (&ns != this) {
 				m_data->clear();
 				copy_namespace(ns);
 			}
