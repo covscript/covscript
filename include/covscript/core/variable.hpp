@@ -250,7 +250,7 @@ namespace cs_impl {
 	static cs::namespace_t &get_ext()
 	{
 		throw cs::runtime_error(std::string("Target type \"") + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) +
-		                        "\" dosen't have extension field.");
+		                        "\" doesn't have extension field.");
 	}
 
 	template<typename _Target>
@@ -576,7 +576,7 @@ namespace cs_impl {
 		cs::namespace_t &get_ext() const
 		{
 			if (this->mDat == nullptr)
-				throw cs::runtime_error("Type dosen't have extension field.");
+				throw cs::runtime_error("Type doesn't have extension field.");
 			return this->mDat->data->get_ext();
 		}
 

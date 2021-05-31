@@ -900,7 +900,7 @@ namespace cs {
 		if (extensions.get() != nullptr)
 			return extensions->get_var(name);
 		else
-			throw runtime_error("Type dosen't have extension field.");
+			throw runtime_error("Type doesn't have extension field.");
 	}
 
 // Internal Garbage Collection
