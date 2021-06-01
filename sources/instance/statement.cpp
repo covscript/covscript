@@ -120,15 +120,7 @@ namespace cs {
 	void statement_expression::repl_run_impl()
 	{
 		const var &result = context->instance->parse_expr(mTree.root());
-		try {
-			std::cout << result.to_string() << std::endl;
-		}
-		catch (cov::error &e) {
-			if (std::strcmp(e.what(), "E000D"))
-				std::cout << "[" << result.get_type_name() << "]" << std::endl;
-			else
-				throw;
-		}
+		std::cout << "Result: " << result.to_string() << std::endl;
 	}
 
 	void statement_expression::dump(std::ostream &o) const
@@ -370,14 +362,7 @@ namespace cs {
 		o << " >\n";
 		for (auto &it:mCases) {
 			o << "< BeginCase: Tag = \"";
-			try {
-				o << it.first.to_string();
-			}
-			catch (cov::error &e) {
-				if (!std::strcmp(e.what(), "E000D"))
-					throw e;
-				o << "[" << cs_impl::cxx_demangle(it.first.type().name()) << "]";
-			}
+			o << it.first.to_string();
 			o << "\" >\n";
 			for (auto &ptr:it.second->get_block())
 				ptr->dump(o);

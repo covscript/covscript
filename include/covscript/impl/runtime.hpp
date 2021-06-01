@@ -24,13 +24,13 @@
 * Github:  https://github.com/mikecovlee
 * Website: http://covscript.org.cn
 */
-#include <covscript/impl/symbols.hpp>
+#include <covscript/impl/compiler.hpp>
 
 namespace cs {
 	class domain_manager {
-		stack_type <set_t<string>> m_set;
-		stack_type <domain_type> m_data;
-		bool m_cache_refresh = false;
+		stack_type<set_t<string>> m_set;
+		stack_type<domain_type> m_data;
+		set_t<string> buildin_symbols;
 	public:
 		domain_manager()
 		{
@@ -55,7 +55,6 @@ namespace cs {
 				m_set.pop_no_return();
 			while (!m_data.empty())
 				m_data.pop_no_return();
-			m_cache_refresh = true;
 		}
 
 		bool is_initial() const
@@ -71,7 +70,6 @@ namespace cs {
 		void add_domain()
 		{
 			m_data.push();
-			m_cache_refresh = true;
 		}
 
 		domain_type &get_domain() const
@@ -81,7 +79,18 @@ namespace cs {
 
 		domain_type &get_global() const
 		{
-			return m_data.top();
+			return m_data.bottom();
+		}
+
+		namespace_t get_namespace() const
+		{
+			namespace_t nm = std::make_shared<name_space>();
+			const domain_type &global = m_data.bottom();
+			for (auto &it : global) {
+				if (buildin_symbols.count(it.first) == 0)
+					nm->add_var(it.first, global.get_var_by_id(it.second));
+			}
+			return nm;
 		}
 
 		void remove_set()
@@ -92,7 +101,6 @@ namespace cs {
 		void remove_domain()
 		{
 			m_data.pop_no_return();
-			m_cache_refresh = true;
 		}
 
 		void clear_set()
@@ -139,10 +147,8 @@ namespace cs {
 
 		inline var &get_var(const var_id &id)
 		{
-			if (!m_cache_refresh && id.m_domain_id < m_data.size() && m_data[id.m_domain_id].consistence(id))
+			if (id.m_domain_id < m_data.size() && m_data[id.m_domain_id].consistence(id))
 				return m_data[id.m_domain_id].get_var_by_id(id.m_slot_id);
-			if (m_cache_refresh)
-				m_cache_refresh = false;
 			for (std::size_t i = 0, size = m_data.size(); i < size; ++i)
 				if (m_data[i].exist(id))
 					return m_data[i].get_var_no_check(id, i);
@@ -221,6 +227,7 @@ namespace cs {
 		domain_manager &add_buildin_var(T &&name, const var &var)
 		{
 			add_record(name);
+			buildin_symbols.emplace(name);
 			return add_var_global(name, var);
 		}
 
@@ -247,6 +254,7 @@ namespace cs {
 		domain_manager &add_buildin_type(T &&name, const std::function<var()> &func, const std::type_index &id)
 		{
 			add_record(name);
+			buildin_symbols.emplace(name);
 			return add_var(name, var::make_protect<type_t>(func, id));
 		}
 
@@ -255,6 +263,7 @@ namespace cs {
 		add_buildin_type(T &&name, const std::function<var()> &func, const std::type_index &id, namespace_t ext)
 		{
 			add_record(name);
+			buildin_symbols.emplace(name);
 			return add_var(name, var::make_protect<type_t>(func, id, ext));
 		}
 
@@ -266,7 +275,7 @@ namespace cs {
 	};
 
 	class runtime_type {
-		map_t <std::string, callable> literals;
+		map_t<std::string, callable> literals;
 	public:
 		domain_manager storage;
 
@@ -320,6 +329,8 @@ namespace cs {
 
 		var parse_powasi(var, const var &);
 
+		var &parse_dot_lhs(const var &, token_base *);
+
 		var parse_dot(const var &, token_base *);
 
 		var parse_arrow(const var &, token_base *);
@@ -339,6 +350,10 @@ namespace cs {
 		var parse_aeq(const var &, const var &);
 
 		var parse_asi(var, const var &);
+
+		var parse_lnkasi(var &, const var &);
+
+		var parse_lnkasi(tree_type<token_base *>::iterator, const var &);
 
 		var parse_bind(token_base *, const var &);
 
@@ -360,7 +375,11 @@ namespace cs {
 
 		var parse_dec(const var &, const var &);
 
+		var parse_addr(const var &);
+
 		var parse_fcall(const var &, token_base *);
+
+		var &parse_access_lhs(const var &, const var &);
 
 		var parse_access(const var &, const var &);
 

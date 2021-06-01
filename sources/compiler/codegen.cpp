@@ -30,10 +30,11 @@ namespace cs {
 	method_expression::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().front())->get_tree();
-		if (tree.root().usable() && tree.root().data()->get_type() != token_types::value)
-			return new statement_expression(tree, context, raw.front().back());
-		else
+		if (context->compiler->fold_expr && tree.root().usable() &&
+		        tree.root().data()->get_type() == token_types::value)
 			return nullptr;
+		else
+			return new statement_expression(tree, context, raw.front().back());
 	}
 
 	void method_import::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)

@@ -222,6 +222,7 @@ namespace cs {
 
 		// Settings
 		bool disable_optimizer = false;
+		bool fold_expr = true;
 
 		// Context
 		context_t swap_context(context_t cxt)

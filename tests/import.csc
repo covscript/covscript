@@ -1,8 +1,10 @@
 import constants
+using  constants
 switch system.in.input()
-    case constants.a[0]
+    case a[0]
         system.out.println("Hello")
     end
 end
-constant s=constants.str+"!!!"
+constant s = str + "!!!"
 system.out.println(s)
+constants.test()

@@ -190,8 +190,8 @@ void covscript_main(int args_size, char *args[])
 		std::cout << "\nMetadata:\n";
 		std::cout << "  Import Path: " << cs::current_process->import_path << "\n";
 		std::cout << "  STD Version: " << cs::current_process->std_version << "\n";
-		std::cout << "  API Version: " << COVSCRIPT_API_VERSION << "\n";
-		std::cout << "  ABI Version: " << COVSCRIPT_ABI_VERSION << "\n";
+		std::cout << "  API Version: " << CS_GET_VERSION_STR(COVSCRIPT_API_VERSION) << "\n";
+		std::cout << "  ABI Version: " << CS_GET_VERSION_STR(COVSCRIPT_ABI_VERSION) << "\n";
 #ifdef COVSCRIPT_PLATFORM_WIN32
 		std::cout << "  Runtime Env: WIN32\n";
 #else

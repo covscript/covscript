@@ -1461,17 +1461,7 @@ namespace cs_impl {
 			.add_var("exist", CNI_SANDBOX(make_cni(exist)))
 			.add_var("can_read", CNI_SANDBOX(make_cni(can_read)))
 			.add_var("can_write", CNI_SANDBOX(make_cni(can_write)))
-			.add_var("can_execute", CNI_SANDBOX(make_cni(can_execute)))
-			// Deprecated, will reserved until 2021.6
-			.add_var("exists", CNI_SANDBOX(make_cni(exist)))
-			.add_var("is_file", CNI_SANDBOX(make_cni([](const std::string &path) {
-				return !is_dir(path);
-			})))
-			.add_var("is_directory", CNI_SANDBOX(make_cni(is_dir)))
-			.add_var("mkdir", CNI_SANDBOX(make_cni(mkdir)))
-			.add_var("mkdir_p", CNI_SANDBOX(make_cni(mkdir_p)))
-			.add_var("chmod", CNI_SANDBOX(make_cni(chmod)))
-			.add_var("chmod_r", CNI_SANDBOX(make_cni(chmod_r)));
+			.add_var("can_execute", CNI_SANDBOX(make_cni(can_execute)));
 		}
 	}
 

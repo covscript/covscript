@@ -55,7 +55,7 @@ namespace cs {
 		else {
 			// is package file
 			context_t rt = create_subcontext(context);
-			namespace_t module = std::make_shared<name_space>(&rt->instance->storage.get_global());
+			namespace_t module = std::make_shared<name_space>();
 			context->compiler->modules.emplace(path, module);
 			rt->compiler->swap_context(rt);
 			try {
@@ -67,6 +67,7 @@ namespace cs {
 			}
 			context->compiler->swap_context(context);
 			rt->instance->interpret();
+			*module = *rt->instance->storage.get_namespace();
 			return module;
 		}
 	}
@@ -92,7 +93,7 @@ namespace cs {
 				return context->compiler->modules[package_path];
 			if (std::ifstream(package_path + ".csp")) {
 				context_t rt = create_subcontext(context);
-				namespace_t module = std::make_shared<name_space>(&rt->instance->storage.get_global());
+				namespace_t module = std::make_shared<name_space>();
 				context->compiler->modules.emplace(package_path, module);
 				rt->compiler->swap_context(rt);
 				try {
@@ -108,6 +109,7 @@ namespace cs {
 					throw runtime_error("Target file is not a package.");
 				if (rt->package_name != name)
 					throw runtime_error("Package name is different from file name.");
+				*module = *rt->instance->storage.get_namespace();
 				return module;
 			}
 			else if (std::ifstream(package_path + ".cse")) {
@@ -246,8 +248,6 @@ namespace cs {
 			case signal_types::asi_: {
 				const var &val = constant ? static_cast<token_value *>(it.right().data())->get_value() : parse_expr(
 				                     it.right());
-				if (link && val.is_protect())
-					throw runtime_error("Wrong grammar for variable definition: link with protected value.");
 				storage.add_var(static_cast<token_id *>(it.left().data())->get_id(),
 				                constant || link ? val : copy(val),
 				                constant);
@@ -281,7 +281,8 @@ namespace cs {
 		}
 	}
 
-	void instance_type::parse_define_structured_binding(tree_type<token_base *>::iterator it, bool constant, bool link)
+	void
+	instance_type::parse_define_structured_binding(tree_type<token_base *>::iterator it, bool constant, bool link)
 	{
 		std::function<void(tree_type<token_base *>::iterator, const var &)> process;
 		process = [&process, this, constant, link](tree_type<token_base *>::iterator it, const var &val) {
@@ -473,14 +474,36 @@ namespace cs {
 				this->run(line);
 			}
 			else {
-				if (cmd == "charset:ascii")
-					encoding = charset::ascii;
-				else if (cmd == "charset:utf8")
-					encoding = charset::utf8;
-				else if (cmd == "charset:gbk")
-					encoding = charset::gbk;
+				auto pos = cmd.find(':');
+				std::string arg;
+				if (pos != std::string::npos) {
+					arg = cmd.substr(pos + 1);
+					cmd = cmd.substr(0, pos);
+				}
+				if (cmd == "exit") {
+					int code = 0;
+					process_context::on_process_exit_default_handler(&code);
+				}
+				else if (cmd == "charset") {
+					if (arg == "ascii")
+						encoding = charset::ascii;
+					else if (arg == "utf8")
+						encoding = charset::utf8;
+					else if (arg == "gbk")
+						encoding = charset::gbk;
+					else
+						throw exception(line_num, context->file_path, "@" + cmd + ": " + arg,
+						                "Unavailable encoding.");
+				}
+				else if (cmd == "require") {
+					std::string version_str = CS_GET_VERSION_STR(COVSCRIPT_STD_VERSION);
+					if (arg > version_str)
+						throw exception(line_num, context->file_path, "@" + cmd + ": " + arg,
+						                "Newer Language Standard required: " + arg + ", now on " + version_str);
+				}
 				else
-					throw exception(line_num, context->file_path, cmd, "Wrong grammar for preprocessor command.");
+					throw exception(line_num, context->file_path, "@" + cmd + (arg.empty() ? "" : ": " + arg),
+					                "Wrong grammar for preprocessor command.");
 				context->file_buff.emplace_back();
 			}
 			return;

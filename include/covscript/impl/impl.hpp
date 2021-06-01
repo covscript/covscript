@@ -24,7 +24,6 @@
 * Github:  https://github.com/mikecovlee
 * Website: http://covscript.org.cn
 */
-#include <covscript/impl/compiler.hpp>
 #include <covscript/impl/runtime.hpp>
 
 namespace cs {
@@ -100,6 +99,7 @@ namespace cs {
 		explicit repl(context_t c) : context(std::move(c))
 		{
 			context->file_path = "<REPL_ENV>";
+			context->compiler->fold_expr = false;
 		}
 
 		repl(const repl &) = delete;

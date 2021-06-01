@@ -105,14 +105,6 @@ namespace cs_impl {
 		}
 	};
 
-	template<typename T>
-	struct to_string_if<T, false> {
-		static std::string to_string(const T &)
-		{
-			throw cov::error("E000D");
-		}
-	};
-
 // To Integer
 	template<typename, bool>
 	struct to_integer_if;
@@ -247,10 +239,18 @@ namespace cs_impl {
 	}
 
 	template<typename T>
+	struct to_string_if<T, false> {
+		static std::string to_string(const T &)
+		{
+			return "[" + cxx_demangle(get_name_of_type<T>()) + "]";
+		}
+	};
+
+	template<typename T>
 	static cs::namespace_t &get_ext()
 	{
 		throw cs::runtime_error(std::string("Target type \"") + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) +
-		                        "\" dosen't have extension field.");
+		                        "\" doesn't have extension field.");
 	}
 
 	template<typename _Target>
@@ -576,7 +576,7 @@ namespace cs_impl {
 		cs::namespace_t &get_ext() const
 		{
 			if (this->mDat == nullptr)
-				throw cs::runtime_error("Type dosen't have extension field.");
+				throw cs::runtime_error("Type doesn't have extension field.");
 			return this->mDat->data->get_ext();
 		}
 
@@ -648,7 +648,7 @@ namespace cs_impl {
 
 		any &operator=(const any &var)
 		{
-			if (&var != this) {
+			if (!is_same(var)) {
 				recycle();
 				mDat = var.duplicate();
 			}
