@@ -198,7 +198,7 @@ namespace cs {
 	void statement_for::gen_flat_ir(flat_executor *fe)
 	{
 		fe->push_ir<instruct_push_scope>();
-		fe->push_ir<instruct_var>(mParallel[0]);
+		fe->push_ir<instruct_var>(mParallel[0], false);
 		fe->push_ir<instruct_push_scope>(scope_type::loop);
 		fe->push_ir<instruct_cond>(mParallel[1], false, scope_type::loop);
 		for (auto &it:mBlock)
