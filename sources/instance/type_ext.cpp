@@ -859,7 +859,7 @@ namespace cs_impl {
 
 		number log(number a, number b)
 		{
-			return std::log(b / a);
+			return std::log(b)/std::log(a);
 		}
 
 		number sin(number n)
