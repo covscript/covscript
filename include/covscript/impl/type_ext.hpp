@@ -154,7 +154,7 @@ namespace cs_impl {
 	std::string to_string<cs::hash_set>(const cs::hash_set &set)
 	{
 		if (set.empty())
-			return "hash_set => {}";
+			return "cs::hash_set => {}";
 		std::string str = "cs::hash_set => {";
 		for (const cs::var &it:set)
 			str += it.to_string() + ", ";

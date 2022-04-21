@@ -32,8 +32,8 @@
 * Master
 *
 */
-#define COVSCRIPT_VERSION_NUM 3,3,5,22
-#define COVSCRIPT_VERSION_STR "3.3.5 Manis pentadactyla(Stable) Build 22"
+#define COVSCRIPT_VERSION_NUM 3,3,5,23
+#define COVSCRIPT_VERSION_STR "3.3.5 Manis pentadactyla(Stable) Build 23"
 #define COVSCRIPT_STD_VERSION 210503
 #define COVSCRIPT_API_VERSION 210504
 #define COVSCRIPT_ABI_VERSION 210503
