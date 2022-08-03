@@ -136,6 +136,11 @@ function print_impl(ofs, flag, expr)
         end
         case 1
             ofs.print(" - ")
+            if expr.right.left != null && expr.right.right != null
+                if expr.right.value == 1
+                    nxt_flag = true
+                end
+            end
         end
         case 2
             ofs.print(" × ")
@@ -230,6 +235,32 @@ function check_range(str0, str1)
     end
 end
 
+function check_expr_range(expr, rbeg, rend)
+    if expr.left == null || expr.right == null
+        return expr.value
+    end
+    var val = 0
+    switch expr.value
+        case 0
+            val = check_expr_range(expr.left, rbeg, rend) + check_expr_range(expr.right, rbeg, rend)
+        end
+        case 1
+            val = check_expr_range(expr.left, rbeg, rend) - check_expr_range(expr.right, rbeg, rend)
+        end
+        case 2
+            val = check_expr_range(expr.left, rbeg, rend) * check_expr_range(expr.right, rbeg, rend)
+        end
+        case 3
+            val = check_expr_range(expr.left, rbeg, rend) / check_expr_range(expr.right, rbeg, rend)
+        end
+    end
+    if val >= rbeg && val <= rend
+        return val
+    else
+        throw runtime.exception("FAILED!!!")
+    end
+end
+
 function run_gen()
     foreach it in txt_buffs
         if check_format(it) != -1
@@ -250,9 +281,12 @@ function run_gen()
         loop
             var expr = gen(opt)
             var val = eval(expr)
-            if val >= opt.output_range[0] && val <= opt.output_range[1]
+            try
+                check_expr_range(expr, opt.output_range[0], opt.output_range[1])
                 expr_list.push_back(expr : val)
                 break
+            catch e
+                continue
             end
         end
     end
