@@ -1014,6 +1014,11 @@ namespace cs_impl {
 			return t.tm_isdst;
 		}
 
+		number unixtime(const std::tm &t)
+		{
+			return std::mktime(const_cast<tm*>(&t));
+		}
+
 		void init()
 		{
 			(*time_ext)
@@ -1025,7 +1030,8 @@ namespace cs_impl {
 			.add_var("yday", make_cni(yday, callable::types::member_visitor))
 			.add_var("mon", make_cni(mon, callable::types::member_visitor))
 			.add_var("year", make_cni(year, callable::types::member_visitor))
-			.add_var("is_dst", make_cni(is_dst, callable::types::member_visitor));
+			.add_var("is_dst", make_cni(is_dst, callable::types::member_visitor))
+			.add_var("unixtime", make_cni(unixtime, callable::types::member_visitor));
 		}
 	}
 	namespace runtime_cs_ext {
@@ -1048,16 +1054,36 @@ namespace cs_impl {
 			return cov::timer::time(cov::timer::time_unit::milli_sec);
 		}
 
-		std::tm local_time()
+		var local_time(vector &args)
 		{
-			std::time_t t = std::time(nullptr);
-			return *std::localtime(&t);
+			std::time_t t;
+			switch (args.size()) {
+			case 0:
+				t = std::time(nullptr);
+				return var::make<std::tm>(*std::localtime(&t));
+			case 1:
+				t = args[0].const_val<number>();
+				return var::make<std::tm>(*std::localtime(&t));
+			default:
+				throw cs::runtime_error(
+				    "Wrong size of the arguments. Expected 0 or 1, provided " + std::to_string(args.size()));
+			}
 		}
 
-		std::tm utc_time()
+		var utc_time(vector &args)
 		{
-			std::time_t t = std::time(nullptr);
-			return *std::gmtime(&t);
+			std::time_t t;
+			switch (args.size()) {
+			case 0:
+				t = std::time(nullptr);
+				return var::make<std::tm>(*std::gmtime(&t));
+			case 1:
+				t = args[0].const_val<number>();
+				return var::make<std::tm>(*std::gmtime(&t));
+			default:
+				throw cs::runtime_error(
+				    "Wrong size of the arguments. Expected 0 or 1, provided " + std::to_string(args.size()));
+			}
 		}
 
 		void delay(number time)
@@ -1204,8 +1230,8 @@ namespace cs_impl {
 			.add_var("get_import_path", make_cni(get_import_path, true))
 			.add_var("info", make_cni(info))
 			.add_var("time", make_cni(time))
-			.add_var("local_time", make_cni(local_time))
-			.add_var("utc_time", make_cni(utc_time))
+			.add_var("local_time", var::make_protect<callable>(local_time, callable::types::request_fold))
+			.add_var("utc_time", var::make_protect<callable>(utc_time, callable::types::request_fold))
 			.add_var("delay", make_cni(delay))
 			.add_var("exception", make_cni(exception))
 			.add_var("hash", make_cni(hash, true))
