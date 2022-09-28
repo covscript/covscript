@@ -653,7 +653,7 @@ namespace cs {
 
 		range_iterator &operator++()
 		{
-			m_index += m_step;
+			m_index = m_index + m_step;
 			return *this;
 		}
 
