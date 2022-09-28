@@ -28,6 +28,7 @@
 #include <covscript_impl/mozart/timer.hpp>
 #include <covscript_impl/system.hpp>
 #include <covscript/impl/impl.hpp>
+#include <covscript/cni.hpp>
 #include <algorithm>
 #include <iostream>
 #include <future>
@@ -50,7 +51,7 @@ namespace cs_impl {
 // Element access
 		var at(const array &arr, number posit)
 		{
-			return arr.at(posit);
+			return arr.at(posit.as_integer());
 		}
 
 		var front(const array &arr)
@@ -85,7 +86,7 @@ namespace cs_impl {
 
 		array::iterator next_n(array::iterator &it, number offset)
 		{
-			return it += offset;
+			return it += offset.as_integer();
 		}
 
 		array::iterator prev(array::iterator &it)
@@ -95,7 +96,7 @@ namespace cs_impl {
 
 		array::iterator prev_n(array::iterator &it, number offset)
 		{
-			return it -= offset;
+			return it -= offset.as_integer();
 		}
 
 		var data(array::iterator &it)
@@ -292,7 +293,7 @@ namespace cs_impl {
 			return std::toupper(c);
 		}
 
-		char from_ascii(number ascii)
+		char from_ascii(number_integer ascii)
 		{
 			if (ascii < 0 || ascii > 255)
 				throw lang_error("Out of range.");
@@ -488,7 +489,7 @@ namespace cs_impl {
 
 		void setprecision(number pre)
 		{
-			current_process->output_precision = pre;
+			current_process->output_precision = pre.as_integer();
 		}
 
 		void init()
@@ -591,12 +592,12 @@ namespace cs_impl {
 
 		void seek(istream &in, number pos)
 		{
-			in->seekg(pos);
+			in->seekg(pos.as_integer());
 		}
 
 		void seek_from(istream &in, std::ios_base::seekdir dir, number offset)
 		{
-			in->seekg(offset, dir);
+			in->seekg(offset.as_integer(), dir);
 		}
 
 		bool good(const istream &in)
@@ -653,12 +654,12 @@ namespace cs_impl {
 
 		void seek(ostream &out, number pos)
 		{
-			out->seekp(pos);
+			out->seekp(pos.as_integer());
 		}
 
 		void seek_from(ostream &out, std::ios_base::seekdir dir, number offset)
 		{
-			out->seekp(offset, dir);
+			out->seekp(offset.as_integer(), dir);
 		}
 
 		void flush(ostream &out)
@@ -844,98 +845,104 @@ namespace cs_impl {
 
 		number abs(number n)
 		{
-			return std::abs(n);
+			return std::abs(n.as_number());
 		}
 
 		number ln(number n)
 		{
-			return std::log(n);
+			return std::log(n.as_number());
 		}
 
 		number log10(number n)
 		{
-			return std::log10(n);
+			return std::log10(n.as_number());
 		}
 
 		number log(number a, number b)
 		{
-			return std::log(b)/std::log(a);
+			return std::log(b.as_number())/std::log(a.as_number());
 		}
 
 		number sin(number n)
 		{
-			return std::sin(n);
+			return std::sin(n.as_number());
 		}
 
 		number cos(number n)
 		{
-			return std::cos(n);
+			return std::cos(n.as_number());
 		}
 
 		number tan(number n)
 		{
-			return std::tan(n);
+			return std::tan(n.as_number());
 		}
 
 		number asin(number n)
 		{
-			return std::asin(n);
+			return std::asin(n.as_number());
 		}
 
 		number acos(number n)
 		{
-			return std::acos(n);
+			return std::acos(n.as_number());
 		}
 
 		number atan(number n)
 		{
-			return std::atan(n);
+			return std::atan(n.as_number());
 		}
 
 		number sqrt(number n)
 		{
-			return std::sqrt(n);
+			return std::sqrt(n.as_number());
 		}
 
 		number root(number a, number b)
 		{
-			return std::pow(a, number(1) / b);
+			return std::pow(a.as_number(), number_float(1) / b.as_number());
 		}
 
 		number pow(number a, number b)
 		{
-			return std::pow(a, b);
+			return std::pow(a.as_number(), b.as_number());
 		}
 
 		number _min(number a, number b)
 		{
-			return (std::min)(a, b);
+			if (a.is_integer())
+				return (std::min)(a.as_integer(), b.as_integer());
+			else
+				return (std::min)(a.as_number(), b.as_number());
 		}
 
 		number _max(number a, number b)
 		{
-			return (std::max)(a, b);
+			if (a.is_integer())
+				return (std::max)(a.as_integer(), b.as_integer());
+			else
+				return (std::max)(a.as_number(), b.as_number());
 		}
 
 		number rand(number b, number e)
 		{
-			return cov::rand<number>(b, e);
+			return cov::rand<number_float>(b.as_number(), e.as_number());
 		}
 
 		number randint(number b, number e)
 		{
-			return cov::rand<long>(b, e);
+			return cov::rand<number_integer>(b.as_integer(), e.as_integer());
 		}
 
 		void init()
 		{
 			(*math_const_ext)
-			.add_var("max", var::make_constant<number>((std::numeric_limits<number>::max)()))
-			.add_var("min", var::make_constant<number>((std::numeric_limits<number>::min)()))
-			.add_var("inf", var::make_constant<number>(std::numeric_limits<number>::infinity()))
-			.add_var("nan", var::make_constant<number>(std::numeric_limits<number>::quiet_NaN()))
-			.add_var("pi", var::make_constant<number>(std::asin(number(1)) * 2))
-			.add_var("e", var::make_constant<number>(std::exp(number(1))));
+			.add_var("max", var::make_constant<number>((std::numeric_limits<number_float>::max)()))
+			.add_var("min", var::make_constant<number>((std::numeric_limits<number_float>::min)()))
+			.add_var("inf", var::make_constant<number>(std::numeric_limits<number_float>::infinity()))
+			.add_var("nan", var::make_constant<number>(std::numeric_limits<number_float>::quiet_NaN()))
+			.add_var("pi", var::make_constant<number>(std::asin(number_float(1)) * 2))
+			.add_var("e", var::make_constant<number>(std::exp(number_float(1))));
 			(*math_ext)
 			.add_var("constants", make_namespace(math_const_ext))
 			.add_var("abs", make_cni(abs, true))
@@ -1062,7 +1069,7 @@ namespace cs_impl {
 				t = std::time(nullptr);
 				return var::make<std::tm>(*std::localtime(&t));
 			case 1:
-				t = args[0].const_val<number>();
+				t = args[0].const_val<number>().as_integer();
 				return var::make<std::tm>(*std::localtime(&t));
 			default:
 				throw cs::runtime_error(
@@ -1078,7 +1085,7 @@ namespace cs_impl {
 				t = std::time(nullptr);
 				return var::make<std::tm>(*std::gmtime(&t));
 			case 1:
-				t = args[0].const_val<number>();
+				t = args[0].const_val<number>().as_integer();
 				return var::make<std::tm>(*std::gmtime(&t));
 			default:
 				throw cs::runtime_error(
@@ -1088,7 +1095,7 @@ namespace cs_impl {
 
 		void delay(number time)
 		{
-			cov::timer::delay(cov::timer::time_unit::milli_sec, time);
+			cov::timer::delay(cov::timer::time_unit::milli_sec, time.as_integer());
 		}
 
 		var exception(const string &str)
@@ -1183,13 +1190,13 @@ namespace cs_impl {
 		{
 			if (func.type() == typeid(cs::callable)) {
 				cs::vector args(argument.begin(), argument.end());
-				return wait_for_impl(mill_sec, func.const_val<cs::callable>(), args);
+				return wait_for_impl(mill_sec.as_integer(), func.const_val<cs::callable>(), args);
 			}
 			else if (func.type() == typeid(cs::object_method)) {
 				const auto &om = func.const_val<cs::object_method>();
 				cs::vector args{om.object};
 				args.insert(args.end(), argument.begin(), argument.end());
-				return wait_for_impl(mill_sec, om.callable.const_val<cs::callable>(), args);
+				return wait_for_impl(mill_sec.as_integer(), om.callable.const_val<cs::callable>(), args);
 			}
 			else
 				throw cs::lang_error("Invoke non-callable object.");
@@ -1199,13 +1206,13 @@ namespace cs_impl {
 		{
 			if (func.type() == typeid(cs::callable)) {
 				cs::vector args(argument.begin(), argument.end());
-				return wait_until_impl(mill_sec, func.const_val<cs::callable>(), args);
+				return wait_until_impl(mill_sec.as_integer(), func.const_val<cs::callable>(), args);
 			}
 			else if (func.type() == typeid(cs::object_method)) {
 				const auto &om = func.const_val<cs::object_method>();
 				cs::vector args{om.object};
 				args.insert(args.end(), argument.begin(), argument.end());
-				return wait_for_impl(mill_sec, om.callable.const_val<cs::callable>(), args);
+				return wait_for_impl(mill_sec.as_integer(), om.callable.const_val<cs::callable>(), args);
 			}
 			else
 				throw cs::lang_error("Invoke non-callable object.");
@@ -1224,7 +1231,9 @@ namespace cs_impl {
 
 		void init()
 		{
+			// DEBUG Only!!!
 			(*runtime_ext)
+			.add_var("is_integer", make_cni([](const cs::number& num){return num.is_integer();}))
 			.add_var("time_type", make_namespace(time_ext))
 			.add_var("std_version", var::make_constant<number>(current_process->std_version))
 			.add_var("get_import_path", make_cni(get_import_path, true))
@@ -1261,7 +1270,7 @@ namespace cs_impl {
 
 		string assign(string &str, number posit, char ch)
 		{
-			str.at(posit) = ch;
+			str.at(posit.as_integer()) = ch;
 			return str;
 		}
 
@@ -1273,37 +1282,37 @@ namespace cs_impl {
 
 		string insert(string &str, number posit, const var &val)
 		{
-			str.insert(posit, val.to_string());
+			str.insert(posit.as_integer(), val.to_string());
 			return str;
 		}
 
 		string erase(string &str, number b, number e)
 		{
-			str.erase(b, e);
+			str.erase(b.as_integer(), e.as_integer());
 			return str;
 		}
 
 		string replace(string &str, number posit, number count, const var &val)
 		{
-			str.replace(posit, count, val.to_string());
+			str.replace(posit.as_integer(), count.as_integer(), val.to_string());
 			return str;
 		}
 
 		string substr(const string &str, number b, number e)
 		{
-			return str.substr(b, e);
+			return str.substr(b.as_integer(), e.as_integer());
 		}
 
 		number find(const string &str, const string &s, number posit)
 		{
-			auto pos = str.find(s, posit);
+			auto pos = str.find(s, posit.as_integer());
 			if (pos == std::string::npos)
 				return -1;
 			else
 				return pos;
 		}
 
-		number rfind(const string &str, const string &s, number posit)
+		number rfind(const string &str, const string &s, number_integer posit)
 		{
 			std::size_t pos = 0;
 			if (posit == -1)
@@ -1316,7 +1325,7 @@ namespace cs_impl {
 				return pos;
 		}
 
-		string cut(string &str, number n)
+		string cut(string &str, number_integer n)
 		{
 			for (std::size_t i = 0; i < n; ++i)
 				str.pop_back();
@@ -1423,7 +1432,7 @@ namespace cs_impl {
 
 		void gotoxy(number x, number y)
 		{
-			conio::gotoxy(x, y);
+			conio::gotoxy(x.as_integer(), y.as_integer());
 		}
 
 		void echo(bool v)
@@ -1557,7 +1566,7 @@ namespace cs_impl {
 
 		void exit(number exit_code)
 		{
-			int code = exit_code;
+			int code = exit_code.as_integer();
 			current_process->on_process_exit.touch(&code);
 		}
 

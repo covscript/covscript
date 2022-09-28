@@ -108,7 +108,7 @@ namespace cs {
 	var runtime_type::parse_mod(const var &a, const var &b)
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
-			return std::fmod(a.const_val<number>(), b.const_val<number>());
+			return number(std::fmod(a.const_val<number>().as_number(), b.const_val<number>().as_number()));
 		else
 			throw runtime_error("Unsupported operator operations(Mod).");
 	}
@@ -122,7 +122,7 @@ namespace cs {
 	var runtime_type::parse_pow(const var &a, const var &b)
 	{
 		if (a.type() == typeid(number) && b.type() == typeid(number))
-			return std::pow(a.const_val<number>(), b.const_val<number>());
+			return number(std::pow(a.const_val<number>().as_number(), b.const_val<number>().as_number()));
 		else
 			throw runtime_error("Unsupported operator operations(Pow).");
 	}
@@ -491,7 +491,7 @@ namespace cs {
 			auto &arr = a.val<array>();
 			std::size_t posit = 0;
 			if (b.const_val<number>() >= 0) {
-				posit = b.const_val<number>();
+				posit = b.const_val<number>().as_integer();
 				if (posit >= arr.size()) {
 					for (std::size_t i = posit - arr.size() + 1; i > 0; --i)
 						arr.emplace_back(number(0));
@@ -500,7 +500,7 @@ namespace cs {
 			else {
 				if (-b.const_val<number>() > arr.size())
 					throw runtime_error("Out of range.");
-				posit = arr.size() + b.const_val<number>();
+				posit = arr.size() + b.const_val<number>().as_integer();
 			}
 			return arr[posit];
 		}
@@ -524,7 +524,7 @@ namespace cs {
 			const auto &carr = a.const_val<array>();
 			std::size_t posit = 0;
 			if (b.const_val<number>() >= 0) {
-				posit = b.const_val<number>();
+				posit = b.const_val<number>().as_integer();
 				if (posit >= carr.size()) {
 					auto &arr = a.val<array>();
 					for (std::size_t i = posit - arr.size() + 1; i > 0; --i)
@@ -534,7 +534,7 @@ namespace cs {
 			else {
 				if (-b.const_val<number>() > carr.size())
 					throw runtime_error("Out of range.");
-				posit = carr.size() + b.const_val<number>();
+				posit = carr.size() + b.const_val<number>().as_integer();
 			}
 			return carr[posit];
 		}
@@ -549,9 +549,9 @@ namespace cs {
 				throw runtime_error("Index must be a number.");
 			const auto &cstr = a.const_val<string>();
 			if (b.const_val<number>() >= 0)
-				return var::make_constant<char>(cstr[b.const_val<number>()]);
+				return var::make_constant<char>(cstr[b.const_val<number>().as_integer()]);
 			else
-				return var::make_constant<char>(cstr[cstr.size() + b.const_val<number>()]);
+				return var::make_constant<char>(cstr[cstr.size() + b.const_val<number>().as_integer()]);
 		}
 		else
 			throw runtime_error("Access non-array or string object.");

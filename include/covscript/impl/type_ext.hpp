@@ -105,11 +105,15 @@ namespace cs_impl {
 	template<>
 	std::string to_string<cs::number>(const cs::number &val)
 	{
-		std::stringstream ss;
-		std::string str;
-		ss << std::setprecision(cs::current_process->output_precision) << val;
-		ss >> str;
-		return std::move(str);
+		if (!val.is_integer())
+		{
+			std::stringstream ss;
+			std::string str;
+			ss << std::setprecision(cs::current_process->output_precision) << val.as_number();
+			ss >> str;
+			return std::move(str);
+		} else
+			return std::to_string(val.as_integer());
 	}
 
 	template<>
@@ -220,6 +224,12 @@ namespace cs_impl {
 	}
 
 // To Integer
+	template<>
+	long to_integer<cs::number>(const cs::number &num)
+	{
+		return num.as_integer();
+	}
+
 	template<>
 	long to_integer<std::string>(const std::string &str)
 	{

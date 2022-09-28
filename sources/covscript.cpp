@@ -183,7 +183,10 @@ namespace cs {
 	number parse_number(const std::string &str)
 	{
 		try {
-			return std::stold(str);
+			if (str.find('.') != std::string::npos)
+				return std::stold(str);
+			else
+				return std::stoll(str);
 		}
 		catch (const std::exception &e) {
 			throw lang_error("Wrong literal format.");

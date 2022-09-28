@@ -41,6 +41,14 @@ namespace cs_impl {
 	struct type_conversion_cpp<signed short int> {
 		using target_type = cs::number;
 	};
+
+	template<>
+	struct type_convertor<cs::number, signed short int> {
+		static signed short int convert(const cs::number &num)
+		{
+			return num.as_integer();
+		}
+	};
 // unsigned short int->cs::number
 	template<>
 	struct type_conversion_cs<unsigned short int> {
@@ -50,6 +58,14 @@ namespace cs_impl {
 	template<>
 	struct type_conversion_cpp<unsigned short int> {
 		using target_type = cs::number;
+	};
+
+	template<>
+	struct type_convertor<cs::number, unsigned short int> {
+		static unsigned short int convert(const cs::number &num)
+		{
+			return num.as_integer();
+		}
 	};
 // signed int->cs::number
 	template<>
@@ -61,6 +77,14 @@ namespace cs_impl {
 	struct type_conversion_cpp<signed int> {
 		using target_type = cs::number;
 	};
+
+	template<>
+	struct type_convertor<cs::number, signed int> {
+		static signed int convert(const cs::number &num)
+		{
+			return num.as_integer();
+		}
+	};
 // unsigned int->cs::number
 	template<>
 	struct type_conversion_cs<unsigned int> {
@@ -70,6 +94,14 @@ namespace cs_impl {
 	template<>
 	struct type_conversion_cpp<unsigned int> {
 		using target_type = cs::number;
+	};
+
+	template<>
+	struct type_convertor<cs::number, unsigned int> {
+		static unsigned int convert(const cs::number &num)
+		{
+			return num.as_integer();
+		}
 	};
 // signed long int->cs::number
 	template<>
@@ -81,6 +113,14 @@ namespace cs_impl {
 	struct type_conversion_cpp<signed long int> {
 		using target_type = cs::number;
 	};
+
+	template<>
+	struct type_convertor<cs::number, signed long int> {
+		static signed long convert(const cs::number &num)
+		{
+			return num.as_integer();
+		}
+	};
 // unsigned long int->cs::number
 	template<>
 	struct type_conversion_cs<unsigned long int> {
@@ -90,6 +130,14 @@ namespace cs_impl {
 	template<>
 	struct type_conversion_cpp<unsigned long int> {
 		using target_type = cs::number;
+	};
+
+	template<>
+	struct type_convertor<cs::number, unsigned long int> {
+		static unsigned long int convert(const cs::number &num)
+		{
+			return num.as_integer();
+		}
 	};
 // signed long long int->cs::number
 	template<>
@@ -101,6 +149,14 @@ namespace cs_impl {
 	struct type_conversion_cpp<signed long long int> {
 		using target_type = cs::number;
 	};
+
+	template<>
+	struct type_convertor<cs::number, signed long long int> {
+		static signed long long int convert(const cs::number &num)
+		{
+			return num.as_integer();
+		}
+	};
 // unsigned long long int->cs::number
 	template<>
 	struct type_conversion_cs<unsigned long long int> {
@@ -110,6 +166,14 @@ namespace cs_impl {
 	template<>
 	struct type_conversion_cpp<unsigned long long int> {
 		using target_type = cs::number;
+	};
+
+	template<>
+	struct type_convertor<cs::number, unsigned long long int> {
+		static unsigned long long int convert(const cs::number &num)
+		{
+			return num.as_integer();
+		}
 	};
 // signed char->cs::char
 	template<>
@@ -141,6 +205,14 @@ namespace cs_impl {
 	struct type_conversion_cpp<float> {
 		using target_type = cs::number;
 	};
+
+	template<>
+	struct type_convertor<cs::number, float> {
+		static float convert(const cs::number &num)
+		{
+			return num.as_number();
+		}
+	};
 // double->cs::number
 	template<>
 	struct type_conversion_cs<double> {
@@ -151,6 +223,14 @@ namespace cs_impl {
 	struct type_conversion_cpp<double> {
 		using target_type = cs::number;
 	};
+
+	template<>
+	struct type_convertor<cs::number, double> {
+		static double convert(const cs::number &num)
+		{
+			return num.as_number();
+		}
+	};
 // long double->cs::number
 	template<>
 	struct type_conversion_cs<long double> {
@@ -160,6 +240,14 @@ namespace cs_impl {
 	template<>
 	struct type_conversion_cpp<long double> {
 		using target_type = cs::number;
+	};
+
+	template<>
+	struct type_convertor<cs::number, long double> {
+		static long double convert(const cs::number &num)
+		{
+			return num.as_number();
+		}
 	};
 // std::string->cs::string
 // const char*->cs::string
