@@ -648,12 +648,12 @@ namespace cs {
 
 		bool operator!=(const range_iterator &it) const
 		{
-			return m_index != it.m_index;
+			return m_index < it.m_index;
 		}
 
 		range_iterator &operator++()
 		{
-			m_index += m_step;
+			m_index = m_index + m_step;
 			return *this;
 		}
 

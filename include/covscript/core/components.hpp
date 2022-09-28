@@ -338,30 +338,6 @@ namespace cs {
 			}
 			return *this;
 		}
-		numeric operator+=(const numeric& rhs)
-		{
-			switch (get_composite_type(type, rhs.type)) {
-			default:
-			case 0b00:
-				data._num += rhs.data._num;
-			case 0b01:
-				data._num += rhs.data._int;
-			case 0b10:
-				data._int += rhs.data._num;
-			case 0b11:
-				data._int += rhs.data._int;
-			}
-			return *this;
-		}
-        template<typename T>
-		numeric operator+=(const T& dat)
-		{
-            if (type)
-				data._int += dat;
-			else
-				data._num += dat;
-			return *this;
-		}
 		bool operator<(const numeric& rhs) const noexcept
 		{
 			switch (get_composite_type(type, rhs.type)) {
