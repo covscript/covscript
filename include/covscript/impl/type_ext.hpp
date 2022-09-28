@@ -47,6 +47,7 @@ namespace cs_impl {
 	extern cs::namespace_t except_ext;
 	extern cs::namespace_t array_ext;
 	extern cs::namespace_t array_iterator_ext;
+	extern cs::namespace_t number_ext;
 	extern cs::namespace_t char_ext;
 	extern cs::namespace_t math_ext;
 	extern cs::namespace_t math_const_ext;
@@ -105,14 +106,14 @@ namespace cs_impl {
 	template<>
 	std::string to_string<cs::number>(const cs::number &val)
 	{
-		if (!val.is_integer())
-		{
+		if (!val.is_integer()) {
 			std::stringstream ss;
 			std::string str;
 			ss << std::setprecision(cs::current_process->output_precision) << val.as_number();
 			ss >> str;
 			return std::move(str);
-		} else
+		}
+		else
 			return std::to_string(val.as_integer());
 	}
 
@@ -447,6 +448,12 @@ namespace cs_impl {
 	cs::namespace_t &get_ext<cs::array::iterator>()
 	{
 		return array_iterator_ext;
+	}
+
+	template<>
+	cs::namespace_t &get_ext<cs::number>()
+	{
+		return number_ext;
 	}
 
 	template<>

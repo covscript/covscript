@@ -325,10 +325,10 @@ namespace cs {
 			}
 			return *this;
 		}
-        template<typename T>
+		template<typename T>
 		numeric& operator=(const T& dat)
 		{
-            if (std::is_integral<T>::value) {
+			if (std::is_integral<T>::value) {
 				type = 1;
 				data._int = dat;
 			}
@@ -352,7 +352,7 @@ namespace cs {
 				return data._int < rhs.data._int;
 			}
 		}
-        template<typename T>
+		template<typename T>
 		bool operator<(const T& rhs) const noexcept
 		{
 			if (type)
@@ -374,7 +374,7 @@ namespace cs {
 				return data._int <= rhs.data._int;
 			}
 		}
-        template<typename T>
+		template<typename T>
 		bool operator<=(const T& rhs) const noexcept
 		{
 			if (type)
@@ -396,7 +396,7 @@ namespace cs {
 				return data._int > rhs.data._int;
 			}
 		}
-        template<typename T>
+		template<typename T>
 		bool operator>(const T& rhs) const noexcept
 		{
 			if (type)
@@ -418,7 +418,7 @@ namespace cs {
 				return data._int >= rhs.data._int;
 			}
 		}
-        template<typename T>
+		template<typename T>
 		bool operator>=(const T& rhs) const noexcept
 		{
 			if (type)
@@ -440,7 +440,7 @@ namespace cs {
 				return data._int == rhs.data._int;
 			}
 		}
-        template<typename T>
+		template<typename T>
 		bool operator==(const T& rhs) const noexcept
 		{
 			if (type)
@@ -462,7 +462,7 @@ namespace cs {
 				return data._int != rhs.data._int;
 			}
 		}
-        template<typename T>
+		template<typename T>
 		bool operator!=(const T& rhs) const noexcept
 		{
 			if (type)
@@ -511,14 +511,14 @@ namespace cs {
 		{
 			return type;
 		}
-		long long int as_integer() const noexcept
+		number_integer as_integer() const noexcept
 		{
 			if (type)
 				return data._int;
 			else
 				return data._num;
 		}
-		long double as_number() const noexcept
+		number_float as_number() const noexcept
 		{
 			if (type)
 				return data._int;

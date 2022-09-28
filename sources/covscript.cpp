@@ -86,6 +86,7 @@ namespace cs_impl {
 	cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t array_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t array_iterator_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t number_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t char_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t math_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t math_const_ext = cs::make_shared_namespace<cs::name_space>();

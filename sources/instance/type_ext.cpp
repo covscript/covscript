@@ -223,7 +223,38 @@ namespace cs_impl {
 			.add_var("to_hash_map", make_cni(to_hash_map, true))
 			.add_var("to_list", make_cni(to_list, true));
 		}
+	}
+	namespace number_cs_ext {
+		using namespace cs;
 
+		bool is_integer(const number &n)
+		{
+			return n.is_integer();
+		}
+
+		bool is_float(const number &n)
+		{
+			return !n.is_integer();
+		}
+
+		number& ntoi(number &n)
+		{
+			return n = n.as_integer();
+		}
+
+		number& ntof(number &n)
+		{
+			return n = n.as_integer();
+		}
+
+		void init()
+		{
+			(*number_ext)
+			.add_var("is_integer", make_cni(is_integer))
+			.add_var("is_float", make_cni(is_float))
+			.add_var("ntoi", make_cni(ntoi))
+			.add_var("ntof", make_cni(ntof));
+		}
 	}
 	namespace char_cs_ext {
 		using namespace cs;
@@ -939,6 +970,10 @@ namespace cs_impl {
 			(*math_const_ext)
 			.add_var("max", var::make_constant<number>((std::numeric_limits<number_float>::max)()))
 			.add_var("min", var::make_constant<number>((std::numeric_limits<number_float>::min)()))
+			.add_var("integer_max", var::make_constant<number>((std::numeric_limits<number_integer>::max)()))
+			.add_var("integer_min", var::make_constant<number>((std::numeric_limits<number_integer>::min)()))
+			.add_var("float_max", var::make_constant<number>((std::numeric_limits<number_float>::max)()))
+			.add_var("float_min", var::make_constant<number>((std::numeric_limits<number_float>::min)()))
 			.add_var("inf", var::make_constant<number>(std::numeric_limits<number_float>::infinity()))
 			.add_var("nan", var::make_constant<number>(std::numeric_limits<number_float>::quiet_NaN()))
 			.add_var("pi", var::make_constant<number>(std::asin(number_float(1)) * 2))
@@ -1231,9 +1266,7 @@ namespace cs_impl {
 
 		void init()
 		{
-			// DEBUG Only!!!
 			(*runtime_ext)
-			.add_var("is_integer", make_cni([](const cs::number& num){return num.is_integer();}))
 			.add_var("time_type", make_namespace(time_ext))
 			.add_var("std_version", var::make_constant<number>(current_process->std_version))
 			.add_var("get_import_path", make_cni(get_import_path, true))
@@ -1606,6 +1639,7 @@ namespace cs_impl {
 			runtime_cs_ext::init();
 			math_cs_ext::init();
 			except_cs_ext::init();
+			number_cs_ext::init();
 			char_cs_ext::init();
 			string_cs_ext::init();
 			list_cs_ext::init();
