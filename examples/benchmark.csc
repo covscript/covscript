@@ -6,7 +6,7 @@ function step1(n)
         var ts=runtime.time()
         var fc=0
         loop
-            fc++
+            ++fc
         until runtime.time()-ts>=1000
         score=score+fc
     end
