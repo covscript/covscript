@@ -210,7 +210,7 @@ namespace cs_impl {
 	struct type_convertor<cs::number, float> {
 		static float convert(const cs::number &num)
 		{
-			return num.as_number();
+			return num.as_float();
 		}
 	};
 // double->cs::number
@@ -228,7 +228,7 @@ namespace cs_impl {
 	struct type_convertor<cs::number, double> {
 		static double convert(const cs::number &num)
 		{
-			return num.as_number();
+			return num.as_float();
 		}
 	};
 // long double->cs::number
@@ -246,7 +246,7 @@ namespace cs_impl {
 	struct type_convertor<cs::number, long double> {
 		static long double convert(const cs::number &num)
 		{
-			return num.as_number();
+			return num.as_float();
 		}
 	};
 // std::string->cs::string

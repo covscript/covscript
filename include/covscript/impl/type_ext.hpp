@@ -109,7 +109,7 @@ namespace cs_impl {
 		if (!val.is_integer()) {
 			std::stringstream ss;
 			std::string str;
-			ss << std::setprecision(cs::current_process->output_precision) << val.as_number();
+			ss << std::setprecision(cs::current_process->output_precision) << val.as_float();
 			ss >> str;
 			return std::move(str);
 		}

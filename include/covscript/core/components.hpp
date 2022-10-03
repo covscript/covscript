@@ -511,6 +511,10 @@ namespace cs {
 		{
 			return type;
 		}
+		bool is_float() const noexcept
+		{
+			return !type;
+		}
 		number_integer as_integer() const noexcept
 		{
 			if (type)
@@ -518,7 +522,7 @@ namespace cs {
 			else
 				return data._num;
 		}
-		number_float as_number() const noexcept
+		number_float as_float() const noexcept
 		{
 			if (type)
 				return data._int;

@@ -234,7 +234,7 @@ namespace cs_impl {
 
 		bool is_float(const number &n)
 		{
-			return !n.is_integer();
+			return n.is_float();
 		}
 
 		number& ntoi(number &n)
@@ -244,7 +244,7 @@ namespace cs_impl {
 
 		number& ntof(number &n)
 		{
-			return n = n.as_integer();
+			return n = n.as_float();
 		}
 
 		void init()
@@ -876,67 +876,67 @@ namespace cs_impl {
 
 		number abs(number n)
 		{
-			return std::abs(n.as_number());
+			return std::abs(n.as_float());
 		}
 
 		number ln(number n)
 		{
-			return std::log(n.as_number());
+			return std::log(n.as_float());
 		}
 
 		number log10(number n)
 		{
-			return std::log10(n.as_number());
+			return std::log10(n.as_float());
 		}
 
 		number log(number a, number b)
 		{
-			return std::log(b.as_number())/std::log(a.as_number());
+			return std::log(b.as_float())/std::log(a.as_float());
 		}
 
 		number sin(number n)
 		{
-			return std::sin(n.as_number());
+			return std::sin(n.as_float());
 		}
 
 		number cos(number n)
 		{
-			return std::cos(n.as_number());
+			return std::cos(n.as_float());
 		}
 
 		number tan(number n)
 		{
-			return std::tan(n.as_number());
+			return std::tan(n.as_float());
 		}
 
 		number asin(number n)
 		{
-			return std::asin(n.as_number());
+			return std::asin(n.as_float());
 		}
 
 		number acos(number n)
 		{
-			return std::acos(n.as_number());
+			return std::acos(n.as_float());
 		}
 
 		number atan(number n)
 		{
-			return std::atan(n.as_number());
+			return std::atan(n.as_float());
 		}
 
 		number sqrt(number n)
 		{
-			return std::sqrt(n.as_number());
+			return std::sqrt(n.as_float());
 		}
 
 		number root(number a, number b)
 		{
-			return std::pow(a.as_number(), number_float(1) / b.as_number());
+			return std::pow(a.as_float(), number_float(1) / b.as_float());
 		}
 
 		number pow(number a, number b)
 		{
-			return std::pow(a.as_number(), b.as_number());
+			return std::pow(a.as_float(), b.as_float());
 		}
 
 		number _min(number a, number b)
@@ -944,7 +944,7 @@ namespace cs_impl {
 			if (a.is_integer())
 				return (std::min)(a.as_integer(), b.as_integer());
 			else
-				return (std::min)(a.as_number(), b.as_number());
+				return (std::min)(a.as_float(), b.as_float());
 		}
 
 		number _max(number a, number b)
@@ -952,12 +952,12 @@ namespace cs_impl {
 			if (a.is_integer())
 				return (std::max)(a.as_integer(), b.as_integer());
 			else
-				return (std::max)(a.as_number(), b.as_number());
+				return (std::max)(a.as_float(), b.as_float());
 		}
 
 		number rand(number b, number e)
 		{
-			return cov::rand<number_float>(b.as_number(), e.as_number());
+			return cov::rand<number_float>(b.as_float(), e.as_float());
 		}
 
 		number randint(number b, number e)
