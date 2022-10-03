@@ -3,6 +3,12 @@ function show_numeric(num)
 end
 var a = 0
 show_numeric(a)
+a = new number
+show_numeric(a)
+a = new float
+show_numeric(a)
+a = new integer
+show_numeric(a)
 a += 1
 show_numeric(a)
 a += 0.1

@@ -449,6 +449,8 @@ namespace cs {
 		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char),
 		                  cs_impl::char_ext)
 		.add_buildin_type("number", []() -> var { return var::make<number>(0); }, typeid(number))
+		.add_buildin_type("integer", []() -> var { return var::make<number>(0); }, typeid(number))
+		.add_buildin_type("float", []() -> var { return var::make<number>(0.0); }, typeid(number))
 		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
 		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
 		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string),
@@ -494,6 +496,8 @@ namespace cs {
 		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char),
 		                  cs_impl::char_ext)
 		.add_buildin_type("number", []() -> var { return var::make<number>(0); }, typeid(number))
+		.add_buildin_type("integer", []() -> var { return var::make<number>(0); }, typeid(number))
+		.add_buildin_type("float", []() -> var { return var::make<number>(0.0); }, typeid(number))
 		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
 		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
 		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string),
