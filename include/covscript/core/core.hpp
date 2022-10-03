@@ -78,7 +78,7 @@ namespace cs {
 	public:
 // Version
 		const std::string version = COVSCRIPT_VERSION_STR;
-		const number std_version = COVSCRIPT_STD_VERSION;
+		const numeric std_version = COVSCRIPT_STD_VERSION;
 // Output Precision
 		int output_precision = 8;
 // Exit code
@@ -629,11 +629,11 @@ namespace cs {
 	};
 
 	class range_iterator final {
-		number m_step, m_index;
+		numeric m_step, m_index;
 	public:
 		range_iterator() = delete;
 
-		explicit range_iterator(number step, number index) : m_step(step), m_index(index) {}
+		explicit range_iterator(numeric step, numeric index) : m_step(step), m_index(index) {}
 
 		range_iterator(const range_iterator &) = default;
 
@@ -657,18 +657,18 @@ namespace cs {
 			return *this;
 		}
 
-		number operator*() const
+		numeric operator*() const
 		{
 			return m_index;
 		}
 	};
 
 	class range_type final {
-		number m_start, m_stop, m_step;
+		numeric m_start, m_stop, m_step;
 	public:
 		range_type() = delete;
 
-		range_type(number start, number stop, number step) : m_start(start), m_stop(stop), m_step(step) {}
+		range_type(numeric start, numeric stop, numeric step) : m_start(start), m_stop(stop), m_step(step) {}
 
 		range_type(const range_type &) = default;
 
@@ -980,7 +980,7 @@ namespace cs {
 	}
 
 // Literal format
-	number parse_number(const std::string &);
+	numeric parse_number(const std::string &);
 }
 
 template<>

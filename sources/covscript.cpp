@@ -181,7 +181,7 @@ namespace cs {
 		return var::make_protect<namespace_t>(ns);
 	}
 
-	number parse_number(const std::string &str)
+	numeric parse_number(const std::string &str)
 	{
 		try {
 			if (str.find('.') != std::string::npos)
@@ -294,22 +294,22 @@ namespace cs {
 	{
 		switch (args.size()) {
 		case 1:
-			cs_impl::check_args<number>(args);
-			return var::make_constant<range_type>(0, args[0].const_val<number>(), 1);
+			cs_impl::check_args<numeric>(args);
+			return var::make_constant<range_type>(0, args[0].const_val<numeric>(), 1);
 		case 2:
-			cs_impl::check_args<number, number>(args);
-			return var::make_constant<range_type>(args[0].const_val<number>(), args[1].const_val<number>(), 1);
+			cs_impl::check_args<numeric, numeric>(args);
+			return var::make_constant<range_type>(args[0].const_val<numeric>(), args[1].const_val<numeric>(), 1);
 		case 3:
-			cs_impl::check_args<number, number, number>(args);
-			return var::make_constant<range_type>(args[0].const_val<number>(), args[1].const_val<number>(),
-			                                      args[2].const_val<number>());
+			cs_impl::check_args<numeric, numeric, numeric>(args);
+			return var::make_constant<range_type>(args[0].const_val<numeric>(), args[1].const_val<numeric>(),
+			                                      args[2].const_val<numeric>());
 		default:
 			throw cs::runtime_error(
 			    "Wrong size of the arguments. Expected 1, 2 or 3, provided " + std::to_string(args.size()));
 		}
 	}
 
-	number to_integer(const var &val)
+	numeric to_integer(const var &val)
 	{
 		return val.to_integer();
 	}
@@ -448,9 +448,9 @@ namespace cs {
 		// Internal Types
 		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char),
 		                  cs_impl::char_ext)
-		.add_buildin_type("number", []() -> var { return var::make<number>(0); }, typeid(number))
-		.add_buildin_type("integer", []() -> var { return var::make<number>(0); }, typeid(number))
-		.add_buildin_type("float", []() -> var { return var::make<number>(0.0); }, typeid(number))
+		.add_buildin_type("number", []() -> var { return var::make<numeric>(0); }, typeid(numeric))
+		.add_buildin_type("integer", []() -> var { return var::make<numeric>(0); }, typeid(numeric))
+		.add_buildin_type("float", []() -> var { return var::make<numeric>(0.0); }, typeid(numeric))
 		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
 		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
 		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string),
@@ -458,7 +458,7 @@ namespace cs {
 		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), cs_impl::list_ext)
 		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array),
 		                  cs_impl::array_ext)
-		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
+		.add_buildin_type("pair", []() -> var { return var::make<pair>(numeric(0), numeric(0)); }, typeid(pair),
 		                  cs_impl::pair_ext)
 		.add_buildin_type("hash_set", []() -> var { return var::make<hash_set>(); }, typeid(hash_set),
 		                  cs_impl::hash_set_ext)
@@ -495,9 +495,9 @@ namespace cs {
 		// Internal Types
 		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char),
 		                  cs_impl::char_ext)
-		.add_buildin_type("number", []() -> var { return var::make<number>(0); }, typeid(number))
-		.add_buildin_type("integer", []() -> var { return var::make<number>(0); }, typeid(number))
-		.add_buildin_type("float", []() -> var { return var::make<number>(0.0); }, typeid(number))
+		.add_buildin_type("number", []() -> var { return var::make<numeric>(0); }, typeid(numeric))
+		.add_buildin_type("integer", []() -> var { return var::make<numeric>(0); }, typeid(numeric))
+		.add_buildin_type("float", []() -> var { return var::make<numeric>(0.0); }, typeid(numeric))
 		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
 		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
 		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string),
@@ -505,7 +505,7 @@ namespace cs {
 		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), cs_impl::list_ext)
 		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array),
 		                  cs_impl::array_ext)
-		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
+		.add_buildin_type("pair", []() -> var { return var::make<pair>(numeric(0), numeric(0)); }, typeid(pair),
 		                  cs_impl::pair_ext)
 		.add_buildin_type("hash_set", []() -> var { return var::make<hash_set>(); }, typeid(hash_set),
 		                  cs_impl::hash_set_ext)

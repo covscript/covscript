@@ -196,13 +196,13 @@ namespace cs {
 	};
 
 // Numeric
-	using number_float = long double;
-	using number_integer = long long int;
+	using numeric_float = long double;
+	using numeric_integer = long long int;
 
 	class numeric final {
 		union {
-			number_float _num;
-			number_integer _int;
+			numeric_float _num;
+			numeric_integer _int;
 		} data;
 		bool type = 1;
 		inline static std::uint8_t get_composite_type(bool lhs, bool rhs) noexcept
@@ -515,14 +515,14 @@ namespace cs {
 		{
 			return !type;
 		}
-		number_integer as_integer() const noexcept
+		numeric_integer as_integer() const noexcept
 		{
 			if (type)
 				return data._int;
 			else
 				return data._num;
 		}
-		number_float as_float() const noexcept
+		numeric_float as_float() const noexcept
 		{
 			if (type)
 				return data._int;

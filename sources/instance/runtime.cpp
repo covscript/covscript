@@ -28,8 +28,8 @@
 namespace cs {
 	var runtime_type::parse_add(const var &a, const var &b)
 	{
-		if (a.type() == typeid(number) && b.type() == typeid(number))
-			return a.const_val<number>() + b.const_val<number>();
+		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+			return a.const_val<numeric>() + b.const_val<numeric>();
 		else if (a.type() == typeid(string) && b.usable())
 			return var::make<std::string>(a.const_val<string>() + b.to_string());
 		else
@@ -44,8 +44,8 @@ namespace cs {
 
 	var runtime_type::parse_sub(const var &a, const var &b)
 	{
-		if (a.type() == typeid(number) && b.type() == typeid(number))
-			return a.const_val<number>() - b.const_val<number>();
+		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+			return a.const_val<numeric>() - b.const_val<numeric>();
 		else
 			throw runtime_error("Unsupported operator operations(Sub).");
 	}
@@ -58,16 +58,16 @@ namespace cs {
 
 	var runtime_type::parse_minus(const var &b)
 	{
-		if (b.type() == typeid(number))
-			return -b.const_val<number>();
+		if (b.type() == typeid(numeric))
+			return -b.const_val<numeric>();
 		else
 			throw runtime_error("Unsupported operator operations(Minus).");
 	}
 
 	var runtime_type::parse_mul(const var &a, const var &b)
 	{
-		if (a.type() == typeid(number) && b.type() == typeid(number))
-			return a.const_val<number>() * b.const_val<number>();
+		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+			return a.const_val<numeric>() * b.const_val<numeric>();
 		else
 			throw runtime_error("Unsupported operator operations(Mul).");
 	}
@@ -93,8 +93,8 @@ namespace cs {
 
 	var runtime_type::parse_div(const var &a, const var &b)
 	{
-		if (a.type() == typeid(number) && b.type() == typeid(number))
-			return a.const_val<number>() / b.const_val<number>();
+		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+			return a.const_val<numeric>() / b.const_val<numeric>();
 		else
 			throw runtime_error("Unsupported operator operations(Div).");
 	}
@@ -107,8 +107,8 @@ namespace cs {
 
 	var runtime_type::parse_mod(const var &a, const var &b)
 	{
-		if (a.type() == typeid(number) && b.type() == typeid(number))
-			return number(std::fmod(a.const_val<number>().as_float(), b.const_val<number>().as_float()));
+		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+			return numeric(std::fmod(a.const_val<numeric>().as_float(), b.const_val<numeric>().as_float()));
 		else
 			throw runtime_error("Unsupported operator operations(Mod).");
 	}
@@ -121,8 +121,8 @@ namespace cs {
 
 	var runtime_type::parse_pow(const var &a, const var &b)
 	{
-		if (a.type() == typeid(number) && b.type() == typeid(number))
-			return number(std::pow(a.const_val<number>().as_float(), b.const_val<number>().as_float()));
+		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+			return numeric(std::pow(a.const_val<numeric>().as_float(), b.const_val<numeric>().as_float()));
 		else
 			throw runtime_error("Unsupported operator operations(Pow).");
 	}
@@ -270,8 +270,8 @@ namespace cs {
 
 	var runtime_type::parse_und(const var &a, const var &b)
 	{
-		if (a.type() == typeid(number) && b.type() == typeid(number))
-			return boolean(a.const_val<number>() < b.const_val<number>());
+		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+			return boolean(a.const_val<numeric>() < b.const_val<numeric>());
 		else if (a.type() == typeid(string) && b.type() == typeid(string))
 			return boolean(a.const_val<string>() < b.const_val<string>());
 		else
@@ -280,8 +280,8 @@ namespace cs {
 
 	var runtime_type::parse_abo(const var &a, const var &b)
 	{
-		if (a.type() == typeid(number) && b.type() == typeid(number))
-			return boolean(a.const_val<number>() > b.const_val<number>());
+		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+			return boolean(a.const_val<numeric>() > b.const_val<numeric>());
 		else if (a.type() == typeid(string) && b.type() == typeid(string))
 			return boolean(a.const_val<string>() > b.const_val<string>());
 		else
@@ -290,8 +290,8 @@ namespace cs {
 
 	var runtime_type::parse_ueq(const var &a, const var &b)
 	{
-		if (a.type() == typeid(number) && b.type() == typeid(number))
-			return boolean(a.const_val<number>() <= b.const_val<number>());
+		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+			return boolean(a.const_val<numeric>() <= b.const_val<numeric>());
 		else if (a.type() == typeid(string) && b.type() == typeid(string))
 			return boolean(a.const_val<string>() <= b.const_val<string>());
 		else
@@ -300,8 +300,8 @@ namespace cs {
 
 	var runtime_type::parse_aeq(const var &a, const var &b)
 	{
-		if (a.type() == typeid(number) && b.type() == typeid(number))
-			return boolean(a.const_val<number>() >= b.const_val<number>());
+		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+			return boolean(a.const_val<numeric>() >= b.const_val<numeric>());
 		else if (a.type() == typeid(string) && b.type() == typeid(string))
 			return boolean(a.const_val<string>() >= b.const_val<string>());
 		else
@@ -411,13 +411,13 @@ namespace cs {
 			if (b.usable())
 				throw runtime_error("Unsupported operator operations(Inc).");
 			else
-				return a.val<number>()++;
+				return a.val<numeric>()++;
 		}
 		else {
 			if (!b.usable())
 				throw runtime_error("Unsupported operator operations(Inc).");
 			else
-				return ++b.val<number>();
+				return ++b.val<numeric>();
 		}
 	}
 
@@ -427,13 +427,13 @@ namespace cs {
 			if (b.usable())
 				throw runtime_error("Unsupported operator operations(Dec).");
 			else
-				return a.val<number>()--;
+				return a.val<numeric>()--;
 		}
 		else {
 			if (!b.usable())
 				throw runtime_error("Unsupported operator operations(Dec).");
 			else
-				return --b.val<number>();
+				return --b.val<numeric>();
 		}
 	}
 
@@ -486,28 +486,28 @@ namespace cs {
 	var &runtime_type::parse_access_lhs(const var &a, const var &b)
 	{
 		if (a.type() == typeid(array)) {
-			if (b.type() != typeid(number))
-				throw runtime_error("Index must be a number.");
+			if (b.type() != typeid(numeric))
+				throw runtime_error("Index must be a numeric.");
 			auto &arr = a.val<array>();
 			std::size_t posit = 0;
-			if (b.const_val<number>() >= 0) {
-				posit = b.const_val<number>().as_integer();
+			if (b.const_val<numeric>() >= 0) {
+				posit = b.const_val<numeric>().as_integer();
 				if (posit >= arr.size()) {
 					for (std::size_t i = posit - arr.size() + 1; i > 0; --i)
-						arr.emplace_back(number(0));
+						arr.emplace_back(numeric(0));
 				}
 			}
 			else {
-				if (-b.const_val<number>() > arr.size())
+				if (-b.const_val<numeric>() > arr.size())
 					throw runtime_error("Out of range.");
-				posit = arr.size() + b.const_val<number>().as_integer();
+				posit = arr.size() + b.const_val<numeric>().as_integer();
 			}
 			return arr[posit];
 		}
 		else if (a.type() == typeid(hash_map)) {
 			auto &map = a.val<hash_map>();
 			if (map.count(b) == 0)
-				map.emplace(copy(b), number(0));
+				map.emplace(copy(b), numeric(0));
 			return map.at(b);
 		}
 		else if (a.type() == typeid(string))
@@ -519,39 +519,39 @@ namespace cs {
 	var runtime_type::parse_access(const var &a, const var &b)
 	{
 		if (a.type() == typeid(array)) {
-			if (b.type() != typeid(number))
-				throw runtime_error("Index must be a number.");
+			if (b.type() != typeid(numeric))
+				throw runtime_error("Index must be a numeric.");
 			const auto &carr = a.const_val<array>();
 			std::size_t posit = 0;
-			if (b.const_val<number>() >= 0) {
-				posit = b.const_val<number>().as_integer();
+			if (b.const_val<numeric>() >= 0) {
+				posit = b.const_val<numeric>().as_integer();
 				if (posit >= carr.size()) {
 					auto &arr = a.val<array>();
 					for (std::size_t i = posit - arr.size() + 1; i > 0; --i)
-						arr.emplace_back(number(0));
+						arr.emplace_back(numeric(0));
 				}
 			}
 			else {
-				if (-b.const_val<number>() > carr.size())
+				if (-b.const_val<numeric>() > carr.size())
 					throw runtime_error("Out of range.");
-				posit = carr.size() + b.const_val<number>().as_integer();
+				posit = carr.size() + b.const_val<numeric>().as_integer();
 			}
 			return carr[posit];
 		}
 		else if (a.type() == typeid(hash_map)) {
 			const auto &cmap = a.const_val<hash_map>();
 			if (cmap.count(b) == 0)
-				a.val<hash_map>().emplace(copy(b), number(0));
+				a.val<hash_map>().emplace(copy(b), numeric(0));
 			return cmap.at(b);
 		}
 		else if (a.type() == typeid(string)) {
-			if (b.type() != typeid(number))
-				throw runtime_error("Index must be a number.");
+			if (b.type() != typeid(numeric))
+				throw runtime_error("Index must be a numeric.");
 			const auto &cstr = a.const_val<string>();
-			if (b.const_val<number>() >= 0)
-				return var::make_constant<char>(cstr[b.const_val<number>().as_integer()]);
+			if (b.const_val<numeric>() >= 0)
+				return var::make_constant<char>(cstr[b.const_val<numeric>().as_integer()]);
 			else
-				return var::make_constant<char>(cstr[cstr.size() + b.const_val<number>().as_integer()]);
+				return var::make_constant<char>(cstr[cstr.size() + b.const_val<numeric>().as_integer()]);
 		}
 		else
 			throw runtime_error("Access non-array or string object.");

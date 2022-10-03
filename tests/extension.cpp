@@ -35,7 +35,7 @@ CNI_ROOT_NAMESPACE {
 
     CNI_VALUE(val, 30)
 
-    CNI_VALUE_V(val_v, cs::number, 30)
+    CNI_VALUE_V(val_v, cs::numeric, 30)
 
     class foo_t {
     public:

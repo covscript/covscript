@@ -80,7 +80,6 @@ namespace cs {
 	template<typename _Tp> using set_t = std::unordered_set<_Tp>;
 #endif
 	using var = cs_impl::any;
-	using number = numeric;
 	using boolean = bool;
 	using string = std::string;
 	using list = std::list<var>;

@@ -104,7 +104,7 @@ namespace cs_impl {
 
 // To String
 	template<>
-	std::string to_string<cs::number>(const cs::number &val)
+	std::string to_string<cs::numeric>(const cs::numeric &val)
 	{
 		if (!val.is_integer()) {
 			std::stringstream ss;
@@ -205,7 +205,7 @@ namespace cs_impl {
 		if (range.empty())
 			return "cs::range => {}";
 		std::string str = "cs::range => {";
-		for (cs::number it:range)
+		for (cs::numeric it:range)
 			str += to_string(it) + ", ";
 		str.resize(str.size() - 2);
 		str += "}";
@@ -226,7 +226,7 @@ namespace cs_impl {
 
 // To Integer
 	template<>
-	long to_integer<cs::number>(const cs::number &num)
+	long to_integer<cs::numeric>(const cs::numeric &num)
 	{
 		return num.as_integer();
 	}
@@ -265,9 +265,9 @@ namespace cs_impl {
 	}
 
 	template<>
-	constexpr const char *get_name_of_type<cs::number>()
+	constexpr const char *get_name_of_type<cs::numeric>()
 	{
-		return "cs::number";
+		return "cs::numeric";
 	}
 
 	template<>
@@ -451,7 +451,7 @@ namespace cs_impl {
 	}
 
 	template<>
-	cs::namespace_t &get_ext<cs::number>()
+	cs::namespace_t &get_ext<cs::numeric>()
 	{
 		return number_ext;
 	}
