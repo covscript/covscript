@@ -451,7 +451,8 @@ namespace cs_impl {
 				return any::make_constant<_Member>(obj.*mem_ptr);
 			};
 			m_setter = [&obj, mem_ptr](const any &val) {
-				obj.*mem_ptr = val.const_val<typename type_conversion_cs<_Member>::source_type>();
+				using source_type = typename type_conversion_cs<_Member>::source_type;
+				obj.*mem_ptr = type_convertor<source_type, _Member>::convert(val.const_val<source_type>());
 			};
 		}
 
