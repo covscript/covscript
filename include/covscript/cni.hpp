@@ -289,8 +289,6 @@ namespace cs {
 			           std::forward<T>(val));
 		}
 	}
-// Compatible declaration since 210503
-	using number = numeric_float;
 }
 
 namespace cni_namespace_impl {

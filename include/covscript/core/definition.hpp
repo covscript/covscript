@@ -98,6 +98,9 @@ namespace cs {
 	using istream = std::shared_ptr<std::istream>;
 	using ostream = std::shared_ptr<std::ostream>;
 
+// Compatible declaration since 210503
+	using number = numeric_float;
+
 	typedef void(*cs_exception_handler)(const lang_error &);
 
 	typedef void(*std_exception_handler)(const std::exception &);
