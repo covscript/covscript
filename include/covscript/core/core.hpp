@@ -439,6 +439,7 @@ namespace cs {
 		map_t<std::string, std::size_t> m_reflect;
 		std::shared_ptr<domain_ref> m_ref;
 		std::vector<var> m_slot;
+		bool optimize = false;
 
 		inline std::size_t get_slot_id(const std::string &name) const
 		{
@@ -469,6 +470,12 @@ namespace cs {
 		{
 			m_reflect.clear();
 			m_slot.clear();
+			optimize = false;
+		}
+
+		void next()
+		{
+			optimize = true;
 		}
 
 		bool consistence(const var_id &id) const noexcept
@@ -483,10 +490,7 @@ namespace cs {
 
 		bool exist(const var_id &id) const noexcept
 		{
-			if (id.m_ref != m_ref)
-				return m_reflect.count(id.m_id) > 0;
-			else
-				return true;
+			return m_reflect.count(id.m_id) > 0;
 		}
 
 		domain_type &add_var(const std::string &name, const var &val)
@@ -516,6 +520,30 @@ namespace cs {
 				m_slot[id.m_slot_id] = val;
 			}
 			return *this;
+		}
+
+		bool add_var_optimal(const std::string &name, const var &val, bool override = false)
+		{
+			if (optimize && m_reflect.count(name) > 0) {
+				m_slot[m_reflect[name]] = val;
+				return true;
+			} else if (override || !exist(name)) {
+				add_var(name, val);
+				return true;
+			} else
+				return false;
+		}
+
+		bool add_var_optimal(const var_id &id, const var &val, bool override = false)
+		{
+			if (optimize && id.m_ref == m_ref) {
+				m_slot[id.m_slot_id] = val;
+				return true;
+			} else if (override || !exist(id)) {
+				add_var(id, val);
+				return true;
+			} else
+				return false;
 		}
 
 		var &get_var(const var_id &id)

@@ -148,7 +148,7 @@ namespace cs {
 
 		void clear() const
 		{
-			context->instance->storage.clear_domain();
+			context->instance->storage.next_domain();
 		}
 	};
 

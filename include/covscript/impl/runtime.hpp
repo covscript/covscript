@@ -113,6 +113,11 @@ namespace cs {
 			m_data.top().clear();
 		}
 
+		void next_domain()
+		{
+			m_data.top().next();
+		}
+
 		bool exist_record(const string &name)
 		{
 			return m_set.top().count(name) > 0;
@@ -200,17 +205,33 @@ namespace cs {
 		}
 
 		template<typename T>
-		domain_manager &add_var(T &&name, const var &val, bool is_override = false)
+		domain_manager &add_var(T &&name, const var &val)
 		{
-			if (var_exist_current(name)) {
-				if (is_override)
-					m_data.top().get_var_no_check(name) = val;
-				else
-					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
-			}
-			else
-				m_data.top().add_var(name, val);
+			if (!m_data.top().add_var_optimal(name, val))
+				throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 			return *this;
+		}
+
+		template<typename T>
+		domain_manager &add_var(T &&name, const var &val, bool is_override)
+		{
+			if (!m_data.top().add_var_optimal(name, val, is_override))
+				throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
+			return *this;
+		}
+
+		template<typename T>
+		void add_var_no_return(T &&name, const var &val)
+		{
+			if (!m_data.top().add_var_optimal(name, val))
+				throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
+		}
+
+		template<typename T>
+		void add_var_no_return(T &&name, const var &val, bool is_override)
+		{
+			if (!m_data.top().add_var_optimal(name, val, is_override))
+				throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 		}
 
 		template<typename T>

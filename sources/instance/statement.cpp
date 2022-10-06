@@ -47,16 +47,16 @@ namespace cs {
 			auto &arr = arg_list.val<cs::array>();
 			std::size_t i = 0;
 			if (mIsMemFn)
-				mContext->instance->storage.add_var("this", args[i++]);
+				mContext->instance->storage.add_var_no_return("this", args[i++]);
 			if (mIsLambda)
-				mContext->instance->storage.add_var("self", args[i++]);
+				mContext->instance->storage.add_var_no_return("self", args[i++]);
 			for (; i < args.size(); ++i)
 				arr.push_back(args[i]);
-			mContext->instance->storage.add_var(this->mArgs.front(), arg_list);
+			mContext->instance->storage.add_var_no_return(this->mArgs.front(), arg_list);
 		}
 		else {
 			for (std::size_t i = 0; i < args.size(); ++i)
-				mContext->instance->storage.add_var(this->mArgs[i], args[i]);
+				mContext->instance->storage.add_var_no_return(this->mArgs[i], args[i]);
 		}
 		for (auto &ptr:this->mBody) {
 			try {
@@ -89,7 +89,7 @@ namespace cs {
 				if (parent.type() == typeid(structure)) {
 					parent.protect();
 					mContext->instance->storage.involve_domain(parent.const_val<structure>().get_domain());
-					mContext->instance->storage.add_var("parent", parent, true);
+					mContext->instance->storage.add_var_no_return("parent", parent, true);
 				}
 				else
 					throw runtime_error("Target is not a struct.");
@@ -133,7 +133,7 @@ namespace cs {
 	void statement_import::run_impl()
 	{
 		for (auto &val:m_var_list)
-			context->instance->storage.add_var(val.first, val.second, true);
+			context->instance->storage.add_var_no_return(val.first, val.second, true);
 	}
 
 	void statement_import::dump(std::ostream &o) const
@@ -233,7 +233,7 @@ namespace cs {
 	void statement_namespace::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
-		context->instance->storage.add_var(this->mName,
+		context->instance->storage.add_var_no_return(this->mName,
 		make_namespace(make_shared_namespace<name_space>([this] {
 			scope_guard scope(context);
 			for (auto &ptr:mBlock)
@@ -585,7 +585,7 @@ namespace cs {
 		for (const X &it:obj.const_val<T>()) {
 			scope.clear();
 			current_process->poll_event();
-			context->instance->storage.add_var(iterator, it);
+			context->instance->storage.add_var_no_return(iterator, it);
 			for (auto &ptr:body) {
 				try {
 					ptr->run();
@@ -665,7 +665,7 @@ namespace cs {
 	{
 		CS_DEBUGGER_STEP(this);
 		if (this->mIsMemFn)
-			context->instance->storage.add_var(this->mName,
+			context->instance->storage.add_var_no_return(this->mName,
 			                                   var::make_protect<callable>(this->mFunc, callable::types::member_fn),
 			                                   mOverride);
 		else {
@@ -674,7 +674,7 @@ namespace cs {
 			if(context->instance->storage.is_initial())
 				cs_debugger_func_breakpoint(this->mName, func);
 #endif
-			context->instance->storage.add_var(this->mName, func, mOverride);
+			context->instance->storage.add_var_no_return(this->mName, func, mOverride);
 		}
 	}
 
@@ -720,7 +720,7 @@ namespace cs {
 			}
 			catch (const lang_error &le) {
 				scope.clear();
-				context->instance->storage.add_var(mName, le);
+				context->instance->storage.add_var_no_return(mName, le);
 				for (auto &ptr:mCatchBody) {
 					try {
 						ptr->run();
