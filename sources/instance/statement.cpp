@@ -666,8 +666,8 @@ namespace cs {
 		CS_DEBUGGER_STEP(this);
 		if (this->mIsMemFn)
 			context->instance->storage.add_var_no_return(this->mName,
-			                                   var::make_protect<callable>(this->mFunc, callable::types::member_fn),
-			                                   mOverride);
+			        var::make_protect<callable>(this->mFunc, callable::types::member_fn),
+			        mOverride);
 		else {
 			var func = var::make_protect<callable>(this->mFunc);
 #ifdef CS_DEBUGGER

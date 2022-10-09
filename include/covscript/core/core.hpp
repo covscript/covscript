@@ -473,22 +473,22 @@ namespace cs {
 			optimize = false;
 		}
 
-		void next()
+		inline void next() noexcept
 		{
 			optimize = true;
 		}
 
-		bool consistence(const var_id &id) const noexcept
+		inline bool consistence(const var_id &id) const noexcept
 		{
 			return id.m_ref == m_ref;
 		}
 
-		bool exist(const std::string &name) const noexcept
+		inline bool exist(const std::string &name) const noexcept
 		{
 			return m_reflect.count(name) > 0;
 		}
 
-		bool exist(const var_id &id) const noexcept
+		inline bool exist(const var_id &id) const noexcept
 		{
 			return m_reflect.count(id.m_id) > 0;
 		}
@@ -527,10 +527,12 @@ namespace cs {
 			if (optimize && m_reflect.count(name) > 0) {
 				m_slot[m_reflect[name]] = val;
 				return true;
-			} else if (override || !exist(name)) {
+			}
+			else if (override || !exist(name)) {
 				add_var(name, val);
 				return true;
-			} else
+			}
+			else
 				return false;
 		}
 
@@ -539,10 +541,12 @@ namespace cs {
 			if (optimize && id.m_ref == m_ref) {
 				m_slot[id.m_slot_id] = val;
 				return true;
-			} else if (override || !exist(id)) {
+			}
+			else if (override || !exist(id)) {
 				add_var(id, val);
 				return true;
-			} else
+			}
+			else
 				return false;
 		}
 
@@ -608,22 +612,22 @@ namespace cs {
 			return m_slot[id.m_slot_id];
 		}
 
-		var &get_var_no_check(const std::string &name) noexcept
+		inline var &get_var_no_check(const std::string &name) noexcept
 		{
 			return m_slot[m_reflect.at(name)];
 		}
 
-		const var &get_var_no_check(const std::string &name) const noexcept
+		inline const var &get_var_no_check(const std::string &name) const noexcept
 		{
 			return m_slot[m_reflect.at(name)];
 		}
 
-		auto begin() const
+		inline auto begin() const
 		{
 			return m_reflect.cbegin();
 		}
 
-		auto end() const
+		inline auto end() const
 		{
 			return m_reflect.cend();
 		}
