@@ -306,7 +306,10 @@ namespace cs {
 			case 0b10:
 				return data._int / rhs.data._num;
 			case 0b11:
-				return data._int / rhs.data._int;
+				if (data._int % rhs.data._int != 0)
+					return static_cast<numeric_float>(data._int) / rhs.data._int;
+				else
+					return data._int / rhs.data._int;
 			}
 		}
 		template<typename T>

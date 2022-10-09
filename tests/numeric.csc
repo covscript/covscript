@@ -19,6 +19,12 @@ a.ntoi()
 show_numeric(a)
 a.ntof()
 show_numeric(a)
+a = 1/100
+show_numeric(a)
+a = 100/10
+show_numeric(a)
+a = 100/3
+show_numeric(a)
 system.out.println("Max  = " + math.constants.max)
 system.out.println("Min  = " + math.constants.min)
 system.out.println("IMax = " + math.constants.integer_max)
