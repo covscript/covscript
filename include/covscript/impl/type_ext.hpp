@@ -251,6 +251,15 @@ namespace cs_impl {
 			throw cov::error("E000F");
 	}
 
+	template<>
+	std::size_t hash<cs::numeric>(const cs::numeric &num)
+	{
+		if (num.is_integer())
+			return hash(num.as_integer());
+		else
+			return hash(num.as_float());
+	}
+
 // Type name
 	template<>
 	constexpr const char *get_name_of_type<cs::context_t>()
