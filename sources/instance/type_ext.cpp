@@ -323,11 +323,11 @@ namespace cs_impl {
 			return std::toupper(c);
 		}
 
-		char from_ascii(numeric_integer ascii)
+		char from_ascii(const numeric& ascii)
 		{
-			if (ascii < 0 || ascii > 255)
+			if (ascii.as_integer() < 0 || ascii.as_integer() > 255)
 				throw lang_error("Out of range.");
-			return static_cast<char>(ascii);
+			return static_cast<char>(ascii.as_integer());
 		}
 
 		void init()
@@ -1344,22 +1344,22 @@ namespace cs_impl {
 				return pos;
 		}
 
-		numeric rfind(const string &str, const string &s, numeric_integer posit)
+		numeric rfind(const string &str, const string &s, numeric posit)
 		{
 			std::size_t pos = 0;
-			if (posit == -1)
+			if (posit.as_integer() == -1)
 				pos = str.rfind(s, std::string::npos);
 			else
-				pos = str.rfind(s, posit);
+				pos = str.rfind(s, posit.as_integer());
 			if (pos == std::string::npos)
 				return -1;
 			else
 				return pos;
 		}
 
-		string cut(string &str, numeric_integer n)
+		string cut(string &str, numeric n)
 		{
-			for (std::size_t i = 0; i < n; ++i)
+			for (std::size_t i = 0; i < n.as_integer(); ++i)
 				str.pop_back();
 			return str;
 		}
