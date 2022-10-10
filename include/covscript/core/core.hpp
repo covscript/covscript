@@ -524,30 +524,42 @@ namespace cs {
 
 		bool add_var_optimal(const std::string &name, const var &val, bool override = false)
 		{
-			if (optimize && m_reflect.count(name) > 0) {
-				m_slot[m_reflect[name]] = val;
-				return true;
+			if (m_reflect.count(name) > 0) {
+				if (optimize) {
+					m_slot[m_reflect.at(name)] = val;
+					return true;
+				}
+				else if (override) {
+					add_var(name, val);
+					return true;
+				}
+				else
+					return false;
 			}
-			else if (override || !exist(name)) {
+			else {
 				add_var(name, val);
 				return true;
 			}
-			else
-				return false;
 		}
 
 		bool add_var_optimal(const var_id &id, const var &val, bool override = false)
 		{
-			if (optimize && id.m_ref == m_ref) {
-				m_slot[id.m_slot_id] = val;
-				return true;
+			if (id.m_ref == m_ref) {
+				if (optimize) {
+					m_slot[id.m_slot_id] = val;
+					return true;
+				}
+				else if (override) {
+					add_var(id, val);
+					return true;
+				}
+				else
+					return false;
 			}
-			else if (override || !exist(id)) {
+			else {
 				add_var(id, val);
 				return true;
 			}
-			else
-				return false;
 		}
 
 		var &get_var(const var_id &id)

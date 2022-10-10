@@ -386,7 +386,6 @@ namespace cs {
 			context->instance->continue_block = false;
 		scope_guard scope(context);
 		while (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
-			scope.clear();
 			current_process->poll_event();
 			for (auto &ptr:mBlock) {
 				try {
@@ -410,6 +409,7 @@ namespace cs {
 					break;
 				}
 			}
+			scope.clear();
 		}
 	}
 
@@ -432,7 +432,6 @@ namespace cs {
 			context->instance->continue_block = false;
 		scope_guard scope(context);
 		while (true) {
-			scope.clear();
 			current_process->poll_event();
 			for (auto &ptr:mBlock) {
 				try {
@@ -456,6 +455,7 @@ namespace cs {
 					break;
 				}
 			}
+			scope.clear();
 		}
 	}
 
@@ -476,7 +476,6 @@ namespace cs {
 			context->instance->continue_block = false;
 		scope_guard scope(context);
 		do {
-			scope.clear();
 			current_process->poll_event();
 			for (auto &ptr:mBlock) {
 				try {
@@ -500,6 +499,7 @@ namespace cs {
 					break;
 				}
 			}
+			scope.clear();
 		}
 		while (!context->instance->parse_expr(mExpr.root()).const_val<boolean>());
 	}
@@ -526,7 +526,6 @@ namespace cs {
 		context->instance->parse_define_var(mParallel[0].root());
 		scope_guard scope(context);
 		while (true) {
-			scope.clear();
 			current_process->poll_event();
 			if (!context->instance->parse_expr(mParallel[1].root()).const_val<boolean>())
 				break;
@@ -553,6 +552,7 @@ namespace cs {
 				}
 			}
 			context->instance->parse_expr(mParallel[2].root());
+			scope.clear();
 		}
 	}
 
@@ -583,7 +583,6 @@ namespace cs {
 			context->instance->continue_block = false;
 		scope_guard scope(context);
 		for (const X &it:obj.const_val<T>()) {
-			scope.clear();
 			current_process->poll_event();
 			context->instance->storage.add_var_no_return(iterator, it);
 			for (auto &ptr:body) {
@@ -608,6 +607,7 @@ namespace cs {
 					break;
 				}
 			}
+			scope.clear();
 		}
 	}
 
@@ -719,7 +719,7 @@ namespace cs {
 				ptr->run();
 			}
 			catch (const lang_error &le) {
-				scope.clear();
+				scope.reset();
 				context->instance->storage.add_var_no_return(mName, le);
 				for (auto &ptr:mCatchBody) {
 					try {
