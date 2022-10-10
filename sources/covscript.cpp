@@ -202,32 +202,6 @@ namespace cs {
 
 	garbage_collector<method_base> method_base::gc;
 
-#ifdef COVSCRIPT_PLATFORM_WIN32
-
-	std::string get_sdk_path()
-	{
-#ifdef COVSCRIPT_HOME
-		return COVSCRIPT_HOME;
-#else
-		CHAR path[MAX_PATH];
-		SHGetFolderPathA(nullptr, CSIDL_PERSONAL, nullptr, SHGFP_TYPE_CURRENT, path);
-		return std::strcat(path, "\\CovScript");
-#endif
-	}
-
-#else
-
-	std::string get_sdk_path()
-	{
-#ifdef COVSCRIPT_HOME
-		return COVSCRIPT_HOME;
-#else
-		return "/usr/share/covscript";
-#endif
-	}
-
-#endif
-
 	std::string process_path(const std::string &raw)
 	{
 		auto pos0 = raw.find('\"');
@@ -242,13 +216,49 @@ namespace cs {
 			return raw;
 	}
 
+#ifdef COVSCRIPT_PLATFORM_WIN32
+
+	std::string get_sdk_path()
+	{
+#ifdef COVSCRIPT_HOME
+		return COVSCRIPT_HOME;
+#else
+		const char *sdk_path = std::getenv("COVSCRIPT_HOME");
+		if (sdk_path == nullptr) {
+			CHAR path[MAX_PATH];
+			SHGetFolderPathA(nullptr, CSIDL_PERSONAL, nullptr, SHGFP_TYPE_CURRENT, path);
+			return process_path(std::strcat(path, "\\CovScript"));
+		}
+		else
+			return process_path(sdk_path);
+#endif
+	}
+
+#else
+
+	std::string get_sdk_path()
+	{
+#ifdef COVSCRIPT_HOME
+		return COVSCRIPT_HOME;
+#else
+		const char *sdk_path = std::getenv("COVSCRIPT_HOME");
+		if (sdk_path == nullptr)
+			return "/usr/share/covscript";
+		else
+			return process_path(sdk_path);
+#endif
+	}
+
+#endif
+
 	std::string get_import_path()
 	{
 		const char *import_path = std::getenv("CS_IMPORT_PATH");
+		std::string base_path = get_sdk_path() + cs::path_separator + "imports";
 		if (import_path != nullptr)
-			return process_path(import_path);
+			return process_path(std::string(import_path) + cs::path_delimiter + base_path);
 		else
-			return process_path(get_sdk_path() + cs::path_separator + "imports");
+			return process_path(base_path);
 	}
 
 	void prepend_import_path(const std::string &script, cs::process_context *context)
