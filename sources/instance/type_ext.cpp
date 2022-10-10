@@ -940,7 +940,7 @@ namespace cs_impl {
 
 		numeric _min(numeric a, numeric b)
 		{
-			if (a.is_integer())
+			if (a.is_integer() && b.is_integer())
 				return (std::min)(a.as_integer(), b.as_integer());
 			else
 				return (std::min)(a.as_float(), b.as_float());
@@ -948,7 +948,7 @@ namespace cs_impl {
 
 		numeric _max(numeric a, numeric b)
 		{
-			if (a.is_integer())
+			if (a.is_integer() && b.is_integer())
 				return (std::max)(a.as_integer(), b.as_integer());
 			else
 				return (std::max)(a.as_float(), b.as_float());
