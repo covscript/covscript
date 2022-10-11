@@ -195,6 +195,345 @@ namespace cs {
 		}
 	};
 
+// Numeric
+	using numeric_float = long double;
+	using numeric_integer = long long int;
+
+	class numeric final {
+		union {
+			numeric_float _num;
+			numeric_integer _int;
+		} data;
+		bool type = 1;
+		inline static std::uint8_t get_composite_type(bool lhs, bool rhs) noexcept
+		{
+			return lhs << 1 | rhs;
+		}
+	public:
+		numeric()
+		{
+			data._int = 0;
+		}
+		template<typename T>
+		numeric(const T& dat)
+		{
+			if (std::is_integral<T>::value) {
+				type = 1;
+				data._int = dat;
+			}
+			else {
+				type = 0;
+				data._num = dat;
+			}
+		}
+		numeric(const numeric& rhs) : data(rhs.data), type(rhs.type) {}
+		numeric(numeric&& rhs) noexcept : data(rhs.data), type(rhs.type) {}
+		~numeric() = default;
+		numeric operator+(const numeric& rhs) const noexcept
+		{
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num + rhs.data._num;
+			case 0b01:
+				return data._num + rhs.data._int;
+			case 0b10:
+				return data._int + rhs.data._num;
+			case 0b11:
+				return data._int + rhs.data._int;
+			}
+		}
+		template<typename T>
+		numeric operator+(const T& rhs) const noexcept
+		{
+			if (type)
+				return data._int + rhs;
+			else
+				return data._num + rhs;
+		}
+		numeric operator-(const numeric& rhs) const noexcept
+		{
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num - rhs.data._num;
+			case 0b01:
+				return data._num - rhs.data._int;
+			case 0b10:
+				return data._int - rhs.data._num;
+			case 0b11:
+				return data._int - rhs.data._int;
+			}
+		}
+		template<typename T>
+		numeric operator-(const T& rhs) const noexcept
+		{
+			if (type)
+				return data._int - rhs;
+			else
+				return data._num - rhs;
+		}
+		numeric operator*(const numeric& rhs) const noexcept
+		{
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num * rhs.data._num;
+			case 0b01:
+				return data._num * rhs.data._int;
+			case 0b10:
+				return data._int * rhs.data._num;
+			case 0b11:
+				return data._int * rhs.data._int;
+			}
+		}
+		template<typename T>
+		numeric operator*(const T& rhs) const noexcept
+		{
+			if (type)
+				return data._int * rhs;
+			else
+				return data._num * rhs;
+		}
+		numeric operator/(const numeric& rhs) const noexcept
+		{
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num / rhs.data._num;
+			case 0b01:
+				return data._num / rhs.data._int;
+			case 0b10:
+				return data._int / rhs.data._num;
+			case 0b11:
+				if (data._int % rhs.data._int != 0)
+					return static_cast<numeric_float>(data._int) / rhs.data._int;
+				else
+					return data._int / rhs.data._int;
+			}
+		}
+		template<typename T>
+		numeric operator/(const T& rhs) const noexcept
+		{
+			if (type)
+				return data._int / rhs;
+			else
+				return data._num / rhs;
+		}
+		numeric& operator=(const numeric& num)
+		{
+			if (this != &num) {
+				data = num.data;
+				type = num.type;
+			}
+			return *this;
+		}
+		template<typename T>
+		numeric& operator=(const T& dat)
+		{
+			if (std::is_integral<T>::value) {
+				type = 1;
+				data._int = dat;
+			}
+			else {
+				type = 0;
+				data._num = dat;
+			}
+			return *this;
+		}
+		bool operator<(const numeric& rhs) const noexcept
+		{
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num < rhs.data._num;
+			case 0b01:
+				return data._num < rhs.data._int;
+			case 0b10:
+				return data._int < rhs.data._num;
+			case 0b11:
+				return data._int < rhs.data._int;
+			}
+		}
+		template<typename T>
+		bool operator<(const T& rhs) const noexcept
+		{
+			if (type)
+				return data._int < rhs;
+			else
+				return data._num < rhs;
+		}
+		bool operator<=(const numeric& rhs) const noexcept
+		{
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num <= rhs.data._num;
+			case 0b01:
+				return data._num <= rhs.data._int;
+			case 0b10:
+				return data._int <= rhs.data._num;
+			case 0b11:
+				return data._int <= rhs.data._int;
+			}
+		}
+		template<typename T>
+		bool operator<=(const T& rhs) const noexcept
+		{
+			if (type)
+				return data._int <= rhs;
+			else
+				return data._num <= rhs;
+		}
+		bool operator>(const numeric& rhs) const noexcept
+		{
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num > rhs.data._num;
+			case 0b01:
+				return data._num > rhs.data._int;
+			case 0b10:
+				return data._int > rhs.data._num;
+			case 0b11:
+				return data._int > rhs.data._int;
+			}
+		}
+		template<typename T>
+		bool operator>(const T& rhs) const noexcept
+		{
+			if (type)
+				return data._int > rhs;
+			else
+				return data._num > rhs;
+		}
+		bool operator>=(const numeric& rhs) const noexcept
+		{
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num >= rhs.data._num;
+			case 0b01:
+				return data._num >= rhs.data._int;
+			case 0b10:
+				return data._int >= rhs.data._num;
+			case 0b11:
+				return data._int >= rhs.data._int;
+			}
+		}
+		template<typename T>
+		bool operator>=(const T& rhs) const noexcept
+		{
+			if (type)
+				return data._int >= rhs;
+			else
+				return data._num >= rhs;
+		}
+		bool operator==(const numeric& rhs) const noexcept
+		{
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num == rhs.data._num;
+			case 0b01:
+				return data._num == rhs.data._int;
+			case 0b10:
+				return data._int == rhs.data._num;
+			case 0b11:
+				return data._int == rhs.data._int;
+			}
+		}
+		template<typename T>
+		bool operator==(const T& rhs) const noexcept
+		{
+			if (type)
+				return data._int == rhs;
+			else
+				return data._num == rhs;
+		}
+		bool operator!=(const numeric& rhs) const noexcept
+		{
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num != rhs.data._num;
+			case 0b01:
+				return data._num != rhs.data._int;
+			case 0b10:
+				return data._int != rhs.data._num;
+			case 0b11:
+				return data._int != rhs.data._int;
+			}
+		}
+		template<typename T>
+		bool operator!=(const T& rhs) const noexcept
+		{
+			if (type)
+				return data._int != rhs;
+			else
+				return data._num != rhs;
+		}
+		numeric& operator++() noexcept
+		{
+			if (type)
+				++data._int;
+			else
+				++data._num;
+			return *this;
+		}
+		numeric& operator--() noexcept
+		{
+			if (type)
+				--data._int;
+			else
+				--data._num;
+			return *this;
+		}
+		numeric operator++(int) noexcept
+		{
+			if (type)
+				return data._int++;
+			else
+				return data._num++;
+		}
+		numeric operator--(int) noexcept
+		{
+			if (type)
+				return data._int--;
+			else
+				return data._num--;
+		}
+		numeric operator-() const noexcept
+		{
+			if (type)
+				return -data._int;
+			else
+				return -data._num;
+		}
+		bool is_integer() const noexcept
+		{
+			return type;
+		}
+		bool is_float() const noexcept
+		{
+			return !type;
+		}
+		numeric_integer as_integer() const noexcept
+		{
+			if (type)
+				return data._int;
+			else
+				return data._num;
+		}
+		numeric_float as_float() const noexcept
+		{
+			if (type)
+				return data._int;
+			else
+				return data._num;
+		}
+	};
+
 // Static Stack
 	template<typename T, template<typename> class allocator_t=std::allocator>
 	class stack_type final {

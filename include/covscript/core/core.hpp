@@ -78,7 +78,7 @@ namespace cs {
 	public:
 // Version
 		const std::string version = COVSCRIPT_VERSION_STR;
-		const number std_version = COVSCRIPT_STD_VERSION;
+		const numeric std_version = COVSCRIPT_STD_VERSION;
 // Output Precision
 		int output_precision = 8;
 // Exit code
@@ -439,6 +439,7 @@ namespace cs {
 		map_t<std::string, std::size_t> m_reflect;
 		std::shared_ptr<domain_ref> m_ref;
 		std::vector<var> m_slot;
+		bool optimize = false;
 
 		inline std::size_t get_slot_id(const std::string &name) const
 		{
@@ -469,24 +470,27 @@ namespace cs {
 		{
 			m_reflect.clear();
 			m_slot.clear();
+			optimize = false;
 		}
 
-		bool consistence(const var_id &id) const noexcept
+		inline void next() noexcept
+		{
+			optimize = true;
+		}
+
+		inline bool consistence(const var_id &id) const noexcept
 		{
 			return id.m_ref == m_ref;
 		}
 
-		bool exist(const std::string &name) const noexcept
+		inline bool exist(const std::string &name) const noexcept
 		{
 			return m_reflect.count(name) > 0;
 		}
 
-		bool exist(const var_id &id) const noexcept
+		inline bool exist(const var_id &id) const noexcept
 		{
-			if (id.m_ref != m_ref)
-				return m_reflect.count(id.m_id) > 0;
-			else
-				return true;
+			return m_reflect.count(id.m_id) > 0;
 		}
 
 		domain_type &add_var(const std::string &name, const var &val)
@@ -516,6 +520,46 @@ namespace cs {
 				m_slot[id.m_slot_id] = val;
 			}
 			return *this;
+		}
+
+		bool add_var_optimal(const std::string &name, const var &val, bool override = false)
+		{
+			if (m_reflect.count(name) > 0) {
+				if (optimize) {
+					m_slot[m_reflect.at(name)] = val;
+					return true;
+				}
+				else if (override) {
+					add_var(name, val);
+					return true;
+				}
+				else
+					return false;
+			}
+			else {
+				add_var(name, val);
+				return true;
+			}
+		}
+
+		bool add_var_optimal(const var_id &id, const var &val, bool override = false)
+		{
+			if (id.m_ref == m_ref) {
+				if (optimize) {
+					m_slot[id.m_slot_id] = val;
+					return true;
+				}
+				else if (override) {
+					add_var(id, val);
+					return true;
+				}
+				else
+					return false;
+			}
+			else {
+				add_var(id, val);
+				return true;
+			}
 		}
 
 		var &get_var(const var_id &id)
@@ -580,22 +624,22 @@ namespace cs {
 			return m_slot[id.m_slot_id];
 		}
 
-		var &get_var_no_check(const std::string &name) noexcept
+		inline var &get_var_no_check(const std::string &name) noexcept
 		{
 			return m_slot[m_reflect.at(name)];
 		}
 
-		const var &get_var_no_check(const std::string &name) const noexcept
+		inline const var &get_var_no_check(const std::string &name) const noexcept
 		{
 			return m_slot[m_reflect.at(name)];
 		}
 
-		auto begin() const
+		inline auto begin() const
 		{
 			return m_reflect.cbegin();
 		}
 
-		auto end() const
+		inline auto end() const
 		{
 			return m_reflect.cend();
 		}
@@ -629,11 +673,11 @@ namespace cs {
 	};
 
 	class range_iterator final {
-		number m_step, m_index;
+		numeric m_step, m_index;
 	public:
 		range_iterator() = delete;
 
-		explicit range_iterator(number step, number index) : m_step(step), m_index(index) {}
+		explicit range_iterator(numeric step, numeric index) : m_step(step), m_index(index) {}
 
 		range_iterator(const range_iterator &) = default;
 
@@ -648,27 +692,27 @@ namespace cs {
 
 		bool operator!=(const range_iterator &it) const
 		{
-			return m_index != it.m_index;
+			return m_index < it.m_index;
 		}
 
 		range_iterator &operator++()
 		{
-			m_index += m_step;
+			m_index = m_index + m_step;
 			return *this;
 		}
 
-		number operator*() const
+		numeric operator*() const
 		{
 			return m_index;
 		}
 	};
 
 	class range_type final {
-		number m_start, m_stop, m_step;
+		numeric m_start, m_stop, m_step;
 	public:
 		range_type() = delete;
 
-		range_type(number start, number stop, number step) : m_start(start), m_stop(stop), m_step(step) {}
+		range_type(numeric start, numeric stop, numeric step) : m_start(start), m_stop(stop), m_step(step) {}
 
 		range_type(const range_type &) = default;
 
@@ -980,7 +1024,7 @@ namespace cs {
 	}
 
 // Literal format
-	number parse_number(const std::string &);
+	numeric parse_number(const std::string &);
 }
 
 template<>

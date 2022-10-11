@@ -48,9 +48,9 @@ namespace cs_impl {
 		using namespace cs;
 
 // Element access
-		var at(const array &arr, number posit)
+		var at(const array &arr, numeric posit)
 		{
-			return arr.at(posit);
+			return arr.at(posit.as_integer());
 		}
 
 		var front(const array &arr)
@@ -83,9 +83,9 @@ namespace cs_impl {
 			return it++;
 		}
 
-		array::iterator next_n(array::iterator &it, number offset)
+		array::iterator next_n(array::iterator &it, numeric offset)
 		{
-			return it += offset;
+			return it += offset.as_integer();
 		}
 
 		array::iterator prev(array::iterator &it)
@@ -93,9 +93,9 @@ namespace cs_impl {
 			return it--;
 		}
 
-		array::iterator prev_n(array::iterator &it, number offset)
+		array::iterator prev_n(array::iterator &it, numeric offset)
 		{
-			return it -= offset;
+			return it -= offset.as_integer();
 		}
 
 		var data(array::iterator &it)
@@ -109,7 +109,7 @@ namespace cs_impl {
 			return arr.empty();
 		}
 
-		number size(const array &arr)
+		numeric size(const array &arr)
 		{
 			return arr.size();
 		}
@@ -222,7 +222,38 @@ namespace cs_impl {
 			.add_var("to_hash_map", make_cni(to_hash_map, true))
 			.add_var("to_list", make_cni(to_list, true));
 		}
+	}
+	namespace number_cs_ext {
+		using namespace cs;
 
+		bool is_integer(const numeric &n)
+		{
+			return n.is_integer();
+		}
+
+		bool is_float(const numeric &n)
+		{
+			return n.is_float();
+		}
+
+		numeric& ntoi(numeric &n)
+		{
+			return n = n.as_integer();
+		}
+
+		numeric& ntof(numeric &n)
+		{
+			return n = n.as_float();
+		}
+
+		void init()
+		{
+			(*number_ext)
+			.add_var("is_integer", make_cni(is_integer))
+			.add_var("is_float", make_cni(is_float))
+			.add_var("ntoi", make_cni(ntoi))
+			.add_var("ntof", make_cni(ntof));
+		}
 	}
 	namespace char_cs_ext {
 		using namespace cs;
@@ -292,11 +323,11 @@ namespace cs_impl {
 			return std::toupper(c);
 		}
 
-		char from_ascii(number ascii)
+		char from_ascii(const numeric& ascii)
 		{
-			if (ascii < 0 || ascii > 255)
+			if (ascii.as_integer() < 0 || ascii.as_integer() > 255)
 				throw lang_error("Out of range.");
-			return static_cast<char>(ascii);
+			return static_cast<char>(ascii.as_integer());
 		}
 
 		void init()
@@ -340,7 +371,7 @@ namespace cs_impl {
 			return set.empty();
 		}
 
-		number size(const hash_set &set)
+		numeric size(const hash_set &set)
 		{
 			return set.size();
 		}
@@ -424,7 +455,7 @@ namespace cs_impl {
 			return map.empty();
 		}
 
-		number size(const hash_map &map)
+		numeric size(const hash_map &map)
 		{
 			return map.size();
 		}
@@ -486,9 +517,9 @@ namespace cs_impl {
 				throw lang_error("Unsupported openmode.");
 		}
 
-		void setprecision(number pre)
+		void setprecision(numeric pre)
 		{
-			current_process->output_precision = pre;
+			current_process->output_precision = pre.as_integer();
 		}
 
 		void init()
@@ -584,19 +615,19 @@ namespace cs_impl {
 			return std::move(str);
 		}
 
-		number tell(istream &in)
+		numeric tell(istream &in)
 		{
 			return in->tellg();
 		}
 
-		void seek(istream &in, number pos)
+		void seek(istream &in, numeric pos)
 		{
-			in->seekg(pos);
+			in->seekg(pos.as_integer());
 		}
 
-		void seek_from(istream &in, std::ios_base::seekdir dir, number offset)
+		void seek_from(istream &in, std::ios_base::seekdir dir, numeric offset)
 		{
-			in->seekg(offset, dir);
+			in->seekg(offset.as_integer(), dir);
 		}
 
 		bool good(const istream &in)
@@ -646,19 +677,19 @@ namespace cs_impl {
 			out->put(c);
 		}
 
-		number tell(ostream &out)
+		numeric tell(ostream &out)
 		{
 			return out->tellp();
 		}
 
-		void seek(ostream &out, number pos)
+		void seek(ostream &out, numeric pos)
 		{
-			out->seekp(pos);
+			out->seekp(pos.as_integer());
 		}
 
-		void seek_from(ostream &out, std::ios_base::seekdir dir, number offset)
+		void seek_from(ostream &out, std::ios_base::seekdir dir, numeric offset)
 		{
-			out->seekp(offset, dir);
+			out->seekp(offset.as_integer(), dir);
 		}
 
 		void flush(ostream &out)
@@ -744,7 +775,7 @@ namespace cs_impl {
 			return lst.empty();
 		}
 
-		number size(const list &lst)
+		numeric size(const list &lst)
 		{
 			return lst.size();
 		}
@@ -842,100 +873,110 @@ namespace cs_impl {
 	namespace math_cs_ext {
 		using namespace cs;
 
-		number abs(number n)
+		numeric abs(numeric n)
 		{
-			return std::abs(n);
+			return std::abs(n.as_float());
 		}
 
-		number ln(number n)
+		numeric ln(numeric n)
 		{
-			return std::log(n);
+			return std::log(n.as_float());
 		}
 
-		number log10(number n)
+		numeric log10(numeric n)
 		{
-			return std::log10(n);
+			return std::log10(n.as_float());
 		}
 
-		number log(number a, number b)
+		numeric log(numeric a, numeric b)
 		{
-			return std::log(b)/std::log(a);
+			return std::log(b.as_float())/std::log(a.as_float());
 		}
 
-		number sin(number n)
+		numeric sin(numeric n)
 		{
-			return std::sin(n);
+			return std::sin(n.as_float());
 		}
 
-		number cos(number n)
+		numeric cos(numeric n)
 		{
-			return std::cos(n);
+			return std::cos(n.as_float());
 		}
 
-		number tan(number n)
+		numeric tan(numeric n)
 		{
-			return std::tan(n);
+			return std::tan(n.as_float());
 		}
 
-		number asin(number n)
+		numeric asin(numeric n)
 		{
-			return std::asin(n);
+			return std::asin(n.as_float());
 		}
 
-		number acos(number n)
+		numeric acos(numeric n)
 		{
-			return std::acos(n);
+			return std::acos(n.as_float());
 		}
 
-		number atan(number n)
+		numeric atan(numeric n)
 		{
-			return std::atan(n);
+			return std::atan(n.as_float());
 		}
 
-		number sqrt(number n)
+		numeric sqrt(numeric n)
 		{
-			return std::sqrt(n);
+			return std::sqrt(n.as_float());
 		}
 
-		number root(number a, number b)
+		numeric root(numeric a, numeric b)
 		{
-			return std::pow(a, number(1) / b);
+			return std::pow(a.as_float(), numeric_float(1) / b.as_float());
 		}
 
-		number pow(number a, number b)
+		numeric pow(numeric a, numeric b)
 		{
-			return std::pow(a, b);
+			return std::pow(a.as_float(), b.as_float());
 		}
 
-		number _min(number a, number b)
+		numeric _min(numeric a, numeric b)
 		{
-			return (std::min)(a, b);
+			if (a.is_integer() && b.is_integer())
+				return (std::min)(a.as_integer(), b.as_integer());
+			else
+				return (std::min)(a.as_float(), b.as_float());
 		}
 
-		number _max(number a, number b)
+		numeric _max(numeric a, numeric b)
 		{
-			return (std::max)(a, b);
+			if (a.is_integer() && b.is_integer())
+				return (std::max)(a.as_integer(), b.as_integer());
+			else
+				return (std::max)(a.as_float(), b.as_float());
 		}
 
-		number rand(number b, number e)
+		numeric rand(numeric b, numeric e)
 		{
-			return cov::rand<number>(b, e);
+			return cov::rand<numeric_float>(b.as_float(), e.as_float());
 		}
 
-		number randint(number b, number e)
+		numeric randint(numeric b, numeric e)
 		{
-			return cov::rand<long>(b, e);
+			return cov::rand<numeric_integer>(b.as_integer(), e.as_integer());
 		}
 
 		void init()
 		{
 			(*math_const_ext)
-			.add_var("max", var::make_constant<number>((std::numeric_limits<number>::max)()))
-			.add_var("min", var::make_constant<number>((std::numeric_limits<number>::min)()))
-			.add_var("inf", var::make_constant<number>(std::numeric_limits<number>::infinity()))
-			.add_var("nan", var::make_constant<number>(std::numeric_limits<number>::quiet_NaN()))
-			.add_var("pi", var::make_constant<number>(std::asin(number(1)) * 2))
-			.add_var("e", var::make_constant<number>(std::exp(number(1))));
+			.add_var("max", var::make_constant<numeric>((std::numeric_limits<numeric_float>::max)()))
+			.add_var("min", var::make_constant<numeric>((std::numeric_limits<numeric_float>::min)()))
+			.add_var("integer_max", var::make_constant<numeric>((std::numeric_limits<numeric_integer>::max)()))
+			.add_var("integer_min", var::make_constant<numeric>((std::numeric_limits<numeric_integer>::min)()))
+			.add_var("float_max", var::make_constant<numeric>((std::numeric_limits<numeric_float>::max)()))
+			.add_var("float_min", var::make_constant<numeric>((std::numeric_limits<numeric_float>::min)()))
+			.add_var("inf", var::make_constant<numeric>(std::numeric_limits<numeric_float>::infinity()))
+			.add_var("nan", var::make_constant<numeric>(std::numeric_limits<numeric_float>::quiet_NaN()))
+			.add_var("pi", var::make_constant<numeric>(std::asin(numeric_float(1)) * 2))
+			.add_var("e", var::make_constant<numeric>(std::exp(numeric_float(1))));
 			(*math_ext)
 			.add_var("constants", make_namespace(math_const_ext))
 			.add_var("abs", make_cni(abs, true))
@@ -969,42 +1010,42 @@ namespace cs_impl {
 	namespace time_cs_ext {
 		using namespace cs;
 
-		number sec(const std::tm &t)
+		numeric sec(const std::tm &t)
 		{
 			return t.tm_sec;
 		}
 
-		number tm_min(const std::tm &t)
+		numeric tm_min(const std::tm &t)
 		{
 			return t.tm_min;
 		}
 
-		number hour(const std::tm &t)
+		numeric hour(const std::tm &t)
 		{
 			return t.tm_hour;
 		}
 
-		number wday(const std::tm &t)
+		numeric wday(const std::tm &t)
 		{
 			return t.tm_wday;
 		}
 
-		number mday(const std::tm &t)
+		numeric mday(const std::tm &t)
 		{
 			return t.tm_mday;
 		}
 
-		number yday(const std::tm &t)
+		numeric yday(const std::tm &t)
 		{
 			return t.tm_yday;
 		}
 
-		number mon(const std::tm &t)
+		numeric mon(const std::tm &t)
 		{
 			return t.tm_mon;
 		}
 
-		number year(const std::tm &t)
+		numeric year(const std::tm &t)
 		{
 			return t.tm_year;
 		}
@@ -1014,7 +1055,7 @@ namespace cs_impl {
 			return t.tm_isdst;
 		}
 
-		number unixtime(const std::tm &t)
+		numeric unixtime(const std::tm &t)
 		{
 			return std::mktime(const_cast<tm*>(&t));
 		}
@@ -1049,7 +1090,7 @@ namespace cs_impl {
 			std::cout << copyright_info << std::endl;
 		}
 
-		number time()
+		numeric time()
 		{
 			return cov::timer::time(cov::timer::time_unit::milli_sec);
 		}
@@ -1062,7 +1103,7 @@ namespace cs_impl {
 				t = std::time(nullptr);
 				return var::make<std::tm>(*std::localtime(&t));
 			case 1:
-				t = args[0].const_val<number>();
+				t = args[0].const_val<numeric>().as_integer();
 				return var::make<std::tm>(*std::localtime(&t));
 			default:
 				throw cs::runtime_error(
@@ -1078,7 +1119,7 @@ namespace cs_impl {
 				t = std::time(nullptr);
 				return var::make<std::tm>(*std::gmtime(&t));
 			case 1:
-				t = args[0].const_val<number>();
+				t = args[0].const_val<numeric>().as_integer();
 				return var::make<std::tm>(*std::gmtime(&t));
 			default:
 				throw cs::runtime_error(
@@ -1086,9 +1127,9 @@ namespace cs_impl {
 			}
 		}
 
-		void delay(number time)
+		void delay(numeric time)
 		{
-			cov::timer::delay(cov::timer::time_unit::milli_sec, time);
+			cov::timer::delay(cov::timer::time_unit::milli_sec, time.as_integer());
 		}
 
 		var exception(const string &str)
@@ -1131,7 +1172,7 @@ namespace cs_impl {
 			return make_namespace(context->instance->source_import(path));
 		}
 
-		number argument_count(const var &func)
+		numeric argument_count(const var &func)
 		{
 			if (func.type() == typeid(object_method)) {
 				const callable::function_type &target = func.const_val<object_method>().callable.const_val<callable>().get_raw_data();
@@ -1179,33 +1220,33 @@ namespace cs_impl {
 				return future.get();
 		}
 
-		cs::var wait_for(cs::number mill_sec, const cs::var &func, const cs::array &argument)
+		cs::var wait_for(cs::numeric mill_sec, const cs::var &func, const cs::array &argument)
 		{
 			if (func.type() == typeid(cs::callable)) {
 				cs::vector args(argument.begin(), argument.end());
-				return wait_for_impl(mill_sec, func.const_val<cs::callable>(), args);
+				return wait_for_impl(mill_sec.as_integer(), func.const_val<cs::callable>(), args);
 			}
 			else if (func.type() == typeid(cs::object_method)) {
 				const auto &om = func.const_val<cs::object_method>();
 				cs::vector args{om.object};
 				args.insert(args.end(), argument.begin(), argument.end());
-				return wait_for_impl(mill_sec, om.callable.const_val<cs::callable>(), args);
+				return wait_for_impl(mill_sec.as_integer(), om.callable.const_val<cs::callable>(), args);
 			}
 			else
 				throw cs::lang_error("Invoke non-callable object.");
 		}
 
-		cs::var wait_until(cs::number mill_sec, const cs::var &func, const cs::array &argument)
+		cs::var wait_until(cs::numeric mill_sec, const cs::var &func, const cs::array &argument)
 		{
 			if (func.type() == typeid(cs::callable)) {
 				cs::vector args(argument.begin(), argument.end());
-				return wait_until_impl(mill_sec, func.const_val<cs::callable>(), args);
+				return wait_until_impl(mill_sec.as_integer(), func.const_val<cs::callable>(), args);
 			}
 			else if (func.type() == typeid(cs::object_method)) {
 				const auto &om = func.const_val<cs::object_method>();
 				cs::vector args{om.object};
 				args.insert(args.end(), argument.begin(), argument.end());
-				return wait_for_impl(mill_sec, om.callable.const_val<cs::callable>(), args);
+				return wait_for_impl(mill_sec.as_integer(), om.callable.const_val<cs::callable>(), args);
 			}
 			else
 				throw cs::lang_error("Invoke non-callable object.");
@@ -1226,7 +1267,7 @@ namespace cs_impl {
 		{
 			(*runtime_ext)
 			.add_var("time_type", make_namespace(time_ext))
-			.add_var("std_version", var::make_constant<number>(current_process->std_version))
+			.add_var("std_version", var::make_constant<numeric>(current_process->std_version))
 			.add_var("get_import_path", make_cni(get_import_path, true))
 			.add_var("info", make_cni(info))
 			.add_var("time", make_cni(time))
@@ -1259,9 +1300,9 @@ namespace cs_impl {
 	namespace string_cs_ext {
 		using namespace cs;
 
-		string assign(string &str, number posit, char ch)
+		string assign(string &str, numeric posit, char ch)
 		{
-			str.at(posit) = ch;
+			str.at(posit.as_integer()) = ch;
 			return str;
 		}
 
@@ -1271,54 +1312,54 @@ namespace cs_impl {
 			return str;
 		}
 
-		string insert(string &str, number posit, const var &val)
+		string insert(string &str, numeric posit, const var &val)
 		{
-			str.insert(posit, val.to_string());
+			str.insert(posit.as_integer(), val.to_string());
 			return str;
 		}
 
-		string erase(string &str, number b, number e)
+		string erase(string &str, numeric b, numeric e)
 		{
-			str.erase(b, e);
+			str.erase(b.as_integer(), e.as_integer());
 			return str;
 		}
 
-		string replace(string &str, number posit, number count, const var &val)
+		string replace(string &str, numeric posit, numeric count, const var &val)
 		{
-			str.replace(posit, count, val.to_string());
+			str.replace(posit.as_integer(), count.as_integer(), val.to_string());
 			return str;
 		}
 
-		string substr(const string &str, number b, number e)
+		string substr(const string &str, numeric b, numeric e)
 		{
-			return str.substr(b, e);
+			return str.substr(b.as_integer(), e.as_integer());
 		}
 
-		number find(const string &str, const string &s, number posit)
+		numeric find(const string &str, const string &s, numeric posit)
 		{
-			auto pos = str.find(s, posit);
+			auto pos = str.find(s, posit.as_integer());
 			if (pos == std::string::npos)
 				return -1;
 			else
 				return pos;
 		}
 
-		number rfind(const string &str, const string &s, number posit)
+		numeric rfind(const string &str, const string &s, numeric posit)
 		{
 			std::size_t pos = 0;
-			if (posit == -1)
+			if (posit.as_integer() == -1)
 				pos = str.rfind(s, std::string::npos);
 			else
-				pos = str.rfind(s, posit);
+				pos = str.rfind(s, posit.as_integer());
 			if (pos == std::string::npos)
 				return -1;
 			else
 				return pos;
 		}
 
-		string cut(string &str, number n)
+		string cut(string &str, numeric n)
 		{
-			for (std::size_t i = 0; i < n; ++i)
+			for (std::size_t i = 0; i < n.as_integer(); ++i)
 				str.pop_back();
 			return str;
 		}
@@ -1333,7 +1374,7 @@ namespace cs_impl {
 			str.clear();
 		}
 
-		number size(const string &str)
+		numeric size(const string &str)
 		{
 			return str.size();
 		}
@@ -1354,7 +1395,7 @@ namespace cs_impl {
 			return std::move(s);
 		}
 
-		number to_number(const string &str)
+		numeric to_number(const string &str)
 		{
 			return parse_number(str);
 		}
@@ -1411,19 +1452,19 @@ namespace cs_impl {
 		using namespace cs;
 		using namespace cs_impl;
 
-		number terminal_width()
+		numeric terminal_width()
 		{
 			return conio::terminal_width();
 		}
 
-		number terminal_height()
+		numeric terminal_height()
 		{
 			return conio::terminal_height();
 		}
 
-		void gotoxy(number x, number y)
+		void gotoxy(numeric x, numeric y)
 		{
-			conio::gotoxy(x, y);
+			conio::gotoxy(x.as_integer(), y.as_integer());
 		}
 
 		void echo(bool v)
@@ -1542,7 +1583,7 @@ namespace cs_impl {
 	namespace system_cs_ext {
 		using namespace cs;
 
-		number run(const string &str)
+		numeric run(const string &str)
 		{
 			return std::system(str.c_str());
 		}
@@ -1555,9 +1596,9 @@ namespace cs_impl {
 			return str;
 		}
 
-		void exit(number exit_code)
+		void exit(numeric exit_code)
 		{
-			int code = exit_code;
+			int code = exit_code.as_integer();
 			current_process->on_process_exit.touch(&code);
 		}
 
@@ -1597,6 +1638,7 @@ namespace cs_impl {
 			runtime_cs_ext::init();
 			math_cs_ext::init();
 			except_cs_ext::init();
+			number_cs_ext::init();
 			char_cs_ext::init();
 			string_cs_ext::init();
 			list_cs_ext::init();

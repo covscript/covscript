@@ -6,7 +6,7 @@ function 第一步(n)
         var 用时=runtime.time()
         var fc=0
         loop
-            fc++
+            ++fc
         until runtime.time()-用时>=1000
         得分=得分+fc
     end

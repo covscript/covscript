@@ -86,6 +86,7 @@ namespace cs_impl {
 	cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t array_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t array_iterator_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t number_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t char_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t math_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t math_const_ext = cs::make_shared_namespace<cs::name_space>();
@@ -180,10 +181,13 @@ namespace cs {
 		return var::make_protect<namespace_t>(ns);
 	}
 
-	number parse_number(const std::string &str)
+	numeric parse_number(const std::string &str)
 	{
 		try {
-			return std::stold(str);
+			if (str.find('.') != std::string::npos)
+				return std::stold(str);
+			else
+				return std::stoll(str);
 		}
 		catch (const std::exception &e) {
 			throw lang_error("Wrong literal format.");
@@ -197,32 +201,6 @@ namespace cs {
 	garbage_collector<statement_base> statement_base::gc;
 
 	garbage_collector<method_base> method_base::gc;
-
-#ifdef COVSCRIPT_PLATFORM_WIN32
-
-	std::string get_sdk_path()
-	{
-#ifdef COVSCRIPT_HOME
-		return COVSCRIPT_HOME;
-#else
-		CHAR path[MAX_PATH];
-		SHGetFolderPathA(nullptr, CSIDL_PERSONAL, nullptr, SHGFP_TYPE_CURRENT, path);
-		return std::strcat(path, "\\CovScript");
-#endif
-	}
-
-#else
-
-	std::string get_sdk_path()
-	{
-#ifdef COVSCRIPT_HOME
-		return COVSCRIPT_HOME;
-#else
-		return "/usr/share/covscript";
-#endif
-	}
-
-#endif
 
 	std::string process_path(const std::string &raw)
 	{
@@ -238,13 +216,49 @@ namespace cs {
 			return raw;
 	}
 
+#ifdef COVSCRIPT_PLATFORM_WIN32
+
+	std::string get_sdk_path()
+	{
+#ifdef COVSCRIPT_HOME
+		return COVSCRIPT_HOME;
+#else
+		const char *sdk_path = std::getenv("COVSCRIPT_HOME");
+		if (sdk_path == nullptr) {
+			CHAR path[MAX_PATH];
+			SHGetFolderPathA(nullptr, CSIDL_PERSONAL, nullptr, SHGFP_TYPE_CURRENT, path);
+			return process_path(std::strcat(path, "\\CovScript"));
+		}
+		else
+			return process_path(sdk_path);
+#endif
+	}
+
+#else
+
+	std::string get_sdk_path()
+	{
+#ifdef COVSCRIPT_HOME
+		return COVSCRIPT_HOME;
+#else
+		const char *sdk_path = std::getenv("COVSCRIPT_HOME");
+		if (sdk_path == nullptr)
+			return "/usr/share/covscript";
+		else
+			return process_path(sdk_path);
+#endif
+	}
+
+#endif
+
 	std::string get_import_path()
 	{
 		const char *import_path = std::getenv("CS_IMPORT_PATH");
+		std::string base_path = get_sdk_path() + cs::path_separator + "imports";
 		if (import_path != nullptr)
-			return process_path(import_path);
+			return process_path(std::string(import_path) + cs::path_delimiter + base_path);
 		else
-			return process_path(get_sdk_path() + cs::path_separator + "imports");
+			return process_path(base_path);
 	}
 
 	void prepend_import_path(const std::string &script, cs::process_context *context)
@@ -290,22 +304,22 @@ namespace cs {
 	{
 		switch (args.size()) {
 		case 1:
-			cs_impl::check_args<number>(args);
-			return var::make_constant<range_type>(0, args[0].const_val<number>(), 1);
+			cs_impl::check_args<numeric>(args);
+			return var::make_constant<range_type>(0, args[0].const_val<numeric>(), 1);
 		case 2:
-			cs_impl::check_args<number, number>(args);
-			return var::make_constant<range_type>(args[0].const_val<number>(), args[1].const_val<number>(), 1);
+			cs_impl::check_args<numeric, numeric>(args);
+			return var::make_constant<range_type>(args[0].const_val<numeric>(), args[1].const_val<numeric>(), 1);
 		case 3:
-			cs_impl::check_args<number, number, number>(args);
-			return var::make_constant<range_type>(args[0].const_val<number>(), args[1].const_val<number>(),
-			                                      args[2].const_val<number>());
+			cs_impl::check_args<numeric, numeric, numeric>(args);
+			return var::make_constant<range_type>(args[0].const_val<numeric>(), args[1].const_val<numeric>(),
+			                                      args[2].const_val<numeric>());
 		default:
 			throw cs::runtime_error(
 			    "Wrong size of the arguments. Expected 1, 2 or 3, provided " + std::to_string(args.size()));
 		}
 	}
 
-	number to_integer(const var &val)
+	numeric to_integer(const var &val)
 	{
 		return val.to_integer();
 	}
@@ -444,7 +458,9 @@ namespace cs {
 		// Internal Types
 		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char),
 		                  cs_impl::char_ext)
-		.add_buildin_type("number", []() -> var { return var::make<number>(0); }, typeid(number))
+		.add_buildin_type("number", []() -> var { return var::make<numeric>(0); }, typeid(numeric))
+		.add_buildin_type("integer", []() -> var { return var::make<numeric>(0); }, typeid(numeric))
+		.add_buildin_type("float", []() -> var { return var::make<numeric>(0.0); }, typeid(numeric))
 		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
 		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
 		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string),
@@ -452,7 +468,7 @@ namespace cs {
 		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), cs_impl::list_ext)
 		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array),
 		                  cs_impl::array_ext)
-		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
+		.add_buildin_type("pair", []() -> var { return var::make<pair>(numeric(0), numeric(0)); }, typeid(pair),
 		                  cs_impl::pair_ext)
 		.add_buildin_type("hash_set", []() -> var { return var::make<hash_set>(); }, typeid(hash_set),
 		                  cs_impl::hash_set_ext)
@@ -489,7 +505,9 @@ namespace cs {
 		// Internal Types
 		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char),
 		                  cs_impl::char_ext)
-		.add_buildin_type("number", []() -> var { return var::make<number>(0); }, typeid(number))
+		.add_buildin_type("number", []() -> var { return var::make<numeric>(0); }, typeid(numeric))
+		.add_buildin_type("integer", []() -> var { return var::make<numeric>(0); }, typeid(numeric))
+		.add_buildin_type("float", []() -> var { return var::make<numeric>(0.0); }, typeid(numeric))
 		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
 		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
 		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string),
@@ -497,7 +515,7 @@ namespace cs {
 		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), cs_impl::list_ext)
 		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array),
 		                  cs_impl::array_ext)
-		.add_buildin_type("pair", []() -> var { return var::make<pair>(number(0), number(0)); }, typeid(pair),
+		.add_buildin_type("pair", []() -> var { return var::make<pair>(numeric(0), numeric(0)); }, typeid(pair),
 		                  cs_impl::pair_ext)
 		.add_buildin_type("hash_set", []() -> var { return var::make<hash_set>(); }, typeid(hash_set),
 		                  cs_impl::hash_set_ext)

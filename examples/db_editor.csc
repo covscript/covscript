@@ -19,7 +19,7 @@ struct db_editor extends picasso.base_window
         this.show()
     end
     function open(path)
-        if system.file.exists(path)
+        if system.file.exist(path)
             db=sqlite.open(path)
         else
             throw runtime.exception("DB do not exists.")
@@ -196,7 +196,7 @@ struct db_viewer extends picasso.base_window
         this.show()
     end
     function open(path)
-        if system.file.exists(path)
+        if system.file.exist(path)
             db=sqlite.open(path)
         else
             throw runtime.exception("DB do not exists.")

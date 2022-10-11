@@ -80,7 +80,6 @@ namespace cs {
 	template<typename _Tp> using set_t = std::unordered_set<_Tp>;
 #endif
 	using var = cs_impl::any;
-	using number = long double;
 	using boolean = bool;
 	using string = std::string;
 	using list = std::list<var>;
@@ -98,6 +97,9 @@ namespace cs {
 	using char_buff = std::shared_ptr<std::stringstream>;
 	using istream = std::shared_ptr<std::istream>;
 	using ostream = std::shared_ptr<std::ostream>;
+
+// Compatible declaration since 210503
+	using number = numeric_float;
 
 	typedef void(*cs_exception_handler)(const lang_error &);
 

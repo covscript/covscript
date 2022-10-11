@@ -14,6 +14,13 @@ function test(f, count)
         f(i)
     end
 end
-var start=runtime.time()
-test([](i)->cs(),200000)
-system.out.println(runtime.time()-start)
+
+var sum = 0, pass = 0
+loop
+    var start=runtime.time()
+    test([](i)->cs(),200000)
+    var time=runtime.time()-start
+    sum += time;
+    ++pass
+    system.out.println(to_string(time) + ", avg: " + to_integer(sum/pass) + ", pass: " + pass)
+end

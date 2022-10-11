@@ -40,7 +40,6 @@
 #elif defined(__APPLE__)
 // Mac OS X / Darwin features
 #include <libkern/OSByteOrder.h>
-
 #elif defined(__FreeBSD__)
 #include <sys/endian.h>
 #elif defined(__GLIBC__)
@@ -64,7 +63,7 @@
 // then a load and a store.
 // -----------------------------------------------------------------------------
 
-#if defined(ADDRESS_SANITIZER) || defined(THREAD_SANITIZER) || \
+#if defined(ADDRESS_SANITIZER) || defined(THREAD_SANITIZER) ||\
     defined(MEMORY_SANITIZER)
 #include <stdint.h>
 
@@ -202,14 +201,12 @@ namespace phmap {
 
 #ifdef PHMAP_HAVE_INTRINSIC_INT128
 __extension__ typedef unsigned __int128 phmap_uint128;
-
-inline uint64_t umul128(uint64_t a, uint64_t b, uint64_t *high)
+inline uint64_t umul128(uint64_t a, uint64_t b, uint64_t* high)
 {
 	auto result = static_cast<phmap_uint128>(a) * static_cast<phmap_uint128>(b);
 	*high = static_cast<uint64_t>(result >> 64);
 	return static_cast<uint64_t>(result);
 }
-
 #define PHMAP_HAS_UMUL128 1
 #elif (defined(_MSC_VER))
 #if defined(_M_X64)
@@ -310,7 +307,7 @@ namespace phmap {
 				return (int)(63 - result);
 			}
 			return 64;
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) && !defined(__clang__)
 			// MSVC does not have __buitin_clzll. Compose two calls to _BitScanReverse
 			unsigned long result = 0;  // NOLINT(runtime/int)
 			if ((n >> 32) && _BitScanReverse(&result, (unsigned long)(n >> 32))) {
@@ -320,7 +317,7 @@ namespace phmap {
 				return 63 - result;
 			}
 			return 64;
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || defined(__clang__)
 			// Use __builtin_clzll, which uses the following instructions:
 			//  x86: bsr
 			//  ARM64: clz
@@ -338,24 +335,24 @@ namespace phmap {
 #endif
 		}
 
-		PHMAP_BASE_INTERNAL_FORCEINLINE int CountLeadingZeros32Slow(uint64_t n)
+		PHMAP_BASE_INTERNAL_FORCEINLINE uint32_t CountLeadingZeros32Slow(uint64_t n)
 		{
-			int zeroes = 28;
+			uint32_t zeroes = 28;
 			if (n >> 16) zeroes -= 16, n >>= 16;
 			if (n >> 8) zeroes -= 8, n >>= 8;
 			if (n >> 4) zeroes -= 4, n >>= 4;
 			return "\4\3\2\2\1\1\1\1\0\0\0\0\0\0\0"[n] + zeroes;
 		}
 
-		PHMAP_BASE_INTERNAL_FORCEINLINE int CountLeadingZeros32(uint32_t n)
+		PHMAP_BASE_INTERNAL_FORCEINLINE uint32_t CountLeadingZeros32(uint32_t n)
 		{
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
 			unsigned long result = 0;  // NOLINT(runtime/int)
 			if (_BitScanReverse(&result, n)) {
-				return (int)(31 - result);
+				return (uint32_t)(31 - result);
 			}
 			return 32;
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || defined(__clang__)
 			// Use __builtin_clz, which uses the following instructions:
 			//  x86: bsr
 			//  ARM64: clz
@@ -373,9 +370,9 @@ namespace phmap {
 #endif
 		}
 
-		PHMAP_BASE_INTERNAL_FORCEINLINE int CountTrailingZerosNonZero64Slow(uint64_t n)
+		PHMAP_BASE_INTERNAL_FORCEINLINE uint32_t CountTrailingZerosNonZero64Slow(uint64_t n)
 		{
-			int c = 63;
+			uint32_t c = 63;
 			n &= ~n + 1;
 			if (n & 0x00000000FFFFFFFF) c -= 32;
 			if (n & 0x0000FFFF0000FFFF) c -= 16;
@@ -386,13 +383,13 @@ namespace phmap {
 			return c;
 		}
 
-		PHMAP_BASE_INTERNAL_FORCEINLINE int CountTrailingZerosNonZero64(uint64_t n)
+		PHMAP_BASE_INTERNAL_FORCEINLINE uint32_t CountTrailingZerosNonZero64(uint64_t n)
 		{
-#if defined(_MSC_VER) && defined(_M_X64)
+#if defined(_MSC_VER) && !defined(__clang__) && defined(_M_X64)
 			unsigned long result = 0;  // NOLINT(runtime/int)
 			_BitScanForward64(&result, n);
-			return (int)result;
-#elif defined(_MSC_VER)
+			return (uint32_t)result;
+#elif defined(_MSC_VER) && !defined(__clang__)
 			unsigned long result = 0;  // NOLINT(runtime/int)
 			if (static_cast<uint32_t>(n) == 0) {
 				_BitScanForward(&result, (unsigned long)(n >> 32));
@@ -400,7 +397,7 @@ namespace phmap {
 			}
 			_BitScanForward(&result, (unsigned long)n);
 			return result;
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || defined(__clang__)
 			static_assert(sizeof(unsigned long long) == sizeof(n),  // NOLINT(runtime/int)
 			              "__builtin_ctzll does not take 64-bit arg");
 			return __builtin_ctzll(n);
@@ -409,9 +406,9 @@ namespace phmap {
 #endif
 		}
 
-		PHMAP_BASE_INTERNAL_FORCEINLINE int CountTrailingZerosNonZero32Slow(uint32_t n)
+		PHMAP_BASE_INTERNAL_FORCEINLINE uint32_t CountTrailingZerosNonZero32Slow(uint32_t n)
 		{
-			int c = 31;
+			uint32_t c = 31;
 			n &= ~n + 1;
 			if (n & 0x0000FFFF) c -= 16;
 			if (n & 0x00FF00FF) c -= 8;
@@ -421,13 +418,13 @@ namespace phmap {
 			return c;
 		}
 
-		PHMAP_BASE_INTERNAL_FORCEINLINE int CountTrailingZerosNonZero32(uint32_t n)
+		PHMAP_BASE_INTERNAL_FORCEINLINE uint32_t CountTrailingZerosNonZero32(uint32_t n)
 		{
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
 			unsigned long result = 0;  // NOLINT(runtime/int)
 			_BitScanForward(&result, n);
-			return (int)result;
-#elif defined(__GNUC__)
+			return (uint32_t)result;
+#elif defined(__GNUC__) || defined(__clang__)
 			static_assert(sizeof(int) == sizeof(n),
 			              "__builtin_ctz does not take 32-bit arg");
 			return __builtin_ctz(n);
@@ -459,12 +456,10 @@ namespace phmap {
 	{
 		return __builtin_bswap64(host_int);
 	}
-
 	inline uint32_t gbswap_32(uint32_t host_int)
 	{
 		return __builtin_bswap32(host_int);
 	}
-
 	inline uint16_t gbswap_16(uint16_t host_int)
 	{
 		return __builtin_bswap16(host_int);
@@ -564,12 +559,10 @@ namespace phmap {
 	{
 		return gbswap_16(x);
 	}
-
 	inline uint32_t ghtonl(uint32_t x)
 	{
 		return gbswap_32(x);
 	}
-
 	inline uint64_t ghtonll(uint64_t x)
 	{
 		return gbswap_64(x);
@@ -603,12 +596,10 @@ namespace phmap {
 	{
 		return ghtons(x);
 	}
-
 	inline uint32_t gntohl(uint32_t x)
 	{
 		return ghtonl(x);
 	}
-
 	inline uint64_t gntohll(uint64_t x)
 	{
 		return ghtonll(x);
@@ -626,7 +617,6 @@ namespace phmap {
 		{
 			return x;
 		}
-
 		inline uint16_t ToHost16(uint16_t x)
 		{
 			return x;
@@ -636,7 +626,6 @@ namespace phmap {
 		{
 			return x;
 		}
-
 		inline uint32_t ToHost32(uint32_t x)
 		{
 			return x;
@@ -646,7 +635,6 @@ namespace phmap {
 		{
 			return x;
 		}
-
 		inline uint64_t ToHost64(uint64_t x)
 		{
 			return x;
@@ -694,6 +682,7 @@ namespace phmap {
 #endif /* ENDIAN */
 
 // Functions to do unaligned loads and stores in little-endian order.
+// ------------------------------------------------------------------
 		inline uint16_t Load16(const void *p)
 		{
 			return ToHost16(PHMAP_INTERNAL_UNALIGNED_LOAD16(p));
@@ -737,7 +726,6 @@ namespace phmap {
 		{
 			return gbswap_16(x);
 		}
-
 		inline uint16_t ToHost16(uint16_t x)
 		{
 			return gbswap_16(x);
@@ -747,7 +735,6 @@ namespace phmap {
 		{
 			return gbswap_32(x);
 		}
-
 		inline uint32_t ToHost32(uint32_t x)
 		{
 			return gbswap_32(x);
@@ -757,7 +744,6 @@ namespace phmap {
 		{
 			return gbswap_64(x);
 		}
-
 		inline uint64_t ToHost64(uint64_t x)
 		{
 			return gbswap_64(x);
