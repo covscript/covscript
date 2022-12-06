@@ -224,16 +224,20 @@ namespace cs {
 		std::vector<std::string> mArgs;
 		std::deque<statement_base *> mBody;
 		static var call_rr(const function*, vector &);
-		static var call_er(const function*, vector &);
+		static var call_vv(const function*, vector &);
 		static var call_rl(const function*, vector &);
 		static var call_el(const function*, vector &);
 		var (*call_ptr)(const function*, vector &) = nullptr;
 		inline void init_call_ptr() noexcept
 		{
-			if (mIsLambda)
-				call_ptr = mArgs.empty()?&call_el:&call_rl;
+			if (!mIsVargs) {
+				if (mIsLambda)
+					call_ptr = mArgs.empty()?&call_el:&call_rl;
+				else
+					call_ptr = &call_rr;
+			}
 			else
-				call_ptr = mArgs.empty()?&call_er:&call_rr;
+				call_ptr = &call_vv;
 		}
 	public:
 		function() = delete;
@@ -243,13 +247,19 @@ namespace cs {
 #ifdef CS_DEBUGGER
 		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body,
 		         bool is_vargs = false, bool is_lambda = false) : mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs),
-			mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)) {init_call_ptr();}
+			mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
+		{
+			init_call_ptr();
+		}
 #else
 
 		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false,
 		         bool is_lambda = false)
 			: mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)),
-			  mBody(std::move(body)) {init_call_ptr();}
+			  mBody(std::move(body))
+		{
+			init_call_ptr();
+		}
 
 #endif
 

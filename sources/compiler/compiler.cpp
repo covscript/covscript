@@ -718,6 +718,7 @@ namespace cs {
 					else
 						throw compile_error("Unexpected element in function argument list.");
 				}
+				bool treat_as_lambda = find_id_ref(it.right(), "self");
 				statement_base *ret = new statement_return(tree_type<token_base *>(it.right()), context,
 				        new token_endline(token->get_line_num()));
 #ifdef CS_DEBUGGER
@@ -730,11 +731,11 @@ namespace cs {
 				}
 				else
 					decl+=")";
-				function func(context, decl, ret, args, std::deque<statement_base *> {ret}, is_vargs, true);
+				function func(context, decl, ret, args, std::deque<statement_base *> {ret}, is_vargs, treat_as_lambda);
 #else
-				function func(context, args, std::deque<statement_base *> {ret}, is_vargs, true);
+				function func(context, args, std::deque<statement_base *> {ret}, is_vargs, treat_as_lambda);
 #endif
-				if (find_id_ref(it.right(), "self")) {
+				if (treat_as_lambda) {
 					func.add_reserve_var("self");
 					var lambda = var::make<object_method>(var(), var::make_protect<callable>(func));
 					lambda.val<object_method>().object = lambda;

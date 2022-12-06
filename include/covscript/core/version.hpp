@@ -32,8 +32,8 @@
 * Master
 *
 */
-#define COVSCRIPT_VERSION_NUM 3,4,1,16
-#define COVSCRIPT_VERSION_STR "3.4.1 Castor fiber(Unstable) Build 16"
+#define COVSCRIPT_VERSION_NUM 3,4,1,17
+#define COVSCRIPT_VERSION_STR "3.4.1 Castor fiber(Unstable) Build 17"
 #define COVSCRIPT_STD_VERSION 210504
 #define COVSCRIPT_API_VERSION 221001
 #define COVSCRIPT_ABI_VERSION 221003

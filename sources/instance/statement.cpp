@@ -27,14 +27,14 @@
 #include <iostream>
 
 namespace cs {
-	var function::call(vector &args) const
+	var function::call_rr(const function *_this, vector &args)
 	{
 		current_process->poll_event();
-		if (!mIsVargs && args.size() != this->mArgs.size())
+		if (args.size() != _this->mArgs.size())
 			throw runtime_error(
-			    "Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
+			    "Wrong size of arguments.Expected " + std::to_string(_this->mArgs.size()) + ",provided " +
 			    std::to_string(args.size()));
-		scope_guard scope(mContext);
+		scope_guard scope(_this->mContext);
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(mDecl);
 		if(mMatch)
@@ -42,23 +42,9 @@ namespace cs {
 #else
 		fcall_guard fcall;
 #endif
-		if (mIsVargs) {
-			var arg_list = var::make<cs::array>();
-			auto &arr = arg_list.val<cs::array>();
-			std::size_t i = 0;
-			if (mIsMemFn)
-				mContext->instance->storage.add_var_no_return("this", args[i++]);
-			if (mIsLambda)
-				mContext->instance->storage.add_var_no_return("self", args[i++]);
-			for (; i < args.size(); ++i)
-				arr.push_back(args[i]);
-			mContext->instance->storage.add_var_no_return(this->mArgs.front(), arg_list);
-		}
-		else {
-			for (std::size_t i = 0; i < args.size(); ++i)
-				mContext->instance->storage.add_var_no_return(this->mArgs[i], args[i]);
-		}
-		for (auto &ptr:this->mBody) {
+		for (std::size_t i = 0; i < args.size(); ++i)
+			_this->mContext->instance->storage.add_var_no_return(_this->mArgs[i], args[i]);
+		for (auto &ptr:_this->mBody) {
 			try {
 				ptr->run();
 			}
@@ -68,12 +54,102 @@ namespace cs {
 			catch (const std::exception &e) {
 				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 			}
-			if (mContext->instance->return_fcall) {
-				mContext->instance->return_fcall = false;
+			if (_this->mContext->instance->return_fcall) {
+				_this->mContext->instance->return_fcall = false;
 				return fcall.get();
 			}
 		}
 		return fcall.get();
+	}
+
+	var function::call_vv(const function *_this, vector &args)
+	{
+		current_process->poll_event();
+		scope_guard scope(_this->mContext);
+#ifdef CS_DEBUGGER
+		fcall_guard fcall(mDecl);
+		if(mMatch)
+			cs_debugger_func_callback(mDecl, mStmt);
+#else
+		fcall_guard fcall;
+#endif
+		{
+			var arg_list = var::make<cs::array>();
+			auto &arr = arg_list.val<cs::array>();
+			std::size_t i = 0;
+			if (_this->mIsMemFn)
+				_this->mContext->instance->storage.add_var_no_return("this", args[i++]);
+			if (_this->mIsLambda)
+				_this->mContext->instance->storage.add_var_no_return("self", args[i++]);
+			for (; i < args.size(); ++i)
+				arr.push_back(args[i]);
+			_this->mContext->instance->storage.add_var_no_return(_this->mArgs.front(), arg_list);
+		}
+		for (auto &ptr:_this->mBody) {
+			try {
+				ptr->run();
+			}
+			catch (const cs::exception &e) {
+				throw e;
+			}
+			catch (const std::exception &e) {
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+			}
+			if (_this->mContext->instance->return_fcall) {
+				_this->mContext->instance->return_fcall = false;
+				return fcall.get();
+			}
+		}
+		return fcall.get();
+	}
+
+	var function::call_rl(const function *_this, vector &args)
+	{
+		current_process->poll_event();
+		if (args.size() != _this->mArgs.size())
+			throw runtime_error(
+			    "Wrong size of arguments.Expected " + std::to_string(_this->mArgs.size()) + ",provided " +
+			    std::to_string(args.size()));
+		scope_guard scope(_this->mContext);
+#ifdef CS_DEBUGGER
+		fcall_guard fcall(mDecl);
+		if(mMatch)
+			cs_debugger_func_callback(mDecl, mStmt);
+#endif
+		for (std::size_t i = 0; i < args.size(); ++i)
+			_this->mContext->instance->storage.add_var_no_return(_this->mArgs[i], args[i]);
+		try {
+			return _this->mContext->instance->parse_expr(static_cast<const statement_return*>(_this->mBody.front())->get_tree().root());
+		}
+		catch (const cs::exception &e) {
+			throw e;
+		}
+		catch (const std::exception &e) {
+			const statement_base *ptr = _this->mBody.front();
+			throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+		}
+	}
+
+	var function::call_el(const function *_this, vector &args)
+	{
+		current_process->poll_event();
+		if (!args.empty())
+			throw runtime_error("Wrong size of arguments.Expected none, provided " +std::to_string(args.size()));
+#ifdef CS_DEBUGGER
+		fcall_guard fcall(mDecl);
+		if(mMatch)
+			cs_debugger_func_callback(mDecl, mStmt);
+#endif
+		try {
+			return _this->mContext->instance->parse_expr(static_cast<const statement_return*>(_this->mBody.front())->get_tree().root());
+		}
+		catch (const cs::exception &e) {
+			throw e;
+		}
+		catch (const std::exception &e) {
+			const statement_base *ptr = _this->mBody.front();
+			throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+		}
 	}
 
 	var struct_builder::operator()()
