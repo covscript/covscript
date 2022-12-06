@@ -470,6 +470,34 @@ namespace cs {
 		signal_types::divasi_, signal_types::modasi_, signal_types::powasi_
 	};
 
+	bool compiler_type::find_id_ref(tree_type<token_base *>::iterator it, const std::string& id)
+	{
+		if (!it.usable())
+			return false;
+		token_base *token = it.data();
+		if (token == nullptr)
+			return false;
+		switch (token->get_type()) {
+		default:
+			break;
+		case token_types::id:
+			return static_cast<token_id *>(token)->get_id().get_id() == id;
+		case token_types::expr:
+			return find_id_ref(static_cast<token_expr *>(it.data())->get_tree().root(), id);
+		case token_types::array: {
+			for (auto &tree:static_cast<token_array *>(token)->get_array()) {
+				if (find_id_ref(tree.root(), id))
+					return true;
+			}
+			return false;
+		}
+		}
+		if (find_id_ref(it.left(), id) || find_id_ref(it.right(), id))
+			return true;
+		else
+			return false;
+	}
+
 	void
 	compiler_type::trim_expr(tree_type<token_base *> &tree, tree_type<token_base *>::iterator it, trim_type do_trim)
 	{
@@ -706,11 +734,15 @@ namespace cs {
 #else
 				function func(context, args, std::deque<statement_base *> {ret}, is_vargs, true);
 #endif
-				func.add_reserve_var("self");
-				var lambda = var::make<object_method>(var(), var::make_protect<callable>(func));
-				lambda.val<object_method>().object = lambda;
-				lambda.protect();
-				it.data() = new_value(lambda);
+				if (find_id_ref(it.right(), "self")) {
+					func.add_reserve_var("self");
+					var lambda = var::make<object_method>(var(), var::make_protect<callable>(func));
+					lambda.val<object_method>().object = lambda;
+					lambda.protect();
+					it.data() = new_value(lambda);
+				}
+				else
+					it.data() = new_value(var::make_protect<callable>(func));
 				return;
 			}
 			}
