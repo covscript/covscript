@@ -32,7 +32,7 @@ namespace cs {
 		current_process->poll_event();
 		if (args.size() != _this->mArgs.size())
 			throw runtime_error(
-			    "Wrong size of arguments.Expected " + std::to_string(_this->mArgs.size()) + ",provided " +
+			    "Wrong size of arguments. Expected " + std::to_string(_this->mArgs.size()) + ", provided " +
 			    std::to_string(args.size()));
 		scope_guard scope(_this->mContext);
 #ifdef CS_DEBUGGER
@@ -79,7 +79,7 @@ namespace cs {
 			std::size_t i = 0;
 			if (_this->mIsMemFn)
 				_this->mContext->instance->storage.add_var_no_return("this", args[i++]);
-			if (_this->mIsLambda)
+			else if (_this->mIsLambda)
 				_this->mContext->instance->storage.add_var_no_return("self", args[i++]);
 			for (; i < args.size(); ++i)
 				arr.push_back(args[i]);
@@ -108,7 +108,7 @@ namespace cs {
 		current_process->poll_event();
 		if (args.size() != _this->mArgs.size())
 			throw runtime_error(
-			    "Wrong size of arguments.Expected " + std::to_string(_this->mArgs.size()) + ",provided " +
+			    "Wrong size of arguments. Expected " + std::to_string(_this->mArgs.size()) + ", provided " +
 			    std::to_string(args.size()));
 		scope_guard scope(_this->mContext);
 #ifdef CS_DEBUGGER
@@ -134,7 +134,7 @@ namespace cs {
 	{
 		current_process->poll_event();
 		if (!args.empty())
-			throw runtime_error("Wrong size of arguments.Expected none, provided " +std::to_string(args.size()));
+			throw runtime_error("Wrong size of arguments. Expected none, provided " +std::to_string(args.size()));
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(mDecl);
 		if(mMatch)
