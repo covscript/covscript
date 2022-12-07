@@ -36,9 +36,9 @@ namespace cs {
 			    std::to_string(args.size()));
 		scope_guard scope(_this->mContext);
 #ifdef CS_DEBUGGER
-		fcall_guard fcall(mDecl);
-		if(mMatch)
-			cs_debugger_func_callback(mDecl, mStmt);
+		fcall_guard fcall(_this->mDecl);
+		if(_this->mMatch)
+			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
 #else
 		fcall_guard fcall;
 #endif
@@ -67,9 +67,9 @@ namespace cs {
 		current_process->poll_event();
 		scope_guard scope(_this->mContext);
 #ifdef CS_DEBUGGER
-		fcall_guard fcall(mDecl);
-		if(mMatch)
-			cs_debugger_func_callback(mDecl, mStmt);
+		fcall_guard fcall(_this->mDecl);
+		if(_this->mMatch)
+			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
 #else
 		fcall_guard fcall;
 #endif
@@ -112,9 +112,9 @@ namespace cs {
 			    std::to_string(args.size()));
 		scope_guard scope(_this->mContext);
 #ifdef CS_DEBUGGER
-		fcall_guard fcall(mDecl);
-		if(mMatch)
-			cs_debugger_func_callback(mDecl, mStmt);
+		fcall_guard fcall(_this->mDecl);
+		if(_this->mMatch)
+			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
 #endif
 		for (std::size_t i = 0; i < args.size(); ++i)
 			_this->mContext->instance->storage.add_var_no_return(_this->mArgs[i], args[i]);
@@ -136,9 +136,9 @@ namespace cs {
 		if (!args.empty())
 			throw runtime_error("Wrong size of arguments. Expected none, provided " +std::to_string(args.size()));
 #ifdef CS_DEBUGGER
-		fcall_guard fcall(mDecl);
-		if(mMatch)
-			cs_debugger_func_callback(mDecl, mStmt);
+		fcall_guard fcall(_this->mDecl);
+		if(_this->mMatch)
+			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
 #endif
 		try {
 			return _this->mContext->instance->parse_expr(static_cast<const statement_return*>(_this->mBody.front())->get_tree().root());

@@ -718,7 +718,18 @@ namespace cs {
 					else
 						throw compile_error("Unexpected element in function argument list.");
 				}
-				bool treat_as_lambda = find_id_ref(it.right(), "self");
+				bool find_self_ref = find_id_ref(it.right(), "self");
+				if (!is_vargs && find_self_ref) {
+					std::vector<std::string> new_args{"self"};
+					new_args.reserve(args.size());
+					for (auto &name:args) {
+						if (name != "self")
+							new_args.emplace_back(std::move(name));
+						else
+							throw runtime_error("Overwrite the default argument \"self\".");
+					}
+					std::swap(new_args, args);
+				}
 				statement_base *ret = new statement_return(tree_type<token_base *>(it.right()), context,
 				        new token_endline(token->get_line_num()));
 #ifdef CS_DEBUGGER
@@ -731,12 +742,11 @@ namespace cs {
 				}
 				else
 					decl+=")";
-				function func(context, decl, ret, args, std::deque<statement_base *> {ret}, is_vargs, treat_as_lambda);
+				function func(context, decl, ret, args, std::deque<statement_base *> {ret}, is_vargs, true);
 #else
-				function func(context, args, std::deque<statement_base *> {ret}, is_vargs, treat_as_lambda);
+				function func(context, args, std::deque<statement_base *> {ret}, is_vargs, true);
 #endif
-				if (treat_as_lambda) {
-					func.add_reserve_var("self");
+				if (find_self_ref) {
 					var lambda = var::make<object_method>(var(), var::make_protect<callable>(func));
 					lambda.val<object_method>().object = lambda;
 					lambda.protect();
