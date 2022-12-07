@@ -218,36 +218,56 @@ namespace cs {
 		std::string mDecl;
 		statement_base *mStmt;
 #endif
-		bool mIsLambda = false;
 		bool mIsMemFn = false;
 		bool mIsVargs = false;
+		bool mIsLambda = false;
 		std::vector<std::string> mArgs;
 		std::deque<statement_base *> mBody;
+		static var call_rr(const function*, vector &);
+		static var call_vv(const function*, vector &);
+		static var call_rl(const function*, vector &);
+		static var call_el(const function*, vector &);
+		var (*call_ptr)(const function*, vector &) = nullptr;
+		inline void init_call_ptr() noexcept
+		{
+			if (!mIsVargs) {
+				if (mIsLambda)
+					call_ptr = mArgs.empty()?&call_el:&call_rl;
+				else
+					call_ptr = &call_rr;
+			}
+			else
+				call_ptr = &call_vv;
+		}
 	public:
 		function() = delete;
 
 		function(const function &) = default;
 
 #ifdef CS_DEBUGGER
-		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body,
-		         bool is_vargs = false, bool is_lambda = false) : mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs),
-			mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)) {}
+		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false) :
+			mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
+		{
+			init_call_ptr();
+		}
 #else
-
-		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false,
-		         bool is_lambda = false)
-			: mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)),
-			  mBody(std::move(body)) {}
-
+		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false) :
+			mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
+		{
+			init_call_ptr();
+		}
 #endif
 
 		~function() = default;
 
-		var call(vector &) const;
+		var call(vector &args) const
+		{
+			return call_ptr(this, args);
+		}
 
 		var operator()(vector &args) const
 		{
-			return call(args);
+			return call_ptr(this, args);
 		}
 
 		void add_reserve_var(const std::string &reserve, bool is_mem_fn = false)
@@ -258,7 +278,7 @@ namespace cs {
 				args.reserve(mArgs.size());
 				for (auto &name:mArgs) {
 					if (name != reserve)
-						args.push_back(name);
+						args.emplace_back(std::move(name));
 					else
 						throw runtime_error(std::string("Overwrite the default argument \"") + reserve + "\".");
 				}
