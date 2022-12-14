@@ -1164,12 +1164,22 @@ namespace cs_impl {
 
 		var import(const context_t &context, const string &dir, const string &name)
 		{
-			return make_namespace(context->instance->import(dir, name));
+			try {
+				return make_namespace(context->instance->import(dir, name));
+			}
+			catch (const fatal_error& fe) {
+				return null_pointer;
+			}
 		}
 
 		var source_import(const context_t &context, const string &path)
 		{
-			return make_namespace(context->instance->source_import(path));
+			try {
+				return make_namespace(context->instance->source_import(path));
+			}
+			catch (const fatal_error& fe) {
+				return null_pointer;
+			}
 		}
 
 		numeric argument_count(const var &func)
