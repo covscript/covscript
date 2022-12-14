@@ -28,9 +28,17 @@
 #include <covscript_impl/mozart/timer.hpp>
 #include <covscript_impl/system.hpp>
 #include <covscript/impl/impl.hpp>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <algorithm>
 #include <iostream>
 #include <future>
+
+#ifdef COVSCRIPT_PLATFORM_WIN32
+#define cs_sys_stat _stat
+#else
+#define cs_sys_stat stat
+#endif
 
 namespace cs_impl {
 	namespace member_visitor_cs_ext {
@@ -1281,8 +1289,8 @@ namespace cs_impl {
 			.add_var("get_import_path", make_cni(get_import_path, true))
 			.add_var("info", make_cni(info))
 			.add_var("time", make_cni(time))
-			.add_var("local_time", make_cni(local_time))
-			.add_var("utc_time", make_cni(utc_time))
+			.add_var("local_time", var::make_protect<callable>(local_time))
+			.add_var("utc_time", var::make_protect<callable>(utc_time))
 			.add_var("delay", make_cni(delay))
 			.add_var("exception", make_cni(exception))
 			.add_var("hash", make_cni(hash, true))
@@ -1514,6 +1522,24 @@ namespace cs_impl {
 		using namespace cs;
 		using namespace cs_impl;
 
+		numeric ctime(const std::string &path)
+		{
+			struct cs_sys_stat result;
+			if (cs_sys_stat(path.c_str(), &result) == 0)
+				return result.st_ctime;
+			else
+				return 0;
+		}
+
+		numeric mtime(const std::string &path)
+		{
+			struct cs_sys_stat result;
+			if (cs_sys_stat(path.c_str(), &result) == 0)
+				return result.st_mtime;
+			else
+				return 0;
+		}
+
 		void init()
 		{
 			using namespace cs_impl::file_system;
@@ -1522,6 +1548,8 @@ namespace cs_impl {
 			.add_var("rename", make_cni(move))
 			.add_var("remove", make_cni(remove))
 			.add_var("exist", make_cni(exist))
+			.add_var("ctime", make_cni(ctime))
+			.add_var("mtime", make_cni(mtime))
 			.add_var("can_read", make_cni(can_read))
 			.add_var("can_write", make_cni(can_write))
 			.add_var("can_execute", make_cni(can_execute));
