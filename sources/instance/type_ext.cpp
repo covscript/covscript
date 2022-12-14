@@ -1175,7 +1175,7 @@ namespace cs_impl {
 			try {
 				return make_namespace(context->instance->import(dir, name));
 			}
-			catch (const fatal_error& fe) {
+			catch (...) {
 				return null_pointer;
 			}
 		}
@@ -1185,7 +1185,7 @@ namespace cs_impl {
 			try {
 				return make_namespace(context->instance->source_import(path));
 			}
-			catch (const fatal_error& fe) {
+			catch (...) {
 				return null_pointer;
 			}
 		}
