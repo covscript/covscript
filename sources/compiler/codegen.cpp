@@ -50,7 +50,7 @@ namespace cs {
 			const var_id &package_name = static_cast<token_id *>(token)->get_id();
 			const var &ext = make_namespace(context->instance->import(current_process->import_path, package_name));
 			context->compiler->add_constant(ext);
-			context->instance->storage.add_var(package_name, ext);
+			context->instance->storage.add_var_no_return(package_name, ext);
 			var_list.emplace_back(package_name, ext);
 		};
 		if (tree.root().data()->get_type() == token_types::parallel) {
@@ -109,7 +109,7 @@ namespace cs {
 		const string &alias_name = static_cast<token_id *>(token_alias)->get_id().get_id();
 		var ext = get_namespace(context, tree_package.root());
 		context->compiler->add_constant(ext);
-		context->instance->storage.add_var(alias_name, ext);
+		context->instance->storage.add_var_no_return(alias_name, ext);
 		mResult.emplace_back(new statement_import({{alias_name, ext}}, context, raw.front().back()));
 	}
 
@@ -208,7 +208,7 @@ namespace cs {
 	{
 		std::string name = static_cast<token_id *>(static_cast<token_expr *>(raw.front().at(
 		                       1))->get_tree().root().data())->get_id();
-		context->instance->storage.add_var("__PRAGMA_CS_NAMESPACE_DEFINITION__", name);
+		context->instance->storage.add_var_no_return("__PRAGMA_CS_NAMESPACE_DEFINITION__", name);
 	}
 
 	statement_base *
@@ -227,8 +227,8 @@ namespace cs {
 
 	void method_namespace::postprocess(const context_t &context, const domain_type &domain)
 	{
-		context->instance->storage.add_var(domain.get_var("__PRAGMA_CS_NAMESPACE_DEFINITION__").const_val<string>(),
-		                                   make_namespace(make_shared_namespace<name_space>(domain)));
+		context->instance->storage.add_var_no_return(domain.get_var("__PRAGMA_CS_NAMESPACE_DEFINITION__").const_val<string>(),
+		        make_namespace(make_shared_namespace<name_space>(domain)));
 	}
 
 	statement_base *method_if::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)

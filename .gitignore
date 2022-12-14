@@ -48,8 +48,7 @@ imgui.ini
 .vscode/
 
 # Build Caches
-cmake-build-debug/
-cmake-build/
+cmake-build*/
 build/
 csdev/
 tests/gen/

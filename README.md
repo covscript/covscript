@@ -105,7 +105,7 @@ Option|Mnemonic|Function
 
 ## Examples ##
 
-The [examples](./examples) folder contains several example programs written by Covariant Script.
+The [covscript-example](https://github.com/covscript/covscript-example) repository contains several example programs written by Covariant Script.
 
 ## Copyright ##
 

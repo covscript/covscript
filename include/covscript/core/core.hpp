@@ -78,7 +78,7 @@ namespace cs {
 	public:
 // Version
 		const std::string version = COVSCRIPT_VERSION_STR;
-		const number std_version = COVSCRIPT_STD_VERSION;
+		const numeric std_version = COVSCRIPT_STD_VERSION;
 // Output Precision
 		int output_precision = 8;
 // Exit code
@@ -218,36 +218,56 @@ namespace cs {
 		std::string mDecl;
 		statement_base *mStmt;
 #endif
-		bool mIsLambda = false;
 		bool mIsMemFn = false;
 		bool mIsVargs = false;
+		bool mIsLambda = false;
 		std::vector<std::string> mArgs;
 		std::deque<statement_base *> mBody;
+		static var call_rr(const function*, vector &);
+		static var call_vv(const function*, vector &);
+		static var call_rl(const function*, vector &);
+		static var call_el(const function*, vector &);
+		var (*call_ptr)(const function*, vector &) = nullptr;
+		inline void init_call_ptr() noexcept
+		{
+			if (!mIsVargs) {
+				if (mIsLambda)
+					call_ptr = mArgs.empty()?&call_el:&call_rl;
+				else
+					call_ptr = &call_rr;
+			}
+			else
+				call_ptr = &call_vv;
+		}
 	public:
 		function() = delete;
 
 		function(const function &) = default;
 
 #ifdef CS_DEBUGGER
-		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body,
-		         bool is_vargs = false, bool is_lambda = false) : mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs),
-			mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)) {}
+		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false) :
+			mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
+		{
+			init_call_ptr();
+		}
 #else
-
-		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false,
-		         bool is_lambda = false)
-			: mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)),
-			  mBody(std::move(body)) {}
-
+		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false) :
+			mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
+		{
+			init_call_ptr();
+		}
 #endif
 
 		~function() = default;
 
-		var call(vector &) const;
+		var call(vector &args) const
+		{
+			return call_ptr(this, args);
+		}
 
 		var operator()(vector &args) const
 		{
-			return call(args);
+			return call_ptr(this, args);
 		}
 
 		void add_reserve_var(const std::string &reserve, bool is_mem_fn = false)
@@ -258,7 +278,7 @@ namespace cs {
 				args.reserve(mArgs.size());
 				for (auto &name:mArgs) {
 					if (name != reserve)
-						args.push_back(name);
+						args.emplace_back(std::move(name));
 					else
 						throw runtime_error(std::string("Overwrite the default argument \"") + reserve + "\".");
 				}
@@ -439,6 +459,7 @@ namespace cs {
 		map_t<std::string, std::size_t> m_reflect;
 		std::shared_ptr<domain_ref> m_ref;
 		std::vector<var> m_slot;
+		bool optimize = false;
 
 		inline std::size_t get_slot_id(const std::string &name) const
 		{
@@ -469,24 +490,27 @@ namespace cs {
 		{
 			m_reflect.clear();
 			m_slot.clear();
+			optimize = false;
 		}
 
-		bool consistence(const var_id &id) const noexcept
+		inline void next() noexcept
+		{
+			optimize = true;
+		}
+
+		inline bool consistence(const var_id &id) const noexcept
 		{
 			return id.m_ref == m_ref;
 		}
 
-		bool exist(const std::string &name) const noexcept
+		inline bool exist(const std::string &name) const noexcept
 		{
 			return m_reflect.count(name) > 0;
 		}
 
-		bool exist(const var_id &id) const noexcept
+		inline bool exist(const var_id &id) const noexcept
 		{
-			if (id.m_ref != m_ref)
-				return m_reflect.count(id.m_id) > 0;
-			else
-				return true;
+			return m_reflect.count(id.m_id) > 0;
 		}
 
 		domain_type &add_var(const std::string &name, const var &val)
@@ -516,6 +540,46 @@ namespace cs {
 				m_slot[id.m_slot_id] = val;
 			}
 			return *this;
+		}
+
+		bool add_var_optimal(const std::string &name, const var &val, bool override = false)
+		{
+			if (m_reflect.count(name) > 0) {
+				if (optimize) {
+					m_slot[m_reflect.at(name)] = val;
+					return true;
+				}
+				else if (override) {
+					add_var(name, val);
+					return true;
+				}
+				else
+					return false;
+			}
+			else {
+				add_var(name, val);
+				return true;
+			}
+		}
+
+		bool add_var_optimal(const var_id &id, const var &val, bool override = false)
+		{
+			if (id.m_ref == m_ref) {
+				if (optimize) {
+					m_slot[id.m_slot_id] = val;
+					return true;
+				}
+				else if (override) {
+					add_var(id, val);
+					return true;
+				}
+				else
+					return false;
+			}
+			else {
+				add_var(id, val);
+				return true;
+			}
 		}
 
 		var &get_var(const var_id &id)
@@ -580,22 +644,22 @@ namespace cs {
 			return m_slot[id.m_slot_id];
 		}
 
-		var &get_var_no_check(const std::string &name) noexcept
+		inline var &get_var_no_check(const std::string &name) noexcept
 		{
 			return m_slot[m_reflect.at(name)];
 		}
 
-		const var &get_var_no_check(const std::string &name) const noexcept
+		inline const var &get_var_no_check(const std::string &name) const noexcept
 		{
 			return m_slot[m_reflect.at(name)];
 		}
 
-		auto begin() const
+		inline auto begin() const
 		{
 			return m_reflect.cbegin();
 		}
 
-		auto end() const
+		inline auto end() const
 		{
 			return m_reflect.cend();
 		}
@@ -629,11 +693,11 @@ namespace cs {
 	};
 
 	class range_iterator final {
-		number m_step, m_index;
+		numeric m_step, m_index;
 	public:
 		range_iterator() = delete;
 
-		explicit range_iterator(number step, number index) : m_step(step), m_index(index) {}
+		explicit range_iterator(numeric step, numeric index) : m_step(step), m_index(index) {}
 
 		range_iterator(const range_iterator &) = default;
 
@@ -648,27 +712,27 @@ namespace cs {
 
 		bool operator!=(const range_iterator &it) const
 		{
-			return m_index != it.m_index;
+			return m_index < it.m_index;
 		}
 
 		range_iterator &operator++()
 		{
-			m_index += m_step;
+			m_index = m_index + m_step;
 			return *this;
 		}
 
-		number operator*() const
+		numeric operator*() const
 		{
 			return m_index;
 		}
 	};
 
 	class range_type final {
-		number m_start, m_stop, m_step;
+		numeric m_start, m_stop, m_step;
 	public:
 		range_type() = delete;
 
-		range_type(number start, number stop, number step) : m_start(start), m_stop(stop), m_step(step) {}
+		range_type(numeric start, numeric stop, numeric step) : m_start(start), m_stop(stop), m_step(step) {}
 
 		range_type(const range_type &) = default;
 
@@ -980,7 +1044,7 @@ namespace cs {
 	}
 
 // Literal format
-	number parse_number(const std::string &);
+	numeric parse_number(const std::string &);
 }
 
 template<>

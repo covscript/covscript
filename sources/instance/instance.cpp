@@ -248,9 +248,9 @@ namespace cs {
 			case signal_types::asi_: {
 				const var &val = constant ? static_cast<token_value *>(it.right().data())->get_value() : parse_expr(
 				                     it.right());
-				storage.add_var(static_cast<token_id *>(it.left().data())->get_id(),
-				                constant || link ? val : copy(val),
-				                constant);
+				storage.add_var_no_return(static_cast<token_id *>(it.left().data())->get_id(),
+				                          constant || link ? val : copy(val),
+				                          constant);
 				break;
 			}
 			case signal_types::bind_: {
@@ -296,8 +296,8 @@ namespace cs {
 				if (pl[i].root().data()->get_type() == token_types::parallel)
 					process(pl[i].root(), arr[i]);
 				else
-					storage.add_var(static_cast<token_id *>(pl[i].root().data())->get_id(),
-					                constant || link ? arr[i] : copy(arr[i]), constant);
+					storage.add_var_no_return(static_cast<token_id *>(pl[i].root().data())->get_id(),
+					                          constant || link ? arr[i] : copy(arr[i]), constant);
 			}
 		};
 		const var &val = constant ? static_cast<token_value *>(it.right().data())->get_value() : parse_expr(it.right());

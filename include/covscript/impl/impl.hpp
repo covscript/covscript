@@ -148,6 +148,11 @@ namespace cs {
 
 		void clear() const
 		{
+			context->instance->storage.next_domain();
+		}
+
+		void reset() const
+		{
 			context->instance->storage.clear_domain();
 		}
 	};

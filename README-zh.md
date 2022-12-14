@@ -105,7 +105,7 @@
 
 ## 示例 ##
 
-`examples` 文件夹包含了数个使用 Covariant Script 编写的示例程序。
+仓库 [covscript-example](https://github.com/covscript/covscript-example) 中包含了数个使用 Covariant Script 编写的示例程序。
 
 ## 版权 ##
 

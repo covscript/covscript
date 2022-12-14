@@ -587,6 +587,11 @@ namespace cs {
 			return statement_types::return_;
 		}
 
+		const tree_type<token_base *>& get_tree() const
+		{
+			return mTree;
+		}
+
 		void run_impl() override;
 
 		void dump(std::ostream &) const override;

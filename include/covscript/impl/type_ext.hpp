@@ -47,6 +47,7 @@ namespace cs_impl {
 	extern cs::namespace_t except_ext;
 	extern cs::namespace_t array_ext;
 	extern cs::namespace_t array_iterator_ext;
+	extern cs::namespace_t number_ext;
 	extern cs::namespace_t char_ext;
 	extern cs::namespace_t math_ext;
 	extern cs::namespace_t math_const_ext;
@@ -103,13 +104,17 @@ namespace cs_impl {
 
 // To String
 	template<>
-	std::string to_string<cs::number>(const cs::number &val)
+	std::string to_string<cs::numeric>(const cs::numeric &val)
 	{
-		std::stringstream ss;
-		std::string str;
-		ss << std::setprecision(cs::current_process->output_precision) << val;
-		ss >> str;
-		return std::move(str);
+		if (!val.is_integer()) {
+			std::stringstream ss;
+			std::string str;
+			ss << std::setprecision(cs::current_process->output_precision) << val.as_float();
+			ss >> str;
+			return std::move(str);
+		}
+		else
+			return std::to_string(val.as_integer());
 	}
 
 	template<>
@@ -154,7 +159,7 @@ namespace cs_impl {
 	std::string to_string<cs::hash_set>(const cs::hash_set &set)
 	{
 		if (set.empty())
-			return "hash_set => {}";
+			return "cs::hash_set => {}";
 		std::string str = "cs::hash_set => {";
 		for (const cs::var &it:set)
 			str += it.to_string() + ", ";
@@ -200,7 +205,7 @@ namespace cs_impl {
 		if (range.empty())
 			return "cs::range => {}";
 		std::string str = "cs::range => {";
-		for (cs::number it:range)
+		for (cs::numeric it:range)
 			str += to_string(it) + ", ";
 		str.resize(str.size() - 2);
 		str += "}";
@@ -221,6 +226,12 @@ namespace cs_impl {
 
 // To Integer
 	template<>
+	long to_integer<cs::numeric>(const cs::numeric &num)
+	{
+		return num.as_integer();
+	}
+
+	template<>
 	long to_integer<std::string>(const std::string &str)
 	{
 		for (auto &ch:str) {
@@ -240,6 +251,15 @@ namespace cs_impl {
 			throw cov::error("E000F");
 	}
 
+	template<>
+	std::size_t hash<cs::numeric>(const cs::numeric &num)
+	{
+		if (num.is_integer())
+			return hash(num.as_integer());
+		else
+			return hash(num.as_float());
+	}
+
 // Type name
 	template<>
 	constexpr const char *get_name_of_type<cs::context_t>()
@@ -254,9 +274,9 @@ namespace cs_impl {
 	}
 
 	template<>
-	constexpr const char *get_name_of_type<cs::number>()
+	constexpr const char *get_name_of_type<cs::numeric>()
 	{
-		return "cs::number";
+		return "cs::numeric";
 	}
 
 	template<>
@@ -437,6 +457,12 @@ namespace cs_impl {
 	cs::namespace_t &get_ext<cs::array::iterator>()
 	{
 		return array_iterator_ext;
+	}
+
+	template<>
+	cs::namespace_t &get_ext<cs::numeric>()
+	{
+		return number_ext;
 	}
 
 	template<>

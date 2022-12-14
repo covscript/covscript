@@ -200,6 +200,8 @@ namespace cs {
 				opt_expr(tree, tree.root(), do_optm);
 		}
 
+		static bool find_id_ref(tree_type<token_base *>::iterator, const std::string&);
+
 		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, trim_type);
 
 		void opt_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, optm_type);

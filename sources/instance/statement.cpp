@@ -27,38 +27,24 @@
 #include <iostream>
 
 namespace cs {
-	var function::call(vector &args) const
+	var function::call_rr(const function *_this, vector &args)
 	{
 		current_process->poll_event();
-		if (!mIsVargs && args.size() != this->mArgs.size())
+		if (args.size() != _this->mArgs.size())
 			throw runtime_error(
-			    "Wrong size of arguments.Expected " + std::to_string(this->mArgs.size()) + ",provided " +
+			    "Wrong size of arguments. Expected " + std::to_string(_this->mArgs.size()) + ", provided " +
 			    std::to_string(args.size()));
-		scope_guard scope(mContext);
+		scope_guard scope(_this->mContext);
 #ifdef CS_DEBUGGER
-		fcall_guard fcall(mDecl);
-		if(mMatch)
-			cs_debugger_func_callback(mDecl, mStmt);
+		fcall_guard fcall(_this->mDecl);
+		if(_this->mMatch)
+			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
 #else
 		fcall_guard fcall;
 #endif
-		if (mIsVargs) {
-			var arg_list = var::make<cs::array>();
-			auto &arr = arg_list.val<cs::array>();
-			std::size_t i = 0;
-			if (mIsMemFn)
-				mContext->instance->storage.add_var("this", args[i++]);
-			if (mIsLambda)
-				mContext->instance->storage.add_var("self", args[i++]);
-			for (; i < args.size(); ++i)
-				arr.push_back(args[i]);
-			mContext->instance->storage.add_var(this->mArgs.front(), arg_list);
-		}
-		else {
-			for (std::size_t i = 0; i < args.size(); ++i)
-				mContext->instance->storage.add_var(this->mArgs[i], args[i]);
-		}
-		for (auto &ptr:this->mBody) {
+		for (std::size_t i = 0; i < args.size(); ++i)
+			_this->mContext->instance->storage.add_var_no_return(_this->mArgs[i], args[i]);
+		for (auto &ptr:_this->mBody) {
 			try {
 				ptr->run();
 			}
@@ -68,12 +54,102 @@ namespace cs {
 			catch (const std::exception &e) {
 				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
 			}
-			if (mContext->instance->return_fcall) {
-				mContext->instance->return_fcall = false;
+			if (_this->mContext->instance->return_fcall) {
+				_this->mContext->instance->return_fcall = false;
 				return fcall.get();
 			}
 		}
 		return fcall.get();
+	}
+
+	var function::call_vv(const function *_this, vector &args)
+	{
+		current_process->poll_event();
+		scope_guard scope(_this->mContext);
+#ifdef CS_DEBUGGER
+		fcall_guard fcall(_this->mDecl);
+		if(_this->mMatch)
+			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
+#else
+		fcall_guard fcall;
+#endif
+		{
+			var arg_list = var::make<cs::array>();
+			auto &arr = arg_list.val<cs::array>();
+			std::size_t i = 0;
+			if (_this->mIsMemFn)
+				_this->mContext->instance->storage.add_var_no_return("this", args[i++]);
+			else if (_this->mIsLambda)
+				_this->mContext->instance->storage.add_var_no_return("self", args[i++]);
+			for (; i < args.size(); ++i)
+				arr.push_back(args[i]);
+			_this->mContext->instance->storage.add_var_no_return(_this->mArgs.front(), arg_list);
+		}
+		for (auto &ptr:_this->mBody) {
+			try {
+				ptr->run();
+			}
+			catch (const cs::exception &e) {
+				throw e;
+			}
+			catch (const std::exception &e) {
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+			}
+			if (_this->mContext->instance->return_fcall) {
+				_this->mContext->instance->return_fcall = false;
+				return fcall.get();
+			}
+		}
+		return fcall.get();
+	}
+
+	var function::call_rl(const function *_this, vector &args)
+	{
+		current_process->poll_event();
+		if (args.size() != _this->mArgs.size())
+			throw runtime_error(
+			    "Wrong size of arguments. Expected " + std::to_string(_this->mArgs.size()) + ", provided " +
+			    std::to_string(args.size()));
+		scope_guard scope(_this->mContext);
+#ifdef CS_DEBUGGER
+		fcall_guard fcall(_this->mDecl);
+		if(_this->mMatch)
+			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
+#endif
+		for (std::size_t i = 0; i < args.size(); ++i)
+			_this->mContext->instance->storage.add_var_no_return(_this->mArgs[i], args[i]);
+		try {
+			return _this->mContext->instance->parse_expr(static_cast<const statement_return*>(_this->mBody.front())->get_tree().root());
+		}
+		catch (const cs::exception &e) {
+			throw e;
+		}
+		catch (const std::exception &e) {
+			const statement_base *ptr = _this->mBody.front();
+			throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+		}
+	}
+
+	var function::call_el(const function *_this, vector &args)
+	{
+		current_process->poll_event();
+		if (!args.empty())
+			throw runtime_error("Wrong size of arguments. Expected none, provided " +std::to_string(args.size()));
+#ifdef CS_DEBUGGER
+		fcall_guard fcall(_this->mDecl);
+		if(_this->mMatch)
+			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
+#endif
+		try {
+			return _this->mContext->instance->parse_expr(static_cast<const statement_return*>(_this->mBody.front())->get_tree().root());
+		}
+		catch (const cs::exception &e) {
+			throw e;
+		}
+		catch (const std::exception &e) {
+			const statement_base *ptr = _this->mBody.front();
+			throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+		}
 	}
 
 	var struct_builder::operator()()
@@ -89,7 +165,7 @@ namespace cs {
 				if (parent.type() == typeid(structure)) {
 					parent.protect();
 					mContext->instance->storage.involve_domain(parent.const_val<structure>().get_domain());
-					mContext->instance->storage.add_var("parent", parent, true);
+					mContext->instance->storage.add_var_no_return("parent", parent, true);
 				}
 				else
 					throw runtime_error("Target is not a struct.");
@@ -133,7 +209,7 @@ namespace cs {
 	void statement_import::run_impl()
 	{
 		for (auto &val:m_var_list)
-			context->instance->storage.add_var(val.first, val.second, true);
+			context->instance->storage.add_var_no_return(val.first, val.second, true);
 	}
 
 	void statement_import::dump(std::ostream &o) const
@@ -233,7 +309,7 @@ namespace cs {
 	void statement_namespace::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
-		context->instance->storage.add_var(this->mName,
+		context->instance->storage.add_var_no_return(this->mName,
 		make_namespace(make_shared_namespace<name_space>([this] {
 			scope_guard scope(context);
 			for (auto &ptr:mBlock)
@@ -386,7 +462,6 @@ namespace cs {
 			context->instance->continue_block = false;
 		scope_guard scope(context);
 		while (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
-			scope.clear();
 			current_process->poll_event();
 			for (auto &ptr:mBlock) {
 				try {
@@ -410,6 +485,7 @@ namespace cs {
 					break;
 				}
 			}
+			scope.clear();
 		}
 	}
 
@@ -432,7 +508,6 @@ namespace cs {
 			context->instance->continue_block = false;
 		scope_guard scope(context);
 		while (true) {
-			scope.clear();
 			current_process->poll_event();
 			for (auto &ptr:mBlock) {
 				try {
@@ -456,6 +531,7 @@ namespace cs {
 					break;
 				}
 			}
+			scope.clear();
 		}
 	}
 
@@ -476,7 +552,6 @@ namespace cs {
 			context->instance->continue_block = false;
 		scope_guard scope(context);
 		do {
-			scope.clear();
 			current_process->poll_event();
 			for (auto &ptr:mBlock) {
 				try {
@@ -500,6 +575,7 @@ namespace cs {
 					break;
 				}
 			}
+			scope.clear();
 		}
 		while (!context->instance->parse_expr(mExpr.root()).const_val<boolean>());
 	}
@@ -526,7 +602,6 @@ namespace cs {
 		context->instance->parse_define_var(mParallel[0].root());
 		scope_guard scope(context);
 		while (true) {
-			scope.clear();
 			current_process->poll_event();
 			if (!context->instance->parse_expr(mParallel[1].root()).const_val<boolean>())
 				break;
@@ -553,6 +628,7 @@ namespace cs {
 				}
 			}
 			context->instance->parse_expr(mParallel[2].root());
+			scope.clear();
 		}
 	}
 
@@ -583,9 +659,8 @@ namespace cs {
 			context->instance->continue_block = false;
 		scope_guard scope(context);
 		for (const X &it:obj.const_val<T>()) {
-			scope.clear();
 			current_process->poll_event();
-			context->instance->storage.add_var(iterator, it);
+			context->instance->storage.add_var_no_return(iterator, it);
 			for (auto &ptr:body) {
 				try {
 					ptr->run();
@@ -608,6 +683,7 @@ namespace cs {
 					break;
 				}
 			}
+			scope.clear();
 		}
 	}
 
@@ -626,7 +702,7 @@ namespace cs {
 		else if (obj.type() == typeid(hash_map))
 			foreach_helper<hash_map, pair>(context, this->mIt, obj, this->mBlock);
 		else if (obj.type() == typeid(range_type))
-			foreach_helper<range_type, number>(context, this->mIt, obj, this->mBlock);
+			foreach_helper<range_type, numeric>(context, this->mIt, obj, this->mBlock);
 		else
 			throw runtime_error("Unsupported type(foreach)");
 	}
@@ -665,16 +741,16 @@ namespace cs {
 	{
 		CS_DEBUGGER_STEP(this);
 		if (this->mIsMemFn)
-			context->instance->storage.add_var(this->mName,
-			                                   var::make_protect<callable>(this->mFunc, callable::types::member_fn),
-			                                   mOverride);
+			context->instance->storage.add_var_no_return(this->mName,
+			        var::make_protect<callable>(this->mFunc, callable::types::member_fn),
+			        mOverride);
 		else {
 			var func = var::make_protect<callable>(this->mFunc);
 #ifdef CS_DEBUGGER
 			if(context->instance->storage.is_initial())
 				cs_debugger_func_breakpoint(this->mName, func);
 #endif
-			context->instance->storage.add_var(this->mName, func, mOverride);
+			context->instance->storage.add_var_no_return(this->mName, func, mOverride);
 		}
 	}
 
@@ -719,8 +795,8 @@ namespace cs {
 				ptr->run();
 			}
 			catch (const lang_error &le) {
-				scope.clear();
-				context->instance->storage.add_var(mName, le);
+				scope.reset();
+				context->instance->storage.add_var_no_return(mName, le);
 				for (auto &ptr:mCatchBody) {
 					try {
 						ptr->run();

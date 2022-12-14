@@ -10,10 +10,8 @@
 #endif
 
 #ifdef SPP_WIN
-
 #include <windows.h>
 #include <Psapi.h>
-
 #undef min
 #undef max
 #elif defined(__linux__)
@@ -30,11 +28,8 @@
 
 namespace spp {
 	uint64_t GetSystemMemory();
-
 	uint64_t GetTotalMemoryUsed();
-
 	uint64_t GetProcessMemoryUsed();
-
 	uint64_t GetPhysicalMemory();
 
 	uint64_t GetSystemMemory()

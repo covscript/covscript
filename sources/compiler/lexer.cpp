@@ -445,12 +445,7 @@ namespace cs {
 			for (auto it = tokens.rbegin(); it != tokens.rend(); ++it) {
 				if (*it != nullptr) {
 					token_base *ptr = *it;
-					if (ptr->get_type() == token_types::signal &&
-					        static_cast<token_signal *>(ptr)->get_signal() == signal_types::endline_) {
-						ptr->line_num = line_num;
-						break;
-					}
-					else if (ptr->get_type() == token_types::endline)
+					if (ptr->get_type() == token_types::endline)
 						break;
 					else
 						ptr->line_num = line_num;
