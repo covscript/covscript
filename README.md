@@ -111,7 +111,7 @@ The [covscript-example](https://github.com/covscript/covscript-example) reposito
 
 **The author of the Covariant Script Programming Language is [@mikecovlee](https://github.com/mikecovlee/), licensed
 under Apache 2.0**  
-**Copyright © 2017-2022 Michael Lee(李登淳)**  
+**Copyright © 2017-2023 Michael Lee(李登淳)**  
 *This software is registered with the National Copyright Administration of the People's Republic of China(Registration
 Number: 2020SR0408026) and is protected by the Copyright Law of the People's Republic of China.*
 
