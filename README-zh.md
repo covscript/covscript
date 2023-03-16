@@ -115,6 +115,6 @@
 
 ## 感谢 ##
 
-[四川大学](http://scu.edu.cn/), [freeCodeCamp 成都社区](https://china.freecodecamp.one/?city=chengdu)  
+[四川大学](http://scu.edu.cn/), freeCodeCamp 成都社区  
 [@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
-, [@MouriNaruto](https://github.com/MouriNaruto), [@Access-Rend](https://github.com/Access-Rend), Weicheng Shi
+, [@MouriNaruto](https://github.com/MouriNaruto), Weicheng Shi
