@@ -117,7 +117,6 @@ Number: 2020SR0408026) and is protected by the Copyright Law of the People's Rep
 
 ## Thanks ##
 
-[Sichuan University](http://scu.edu.cn/)
-, [freeCodeCamp Chengdu Community](https://china.freecodecamp.one/?city=chengdu)  
-[@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
-, [@MouriNaruto](https://github.com/MouriNaruto), [@Access-Rend](https://github.com/Access-Rend), Weicheng Shi
+[Sichuan University](http://scu.edu.cn/), KDDE Lab (Prof. Lei Duan), freeCodeCamp Chengdu Community
+[@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/),
+[@MouriNaruto](https://github.com/MouriNaruto), Weicheng Shi

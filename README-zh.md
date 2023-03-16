@@ -115,6 +115,7 @@
 
 ## 感谢 ##
 
-[四川大学](http://scu.edu.cn/), freeCodeCamp 成都社区  
-[@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
-, [@MouriNaruto](https://github.com/MouriNaruto), Weicheng Shi
+[四川大学](http://scu.edu.cn/), KDDE Lab (段磊教授), freeCodeCamp 成都社区
+
+[@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/),
+[@MouriNaruto](https://github.com/MouriNaruto), Weicheng Shi
