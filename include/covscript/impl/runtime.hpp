@@ -30,6 +30,7 @@ namespace cs {
 	class domain_manager {
 		stack_type<set_t<string>> m_set;
 		stack_type<domain_type> m_data;
+		stack_type<domain_type> *fiber_stack = nullptr;
 		set_t<string> buildin_symbols;
 	public:
 		domain_manager()
@@ -72,6 +73,20 @@ namespace cs {
 			m_data.push();
 		}
 
+		void clear_context()
+		{
+			if (fiber_stack != nullptr) {
+				while (!fiber_stack->empty())
+					fiber_stack->pop_no_return();
+				fiber_stack = nullptr;
+			}
+		}
+
+		void swap_context(stack_type<domain_type> *stack)
+		{
+			fiber_stack = stack;
+		}
+
 		domain_type &get_domain() const
 		{
 			return m_data.top();
@@ -100,7 +115,10 @@ namespace cs {
 
 		void remove_domain()
 		{
-			m_data.pop_no_return();
+			if (fiber_stack != nullptr)
+				fiber_stack->pop_no_return();
+			else
+				m_data.pop_no_return();
 		}
 
 		void clear_set()
@@ -110,12 +128,18 @@ namespace cs {
 
 		void clear_domain()
 		{
-			m_data.top().clear();
+			if (fiber_stack != nullptr)
+				fiber_stack->top().clear();
+			else
+				m_data.top().clear();
 		}
 
 		void next_domain()
 		{
-			m_data.top().next();
+			if (fiber_stack != nullptr)
+				fiber_stack->top().next();
+			else
+				m_data.top().next();
 		}
 
 		bool exist_record(const string &name)
@@ -134,7 +158,10 @@ namespace cs {
 
 		inline bool var_exist_current(const string &name) noexcept
 		{
-			return m_data.top().exist(name);
+			if (fiber_stack != nullptr)
+				return fiber_stack->top().exist(name);
+			else
+				return m_data.top().exist(name);
 		}
 
 		inline bool var_exist_global(const string &name) noexcept
@@ -144,6 +171,11 @@ namespace cs {
 
 		inline var &get_var(const std::string &name)
 		{
+			if (fiber_stack != nullptr) {
+				for (auto &domain:*fiber_stack)
+					if (domain.exist(name))
+						return domain.get_var_no_check(name);
+			}
 			for (auto &domain:m_data)
 				if (domain.exist(name))
 					return domain.get_var_no_check(name);
@@ -152,6 +184,13 @@ namespace cs {
 
 		inline var &get_var(const var_id &id)
 		{
+			if (fiber_stack != nullptr) {
+				if (id.m_domain_id < fiber_stack->size() && (*fiber_stack)[id.m_domain_id].consistence(id))
+					return (*fiber_stack)[id.m_domain_id].get_var_by_id(id.m_slot_id);
+				for (std::size_t i = 0, size = fiber_stack->size(); i < size; ++i)
+					if ((*fiber_stack)[i].exist(id))
+						return (*fiber_stack)[i].get_var_no_check(id, i);
+			}
 			if (id.m_domain_id < m_data.size() && m_data[id.m_domain_id].consistence(id))
 				return m_data[id.m_domain_id].get_var_by_id(id.m_slot_id);
 			for (std::size_t i = 0, size = m_data.size(); i < size; ++i)
@@ -163,7 +202,10 @@ namespace cs {
 		template<typename T>
 		var &get_var_current(T &&name)
 		{
-			return m_data.top().get_var(name);
+			if (fiber_stack != nullptr)
+				return fiber_stack->top().get_var(name);
+			else
+				return m_data.top().get_var(name);
 		}
 
 		template<typename T>
@@ -207,31 +249,55 @@ namespace cs {
 		template<typename T>
 		domain_manager &add_var(T &&name, const var &val)
 		{
-			if (!m_data.top().add_var_optimal(name, val))
-				throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
+			if (fiber_stack != nullptr) {
+				if (!fiber_stack->top().add_var_optimal(name, val))
+					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
+			}
+			else {
+				if (!m_data.top().add_var_optimal(name, val))
+					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
+			}
 			return *this;
 		}
 
 		template<typename T>
 		domain_manager &add_var(T &&name, const var &val, bool is_override)
 		{
-			if (!m_data.top().add_var_optimal(name, val, is_override))
-				throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
+			if (fiber_stack != nullptr) {
+				if (!fiber_stack->top().add_var_optimal(name, val, is_override))
+					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
+			}
+			else {
+				if (!m_data.top().add_var_optimal(name, val, is_override))
+					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
+			}
 			return *this;
 		}
 
 		template<typename T>
 		void add_var_no_return(T &&name, const var &val)
 		{
-			if (!m_data.top().add_var_optimal(name, val))
-				throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
+			if (fiber_stack != nullptr) {
+				if (!fiber_stack->top().add_var_optimal(name, val))
+					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
+			}
+			else {
+				if (!m_data.top().add_var_optimal(name, val))
+					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
+			}
 		}
 
 		template<typename T>
 		void add_var_no_return(T &&name, const var &val, bool is_override)
 		{
-			if (!m_data.top().add_var_optimal(name, val, is_override))
-				throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
+			if (fiber_stack != nullptr) {
+				if (!fiber_stack->top().add_var_optimal(name, val, is_override))
+					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
+			}
+			else {
+				if (!m_data.top().add_var_optimal(name, val, is_override))
+					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
+			}
 		}
 
 		template<typename T>

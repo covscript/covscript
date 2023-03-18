@@ -27,6 +27,7 @@
 #include <covscript_impl/mozart/random.hpp>
 #include <covscript_impl/mozart/timer.hpp>
 #include <covscript_impl/system.hpp>
+#include <covscript_impl/fiber.hpp>
 #include <covscript/impl/impl.hpp>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -1083,6 +1084,37 @@ namespace cs_impl {
 			.add_var("unixtime", make_cni(unixtime, callable::types::member_visitor));
 		}
 	}
+
+	namespace channel_cs_ext {
+		using namespace cs;
+
+		namespace_t channel_ext = cs::make_shared_namespace<cs::name_space>();
+		using channel_type = coroutine::Channel<var>;
+
+		void init()
+		{
+			(*channel_ext)
+			.add_var("push", make_cni(&channel_type::push))
+			.add_var("pop", make_cni(&channel_type::pop))
+			.add_var("clear", make_cni(&channel_type::clear))
+			.add_var("touch", make_cni(&channel_type::touch))
+			.add_var("size", make_cni(&channel_type::size, callable::types::member_visitor))
+			.add_var("empty", make_cni(&channel_type::empty));
+		}
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<channel_cs_ext::channel_type>()
+	{
+		return "cs::fiber::channel";
+	}
+
+	template<>
+	cs::namespace_t &get_ext<channel_cs_ext::channel_type>()
+	{
+		return channel_cs_ext::channel_ext;
+	}
+
 	namespace runtime_cs_ext {
 		using namespace cs;
 
@@ -1270,6 +1302,45 @@ namespace cs_impl {
 				throw cs::lang_error("Invoke non-callable object.");
 		}
 
+		coroutine::routine_t create_fiber(const context_t &context, const callable &func)
+		{
+			return coroutine::create([context, func]() {
+				vector args;
+				func.call(args);
+				context->instance->storage.clear_context();
+			});
+		}
+
+		coroutine::routine_t create_fiber_s(const context_t &context, const callable &func, const array &args)
+		{
+			return coroutine::create([context, func, args]() {
+				vector real_args(args.begin(), args.end());
+				func.call(real_args);
+				context->instance->storage.clear_context();
+			});
+		}
+
+		var create_channel(const context_t &context)
+		{
+			return var::make<channel_cs_ext::channel_type>(context);
+		}
+
+		var await(const context_t &context, const callable &func)
+		{
+			return coroutine::await(context, [func]()-> var {
+				vector args;
+				return func.call(args);
+			});
+		}
+
+		var await_s(const context_t &context, const callable &func, const array &args)
+		{
+			return coroutine::await(context, [func, args]()-> var {
+				vector real_args(args.begin(), args.end());
+				return func.call(real_args);
+			});
+		}
+
 		void link_var(const context_t &context, const string &a, const var &b)
 		{
 			context->instance->storage.get_var(a) = b;
@@ -1311,6 +1382,13 @@ namespace cs_impl {
 			.add_var("import", make_cni(import, true))
 			.add_var("source_import", make_cni(source_import, true))
 			.add_var("add_literal", make_cni(add_string_literal, true))
+			.add_var("create_fiber", make_cni(create_fiber))
+			.add_var("create_fiber_s", make_cni(create_fiber_s))
+			.add_var("create_channel", make_cni(create_channel))
+			.add_var("await", make_cni(await))
+			.add_var("await_s", make_cni(await_s))
+			.add_var("resume", make_cni(&coroutine::resume))
+			.add_var("yield", make_cni(&coroutine::yield))
 			.add_var("link_var", make_cni(link_var))
 			.add_var("unlink_var", make_cni(unlink_var));
 		}
@@ -1673,6 +1751,7 @@ namespace cs_impl {
 			ostream_cs_ext::init();
 			system_cs_ext::init();
 			time_cs_ext::init();
+			channel_cs_ext::init();
 			runtime_cs_ext::init();
 			math_cs_ext::init();
 			except_cs_ext::init();
