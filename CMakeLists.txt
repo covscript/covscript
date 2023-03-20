@@ -18,7 +18,7 @@ elseif (CMAKE_COMPILER_IS_GNUCXX)
         set(CMAKE_CXX_FLAGS "-fPIC -s -O3")
     endif ()
 else ()
-    set(CMAKE_CXX_FLAGS "-fPIC -O3")
+    set(CMAKE_CXX_FLAGS "-fPIC -O3 -Wno-deprecated-declarations")
 endif ()
 
 if (DEFINED ENV{CS_COMPATIBILITY_MODE})

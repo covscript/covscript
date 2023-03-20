@@ -1118,6 +1118,17 @@ namespace cs_impl {
 	namespace runtime_cs_ext {
 		using namespace cs;
 
+		struct fiber_holder_impl {
+			coroutine::routine_t rt = 0;
+			fiber_holder_impl(coroutine::routine_t t) : rt(t) {}
+			~fiber_holder_impl()
+			{
+				coroutine::destroy(rt);
+			}
+		};
+
+		using fiber_holder = std::shared_ptr<fiber_holder_impl>;
+
 		string get_import_path()
 		{
 			return current_process->import_path;
@@ -1302,22 +1313,27 @@ namespace cs_impl {
 				throw cs::lang_error("Invoke non-callable object.");
 		}
 
-		coroutine::routine_t create_fiber(const context_t &context, const callable &func)
+		fiber_holder create_fiber(const context_t &context, const callable &func)
 		{
-			return coroutine::create([context, func]() {
+			return std::make_shared<fiber_holder_impl>(coroutine::create([context, func]() {
 				vector args;
 				func.call(args);
 				context->instance->storage.clear_context();
-			});
+			}));
 		}
 
-		coroutine::routine_t create_fiber_s(const context_t &context, const callable &func, const array &args)
+		fiber_holder create_fiber_s(const context_t &context, const callable &func, const array &args)
 		{
-			return coroutine::create([context, func, args]() {
+			return std::make_shared<fiber_holder_impl>(coroutine::create([context, func, args]() {
 				vector real_args(args.begin(), args.end());
 				func.call(real_args);
 				context->instance->storage.clear_context();
-			});
+			}));
+		}
+
+		void resume(const context_t &context, const fiber_holder &fiber)
+		{
+			coroutine::resume(context, fiber->rt);
 		}
 
 		var create_channel(const context_t &context)
@@ -1387,7 +1403,7 @@ namespace cs_impl {
 			.add_var("create_channel", make_cni(create_channel))
 			.add_var("await", make_cni(await))
 			.add_var("await_s", make_cni(await_s))
-			.add_var("resume", make_cni(&coroutine::resume))
+			.add_var("resume", make_cni(resume))
 			.add_var("yield", make_cni(&coroutine::yield))
 			.add_var("link_var", make_cni(link_var))
 			.add_var("unlink_var", make_cni(unlink_var));

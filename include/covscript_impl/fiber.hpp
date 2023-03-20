@@ -73,7 +73,6 @@ namespace coroutine {
 
 		Routine(std::function<void()> f)
 		{
-			cs_stack.push();
 			func = f;
 			finished = false;
 			fiber = nullptr;
@@ -203,7 +202,6 @@ namespace coroutine {
 
 		Routine(std::function<void()> f)
 		{
-			cs_stack.push();
 			func = f;
 			stack = nullptr;
 			finished = false;

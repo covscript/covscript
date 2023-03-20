@@ -70,7 +70,10 @@ namespace cs {
 
 		void add_domain()
 		{
-			m_data.push();
+			if (fiber_stack != nullptr)
+				fiber_stack->push();
+			else
+				m_data.push();
 		}
 
 		void clear_context()
@@ -89,7 +92,10 @@ namespace cs {
 
 		domain_type &get_domain() const
 		{
-			return m_data.top();
+			if (fiber_stack != nullptr)
+				return fiber_stack->top();
+			else
+				return m_data.top();
 		}
 
 		domain_type &get_global() const
