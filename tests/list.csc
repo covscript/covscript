@@ -3,10 +3,12 @@ lst.unique()
 var it=lst.begin
 while it!=lst.end
 	if(it.data==3)
-		it=lst.insert(it.next(),4)
+		it.next()
+		it=lst.insert(it,4)
 	end
 	if(it.data==5)
 		it=lst.erase(it)
+		continue
 	end
 	it.next()
 end
