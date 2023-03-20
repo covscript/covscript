@@ -27,7 +27,6 @@
 #include <covscript_impl/mozart/random.hpp>
 #include <covscript_impl/mozart/timer.hpp>
 #include <covscript_impl/system.hpp>
-#include <covscript_impl/fiber.hpp>
 #include <covscript/impl/impl.hpp>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -1089,7 +1088,7 @@ namespace cs_impl {
 		using namespace cs;
 
 		namespace_t channel_ext = cs::make_shared_namespace<cs::name_space>();
-		using channel_type = coroutine::Channel<var>;
+		using channel_type = fiber::Channel<var>;
 
 		void init()
 		{
@@ -1119,11 +1118,11 @@ namespace cs_impl {
 		using namespace cs;
 
 		struct fiber_holder_impl {
-			coroutine::routine_t rt = 0;
-			fiber_holder_impl(coroutine::routine_t t) : rt(t) {}
+			fiber::routine_t rt = 0;
+			fiber_holder_impl(fiber::routine_t t) : rt(t) {}
 			~fiber_holder_impl()
 			{
-				coroutine::destroy(rt);
+				fiber::destroy(rt);
 			}
 		};
 
@@ -1315,7 +1314,7 @@ namespace cs_impl {
 
 		fiber_holder create_fiber(const context_t &context, const callable &func)
 		{
-			return std::make_shared<fiber_holder_impl>(coroutine::create([context, func]() {
+			return std::make_shared<fiber_holder_impl>(fiber::create([context, func]() {
 				vector args;
 				func.call(args);
 				context->instance->storage.clear_context();
@@ -1324,7 +1323,7 @@ namespace cs_impl {
 
 		fiber_holder create_fiber_s(const context_t &context, const callable &func, const array &args)
 		{
-			return std::make_shared<fiber_holder_impl>(coroutine::create([context, func, args]() {
+			return std::make_shared<fiber_holder_impl>(fiber::create([context, func, args]() {
 				vector real_args(args.begin(), args.end());
 				func.call(real_args);
 				context->instance->storage.clear_context();
@@ -1333,7 +1332,7 @@ namespace cs_impl {
 
 		void resume(const context_t &context, const fiber_holder &fiber)
 		{
-			coroutine::resume(context, fiber->rt);
+			fiber::resume(context, fiber->rt);
 		}
 
 		var create_channel(const context_t &context)
@@ -1343,7 +1342,7 @@ namespace cs_impl {
 
 		var await(const context_t &context, const callable &func)
 		{
-			return coroutine::await(context, [func]()-> var {
+			return fiber::await(context, [func]()-> var {
 				vector args;
 				return func.call(args);
 			});
@@ -1351,7 +1350,7 @@ namespace cs_impl {
 
 		var await_s(const context_t &context, const callable &func, const array &args)
 		{
-			return coroutine::await(context, [func, args]()-> var {
+			return fiber::await(context, [func, args]()-> var {
 				vector real_args(args.begin(), args.end());
 				return func.call(real_args);
 			});
@@ -1404,7 +1403,7 @@ namespace cs_impl {
 			.add_var("await", make_cni(await))
 			.add_var("await_s", make_cni(await_s))
 			.add_var("resume", make_cni(resume))
-			.add_var("yield", make_cni(&coroutine::yield))
+			.add_var("yield", make_cni(&fiber::yield))
 			.add_var("link_var", make_cni(link_var))
 			.add_var("unlink_var", make_cni(unlink_var));
 		}
