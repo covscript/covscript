@@ -21,17 +21,21 @@
 
 + 全平台可用，支持大多数主流操作系统
     + 使用 C++ 14 标准编写，支持版本较老的编译器
-    + Linux and Unix: x86, ARM, MIPS, Loongson ISA
+    + Apple macOS: Universal binary with x86_64 and arm64
+    + Linux and Unix: x86, ARM, MIPS, LoongArch
     + Microsoft Windows: x86
 + 强大易用的扩展系统
     + C/C++ Native Interface(CNI) 系统：能够翻译 C/C++ 和 Covariant Script 之间的双向调用
     + Interpreter Bootstrap：在 C++ 项目中集成 Covariant Script 运行时环境的帮手
     + CNI 组成宏：将扩展系统与CNI系统有机结合，现已纳入语言标准
+    + CFFI 支持: 直接调用使用 C 语言编写的动态库中的函数
 + 自研高效编译系统
+    + 针对中文优化的 Unicode 支持
     + 无依赖、高效的编译器前端
     + 支持编译期优化
     + 可导出编译结果
 + 高性能运行时环境
+    + 堆栈式非对称协程
     + 热点分析优化算法
     + 高效的内存管理系统
     + 引用计数垃圾回收器
