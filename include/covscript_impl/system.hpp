@@ -118,6 +118,14 @@ namespace cs_impl {
 	namespace fiber {
 		typedef unsigned routine_t;
 
+		inline std::size_t stack_size()
+		{
+			if (cs::current_process->stack_size >= 1000)
+				return cs::current_process->stack_size/10;
+			else
+				return 100;
+		}
+
 		routine_t create(std::function<void()>);
 
 		void destroy(routine_t);

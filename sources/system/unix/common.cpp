@@ -248,7 +248,7 @@ namespace cs_impl {
 			bool finished;
 			cs_fiber_ucontext_t ctx;
 
-			Routine(std::function<void()> f)
+			Routine(std::function<void()> f) : cs_stack(fiber::stack_size())
 			{
 				func = f;
 				stack = nullptr;

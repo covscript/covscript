@@ -184,7 +184,7 @@ namespace cs_impl {
 			bool finished;
 			LPVOID fiber;
 
-			Routine(std::function<void()> f)
+			Routine(std::function<void()> f) : cs_stack(fiber::stack_size())
 			{
 				func = f;
 				finished = false;
