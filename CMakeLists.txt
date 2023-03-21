@@ -50,12 +50,46 @@ if (UNIX)
     target_link_libraries(covscript_debug pthread dl)
 endif ()
 
-# Link libdl and libucontext in APPLE platform
+# Process universal binary in APPLE platform
 if (APPLE)
-    include_directories(/usr/local/include)
-    link_directories(/usr/local/lib)
-    target_link_libraries(covscript pthread dl ucontext)
-    target_link_libraries(covscript_debug pthread dl ucontext)
+    enable_language(C ASM)
+    include_directories(csbuild/libucontext/include)
+
+    # ARM version of covscript
+    add_library(covscript_arm STATIC ${SOURCE_CODE})
+    add_library(covscript_debug_arm STATIC ${SOURCE_CODE})
+
+    # x86 version of ucontext
+    add_library(ucontext_x86 STATIC
+        csbuild/libucontext/arch/x86_64/getcontext.S
+        csbuild/libucontext/arch/x86_64/makecontext.c
+        csbuild/libucontext/arch/x86_64/setcontext.S
+        csbuild/libucontext/arch/x86_64/swapcontext.S
+        csbuild/libucontext/arch/x86_64/trampoline.c)
+    target_compile_options(ucontext_x86 PUBLIC -target x86_64-apple-macos10.12)
+    target_link_options(ucontext_x86 PUBLIC -target x86_64-apple-macos10.12)
+    target_include_directories(ucontext_x86 PRIVATE csbuild/libucontext/arch/common)
+    target_include_directories(ucontext_x86 PUBLIC csbuild/libucontext/arch/x86_64/include)
+
+    # ARM version of ucontext
+    add_library(ucontext_arm STATIC
+        csbuild/libucontext/arch/aarch64/getcontext.S
+        csbuild/libucontext/arch/aarch64/makecontext.c
+        csbuild/libucontext/arch/aarch64/setcontext.S
+        csbuild/libucontext/arch/aarch64/swapcontext.S
+        csbuild/libucontext/arch/aarch64/trampoline.c)
+    target_compile_options(ucontext_arm PUBLIC -target arm64-apple-macos11)
+    target_link_options(ucontext_arm PUBLIC -target arm64-apple-macos11)
+    target_include_directories(ucontext_arm PRIVATE csbuild/libucontext/arch/common)
+    target_include_directories(ucontext_arm PUBLIC csbuild/libucontext/arch/aarch64/include)
+
+    # Set link options for x86 target
+    target_link_libraries(covscript pthread dl ucontext_x86)
+    target_link_libraries(covscript_debug pthread dl ucontext_x86)
+
+    # Set link options for ARM target
+    target_link_libraries(covscript_arm pthread dl ucontext_arm)
+    target_link_libraries(covscript_debug_arm pthread dl ucontext_arm)
 endif ()
 
 # Main Executable
@@ -69,6 +103,13 @@ endif ()
 
 target_link_libraries(cs covscript)
 target_link_libraries(cs_dbg covscript_debug)
+
+if (APPLE)
+    add_executable(cs_arm sources/interpreter.cpp)
+    add_executable(cs_dbg_arm sources/debugger.cpp)
+    target_link_libraries(cs_arm covscript_arm)
+    target_link_libraries(cs_dbg_arm covscript_debug_arm)
+endif ()
 
 # Tests
 add_library(test-extension SHARED tests/extension.cpp)
