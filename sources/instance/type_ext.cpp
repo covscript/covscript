@@ -1259,8 +1259,26 @@ namespace cs_impl {
 
 		cs::var wait_for_impl(std::size_t mill_sec, const cs::callable &func, cs::vector &args)
 		{
-			std::future<cs::var> future = std::async(std::launch::async, [&func, &args] {
-				return func.call(args);
+			std::future<cs::var> future = std::async(std::launch::async, [&func, &args]()-> var {
+				try
+				{
+					return func.call(args);
+				}
+				catch (const lang_error &le)
+				{
+					std::cerr << "wait thread terminated after throwing an instance of runtime exception" << std::endl;
+					std::cerr << "what(): " << le.what() << std::endl;
+				}
+				catch (const std::exception &e)
+				{
+					std::cerr << "wait thread terminated after throwing an instance of exception" << std::endl;
+					std::cerr << "what(): " << e.what() << std::endl;
+				}
+				catch (...)
+				{
+					std::cerr << "wait thread terminated after throwing an instance of unknown exception" << std::endl;
+				}
+				return null_pointer;
 			});
 			if (future.wait_for(std::chrono::milliseconds(mill_sec)) != std::future_status::ready)
 				throw cs::lang_error("Target function deferred or timeout.");
@@ -1270,8 +1288,26 @@ namespace cs_impl {
 
 		cs::var wait_until_impl(std::size_t mill_sec, const cs::callable &func, cs::vector &args)
 		{
-			std::future<cs::var> future = std::async(std::launch::async, [&func, &args] {
-				return func.call(args);
+			std::future<cs::var> future = std::async(std::launch::async, [&func, &args]()-> var {
+				try
+				{
+					return func.call(args);
+				}
+				catch (const lang_error &le)
+				{
+					std::cerr << "wait thread terminated after throwing an instance of runtime exception" << std::endl;
+					std::cerr << "what(): " << le.what() << std::endl;
+				}
+				catch (const std::exception &e)
+				{
+					std::cerr << "wait thread terminated after throwing an instance of exception" << std::endl;
+					std::cerr << "what(): " << e.what() << std::endl;
+				}
+				catch (...)
+				{
+					std::cerr << "wait thread terminated after throwing an instance of unknown exception" << std::endl;
+				}
+				return null_pointer;
 			});
 			if (future.wait_until(std::chrono::system_clock::now() + std::chrono::milliseconds(mill_sec)) !=
 			        std::future_status::ready)
@@ -1315,14 +1351,27 @@ namespace cs_impl {
 		fiber_holder create_co(const context_t &context, const var &func)
 		{
 			return std::make_shared<fiber_holder_impl>(fiber::create([context, func]() {
-				if (func.type() == typeid(callable)) {
-					vector args;
-					func.const_val<callable>().call(args);
+				try {
+					if (func.type() == typeid(callable)) {
+						vector args;
+						func.const_val<callable>().call(args);
+					}
+					else if (func.type() == typeid(object_method)) {
+						const auto &om = func.const_val<object_method>();
+						vector args{om.object};
+						om.callable.const_val<callable>().call(args);
+					}
 				}
-				else if (func.type() == typeid(object_method)) {
-					const auto &om = func.const_val<object_method>();
-					vector args{om.object};
-					om.callable.const_val<callable>().call(args);
+				catch (const lang_error &le) {
+					std::cerr << "coroutine terminated after throwing an instance of runtime exception" << std::endl;
+					std::cerr << "what(): " << le.what() << std::endl;
+				}
+				catch (const std::exception &e) {
+					std::cerr << "coroutine terminated after throwing an instance of exception" << std::endl;
+					std::cerr << "what(): " << e.what() << std::endl;
+				}
+				catch (...) {
+					std::cerr << "coroutine terminated after throwing an instance of unknown exception" << std::endl;
 				}
 				context->instance->storage.clear_context();
 			}));
@@ -1331,15 +1380,28 @@ namespace cs_impl {
 		fiber_holder create_co_s(const context_t &context, const var &func, const array &args)
 		{
 			return std::make_shared<fiber_holder_impl>(fiber::create([context, func, args]() {
-				if (func.type() == typeid(callable)) {
-					vector real_args(args.begin(), args.end());
-					func.const_val<callable>().call(real_args);
+				try {
+					if (func.type() == typeid(callable)) {
+						vector real_args(args.begin(), args.end());
+						func.const_val<callable>().call(real_args);
+					}
+					else if (func.type() == typeid(object_method)) {
+						const auto &om = func.const_val<object_method>();
+						vector real_args{om.object};
+						real_args.insert(real_args.end(), args.begin(), args.end());
+						om.callable.const_val<callable>().call(real_args);
+					}
 				}
-				else if (func.type() == typeid(object_method)) {
-					const auto &om = func.const_val<object_method>();
-					vector real_args{om.object};
-					real_args.insert(real_args.end(), args.begin(), args.end());
-					om.callable.const_val<callable>().call(real_args);
+				catch (const lang_error &le) {
+					std::cerr << "coroutine terminated after throwing an instance of runtime exception" << std::endl;
+					std::cerr << "what(): " << le.what() << std::endl;
+				}
+				catch (const std::exception &e) {
+					std::cerr << "coroutine terminated after throwing an instance of exception" << std::endl;
+					std::cerr << "what(): " << e.what() << std::endl;
+				}
+				catch (...) {
+					std::cerr << "coroutine terminated after throwing an instance of unknown exception" << std::endl;
 				}
 				context->instance->storage.clear_context();
 			}));
@@ -1360,39 +1422,67 @@ namespace cs_impl {
 		var await(const context_t &context, const var &func)
 		{
 			return fiber::await(context, [func]()-> var {
-				if (func.type() == typeid(callable))
+				try
 				{
-					vector args;
-					return func.const_val<callable>().call(args);
+					if (func.type() == typeid(callable)) {
+						vector args;
+						return func.const_val<callable>().call(args);
+					}
+					else if (func.type() == typeid(object_method)) {
+						const auto &om = func.const_val<object_method>();
+						vector args{om.object};
+						return om.callable.const_val<callable>().call(args);
+					}
 				}
-				else if (func.type() == typeid(object_method))
+				catch (const lang_error &le)
 				{
-					const auto &om = func.const_val<object_method>();
-					vector args{om.object};
-					return om.callable.const_val<callable>().call(args);
+					std::cerr << "await thread terminated after throwing an instance of runtime exception" << std::endl;
+					std::cerr << "what(): " << le.what() << std::endl;
 				}
-				else
-					return null_pointer;
+				catch (const std::exception &e)
+				{
+					std::cerr << "await thread terminated after throwing an instance of exception" << std::endl;
+					std::cerr << "what(): " << e.what() << std::endl;
+				}
+				catch (...)
+				{
+					std::cerr << "await thread terminated after throwing an instance of unknown exception" << std::endl;
+				}
+				return null_pointer;
 			});
 		}
 
 		var await_s(const context_t &context, const var &func, const array &args)
 		{
 			return fiber::await(context, [func, args]()-> var {
-				if (func.type() == typeid(callable))
+				try
 				{
-					vector real_args(args.begin(), args.end());
-					return func.const_val<callable>().call(real_args);
+					if (func.type() == typeid(callable)) {
+						vector real_args(args.begin(), args.end());
+						return func.const_val<callable>().call(real_args);
+					}
+					else if (func.type() == typeid(object_method)) {
+						const auto &om = func.const_val<object_method>();
+						vector real_args{om.object};
+						real_args.insert(real_args.end(), args.begin(), args.end());
+						return om.callable.const_val<callable>().call(real_args);
+					}
 				}
-				else if (func.type() == typeid(object_method))
+				catch (const lang_error &le)
 				{
-					const auto &om = func.const_val<object_method>();
-					vector real_args{om.object};
-					real_args.insert(real_args.end(), args.begin(), args.end());
-					return om.callable.const_val<callable>().call(real_args);
+					std::cerr << "await thread terminated after throwing an instance of runtime exception" << std::endl;
+					std::cerr << "what(): " << le.what() << std::endl;
 				}
-				else
-					return null_pointer;
+				catch (const std::exception &e)
+				{
+					std::cerr << "await thread terminated after throwing an instance of exception" << std::endl;
+					std::cerr << "what(): " << e.what() << std::endl;
+				}
+				catch (...)
+				{
+					std::cerr << "await thread terminated after throwing an instance of unknown exception" << std::endl;
+				}
+				return null_pointer;
 			});
 		}
 
