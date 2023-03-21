@@ -137,8 +137,7 @@ namespace cs_impl {
 		routine_t current();
 
 		template<typename Function>
-		inline std::result_of_t<std::decay_t<Function>()>
-		await(const cs::context_t &context, Function &&func)
+		inline cs::var await(const cs::context_t &context, Function &&func)
 		{
 			auto future = std::async(std::launch::async, func);
 			std::future_status status = future.wait_for(std::chrono::milliseconds(0));

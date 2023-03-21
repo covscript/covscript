@@ -1312,20 +1312,35 @@ namespace cs_impl {
 				throw cs::lang_error("Invoke non-callable object.");
 		}
 
-		fiber_holder create_co(const context_t &context, const callable &func)
+		fiber_holder create_co(const context_t &context, const var &func)
 		{
 			return std::make_shared<fiber_holder_impl>(fiber::create([context, func]() {
-				vector args;
-				func.call(args);
+				if (func.type() == typeid(callable)) {
+					vector args;
+					func.const_val<callable>().call(args);
+				}
+				else if (func.type() == typeid(object_method)) {
+					const auto &om = func.const_val<object_method>();
+					vector args{om.object};
+					om.callable.const_val<callable>().call(args);
+				}
 				context->instance->storage.clear_context();
 			}));
 		}
 
-		fiber_holder create_co_s(const context_t &context, const callable &func, const array &args)
+		fiber_holder create_co_s(const context_t &context, const var &func, const array &args)
 		{
 			return std::make_shared<fiber_holder_impl>(fiber::create([context, func, args]() {
-				vector real_args(args.begin(), args.end());
-				func.call(real_args);
+				if (func.type() == typeid(callable)) {
+					vector real_args(args.begin(), args.end());
+					func.const_val<callable>().call(real_args);
+				}
+				else if (func.type() == typeid(object_method)) {
+					const auto &om = func.const_val<object_method>();
+					vector real_args{om.object};
+					real_args.insert(real_args.end(), args.begin(), args.end());
+					om.callable.const_val<callable>().call(real_args);
+				}
 				context->instance->storage.clear_context();
 			}));
 		}
@@ -1342,19 +1357,42 @@ namespace cs_impl {
 			}, type_id(typeid(channel_cs_ext::channel_type)), channel_cs_ext::channel_ext);
 		}
 
-		var await(const context_t &context, const callable &func)
+		var await(const context_t &context, const var &func)
 		{
 			return fiber::await(context, [func]()-> var {
-				vector args;
-				return func.call(args);
+				if (func.type() == typeid(callable))
+				{
+					vector args;
+					return func.const_val<callable>().call(args);
+				}
+				else if (func.type() == typeid(object_method))
+				{
+					const auto &om = func.const_val<object_method>();
+					vector args{om.object};
+					return om.callable.const_val<callable>().call(args);
+				}
+				else
+					return null_pointer;
 			});
 		}
 
-		var await_s(const context_t &context, const callable &func, const array &args)
+		var await_s(const context_t &context, const var &func, const array &args)
 		{
 			return fiber::await(context, [func, args]()-> var {
-				vector real_args(args.begin(), args.end());
-				return func.call(real_args);
+				if (func.type() == typeid(callable))
+				{
+					vector real_args(args.begin(), args.end());
+					return func.const_val<callable>().call(real_args);
+				}
+				else if (func.type() == typeid(object_method))
+				{
+					const auto &om = func.const_val<object_method>();
+					vector real_args{om.object};
+					real_args.insert(real_args.end(), args.begin(), args.end());
+					return om.callable.const_val<callable>().call(real_args);
+				}
+				else
+					return null_pointer;
 			});
 		}
 
