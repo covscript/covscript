@@ -45,11 +45,29 @@
 #ifdef COVSCRIPT_PLATFORM_DARWIN
 
 #include <mach-o/loader.h>
-#define _XOPEN_SOURCE
 
-#endif
+extern "C"
+{
+#include <libucontext/libucontext.h>
+}
+
+#define cs_fiber_ucontext_t  libucontext_ucontext_t
+#define cs_fiber_getcontext  libucontext_getcontext
+#define cs_fiber_makecontext libucontext_makecontext
+#define cs_fiber_setcontext  libucontext_setcontext
+#define cs_fiber_swapcontext libucontext_swapcontext
+
+#else
 
 #include <ucontext.h>
+
+#define cs_fiber_ucontext_t  ucontext_t
+#define cs_fiber_getcontext  getcontext
+#define cs_fiber_makecontext makecontext
+#define cs_fiber_setcontext  setcontext
+#define cs_fiber_swapcontext swapcontext
+
+#endif
 
 namespace cs_system_impl {
 	bool chmod_impl(const std::string &path, unsigned int mode)
@@ -228,7 +246,7 @@ namespace cs_impl {
 
 			char *stack;
 			bool finished;
-			ucontext_t ctx;
+			cs_fiber_ucontext_t ctx;
 
 			Routine(std::function<void()> f)
 			{
@@ -248,7 +266,7 @@ namespace cs_impl {
 			std::list<routine_t> indexes;
 			routine_t current;
 			size_t stack_size;
-			ucontext_t ctx;
+			cs_fiber_ucontext_t ctx;
 
 			inline Ordinator(size_t ss = STACK_LIMIT)
 			{
@@ -317,7 +335,7 @@ namespace cs_impl {
 				//initializes the structure to the currently active context.
 				//When successful, getcontext() returns 0
 				//On error, return -1 and set errno appropriately.
-				getcontext(&routine->ctx);
+				cs_fiber_getcontext(&routine->ctx);
 
 				//Before invoking makecontext(), the caller must allocate a new stack
 				//for this context and assign its address to ucp->uc_stack,
@@ -332,16 +350,16 @@ namespace cs_impl {
 				//When this function returns, the  successor context is activated.
 				//If the successor context pointer is NULL, the thread exits.
 				context->instance->storage.swap_context(&routine->cs_stack);
-				makecontext(&routine->ctx, reinterpret_cast<void (*)(void)>(entry), 0);
+				cs_fiber_makecontext(&routine->ctx, reinterpret_cast<void (*)(void)>(entry), 0);
 
 				//The swapcontext() function saves the current context,
 				//and then activates the context of another.
-				swapcontext(&ordinator.ctx, &routine->ctx);
+				cs_fiber_swapcontext(&ordinator.ctx, &routine->ctx);
 			}
 			else {
 				ordinator.current = id;
 				context->instance->storage.swap_context(&routine->cs_stack);
-				swapcontext(&ordinator.ctx, &routine->ctx);
+				cs_fiber_swapcontext(&ordinator.ctx, &routine->ctx);
 			}
 
 			return 0;
@@ -359,7 +377,7 @@ namespace cs_impl {
 
 			ordinator.current = 0;
 			context->instance->storage.swap_context(nullptr);
-			swapcontext(&routine->ctx, &ordinator.ctx);
+			cs_fiber_swapcontext(&routine->ctx, &ordinator.ctx);
 		}
 
 		routine_t current()

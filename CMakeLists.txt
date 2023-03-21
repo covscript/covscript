@@ -18,7 +18,7 @@ elseif (CMAKE_COMPILER_IS_GNUCXX)
         set(CMAKE_CXX_FLAGS "-fPIC -s -O3")
     endif ()
 else ()
-    set(CMAKE_CXX_FLAGS "-fPIC -O3 -Wno-deprecated-declarations")
+    set(CMAKE_CXX_FLAGS "-fPIC -O3")
 endif ()
 
 if (DEFINED ENV{CS_COMPATIBILITY_MODE})
@@ -44,10 +44,18 @@ add_library(covscript_debug STATIC ${SOURCE_CODE})
 
 target_compile_definitions(covscript_debug PRIVATE CS_DEBUGGER)
 
-# Link libdl in UNIX and APPLE platform
-if (UNIX OR APPLE)
+# Link libdl in UNIX platform
+if (UNIX)
     target_link_libraries(covscript pthread dl)
     target_link_libraries(covscript_debug pthread dl)
+endif ()
+
+# Link libdl and libucontext in APPLE platform
+if (APPLE)
+    include_directories(/usr/local/include)
+    link_directories(/usr/local/lib)
+    target_link_libraries(covscript pthread dl ucontext)
+    target_link_libraries(covscript_debug pthread dl ucontext)
 endif ()
 
 # Main Executable
