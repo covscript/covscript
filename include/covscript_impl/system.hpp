@@ -158,12 +158,12 @@ namespace cs_impl {
 			std::list<Type> _list;
 			routine_t _taker;
 		public:
-			Channel(const cs::context_t &cxt): context(cxt)
+			Channel(const cs::context_t &cxt) : context(cxt)
 			{
 				_taker = 0;
 			}
 
-			Channel(const cs::context_t &cxt, routine_t id): context(cxt)
+			Channel(const cs::context_t &cxt, routine_t id) : context(cxt)
 			{
 				_taker = id;
 			}

@@ -1,4 +1,4 @@
-var channel = context.create_channel()
+var channel = new context.channel
 
 function async_func()
     foreach i in range(3)
@@ -15,15 +15,15 @@ function co_a()
     system.out.println(i)
 end
 
-function co_b()
-    system.out.println(20)
+function co_b(i)
+    system.out.println(i)
     context.yield()
     system.out.println(21)
     var val = context.await(async_func)
     system.out.println(val)
 end
 
-var rt1 = context.create_fiber(co_a), rt2 = context.create_fiber(co_b)
+var rt1 = context.create_co(co_a), rt2 = context.create_co_s(co_b, {20})
 
 system.out.println("00")
 context.resume(rt1)

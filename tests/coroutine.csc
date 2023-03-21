@@ -19,7 +19,7 @@ end
 
 foreach it in range(10)
     var co_list = new array
-    foreach i in range(10) do co_list.push_back(context.create_fiber(worker))
+    foreach i in range(10) do co_list.push_back(context.create_co(worker))
     var i = 0, ts = runtime.time()
     while runtime.time() - ts < 1000
         foreach co in co_list do i += receive(co)

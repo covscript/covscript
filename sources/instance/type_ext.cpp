@@ -1312,7 +1312,7 @@ namespace cs_impl {
 				throw cs::lang_error("Invoke non-callable object.");
 		}
 
-		fiber_holder create_fiber(const context_t &context, const callable &func)
+		fiber_holder create_co(const context_t &context, const callable &func)
 		{
 			return std::make_shared<fiber_holder_impl>(fiber::create([context, func]() {
 				vector args;
@@ -1321,7 +1321,7 @@ namespace cs_impl {
 			}));
 		}
 
-		fiber_holder create_fiber_s(const context_t &context, const callable &func, const array &args)
+		fiber_holder create_co_s(const context_t &context, const callable &func, const array &args)
 		{
 			return std::make_shared<fiber_holder_impl>(fiber::create([context, func, args]() {
 				vector real_args(args.begin(), args.end());
@@ -1335,9 +1335,11 @@ namespace cs_impl {
 			fiber::resume(context, fiber->rt);
 		}
 
-		var create_channel(const context_t &context)
+		var channel_type(const context_t &context)
 		{
-			return var::make<channel_cs_ext::channel_type>(context);
+			return var::make_protect<type_t>([context]()-> var {
+				return var::make<channel_cs_ext::channel_type>(context);
+			}, type_id(typeid(channel_cs_ext::channel_type)), channel_cs_ext::channel_ext);
 		}
 
 		var await(const context_t &context, const callable &func)
@@ -1397,9 +1399,9 @@ namespace cs_impl {
 			.add_var("import", make_cni(import, true))
 			.add_var("source_import", make_cni(source_import, true))
 			.add_var("add_literal", make_cni(add_string_literal, true))
-			.add_var("create_fiber", make_cni(create_fiber))
-			.add_var("create_fiber_s", make_cni(create_fiber_s))
-			.add_var("create_channel", make_cni(create_channel))
+			.add_var("create_co", make_cni(create_co))
+			.add_var("create_co_s", make_cni(create_co_s))
+			.add_var("channel", make_cni(channel_type, callable::types::member_visitor))
 			.add_var("await", make_cni(await))
 			.add_var("await_s", make_cni(await_s))
 			.add_var("resume", make_cni(resume))
