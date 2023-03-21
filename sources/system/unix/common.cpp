@@ -349,11 +349,11 @@ namespace cs_impl {
 				//When this context is later activated by swapcontext(), the function entry is called.
 				//When this function returns, the  successor context is activated.
 				//If the successor context pointer is NULL, the thread exits.
-				context->instance->storage.swap_context(&routine->cs_stack);
 				cs_fiber_makecontext(&routine->ctx, reinterpret_cast<void (*)(void)>(entry), 0);
 
 				//The swapcontext() function saves the current context,
 				//and then activates the context of another.
+				context->instance->storage.swap_context(&routine->cs_stack);
 				cs_fiber_swapcontext(&ordinator.ctx, &routine->ctx);
 			}
 			else {
