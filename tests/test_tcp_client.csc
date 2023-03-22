@@ -9,9 +9,12 @@ function worker(sock)
         var s = context.await(system.in.getline)
         if !s.empty()
             sock.send(s)
+            if s == "end"
+                break
+            end
             system.out.println(sock.receive(512))
         end
-    until s.toupper() == "END"
+    end
     exit = true
 end
 
@@ -24,16 +27,26 @@ else
 end
 sock.connect(ep)
 sock.send(id)
+if sock.receive(512) != id
+    system.out.println("Protocol error!!!")
+    system.exit(0)
+end
 var co = context.create_co_s(worker, {sock})
-var count = 0
+var count = 0, million = 1
 loop
     context.resume(co)
-    if count == 50
-        sock.send("ECHO from " + id)
-        system.out.println(sock.receive(512))
-        count = 0
-    else
-        runtime.delay(100)
-        ++count
+    if exit
+        break
     end
-until exit
+    var num = math.randint(0, 100000)
+    sock.send(to_string(num))
+    if sock.receive(512) != to_string(num + 1)
+        system.out.println("Transmission error!!!")
+        system.exit(0)
+    end
+    if ++count == 100000
+        system.out.println("[" + id + "]: " + to_string(million) + " Million" + (million > 1 ? "s" : "") + " Request")
+        ++million
+        count = 0
+    end
+end

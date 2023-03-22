@@ -1,7 +1,7 @@
 var co_swap = null
 
 function send(val)
-    co_swap := val
+    co_swap = val
     context.yield()
 end
 
