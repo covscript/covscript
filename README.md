@@ -21,17 +21,21 @@ This project is an officially maintained Covariant Script interpreter.
 
 + Cross-platform, supporting most mainstream Operating Systems
     + Compatible with legacy compilers -- written in C++ 14
-    + Linux and Unix: x86, ARM, MIPS, Loongson ISA
+    + Apple macOS: Universal binary with x86_64 and arm64
+    + Linux and Unix: x86, ARM, MIPS, LoongArch
     + Microsoft Windows: x86
 + Powerful and bloat-free extension system
     + C/C++ Native Interface(CNI) System: translate invoking from both C/C++ and Covariant Script
     + Interpreter Bootstrap: A portable way to access the Covariant Script Runtime from C++
     + CNI Composer Macro: Combined the extension system and CNI system organically
+    + CFFI Support: Directly calling functions from shared library written in C
 + Self-developed efficient compilation system
     + Dependency-free and efficient compiler front-end
+    + Unicode support optimized for Chinese
     + Support compile-time optimization
     + Exportable compilation results
 + High-performance runtime environment
+    + Stackful asymmetric coroutine
     + Hotspot optimization algorithm
     + Efficient memory management system
     + Reference count garbage collection system
@@ -84,6 +88,8 @@ Option|Mnemonic|Function
 `--log-path <PATH>`|`-l <PATH>` |Set the log path
 `--import-path <PATH>`|`-i <PATH>`|Set the import path
 
+The default stack size is **1000**. When the stack size is set larger than the default value, the stack size of the coroutine will be dynamically adjusted to one tenth of the set size; when the stack size is set smaller than the default value, the stack size of the coroutine will be will remain at **100**.
+
 **Note that if you do not set the log path, it will be directly output to the standard output stream.**
 
 ### Debugger ###
@@ -100,6 +106,8 @@ Option|Mnemonic|Function
 `--stack-resize <SIZE>`|`-S <SIZE>`|Reset the size of runtime stack
 `--log-path <PATH>`|`-l <PATH>`|Set the log path
 `--import-path <PATH>`|`-i <PATH>`|Set the import path
+
+The stack size policy is the same as for the interpreter.
 
 **Note that if you do not set the log path, it will be printed to stdout.**
 

@@ -24,11 +24,17 @@
 * Website: http://covscript.org.cn
 */
 
+#include <covscript/impl/impl.hpp>
 #include <direct.h>
 #include <conio.h>
+#include <cassert>
 #include <cstdlib>
 #include <string>
 #include <io.h>
+
+#ifndef STACK_LIMIT
+#define STACK_LIMIT (1024*1024)
+#endif
 
 namespace cs_system_impl {
 	bool chmod_impl(const std::string &path, unsigned int mode)
@@ -167,6 +173,134 @@ namespace cs_impl {
 				throw cs::runtime_error(str.str());
 			}
 			}
+		}
+	}
+
+	namespace fiber {
+		struct Routine {
+			cs::stack_type<cs::domain_type> cs_stack;
+			std::function<void()> func;
+
+			bool finished;
+			LPVOID fiber;
+
+			Routine(std::function<void()> f) : cs_stack(fiber::stack_size())
+			{
+				func = f;
+				finished = false;
+				fiber = nullptr;
+			}
+
+			~Routine()
+			{
+				DeleteFiber(fiber);
+			}
+		};
+
+		struct Ordinator {
+			std::vector<Routine *> routines;
+			std::list<routine_t> indexes;
+			routine_t current;
+			size_t stack_size;
+			LPVOID fiber;
+
+			Ordinator(size_t ss = STACK_LIMIT)
+			{
+				current = 0;
+				stack_size = ss;
+				fiber = ConvertThreadToFiber(nullptr);
+			}
+
+			~Ordinator()
+			{
+				for (auto &routine : routines)
+					delete routine;
+			}
+		};
+
+		thread_local static Ordinator ordinator;
+
+		routine_t create(std::function<void()> f)
+		{
+			Routine *routine = new Routine(f);
+
+			if (ordinator.indexes.empty()) {
+				ordinator.routines.push_back(routine);
+				return ordinator.routines.size();
+			}
+			else {
+				routine_t id = ordinator.indexes.front();
+				ordinator.indexes.pop_front();
+				assert(ordinator.routines[id-1] == nullptr);
+				ordinator.routines[id-1] = routine;
+				return id;
+			}
+		}
+
+		void destroy(routine_t id)
+		{
+			Routine *routine = ordinator.routines[id-1];
+			assert(routine != nullptr);
+
+			delete routine;
+			ordinator.routines[id-1] = nullptr;
+			ordinator.indexes.push_back(id);
+		}
+
+		void __stdcall entry(LPVOID lpParameter)
+		{
+			routine_t id = ordinator.current;
+			Routine *routine = ordinator.routines[id-1];
+			assert(routine != nullptr);
+
+			routine->func();
+
+			routine->finished = true;
+			ordinator.current = 0;
+
+			SwitchToFiber(ordinator.fiber);
+		}
+
+		int resume(const cs::context_t &context, routine_t id)
+		{
+			assert(ordinator.current == 0);
+
+			Routine *routine = ordinator.routines[id-1];
+			if (routine == nullptr)
+				return -1;
+
+			if (routine->finished)
+				return -2;
+
+			if (routine->fiber == nullptr) {
+				routine->fiber = CreateFiber(ordinator.stack_size, entry, 0);
+				ordinator.current = id;
+				context->instance->storage.swap_context(&routine->cs_stack);
+				SwitchToFiber(routine->fiber);
+			}
+			else {
+				ordinator.current = id;
+				context->instance->storage.swap_context(&routine->cs_stack);
+				SwitchToFiber(routine->fiber);
+			}
+
+			return 0;
+		}
+
+		void yield(const cs::context_t &context)
+		{
+			routine_t id = ordinator.current;
+			Routine *routine = ordinator.routines[id-1];
+			assert(routine != nullptr);
+
+			ordinator.current = 0;
+			context->instance->storage.swap_context(nullptr);
+			SwitchToFiber(ordinator.fiber);
+		}
+
+		routine_t current()
+		{
+			return ordinator.current;
 		}
 	}
 }

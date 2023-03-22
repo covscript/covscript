@@ -21,17 +21,21 @@
 
 + 全平台可用，支持大多数主流操作系统
     + 使用 C++ 14 标准编写，支持版本较老的编译器
-    + Linux and Unix: x86, ARM, MIPS, Loongson ISA
+    + Apple macOS: Universal binary with x86_64 and arm64
+    + Linux and Unix: x86, ARM, MIPS, LoongArch
     + Microsoft Windows: x86
 + 强大易用的扩展系统
     + C/C++ Native Interface(CNI) 系统：能够翻译 C/C++ 和 Covariant Script 之间的双向调用
     + Interpreter Bootstrap：在 C++ 项目中集成 Covariant Script 运行时环境的帮手
     + CNI 组成宏：将扩展系统与CNI系统有机结合，现已纳入语言标准
+    + CFFI 支持: 直接调用使用 C 语言编写的动态库中的函数
 + 自研高效编译系统
+    + 针对中文优化的 Unicode 支持
     + 无依赖、高效的编译器前端
     + 支持编译期优化
     + 可导出编译结果
 + 高性能运行时环境
+    + 堆栈式非对称协程
     + 热点分析优化算法
     + 高效的内存管理系统
     + 引用计数垃圾回收器
@@ -84,6 +88,8 @@
 `--log-path <PATH>`|`-l <PATH>` |设置日志输出路径
 `--import-path <PATH>`|`-i <PATH>`|设置引入查找路径
 
+默认栈大小为**1000**，当设置的栈大小大于默认值时，协程的栈大小会动态调整为设置大小的十分之一；当堆栈大小设置小于默认值时，协程的堆栈大小将保持在**100**
+
 **注意，若不设置日志输出路径，将直接输出至标准输出流**
 
 ### 调试器 ###
@@ -100,6 +106,8 @@
 `--stack-resize <SIZE>`|`-S <SIZE>`|重设运行时栈大小
 `--log-path <PATH>`|`-l <PATH>`|设置日志路径
 `--import-path <PATH>`|`-i <PATH>`|设置引入查找路径
+
+栈大小策略与解释器相同
 
 **若不设置日志路径，将直接输出至标准输出流**
 

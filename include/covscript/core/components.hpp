@@ -614,6 +614,11 @@ namespace cs {
 			resize(512);
 		}
 
+		explicit stack_type(std::size_t s)
+		{
+			resize(s);
+		}
+
 		stack_type(const stack_type &) = delete;
 
 		~stack_type()
