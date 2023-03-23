@@ -18,23 +18,36 @@ function worker(sock)
     exit = true
 end
 
-var id = null
-if context.cmd_args.size == 1
-    system.out.print("Please enter an ID: ")
-    id = system.in.getline()
+var id = null, pure = false
+if context.cmd_args.size < 2
+    system.out.print("Usage: test_tcp_client <ID> [--pure]")
+    system.exit(0)
 else
     id = context.cmd_args[1]
+    if context.cmd_args.size > 2 && context.cmd_args[2] == "--pure"
+        pure = true
+    end
 end
+
+# Establish connection
 sock.connect(ep)
 sock.send(id)
 if sock.receive(512) != id
     system.out.println("Protocol error!!!")
     system.exit(0)
 end
-var co = context.create_co_s(worker, {sock})
+
+# Create coroutine
+var co = null
+if !pure
+    co = context.create_co_s(worker, {sock})
+end
+
 var count = 0, million = 1
 loop
-    context.resume(co)
+    if !pure
+        context.resume(co)
+    end
     if exit
         break
     end
