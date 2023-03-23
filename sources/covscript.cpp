@@ -458,7 +458,8 @@ namespace cs {
 		// Internal Types
 		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char),
 		                  cs_impl::char_ext)
-		.add_buildin_type("number", []() -> var { return var::make<numeric>(0); }, typeid(numeric))
+		.add_buildin_type("number", []() -> var { return var::make<numeric>(0); }, typeid(numeric),
+		                  cs_impl::number_ext)
 		.add_buildin_type("integer", []() -> var { return var::make<numeric>(0); }, typeid(numeric))
 		.add_buildin_type("float", []() -> var { return var::make<numeric>(0.0); }, typeid(numeric))
 		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))

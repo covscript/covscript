@@ -1084,15 +1084,34 @@ namespace cs_impl {
 		}
 	}
 
+	namespace runtime_cs_ext {
+		struct fiber_holder_impl {
+			fiber::routine_t rt = 0;
+			fiber_holder_impl(fiber::routine_t t) : rt(t) {}
+			~fiber_holder_impl()
+			{
+				fiber::destroy(rt);
+			}
+		};
+
+		using fiber_holder = std::shared_ptr<fiber_holder_impl>;
+	}
+
 	namespace channel_cs_ext {
 		using namespace cs;
 
 		namespace_t channel_ext = cs::make_shared_namespace<cs::name_space>();
 		using channel_type = fiber::Channel<var>;
 
+		void consumer(channel_type& ch, const runtime_cs_ext::fiber_holder& co)
+		{
+			ch.consumer(co->rt);
+		}
+
 		void init()
 		{
 			(*channel_ext)
+			.add_var("consumer", make_cni(consumer))
 			.add_var("push", make_cni(&channel_type::push))
 			.add_var("pop", make_cni(&channel_type::pop))
 			.add_var("clear", make_cni(&channel_type::clear))
@@ -1116,17 +1135,6 @@ namespace cs_impl {
 
 	namespace runtime_cs_ext {
 		using namespace cs;
-
-		struct fiber_holder_impl {
-			fiber::routine_t rt = 0;
-			fiber_holder_impl(fiber::routine_t t) : rt(t) {}
-			~fiber_holder_impl()
-			{
-				fiber::destroy(rt);
-			}
-		};
-
-		using fiber_holder = std::shared_ptr<fiber_holder_impl>;
 
 		string get_import_path()
 		{
