@@ -32,7 +32,7 @@ end
 # Establish connection
 sock.connect(ep)
 sock.send(id)
-if sock.receive(512) != id
+if sock.receive(64) != id
     system.out.println("Protocol error!!!")
     system.exit(0)
 end
@@ -53,7 +53,7 @@ loop
     end
     var num = math.randint(0, 100000)
     sock.send(to_string(num))
-    if sock.receive(512) != to_string(num + 1)
+    if sock.receive(64) != to_string(num + 1)
         system.out.println("Transmission error!!!")
         system.exit(0)
     end

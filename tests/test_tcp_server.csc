@@ -1,6 +1,6 @@
 import network
 using network
-var ep = tcp.endpoint("127.0.0.1", 1024)
+var ep = tcp.endpoint_v4(1024)
 var a = tcp.acceptor(ep)
 var listen = false
 
@@ -14,12 +14,18 @@ function worker(co, a)
     co->state = 1
     var sock = new tcp.socket
     context.await_s(sock.accept, {a})
-    var id = sock.receive(512); sock.send(id)
+    while sock.available() == 0
+        context.yield()
+    end
+    var id = sock.receive(64); sock.send(id)
     system.out.println("[" + id + "]: Connected")
     listen = false
     var count = 0, million = 1, timestamp = runtime.time()
     loop
-        var s = sock.receive(512)
+        while sock.available() == 0
+            context.yield()
+        end
+        var s = sock.receive(64)
         if s == "end"
             break
         end
