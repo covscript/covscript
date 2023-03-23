@@ -184,9 +184,8 @@ namespace cs_impl {
 			bool finished;
 			LPVOID fiber;
 
-			Routine(std::function<void()> f) : cs_stack(fiber::stack_size())
+			Routine(std::function<void()> f) : cs_stack(fiber::stack_size()), func(std::move(f))
 			{
-				func = f;
 				finished = false;
 				fiber = nullptr;
 			}
@@ -222,7 +221,7 @@ namespace cs_impl {
 
 		routine_t create(std::function<void()> f)
 		{
-			Routine *routine = new Routine(f);
+			Routine *routine = new Routine(std::move(f));
 
 			if (ordinator.indexes.empty()) {
 				ordinator.routines.push_back(routine);

@@ -1085,6 +1085,8 @@ namespace cs_impl {
 	}
 
 	namespace runtime_cs_ext {
+		using namespace cs;
+
 		struct fiber_holder_impl {
 			fiber::routine_t rt = 0;
 			fiber_holder_impl(fiber::routine_t t) : rt(t) {}
@@ -1095,6 +1097,82 @@ namespace cs_impl {
 		};
 
 		using fiber_holder = std::shared_ptr<fiber_holder_impl>;
+
+		class fiber_callable final {
+			const context_t &context;
+			const callable &func;
+			mutable vector args;
+		public:
+			fiber_callable(const context_t &cxt, const var &fn) : context(cxt), func(fn.const_val<callable>()) {}
+			fiber_callable(const context_t &cxt, const var &fn, vector data) : context(cxt), func(fn.const_val<callable>()), args(std::move(data)) {}
+			fiber_callable(const context_t &cxt, const var &fn, vector data, const array &append_args) : context(cxt), func(fn.const_val<callable>()), args(std::move(data))
+			{
+				args.insert(args.end(), append_args.begin(), append_args.end());
+			}
+			void operator()() const noexcept
+			{
+				try {
+					func.call(args);
+					context->instance->storage.clear_context();
+				}
+				catch (const lang_error &le) {
+					std::cerr << "coroutine terminated after throwing an instance of runtime exception" << std::endl;
+					std::cerr << "what(): " << le.what() << std::endl;
+				}
+				catch (const std::exception &e) {
+					std::cerr << "coroutine terminated after throwing an instance of exception" << std::endl;
+					std::cerr << "what(): " << e.what() << std::endl;
+				}
+				catch (...) {
+					std::cerr << "coroutine terminated after throwing an instance of unknown exception" << std::endl;
+				}
+			}
+		};
+
+		class async_callable final {
+			callable func;
+			mutable vector args;
+			void detach_args()
+			{
+				for (auto &val : args) {
+					if (!val.is_rvalue()) {
+						val.clone();
+						val.detach();
+					}
+					else
+						val.mark_as_rvalue(false);
+				}
+			}
+		public:
+			async_callable(const var &fn) : func(fn.const_val<callable>()) {}
+			async_callable(const var &fn, vector data) : func(fn.const_val<callable>()), args(std::move(data))
+			{
+				detach_args();
+			}
+			async_callable(const var &fn, vector data, const array &append_args) : func(fn.const_val<callable>()), args(std::move(data))
+			{
+				args.insert(args.end(), append_args.begin(), append_args.end());
+				detach_args();
+			}
+			var operator()() const noexcept
+			{
+				try {
+					return func.call(args);
+				}
+				catch (const lang_error &le) {
+					std::cerr << "await thread terminated after throwing an instance of runtime exception" << std::endl;
+					std::cerr << "what(): " << le.what() << std::endl;
+				}
+				catch (const std::exception &e) {
+					std::cerr << "await thread terminated after throwing an instance of exception" << std::endl;
+					std::cerr << "what(): " << e.what() << std::endl;
+				}
+				catch (...) {
+					std::cerr << "await thread terminated after throwing an instance of unknown exception" << std::endl;
+				}
+				return null_pointer;
+			}
+		};
 	}
 
 	namespace channel_cs_ext {
@@ -1265,28 +1343,29 @@ namespace cs_impl {
 			context->instance->add_string_literal(literal, func);
 		}
 
+		var wait_worker(const cs::callable &func, cs::vector &args)
+		{
+			try {
+				return func.call(args);
+			}
+			catch (const lang_error &le) {
+				std::cerr << "wait thread terminated after throwing an instance of runtime exception" << std::endl;
+				std::cerr << "what(): " << le.what() << std::endl;
+			}
+			catch (const std::exception &e) {
+				std::cerr << "wait thread terminated after throwing an instance of exception" << std::endl;
+				std::cerr << "what(): " << e.what() << std::endl;
+			}
+			catch (...) {
+				std::cerr << "wait thread terminated after throwing an instance of unknown exception" << std::endl;
+			}
+			return null_pointer;
+		}
+
 		cs::var wait_for_impl(std::size_t mill_sec, const cs::callable &func, cs::vector &args)
 		{
 			std::future<cs::var> future = std::async(std::launch::async, [&func, &args]()-> var {
-				try
-				{
-					return func.call(args);
-				}
-				catch (const lang_error &le)
-				{
-					std::cerr << "wait thread terminated after throwing an instance of runtime exception" << std::endl;
-					std::cerr << "what(): " << le.what() << std::endl;
-				}
-				catch (const std::exception &e)
-				{
-					std::cerr << "wait thread terminated after throwing an instance of exception" << std::endl;
-					std::cerr << "what(): " << e.what() << std::endl;
-				}
-				catch (...)
-				{
-					std::cerr << "wait thread terminated after throwing an instance of unknown exception" << std::endl;
-				}
-				return null_pointer;
+				return wait_worker(func, args);
 			});
 			if (future.wait_for(std::chrono::milliseconds(mill_sec)) != std::future_status::ready)
 				throw cs::lang_error("Target function deferred or timeout.");
@@ -1297,25 +1376,7 @@ namespace cs_impl {
 		cs::var wait_until_impl(std::size_t mill_sec, const cs::callable &func, cs::vector &args)
 		{
 			std::future<cs::var> future = std::async(std::launch::async, [&func, &args]()-> var {
-				try
-				{
-					return func.call(args);
-				}
-				catch (const lang_error &le)
-				{
-					std::cerr << "wait thread terminated after throwing an instance of runtime exception" << std::endl;
-					std::cerr << "what(): " << le.what() << std::endl;
-				}
-				catch (const std::exception &e)
-				{
-					std::cerr << "wait thread terminated after throwing an instance of exception" << std::endl;
-					std::cerr << "what(): " << e.what() << std::endl;
-				}
-				catch (...)
-				{
-					std::cerr << "wait thread terminated after throwing an instance of unknown exception" << std::endl;
-				}
-				return null_pointer;
+				return wait_worker(func, args);
 			});
 			if (future.wait_until(std::chrono::system_clock::now() + std::chrono::milliseconds(mill_sec)) !=
 			        std::future_status::ready)
@@ -1356,63 +1417,28 @@ namespace cs_impl {
 				throw cs::lang_error("Invoke non-callable object.");
 		}
 
-		fiber_holder create_co(const context_t &context, const var &func)
+		var create_co(const context_t &context, const var &func)
 		{
-			return std::make_shared<fiber_holder_impl>(fiber::create([context, func]() {
-				try {
-					if (func.type() == typeid(callable)) {
-						vector args;
-						func.const_val<callable>().call(args);
-					}
-					else if (func.type() == typeid(object_method)) {
-						const auto &om = func.const_val<object_method>();
-						vector args{om.object};
-						om.callable.const_val<callable>().call(args);
-					}
-				}
-				catch (const lang_error &le) {
-					std::cerr << "coroutine terminated after throwing an instance of runtime exception" << std::endl;
-					std::cerr << "what(): " << le.what() << std::endl;
-				}
-				catch (const std::exception &e) {
-					std::cerr << "coroutine terminated after throwing an instance of exception" << std::endl;
-					std::cerr << "what(): " << e.what() << std::endl;
-				}
-				catch (...) {
-					std::cerr << "coroutine terminated after throwing an instance of unknown exception" << std::endl;
-				}
-				context->instance->storage.clear_context();
-			}));
+			if (func.type() == typeid(callable)) {
+				return std::make_shared<fiber_holder_impl>(fiber::create(fiber_callable(context, func)));
+			}
+			else if (func.type() == typeid(object_method)) {
+				const auto &om = func.const_val<object_method>();
+				return std::make_shared<fiber_holder_impl>(fiber::create(fiber_callable(context, om.callable, {om.object})));
+			}
+			return null_pointer;
 		}
 
-		fiber_holder create_co_s(const context_t &context, const var &func, const array &args)
+		var create_co_s(const context_t &context, const var &func, const array &args)
 		{
-			return std::make_shared<fiber_holder_impl>(fiber::create([context, func, args]() {
-				try {
-					if (func.type() == typeid(callable)) {
-						vector real_args(args.begin(), args.end());
-						func.const_val<callable>().call(real_args);
-					}
-					else if (func.type() == typeid(object_method)) {
-						const auto &om = func.const_val<object_method>();
-						vector real_args{om.object};
-						real_args.insert(real_args.end(), args.begin(), args.end());
-						om.callable.const_val<callable>().call(real_args);
-					}
-				}
-				catch (const lang_error &le) {
-					std::cerr << "coroutine terminated after throwing an instance of runtime exception" << std::endl;
-					std::cerr << "what(): " << le.what() << std::endl;
-				}
-				catch (const std::exception &e) {
-					std::cerr << "coroutine terminated after throwing an instance of exception" << std::endl;
-					std::cerr << "what(): " << e.what() << std::endl;
-				}
-				catch (...) {
-					std::cerr << "coroutine terminated after throwing an instance of unknown exception" << std::endl;
-				}
-				context->instance->storage.clear_context();
-			}));
+			if (func.type() == typeid(callable)) {
+				return std::make_shared<fiber_holder_impl>(fiber::create(fiber_callable(context, func, vector(args.begin(), args.end()))));
+			}
+			else if (func.type() == typeid(object_method)) {
+				const auto &om = func.const_val<object_method>();
+				return std::make_shared<fiber_holder_impl>(fiber::create(fiber_callable(context, om.callable, {om.object}, args)));
+			}
+			return null_pointer;
 		}
 
 		void resume(const context_t &context, const fiber_holder &fiber)
@@ -1429,69 +1455,26 @@ namespace cs_impl {
 
 		var await(const context_t &context, const var &func)
 		{
-			return fiber::await(context, [func]()-> var {
-				try
-				{
-					if (func.type() == typeid(callable)) {
-						vector args;
-						return func.const_val<callable>().call(args);
-					}
-					else if (func.type() == typeid(object_method)) {
-						const auto &om = func.const_val<object_method>();
-						vector args{om.object};
-						return om.callable.const_val<callable>().call(args);
-					}
-				}
-				catch (const lang_error &le)
-				{
-					std::cerr << "await thread terminated after throwing an instance of runtime exception" << std::endl;
-					std::cerr << "what(): " << le.what() << std::endl;
-				}
-				catch (const std::exception &e)
-				{
-					std::cerr << "await thread terminated after throwing an instance of exception" << std::endl;
-					std::cerr << "what(): " << e.what() << std::endl;
-				}
-				catch (...)
-				{
-					std::cerr << "await thread terminated after throwing an instance of unknown exception" << std::endl;
-				}
-				return null_pointer;
-			});
+			if (func.type() == typeid(callable)) {
+				return fiber::await(context, async_callable(func));
+			}
+			else if (func.type() == typeid(object_method)) {
+				const auto &om = func.const_val<object_method>();
+				return fiber::await(context, async_callable(om.callable, {om.object}));
+			}
+			return null_pointer;
 		}
 
 		var await_s(const context_t &context, const var &func, const array &args)
 		{
-			return fiber::await(context, [func, args]()-> var {
-				try
-				{
-					if (func.type() == typeid(callable)) {
-						vector real_args(args.begin(), args.end());
-						return func.const_val<callable>().call(real_args);
-					}
-					else if (func.type() == typeid(object_method)) {
-						const auto &om = func.const_val<object_method>();
-						vector real_args{om.object};
-						real_args.insert(real_args.end(), args.begin(), args.end());
-						return om.callable.const_val<callable>().call(real_args);
-					}
-				}
-				catch (const lang_error &le)
-				{
-					std::cerr << "await thread terminated after throwing an instance of runtime exception" << std::endl;
-					std::cerr << "what(): " << le.what() << std::endl;
-				}
-				catch (const std::exception &e)
-				{
-					std::cerr << "await thread terminated after throwing an instance of exception" << std::endl;
-					std::cerr << "what(): " << e.what() << std::endl;
-				}
-				catch (...)
-				{
-					std::cerr << "await thread terminated after throwing an instance of unknown exception" << std::endl;
-				}
-				return null_pointer;
-			});
+			if (func.type() == typeid(callable)) {
+				return fiber::await(context, async_callable(func, vector(args.begin(), args.end())));
+			}
+			else if (func.type() == typeid(object_method)) {
+				const auto &om = func.const_val<object_method>();
+				return fiber::await(context, async_callable(om.callable, {om.object}, args));
+			}
+			return null_pointer;
 		}
 
 		void link_var(const context_t &context, const string &a, const var &b)
