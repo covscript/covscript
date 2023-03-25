@@ -888,7 +888,10 @@ namespace cs {
 	public:
 		name_space() : m_data(new domain_type) {}
 
-		name_space(const name_space &) = delete;
+		name_space(const name_space &ns) : m_data(new domain_type)
+		{
+			copy_namespace(ns);
+		}
 
 		explicit name_space(domain_type dat) : m_data(new domain_type(std::move(dat))) {}
 

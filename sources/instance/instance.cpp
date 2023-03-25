@@ -55,8 +55,6 @@ namespace cs {
 		else {
 			// is package file
 			context_t rt = create_subcontext(context);
-			namespace_t module = std::make_shared<name_space>();
-			context->compiler->modules.emplace(path, module);
 			rt->compiler->swap_context(rt);
 			try {
 				rt->instance->compile(path);
@@ -67,7 +65,8 @@ namespace cs {
 			}
 			context->compiler->swap_context(context);
 			rt->instance->interpret();
-			*module = *rt->instance->storage.get_namespace();
+			namespace_t module = std::make_shared<name_space>(*rt->instance->storage.get_namespace());
+			context->compiler->modules.emplace(path, module);
 			return module;
 		}
 	}
@@ -93,8 +92,6 @@ namespace cs {
 				return context->compiler->modules[package_path];
 			if (std::ifstream(package_path + ".csp")) {
 				context_t rt = create_subcontext(context);
-				namespace_t module = std::make_shared<name_space>();
-				context->compiler->modules.emplace(package_path, module);
 				rt->compiler->swap_context(rt);
 				try {
 					rt->instance->compile(package_path + ".csp");
@@ -109,7 +106,8 @@ namespace cs {
 					throw runtime_error("Target file is not a package.");
 				if (rt->package_name != name)
 					throw runtime_error("Package name is different from file name.");
-				*module = *rt->instance->storage.get_namespace();
+				namespace_t module = std::make_shared<name_space>(*rt->instance->storage.get_namespace());
+				context->compiler->modules.emplace(package_path, module);
 				return module;
 			}
 			else if (std::ifstream(package_path + ".cse")) {
