@@ -1092,7 +1092,8 @@ namespace cs_impl {
 			fiber_holder_impl(fiber::routine_t t) : rt(t) {}
 			~fiber_holder_impl()
 			{
-				fiber::destroy(rt);
+				if (rt != 0)
+					fiber::destroy(rt);
 			}
 		};
 
@@ -1441,6 +1442,12 @@ namespace cs_impl {
 			return null_pointer;
 		}
 
+		void destroy(const context_t &context, const fiber_holder &fiber)
+		{
+			fiber::destroy(fiber->rt);
+			fiber->rt = 0;
+		}
+
 		void resume(const context_t &context, const fiber_holder &fiber)
 		{
 			fiber::resume(context, fiber->rt);
@@ -1523,6 +1530,7 @@ namespace cs_impl {
 			.add_var("channel", make_cni(channel_type, callable::types::member_visitor))
 			.add_var("await", make_cni(await))
 			.add_var("await_s", make_cni(await_s))
+			.add_var("destroy", make_cni(destroy))
 			.add_var("resume", make_cni(resume))
 			.add_var("yield", make_cni(&fiber::yield))
 			.add_var("link_var", make_cni(link_var))
