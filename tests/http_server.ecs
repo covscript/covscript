@@ -1,0 +1,202 @@
+import network.*
+import regex
+
+var ac = null
+var ac_lock = false
+
+function lock_acceptor()
+    ac_lock = true
+end
+
+function unlock_acceptor()
+    ac_lock = false
+    context.yield()
+end
+
+var request_line_reg = regex.build("^([^ ]*) ([^ ]*) HTTP/([^ ]*)$")
+var request_header_reg = regex.build("^([^:]*): ?(.*)$")
+
+struct http_info
+    var version = null
+    var method = null
+    var url = null
+    var host = null
+    var user_agent = null
+    var connection = null
+    var content_length = null
+    function construct(header)
+        var request_line = header.front
+        header.pop_front()
+        var match = request_line_reg.match(request_line)
+        if !match.empty()
+            method = match.str(1)
+            url = match.str(2)
+            version = match.str(3)
+        end
+        foreach line in header
+            var match = request_header_reg.match(request_line)
+            if !match.empty()
+                switch match.str(1)
+                    case "Host"
+                        host = match.str(2)
+                    end
+                    case "User-Agent"
+                        user_agent = match.str(2)
+                    end
+                    case "Connection"
+                        connection = match.str(2)
+                    end
+                    case "Content-Length"
+                        content_length = match.str(2).to_number()
+                    end
+                end
+            end
+        end
+    end
+end
+
+var wday_map = {
+    "Mon", "Tues", "Wed", "Thur", "Fri", "Sat", "Sun"
+}
+
+var mon_map = {
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+}
+
+function time_padding(obj, width)
+    var time = to_string(obj)
+    var last = width - time.size
+    if last <= 0
+        return time
+    end
+    var str = new string
+    foreach it in range(last) do str += "0"
+    return str + time
+end
+
+function compose_http_time()
+    var tm = runtime.utc_time()
+    return "Date: " +
+        wday_map[tm.wday] + ", " +
+        tm.mday + " " + mon_map[tm.mon] + " " + to_string(1900 + tm.year) + " " +
+        time_padding(tm.hour, 2) + ":" + time_padding(tm.min, 2) + ":" + time_padding(tm.sec, 2) + " GMT"
+end
+
+link sout = system.out
+
+function listen(port : integer)
+    ac = tcp.acceptor(tcp.endpoint_v4(port))
+end
+
+struct session_type
+    var co = null
+    # 0 = spawn, 1 = running, 2 = died
+    var state = gcnew integer
+end
+
+function wait_sock(sock, size)
+    while sock.available() < size
+        context.yield()
+    end
+end
+
+function http_session(state, ac, map)
+    *state = 1
+    var sock = new tcp.socket
+    context.await_s(sock.accept, {ac})
+    unlock_acceptor()
+    var header = new array
+    var buffer = new string
+    var end_of_header = 0
+    loop
+        wait_sock(sock, 1)
+        var str = sock.receive(128)
+        var skip_cntl_n = false
+        foreach ch in str
+            if skip_cntl_n
+                if ch == '\n'
+                    skip_cntl_n = false
+                    header.push_back(buffer)
+                    buffer = new string
+                    ++end_of_header
+                else
+                    sout.println("Data transmission error: expected \\n after \\r.")
+                    self->state = 2
+                    return
+                end
+                continue
+            end
+            if ch == '\r'
+                skip_cntl_n = true
+                continue
+            end
+            end_of_header = 0
+            buffer += ch
+        end
+    until end_of_header == 2
+    var info = new http_info{header}
+    sout.println("Receive: Method = " + info.method + ", URL = " + info.url)
+    sout.println(compose_http_time())
+    var data = null
+    if info.method == "POST"
+        wait_sock(sock, info.content_length)
+        data = sock.receive(info.content_length)
+    end
+    if !map.exist(info.url)
+        data = "URL " + info.url + " not found!"
+        sock.send("HTTP/" + info.version + " 404 Not Found\r\n")
+        sock.send(compose_http_time() + "\r\n")
+        sock.send("Content-Length: " + data.size + "\r\n")
+        sock.send("Content-Type: text/html\r\n")
+        sock.send("\r\n")
+        sock.send(data)
+    else
+        map[info.url](sock, info, data)
+    end
+    *state = 2
+end
+
+var index_content = "Hello!"
+
+var url_map = {
+    "/": ([index_content](sock, info, data){
+        sock.send("HTTP/" + info.version + " 200 OK\r\n")
+        sock.send(compose_http_time() + "\r\n")
+        sock.send("Content-Length: " + index_content.size + "\r\n")
+        sock.send("Content-Type: text/html\r\n")
+        sock.send("\r\n")
+        sock.send(index_content)
+    })
+}.to_hash_map()
+
+var session_list = new list
+
+function cleaning()
+    var it = session_list.begin
+    while it != session_list.end
+        if *(it.data.state) == 2
+            it = session_list.erase(it)
+        else
+            it.next()
+        end
+    end
+end
+
+listen(8080)
+
+loop
+    if !ac_lock
+        lock_acceptor()
+        cleaning()
+        var session = new session_type
+        session.co = context.create_co_s(http_session, {session.state, ac, url_map})
+        context.resume(session.co)
+        session_list.push_back(move(session))
+    else
+        foreach session in session_list
+            if *(session.state) != 2
+                context.resume(session.co)
+            end
+        end
+    end
+end

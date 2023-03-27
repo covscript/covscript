@@ -55,3 +55,6 @@ tests/gen/
 
 # macOS Files
 .DS_Store
+
+# ECS Files
+.ecs_output/
