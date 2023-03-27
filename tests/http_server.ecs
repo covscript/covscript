@@ -77,7 +77,7 @@ end
 function compose_http_time()
     var tm = runtime.utc_time()
     return "Date: " +
-        wday_map[tm.wday] + ", " +
+        wday_map[tm.wday - 1] + ", " +
         tm.mday + " " + mon_map[tm.mon] + " " + to_string(1900 + tm.year) + " " +
         time_padding(tm.hour, 2) + ":" + time_padding(tm.min, 2) + ":" + time_padding(tm.sec, 2) + " GMT"
 end
@@ -91,7 +91,7 @@ end
 struct session_type
     var co = null
     # 0 = spawn, 1 = running, 2 = died
-    var state = gcnew integer
+    var state = 0
 end
 
 function wait_sock(sock, size)
@@ -100,8 +100,8 @@ function wait_sock(sock, size)
     end
 end
 
-function http_session(state, ac, map)
-    *state = 1
+function http_session(session, ac, map)
+    ++session->state
     var sock = new tcp.socket
     context.await_s(sock.accept, {ac})
     unlock_acceptor()
@@ -121,7 +121,7 @@ function http_session(state, ac, map)
                     ++end_of_header
                 else
                     sout.println("Data transmission error: expected \\n after \\r.")
-                    self->state = 2
+                    ++session->state
                     return
                 end
                 continue
@@ -153,7 +153,7 @@ function http_session(state, ac, map)
     else
         map[info.url](sock, info, data)
     end
-    *state = 2
+    ++session->state
 end
 
 var index_content = "Hello!"
@@ -170,32 +170,26 @@ var url_map = {
 }.to_hash_map()
 
 var session_list = new list
-
-function cleaning()
-    var it = session_list.begin
-    while it != session_list.end
-        if *(it.data.state) == 2
-            it = session_list.erase(it)
-        else
-            it.next()
-        end
-    end
-end
-
-listen(8080)
-
+listen(context.cmd_args[1].to_number())
 loop
     if !ac_lock
+        # Start a new acceptance
         lock_acceptor()
-        cleaning()
-        var session = new session_type
-        session.co = context.create_co_s(http_session, {session.state, ac, url_map})
-        context.resume(session.co)
-        session_list.push_back(move(session))
+        var session = gcnew session_type
+        session->co = context.create_co_s(http_session, {session, ac, url_map})
+        context.resume(session->co)
+        session_list.push_back(session)
     else
-        foreach session in session_list
-            if *(session.state) != 2
-                context.resume(session.co)
+        # Sequentially process each coroutine
+        var it = session_list.begin
+        while it != session_list.end
+            link session = it.data
+            if session->state == 2
+                context.destroy_co(session->co)
+                it = session_list.erase(it)
+            else
+                context.resume(session->co)
+                it.next()
             end
         end
     end
