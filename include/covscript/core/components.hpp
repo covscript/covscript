@@ -61,6 +61,11 @@ namespace cs {
 
 		exception &operator=(exception &&) = default;
 
+		const std::string &file() const noexcept
+		{
+			return mFile;
+		}
+
 		void relocate_to_csym(const csym_info &);
 
 		const char *what() const noexcept override

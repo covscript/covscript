@@ -215,23 +215,22 @@ void covscript_main(int args_size, char *args[])
 		if (!cs_impl::file_system::exist(path) || cs_impl::file_system::is_dir(path) ||
 		        !cs_impl::file_system::can_read(path))
 			throw cs::fatal_error("invalid input file.");
-		std::unique_ptr<cs::csym_info> csym;
-		// Reads cSYM
-		if (!csym_path.empty()) {
-			std::unique_ptr<cs::csym_info> ptr(cs::read_csym(csym_path));
-			csym.swap(ptr);
-		}
 		cs::prepend_import_path(path, cs::current_process);
 		cs::array arg;
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::context_t context = cs::create_context(arg);
+		cs::raii_collector context_gc(context);
 		cs::current_process->on_process_exit.add_listener([&context](void *code) -> bool {
 			cs::current_process->exit_code = *static_cast<int *>(code);
 			throw cs::fatal_error("CS_EXIT");
 			return true;
 		});
 		context->compiler->disable_optimizer = no_optimize;
+		// Reads cSYM
+		if (!csym_path.empty()) {
+			context->compiler->import_csym(path, csym_path);
+		}
 		try {
 			context->instance->compile(path);
 			if (dump_ast) {
@@ -257,11 +256,10 @@ void covscript_main(int args_size, char *args[])
 				context->instance->interpret();
 		}
 		catch (const cs::exception &ce) {
-			cs::collect_garbage(context);
 			if (std::strstr(ce.what(), "CS_EXIT") == nullptr) {
-				if (csym) {
+				if (context->compiler->csyms.count(ce.file()) > 0) {
 					cs::exception ne(ce);
-					ne.relocate_to_csym(*csym);
+					ne.relocate_to_csym(context->compiler->csyms.at(ce.file()));
 					throw ne;
 				}
 				else
@@ -269,10 +267,8 @@ void covscript_main(int args_size, char *args[])
 			}
 		}
 		catch (...) {
-			cs::collect_garbage(context);
 			throw;
 		}
-		cs::collect_garbage(context);
 	}
 	else {
 		if (!silent)
@@ -287,6 +283,7 @@ void covscript_main(int args_size, char *args[])
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::context_t context = cs::create_context(arg);
+		cs::raii_collector context_gc(context);
 		activate_sigint_handler();
 		cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
 			cs::current_process->exit_code = *static_cast<int *>(code);
@@ -348,11 +345,9 @@ void covscript_main(int args_size, char *args[])
 					break;
 			}
 			catch (...) {
-				cs::collect_garbage(context);
 				throw;
 			}
 		}
-		cs::collect_garbage(context);
 	}
 }
 

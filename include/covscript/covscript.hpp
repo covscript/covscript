@@ -110,6 +110,19 @@ namespace cs {
 
 	void collect_garbage(context_t &);
 
+	class raii_collector final {
+		context_t context;
+	public:
+		raii_collector() = delete;
+		raii_collector(const raii_collector &) = delete;
+		raii_collector(raii_collector &&) noexcept = delete;
+		explicit raii_collector(const context_t &cxt) : context(cxt) {}
+		~raii_collector()
+		{
+			collect_garbage(context);
+		}
+	};
+
 	cs::var eval(const context_t &, const std::string &);
 
 	using cs_function_invoker_impl::function_invoker;
@@ -138,12 +151,4 @@ namespace cs {
 			context->instance->interpret();
 		}
 	};
-
-	struct csym_info {
-		std::string file;
-		std::vector<std::size_t> map;
-		std::vector<std::string> codes;
-	};
-
-	std::unique_ptr<csym_info> read_csym(const std::string &);
 }

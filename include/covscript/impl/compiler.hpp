@@ -91,6 +91,12 @@ namespace cs {
 		ascii, utf8, gbk
 	};
 
+	struct csym_info {
+		std::string file;
+		std::vector<std::size_t> map;
+		std::vector<std::string> codes;
+	};
+
 	class compiler_type final {
 	public:
 		// Symbol Table
@@ -208,6 +214,7 @@ namespace cs {
 
 	public:
 		map_t<string, namespace_t> modules;
+		map_t<string, csym_info> csyms;
 
 		void try_fix_this_deduction(tree_type<token_base *>::iterator);
 
@@ -234,6 +241,8 @@ namespace cs {
 		}
 
 		// Metadata
+		void import_csym(const std::string &, const std::string &);
+
 		void clear_metadata()
 		{
 			constant_pool.clear();

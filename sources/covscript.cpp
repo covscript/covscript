@@ -26,7 +26,6 @@
 #include <covscript/impl/codegen.hpp>
 #include <covscript_impl/system.hpp>
 #include <covscript/covscript.hpp>
-#include <regex>
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
 
@@ -115,6 +114,21 @@ namespace cs_impl {
 }
 
 namespace cs {
+	void exception::relocate_to_csym(const csym_info &csym)
+	{
+		if (mLine >= csym.map.size())
+			throw std::runtime_error("Invalid line when relocating symbols in cSYM.");
+		std::size_t relocated_line = csym.map.at(mLine - 1);
+		if (relocated_line >= csym.codes.size())
+			throw std::runtime_error("Broken cSYM file.");
+		if (relocated_line > 0) {
+			const std::string &relocated_code = csym.codes.at(relocated_line - 1);
+			mStr = compose_what(csym.file, relocated_line, relocated_code, mWhat);
+		}
+		else
+			mStr = compose_what_internal(csym.file, mWhat);
+	}
+
 	void process_context::cleanup_context()
 	{
 		while (!current_process->stack.empty())
@@ -561,6 +575,7 @@ namespace cs {
 		if (context) {
 			context->instance->storage.clear_all_data();
 			context->compiler->modules.clear();
+			context->compiler->csyms.clear();
 			context->compiler->swap_context(nullptr);
 			context->instance->context = nullptr;
 			context->compiler = nullptr;
@@ -579,85 +594,4 @@ namespace cs {
 		context->compiler->build_expr(buff, tree);
 		return context->instance->parse_expr(tree.root());
 	}
-
-	std::unique_ptr<csym_info> read_csym(const std::string &csym_path)
-	{
-		if (!cs_impl::file_system::exist(csym_path) || cs_impl::file_system::is_dir(csym_path) ||
-		        !cs_impl::file_system::can_read(csym_path))
-			throw cs::fatal_error("invalid cSYM file.");
-		std::unique_ptr<csym_info> csym(new csym_info);
-		std::regex reg("^#\\$cSYM/1\\.0\\(([^\\)]*)\\):(.*)$");
-		std::ifstream ifs(csym_path);
-		// Read file
-		std::string header, buff;
-		bool expect_n = false;
-		for (int ch = ifs.get(); ifs; ch = ifs.get()) {
-			if (expect_n) {
-				expect_n = false;
-				if (ch != '\n')
-					buff += '\r';
-			}
-			switch (ch) {
-			case '\n':
-				if (!header.empty()) {
-					csym->codes.emplace_back(buff);
-					buff.clear();
-				}
-				else
-					std::swap(header, buff);
-				break;
-			case '\r':
-				expect_n = true;
-				break;
-			default:
-				buff += ch;
-				break;
-			}
-		}
-		if (!buff.empty()) {
-			csym->codes.emplace_back(buff);
-		}
-		// Parsing header
-		std::smatch match;
-		if (!std::regex_match(header, match, reg))
-			throw cs::fatal_error("invalid cSYM format.");
-		csym->file = match.str(1);
-		std::string map_str = match.str(2);
-		for (auto &ch : map_str) {
-			if (ch == ',') {
-				if (!buff.empty()) {
-					if (buff != "-")
-						csym->map.push_back(std::stoull(buff) + 1);
-					else
-						csym->map.push_back(0);
-					buff.clear();
-				}
-			}
-			else
-				buff += ch;
-		}
-		if (!buff.empty()) {
-			if (buff != "-")
-				csym->map.push_back(std::stoull(buff) + 1);
-			else
-				csym->map.push_back(0);
-			buff.clear();
-		}
-		return std::move(csym);
-	}
-}
-
-void cs::exception::relocate_to_csym(const cs::csym_info &csym)
-{
-	if (mLine >= csym.map.size())
-		throw std::runtime_error("Invalid line when relocating symbols in cSYM.");
-	std::size_t relocated_line = csym.map.at(mLine - 1);
-	if (relocated_line >= csym.codes.size())
-		throw std::runtime_error("Broken cSYM file.");
-	if (relocated_line > 0) {
-		const std::string &relocated_code = csym.codes.at(relocated_line - 1);
-		mStr = compose_what(csym.file, relocated_line, relocated_code, mWhat);
-	}
-	else
-		mStr = compose_what_internal(csym.file, mWhat);
 }

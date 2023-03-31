@@ -92,6 +92,7 @@ namespace cs {
 				return context->compiler->modules[package_path];
 			if (std::ifstream(package_path + ".csp")) {
 				context_t rt = create_subcontext(context);
+				rt->compiler->import_csym(package_path + ".csp", package_path + ".csym");
 				rt->compiler->swap_context(rt);
 				try {
 					rt->instance->compile(package_path + ".csp");

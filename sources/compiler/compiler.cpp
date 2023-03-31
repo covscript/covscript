@@ -24,6 +24,7 @@
 * Website: http://covscript.org.cn
 */
 #include <covscript/impl/codegen.hpp>
+#include <regex>
 
 namespace cs {
 	const map_t<char, char> token_value::escape_char = {
@@ -1033,6 +1034,71 @@ namespace cs {
 			throw compile_error(std::string("Symbol collision with structure member \"") +
 			                    static_cast<token_id *>(it.right().data())->get_id().get_id() + "\".");
 		}
+	}
+
+	void compiler_type::import_csym(const std::string &module_path, const std::string &csym_path)
+	{
+		std::ifstream ifs(csym_path);
+		if (!ifs.is_open())
+			return;
+		csym_info csym;
+		std::regex reg("^#\\$cSYM/1\\.0\\(([^\\)]*)\\):(.*)$");
+		// Read file
+		std::string header, buff;
+		bool expect_n = false;
+		for (int ch = ifs.get(); ifs; ch = ifs.get()) {
+			if (expect_n) {
+				expect_n = false;
+				if (ch != '\n')
+					buff += '\r';
+			}
+			switch (ch) {
+			case '\n':
+				if (!header.empty()) {
+					csym.codes.emplace_back(buff);
+					buff.clear();
+				}
+				else
+					std::swap(header, buff);
+				break;
+			case '\r':
+				expect_n = true;
+				break;
+			default:
+				buff += ch;
+				break;
+			}
+		}
+		if (!buff.empty()) {
+			csym.codes.emplace_back(buff);
+		}
+		// Parsing header
+		std::smatch match;
+		if (!std::regex_match(header, match, reg))
+			return;
+		csym.file = match.str(1);
+		std::string map_str = match.str(2);
+		for (auto &ch : map_str) {
+			if (ch == ',') {
+				if (!buff.empty()) {
+					if (buff != "-")
+						csym.map.push_back(std::stoull(buff) + 1);
+					else
+						csym.map.push_back(0);
+					buff.clear();
+				}
+			}
+			else
+				buff += ch;
+		}
+		if (!buff.empty()) {
+			if (buff != "-")
+				csym.map.push_back(std::stoull(buff) + 1);
+			else
+				csym.map.push_back(0);
+			buff.clear();
+		}
+		csyms.emplace(module_path, std::move(csym));
 	}
 
 	void compiler_type::dump_expr(tree_type<token_base *>::iterator it, std::ostream &stream)
