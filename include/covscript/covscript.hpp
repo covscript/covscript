@@ -138,4 +138,12 @@ namespace cs {
 			context->instance->interpret();
 		}
 	};
+
+	struct csym_info {
+		std::string file;
+		std::vector<std::size_t> map;
+		std::vector<std::string> codes;
+	};
+
+	std::unique_ptr<csym_info> read_csym(const std::string &);
 }

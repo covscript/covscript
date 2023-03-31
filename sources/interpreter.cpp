@@ -75,6 +75,7 @@ void activate_sigint_handler()
 
 #endif
 
+std::string csym_path;
 std::string log_path;
 bool repl = false;
 bool silent = false;
@@ -88,12 +89,17 @@ bool show_version_info = false;
 
 int covscript_args(int args_size, char *args[])
 {
+	int expect_csym = 0;
 	int expect_log_path = 0;
 	int expect_import_path = 0;
 	int expect_stack_resize = 0;
 	int index = 1;
 	for (; index < args_size; ++index) {
-		if (expect_log_path == 1) {
+		if (expect_csym == 1) {
+			csym_path = cs::process_path(args[index]);
+			expect_csym = 2;
+		}
+		else if (expect_log_path == 1) {
 			log_path = cs::process_path(args[index]);
 			expect_log_path = 2;
 		}
@@ -132,6 +138,9 @@ int covscript_args(int args_size, char *args[])
 			else if ((std::strcmp(args[index], "--version") == 0 || std::strcmp(args[index], "-v") == 0) &&
 			         !show_version_info)
 				show_version_info = true;
+			else if ((std::strcmp(args[index], "--csym") == 0 || std::strcmp(args[index], "-g") == 0) &&
+			         expect_csym == 0)
+				expect_csym = 1;
 			else if ((std::strcmp(args[index], "--log-path") == 0 || std::strcmp(args[index], "-l") == 0) &&
 			         expect_log_path == 0)
 				expect_log_path = 1;
@@ -147,7 +156,7 @@ int covscript_args(int args_size, char *args[])
 		else
 			break;
 	}
-	if (expect_log_path == 1 || expect_import_path == 1 || expect_import_path == 1)
+	if (expect_csym == 1 || expect_log_path == 1 || expect_import_path == 1 || expect_import_path == 1)
 		throw cs::fatal_error("argument syntax error.");
 	return index;
 }
@@ -166,6 +175,7 @@ void covscript_main(int args_size, char *args[])
 		std::cout << "  --compile-only         -c          Only compile\n";
 		std::cout << "  --dump-ast             -d          Export abstract syntax tree\n";
 		std::cout << "  --dependency           -r          Export module dependency\n";
+		std::cout << "  --csym         <FILE>  -g <FILE>   Read cSYM from file\n";
 		std::cout << std::endl;
 		std::cout << "Interpreter REPL Options:" << std::endl;
 		std::cout << "    Option                Mnemonic   Function\n";
@@ -205,6 +215,12 @@ void covscript_main(int args_size, char *args[])
 		if (!cs_impl::file_system::exist(path) || cs_impl::file_system::is_dir(path) ||
 		        !cs_impl::file_system::can_read(path))
 			throw cs::fatal_error("invalid input file.");
+		std::unique_ptr<cs::csym_info> csym;
+		// Reads cSYM
+		if (!csym_path.empty()) {
+			std::unique_ptr<cs::csym_info> ptr(cs::read_csym(csym_path));
+			csym.swap(ptr);
+		}
 		cs::prepend_import_path(path, cs::current_process);
 		cs::array arg;
 		for (; index < args_size; ++index)
@@ -239,6 +255,15 @@ void covscript_main(int args_size, char *args[])
 			}
 			if (!compile_only)
 				context->instance->interpret();
+		}
+		catch (const cs::exception &ce) {
+			if (csym) {
+				cs::exception ne(ce);
+				ne.relocate_to_csym(*csym);
+				throw ne;
+			}
+			else
+				throw;
 		}
 		catch (const std::exception &e) {
 			if (std::strstr(e.what(), "CS_EXIT") == nullptr)

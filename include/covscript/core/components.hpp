@@ -28,13 +28,28 @@
 
 namespace cs {
 // Exceptions
+	struct csym_info;
+
 	class exception final : public std::exception {
-		std::string mWhat;
+		std::size_t mLine = 0;
+		std::string mFile, mCode, mWhat, mStr;
+		static std::string compose_what(const std::string &file, std::size_t line, const std::string &code, const std::string &what)
+		{
+			return "File \"" + file + "\", line " + std::to_string(line) + ": " + what + "\n>\t" + code + "\n";
+		}
+
+		static std::string compose_what_internal(const std::string &file, const std::string &what)
+		{
+			return "File \"" + file + "\", line <INTERNAL>: " + what + "\n";
+		}
 	public:
 		exception() = delete;
 
 		exception(std::size_t line, const std::string &file, const std::string &code, const std::string &what) noexcept:
-			mWhat("File \"" + file + "\", line " + std::to_string(line) + ": " + what + "\n>\t" + code + "\n") {}
+			mLine(line), mFile(file), mCode(code), mWhat(what)
+		{
+			mStr = compose_what(mFile, mLine, mCode, mWhat);
+		}
 
 		exception(const exception &) = default;
 
@@ -46,9 +61,11 @@ namespace cs {
 
 		exception &operator=(exception &&) = default;
 
+		void relocate_to_csym(const csym_info &);
+
 		const char *what() const noexcept override
 		{
-			return this->mWhat.c_str();
+			return this->mStr.c_str();
 		}
 	};
 
