@@ -257,17 +257,16 @@ void covscript_main(int args_size, char *args[])
 				context->instance->interpret();
 		}
 		catch (const cs::exception &ce) {
-			if (csym) {
-				cs::exception ne(ce);
-				ne.relocate_to_csym(*csym);
-				throw ne;
+			cs::collect_garbage(context);
+			if (std::strstr(ce.what(), "CS_EXIT") == nullptr) {
+				if (csym) {
+					cs::exception ne(ce);
+					ne.relocate_to_csym(*csym);
+					throw ne;
+				}
+				else
+					throw;
 			}
-			else
-				throw;
-		}
-		catch (const std::exception &e) {
-			if (std::strstr(e.what(), "CS_EXIT") == nullptr)
-				throw;
 		}
 		catch (...) {
 			cs::collect_garbage(context);

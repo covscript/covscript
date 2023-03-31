@@ -602,7 +602,8 @@ namespace cs {
 				if (!header.empty()) {
 					csym->codes.emplace_back(buff);
 					buff.clear();
-				} else
+				}
+				else
 					std::swap(header, buff);
 				break;
 			case '\r':
