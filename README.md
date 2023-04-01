@@ -54,8 +54,10 @@ Please visit [Covariant Script Organization README](https://github.com/covscript
 
 ### Basic command ###
 
-`cs [options...] <FILE> [arguments...]`  
+`cs [options...] <FILE|STDIN> [arguments...]`  
 `cs [options...]`
+
+When replace `FILE` with `STDIN`, interpreter will directly reads inputs from standard input stream.
 
 #### Options ####
 
@@ -66,6 +68,7 @@ Option|Mnemonic|Function
 `--compile-only`|`-c`|Only compile
 `--dump-ast`|`-d`|Export abstract syntax tree
 `--dependency`|`-r`|Export module dependency
+`--csym <FILE>`|`-g <FILE>`|Read cSYM from file
 
 ##### Interpreter REPL #####
 
@@ -94,7 +97,9 @@ The default stack size is **1000**. When the stack size is set larger than the d
 
 ### Debugger ###
 
-`cs_dbg [options...] <FILE>`
+`cs_dbg [options...] <FILE|STDIN>`
+
+When replace `FILE` with `STDIN`, debugger will directly reads inputs from standard input stream.
 
 #### Options ####
 
@@ -103,6 +108,7 @@ Option|Mnemonic|Function
 `--help`|`-h`|Show help infomation
 `--version`|`-v`|Show version infomation
 `--wait-before-exit`|`-w`|Wait before process exit
+`--csym <FILE>`|`-g <FILE>`|Read cSYM from file
 `--stack-resize <SIZE>`|`-S <SIZE>`|Reset the size of runtime stack
 `--log-path <PATH>`|`-l <PATH>`|Set the log path
 `--import-path <PATH>`|`-i <PATH>`|Set the import path
