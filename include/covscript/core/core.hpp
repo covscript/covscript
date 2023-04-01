@@ -103,6 +103,14 @@ namespace cs {
 #endif
 		}
 
+		inline std::size_t child_stack_size()
+		{
+			if (stack_size >= 1000)
+				return stack_size/10;
+			else
+				return 100;
+		}
+
 // Event Handling
 		static void cleanup_context();
 
@@ -140,11 +148,17 @@ namespace cs {
 		std_exception_handler std_eh_callback = &std_defalt_exception_handler;
 		cs_exception_handler cs_eh_callback = &cs_defalt_exception_handler;
 
-		process_context() : on_process_exit(&on_process_exit_default_handler),
-			on_process_sigint(&on_process_exit_default_handler)
+		process_context() : on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
 		{
 			is_sigint_raised = false;
 		}
+
+		explicit process_context(std::size_t ss) : stack_size(ss), stack(ss), on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
+		{
+			is_sigint_raised = false;
+		}
+
+		std::unique_ptr<process_context> fork();
 	};
 
 	extern process_context this_process;

@@ -241,6 +241,8 @@ namespace cs_impl {
 
 	namespace fiber {
 		struct Routine {
+			cs::process_context *this_context = cs::current_process;
+			std::unique_ptr<cs::process_context> cs_context;
 			cs::stack_type<cs::domain_type> cs_stack;
 			std::function<void()> func;
 
@@ -248,7 +250,7 @@ namespace cs_impl {
 			bool finished;
 			cs_fiber_ucontext_t ctx;
 
-			Routine(std::function<void()> f) : cs_stack(fiber::stack_size()), func(std::move(f))
+			Routine(std::function<void()> f) : cs_context(cs::current_process->fork()), cs_stack(cs::current_process->child_stack_size()), func(std::move(f))
 			{
 				stack = nullptr;
 				finished = false;
@@ -256,6 +258,7 @@ namespace cs_impl {
 
 			~Routine()
 			{
+				cs_context->cleanup_context();
 				delete[] stack;
 			}
 		};
@@ -317,6 +320,7 @@ namespace cs_impl {
 			routine->finished = true;
 			ordinator.current = 0;
 			ordinator.indexes.push_back(id);
+			cs::current_process = routine->this_context;
 		}
 
 		int resume(const cs::context_t &context, routine_t id)
@@ -352,11 +356,13 @@ namespace cs_impl {
 
 				//The swapcontext() function saves the current context,
 				//and then activates the context of another.
+				cs::current_process = routine->cs_context.get();
 				context->instance->storage.swap_context(&routine->cs_stack);
 				cs_fiber_swapcontext(&ordinator.ctx, &routine->ctx);
 			}
 			else {
 				ordinator.current = id;
+				cs::current_process = routine->cs_context.get();
 				context->instance->storage.swap_context(&routine->cs_stack);
 				cs_fiber_swapcontext(&ordinator.ctx, &routine->ctx);
 			}
@@ -375,6 +381,7 @@ namespace cs_impl {
 			assert(size_t(stack_top - &stack_bottom) <= ordinator.stack_size);
 
 			ordinator.current = 0;
+			cs::current_process = routine->this_context;
 			context->instance->storage.swap_context(nullptr);
 			cs_fiber_swapcontext(&routine->ctx, &ordinator.ctx);
 		}

@@ -178,13 +178,15 @@ namespace cs_impl {
 
 	namespace fiber {
 		struct Routine {
+			cs::process_context *this_context = cs::current_process;
+			std::unique_ptr<cs::process_context> cs_context;
 			cs::stack_type<cs::domain_type> cs_stack;
 			std::function<void()> func;
 
 			bool finished;
 			LPVOID fiber;
 
-			Routine(std::function<void()> f) : cs_stack(fiber::stack_size()), func(std::move(f))
+			Routine(std::function<void()> f) : cs_context(cs::current_process->fork()), cs_stack(cs::current_process->child_stack_size()), func(std::move(f))
 			{
 				finished = false;
 				fiber = nullptr;
@@ -192,6 +194,7 @@ namespace cs_impl {
 
 			~Routine()
 			{
+				cs_context->cleanup_context();
 				DeleteFiber(fiber);
 			}
 		};
@@ -257,6 +260,7 @@ namespace cs_impl {
 			routine->finished = true;
 			ordinator.current = 0;
 
+			cs::current_process = routine->this_context;
 			SwitchToFiber(ordinator.fiber);
 		}
 
@@ -274,11 +278,13 @@ namespace cs_impl {
 			if (routine->fiber == nullptr) {
 				routine->fiber = CreateFiber(ordinator.stack_size, entry, 0);
 				ordinator.current = id;
+				cs::current_process = routine->cs_context.get();
 				context->instance->storage.swap_context(&routine->cs_stack);
 				SwitchToFiber(routine->fiber);
 			}
 			else {
 				ordinator.current = id;
+				cs::current_process = routine->cs_context.get();
 				context->instance->storage.swap_context(&routine->cs_stack);
 				SwitchToFiber(routine->fiber);
 			}
@@ -293,6 +299,7 @@ namespace cs_impl {
 			assert(routine != nullptr);
 
 			ordinator.current = 0;
+			cs::current_process = routine->this_context;
 			context->instance->storage.swap_context(nullptr);
 			SwitchToFiber(ordinator.fiber);
 		}

@@ -147,6 +147,23 @@ namespace cs {
 		return true;
 	}
 
+	std::unique_ptr<process_context> process_context::fork()
+	{
+		std::unique_ptr<process_context> new_process(new process_context(current_process->child_stack_size()));
+		new_process->output_precision = current_process->output_precision;
+		new_process->import_path = current_process->import_path;
+		process_context *curr = current_process;
+		new_process->on_process_exit.add_listener([curr](void *data) -> bool {
+			return curr->on_process_exit.touch(data);
+		});
+		new_process->on_process_sigint.add_listener([curr](void *data) -> bool {
+			return curr->on_process_sigint.touch(data);
+		});
+		new_process->std_eh_callback = current_process->std_eh_callback;
+		new_process->cs_eh_callback = current_process->cs_eh_callback;
+		return std::move(new_process);
+	}
+
 	process_context this_process;
 	process_context *current_process = &this_process;
 
