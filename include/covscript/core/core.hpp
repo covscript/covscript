@@ -300,14 +300,14 @@ namespace cs {
 			}
 #ifdef CS_DEBUGGER
 			std::string prefix, suffix;
-			auto lpos=mDecl.find('(')+1;
-			auto rpos=mDecl.rfind(')');
-			prefix=mDecl.substr(0, lpos);
-			suffix=mDecl.substr(rpos);
-			if(mArgs.size()>2)
-				mDecl=prefix+"this, "+mDecl.substr(lpos, rpos-lpos)+suffix;
+			auto lpos = mDecl.find('(') + 1;
+			auto rpos = mDecl.rfind(')');
+			prefix = mDecl.substr(0, lpos);
+			suffix = mDecl.substr(rpos);
+			if(mArgs.size() > 1 | mIsVargs)
+				mDecl = prefix + "this" + (mIsVargs ? ", ..." : ", ") + mDecl.substr(lpos, rpos-lpos) + suffix;
 			else
-				mDecl=prefix+"this"+mDecl.substr(lpos, rpos-lpos)+suffix;
+				mDecl = prefix + "this" + suffix;
 #endif
 		}
 

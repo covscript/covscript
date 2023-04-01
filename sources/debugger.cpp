@@ -81,6 +81,7 @@ void activate_sigint_handler()
 
 std::string log_path;
 std::string csym_path;
+bool silent = false;
 bool no_optimize = false;
 bool show_help_info = false;
 bool wait_before_exit = false;
@@ -114,6 +115,8 @@ int covscript_args(int args_size, char *args[])
 			if ((std::strcmp(args[index], "--help") == 0 || std::strcmp(args[index], "-h") == 0) &&
 			        !show_help_info)
 				show_help_info = true;
+			else if ((std::strcmp(args[index], "--silent") == 0 || std::strcmp(args[index], "-s") == 0) && !silent)
+				silent = true;
 			else if ((std::strcmp(args[index], "--version") == 0 || std::strcmp(args[index], "-v") == 0) &&
 			         !show_version_info)
 				show_version_info = true;
@@ -469,6 +472,7 @@ void covscript_main(int args_size, char *args[])
 			std::cout << "Usage: cs_dbg [options...] <FILE>\n" << "Options:\n";
 			std::cout << "    Option                Mnemonic   Function\n";
 			std::cout << "  --help                 -h          Show help infomation\n";
+			std::cout << "  --silent               -s          Close the command prompt\n";
 			std::cout << "  --version              -v          Show version infomation\n";
 			std::cout << "  --wait-before-exit     -w          Wait before process exit\n";
 			std::cout << "  --csym         <FILE>  -g <FILE>   Read cSYM from file\n";
@@ -500,11 +504,13 @@ void covscript_main(int args_size, char *args[])
 		        !cs_impl::file_system::can_read(path))
 			throw cs::fatal_error("invalid input file.");
 		cs::prepend_import_path(path, cs::current_process);
-		std::cout << "Covariant Script Programming Language Debugger\nVersion: " << cs::current_process->version
-		          << "\n"
-		          "Copyright (C) 2017-2023 Michael Lee. All rights reserved.\n"
-		          "Please visit <http://covscript.org.cn/> for more information."
-		          << std::endl;
+		if (!silent) {
+			std::cout << "Covariant Script Programming Language Debugger\nVersion: " << cs::current_process->version
+			          << "\n"
+			          "Copyright (C) 2017-2023 Michael Lee. All rights reserved.\n"
+			          "Please visit <http://covscript.org.cn/> for more information."
+			          << std::endl;
+		}
 		cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
 			cs::current_process->exit_code = *static_cast<int *>(code);
 			throw cs::fatal_error("CS_DEBUGGER_EXIT");

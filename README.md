@@ -105,6 +105,7 @@ Option|Mnemonic|Function
 :---:|:---:|:--:
 `--help`|`-h`|Show help infomation
 `--version`|`-v`|Show version infomation
+`--silent`|`-s`|Close the command prompt
 `--wait-before-exit`|`-w`|Wait before process exit
 `--csym <FILE>`|`-g <FILE>`|Read cSYM from file
 `--stack-resize <SIZE>`|`-S <SIZE>`|Reset the size of runtime stack
