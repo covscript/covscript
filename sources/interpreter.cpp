@@ -167,7 +167,7 @@ void covscript_main(int args_size, char *args[])
 	cs::current_process->import_path += cs::path_delimiter + cs::get_import_path();
 	if (show_help_info) {
 		std::cout << "Usage:\n";
-		std::cout << "    cs [options...] <FILE> [arguments...]\n";
+		std::cout << "    cs [options...] <FILE|STDIN> [arguments...]\n";
 		std::cout << "    cs [options...]\n";
 		std::cout << std::endl;
 		std::cout << "Interpreter Options:" << std::endl;
@@ -202,20 +202,18 @@ void covscript_main(int args_size, char *args[])
 		std::cout << "  STD Version: " << cs::current_process->std_version << "\n";
 		std::cout << "  API Version: " << CS_GET_VERSION_STR(COVSCRIPT_API_VERSION) << "\n";
 		std::cout << "  ABI Version: " << CS_GET_VERSION_STR(COVSCRIPT_ABI_VERSION) << "\n";
-#ifdef COVSCRIPT_PLATFORM_WIN32
-		std::cout << "  Runtime Env: WIN32\n";
-#else
-		std::cout << "  Runtime Env: UNIX\n";
-#endif
+		std::cout << "  Runtime Env: " << COVSCRIPT_PLATFORM_NAME << "\n";
 		std::cout << std::endl;
 		return;
 	}
 	if (!repl && index != args_size) {
 		std::string path = cs::process_path(args[index]);
-		if (!cs_impl::file_system::exist(path) || cs_impl::file_system::is_dir(path) ||
-		        !cs_impl::file_system::can_read(path))
-			throw cs::fatal_error("invalid input file.");
-		cs::prepend_import_path(path, cs::current_process);
+		if (path != "STDIN") {
+			if (!cs_impl::file_system::exist(path) || cs_impl::file_system::is_dir(path) ||
+			        !cs_impl::file_system::can_read(path))
+				throw cs::fatal_error("invalid input file.");
+			cs::prepend_import_path(path, cs::current_process);
+		}
 		cs::array arg;
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
@@ -232,7 +230,12 @@ void covscript_main(int args_size, char *args[])
 			context->compiler->import_csym(path, csym_path);
 		}
 		try {
-			context->instance->compile(path);
+			if (path == "STDIN") {
+				context->file_path = "STDIN";
+				context->instance->compile(std::cin);
+			}
+			else
+				context->instance->compile(path);
 			if (dump_ast) {
 				if (!log_path.empty()) {
 					std::ofstream out(::log_path);

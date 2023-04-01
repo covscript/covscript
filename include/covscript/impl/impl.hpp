@@ -58,6 +58,8 @@ namespace cs {
 
 		void compile(const std::string &);
 
+		void compile(std::istream &);
+
 		void interpret();
 
 		void dump_ast(std::ostream &);

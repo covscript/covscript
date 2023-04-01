@@ -122,12 +122,18 @@ namespace cs {
 
 	void instance_type::compile(const std::string &path)
 	{
-		context->file_path = path;
 		// Read from file
-		std::deque<char> buff;
+		context->file_path = path;
 		std::ifstream in(path, std::ios::binary);
 		if (!in.is_open())
 			throw fatal_error(path + ": No such file or directory");
+		compile(in);
+	}
+
+	void instance_type::compile(std::istream &in)
+	{
+		// Read from file
+		std::deque<char> buff;
 		for (int ch = in.get(); in; ch = in.get())
 			buff.push_back(ch);
 		std::deque<std::deque<token_base *>> ast;
