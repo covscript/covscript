@@ -117,12 +117,12 @@ namespace cs {
 	void exception::relocate_to_csym(const csym_info &csym)
 	{
 		if (mLine >= csym.map.size())
-			throw std::runtime_error("Invalid line when relocating symbols in cSYM.");
-		std::size_t relocated_line = csym.map.at(mLine - 1);
+			throw fatal_error("Invalid line when relocating symbols in cSYM.");
+		std::size_t relocated_line = csym.map[mLine - 1];
 		if (relocated_line >= csym.codes.size())
-			throw std::runtime_error("Broken cSYM file.");
+			throw fatal_error("Broken cSYM file.");
 		if (relocated_line > 0) {
-			const std::string &relocated_code = csym.codes.at(relocated_line - 1);
+			const std::string &relocated_code = csym.codes[relocated_line - 1];
 			mStr = compose_what(csym.file, relocated_line, relocated_code, mWhat);
 		}
 		else

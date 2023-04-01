@@ -226,9 +226,8 @@ void covscript_main(int args_size, char *args[])
 		});
 		context->compiler->disable_optimizer = no_optimize;
 		// Reads cSYM
-		if (!csym_path.empty()) {
+		if (!csym_path.empty())
 			context->compiler->import_csym(path, csym_path);
-		}
 		try {
 			if (path == "STDIN") {
 				context->file_path = "STDIN";
@@ -262,7 +261,7 @@ void covscript_main(int args_size, char *args[])
 			if (std::strstr(ce.what(), "CS_EXIT") == nullptr) {
 				if (context->compiler->csyms.count(ce.file()) > 0) {
 					cs::exception ne(ce);
-					ne.relocate_to_csym(context->compiler->csyms.at(ce.file()));
+					ne.relocate_to_csym(context->compiler->csyms[ce.file()]);
 					throw ne;
 				}
 				else
