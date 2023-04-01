@@ -97,9 +97,7 @@ The default stack size is **1000**. When the stack size is set larger than the d
 
 ### Debugger ###
 
-`cs_dbg [options...] <FILE|STDIN>`
-
-When replace `FILE` with `STDIN`, debugger will directly reads inputs from standard input stream.
+`cs_dbg [options...] <FILE>`
 
 #### Options ####
 

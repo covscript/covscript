@@ -466,7 +466,7 @@ void covscript_main(int args_size, char *args[])
 		int index = covscript_args(args_size, args);
 		cs::current_process->import_path += cs::path_delimiter + cs::get_import_path();
 		if (show_help_info) {
-			std::cout << "Usage: cs_dbg [options...] <FILE|STDIN>\n" << "Options:\n";
+			std::cout << "Usage: cs_dbg [options...] <FILE>\n" << "Options:\n";
 			std::cout << "    Option                Mnemonic   Function\n";
 			std::cout << "  --help                 -h          Show help infomation\n";
 			std::cout << "  --version              -v          Show version infomation\n";
@@ -496,12 +496,10 @@ void covscript_main(int args_size, char *args[])
 		if (args_size - index > 1)
 			throw cs::fatal_error("argument syntax error.");
 		path = cs::process_path(args[index]);
-		if (path != "STDIN") {
-			if (!cs_impl::file_system::exist(path) || cs_impl::file_system::is_dir(path) ||
-			        !cs_impl::file_system::can_read(path))
-				throw cs::fatal_error("invalid input file.");
-			cs::prepend_import_path(path, cs::current_process);
-		}
+		if (!cs_impl::file_system::exist(path) || cs_impl::file_system::is_dir(path) ||
+		        !cs_impl::file_system::can_read(path))
+			throw cs::fatal_error("invalid input file.");
+		cs::prepend_import_path(path, cs::current_process);
 		std::cout << "Covariant Script Programming Language Debugger\nVersion: " << cs::current_process->version
 		          << "\n"
 		          "Copyright (C) 2017-2023 Michael Lee. All rights reserved.\n"
@@ -663,12 +661,7 @@ void covscript_main(int args_size, char *args[])
 					context->compiler->import_csym(path, csym_path);
 				std::cout << "Compiling..." << std::endl;
 				start_time = time();
-				if (path == "STDIN") {
-					context->file_path = "STDIN";
-					context->instance->compile(std::cin);
-				}
-				else
-					context->instance->compile(path);
+				context->instance->compile(path);
 				std::cout << "The compiler has exited normally, up to " << time() - start_time << "ms." << std::endl;
 				std::cout << "Launching new interpreter instance..." << std::endl;
 				start_time = time();
