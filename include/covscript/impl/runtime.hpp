@@ -107,7 +107,7 @@ namespace cs {
 		{
 			namespace_t nm = std::make_shared<name_space>();
 			const domain_type &global = m_data.bottom();
-			for (auto &it : global) {
+			for (auto &it: global) {
 				if (buildin_symbols.count(it.first) == 0)
 					nm->add_var(it.first, global.get_var_by_id(it.second));
 			}
@@ -155,7 +155,7 @@ namespace cs {
 
 		bool exist_record_in_struct(const string &name)
 		{
-			for (auto &set:m_set) {
+			for (auto &set: m_set) {
 				if (set.count(name) > 0)
 					return set.count("__PRAGMA_CS_STRUCT_DEFINITION__") > 0;
 			}
@@ -178,11 +178,11 @@ namespace cs {
 		inline var &get_var(const std::string &name)
 		{
 			if (fiber_stack != nullptr) {
-				for (auto &domain:*fiber_stack)
+				for (auto &domain: *fiber_stack)
 					if (domain.exist(name))
 						return domain.get_var_no_check(name);
 			}
-			for (auto &domain:m_data)
+			for (auto &domain: m_data)
 				if (domain.exist(name))
 					return domain.get_var_no_check(name);
 			throw runtime_error("Use of undefined variable \"" + name + "\".");
@@ -362,7 +362,7 @@ namespace cs {
 
 		void involve_domain(const domain_type &domain, bool is_override = false)
 		{
-			for (auto &it:domain)
+			for (auto &it: domain)
 				add_var(it.first, domain.get_var_by_id(it.second), is_override);
 		}
 	};

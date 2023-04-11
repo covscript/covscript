@@ -606,7 +606,7 @@ namespace cs {
 	{
 		tree_type<cs::token_base *> tree;
 		std::deque<char> buff;
-		for (auto &ch:expr)
+		for (auto &ch: expr)
 			buff.push_back(ch);
 		context->compiler->build_expr(buff, tree);
 		return context->instance->parse_expr(tree.root());

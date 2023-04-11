@@ -33,6 +33,7 @@ namespace cs {
 	class exception final : public std::exception {
 		std::size_t mLine = 0;
 		std::string mFile, mCode, mWhat, mStr;
+
 		static std::string compose_what(const std::string &file, std::size_t line, const std::string &code, const std::string &what)
 		{
 			return "File \"" + file + "\", line " + std::to_string(line) + ": " + what + "\n>\t" + code + "\n";
@@ -42,6 +43,7 @@ namespace cs {
 		{
 			return "File \"" + file + "\", line <INTERNAL>: " + what + "\n";
 		}
+
 	public:
 		exception() = delete;
 
@@ -227,17 +229,20 @@ namespace cs {
 			numeric_integer _int;
 		} data;
 		bool type = 1;
+
 		inline static std::uint8_t get_composite_type(bool lhs, bool rhs) noexcept
 		{
 			return lhs << 1 | rhs;
 		}
+
 	public:
 		numeric()
 		{
 			data._int = 0;
 		}
+
 		template<typename T>
-		numeric(const T& dat)
+		numeric(const T &dat)
 		{
 			if (std::is_integral<T>::value) {
 				type = 1;
@@ -248,10 +253,14 @@ namespace cs {
 				data._num = dat;
 			}
 		}
-		numeric(const numeric& rhs) : data(rhs.data), type(rhs.type) {}
-		numeric(numeric&& rhs) noexcept : data(rhs.data), type(rhs.type) {}
+
+		numeric(const numeric &rhs) : data(rhs.data), type(rhs.type) {}
+
+		numeric(numeric &&rhs) noexcept: data(rhs.data), type(rhs.type) {}
+
 		~numeric() = default;
-		numeric operator+(const numeric& rhs) const noexcept
+
+		numeric operator+(const numeric &rhs) const noexcept
 		{
 			switch (get_composite_type(type, rhs.type)) {
 			default:
@@ -265,15 +274,17 @@ namespace cs {
 				return data._int + rhs.data._int;
 			}
 		}
+
 		template<typename T>
-		numeric operator+(const T& rhs) const noexcept
+		numeric operator+(const T &rhs) const noexcept
 		{
 			if (type)
 				return data._int + rhs;
 			else
 				return data._num + rhs;
 		}
-		numeric operator-(const numeric& rhs) const noexcept
+
+		numeric operator-(const numeric &rhs) const noexcept
 		{
 			switch (get_composite_type(type, rhs.type)) {
 			default:
@@ -287,15 +298,17 @@ namespace cs {
 				return data._int - rhs.data._int;
 			}
 		}
+
 		template<typename T>
-		numeric operator-(const T& rhs) const noexcept
+		numeric operator-(const T &rhs) const noexcept
 		{
 			if (type)
 				return data._int - rhs;
 			else
 				return data._num - rhs;
 		}
-		numeric operator*(const numeric& rhs) const noexcept
+
+		numeric operator*(const numeric &rhs) const noexcept
 		{
 			switch (get_composite_type(type, rhs.type)) {
 			default:
@@ -309,15 +322,17 @@ namespace cs {
 				return data._int * rhs.data._int;
 			}
 		}
+
 		template<typename T>
-		numeric operator*(const T& rhs) const noexcept
+		numeric operator*(const T &rhs) const noexcept
 		{
 			if (type)
 				return data._int * rhs;
 			else
 				return data._num * rhs;
 		}
-		numeric operator/(const numeric& rhs) const noexcept
+
+		numeric operator/(const numeric &rhs) const noexcept
 		{
 			switch (get_composite_type(type, rhs.type)) {
 			default:
@@ -334,15 +349,17 @@ namespace cs {
 					return data._int / rhs.data._int;
 			}
 		}
+
 		template<typename T>
-		numeric operator/(const T& rhs) const noexcept
+		numeric operator/(const T &rhs) const noexcept
 		{
 			if (type)
 				return data._int / rhs;
 			else
 				return data._num / rhs;
 		}
-		numeric& operator=(const numeric& num)
+
+		numeric &operator=(const numeric &num)
 		{
 			if (this != &num) {
 				data = num.data;
@@ -350,8 +367,9 @@ namespace cs {
 			}
 			return *this;
 		}
+
 		template<typename T>
-		numeric& operator=(const T& dat)
+		numeric &operator=(const T &dat)
 		{
 			if (std::is_integral<T>::value) {
 				type = 1;
@@ -363,7 +381,8 @@ namespace cs {
 			}
 			return *this;
 		}
-		bool operator<(const numeric& rhs) const noexcept
+
+		bool operator<(const numeric &rhs) const noexcept
 		{
 			switch (get_composite_type(type, rhs.type)) {
 			default:
@@ -377,15 +396,17 @@ namespace cs {
 				return data._int < rhs.data._int;
 			}
 		}
+
 		template<typename T>
-		bool operator<(const T& rhs) const noexcept
+		bool operator<(const T &rhs) const noexcept
 		{
 			if (type)
 				return data._int < rhs;
 			else
 				return data._num < rhs;
 		}
-		bool operator<=(const numeric& rhs) const noexcept
+
+		bool operator<=(const numeric &rhs) const noexcept
 		{
 			switch (get_composite_type(type, rhs.type)) {
 			default:
@@ -399,15 +420,17 @@ namespace cs {
 				return data._int <= rhs.data._int;
 			}
 		}
+
 		template<typename T>
-		bool operator<=(const T& rhs) const noexcept
+		bool operator<=(const T &rhs) const noexcept
 		{
 			if (type)
 				return data._int <= rhs;
 			else
 				return data._num <= rhs;
 		}
-		bool operator>(const numeric& rhs) const noexcept
+
+		bool operator>(const numeric &rhs) const noexcept
 		{
 			switch (get_composite_type(type, rhs.type)) {
 			default:
@@ -421,15 +444,17 @@ namespace cs {
 				return data._int > rhs.data._int;
 			}
 		}
+
 		template<typename T>
-		bool operator>(const T& rhs) const noexcept
+		bool operator>(const T &rhs) const noexcept
 		{
 			if (type)
 				return data._int > rhs;
 			else
 				return data._num > rhs;
 		}
-		bool operator>=(const numeric& rhs) const noexcept
+
+		bool operator>=(const numeric &rhs) const noexcept
 		{
 			switch (get_composite_type(type, rhs.type)) {
 			default:
@@ -443,15 +468,17 @@ namespace cs {
 				return data._int >= rhs.data._int;
 			}
 		}
+
 		template<typename T>
-		bool operator>=(const T& rhs) const noexcept
+		bool operator>=(const T &rhs) const noexcept
 		{
 			if (type)
 				return data._int >= rhs;
 			else
 				return data._num >= rhs;
 		}
-		bool operator==(const numeric& rhs) const noexcept
+
+		bool operator==(const numeric &rhs) const noexcept
 		{
 			switch (get_composite_type(type, rhs.type)) {
 			default:
@@ -465,15 +492,17 @@ namespace cs {
 				return data._int == rhs.data._int;
 			}
 		}
+
 		template<typename T>
-		bool operator==(const T& rhs) const noexcept
+		bool operator==(const T &rhs) const noexcept
 		{
 			if (type)
 				return data._int == rhs;
 			else
 				return data._num == rhs;
 		}
-		bool operator!=(const numeric& rhs) const noexcept
+
+		bool operator!=(const numeric &rhs) const noexcept
 		{
 			switch (get_composite_type(type, rhs.type)) {
 			default:
@@ -487,15 +516,17 @@ namespace cs {
 				return data._int != rhs.data._int;
 			}
 		}
+
 		template<typename T>
-		bool operator!=(const T& rhs) const noexcept
+		bool operator!=(const T &rhs) const noexcept
 		{
 			if (type)
 				return data._int != rhs;
 			else
 				return data._num != rhs;
 		}
-		numeric& operator++() noexcept
+
+		numeric &operator++() noexcept
 		{
 			if (type)
 				++data._int;
@@ -503,7 +534,8 @@ namespace cs {
 				++data._num;
 			return *this;
 		}
-		numeric& operator--() noexcept
+
+		numeric &operator--() noexcept
 		{
 			if (type)
 				--data._int;
@@ -511,6 +543,7 @@ namespace cs {
 				--data._num;
 			return *this;
 		}
+
 		numeric operator++(int) noexcept
 		{
 			if (type)
@@ -518,6 +551,7 @@ namespace cs {
 			else
 				return data._num++;
 		}
+
 		numeric operator--(int) noexcept
 		{
 			if (type)
@@ -525,6 +559,7 @@ namespace cs {
 			else
 				return data._num--;
 		}
+
 		numeric operator-() const noexcept
 		{
 			if (type)
@@ -532,14 +567,17 @@ namespace cs {
 			else
 				return -data._num;
 		}
+
 		bool is_integer() const noexcept
 		{
 			return type;
 		}
+
 		bool is_float() const noexcept
 		{
 			return !type;
 		}
+
 		numeric_integer as_integer() const noexcept
 		{
 			if (type)
@@ -547,6 +585,7 @@ namespace cs {
 			else
 				return data._num;
 		}
+
 		numeric_float as_float() const noexcept
 		{
 			if (type)
@@ -1225,7 +1264,7 @@ namespace cs {
 
 		bool touch(void *arg)
 		{
-			for (auto &listener:m_listener)
+			for (auto &listener: m_listener)
 				if (listener(arg))
 					return true;
 			return false;

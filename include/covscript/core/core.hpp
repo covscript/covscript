@@ -106,7 +106,7 @@ namespace cs {
 		inline std::size_t child_stack_size()
 		{
 			if (stack_size >= 1000)
-				return stack_size/10;
+				return stack_size / 10;
 			else
 				return 100;
 		}
@@ -237,22 +237,29 @@ namespace cs {
 		bool mIsLambda = false;
 		std::vector<std::string> mArgs;
 		std::deque<statement_base *> mBody;
-		static var call_rr(const function*, vector &);
-		static var call_vv(const function*, vector &);
-		static var call_rl(const function*, vector &);
-		static var call_el(const function*, vector &);
-		var (*call_ptr)(const function*, vector &) = nullptr;
+
+		static var call_rr(const function *, vector &);
+
+		static var call_vv(const function *, vector &);
+
+		static var call_rl(const function *, vector &);
+
+		static var call_el(const function *, vector &);
+
+		var (*call_ptr)(const function *, vector &) = nullptr;
+
 		inline void init_call_ptr() noexcept
 		{
 			if (!mIsVargs) {
 				if (mIsLambda)
-					call_ptr = mArgs.empty()?&call_el:&call_rl;
+					call_ptr = mArgs.empty() ? &call_el : &call_rl;
 				else
 					call_ptr = &call_rr;
 			}
 			else
 				call_ptr = &call_vv;
 		}
+
 	public:
 		function() = delete;
 
@@ -265,11 +272,13 @@ namespace cs {
 			init_call_ptr();
 		}
 #else
+
 		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false) :
 			mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
 		{
 			init_call_ptr();
 		}
+
 #endif
 
 		~function() = default;
@@ -290,7 +299,7 @@ namespace cs {
 			if (!mIsVargs) {
 				std::vector<std::string> args{reserve};
 				args.reserve(mArgs.size());
-				for (auto &name:mArgs) {
+				for (auto &name: mArgs) {
 					if (name != reserve)
 						args.emplace_back(std::move(name));
 					else
@@ -796,7 +805,7 @@ namespace cs {
 				var p = copy(_p);
 				auto &parent = p.val<structure>();
 				m_data->add_var("parent", p);
-				for (auto &it:*parent.m_data) {
+				for (auto &it: *parent.m_data) {
 					// Handle overriding
 					const var &v = s.m_data->get_var(it.first);
 					if (!_parent.m_data->get_var(it.first).is_same(v))
@@ -805,7 +814,7 @@ namespace cs {
 						m_data->add_var(it.first, parent.m_data->get_var_by_id(it.second));
 				}
 			}
-			for (auto &it:*s.m_data)
+			for (auto &it: *s.m_data)
 				if (!m_data->exist(it.first))
 					m_data->add_var(it.first, copy(s.m_data->get_var_by_id(it.second)));
 			if (m_data->exist("duplicate"))
@@ -829,7 +838,7 @@ namespace cs {
 				return invoke(m_data->get_var("equal"), var::make<structure>(this),
 				              var::make<structure>(&s)).const_val<bool>();
 			else {
-				for (auto &it:*m_data)
+				for (auto &it: *m_data)
 					if (it.first != "parent" && s.m_data->get_var(it.first) != m_data->get_var_by_id(it.second))
 						return false;
 				return true;
@@ -961,7 +970,7 @@ namespace cs {
 
 		void copy_domain(const domain_type &domain)
 		{
-			for (auto &it:domain)
+			for (auto &it: domain)
 				m_data->add_var(it.first, domain.get_var_by_id(it.second));
 		}
 
@@ -1000,7 +1009,7 @@ namespace cs {
 
 		void collect()
 		{
-			for (auto &ptr:table)
+			for (auto &ptr: table)
 				::operator delete(ptr);
 			table.clear();
 		}

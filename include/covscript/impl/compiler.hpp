@@ -61,7 +61,7 @@ namespace cs {
 			if (raw.size() <= 1)
 				throw compile_error("Empty input when matching grammar.");
 			std::list<std::shared_ptr<data_type>> stack;
-			for (auto &it:m_data)
+			for (auto &it: m_data)
 				if (cs::translator_type::compare(it->first.front(), raw.front()))
 					stack.push_back(it);
 			stack.remove_if([&](const std::shared_ptr<data_type> &dat) {
@@ -206,7 +206,7 @@ namespace cs {
 				opt_expr(tree, tree.root(), do_optm);
 		}
 
-		static bool find_id_ref(tree_type<token_base *>::iterator, const std::string&);
+		static bool find_id_ref(tree_type<token_base *>::iterator, const std::string &);
 
 		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, trim_type);
 
@@ -250,7 +250,7 @@ namespace cs {
 
 		void utilize_metadata()
 		{
-			for (auto &it:constant_pool)
+			for (auto &it: constant_pool)
 				it.constant();
 		}
 
@@ -294,7 +294,7 @@ namespace cs {
 			process_char_buff(buff, tokens, encoding);
 			tokens.push_back(new token_endline(line_num));
 			process_token_buff(tokens, ast);
-			for (auto &line:ast)
+			for (auto &line: ast)
 				process_line(line);
 		}
 

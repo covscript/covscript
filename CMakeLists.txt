@@ -61,11 +61,11 @@ if (APPLE)
 
     # x86 version of ucontext
     add_library(ucontext_x86 STATIC
-        csbuild/libucontext/arch/x86_64/getcontext.S
-        csbuild/libucontext/arch/x86_64/makecontext.c
-        csbuild/libucontext/arch/x86_64/setcontext.S
-        csbuild/libucontext/arch/x86_64/swapcontext.S
-        csbuild/libucontext/arch/x86_64/trampoline.c)
+            csbuild/libucontext/arch/x86_64/getcontext.S
+            csbuild/libucontext/arch/x86_64/makecontext.c
+            csbuild/libucontext/arch/x86_64/setcontext.S
+            csbuild/libucontext/arch/x86_64/swapcontext.S
+            csbuild/libucontext/arch/x86_64/trampoline.c)
     target_compile_options(ucontext_x86 PUBLIC -target x86_64-apple-macos10.12)
     target_link_options(ucontext_x86 PUBLIC -target x86_64-apple-macos10.12)
     target_include_directories(ucontext_x86 PRIVATE csbuild/libucontext/arch/common)
@@ -73,11 +73,11 @@ if (APPLE)
 
     # ARM version of ucontext
     add_library(ucontext_arm STATIC
-        csbuild/libucontext/arch/aarch64/getcontext.S
-        csbuild/libucontext/arch/aarch64/makecontext.c
-        csbuild/libucontext/arch/aarch64/setcontext.S
-        csbuild/libucontext/arch/aarch64/swapcontext.S
-        csbuild/libucontext/arch/aarch64/trampoline.c)
+            csbuild/libucontext/arch/aarch64/getcontext.S
+            csbuild/libucontext/arch/aarch64/makecontext.c
+            csbuild/libucontext/arch/aarch64/setcontext.S
+            csbuild/libucontext/arch/aarch64/swapcontext.S
+            csbuild/libucontext/arch/aarch64/trampoline.c)
     target_compile_options(ucontext_arm PUBLIC -target arm64-apple-macos11)
     target_link_options(ucontext_arm PUBLIC -target arm64-apple-macos11)
     target_include_directories(ucontext_arm PRIVATE csbuild/libucontext/arch/common)

@@ -215,7 +215,7 @@ namespace cs_impl {
 
 			~Ordinator()
 			{
-				for (auto &routine : routines)
+				for (auto &routine: routines)
 					delete routine;
 			}
 		};
@@ -233,26 +233,26 @@ namespace cs_impl {
 			else {
 				routine_t id = ordinator.indexes.front();
 				ordinator.indexes.pop_front();
-				assert(ordinator.routines[id-1] == nullptr);
-				ordinator.routines[id-1] = routine;
+				assert(ordinator.routines[id - 1] == nullptr);
+				ordinator.routines[id - 1] = routine;
 				return id;
 			}
 		}
 
 		void destroy(routine_t id)
 		{
-			Routine *routine = ordinator.routines[id-1];
+			Routine *routine = ordinator.routines[id - 1];
 			assert(routine != nullptr);
 
 			delete routine;
-			ordinator.routines[id-1] = nullptr;
+			ordinator.routines[id - 1] = nullptr;
 			ordinator.indexes.push_back(id);
 		}
 
 		void __stdcall entry(LPVOID lpParameter)
 		{
 			routine_t id = ordinator.current;
-			Routine *routine = ordinator.routines[id-1];
+			Routine *routine = ordinator.routines[id - 1];
 			assert(routine != nullptr);
 
 			routine->func();
@@ -268,7 +268,7 @@ namespace cs_impl {
 		{
 			assert(ordinator.current == 0);
 
-			Routine *routine = ordinator.routines[id-1];
+			Routine *routine = ordinator.routines[id - 1];
 			if (routine == nullptr)
 				return -1;
 
@@ -295,7 +295,7 @@ namespace cs_impl {
 		void yield(const cs::context_t &context)
 		{
 			routine_t id = ordinator.current;
-			Routine *routine = ordinator.routines[id-1];
+			Routine *routine = ordinator.routines[id - 1];
 			assert(routine != nullptr);
 
 			ordinator.current = 0;

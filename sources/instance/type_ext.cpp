@@ -173,7 +173,7 @@ namespace cs_impl {
 		var to_hash_set(const array &arr)
 		{
 			hash_set set;
-			for (auto &it:arr) {
+			for (auto &it: arr) {
 				if (set.count(it) == 0)
 					set.insert(copy(it));
 			}
@@ -183,7 +183,7 @@ namespace cs_impl {
 		var to_hash_map(const array &arr)
 		{
 			hash_map map;
-			for (auto &it:arr) {
+			for (auto &it: arr) {
 				if (it.type() == typeid(pair)) {
 					const auto &p = it.const_val<pair>();
 					map[p.first] = copy(p.second);
@@ -244,12 +244,12 @@ namespace cs_impl {
 			return n.is_float();
 		}
 
-		numeric& ntoi(numeric &n)
+		numeric &ntoi(numeric &n)
 		{
 			return n = n.as_integer();
 		}
 
-		numeric& ntof(numeric &n)
+		numeric &ntof(numeric &n)
 		{
 			return n = n.as_float();
 		}
@@ -331,7 +331,7 @@ namespace cs_impl {
 			return std::toupper(c);
 		}
 
-		char from_ascii(const numeric& ascii)
+		char from_ascii(const numeric &ascii)
 		{
 			if (ascii.as_integer() < 0 || ascii.as_integer() > 255)
 				throw lang_error("Out of range.");
@@ -411,7 +411,7 @@ namespace cs_impl {
 		{
 			var ret = var::make<hash_set>();
 			hash_set &s = ret.val<hash_set>();
-			for (auto &it:lhs) {
+			for (auto &it: lhs) {
 				if (rhs.count(it) > 0)
 					s.emplace(it);
 			}
@@ -422,7 +422,7 @@ namespace cs_impl {
 		{
 			var ret = var::make<hash_set>(lhs);
 			hash_set &s = ret.val<hash_set>();
-			for (auto &it:rhs) {
+			for (auto &it: rhs) {
 				if (s.count(it) == 0)
 					s.emplace(it);
 			}
@@ -433,7 +433,7 @@ namespace cs_impl {
 		{
 			var ret = var::make<hash_set>(lhs);
 			hash_set &s = ret.val<hash_set>();
-			for (auto &it:rhs) {
+			for (auto &it: rhs) {
 				if (s.count(it) > 0)
 					s.erase(it);
 			}
@@ -898,7 +898,7 @@ namespace cs_impl {
 
 		numeric log(numeric a, numeric b)
 		{
-			return std::log(b.as_float())/std::log(a.as_float());
+			return std::log(b.as_float()) / std::log(a.as_float());
 		}
 
 		numeric sin(numeric n)
@@ -1065,7 +1065,7 @@ namespace cs_impl {
 
 		numeric unixtime(const std::tm &t)
 		{
-			return std::mktime(const_cast<tm*>(&t));
+			return std::mktime(const_cast<tm *>(&t));
 		}
 
 		void init()
@@ -1089,7 +1089,9 @@ namespace cs_impl {
 
 		struct fiber_holder_impl {
 			fiber::routine_t rt = 0;
+
 			fiber_holder_impl(fiber::routine_t t) : rt(t) {}
+
 			~fiber_holder_impl()
 			{
 				if (rt != 0)
@@ -1105,11 +1107,14 @@ namespace cs_impl {
 			mutable vector args;
 		public:
 			fiber_callable(const context_t &cxt, const var &fn) : context(cxt), func(fn.const_val<callable>()) {}
+
 			fiber_callable(const context_t &cxt, const var &fn, vector data) : context(cxt), func(fn.const_val<callable>()), args(std::move(data)) {}
+
 			fiber_callable(const context_t &cxt, const var &fn, vector data, const array &append_args) : context(cxt), func(fn.const_val<callable>()), args(std::move(data))
 			{
 				args.insert(args.end(), append_args.begin(), append_args.end());
 			}
+
 			void operator()() const noexcept
 			{
 				try {
@@ -1133,9 +1138,10 @@ namespace cs_impl {
 		class async_callable final {
 			callable func;
 			mutable vector args;
+
 			void detach_args()
 			{
-				for (auto &val : args) {
+				for (auto &val: args) {
 					if (!val.is_rvalue()) {
 						val.clone();
 						val.detach();
@@ -1144,17 +1150,21 @@ namespace cs_impl {
 						val.mark_as_rvalue(false);
 				}
 			}
+
 		public:
 			async_callable(const var &fn) : func(fn.const_val<callable>()) {}
+
 			async_callable(const var &fn, vector data) : func(fn.const_val<callable>()), args(std::move(data))
 			{
 				detach_args();
 			}
+
 			async_callable(const var &fn, vector data, const array &append_args) : func(fn.const_val<callable>()), args(std::move(data))
 			{
 				args.insert(args.end(), append_args.begin(), append_args.end());
 				detach_args();
 			}
+
 			var operator()() const noexcept
 			{
 				try {
@@ -1182,7 +1192,7 @@ namespace cs_impl {
 		namespace_t channel_ext = cs::make_shared_namespace<cs::name_space>();
 		using channel_type = fiber::Channel<var>;
 
-		void consumer(channel_type& ch, const runtime_cs_ext::fiber_holder& co)
+		void consumer(channel_type &ch, const runtime_cs_ext::fiber_holder &co)
 		{
 			ch.consumer(co->rt);
 		}
@@ -1283,7 +1293,7 @@ namespace cs_impl {
 		{
 			std::deque<char> buff;
 			expression_t tree;
-			for (auto &ch:expr)
+			for (auto &ch: expr)
 				buff.push_back(ch);
 			context->compiler->build_expr(buff, tree);
 			return var::make<expression_t>(tree);
@@ -1365,7 +1375,7 @@ namespace cs_impl {
 
 		cs::var wait_for_impl(std::size_t mill_sec, const cs::callable &func, cs::vector &args)
 		{
-			std::future<cs::var> future = std::async(std::launch::async, [&func, &args]()-> var {
+			std::future<cs::var> future = std::async(std::launch::async, [&func, &args]() -> var {
 				return wait_worker(func, args);
 			});
 			if (future.wait_for(std::chrono::milliseconds(mill_sec)) != std::future_status::ready)
@@ -1376,7 +1386,7 @@ namespace cs_impl {
 
 		cs::var wait_until_impl(std::size_t mill_sec, const cs::callable &func, cs::vector &args)
 		{
-			std::future<cs::var> future = std::async(std::launch::async, [&func, &args]()-> var {
+			std::future<cs::var> future = std::async(std::launch::async, [&func, &args]() -> var {
 				return wait_worker(func, args);
 			});
 			if (future.wait_until(std::chrono::system_clock::now() + std::chrono::milliseconds(mill_sec)) !=
@@ -1455,7 +1465,7 @@ namespace cs_impl {
 
 		var channel_type(const context_t &context)
 		{
-			return var::make_protect<type_t>([context]()-> var {
+			return var::make_protect<type_t>([context]() -> var {
 				return var::make<channel_cs_ext::channel_type>(context);
 			}, type_id(typeid(channel_cs_ext::channel_type)), channel_cs_ext::channel_ext);
 		}
@@ -1622,7 +1632,7 @@ namespace cs_impl {
 		string tolower(const string &str)
 		{
 			string s;
-			for (auto &ch:str)
+			for (auto &ch: str)
 				s.push_back(std::tolower(ch));
 			return std::move(s);
 		}
@@ -1630,7 +1640,7 @@ namespace cs_impl {
 		string toupper(const string &str)
 		{
 			string s;
-			for (auto &ch:str)
+			for (auto &ch: str)
 				s.push_back(std::toupper(ch));
 			return std::move(s);
 		}
@@ -1646,8 +1656,8 @@ namespace cs_impl {
 			arr;
 			string buf;
 			bool found = false;
-			for (auto &ch:str) {
-				for (auto &sig:signals) {
+			for (auto &ch: str) {
+				for (auto &sig: signals) {
 					if (ch == sig.const_val<char>()) {
 						if (!buf.empty()) {
 							arr.push_back(buf);

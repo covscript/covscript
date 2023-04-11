@@ -587,7 +587,7 @@ namespace cs {
 			return statement_types::return_;
 		}
 
-		const tree_type<token_base *>& get_tree() const
+		const tree_type<token_base *> &get_tree() const
 		{
 			return mTree;
 		}

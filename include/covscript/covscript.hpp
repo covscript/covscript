@@ -114,9 +114,13 @@ namespace cs {
 		context_t context;
 	public:
 		raii_collector() = delete;
+
 		raii_collector(const raii_collector &) = delete;
+
 		raii_collector(raii_collector &&) noexcept = delete;
+
 		explicit raii_collector(const context_t &cxt) : context(cxt) {}
+
 		~raii_collector()
 		{
 			collect_garbage(context);

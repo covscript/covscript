@@ -196,7 +196,7 @@ public:
 			target.target<cs::function>()->set_debugger_state(true);
 			auto key = m_pending.find(name);
 			if (key->second.second) {
-				for (auto &it:m_breakpoints) {
+				for (auto &it: m_breakpoints) {
 					if (it.id == key->second.first) {
 						it.data.emplace<cs::var>(function);
 						key->second.second = false;
@@ -227,7 +227,7 @@ public:
 
 	bool exist(std::size_t line_num) const
 	{
-		for (auto &b:m_breakpoints)
+		for (auto &b: m_breakpoints)
 			if (b.data.type() == typeid(std::size_t) && b.data.get<std::size_t>() == line_num)
 				return true;
 		return false;
@@ -236,7 +236,7 @@ public:
 	void list() const
 	{
 		std::cout << "ID\tBreakpoint\n" << std::endl;
-		for (auto &b:m_breakpoints) {
+		for (auto &b: m_breakpoints) {
 			std::cout << b.id << "\t";
 			if (b.data.type() == typeid(cs::var)) {
 				auto func = b.data.get<cs::var>().const_val<cs::callable>().get_raw_data().target<cs::function>();
@@ -252,9 +252,9 @@ public:
 
 	void reset()
 	{
-		for (auto &it:m_pending) {
+		for (auto &it: m_pending) {
 			it.second.second = true;
-			for (auto &b:m_breakpoints) {
+			for (auto &b: m_breakpoints) {
 				if (b.id == it.second.first) {
 					b.data.emplace<std::string>(it.first);
 					break;
@@ -448,7 +448,7 @@ cs::array split(const std::string &str)
 {
 	cs::array arr{path};
 	std::string buf;
-	for (auto &ch:str) {
+	for (auto &ch: str) {
 		if (std::isspace(ch)) {
 			if (!buf.empty()) {
 				arr.push_back(buf);
@@ -579,14 +579,14 @@ void covscript_main(int args_size, char *args[])
 		func_map.add_func("backtrace", "bt", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
-			for (auto &func:cs::current_process->stack_backtrace)
+			for (auto &func: cs::current_process->stack_backtrace)
 				std::cout << func << std::endl;
 			std::cout << "function main()" << std::endl;
 			return true;
 		});
 		func_map.add_func("break", "b", [](const std::string &cmd) -> bool {
 			bool is_line = true;
-			for (auto &ch:cmd)
+			for (auto &ch: cmd)
 			{
 				if (!std::isspace(ch) && !std::isdigit(ch)) {
 					is_line = false;
@@ -609,7 +609,7 @@ void covscript_main(int args_size, char *args[])
 				else {
 					std::deque<char> buff;
 					cs::expression_t tree;
-					for (auto &ch:cmd)
+					for (auto &ch: cmd)
 						buff.push_back(ch);
 					context->compiler->build_expr(buff, tree);
 					id = breakpoints.add_func(context->instance->parse_expr(tree.root()));
@@ -719,7 +719,7 @@ void covscript_main(int args_size, char *args[])
 			{
 				std::deque<char> buff;
 				cs::expression_t tree;
-				for (auto &ch:cmd)
+				for (auto &ch: cmd)
 					buff.push_back(ch);
 				context->compiler->build_expr(buff, tree);
 				std::cout << context->instance->parse_expr(tree.root()) << std::endl;

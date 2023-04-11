@@ -91,7 +91,8 @@ Option|Mnemonic|Function
 `--log-path <PATH>`|`-l <PATH>` |Set the log path
 `--import-path <PATH>`|`-i <PATH>`|Set the import path
 
-The default stack size is **1000**. When the stack size is set larger than the default value, the stack size of the coroutine will be dynamically adjusted to one tenth of the set size; when the stack size is set smaller than the default value, the stack size of the coroutine will be will remain at **100**.
+The default stack size is **1000**. When the stack size is set larger than the default value, the stack size of the coroutine will be dynamically adjusted to one tenth of the set size; when the stack
+size is set smaller than the default value, the stack size of the coroutine will be will remain at **100**.
 
 **Note that if you do not set the log path, it will be directly output to the standard output stream.**
 
@@ -101,16 +102,16 @@ The default stack size is **1000**. When the stack size is set larger than the d
 
 #### Options ####
 
-Option|Mnemonic|Function
-:---:|:---:|:--:
-`--help`|`-h`|Show help infomation
-`--version`|`-v`|Show version infomation
-`--silent`|`-s`|Close the command prompt
-`--wait-before-exit`|`-w`|Wait before process exit
-`--csym <FILE>`|`-g <FILE>`|Read cSYM from file
-`--stack-resize <SIZE>`|`-S <SIZE>`|Reset the size of runtime stack
-`--log-path <PATH>`|`-l <PATH>`|Set the log path
-`--import-path <PATH>`|`-i <PATH>`|Set the import path
+         Option          |Mnemonic|Function
+:-----------------------:|:---:|:--:
+        `--help`         |`-h`|Show help infomation
+       `--version`       |`-v`|Show version infomation
+       `--silent`        |`-s`|Close the command prompt
+  `--wait-before-exit`   |`-w`|Wait before process exit
+     `--csym <FILE>`     |`-g <FILE>`|Read cSYM from file
+ `--stack-resize <SIZE>` |`-S <SIZE>`|Reset the size of runtime stack
+   `--log-path <PATH>`   |`-l <PATH>`|Set the log path
+ `--import-path <PATH>`  |`-i <PATH>`|Set the import path
 
 The stack size policy is the same as for the interpreter.
 

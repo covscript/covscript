@@ -76,7 +76,7 @@ namespace cs {
 		std::vector<std::string> collection;
 		{
 			std::string tmp;
-			for (auto &ch:path) {
+			for (auto &ch: path) {
 				if (ch == cs::path_delimiter) {
 					collection.push_back(tmp);
 					tmp.clear();
@@ -86,7 +86,7 @@ namespace cs {
 			}
 			collection.push_back(tmp);
 		}
-		for (auto &it:collection) {
+		for (auto &it: collection) {
 			std::string package_path = it + path_separator + name;
 			if (context->compiler->modules.count(package_path) > 0)
 				return context->compiler->modules[package_path];
@@ -147,7 +147,7 @@ namespace cs {
 	void instance_type::interpret()
 	{
 		// Run the instruction
-		for (auto &ptr:statements) {
+		for (auto &ptr: statements) {
 			try {
 				ptr->run();
 			}
@@ -177,7 +177,7 @@ namespace cs {
 		stream << "< Platform: Unix >\n";
 #endif
 		stream << "< EndMetaData >\n";
-		for (auto &ptr:statements)
+		for (auto &ptr: statements)
 			ptr->dump(stream);
 		stream << std::flush;
 	}
@@ -188,7 +188,7 @@ namespace cs {
 			throw internal_error("Null pointer accessed.");
 		if (it.data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
-			for (auto &t:parallel_list)
+			for (auto &t: parallel_list)
 				check_declar_var(t.root(), regist);
 		}
 		else {
@@ -206,7 +206,7 @@ namespace cs {
 			throw internal_error("Null pointer accessed.");
 		if (it.data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
-			for (auto &t:parallel_list)
+			for (auto &t: parallel_list)
 				check_define_var(t.root(), regist, constant);
 		}
 		else {
@@ -244,7 +244,7 @@ namespace cs {
 	{
 		if (it.data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
-			for (auto &t:parallel_list)
+			for (auto &t: parallel_list)
 				parse_define_var(t.root(), constant, link);
 		}
 		else {
@@ -271,7 +271,7 @@ namespace cs {
 	void
 	instance_type::check_define_structured_binding(tree_type<token_base *>::iterator it, bool regist)
 	{
-		for (auto &p_it:static_cast<token_parallel *>(it.data())->get_parallel()) {
+		for (auto &p_it: static_cast<token_parallel *>(it.data())->get_parallel()) {
 			token_base *root = p_it.root().data();
 			if (root == nullptr)
 				throw runtime_error("Wrong grammar for variable definition(7).");
@@ -313,7 +313,7 @@ namespace cs {
 	{
 		if (it.data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
-			for (auto &t:parallel_list)
+			for (auto &t: parallel_list)
 				parse_using(t.root());
 		}
 		else {
@@ -410,13 +410,13 @@ namespace cs {
 		if (code.empty())
 			return;
 		std::deque<char> buff;
-		for (auto &ch:code)
+		for (auto &ch: code)
 			buff.push_back(ch);
 		try {
 			std::deque<std::deque<token_base *>> ast;
 			context->compiler->clear_metadata();
 			context->compiler->build_line(buff, ast, 1, encoding);
-			for (auto &line:ast)
+			for (auto &line: ast)
 				interpret(code, line);
 		}
 		catch (const lang_error &le) {
@@ -438,7 +438,7 @@ namespace cs {
 		// Preprocess
 		++line_num;
 		int mode = 0;
-		for (auto &ch:code) {
+		for (auto &ch: code) {
 			if (mode == 0) {
 				if (!std::isspace(ch)) {
 					switch (ch) {

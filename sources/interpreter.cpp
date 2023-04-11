@@ -246,11 +246,11 @@ void covscript_main(int args_size, char *args[])
 			if (dump_dependency) {
 				if (!log_path.empty()) {
 					std::ofstream out(::log_path);
-					for (auto &it:context->compiler->modules)
+					for (auto &it: context->compiler->modules)
 						out << it.first << std::endl;
 				}
 				else {
-					for (auto &it:context->compiler->modules)
+					for (auto &it: context->compiler->modules)
 						std::cout << it.first << std::endl;
 				}
 			}

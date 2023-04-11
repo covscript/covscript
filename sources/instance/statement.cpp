@@ -44,7 +44,7 @@ namespace cs {
 #endif
 		for (std::size_t i = 0; i < args.size(); ++i)
 			_this->mContext->instance->storage.add_var_no_return(_this->mArgs[i], args[i]);
-		for (auto &ptr:_this->mBody) {
+		for (auto &ptr: _this->mBody) {
 			try {
 				ptr->run();
 			}
@@ -85,7 +85,7 @@ namespace cs {
 				arr.push_back(args[i]);
 			_this->mContext->instance->storage.add_var_no_return(_this->mArgs.front(), arg_list);
 		}
-		for (auto &ptr:_this->mBody) {
+		for (auto &ptr: _this->mBody) {
 			try {
 				ptr->run();
 			}
@@ -119,7 +119,7 @@ namespace cs {
 		for (std::size_t i = 0; i < args.size(); ++i)
 			_this->mContext->instance->storage.add_var_no_return(_this->mArgs[i], args[i]);
 		try {
-			return _this->mContext->instance->parse_expr(static_cast<const statement_return*>(_this->mBody.front())->get_tree().root());
+			return _this->mContext->instance->parse_expr(static_cast<const statement_return *>(_this->mBody.front())->get_tree().root());
 		}
 		catch (const cs::exception &e) {
 			throw e;
@@ -134,14 +134,14 @@ namespace cs {
 	{
 		current_process->poll_event();
 		if (!args.empty())
-			throw runtime_error("Wrong size of arguments. Expected none, provided " +std::to_string(args.size()));
+			throw runtime_error("Wrong size of arguments. Expected none, provided " + std::to_string(args.size()));
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
 		if(_this->mMatch)
 			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
 #endif
 		try {
-			return _this->mContext->instance->parse_expr(static_cast<const statement_return*>(_this->mBody.front())->get_tree().root());
+			return _this->mContext->instance->parse_expr(static_cast<const statement_return *>(_this->mBody.front())->get_tree().root());
 		}
 		catch (const cs::exception &e) {
 			throw e;
@@ -173,7 +173,7 @@ namespace cs {
 			else
 				throw runtime_error("Target is not a type.");
 		}
-		for (auto &ptr:this->mMethod) {
+		for (auto &ptr: this->mMethod) {
 			try {
 				ptr->run();
 			}
@@ -208,13 +208,13 @@ namespace cs {
 
 	void statement_import::run_impl()
 	{
-		for (auto &val:m_var_list)
+		for (auto &val: m_var_list)
 			context->instance->storage.add_var_no_return(val.first, val.second, true);
 	}
 
 	void statement_import::dump(std::ostream &o) const
 	{
-		for (auto &val:m_var_list)
+		for (auto &val: m_var_list)
 			o << "< Import: Name = \"" << val.first << "\" >\n";
 	}
 
@@ -283,7 +283,7 @@ namespace cs {
 	{
 		CS_DEBUGGER_STEP(this);
 		scope_guard scope(context);
-		for (auto &ptr:mBlock) {
+		for (auto &ptr: mBlock) {
 			try {
 				ptr->run();
 			}
@@ -301,7 +301,7 @@ namespace cs {
 	void statement_block::dump(std::ostream &o) const
 	{
 		o << "< BeginBlock >\n";
-		for (auto &ptr:mBlock)
+		for (auto &ptr: mBlock)
 			ptr->dump(o);
 		o << "< EndBlock >\n";
 	}
@@ -312,7 +312,7 @@ namespace cs {
 		context->instance->storage.add_var_no_return(this->mName,
 		make_namespace(make_shared_namespace<name_space>([this] {
 			scope_guard scope(context);
-			for (auto &ptr:mBlock)
+			for (auto &ptr: mBlock)
 			{
 				try {
 					ptr->run();
@@ -332,7 +332,7 @@ namespace cs {
 	void statement_namespace::dump(std::ostream &o) const
 	{
 		o << "< BeginNamespace: ID = \"" << mName << "\" >\n";
-		for (auto &ptr:mBlock)
+		for (auto &ptr: mBlock)
 			ptr->dump(o);
 		o << "< EndNamespace >\n";
 	}
@@ -342,7 +342,7 @@ namespace cs {
 		CS_DEBUGGER_STEP(this);
 		if (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
 			scope_guard scope(context);
-			for (auto &ptr:mBlock) {
+			for (auto &ptr: mBlock) {
 				try {
 					ptr->run();
 				}
@@ -364,7 +364,7 @@ namespace cs {
 		o << "< BeginIf: Condition = ";
 		compiler_type::dump_expr(mTree.root(), o);
 		o << " >\n";
-		for (auto &ptr:mBlock)
+		for (auto &ptr: mBlock)
 			ptr->dump(o);
 		o << "< EndIf >\n";
 	}
@@ -374,7 +374,7 @@ namespace cs {
 		CS_DEBUGGER_STEP(this);
 		if (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
 			scope_guard scope(context);
-			for (auto &ptr:mBlock) {
+			for (auto &ptr: mBlock) {
 				try {
 					ptr->run();
 				}
@@ -391,7 +391,7 @@ namespace cs {
 		}
 		else {
 			scope_guard scope(context);
-			for (auto &ptr:mElseBlock) {
+			for (auto &ptr: mElseBlock) {
 				try {
 					ptr->run();
 				}
@@ -413,10 +413,10 @@ namespace cs {
 		o << "< BeginIfElse: Condition = ";
 		compiler_type::dump_expr(mTree.root(), o);
 		o << " >\n";
-		for (auto &ptr:mBlock)
+		for (auto &ptr: mBlock)
 			ptr->dump(o);
 		o << "< Else >\n";
-		for (auto &ptr:mElseBlock)
+		for (auto &ptr: mElseBlock)
 			ptr->dump(o);
 		o << "< EndIfElse >\n";
 	}
@@ -436,17 +436,17 @@ namespace cs {
 		o << "< BeginSwitch: Condition = ";
 		compiler_type::dump_expr(mTree.root(), o);
 		o << " >\n";
-		for (auto &it:mCases) {
+		for (auto &it: mCases) {
 			o << "< BeginCase: Tag = \"";
 			o << it.first.to_string();
 			o << "\" >\n";
-			for (auto &ptr:it.second->get_block())
+			for (auto &ptr: it.second->get_block())
 				ptr->dump(o);
 			o << "< EndCase >\n";
 		}
 		if (mDefault != nullptr) {
 			o << "< BeginDefaultCase >\n";
-			for (auto &ptr:mDefault->get_block())
+			for (auto &ptr: mDefault->get_block())
 				ptr->dump(o);
 			o << "< EndDefaultCase >\n";
 		}
@@ -463,7 +463,7 @@ namespace cs {
 		scope_guard scope(context);
 		while (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
 			current_process->poll_event();
-			for (auto &ptr:mBlock) {
+			for (auto &ptr: mBlock) {
 				try {
 					ptr->run();
 				}
@@ -494,7 +494,7 @@ namespace cs {
 		o << "< BeginWhile: Condition = ";
 		compiler_type::dump_expr(mTree.root(), o);
 		o << " >\n";
-		for (auto &ptr:mBlock)
+		for (auto &ptr: mBlock)
 			ptr->dump(o);
 		o << "< EndWhile >\n";
 	}
@@ -509,7 +509,7 @@ namespace cs {
 		scope_guard scope(context);
 		while (true) {
 			current_process->poll_event();
-			for (auto &ptr:mBlock) {
+			for (auto &ptr: mBlock) {
 				try {
 					ptr->run();
 				}
@@ -538,7 +538,7 @@ namespace cs {
 	void statement_loop::dump(std::ostream &o) const
 	{
 		o << "< BeginLoop >\n";
-		for (auto &ptr:mBlock)
+		for (auto &ptr: mBlock)
 			ptr->dump(o);
 		o << "< EndLoop >\n";
 	}
@@ -553,7 +553,7 @@ namespace cs {
 		scope_guard scope(context);
 		do {
 			current_process->poll_event();
-			for (auto &ptr:mBlock) {
+			for (auto &ptr: mBlock) {
 				try {
 					ptr->run();
 				}
@@ -583,7 +583,7 @@ namespace cs {
 	void statement_loop_until::dump(std::ostream &o) const
 	{
 		o << "< BeginLoop >\n";
-		for (auto &ptr:mBlock)
+		for (auto &ptr: mBlock)
 			ptr->dump(o);
 		o << "< Until: Condition = ";
 		compiler_type::dump_expr(mExpr.root(), o);
@@ -605,7 +605,7 @@ namespace cs {
 			current_process->poll_event();
 			if (!context->instance->parse_expr(mParallel[1].root()).const_val<boolean>())
 				break;
-			for (auto &ptr:mBlock) {
+			for (auto &ptr: mBlock) {
 				try {
 					ptr->run();
 				}
@@ -642,7 +642,7 @@ namespace cs {
 		o << " >\n< Increment = ";
 		compiler_type::dump_expr(mParallel[2].root(), o);
 		o << " >\n< Body >\n";
-		for (auto &ptr:mBlock)
+		for (auto &ptr: mBlock)
 			ptr->dump(o);
 		o << "< EndFor >\n";
 	}
@@ -658,10 +658,10 @@ namespace cs {
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
 		scope_guard scope(context);
-		for (const X &it:obj.const_val<T>()) {
+		for (const X &it: obj.const_val<T>()) {
 			current_process->poll_event();
 			context->instance->storage.add_var_no_return(iterator, it);
-			for (auto &ptr:body) {
+			for (auto &ptr: body) {
 				try {
 					ptr->run();
 				}
@@ -713,7 +713,7 @@ namespace cs {
 		o << "< IteratorID = \"" << mIt << "\", TargetValue = ";
 		compiler_type::dump_expr(mObj.root(), o);
 		o << " >\n< Body >\n";
-		for (auto &ptr:mBlock)
+		for (auto &ptr: mBlock)
 			ptr->dump(o);
 		o << "< EndForEach >\n";
 	}
@@ -732,7 +732,7 @@ namespace cs {
 			compiler_type::dump_expr(mParent.root(), o);
 		}
 		o << " >\n";
-		for (auto &ptr:mBlock)
+		for (auto &ptr: mBlock)
 			ptr->dump(o);
 		o << "< EndStruct >\n";
 	}
@@ -762,10 +762,10 @@ namespace cs {
 		else
 			o << ", Override = False >\n";
 		o << "< FunctionArgs = {";
-		for (auto &name:mArgs)
+		for (auto &name: mArgs)
 			o << "< ID = \"" << name << "\" >";
 		o << "} >\n< Body >\n";
-		for (auto &ptr:mBlock)
+		for (auto &ptr: mBlock)
 			ptr->dump(o);
 		o << "< EndFunction >\n";
 	}
@@ -790,14 +790,14 @@ namespace cs {
 	{
 		CS_DEBUGGER_STEP(this);
 		scope_guard scope(context);
-		for (auto &ptr:mTryBody) {
+		for (auto &ptr: mTryBody) {
 			try {
 				ptr->run();
 			}
 			catch (const lang_error &le) {
 				scope.reset();
 				context->instance->storage.add_var_no_return(mName, le);
-				for (auto &ptr:mCatchBody) {
+				for (auto &ptr: mCatchBody) {
 					try {
 						ptr->run();
 					}
@@ -827,10 +827,10 @@ namespace cs {
 	void statement_try::dump(std::ostream &o) const
 	{
 		o << "< Try >\n";
-		for (auto &ptr:mTryBody)
+		for (auto &ptr: mTryBody)
 			ptr->dump(o);
 		o << "< Catch: ID = \"" << mName << "\" >\n";
-		for (auto &ptr:mCatchBody)
+		for (auto &ptr: mCatchBody)
 			ptr->dump(o);
 		o << "< EndTry >\n";
 	}

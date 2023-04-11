@@ -1187,4 +1187,3 @@ dirent_set_errno(
 }
 #endif
 #endif /*DIRENT_H*/
-

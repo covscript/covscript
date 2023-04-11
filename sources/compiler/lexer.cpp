@@ -52,7 +52,7 @@ namespace cs {
 			{
 				std::string local;
 				local.reserve(str.size());
-				for (auto ch:str)
+				for (auto ch: str)
 					local.push_back(ch);
 				return std::move(local);
 			}
@@ -132,7 +132,7 @@ namespace cs {
 			std::string wide2local(const std::u32string &wide) override
 			{
 				std::string local;
-				for (auto &ch:wide) {
+				for (auto &ch: wide) {
 					if (ch & u32_blck_begin)
 						local.push_back(ch >> 8);
 					local.push_back(ch);
@@ -300,7 +300,7 @@ namespace cs {
 				}
 				type = token_types::null;
 				std::u32string sig;
-				for (auto &ch:tmp) {
+				for (auto &ch: tmp) {
 					if (!signal_map.exist(cvt->wide2local(sig + ch))) {
 						tokens.push_back(new token_signal(signal_map.match(cvt->wide2local(sig))));
 						sig = ch;
@@ -347,7 +347,7 @@ namespace cs {
 			break;
 		case token_types::signal: {
 			std::u32string sig;
-			for (auto &ch:tmp) {
+			for (auto &ch: tmp) {
 				if (!signal_map.exist(cvt->wide2local(sig + ch))) {
 					tokens.push_back(new token_signal(signal_map.match(cvt->wide2local(sig))));
 					sig = ch;
@@ -465,7 +465,7 @@ namespace cs {
 		explicit preprocessor(const context_t &context, compiler_type &compiler, const std::deque<char> &char_buff,
 		                      std::deque<token_base *> &tokens, charset encoding)
 		{
-			for (auto &ch:char_buff) {
+			for (auto &ch: char_buff) {
 				if (ch == '\n') {
 					process_endline(context, compiler, tokens, encoding);
 					continue;
@@ -508,14 +508,14 @@ namespace cs {
 		std::deque<token_base *> oldt, expr;
 		std::swap(tokens, oldt);
 		tokens.clear();
-		for (auto &ptr:oldt) {
+		for (auto &ptr: oldt) {
 			if (ptr->get_type() == token_types::signal &&
 			        static_cast<token_signal *>(ptr)->get_signal() == signal_types::endline_)
 				ptr = new token_endline(ptr->get_line_num());
 			if (ptr->get_type() == token_types::action || ptr->get_type() == token_types::endline) {
 				if (!expr.empty()) {
 					translator.match_grammar(context, expr);
-					for (auto &it:expr)
+					for (auto &it: expr)
 						tokens.push_back(it);
 					expr.clear();
 				}
@@ -525,7 +525,7 @@ namespace cs {
 				expr.push_back(ptr);
 		}
 		std::deque<token_base *> tmp;
-		for (auto &ptr:tokens) {
+		for (auto &ptr: tokens) {
 			tmp.push_back(ptr);
 			if (ptr != nullptr && ptr->get_type() == token_types::endline) {
 				if (tmp.size() > 1)
@@ -565,7 +565,7 @@ namespace cs {
 				break;
 			}
 		};
-		for (auto &ptr:oldt) {
+		for (auto &ptr: oldt) {
 			if (ptr->get_type() == token_types::signal) {
 				switch (static_cast<token_signal *>(ptr)->get_signal()) {
 				default:
@@ -647,7 +647,7 @@ namespace cs {
 		std::deque<std::deque<token_base *>> blist;
 		std::deque<token_base *> btokens;
 		std::deque<int> blist_stack;
-		for (auto &ptr:oldt) {
+		for (auto &ptr: oldt) {
 			if (ptr->get_type() == token_types::signal) {
 				switch (static_cast<token_signal *>(ptr)->get_signal()) {
 				default:

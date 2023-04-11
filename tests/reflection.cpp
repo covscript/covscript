@@ -56,7 +56,7 @@ CNI_ROOT_NAMESPACE {
 
     void proxy(cs::type_t &type, const cs::array &arr) {
         cs::map_t<cs::string, cs::var> map;
-        for (auto &it:arr) {
+        for (auto &it: arr) {
             if (it.type() == typeid(cs::pair)) {
                 const cs::pair &p = it.const_val<cs::pair>();
                 if (p.first.type() == typeid(cs::string)) {
@@ -68,7 +68,7 @@ CNI_ROOT_NAMESPACE {
         }
         type.constructor = [type, map]() -> cs::var {
             cs::var cs_struct = type.constructor();
-            for (auto &it:map) {
+            for (auto &it: map) {
                 cs::var &om = cs_struct.val<cs::structure>().get_var(it.first);
                 if (it.second.type() == typeid(cs::object_method))
                     modify_function(om,
