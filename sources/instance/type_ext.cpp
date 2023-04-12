@@ -1510,6 +1510,7 @@ namespace cs_impl {
 			(*runtime_ext)
 			.add_var("time_type", make_namespace(time_ext))
 			.add_var("std_version", var::make_constant<numeric>(current_process->std_version))
+			.add_var("get_sdk_path", make_cni(get_sdk_path))
 			.add_var("get_import_path", make_cni(get_import_path, true))
 			.add_var("info", make_cni(info))
 			.add_var("time", make_cni(time))

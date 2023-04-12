@@ -32,6 +32,13 @@
 #include <shlobj.h>
 
 #pragma comment(lib, "shell32.lib")
+
+#else
+
+#include <sys/types.h>
+#include <unistd.h>
+#include <pwd.h>
+
 #endif
 
 #ifdef _MSC_VER
@@ -259,7 +266,7 @@ namespace cs {
 		if (sdk_path == nullptr) {
 			CHAR path[MAX_PATH];
 			SHGetFolderPathA(nullptr, CSIDL_PERSONAL, nullptr, SHGFP_TYPE_CURRENT, path);
-			return process_path(std::strcat(path, "\\CovScript"));
+			return process_path(std::string(path) + "\\CovScript");
 		}
 		else
 			return process_path(sdk_path);
@@ -274,8 +281,10 @@ namespace cs {
 		return COVSCRIPT_HOME;
 #else
 		const char *sdk_path = std::getenv("COVSCRIPT_HOME");
-		if (sdk_path == nullptr)
-			return "/usr/share/covscript";
+		if (sdk_path == nullptr) {
+			struct passwd *pw = getpwuid(getuid());
+			return process_path(std::string(pw->pw_dir) + "/.covscript");
+		}
 		else
 			return process_path(sdk_path);
 #endif
@@ -287,6 +296,7 @@ namespace cs {
 	{
 		const char *import_path = std::getenv("CS_IMPORT_PATH");
 		std::string base_path = get_sdk_path() + cs::path_separator + "imports";
+		base_path += cs::path_delimiter + std::string(COVSCRIPT_PLATFORM_HOME) + cs::path_separator + "imports";
 		if (import_path != nullptr)
 			return process_path(std::string(import_path) + cs::path_delimiter + base_path);
 		else

@@ -194,4 +194,6 @@ namespace cs {
 			return current_process->stack.top();
 		}
 	};
+
+	std::string get_sdk_path();
 }

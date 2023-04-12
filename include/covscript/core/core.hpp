@@ -313,7 +313,7 @@ namespace cs {
 			auto rpos = mDecl.rfind(')');
 			prefix = mDecl.substr(0, lpos);
 			suffix = mDecl.substr(rpos);
-			if(mArgs.size() > 1 | mIsVargs)
+			if(mArgs.size() > 1 || mIsVargs)
 				mDecl = prefix + "this" + (mIsVargs ? ", ..." : ", ") + mDecl.substr(lpos, rpos-lpos) + suffix;
 			else
 				mDecl = prefix + "this" + suffix;
