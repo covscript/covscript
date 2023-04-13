@@ -33,7 +33,7 @@
 *
 */
 #define COVSCRIPT_VERSION_NUM 3,4,2,20
-#define COVSCRIPT_VERSION_STR "3.4.2 Castor fiber(Unstable) Build 20"
+#define COVSCRIPT_VERSION_STR "3.4.2 Castor fiber(Stable) Build 20"
 #define COVSCRIPT_STD_VERSION 210506
 #define COVSCRIPT_API_VERSION 230403
 #define COVSCRIPT_ABI_VERSION 230301
