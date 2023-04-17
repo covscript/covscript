@@ -1044,7 +1044,7 @@ namespace cs {
 
 		inline static int truncate(int n, int m)
 		{
-			return n == 0 ? 0 : n / int(std::pow(10, std::max(int(std::log10(std::abs(n))) - std::max(m, 0) + 1, 0)));
+			return n == 0 ? 0 : n / int(std::pow(10, (std::max)(int(std::log10(std::abs(n))) - (std::max)(m, 0) + 1, 0)));
 		}
 
 		explicit extension(const std::string &path)
