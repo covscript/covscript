@@ -1042,6 +1042,11 @@ namespace cs {
 
 		extension(const extension &) = delete;
 
+		inline static int truncate(int n, int m)
+		{
+			return n == 0 ? 0 : n / int(std::pow(10, std::max(int(std::log10(std::abs(n))) - std::max(m, 0) + 1, 0)));
+		}
+
 		explicit extension(const std::string &path)
 		{
 			using namespace dll_resources;
@@ -1049,7 +1054,7 @@ namespace cs {
 			gc.add(dll);
 			dll_compatible_check_t dll_check = reinterpret_cast<dll_compatible_check_t>(dll->get_address(
 			                                       dll_compatible_check));
-			if (dll_check == nullptr || dll_check() != COVSCRIPT_ABI_VERSION)
+			if (dll_check == nullptr || truncate(dll_check(), 4) != truncate(COVSCRIPT_ABI_VERSION, 4))
 				throw runtime_error("Incompatible Covariant Script Extension.(Target: " + std::to_string(dll_check()) +
 				                    ", Current: " + std::to_string(COVSCRIPT_ABI_VERSION) + ")");
 			dll_main_entrance_t dll_main = reinterpret_cast<dll_main_entrance_t>(dll->get_address(dll_main_entrance));
