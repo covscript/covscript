@@ -96,6 +96,8 @@ namespace cs {
 	public:
 		context_t context;
 
+		bool echo = true;
+
 		repl() = delete;
 
 		explicit repl(context_t c) : context(std::move(c))

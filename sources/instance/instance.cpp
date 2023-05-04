@@ -381,7 +381,7 @@ namespace cs {
 				break;
 			}
 			if (sptr != nullptr)
-				sptr->repl_run();
+				echo ? sptr->repl_run() : sptr->run();
 		}
 		catch (const lang_error &le) {
 			reset_status();
