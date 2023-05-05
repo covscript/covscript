@@ -302,6 +302,7 @@ void covscript_main(int args_size, char *args[])
 		cs::repl repl(context);
 		std::ofstream log_stream;
 		std::string line;
+		repl.echo = !silent;
 		while (true) {
 			try {
 #ifdef COVSCRIPT_PLATFORM_WIN32
