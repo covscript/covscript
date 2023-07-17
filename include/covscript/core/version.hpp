@@ -37,10 +37,10 @@
 *   the last two digits are different, it will be regarded as a compatible
 *   version.
 */
-#define COVSCRIPT_VERSION_NUM 3,4,2,23
-#define COVSCRIPT_VERSION_STR "3.4.2 Castor fiber(Stable) Build 23"
+#define COVSCRIPT_VERSION_NUM 3,4,2,24
+#define COVSCRIPT_VERSION_STR "3.4.2 Castor fiber(Stable) Build 24"
 #define COVSCRIPT_STD_VERSION 210506
 #define COVSCRIPT_API_VERSION 230501
-#define COVSCRIPT_ABI_VERSION 230302
+#define COVSCRIPT_ABI_VERSION 230303
 #define CS_VERSION_STR_MIXER(VER) #VER
 #define CS_GET_VERSION_STR(VER) CS_VERSION_STR_MIXER(VER)

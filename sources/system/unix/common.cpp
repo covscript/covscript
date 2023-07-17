@@ -309,17 +309,20 @@ namespace cs_impl {
 
 			delete routine;
 			ordinator.routines[id - 1] = nullptr;
+			ordinator.indexes.push_back(id);
 		}
 
 		void entry()
 		{
 			routine_t id = ordinator.current;
 			Routine *routine = ordinator.routines[id - 1];
+			assert(routine != nullptr);
+
 			routine->func();
 
 			routine->finished = true;
 			ordinator.current = 0;
-			ordinator.indexes.push_back(id);
+
 			cs::current_process = routine->this_context;
 		}
 
