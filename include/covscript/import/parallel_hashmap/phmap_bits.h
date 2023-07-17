@@ -288,7 +288,7 @@ inline uint64_t umul128(uint64_t a, uint64_t b, uint64_t* high)
 namespace phmap {
 	namespace base_internal {
 
-		PHMAP_BASE_INTERNAL_FORCEINLINE int CountLeadingZeros64Slow(uint64_t n)
+		PHMAP_BASE_INTERNAL_FORCEINLINE uint32_t CountLeadingZeros64Slow(uint64_t n)
 		{
 			int zeroes = 60;
 			if (n >> 32) zeroes -= 32, n >>= 32;
@@ -298,7 +298,7 @@ namespace phmap {
 			return "\4\3\2\2\1\1\1\1\0\0\0\0\0\0\0"[n] + zeroes;
 		}
 
-		PHMAP_BASE_INTERNAL_FORCEINLINE int CountLeadingZeros64(uint64_t n)
+		PHMAP_BASE_INTERNAL_FORCEINLINE uint32_t CountLeadingZeros64(uint64_t n)
 		{
 #if defined(_MSC_VER) && defined(_M_X64)
 			// MSVC does not have __buitin_clzll. Use _BitScanReverse64.

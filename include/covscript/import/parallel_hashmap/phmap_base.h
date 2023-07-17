@@ -94,19 +94,6 @@ namespace phmap {
 			using type = void;
 		};
 
-// This trick to retrieve a default alignment is necessary for our
-// implementation of aligned_storage_t to be consistent with any implementation
-// of std::aligned_storage.
-// ---------------------------------------------------------------------------
-		template <size_t Len, typename T = std::aligned_storage<Len>>
-		struct default_alignment_of_aligned_storage;
-
-		template <size_t Len, size_t Align>
-		struct default_alignment_of_aligned_storage<Len,
-			       std::aligned_storage<Len, Align>> {
-			static constexpr size_t value = Align;
-		};
-
 // NOTE: The `is_detected` family of templates here differ from the library
 // fundamentals specification in that for library fundamentals, `Op<Args...>` is
 // evaluated as soon as the type `is_detected<Op, Args...>` undergoes
@@ -234,29 +221,6 @@ namespace phmap {
 	template <typename T>
 	struct negation : std::integral_constant<bool, !T::value> {};
 
-	template <typename T>
-	struct is_trivially_destructible
-		: std::integral_constant<bool, __has_trivial_destructor(T) &&
-	  std::is_destructible<T>::value> {};
-
-	template <typename T>
-	struct is_trivially_default_constructible
-		: std::integral_constant<bool, __has_trivial_constructor(T) &&
-	  std::is_default_constructible<T>::value &&
-	  is_trivially_destructible<T>::value> {};
-
-	template <typename T>
-	struct is_trivially_copy_constructible
-	: std::integral_constant<bool, __has_trivial_copy(T) &&
-	  std::is_copy_constructible<T>::value &&
-	  is_trivially_destructible<T>::value> {};
-
-	template <typename T>
-	struct is_trivially_copy_assignable
-		: std::integral_constant<
-	  bool, __has_trivial_assign(typename std::remove_reference<T>::type) &&
-	  phmap::is_copy_assignable<T>::value> {};
-
 // -----------------------------------------------------------------------------
 // C++14 "_t" trait aliases
 // -----------------------------------------------------------------------------
@@ -306,9 +270,15 @@ namespace phmap {
 	template <typename T>
 	using remove_all_extents_t = typename std::remove_all_extents<T>::type;
 
-	template <size_t Len, size_t Align = type_traits_internal::
-	          default_alignment_of_aligned_storage<Len>::value>
-	using aligned_storage_t = typename std::aligned_storage<Len, Align>::type;
+	template<std::size_t Len, std::size_t Align>
+	struct aligned_storage {
+		struct type {
+			alignas(Align) unsigned char data[Len];
+		};
+	};
+
+	template< std::size_t Len, std::size_t Align>
+	using aligned_storage_t = typename aligned_storage<Len, Align>::type;
 
 	template <typename T>
 	using decay_t = typename std::decay<T>::type;
@@ -659,108 +629,104 @@ namespace phmap {
 	namespace base_internal {
 
 		namespace {
-			template <typename T>
+
 #ifdef PHMAP_HAVE_EXCEPTIONS
-			[[noreturn]] void Throw(const T& error)
-			{
-				throw error;
-			}
+#define PHMAP_THROW_IMPL(e) throw e
 #else
-			[[noreturn]] void Throw(const T&)
-			{
-				std::abort();
-			}
+#define PHMAP_THROW_IMPL(e) std::abort()
 #endif
 		}  // namespace
 
 		static inline void ThrowStdLogicError(const std::string& what_arg)
 		{
-			Throw(std::logic_error(what_arg));
+			PHMAP_THROW_IMPL(std::logic_error(what_arg));
 		}
 		static inline void ThrowStdLogicError(const char* what_arg)
 		{
-			Throw(std::logic_error(what_arg));
+			PHMAP_THROW_IMPL(std::logic_error(what_arg));
 		}
 		static inline void ThrowStdInvalidArgument(const std::string& what_arg)
 		{
-			Throw(std::invalid_argument(what_arg));
+			PHMAP_THROW_IMPL(std::invalid_argument(what_arg));
 		}
 		static inline void ThrowStdInvalidArgument(const char* what_arg)
 		{
-			Throw(std::invalid_argument(what_arg));
+			PHMAP_THROW_IMPL(std::invalid_argument(what_arg));
 		}
 
 		static inline void ThrowStdDomainError(const std::string& what_arg)
 		{
-			Throw(std::domain_error(what_arg));
+			PHMAP_THROW_IMPL(std::domain_error(what_arg));
 		}
 		static inline void ThrowStdDomainError(const char* what_arg)
 		{
-			Throw(std::domain_error(what_arg));
+			PHMAP_THROW_IMPL(std::domain_error(what_arg));
 		}
 
 		static inline void ThrowStdLengthError(const std::string& what_arg)
 		{
-			Throw(std::length_error(what_arg));
+			PHMAP_THROW_IMPL(std::length_error(what_arg));
 		}
 		static inline void ThrowStdLengthError(const char* what_arg)
 		{
-			Throw(std::length_error(what_arg));
+			PHMAP_THROW_IMPL(std::length_error(what_arg));
 		}
 
 		static inline void ThrowStdOutOfRange(const std::string& what_arg)
 		{
-			Throw(std::out_of_range(what_arg));
+			PHMAP_THROW_IMPL(std::out_of_range(what_arg));
 		}
 		static inline void ThrowStdOutOfRange(const char* what_arg)
 		{
-			Throw(std::out_of_range(what_arg));
+			PHMAP_THROW_IMPL(std::out_of_range(what_arg));
 		}
 
 		static inline void ThrowStdRuntimeError(const std::string& what_arg)
 		{
-			Throw(std::runtime_error(what_arg));
+			PHMAP_THROW_IMPL(std::runtime_error(what_arg));
 		}
 		static inline void ThrowStdRuntimeError(const char* what_arg)
 		{
-			Throw(std::runtime_error(what_arg));
+			PHMAP_THROW_IMPL(std::runtime_error(what_arg));
 		}
 
 		static inline void ThrowStdRangeError(const std::string& what_arg)
 		{
-			Throw(std::range_error(what_arg));
+			PHMAP_THROW_IMPL(std::range_error(what_arg));
 		}
 		static inline void ThrowStdRangeError(const char* what_arg)
 		{
-			Throw(std::range_error(what_arg));
+			PHMAP_THROW_IMPL(std::range_error(what_arg));
 		}
 
 		static inline void ThrowStdOverflowError(const std::string& what_arg)
 		{
-			Throw(std::overflow_error(what_arg));
+			PHMAP_THROW_IMPL(std::overflow_error(what_arg));
 		}
+
 		static inline void ThrowStdOverflowError(const char* what_arg)
 		{
-			Throw(std::overflow_error(what_arg));
+			PHMAP_THROW_IMPL(std::overflow_error(what_arg));
 		}
 
 		static inline void ThrowStdUnderflowError(const std::string& what_arg)
 		{
-			Throw(std::underflow_error(what_arg));
+			PHMAP_THROW_IMPL(std::underflow_error(what_arg));
 		}
+
 		static inline void ThrowStdUnderflowError(const char* what_arg)
 		{
-			Throw(std::underflow_error(what_arg));
+			PHMAP_THROW_IMPL(std::underflow_error(what_arg));
 		}
 
 		static inline void ThrowStdBadFunctionCall()
 		{
-			Throw(std::bad_function_call());
+			PHMAP_THROW_IMPL(std::bad_function_call());
 		}
 
 		static inline void ThrowStdBadAlloc()
 		{
-			Throw(std::bad_alloc());
+			PHMAP_THROW_IMPL(std::bad_alloc());
 		}
 
 	}  // namespace base_internal
@@ -1887,9 +1853,10 @@ namespace phmap {
 // Also, we should be checking is_trivially_copyable here, which is not
 // supported now, so we use is_trivially_* traits instead.
 		template <typename T,
-		          bool unused = phmap::is_trivially_copy_constructible<T>::value&&
-		          phmap::is_trivially_copy_assignable<typename std::remove_cv<
-		                      T>::type>::value&& std::is_trivially_destructible<T>::value>
+		          bool unused =
+		          std::is_trivially_copy_constructible<T>::value &&
+		          std::is_trivially_copy_assignable<typename std::remove_cv<T>::type>::value &&
+		          std::is_trivially_destructible<T>::value>
 		class optional_data;
 
 // Trivially copyable types
@@ -2143,7 +2110,7 @@ namespace phmap {
 		optional(const optional& src) = default;
 
 		// Move constructor, standard semantics
-		optional(optional&& src) = default;
+		optional(optional&& src) noexcept = default;
 
 		// Constructs a non-empty `optional` direct-initialized value of type `T` from
 		// the arguments `std::forward<Args>(args)...`  within the `optional`.
@@ -2289,7 +2256,7 @@ namespace phmap {
 		optional& operator=(const optional& src) = default;
 
 		// Move assignment operator, standard semantics
-		optional& operator=(optional&& src) = default;
+		optional& operator=(optional&& src) noexcept = default;
 
 		// Value assignment operators
 		template <
@@ -5131,7 +5098,7 @@ namespace phmap {
 			{
 				return *this;
 			}
-			DoNothing& operator=(DoNothing&&)
+			DoNothing& operator=(DoNothing&&) noexcept
 			{
 				return *this;
 			}
@@ -5169,14 +5136,14 @@ namespace phmap {
 				m_->try_lock();
 			}
 
-			WriteLock(WriteLock &&o) :
+			WriteLock(WriteLock &&o) noexcept :
 				m_(std::move(o.m_)), locked_(std::move(o.locked_))
 			{
 				o.locked_ = false;
 				o.m_      = nullptr;
 			}
 
-			WriteLock& operator=(WriteLock&& other)
+			WriteLock& operator=(WriteLock&& other) noexcept
 			{
 				WriteLock temp(std::move(other));
 				swap(temp);
@@ -5261,14 +5228,14 @@ namespace phmap {
 				m_->try_lock_shared();
 			}
 
-			ReadLock(ReadLock &&o) :
+			ReadLock(ReadLock &&o) noexcept :
 				m_(std::move(o.m_)), locked_(std::move(o.locked_))
 			{
 				o.locked_ = false;
 				o.m_      = nullptr;
 			}
 
-			ReadLock& operator=(ReadLock&& other)
+			ReadLock& operator=(ReadLock&& other) noexcept
 			{
 				ReadLock temp(std::move(other));
 				swap(temp);
