@@ -1458,7 +1458,7 @@ namespace cs_impl {
 			fiber->rt = 0;
 		}
 
-		int resume(const context_t &context, const fiber_holder &fiber)
+		numeric resume(const context_t &context, const fiber_holder &fiber)
 		{
 			return fiber::resume(context, fiber->rt);
 		}
