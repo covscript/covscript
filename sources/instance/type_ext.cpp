@@ -1458,9 +1458,9 @@ namespace cs_impl {
 			fiber->rt = 0;
 		}
 
-		void resume(const context_t &context, const fiber_holder &fiber)
+		int resume(const context_t &context, const fiber_holder &fiber)
 		{
-			fiber::resume(context, fiber->rt);
+			return fiber::resume(context, fiber->rt);
 		}
 
 		var channel_type(const context_t &context)
