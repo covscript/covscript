@@ -60,6 +60,7 @@
 #include <cstring>
 #include <limits>
 #include <new>
+#include <type_traits>
 
 #include "phmap_fwd_decl.h"
 #include "phmap_base.h"
@@ -75,14 +76,6 @@
 #endif
 
 namespace phmap {
-
-// Defined and documented later on in this file.
-	template <typename T>
-	struct is_trivially_destructible;
-
-// Defined and documented later on in this file.
-	template <typename T>
-	struct is_trivially_move_assignable;
 
 	namespace type_traits_internal {
 
@@ -107,25 +100,25 @@ namespace phmap {
 			: std::integral_constant<
 			  bool, std::is_move_constructible<
 			  type_traits_internal::SingleMemberUnion<T>>::value &&
-			  phmap::is_trivially_destructible<T>::value> {};
+			  std::is_trivially_destructible<T>::value> {};
 
 		template <class T>
 		struct IsTriviallyCopyConstructibleObject
 			: std::integral_constant<
 			  bool, std::is_copy_constructible<
 			  type_traits_internal::SingleMemberUnion<T>>::value &&
-			  phmap::is_trivially_destructible<T>::value> {};
+			  std::is_trivially_destructible<T>::value> {};
 
 		template <class T>
 		struct IsTriviallyMoveAssignableReference : std::false_type {};
 
 		template <class T>
 		struct IsTriviallyMoveAssignableReference<T&>
-			: phmap::is_trivially_move_assignable<T>::type {};
+			: std::is_trivially_move_assignable<T>::type {};
 
 		template <class T>
 		struct IsTriviallyMoveAssignableReference<T&&>
-			: phmap::is_trivially_move_assignable<T>::type {};
+			: std::is_trivially_move_assignable<T>::type {};
 
 	}  // namespace type_traits_internal
 
@@ -155,10 +148,10 @@ namespace phmap {
 
 		public:
 			static constexpr bool kValue =
-			    (__has_trivial_copy(ExtentsRemoved) || !kIsCopyOrMoveConstructible) &&
-			    (__has_trivial_assign(ExtentsRemoved) || !kIsCopyOrMoveAssignable) &&
+			    (std::is_trivially_copyable<ExtentsRemoved>::value || !kIsCopyOrMoveConstructible) &&
+			    (std::is_trivially_copy_assignable<ExtentsRemoved>::value || !kIsCopyOrMoveAssignable) &&
 			    (kIsCopyOrMoveConstructible || kIsCopyOrMoveAssignable) &&
-			    is_trivially_destructible<ExtentsRemoved>::value &&
+			    std::is_trivially_destructible<ExtentsRemoved>::value &&
 			    // We need to check for this explicitly because otherwise we'll say
 			    // references are trivial copyable when compiled by MSVC.
 			    !std::is_reference<ExtentsRemoved>::value;
@@ -807,14 +800,14 @@ namespace phmap {
 			StringBtreeDefaultLess(std::less<std::string_view>) {}  // NOLINT
 			StringBtreeDefaultLess(phmap::Less<std::string_view>) {}  // NOLINT
 
-			phmap::weak_ordering operator()(std::string_view lhs,
-			                                std::string_view rhs) const
+			phmap::weak_ordering operator()(const std::string_view &lhs,
+			                                const std::string_view &rhs) const
 			{
 				return compare_internal::compare_result_as_ordering(lhs.compare(rhs));
 			}
 #else
-			phmap::weak_ordering operator()(std::string lhs,
-			                                std::string rhs) const
+			phmap::weak_ordering operator()(const std::string &lhs,
+			                                const std::string &rhs) const
 			{
 				return compare_internal::compare_result_as_ordering(lhs.compare(rhs));
 			}
@@ -836,8 +829,8 @@ namespace phmap {
 				return compare_internal::compare_result_as_ordering(rhs.compare(lhs));
 			}
 #else
-			phmap::weak_ordering operator()(std::string lhs,
-			                                std::string rhs) const
+			phmap::weak_ordering operator()(const std::string &lhs,
+			                                const std::string &rhs) const
 			{
 				return compare_internal::compare_result_as_ordering(rhs.compare(lhs));
 			}
