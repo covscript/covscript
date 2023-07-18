@@ -1121,7 +1121,7 @@ namespace cs_impl {
 			{
 				try {
 					func->call(args);
-					context->instance->storage.clear_context();
+					context->instance->clear_context();
 				}
 				catch (const lang_error &le) {
 					std::cerr << "coroutine terminated after throwing an instance of runtime exception" << std::endl;

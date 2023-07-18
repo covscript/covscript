@@ -280,13 +280,13 @@ namespace cs_impl {
 				routine->fiber = CreateFiber(ordinator.stack_size, entry, 0);
 				ordinator.current = id;
 				cs::current_process = routine->cs_pcontext.get();
-				routine->cs_context->instance->storage.swap_context(&routine->cs_stack);
+				routine->cs_context->instance->swap_context(&routine->cs_stack);
 				SwitchToFiber(routine->fiber);
 			}
 			else {
 				ordinator.current = id;
 				cs::current_process = routine->cs_pcontext.get();
-				routine->cs_context->instance->storage.swap_context(&routine->cs_stack);
+				routine->cs_context->instance->swap_context(&routine->cs_stack);
 				SwitchToFiber(routine->fiber);
 			}
 
@@ -299,7 +299,7 @@ namespace cs_impl {
 			Routine *routine = ordinator.routines[id - 1];
 			assert(routine != nullptr);
 
-			routine->cs_context->instance->storage.swap_context(nullptr);
+			routine->cs_context->instance->swap_context(nullptr);
 			cs::current_process = routine->this_context;
 
 			ordinator.current = 0;

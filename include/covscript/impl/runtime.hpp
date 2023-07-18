@@ -27,19 +27,21 @@
 #include <covscript/impl/compiler.hpp>
 
 namespace cs {
+	using stack_pointer = stack_type<domain_type>*;
+
 	class domain_manager {
+		const stack_pointer &fiber_stack;
 		stack_type<set_t<string>> m_set;
 		stack_type<domain_type> m_data;
-		stack_type<domain_type> *fiber_stack = nullptr;
 		set_t<string> buildin_symbols;
 	public:
-		domain_manager()
+		explicit domain_manager(const stack_pointer &fiber_sp) : fiber_stack(fiber_sp)
 		{
 			m_set.push();
 			m_data.push();
 		}
 
-		explicit domain_manager(std::size_t size)
+		domain_manager(const stack_pointer &fiber_sp, std::size_t size) : fiber_stack(fiber_sp)
 		{
 			m_set.push();
 			m_data.resize(size);
@@ -74,20 +76,6 @@ namespace cs {
 				fiber_stack->push();
 			else
 				m_data.push();
-		}
-
-		void clear_context()
-		{
-			if (fiber_stack != nullptr) {
-				while (!fiber_stack->empty())
-					fiber_stack->pop_no_return();
-				fiber_stack = nullptr;
-			}
-		}
-
-		void swap_context(stack_type<domain_type> *stack)
-		{
-			fiber_stack = stack;
 		}
 
 		domain_type &get_domain() const
@@ -372,9 +360,9 @@ namespace cs {
 	public:
 		domain_manager storage;
 
-		runtime_type() = default;
+		explicit runtime_type(const stack_pointer &fiber_sp) : storage(fiber_sp) {}
 
-		explicit runtime_type(std::size_t size) : storage(size) {}
+		runtime_type(const stack_pointer &fiber_sp, std::size_t size) : storage(fiber_sp, size) {}
 
 		void add_string_literal(const std::string &literal, const callable &func)
 		{

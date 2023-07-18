@@ -32,6 +32,9 @@ namespace cs {
 
 		// Statements
 		std::deque<statement_base *> statements;
+
+		// Fiber Stack Pointer
+		stack_pointer fiber_sp = nullptr;
 	public:
 		// Status
 		bool return_fcall = false;
@@ -43,9 +46,9 @@ namespace cs {
 		// Constructor and destructor
 		instance_type() = delete;
 
-		explicit instance_type(context_t c) : context(std::move(c)) {}
+		explicit instance_type(context_t c) : context(std::move(c)), runtime_type(fiber_sp) {}
 
-		instance_type(context_t c, std::size_t stack_size) : context(std::move(c)), runtime_type(stack_size) {}
+		instance_type(context_t c, std::size_t stack_size) : context(std::move(c)), runtime_type(fiber_sp, stack_size) {}
 
 		instance_type(const instance_type &) = delete;
 
@@ -77,6 +80,21 @@ namespace cs {
 
 		// Parse using statement
 		void parse_using(tree_type<token_base *>::iterator, bool= false);
+
+		// Coroutines
+		void swap_context(stack_type<domain_type> *stack)
+		{
+			fiber_sp = stack;
+		}
+
+		void clear_context()
+		{
+			if (fiber_sp != nullptr) {
+				while (!fiber_sp->empty())
+					fiber_sp->pop_no_return();
+				fiber_sp = nullptr;
+			}
+		}
 	};
 
 // Repl
