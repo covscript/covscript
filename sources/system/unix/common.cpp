@@ -361,13 +361,13 @@ namespace cs_impl {
 				//The swapcontext() function saves the current context,
 				//and then activates the context of another.
 				cs::current_process = routine->cs_pcontext.get();
-				routine->cs_context->instance->storage.swap_context(&routine->cs_stack);
+				routine->cs_context->instance->swap_context(&routine->cs_stack);
 				cs_fiber_swapcontext(&ordinator.ctx, &routine->ctx);
 			}
 			else {
 				ordinator.current = id;
 				cs::current_process = routine->cs_pcontext.get();
-				routine->cs_context->instance->storage.swap_context(&routine->cs_stack);
+				routine->cs_context->instance->swap_context(&routine->cs_stack);
 				cs_fiber_swapcontext(&ordinator.ctx, &routine->ctx);
 			}
 
@@ -384,7 +384,7 @@ namespace cs_impl {
 			char stack_bottom = 0;
 			assert(size_t(stack_top - &stack_bottom) <= ordinator.stack_size);
 
-			routine->cs_context->instance->storage.swap_context(nullptr);
+			routine->cs_context->instance->swap_context(nullptr);
 			cs::current_process = routine->this_context;
 
 			ordinator.current = 0;
