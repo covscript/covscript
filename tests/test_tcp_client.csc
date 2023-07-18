@@ -6,7 +6,7 @@ var exit = false
 
 function worker(sock)
     loop
-        var s = context.await(system.in.getline)
+        var s = runtime.await(system.in.getline)
         if !s.empty()
             sock.send(s)
             if s == "end"
@@ -40,13 +40,13 @@ end
 # Create coroutine
 var co = null
 if !pure
-    co = context.create_co_s(worker, {sock})
+    co = runtime.create_co_s(worker, {sock})
 end
 
 var count = 0, million = 1
 loop
     if !pure
-        context.resume(co)
+        runtime.resume(co)
     end
     if exit
         break
