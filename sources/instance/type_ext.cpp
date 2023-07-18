@@ -1087,8 +1087,10 @@ namespace cs_impl {
 	namespace runtime_cs_ext {
 		using namespace cs;
 
-		struct fiber_holder_impl {
-			fiber::routine_t rt = 0;
+		struct fiber_holder_impl final {
+			fiber::routine_t rt;
+
+			fiber_holder_impl() = delete;
 
 			fiber_holder_impl(fiber::routine_t t) : rt(t) {}
 
@@ -1103,14 +1105,14 @@ namespace cs_impl {
 
 		class fiber_callable final {
 			const context_t &context;
-			const callable &func;
+			function const *func;
 			mutable vector args;
 		public:
-			fiber_callable(const context_t &cxt, const var &fn) : context(cxt), func(fn.const_val<callable>()) {}
+			fiber_callable(function const *fn) : context(fn->get_context()), func(fn) {}
 
-			fiber_callable(const context_t &cxt, const var &fn, vector data) : context(cxt), func(fn.const_val<callable>()), args(std::move(data)) {}
+			fiber_callable(function const *fn, vector data) : context(fn->get_context()), func(fn), args(std::move(data)) {}
 
-			fiber_callable(const context_t &cxt, const var &fn, vector data, const array &append_args) : context(cxt), func(fn.const_val<callable>()), args(std::move(data))
+			fiber_callable(function const *fn, vector data, const array &append_args) : context(fn->get_context()), func(fn), args(std::move(data))
 			{
 				args.insert(args.end(), append_args.begin(), append_args.end());
 			}
@@ -1118,7 +1120,7 @@ namespace cs_impl {
 			void operator()() const noexcept
 			{
 				try {
-					func.call(args);
+					func->call(args);
 					context->instance->storage.clear_context();
 				}
 				catch (const lang_error &le) {
@@ -1428,68 +1430,77 @@ namespace cs_impl {
 				throw cs::lang_error("Invoke non-callable object.");
 		}
 
-		var create_co(const context_t &context, const var &func)
+		var create_co(const var &func)
 		{
 			if (func.type() == typeid(callable)) {
-				return std::make_shared<fiber_holder_impl>(fiber::create(fiber_callable(context, func)));
+				const cs::callable::function_type &impl_f = func.const_val<callable>().get_raw_data();
+				if (impl_f.target_type() != typeid(function))
+					throw lang_error("Only can create coroutine from covscript function.");
+				function const *fptr = impl_f.target<function>();
+				return std::make_shared<fiber_holder_impl>(fiber::create(fptr->get_context(),fiber_callable(fptr)));
 			}
 			else if (func.type() == typeid(object_method)) {
 				const auto &om = func.const_val<object_method>();
-				return std::make_shared<fiber_holder_impl>(fiber::create(fiber_callable(context, om.callable, {om.object})));
+				const cs::callable::function_type &impl_f = om.callable.const_val<callable>().get_raw_data();
+				if (impl_f.target_type() != typeid(function))
+					throw lang_error("Only can create coroutine from covscript function.");
+				function const *fptr = impl_f.target<function>();
+				return std::make_shared<fiber_holder_impl>(fiber::create(fptr->get_context(), fiber_callable(fptr, {om.object})));
 			}
 			return null_pointer;
 		}
 
-		var create_co_s(const context_t &context, const var &func, const array &args)
+		var create_co_s(const var &func, const array &args)
 		{
 			if (func.type() == typeid(callable)) {
-				return std::make_shared<fiber_holder_impl>(fiber::create(fiber_callable(context, func, vector(args.begin(), args.end()))));
+				const cs::callable::function_type &impl_f = func.const_val<callable>().get_raw_data();
+				if (impl_f.target_type() != typeid(function))
+					throw lang_error("Only can create coroutine from covscript function.");
+				function const *fptr = impl_f.target<function>();
+				return std::make_shared<fiber_holder_impl>(fiber::create(fptr->get_context(), fiber_callable(fptr, vector(args.begin(), args.end()))));
 			}
 			else if (func.type() == typeid(object_method)) {
 				const auto &om = func.const_val<object_method>();
-				return std::make_shared<fiber_holder_impl>(fiber::create(fiber_callable(context, om.callable, {om.object}, args)));
+				const cs::callable::function_type &impl_f = om.callable.const_val<callable>().get_raw_data();
+				if (impl_f.target_type() != typeid(function))
+					throw lang_error("Only can create coroutine from covscript function.");
+				function const *fptr = impl_f.target<function>();
+				return std::make_shared<fiber_holder_impl>(fiber::create(fptr->get_context(), fiber_callable(fptr, {om.object}, args)));
 			}
 			return null_pointer;
 		}
 
-		void destroy(const context_t &context, const fiber_holder &fiber)
+		void destroy(const fiber_holder &fiber)
 		{
 			fiber::destroy(fiber->rt);
 			fiber->rt = 0;
 		}
 
-		numeric resume(const context_t &context, const fiber_holder &fiber)
+		numeric resume(const fiber_holder &fiber)
 		{
-			return fiber::resume(context, fiber->rt);
+			return fiber::resume(fiber->rt);
 		}
 
-		var channel_type(const context_t &context)
-		{
-			return var::make_protect<type_t>([context]() -> var {
-				return var::make<channel_cs_ext::channel_type>(context);
-			}, type_id(typeid(channel_cs_ext::channel_type)), channel_cs_ext::channel_ext);
-		}
-
-		var await(const context_t &context, const var &func)
+		var await(const var &func)
 		{
 			if (func.type() == typeid(callable)) {
-				return fiber::await(context, async_callable(func));
+				return fiber::await(async_callable(func));
 			}
 			else if (func.type() == typeid(object_method)) {
 				const auto &om = func.const_val<object_method>();
-				return fiber::await(context, async_callable(om.callable, {om.object}));
+				return fiber::await(async_callable(om.callable, {om.object}));
 			}
 			return null_pointer;
 		}
 
-		var await_s(const context_t &context, const var &func, const array &args)
+		var await_s(const var &func, const array &args)
 		{
 			if (func.type() == typeid(callable)) {
-				return fiber::await(context, async_callable(func, vector(args.begin(), args.end())));
+				return fiber::await(async_callable(func, vector(args.begin(), args.end())));
 			}
 			else if (func.type() == typeid(object_method)) {
 				const auto &om = func.const_val<object_method>();
-				return fiber::await(context, async_callable(om.callable, {om.object}, args));
+				return fiber::await(async_callable(om.callable, {om.object}, args));
 			}
 			return null_pointer;
 		}
@@ -1527,8 +1538,18 @@ namespace cs_impl {
 			.add_var("argument_count", make_cni(argument_count, true))
 			.add_var("add_literal", make_cni(add_string_literal, true))
 			.add_var("get_current_dir", make_cni(file_system::get_current_dir))
+			// Asynchronous
 			.add_var("wait_for", make_cni(wait_for))
-			.add_var("wait_until", make_cni(wait_until));
+			.add_var("wait_until", make_cni(wait_until))
+			.add_var("await", make_cni(await))
+			.add_var("await_s", make_cni(await_s))
+			// Coroutine
+			.add_var("create_co", make_cni(create_co))
+			.add_var("create_co_s", make_cni(create_co_s))
+			.add_var("destroy_co", make_cni(destroy))
+			.add_var("resume", make_cni(resume))
+			.add_var("yield", make_cni(&fiber::yield))
+			.add_var("channel", var::make_protect<type_t>([]() -> var {return var::make<channel_cs_ext::channel_type>();}, type_id(typeid(channel_cs_ext::channel_type)), channel_cs_ext::channel_ext));
 			(*context_ext)
 			.add_var("build", make_cni(build))
 			.add_var("solve", make_cni(solve))
@@ -1536,18 +1557,11 @@ namespace cs_impl {
 			.add_var("import", make_cni(import, true))
 			.add_var("source_import", make_cni(source_import, true))
 			.add_var("add_literal", make_cni(add_string_literal, true))
-			.add_var("create_co", make_cni(create_co))
-			.add_var("create_co_s", make_cni(create_co_s))
-			.add_var("destroy_co", make_cni(destroy))
-			.add_var("channel", make_cni(channel_type, callable::types::member_visitor))
-			.add_var("await", make_cni(await))
-			.add_var("await_s", make_cni(await_s))
-			.add_var("resume", make_cni(resume))
-			.add_var("yield", make_cni(&fiber::yield))
 			.add_var("link_var", make_cni(link_var))
 			.add_var("unlink_var", make_cni(unlink_var));
 		}
 	}
+
 	namespace string_cs_ext {
 		using namespace cs;
 

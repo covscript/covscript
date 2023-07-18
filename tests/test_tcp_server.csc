@@ -13,9 +13,9 @@ end
 function worker(co, a)
     co->state = 1
     var sock = new tcp.socket
-    context.await_s(sock.accept, {a})
+    runtime.await_s(sock.accept, {a})
     while sock.available() == 0
-        context.yield()
+        runtime.yield()
     end
     var id = sock.receive(64); sock.send(id)
     system.out.println("[" + id + "]: Connected")
@@ -23,7 +23,7 @@ function worker(co, a)
     var count = 0, million = 1, timestamp = runtime.time()
     loop
         while sock.available() == 0
-            context.yield()
+            runtime.yield()
         end
         var s = sock.receive(64)
         if s == "end"
@@ -36,7 +36,7 @@ function worker(co, a)
             ++million
             count = 0
         end
-        context.yield()
+        runtime.yield()
     end
     system.out.println("[" + id + "]: Disconnected")
     co->state = 2
@@ -47,13 +47,13 @@ loop
     if !listen
         listen = true
         var co = gcnew co_type
-        co->co = context.create_co_s(worker, {co, a})
-        context.resume(co->co)
+        co->co = runtime.create_co_s(worker, {co, a})
+        runtime.resume(co->co)
         worker_list.push_back(co)
     else
         foreach co in worker_list
             if co->state != 2
-                context.resume(co->co)
+                runtime.resume(co->co)
             else
                 co->co = null
             end

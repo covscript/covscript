@@ -293,6 +293,11 @@ namespace cs {
 			return call_ptr(this, args);
 		}
 
+		const context_t &get_context() const
+		{
+			return mContext;
+		}
+
 		void add_reserve_var(const std::string &reserve, bool is_mem_fn = false)
 		{
 			mIsMemFn = is_mem_fn;

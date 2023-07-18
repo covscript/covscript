@@ -242,15 +242,16 @@ namespace cs_impl {
 	namespace fiber {
 		struct Routine {
 			cs::process_context *this_context = cs::current_process;
-			std::unique_ptr<cs::process_context> cs_context;
+			std::unique_ptr<cs::process_context> cs_pcontext;
 			cs::stack_type<cs::domain_type> cs_stack;
+			const cs::context_t &cs_context;
 			std::function<void()> func;
 
 			char *stack;
 			bool finished;
 			cs_fiber_ucontext_t ctx;
 
-			Routine(std::function<void()> f) : cs_context(cs::current_process->fork()), cs_stack(cs::current_process->child_stack_size()), func(std::move(f))
+			Routine(const cs::context_t &cxt, std::function<void()> f) : cs_pcontext(cs::current_process->fork()), cs_stack(cs::current_process->child_stack_size()), cs_context(cxt), func(std::move(f))
 			{
 				stack = nullptr;
 				finished = false;
@@ -258,7 +259,7 @@ namespace cs_impl {
 
 			~Routine()
 			{
-				cs_context->cleanup_context();
+				cs_pcontext->cleanup_context();
 				delete[] stack;
 			}
 		};
@@ -285,9 +286,9 @@ namespace cs_impl {
 
 		thread_local static Ordinator ordinator;
 
-		routine_t create(std::function<void()> f)
+		routine_t create(const cs::context_t &cxt, std::function<void()> f)
 		{
-			Routine *routine = new Routine(std::move(f));
+			Routine *routine = new Routine(cxt, std::move(f));
 
 			if (ordinator.indexes.empty()) {
 				ordinator.routines.push_back(routine);
@@ -326,7 +327,7 @@ namespace cs_impl {
 			cs::current_process = routine->this_context;
 		}
 
-		int resume(const cs::context_t &context, routine_t id)
+		int resume(routine_t id)
 		{
 			assert(ordinator.current == 0);
 
@@ -359,21 +360,21 @@ namespace cs_impl {
 
 				//The swapcontext() function saves the current context,
 				//and then activates the context of another.
-				cs::current_process = routine->cs_context.get();
-				context->instance->storage.swap_context(&routine->cs_stack);
+				cs::current_process = routine->cs_pcontext.get();
+				routine->cs_context->instance->storage.swap_context(&routine->cs_stack);
 				cs_fiber_swapcontext(&ordinator.ctx, &routine->ctx);
 			}
 			else {
 				ordinator.current = id;
-				cs::current_process = routine->cs_context.get();
-				context->instance->storage.swap_context(&routine->cs_stack);
+				cs::current_process = routine->cs_pcontext.get();
+				routine->cs_context->instance->storage.swap_context(&routine->cs_stack);
 				cs_fiber_swapcontext(&ordinator.ctx, &routine->ctx);
 			}
 
 			return 0;
 		}
 
-		void yield(const cs::context_t &context)
+		void yield()
 		{
 			routine_t id = ordinator.current;
 			Routine *routine = ordinator.routines[id - 1];
@@ -383,9 +384,10 @@ namespace cs_impl {
 			char stack_bottom = 0;
 			assert(size_t(stack_top - &stack_bottom) <= ordinator.stack_size);
 
-			ordinator.current = 0;
+			routine->cs_context->instance->storage.swap_context(nullptr);
 			cs::current_process = routine->this_context;
-			context->instance->storage.swap_context(nullptr);
+
+			ordinator.current = 0;
 			cs_fiber_swapcontext(&routine->ctx, &ordinator.ctx);
 		}
 

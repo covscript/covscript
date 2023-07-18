@@ -118,25 +118,25 @@ namespace cs_impl {
 	namespace fiber {
 		typedef unsigned routine_t;
 
-		routine_t create(std::function<void()>);
+		routine_t create(const cs::context_t &, std::function<void()>);
 
 		void destroy(routine_t);
 
-		int resume(const cs::context_t &, routine_t);
+		int resume(routine_t);
 
-		void yield(const cs::context_t &);
+		void yield();
 
 		routine_t current();
 
 		template<typename Function>
-		inline cs::var await(const cs::context_t &context, Function &&func)
+		inline cs::var await(Function &&func)
 		{
 			auto future = std::async(std::launch::async, func);
 			std::future_status status = future.wait_for(std::chrono::milliseconds(0));
 
 			while (status == std::future_status::timeout) {
 				if (current() != 0)
-					yield(context);
+					yield();
 
 				status = future.wait_for(std::chrono::milliseconds(0));
 			}
@@ -145,16 +145,15 @@ namespace cs_impl {
 
 		template<typename Type>
 		class Channel {
-			cs::context_t context;
 			std::list<Type> _list;
 			routine_t _taker;
 		public:
-			Channel(const cs::context_t &cxt) : context(cxt)
+			Channel()
 			{
 				_taker = 0;
 			}
 
-			Channel(const cs::context_t &cxt, routine_t id) : context(cxt)
+			explicit Channel(routine_t id)
 			{
 				_taker = id;
 			}
@@ -168,7 +167,7 @@ namespace cs_impl {
 			{
 				_list.push_back(obj);
 				if (_taker && _taker != current())
-					resume(context, _taker);
+					resume(_taker);
 			}
 
 			inline Type pop()
@@ -177,7 +176,7 @@ namespace cs_impl {
 					_taker = current();
 
 				while (_list.empty())
-					yield(context);
+					yield();
 
 				Type obj = std::move(_list.front());
 				_list.pop_front();
@@ -192,7 +191,7 @@ namespace cs_impl {
 			inline void touch()
 			{
 				if (_taker && _taker != current())
-					resume(context, _taker);
+					resume(_taker);
 			}
 
 			inline size_t size()
