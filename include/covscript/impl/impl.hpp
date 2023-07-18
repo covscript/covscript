@@ -27,14 +27,21 @@
 #include <covscript/impl/runtime.hpp>
 
 namespace cs {
+	context_t create_context(const array &);
+
+	context_t create_subcontext(const context_t &);
+
 	class instance_type final : public runtime_type {
 		friend class repl;
+		friend context_t cs::create_context(const array &);
+		friend context_t cs::create_subcontext(const context_t &);
 
 		// Statements
 		std::deque<statement_base *> statements;
 
 		// Fiber Stack Pointer
 		stack_pointer fiber_sp = nullptr;
+		stack_pointer &fiber_stack;
 	public:
 		// Status
 		bool return_fcall = false;
@@ -46,9 +53,13 @@ namespace cs {
 		// Constructor and destructor
 		instance_type() = delete;
 
-		explicit instance_type(context_t c) : context(std::move(c)), runtime_type(fiber_sp) {}
+		explicit instance_type(context_t c) : context(std::move(c)), runtime_type(fiber_sp), fiber_stack(fiber_sp) {}
 
-		instance_type(context_t c, std::size_t stack_size) : context(std::move(c)), runtime_type(fiber_sp, stack_size) {}
+		instance_type(context_t c, stack_pointer &fsp) : context(std::move(c)), runtime_type(fsp), fiber_stack(fsp) {}
+
+		instance_type(context_t c, std::size_t stack_size) : context(std::move(c)), runtime_type(fiber_sp, stack_size), fiber_stack(fiber_sp) {}
+
+		instance_type(context_t c, stack_pointer &fsp, std::size_t stack_size) : context(std::move(c)), runtime_type(fsp, stack_size), fiber_stack(fsp) {}
 
 		instance_type(const instance_type &) = delete;
 
@@ -84,15 +95,15 @@ namespace cs {
 		// Coroutines
 		void swap_context(stack_type<domain_type> *stack)
 		{
-			fiber_sp = stack;
+			fiber_stack = stack;
 		}
 
 		void clear_context()
 		{
-			if (fiber_sp != nullptr) {
-				while (!fiber_sp->empty())
-					fiber_sp->pop_no_return();
-				fiber_sp = nullptr;
+			if (fiber_stack != nullptr) {
+				while (!fiber_stack->empty())
+					fiber_stack->pop_no_return();
+				fiber_stack = nullptr;
 			}
 		}
 	};

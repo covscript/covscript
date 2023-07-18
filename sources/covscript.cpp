@@ -540,7 +540,7 @@ namespace cs {
 	{
 		cs_impl::init_extensions();
 		context_t context = std::make_shared<context_type>();
-		context->instance = std::make_shared<instance_type>(context, current_process->stack_size);
+		context->instance = std::make_shared<instance_type>(context, cxt->instance->fiber_sp, current_process->stack_size);
 		context->compiler = cxt->compiler;
 		context->cmd_args = cxt->cmd_args;
 		// Init Runtime

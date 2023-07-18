@@ -102,10 +102,6 @@ namespace cs {
 
 	array parse_cmd_args(int, char *[]);
 
-	context_t create_context(const array &);
-
-	context_t create_subcontext(const context_t &);
-
 	void collect_garbage();
 
 	void collect_garbage(context_t &);
