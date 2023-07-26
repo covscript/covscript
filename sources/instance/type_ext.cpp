@@ -1108,7 +1108,7 @@ namespace cs_impl {
 			function const *func;
 			mutable vector args;
 		public:
-			fiber_callable(function const *fn) : context(fn->get_context()), func(fn) {}
+			explicit fiber_callable(function const *fn) : context(fn->get_context()), func(fn) {}
 
 			fiber_callable(function const *fn, vector data) : context(fn->get_context()), func(fn), args(std::move(data)) {}
 
@@ -1121,6 +1121,7 @@ namespace cs_impl {
 			{
 				try {
 					func->call(args);
+					args.clear();
 					context->instance->clear_context();
 				}
 				catch (const lang_error &le) {
@@ -1154,7 +1155,7 @@ namespace cs_impl {
 			}
 
 		public:
-			async_callable(const var &fn) : func(fn.const_val<callable>()) {}
+			explicit async_callable(const var &fn) : func(fn.const_val<callable>()) {}
 
 			async_callable(const var &fn, vector data) : func(fn.const_val<callable>()), args(std::move(data))
 			{
@@ -1170,7 +1171,9 @@ namespace cs_impl {
 			var operator()() const noexcept
 			{
 				try {
-					return func.call(args);
+					var &&ret = func.call(args);
+					args.clear();
+					return ret;
 				}
 				catch (const lang_error &le) {
 					std::cerr << "await thread terminated after throwing an instance of runtime exception" << std::endl;

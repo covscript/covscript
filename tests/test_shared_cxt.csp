@@ -1,0 +1,67 @@
+package test_shared_cxt
+
+class coroutine_queue
+    var data = new array
+    var incoming = false
+    function yield(...args)
+        if !args.empty()
+            data = args
+            incoming = true
+        else
+            incoming = false
+        end
+        runtime.yield()
+    end
+    function avail()
+        return incoming
+    end
+    function get()
+        if !incoming
+            return null
+        end
+        incoming = false
+        return data
+    end
+end
+
+function coroutine_worker(obj, args)
+    obj->running = true
+    obj->func(obj->queue, args...)
+    obj->running = false
+end
+
+class coroutine
+    var co = null
+    var func = null
+    var running = false
+    var queue = new coroutine_queue
+    function construct(_func)
+        func = _func
+    end
+    function join(...args)
+        co = runtime.create_co_s(coroutine_worker, {&this, args})
+        return runtime.resume(co)
+    end
+    function detach(...args)
+        co = runtime.create_co_s(coroutine_worker, {&this, args})
+    end
+    function resume(...args)
+        if !args.empty()
+            queue.data = args
+            queue.incoming = true
+        else
+            queue.incoming = false
+        end
+        return runtime.resume(co)
+    end
+    function avail()
+        return queue.incoming
+    end
+    function get()
+        if !queue.incoming
+            return null
+        end
+        queue.incoming = false
+        return queue.data
+    end
+end

@@ -195,7 +195,6 @@ namespace cs_impl {
 
 			~Routine()
 			{
-				cs_pcontext->cleanup_context();
 				DeleteFiber(fiber);
 			}
 		};
