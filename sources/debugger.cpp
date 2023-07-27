@@ -492,6 +492,7 @@ void covscript_main(int args_size, char *args[])
 			std::cout << "  API Version: " << CS_GET_VERSION_STR(COVSCRIPT_API_VERSION) << "\n";
 			std::cout << "  ABI Version: " << CS_GET_VERSION_STR(COVSCRIPT_ABI_VERSION) << "\n";
 			std::cout << "  Runtime Env: " << COVSCRIPT_PLATFORM_NAME << "\n";
+			std::cout << "  Compile Env: " << COVSCRIPT_COMPILER_NAME << "\n";
 			std::cout << std::endl;
 			return;
 		}
@@ -505,8 +506,8 @@ void covscript_main(int args_size, char *args[])
 			throw cs::fatal_error("invalid input file.");
 		cs::prepend_import_path(path, cs::current_process);
 		if (!silent) {
-			std::cout << "Covariant Script Programming Language Debugger\nVersion: " << cs::current_process->version
-			          << "\n"
+			std::cout << "Covariant Script Programming Language Debugger\nVersion: "
+			          << cs::current_process->version << " [" << COVSCRIPT_COMPILER_NAME << " on " << COVSCRIPT_PLATFORM_NAME << "]\n"
 			          "Copyright (C) 2017-2023 Michael Lee. All rights reserved.\n"
 			          "Please visit <http://covscript.org.cn/> for more information."
 			          << std::endl;
