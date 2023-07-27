@@ -21,7 +21,9 @@ jobs:
         run: bash csbuild/make.sh
 
       - name: test
-        run: build/bin/cs .github/workflows/benchmark.csc
+        run:
+          - build/bin/cs -v
+          - build/bin/cs .github/workflows/benchmark.csc
 
       - uses: actions/upload-artifact@master
         if: matrix.os == 'ubuntu-latest'
