@@ -21,7 +21,7 @@ jobs:
         run: bash csbuild/make.sh
 
       - name: test
-        run:
+        run: |
           - build/bin/cs -v
           - build/bin/cs .github/workflows/benchmark.csc
 
