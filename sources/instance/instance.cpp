@@ -487,7 +487,7 @@ namespace cs {
 				}
 				if (cmd == "exit") {
 					int code = 0;
-					process_context::on_process_exit_default_handler(&code);
+					current_process->on_process_exit.touch(&code);
 				}
 				else if (cmd == "charset") {
 					if (arg == "ascii")
