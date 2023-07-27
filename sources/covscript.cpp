@@ -88,7 +88,7 @@ std::ostream &operator<<(std::ostream &out, const cs_impl::any &val)
 }
 
 namespace cs_impl {
-	default_allocator<any::proxy> any::allocator;
+	thread_local default_allocator<any::proxy> any::allocator;
 	cs::namespace_t member_visitor_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t array_ext = cs::make_shared_namespace<cs::name_space>();

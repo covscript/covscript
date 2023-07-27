@@ -426,7 +426,7 @@ namespace cs_impl {
 			}
 		};
 
-		static default_allocator<proxy> allocator;
+		static thread_local default_allocator<proxy> allocator;
 		proxy *mDat = nullptr;
 
 		proxy *duplicate() const noexcept
