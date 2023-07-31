@@ -254,9 +254,9 @@ namespace cs {
 			}
 		}
 
-		numeric(const numeric &) = default;
+		numeric(const numeric &rhs) : data(rhs.data), type(rhs.type) {}
 
-		numeric(numeric &&) noexcept = default;
+		numeric(numeric &&rhs) noexcept: data(rhs.data), type(rhs.type) {}
 
 		~numeric() = default;
 
