@@ -56,7 +56,7 @@ namespace cs_impl {
 		using namespace cs;
 
 // Element access
-		var at(const array &arr, numeric posit)
+		var at(const array &arr, const numeric &posit)
 		{
 			return arr.at(posit.as_integer());
 		}
@@ -91,7 +91,7 @@ namespace cs_impl {
 			return it++;
 		}
 
-		array::iterator next_n(array::iterator &it, numeric offset)
+		array::iterator next_n(array::iterator &it, const numeric &offset)
 		{
 			return it += offset.as_integer();
 		}
@@ -101,7 +101,7 @@ namespace cs_impl {
 			return it--;
 		}
 
-		array::iterator prev_n(array::iterator &it, numeric offset)
+		array::iterator prev_n(array::iterator &it, const numeric &offset)
 		{
 			return it -= offset.as_integer();
 		}
@@ -517,15 +517,13 @@ namespace cs_impl {
 		{
 			if (openmode & std::ios_base::in)
 				return var::make<istream>(new std::ifstream(path, openmode));
-			else if (openmode & std::ios_base::out)
-				return var::make<ostream>(new std::ofstream(path, openmode));
-			else if (openmode & std::ios_base::app)
+			else if (openmode & std::ios_base::out || openmode & std::ios_base::app)
 				return var::make<ostream>(new std::ofstream(path, openmode));
 			else
 				throw lang_error("Unsupported openmode.");
 		}
 
-		void setprecision(numeric pre)
+		void setprecision(const numeric &pre)
 		{
 			current_process->output_precision = pre.as_integer();
 		}
@@ -628,12 +626,12 @@ namespace cs_impl {
 			return in->tellg();
 		}
 
-		void seek(istream &in, numeric pos)
+		void seek(istream &in, const numeric &pos)
 		{
 			in->seekg(pos.as_integer());
 		}
 
-		void seek_from(istream &in, std::ios_base::seekdir dir, numeric offset)
+		void seek_from(istream &in, std::ios_base::seekdir dir, const numeric& offset)
 		{
 			in->seekg(offset.as_integer(), dir);
 		}
@@ -690,12 +688,12 @@ namespace cs_impl {
 			return out->tellp();
 		}
 
-		void seek(ostream &out, numeric pos)
+		void seek(ostream &out, const numeric& pos)
 		{
 			out->seekp(pos.as_integer());
 		}
 
-		void seek_from(ostream &out, std::ios_base::seekdir dir, numeric offset)
+		void seek_from(ostream &out, std::ios_base::seekdir dir, const numeric& offset)
 		{
 			out->seekp(offset.as_integer(), dir);
 		}
@@ -881,72 +879,72 @@ namespace cs_impl {
 	namespace math_cs_ext {
 		using namespace cs;
 
-		numeric abs(numeric n)
+		numeric abs(const numeric& n)
 		{
 			return std::abs(n.as_float());
 		}
 
-		numeric ln(numeric n)
+		numeric ln(const numeric& n)
 		{
 			return std::log(n.as_float());
 		}
 
-		numeric log10(numeric n)
+		numeric log10(const numeric& n)
 		{
 			return std::log10(n.as_float());
 		}
 
-		numeric log(numeric a, numeric b)
+		numeric log(const numeric& a, const numeric& b)
 		{
 			return std::log(b.as_float()) / std::log(a.as_float());
 		}
 
-		numeric sin(numeric n)
+		numeric sin(const numeric& n)
 		{
 			return std::sin(n.as_float());
 		}
 
-		numeric cos(numeric n)
+		numeric cos(const numeric& n)
 		{
 			return std::cos(n.as_float());
 		}
 
-		numeric tan(numeric n)
+		numeric tan(const numeric& n)
 		{
 			return std::tan(n.as_float());
 		}
 
-		numeric asin(numeric n)
+		numeric asin(const numeric& n)
 		{
 			return std::asin(n.as_float());
 		}
 
-		numeric acos(numeric n)
+		numeric acos(const numeric& n)
 		{
 			return std::acos(n.as_float());
 		}
 
-		numeric atan(numeric n)
+		numeric atan(const numeric& n)
 		{
 			return std::atan(n.as_float());
 		}
 
-		numeric sqrt(numeric n)
+		numeric sqrt(const numeric& n)
 		{
 			return std::sqrt(n.as_float());
 		}
 
-		numeric root(numeric a, numeric b)
+		numeric root(const numeric& a, const numeric& b)
 		{
 			return std::pow(a.as_float(), numeric_float(1) / b.as_float());
 		}
 
-		numeric pow(numeric a, numeric b)
+		numeric pow(const numeric& a, const numeric& b)
 		{
 			return std::pow(a.as_float(), b.as_float());
 		}
 
-		numeric _min(numeric a, numeric b)
+		numeric _min(const numeric& a, const numeric& b)
 		{
 			if (a.is_integer() && b.is_integer())
 				return (std::min)(a.as_integer(), b.as_integer());
@@ -954,7 +952,7 @@ namespace cs_impl {
 				return (std::min)(a.as_float(), b.as_float());
 		}
 
-		numeric _max(numeric a, numeric b)
+		numeric _max(const numeric& a, const numeric& b)
 		{
 			if (a.is_integer() && b.is_integer())
 				return (std::max)(a.as_integer(), b.as_integer());
@@ -962,12 +960,12 @@ namespace cs_impl {
 				return (std::max)(a.as_float(), b.as_float());
 		}
 
-		numeric rand(numeric b, numeric e)
+		numeric rand(const numeric& b, const numeric& e)
 		{
 			return cov::rand<numeric_float>(b.as_float(), e.as_float());
 		}
 
-		numeric randint(numeric b, numeric e)
+		numeric randint(const numeric& b, const numeric& e)
 		{
 			return cov::rand<numeric_integer>(b.as_integer(), e.as_integer());
 		}
@@ -1279,7 +1277,7 @@ namespace cs_impl {
 			}
 		}
 
-		void delay(numeric time)
+		void delay(const numeric& time)
 		{
 			cov::timer::delay(cov::timer::time_unit::milli_sec, time.as_integer());
 		}
@@ -1401,7 +1399,7 @@ namespace cs_impl {
 				return future.get();
 		}
 
-		cs::var wait_for(cs::numeric mill_sec, const cs::var &func, const cs::array &argument)
+		cs::var wait_for(const cs::numeric& mill_sec, const cs::var &func, const cs::array &argument)
 		{
 			if (func.type() == typeid(cs::callable)) {
 				cs::vector args(argument.begin(), argument.end());
@@ -1417,7 +1415,7 @@ namespace cs_impl {
 				throw cs::lang_error("Invoke non-callable object.");
 		}
 
-		cs::var wait_until(cs::numeric mill_sec, const cs::var &func, const cs::array &argument)
+		cs::var wait_until(const cs::numeric& mill_sec, const cs::var &func, const cs::array &argument)
 		{
 			if (func.type() == typeid(cs::callable)) {
 				cs::vector args(argument.begin(), argument.end());
@@ -1568,7 +1566,7 @@ namespace cs_impl {
 	namespace string_cs_ext {
 		using namespace cs;
 
-		string assign(string &str, numeric posit, char ch)
+		string assign(string &str, const numeric& posit, char ch)
 		{
 			str.at(posit.as_integer()) = ch;
 			return str;
@@ -1580,30 +1578,30 @@ namespace cs_impl {
 			return str;
 		}
 
-		string insert(string &str, numeric posit, const var &val)
+		string insert(string &str, const numeric& posit, const var &val)
 		{
 			str.insert(posit.as_integer(), val.to_string());
 			return str;
 		}
 
-		string erase(string &str, numeric b, numeric e)
+		string erase(string &str, const numeric& b, const numeric& e)
 		{
 			str.erase(b.as_integer(), e.as_integer());
 			return str;
 		}
 
-		string replace(string &str, numeric posit, numeric count, const var &val)
+		string replace(string &str, const numeric& posit, const numeric& count, const var &val)
 		{
 			str.replace(posit.as_integer(), count.as_integer(), val.to_string());
 			return str;
 		}
 
-		string substr(const string &str, numeric b, numeric e)
+		string substr(const string &str, const numeric& b, const numeric& e)
 		{
 			return str.substr(b.as_integer(), e.as_integer());
 		}
 
-		numeric find(const string &str, const string &s, numeric posit)
+		numeric find(const string &str, const string &s, const numeric& posit)
 		{
 			auto pos = str.find(s, posit.as_integer());
 			if (pos == std::string::npos)
@@ -1612,7 +1610,7 @@ namespace cs_impl {
 				return pos;
 		}
 
-		numeric rfind(const string &str, const string &s, numeric posit)
+		numeric rfind(const string &str, const string &s, const numeric& posit)
 		{
 			std::size_t pos = 0;
 			if (posit.as_integer() == -1)
@@ -1625,7 +1623,7 @@ namespace cs_impl {
 				return pos;
 		}
 
-		string cut(string &str, numeric n)
+		string cut(string &str, const numeric& n)
 		{
 			for (std::size_t i = 0; i < n.as_integer(); ++i)
 				str.pop_back();
@@ -1678,7 +1676,7 @@ namespace cs_impl {
 				for (auto &sig: signals) {
 					if (ch == sig.const_val<char>()) {
 						if (!buf.empty()) {
-							arr.push_back(buf);
+							arr.emplace_back(buf);
 							buf.clear();
 						}
 						found = true;
@@ -1691,7 +1689,7 @@ namespace cs_impl {
 					buf.push_back(ch);
 			}
 			if (!buf.empty())
-				arr.push_back(buf);
+				arr.emplace_back(buf);
 			return std::move(arr);
 		}
 
@@ -1730,7 +1728,7 @@ namespace cs_impl {
 			return conio::terminal_height();
 		}
 
-		void gotoxy(numeric x, numeric y)
+		void gotoxy(const numeric& x, const numeric& y)
 		{
 			conio::gotoxy(x.as_integer(), y.as_integer());
 		}
@@ -1884,7 +1882,7 @@ namespace cs_impl {
 			return str;
 		}
 
-		void exit(numeric exit_code)
+		void exit(const numeric& exit_code)
 		{
 			int code = exit_code.as_integer();
 			current_process->on_process_exit.touch(&code);

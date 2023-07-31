@@ -92,8 +92,6 @@ namespace cs_function_invoker_impl {
 }
 
 namespace cs {
-	std::string get_sdk_path();
-
 	std::string process_path(const std::string &);
 
 	std::string get_import_path();
@@ -115,7 +113,7 @@ namespace cs {
 
 		raii_collector(raii_collector &&) noexcept = delete;
 
-		explicit raii_collector(const context_t &cxt) : context(cxt) {}
+		explicit raii_collector(context_t cxt) : context(std::move(cxt)) {}
 
 		~raii_collector()
 		{

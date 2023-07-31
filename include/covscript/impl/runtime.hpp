@@ -27,7 +27,7 @@
 #include <covscript/impl/compiler.hpp>
 
 namespace cs {
-	using stack_pointer = stack_type<domain_type>*;
+	using stack_pointer = stack_type<domain_type> *;
 
 	class domain_manager {
 		const stack_pointer &fiber_stack;

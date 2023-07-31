@@ -451,7 +451,7 @@ cs::array split(const std::string &str)
 	for (auto &ch: str) {
 		if (std::isspace(ch)) {
 			if (!buf.empty()) {
-				arr.push_back(buf);
+				arr.emplace_back(buf);
 				buf.clear();
 			}
 		}
@@ -459,7 +459,7 @@ cs::array split(const std::string &str)
 			buf.push_back(ch);
 	}
 	if (!buf.empty())
-		arr.push_back(buf);
+		arr.emplace_back(buf);
 	return std::move(arr);
 }
 

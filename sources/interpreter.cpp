@@ -285,10 +285,6 @@ void covscript_main(int args_size, char *args[])
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::context_t context = cs::create_context(arg);
-		context->instance->storage.add_buildin_var("quit", cs::make_cni([]() {
-			int code = 0;
-			cs::current_process->on_process_exit.touch(&code);
-		}));
 		cs::raii_collector context_gc(context);
 		activate_sigint_handler();
 		cs::current_process->on_process_exit.add_listener([](void *code) -> bool {

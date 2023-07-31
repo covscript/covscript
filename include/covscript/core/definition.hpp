@@ -28,7 +28,9 @@
 // Platform detection
 
 #if defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(__WINDOWS__)
+
 #include <Windows.h>
+
 #define COVSCRIPT_PLATFORM_WIN32
 #if defined(_WIN64)
 #define COVSCRIPT_PLATFORM_NAME "Win64"

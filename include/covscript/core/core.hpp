@@ -103,7 +103,7 @@ namespace cs {
 #endif
 		}
 
-		inline std::size_t child_stack_size()
+		inline std::size_t child_stack_size() const
 		{
 			if (stack_size >= 1000)
 				return stack_size / 10;
@@ -396,7 +396,7 @@ namespace cs {
 
 		pointer() = default;
 
-		explicit pointer(const var &v) : data(v) {}
+		explicit pointer(var v) : data(std::move(v)) {}
 
 		bool operator==(const pointer &ptr) const
 		{
@@ -725,7 +725,7 @@ namespace cs {
 	public:
 		range_iterator() = delete;
 
-		explicit range_iterator(numeric step, numeric index) : m_step(step), m_index(index) {}
+		explicit range_iterator(numeric step, numeric index) : m_step(std::move(step)), m_index(std::move(index)) {}
 
 		range_iterator(const range_iterator &) = default;
 
@@ -760,7 +760,7 @@ namespace cs {
 	public:
 		range_type() = delete;
 
-		range_type(numeric start, numeric stop, numeric step) : m_start(start), m_stop(stop), m_step(step) {}
+		range_type(numeric start, numeric stop, numeric step) : m_start(std::move(start)), m_stop(std::move(stop)), m_step(std::move(step)) {}
 
 		range_type(const range_type &) = default;
 
@@ -792,10 +792,9 @@ namespace cs {
 	public:
 		structure() = delete;
 
-		structure(const type_id &id, const std::string &name, const domain_type &data) : m_id(id),
-			m_name(name),
-			m_data(std::make_shared<domain_type>(
-			           data))
+		structure(const type_id &id, std::string name, const domain_type &data) : m_id(id),
+			m_name(std::move(name)),
+			m_data(std::make_shared<domain_type>(data))
 		{
 			if (m_data->exist("initialize"))
 				invoke(m_data->get_var("initialize"), var::make<structure>(this));

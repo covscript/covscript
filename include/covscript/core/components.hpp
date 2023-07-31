@@ -47,8 +47,8 @@ namespace cs {
 	public:
 		exception() = delete;
 
-		exception(std::size_t line, const std::string &file, const std::string &code, const std::string &what) noexcept:
-			mLine(line), mFile(file), mCode(code), mWhat(what)
+		exception(std::size_t line, std::string file, std::string code, std::string what) noexcept:
+			mLine(line), mFile(std::move(file)), mCode(std::move(code)), mWhat(std::move(what))
 		{
 			mStr = compose_what(mFile, mLine, mCode, mWhat);
 		}
@@ -254,9 +254,9 @@ namespace cs {
 			}
 		}
 
-		numeric(const numeric &rhs) : data(rhs.data), type(rhs.type) {}
+		numeric(const numeric &) = default;
 
-		numeric(numeric &&rhs) noexcept: data(rhs.data), type(rhs.type) {}
+		numeric(numeric &&) noexcept = default;
 
 		~numeric() = default;
 

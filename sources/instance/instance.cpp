@@ -325,6 +325,16 @@ namespace cs {
 		}
 	}
 
+	repl::repl(context_t c) : context(std::move(c))
+	{
+		context->file_path = "<REPL_ENV>";
+		context->compiler->fold_expr = false;
+		context->instance->storage.add_buildin_var("quit", cs::make_cni([]() {
+			int code = 0;
+			cs::current_process->on_process_exit.touch(&code);
+		}));
+	}
+
 	void repl::interpret(const string &code, std::deque<token_base *> &line)
 	{
 		statement_base *sptr = nullptr;

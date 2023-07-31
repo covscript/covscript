@@ -49,7 +49,7 @@ namespace cs_system_impl {
 #endif
 
 namespace cs_system_impl {
-	std::vector<std::string> split(const std::string &str, cs::set_t<char> set)
+	std::vector<std::string> split(const std::string &str, const cs::set_t<char> &set)
 	{
 		std::vector<std::string> results;
 		std::string buff;

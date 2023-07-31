@@ -33,7 +33,9 @@ namespace cs {
 
 	class instance_type final : public runtime_type {
 		friend class repl;
+
 		friend context_t cs::create_context(const array &);
+
 		friend context_t cs::create_subcontext(const context_t &);
 
 		// Statements
@@ -129,11 +131,7 @@ namespace cs {
 
 		repl() = delete;
 
-		explicit repl(context_t c) : context(std::move(c))
-		{
-			context->file_path = "<REPL_ENV>";
-			context->compiler->fold_expr = false;
-		}
+		explicit repl(context_t);
 
 		repl(const repl &) = delete;
 
@@ -152,7 +150,7 @@ namespace cs {
 			context->instance->storage.clear_set();
 		}
 
-		int get_level() const
+		std::size_t get_level() const
 		{
 			return methods.size();
 		}
