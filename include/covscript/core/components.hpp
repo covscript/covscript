@@ -25,6 +25,7 @@
 * Website: http://covscript.org.cn
 */
 #include <covscript/import/mozart/base.hpp>
+#include <atomic>
 
 namespace cs {
 // Exceptions
@@ -770,9 +771,9 @@ namespace cs {
 	class allocator_type final {
 		T *mPool[blck_size];
 		allocator_t<T> mAlloc;
-		std::size_t mOffset = 0;
+		std::atomic_size_t mOffset;
 	public:
-		allocator_type()
+		allocator_type() : mOffset(0)
 		{
 			while (mOffset < 0.5 * blck_size)
 				mPool[mOffset++] = mAlloc.allocate(1);
