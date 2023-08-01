@@ -131,6 +131,7 @@ namespace cs_impl {
 		template<typename Function>
 		inline cs::var await(Function &&func)
 		{
+			cs::thread_guard guard;
 			auto future = std::async(std::launch::async, func);
 			std::future_status status = future.wait_for(std::chrono::milliseconds(0));
 
