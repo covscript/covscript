@@ -43,6 +43,6 @@ loop
     runtime.resume(rt2)
 until co_b_exit
 var blank = new string
-foreach i in range(system.console.terminal_width() - 2) do blank += " "
+foreach i in range(20) do blank += " "
 system.out.print(blank + "\r")
 system.out.println("06, count = " + count)

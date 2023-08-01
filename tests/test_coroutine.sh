@@ -1,6 +1,7 @@
 #!/bin/bash
+CURRENT_FOLDER=$(dirname $(readlink -f "$0"))
+cd $CURRENT_FOLDER
 clear
 for (( i = 1; i <= 1000; i = i + 1 )); do
-  echo "system.console.gotoxy(0,0)" | cs STDIN
-  echo $i | cs ./test_coroutine.csc
+  echo $i | cs test_coroutine.csc
 done
