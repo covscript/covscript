@@ -19,6 +19,8 @@ end
 
 var rt1 = runtime.create_co(co_a), rt2 = runtime.create_co_s(co_b, {"20"})
 
+system.console.gotoxy(0,0)
+
 system.out.println("00, resume co_a")
 runtime.resume(rt1)
 
@@ -40,4 +42,7 @@ loop
     ++count
     runtime.resume(rt2)
 until co_b_exit
+var blank = new string
+foreach i in range(system.console.terminal_width() - 2) do blank += " "
+system.out.print(blank + "\r")
 system.out.println("06, count = " + count)
