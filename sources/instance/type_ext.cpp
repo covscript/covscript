@@ -1169,9 +1169,7 @@ namespace cs_impl {
 			var operator()() const noexcept
 			{
 				try {
-					var &&ret = func.call(args);
-					args.clear();
-					return ret;
+					return func.call(args);
 				}
 				catch (const lang_error &le) {
 					std::cerr << "await thread terminated after throwing an instance of runtime exception" << std::endl;

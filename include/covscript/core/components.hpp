@@ -25,11 +25,27 @@
 * Website: http://covscript.org.cn
 */
 #include <covscript/import/mozart/base.hpp>
+#include <atomic>
 
 namespace cs {
-// Exceptions
+	extern std::atomic_size_t global_thread_counter;
+
+	struct thread_guard final {
+		thread_guard()
+		{
+			++global_thread_counter;
+		}
+		thread_guard(const thread_guard &) = delete;
+		thread_guard(thread_guard &&) noexcept = delete;
+		~thread_guard()
+		{
+			--global_thread_counter;
+		}
+	};
+
 	struct csym_info;
 
+// Exceptions
 	class exception final : public std::exception {
 		std::size_t mLine = 0;
 		std::string mFile, mCode, mWhat, mStr;
@@ -254,9 +270,9 @@ namespace cs {
 			}
 		}
 
-		numeric(const numeric &) = default;
+		numeric(const numeric &rhs) : data(rhs.data), type(rhs.type) {}
 
-		numeric(numeric &&) noexcept = default;
+		numeric(numeric &&rhs) noexcept: data(rhs.data), type(rhs.type) {}
 
 		~numeric() = default;
 
@@ -790,7 +806,7 @@ namespace cs {
 		inline T *alloc(ArgsT &&...args)
 		{
 			T *ptr = nullptr;
-			if (mOffset > 0)
+			if (mOffset > 0 && global_thread_counter == 0)
 				ptr = mPool[--mOffset];
 			else
 				ptr = mAlloc.allocate(1);
@@ -801,7 +817,7 @@ namespace cs {
 		inline void free(T *ptr)
 		{
 			mAlloc.destroy(ptr);
-			if (mOffset < blck_size)
+			if (mOffset < blck_size && global_thread_counter == 0)
 				mPool[mOffset++] = ptr;
 			else
 				mAlloc.deallocate(ptr, 1);
