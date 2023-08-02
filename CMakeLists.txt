@@ -1,7 +1,6 @@
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.10)
 
 project(covscript)
-include_directories(include)
 
 # Compiler Options
 set(CMAKE_CXX_STANDARD 14)
@@ -21,9 +20,12 @@ else ()
     set(CMAKE_CXX_FLAGS "-fPIC -O3")
 endif ()
 
-if (DEFINED ENV{CS_COMPATIBILITY_MODE})
+if (CS_COMPATIBILITY_MODE)
+    message("CovScript: Configuring Compatibility Mode")
     add_compile_definitions(CS_COMPATIBILITY_MODE)
 endif ()
+
+include_directories(include csbuild/deps/include)
 
 # Source Code
 set(SOURCE_CODE
@@ -44,52 +46,51 @@ add_library(covscript_debug STATIC ${SOURCE_CODE})
 
 target_compile_definitions(covscript_debug PRIVATE CS_DEBUGGER)
 
-# Link libdl in UNIX platform
+# Link extra libraries in Linux
 if (UNIX)
     target_link_libraries(covscript pthread dl)
     target_link_libraries(covscript_debug pthread dl)
+
+    # Use system implementation by default in Linux
+    if (CS_FIBER_LIBUCONTEXT_IMPL)
+        message("-- CovScript: Using libucontext implementation of fiber")
+        add_subdirectory(csbuild/deps)
+        target_compile_definitions(covscript PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)
+        target_compile_definitions(covscript_debug PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)
+        target_link_libraries(covscript ucontext)
+        target_link_libraries(covscript_debug ucontext)
+    endif ()
 endif ()
 
-# Process universal binary in APPLE platform
+# Process universal binary in macOS
 if (APPLE)
-    enable_language(C ASM)
-    include_directories(csbuild/libucontext/include)
-
     # ARM version of covscript
     add_library(covscript_arm STATIC ${SOURCE_CODE})
     add_library(covscript_debug_arm STATIC ${SOURCE_CODE})
 
-    # x86 version of ucontext
-    add_library(ucontext_x86 STATIC
-            csbuild/libucontext/arch/x86_64/getcontext.S
-            csbuild/libucontext/arch/x86_64/makecontext.c
-            csbuild/libucontext/arch/x86_64/setcontext.S
-            csbuild/libucontext/arch/x86_64/swapcontext.S
-            csbuild/libucontext/arch/x86_64/trampoline.c)
-    target_compile_options(ucontext_x86 PUBLIC -target x86_64-apple-macos10.12)
-    target_link_options(ucontext_x86 PUBLIC -target x86_64-apple-macos10.12)
-    target_include_directories(ucontext_x86 PRIVATE csbuild/libucontext/arch/common)
-    target_include_directories(ucontext_x86 PUBLIC csbuild/libucontext/arch/x86_64/include)
-
-    # ARM version of ucontext
-    add_library(ucontext_arm STATIC
-            csbuild/libucontext/arch/aarch64/getcontext.S
-            csbuild/libucontext/arch/aarch64/makecontext.c
-            csbuild/libucontext/arch/aarch64/setcontext.S
-            csbuild/libucontext/arch/aarch64/swapcontext.S
-            csbuild/libucontext/arch/aarch64/trampoline.c)
-    target_compile_options(ucontext_arm PUBLIC -target arm64-apple-macos11)
-    target_link_options(ucontext_arm PUBLIC -target arm64-apple-macos11)
-    target_include_directories(ucontext_arm PRIVATE csbuild/libucontext/arch/common)
-    target_include_directories(ucontext_arm PUBLIC csbuild/libucontext/arch/aarch64/include)
-
     # Set link options for x86 target
-    target_link_libraries(covscript pthread dl ucontext_x86)
-    target_link_libraries(covscript_debug pthread dl ucontext_x86)
+    target_link_libraries(covscript pthread dl)
+    target_link_libraries(covscript_debug pthread dl)
 
     # Set link options for ARM target
-    target_link_libraries(covscript_arm pthread dl ucontext_arm)
-    target_link_libraries(covscript_debug_arm pthread dl ucontext_arm)
+    target_link_libraries(covscript_arm pthread dl)
+    target_link_libraries(covscript_debug_arm pthread dl)
+
+    # Use libucontext by default in macOS
+    if (NOT CS_FIBER_SYSTEM_IMPL)
+        add_subdirectory(csbuild/deps)
+        target_compile_definitions(covscript PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)
+        target_compile_definitions(covscript_debug PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)
+        target_compile_definitions(covscript_arm PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)
+        target_compile_definitions(covscript_debug_arm PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)
+        target_link_libraries(covscript ucontext)
+        target_link_libraries(covscript_debug ucontext)
+        target_link_libraries(covscript_arm ucontext_arm)
+        target_link_libraries(covscript_debug_arm ucontext_arm)
+    else ()
+        message("-- CovScript: Using system implementation of fiber")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+    endif ()
 endif ()
 
 # Main Executable

@@ -3,12 +3,11 @@
 mv cs cs_x86
 mv cs_dbg cs_dbg_x86
 # Merge libcovscript and libucontext
-libtool -static -o libcovscript_x86_merge.a libcovscript.a libucontext_x86.a
-libtool -static -o libcovscript_debug_x86_merge.a libcovscript_debug.a libucontext_x86.a
-libtool -static -o libcovscript_arm_merge.a libcovscript_arm.a libucontext_arm.a
-libtool -static -o libcovscript_debug_arm_merge.a libcovscript_debug_arm.a libucontext_arm.a
+libtool -static -o libcovscript_x86_merge.a libcovscript.a csbuild/deps/libucontext.a
+libtool -static -o libcovscript_debug_x86_merge.a libcovscript_debug.a csbuild/deps/libucontext.a
+libtool -static -o libcovscript_arm_merge.a libcovscript_arm.a csbuild/deps/libucontext_arm.a
+libtool -static -o libcovscript_debug_arm_merge.a libcovscript_debug_arm.a csbuild/deps/libucontext_arm.a
 rm -f libcovscript.a libcovscript_arm.a libcovscript_debug.a libcovscript_debug_arm.a
-rm -f libucontext_arm.a libucontext_x86.a
 # Check file information
 otool -L libcovscript_x86_merge.a
 otool -L libcovscript_debug_x86_merge.a

@@ -10,17 +10,20 @@ jobs:
         os: [ ubuntu-latest, windows-latest, macOS-latest ]
 
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
-      - name: build-win64
+      - name: Build on Windows with MSVC
         if: matrix.os == 'windows-latest'
         run: .github/workflows/make_msvc_win64.bat
 
-      - name: build-unix
+      - name: Build on Linux and macOS
         if: matrix.os != 'windows-latest'
         run: bash csbuild/make.sh
 
-      - name: test
+      - name: Test
         run: |
           build/bin/cs -v
           build/bin/cs .github/workflows/benchmark.csc
