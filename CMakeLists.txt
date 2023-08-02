@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.10)
 
 project(covscript)
 
@@ -47,7 +47,7 @@ add_library(covscript_debug STATIC ${SOURCE_CODE})
 target_compile_definitions(covscript_debug PRIVATE CS_DEBUGGER)
 
 # Link extra libraries in Linux
-if (LINUX)
+if (UNIX)
     target_link_libraries(covscript pthread dl)
     target_link_libraries(covscript_debug pthread dl)
 
