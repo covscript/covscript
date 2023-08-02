@@ -16,4 +16,5 @@ rd /S /Q csdev
 mkdir csdev\include\covscript
 mkdir csdev\lib
 xcopy /E /Y include\covscript csdev\include\covscript
+xcopy /E /Y csbuild\deps\include\covscript csdev\include\covscript
 xcopy /E /Y build\lib         csdev\lib\
