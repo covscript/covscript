@@ -39,13 +39,18 @@
 #include <cerrno>
 
 #ifndef STACK_LIMIT
+
 #define STACK_LIMIT (1024*1024)
+
 #endif
 
-#ifdef COVSCRIPT_LIBUCONTEXT_IMPL
 #ifdef COVSCRIPT_PLATFORM_DARWIN
+
 #include <mach-o/loader.h>
+
 #endif
+
+#ifdef CS_FIBER_LIBUCONTEXT_IMPL
 
 extern "C"
 {
@@ -59,6 +64,12 @@ extern "C"
 #define cs_fiber_swapcontext libucontext_swapcontext
 
 #else
+
+#ifdef COVSCRIPT_PLATFORM_DARWIN
+
+#define _XOPEN_SOURCE
+
+#endif
 
 #include <ucontext.h>
 
