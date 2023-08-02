@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.4)
 
 project(covscript)
-include_directories(include)
 
 # Compiler Options
 set(CMAKE_CXX_STANDARD 14)
@@ -25,6 +24,8 @@ if (DEFINED ENV{CS_COMPATIBILITY_MODE})
     add_compile_definitions(CS_COMPATIBILITY_MODE)
 endif ()
 
+include_directories(include csbuild/deps/include)
+
 # Source Code
 set(SOURCE_CODE
         sources/compiler/codegen.cpp
@@ -44,52 +45,38 @@ add_library(covscript_debug STATIC ${SOURCE_CODE})
 
 target_compile_definitions(covscript_debug PRIVATE CS_DEBUGGER)
 
-# Link libdl in UNIX platform
+# Link extra libraries in UNIX platform
 if (UNIX)
     target_link_libraries(covscript pthread dl)
     target_link_libraries(covscript_debug pthread dl)
+    if (COVSCRIPT_LIBUCONTEXT_IMPL)
+        add_subdirectory(csbuild/deps)
+        target_compile_definitions(covscript PRIVATE COVSCRIPT_LIBUCONTEXT_IMPL)
+        target_compile_definitions(covscript_debug PRIVATE COVSCRIPT_LIBUCONTEXT_IMPL)
+        target_link_libraries(covscript ucontext)
+        target_link_libraries(covscript_debug ucontext)
+    endif ()
 endif ()
 
 # Process universal binary in APPLE platform
 if (APPLE)
-    enable_language(C ASM)
-    include_directories(csbuild/libucontext/include)
-
     # ARM version of covscript
     add_library(covscript_arm STATIC ${SOURCE_CODE})
     add_library(covscript_debug_arm STATIC ${SOURCE_CODE})
 
-    # x86 version of ucontext
-    add_library(ucontext_x86 STATIC
-            csbuild/libucontext/arch/x86_64/getcontext.S
-            csbuild/libucontext/arch/x86_64/makecontext.c
-            csbuild/libucontext/arch/x86_64/setcontext.S
-            csbuild/libucontext/arch/x86_64/swapcontext.S
-            csbuild/libucontext/arch/x86_64/trampoline.c)
-    target_compile_options(ucontext_x86 PUBLIC -target x86_64-apple-macos10.12)
-    target_link_options(ucontext_x86 PUBLIC -target x86_64-apple-macos10.12)
-    target_include_directories(ucontext_x86 PRIVATE csbuild/libucontext/arch/common)
-    target_include_directories(ucontext_x86 PUBLIC csbuild/libucontext/arch/x86_64/include)
-
-    # ARM version of ucontext
-    add_library(ucontext_arm STATIC
-            csbuild/libucontext/arch/aarch64/getcontext.S
-            csbuild/libucontext/arch/aarch64/makecontext.c
-            csbuild/libucontext/arch/aarch64/setcontext.S
-            csbuild/libucontext/arch/aarch64/swapcontext.S
-            csbuild/libucontext/arch/aarch64/trampoline.c)
-    target_compile_options(ucontext_arm PUBLIC -target arm64-apple-macos11)
-    target_link_options(ucontext_arm PUBLIC -target arm64-apple-macos11)
-    target_include_directories(ucontext_arm PRIVATE csbuild/libucontext/arch/common)
-    target_include_directories(ucontext_arm PUBLIC csbuild/libucontext/arch/aarch64/include)
+    add_subdirectory(csbuild/deps)
 
     # Set link options for x86 target
-    target_link_libraries(covscript pthread dl ucontext_x86)
-    target_link_libraries(covscript_debug pthread dl ucontext_x86)
+    target_link_libraries(covscript pthread dl ucontext)
+    target_link_libraries(covscript_debug pthread dl ucontext)
+    target_compile_definitions(covscript PRIVATE COVSCRIPT_LIBUCONTEXT_IMPL)
+    target_compile_definitions(covscript_debug PRIVATE COVSCRIPT_LIBUCONTEXT_IMPL)
 
     # Set link options for ARM target
     target_link_libraries(covscript_arm pthread dl ucontext_arm)
     target_link_libraries(covscript_debug_arm pthread dl ucontext_arm)
+    target_compile_definitions(covscript_arm PRIVATE COVSCRIPT_LIBUCONTEXT_IMPL)
+    target_compile_definitions(covscript_debug_arm PRIVATE COVSCRIPT_LIBUCONTEXT_IMPL)
 endif ()
 
 # Main Executable

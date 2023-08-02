@@ -42,9 +42,10 @@
 #define STACK_LIMIT (1024*1024)
 #endif
 
+#ifdef COVSCRIPT_LIBUCONTEXT_IMPL
 #ifdef COVSCRIPT_PLATFORM_DARWIN
-
 #include <mach-o/loader.h>
+#endif
 
 extern "C"
 {

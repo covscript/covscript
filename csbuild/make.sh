@@ -20,4 +20,5 @@ rm -rf csdev
 mkdir -p csdev/include/covscript
 mkdir -p csdev/lib
 cp -r include/covscript csdev/include/
+cp -r csbuild/deps/include/covscript csdev/include/
 cp -r build/lib         csdev/
