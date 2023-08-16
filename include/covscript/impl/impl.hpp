@@ -139,13 +139,12 @@ namespace cs {
 
 		void reset_status()
 		{
-			context_t _context = context;
-			charset _encoding = encoding;
-			std::size_t _line_num = line_num;
-			this->~repl();
-			::new(this) repl(_context);
-			encoding = _encoding;
-			line_num = _line_num;
+			tmp.clear();
+			while (!methods.empty())
+				methods.pop_no_return();
+			multi_line = false;
+			line_buff.clear();
+			cmd_buff.clear();
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
 		}
