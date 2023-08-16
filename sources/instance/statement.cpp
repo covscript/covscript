@@ -152,6 +152,32 @@ namespace cs {
 		}
 	}
 
+	void struct_builder::do_inherit()
+	{
+		if (mParent.root().usable()) {
+			var builder = mContext->instance->parse_expr(mParent.root());
+			if (builder.type() == typeid(type_t)) {
+				const auto &t = builder.const_val<type_t>();
+				if (mTypeId == t.id)
+					throw runtime_error("Can not inherit itself.");
+				if (t.id.type_hash) {
+					for (std::size_t it = t.id.type_hash;;) {
+						type_id::inherit_map[it].insert(mTypeId.type_hash);
+						if (mParentMap.count(it) > 0)
+							it = mParentMap[it];
+						else
+							break;
+					}
+					mParentMap[mTypeId.type_hash] = t.id.type_hash;
+				}
+				else
+					throw runtime_error("Target is not a struct.");
+			}
+			else
+				throw runtime_error("Target is not a type.");
+		}
+	}
+
 	var struct_builder::operator()()
 	{
 		scope_guard scope(mContext);
@@ -721,6 +747,7 @@ namespace cs {
 	void statement_struct::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
+		this->mBuilder.do_inherit();
 		context->instance->storage.add_struct(this->mName, this->mBuilder);
 	}
 

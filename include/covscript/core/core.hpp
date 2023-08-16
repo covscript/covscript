@@ -407,6 +407,7 @@ namespace cs {
 	static const pointer null_pointer = {};
 
 	struct type_id final {
+		static map_t<std::size_t, set_t<std::size_t>> inherit_map;
 		std::type_index type_idx;
 		std::size_t type_hash;
 
@@ -414,22 +415,32 @@ namespace cs {
 
 		type_id(const std::type_index &id, std::size_t hash = 0) : type_idx(id), type_hash(hash) {}
 
-		bool compare(const type_id &id) const
+		inline bool is_a(const type_id &id) const
 		{
 			if (&id == this)
 				return true;
-			if (type_hash != 0)
+			if (type_hash && id.type_hash)
+				return inherit_map.count(id.type_hash) > 0 && inherit_map[id.type_hash].count(type_hash) > 0;
+			else
+				return type_idx == id.type_idx;
+		}
+
+		inline bool compare(const type_id &id) const
+		{
+			if (&id == this)
+				return true;
+			if (type_hash)
 				return type_hash == id.type_hash;
 			else
 				return type_idx == id.type_idx;
 		}
 
-		bool operator==(const type_id &id) const
+		inline bool operator==(const type_id &id) const
 		{
 			return compare(id);
 		}
 
-		bool operator!=(const type_id &id) const
+		inline bool operator!=(const type_id &id) const
 		{
 			return !compare(id);
 		}
@@ -875,6 +886,7 @@ namespace cs {
 	};
 
 	class struct_builder final {
+		static map_t<std::size_t, std::size_t> mParentMap;
 		static std::size_t mCount;
 		context_t mContext;
 		type_id mTypeId;
@@ -897,6 +909,7 @@ namespace cs {
 
 		static void reset_counter()
 		{
+			mParentMap.clear();
 			mCount = 0;
 		}
 
@@ -904,6 +917,8 @@ namespace cs {
 		{
 			return mTypeId;
 		}
+
+		void do_inherit();
 
 		var operator()();
 	};

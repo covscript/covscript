@@ -176,6 +176,9 @@ namespace cs {
 	process_context this_process;
 	process_context *current_process = &this_process;
 
+	map_t<std::size_t, set_t<std::size_t>> type_id::inherit_map;
+
+	map_t<std::size_t, std::size_t> struct_builder::mParentMap;
 	std::size_t struct_builder::mCount = 0;
 
 	void copy_no_return(var &val)
@@ -393,6 +396,11 @@ namespace cs {
 		a.swap(b, true);
 	}
 
+	bool is_a(const type_id &a, const type_id &b)
+	{
+		return a.is_a(b);
+	}
+
 	context_t create_context(const array &args)
 	{
 		cs_impl::init_extensions();
@@ -529,6 +537,7 @@ namespace cs {
 		.add_buildin_var("clone", make_cni(clone))
 		.add_buildin_var("move", make_cni(move))
 		.add_buildin_var("swap", make_cni(swap, true))
+		.add_buildin_var("is_a", make_cni(is_a, true))
 		// Add extensions to storage
 		.add_buildin_var("exception", make_namespace(cs_impl::except_ext))
 		.add_buildin_var("iostream", make_namespace(cs_impl::iostream_ext))
@@ -576,6 +585,7 @@ namespace cs {
 		.add_buildin_var("clone", make_cni(clone))
 		.add_buildin_var("move", make_cni(move))
 		.add_buildin_var("swap", make_cni(swap, true))
+		.add_buildin_var("is_a", make_cni(is_a, true))
 		// Add extensions to storage
 		.add_buildin_var("exception", make_namespace(cs_impl::except_ext))
 		.add_buildin_var("iostream", make_namespace(cs_impl::iostream_ext))
