@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -55,8 +55,6 @@ namespace cs {
 		else {
 			// is package file
 			context_t rt = create_subcontext(context);
-			namespace_t module = std::make_shared<name_space>();
-			context->compiler->modules.emplace(path, module);
 			rt->compiler->swap_context(rt);
 			try {
 				rt->instance->compile(path);
@@ -67,7 +65,8 @@ namespace cs {
 			}
 			context->compiler->swap_context(context);
 			rt->instance->interpret();
-			*module = *rt->instance->storage.get_namespace();
+			namespace_t module = std::make_shared<name_space>(*rt->instance->storage.get_namespace());
+			context->compiler->modules.emplace(path, module);
 			return module;
 		}
 	}
@@ -77,7 +76,7 @@ namespace cs {
 		std::vector<std::string> collection;
 		{
 			std::string tmp;
-			for (auto &ch:path) {
+			for (auto &ch: path) {
 				if (ch == cs::path_delimiter) {
 					collection.push_back(tmp);
 					tmp.clear();
@@ -87,14 +86,13 @@ namespace cs {
 			}
 			collection.push_back(tmp);
 		}
-		for (auto &it:collection) {
+		for (auto &it: collection) {
 			std::string package_path = it + path_separator + name;
 			if (context->compiler->modules.count(package_path) > 0)
 				return context->compiler->modules[package_path];
 			if (std::ifstream(package_path + ".csp")) {
 				context_t rt = create_subcontext(context);
-				namespace_t module = std::make_shared<name_space>();
-				context->compiler->modules.emplace(package_path, module);
+				rt->compiler->import_csym(package_path + ".csp", package_path + ".csym");
 				rt->compiler->swap_context(rt);
 				try {
 					rt->instance->compile(package_path + ".csp");
@@ -109,7 +107,8 @@ namespace cs {
 					throw runtime_error("Target file is not a package.");
 				if (rt->package_name != name)
 					throw runtime_error("Package name is different from file name.");
-				*module = *rt->instance->storage.get_namespace();
+				namespace_t module = std::make_shared<name_space>(*rt->instance->storage.get_namespace());
+				context->compiler->modules.emplace(package_path, module);
 				return module;
 			}
 			else if (std::ifstream(package_path + ".cse")) {
@@ -123,12 +122,18 @@ namespace cs {
 
 	void instance_type::compile(const std::string &path)
 	{
-		context->file_path = path;
 		// Read from file
-		std::deque<char> buff;
+		context->file_path = path;
 		std::ifstream in(path, std::ios::binary);
 		if (!in.is_open())
 			throw fatal_error(path + ": No such file or directory");
+		compile(in);
+	}
+
+	void instance_type::compile(std::istream &in)
+	{
+		// Read from file
+		std::deque<char> buff;
 		for (int ch = in.get(); in; ch = in.get())
 			buff.push_back(ch);
 		std::deque<std::deque<token_base *>> ast;
@@ -142,7 +147,7 @@ namespace cs {
 	void instance_type::interpret()
 	{
 		// Run the instruction
-		for (auto &ptr:statements) {
+		for (auto &ptr: statements) {
 			try {
 				ptr->run();
 			}
@@ -172,7 +177,7 @@ namespace cs {
 		stream << "< Platform: Unix >\n";
 #endif
 		stream << "< EndMetaData >\n";
-		for (auto &ptr:statements)
+		for (auto &ptr: statements)
 			ptr->dump(stream);
 		stream << std::flush;
 	}
@@ -183,7 +188,7 @@ namespace cs {
 			throw internal_error("Null pointer accessed.");
 		if (it.data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
-			for (auto &t:parallel_list)
+			for (auto &t: parallel_list)
 				check_declar_var(t.root(), regist);
 		}
 		else {
@@ -201,7 +206,7 @@ namespace cs {
 			throw internal_error("Null pointer accessed.");
 		if (it.data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
-			for (auto &t:parallel_list)
+			for (auto &t: parallel_list)
 				check_define_var(t.root(), regist, constant);
 		}
 		else {
@@ -239,7 +244,7 @@ namespace cs {
 	{
 		if (it.data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
-			for (auto &t:parallel_list)
+			for (auto &t: parallel_list)
 				parse_define_var(t.root(), constant, link);
 		}
 		else {
@@ -266,7 +271,7 @@ namespace cs {
 	void
 	instance_type::check_define_structured_binding(tree_type<token_base *>::iterator it, bool regist)
 	{
-		for (auto &p_it:static_cast<token_parallel *>(it.data())->get_parallel()) {
+		for (auto &p_it: static_cast<token_parallel *>(it.data())->get_parallel()) {
 			token_base *root = p_it.root().data();
 			if (root == nullptr)
 				throw runtime_error("Wrong grammar for variable definition(7).");
@@ -308,7 +313,7 @@ namespace cs {
 	{
 		if (it.data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
-			for (auto &t:parallel_list)
+			for (auto &t: parallel_list)
 				parse_using(t.root());
 		}
 		else {
@@ -318,6 +323,16 @@ namespace cs {
 			else
 				throw runtime_error("Only support involve namespace.");
 		}
+	}
+
+	repl::repl(context_t c) : context(std::move(c))
+	{
+		context->file_path = "<REPL_ENV>";
+		context->compiler->fold_expr = false;
+		context->instance->storage.add_buildin_var("quit", cs::make_cni([]() {
+			int code = 0;
+			cs::current_process->on_process_exit.touch(&code);
+		}));
 	}
 
 	void repl::interpret(const string &code, std::deque<token_base *> &line)
@@ -376,7 +391,7 @@ namespace cs {
 				break;
 			}
 			if (sptr != nullptr)
-				sptr->repl_run();
+				echo ? sptr->repl_run() : sptr->run();
 		}
 		catch (const lang_error &le) {
 			reset_status();
@@ -405,13 +420,13 @@ namespace cs {
 		if (code.empty())
 			return;
 		std::deque<char> buff;
-		for (auto &ch:code)
+		for (auto &ch: code)
 			buff.push_back(ch);
 		try {
 			std::deque<std::deque<token_base *>> ast;
 			context->compiler->clear_metadata();
 			context->compiler->build_line(buff, ast, 1, encoding);
-			for (auto &line:ast)
+			for (auto &line: ast)
 				interpret(code, line);
 		}
 		catch (const lang_error &le) {
@@ -433,7 +448,7 @@ namespace cs {
 		// Preprocess
 		++line_num;
 		int mode = 0;
-		for (auto &ch:code) {
+		for (auto &ch: code) {
 			if (mode == 0) {
 				if (!std::isspace(ch)) {
 					switch (ch) {
@@ -482,7 +497,7 @@ namespace cs {
 				}
 				if (cmd == "exit") {
 					int code = 0;
-					process_context::on_process_exit_default_handler(&code);
+					current_process->on_process_exit.touch(&code);
 				}
 				else if (cmd == "charset") {
 					if (arg == "ascii")

@@ -1,7 +1,6 @@
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.10)
 
 project(covscript)
-include_directories(include)
 
 # Compiler Options
 set(CMAKE_CXX_STANDARD 14)
@@ -21,9 +20,12 @@ else ()
     set(CMAKE_CXX_FLAGS "-fPIC -O3")
 endif ()
 
-if (DEFINED ENV{CS_COMPATIBILITY_MODE})
+if (CS_COMPATIBILITY_MODE)
+    message("CovScript: Configuring Compatibility Mode")
     add_compile_definitions(CS_COMPATIBILITY_MODE)
 endif ()
+
+include_directories(include csbuild/deps/include)
 
 # Source Code
 set(SOURCE_CODE
@@ -44,10 +46,51 @@ add_library(covscript_debug STATIC ${SOURCE_CODE})
 
 target_compile_definitions(covscript_debug PRIVATE CS_DEBUGGER)
 
-# Link libdl in UNIX and APPLE platform
-if (UNIX OR APPLE)
+# Link extra libraries in Linux
+if (UNIX)
     target_link_libraries(covscript pthread dl)
     target_link_libraries(covscript_debug pthread dl)
+
+    # Use system implementation by default in Linux
+    if (CS_FIBER_LIBUCONTEXT_IMPL)
+        message("-- CovScript: Using libucontext implementation of fiber")
+        add_subdirectory(csbuild/deps)
+        target_compile_definitions(covscript PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)
+        target_compile_definitions(covscript_debug PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)
+        target_link_libraries(covscript ucontext)
+        target_link_libraries(covscript_debug ucontext)
+    endif ()
+endif ()
+
+# Process universal binary in macOS
+if (APPLE)
+    # ARM version of covscript
+    add_library(covscript_arm STATIC ${SOURCE_CODE})
+    add_library(covscript_debug_arm STATIC ${SOURCE_CODE})
+
+    # Set link options for x86 target
+    target_link_libraries(covscript pthread dl)
+    target_link_libraries(covscript_debug pthread dl)
+
+    # Set link options for ARM target
+    target_link_libraries(covscript_arm pthread dl)
+    target_link_libraries(covscript_debug_arm pthread dl)
+
+    # Use libucontext by default in macOS
+    if (NOT CS_FIBER_SYSTEM_IMPL)
+        add_subdirectory(csbuild/deps)
+        target_compile_definitions(covscript PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)
+        target_compile_definitions(covscript_debug PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)
+        target_compile_definitions(covscript_arm PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)
+        target_compile_definitions(covscript_debug_arm PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)
+        target_link_libraries(covscript ucontext)
+        target_link_libraries(covscript_debug ucontext)
+        target_link_libraries(covscript_arm ucontext_arm)
+        target_link_libraries(covscript_debug_arm ucontext_arm)
+    else ()
+        message("-- CovScript: Using system implementation of fiber")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+    endif ()
 endif ()
 
 # Main Executable
@@ -61,6 +104,13 @@ endif ()
 
 target_link_libraries(cs covscript)
 target_link_libraries(cs_dbg covscript_debug)
+
+if (APPLE)
+    add_executable(cs_arm sources/interpreter.cpp)
+    add_executable(cs_dbg_arm sources/debugger.cpp)
+    target_link_libraries(cs_arm covscript_arm)
+    target_link_libraries(cs_dbg_arm covscript_debug_arm)
+endif ()
 
 # Tests
 add_library(test-extension SHARED tests/extension.cpp)

@@ -21,17 +21,21 @@ This project is an officially maintained Covariant Script interpreter.
 
 + Cross-platform, supporting most mainstream Operating Systems
     + Compatible with legacy compilers -- written in C++ 14
-    + Linux and Unix: x86, ARM, MIPS, Loongson ISA
+    + Apple macOS: Universal binary with x86_64 and arm64
+    + Linux and Unix: x86, ARM, MIPS, LoongArch
     + Microsoft Windows: x86
 + Powerful and bloat-free extension system
     + C/C++ Native Interface(CNI) System: translate invoking from both C/C++ and Covariant Script
     + Interpreter Bootstrap: A portable way to access the Covariant Script Runtime from C++
     + CNI Composer Macro: Combined the extension system and CNI system organically
+    + CFFI Support: Directly calling functions from shared library written in C
 + Self-developed efficient compilation system
     + Dependency-free and efficient compiler front-end
+    + Unicode support optimized for Chinese
     + Support compile-time optimization
     + Exportable compilation results
 + High-performance runtime environment
+    + Stackful asymmetric coroutine
     + Hotspot optimization algorithm
     + Efficient memory management system
     + Reference count garbage collection system
@@ -50,8 +54,10 @@ Please visit [Covariant Script Organization README](https://github.com/covscript
 
 ### Basic command ###
 
-`cs [options...] <FILE> [arguments...]`  
+`cs [options...] <FILE|STDIN> [arguments...]`  
 `cs [options...]`
+
+When replace `FILE` with `STDIN`, interpreter will directly reads inputs from standard input stream.
 
 #### Options ####
 
@@ -62,6 +68,7 @@ Option|Mnemonic|Function
 `--compile-only`|`-c`|Only compile
 `--dump-ast`|`-d`|Export abstract syntax tree
 `--dependency`|`-r`|Export module dependency
+`--csym <FILE>`|`-g <FILE>`|Read cSYM from file
 
 ##### Interpreter REPL #####
 
@@ -84,6 +91,9 @@ Option|Mnemonic|Function
 `--log-path <PATH>`|`-l <PATH>` |Set the log path
 `--import-path <PATH>`|`-i <PATH>`|Set the import path
 
+The default stack size is **1000**. When the stack size is set larger than the default value, the stack size of the coroutine will be dynamically adjusted to one tenth of the set size; when the stack
+size is set smaller than the default value, the stack size of the coroutine will be will remain at **100**.
+
 **Note that if you do not set the log path, it will be directly output to the standard output stream.**
 
 ### Debugger ###
@@ -93,13 +103,17 @@ Option|Mnemonic|Function
 #### Options ####
 
 Option|Mnemonic|Function
-:---:|:---:|:--:
+:-----------------------:|:------:|:--:
 `--help`|`-h`|Show help infomation
 `--version`|`-v`|Show version infomation
+`--silent`|`-s`|Close the command prompt
 `--wait-before-exit`|`-w`|Wait before process exit
+`--csym <FILE>`|`-g <FILE>`|Read cSYM from file
 `--stack-resize <SIZE>`|`-S <SIZE>`|Reset the size of runtime stack
 `--log-path <PATH>`|`-l <PATH>`|Set the log path
 `--import-path <PATH>`|`-i <PATH>`|Set the import path
+
+The stack size policy is the same as for the interpreter.
 
 **Note that if you do not set the log path, it will be printed to stdout.**
 
@@ -111,13 +125,13 @@ The [covscript-example](https://github.com/covscript/covscript-example) reposito
 
 **The author of the Covariant Script Programming Language is [@mikecovlee](https://github.com/mikecovlee/), licensed
 under Apache 2.0**  
-**Copyright © 2017-2022 Michael Lee(李登淳)**  
+**Copyright © 2017-2023 Michael Lee(李登淳)**  
 *This software is registered with the National Copyright Administration of the People's Republic of China(Registration
 Number: 2020SR0408026) and is protected by the Copyright Law of the People's Republic of China.*
 
 ## Thanks ##
 
-[Sichuan University](http://scu.edu.cn/)
-, [freeCodeCamp Chengdu Community](https://china.freecodecamp.one/?city=chengdu)  
-[@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/)
-, [@MouriNaruto](https://github.com/MouriNaruto), [@Access-Rend](https://github.com/Access-Rend), Weicheng Shi
+[Sichuan University](http://scu.edu.cn/), KDDE Lab (Prof. Lei Duan), freeCodeCamp Chengdu Community
+
+[@imkiva](https://github.com/imkiva/), [@ice1000](https://github.com/ice1000/),
+[@MouriNaruto](https://github.com/MouriNaruto), Weicheng Shi

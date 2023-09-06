@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -32,6 +32,13 @@
 #include <shlobj.h>
 
 #pragma comment(lib, "shell32.lib")
+
+#else
+
+#include <sys/types.h>
+#include <unistd.h>
+#include <pwd.h>
+
 #endif
 
 #ifdef _MSC_VER
@@ -81,7 +88,7 @@ std::ostream &operator<<(std::ostream &out, const cs_impl::any &val)
 }
 
 namespace cs_impl {
-	default_allocator<any::proxy> any::allocator;
+	cs::allocator_type<any::proxy, default_allocate_buffer_size*default_allocate_buffer_multiplier, default_allocator_provider> any::allocator;
 	cs::namespace_t member_visitor_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t array_ext = cs::make_shared_namespace<cs::name_space>();
@@ -114,6 +121,23 @@ namespace cs_impl {
 }
 
 namespace cs {
+	std::atomic_size_t global_thread_counter(0);
+
+	void exception::relocate_to_csym(const csym_info &csym)
+	{
+		if (mLine >= csym.map.size())
+			throw fatal_error("Invalid line when relocating symbols in cSYM.");
+		std::size_t relocated_line = csym.map[mLine - 1];
+		if (relocated_line >= csym.codes.size())
+			throw fatal_error("Broken cSYM file.");
+		if (relocated_line > 0) {
+			const std::string &relocated_code = csym.codes[relocated_line - 1];
+			mStr = compose_what(csym.file, relocated_line, relocated_code, mWhat);
+		}
+		else
+			mStr = compose_what_internal(csym.file, mWhat);
+	}
+
 	void process_context::cleanup_context()
 	{
 		while (!current_process->stack.empty())
@@ -132,9 +156,29 @@ namespace cs {
 		return true;
 	}
 
+	std::unique_ptr<process_context> process_context::fork()
+	{
+		std::unique_ptr<process_context> new_process(new process_context(current_process->child_stack_size()));
+		new_process->output_precision = current_process->output_precision;
+		new_process->import_path = current_process->import_path;
+		process_context *curr = current_process;
+		new_process->on_process_exit.add_listener([curr](void *data) -> bool {
+			return curr->on_process_exit.touch(data);
+		});
+		new_process->on_process_sigint.add_listener([curr](void *data) -> bool {
+			return curr->on_process_sigint.touch(data);
+		});
+		new_process->std_eh_callback = current_process->std_eh_callback;
+		new_process->cs_eh_callback = current_process->cs_eh_callback;
+		return std::move(new_process);
+	}
+
 	process_context this_process;
 	process_context *current_process = &this_process;
 
+	map_t<std::size_t, set_t<std::size_t>> type_id::inherit_map;
+
+	map_t<std::size_t, std::size_t> struct_builder::mParentMap;
 	std::size_t struct_builder::mCount = 0;
 
 	void copy_no_return(var &val)
@@ -227,7 +271,7 @@ namespace cs {
 		if (sdk_path == nullptr) {
 			CHAR path[MAX_PATH];
 			SHGetFolderPathA(nullptr, CSIDL_PERSONAL, nullptr, SHGFP_TYPE_CURRENT, path);
-			return process_path(std::strcat(path, "\\CovScript"));
+			return process_path(std::string(path) + "\\CovScript");
 		}
 		else
 			return process_path(sdk_path);
@@ -242,8 +286,10 @@ namespace cs {
 		return COVSCRIPT_HOME;
 #else
 		const char *sdk_path = std::getenv("COVSCRIPT_HOME");
-		if (sdk_path == nullptr)
-			return "/usr/share/covscript";
+		if (sdk_path == nullptr) {
+			struct passwd *pw = getpwuid(getuid());
+			return process_path(std::string(pw->pw_dir) + "/.covscript");
+		}
 		else
 			return process_path(sdk_path);
 #endif
@@ -255,6 +301,7 @@ namespace cs {
 	{
 		const char *import_path = std::getenv("CS_IMPORT_PATH");
 		std::string base_path = get_sdk_path() + cs::path_separator + "imports";
+		base_path += cs::path_delimiter + std::string(COVSCRIPT_PLATFORM_HOME) + cs::path_separator + "imports";
 		if (import_path != nullptr)
 			return process_path(std::string(import_path) + cs::path_delimiter + base_path);
 		else
@@ -347,6 +394,11 @@ namespace cs {
 	void swap(var &a, var &b)
 	{
 		a.swap(b, true);
+	}
+
+	bool is_a(const type_id &a, const type_id &b)
+	{
+		return a.is_a(b);
 	}
 
 	context_t create_context(const array &args)
@@ -458,7 +510,8 @@ namespace cs {
 		// Internal Types
 		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char),
 		                  cs_impl::char_ext)
-		.add_buildin_type("number", []() -> var { return var::make<numeric>(0); }, typeid(numeric))
+		.add_buildin_type("number", []() -> var { return var::make<numeric>(0); }, typeid(numeric),
+		                  cs_impl::number_ext)
 		.add_buildin_type("integer", []() -> var { return var::make<numeric>(0); }, typeid(numeric))
 		.add_buildin_type("float", []() -> var { return var::make<numeric>(0.0); }, typeid(numeric))
 		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
@@ -484,6 +537,7 @@ namespace cs {
 		.add_buildin_var("clone", make_cni(clone))
 		.add_buildin_var("move", make_cni(move))
 		.add_buildin_var("swap", make_cni(swap, true))
+		.add_buildin_var("is_a", make_cni(is_a, true))
 		// Add extensions to storage
 		.add_buildin_var("exception", make_namespace(cs_impl::except_ext))
 		.add_buildin_var("iostream", make_namespace(cs_impl::iostream_ext))
@@ -497,7 +551,7 @@ namespace cs {
 	{
 		cs_impl::init_extensions();
 		context_t context = std::make_shared<context_type>();
-		context->instance = std::make_shared<instance_type>(context, current_process->stack_size);
+		context->instance = std::make_shared<instance_type>(context, cxt->instance->fiber_sp, current_process->stack_size);
 		context->compiler = cxt->compiler;
 		context->cmd_args = cxt->cmd_args;
 		// Init Runtime
@@ -531,6 +585,7 @@ namespace cs {
 		.add_buildin_var("clone", make_cni(clone))
 		.add_buildin_var("move", make_cni(move))
 		.add_buildin_var("swap", make_cni(swap, true))
+		.add_buildin_var("is_a", make_cni(is_a, true))
 		// Add extensions to storage
 		.add_buildin_var("exception", make_namespace(cs_impl::except_ext))
 		.add_buildin_var("iostream", make_namespace(cs_impl::iostream_ext))
@@ -559,6 +614,7 @@ namespace cs {
 		if (context) {
 			context->instance->storage.clear_all_data();
 			context->compiler->modules.clear();
+			context->compiler->csyms.clear();
 			context->compiler->swap_context(nullptr);
 			context->instance->context = nullptr;
 			context->compiler = nullptr;
@@ -572,7 +628,7 @@ namespace cs {
 	{
 		tree_type<cs::token_base *> tree;
 		std::deque<char> buff;
-		for (auto &ch:expr)
+		for (auto &ch: expr)
 			buff.push_back(ch);
 		context->compiler->build_expr(buff, tree);
 		return context->instance->parse_expr(tree.root());

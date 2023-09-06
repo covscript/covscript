@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -24,6 +24,7 @@
 * Website: http://covscript.org.cn
 */
 
+#include <covscript/impl/impl.hpp>
 #include <sys/select.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -32,13 +33,51 @@
 #include <unistd.h>
 #include <sstream>
 #include <climits>
+#include <cassert>
 #include <cstdio>
 #include <string>
 #include <cerrno>
 
+#ifndef STACK_LIMIT
+
+#define STACK_LIMIT (1024*1024)
+
+#endif
+
 #ifdef COVSCRIPT_PLATFORM_DARWIN
 
 #include <mach-o/loader.h>
+
+#endif
+
+#ifdef CS_FIBER_LIBUCONTEXT_IMPL
+
+extern "C"
+{
+#include <libucontext/libucontext.h>
+}
+
+#define cs_fiber_ucontext_t  libucontext_ucontext_t
+#define cs_fiber_getcontext  libucontext_getcontext
+#define cs_fiber_makecontext libucontext_makecontext
+#define cs_fiber_setcontext  libucontext_setcontext
+#define cs_fiber_swapcontext libucontext_swapcontext
+
+#else
+
+#ifdef COVSCRIPT_PLATFORM_DARWIN
+
+#define _XOPEN_SOURCE
+
+#endif
+
+#include <ucontext.h>
+
+#define cs_fiber_ucontext_t  ucontext_t
+#define cs_fiber_getcontext  getcontext
+#define cs_fiber_makecontext makecontext
+#define cs_fiber_setcontext  setcontext
+#define cs_fiber_swapcontext swapcontext
 
 #endif
 
@@ -209,6 +248,163 @@ namespace cs_impl {
 				throw cs::runtime_error(str.str());
 			}
 			}
+		}
+	}
+
+	namespace fiber {
+		struct Routine {
+			cs::process_context *this_context = cs::current_process;
+			std::unique_ptr<cs::process_context> cs_pcontext;
+			cs::stack_type<cs::domain_type> cs_stack;
+			const cs::context_t &cs_context;
+			std::function<void()> func;
+
+			char *stack;
+			bool finished;
+			cs_fiber_ucontext_t ctx;
+
+			Routine(const cs::context_t &cxt, std::function<void()> f) : cs_pcontext(cs::current_process->fork()), cs_stack(cs::current_process->child_stack_size()), cs_context(cxt), func(std::move(f))
+			{
+				stack = nullptr;
+				finished = false;
+			}
+
+			~Routine()
+			{
+				delete[] stack;
+			}
+		};
+
+		struct Ordinator {
+			std::vector<Routine *> routines;
+			std::list<routine_t> indexes;
+			routine_t current;
+			size_t stack_size;
+			cs_fiber_ucontext_t ctx;
+
+			inline Ordinator(size_t ss = STACK_LIMIT)
+			{
+				current = 0;
+				stack_size = ss;
+			}
+
+			inline ~Ordinator()
+			{
+				for (auto &routine: routines)
+					delete routine;
+			}
+		};
+
+		thread_local static Ordinator ordinator;
+
+		routine_t create(const cs::context_t &cxt, std::function<void()> f)
+		{
+			Routine *routine = new Routine(cxt, std::move(f));
+
+			if (ordinator.indexes.empty()) {
+				ordinator.routines.push_back(routine);
+				return ordinator.routines.size();
+			}
+			else {
+				routine_t id = ordinator.indexes.front();
+				ordinator.indexes.pop_front();
+				assert(ordinator.routines[id - 1] == nullptr);
+				ordinator.routines[id - 1] = routine;
+				return id;
+			}
+		}
+
+		void destroy(routine_t id)
+		{
+			Routine *routine = ordinator.routines[id - 1];
+			assert(routine != nullptr);
+
+			delete routine;
+			ordinator.routines[id - 1] = nullptr;
+			ordinator.indexes.push_back(id);
+		}
+
+		void entry()
+		{
+			routine_t id = ordinator.current;
+			Routine *routine = ordinator.routines[id - 1];
+			assert(routine != nullptr);
+
+			routine->func();
+
+			routine->finished = true;
+			ordinator.current = 0;
+
+			cs::current_process = routine->this_context;
+		}
+
+		int resume(routine_t id)
+		{
+			assert(ordinator.current == 0);
+
+			Routine *routine = ordinator.routines[id - 1];
+			if (routine == nullptr)
+				return -1;
+
+			if (routine->finished)
+				return -2;
+
+			if (routine->stack == nullptr) {
+				//initializes the structure to the currently active context.
+				//When successful, getcontext() returns 0
+				//On error, return -1 and set errno appropriately.
+				cs_fiber_getcontext(&routine->ctx);
+
+				//Before invoking makecontext(), the caller must allocate a new stack
+				//for this context and assign its address to ucp->uc_stack,
+				//and define a successor context and assign its address to ucp->uc_link.
+				routine->stack = new char[ordinator.stack_size];
+				routine->ctx.uc_stack.ss_sp = routine->stack;
+				routine->ctx.uc_stack.ss_size = ordinator.stack_size;
+				routine->ctx.uc_link = &ordinator.ctx;
+				ordinator.current = id;
+
+				//When this context is later activated by swapcontext(), the function entry is called.
+				//When this function returns, the  successor context is activated.
+				//If the successor context pointer is NULL, the thread exits.
+				cs_fiber_makecontext(&routine->ctx, reinterpret_cast<void (*)(void)>(entry), 0);
+
+				//The swapcontext() function saves the current context,
+				//and then activates the context of another.
+				cs::current_process = routine->cs_pcontext.get();
+				routine->cs_context->instance->swap_context(&routine->cs_stack);
+				cs_fiber_swapcontext(&ordinator.ctx, &routine->ctx);
+			}
+			else {
+				ordinator.current = id;
+				cs::current_process = routine->cs_pcontext.get();
+				routine->cs_context->instance->swap_context(&routine->cs_stack);
+				cs_fiber_swapcontext(&ordinator.ctx, &routine->ctx);
+			}
+
+			return 0;
+		}
+
+		void yield()
+		{
+			routine_t id = ordinator.current;
+			Routine *routine = ordinator.routines[id - 1];
+			assert(routine != nullptr);
+
+			char *stack_top = routine->stack + ordinator.stack_size;
+			char stack_bottom = 0;
+			assert(size_t(stack_top - &stack_bottom) <= ordinator.stack_size);
+
+			routine->cs_context->instance->swap_context(nullptr);
+			cs::current_process = routine->this_context;
+
+			ordinator.current = 0;
+			cs_fiber_swapcontext(&routine->ctx, &ordinator.ctx);
+		}
+
+		routine_t current()
+		{
+			return ordinator.current;
 		}
 	}
 }

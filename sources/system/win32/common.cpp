@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -24,11 +24,17 @@
 * Website: http://covscript.org.cn
 */
 
+#include <covscript/impl/impl.hpp>
 #include <direct.h>
 #include <conio.h>
+#include <cassert>
 #include <cstdlib>
 #include <string>
 #include <io.h>
+
+#ifndef STACK_LIMIT
+#define STACK_LIMIT (1024*1024)
+#endif
 
 namespace cs_system_impl {
 	bool chmod_impl(const std::string &path, unsigned int mode)
@@ -167,6 +173,141 @@ namespace cs_impl {
 				throw cs::runtime_error(str.str());
 			}
 			}
+		}
+	}
+
+	namespace fiber {
+		struct Routine {
+			cs::process_context *this_context = cs::current_process;
+			std::unique_ptr<cs::process_context> cs_pcontext;
+			cs::stack_type<cs::domain_type> cs_stack;
+			const cs::context_t &cs_context;
+			std::function<void()> func;
+
+			bool finished;
+			LPVOID fiber;
+
+			Routine(const cs::context_t &cxt, std::function<void()> f) : cs_pcontext(cs::current_process->fork()), cs_stack(cs::current_process->child_stack_size()), cs_context(cxt), func(std::move(f))
+			{
+				finished = false;
+				fiber = nullptr;
+			}
+
+			~Routine()
+			{
+				DeleteFiber(fiber);
+			}
+		};
+
+		struct Ordinator {
+			std::vector<Routine *> routines;
+			std::list<routine_t> indexes;
+			routine_t current;
+			size_t stack_size;
+			LPVOID fiber;
+
+			Ordinator(size_t ss = STACK_LIMIT)
+			{
+				current = 0;
+				stack_size = ss;
+				fiber = ConvertThreadToFiber(nullptr);
+			}
+
+			~Ordinator()
+			{
+				for (auto &routine: routines)
+					delete routine;
+			}
+		};
+
+		thread_local static Ordinator ordinator;
+
+		routine_t create(const cs::context_t &cxt, std::function<void()> f)
+		{
+			Routine *routine = new Routine(cxt, std::move(f));
+
+			if (ordinator.indexes.empty()) {
+				ordinator.routines.push_back(routine);
+				return ordinator.routines.size();
+			}
+			else {
+				routine_t id = ordinator.indexes.front();
+				ordinator.indexes.pop_front();
+				assert(ordinator.routines[id - 1] == nullptr);
+				ordinator.routines[id - 1] = routine;
+				return id;
+			}
+		}
+
+		void destroy(routine_t id)
+		{
+			Routine *routine = ordinator.routines[id - 1];
+			assert(routine != nullptr);
+
+			delete routine;
+			ordinator.routines[id - 1] = nullptr;
+			ordinator.indexes.push_back(id);
+		}
+
+		void __stdcall entry(LPVOID lpParameter)
+		{
+			routine_t id = ordinator.current;
+			Routine *routine = ordinator.routines[id - 1];
+			assert(routine != nullptr);
+
+			routine->func();
+
+			routine->finished = true;
+			ordinator.current = 0;
+
+			cs::current_process = routine->this_context;
+			SwitchToFiber(ordinator.fiber);
+		}
+
+		int resume(routine_t id)
+		{
+			assert(ordinator.current == 0);
+
+			Routine *routine = ordinator.routines[id - 1];
+			if (routine == nullptr)
+				return -1;
+
+			if (routine->finished)
+				return -2;
+
+			if (routine->fiber == nullptr) {
+				routine->fiber = CreateFiber(ordinator.stack_size, entry, 0);
+				ordinator.current = id;
+				cs::current_process = routine->cs_pcontext.get();
+				routine->cs_context->instance->swap_context(&routine->cs_stack);
+				SwitchToFiber(routine->fiber);
+			}
+			else {
+				ordinator.current = id;
+				cs::current_process = routine->cs_pcontext.get();
+				routine->cs_context->instance->swap_context(&routine->cs_stack);
+				SwitchToFiber(routine->fiber);
+			}
+
+			return 0;
+		}
+
+		void yield()
+		{
+			routine_t id = ordinator.current;
+			Routine *routine = ordinator.routines[id - 1];
+			assert(routine != nullptr);
+
+			routine->cs_context->instance->swap_context(nullptr);
+			cs::current_process = routine->this_context;
+
+			ordinator.current = 0;
+			SwitchToFiber(ordinator.fiber);
+		}
+
+		routine_t current()
+		{
+			return ordinator.current;
 		}
 	}
 }

@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -31,11 +31,16 @@
 *   | Major
 * Master
 *
+* Note for ABI Version:
+*   Starting from v3.4.2 (Build 21), only the first four digits of the ABI
+*   version will be compared. If the first four digits are the same and
+*   the last two digits are different, it will be regarded as a compatible
+*   version.
 */
-#define COVSCRIPT_VERSION_NUM 3,4,1,19
-#define COVSCRIPT_VERSION_STR "3.4.1 Castor fiber(Unstable) Build 19"
-#define COVSCRIPT_STD_VERSION 210504
-#define COVSCRIPT_API_VERSION 221001
-#define COVSCRIPT_ABI_VERSION 221003
+#define COVSCRIPT_VERSION_NUM 3,4,3,11
+#define COVSCRIPT_VERSION_STR "3.4.3 Castor fiber(Stable) Build 11"
+#define COVSCRIPT_STD_VERSION 210508
+#define COVSCRIPT_API_VERSION 230801
+#define COVSCRIPT_ABI_VERSION 230307
 #define CS_VERSION_STR_MIXER(VER) #VER
 #define CS_GET_VERSION_STR(VER) CS_VERSION_STR_MIXER(VER)

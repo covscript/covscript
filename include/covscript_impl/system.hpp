@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -26,6 +26,7 @@
 */
 
 #include <covscript/core/core.hpp>
+#include <future>
 
 namespace cs_impl {
 	namespace platform {
@@ -113,5 +114,96 @@ namespace cs_impl {
 		bool mkdir(std::string);
 
 		std::string get_current_dir();
+	}
+	namespace fiber {
+		typedef unsigned routine_t;
+
+		routine_t create(const cs::context_t &, std::function<void()>);
+
+		void destroy(routine_t);
+
+		int resume(routine_t);
+
+		void yield();
+
+		routine_t current();
+
+		template<typename Function>
+		inline cs::var await(Function &&func)
+		{
+			cs::thread_guard guard;
+			auto future = std::async(std::launch::async, func);
+			std::future_status status = future.wait_for(std::chrono::milliseconds(0));
+
+			while (status == std::future_status::timeout) {
+				if (current() != 0)
+					yield();
+
+				status = future.wait_for(std::chrono::milliseconds(0));
+			}
+			return future.get();
+		}
+
+		template<typename Type>
+		class Channel {
+			std::list<Type> _list;
+			routine_t _taker;
+		public:
+			Channel()
+			{
+				_taker = 0;
+			}
+
+			explicit Channel(routine_t id)
+			{
+				_taker = id;
+			}
+
+			inline void consumer(routine_t id)
+			{
+				_taker = id;
+			}
+
+			inline void push(const Type &obj)
+			{
+				_list.push_back(obj);
+				if (_taker && _taker != current())
+					resume(_taker);
+			}
+
+			inline Type pop()
+			{
+				if (!_taker)
+					_taker = current();
+
+				while (_list.empty())
+					yield();
+
+				Type obj = std::move(_list.front());
+				_list.pop_front();
+				return std::move(obj);
+			}
+
+			inline void clear()
+			{
+				_list.clear();
+			}
+
+			inline void touch()
+			{
+				if (_taker && _taker != current())
+					resume(_taker);
+			}
+
+			inline size_t size()
+			{
+				return _list.size();
+			}
+
+			inline bool empty()
+			{
+				return _list.empty();
+			}
+		};
 	}
 }

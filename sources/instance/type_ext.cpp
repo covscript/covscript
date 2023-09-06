@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -28,6 +28,8 @@
 #include <covscript_impl/mozart/timer.hpp>
 #include <covscript_impl/system.hpp>
 #include <covscript/impl/impl.hpp>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <algorithm>
 #include <iostream>
 #include <future>
@@ -46,6 +48,12 @@ namespace cs_sandbox {
 #define CNI_SANDBOX(expr) (expr)
 #endif
 
+#ifdef COVSCRIPT_PLATFORM_WIN32
+#define cs_sys_stat _stat
+#else
+#define cs_sys_stat stat
+#endif
+
 namespace cs_impl {
 	namespace member_visitor_cs_ext {
 		using namespace cs;
@@ -62,7 +70,7 @@ namespace cs_impl {
 		using namespace cs;
 
 // Element access
-		var at(const array &arr, numeric posit)
+		var at(const array &arr, const numeric &posit)
 		{
 			return arr.at(posit.as_integer());
 		}
@@ -97,7 +105,7 @@ namespace cs_impl {
 			return it++;
 		}
 
-		array::iterator next_n(array::iterator &it, numeric offset)
+		array::iterator next_n(array::iterator &it, const numeric &offset)
 		{
 			return it += offset.as_integer();
 		}
@@ -107,7 +115,7 @@ namespace cs_impl {
 			return it--;
 		}
 
-		array::iterator prev_n(array::iterator &it, numeric offset)
+		array::iterator prev_n(array::iterator &it, const numeric &offset)
 		{
 			return it -= offset.as_integer();
 		}
@@ -179,7 +187,7 @@ namespace cs_impl {
 		var to_hash_set(const array &arr)
 		{
 			hash_set set;
-			for (auto &it:arr) {
+			for (auto &it: arr) {
 				if (set.count(it) == 0)
 					set.insert(copy(it));
 			}
@@ -189,7 +197,7 @@ namespace cs_impl {
 		var to_hash_map(const array &arr)
 		{
 			hash_map map;
-			for (auto &it:arr) {
+			for (auto &it: arr) {
 				if (it.type() == typeid(pair)) {
 					const auto &p = it.const_val<pair>();
 					map[p.first] = copy(p.second);
@@ -250,12 +258,12 @@ namespace cs_impl {
 			return n.is_float();
 		}
 
-		numeric& ntoi(numeric &n)
+		numeric &ntoi(numeric &n)
 		{
 			return n = n.as_integer();
 		}
 
-		numeric& ntof(numeric &n)
+		numeric &ntof(numeric &n)
 		{
 			return n = n.as_float();
 		}
@@ -337,7 +345,7 @@ namespace cs_impl {
 			return std::toupper(c);
 		}
 
-		char from_ascii(const numeric& ascii)
+		char from_ascii(const numeric &ascii)
 		{
 			if (ascii.as_integer() < 0 || ascii.as_integer() > 255)
 				throw lang_error("Out of range.");
@@ -417,7 +425,7 @@ namespace cs_impl {
 		{
 			var ret = var::make<hash_set>();
 			hash_set &s = ret.val<hash_set>();
-			for (auto &it:lhs) {
+			for (auto &it: lhs) {
 				if (rhs.count(it) > 0)
 					s.emplace(it);
 			}
@@ -428,7 +436,7 @@ namespace cs_impl {
 		{
 			var ret = var::make<hash_set>(lhs);
 			hash_set &s = ret.val<hash_set>();
-			for (auto &it:rhs) {
+			for (auto &it: rhs) {
 				if (s.count(it) == 0)
 					s.emplace(it);
 			}
@@ -439,7 +447,7 @@ namespace cs_impl {
 		{
 			var ret = var::make<hash_set>(lhs);
 			hash_set &s = ret.val<hash_set>();
-			for (auto &it:rhs) {
+			for (auto &it: rhs) {
 				if (s.count(it) > 0)
 					s.erase(it);
 			}
@@ -523,15 +531,13 @@ namespace cs_impl {
 		{
 			if (openmode & std::ios_base::in)
 				return var::make<istream>(new std::ifstream(path, openmode));
-			else if (openmode & std::ios_base::out)
-				return var::make<ostream>(new std::ofstream(path, openmode));
-			else if (openmode & std::ios_base::app)
+			else if (openmode & std::ios_base::out || openmode & std::ios_base::app)
 				return var::make<ostream>(new std::ofstream(path, openmode));
 			else
 				throw lang_error("Unsupported openmode.");
 		}
 
-		void setprecision(numeric pre)
+		void setprecision(const numeric &pre)
 		{
 			current_process->output_precision = pre.as_integer();
 		}
@@ -634,12 +640,12 @@ namespace cs_impl {
 			return in->tellg();
 		}
 
-		void seek(istream &in, numeric pos)
+		void seek(istream &in, const numeric &pos)
 		{
 			in->seekg(pos.as_integer());
 		}
 
-		void seek_from(istream &in, std::ios_base::seekdir dir, numeric offset)
+		void seek_from(istream &in, std::ios_base::seekdir dir, const numeric& offset)
 		{
 			in->seekg(offset.as_integer(), dir);
 		}
@@ -696,12 +702,12 @@ namespace cs_impl {
 			return out->tellp();
 		}
 
-		void seek(ostream &out, numeric pos)
+		void seek(ostream &out, const numeric& pos)
 		{
 			out->seekp(pos.as_integer());
 		}
 
-		void seek_from(ostream &out, std::ios_base::seekdir dir, numeric offset)
+		void seek_from(ostream &out, std::ios_base::seekdir dir, const numeric& offset)
 		{
 			out->seekp(offset.as_integer(), dir);
 		}
@@ -887,72 +893,72 @@ namespace cs_impl {
 	namespace math_cs_ext {
 		using namespace cs;
 
-		numeric abs(numeric n)
+		numeric abs(const numeric& n)
 		{
 			return std::abs(n.as_float());
 		}
 
-		numeric ln(numeric n)
+		numeric ln(const numeric& n)
 		{
 			return std::log(n.as_float());
 		}
 
-		numeric log10(numeric n)
+		numeric log10(const numeric& n)
 		{
 			return std::log10(n.as_float());
 		}
 
-		numeric log(numeric a, numeric b)
+		numeric log(const numeric& a, const numeric& b)
 		{
-			return std::log(b.as_float())/std::log(a.as_float());
+			return std::log(b.as_float()) / std::log(a.as_float());
 		}
 
-		numeric sin(numeric n)
+		numeric sin(const numeric& n)
 		{
 			return std::sin(n.as_float());
 		}
 
-		numeric cos(numeric n)
+		numeric cos(const numeric& n)
 		{
 			return std::cos(n.as_float());
 		}
 
-		numeric tan(numeric n)
+		numeric tan(const numeric& n)
 		{
 			return std::tan(n.as_float());
 		}
 
-		numeric asin(numeric n)
+		numeric asin(const numeric& n)
 		{
 			return std::asin(n.as_float());
 		}
 
-		numeric acos(numeric n)
+		numeric acos(const numeric& n)
 		{
 			return std::acos(n.as_float());
 		}
 
-		numeric atan(numeric n)
+		numeric atan(const numeric& n)
 		{
 			return std::atan(n.as_float());
 		}
 
-		numeric sqrt(numeric n)
+		numeric sqrt(const numeric& n)
 		{
 			return std::sqrt(n.as_float());
 		}
 
-		numeric root(numeric a, numeric b)
+		numeric root(const numeric& a, const numeric& b)
 		{
 			return std::pow(a.as_float(), numeric_float(1) / b.as_float());
 		}
 
-		numeric pow(numeric a, numeric b)
+		numeric pow(const numeric& a, const numeric& b)
 		{
 			return std::pow(a.as_float(), b.as_float());
 		}
 
-		numeric _min(numeric a, numeric b)
+		numeric _min(const numeric& a, const numeric& b)
 		{
 			if (a.is_integer() && b.is_integer())
 				return (std::min)(a.as_integer(), b.as_integer());
@@ -960,7 +966,7 @@ namespace cs_impl {
 				return (std::min)(a.as_float(), b.as_float());
 		}
 
-		numeric _max(numeric a, numeric b)
+		numeric _max(const numeric& a, const numeric& b)
 		{
 			if (a.is_integer() && b.is_integer())
 				return (std::max)(a.as_integer(), b.as_integer());
@@ -968,12 +974,12 @@ namespace cs_impl {
 				return (std::max)(a.as_float(), b.as_float());
 		}
 
-		numeric rand(numeric b, numeric e)
+		numeric rand(const numeric& b, const numeric& e)
 		{
 			return cov::rand<numeric_float>(b.as_float(), e.as_float());
 		}
 
-		numeric randint(numeric b, numeric e)
+		numeric randint(const numeric& b, const numeric& e)
 		{
 			return cov::rand<numeric_integer>(b.as_integer(), e.as_integer());
 		}
@@ -1071,7 +1077,7 @@ namespace cs_impl {
 
 		numeric unixtime(const std::tm &t)
 		{
-			return std::mktime(const_cast<tm*>(&t));
+			return std::mktime(const_cast<tm *>(&t));
 		}
 
 		void init()
@@ -1089,6 +1095,148 @@ namespace cs_impl {
 			.add_var("unixtime", make_cni(unixtime, callable::types::member_visitor));
 		}
 	}
+
+	namespace runtime_cs_ext {
+		using namespace cs;
+
+		struct fiber_holder_impl final {
+			fiber::routine_t rt;
+
+			fiber_holder_impl() = delete;
+
+			fiber_holder_impl(fiber::routine_t t) : rt(t) {}
+
+			~fiber_holder_impl()
+			{
+				if (rt != 0)
+					fiber::destroy(rt);
+			}
+		};
+
+		using fiber_holder = std::shared_ptr<fiber_holder_impl>;
+
+		class fiber_callable final {
+			const context_t &context;
+			function const *func;
+			mutable vector args;
+		public:
+			explicit fiber_callable(function const *fn) : context(fn->get_context()), func(fn) {}
+
+			fiber_callable(function const *fn, vector data) : context(fn->get_context()), func(fn), args(std::move(data)) {}
+
+			fiber_callable(function const *fn, vector data, const array &append_args) : context(fn->get_context()), func(fn), args(std::move(data))
+			{
+				args.insert(args.end(), append_args.begin(), append_args.end());
+			}
+
+			void operator()() const noexcept
+			{
+				try {
+					func->call(args);
+					args.clear();
+					context->instance->clear_context();
+				}
+				catch (const lang_error &le) {
+					std::cerr << "coroutine terminated after throwing an instance of runtime exception" << std::endl;
+					std::cerr << "what(): " << le.what() << std::endl;
+				}
+				catch (const std::exception &e) {
+					std::cerr << "coroutine terminated after throwing an instance of exception" << std::endl;
+					std::cerr << "what(): " << e.what() << std::endl;
+				}
+				catch (...) {
+					std::cerr << "coroutine terminated after throwing an instance of unknown exception" << std::endl;
+				}
+			}
+		};
+
+		class async_callable final {
+			callable func;
+			mutable vector args;
+
+			void detach_args()
+			{
+				for (auto &val: args) {
+					if (!val.is_rvalue()) {
+						val.clone();
+						val.detach();
+					}
+					else
+						val.mark_as_rvalue(false);
+				}
+			}
+
+		public:
+			explicit async_callable(const var &fn) : func(fn.const_val<callable>()) {}
+
+			async_callable(const var &fn, vector data) : func(fn.const_val<callable>()), args(std::move(data))
+			{
+				detach_args();
+			}
+
+			async_callable(const var &fn, vector data, const array &append_args) : func(fn.const_val<callable>()), args(std::move(data))
+			{
+				args.insert(args.end(), append_args.begin(), append_args.end());
+				detach_args();
+			}
+
+			var operator()() const noexcept
+			{
+				try {
+					return func.call(args);
+				}
+				catch (const lang_error &le) {
+					std::cerr << "await thread terminated after throwing an instance of runtime exception" << std::endl;
+					std::cerr << "what(): " << le.what() << std::endl;
+				}
+				catch (const std::exception &e) {
+					std::cerr << "await thread terminated after throwing an instance of exception" << std::endl;
+					std::cerr << "what(): " << e.what() << std::endl;
+				}
+				catch (...) {
+					std::cerr << "await thread terminated after throwing an instance of unknown exception" << std::endl;
+				}
+				return null_pointer;
+			}
+		};
+	}
+
+	namespace channel_cs_ext {
+		using namespace cs;
+
+		namespace_t channel_ext = cs::make_shared_namespace<cs::name_space>();
+		using channel_type = fiber::Channel<var>;
+
+		void consumer(channel_type &ch, const runtime_cs_ext::fiber_holder &co)
+		{
+			ch.consumer(co->rt);
+		}
+
+		void init()
+		{
+			(*channel_ext)
+			.add_var("consumer", make_cni(consumer))
+			.add_var("push", make_cni(&channel_type::push))
+			.add_var("pop", make_cni(&channel_type::pop))
+			.add_var("clear", make_cni(&channel_type::clear))
+			.add_var("touch", make_cni(&channel_type::touch))
+			.add_var("size", make_cni(&channel_type::size, callable::types::member_visitor))
+			.add_var("empty", make_cni(&channel_type::empty));
+		}
+	}
+
+	template<>
+	constexpr const char *get_name_of_type<channel_cs_ext::channel_type>()
+	{
+		return "cs::fiber::channel";
+	}
+
+	template<>
+	cs::namespace_t &get_ext<channel_cs_ext::channel_type>()
+	{
+		return channel_cs_ext::channel_ext;
+	}
+
 	namespace runtime_cs_ext {
 		using namespace cs;
 
@@ -1141,7 +1289,7 @@ namespace cs_impl {
 			}
 		}
 
-		void delay(numeric time)
+		void delay(const numeric& time)
 		{
 			cov::timer::delay(cov::timer::time_unit::milli_sec, time.as_integer());
 		}
@@ -1160,7 +1308,7 @@ namespace cs_impl {
 		{
 			std::deque<char> buff;
 			expression_t tree;
-			for (auto &ch:expr)
+			for (auto &ch: expr)
 				buff.push_back(ch);
 			context->compiler->build_expr(buff, tree);
 			return var::make<expression_t>(tree);
@@ -1178,12 +1326,22 @@ namespace cs_impl {
 
 		var import(const context_t &context, const string &dir, const string &name)
 		{
-			return make_namespace(context->instance->import(dir, name));
+			try {
+				return make_namespace(context->instance->import(dir, name));
+			}
+			catch (...) {
+				return null_pointer;
+			}
 		}
 
 		var source_import(const context_t &context, const string &path)
 		{
-			return make_namespace(context->instance->source_import(path));
+			try {
+				return make_namespace(context->instance->source_import(path));
+			}
+			catch (...) {
+				return null_pointer;
+			}
 		}
 
 		numeric argument_count(const var &func)
@@ -1211,10 +1369,29 @@ namespace cs_impl {
 			context->instance->add_string_literal(literal, func);
 		}
 
+		var wait_worker(const cs::callable &func, cs::vector &args)
+		{
+			try {
+				return func.call(args);
+			}
+			catch (const lang_error &le) {
+				std::cerr << "wait thread terminated after throwing an instance of runtime exception" << std::endl;
+				std::cerr << "what(): " << le.what() << std::endl;
+			}
+			catch (const std::exception &e) {
+				std::cerr << "wait thread terminated after throwing an instance of exception" << std::endl;
+				std::cerr << "what(): " << e.what() << std::endl;
+			}
+			catch (...) {
+				std::cerr << "wait thread terminated after throwing an instance of unknown exception" << std::endl;
+			}
+			return null_pointer;
+		}
+
 		cs::var wait_for_impl(std::size_t mill_sec, const cs::callable &func, cs::vector &args)
 		{
-			std::future<cs::var> future = std::async(std::launch::async, [&func, &args] {
-				return func.call(args);
+			std::future<cs::var> future = std::async(std::launch::async, [&func, &args]() -> var {
+				return wait_worker(func, args);
 			});
 			if (future.wait_for(std::chrono::milliseconds(mill_sec)) != std::future_status::ready)
 				throw cs::lang_error("Target function deferred or timeout.");
@@ -1224,8 +1401,8 @@ namespace cs_impl {
 
 		cs::var wait_until_impl(std::size_t mill_sec, const cs::callable &func, cs::vector &args)
 		{
-			std::future<cs::var> future = std::async(std::launch::async, [&func, &args] {
-				return func.call(args);
+			std::future<cs::var> future = std::async(std::launch::async, [&func, &args]() -> var {
+				return wait_worker(func, args);
 			});
 			if (future.wait_until(std::chrono::system_clock::now() + std::chrono::milliseconds(mill_sec)) !=
 			        std::future_status::ready)
@@ -1234,7 +1411,7 @@ namespace cs_impl {
 				return future.get();
 		}
 
-		cs::var wait_for(cs::numeric mill_sec, const cs::var &func, const cs::array &argument)
+		cs::var wait_for(const cs::numeric& mill_sec, const cs::var &func, const cs::array &argument)
 		{
 			if (func.type() == typeid(cs::callable)) {
 				cs::vector args(argument.begin(), argument.end());
@@ -1250,7 +1427,7 @@ namespace cs_impl {
 				throw cs::lang_error("Invoke non-callable object.");
 		}
 
-		cs::var wait_until(cs::numeric mill_sec, const cs::var &func, const cs::array &argument)
+		cs::var wait_until(const cs::numeric& mill_sec, const cs::var &func, const cs::array &argument)
 		{
 			if (func.type() == typeid(cs::callable)) {
 				cs::vector args(argument.begin(), argument.end());
@@ -1264,6 +1441,81 @@ namespace cs_impl {
 			}
 			else
 				throw cs::lang_error("Invoke non-callable object.");
+		}
+
+		var create_co(const var &func)
+		{
+			if (func.type() == typeid(callable)) {
+				const cs::callable::function_type &impl_f = func.const_val<callable>().get_raw_data();
+				if (impl_f.target_type() != typeid(function))
+					throw lang_error("Only can create coroutine from covscript function.");
+				function const *fptr = impl_f.target<function>();
+				return std::make_shared<fiber_holder_impl>(fiber::create(fptr->get_context(),fiber_callable(fptr)));
+			}
+			else if (func.type() == typeid(object_method)) {
+				const auto &om = func.const_val<object_method>();
+				const cs::callable::function_type &impl_f = om.callable.const_val<callable>().get_raw_data();
+				if (impl_f.target_type() != typeid(function))
+					throw lang_error("Only can create coroutine from covscript function.");
+				function const *fptr = impl_f.target<function>();
+				return std::make_shared<fiber_holder_impl>(fiber::create(fptr->get_context(), fiber_callable(fptr, {om.object})));
+			}
+			return null_pointer;
+		}
+
+		var create_co_s(const var &func, const array &args)
+		{
+			if (func.type() == typeid(callable)) {
+				const cs::callable::function_type &impl_f = func.const_val<callable>().get_raw_data();
+				if (impl_f.target_type() != typeid(function))
+					throw lang_error("Only can create coroutine from covscript function.");
+				function const *fptr = impl_f.target<function>();
+				return std::make_shared<fiber_holder_impl>(fiber::create(fptr->get_context(), fiber_callable(fptr, vector(args.begin(), args.end()))));
+			}
+			else if (func.type() == typeid(object_method)) {
+				const auto &om = func.const_val<object_method>();
+				const cs::callable::function_type &impl_f = om.callable.const_val<callable>().get_raw_data();
+				if (impl_f.target_type() != typeid(function))
+					throw lang_error("Only can create coroutine from covscript function.");
+				function const *fptr = impl_f.target<function>();
+				return std::make_shared<fiber_holder_impl>(fiber::create(fptr->get_context(), fiber_callable(fptr, {om.object}, args)));
+			}
+			return null_pointer;
+		}
+
+		void destroy(const fiber_holder &fiber)
+		{
+			fiber::destroy(fiber->rt);
+			fiber->rt = 0;
+		}
+
+		numeric resume(const fiber_holder &fiber)
+		{
+			return fiber::resume(fiber->rt);
+		}
+
+		var await(const var &func)
+		{
+			if (func.type() == typeid(callable)) {
+				return fiber::await(async_callable(func));
+			}
+			else if (func.type() == typeid(object_method)) {
+				const auto &om = func.const_val<object_method>();
+				return fiber::await(async_callable(om.callable, {om.object}));
+			}
+			return null_pointer;
+		}
+
+		var await_s(const var &func, const array &args)
+		{
+			if (func.type() == typeid(callable)) {
+				return fiber::await(async_callable(func, vector(args.begin(), args.end())));
+			}
+			else if (func.type() == typeid(object_method)) {
+				const auto &om = func.const_val<object_method>();
+				return fiber::await(async_callable(om.callable, {om.object}, args));
+			}
+			return null_pointer;
 		}
 
 		void link_var(const context_t &context, const string &a, const var &b)
@@ -1282,11 +1534,12 @@ namespace cs_impl {
 			(*runtime_ext)
 			.add_var("time_type", make_namespace(time_ext))
 			.add_var("std_version", var::make_constant<numeric>(current_process->std_version))
-			.add_var("get_import_path", make_cni(get_import_path, true))
+			.add_var("get_sdk_path", CNI_SANDBOX(make_cni(get_sdk_path)))
+			.add_var("get_import_path", CNI_SANDBOX(make_cni(get_import_path, true)))
 			.add_var("info", make_cni(info))
 			.add_var("time", make_cni(time))
-			.add_var("local_time", make_cni(local_time))
-			.add_var("utc_time", make_cni(utc_time))
+			.add_var("local_time", var::make_protect<callable>(local_time))
+			.add_var("utc_time", var::make_protect<callable>(utc_time))
 			.add_var("delay", make_cni(delay))
 			.add_var("exception", make_cni(exception))
 			.add_var("hash", make_cni(hash, true))
@@ -1299,7 +1552,16 @@ namespace cs_impl {
 			.add_var("add_literal", make_cni(add_string_literal, true))
 			.add_var("get_current_dir", CNI_SANDBOX(make_cni(file_system::get_current_dir)))
 			.add_var("wait_for", make_cni(wait_for))
-			.add_var("wait_until", make_cni(wait_until));
+			.add_var("wait_until", make_cni(wait_until))
+			.add_var("await", make_cni(await))
+			.add_var("await_s", make_cni(await_s))
+			// Coroutine
+			.add_var("create_co", make_cni(create_co))
+			.add_var("create_co_s", make_cni(create_co_s))
+			.add_var("destroy_co", make_cni(destroy))
+			.add_var("resume", make_cni(resume))
+			.add_var("yield", make_cni(&fiber::yield))
+			.add_var("channel", var::make_protect<type_t>([]() -> var {return var::make<channel_cs_ext::channel_type>();}, type_id(typeid(channel_cs_ext::channel_type)), channel_cs_ext::channel_ext));
 			(*context_ext)
 			.add_var("build", make_cni(build))
 			.add_var("solve", make_cni(solve))
@@ -1311,10 +1573,11 @@ namespace cs_impl {
 			.add_var("unlink_var", make_cni(unlink_var));
 		}
 	}
+
 	namespace string_cs_ext {
 		using namespace cs;
 
-		string assign(string &str, numeric posit, char ch)
+		string assign(string &str, const numeric& posit, char ch)
 		{
 			str.at(posit.as_integer()) = ch;
 			return str;
@@ -1326,30 +1589,30 @@ namespace cs_impl {
 			return str;
 		}
 
-		string insert(string &str, numeric posit, const var &val)
+		string insert(string &str, const numeric& posit, const var &val)
 		{
 			str.insert(posit.as_integer(), val.to_string());
 			return str;
 		}
 
-		string erase(string &str, numeric b, numeric e)
+		string erase(string &str, const numeric& b, const numeric& e)
 		{
 			str.erase(b.as_integer(), e.as_integer());
 			return str;
 		}
 
-		string replace(string &str, numeric posit, numeric count, const var &val)
+		string replace(string &str, const numeric& posit, const numeric& count, const var &val)
 		{
 			str.replace(posit.as_integer(), count.as_integer(), val.to_string());
 			return str;
 		}
 
-		string substr(const string &str, numeric b, numeric e)
+		string substr(const string &str, const numeric& b, const numeric& e)
 		{
 			return str.substr(b.as_integer(), e.as_integer());
 		}
 
-		numeric find(const string &str, const string &s, numeric posit)
+		numeric find(const string &str, const string &s, const numeric& posit)
 		{
 			auto pos = str.find(s, posit.as_integer());
 			if (pos == std::string::npos)
@@ -1358,7 +1621,7 @@ namespace cs_impl {
 				return pos;
 		}
 
-		numeric rfind(const string &str, const string &s, numeric posit)
+		numeric rfind(const string &str, const string &s, const numeric& posit)
 		{
 			std::size_t pos = 0;
 			if (posit.as_integer() == -1)
@@ -1371,7 +1634,7 @@ namespace cs_impl {
 				return pos;
 		}
 
-		string cut(string &str, numeric n)
+		string cut(string &str, const numeric& n)
 		{
 			for (std::size_t i = 0; i < n.as_integer(); ++i)
 				str.pop_back();
@@ -1396,7 +1659,7 @@ namespace cs_impl {
 		string tolower(const string &str)
 		{
 			string s;
-			for (auto &ch:str)
+			for (auto &ch: str)
 				s.push_back(std::tolower(ch));
 			return std::move(s);
 		}
@@ -1404,7 +1667,7 @@ namespace cs_impl {
 		string toupper(const string &str)
 		{
 			string s;
-			for (auto &ch:str)
+			for (auto &ch: str)
 				s.push_back(std::toupper(ch));
 			return std::move(s);
 		}
@@ -1420,11 +1683,11 @@ namespace cs_impl {
 			arr;
 			string buf;
 			bool found = false;
-			for (auto &ch:str) {
-				for (auto &sig:signals) {
+			for (auto &ch: str) {
+				for (auto &sig: signals) {
 					if (ch == sig.const_val<char>()) {
 						if (!buf.empty()) {
-							arr.push_back(buf);
+							arr.emplace_back(buf);
 							buf.clear();
 						}
 						found = true;
@@ -1437,7 +1700,7 @@ namespace cs_impl {
 					buf.push_back(ch);
 			}
 			if (!buf.empty())
-				arr.push_back(buf);
+				arr.emplace_back(buf);
 			return std::move(arr);
 		}
 
@@ -1476,7 +1739,7 @@ namespace cs_impl {
 			return conio::terminal_height();
 		}
 
-		void gotoxy(numeric x, numeric y)
+		void gotoxy(const numeric& x, const numeric& y)
 		{
 			conio::gotoxy(x.as_integer(), y.as_integer());
 		}
@@ -1518,6 +1781,24 @@ namespace cs_impl {
 		using namespace cs;
 		using namespace cs_impl;
 
+		numeric ctime(const std::string &path)
+		{
+			struct cs_sys_stat result;
+			if (cs_sys_stat(path.c_str(), &result) == 0)
+				return result.st_ctime;
+			else
+				return 0;
+		}
+
+		numeric mtime(const std::string &path)
+		{
+			struct cs_sys_stat result;
+			if (cs_sys_stat(path.c_str(), &result) == 0)
+				return result.st_mtime;
+			else
+				return 0;
+		}
+
 		void init()
 		{
 			using namespace cs_impl::file_system;
@@ -1526,6 +1807,8 @@ namespace cs_impl {
 			.add_var("rename", CNI_SANDBOX(make_cni(move)))
 			.add_var("remove", CNI_SANDBOX(make_cni(remove)))
 			.add_var("exist", CNI_SANDBOX(make_cni(exist)))
+			.add_var("ctime", make_cni(ctime))
+			.add_var("mtime", make_cni(mtime))
 			.add_var("can_read", CNI_SANDBOX(make_cni(can_read)))
 			.add_var("can_write", CNI_SANDBOX(make_cni(can_write)))
 			.add_var("can_execute", CNI_SANDBOX(make_cni(can_execute)));
@@ -1610,7 +1893,7 @@ namespace cs_impl {
 			return str;
 		}
 
-		void exit(numeric exit_code)
+		void exit(const numeric& exit_code)
 		{
 			int code = exit_code.as_integer();
 			current_process->on_process_exit.touch(&code);
@@ -1649,6 +1932,7 @@ namespace cs_impl {
 			ostream_cs_ext::init();
 			system_cs_ext::init();
 			time_cs_ext::init();
+			channel_cs_ext::init();
 			runtime_cs_ext::init();
 			math_cs_ext::init();
 			except_cs_ext::init();

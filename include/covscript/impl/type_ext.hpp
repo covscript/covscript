@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -84,21 +84,21 @@ namespace cs_impl {
 	template<>
 	void detach<cs::list>(cs::list &val)
 	{
-		for (auto &it:val)
+		for (auto &it: val)
 			cs::copy_no_return(it);
 	}
 
 	template<>
 	void detach<cs::array>(cs::array &val)
 	{
-		for (auto &it:val)
+		for (auto &it: val)
 			cs::copy_no_return(it);
 	}
 
 	template<>
 	void detach<cs::hash_map>(cs::hash_map &val)
 	{
-		for (auto &it:val)
+		for (auto &it: val)
 			cs::copy_no_return(it.second);
 	}
 
@@ -129,7 +129,7 @@ namespace cs_impl {
 		if (lst.empty())
 			return "list => {}";
 		std::string str = "list => {";
-		for (const cs::var &it:lst)
+		for (const cs::var &it: lst)
 			str += it.to_string() + ", ";
 		str.resize(str.size() - 2);
 		str += "}";
@@ -142,7 +142,7 @@ namespace cs_impl {
 		if (arr.empty())
 			return "{}";
 		std::string str = "{";
-		for (const cs::var &it:arr)
+		for (const cs::var &it: arr)
 			str += it.to_string() + ", ";
 		str.resize(str.size() - 2);
 		str += "}";
@@ -161,7 +161,7 @@ namespace cs_impl {
 		if (set.empty())
 			return "cs::hash_set => {}";
 		std::string str = "cs::hash_set => {";
-		for (const cs::var &it:set)
+		for (const cs::var &it: set)
 			str += it.to_string() + ", ";
 		str.resize(str.size() - 2);
 		str += "}";
@@ -174,7 +174,7 @@ namespace cs_impl {
 		if (map.empty())
 			return "cs::hash_map => {}";
 		std::string str = "cs::hash_map => {";
-		for (const cs::pair &it:map)
+		for (const cs::pair &it: map)
 			str += cs_impl::to_string(it) + ", ";
 		str.resize(str.size() - 2);
 		str += "}";
@@ -205,7 +205,7 @@ namespace cs_impl {
 		if (range.empty())
 			return "cs::range => {}";
 		std::string str = "cs::range => {";
-		for (cs::numeric it:range)
+		for (cs::numeric it: range)
 			str += to_string(it) + ", ";
 		str.resize(str.size() - 2);
 		str += "}";
@@ -234,7 +234,7 @@ namespace cs_impl {
 	template<>
 	long to_integer<std::string>(const std::string &str)
 	{
-		for (auto &ch:str) {
+		for (auto &ch: str) {
 			if (!std::isdigit(ch))
 				throw cs::runtime_error("Wrong literal format.");
 		}

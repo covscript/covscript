@@ -1,0 +1,3 @@
+[submodule "csbuild/deps"]
+	path = csbuild/deps
+	url = https://github.com/covscript/covscript-deps

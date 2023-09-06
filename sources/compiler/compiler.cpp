@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -24,6 +24,7 @@
 * Website: http://covscript.org.cn
 */
 #include <covscript/impl/codegen.hpp>
+#include <regex>
 
 namespace cs {
 	const map_t<char, char> token_value::escape_char = {
@@ -46,7 +47,7 @@ namespace cs {
 		if (mVal.type() == typeid(cs::string)) {
 			o << "\"";
 			const cs::string &str = mVal.const_val<cs::string>();
-			for (auto ch : str) {
+			for (auto ch: str) {
 				if (escape_char.count(ch) > 0)
 					o << '\\' << escape_char.at(ch);
 				else
@@ -262,7 +263,7 @@ namespace cs {
 	bool token_arglist::dump(std::ostream &o) const
 	{
 		o << "< ArgumentList = {";
-		for (auto &tree:mTreeList) {
+		for (auto &tree: mTreeList) {
 			o << "< ChildExpression: ";
 			compiler_type::dump_expr(tree.root(), o);
 			o << " >";
@@ -274,7 +275,7 @@ namespace cs {
 	bool token_array::dump(std::ostream &o) const
 	{
 		o << "< ArrayList = {";
-		for (auto &tree:mTreeList) {
+		for (auto &tree: mTreeList) {
 			o << "< ChildExpression: ";
 			compiler_type::dump_expr(tree.root(), o);
 			o << " >";
@@ -286,7 +287,7 @@ namespace cs {
 	bool token_parallel::dump(std::ostream &o) const
 	{
 		o << "< ParallelList = {";
-		for (auto &tree:mTreeList) {
+		for (auto &tree: mTreeList) {
 			o << "< ChildExpression: ";
 			compiler_type::dump_expr(tree.root(), o);
 			o << " >";
@@ -470,7 +471,7 @@ namespace cs {
 		signal_types::divasi_, signal_types::modasi_, signal_types::powasi_
 	};
 
-	bool compiler_type::find_id_ref(tree_type<token_base *>::iterator it, const std::string& id)
+	bool compiler_type::find_id_ref(tree_type<token_base *>::iterator it, const std::string &id)
 	{
 		if (!it.usable())
 			return false;
@@ -485,7 +486,7 @@ namespace cs {
 		case token_types::expr:
 			return find_id_ref(static_cast<token_expr *>(it.data())->get_tree().root(), id);
 		case token_types::array: {
-			for (auto &tree:static_cast<token_array *>(token)->get_array()) {
+			for (auto &tree: static_cast<token_array *>(token)->get_array()) {
 				if (find_id_ref(tree.root(), id))
 					return true;
 			}
@@ -531,7 +532,7 @@ namespace cs {
 			return;
 		}
 		case token_types::array: {
-			for (auto &tree:static_cast<token_array *>(token)->get_array())
+			for (auto &tree: static_cast<token_array *>(token)->get_array())
 				trim_expression(tree, do_trim);
 			return;
 		}
@@ -593,11 +594,11 @@ namespace cs {
 					else
 						parallel_list = new token_parallel();
 					if (rptr != nullptr && rptr->get_type() == token_types::parallel)
-						for (auto &tree:static_cast<token_parallel *>(rptr)->get_parallel())
+						for (auto &tree: static_cast<token_parallel *>(rptr)->get_parallel())
 							parallel_list->get_parallel().push_back(tree);
 					else if (rptr != nullptr)
 						parallel_list->get_parallel().emplace_back(it.right());
-					for (auto &lst:parallel_list->get_parallel())
+					for (auto &lst: parallel_list->get_parallel())
 						trim_expr(lst, lst.root(), do_trim);
 					it.data() = parallel_list;
 				}
@@ -697,13 +698,13 @@ namespace cs {
 					throw compile_error("Wrong grammar for lambda expression.");
 				std::vector<std::string> args;
 				bool is_vargs = false;
-				for (auto &item:static_cast<token_arglist *>(lptr)->get_arglist()) {
+				for (auto &item: static_cast<token_arglist *>(lptr)->get_arglist()) {
 					if (item.root().data() == nullptr)
 						throw internal_error("Null pointer accessed.");
 					try_fix_this_deduction(item.root());
 					if (item.root().data()->get_type() == token_types::id) {
 						const std::string &str = static_cast<token_id *>(item.root().data())->get_id();
-						for (auto &it:args)
+						for (auto &it: args)
 							if (it == str)
 								throw compile_error("Redefinition of function argument.");
 						args.push_back(str);
@@ -722,7 +723,7 @@ namespace cs {
 				if (!is_vargs && find_self_ref) {
 					std::vector<std::string> new_args{"self"};
 					new_args.reserve(args.size());
-					for (auto &name:args) {
+					for (auto &name: args) {
 						if (name != "self")
 							new_args.emplace_back(std::move(name));
 						else
@@ -801,7 +802,7 @@ namespace cs {
 		}
 		case token_types::array: {
 			token_base *ptr = nullptr;
-			for (auto &tree:static_cast<token_array *>(token)->get_array()) {
+			for (auto &tree: static_cast<token_array *>(token)->get_array()) {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 					auto &child_tree = static_cast<token_expand *>(ptr)->get_tree();
@@ -818,18 +819,18 @@ namespace cs {
 			token_base *oldt = it.data();
 			try {
 				array arr;
-				for (auto &tree:static_cast<token_array *>(token)->get_array()) {
+				for (auto &tree: static_cast<token_array *>(token)->get_array()) {
 					ptr = tree.root().data();
 					if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 						const auto &child_arr = context->instance->parse_expr(
 						                            static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
-						for (auto &it:child_arr)
+						for (auto &it: child_arr)
 							arr.push_back(copy(it));
 					}
 					else
 						arr.push_back(copy(context->instance->parse_expr(tree.root())));
 				}
-				for (auto &it:arr)
+				for (auto &it: arr)
 					add_constant(it);
 				it.data() = new_value(var::make<array>(std::move(arr)));
 			}
@@ -839,7 +840,7 @@ namespace cs {
 			return;
 		}
 		case token_types::parallel: {
-			for (auto &tree:static_cast<token_parallel *>(token)->get_parallel())
+			for (auto &tree: static_cast<token_parallel *>(token)->get_parallel())
 				optimize_expression(tree, do_optm);
 			return;
 		}
@@ -924,7 +925,7 @@ namespace cs {
 					var &a = static_cast<token_value *>(lptr)->get_value();
 					if (a.type() == typeid(callable) && a.const_val<callable>().is_request_fold()) {
 						token_base *ptr = nullptr;
-						for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
+						for (auto &tree: static_cast<token_arglist *>(rptr)->get_arglist()) {
 							ptr = tree.root().data();
 							if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 								if (!optimizable(static_cast<token_expand *>(ptr)->get_tree().root()))
@@ -939,12 +940,12 @@ namespace cs {
 						try {
 							vector args;
 							args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
-							for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
+							for (auto &tree: static_cast<token_arglist *>(rptr)->get_arglist()) {
 								ptr = tree.root().data();
 								if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 									const auto &arr = context->instance->parse_expr(
 									                      static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
-									for (auto &it:arr)
+									for (auto &it: arr)
 										args.push_back(lvalue(it));
 								}
 								else
@@ -959,7 +960,7 @@ namespace cs {
 					else if (a.type() == typeid(object_method) &&
 					         a.const_val<object_method>().is_request_fold) {
 						token_base *ptr = nullptr;
-						for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
+						for (auto &tree: static_cast<token_arglist *>(rptr)->get_arglist()) {
 							ptr = tree.root().data();
 							if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 								if (!optimizable(static_cast<token_expand *>(ptr)->get_tree().root()))
@@ -975,12 +976,12 @@ namespace cs {
 							const auto &om = a.const_val<object_method>();
 							vector args{om.object};
 							args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
-							for (auto &tree:static_cast<token_arglist *>(rptr)->get_arglist()) {
+							for (auto &tree: static_cast<token_arglist *>(rptr)->get_arglist()) {
 								ptr = tree.root().data();
 								if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 									const auto &arr = context->instance->parse_expr(
 									                      static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
-									for (auto &it:arr)
+									for (auto &it: arr)
 										args.push_back(lvalue(it));
 								}
 								else
@@ -1035,6 +1036,71 @@ namespace cs {
 		}
 	}
 
+	void compiler_type::import_csym(const std::string &module_path, const std::string &csym_path)
+	{
+		std::ifstream ifs(csym_path);
+		if (!ifs.is_open())
+			return;
+		csym_info csym;
+		std::regex reg("^#\\$cSYM/1\\.0\\(([^\\)]*)\\):(.*)$");
+		// Read file
+		std::string header, buff;
+		bool expect_n = false;
+		for (int ch = ifs.get(); ifs; ch = ifs.get()) {
+			if (expect_n) {
+				expect_n = false;
+				if (ch != '\n')
+					buff += '\r';
+			}
+			switch (ch) {
+			case '\n':
+				if (!header.empty()) {
+					csym.codes.emplace_back(buff);
+					buff.clear();
+				}
+				else
+					std::swap(header, buff);
+				break;
+			case '\r':
+				expect_n = true;
+				break;
+			default:
+				buff += ch;
+				break;
+			}
+		}
+		if (!buff.empty()) {
+			csym.codes.emplace_back(buff);
+		}
+		// Parsing header
+		std::smatch match;
+		if (!std::regex_match(header, match, reg))
+			return;
+		csym.file = match.str(1);
+		std::string map_str = match.str(2);
+		for (auto &ch: map_str) {
+			if (ch == ',') {
+				if (!buff.empty()) {
+					if (buff != "-")
+						csym.map.push_back(std::stoull(buff) + 1);
+					else
+						csym.map.push_back(0);
+					buff.clear();
+				}
+			}
+			else
+				buff += ch;
+		}
+		if (!buff.empty()) {
+			if (buff != "-")
+				csym.map.push_back(std::stoull(buff) + 1);
+			else
+				csym.map.push_back(0);
+			buff.clear();
+		}
+		csyms.emplace(module_path, std::move(csym));
+	}
+
 	void compiler_type::dump_expr(tree_type<token_base *>::iterator it, std::ostream &stream)
 	{
 		if (!it.usable()) {
@@ -1062,12 +1128,12 @@ namespace cs {
 
 	void translator_type::match_grammar(const context_t &context, std::deque<token_base *> &raw)
 	{
-		for (auto &dat:m_data) {
+		for (auto &dat: m_data) {
 			bool matched = false;
 			{
 				bool failed = false, skip_useless = false;
 				std::size_t i = 0;
-				for (auto &it:dat->first) {
+				for (auto &it: dat->first) {
 					switch (it->get_type()) {
 					default:
 						break;
@@ -1125,7 +1191,7 @@ namespace cs {
 				// If matched, find and replace all id token with correspondent action token.
 				bool skip_useless = false;
 				std::size_t i = 0;
-				for (auto &it:dat->first) {
+				for (auto &it: dat->first) {
 					switch (it->get_type()) {
 					default:
 						break;
@@ -1170,7 +1236,7 @@ namespace cs {
 		std::size_t method_line_num = 0, line_num = 0;
 		std::deque<std::deque<token_base *>> tmp;
 		stack_type<method_base *> methods;
-		for (auto &it:lines) {
+		for (auto &it: lines) {
 			std::deque<token_base *> line = it;
 			line_num = static_cast<token_endline *>(line.back())->get_line_num();
 			try {

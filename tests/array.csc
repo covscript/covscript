@@ -5,10 +5,12 @@ arr[10]=10
 var it=arr.begin
 while it!=arr.end
 	if(it.data==6)
-		it=arr.insert(it.next(),7)
+		it.next()
+		it=arr.insert(it,7)
 	end
 	if(it.data==8)
 		it=arr.erase(it)
+		continue
 	end
 	it.next()
 end

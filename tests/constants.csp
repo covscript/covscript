@@ -3,6 +3,5 @@ constant a = {"World"}
 constant str = "Hello"
 a.push_front(str)
 function test()
-    import constants
-    system.out.println(constants.a)
+    system.out.println(a)
 end

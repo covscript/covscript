@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -75,6 +75,7 @@ void activate_sigint_handler()
 
 #endif
 
+std::string csym_path;
 std::string log_path;
 bool repl = false;
 bool silent = false;
@@ -88,12 +89,17 @@ bool show_version_info = false;
 
 int covscript_args(int args_size, char *args[])
 {
+	int expect_csym = 0;
 	int expect_log_path = 0;
 	int expect_import_path = 0;
 	int expect_stack_resize = 0;
 	int index = 1;
 	for (; index < args_size; ++index) {
-		if (expect_log_path == 1) {
+		if (expect_csym == 1) {
+			csym_path = cs::process_path(args[index]);
+			expect_csym = 2;
+		}
+		else if (expect_log_path == 1) {
 			log_path = cs::process_path(args[index]);
 			expect_log_path = 2;
 		}
@@ -132,6 +138,9 @@ int covscript_args(int args_size, char *args[])
 			else if ((std::strcmp(args[index], "--version") == 0 || std::strcmp(args[index], "-v") == 0) &&
 			         !show_version_info)
 				show_version_info = true;
+			else if ((std::strcmp(args[index], "--csym") == 0 || std::strcmp(args[index], "-g") == 0) &&
+			         expect_csym == 0)
+				expect_csym = 1;
 			else if ((std::strcmp(args[index], "--log-path") == 0 || std::strcmp(args[index], "-l") == 0) &&
 			         expect_log_path == 0)
 				expect_log_path = 1;
@@ -147,7 +156,7 @@ int covscript_args(int args_size, char *args[])
 		else
 			break;
 	}
-	if (expect_log_path == 1 || expect_import_path == 1 || expect_import_path == 1)
+	if (expect_csym == 1 || expect_log_path == 1 || expect_import_path == 1 || expect_import_path == 1)
 		throw cs::fatal_error("argument syntax error.");
 	return index;
 }
@@ -158,7 +167,7 @@ void covscript_main(int args_size, char *args[])
 	cs::current_process->import_path += cs::path_delimiter + cs::get_import_path();
 	if (show_help_info) {
 		std::cout << "Usage:\n";
-		std::cout << "    cs [options...] <FILE> [arguments...]\n";
+		std::cout << "    cs [options...] <FILE|STDIN> [arguments...]\n";
 		std::cout << "    cs [options...]\n";
 		std::cout << std::endl;
 		std::cout << "Interpreter Options:" << std::endl;
@@ -166,6 +175,7 @@ void covscript_main(int args_size, char *args[])
 		std::cout << "  --compile-only         -c          Only compile\n";
 		std::cout << "  --dump-ast             -d          Export abstract syntax tree\n";
 		std::cout << "  --dependency           -r          Export module dependency\n";
+		std::cout << "  --csym         <FILE>  -g <FILE>   Read cSYM from file\n";
 		std::cout << std::endl;
 		std::cout << "Interpreter REPL Options:" << std::endl;
 		std::cout << "    Option                Mnemonic   Function\n";
@@ -192,32 +202,40 @@ void covscript_main(int args_size, char *args[])
 		std::cout << "  STD Version: " << cs::current_process->std_version << "\n";
 		std::cout << "  API Version: " << CS_GET_VERSION_STR(COVSCRIPT_API_VERSION) << "\n";
 		std::cout << "  ABI Version: " << CS_GET_VERSION_STR(COVSCRIPT_ABI_VERSION) << "\n";
-#ifdef COVSCRIPT_PLATFORM_WIN32
-		std::cout << "  Runtime Env: WIN32\n";
-#else
-		std::cout << "  Runtime Env: UNIX\n";
-#endif
+		std::cout << "  Runtime Env: " << COVSCRIPT_PLATFORM_NAME << "\n";
+		std::cout << "  Compile Env: " << COVSCRIPT_COMPILER_NAME << "\n";
 		std::cout << std::endl;
 		return;
 	}
 	if (!repl && index != args_size) {
 		std::string path = cs::process_path(args[index]);
-		if (!cs_impl::file_system::exist(path) || cs_impl::file_system::is_dir(path) ||
-		        !cs_impl::file_system::can_read(path))
-			throw cs::fatal_error("invalid input file.");
-		cs::prepend_import_path(path, cs::current_process);
+		if (path != "STDIN") {
+			if (!cs_impl::file_system::exist(path) || cs_impl::file_system::is_dir(path) ||
+			        !cs_impl::file_system::can_read(path))
+				throw cs::fatal_error("invalid input file.");
+			cs::prepend_import_path(path, cs::current_process);
+		}
 		cs::array arg;
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::context_t context = cs::create_context(arg);
+		cs::raii_collector context_gc(context);
 		cs::current_process->on_process_exit.add_listener([&context](void *code) -> bool {
 			cs::current_process->exit_code = *static_cast<int *>(code);
 			throw cs::fatal_error("CS_EXIT");
 			return true;
 		});
 		context->compiler->disable_optimizer = no_optimize;
+		// Reads cSYM
+		if (!csym_path.empty())
+			context->compiler->import_csym(path, csym_path);
 		try {
-			context->instance->compile(path);
+			if (path == "STDIN") {
+				context->file_path = "STDIN";
+				context->instance->compile(std::cin);
+			}
+			else
+				context->instance->compile(path);
 			if (dump_ast) {
 				if (!log_path.empty()) {
 					std::ofstream out(::log_path);
@@ -229,33 +247,37 @@ void covscript_main(int args_size, char *args[])
 			if (dump_dependency) {
 				if (!log_path.empty()) {
 					std::ofstream out(::log_path);
-					for (auto &it:context->compiler->modules)
+					for (auto &it: context->compiler->modules)
 						out << it.first << std::endl;
 				}
 				else {
-					for (auto &it:context->compiler->modules)
+					for (auto &it: context->compiler->modules)
 						std::cout << it.first << std::endl;
 				}
 			}
 			if (!compile_only)
 				context->instance->interpret();
 		}
-		catch (const std::exception &e) {
-			if (std::strstr(e.what(), "CS_EXIT") == nullptr)
-				throw;
+		catch (const cs::exception &ce) {
+			if (std::strstr(ce.what(), "CS_EXIT") == nullptr) {
+				if (context->compiler->csyms.count(ce.file()) > 0) {
+					cs::exception ne(ce);
+					ne.relocate_to_csym(context->compiler->csyms[ce.file()]);
+					throw ne;
+				}
+				else
+					throw;
+			}
 		}
 		catch (...) {
-			cs::collect_garbage(context);
 			throw;
 		}
-		cs::collect_garbage(context);
 	}
 	else {
 		if (!silent)
 			std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: "
-			          << cs::current_process->version
-			          << "\n"
-			          "Copyright (C) 2017-2022 Michael Lee. All rights reserved.\n"
+			          << cs::current_process->version << " [" << COVSCRIPT_COMPILER_NAME << " on " << COVSCRIPT_PLATFORM_NAME << "]\n"
+			          "Copyright (C) 2017-2023 Michael Lee. All rights reserved.\n"
 			          "Please visit <http://covscript.org.cn/> for more information."
 			          << std::endl;
 		cs::array
@@ -263,6 +285,7 @@ void covscript_main(int args_size, char *args[])
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::context_t context = cs::create_context(arg);
+		cs::raii_collector context_gc(context);
 		activate_sigint_handler();
 		cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
 			cs::current_process->exit_code = *static_cast<int *>(code);
@@ -279,6 +302,7 @@ void covscript_main(int args_size, char *args[])
 		cs::repl repl(context);
 		std::ofstream log_stream;
 		std::string line;
+		repl.echo = !silent;
 		while (true) {
 			try {
 #ifdef COVSCRIPT_PLATFORM_WIN32
@@ -324,11 +348,9 @@ void covscript_main(int args_size, char *args[])
 					break;
 			}
 			catch (...) {
-				cs::collect_garbage(context);
 				throw;
 			}
 		}
-		cs::collect_garbage(context);
 	}
 }
 

@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -27,11 +27,23 @@
 #include <covscript/impl/runtime.hpp>
 
 namespace cs {
+	context_t create_context(const array &);
+
+	context_t create_subcontext(const context_t &);
+
 	class instance_type final : public runtime_type {
 		friend class repl;
 
+		friend context_t cs::create_context(const array &);
+
+		friend context_t cs::create_subcontext(const context_t &);
+
 		// Statements
 		std::deque<statement_base *> statements;
+
+		// Fiber Stack Pointer
+		stack_pointer fiber_sp = nullptr;
+		stack_pointer &fiber_stack;
 	public:
 		// Status
 		bool return_fcall = false;
@@ -43,9 +55,13 @@ namespace cs {
 		// Constructor and destructor
 		instance_type() = delete;
 
-		explicit instance_type(context_t c) : context(std::move(c)) {}
+		explicit instance_type(context_t c) : context(std::move(c)), runtime_type(fiber_sp), fiber_stack(fiber_sp) {}
 
-		instance_type(context_t c, std::size_t stack_size) : context(std::move(c)), runtime_type(stack_size) {}
+		instance_type(context_t c, stack_pointer &fsp) : context(std::move(c)), runtime_type(fsp), fiber_stack(fsp) {}
+
+		instance_type(context_t c, std::size_t stack_size) : context(std::move(c)), runtime_type(fiber_sp, stack_size), fiber_stack(fiber_sp) {}
+
+		instance_type(context_t c, stack_pointer &fsp, std::size_t stack_size) : context(std::move(c)), runtime_type(fsp, stack_size), fiber_stack(fsp) {}
 
 		instance_type(const instance_type &) = delete;
 
@@ -57,6 +73,8 @@ namespace cs {
 		namespace_t source_import(const std::string &);
 
 		void compile(const std::string &);
+
+		void compile(std::istream &);
 
 		void interpret();
 
@@ -75,6 +93,21 @@ namespace cs {
 
 		// Parse using statement
 		void parse_using(tree_type<token_base *>::iterator, bool= false);
+
+		// Coroutines
+		void swap_context(stack_type<domain_type> *stack)
+		{
+			fiber_stack = stack;
+		}
+
+		void clear_context()
+		{
+			if (fiber_stack != nullptr) {
+				while (!fiber_stack->empty())
+					fiber_stack->pop_no_return();
+				fiber_stack = nullptr;
+			}
+		}
 	};
 
 // Repl
@@ -94,13 +127,11 @@ namespace cs {
 	public:
 		context_t context;
 
+		bool echo = true;
+
 		repl() = delete;
 
-		explicit repl(context_t c) : context(std::move(c))
-		{
-			context->file_path = "<REPL_ENV>";
-			context->compiler->fold_expr = false;
-		}
+		explicit repl(context_t);
 
 		repl(const repl &) = delete;
 
@@ -108,18 +139,17 @@ namespace cs {
 
 		void reset_status()
 		{
-			context_t _context = context;
-			charset _encoding = encoding;
-			std::size_t _line_num = line_num;
-			this->~repl();
-			::new(this) repl(_context);
-			encoding = _encoding;
-			line_num = _line_num;
+			tmp.clear();
+			while (!methods.empty())
+				methods.pop_no_return();
+			multi_line = false;
+			line_buff.clear();
+			cmd_buff.clear();
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
 		}
 
-		int get_level() const
+		std::size_t get_level() const
 		{
 			return methods.size();
 		}
@@ -192,4 +222,6 @@ namespace cs {
 			return current_process->stack.top();
 		}
 	};
+
+	std::string get_sdk_path();
 }

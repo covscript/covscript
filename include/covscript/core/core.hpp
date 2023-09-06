@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -103,6 +103,14 @@ namespace cs {
 #endif
 		}
 
+		inline std::size_t child_stack_size() const
+		{
+			if (stack_size >= 1000)
+				return stack_size / 10;
+			else
+				return 100;
+		}
+
 // Event Handling
 		static void cleanup_context();
 
@@ -140,11 +148,17 @@ namespace cs {
 		std_exception_handler std_eh_callback = &std_defalt_exception_handler;
 		cs_exception_handler cs_eh_callback = &cs_defalt_exception_handler;
 
-		process_context() : on_process_exit(&on_process_exit_default_handler),
-			on_process_sigint(&on_process_exit_default_handler)
+		process_context() : on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
 		{
 			is_sigint_raised = false;
 		}
+
+		explicit process_context(std::size_t ss) : stack_size(ss), stack(ss), on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
+		{
+			is_sigint_raised = false;
+		}
+
+		std::unique_ptr<process_context> fork();
 	};
 
 	extern process_context this_process;
@@ -223,22 +237,29 @@ namespace cs {
 		bool mIsLambda = false;
 		std::vector<std::string> mArgs;
 		std::deque<statement_base *> mBody;
-		static var call_rr(const function*, vector &);
-		static var call_vv(const function*, vector &);
-		static var call_rl(const function*, vector &);
-		static var call_el(const function*, vector &);
-		var (*call_ptr)(const function*, vector &) = nullptr;
+
+		static var call_rr(const function *, vector &);
+
+		static var call_vv(const function *, vector &);
+
+		static var call_rl(const function *, vector &);
+
+		static var call_el(const function *, vector &);
+
+		var (*call_ptr)(const function *, vector &) = nullptr;
+
 		inline void init_call_ptr() noexcept
 		{
 			if (!mIsVargs) {
 				if (mIsLambda)
-					call_ptr = mArgs.empty()?&call_el:&call_rl;
+					call_ptr = mArgs.empty() ? &call_el : &call_rl;
 				else
 					call_ptr = &call_rr;
 			}
 			else
 				call_ptr = &call_vv;
 		}
+
 	public:
 		function() = delete;
 
@@ -251,11 +272,13 @@ namespace cs {
 			init_call_ptr();
 		}
 #else
+
 		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false) :
 			mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
 		{
 			init_call_ptr();
 		}
+
 #endif
 
 		~function() = default;
@@ -270,13 +293,18 @@ namespace cs {
 			return call_ptr(this, args);
 		}
 
+		const context_t &get_context() const
+		{
+			return mContext;
+		}
+
 		void add_reserve_var(const std::string &reserve, bool is_mem_fn = false)
 		{
 			mIsMemFn = is_mem_fn;
 			if (!mIsVargs) {
 				std::vector<std::string> args{reserve};
 				args.reserve(mArgs.size());
-				for (auto &name:mArgs) {
+				for (auto &name: mArgs) {
 					if (name != reserve)
 						args.emplace_back(std::move(name));
 					else
@@ -286,14 +314,14 @@ namespace cs {
 			}
 #ifdef CS_DEBUGGER
 			std::string prefix, suffix;
-			auto lpos=mDecl.find('(')+1;
-			auto rpos=mDecl.rfind(')');
-			prefix=mDecl.substr(0, lpos);
-			suffix=mDecl.substr(rpos);
-			if(mArgs.size()>2)
-				mDecl=prefix+"this, "+mDecl.substr(lpos, rpos-lpos)+suffix;
+			auto lpos = mDecl.find('(') + 1;
+			auto rpos = mDecl.rfind(')');
+			prefix = mDecl.substr(0, lpos);
+			suffix = mDecl.substr(rpos);
+			if(mArgs.size() > 1 || mIsVargs)
+				mDecl = prefix + "this" + (mIsVargs ? ", ..." : ", ") + mDecl.substr(lpos, rpos-lpos) + suffix;
 			else
-				mDecl=prefix+"this"+mDecl.substr(lpos, rpos-lpos)+suffix;
+				mDecl = prefix + "this" + suffix;
 #endif
 		}
 
@@ -368,7 +396,7 @@ namespace cs {
 
 		pointer() = default;
 
-		explicit pointer(const var &v) : data(v) {}
+		explicit pointer(var v) : data(std::move(v)) {}
 
 		bool operator==(const pointer &ptr) const
 		{
@@ -379,6 +407,7 @@ namespace cs {
 	static const pointer null_pointer = {};
 
 	struct type_id final {
+		static map_t<std::size_t, set_t<std::size_t>> inherit_map;
 		std::type_index type_idx;
 		std::size_t type_hash;
 
@@ -386,22 +415,32 @@ namespace cs {
 
 		type_id(const std::type_index &id, std::size_t hash = 0) : type_idx(id), type_hash(hash) {}
 
-		bool compare(const type_id &id) const
+		inline bool is_a(const type_id &id) const
 		{
 			if (&id == this)
 				return true;
-			if (type_hash != 0)
+			if (type_hash && id.type_hash)
+				return inherit_map.count(id.type_hash) > 0 && inherit_map[id.type_hash].count(type_hash) > 0;
+			else
+				return type_idx == id.type_idx;
+		}
+
+		inline bool compare(const type_id &id) const
+		{
+			if (&id == this)
+				return true;
+			if (type_hash)
 				return type_hash == id.type_hash;
 			else
 				return type_idx == id.type_idx;
 		}
 
-		bool operator==(const type_id &id) const
+		inline bool operator==(const type_id &id) const
 		{
 			return compare(id);
 		}
 
-		bool operator!=(const type_id &id) const
+		inline bool operator!=(const type_id &id) const
 		{
 			return !compare(id);
 		}
@@ -697,7 +736,7 @@ namespace cs {
 	public:
 		range_iterator() = delete;
 
-		explicit range_iterator(numeric step, numeric index) : m_step(step), m_index(index) {}
+		explicit range_iterator(numeric step, numeric index) : m_step(std::move(step)), m_index(std::move(index)) {}
 
 		range_iterator(const range_iterator &) = default;
 
@@ -732,7 +771,7 @@ namespace cs {
 	public:
 		range_type() = delete;
 
-		range_type(numeric start, numeric stop, numeric step) : m_start(start), m_stop(stop), m_step(step) {}
+		range_type(numeric start, numeric stop, numeric step) : m_start(std::move(start)), m_stop(std::move(stop)), m_step(std::move(step)) {}
 
 		range_type(const range_type &) = default;
 
@@ -764,10 +803,9 @@ namespace cs {
 	public:
 		structure() = delete;
 
-		structure(const type_id &id, const std::string &name, const domain_type &data) : m_id(id),
-			m_name(name),
-			m_data(std::make_shared<domain_type>(
-			           data))
+		structure(const type_id &id, std::string name, const domain_type &data) : m_id(id),
+			m_name(std::move(name)),
+			m_data(std::make_shared<domain_type>(data))
 		{
 			if (m_data->exist("initialize"))
 				invoke(m_data->get_var("initialize"), var::make<structure>(this));
@@ -782,7 +820,7 @@ namespace cs {
 				var p = copy(_p);
 				auto &parent = p.val<structure>();
 				m_data->add_var("parent", p);
-				for (auto &it:*parent.m_data) {
+				for (auto &it: *parent.m_data) {
 					// Handle overriding
 					const var &v = s.m_data->get_var(it.first);
 					if (!_parent.m_data->get_var(it.first).is_same(v))
@@ -791,7 +829,7 @@ namespace cs {
 						m_data->add_var(it.first, parent.m_data->get_var_by_id(it.second));
 				}
 			}
-			for (auto &it:*s.m_data)
+			for (auto &it: *s.m_data)
 				if (!m_data->exist(it.first))
 					m_data->add_var(it.first, copy(s.m_data->get_var_by_id(it.second)));
 			if (m_data->exist("duplicate"))
@@ -815,7 +853,7 @@ namespace cs {
 				return invoke(m_data->get_var("equal"), var::make<structure>(this),
 				              var::make<structure>(&s)).const_val<bool>();
 			else {
-				for (auto &it:*m_data)
+				for (auto &it: *m_data)
 					if (it.first != "parent" && s.m_data->get_var(it.first) != m_data->get_var_by_id(it.second))
 						return false;
 				return true;
@@ -848,6 +886,7 @@ namespace cs {
 	};
 
 	class struct_builder final {
+		static map_t<std::size_t, std::size_t> mParentMap;
 		static std::size_t mCount;
 		context_t mContext;
 		type_id mTypeId;
@@ -870,6 +909,7 @@ namespace cs {
 
 		static void reset_counter()
 		{
+			mParentMap.clear();
 			mCount = 0;
 		}
 
@@ -877,6 +917,8 @@ namespace cs {
 		{
 			return mTypeId;
 		}
+
+		void do_inherit();
 
 		var operator()();
 	};
@@ -888,7 +930,10 @@ namespace cs {
 	public:
 		name_space() : m_data(new domain_type) {}
 
-		name_space(const name_space &) = delete;
+		name_space(const name_space &ns) : m_data(new domain_type)
+		{
+			copy_namespace(ns);
+		}
 
 		explicit name_space(domain_type dat) : m_data(new domain_type(std::move(dat))) {}
 
@@ -944,7 +989,7 @@ namespace cs {
 
 		void copy_domain(const domain_type &domain)
 		{
-			for (auto &it:domain)
+			for (auto &it: domain)
 				m_data->add_var(it.first, domain.get_var_by_id(it.second));
 		}
 
@@ -983,7 +1028,7 @@ namespace cs {
 
 		void collect()
 		{
-			for (auto &ptr:table)
+			for (auto &ptr: table)
 				::operator delete(ptr);
 			table.clear();
 		}
@@ -1016,6 +1061,11 @@ namespace cs {
 
 		extension(const extension &) = delete;
 
+		inline static int truncate(int n, int m)
+		{
+			return n == 0 ? 0 : n / int(std::pow(10, (std::max)(int(std::log10(std::abs(n))) - (std::max)(m, 0) + 1, 0)));
+		}
+
 		explicit extension(const std::string &path)
 		{
 			using namespace dll_resources;
@@ -1023,7 +1073,7 @@ namespace cs {
 			gc.add(dll);
 			dll_compatible_check_t dll_check = reinterpret_cast<dll_compatible_check_t>(dll->get_address(
 			                                       dll_compatible_check));
-			if (dll_check == nullptr || dll_check() != COVSCRIPT_ABI_VERSION)
+			if (dll_check == nullptr || truncate(dll_check(), 4) != truncate(COVSCRIPT_ABI_VERSION, 4))
 				throw runtime_error("Incompatible Covariant Script Extension.(Target: " + std::to_string(dll_check()) +
 				                    ", Current: " + std::to_string(COVSCRIPT_ABI_VERSION) + ")");
 			dll_main_entrance_t dll_main = reinterpret_cast<dll_main_entrance_t>(dll->get_address(dll_main_entrance));

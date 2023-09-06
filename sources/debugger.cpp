@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -80,6 +80,8 @@ void activate_sigint_handler()
 #endif
 
 std::string log_path;
+std::string csym_path;
+bool silent = false;
 bool no_optimize = false;
 bool show_help_info = false;
 bool wait_before_exit = false;
@@ -87,12 +89,17 @@ bool show_version_info = false;
 
 int covscript_args(int args_size, char *args[])
 {
+	int expect_csym = 0;
 	int expect_log_path = 0;
 	int expect_import_path = 0;
 	int expect_stack_resize = 0;
 	int index = 1;
 	for (; index < args_size; ++index) {
-		if (expect_log_path == 1) {
+		if (expect_csym == 1) {
+			csym_path = cs::process_path(args[index]);
+			expect_csym = 2;
+		}
+		else if (expect_log_path == 1) {
 			log_path = cs::process_path(args[index]);
 			expect_log_path = 2;
 		}
@@ -108,12 +115,17 @@ int covscript_args(int args_size, char *args[])
 			if ((std::strcmp(args[index], "--help") == 0 || std::strcmp(args[index], "-h") == 0) &&
 			        !show_help_info)
 				show_help_info = true;
+			else if ((std::strcmp(args[index], "--silent") == 0 || std::strcmp(args[index], "-s") == 0) && !silent)
+				silent = true;
 			else if ((std::strcmp(args[index], "--version") == 0 || std::strcmp(args[index], "-v") == 0) &&
 			         !show_version_info)
 				show_version_info = true;
 			else if ((std::strcmp(args[index], "--wait-before-exit") == 0 || std::strcmp(args[index], "-w") == 0) &&
 			         !wait_before_exit)
 				wait_before_exit = true;
+			else if ((std::strcmp(args[index], "--csym") == 0 || std::strcmp(args[index], "-g") == 0) &&
+			         expect_csym == 0)
+				expect_csym = 1;
 			else if ((std::strcmp(args[index], "--log-path") == 0 || std::strcmp(args[index], "-l") == 0) &&
 			         expect_log_path == 0)
 				expect_log_path = 1;
@@ -129,7 +141,7 @@ int covscript_args(int args_size, char *args[])
 		else
 			break;
 	}
-	if (expect_log_path == 1 || expect_import_path == 1 || expect_import_path == 1)
+	if (expect_csym == 1 || expect_log_path == 1 || expect_import_path == 1 || expect_import_path == 1)
 		throw cs::fatal_error("argument syntax error.");
 	return index;
 }
@@ -184,7 +196,7 @@ public:
 			target.target<cs::function>()->set_debugger_state(true);
 			auto key = m_pending.find(name);
 			if (key->second.second) {
-				for (auto &it:m_breakpoints) {
+				for (auto &it: m_breakpoints) {
 					if (it.id == key->second.first) {
 						it.data.emplace<cs::var>(function);
 						key->second.second = false;
@@ -215,7 +227,7 @@ public:
 
 	bool exist(std::size_t line_num) const
 	{
-		for (auto &b:m_breakpoints)
+		for (auto &b: m_breakpoints)
 			if (b.data.type() == typeid(std::size_t) && b.data.get<std::size_t>() == line_num)
 				return true;
 		return false;
@@ -224,7 +236,7 @@ public:
 	void list() const
 	{
 		std::cout << "ID\tBreakpoint\n" << std::endl;
-		for (auto &b:m_breakpoints) {
+		for (auto &b: m_breakpoints) {
 			std::cout << b.id << "\t";
 			if (b.data.type() == typeid(cs::var)) {
 				auto func = b.data.get<cs::var>().const_val<cs::callable>().get_raw_data().target<cs::function>();
@@ -240,9 +252,9 @@ public:
 
 	void reset()
 	{
-		for (auto &it:m_pending) {
+		for (auto &it: m_pending) {
 			it.second.second = true;
-			for (auto &b:m_breakpoints) {
+			for (auto &b: m_breakpoints) {
 				if (b.id == it.second.first) {
 					b.data.emplace<std::string>(it.first);
 					break;
@@ -369,17 +381,43 @@ bool covscript_debugger()
 
 void cs_debugger_step_callback(cs::statement_base *stmt)
 {
-	if (!exec_by_step && stmt->get_file_path() == path && breakpoints.exist(stmt->get_line_num())) {
-		std::cout << "\nHit breakpoint, at \"" << stmt->get_file_path() << "\", line " << stmt->get_line_num()
-		          << std::endl;
-		current_level = cs::current_process->stack.size();
-		exec_by_step = true;
+	if (stmt->get_file_path() != path)
+		return;
+	if (context->compiler->csyms.count(path) > 0) {
+		cs::csym_info &csym = context->compiler->csyms[path];
+		std::size_t current_line = stmt->get_line_num();
+		if (current_line >= csym.map.size())
+			return;
+		std::size_t actual_line = csym.map[current_line - 1];
+		if (actual_line >= csym.codes.size() || actual_line == 0)
+			return;
+		const std::string &code = csym.codes[actual_line - 1];
+		if (!exec_by_step && breakpoints.exist(actual_line)) {
+			std::cout << "\nHit breakpoint, at \"" << csym.file << "\", line " << actual_line
+			          << std::endl;
+			current_level = cs::current_process->stack.size();
+			exec_by_step = true;
+		}
+		if (exec_by_step && (step_into_function || cs::current_process->stack.size() <= current_level)) {
+			std::cout << actual_line << "\t" << code << std::endl;
+			current_level = cs::current_process->stack.size();
+			step_into_function = false;
+			while (covscript_debugger());
+		}
 	}
-	if (exec_by_step && (step_into_function || cs::current_process->stack.size() <= current_level)) {
-		std::cout << stmt->get_line_num() << "\t" << stmt->get_raw_code() << std::endl;
-		current_level = cs::current_process->stack.size();
-		step_into_function = false;
-		while (covscript_debugger());
+	else {
+		if (!exec_by_step && breakpoints.exist(stmt->get_line_num())) {
+			std::cout << "\nHit breakpoint, at \"" << stmt->get_file_path() << "\", line " << stmt->get_line_num()
+			          << std::endl;
+			current_level = cs::current_process->stack.size();
+			exec_by_step = true;
+		}
+		if (exec_by_step && (step_into_function || cs::current_process->stack.size() <= current_level)) {
+			std::cout << stmt->get_line_num() << "\t" << stmt->get_raw_code() << std::endl;
+			current_level = cs::current_process->stack.size();
+			step_into_function = false;
+			while (covscript_debugger());
+		}
 	}
 }
 
@@ -390,8 +428,18 @@ void cs_debugger_func_breakpoint(const std::string &name, const cs::var &func)
 
 void cs_debugger_func_callback(const std::string &decl, cs::statement_base *stmt)
 {
-	std::cout << "\nHit breakpoint, at \"" << stmt->get_file_path() << "\", line " << stmt->get_line_num() << ", "
-	          << decl << std::endl;
+	if (context->compiler->csyms.count(stmt->get_file_path()) > 0) {
+		cs::csym_info &csym = context->compiler->csyms[stmt->get_file_path()];
+		std::size_t current_line = stmt->get_line_num();
+		if (current_line >= csym.map.size())
+			return;
+		std::size_t actual_line = csym.map[current_line - 1];
+		if (actual_line >= csym.codes.size() || actual_line == 0)
+			return;
+		std::cout << "\nHit breakpoint, at \"" << csym.file << "\", line " << actual_line << ", " << decl << std::endl;
+	}
+	else
+		std::cout << "\nHit breakpoint, at \"" << stmt->get_file_path() << "\", line " << stmt->get_line_num() << ", " << decl << std::endl;
 	current_level = cs::current_process->stack.size();
 	exec_by_step = true;
 }
@@ -400,10 +448,10 @@ cs::array split(const std::string &str)
 {
 	cs::array arr{path};
 	std::string buf;
-	for (auto &ch:str) {
+	for (auto &ch: str) {
 		if (std::isspace(ch)) {
 			if (!buf.empty()) {
-				arr.push_back(buf);
+				arr.emplace_back(buf);
 				buf.clear();
 			}
 		}
@@ -411,7 +459,7 @@ cs::array split(const std::string &str)
 			buf.push_back(ch);
 	}
 	if (!buf.empty())
-		arr.push_back(buf);
+		arr.emplace_back(buf);
 	return std::move(arr);
 }
 
@@ -424,8 +472,10 @@ void covscript_main(int args_size, char *args[])
 			std::cout << "Usage: cs_dbg [options...] <FILE>\n" << "Options:\n";
 			std::cout << "    Option                Mnemonic   Function\n";
 			std::cout << "  --help                 -h          Show help infomation\n";
+			std::cout << "  --silent               -s          Close the command prompt\n";
 			std::cout << "  --version              -v          Show version infomation\n";
 			std::cout << "  --wait-before-exit     -w          Wait before process exit\n";
+			std::cout << "  --csym         <FILE>  -g <FILE>   Read cSYM from file\n";
 			std::cout << "  --stack-resize <SIZE>  -S <SIZE>   Reset the size of runtime stack\n";
 			std::cout << "  --log-path     <PATH>  -l <PATH>   Set the log path\n";
 			std::cout << "  --import-path  <PATH>  -i <PATH>   Set the import path\n";
@@ -441,11 +491,8 @@ void covscript_main(int args_size, char *args[])
 			std::cout << "  STD Version: " << cs::current_process->std_version << "\n";
 			std::cout << "  API Version: " << CS_GET_VERSION_STR(COVSCRIPT_API_VERSION) << "\n";
 			std::cout << "  ABI Version: " << CS_GET_VERSION_STR(COVSCRIPT_ABI_VERSION) << "\n";
-#ifdef COVSCRIPT_PLATFORM_WIN32
-			std::cout << "  Runtime Env: WIN32\n";
-#else
-			std::cout << "  Runtime Env: UNIX\n";
-#endif
+			std::cout << "  Runtime Env: " << COVSCRIPT_PLATFORM_NAME << "\n";
+			std::cout << "  Compile Env: " << COVSCRIPT_COMPILER_NAME << "\n";
 			std::cout << std::endl;
 			return;
 		}
@@ -457,12 +504,14 @@ void covscript_main(int args_size, char *args[])
 		if (!cs_impl::file_system::exist(path) || cs_impl::file_system::is_dir(path) ||
 		        !cs_impl::file_system::can_read(path))
 			throw cs::fatal_error("invalid input file.");
-		std::cout << "Covariant Script Programming Language Debugger\nVersion: " << cs::current_process->version
-		          << "\n"
-		          "Copyright (C) 2017-2022 Michael Lee. All rights reserved.\n"
-		          "Please visit <http://covscript.org.cn/> for more information."
-		          << std::endl;
 		cs::prepend_import_path(path, cs::current_process);
+		if (!silent) {
+			std::cout << "Covariant Script Programming Language Debugger\nVersion: "
+			          << cs::current_process->version << " [" << COVSCRIPT_COMPILER_NAME << " on " << COVSCRIPT_PLATFORM_NAME << "]\n"
+			          "Copyright (C) 2017-2023 Michael Lee. All rights reserved.\n"
+			          "Please visit <http://covscript.org.cn/> for more information."
+			          << std::endl;
+		}
 		cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
 			cs::current_process->exit_code = *static_cast<int *>(code);
 			throw cs::fatal_error("CS_DEBUGGER_EXIT");
@@ -531,14 +580,14 @@ void covscript_main(int args_size, char *args[])
 		func_map.add_func("backtrace", "bt", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
-			for (auto &func:cs::current_process->stack_backtrace)
+			for (auto &func: cs::current_process->stack_backtrace)
 				std::cout << func << std::endl;
 			std::cout << "function main()" << std::endl;
 			return true;
 		});
 		func_map.add_func("break", "b", [](const std::string &cmd) -> bool {
 			bool is_line = true;
-			for (auto &ch:cmd)
+			for (auto &ch: cmd)
 			{
 				if (!std::isspace(ch) && !std::isdigit(ch)) {
 					is_line = false;
@@ -561,7 +610,7 @@ void covscript_main(int args_size, char *args[])
 				else {
 					std::deque<char> buff;
 					cs::expression_t tree;
-					for (auto &ch:cmd)
+					for (auto &ch: cmd)
 						buff.push_back(ch);
 					context->compiler->build_expr(buff, tree);
 					id = breakpoints.add_func(context->instance->parse_expr(tree.root()));
@@ -614,6 +663,9 @@ void covscript_main(int args_size, char *args[])
 				cs::current_process->exit_code = 0;
 				context = cs::create_context(split(cmd));
 				context->compiler->disable_optimizer = no_optimize;
+				// Reads cSYM
+				if (!csym_path.empty())
+					context->compiler->import_csym(path, csym_path);
 				std::cout << "Compiling..." << std::endl;
 				start_time = time();
 				context->instance->compile(path);
@@ -668,7 +720,7 @@ void covscript_main(int args_size, char *args[])
 			{
 				std::deque<char> buff;
 				cs::expression_t tree;
-				for (auto &ch:cmd)
+				for (auto &ch: cmd)
 					buff.push_back(ch);
 				context->compiler->build_expr(buff, tree);
 				std::cout << context->instance->parse_expr(tree.root()) << std::endl;

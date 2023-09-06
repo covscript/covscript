@@ -1,4 +1,4 @@
-@require:210501
+@require:210507
 iostream.setprecision(64)
 function step1(n)
     var score=0
@@ -95,14 +95,47 @@ function step5(n,k)
     end
     return to_integer(score/k)
 end
+var co_swap = null
+function send(val)
+    co_swap = val
+    runtime.yield()
+end
+function receive(co)
+    runtime.resume(co)
+    return co_swap
+end
+function worker()
+    var i = 0
+    loop
+        send(++i)
+    until co_swap == null
+end
+function step6(n)
+    var score = 0
+    foreach it in range(n)
+        var co_list = new array
+        foreach i in range(10) do co_list.push_back(runtime.create_co(worker))
+        var i = 0, ts = runtime.time()
+        while runtime.time() - ts < 1000
+            foreach co in co_list do i += receive(co)
+        end
+        score += i
+        co_swap = null
+        foreach co in co_list do runtime.resume(co)
+        co_list = null
+    end
+    return score/n
+end
 system.out.println("Covariant Script Performance Benchmark")
-system.out.println("Step 1:Speed of simple statement execution")
-system.out.println("Result:"+to_string(step1(5)))
-system.out.println("Step 2:Speed of integral")
-system.out.println("Result:"+to_string(step2(5,5)))
-system.out.println("Step 3:Speed of quick sort(10000 Data)")
-system.out.println("Result:"+to_string(step3(10000,5)))
-system.out.println("Step 4:Speed of fibonacci(10000 Data)")
-system.out.println("Result:"+to_string(step4(10000,5)))
-system.out.println("Step 5:Speed of fibonacci(Depth 30)")
-system.out.println("Result:"+to_string(step5(30,5)))
+system.out.println("Test 1: Simple Statement Execution (Count/Second)")
+system.out.println("Result: "+to_string(step1(5)))
+system.out.println("Test 2: Coroutine Context Switch (Count/Second)")
+system.out.println("Result: "+to_string(step6(5)))
+system.out.println("Test 3: Integral (Millsecond)")
+system.out.println("Result: "+to_string(step2(5,5)))
+system.out.println("Test 4: Quick Sort (Millsecond, Data = 10k)")
+system.out.println("Result: "+to_string(step3(10000,5)))
+system.out.println("Test 5: Serial Fibonacci (Millsecond, Data = 10k)")
+system.out.println("Result: "+to_string(step4(10000,5)))
+system.out.println("Test 6: Recursive Fibonacci (Millsecond, Depth = 30)")
+system.out.println("Result: "+to_string(step5(30,5)))

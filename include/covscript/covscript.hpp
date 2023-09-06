@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -92,8 +92,6 @@ namespace cs_function_invoker_impl {
 }
 
 namespace cs {
-	std::string get_sdk_path();
-
 	std::string process_path(const std::string &);
 
 	std::string get_import_path();
@@ -102,13 +100,26 @@ namespace cs {
 
 	array parse_cmd_args(int, char *[]);
 
-	context_t create_context(const array &);
-
-	context_t create_subcontext(const context_t &);
-
 	void collect_garbage();
 
 	void collect_garbage(context_t &);
+
+	class raii_collector final {
+		context_t context;
+	public:
+		raii_collector() = delete;
+
+		raii_collector(const raii_collector &) = delete;
+
+		raii_collector(raii_collector &&) noexcept = delete;
+
+		explicit raii_collector(context_t cxt) : context(std::move(cxt)) {}
+
+		~raii_collector()
+		{
+			collect_garbage(context);
+		}
+	};
 
 	cs::var eval(const context_t &, const std::string &);
 

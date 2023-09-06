@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -49,6 +49,7 @@ namespace cs_impl {
 			return num.as_integer();
 		}
 	};
+
 // unsigned short int->cs::numeric
 	template<>
 	struct type_conversion_cs<unsigned short int> {
@@ -67,6 +68,7 @@ namespace cs_impl {
 			return num.as_integer();
 		}
 	};
+
 // signed int->cs::numeric
 	template<>
 	struct type_conversion_cs<signed int> {
@@ -85,6 +87,7 @@ namespace cs_impl {
 			return num.as_integer();
 		}
 	};
+
 // unsigned int->cs::numeric
 	template<>
 	struct type_conversion_cs<unsigned int> {
@@ -103,6 +106,7 @@ namespace cs_impl {
 			return num.as_integer();
 		}
 	};
+
 // signed long int->cs::numeric
 	template<>
 	struct type_conversion_cs<signed long int> {
@@ -121,6 +125,7 @@ namespace cs_impl {
 			return num.as_integer();
 		}
 	};
+
 // unsigned long int->cs::numeric
 	template<>
 	struct type_conversion_cs<unsigned long int> {
@@ -139,6 +144,7 @@ namespace cs_impl {
 			return num.as_integer();
 		}
 	};
+
 // signed long long int->cs::numeric
 	template<>
 	struct type_conversion_cs<signed long long int> {
@@ -157,6 +163,7 @@ namespace cs_impl {
 			return num.as_integer();
 		}
 	};
+
 // unsigned long long int->cs::numeric
 	template<>
 	struct type_conversion_cs<unsigned long long int> {
@@ -175,6 +182,7 @@ namespace cs_impl {
 			return num.as_integer();
 		}
 	};
+
 // signed char->cs::char
 	template<>
 	struct type_conversion_cs<signed char> {
@@ -213,6 +221,7 @@ namespace cs_impl {
 			return num.as_float();
 		}
 	};
+
 // double->cs::numeric
 	template<>
 	struct type_conversion_cs<double> {
@@ -231,6 +240,7 @@ namespace cs_impl {
 			return num.as_float();
 		}
 	};
+
 // long double->cs::numeric
 	template<>
 	struct type_conversion_cs<long double> {
@@ -249,6 +259,7 @@ namespace cs_impl {
 			return num.as_float();
 		}
 	};
+
 // std::string->cs::string
 // const char*->cs::string
 	template<>

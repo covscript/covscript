@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -61,7 +61,7 @@ namespace cs {
 			if (raw.size() <= 1)
 				throw compile_error("Empty input when matching grammar.");
 			std::list<std::shared_ptr<data_type>> stack;
-			for (auto &it:m_data)
+			for (auto &it: m_data)
 				if (cs::translator_type::compare(it->first.front(), raw.front()))
 					stack.push_back(it);
 			stack.remove_if([&](const std::shared_ptr<data_type> &dat) {
@@ -89,6 +89,12 @@ namespace cs {
 
 	enum class charset {
 		ascii, utf8, gbk
+	};
+
+	struct csym_info {
+		std::string file;
+		std::vector<std::size_t> map;
+		std::vector<std::string> codes;
 	};
 
 	class compiler_type final {
@@ -200,7 +206,7 @@ namespace cs {
 				opt_expr(tree, tree.root(), do_optm);
 		}
 
-		static bool find_id_ref(tree_type<token_base *>::iterator, const std::string&);
+		static bool find_id_ref(tree_type<token_base *>::iterator, const std::string &);
 
 		void trim_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, trim_type);
 
@@ -208,6 +214,7 @@ namespace cs {
 
 	public:
 		map_t<string, namespace_t> modules;
+		map_t<string, csym_info> csyms;
 
 		void try_fix_this_deduction(tree_type<token_base *>::iterator);
 
@@ -215,6 +222,7 @@ namespace cs {
 
 		explicit compiler_type(context_t c) : context(std::move(c))
 		{
+			type_id::inherit_map.clear();
 			struct_builder::reset_counter();
 		}
 
@@ -234,6 +242,8 @@ namespace cs {
 		}
 
 		// Metadata
+		void import_csym(const std::string &, const std::string &);
+
 		void clear_metadata()
 		{
 			constant_pool.clear();
@@ -241,7 +251,7 @@ namespace cs {
 
 		void utilize_metadata()
 		{
-			for (auto &it:constant_pool)
+			for (auto &it: constant_pool)
 				it.constant();
 		}
 
@@ -285,7 +295,7 @@ namespace cs {
 			process_char_buff(buff, tokens, encoding);
 			tokens.push_back(new token_endline(line_num));
 			process_token_buff(tokens, ast);
-			for (auto &line:ast)
+			for (auto &line: ast)
 				process_line(line);
 		}
 

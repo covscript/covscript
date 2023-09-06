@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -49,11 +49,11 @@ namespace cs_system_impl {
 #endif
 
 namespace cs_system_impl {
-	std::vector<std::string> split(const std::string &str, cs::set_t<char> set)
+	std::vector<std::string> split(const std::string &str, const cs::set_t<char> &set)
 	{
 		std::vector<std::string> results;
 		std::string buff;
-		for (auto ch : str) {
+		for (auto ch: str) {
 			if (set.count(ch) > 0) {
 				if (!buff.empty()) {
 					results.emplace_back(buff);
@@ -156,7 +156,7 @@ namespace cs_system_impl {
 		std::string path;
 		if (absolute_path)
 			path = cs::path_separator;
-		for (const auto &dir : dirs) {
+		for (const auto &dir: dirs) {
 			path += dir + cs::path_separator;
 			if (is_directory(path))
 				continue;
@@ -183,7 +183,7 @@ namespace cs_impl {
 			std::string path;
 			if (path_input.size() > 0 && (path_input[0] == '/' || path_input[0] == '\\'))
 				path = cs::path_separator;
-			for (auto &dir : dirs) {
+			for (auto &dir: dirs) {
 				path += dir + cs::path_separator;
 				// DO NOT SKIP when dir is a directory
 				// directory has permissions too
@@ -232,7 +232,7 @@ namespace cs_impl {
 
 		bool mkdir(std::string path)
 		{
-			for (auto &ch : path) {
+			for (auto &ch: path) {
 				if (ch == path_separator_reversed)
 					ch = cs::path_separator;
 			}

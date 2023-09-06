@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -55,7 +55,7 @@ namespace cs {
 		};
 		if (tree.root().data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
-			for (auto &t:parallel_list)
+			for (auto &t: parallel_list)
 				process(t);
 		}
 		else
@@ -139,7 +139,7 @@ namespace cs {
 			var ns = vptr->get_value();
 			if (ns.type() == typeid(namespace_t)) {
 				auto &domain = ns.const_val<namespace_t>()->get_domain();
-				for (auto &it:domain) {
+				for (auto &it: domain) {
 					if (domain.get_var_by_id(it.second).is_protect())
 						context->instance->storage.add_record(it.first);
 				}
@@ -216,7 +216,7 @@ namespace cs {
 	{
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		for (auto &ptr:body)
+		for (auto &ptr: body)
 			if (ptr->get_type() != statement_types::import_ && ptr->get_type() != statement_types::involve_ &&
 			        ptr->get_type() != statement_types::var_ && ptr->get_type() != statement_types::function_ &&
 			        ptr->get_type() != statement_types::namespace_ && ptr->get_type() != statement_types::struct_)
@@ -236,7 +236,7 @@ namespace cs {
 		bool have_else = false;
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		for (auto &ptr:body) {
+		for (auto &ptr: body) {
 			if (ptr->get_type() == statement_types::else_) {
 				if (!have_else)
 					have_else = true;
@@ -250,7 +250,7 @@ namespace cs {
 			std::deque<statement_base *> body_true;
 			std::deque<statement_base *> body_false;
 			bool now_place = true;
-			for (auto &ptr:body) {
+			for (auto &ptr: body) {
 				if (ptr->get_type() == statement_types::else_) {
 					now_place = false;
 					continue;
@@ -297,7 +297,7 @@ namespace cs {
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		statement_block *dptr = nullptr;
 		map_t<var, statement_block *> cases;
-		for (auto &it:body) {
+		for (auto &it: body) {
 			try {
 				if (it->get_type() == statement_types::case_) {
 					auto *scptr = static_cast<statement_case *>(it);
@@ -505,13 +505,13 @@ namespace cs {
 		if (t.root().right().data()->get_type() != token_types::arglist)
 			throw compile_error("Wrong grammar for function definition, expect argument list.");
 		std::vector<std::string> args;
-		for (auto &it:static_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
+		for (auto &it: static_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
 			if (it.root().data() == nullptr)
 				throw internal_error("Null pointer accessed.");
 			context->compiler->try_fix_this_deduction(it.root());
 			if (it.root().data()->get_type() == token_types::id) {
 				const std::string &str = static_cast<token_id *>(it.root().data())->get_id();
-				for (auto &it:args)
+				for (auto &it: args)
 					if (it == str)
 						throw compile_error("Redefinition of function argument.");
 				context->instance->storage.add_record(str);
@@ -536,7 +536,7 @@ namespace cs {
 		std::string name = static_cast<token_id *>(t.root().left().data())->get_id();
 		std::vector<std::string> args;
 		bool is_vargs = false;
-		for (auto &it:static_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
+		for (auto &it: static_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
 			if (it.root().data()->get_type() == token_types::id)
 				args.push_back(static_cast<token_id *>(it.root().data())->get_id());
 			else if (it.root().data()->get_type() == token_types::vargs) {
@@ -595,7 +595,7 @@ namespace cs {
 		std::string name = static_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		for (auto &ptr:body) {
+		for (auto &ptr: body) {
 			try {
 				switch (ptr->get_type()) {
 				default:
@@ -628,7 +628,7 @@ namespace cs {
 		std::string name;
 		std::deque<statement_base *> tbody, cbody;
 		bool founded = false;
-		for (auto &ptr:body) {
+		for (auto &ptr: body) {
 			if (ptr->get_type() == statement_types::catch_) {
 				name = static_cast<statement_catch *>(ptr)->get_name();
 				founded = true;

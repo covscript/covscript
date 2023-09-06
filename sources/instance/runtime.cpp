@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2022 Michael Lee(李登淳)
+* Copyright (C) 2017-2023 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -448,12 +448,12 @@ namespace cs {
 			vector args;
 			token_base *ptr = nullptr;
 			args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
-			for (auto &tree:static_cast<token_arglist *>(b)->get_arglist()) {
+			for (auto &tree: static_cast<token_arglist *>(b)->get_arglist()) {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
 					const auto &arr = val.const_val<array>();
-					for (auto &it:arr)
+					for (auto &it: arr)
 						args.push_back(lvalue(it));
 				}
 				else
@@ -466,12 +466,12 @@ namespace cs {
 			vector args{om.object};
 			token_base *ptr = nullptr;
 			args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
-			for (auto &tree:static_cast<token_arglist *>(b)->get_arglist()) {
+			for (auto &tree: static_cast<token_arglist *>(b)->get_arglist()) {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
 					const auto &arr = val.const_val<array>();
-					for (auto &it:arr)
+					for (auto &it: arr)
 						args.push_back(lvalue(it));
 				}
 				else
@@ -589,12 +589,12 @@ namespace cs {
 		case token_types::array: {
 			array arr;
 			token_base *ptr = nullptr;
-			for (auto &tree:static_cast<token_array *>(token)->get_array()) {
+			for (auto &tree: static_cast<token_array *>(token)->get_array()) {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
 					const auto &child_arr = val.const_val<array>();
-					for (auto &it:child_arr)
+					for (auto &it: child_arr)
 						arr.push_back(copy(it));
 				}
 				else
@@ -606,7 +606,7 @@ namespace cs {
 			if (disable_parallel)
 				throw runtime_error("Do not allowed parallel list.");
 			var result;
-			for (auto &tree:static_cast<token_parallel *>(token)->get_parallel())
+			for (auto &tree: static_cast<token_parallel *>(token)->get_parallel())
 				result = parse_expr(tree.root());
 			return result;
 		}
