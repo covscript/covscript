@@ -47,10 +47,77 @@ add_library(covscript_debug STATIC ${SOURCE_CODE})
 target_compile_definitions(covscript_debug PRIVATE CS_DEBUGGER)
 
 if (NOT CS_COMPATIBILITY_MODE)
-    add_subdirectory(csbuild/mimalloc)
     include_directories(csbuild/mimalloc/include)
-    target_link_libraries(covscript mimalloc-static)
-    target_link_libraries(covscript_debug mimalloc-static)
+
+    set(mi_sources
+        csbuild/mimalloc/src/alloc.c
+        csbuild/mimalloc/src/alloc-aligned.c
+        csbuild/mimalloc/src/alloc-posix.c
+        csbuild/mimalloc/src/arena.c
+        csbuild/mimalloc/src/bitmap.c
+        csbuild/mimalloc/src/heap.c
+        csbuild/mimalloc/src/init.c
+        csbuild/mimalloc/src/options.c
+        csbuild/mimalloc/src/os.c
+        csbuild/mimalloc/src/page.c
+        csbuild/mimalloc/src/random.c
+        csbuild/mimalloc/src/segment.c
+        csbuild/mimalloc/src/segment-map.c
+        csbuild/mimalloc/src/stats.c
+        csbuild/mimalloc/src/prim/prim.c)
+
+    set(mi_cflags "")
+    set(mi_libraries "")
+
+    if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
+        set(MI_USE_CXX "ON")
+    endif()
+
+    # Compiler flags
+    if(CMAKE_C_COMPILER_ID MATCHES "AppleClang|Clang|GNU")
+        list(APPEND mi_cflags -fPIC -O2 -Wall -Wextra -Wno-unknown-pragmas -fvisibility=hidden)
+        if(NOT MI_USE_CXX)
+            list(APPEND mi_cflags -Wstrict-prototypes)
+        endif()
+        if(CMAKE_C_COMPILER_ID MATCHES "AppleClang|Clang")
+            list(APPEND mi_cflags -Wpedantic -Wno-static-in-inline)
+        endif()
+        if(MI_LOCAL_DYNAMIC_TLS)
+            list(APPEND mi_cflags -ftls-model=local-dynamic)
+        else()
+            list(APPEND mi_cflags -ftls-model=initial-exec)
+        endif()
+    endif()
+
+    if (MSVC AND MSVC_VERSION GREATER_EQUAL 1914)
+        list(APPEND mi_cflags /Zc:__cplusplus)
+    endif()
+
+    # extra needed libraries
+    if(WIN32)
+        list(APPEND mi_libraries psapi shell32 user32 advapi32 bcrypt)
+        set(pc_libraries "-lpsapi -lshell32 -luser32 -ladvapi32 -lbcrypt")
+    else()
+        set(pc_libraries "")
+        find_library(MI_LIBPTHREAD pthread)
+        if (MI_LIBPTHREAD)
+            list(APPEND mi_libraries ${MI_LIBPTHREAD})
+            set(pc_libraries "${pc_libraries} -pthread")
+        endif()
+        find_library(MI_LIBRT rt)
+        if(MI_LIBRT)
+            list(APPEND mi_libraries ${MI_LIBRT})
+            set(pc_libraries "${pc_libraries} -lrt")
+        endif()
+    endif()
+
+    add_library(mimalloc STATIC ${mi_sources})
+    set_property(TARGET mimalloc PROPERTY C_STANDARD 11)
+    target_compile_options(mimalloc PRIVATE ${mi_cflags})
+    target_link_libraries(mimalloc PRIVATE ${mi_libraries})
+
+    target_link_libraries(covscript mimalloc)
+    target_link_libraries(covscript_debug mimalloc)
 endif ()
 
 # Link extra libraries in Linux
@@ -71,17 +138,26 @@ endif ()
 
 # Process universal binary in macOS
 if (APPLE)
+    target_compile_options(mimalloc PRIVATE -target x86_64-apple-macos)
+    target_link_options(mimalloc PRIVATE -target x86_64-apple-macos)
+
     # ARM version of covscript
     add_library(covscript_arm STATIC ${SOURCE_CODE})
     add_library(covscript_debug_arm STATIC ${SOURCE_CODE})
+
+    # ARM version of MiMalloc
+    add_library(mimalloc_arm STATIC ${mi_sources})
+    set_property(TARGET mimalloc_arm PROPERTY C_STANDARD 11)
+    target_compile_options(mimalloc_arm PRIVATE ${mi_cflags} -target arm64-apple-macos)
+    target_link_libraries(mimalloc_arm PRIVATE ${mi_libraries} -target arm64-apple-macos)
 
     # Set link options for x86 target
     target_link_libraries(covscript pthread dl)
     target_link_libraries(covscript_debug pthread dl)
 
     # Set link options for ARM target
-    target_link_libraries(covscript_arm pthread dl)
-    target_link_libraries(covscript_debug_arm pthread dl)
+    target_link_libraries(covscript_arm pthread dl mimalloc_arm)
+    target_link_libraries(covscript_debug_arm pthread dl mimalloc_arm)
 
     # Use libucontext by default in macOS
     if (NOT CS_FIBER_SYSTEM_IMPL)
