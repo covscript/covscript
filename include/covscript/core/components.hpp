@@ -43,6 +43,12 @@ namespace cs {
 		}
 	};
 
+#ifdef CS_COMPATIBILITY_MODE
+	template<typename _Tp> using allocator_t = std::allocator<_Tp>;
+#else
+	template<typename _Tp> using allocator_t = mi_stl_allocator<_Tp>;
+#endif
+
 	struct csym_info;
 
 // Exceptions
@@ -612,7 +618,7 @@ namespace cs {
 	};
 
 // Static Stack
-	template<typename T, template<typename> class allocator_t=std::allocator>
+	template<typename T, template<typename> class allocator_t=cs::allocator_t>
 	class stack_type final {
 		using aligned_type = typename std::aligned_storage<sizeof(T), alignof(T)>::type;
 		T *m_start = nullptr, *m_current = nullptr;
@@ -782,7 +788,7 @@ namespace cs {
 	};
 
 // Buffer Pool
-	template<typename T, std::size_t blck_size, template<typename> class allocator_t=std::allocator>
+	template<typename T, std::size_t blck_size, template<typename> class allocator_t=cs::allocator_t>
 	class allocator_type final {
 		T *mPool[blck_size];
 		allocator_t<T> mAlloc;

@@ -296,7 +296,7 @@ namespace cs_impl {
 // Be careful when you adjust the buffer size.
 	constexpr std::size_t default_allocate_buffer_size = 64;
 	constexpr std::size_t default_allocate_buffer_multiplier = 8;
-	template<typename T> using default_allocator_provider = std::allocator<T>;
+	template<typename T> using default_allocator_provider = cs::allocator_t<T>;
 	template<typename T> using default_allocator = cs::allocator_type<T, default_allocate_buffer_size, default_allocator_provider>;
 
 	class any final {

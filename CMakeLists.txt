@@ -46,6 +46,13 @@ add_library(covscript_debug STATIC ${SOURCE_CODE})
 
 target_compile_definitions(covscript_debug PRIVATE CS_DEBUGGER)
 
+if (NOT CS_COMPATIBILITY_MODE)
+    add_subdirectory(csbuild/mimalloc)
+    include_directories(csbuild/mimalloc/include)
+    target_link_libraries(covscript mimalloc-static)
+    target_link_libraries(covscript_debug mimalloc-static)
+endif ()
+
 # Link extra libraries in Linux
 if (UNIX)
     target_link_libraries(covscript pthread dl)

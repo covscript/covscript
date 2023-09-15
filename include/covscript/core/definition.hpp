@@ -143,12 +143,12 @@ namespace cs {
 	using var = cs_impl::any;
 	using boolean = bool;
 	using string = std::string;
-	using list = std::list<var>;
-	using array = std::deque<var>;
+	using list = std::list<var, allocator_t<var>>;
+	using array = std::deque<var, allocator_t<var>>;
 	using pair = std::pair<var, var>;
 	using hash_set = set_t<var>;
 	using hash_map = map_t<var, var>;
-	using vector = std::vector<var>;
+	using vector = std::vector<var, allocator_t<var>>;
 	using expression_t = tree_type<token_base *>;
 	using compiler_t = std::shared_ptr<compiler_type>;
 	using instance_t = std::shared_ptr<instance_type>;

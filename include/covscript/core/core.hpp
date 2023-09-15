@@ -30,10 +30,12 @@
 */
 // LibDLL
 #include <covscript/import/libdll/dll.hpp>
-// Hash Map and Set
 #ifndef CS_COMPATIBILITY_MODE
 
+// Hash Map and Set
 #include <covscript/import/parallel_hashmap/phmap.h>
+// MiMalloc
+#include <mimalloc.h>
 
 #else
 
