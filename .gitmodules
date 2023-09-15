@@ -1,3 +1,6 @@
 [submodule "csbuild/deps"]
 	path = csbuild/deps
 	url = https://github.com/covscript/covscript-deps
+[submodule "csbuild/mimalloc"]
+	path = csbuild/mimalloc
+	url = https://github.com/microsoft/mimalloc
