@@ -75,7 +75,10 @@ if (NOT CS_COMPATIBILITY_MODE)
 
     # Compiler flags
     if(CMAKE_C_COMPILER_ID MATCHES "AppleClang|Clang|GNU")
-        list(APPEND mi_cflags -fPIC -O2 -Wall -Wextra -Wno-unknown-pragmas -fvisibility=hidden)
+        list(APPEND mi_cflags -fPIC -O3 -Wall -Wextra -Wno-unknown-pragmas -fvisibility=hidden)
+        if(WIN32 AND CMAKE_C_COMPILER_ID MATCHES "GNU")
+            list(APPEND mi_cflags -Wno-array-bounds)
+        endif()
         if(NOT MI_USE_CXX)
             list(APPEND mi_cflags -Wstrict-prototypes)
         endif()
