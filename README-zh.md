@@ -1,13 +1,16 @@
 ![](https://github.com/covscript/covscript/raw/master/docs/covariant_script_wide.png)
 
-# Covariant Script 编程语言：解释器 #
+# Covariant Script 编程语言解释器 #
 
 ![](https://github.com/covscript/covscript/workflows/build/badge.svg)
-[![](https://img.shields.io/github/stars/covscript/covscript?logo=GitHub)](https://github.com/covscript/covscript/stargazers)
-[![](https://img.shields.io/github/license/covscript/covscript)](http://www.apache.org/licenses/LICENSE-2.0)
-[![](https://img.shields.io/github/v/release/covscript/covscript)](https://github.com/covscript/covscript/releases/latest)
 ![](https://github.com/covscript/covscript/workflows/CodeQL/badge.svg)
-[![](https://img.shields.io/github/languages/top/covscript/covscript)](http://www.cplusplus.com/)  
+[![](https://img.shields.io/github/stars/covscript/covscript?logo=GitHub)](https://github.com/covscript/covscript/stargazers)
+[![](https://img.shields.io/github/languages/top/covscript/covscript)](http://www.cplusplus.com/)
+[![](https://img.shields.io/github/license/covscript/covscript)](http://www.apache.org/licenses/LICENSE-2.0)
+
+[![](https://img.shields.io/github/v/release/covscript/covscript)](https://github.com/covscript/covscript/releases/latest)
+[![](https://zenodo.org/badge/79646991.svg)](https://zenodo.org/doi/10.5281/zenodo.10004374)
+
 **欢迎使用Covariant Script编程语言!**  
 **Covariant Script**是一种开源的跨平台编程语言  
 此项目为官方维护的Covariant Script解释器
@@ -42,7 +45,14 @@
 
 ## 文档 ##
 
-请访问 [Covariant Script 组织 README](https://github.com/covscript/README)
+请访问 [Covariant Script OSC README](https://github.com/covscript/README)
+
+## Codespace ##
+
+您可以在 GitHub Codespace 中免安装直接使用 CovScript：
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/covscript/codespace?quickstart=1)
+
 
 ## 安装 ##
 
@@ -77,7 +87,7 @@
 `--silent`|`-s`|关闭命令提示符
 `--args <...>`|`-a <...>`|设置程序参数
 
-**注意，在选项`--args`或其助记符`-a`之后设置的每一项都将被视为参数**
+**注意，在选项 `--args` 或其助记符 `-a` 之后设置的每一项都将被视为参数**
 
 ##### 通用选项 #####
 
@@ -125,6 +135,19 @@
 **Covariant Script 编程语言的作者是 [@mikecovlee](https://github.com/mikecovlee/)，基于 Apache 2.0 协议分发。**  
 **版权所有 © 2017-2023 李登淳(Michael Lee)**  
 *该软件已在中华人民共和国国家版权局注册（登记号：2020SR0408026），受中华人民共和国著作权法保护。*
+
+## 引用 ##
+
+如果 CovScript 为您的工作增添了一些便利，请引用该仓库。
+```bibtex
+@misc{CovScript,
+  author = {Li, Dengchun},
+  title = {Covariant Script Programming Language},
+  year = {2023},
+  publisher = {GitHub},
+  howpublished = {\url{https://github.com/covscript/covscript}}
+}
+```
 
 ## 感谢 ##
 

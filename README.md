@@ -3,11 +3,14 @@
 # Covariant Script Programming Language: The Interpreter #
 
 ![](https://github.com/covscript/covscript/workflows/build/badge.svg)
-[![](https://img.shields.io/github/stars/covscript/covscript?logo=GitHub)](https://github.com/covscript/covscript/stargazers)
-[![](https://img.shields.io/github/license/covscript/covscript)](http://www.apache.org/licenses/LICENSE-2.0)
-[![](https://img.shields.io/github/v/release/covscript/covscript)](https://github.com/covscript/covscript/releases/latest)
 ![](https://github.com/covscript/covscript/workflows/CodeQL/badge.svg)
-[![](https://img.shields.io/github/languages/top/covscript/covscript)](http://www.cplusplus.com/)  
+[![](https://img.shields.io/github/stars/covscript/covscript?logo=GitHub)](https://github.com/covscript/covscript/stargazers)
+[![](https://img.shields.io/github/languages/top/covscript/covscript)](http://www.cplusplus.com/)
+[![](https://img.shields.io/github/license/covscript/covscript)](http://www.apache.org/licenses/LICENSE-2.0)
+
+[![](https://img.shields.io/github/v/release/covscript/covscript)](https://github.com/covscript/covscript/releases/latest)
+[![](https://zenodo.org/badge/79646991.svg)](https://zenodo.org/doi/10.5281/zenodo.10004374)
+
 **Welcome to the Covariant Script programming language!**  
 **Covariant Script** is an open source, cross-platform programming language.  
 This project is an officially maintained Covariant Script interpreter.
@@ -43,6 +46,12 @@ This project is an officially maintained Covariant Script interpreter.
 ## Documents ##
 
 Please visit [Covariant Script Organization README](https://github.com/covscript/README)
+
+## Codespace ##
+
+You can try CovScript in GitHub Codespace directly.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/covscript/codespace?quickstart=1)
 
 ## Installation ##
 
@@ -128,6 +137,19 @@ under Apache 2.0**
 **Copyright © 2017-2023 Michael Lee(李登淳)**  
 *This software is registered with the National Copyright Administration of the People's Republic of China(Registration
 Number: 2020SR0408026) and is protected by the Copyright Law of the People's Republic of China.*
+
+## Citation ##
+
+Please cite the repo if you use CovScript.
+```bibtex
+@misc{CovScript,
+  author = {Li, Dengchun},
+  title = {Covariant Script Programming Language},
+  year = {2023},
+  publisher = {GitHub},
+  howpublished = {\url{https://github.com/covscript/covscript}}
+}
+```
 
 ## Thanks ##
 
