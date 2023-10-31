@@ -41,13 +41,17 @@ set(SOURCE_CODE
         sources/covscript.cpp)
 
 # Static Library
+if (APPLE)
+    set(CMAKE_OSX_ARCHITECTURES x86_64)
+endif ()
+
 add_library(covscript STATIC ${SOURCE_CODE})
 add_library(covscript_debug STATIC ${SOURCE_CODE})
 
 target_compile_definitions(covscript_debug PRIVATE CS_DEBUGGER)
 
 # Link extra libraries in Linux
-if (UNIX)
+if (UNIX AND NOT APPLE)
     target_link_libraries(covscript pthread dl)
     target_link_libraries(covscript_debug pthread dl)
 
@@ -65,6 +69,7 @@ endif ()
 # Process universal binary in macOS
 if (APPLE)
     # ARM version of covscript
+    set(CMAKE_OSX_ARCHITECTURES arm64)
     add_library(covscript_arm STATIC ${SOURCE_CODE})
     add_library(covscript_debug_arm STATIC ${SOURCE_CODE})
 
@@ -94,6 +99,10 @@ if (APPLE)
 endif ()
 
 # Main Executable
+if (APPLE)
+    set(CMAKE_OSX_ARCHITECTURES x86_64)
+endif ()
+
 if (WIN32)
     add_executable(cs sources/interpreter.cpp sources/win32_rc/interpreter.rc)
     add_executable(cs_dbg sources/debugger.cpp sources/win32_rc/debugger.rc)
@@ -106,6 +115,7 @@ target_link_libraries(cs covscript)
 target_link_libraries(cs_dbg covscript_debug)
 
 if (APPLE)
+    set(CMAKE_OSX_ARCHITECTURES arm64)
     add_executable(cs_arm sources/interpreter.cpp)
     add_executable(cs_dbg_arm sources/debugger.cpp)
     target_link_libraries(cs_arm covscript_arm)
@@ -113,13 +123,23 @@ if (APPLE)
 endif ()
 
 # Tests
+if (APPLE AND ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+    set(CMAKE_OSX_ARCHITECTURES x86_64)
+endif ()
+
 add_library(test-extension SHARED tests/extension.cpp)
 add_library(test-reflection SHARED tests/reflection.cpp)
 add_executable(test-covscript tests/function_invoker.cpp)
 
-target_link_libraries(test-extension covscript)
-target_link_libraries(test-reflection covscript)
-target_link_libraries(test-covscript covscript)
+if (APPLE AND ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
+    target_link_libraries(test-extension covscript_arm)
+    target_link_libraries(test-reflection covscript_arm)
+    target_link_libraries(test-covscript covscript_arm)
+else ()
+    target_link_libraries(test-extension covscript)
+    target_link_libraries(test-reflection covscript)
+    target_link_libraries(test-covscript covscript)
+endif ()
 
 set_target_properties(test-extension PROPERTIES OUTPUT_NAME my_ext)
 set_target_properties(test-extension PROPERTIES PREFIX "")
