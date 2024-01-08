@@ -5,7 +5,7 @@ authors:
   given-names: "Dengchun"
   orcid: "https://orcid.org/0000-0001-6002-1661"
 title: "CovScript Interpreter"
-version: 3.4.3-patch1
+version: 3.4.3-patch2
 doi: 10.5281/zenodo.10004375
-date-released: 2023-10-15
+date-released: 2024-01-08
 url: "https://github.com/covscript/covscript"
