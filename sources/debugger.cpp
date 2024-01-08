@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2023 Michael Lee(李登淳)
+* Copyright (C) 2017-2024 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -508,7 +508,7 @@ void covscript_main(int args_size, char *args[])
 		if (!silent) {
 			std::cout << "Covariant Script Programming Language Debugger\nVersion: "
 			          << cs::current_process->version << " [" << COVSCRIPT_COMPILER_NAME << " on " << COVSCRIPT_PLATFORM_NAME << "]\n"
-			          "Copyright (C) 2017-2023 Michael Lee. All rights reserved.\n"
+			          "Copyright (C) 2017-2024 Michael Lee. All rights reserved.\n"
 			          "Please visit <http://covscript.org.cn/> for more information."
 			          << std::endl;
 		}

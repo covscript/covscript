@@ -133,7 +133,7 @@
 ## 版权 ##
 
 **Covariant Script 编程语言的作者是 [@mikecovlee](https://github.com/mikecovlee/)，基于 Apache 2.0 协议分发。**  
-**版权所有 © 2017-2023 李登淳(Michael Lee)**  
+**版权所有 © 2017-2024 李登淳(Michael Lee)**  
 *该软件已在中华人民共和国国家版权局注册（登记号：2020SR0408026），受中华人民共和国著作权法保护。*
 
 ## 引用 ##
@@ -143,7 +143,7 @@
 @misc{CovScript,
   author = {Li, Dengchun},
   title = {Covariant Script Programming Language},
-  year = {2023},
+  year = {2024},
   publisher = {GitHub},
   howpublished = {\url{https://github.com/covscript/covscript}}
 }
