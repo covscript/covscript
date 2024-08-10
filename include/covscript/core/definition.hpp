@@ -52,6 +52,12 @@
 #define COVSCRIPT_PLATFORM_HOME "/Applications/CovScript.app/Contents/MacOS/covscript"
 #endif
 
+#if defined(__FreeBSD__)
+#define COVSCRIPT_PLATFORM_UNIX
+#define COVSCRIPT_PLATFORM_NAME "FreeBSD"
+#define COVSCRIPT_PLATFORM_HOME "/usr/local/share/covscript"
+#endif
+
 #if defined(COVSCRIPT_PLATFORM_LINUX) || defined(COVSCRIPT_PLATFORM_DARWIN)
 #define COVSCRIPT_PLATFORM_UNIX
 #endif
