@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* Copyright (C) 2017-2024 Michael Lee(李登淳)
+* Copyright (C) 2017-2025 Michael Lee(李登淳)
 *
 * This software is registered with the National Copyright Administration
 * of the People's Republic of China(Registration Number: 2020SR0408026)
@@ -37,8 +37,8 @@
 *   the last two digits are different, it will be regarded as a compatible
 *   version.
 */
-#define COVSCRIPT_VERSION_NUM 3,4,3,13
-#define COVSCRIPT_VERSION_STR "3.4.3 Castor fiber(Stable) Build 13"
+#define COVSCRIPT_VERSION_NUM 3,4,3,14
+#define COVSCRIPT_VERSION_STR "3.4.3 Castor fiber(Stable) Build 14"
 #define COVSCRIPT_STD_VERSION 210508
 #define COVSCRIPT_API_VERSION 230801
 #define COVSCRIPT_ABI_VERSION 230308
