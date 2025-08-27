@@ -1,33 +1,36 @@
 #pragma once
 /*
-* Covariant Script C/C++ Native Interface
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   lee@covariant.cn, mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script C/C++ Native Interface
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   lee@covariant.cn, mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 #include <covscript/import/mozart/bind.hpp>
 
 namespace cs_impl {
 // Utilities
+	template<typename...> using void_t = void;
+	template<typename T> using decay_t = typename std::decay<T>::type;
+
 	template<typename...ArgsT>
 	inline void result_container(ArgsT &&...) {}
 
@@ -90,7 +93,7 @@ namespace cs_impl {
 			return false;
 		}
 
-		template<typename From1, typename To1, typename=decltype(type_convertor<From1, To1>::convert(
+		template<typename From1, typename To1, typename = decltype(type_convertor<From1, To1>::convert(
 		             std::declval<From1>()))>
 		static constexpr bool helper(int)
 		{
@@ -105,6 +108,40 @@ namespace cs_impl {
 	class cni_convertible<T, T> final {
 	public:
 		static constexpr bool value = true;
+	};
+
+	template<typename _SourceT, typename _TargetT>
+	class cni_decayed_convertor {
+		template<typename _From, typename _To, typename = void>
+		struct is_specialized {
+			constexpr static bool value = true;
+		};
+
+		template<typename _From, typename _To>
+		struct is_specialized<_From, _To, void_t<typename type_convertor<_From, _To>::_not_specialized>> {
+			constexpr static bool value = false;
+		};
+
+		template<typename>
+		struct helper;
+
+		template<template<typename, typename> class T, typename _From, typename _To>
+		struct helper<T<_From, _To>> {
+			using source_type = _From;
+			using target_type = _To;
+		};
+
+	public:
+		using convertor = typename std::conditional<is_specialized<_SourceT, _TargetT>::value, type_convertor<_SourceT, _TargetT>,
+		      typename std::conditional<is_specialized<decay_t<_SourceT>, decay_t<_TargetT>>::value, type_convertor<decay_t<_SourceT>, decay_t<_TargetT>>,
+		      typename std::conditional<cni_convertible<_SourceT, _TargetT>::value, type_convertor<_SourceT, _TargetT>, void>::type>::type>::type;
+		using source_type = typename helper<convertor>::source_type;
+		using target_type = typename helper<convertor>::target_type;
+
+		inline static _TargetT convert(cs::var &val)
+		{
+			return convertor::convert(convert_helper<source_type>::get_val(val));
+		}
 	};
 
 // Dynamic argument check
@@ -149,16 +186,17 @@ namespace cs_impl {
 
 	template<typename _TargetT, typename _SourceT, typename _CheckT, std::size_t index>
 	struct try_convert_and_check {
+		using source_type = typename cni_decayed_convertor<_SourceT, _TargetT>::source_type;
 		inline static _TargetT convert(cs::var &val)
 		{
-			if (val.type() == typeid(_SourceT))
-				return type_convertor<_SourceT, _TargetT>::convert(convert_helper<_SourceT>::get_val(val));
+			if (val.type() == typeid(source_type))
+				return cni_decayed_convertor<_SourceT, _TargetT>::convert(val);
 			else if (val.type() == typeid(_TargetT))
 				return convert_helper<_TargetT>::get_val(val);
 			else
 				throw cs::runtime_error("Invalid Argument. At " + std::to_string(index + 1) + ". Expected " +
 				                        cxx_demangle(get_name_of_type<_TargetT>()) + ", compatible with " +
-				                        cxx_demangle(get_name_of_type<_SourceT>()) + ", provided " +
+				                        cxx_demangle(get_name_of_type<source_type>()) + ", provided " +
 				                        val.get_type_name());
 		}
 	};
@@ -184,7 +222,8 @@ namespace cs_impl {
 		}
 	};
 
-	template<typename _TargetT, typename _SourceT, std::size_t index> using try_convert = try_convert_and_check<_TargetT, _SourceT, typename cov::remove_constant<typename cov::remove_reference<_TargetT>::type>::type, index>;
+	template<typename _TargetT, typename _SourceT, std::size_t index>
+	using try_convert = try_convert_and_check<_TargetT, _SourceT, typename cov::remove_constant<typename cov::remove_reference<_TargetT>::type>::type, index>;
 
 // Static argument check
 	template<typename RetT, typename...ArgsT>
@@ -263,7 +302,7 @@ namespace cs_impl {
 		template<int...S>
 		_Source_RetT _call(cs::vector &args, const cov::sequence<S...> &) const
 		{
-			return type_convertor<_Target_RetT, _Source_RetT>::convert(
+			return cni_decayed_convertor<_Target_RetT, _Source_RetT>::convertor::convert(
 			           mFunc(try_convert<_Target_ArgsT, _Source_ArgsT, S>::convert(args[S])...));
 		}
 
@@ -309,6 +348,7 @@ namespace cs_impl {
 	template<typename T, typename X>
 	class cni_holder final : public cni_holder_base {
 		cni_helper<typename cov::function_parser<T>::type::common_type, typename cov::function_parser<X>::type::common_type> mCni;
+
 	public:
 		cni_holder() = delete;
 
@@ -334,6 +374,43 @@ namespace cs_impl {
 		}
 	};
 
+// CNI Decayed Conversion
+	template<typename _Target>
+	class cni_decayed_conversion_cs {
+		template<typename T, typename = void>
+		struct is_specialized {
+			constexpr static bool value = true;
+		};
+
+		template<typename T>
+		struct is_specialized<T, void_t<typename type_conversion_cs<T>::_not_specialized>> {
+			constexpr static bool value = false;
+		};
+
+	public:
+		using source_type = typename type_conversion_cs<
+		                    typename std::conditional<is_specialized<_Target>::value, _Target,
+		                    typename std::conditional<is_specialized<decay_t<_Target>>::value, decay_t<_Target>, _Target>::type>::type>::source_type;
+	};
+
+	template<typename _Source>
+	class cni_decayed_conversion_cpp {
+		template<typename T, typename = void>
+		struct is_specialized {
+			constexpr static bool value = true;
+		};
+
+		template<typename T>
+		struct is_specialized<T, void_t<typename type_conversion_cpp<T>::_not_specialized>> {
+			constexpr static bool value = false;
+		};
+
+	public:
+		using target_type = typename type_conversion_cpp<
+		                    typename std::conditional<is_specialized<_Source>::value, _Source,
+		                    typename std::conditional<is_specialized<decay_t<_Source>>::value, decay_t<_Source>, _Source>::type>::type>::target_type;
+	};
+
 // CNI Implementation
 	template<typename T>
 	struct cni_type {
@@ -345,10 +422,10 @@ namespace cs_impl {
 			template<typename X, typename RetT, typename...ArgsT>
 			static cni_holder_base *_construct(X &&val, RetT(*target_function)(ArgsT...))
 			{
-				using source_function_type = typename type_conversion_cpp<RetT>::target_type(*)(
-				                                 typename type_conversion_cs<ArgsT>::source_type...);
+				using source_function_type = typename cni_decayed_conversion_cpp<RetT>::target_type(*)(
+				                                 typename cni_decayed_conversion_cs<ArgsT>::source_type...);
 				// Return type
-				static_assert(cni_convertible<RetT, typename type_conversion_cpp<RetT>::target_type>::value,
+				static_assert(cni_convertible<RetT, typename cni_decayed_conversion_cpp<RetT>::target_type>::value,
 				              "Invalid conversion.");
 				// Argument type
 				check_conversion(target_function, source_function_type(nullptr));
@@ -363,18 +440,19 @@ namespace cs_impl {
 		};
 
 		cni_holder_base *mCni = nullptr;
+
 	public:
 		cni() = delete;
 
 		cni(const cni &c) : mCni(c.mCni->clone()) {}
 
 		template<typename T>
-		explicit cni(T &&val):mCni(
+		explicit cni(T &&val) : mCni(
 			    construct_helper<typename cni_modify<typename cov::remove_reference<T>::type>::type>::construct(
 			        std::forward<T>(val))) {}
 
 		template<typename T, typename X>
-		cni(T &&val, cni_type<X>):mCni(
+		cni(T &&val, cni_type<X>) : mCni(
 			    new cni_holder<typename cni_modify<typename cov::remove_reference<T>::type>::type, typename cni_modify<X>::type>(
 			        std::forward<T>(val)))
 		{
@@ -441,6 +519,7 @@ namespace cs_impl {
 	class member_visitor final {
 		std::function<any()> m_getter;
 		std::function<void(const any &)> m_setter;
+
 	public:
 		member_visitor() = delete;
 
@@ -451,8 +530,8 @@ namespace cs_impl {
 				return any::make_constant<_Member>(obj.*mem_ptr);
 			};
 			m_setter = [&obj, mem_ptr](const any &val) {
-				using source_type = typename type_conversion_cs<_Member>::source_type;
-				obj.*mem_ptr = type_convertor<source_type, _Member>::convert(val.const_val<source_type>());
+				using source_type = typename cni_decayed_conversion_cs<_Member>::source_type;
+				obj.*mem_ptr = cni_decayed_convertor<source_type, _Member>::convertor::convert(val.const_val<source_type>());
 			};
 		}
 
@@ -479,8 +558,8 @@ namespace cs_impl {
 	};
 }
 namespace cs {
-	using cs_impl::cni_type;
 	using cs_impl::cni;
+	using cs_impl::cni_type;
 	using cs_impl::member_visitor;
 
 	/**

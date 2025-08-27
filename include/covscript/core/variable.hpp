@@ -256,15 +256,18 @@ namespace cs_impl {
 	template<typename _Target>
 	struct type_conversion_cs {
 		using source_type = _Target;
+		using _not_specialized = void;
 	};
 
 	template<typename _Source>
 	struct type_conversion_cpp {
 		using target_type = _Source;
+		using _not_specialized = void;
 	};
 
 	template<typename _From, typename _To>
 	struct type_convertor {
+		using _not_specialized = void;
 		template<typename T>
 		static inline _To convert(T &&val) noexcept
 		{
