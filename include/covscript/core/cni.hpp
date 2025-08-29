@@ -136,6 +136,7 @@ namespace cs_impl {
 		{
 			using decayed_target_t = decay_t<_TargetT>;
 			val.assign(any::make<decayed_target_t>(_ConvertorT::convert(convert_helper<_SourceT>::get_val(val))));
+			val.constant();
 			return convert_helper<_TargetT>::get_val(val);
 		}
 	};
@@ -235,8 +236,16 @@ namespace cs_impl {
 		using source_type = typename cni_decayed_convertor<_SourceT, _TargetT>::source_type;
 		static _TargetT convert(any &val)
 		{
-			if (val.type() == typeid(source_type))
-				return cni_decayed_convertor<_SourceT, _TargetT>::convert_to_cpp(val);
+			if (val.type() == typeid(source_type)) {
+				try {
+					return cni_decayed_convertor<_SourceT, _TargetT>::convert_to_cpp(val);
+				}
+				catch (...) {
+					throw cs::runtime_error("Type Conversion Failed. At " + std::to_string(index + 1) + ". Expected " +
+					                        cxx_demangle(get_name_of_type<_TargetT>()) + ", provided " +
+					                        cxx_demangle(get_name_of_type<_SourceT>()));
+				}
+			}
 			else if (val.type() == typeid(_TargetT))
 				return convert_helper<_TargetT>::get_val(val);
 			else
