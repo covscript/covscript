@@ -732,7 +732,7 @@ namespace cs {
 					std::swap(new_args, args);
 				}
 				statement_base *ret = new statement_return(tree_type<token_base *>(it.right()), context,
-				        new token_endline(token->get_line_num()));
+				    new token_endline(token->get_line_num()));
 #ifdef CS_DEBUGGER
 				std::string decl="function [lambda](";
 				if(args.size()!=0) {
@@ -1265,7 +1265,7 @@ namespace cs {
 							line_num = method_line_num;
 							if (m->get_target_type() == statement_types::end_)
 								sptr = static_cast<method_end *>(m)->translate_end(expected_method, context, tmp,
-								        line);
+								       line);
 							else
 								sptr = expected_method->translate(context, tmp);
 							tmp.clear();

@@ -358,7 +358,7 @@ namespace cs {
 					if (methods.empty()) {
 						if (m->get_target_type() == statement_types::end_)
 							sptr = static_cast<method_end *>(m)->translate_end(expected_method, context, tmp,
-							        line);
+							       line);
 						else
 							sptr = expected_method->translate(context, tmp);
 						tmp.clear();
@@ -491,15 +491,18 @@ namespace cs {
 			else {
 				auto pos = cmd.find(':');
 				std::string arg;
-				if (pos != std::string::npos) {
+				if (pos != std::string::npos)
+				{
 					arg = cmd.substr(pos + 1);
 					cmd = cmd.substr(0, pos);
 				}
-				if (cmd == "exit") {
+				if (cmd == "exit")
+				{
 					int code = 0;
 					current_process->on_process_exit.touch(&code);
 				}
-				else if (cmd == "charset") {
+				else if (cmd == "charset")
+				{
 					if (arg == "ascii")
 						encoding = charset::ascii;
 					else if (arg == "utf8")
@@ -510,7 +513,8 @@ namespace cs {
 						throw exception(line_num, context->file_path, "@" + cmd + ": " + arg,
 						                "Unavailable encoding.");
 				}
-				else if (cmd == "require") {
+				else if (cmd == "require")
+				{
 					std::string version_str = CS_GET_VERSION_STR(COVSCRIPT_STD_VERSION);
 					if (arg > version_str)
 						throw exception(line_num, context->file_path, "@" + cmd + ": " + arg,

@@ -104,15 +104,14 @@ namespace cs_impl {
 	};
 
 	template <typename From, typename To>
-	struct cni_convertible<From, To, decltype(void(type_convertor<From, To>::convert(std::declval<From>())))> {
+	struct cni_convertible<From, To, void_t<decltype(type_convertor<From, To>::convert(std::declval<From>()))>> {
 		static constexpr bool value = true;
 	};
 
-	// template <typename T>
-	// class cni_convertible<T, T, void> final {
-	// public:
-	// 	static constexpr bool value = true;
-	// };
+	template <>
+	struct cni_convertible<void, void, void> {
+		static constexpr bool value = true;
+	};
 
 	template <typename T>
 	static any return_to_cs(const T &val)
@@ -125,16 +124,6 @@ namespace cs_impl {
 	{
 		return val;
 	}
-
-	template <typename From, typename To, typename = void>
-	struct cni_bindable {
-		static constexpr bool value = false;
-	};
-
-	template <typename From, typename To>
-	struct cni_bindable<From, To, decltype(void(std::declval<void (*)(To)>()(std::declval<From>())))> {
-		static constexpr bool value = true;
-	};
 
 	template <typename _SourceT, typename _TargetT, typename _ConvertorT, bool _Bindable>
 	struct cni_decayed_converter_impl {
@@ -158,12 +147,14 @@ namespace cs_impl {
 	class cni_decayed_convertor {
 	private:
 		template <typename _From, typename _To, typename = void>
-		struct is_specialized {
+		struct is_specialized
+		{
 			static constexpr bool value = true;
 		};
 
 		template <typename _From, typename _To>
-		struct is_specialized<_From, _To, void_t<typename type_convertor<_From, _To>::_not_specialized>> {
+		struct is_specialized<_From, _To, void_t<typename type_convertor<_From, _To>::_not_specialized>>
+		{
 			static constexpr bool value = false;
 		};
 
@@ -171,16 +162,15 @@ namespace cs_impl {
 		struct type_extractor;
 
 		template <template <typename, typename> class T, typename _From, typename _To>
-		struct type_extractor<T<_From, _To>> {
+		struct type_extractor<T<_From, _To>>
+		{
 			using source_type = _From;
 			using target_type = _To;
 		};
 
 		template <typename S, typename T>
 		using select_convertor = typename std::conditional<is_specialized<S, T>::value,
-		      type_convertor<S, T>,typename std::conditional<is_specialized<decay_t<S>, decay_t<T>>::value,
-		      type_convertor<decay_t<S>, decay_t<T>>,typename std::conditional<cni_convertible<S, T>::value,
-		      type_convertor<S, T>,void>::type>::type>::type;
+		      type_convertor<S, T>, typename std::conditional<is_specialized<decay_t<S>, decay_t<T>>::value, type_convertor<decay_t<S>, decay_t<T>>, typename std::conditional<cni_convertible<S, T>::value, type_convertor<S, T>, void>::type>::type>::type;
 
 	public:
 		using convertor = select_convertor<_SourceT, _TargetT>;
@@ -191,7 +181,7 @@ namespace cs_impl {
 
 		static _TargetT convert_to_cpp(any &val)
 		{
-			constexpr bool bindable = cni_bindable<decltype(convertor::convert(std::declval<source_type>())), _TargetT>::value;
+			constexpr bool bindable = std::is_reference<decltype(convertor::convert(std::declval<source_type>()))>::value || !std::is_reference<_TargetT>::value;
 			using Convertor = cni_decayed_converter_impl<source_type, _TargetT, convertor, bindable>;
 			return Convertor::convert(val);
 		}
@@ -350,7 +340,7 @@ namespace cs_impl {
 		any _call(cs::vector &args, const cov::sequence<S...> &) const
 		{
 			return cni_decayed_convertor<_Target_RetT, _Source_RetT>::convert_to_cs(
-			           mFunc(try_convert<_Target_ArgsT, _Source_ArgsT, S>::convert(args[S])...));
+			    mFunc(try_convert<_Target_ArgsT, _Source_ArgsT, S>::convert(args[S])...));
 		}
 
 	public:
@@ -425,12 +415,14 @@ namespace cs_impl {
 	template <typename _Target>
 	class cni_decayed_conversion_cs {
 		template <typename T, typename = void>
-		struct is_specialized {
+		struct is_specialized
+		{
 			constexpr static bool value = true;
 		};
 
 		template <typename T>
-		struct is_specialized<T, void_t<typename type_conversion_cs<T>::_not_specialized>> {
+		struct is_specialized<T, void_t<typename type_conversion_cs<T>::_not_specialized>>
+		{
 			constexpr static bool value = false;
 		};
 
@@ -443,12 +435,14 @@ namespace cs_impl {
 	template <typename _Source>
 	class cni_decayed_conversion_cpp {
 		template <typename T, typename = void>
-		struct is_specialized {
+		struct is_specialized
+		{
 			constexpr static bool value = true;
 		};
 
 		template <typename T>
-		struct is_specialized<T, void_t<typename type_conversion_cpp<T>::_not_specialized>> {
+		struct is_specialized<T, void_t<typename type_conversion_cpp<T>::_not_specialized>>
+		{
 			constexpr static bool value = false;
 		};
 
@@ -465,7 +459,8 @@ namespace cs_impl {
 
 	class cni final {
 		template <typename T>
-		struct construct_helper {
+		struct construct_helper
+		{
 			template <typename X, typename RetT, typename... ArgsT>
 			static cni_holder_base *_construct(X &&val, RetT (*target_function)(ArgsT...))
 			{
@@ -531,16 +526,20 @@ namespace cs_impl {
 
 		any operator()(cs::vector &args) const
 		{
-			try {
+			try
+			{
 				return cs::try_move(mCni->call(args));
 			}
-			catch (const cs::lang_error &e) {
+			catch (const cs::lang_error &e)
+			{
 				cs::current_process->cs_eh_callback(e);
 			}
-			catch (const std::exception &e) {
+			catch (const std::exception &e)
+			{
 				cs::current_process->std_eh_callback(e);
 			}
-			catch (...) {
+			catch (...)
+			{
 				cs::current_process->std_eh_callback(cs::fatal_error("CNI:Unrecognized exception."));
 			}
 			return cs::null_pointer;
