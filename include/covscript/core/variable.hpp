@@ -31,6 +31,8 @@ namespace cs_impl {
 	std::string cxx_demangle(const char *);
 
 // Type support auto-detection(SFINAE)
+	template <typename...> using void_t = void;
+
 // Compare
 	template<typename _Tp>
 	class compare_helper {
@@ -126,25 +128,14 @@ namespace cs_impl {
 	};
 
 // Hash
-	template<typename _Tp>
-	class hash_helper {
-		template<typename T, decltype(&std::hash<T>::operator()) X>
-		struct matcher;
+	template<typename T, typename = void>
+	struct hash_helper {
+		static constexpr bool value = false;
+	};
 
-		template<typename T>
-		static constexpr bool match(T *) noexcept
-		{
-			return false;
-		}
-
-		template<typename T>
-		static constexpr bool match(matcher<T, &std::hash<T>::operator()> *) noexcept
-		{
-			return true;
-		}
-
-	public:
-		static constexpr bool value = match<_Tp>(nullptr);
+	template<typename T>
+	struct hash_helper<T, void_t<decltype(std::hash<T> {}(std::declval<T>()))>> {
+		static constexpr bool value = true;
 	};
 
 	template<typename T>

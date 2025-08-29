@@ -28,9 +28,6 @@
 
 namespace cs_impl {
 // Utilities
-	template <typename...>
-	using void_t = void;
-
 	template <typename T>
 	using decay_t = typename std::decay<T>::type;
 
