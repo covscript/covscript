@@ -110,6 +110,55 @@ namespace cs_impl {
 		static constexpr bool value = true;
 	};
 
+	template<typename T>
+	static inline any return_to_cs(const T &val)
+	{
+		return any::make_constant<T>(val);
+	}
+
+	template<>
+	inline any return_to_cs<any>(const any &val)
+	{
+		return val;
+	}
+
+	template<typename _SourceT, typename _TargetT>
+	class cni_bindable {
+		template<typename From1, typename To1>
+		static constexpr bool helper(...)
+		{
+			return false;
+		}
+
+		template<typename T> void sfine_container(_TargetT) {}
+
+		template<typename From1, typename To1, typename = decltype(sfine_container<To1>(std::declval<From1>()))>
+		static constexpr bool helper(int)
+		{
+			return true;
+		}
+	public:
+		static constexpr bool value = helper<_SourceT, _TargetT>(0);
+	};
+
+	template<typename _SourceT, typename _TargetT, typename ConvertorT, bool bindable>
+	struct cni_safe_convertor {
+		inline static _TargetT convert(any &val)
+		{
+			return ConvertorT::convert(convert_helper<_SourceT>::get_val(val));
+		}
+	};
+
+	template<typename _SourceT, typename _TargetT, typename ConvertorT>
+	struct cni_safe_convertor<_SourceT, _TargetT, ConvertorT, false> {
+		inline static _TargetT convert(any &val)
+		{
+			using decayed_target_t = decay_t<_TargetT>;
+			val.assign(any::make<decayed_target_t>(ConvertorT::convert(convert_helper<_SourceT>::get_val(val))));
+			return convert_helper<_TargetT>::get_val(val);
+		}
+	};
+
 	template<typename _SourceT, typename _TargetT>
 	class cni_decayed_convertor {
 		template<typename _From, typename _To, typename = void>
@@ -138,9 +187,15 @@ namespace cs_impl {
 		using source_type = typename helper<convertor>::source_type;
 		using target_type = typename helper<convertor>::target_type;
 
-		inline static _TargetT convert(cs::var &val)
+		inline static _TargetT convert_to_cpp(any &val)
 		{
-			return convertor::convert(convert_helper<source_type>::get_val(val));
+			constexpr bool bindable = cni_bindable<decltype(convertor::convert(std::declval<source_type>())), _TargetT>::value;
+			return cni_safe_convertor<source_type, _TargetT, convertor, bindable>::convert(val);
+		}
+
+		inline static any convert_to_cs(source_type &&val)
+		{
+			return return_to_cs(convertor::convert(val));
 		}
 	};
 
@@ -190,7 +245,7 @@ namespace cs_impl {
 		inline static _TargetT convert(cs::var &val)
 		{
 			if (val.type() == typeid(source_type))
-				return cni_decayed_convertor<_SourceT, _TargetT>::convert(val);
+				return cni_decayed_convertor<_SourceT, _TargetT>::convert_to_cpp(val);
 			else if (val.type() == typeid(_TargetT))
 				return convert_helper<_TargetT>::get_val(val);
 			else
@@ -245,18 +300,6 @@ namespace cs_impl {
 		result_container(check_conversion_base<_Target_ArgsT, _Source_ArgsT>()...);
 	}
 
-	template<typename T>
-	static inline any return_to_cs(const T &val)
-	{
-		return any::make_constant<T>(val);
-	}
-
-	template<>
-	inline any return_to_cs<any>(const any &val)
-	{
-		return val;
-	}
-
 // CNI Helper
 	template<typename _Target, typename _Source>
 	class cni_helper;
@@ -300,9 +343,9 @@ namespace cs_impl {
 		std::function<_Target_RetT(_Target_ArgsT...)> mFunc;
 
 		template<int...S>
-		_Source_RetT _call(cs::vector &args, const cov::sequence<S...> &) const
+		any _call(cs::vector &args, const cov::sequence<S...> &) const
 		{
-			return cni_decayed_convertor<_Target_RetT, _Source_RetT>::convertor::convert(
+			return cni_decayed_convertor<_Target_RetT, _Source_RetT>::convert_to_cs(
 			           mFunc(try_convert<_Target_ArgsT, _Source_ArgsT, S>::convert(args[S])...));
 		}
 
@@ -325,7 +368,7 @@ namespace cs_impl {
 				    "Wrong size of the arguments. Expected " + std::to_string(sizeof...(_Target_ArgsT)) +
 				    ", provided " +
 				    std::to_string(args.size()));
-			return return_to_cs(_call(args, cov::make_sequence<sizeof...(_Source_ArgsT)>::result));
+			return _call(args, cov::make_sequence<sizeof...(_Source_ArgsT)>::result);
 		}
 	};
 
