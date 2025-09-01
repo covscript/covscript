@@ -134,9 +134,20 @@ namespace cs_impl {
 			printf("\x1B[%d;%df", y + 1, x + 1);
 		}
 
-		void echo(bool in)
+		void echo(bool mode)
 		{
-			if (in)
+			struct termios tty;
+			tcgetattr(STDIN_FILENO, &tty);
+			if (!enable)
+				tty.c_lflag &= ~ECHO;
+			else
+				tty.c_lflag |= ECHO;
+			(void)tcsetattr(STDIN_FILENO, TCSANOW, &tty);
+		}
+
+		void cursor(bool mode)
+		{
+			if (mode)
 				printf("\33[?25h");
 			else
 				printf("\33[?25l");

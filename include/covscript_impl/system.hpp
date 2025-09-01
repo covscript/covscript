@@ -75,6 +75,8 @@ namespace cs_impl {
 
 		void echo(bool);
 
+		void cursor(bool);
+
 		void clrscr();
 
 		int getch();
