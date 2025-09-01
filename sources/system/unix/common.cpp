@@ -138,7 +138,7 @@ namespace cs_impl {
 		{
 			struct termios tty;
 			tcgetattr(STDIN_FILENO, &tty);
-			if (!enable)
+			if (!mode)
 				tty.c_lflag &= ~ECHO;
 			else
 				tty.c_lflag |= ECHO;
