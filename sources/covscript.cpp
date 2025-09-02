@@ -411,100 +411,99 @@ namespace cs {
 		// Init Grammars
 		(*context->compiler)
 		// Expression Grammar
-		.add_method({new token_expr(tree_type<token_base *>()), new token_endline(0)},
-		new method_expression)
+		.add_method({new token_expr(tree_type<token_base *>()), new token_endline(0)}, new method_expression)
 		// Import Grammar
 		.add_method({new token_action(action_types::import_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_import)
+		             new token_endline(0)}, new method_import)
 		.add_method({new token_action(action_types::import_), new token_expr(tree_type<token_base *>()),
-			            new token_action(action_types::as_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_import_as)
+		             new token_action(action_types::as_), new token_expr(tree_type<token_base *>()),
+		             new token_endline(0)}, new method_import_as)
 		// Package Grammar
 		.add_method({new token_action(action_types::package_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_package)
+		             new token_endline(0)}, new method_package)
 		// Involve Grammar
 		.add_method({new token_action(action_types::using_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_involve)
+		             new token_endline(0)}, new method_involve)
 		// Var Grammar
 		.add_method({new token_action(action_types::var_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_var)
+		             new token_endline(0)}, new method_var)
 		.add_method({new token_action(action_types::link_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_link)
+		             new token_endline(0)}, new method_link)
 		.add_method({new token_action(action_types::constant_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_constant)
+		             new token_endline(0)},
+		            new method_constant)
 		// End Grammar
 		.add_method({new token_action(action_types::endblock_), new token_endline(0)}, new method_end)
 		// Block Grammar
 		.add_method({new token_action(action_types::block_), new token_endline(0)}, new method_block)
 		// Namespace Grammar
 		.add_method({new token_action(action_types::namespace_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_namespace)
+		             new token_endline(0)}, new method_namespace)
 		// If Grammar
 		.add_method({new token_action(action_types::if_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_if)
+		             new token_endline(0)}, new method_if)
 		// Else Grammar
 		.add_method({new token_action(action_types::else_), new token_endline(0)}, new method_else)
 		// Switch Grammar
 		.add_method({new token_action(action_types::switch_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_switch)
+		             new token_endline(0)}, new method_switch)
 		// Case Grammar
 		.add_method({new token_action(action_types::case_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_case)
+		             new token_endline(0)}, new method_case)
 		// Default Grammar
 		.add_method({new token_action(action_types::default_), new token_endline(0)},
-		new method_default)
+		            new method_default)
 		// While Grammar
 		.add_method({new token_action(action_types::while_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_while)
+		             new token_endline(0)}, new method_while)
 		// Until Grammar
 		.add_method({new token_action(action_types::until_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_until)
+		             new token_endline(0)}, new method_until)
 		// Loop Grammar
 		.add_method({new token_action(action_types::loop_), new token_endline(0)}, new method_loop)
 		// For Grammar
 		.add_method({new token_action(action_types::for_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_for)
+		             new token_endline(0)}, new method_for)
 		.add_method({new token_action(action_types::for_), new token_expr(tree_type<token_base *>()),
-			            new token_action(action_types::do_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_for_do)
+		             new token_action(action_types::do_), new token_expr(tree_type<token_base *>()),
+		             new token_endline(0)}, new method_for_do)
 		.add_method({new token_action(action_types::foreach_), new token_expr(tree_type<token_base *>()),
-			            new token_action(action_types::in_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_foreach)
+		             new token_action(action_types::in_), new token_expr(tree_type<token_base *>()),
+		             new token_endline(0)}, new method_foreach)
 		.add_method({new token_action(action_types::foreach_), new token_expr(tree_type<token_base *>()),
-			            new token_action(action_types::in_), new token_expr(tree_type<token_base *>()),
-			            new token_action(action_types::do_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_foreach_do)
+		             new token_action(action_types::in_), new token_expr(tree_type<token_base *>()),
+		             new token_action(action_types::do_), new token_expr(tree_type<token_base *>()),
+		             new token_endline(0)}, new method_foreach_do)
 		// Break Grammar
 		.add_method({new token_action(action_types::break_), new token_endline(0)}, new method_break)
 		// Continue Grammar
 		.add_method({new token_action(action_types::continue_), new token_endline(0)},
-		new method_continue)
+		            new method_continue)
 		// Function Grammar
 		.add_method({new token_action(action_types::function_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_function)
+		             new token_endline(0)}, new method_function)
 		.add_method({new token_action(action_types::function_), new token_expr(tree_type<token_base *>()),
-			            new token_action(action_types::override_), new token_endline(0)},
-		new method_function)
+		             new token_action(action_types::override_), new token_endline(0)},
+		            new method_function)
 		// Return Grammar
 		.add_method({new token_action(action_types::return_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_return)
+		             new token_endline(0)}, new method_return)
 		.add_method({new token_action(action_types::return_), new token_endline(0)},
-		new method_return_no_value)
+		            new method_return_no_value)
 		// Struct Grammar
 		.add_method({new token_action(action_types::struct_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_struct)
+		             new token_endline(0)}, new method_struct)
 		.add_method({new token_action(action_types::struct_), new token_expr(tree_type<token_base *>()),
-			            new token_action(action_types::extends_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_struct)
+		             new token_action(action_types::extends_), new token_expr(tree_type<token_base *>()),
+		             new token_endline(0)}, new method_struct)
 		// Try Grammar
 		.add_method({new token_action(action_types::try_), new token_endline(0)}, new method_try)
 		// Catch Grammar
 		.add_method({new token_action(action_types::catch_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_catch)
+		             new token_endline(0)}, new method_catch)
 		// Throw Grammar
 		.add_method({new token_action(action_types::throw_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)}, new method_throw);
+		             new token_endline(0)}, new method_throw);
 		// Init Runtime
 		context->instance->storage
 		// Internal Types

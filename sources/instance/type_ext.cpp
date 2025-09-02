@@ -1736,6 +1736,11 @@ namespace cs_impl {
 			conio::echo(v);
 		}
 
+		void cursor(bool v)
+		{
+			conio::cursor(v);
+		}
+
 		void clrscr()
 		{
 			conio::clrscr();
@@ -1758,6 +1763,7 @@ namespace cs_impl {
 			.add_var("terminal_height", make_cni(terminal_height))
 			.add_var("gotoxy", make_cni(gotoxy))
 			.add_var("echo", make_cni(echo))
+			.add_var("cursor", make_cni(cursor))
 			.add_var("clrscr", make_cni(clrscr))
 			.add_var("getch", make_cni(getch))
 			.add_var("kbhit", make_cni(kbhit));

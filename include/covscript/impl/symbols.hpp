@@ -156,8 +156,7 @@ namespace cs {
 	public:
 		mapping(std::initializer_list<std::pair<const Key, T>> l) : mDat(l) {}
 
-		bool exist(const Key &k) const
-		{
+		bool exist(const Key &k) const {
 			return mDat.count(k) > 0;
 		}
 
@@ -412,19 +411,18 @@ namespace cs {
 			return token_types::sblist;
 		}
 
-		std::deque<std::deque<token_base *>> &get_list() noexcept
-		{
+		std::deque<std::deque<token_base *>> &get_list() noexcept {
 			return this->mList;
 		}
 
-		bool dump(std::ostream &o) const override
-		{
+		bool dump(std::ostream &o) const override {
 			o << "< Small Bracket >";
 			return false;
 		}
 	};
 
-	class token_mblist final : public token_base {
+	class token_mblist final :
+		public token_base {
 		std::deque<std::deque<token_base *>> mList;
 	public:
 		token_mblist() = delete;
@@ -508,9 +506,7 @@ namespace cs {
 			return token_types::arglist;
 		}
 
-		std::deque<tree_type<token_base * >> &
-
-		                                  get_arglist() noexcept
+		std::deque<tree_type<token_base * >> &get_arglist() noexcept
 		{
 			return this->mTreeList;
 		}
@@ -534,9 +530,7 @@ namespace cs {
 			return token_types::array;
 		}
 
-		std::deque<tree_type<token_base * >> &
-
-		                                  get_array() noexcept
+		std::deque<tree_type<token_base * >> &get_array() noexcept
 		{
 			return this->mTreeList;
 		}
@@ -560,9 +554,7 @@ namespace cs {
 			return token_types::parallel;
 		}
 
-		std::deque<tree_type<token_base * >> &
-
-		                                  get_parallel() noexcept
+		std::deque<tree_type<token_base * >> &get_parallel() noexcept
 		{
 			return this->mTreeList;
 		}

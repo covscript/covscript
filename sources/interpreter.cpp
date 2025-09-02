@@ -277,8 +277,8 @@ void covscript_main(int args_size, char *args[])
 		if (!silent)
 			std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: "
 			          << cs::current_process->version << " [" << COVSCRIPT_COMPILER_NAME << " on " << COVSCRIPT_PLATFORM_NAME << "]\n"
-			          "Copyright (C) 2017-2025 Michael Lee. All rights reserved.\n"
-			          "Please visit <http://covscript.org.cn/> for more information."
+			                                   "Copyright (C) 2017-2025 Michael Lee. All rights reserved.\n"
+			                                   "Please visit <http://covscript.org.cn/> for more information."
 			          << std::endl;
 		cs::array
 		arg{cs::var::make_constant<cs::string>("<REPL_ENV>")};

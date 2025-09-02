@@ -75,6 +75,18 @@ namespace cs_impl {
 
 		void echo(bool mode)
 		{
+			HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+			DWORD conmode;
+			GetConsoleMode(hStdin, &conmode);
+			if (!mode)
+				conmode &= ~ENABLE_ECHO_INPUT;
+			else
+				conmode |= ENABLE_ECHO_INPUT;
+			SetConsoleMode(hStdin, conmode);
+		}
+
+		void cursor(bool mode)
+		{
 			static CONSOLE_CURSOR_INFO cci;
 			GetConsoleCursorInfo(StdHandle, &cci);
 			cci.bVisible = mode;

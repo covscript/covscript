@@ -1,4 +1,10 @@
 import my_ext
+var num=1.234
+system.out.println(my_ext.test_func_cref(num) == 1)
+system.out.println(type(num))
+# test this line. this line should throw type conversion error.
+# my_ext.test_func_ref(num) == 1
+system.out.println(my_ext.test_func_ref(my_ext.get_wrapper(num)) == 1)
 context.add_literal("hex", my_ext.hex_literal)
 constant hex = "0x0f"hex
 system.out.println(hex)
