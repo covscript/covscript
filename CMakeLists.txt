@@ -50,13 +50,23 @@ add_library(covscript_debug STATIC ${SOURCE_CODE})
 
 target_compile_definitions(covscript_debug PRIVATE CS_DEBUGGER)
 
+include(CheckCSourceCompiles)
+
+check_c_source_compiles("
+    #include <features.h>
+    #ifndef __GLIBC__
+    #error Not glibc
+    #endif
+    int main() { return 0; }
+" HAVE_GLIBC)
+
 # Link extra libraries in Linux
 if (UNIX AND NOT APPLE)
     target_link_libraries(covscript pthread dl)
     target_link_libraries(covscript_debug pthread dl)
 
     # Use system implementation by default in Linux
-    if (CS_FIBER_LIBUCONTEXT_IMPL)
+    if (NOT HAVE_GLIBC OR CS_FIBER_LIBUCONTEXT_IMPL)
         message("-- CovScript: Using libucontext implementation of fiber")
         add_subdirectory(csbuild/deps)
         target_compile_definitions(covscript PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)
