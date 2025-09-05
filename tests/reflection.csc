@@ -13,11 +13,11 @@ function hack(this)
 end
 reflect.modify_mem_fn(a.test, hack)
 a.test()
-reflect.modify_mem_fn(a.test, []()->system.out.println(self.a + self.b))
+reflect.modify_mem_fn(a.test, [](self)->system.out.println(self.a + self.b))
 a.test()
 reflect.privileged_do(hack, []()->(hack = a.test))
 hack()
-reflect.proxy(foo, {"test":([]()->system.out.println(self.a++))})
+reflect.proxy(foo, {"test":([](self)->system.out.println(self.a++))})
 var b = new foo
 b.test()
 reflect.modify_mem_fn(b.test, a.test)
