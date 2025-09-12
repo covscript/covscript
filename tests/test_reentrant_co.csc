@@ -1,4 +1,13 @@
+class tracer_t
+    var id = null
+    function finalize()
+        system.out.println(this.id + " destroy")
+    end
+end
+
 function body0()
+    var tracer = new tracer_t
+    tracer.id = "Body 0"
     system.out.println("Body 0 start")
     system.out.println("Body 0 yield")
     runtime.yield()
@@ -6,6 +15,8 @@ function body0()
 end
 
 function body1()
+    var tracer = new tracer_t
+    tracer.id = "Body 1"
     system.out.println("Body 1 start")
     var c0 = runtime.create_co(body0)
     system.out.println("Body 1 yield")

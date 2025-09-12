@@ -32,10 +32,6 @@
 #include <string>
 #include <io.h>
 
-#ifndef STACK_LIMIT
-#define STACK_LIMIT (1024 * 1024)
-#endif
-
 namespace cs_system_impl {
 	bool chmod_impl(const std::string &path, unsigned int mode)
 	{
@@ -187,7 +183,9 @@ namespace cs_impl {
 			bool running = false;
 			bool error = false;
 			std::exception_ptr eptr;
-			LPVOID fiber = nullptr;
+
+			LPVOID ctx = nullptr;
+			LPVOID prev_ctx = nullptr;
 
 			Routine(const cs::context_t &cxt, std::function<void()> f)
 				: cs_context(cxt),
@@ -197,8 +195,8 @@ namespace cs_impl {
 
 			~Routine()
 			{
-				if (fiber)
-					DeleteFiber(fiber);
+				if (ctx != nullptr)
+					DeleteFiber(ctx);
 			}
 
 			void cs_context_swap_in()
@@ -218,14 +216,12 @@ namespace cs_impl {
 			std::vector<Routine *> routines;
 			std::list<routine_t> indexes;
 			std::vector<routine_t> call_stack;
-			size_t stack_size;
-			LPVOID fiber;
+			LPVOID ctx;
 
-			Ordinator(size_t ss = STACK_LIMIT)
-				: stack_size(ss)
+			Ordinator(size_t = 0)
 			{
-				fiber = ConvertThreadToFiber(nullptr);
-				if (fiber == nullptr)
+				ctx = ConvertThreadToFiber(nullptr);
+				if (ctx == nullptr)
 					throw cs::internal_error("Create basic coroutine context failed.");
 			}
 
@@ -291,21 +287,7 @@ namespace cs_impl {
 			}
 			routine->running = false;
 			routine->finished = true;
-			LPVOID target_fiber = ordinator.fiber;
-			if (!ordinator.call_stack.empty() && ordinator.call_stack.back() == id) {
-				ordinator.call_stack.pop_back();
-				routine->cs_context_swap_out();
-				if (!ordinator.call_stack.empty()) {
-					Routine *next_routine = ordinator.routines[ordinator.call_stack.back() - 1];
-					if (next_routine == nullptr)
-						throw cs::internal_error("Broken call stack when yield.");
-					next_routine->cs_context_swap_in();
-					target_fiber = next_routine->fiber;
-				}
-			}
-			else
-				throw cs::internal_error("Call stack corrupted on entry completion.");
-			SwitchToFiber(target_fiber);
+			SwitchToFiber(routine->prev_ctx);
 		}
 
 		int resume(routine_t id)
@@ -319,11 +301,33 @@ namespace cs_impl {
 				return routine->error ? -3 : -2;
 			if (routine->running)
 				return -4;
-			if (routine->fiber == nullptr)
-				routine->fiber = CreateFiber(ordinator.stack_size, entry, nullptr);
+			if (routine->ctx == nullptr) {
+				routine->ctx = CreateFiber(ordinator.stack_size, entry, nullptr);
+				if (routine->ctx == nullptr)
+					throw cs::internal_error("Coroutine create failed.");
+				if (!ordinator.call_stack.empty()) {
+					Routine *prev_routine = ordinator.routines[ordinator.call_stack.back() - 1];
+					if (prev_routine == nullptr)
+						throw cs::internal_error("Broken call stack.");
+					routine->prev_ctx = prev_routine->ctx;
+				}
+				else
+					routine->prev_ctx = ordinator.ctx;
+			}
 			ordinator.call_stack.push_back(id);
 			routine->cs_context_swap_in();
-			SwitchToFiber(routine->fiber);
+			SwitchToFiber(routine->ctx);
+			if (!ordinator.call_stack.empty() && ordinator.call_stack.back() == id)
+				ordinator.call_stack.pop_back();
+			else
+				throw cs::internal_error("Call stack corrupted.");
+			routine->cs_context_swap_out();
+			if (!ordinator.call_stack.empty()) {
+				Routine *next_routine = ordinator.routines[ordinator.call_stack.back() - 1];
+				if (next_routine == nullptr)
+					throw cs::internal_error("Broken call stack.");
+				next_routine->cs_context_swap_in();
+			}
 			if (routine->finished && routine->error)
 				std::rethrow_exception(routine->eptr);
 			return routine->finished ? 1 : 0;
@@ -338,21 +342,7 @@ namespace cs_impl {
 			if (routine == nullptr)
 				throw cs::internal_error("Yield a destroyed coroutine.");
 			routine->running = false;
-			LPVOID target_fiber = ordinator.fiber;
-			if (!ordinator.call_stack.empty() && ordinator.call_stack.back() == id) {
-				ordinator.call_stack.pop_back();
-				routine->cs_context_swap_out();
-				if (!ordinator.call_stack.empty()) {
-					Routine *next_routine = ordinator.routines[ordinator.call_stack.back() - 1];
-					if (next_routine == nullptr)
-						throw cs::internal_error("Broken call stack when yield.");
-					next_routine->cs_context_swap_in();
-					target_fiber = next_routine->fiber;
-				}
-			}
-			else
-				throw cs::internal_error("Call stack corrupted in yield.");
-			SwitchToFiber(target_fiber);
+			SwitchToFiber(routine->prev_ctx);
 		}
 
 		routine_t current()

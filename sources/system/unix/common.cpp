@@ -274,18 +274,26 @@ namespace cs_impl {
 			const cs::context_t &cs_context;
 			std::function<void()> func;
 
-			std::unique_ptr<char[]> stack;
 			bool finished = false;
 			bool running = false;
 			bool error = false;
 			std::exception_ptr eptr;
+
+			void *stack = nullptr;
 			cs_fiber_ucontext_t ctx;
+			cs_fiber_ucontext_t *prev_ctx = nullptr;
 
 			Routine(const cs::context_t &cxt, std::function<void()> f)
 				: cs_context(cxt),
 				  cs_pcontext(cs::current_process->fork()),
 				  cs_stack(cs::current_process->child_stack_size()),
 				  func(std::move(f)) {}
+
+			~Routine()
+			{
+				if (stack != nullptr)
+					free(stack);
+			}
 
 			void cs_context_swap_in()
 			{
@@ -304,8 +312,8 @@ namespace cs_impl {
 			std::vector<Routine *> routines;
 			std::list<routine_t> indexes;
 			std::vector<routine_t> call_stack;
-			size_t stack_size;
 			cs_fiber_ucontext_t ctx;
+			size_t stack_size;
 
 			Ordinator(size_t ss = STACK_LIMIT)
 				: stack_size(ss) {}
@@ -371,18 +379,7 @@ namespace cs_impl {
 			}
 			routine->running = false;
 			routine->finished = true;
-			if (!ordinator.call_stack.empty() && ordinator.call_stack.back() == id) {
-				ordinator.call_stack.pop_back();
-				routine->cs_context_swap_out();
-				if (!ordinator.call_stack.empty()) {
-					Routine *next_routine = ordinator.routines[ordinator.call_stack.back() - 1];
-					if (next_routine == nullptr)
-						throw cs::internal_error("Broken call stack when yield.");
-					next_routine->cs_context_swap_in();
-				}
-			}
-			else
-				throw cs::internal_error("Call stack corrupted on entry completion.");
+			cs_fiber_swapcontext(&routine->ctx, routine->prev_ctx);
 		}
 
 		int resume(routine_t id)
@@ -397,16 +394,37 @@ namespace cs_impl {
 			if (routine->running)
 				return -4;
 			if (routine->stack == nullptr) {
-				routine->stack = std::make_unique<char[]>(ordinator.stack_size);
+				routine->stack = malloc(ordinator.stack_size);
+				if (routine->stack == nullptr)
+					throw cs::internal_error("Coroutine create failed.");
 				cs_fiber_getcontext(&routine->ctx);
-				routine->ctx.uc_stack.ss_sp = routine->stack.get();
+				routine->ctx.uc_stack.ss_sp = routine->stack;
 				routine->ctx.uc_stack.ss_size = ordinator.stack_size;
-				routine->ctx.uc_link = &ordinator.ctx;
-				cs_fiber_makecontext(&routine->ctx, reinterpret_cast<void (*)(void)>(entry), 0);
+				routine->ctx.uc_link = nullptr;
+				cs_fiber_makecontext(&routine->ctx, reinterpret_cast<void (*)()>(entry), 0);
+				if (!ordinator.call_stack.empty()) {
+					Routine *prev_routine = ordinator.routines[ordinator.call_stack.back() - 1];
+					if (prev_routine == nullptr)
+						throw cs::internal_error("Broken call stack.");
+					routine->prev_ctx = &prev_routine->ctx;
+				}
+				else
+					routine->prev_ctx = &ordinator.ctx;
 			}
 			ordinator.call_stack.push_back(id);
 			routine->cs_context_swap_in();
-			cs_fiber_swapcontext(&ordinator.ctx, &routine->ctx);
+			cs_fiber_swapcontext(routine->prev_ctx, &routine->ctx);
+			if (!ordinator.call_stack.empty() && ordinator.call_stack.back() == id)
+				ordinator.call_stack.pop_back();
+			else
+				throw cs::internal_error("Call stack corrupted.");
+			routine->cs_context_swap_out();
+			if (!ordinator.call_stack.empty()) {
+				Routine *next_routine = ordinator.routines[ordinator.call_stack.back() - 1];
+				if (next_routine == nullptr)
+					throw cs::internal_error("Broken call stack.");
+				next_routine->cs_context_swap_in();
+			}
 			if (routine->finished && routine->error)
 				std::rethrow_exception(routine->eptr);
 			return routine->finished ? 1 : 0;
@@ -421,19 +439,7 @@ namespace cs_impl {
 			if (routine == nullptr)
 				throw cs::internal_error("Yield a destroyed coroutine.");
 			routine->running = false;
-			if (!ordinator.call_stack.empty() && ordinator.call_stack.back() == id) {
-				ordinator.call_stack.pop_back();
-				routine->cs_context_swap_out();
-				if (!ordinator.call_stack.empty()) {
-					Routine *next_routine = ordinator.routines[ordinator.call_stack.back() - 1];
-					if (next_routine == nullptr)
-						throw cs::internal_error("Broken call stack when yield.");
-					next_routine->cs_context_swap_in();
-				}
-			}
-			else
-				throw cs::internal_error("Call stack corrupted in yield.");
-			cs_fiber_swapcontext(&routine->ctx, &ordinator.ctx);
+			cs_fiber_swapcontext(&routine->ctx, routine->prev_ctx);
 		}
 
 		routine_t current()
