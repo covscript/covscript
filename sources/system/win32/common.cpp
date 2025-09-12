@@ -32,6 +32,10 @@
 #include <string>
 #include <io.h>
 
+#ifndef STACK_LIMIT
+#define STACK_LIMIT (1024 * 1024)
+#endif
+
 namespace cs_system_impl {
 	bool chmod_impl(const std::string &path, unsigned int mode)
 	{
@@ -216,9 +220,11 @@ namespace cs_impl {
 			std::vector<Routine *> routines;
 			std::list<routine_t> indexes;
 			std::vector<routine_t> call_stack;
+			size_t stack_size;
 			LPVOID ctx;
 
-			Ordinator(size_t = 0)
+			Ordinator(size_t ss = STACK_LIMIT)
+				: stack_size(ss)
 			{
 				ctx = ConvertThreadToFiber(nullptr);
 				if (ctx == nullptr)
