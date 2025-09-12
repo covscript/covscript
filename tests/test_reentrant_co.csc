@@ -1,0 +1,25 @@
+function body0()
+    system.out.println("Body 0 start")
+    system.out.println("Body 0 yield")
+    runtime.yield()
+    system.out.println("Body 0 exit")
+end
+
+function body1()
+    system.out.println("Body 1 start")
+    var c0 = runtime.create_co(body0)
+    system.out.println("Body 1 yield")
+    runtime.yield()
+    system.out.println("Body 1 resume 0")
+    runtime.resume(c0)
+    system.out.println("Body 1 resume 1")
+    runtime.resume(c0)
+    system.out.println("Body 1 exit")
+end
+
+system.out.println("Main start")
+var c1 = runtime.create_co(body1)
+runtime.resume(c1)
+system.out.println("Main resume")
+runtime.resume(c1)
+system.out.println("Main exit")

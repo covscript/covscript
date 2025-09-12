@@ -1482,26 +1482,18 @@ namespace cs_impl {
 
 		var await(const var &func)
 		{
-			if (func.type() == typeid(callable)) {
+			if (func.type() == typeid(callable) && func.const_val<callable>().get_raw_data().target_type() != typeid(function))
 				return fiber::await(async_callable(func));
-			}
-			else if (func.type() == typeid(object_method)) {
-				const auto &om = func.const_val<object_method>();
-				return fiber::await(async_callable(om.callable, {om.object}));
-			}
-			return null_pointer;
+			else
+				return null_pointer;
 		}
 
 		var await_s(const var &func, const array &args)
 		{
-			if (func.type() == typeid(callable)) {
+			if (func.type() == typeid(callable) && func.const_val<callable>().get_raw_data().target_type() != typeid(function))
 				return fiber::await(async_callable(func, vector(args.begin(), args.end())));
-			}
-			else if (func.type() == typeid(object_method)) {
-				const auto &om = func.const_val<object_method>();
-				return fiber::await(async_callable(om.callable, {om.object}, args));
-			}
-			return null_pointer;
+			else
+				return null_pointer;
 		}
 
 		void link_var(const context_t &context, const string &a, const var &b)

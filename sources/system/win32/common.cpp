@@ -1,28 +1,28 @@
 /*
-* Covariant Script OS Support: Win32 Common Functions
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   lee@covariant.cn, mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script OS Support: Win32 Common Functions
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   lee@covariant.cn, mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 
 #include <covscript/impl/impl.hpp>
 #include <direct.h>
@@ -33,7 +33,7 @@
 #include <io.h>
 
 #ifndef STACK_LIMIT
-#define STACK_LIMIT (1024*1024)
+#define STACK_LIMIT (1024 * 1024)
 #endif
 
 namespace cs_system_impl {
@@ -55,14 +55,14 @@ namespace cs_impl {
 	namespace conio {
 		int terminal_width()
 		{
-			static CONSOLE_SCREEN_BUFFER_INFO csbi;
+			CONSOLE_SCREEN_BUFFER_INFO csbi;
 			GetConsoleScreenBufferInfo(StdHandle, &csbi);
 			return csbi.srWindow.Right - csbi.srWindow.Left;
 		}
 
 		int terminal_height()
 		{
-			static CONSOLE_SCREEN_BUFFER_INFO csbi;
+			CONSOLE_SCREEN_BUFFER_INFO csbi;
 			GetConsoleScreenBufferInfo(StdHandle, &csbi);
 			return csbi.srWindow.Bottom - csbi.srWindow.Top;
 		}
@@ -87,34 +87,22 @@ namespace cs_impl {
 
 		void cursor(bool mode)
 		{
-			static CONSOLE_CURSOR_INFO cci;
+			CONSOLE_CURSOR_INFO cci;
 			GetConsoleCursorInfo(StdHandle, &cci);
-			cci.bVisible = mode;
+			cci.bVisible = mode ? TRUE : FALSE;
 			SetConsoleCursorInfo(StdHandle, &cci);
 		}
 
 		void clrscr()
 		{
-			static CONSOLE_SCREEN_BUFFER_INFO csbi;
-			static DWORD dwWritten;
-			GetConsoleScreenBufferInfo(
-			    StdHandle,
-			    &csbi);
-			FillConsoleOutputAttribute(
-			    StdHandle,
-			    csbi.wAttributes,
-			    csbi.dwSize.X * csbi.dwSize.Y,
-			{0, 0},
-			&dwWritten);
-			FillConsoleOutputCharacterW(
-			    StdHandle,
-			    L' ',
-			    csbi.dwSize.X * csbi.dwSize.Y,
-			{0, 0},
-			&dwWritten);
-			SetConsoleCursorPosition(
-			    StdHandle,
-			{0, 0});
+			CONSOLE_SCREEN_BUFFER_INFO csbi;
+			DWORD dwWritten;
+			GetConsoleScreenBufferInfo(StdHandle, &csbi);
+			COORD home{0, 0};
+			DWORD cellCount = csbi.dwSize.X * csbi.dwSize.Y;
+			FillConsoleOutputCharacterA(StdHandle, ' ', cellCount, home, &dwWritten);
+			FillConsoleOutputAttribute(StdHandle, csbi.wAttributes, cellCount, home, &dwWritten);
+			SetConsoleCursorPosition(StdHandle, home);
 		}
 
 		int getch()
@@ -159,7 +147,7 @@ namespace cs_impl {
 
 		bool is_absolute_path(const std::string &path)
 		{
-			return (!path.empty() && path[0] == '/')    // for mingw, cygwin
+			return (!path.empty() && path[0] == '/') // for mingw, cygwin
 			       || (path.size() >= 3 && path[1] == ':' && path[2] == '\\');
 		}
 
@@ -179,11 +167,10 @@ namespace cs_impl {
 			case ENOMEM:
 				throw cs::runtime_error("Out of memory");
 
-			default: {
+			default:
 				std::stringstream str;
 				str << "Unrecognised errno: " << error;
 				throw cs::runtime_error(str.str());
-			}
 			}
 		}
 	}
@@ -196,39 +183,62 @@ namespace cs_impl {
 			const cs::context_t &cs_context;
 			std::function<void()> func;
 
-			bool finished;
-			LPVOID fiber;
+			bool finished = false;
+			bool running = false;
+			bool error = false;
+			std::exception_ptr eptr;
+			LPVOID fiber = nullptr;
 
-			Routine(const cs::context_t &cxt, std::function<void()> f) : cs_pcontext(cs::current_process->fork()), cs_stack(cs::current_process->child_stack_size()), cs_context(cxt), func(std::move(f))
-			{
-				finished = false;
-				fiber = nullptr;
-			}
+			Routine(const cs::context_t &cxt, std::function<void()> f)
+				: cs_context(cxt),
+				  cs_pcontext(cs::current_process->fork()),
+				  cs_stack(cs::current_process->child_stack_size()),
+				  func(std::move(f)) {}
 
 			~Routine()
 			{
-				DeleteFiber(fiber);
+				if (fiber)
+					DeleteFiber(fiber);
+			}
+
+			void cs_context_swap_in()
+			{
+				cs_context->instance->swap_context(&cs_stack);
+				cs::current_process = cs_pcontext.get();
+			}
+
+			void cs_context_swap_out()
+			{
+				cs_context->instance->swap_context(nullptr);
+				cs::current_process = this_context;
 			}
 		};
 
 		struct Ordinator {
 			std::vector<Routine *> routines;
 			std::list<routine_t> indexes;
-			routine_t current;
+			std::vector<routine_t> call_stack;
 			size_t stack_size;
 			LPVOID fiber;
 
 			Ordinator(size_t ss = STACK_LIMIT)
+				: stack_size(ss)
 			{
-				current = 0;
-				stack_size = ss;
 				fiber = ConvertThreadToFiber(nullptr);
+				if (fiber == nullptr)
+					throw cs::internal_error("Create basic coroutine context failed.");
 			}
 
 			~Ordinator()
 			{
-				for (auto &routine: routines)
+				for (auto &routine : routines)
 					delete routine;
+				ConvertFiberToThread();
+			}
+
+			routine_t current_routine() const
+			{
+				return call_stack.empty() ? 0 : call_stack.back();
 			}
 		};
 
@@ -237,15 +247,13 @@ namespace cs_impl {
 		routine_t create(const cs::context_t &cxt, std::function<void()> f)
 		{
 			Routine *routine = new Routine(cxt, std::move(f));
-
 			if (ordinator.indexes.empty()) {
 				ordinator.routines.push_back(routine);
-				return ordinator.routines.size();
+				return static_cast<routine_t>(ordinator.routines.size());
 			}
 			else {
 				routine_t id = ordinator.indexes.front();
 				ordinator.indexes.pop_front();
-				assert(ordinator.routines[id - 1] == nullptr);
 				ordinator.routines[id - 1] = routine;
 				return id;
 			}
@@ -253,9 +261,15 @@ namespace cs_impl {
 
 		void destroy(routine_t id)
 		{
+			if (id == 0 || id > ordinator.routines.size())
+				throw cs::internal_error("Invalid coroutine ID.");
 			Routine *routine = ordinator.routines[id - 1];
-			assert(routine != nullptr);
-
+			if (routine == nullptr)
+				throw cs::internal_error("Destroying a destroyed coroutine.");
+			for (auto r : ordinator.call_stack) {
+				if (r == id)
+					throw cs::internal_error("Destroying a running or nested routine is not allowed.");
+			}
 			delete routine;
 			ordinator.routines[id - 1] = nullptr;
 			ordinator.indexes.push_back(id);
@@ -263,63 +277,87 @@ namespace cs_impl {
 
 		void __stdcall entry(LPVOID lpParameter)
 		{
-			routine_t id = ordinator.current;
+			routine_t id = ordinator.current_routine();
 			Routine *routine = ordinator.routines[id - 1];
-			assert(routine != nullptr);
-
-			routine->func();
-
+			if (routine == nullptr)
+				throw cs::internal_error("Entering a destroyed coroutine.");
+			try {
+				routine->running = true;
+				routine->func();
+			}
+			catch (...) {
+				routine->eptr = std::current_exception();
+				routine->error = true;
+			}
+			routine->running = false;
 			routine->finished = true;
-			ordinator.current = 0;
-
-			cs::current_process = routine->this_context;
-			SwitchToFiber(ordinator.fiber);
+			LPVOID target_fiber = ordinator.fiber;
+			if (!ordinator.call_stack.empty() && ordinator.call_stack.back() == id) {
+				ordinator.call_stack.pop_back();
+				routine->cs_context_swap_out();
+				if (!ordinator.call_stack.empty()) {
+					Routine *next_routine = ordinator.routines[ordinator.call_stack.back() - 1];
+					if (next_routine == nullptr)
+						throw cs::internal_error("Broken call stack when yield.");
+					next_routine->cs_context_swap_in();
+					target_fiber = next_routine->fiber;
+				}
+			}
+			else
+				throw cs::internal_error("Call stack corrupted on entry completion.");
+			SwitchToFiber(target_fiber);
 		}
 
 		int resume(routine_t id)
 		{
-			assert(ordinator.current == 0);
-
+			if (id == 0 || id > ordinator.routines.size())
+				throw cs::internal_error("Invalid coroutine ID.");
 			Routine *routine = ordinator.routines[id - 1];
 			if (routine == nullptr)
 				return -1;
-
 			if (routine->finished)
-				return -2;
-
-			if (routine->fiber == nullptr) {
-				routine->fiber = CreateFiber(ordinator.stack_size, entry, 0);
-				ordinator.current = id;
-				cs::current_process = routine->cs_pcontext.get();
-				routine->cs_context->instance->swap_context(&routine->cs_stack);
-				SwitchToFiber(routine->fiber);
-			}
-			else {
-				ordinator.current = id;
-				cs::current_process = routine->cs_pcontext.get();
-				routine->cs_context->instance->swap_context(&routine->cs_stack);
-				SwitchToFiber(routine->fiber);
-			}
-
-			return 0;
+				return routine->error ? -3 : -2;
+			if (routine->running)
+				return -4;
+			if (routine->fiber == nullptr)
+				routine->fiber = CreateFiber(ordinator.stack_size, entry, nullptr);
+			ordinator.call_stack.push_back(id);
+			routine->cs_context_swap_in();
+			SwitchToFiber(routine->fiber);
+			if (routine->finished && routine->error)
+				std::rethrow_exception(routine->eptr);
+			return routine->finished ? 1 : 0;
 		}
 
 		void yield()
 		{
-			routine_t id = ordinator.current;
+			routine_t id = ordinator.current_routine();
+			if (id == 0)
+				throw cs::lang_error("Cannot yield outside a coroutine.");
 			Routine *routine = ordinator.routines[id - 1];
-			assert(routine != nullptr);
-
-			routine->cs_context->instance->swap_context(nullptr);
-			cs::current_process = routine->this_context;
-
-			ordinator.current = 0;
-			SwitchToFiber(ordinator.fiber);
+			if (routine == nullptr)
+				throw cs::internal_error("Yield a destroyed coroutine.");
+			routine->running = false;
+			LPVOID target_fiber = ordinator.fiber;
+			if (!ordinator.call_stack.empty() && ordinator.call_stack.back() == id) {
+				ordinator.call_stack.pop_back();
+				routine->cs_context_swap_out();
+				if (!ordinator.call_stack.empty()) {
+					Routine *next_routine = ordinator.routines[ordinator.call_stack.back() - 1];
+					if (next_routine == nullptr)
+						throw cs::internal_error("Broken call stack when yield.");
+					next_routine->cs_context_swap_in();
+					target_fiber = next_routine->fiber;
+				}
+			}
+			else
+				throw cs::internal_error("Call stack corrupted in yield.");
+			SwitchToFiber(target_fiber);
 		}
 
 		routine_t current()
 		{
-			return ordinator.current;
+			return ordinator.current_routine();
 		}
 	}
 }
