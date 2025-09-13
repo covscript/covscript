@@ -5,10 +5,15 @@ class tracer_t
     end
 end
 
+var test_exception = false
+
 function body0()
     var tracer = new tracer_t
     tracer.id = "Body 0"
     system.out.println("Body 0 start")
+    if test_exception
+        throw runtime.exception("Test Exception")
+    end
     system.out.println("Body 0 yield")
     runtime.yield()
     system.out.println("Body 0 exit")
@@ -32,5 +37,9 @@ system.out.println("Main start")
 var c1 = runtime.create_co(body1)
 runtime.resume(c1)
 system.out.println("Main resume")
-runtime.resume(c1)
+try
+    runtime.resume(c1)
+catch e
+    system.out.println(e.what)
+end
 system.out.println("Main exit")
