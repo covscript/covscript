@@ -1,29 +1,29 @@
 #pragma once
 /*
-* Covariant Script OS Support
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   lee@covariant.cn, mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script OS Support
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   lee@covariant.cn, mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 
 #include <covscript/core/core.hpp>
 #include <future>
@@ -130,26 +130,37 @@ namespace cs_impl {
 
 		routine_t current();
 
-		template<typename Function>
-		inline cs::var await(Function &&func)
+		template <typename Function>
+		cs::var await(Function &&func)
 		{
-			cs::thread_guard guard;
-			auto future = std::async(std::launch::async, func);
-			std::future_status status = future.wait_for(std::chrono::milliseconds(0));
-
-			while (status == std::future_status::timeout) {
-				if (current() != 0)
+			cs::var ret;
+			if (current() != 0) {
+				cs::thread_guard guard;
+				auto future = std::async(std::launch::async, std::forward<Function>(func));
+				while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
 					yield();
-
-				status = future.wait_for(std::chrono::milliseconds(0));
+				ret = future.get();
 			}
-			return future.get();
+			else
+				ret = func();
+
+			cs::current_process->eptr_mutex.lock();
+			if (cs::current_process->eptr != nullptr) {
+				std::exception_ptr e = nullptr;
+				std::swap(cs::current_process->eptr, e);
+				cs::current_process->eptr_mutex.unlock();
+				std::rethrow_exception(e);
+			}
+			cs::current_process->eptr_mutex.unlock();
+
+			return std::move(ret);
 		}
 
-		template<typename Type>
+		template <typename Type>
 		class Channel {
 			std::list<Type> _list;
 			routine_t _taker;
+
 		public:
 			Channel()
 			{

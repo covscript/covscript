@@ -135,6 +135,9 @@ namespace cs {
 		}
 
 // Exception Handling
+		std::exception_ptr eptr = nullptr;
+		std::mutex eptr_mutex;
+
 		static void cs_defalt_exception_handler(const lang_error &e)
 		{
 			throw e;
@@ -296,6 +299,11 @@ namespace cs {
 		const context_t &get_context() const
 		{
 			return mContext;
+		}
+
+		bool is_el_func() const
+		{
+			return call_ptr == &call_el;
 		}
 
 		void add_reserve_var(const std::string &reserve, bool is_mem_fn = false)
