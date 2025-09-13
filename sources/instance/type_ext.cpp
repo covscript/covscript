@@ -1479,8 +1479,7 @@ namespace cs_impl {
 			}
 			else if (func.type() == typeid(object_method)) {
 				const auto &om = func.const_val<object_method>();
-				if (om.callable.const_val<callable>().get_raw_data().target_type() != typeid(function))
-					return fiber::await(async_callable(om.callable, {om.object}));
+				return fiber::await(async_callable(om.callable, {om.object}));
 			}
 			return null_pointer;
 		}
@@ -1494,8 +1493,7 @@ namespace cs_impl {
 				const auto &om = func.const_val<object_method>();
 				return fiber::await(async_callable(om.callable, {om.object}, args));
 			}
-			else
-				return null_pointer;
+			return null_pointer;
 		}
 
 		void link_var(const context_t &context, const string &a, const var &b)
