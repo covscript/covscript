@@ -25,6 +25,7 @@
  */
 
 #include <covscript/impl/impl.hpp>
+#include <covscript_impl/system.hpp>
 #include <sys/select.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -277,7 +278,6 @@ namespace cs_impl {
 			bool finished = false;
 			bool running = false;
 			bool error = false;
-			std::exception_ptr eptr;
 
 			void *stack = nullptr;
 			cs_fiber_ucontext_t ctx;
@@ -310,8 +310,8 @@ namespace cs_impl {
 
 		struct Ordinator {
 			std::vector<Routine *> routines;
-			std::list<routine_t> indexes;
-			std::vector<routine_t> call_stack;
+			std::list<fiber_id> indexes;
+			std::vector<fiber_id> call_stack;
 			cs_fiber_ucontext_t ctx;
 			size_t stack_size;
 
@@ -324,7 +324,7 @@ namespace cs_impl {
 					delete routine;
 			}
 
-			routine_t current_routine() const
+			fiber_id current_routine() const
 			{
 				return call_stack.empty() ? 0 : call_stack.back();
 			}
@@ -332,22 +332,22 @@ namespace cs_impl {
 
 		thread_local static Ordinator ordinator;
 
-		routine_t create(const cs::context_t &cxt, std::function<void()> f)
+		fiber_id create(const cs::context_t &cxt, std::function<void()> f)
 		{
 			Routine *routine = new Routine(cxt, std::move(f));
 			if (ordinator.indexes.empty()) {
 				ordinator.routines.push_back(routine);
-				return static_cast<routine_t>(ordinator.routines.size());
+				return static_cast<fiber_id>(ordinator.routines.size());
 			}
 			else {
-				routine_t id = ordinator.indexes.front();
+				fiber_id id = ordinator.indexes.front();
 				ordinator.indexes.pop_front();
 				ordinator.routines[id - 1] = routine;
 				return id;
 			}
 		}
 
-		void destroy(routine_t id)
+		void destroy(fiber_id id)
 		{
 			if (id == 0 || id > ordinator.routines.size())
 				throw cs::internal_error("Invalid coroutine ID.");
@@ -365,7 +365,7 @@ namespace cs_impl {
 
 		void entry()
 		{
-			routine_t id = ordinator.current_routine();
+			fiber_id id = ordinator.current_routine();
 			Routine *routine = ordinator.routines[id - 1];
 			if (routine == nullptr)
 				throw cs::internal_error("Entering a destroyed coroutine.");
@@ -374,7 +374,7 @@ namespace cs_impl {
 				routine->func();
 			}
 			catch (...) {
-				routine->eptr = std::current_exception();
+				routine->this_context->eptr = std::current_exception();
 				routine->error = true;
 			}
 			routine->running = false;
@@ -382,7 +382,7 @@ namespace cs_impl {
 			cs_fiber_swapcontext(&routine->ctx, routine->prev_ctx);
 		}
 
-		int resume(routine_t id)
+		int resume(fiber_id id)
 		{
 			if (id == 0 || id > ordinator.routines.size())
 				throw cs::internal_error("Invalid coroutine ID.");
@@ -425,14 +425,17 @@ namespace cs_impl {
 					throw cs::internal_error("Broken call stack.");
 				next_routine->cs_context_swap_in();
 			}
-			if (routine->finished && routine->error)
-				std::rethrow_exception(routine->eptr);
+			if (routine->finished && routine->error) {
+				std::exception_ptr e = nullptr;
+				std::swap(routine->this_context->eptr, e);
+				std::rethrow_exception(e);
+			}
 			return routine->finished ? 1 : 0;
 		}
 
 		void yield()
 		{
-			routine_t id = ordinator.current_routine();
+			fiber_id id = ordinator.current_routine();
 			if (id == 0)
 				throw cs::lang_error("Cannot yield outside a coroutine.");
 			Routine *routine = ordinator.routines[id - 1];
@@ -442,7 +445,7 @@ namespace cs_impl {
 			cs_fiber_swapcontext(&routine->ctx, routine->prev_ctx);
 		}
 
-		routine_t current()
+		fiber_id current()
 		{
 			return ordinator.current_routine();
 		}

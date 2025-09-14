@@ -118,17 +118,17 @@ namespace cs_impl {
 		std::string get_current_dir();
 	}
 	namespace fiber {
-		typedef unsigned routine_t;
+		using cs::fiber_id;
 
-		routine_t create(const cs::context_t &, std::function<void()>);
+		fiber_id create(const cs::context_t &, std::function<void()>);
 
-		void destroy(routine_t);
+		void destroy(fiber_id);
 
-		int resume(routine_t);
+		int resume(fiber_id);
 
 		void yield();
 
-		routine_t current();
+		fiber_id current();
 
 		template <typename Function>
 		cs::var await(Function &&func)
@@ -159,7 +159,7 @@ namespace cs_impl {
 		template <typename Type>
 		class Channel {
 			std::list<Type> _list;
-			routine_t _taker;
+			fiber_id _taker;
 
 		public:
 			Channel()
@@ -167,12 +167,12 @@ namespace cs_impl {
 				_taker = 0;
 			}
 
-			explicit Channel(routine_t id)
+			explicit Channel(fiber_id id)
 			{
 				_taker = id;
 			}
 
-			inline void consumer(routine_t id)
+			inline void consumer(fiber_id id)
 			{
 				_taker = id;
 			}

@@ -5,8 +5,8 @@ end
 var co = null
 
 foreach i in range(10)
-    co = runtime.create_co(dummy_func)
+    co = fiber.create(dummy_func)
     loop
-        var state = runtime.resume(co)
+        var state = co.resume()
     until state == -2
 end

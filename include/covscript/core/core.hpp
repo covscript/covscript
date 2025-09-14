@@ -227,6 +227,18 @@ namespace cs {
 		}
 	};
 
+	struct fiber_type final {
+		fiber_id id;
+
+		fiber_type() = delete;
+
+		fiber_type(const fiber_type &) = delete;
+
+		explicit fiber_type(fiber_id);
+
+		~fiber_type();
+	};
+
 	class function final {
 		context_t mContext;
 #ifdef CS_DEBUGGER

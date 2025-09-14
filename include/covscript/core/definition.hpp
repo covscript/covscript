@@ -135,6 +135,8 @@ namespace cs {
 
 	class callable;
 
+	class fiber_type;
+
 	class domain_type;
 
 	class name_space;
@@ -159,6 +161,8 @@ namespace cs {
 	using compiler_t = std::shared_ptr<compiler_type>;
 	using instance_t = std::shared_ptr<instance_type>;
 	using context_t = std::shared_ptr<context_type>;
+	using fiber_id = std::size_t;
+	using fiber_t = std::shared_ptr<fiber_type>;
 	using domain_t = std::shared_ptr<domain_type>;
 	using namespace_t = std::shared_ptr<name_space>;
 	using char_buff = std::shared_ptr<std::stringstream>;

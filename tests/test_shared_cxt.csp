@@ -10,7 +10,7 @@ class coroutine_queue
         else
             incoming = false
         end
-        runtime.yield()
+        fiber.yield()
     end
     function avail()
         return incoming
@@ -39,11 +39,11 @@ class coroutine
         func = _func
     end
     function join(...args)
-        co = runtime.create_co_s(coroutine_worker, {&this, args})
-        return runtime.resume(co)
+        co = fiber.create(coroutine_worker, &this, args)
+        return co.resume()
     end
     function detach(...args)
-        co = runtime.create_co_s(coroutine_worker, {&this, args})
+        co = fiber.create(coroutine_worker, &this, args)
     end
     function resume(...args)
         if !args.empty()
@@ -52,7 +52,7 @@ class coroutine
         else
             queue.incoming = false
         end
-        return runtime.resume(co)
+        return co.resume()
     end
     function avail()
         return queue.incoming
