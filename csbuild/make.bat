@@ -1,4 +1,12 @@
 @echo off
+set CPU_NUM=8
+if defined NUMBER_OF_PROCESSORS (
+    set /A detected=%NUMBER_OF_PROCESSORS%
+    if %detected% GTR 0 (
+        set CPU_NUM=%detected%
+        echo  -- Setting parallel jobs to %CPU_NUM% automatically
+    )
+)
 cd "%~dp0\.."
 mkdir cmake-build\mingw-w64
 cd    cmake-build\mingw-w64

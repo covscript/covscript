@@ -13,5 +13,7 @@ function format() {
     done
     cd ..
 }
+CURRENT_FOLDER=$(dirname $(readlink -f "$0"))
+cd $CURRENT_FOLDER/..
 format ./include
 format ./sources

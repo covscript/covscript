@@ -25,4 +25,4 @@ file cs
 file cs_dbg
 file libcovscript.a
 file libcovscript_sdk.a
-file libcovscript_debug_sdk_sdk.a
+file libcovscript_debug_sdk.a
