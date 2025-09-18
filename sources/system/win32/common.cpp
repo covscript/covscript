@@ -353,7 +353,7 @@ namespace cs_impl {
 				std::swap(routine->this_context->eptr, e);
 				std::rethrow_exception(e);
 			}
-			return routine->running && !routine->finished && !routine->error;
+			return !routine->finished && !routine->error;
 		}
 
 		void yield()
