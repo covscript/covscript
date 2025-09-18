@@ -6,6 +6,7 @@ cd    cmake-build\msvc_win32
 cmake -G "Visual Studio 16 2019" -A "Win32" ..\..
 cmake --build . --config %config% --target cs
 cmake --build . --config %config% --target cs_dbg
+cmake --build . --config %config% --target covscript
 cd ..\..
 rd /S /Q build
 mkdir build\bin

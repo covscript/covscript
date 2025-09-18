@@ -4,10 +4,12 @@ cd       cmake-build/unix
 cmake -G "Unix Makefiles" ../..
 cmake --build . --target cs               -- -j8
 cmake --build . --target cs_dbg           -- -j8
+cmake --build . --target covscript        -- -j8
 # Running lipo in macOS
 if [[ "$(uname)" == "Darwin" ]]; then
     cmake --build . --target cs_arm       -- -j8
     cmake --build . --target cs_dbg_arm   -- -j8
+    cmake --build . --target covscript    -- -j8
     bash ../../csbuild/create_universal.sh
 fi
 cd ../..

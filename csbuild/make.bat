@@ -5,6 +5,7 @@ cd    cmake-build\mingw-w64
 cmake -G "MinGW Makefiles" ..\..
 cmake --build . --target cs               -- -j8
 cmake --build . --target cs_dbg           -- -j8
+cmake --build . --target covscript        -- -j8
 cd ..\..
 rd /S /Q build
 mkdir build\bin
