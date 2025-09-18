@@ -273,17 +273,18 @@ namespace cs_impl {
 			std::unique_ptr<cs::process_context> cs_pcontext;
 			cs::stack_type<cs::domain_type> cs_stack;
 			const cs::context_t &cs_context;
-			std::function<void()> func;
+			std::function<cs::var()> func;
 
 			bool finished = false;
 			bool running = false;
 			bool error = false;
+			cs::var ret_val;
 
 			void *stack = nullptr;
 			cs_fiber_ucontext_t ctx;
 			cs_fiber_ucontext_t *prev_ctx = nullptr;
 
-			Routine(const cs::context_t &cxt, std::function<void()> f)
+			Routine(const cs::context_t &cxt, std::function<cs::var()> f)
 				: cs_context(cxt),
 				  cs_pcontext(cs::current_process->fork()),
 				  cs_stack(cs::current_process->child_stack_size()),
@@ -332,7 +333,7 @@ namespace cs_impl {
 
 		thread_local static Ordinator ordinator;
 
-		fiber_id create(const cs::context_t &cxt, std::function<void()> f)
+		fiber_id create(const cs::context_t &cxt, std::function<cs::var()> f)
 		{
 			Routine *routine = new Routine(cxt, std::move(f));
 			if (ordinator.indexes.empty()) {
@@ -350,31 +351,46 @@ namespace cs_impl {
 		void destroy(fiber_id id)
 		{
 			if (id == 0 || id > ordinator.routines.size())
-				throw cs::internal_error("Invalid coroutine ID.");
+				throw cs::lang_error("Invalid fiber ID.");
 			Routine *routine = ordinator.routines[id - 1];
 			if (routine == nullptr)
-				throw cs::internal_error("Destroying a destroyed coroutine.");
+				throw cs::lang_error("Destroying a destroyed fiber.");
 			for (auto r : ordinator.call_stack) {
 				if (r == id)
-					throw cs::internal_error("Destroying a running or nested routine is not allowed.");
+					throw cs::lang_error("Destroying a running or nested fiber is not allowed.");
 			}
 			delete routine;
 			ordinator.routines[id - 1] = nullptr;
 			ordinator.indexes.push_back(id);
 		}
 
-		void entry()
+		cs::var return_value(fiber_id id)
+		{
+			if (id == 0 || id > ordinator.routines.size())
+				throw cs::lang_error("Invalid fiber ID.");
+			Routine *routine = ordinator.routines[id - 1];
+			if (routine == nullptr)
+				throw cs::lang_error(
+				    "Geting return value from a destroyed fiber.");
+			if (routine->finished)
+				return routine->ret_val;
+			else
+				throw cs::lang_error("Fiber has not yet started or ended.");
+		}
+
+		void entry() noexcept
 		{
 			fiber_id id = ordinator.current_routine();
 			Routine *routine = ordinator.routines[id - 1];
 			if (routine == nullptr)
-				throw cs::internal_error("Entering a destroyed coroutine.");
+				return;
 			try {
 				routine->running = true;
-				routine->func();
+				routine->ret_val = routine->func();
 			}
 			catch (...) {
 				routine->this_context->eptr = std::current_exception();
+				routine->ret_val = cs::null_pointer;
 				routine->error = true;
 			}
 			routine->running = false;
@@ -382,21 +398,19 @@ namespace cs_impl {
 			cs_fiber_swapcontext(&routine->ctx, routine->prev_ctx);
 		}
 
-		int resume(fiber_id id)
+		bool resume(fiber_id id)
 		{
 			if (id == 0 || id > ordinator.routines.size())
-				throw cs::internal_error("Invalid coroutine ID.");
+				throw cs::lang_error("Invalid fiber ID.");
 			Routine *routine = ordinator.routines[id - 1];
 			if (routine == nullptr)
-				return -1;
-			if (routine->finished)
-				return routine->error ? -3 : -2;
-			if (routine->running)
-				return -4;
+				throw cs::lang_error("Resuming a destroyed fiber.");
+			if (routine->finished || routine->running)
+				throw cs::lang_error("Fiber is not reentrant.");
 			if (routine->stack == nullptr) {
 				routine->stack = malloc(ordinator.stack_size);
 				if (routine->stack == nullptr)
-					throw cs::internal_error("Coroutine create failed.");
+					throw cs::lang_error("Fiber create failed.");
 				cs_fiber_getcontext(&routine->ctx);
 				routine->ctx.uc_stack.ss_sp = routine->stack;
 				routine->ctx.uc_stack.ss_size = ordinator.stack_size;
@@ -430,17 +444,17 @@ namespace cs_impl {
 				std::swap(routine->this_context->eptr, e);
 				std::rethrow_exception(e);
 			}
-			return routine->finished ? 1 : 0;
+			return routine->running && !routine->finished && !routine->error;
 		}
 
 		void yield()
 		{
 			fiber_id id = ordinator.current_routine();
 			if (id == 0)
-				throw cs::lang_error("Cannot yield outside a coroutine.");
+				throw cs::lang_error("Cannot yield outside a fiber.");
 			Routine *routine = ordinator.routines[id - 1];
 			if (routine == nullptr)
-				throw cs::internal_error("Yield a destroyed coroutine.");
+				throw cs::lang_error("Yield a destroyed fiber.");
 			routine->running = false;
 			cs_fiber_swapcontext(&routine->ctx, routine->prev_ctx);
 		}

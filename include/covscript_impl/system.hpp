@@ -120,11 +120,13 @@ namespace cs_impl {
 	namespace fiber {
 		using cs::fiber_id;
 
-		fiber_id create(const cs::context_t &, std::function<void()>);
+		fiber_id create(const cs::context_t &, std::function<cs::var()>);
 
 		void destroy(fiber_id);
 
-		int resume(fiber_id);
+		cs::var return_value(fiber_id);
+
+		bool resume(fiber_id);
 
 		void yield();
 

@@ -1132,15 +1132,16 @@ namespace cs_impl {
 		public:
 			fiber_function(function const *fn, vector data) : context(fn->get_context()), func(fn), args(std::move(data)) {}
 
-			void operator()()
+			var operator()()
 			{
 				if (func == nullptr)
 					throw lang_error("Asynchronous functions are not reentrant.");
 				try {
-					func->call(args);
+					var ret = func->call(args);
 					func = nullptr;
 					args.clear();
 					context->instance->clear_context();
+					return std::move(ret);
 				}
 				catch (...) {
 					func = nullptr;
@@ -1176,7 +1177,12 @@ namespace cs_impl {
 			return null_pointer;
 		}
 
-		numeric resume(const fiber_t &fiber)
+		var return_value(const fiber_t &fiber)
+		{
+			return fiber::return_value(fiber->id);
+		}
+
+		bool resume(const fiber_t &fiber)
 		{
 			return fiber::resume(fiber->id);
 		}
@@ -1185,6 +1191,7 @@ namespace cs_impl {
 		{
 			(*fiber_ext)
 			.add_var("create", var::make_protect<callable>(create))
+			.add_var("return_value", make_cni(return_value))
 			.add_var("resume", make_cni(resume))
 			.add_var("yield", make_cni(&fiber::yield))
 			.add_var("channel", var::make_protect<type_t>([]() -> var
@@ -1265,6 +1272,11 @@ namespace cs_impl {
 			}
 		};
 
+		bool is_native_callable(const callable &func)
+		{
+			return func.get_raw_data().target_type() != typeid(function) || func.get_raw_data().target<function>()->is_el_func();
+		}
+
 		class async_callable final : public async_base {
 			callable func;
 			vector args;
@@ -1284,7 +1296,7 @@ namespace cs_impl {
 		public:
 			async_callable(const callable &fn, vector data) : func(fn), args(std::move(data))
 			{
-				if (func.get_raw_data().target_type() == typeid(function) && !func.get_raw_data().target<function>()->is_el_func())
+				if (!is_native_callable(fn))
 					throw lang_error("Invoke non-parallelizable object.");
 				detach_args();
 			}
@@ -1310,10 +1322,22 @@ namespace cs_impl {
 
 		std::unique_ptr<async_base> make_async_wrapper(const callable &func, vector data)
 		{
-			if (func.get_raw_data().target_type() == typeid(function) && !func.get_raw_data().target<function>()->is_el_func())
+			if (is_native_callable(func))
 				return std::make_unique<async_function>(func.get_raw_data().target<function>(), std::move(data));
 			else
 				return std::make_unique<async_callable>(func, std::move(data));
+		}
+
+		var await_impl(const callable &fn, vector args)
+		{
+			if (is_native_callable(fn))
+				return fiber::await(async_callable(fn, std::move(args)));
+			function const *fptr = fn.get_raw_data().target<function>();
+			fiber_id co = fiber::create(fptr->get_context(), fiber_cs_ext::fiber_function(fptr, std::move(args)));
+			while (fiber::resume(co));
+			var ret = fiber::return_value(co);
+			fiber::destroy(co);
+			return std::move(ret);
 		}
 
 		string get_import_path()
@@ -1527,16 +1551,16 @@ namespace cs_impl {
 		var await(vector &args)
 		{
 			if (args.empty())
-				throw lang_error("Empty arguments. Expected: fiber.create(function, arguments...)");
+				throw lang_error("Empty arguments. Expected: runtime.await(function, arguments...)");
 			const var &func = args.front();
 			if (func.type() == typeid(callable)) {
-				return fiber::await(async_callable(func.const_val<callable>(), vector(args.begin() + 1, args.end())));
+				return await_impl(func.const_val<callable>(), vector(args.begin() + 1, args.end()));
 			}
 			else if (func.type() == typeid(object_method)) {
 				const auto &om = func.const_val<object_method>();
 				vector argument{om.object};
 				argument.insert(argument.end(), args.begin() + 1, args.end());
-				return fiber::await(async_callable(om.callable.const_val<callable>(), std::move(argument)));
+				return await_impl(om.callable.const_val<callable>(), std::move(argument));
 			}
 			else
 				throw lang_error("Invoke non-callable object.");
