@@ -103,6 +103,7 @@ namespace cs_impl {
 	cs::namespace_t hash_map_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t pair_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t time_ext = cs::make_shared_namespace<cs::name_space>();
+	cs::namespace_t fiber_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t context_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t runtime_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t string_ext = cs::make_shared_namespace<cs::name_space>();
@@ -301,7 +302,9 @@ namespace cs {
 	{
 		const char *import_path = std::getenv("CS_IMPORT_PATH");
 		std::string base_path = get_sdk_path() + cs::path_separator + "imports";
+#ifdef COVSCRIPT_PLATFORM_HOME
 		base_path += cs::path_delimiter + std::string(COVSCRIPT_PLATFORM_HOME) + cs::path_separator + "imports";
+#endif
 		if (import_path != nullptr)
 			return process_path(std::string(import_path) + cs::path_delimiter + base_path);
 		else
@@ -541,6 +544,7 @@ namespace cs {
 		.add_buildin_var("exception", make_namespace(cs_impl::except_ext))
 		.add_buildin_var("iostream", make_namespace(cs_impl::iostream_ext))
 		.add_buildin_var("system", make_namespace(cs_impl::system_ext))
+		.add_buildin_var("fiber", make_namespace(cs_impl::fiber_ext))
 		.add_buildin_var("runtime", make_namespace(cs_impl::runtime_ext))
 		.add_buildin_var("math", make_namespace(cs_impl::math_ext));
 		return context;
@@ -589,6 +593,7 @@ namespace cs {
 		.add_buildin_var("exception", make_namespace(cs_impl::except_ext))
 		.add_buildin_var("iostream", make_namespace(cs_impl::iostream_ext))
 		.add_buildin_var("system", make_namespace(cs_impl::system_ext))
+		.add_buildin_var("fiber", make_namespace(cs_impl::fiber_ext))
 		.add_buildin_var("runtime", make_namespace(cs_impl::runtime_ext))
 		.add_buildin_var("math", make_namespace(cs_impl::math_ext));
 		return context;

@@ -98,10 +98,10 @@ end
 var co_swap = null
 function send(val)
     co_swap = val
-    runtime.yield()
+    fiber.yield()
 end
 function receive(co)
-    runtime.resume(co)
+    fiber.resume(co)
     return co_swap
 end
 function worker()
@@ -114,14 +114,14 @@ function step6(n)
     var score = 0
     foreach it in range(n)
         var co_list = new array
-        foreach i in range(10) do co_list.push_back(runtime.create_co(worker))
+        foreach i in range(10) do co_list.push_back(fiber.create(worker))
         var i = 0, ts = runtime.time()
         while runtime.time() - ts < 1000
             foreach co in co_list do i += receive(co)
         end
         score += i
         co_swap = null
-        foreach co in co_list do runtime.resume(co)
+        foreach co in co_list do fiber.resume(co)
         co_list = null
     end
     return score/n

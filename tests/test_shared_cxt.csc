@@ -21,4 +21,4 @@ loop
         val = co.get()[0]
         system.out.println(val)
     end
-until co.resume(val + 1) == -2
+until !co.resume(val + 1)

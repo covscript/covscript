@@ -57,6 +57,7 @@ namespace cs_impl {
 	extern cs::namespace_t hash_map_ext;
 	extern cs::namespace_t pair_ext;
 	extern cs::namespace_t time_ext;
+	extern cs::namespace_t fiber_ext;
 	extern cs::namespace_t context_ext;
 	extern cs::namespace_t runtime_ext;
 	extern cs::namespace_t string_ext;
@@ -421,6 +422,12 @@ namespace cs_impl {
 
 #endif
 
+	template <>
+	constexpr const char *get_name_of_type<cs::fiber_t>()
+	{
+		return "cs::fiber";
+	}
+
 	template<>
 	constexpr const char *get_name_of_type<cs::tree_type<cs::token_base *>>()
 	{
@@ -523,6 +530,12 @@ namespace cs_impl {
 	cs::namespace_t &get_ext<std::tm>()
 	{
 		return time_ext;
+	}
+
+	template <>
+	cs::namespace_t &get_ext<cs::fiber_t>()
+	{
+		return fiber_ext;
 	}
 
 	template<>

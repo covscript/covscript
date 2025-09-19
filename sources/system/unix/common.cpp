@@ -1,30 +1,31 @@
 /*
-* Covariant Script OS Support: Unix Common Functions
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   lee@covariant.cn, mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script OS Support: Unix Common Functions
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   lee@covariant.cn, mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 
 #include <covscript/impl/impl.hpp>
+#include <covscript_impl/system.hpp>
 #include <sys/select.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -40,7 +41,7 @@
 
 #ifndef STACK_LIMIT
 
-#define STACK_LIMIT (1024*1024)
+#define STACK_LIMIT (1024 * 1024)
 
 #endif
 
@@ -57,10 +58,10 @@ extern "C"
 #include <libucontext/libucontext.h>
 }
 
-#define cs_fiber_ucontext_t  libucontext_ucontext_t
-#define cs_fiber_getcontext  libucontext_getcontext
+#define cs_fiber_ucontext_t libucontext_ucontext_t
+#define cs_fiber_getcontext libucontext_getcontext
 #define cs_fiber_makecontext libucontext_makecontext
-#define cs_fiber_setcontext  libucontext_setcontext
+#define cs_fiber_setcontext libucontext_setcontext
 #define cs_fiber_swapcontext libucontext_swapcontext
 
 #else
@@ -73,10 +74,10 @@ extern "C"
 
 #include <ucontext.h>
 
-#define cs_fiber_ucontext_t  ucontext_t
-#define cs_fiber_getcontext  getcontext
+#define cs_fiber_ucontext_t ucontext_t
+#define cs_fiber_getcontext getcontext
 #define cs_fiber_makecontext makecontext
-#define cs_fiber_setcontext  setcontext
+#define cs_fiber_setcontext setcontext
 #define cs_fiber_swapcontext swapcontext
 
 #endif
@@ -98,8 +99,10 @@ void terminal_lnbuf(int yn)
 	struct termios oldt, newt;
 	tcgetattr(0, &oldt);
 	newt = oldt;
-	if (!yn) newt.c_lflag &= ~ICANON;
-	else newt.c_lflag |= ICANON;
+	if (!yn)
+		newt.c_lflag &= ~ICANON;
+	else
+		newt.c_lflag |= ICANON;
 	tcsetattr(0, TCSANOW, &newt);
 }
 
@@ -108,8 +111,10 @@ void terminal_echo(int yn)
 	struct termios oldt, newt;
 	tcgetattr(0, &oldt);
 	newt = oldt;
-	if (!yn) newt.c_lflag &= ~ECHO;
-	else newt.c_lflag |= ECHO;
+	if (!yn)
+		newt.c_lflag &= ~ECHO;
+	else
+		newt.c_lflag |= ECHO;
 	tcsetattr(0, TCSANOW, &newt);
 }
 
@@ -268,154 +273,195 @@ namespace cs_impl {
 			std::unique_ptr<cs::process_context> cs_pcontext;
 			cs::stack_type<cs::domain_type> cs_stack;
 			const cs::context_t &cs_context;
-			std::function<void()> func;
+			std::function<cs::var()> func;
 
-			char *stack;
-			bool finished;
+			bool finished = false;
+			bool running = false;
+			bool error = false;
+			cs::var ret_val;
+
+			void *stack = nullptr;
 			cs_fiber_ucontext_t ctx;
+			cs_fiber_ucontext_t *prev_ctx = nullptr;
 
-			Routine(const cs::context_t &cxt, std::function<void()> f) : cs_pcontext(cs::current_process->fork()), cs_stack(cs::current_process->child_stack_size()), cs_context(cxt), func(std::move(f))
-			{
-				stack = nullptr;
-				finished = false;
-			}
+			Routine(const cs::context_t &cxt, std::function<cs::var()> f)
+				: cs_context(cxt),
+				  cs_pcontext(cs::current_process->fork()),
+				  cs_stack(cs::current_process->child_stack_size()),
+				  func(std::move(f)) {}
 
 			~Routine()
 			{
-				delete[] stack;
+				if (stack != nullptr)
+					free(stack);
+			}
+
+			void cs_context_swap_in()
+			{
+				cs_context->instance->swap_context(&cs_stack);
+				cs::current_process = cs_pcontext.get();
+			}
+
+			void cs_context_swap_out()
+			{
+				cs_context->instance->swap_context(nullptr);
+				cs::current_process = this_context;
 			}
 		};
 
 		struct Ordinator {
 			std::vector<Routine *> routines;
-			std::list<routine_t> indexes;
-			routine_t current;
-			size_t stack_size;
+			std::list<fiber_id> indexes;
+			std::vector<fiber_id> call_stack;
 			cs_fiber_ucontext_t ctx;
+			size_t stack_size;
 
-			inline Ordinator(size_t ss = STACK_LIMIT)
+			Ordinator(size_t ss = STACK_LIMIT)
+				: stack_size(ss) {}
+
+			~Ordinator()
 			{
-				current = 0;
-				stack_size = ss;
+				for (auto &routine : routines)
+					delete routine;
 			}
 
-			inline ~Ordinator()
+			fiber_id current_routine() const
 			{
-				for (auto &routine: routines)
-					delete routine;
+				return call_stack.empty() ? 0 : call_stack.back();
 			}
 		};
 
 		thread_local static Ordinator ordinator;
 
-		routine_t create(const cs::context_t &cxt, std::function<void()> f)
+		fiber_id create(const cs::context_t &cxt, std::function<cs::var()> f)
 		{
 			Routine *routine = new Routine(cxt, std::move(f));
-
 			if (ordinator.indexes.empty()) {
 				ordinator.routines.push_back(routine);
-				return ordinator.routines.size();
+				return static_cast<fiber_id>(ordinator.routines.size());
 			}
 			else {
-				routine_t id = ordinator.indexes.front();
+				fiber_id id = ordinator.indexes.front();
 				ordinator.indexes.pop_front();
-				assert(ordinator.routines[id - 1] == nullptr);
 				ordinator.routines[id - 1] = routine;
 				return id;
 			}
 		}
 
-		void destroy(routine_t id)
+		void destroy(fiber_id id)
 		{
+			if (id == 0 || id > ordinator.routines.size())
+				throw cs::lang_error("Invalid fiber ID.");
 			Routine *routine = ordinator.routines[id - 1];
-			assert(routine != nullptr);
-
+			if (routine == nullptr)
+				throw cs::lang_error("Destroying a destroyed fiber.");
+			for (auto r : ordinator.call_stack) {
+				if (r == id)
+					throw cs::lang_error("Destroying a running or nested fiber is not allowed.");
+			}
 			delete routine;
 			ordinator.routines[id - 1] = nullptr;
 			ordinator.indexes.push_back(id);
 		}
 
-		void entry()
+		cs::var return_value(fiber_id id)
 		{
-			routine_t id = ordinator.current;
-			Routine *routine = ordinator.routines[id - 1];
-			assert(routine != nullptr);
-
-			routine->func();
-
-			routine->finished = true;
-			ordinator.current = 0;
-
-			cs::current_process = routine->this_context;
-		}
-
-		int resume(routine_t id)
-		{
-			assert(ordinator.current == 0);
-
+			if (id == 0 || id > ordinator.routines.size())
+				throw cs::lang_error("Invalid fiber ID.");
 			Routine *routine = ordinator.routines[id - 1];
 			if (routine == nullptr)
-				return -1;
-
+				throw cs::lang_error(
+				    "Geting return value from a destroyed fiber.");
 			if (routine->finished)
-				return -2;
+				return routine->ret_val;
+			else
+				throw cs::lang_error("Fiber has not yet started or ended.");
+		}
 
+		void entry() noexcept
+		{
+			fiber_id id = ordinator.current_routine();
+			Routine *routine = ordinator.routines[id - 1];
+			if (routine == nullptr)
+				return;
+			try {
+				routine->running = true;
+				routine->ret_val = routine->func();
+			}
+			catch (...) {
+				routine->this_context->eptr = std::current_exception();
+				routine->ret_val = cs::null_pointer;
+				routine->error = true;
+			}
+			routine->running = false;
+			routine->finished = true;
+			cs_fiber_swapcontext(&routine->ctx, routine->prev_ctx);
+		}
+
+		bool resume(fiber_id id)
+		{
+			if (id == 0 || id > ordinator.routines.size())
+				throw cs::lang_error("Invalid fiber ID.");
+			Routine *routine = ordinator.routines[id - 1];
+			if (routine == nullptr)
+				throw cs::lang_error("Resuming a destroyed fiber.");
+			if (routine->finished || routine->running)
+				throw cs::lang_error("Fiber is not reentrant.");
 			if (routine->stack == nullptr) {
-				//initializes the structure to the currently active context.
-				//When successful, getcontext() returns 0
-				//On error, return -1 and set errno appropriately.
+				routine->stack = malloc(ordinator.stack_size);
+				if (routine->stack == nullptr)
+					throw cs::lang_error("Fiber create failed.");
 				cs_fiber_getcontext(&routine->ctx);
-
-				//Before invoking makecontext(), the caller must allocate a new stack
-				//for this context and assign its address to ucp->uc_stack,
-				//and define a successor context and assign its address to ucp->uc_link.
-				routine->stack = new char[ordinator.stack_size];
 				routine->ctx.uc_stack.ss_sp = routine->stack;
 				routine->ctx.uc_stack.ss_size = ordinator.stack_size;
-				routine->ctx.uc_link = &ordinator.ctx;
-				ordinator.current = id;
-
-				//When this context is later activated by swapcontext(), the function entry is called.
-				//When this function returns, the  successor context is activated.
-				//If the successor context pointer is NULL, the thread exits.
-				cs_fiber_makecontext(&routine->ctx, reinterpret_cast<void (*)(void)>(entry), 0);
-
-				//The swapcontext() function saves the current context,
-				//and then activates the context of another.
-				cs::current_process = routine->cs_pcontext.get();
-				routine->cs_context->instance->swap_context(&routine->cs_stack);
-				cs_fiber_swapcontext(&ordinator.ctx, &routine->ctx);
+				routine->ctx.uc_link = nullptr;
+				cs_fiber_makecontext(&routine->ctx, reinterpret_cast<void (*)()>(entry), 0);
+				if (!ordinator.call_stack.empty()) {
+					Routine *prev_routine = ordinator.routines[ordinator.call_stack.back() - 1];
+					if (prev_routine == nullptr)
+						throw cs::internal_error("Broken call stack.");
+					routine->prev_ctx = &prev_routine->ctx;
+				}
+				else
+					routine->prev_ctx = &ordinator.ctx;
 			}
-			else {
-				ordinator.current = id;
-				cs::current_process = routine->cs_pcontext.get();
-				routine->cs_context->instance->swap_context(&routine->cs_stack);
-				cs_fiber_swapcontext(&ordinator.ctx, &routine->ctx);
+			ordinator.call_stack.push_back(id);
+			routine->cs_context_swap_in();
+			cs_fiber_swapcontext(routine->prev_ctx, &routine->ctx);
+			if (!ordinator.call_stack.empty() && ordinator.call_stack.back() == id)
+				ordinator.call_stack.pop_back();
+			else
+				throw cs::internal_error("Call stack corrupted.");
+			routine->cs_context_swap_out();
+			if (!ordinator.call_stack.empty()) {
+				Routine *next_routine = ordinator.routines[ordinator.call_stack.back() - 1];
+				if (next_routine == nullptr)
+					throw cs::internal_error("Broken call stack.");
+				next_routine->cs_context_swap_in();
 			}
-
-			return 0;
+			if (routine->finished && routine->error) {
+				std::exception_ptr e = nullptr;
+				std::swap(routine->this_context->eptr, e);
+				std::rethrow_exception(e);
+			}
+			return !routine->finished && !routine->error;
 		}
 
 		void yield()
 		{
-			routine_t id = ordinator.current;
+			fiber_id id = ordinator.current_routine();
+			if (id == 0)
+				throw cs::lang_error("Cannot yield outside a fiber.");
 			Routine *routine = ordinator.routines[id - 1];
-			assert(routine != nullptr);
-
-			char *stack_top = routine->stack + ordinator.stack_size;
-			char stack_bottom = 0;
-			assert(size_t(stack_top - &stack_bottom) <= ordinator.stack_size);
-
-			routine->cs_context->instance->swap_context(nullptr);
-			cs::current_process = routine->this_context;
-
-			ordinator.current = 0;
-			cs_fiber_swapcontext(&routine->ctx, &ordinator.ctx);
+			if (routine == nullptr)
+				throw cs::lang_error("Yield a destroyed fiber.");
+			routine->running = false;
+			cs_fiber_swapcontext(&routine->ctx, routine->prev_ctx);
 		}
 
-		routine_t current()
+		fiber_id current()
 		{
-			return ordinator.current;
+			return ordinator.current_routine();
 		}
 	}
 }

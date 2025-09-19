@@ -58,3 +58,6 @@ tests/gen/
 
 # ECS Files
 .ecs_output/
+
+# ClangD Files
+*.idx
