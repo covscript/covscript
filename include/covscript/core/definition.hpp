@@ -40,9 +40,6 @@
 #define COVSCRIPT_PLATFORM_LINUX
 #define COVSCRIPT_PLATFORM_UNIX
 #define COVSCRIPT_PLATFORM_NAME "android"
-#ifndef COVSCRIPT_PLATFORM_HOME
-#error COVSCRIPT_PLATFORM_HOME not defined. Can not detect automatically on Android platform.
-#endif
 #elif defined(__linux__) || defined(__gnu_linux__)
 #define COVSCRIPT_PLATFORM_LINUX
 #define COVSCRIPT_PLATFORM_UNIX

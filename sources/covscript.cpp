@@ -302,7 +302,9 @@ namespace cs {
 	{
 		const char *import_path = std::getenv("CS_IMPORT_PATH");
 		std::string base_path = get_sdk_path() + cs::path_separator + "imports";
+#ifdef COVSCRIPT_PLATFORM_HOME
 		base_path += cs::path_delimiter + std::string(COVSCRIPT_PLATFORM_HOME) + cs::path_separator + "imports";
+#endif
 		if (import_path != nullptr)
 			return process_path(std::string(import_path) + cs::path_delimiter + base_path);
 		else
