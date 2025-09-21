@@ -33,10 +33,6 @@
 #include <string>
 #include <io.h>
 
-#ifndef STACK_LIMIT
-#define STACK_LIMIT (1024 * 1024)
-#endif
-
 namespace cs_system_impl {
 	bool chmod_impl(const std::string &path, unsigned int mode)
 	{
@@ -224,7 +220,7 @@ namespace cs_impl {
 			size_t stack_size;
 			LPVOID ctx;
 
-			Ordinator(size_t ss = STACK_LIMIT)
+			Ordinator(size_t ss = COVSCRIPT_FIBER_STACK_LIMIT)
 				: stack_size(ss)
 			{
 				ctx = ConvertThreadToFiber(nullptr);

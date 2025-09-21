@@ -39,12 +39,6 @@
 #include <string>
 #include <cerrno>
 
-#ifndef STACK_LIMIT
-
-#define STACK_LIMIT (1024 * 1024)
-
-#endif
-
 #ifdef COVSCRIPT_PLATFORM_DARWIN
 
 #include <mach-o/loader.h>
@@ -316,7 +310,7 @@ namespace cs_impl {
 			cs_fiber_ucontext_t ctx;
 			size_t stack_size;
 
-			Ordinator(size_t ss = STACK_LIMIT)
+			Ordinator(size_t ss = COVSCRIPT_FIBER_STACK_LIMIT)
 				: stack_size(ss) {}
 
 			~Ordinator()

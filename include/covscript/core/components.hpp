@@ -612,83 +612,20 @@ namespace cs {
 	};
 
 // Static Stack
-	template<typename T, template<typename> class allocator_t=std::allocator>
+	template<typename T>
 	class stack_type final {
-		using aligned_type = typename std::aligned_storage<sizeof(T), alignof(T)>::type;
-		T *m_start = nullptr, *m_current = nullptr;
-		allocator_t<aligned_type> m_alloc;
-		aligned_type *m_data = nullptr;
-		std::size_t m_size = 0;
-
-		void destroy()
-		{
-			while (m_current != m_start)
-				(--m_current)->~T();
-			m_alloc.deallocate(m_data, m_size);
-		}
-
+		mutable std::vector<T> m_impl;
 	public:
-		class iterator final {
-			friend class stack_type;
-
-			T *m_ptr = nullptr;
-
-			explicit iterator(T *const ptr) : m_ptr(ptr) {}
-
-		public:
-			iterator() = delete;
-
-			iterator(const iterator &) = default;
-
-			iterator(iterator &&) noexcept = default;
-
-			~iterator() = default;
-
-			inline T &operator*() const noexcept
-			{
-				return *m_ptr;
-			}
-
-			inline T *operator->() const noexcept
-			{
-				return m_ptr;
-			}
-
-			inline iterator &operator++() noexcept
-			{
-				--m_ptr;
-				return *this;
-			}
-
-			inline iterator operator++(int) noexcept
-			{
-				return iterator(m_ptr--);
-			}
-
-			inline bool operator==(const iterator &it) const noexcept
-			{
-				return m_ptr == it.m_ptr;
-			}
-
-			inline bool operator!=(const iterator &it) const noexcept
-			{
-				return m_ptr != it.m_ptr;
-			}
-		};
+		using iterator = typename std::vector<T>::reverse_iterator;
 
 		void resize(std::size_t size)
 		{
-			if (m_data != nullptr)
-				destroy();
-			m_size = size;
-			m_data = m_alloc.allocate(m_size);
-			m_start = reinterpret_cast<T *>(m_data);
-			m_current = m_start;
+			m_impl.reserve(size);
 		}
 
 		stack_type()
 		{
-			resize(512);
+			resize(COVSCRIPT_STACK_PRESERVE);
 		}
 
 		explicit stack_type(std::size_t s)
@@ -698,86 +635,69 @@ namespace cs {
 
 		stack_type(const stack_type &) = delete;
 
-		~stack_type()
-		{
-			destroy();
-		}
+		~stack_type() = default;
 
 		inline bool empty() const
 		{
-			return m_current == m_start;
+			return m_impl.empty();
 		}
 
 		inline std::size_t size() const
 		{
-			return m_current - m_start;
+			return m_impl.size();
 		}
 
 		inline bool full() const
 		{
-			return m_current - m_start == m_size;
+			return false;
 		}
 
 		inline T &top() const
 		{
-			if (empty())
-				throw cov::error("E000H");
-			return *(m_current - 1);
+			return m_impl.back();
 		}
 
 		inline T &bottom() const
 		{
-			if (empty())
-				throw cov::error("E000H");
-			return *m_start;
+			return m_impl.front();
 		}
 
 		inline T &at(std::size_t offset) const
 		{
-			if (offset >= size())
-				throw std::out_of_range("Stack out of range.");
-			return *(m_current - offset - 1);
+			return m_impl.at(m_impl.size() - offset - 1);
 		}
 
 		inline T &operator[](std::size_t offset) const
 		{
-			return *(m_current - offset - 1);
+			return m_impl[m_impl.size() - offset - 1];
 		}
 
 		template<typename...ArgsT>
 		inline void push(ArgsT &&...args)
 		{
-			if (full())
-				throw cov::error("E000I");
-			::new(m_current++) T(std::forward<ArgsT>(args)...);
+			m_impl.emplace_back(std::forward<ArgsT>(args)...);
 		}
 
 		inline T pop()
 		{
-			if (empty())
-				throw cov::error("E000H");
-			T data(std::move(*m_current));
-			(m_current - 1)->~T();
-			--m_current;
+			T data(m_impl.back());
+			m_impl.pop_back();
 			return std::move(data);
 		}
 
 		inline void pop_no_return()
 		{
-			if (empty())
-				throw cov::error("E000H");
-			(m_current - 1)->~T();
-			--m_current;
+			m_impl.pop_back();
 		}
 
 		iterator begin() const noexcept
 		{
-			return iterator(m_current - 1);
+			return m_impl.rbegin();
 		}
 
 		iterator end() const noexcept
 		{
-			return iterator(m_start - 1);
+			return m_impl.rend();
 		}
 	};
 
@@ -1262,7 +1182,7 @@ namespace cs {
 	public:
 		using listener_type = std::function<bool(void *)>;
 	private:
-		stack_type<listener_type> m_listener;
+		std::forward_list<listener_type> m_listener;
 	public:
 		event_type() = delete;
 
@@ -1270,12 +1190,12 @@ namespace cs {
 
 		explicit event_type(listener_type default_listener)
 		{
-			m_listener.push(std::move(default_listener));
+			m_listener.emplace_front(std::move(default_listener));
 		}
 
 		void add_listener(listener_type listener)
 		{
-			m_listener.push(std::move(listener));
+			m_listener.emplace_front(std::move(listener));
 		}
 
 		bool touch(void *arg)

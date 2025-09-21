@@ -28,18 +28,21 @@
 * cs: Main Namespace
 * cs_impl: Implement Namespace
 */
+// Configs
+#ifndef COVSCRIPT_STACK_PRESERVE
+#define COVSCRIPT_STACK_PRESERVE 64
+#endif
+#ifndef COVSCRIPT_FIBER_STACK_LIMIT
+#define COVSCRIPT_FIBER_STACK_LIMIT (1024 * 1024)
+#endif
 // LibDLL
 #include <covscript/import/libdll/dll.hpp>
 // Hash Map and Set
 #ifndef CS_COMPATIBILITY_MODE
-
 #include <covscript/import/parallel_hashmap/phmap.h>
-
 #else
-
 #include <unordered_map>
 #include <unordered_set>
-
 #endif
 // STL
 #include <forward_list>
@@ -86,7 +89,7 @@ namespace cs {
 // Import Path
 		std::string import_path = ".";
 // Stack
-		std::size_t stack_size = 1000;
+		std::size_t stack_size = COVSCRIPT_STACK_PRESERVE;
 
 		stack_type<var> stack;
 #ifdef CS_DEBUGGER
@@ -108,7 +111,7 @@ namespace cs {
 			if (stack_size >= 1000)
 				return stack_size / 10;
 			else
-				return 100;
+				return COVSCRIPT_STACK_PRESERVE;
 		}
 
 // Event Handling
