@@ -135,6 +135,9 @@ namespace cs {
 		}
 
 // Exception Handling
+		std::exception_ptr eptr = nullptr;
+		std::mutex eptr_mutex;
+
 		static void cs_defalt_exception_handler(const lang_error &e)
 		{
 			throw e;
@@ -224,6 +227,18 @@ namespace cs {
 		}
 	};
 
+	struct fiber_type final {
+		fiber_id id;
+
+		fiber_type() = delete;
+
+		fiber_type(const fiber_type &) = delete;
+
+		explicit fiber_type(fiber_id);
+
+		~fiber_type();
+	};
+
 	class function final {
 		context_t mContext;
 #ifdef CS_DEBUGGER
@@ -296,6 +311,11 @@ namespace cs {
 		const context_t &get_context() const
 		{
 			return mContext;
+		}
+
+		bool is_el_func() const
+		{
+			return call_ptr == &call_el;
 		}
 
 		void add_reserve_var(const std::string &reserve, bool is_mem_fn = false)

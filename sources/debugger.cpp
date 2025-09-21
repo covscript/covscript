@@ -491,7 +491,7 @@ void covscript_main(int args_size, char *args[])
 			std::cout << "  STD Version: " << cs::current_process->std_version << "\n";
 			std::cout << "  API Version: " << CS_GET_VERSION_STR(COVSCRIPT_API_VERSION) << "\n";
 			std::cout << "  ABI Version: " << CS_GET_VERSION_STR(COVSCRIPT_ABI_VERSION) << "\n";
-			std::cout << "  Runtime Env: " << COVSCRIPT_PLATFORM_NAME << "\n";
+			std::cout << "  Runtime Env: " << COVSCRIPT_PLATFORM_NAME << "-" << COVSCRIPT_ARCH_NAME "\n";
 			std::cout << "  Compile Env: " << COVSCRIPT_COMPILER_NAME << "\n";
 			std::cout << std::endl;
 			return;

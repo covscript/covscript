@@ -1,12 +1,11 @@
-function dummy_func()
-    return
+function dummy_func(i)
+    return i + 1
 end
 
 var co = null
 
 foreach i in range(10)
-    co = runtime.create_co(dummy_func)
-    loop
-        var state = runtime.resume(co)
-    until state == -2
+    co = fiber.create(dummy_func, i)
+    loop; until !co.resume()
+    system.out.println(co.return_value())
 end

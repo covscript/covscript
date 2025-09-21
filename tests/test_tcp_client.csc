@@ -40,13 +40,13 @@ end
 # Create coroutine
 var co = null
 if !pure
-    co = runtime.create_co_s(worker, {sock})
+    co = fiber.create(worker, sock)
 end
 
 var count = 0, million = 1
 loop
     if !pure
-        runtime.resume(co)
+        co.resume()
     end
     if exit
         break
