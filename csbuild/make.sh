@@ -22,8 +22,8 @@ cd ../..
 rm -rf build
 mkdir -p build/bin
 mkdir -p build/lib
-mv cmake-build/unix/cs* build/bin/
-mv cmake-build/unix/*.a build/lib/
+find cmake-build/unix -maxdepth 1 -type f -name 'cs*' -exec mv {} build/bin/ \;
+find cmake-build/unix -maxdepth 1 -type f -name 'libcovscript*.a' -exec mv {} build/lib/ \;
 rm -rf csdev
 mkdir -p csdev/include/covscript
 mkdir -p csdev/lib
