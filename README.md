@@ -24,9 +24,10 @@ This project is an officially maintained Covariant Script interpreter.
 
 + Cross-platform, supporting most mainstream Operating Systems
     + Compatible with legacy compilers -- written in C++ 14
-    + Apple macOS: Universal binary with x86_64 and arm64
+    + Apple macOS: Universal binary with x86_64 (Intel) and ARM64 (Apple Silicon)
     + Linux and Unix: x86, ARM, MIPS, LoongArch
     + Microsoft Windows: x86
+    + [New!] Google Android: x86, ARM (The complete environment is available in [Termux](https://github.com/termux/termux-app) environment)
 + Powerful and bloat-free extension system
     + C/C++ Native Interface(CNI) System: translate invoking from both C/C++ and Covariant Script
     + Interpreter Bootstrap: A portable way to access the Covariant Script Runtime from C++

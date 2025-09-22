@@ -24,9 +24,10 @@
 
 + 全平台可用，支持大多数主流操作系统
     + 使用 C++ 14 标准编写，支持版本较老的编译器
-    + Apple macOS: Universal binary with x86_64 and arm64
-    + Linux and Unix: x86, ARM, MIPS, LoongArch
-    + Microsoft Windows: x86
+    + Apple macOS: 通用二进制，同时支持 x86_64 (Intel) 和 ARM64 (Apple Silicon)
+    + Linux 和类 Unix: x86, ARM, MIPS, LoongArch
+    + Microsoft Windows: x86, ARM
+    + [New!] Google Android: x86, ARM (在 [Termux](https://github.com/termux/termux-app) 环境中可运行完整环境)
 + 强大易用的扩展系统
     + C/C++ Native Interface(CNI) 系统：能够翻译 C/C++ 和 Covariant Script 之间的双向调用
     + Interpreter Bootstrap：在 C++ 项目中集成 Covariant Script 运行时环境的帮手
@@ -42,6 +43,10 @@
     + 热点分析优化算法
     + 高效的内存管理系统
     + 引用计数垃圾回收器
++ 全面支持国产信创环境
+    + 处理器：龙芯（MIPS/LoongArch）、鲲鹏/飞腾（ARM）、海光/兆芯（x86）
+    + 操作系统：支持大多数 Linux 衍生系统，在 UOS、openEuler 中经过测试
+    + 加密算法：支持[主流的国密 SM2、SM3、SM4 算法](https://github.com/covscript/covscript-gmssl)
 
 ## 文档 ##
 
