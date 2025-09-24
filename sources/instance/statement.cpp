@@ -802,7 +802,8 @@ namespace cs {
 		CS_DEBUGGER_STEP(this);
 		if (current_process->stack.empty())
 			throw runtime_error("Return outside function.");
-		current_process->stack.top() = context->instance->parse_expr(this->mTree.root());
+		var ret = context->instance->parse_expr(this->mTree.root());
+		current_process->stack.top().swap(ret);
 		context->instance->return_fcall = true;
 	}
 

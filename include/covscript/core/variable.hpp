@@ -436,8 +436,7 @@ namespace cs_impl {
 		void recycle() noexcept
 		{
 			if (mDat != nullptr) {
-				--mDat->refcount;
-				if (mDat->refcount == 0) {
+				if (--mDat->refcount == 0) {
 					allocator.free(mDat);
 					mDat = nullptr;
 				}
@@ -707,8 +706,9 @@ namespace cs_impl {
 				if (mDat != nullptr && obj.mDat != nullptr && raw) {
 					if (mDat->is_rvalue || this->mDat->protect_level > 0 || obj.mDat->protect_level > 0)
 						throw cov::error("E000J");
-					mDat->data->kill();
+					baseHolder *oldp = mDat->data;
 					mDat->data = obj.mDat->data->duplicate();
+					oldp->kill();
 				}
 				else {
 					recycle();
@@ -726,8 +726,9 @@ namespace cs_impl {
 			if (mDat != nullptr && raw) {
 				if (mDat->is_rvalue || this->mDat->protect_level > 0)
 					throw cov::error("E000J");
-				mDat->data->kill();
+				baseHolder *oldp = mDat->data;
 				mDat->data = holder<T>::allocator.alloc(dat);
+				oldp->kill();
 			}
 			else {
 				recycle();

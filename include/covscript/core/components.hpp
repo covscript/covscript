@@ -710,7 +710,7 @@ namespace cs {
 	public:
 		allocator_type()
 		{
-			while (mOffset < 0.5 * blck_size)
+			while (mOffset < blck_size / 2)
 				mPool[mOffset++] = mAlloc.allocate(1);
 		}
 
