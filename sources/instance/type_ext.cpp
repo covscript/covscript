@@ -1330,14 +1330,9 @@ namespace cs_impl {
 
 		var await_impl(const callable &fn, vector args)
 		{
-			if (is_native_callable(fn))
-				return fiber::await(async_callable(fn, std::move(args)));
-			function const *fptr = fn.get_raw_data().target<function>();
-			fiber_id co = fiber::create(fptr->get_context(), fiber_cs_ext::fiber_function(fptr, std::move(args)));
-			while (fiber::resume(co));
-			var ret = fiber::return_value(co);
-			fiber::destroy(co);
-			return std::move(ret);
+			if (!is_native_callable(fn))
+				throw lang_error("Asynchronous waiting only available on native functions.");
+			return fiber::await(async_callable(fn, std::move(args)));
 		}
 
 		string get_import_path()
