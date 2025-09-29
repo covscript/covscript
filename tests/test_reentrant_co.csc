@@ -12,6 +12,7 @@ function body0()
     tracer.id = "Body 0"
     system.out.println("Body 0 start")
     if test_exception
+        system.out.println("Body 0 throw")
         throw runtime.exception("Test Exception")
     end
     system.out.println("Body 0 yield")
@@ -41,7 +42,7 @@ function main()
     try
         c1.resume()
     catch e
-        system.out.println(e.what)
+        system.out.println("What: " + e.what)
     end
     system.out.println("Main exit")
 end

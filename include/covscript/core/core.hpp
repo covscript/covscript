@@ -233,6 +233,33 @@ namespace cs {
 		}
 	};
 
+	enum class fiber_state {
+		ready, running, suspended, finished
+	};
+
+	class fiber_type {
+	protected:
+		fiber_type() = default;
+
+	public:
+		fiber_type(const fiber_type &) = delete;
+		fiber_type &operator=(const fiber_type &) = delete;
+
+		virtual ~fiber_type() = default;
+
+		virtual fiber_state get_state() const = 0;
+
+		virtual var return_value() const = 0;
+	};
+
+	namespace fiber {
+		fiber_t create(const context_t &, std::function<cs::var()>);
+
+		void resume(const fiber_t &);
+
+		void yield();
+	}
+
 	class function final {
 		context_t mContext;
 #ifdef CS_DEBUGGER

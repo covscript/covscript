@@ -1119,7 +1119,7 @@ namespace cs_impl {
 				if (impl_f.target_type() != typeid(function))
 					throw lang_error("Only can create coroutine from covscript function.");
 				function const *fptr = impl_f.target<function>();
-				return std::make_shared<fiber_type>(fiber::create(fptr->get_context(), fiber_function(fptr, vector(args.begin() + 1, args.end()))));
+				return fiber::create(fptr->get_context(), fiber_function(fptr, vector(args.begin() + 1, args.end())));
 			}
 			else if (func.type() == typeid(object_method)) {
 				const auto &om = func.const_val<object_method>();
@@ -1129,19 +1129,29 @@ namespace cs_impl {
 				function const *fptr = impl_f.target<function>();
 				vector argument{om.object};
 				argument.insert(argument.end(), args.begin() + 1, args.end());
-				return std::make_shared<fiber_type>(fiber::create(fptr->get_context(), fiber_function(fptr, std::move(argument))));
+				return fiber::create(fptr->get_context(), fiber_function(fptr, std::move(argument)));
 			}
 			return null_pointer;
 		}
 
 		var return_value(const fiber_t &fiber)
 		{
-			return fiber::return_value(fiber->id);
+			return fiber->return_value();
 		}
 
-		bool resume(const fiber_t &fiber)
+		bool is_running(const fiber_t &fiber)
 		{
-			return fiber::resume(fiber->id);
+			return fiber->get_state() == fiber_state::running;
+		}
+
+		bool is_suspended(const fiber_t &fiber)
+		{
+			return fiber->get_state() == fiber_state::suspended;
+		}
+
+		bool is_finished(const fiber_t &fiber)
+		{
+			return fiber->get_state() == fiber_state::finished;
 		}
 
 		void init()
@@ -1149,8 +1159,11 @@ namespace cs_impl {
 			(*fiber_ext)
 			.add_var("create", var::make_protect<callable>(create))
 			.add_var("return_value", make_cni(return_value))
-			.add_var("resume", make_cni(resume))
-			.add_var("yield", make_cni(&fiber::yield));
+			.add_var("is_running", make_cni(is_running))
+			.add_var("is_suspended", make_cni(is_suspended))
+			.add_var("is_finished", make_cni(is_finished))
+			.add_var("resume", make_cni(fiber::resume))
+			.add_var("yield", make_cni(fiber::yield));
 		}
 	}
 
@@ -1287,7 +1300,28 @@ namespace cs_impl {
 		{
 			if (!is_native_callable(fn))
 				throw lang_error("Asynchronous waiting only available on native functions.");
-			return fiber::await(async_callable(fn, std::move(args)));
+
+			async_callable func(fn, std::move(args));
+			cs::var ret;
+			if (!current_process->fiber_stack.empty()) {
+				thread_guard guard;
+				auto future = std::async(std::launch::async, func);
+				while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
+					fiber::yield();
+				ret = future.get();
+			}
+			else
+				ret = func();
+
+			std::exception_ptr e = nullptr;
+			current_process->eptr_mutex.lock();
+			if (current_process->eptr != nullptr)
+				std::swap(current_process->eptr, e);
+			current_process->eptr_mutex.unlock();
+			if (e != nullptr)
+				std::rethrow_exception(e);
+
+			return std::move(ret);
 		}
 
 		string get_import_path()

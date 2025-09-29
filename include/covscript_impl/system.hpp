@@ -26,7 +26,6 @@
  */
 
 #include <covscript/core/core.hpp>
-#include <future>
 
 namespace cs_impl {
 	namespace platform {
@@ -116,36 +115,5 @@ namespace cs_impl {
 		bool mkdir(std::string);
 
 		std::string get_current_dir();
-	}
-	namespace fiber {
-		cs::fiber_t create(const cs::context_t &, std::function<cs::var()>);
-
-		void yield();
-
-		template <typename Function>
-		cs::var await(Function &&func)
-		{
-			cs::var ret;
-			if (current() != 0) {
-				cs::thread_guard guard;
-				auto future = std::async(std::launch::async, std::forward<Function>(func));
-				while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
-					yield();
-				ret = future.get();
-			}
-			else
-				ret = func();
-
-			cs::current_process->eptr_mutex.lock();
-			if (cs::current_process->eptr != nullptr) {
-				std::exception_ptr e = nullptr;
-				std::swap(cs::current_process->eptr, e);
-				cs::current_process->eptr_mutex.unlock();
-				std::rethrow_exception(e);
-			}
-			cs::current_process->eptr_mutex.unlock();
-
-			return std::move(ret);
-		}
 	}
 }

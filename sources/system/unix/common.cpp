@@ -46,37 +46,6 @@
 
 #endif
 
-#ifdef CS_FIBER_LIBUCONTEXT_IMPL
-
-extern "C"
-{
-#include <libucontext/libucontext.h>
-}
-
-#define cs_fiber_ucontext_t libucontext_ucontext_t
-#define cs_fiber_getcontext libucontext_getcontext
-#define cs_fiber_makecontext libucontext_makecontext
-#define cs_fiber_setcontext libucontext_setcontext
-#define cs_fiber_swapcontext libucontext_swapcontext
-
-#else
-
-#ifdef COVSCRIPT_PLATFORM_DARWIN
-
-#define _XOPEN_SOURCE
-
-#endif
-
-#include <ucontext.h>
-
-#define cs_fiber_ucontext_t ucontext_t
-#define cs_fiber_getcontext getcontext
-#define cs_fiber_makecontext makecontext
-#define cs_fiber_setcontext setcontext
-#define cs_fiber_swapcontext swapcontext
-
-#endif
-
 namespace cs_system_impl {
 	bool chmod_impl(const std::string &path, unsigned int mode)
 	{
@@ -263,231 +232,229 @@ namespace cs_impl {
 	}
 }
 
-inline uintptr_t align_up(uintptr_t ptr, size_t align)
+#ifdef CS_FIBER_LIBUCONTEXT_IMPL
+
+extern "C"
 {
-	return (ptr + align - 1) & ~(align - 1);
+#include <libucontext/libucontext.h>
 }
 
-class fiber_stack {
-	void *base = nullptr;
-	size_t size = 0;
-	void *sp = nullptr;
-	size_t usable_size = 0;
+#define cs_fiber_ucontext_t libucontext_ucontext_t
+#define cs_fiber_getcontext libucontext_getcontext
+#define cs_fiber_makecontext libucontext_makecontext
+#define cs_fiber_setcontext libucontext_setcontext
+#define cs_fiber_swapcontext libucontext_swapcontext
 
-public:
-	fiber_stack() = default;
-	fiber_stack(const fiber_stack &) = delete;
-	fiber_stack(fiber_stack &&) noexcept = delete;
+#else
 
-	void allocate(size_t stack_size, size_t align = 16)
-	{
-		if (base)
-			throw std::logic_error("fiber_stack already allocated");
+#ifdef COVSCRIPT_PLATFORM_DARWIN
 
-		long pagesize = sysconf(_SC_PAGESIZE);
-		if (pagesize <= 0)
-			throw std::runtime_error("Failed to get page size.");
-		if ((align & (align - 1)) != 0 || align == 0)
-			throw std::invalid_argument("align must be a power of two.");
-		if ((size_t)pagesize % align != 0)
-			throw std::invalid_argument("align must divide system page size.");
+#define _XOPEN_SOURCE
 
-		size_t rounded = (stack_size + pagesize - 1) & ~(pagesize - 1);
-		size_t total = rounded + 2 * pagesize;
+#endif
 
-		void *addr = mmap(nullptr, total, PROT_READ | PROT_WRITE,
-		                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-		if (addr == MAP_FAILED)
-			throw std::runtime_error(std::string("mmap failed: ") + std::strerror(errno));
+#include <ucontext.h>
 
-		if (mprotect(addr, pagesize, PROT_NONE) != 0 ||
-		        mprotect((char *)addr + pagesize + rounded, pagesize, PROT_NONE) != 0) {
-			munmap(addr, total);
-			throw std::runtime_error(std::string("mprotect failed: ") + std::strerror(errno));
-		}
+#define cs_fiber_ucontext_t ucontext_t
+#define cs_fiber_getcontext getcontext
+#define cs_fiber_makecontext makecontext
+#define cs_fiber_setcontext setcontext
+#define cs_fiber_swapcontext swapcontext
 
-		base = addr;
-		size = total;
-		uintptr_t aligned_sp = align_up((uintptr_t)addr + pagesize, align);
-		sp = (void *)aligned_sp;
-		usable_size = rounded - (aligned_sp - ((uintptr_t)addr + pagesize));
+#endif
 
-		if (usable_size == 0)
-			throw std::runtime_error("Stack usable size is zero after alignment");
-	}
-
-	~fiber_stack()
-	{
-		if (base != nullptr)
-			munmap(base, size);
-	}
-
-	inline bool initialized() const
-	{
-		return base != nullptr;
-	}
-
-	inline void *get_sp() const
-	{
-		return sp;
-	}
-
-	inline size_t get_ss() const
-	{
-		return usable_size;
-	}
-};
-
-struct cs::fiber_type {
-	cs::process_context *this_context = cs::current_process;
-	std::unique_ptr<cs::process_context> cs_pcontext;
-	cs::stack_type<cs::domain_type> cs_stack;
-	const cs::context_t &cs_context;
-	std::function<cs::var()> func;
-
-	bool finished = false;
-	bool running = false;
-	bool error = false;
-	cs::var ret_val;
-
-	fiber_stack stack;
-	cs_fiber_ucontext_t ctx;
-	cs_fiber_ucontext_t *prev_ctx = nullptr;
-
-	fiber_type(const cs::context_t &cxt, std::function<cs::var()> f)
-		: cs_context(cxt),
-		  cs_pcontext(cs::current_process->fork()),
-		  cs_stack(cs::current_process->child_stack_size()),
-		  func(std::move(f)) {}
-
-	~fiber_type() = default;
-
-	void cs_context_swap_in()
-	{
-		cs_context->instance->swap_context(&cs_stack);
-		cs::current_process = cs_pcontext.get();
-	}
-
-	void cs_context_swap_out()
-	{
-		cs_context->instance->swap_context(nullptr);
-		cs::current_process = this_context;
-	}
-};
-
-namespace cs_impl {
+namespace cs {
 	namespace fiber {
-		cs::fiber_t create(const cs::context_t &cxt, std::function<cs::var()> f)
-		{
-			return std::make_shared<cs::fiber_type>(cxt, std::move(f));
-		}
-
-		cs::var return_value(fiber_id id)
-		{
-			if (id == 0 || id > ordinator.routines.size())
-				throw cs::lang_error("Invalid fiber ID.");
-			Routine *routine = ordinator.routines[id - 1];
-			if (routine == nullptr)
-				throw cs::lang_error(
-				    "Geting return value from a destroyed fiber.");
-			if (routine->finished)
-				return routine->ret_val;
-			else
-				throw cs::lang_error("Fiber has not yet started or ended.");
-		}
-
-		void entry() noexcept
-		{
-			fiber_id id = ordinator.current_routine();
-			Routine *routine = ordinator.routines[id - 1];
-			if (routine == nullptr)
-				return;
-			try {
-				routine->running = true;
-				routine->ret_val = routine->func();
+		class unix_fiber_stack {
+			inline static uintptr_t align_up(uintptr_t ptr, size_t align)
+			{
+				return (ptr + align - 1) & ~(align - 1);
 			}
-			catch (...) {
-				routine->this_context->eptr = std::current_exception();
-				routine->ret_val = cs::null_pointer;
-				routine->error = true;
-			}
-			routine->running = false;
-			routine->finished = true;
-			cs_fiber_swapcontext(&routine->ctx, routine->prev_ctx);
-			// This should never execute
-			std::abort();
-		}
 
-		bool resume(fiber_id id)
-		{
-			if (id == 0 || id > ordinator.routines.size())
-				throw cs::lang_error("Invalid fiber ID.");
-			Routine *routine = ordinator.routines[id - 1];
-			if (routine == nullptr)
-				throw cs::lang_error("Resuming a destroyed fiber.");
-			if (routine->finished || routine->running)
-				throw cs::lang_error("Fiber is not reentrant.");
-			if (!routine->stack.initialized()) {
-				routine->stack.allocate(ordinator.stack_size);
-				memset(&routine->ctx, 0, sizeof(routine->ctx));
-				cs_fiber_getcontext(&routine->ctx);
-				routine->ctx.uc_stack.ss_sp = routine->stack.get_sp();
-				routine->ctx.uc_stack.ss_size = routine->stack.get_ss();
-				routine->ctx.uc_link = nullptr;
-				cs_fiber_makecontext(&routine->ctx, reinterpret_cast<void (*)()>(entry), 0);
-				if (!ordinator.call_stack.empty()) {
-					Routine *prev_routine = ordinator.routines[ordinator.call_stack.back() - 1];
-					if (prev_routine == nullptr)
-						throw cs::internal_error("Broken call stack.");
-					routine->prev_ctx = &prev_routine->ctx;
+			void *base = nullptr;
+			size_t size = 0;
+			void *sp = nullptr;
+			size_t usable_size = 0;
+
+		public:
+			unix_fiber_stack() = delete;
+			unix_fiber_stack(const unix_fiber_stack &) = delete;
+			unix_fiber_stack(unix_fiber_stack &&) noexcept = delete;
+
+			explicit unix_fiber_stack(size_t stack_size, size_t align = 16)
+			{
+				long pagesize = sysconf(_SC_PAGESIZE);
+				if (pagesize <= 0)
+					throw std::runtime_error("Failed to get page size.");
+				if ((align & (align - 1)) != 0 || align == 0)
+					throw std::invalid_argument("align must be a power of two.");
+				if ((size_t)pagesize % align != 0)
+					throw std::invalid_argument("align must divide system page size.");
+
+				size_t rounded = (stack_size + pagesize - 1) & ~(pagesize - 1);
+				size_t total = rounded + 2 * pagesize;
+
+				void *addr = mmap(nullptr, total, PROT_READ | PROT_WRITE,
+				                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+				if (addr == MAP_FAILED)
+					throw std::runtime_error(std::string("mmap failed: ") + std::strerror(errno));
+
+				if (mprotect(addr, pagesize, PROT_NONE) != 0 ||
+				        mprotect((char *)addr + pagesize + rounded, pagesize, PROT_NONE) != 0) {
+					munmap(addr, total);
+					throw std::runtime_error(std::string("mprotect failed: ") + std::strerror(errno));
 				}
+
+				base = addr;
+				size = total;
+				uintptr_t aligned_sp = align_up((uintptr_t)addr + pagesize, align);
+				sp = (void *)aligned_sp;
+				usable_size = rounded - (aligned_sp - ((uintptr_t)addr + pagesize));
+
+				if (usable_size == 0)
+					throw std::runtime_error("Stack usable size is zero after alignment");
+			}
+
+			~unix_fiber_stack()
+			{
+				if (base != nullptr)
+					munmap(base, size);
+			}
+
+			inline bool initialized() const
+			{
+				return base != nullptr;
+			}
+
+			inline void *get_sp() const
+			{
+				return sp;
+			}
+
+			inline size_t get_ss() const
+			{
+				return usable_size;
+			}
+		};
+
+		class unix_fiber: public cs::fiber_type {
+			friend void cs::fiber::resume(const fiber_t &);
+			friend void cs::fiber::yield();
+
+			cs::stack_type<cs::domain_type> cs_stack;
+			cs::context_t cs_context;
+
+			std::function<cs::var()> func;
+			std::exception_ptr eptr;
+			cs::fiber_state state;
+			cs::var ret_val;
+
+			unix_fiber_stack stack;
+			cs_fiber_ucontext_t ctx;
+			cs_fiber_ucontext_t *prev_ctx = nullptr;
+
+			static void entry() noexcept
+			{
+				unix_fiber *fi = dynamic_cast<unix_fiber *>(cs::current_process->fiber_stack.top().get());
+				try {
+					fi->state = cs::fiber_state::running;
+					cs::var ret = fi->func();
+					fi->ret_val.swap(ret);
+				}
+				catch (...) {
+					fi->eptr = std::current_exception();
+				}
+				fi->state = cs::fiber_state::finished;
+				cs_fiber_swapcontext(&fi->ctx, fi->prev_ctx);
+				// This should never execute
+				std::abort();
+			}
+
+		public:
+			unix_fiber() = delete;
+			unix_fiber(const cs::context_t &cxt, std::function<cs::var()> f)
+				: cs_stack(cs::current_process->child_stack_size()),
+				  cs_context(cxt),
+				  func(std::move(f)),
+				  eptr(nullptr),
+				  state(cs::fiber_state::ready),
+				  ret_val(cs::null_pointer),
+				  stack(COVSCRIPT_FIBER_STACK_LIMIT) {}
+
+			void cs_swap_in()
+			{
+				cs_context->instance->swap_context(&cs_stack);
+			}
+
+			void cs_swap_out()
+			{
+				cs_context->instance->swap_context(nullptr);
+			}
+
+			virtual fiber_state get_state() const
+			{
+				return state;
+			}
+
+			virtual var return_value() const
+			{
+				if (state == fiber_state::finished)
+					return ret_val;
 				else
-					routine->prev_ctx = &ordinator.ctx;
+					throw lang_error("Fiber has not yet started or ended.");
 			}
-			// Push call stack
-			ordinator.call_stack.push_back(id);
-			// Swap to routine interpreter context
-			routine->cs_context_swap_in();
-			// Swap to routine context
-			cs_fiber_swapcontext(routine->prev_ctx, &routine->ctx);
-			// Pop call stack
-			if (!ordinator.call_stack.empty() && ordinator.call_stack.back() == id)
-				ordinator.call_stack.pop_back();
-			else
-				throw cs::internal_error("Call stack corrupted.");
-			// Swap to original interpreter context
-			if (!ordinator.call_stack.empty()) {
-				Routine *next_routine = ordinator.routines[ordinator.call_stack.back() - 1];
-				if (next_routine == nullptr)
-					throw cs::internal_error("Broken call stack.");
-				next_routine->cs_context_swap_in();
+		};
+
+		fiber_t create(const context_t &cxt, std::function<var()> f)
+		{
+			return std::make_shared<unix_fiber>(cxt, std::move(f));
+		}
+
+		void resume(const fiber_t &fi_p)
+		{
+			static cs_fiber_ucontext_t global_ctx;
+			unix_fiber *fi = dynamic_cast<unix_fiber *>(fi_p.get());
+			if (fi == nullptr)
+				throw internal_error("Resuming a corrupted fiber.");
+			if (fi->state == fiber_state::running || fi->state == fiber_state::finished)
+				throw lang_error("Fiber is not reentrant.");
+			if (fi->state == fiber_state::ready) {
+				memset(&fi->ctx, 0, sizeof(fi->ctx));
+				cs_fiber_getcontext(&fi->ctx);
+				fi->ctx.uc_stack.ss_sp = fi->stack.get_sp();
+				fi->ctx.uc_stack.ss_size = fi->stack.get_ss();
+				fi->ctx.uc_link = nullptr;
+				cs_fiber_makecontext(&fi->ctx, reinterpret_cast<void (*)()>(unix_fiber::entry), 0);
+				if (!current_process->fiber_stack.empty())
+					fi->prev_ctx = &dynamic_cast<unix_fiber *>(current_process->fiber_stack.top().get())->ctx;
+				else
+					fi->prev_ctx = &global_ctx;
 			}
+			current_process->fiber_stack.push(fi_p);
+			fi->cs_swap_in();
+			cs_fiber_swapcontext(fi->prev_ctx, &fi->ctx);
+			if (!current_process->fiber_stack.empty())
+				current_process->fiber_stack.pop();
 			else
-				routine->cs_context_swap_out();
-			// Handling exception
-			if (routine->finished && routine->error) {
+				throw internal_error("Fiber stack corrupted.");
+			if (!current_process->fiber_stack.empty())
+				dynamic_cast<unix_fiber *>(current_process->fiber_stack.top().get())->cs_swap_in();
+			else
+				fi->cs_swap_out();
+			if (fi->eptr != nullptr) {
 				std::exception_ptr e = nullptr;
-				std::swap(routine->this_context->eptr, e);
+				std::swap(fi->eptr, e);
 				std::rethrow_exception(e);
 			}
-			return !routine->finished && !routine->error;
 		}
 
 		void yield()
 		{
-			fiber_id id = ordinator.current_routine();
-			if (id == 0)
-				throw cs::lang_error("Cannot yield outside a fiber.");
-			Routine *routine = ordinator.routines[id - 1];
-			if (routine == nullptr)
-				throw cs::lang_error("Yield a destroyed fiber.");
-			routine->running = false;
-			cs_fiber_swapcontext(&routine->ctx, routine->prev_ctx);
-		}
-
-		fiber_id current()
-		{
-			return ordinator.current_routine();
+			if (current_process->fiber_stack.empty())
+				throw lang_error("Cannot yield outside a fiber.");
+			unix_fiber *fi = dynamic_cast<unix_fiber *>(current_process->fiber_stack.top().get());
+			fi->state = fiber_state::suspended;
+			cs_fiber_swapcontext(&fi->ctx, fi->prev_ctx);
 		}
 	}
 }

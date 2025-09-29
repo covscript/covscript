@@ -171,213 +171,148 @@ namespace cs_impl {
 			}
 		}
 	}
+}
 
+namespace cs {
 	namespace fiber {
-		struct Routine {
-			cs::process_context *this_context = cs::current_process;
-			std::unique_ptr<cs::process_context> cs_pcontext;
-			cs::stack_type<cs::domain_type> cs_stack;
-			const cs::context_t &cs_context;
-			std::function<cs::var()> func;
+		class win32_fiber: public cs::fiber_type {
+			friend void cs::fiber::resume(const fiber_t &);
+			friend void cs::fiber::yield();
 
-			bool finished = false;
-			bool running = false;
-			bool error = false;
+			cs::stack_type<cs::domain_type> cs_stack;
+			cs::context_t cs_context;
+
+			std::function<cs::var()> func;
+			std::exception_ptr eptr;
+			cs::fiber_state state;
 			cs::var ret_val;
 
+			size_t stack_size;
 			LPVOID ctx = nullptr;
 			LPVOID prev_ctx = nullptr;
 
-			Routine(const cs::context_t &cxt, std::function<cs::var()> f)
-				: cs_context(cxt),
-				  cs_pcontext(cs::current_process->fork()),
-				  cs_stack(cs::current_process->child_stack_size()),
-				  func(std::move(f)) {}
+			static void __stdcall entry(LPVOID lpParameter) noexcept
+			{
+				win32_fiber *fi = static_cast<win32_fiber *>(lpParameter);
+				try {
+					fi->state = cs::fiber_state::running;
+					cs::var ret = fi->func();
+					fi->ret_val.swap(ret);
+				}
+				catch (...) {
+					fi->eptr = std::current_exception();
+				}
+				fi->state = cs::fiber_state::finished;
+				SwitchToFiber(fi->prev_ctx);
+				// This should never execute
+				std::abort();
+			}
 
-			~Routine()
+		public:
+			win32_fiber() = delete;
+			win32_fiber(const cs::context_t &cxt, std::function<cs::var()> f)
+				: cs_stack(cs::current_process->child_stack_size()),
+				  cs_context(cxt),
+				  func(std::move(f)),
+				  eptr(nullptr),
+				  state(fiber_state::ready),
+				  ret_val(null_pointer),
+				  stack_size(current_process->child_stack_size()) {}
+			
+			virtual ~win32_fiber()
 			{
 				if (ctx != nullptr)
 					DeleteFiber(ctx);
 			}
 
-			void cs_context_swap_in()
+			void cs_swap_in()
 			{
 				cs_context->instance->swap_context(&cs_stack);
-				cs::current_process = cs_pcontext.get();
 			}
 
-			void cs_context_swap_out()
+			void cs_swap_out()
 			{
 				cs_context->instance->swap_context(nullptr);
-				cs::current_process = this_context;
+			}
+
+			virtual fiber_state get_state() const
+			{
+				return state;
+			}
+
+			virtual var return_value() const
+			{
+				if (state == fiber_state::finished)
+					return ret_val;
+				else
+					throw lang_error("Fiber has not yet started or ended.");
 			}
 		};
 
-		struct Ordinator {
-			std::vector<Routine *> routines;
-			std::list<fiber_id> indexes;
-			std::vector<fiber_id> call_stack;
-			size_t stack_size;
-			LPVOID ctx;
+		fiber_t create(const context_t &cxt, std::function<var()> f)
+		{
+			return std::make_shared<win32_fiber>(cxt, std::move(f));
+		}
 
-			Ordinator(size_t ss = COVSCRIPT_FIBER_STACK_LIMIT)
-				: stack_size(ss)
+		struct global_ctx_holder {
+			LPVOID ctx = nullptr;
+
+			global_ctx_holder()
 			{
 				ctx = ConvertThreadToFiber(nullptr);
 				if (ctx == nullptr)
 					throw cs::internal_error("Create basic coroutine context failed.");
 			}
 
-			~Ordinator()
+			~global_ctx_holder()
 			{
-				for (auto &routine : routines)
-					delete routine;
-				ConvertFiberToThread();
-			}
-
-			fiber_id current_routine() const
-			{
-				return call_stack.empty() ? 0 : call_stack.back();
+				if (ctx != nullptr)
+					ConvertFiberToThread();
 			}
 		};
 
-		thread_local static Ordinator ordinator;
-
-		fiber_id create(const cs::context_t &cxt, std::function<cs::var()> f)
+		void resume(const fiber_t &fi_p)
 		{
-			Routine *routine = new Routine(cxt, std::move(f));
-			if (ordinator.indexes.empty()) {
-				ordinator.routines.push_back(routine);
-				return static_cast<fiber_id>(ordinator.routines.size());
-			}
-			else {
-				fiber_id id = ordinator.indexes.front();
-				ordinator.indexes.pop_front();
-				ordinator.routines[id - 1] = routine;
-				return id;
-			}
-		}
-
-		void destroy(fiber_id id)
-		{
-			if (id == 0 || id > ordinator.routines.size())
-				throw cs::lang_error("Invalid fiber ID.");
-			Routine *routine = ordinator.routines[id - 1];
-			if (routine == nullptr)
-				throw cs::lang_error("Destroying a destroyed fiber.");
-			if (routine->running && !routine->finished)
-				throw cs::lang_error("Destroying a running fiber is not allowed.");
-			for (auto r : ordinator.call_stack) {
-				if (r == id)
-					throw cs::lang_error("Destroying a nested fiber is not allowed.");
-			}
-			delete routine;
-			ordinator.routines[id - 1] = nullptr;
-			ordinator.indexes.push_back(id);
-		}
-
-		cs::var return_value(fiber_id id)
-		{
-			if (id == 0 || id > ordinator.routines.size())
-				throw cs::lang_error("Invalid fiber ID.");
-			Routine *routine = ordinator.routines[id - 1];
-			if (routine == nullptr)
-				throw cs::lang_error(
-				    "Geting return value from a destroyed fiber.");
-			if (routine->finished)
-				return routine->ret_val;
-			else
-				throw cs::lang_error("Fiber has not yet started or ended.");
-		}
-
-		void __stdcall entry(LPVOID lpParameter) noexcept
-		{
-			fiber_id id = ordinator.current_routine();
-			Routine *routine = ordinator.routines[id - 1];
-			if (routine == nullptr)
-				return;
-			try {
-				routine->running = true;
-				routine->ret_val = routine->func();
-			}
-			catch (...) {
-				routine->this_context->eptr = std::current_exception();
-				routine->ret_val = cs::null_pointer;
-				routine->error = true;
-			}
-			routine->running = false;
-			routine->finished = true;
-			SwitchToFiber(routine->prev_ctx);
-			// This should never execute
-			std::abort();
-		}
-
-		bool resume(fiber_id id)
-		{
-			if (id == 0 || id > ordinator.routines.size())
-				throw cs::lang_error("Invalid fiber ID.");
-			Routine *routine = ordinator.routines[id - 1];
-			if (routine == nullptr)
-				throw cs::lang_error("Resuming a destroyed fiber.");
-			if (routine->finished || routine->running)
-				throw cs::lang_error("Fiber is not reentrant.");
-			if (routine->ctx == nullptr) {
-				routine->ctx = CreateFiber(ordinator.stack_size, entry, nullptr);
-				if (routine->ctx == nullptr)
+			static global_ctx_holder global_ctx;
+			win32_fiber *fi = dynamic_cast<win32_fiber *>(fi_p.get());
+			if (fi == nullptr)
+				throw internal_error("Resuming a corrupted fiber.");
+			if (fi->state == fiber_state::running || fi->state == fiber_state::finished)
+				throw lang_error("Fiber is not reentrant.");
+			if (fi->state == fiber_state::ready) {
+				fi->ctx = CreateFiber(fi->stack_size, win32_fiber::entry, fi);
+				if (fi->ctx == nullptr)
 					throw cs::lang_error("Fiber create failed.");
-				if (!ordinator.call_stack.empty()) {
-					Routine *prev_routine = ordinator.routines[ordinator.call_stack.back() - 1];
-					if (prev_routine == nullptr)
-						throw cs::internal_error("Broken call stack.");
-					routine->prev_ctx = prev_routine->ctx;
-				}
+				if (!current_process->fiber_stack.empty())
+					fi->prev_ctx = dynamic_cast<win32_fiber *>(current_process->fiber_stack.top().get())->ctx;
 				else
-					routine->prev_ctx = ordinator.ctx;
+					fi->prev_ctx = global_ctx.ctx;
 			}
-			// Push call stack
-			ordinator.call_stack.push_back(id);
-			// Swap to routine interpreter context
-			routine->cs_context_swap_in();
-			// Swap to routine context
-			SwitchToFiber(routine->ctx);
-			// Pop call stack
-			if (!ordinator.call_stack.empty() && ordinator.call_stack.back() == id)
-				ordinator.call_stack.pop_back();
+			current_process->fiber_stack.push(fi_p);
+			fi->cs_swap_in();
+			SwitchToFiber(fi->ctx);
+			if (!current_process->fiber_stack.empty())
+				current_process->fiber_stack.pop();
 			else
-				throw cs::internal_error("Call stack corrupted.");
-			// Swap to original interpreter context
-			if (!ordinator.call_stack.empty()) {
-				Routine *next_routine = ordinator.routines[ordinator.call_stack.back() - 1];
-				if (next_routine == nullptr)
-					throw cs::internal_error("Broken call stack.");
-				next_routine->cs_context_swap_in();
-			}
+				throw internal_error("Fiber stack corrupted.");
+			if (!current_process->fiber_stack.empty())
+				dynamic_cast<win32_fiber *>(current_process->fiber_stack.top().get())->cs_swap_in();
 			else
-				routine->cs_context_swap_out();
-			// Handling exception
-			if (routine->finished && routine->error) {
+				fi->cs_swap_out();
+			if (fi->eptr != nullptr) {
 				std::exception_ptr e = nullptr;
-				std::swap(routine->this_context->eptr, e);
+				std::swap(fi->eptr, e);
 				std::rethrow_exception(e);
 			}
-			return !routine->finished && !routine->error;
 		}
 
 		void yield()
 		{
-			fiber_id id = ordinator.current_routine();
-			if (id == 0)
-				throw cs::lang_error("Cannot yield outside a fiber.");
-			Routine *routine = ordinator.routines[id - 1];
-			if (routine == nullptr)
-				throw cs::lang_error("Yield a destroyed fiber.");
-			routine->running = false;
-			SwitchToFiber(routine->prev_ctx);
-		}
-
-		fiber_id current()
-		{
-			return ordinator.current_routine();
+			if (current_process->fiber_stack.empty())
+				throw lang_error("Cannot yield outside a fiber.");
+			win32_fiber *fi = dynamic_cast<win32_fiber *>(current_process->fiber_stack.top().get());
+			fi->state = fiber_state::suspended;
+			SwitchToFiber(fi->prev_ctx);
 		}
 	}
 }
