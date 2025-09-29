@@ -57,7 +57,10 @@ namespace cs {
 			while (!m_set.empty())
 				m_set.pop_no_return();
 			while (!m_data.empty())
+			{
+				m_data.top().clear();
 				m_data.pop_no_return();
+			}
 		}
 
 		bool is_initial() const
@@ -110,9 +113,13 @@ namespace cs {
 		void remove_domain()
 		{
 			if (fiber_stack != nullptr)
+			{
+				fiber_stack->top().clear();
 				fiber_stack->pop_no_return();
-			else
+			} else {
+				m_data.top().clear();
 				m_data.pop_no_return();
+			}
 		}
 
 		void clear_set()

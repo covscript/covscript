@@ -306,6 +306,7 @@ namespace cs_impl {
 			routine->running = false;
 			routine->finished = true;
 			SwitchToFiber(routine->prev_ctx);
+			// This should never execute
 			std::abort();
 		}
 
@@ -331,20 +332,26 @@ namespace cs_impl {
 				else
 					routine->prev_ctx = ordinator.ctx;
 			}
+			// Push call stack
 			ordinator.call_stack.push_back(id);
+			// Swap to routine interpreter context
 			routine->cs_context_swap_in();
+			// Swap to routine context
 			SwitchToFiber(routine->ctx);
+			// Pop call stack
 			if (!ordinator.call_stack.empty() && ordinator.call_stack.back() == id)
 				ordinator.call_stack.pop_back();
 			else
 				throw cs::internal_error("Call stack corrupted.");
-			routine->cs_context_swap_out();
+			// Swap to original interpreter context
 			if (!ordinator.call_stack.empty()) {
 				Routine *next_routine = ordinator.routines[ordinator.call_stack.back() - 1];
 				if (next_routine == nullptr)
 					throw cs::internal_error("Broken call stack.");
 				next_routine->cs_context_swap_in();
-			}
+			} else
+				routine->cs_context_swap_out();
+			// Handling exception
 			if (routine->finished && routine->error) {
 				std::exception_ptr e = nullptr;
 				std::swap(routine->this_context->eptr, e);
