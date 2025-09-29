@@ -263,6 +263,11 @@ namespace cs_impl {
 	}
 
 	namespace fiber {
+		inline uintptr_t align_up(uintptr_t ptr, size_t align)
+		{
+			return (ptr + align - 1) & ~(align - 1);
+		}
+
 		class fiber_stack {
 			void *base = nullptr;
 			size_t size = 0;
@@ -276,28 +281,39 @@ namespace cs_impl {
 
 			void allocate(size_t stack_size, size_t align = 16)
 			{
+				if (base)
+					throw std::logic_error("fiber_stack already allocated");
+
 				long pagesize = sysconf(_SC_PAGESIZE);
 				if (pagesize <= 0)
 					throw std::runtime_error("Failed to get page size.");
+				if ((align & (align - 1)) != 0 || align == 0)
+					throw std::invalid_argument("align must be a power of two.");
+				if ((size_t)pagesize % align != 0)
+					throw std::invalid_argument("align must divide system page size.");
+
 				size_t rounded = (stack_size + pagesize - 1) & ~(pagesize - 1);
 				size_t total = rounded + 2 * pagesize;
+
 				void *addr = mmap(nullptr, total, PROT_READ | PROT_WRITE,
 				                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 				if (addr == MAP_FAILED)
-					throw std::bad_alloc();
+					throw std::runtime_error(std::string("mmap failed: ") + std::strerror(errno));
+
 				if (mprotect(addr, pagesize, PROT_NONE) != 0 ||
 				        mprotect((char *)addr + pagesize + rounded, pagesize, PROT_NONE) != 0) {
 					munmap(addr, total);
-					throw std::runtime_error("Failed to set guard pages.");
+					throw std::runtime_error(std::string("mprotect failed: ") + std::strerror(errno));
 				}
+
 				base = addr;
 				size = total;
-				sp = (char *)addr + pagesize;
-				usable_size = rounded;
-				if (align > (size_t)pagesize) {
-					munmap(addr, total);
-					throw std::runtime_error("Stack alignment failed.");
-				}
+				uintptr_t aligned_sp = align_up((uintptr_t)addr + pagesize, align);
+				sp = (void *)aligned_sp;
+				usable_size = rounded - (aligned_sp - ((uintptr_t)addr + pagesize));
+
+				if (usable_size == 0)
+					throw std::runtime_error("Stack usable size is zero after alignment");
 			}
 
 			~fiber_stack()
@@ -306,17 +322,17 @@ namespace cs_impl {
 					munmap(base, size);
 			}
 
-			bool initialized() const
+			inline bool initialized() const
 			{
 				return base != nullptr;
 			}
 
-			void *get_sp()
+			inline void *get_sp() const
 			{
 				return sp;
 			}
 
-			size_t get_ss()
+			inline size_t get_ss() const
 			{
 				return usable_size;
 			}
@@ -405,9 +421,11 @@ namespace cs_impl {
 			Routine *routine = ordinator.routines[id - 1];
 			if (routine == nullptr)
 				throw cs::lang_error("Destroying a destroyed fiber.");
+			if (routine->running && !routine->finished)
+				throw cs::lang_error("Destroying a running fiber is not allowed.");
 			for (auto r : ordinator.call_stack) {
 				if (r == id)
-					throw cs::lang_error("Destroying a running or nested fiber is not allowed.");
+					throw cs::lang_error("Destroying a nested fiber is not allowed.");
 			}
 			delete routine;
 			ordinator.routines[id - 1] = nullptr;
@@ -466,6 +484,7 @@ namespace cs_impl {
 				routine->ctx.uc_stack.ss_sp = routine->stack.get_sp();
 				routine->ctx.uc_stack.ss_size = routine->stack.get_ss();
 				routine->ctx.uc_link = nullptr;
+				cs_fiber_makecontext(&routine->ctx, reinterpret_cast<void (*)()>(entry), 0);
 				if (!ordinator.call_stack.empty()) {
 					Routine *prev_routine = ordinator.routines[ordinator.call_stack.back() - 1];
 					if (prev_routine == nullptr)
@@ -474,7 +493,6 @@ namespace cs_impl {
 				}
 				else
 					routine->prev_ctx = &ordinator.ctx;
-				cs_fiber_makecontext(&routine->ctx, reinterpret_cast<void (*)()>(entry), 0);
 			}
 			// Push call stack
 			ordinator.call_stack.push_back(id);
@@ -493,7 +511,8 @@ namespace cs_impl {
 				if (next_routine == nullptr)
 					throw cs::internal_error("Broken call stack.");
 				next_routine->cs_context_swap_in();
-			} else
+			}
+			else
 				routine->cs_context_swap_out();
 			// Handling exception
 			if (routine->finished && routine->error) {

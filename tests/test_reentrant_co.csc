@@ -33,13 +33,21 @@ function body1()
     system.out.println("Body 1 exit")
 end
 
-system.out.println("Main start")
-var c1 = fiber.create(body1)
-c1.resume()
-system.out.println("Main resume")
-try
+function main()
+    system.out.println("Main start")
+    var c1 = fiber.create(body1)
     c1.resume()
-catch e
-    system.out.println(e.what)
+    system.out.println("Main resume")
+    try
+        c1.resume()
+    catch e
+        system.out.println(e.what)
+    end
+    system.out.println("Main exit")
 end
-system.out.println("Main exit")
+
+system.out.println("Test without Exception")
+main()
+test_exception = true
+system.out.println("Test with Exception")
+main()

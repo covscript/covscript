@@ -265,9 +265,11 @@ namespace cs_impl {
 			Routine *routine = ordinator.routines[id - 1];
 			if (routine == nullptr)
 				throw cs::lang_error("Destroying a destroyed fiber.");
+			if (routine->running && !routine->finished)
+				throw cs::lang_error("Destroying a running fiber is not allowed.");
 			for (auto r : ordinator.call_stack) {
 				if (r == id)
-					throw cs::lang_error("Destroying a running or nested fiber is not allowed.");
+					throw cs::lang_error("Destroying a nested fiber is not allowed.");
 			}
 			delete routine;
 			ordinator.routines[id - 1] = nullptr;
@@ -349,7 +351,8 @@ namespace cs_impl {
 				if (next_routine == nullptr)
 					throw cs::internal_error("Broken call stack.");
 				next_routine->cs_context_swap_in();
-			} else
+			}
+			else
 				routine->cs_context_swap_out();
 			// Handling exception
 			if (routine->finished && routine->error) {

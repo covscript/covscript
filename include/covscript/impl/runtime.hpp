@@ -56,8 +56,7 @@ namespace cs {
 		{
 			while (!m_set.empty())
 				m_set.pop_no_return();
-			while (!m_data.empty())
-			{
+			while (!m_data.empty()) {
 				m_data.top().clear();
 				m_data.pop_no_return();
 			}
@@ -112,11 +111,11 @@ namespace cs {
 
 		void remove_domain()
 		{
-			if (fiber_stack != nullptr)
-			{
+			if (fiber_stack != nullptr) {
 				fiber_stack->top().clear();
 				fiber_stack->pop_no_return();
-			} else {
+			}
+			else {
 				m_data.top().clear();
 				m_data.pop_no_return();
 			}
