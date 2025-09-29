@@ -337,7 +337,7 @@ namespace cs {
 			}
 		};
 
-		class unix_fiber: public cs::fiber_type {
+		class unix_fiber : public cs::fiber_type {
 			friend void cs::fiber::resume(const fiber_t &);
 			friend void cs::fiber::yield();
 
@@ -430,6 +430,12 @@ namespace cs {
 				else
 					fi->prev_ctx = &global_ctx;
 			}
+			else if (fi->state == fiber_state::suspended) {
+				if (fi->prev_ctx == nullptr)
+					throw internal_error("Fiber context corrupted.");
+				fi->state = fiber_state::running;
+			}
+			fi->state = fiber_state::running;
 			current_process->fiber_stack.push(fi_p);
 			fi->cs_swap_in();
 			cs_fiber_swapcontext(fi->prev_ctx, &fi->ctx);

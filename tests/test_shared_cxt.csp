@@ -40,7 +40,8 @@ class coroutine
     end
     function join(...args)
         co = fiber.create(coroutine_worker, &this, args)
-        return co.resume()
+        co.resume()
+        return co.is_running()
     end
     function detach(...args)
         co = fiber.create(coroutine_worker, &this, args)
@@ -52,7 +53,8 @@ class coroutine
         else
             queue.incoming = false
         end
-        return co.resume()
+        co.resume()
+        return !co.is_finished()
     end
     function avail()
         return queue.incoming

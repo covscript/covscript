@@ -175,7 +175,7 @@ namespace cs_impl {
 
 namespace cs {
 	namespace fiber {
-		class win32_fiber: public cs::fiber_type {
+		class win32_fiber : public cs::fiber_type {
 			friend void cs::fiber::resume(const fiber_t &);
 			friend void cs::fiber::yield();
 
@@ -218,7 +218,7 @@ namespace cs {
 				  state(fiber_state::ready),
 				  ret_val(null_pointer),
 				  stack_size(current_process->child_stack_size()) {}
-			
+
 			virtual ~win32_fiber()
 			{
 				if (ctx != nullptr)
@@ -287,6 +287,11 @@ namespace cs {
 					fi->prev_ctx = dynamic_cast<win32_fiber *>(current_process->fiber_stack.top().get())->ctx;
 				else
 					fi->prev_ctx = global_ctx.ctx;
+			}
+			else if (fi->state == fiber_state::suspended) {
+				if (fi->prev_ctx == nullptr)
+					throw internal_error("Fiber context corrupted.");
+				fi->state = fiber_state::running;
 			}
 			current_process->fiber_stack.push(fi_p);
 			fi->cs_swap_in();
