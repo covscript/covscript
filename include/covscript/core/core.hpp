@@ -253,7 +253,7 @@ namespace cs {
 	};
 
 	namespace fiber {
-		fiber_t create(const context_t &, std::function<cs::var()>);
+		fiber_t create(const context_t &, std::function<var()>);
 
 		void resume(const fiber_t &);
 

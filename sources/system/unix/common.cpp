@@ -337,17 +337,17 @@ namespace cs {
 			}
 		};
 
-		class unix_fiber : public cs::fiber_type {
+		class unix_fiber : public fiber_type {
 			friend void cs::fiber::resume(const fiber_t &);
 			friend void cs::fiber::yield();
 
-			cs::stack_type<cs::domain_type> cs_stack;
-			cs::context_t cs_context;
+			stack_type<domain_type> cs_stack;
+			context_t cs_context;
 
-			std::function<cs::var()> func;
+			std::function<var()> func;
 			std::exception_ptr eptr;
-			cs::fiber_state state;
-			cs::var ret_val;
+			fiber_state state;
+			var ret_val;
 
 			unix_fiber_stack stack;
 			cs_fiber_ucontext_t ctx;
@@ -355,16 +355,16 @@ namespace cs {
 
 			static void entry() noexcept
 			{
-				unix_fiber *fi = dynamic_cast<unix_fiber *>(cs::current_process->fiber_stack.top().get());
+				unix_fiber *fi = dynamic_cast<unix_fiber *>(current_process->fiber_stack.top().get());
 				try {
-					fi->state = cs::fiber_state::running;
-					cs::var ret = fi->func();
+					fi->state = fiber_state::running;
+					var ret = fi->func();
 					fi->ret_val.swap(ret);
 				}
 				catch (...) {
 					fi->eptr = std::current_exception();
 				}
-				fi->state = cs::fiber_state::finished;
+				fi->state = fiber_state::finished;
 				cs_fiber_swapcontext(&fi->ctx, fi->prev_ctx);
 				// This should never execute
 				std::abort();
@@ -372,13 +372,13 @@ namespace cs {
 
 		public:
 			unix_fiber() = delete;
-			unix_fiber(const cs::context_t &cxt, std::function<cs::var()> f)
-				: cs_stack(cs::current_process->child_stack_size()),
+			unix_fiber(const context_t &cxt, std::function<var()> f)
+				: cs_stack(current_process->child_stack_size()),
 				  cs_context(cxt),
 				  func(std::move(f)),
 				  eptr(nullptr),
-				  state(cs::fiber_state::ready),
-				  ret_val(cs::null_pointer),
+				  state(fiber_state::ready),
+				  ret_val(null_pointer),
 				  stack(COVSCRIPT_FIBER_STACK_LIMIT) {}
 
 			void cs_swap_in()

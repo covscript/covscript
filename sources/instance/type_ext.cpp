@@ -573,7 +573,7 @@ namespace cs_impl {
 			{ return std::shared_ptr<std::istream>(buff.get(), [](std::istream *) {}); }))
 			.add_var("get_ostream", make_cni([](char_buff &buff) -> cs::ostream
 			{ return std::shared_ptr<std::ostream>(buff.get(), [](std::ostream *) {}); }))
-			.add_var("get_string", make_cni([](char_buff &buff) -> cs::string
+			.add_var("get_string", make_cni([](char_buff &buff) -> string
 			{ return std::move(buff->str()); }));
 		}
 	}
@@ -1302,7 +1302,7 @@ namespace cs_impl {
 				throw lang_error("Asynchronous waiting only available on native functions.");
 
 			async_callable func(fn, std::move(args));
-			cs::var ret;
+			var ret;
 			if (!current_process->fiber_stack.empty()) {
 				thread_guard guard;
 				auto future = std::async(std::launch::async, func);
@@ -1352,7 +1352,7 @@ namespace cs_impl {
 				t = args[0].const_val<numeric>().as_integer();
 				return var::make<std::tm>(*std::localtime(&t));
 			default:
-				throw cs::runtime_error(
+				throw runtime_error(
 				    "Wrong size of the arguments. Expected 0 or 1, provided " + std::to_string(args.size()));
 			}
 		}
@@ -1368,7 +1368,7 @@ namespace cs_impl {
 				t = args[0].const_val<numeric>().as_integer();
 				return var::make<std::tm>(*std::gmtime(&t));
 			default:
-				throw cs::runtime_error(
+				throw runtime_error(
 				    "Wrong size of the arguments. Expected 0 or 1, provided " + std::to_string(args.size()));
 			}
 		}
@@ -1863,7 +1863,7 @@ namespace cs_impl {
 		{
 			DIR *dir = ::opendir(path.c_str());
 			if (dir == nullptr)
-				throw cs::lang_error("Path does not exist.");
+				throw lang_error("Path does not exist.");
 			array
 			entries;
 			for (dirent *dp = ::readdir(dir); dp != nullptr; dp = ::readdir(dir))

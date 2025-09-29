@@ -175,17 +175,17 @@ namespace cs_impl {
 
 namespace cs {
 	namespace fiber {
-		class win32_fiber : public cs::fiber_type {
+		class win32_fiber : public fiber_type {
 			friend void cs::fiber::resume(const fiber_t &);
 			friend void cs::fiber::yield();
 
-			cs::stack_type<cs::domain_type> cs_stack;
-			cs::context_t cs_context;
+			stack_type<domain_type> cs_stack;
+			context_t cs_context;
 
-			std::function<cs::var()> func;
+			std::function<var()> func;
 			std::exception_ptr eptr;
-			cs::fiber_state state;
-			cs::var ret_val;
+			fiber_state state;
+			var ret_val;
 
 			size_t stack_size;
 			LPVOID ctx = nullptr;
@@ -195,14 +195,14 @@ namespace cs {
 			{
 				win32_fiber *fi = static_cast<win32_fiber *>(lpParameter);
 				try {
-					fi->state = cs::fiber_state::running;
-					cs::var ret = fi->func();
+					fi->state = fiber_state::running;
+					var ret = fi->func();
 					fi->ret_val.swap(ret);
 				}
 				catch (...) {
 					fi->eptr = std::current_exception();
 				}
-				fi->state = cs::fiber_state::finished;
+				fi->state = fiber_state::finished;
 				SwitchToFiber(fi->prev_ctx);
 				// This should never execute
 				std::abort();
@@ -210,8 +210,8 @@ namespace cs {
 
 		public:
 			win32_fiber() = delete;
-			win32_fiber(const cs::context_t &cxt, std::function<cs::var()> f)
-				: cs_stack(cs::current_process->child_stack_size()),
+			win32_fiber(const context_t &cxt, std::function<var()> f)
+				: cs_stack(current_process->child_stack_size()),
 				  cs_context(cxt),
 				  func(std::move(f)),
 				  eptr(nullptr),
@@ -261,7 +261,7 @@ namespace cs {
 			{
 				ctx = ConvertThreadToFiber(nullptr);
 				if (ctx == nullptr)
-					throw cs::internal_error("Create basic coroutine context failed.");
+					throw internal_error("Create basic coroutine context failed.");
 			}
 
 			~global_ctx_holder()
@@ -282,7 +282,7 @@ namespace cs {
 			if (fi->state == fiber_state::ready) {
 				fi->ctx = CreateFiber(fi->stack_size, win32_fiber::entry, fi);
 				if (fi->ctx == nullptr)
-					throw cs::lang_error("Fiber create failed.");
+					throw lang_error("Fiber create failed.");
 				if (!current_process->fiber_stack.empty())
 					fi->prev_ctx = dynamic_cast<win32_fiber *>(current_process->fiber_stack.top().get())->ctx;
 				else
