@@ -306,6 +306,7 @@ namespace cs_impl {
 			routine->running = false;
 			routine->finished = true;
 			SwitchToFiber(routine->prev_ctx);
+			std::abort();
 		}
 
 		bool resume(fiber_id id)

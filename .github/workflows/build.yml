@@ -27,6 +27,9 @@ jobs:
         run: |
           build/bin/cs -v
           build/bin/cs .github/workflows/benchmark.csc
+          build/bin/cs tests/test_reentrant_co.csc
+          build/bin/cs tests/test_dead_co.csc
+          build/bin/cs tests/inherit.csc
 
       - uses: actions/upload-artifact@master
         if: matrix.os == 'ubuntu-latest'
