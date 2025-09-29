@@ -95,12 +95,14 @@ namespace cs {
 #ifdef CS_DEBUGGER
 		stack_type<std::string> stack_backtrace;
 #endif
+		stack_type<fiber_t> fiber_stack;
 
 // Stack Resize must before any context instance start
 		void resize_stack(std::size_t size)
 		{
 			stack_size = size;
 			stack.resize(size);
+			fiber_stack.resize(child_stack_size());
 #ifdef CS_DEBUGGER
 			stack_backtrace.resize(size);
 #endif
@@ -159,8 +161,9 @@ namespace cs {
 			is_sigint_raised = false;
 		}
 
-		explicit process_context(std::size_t ss) : stack_size(ss), stack(ss), on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
+		explicit process_context(std::size_t ss) : on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
 		{
+			resize_stack(ss);
 			is_sigint_raised = false;
 		}
 
@@ -228,18 +231,6 @@ namespace cs {
 		{
 			return mFunc;
 		}
-	};
-
-	struct fiber_type final {
-		fiber_id id;
-
-		fiber_type() = delete;
-
-		fiber_type(const fiber_type &) = delete;
-
-		explicit fiber_type(fiber_id);
-
-		~fiber_type();
 	};
 
 	class function final {

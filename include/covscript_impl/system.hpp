@@ -118,19 +118,9 @@ namespace cs_impl {
 		std::string get_current_dir();
 	}
 	namespace fiber {
-		using cs::fiber_id;
-
-		fiber_id create(const cs::context_t &, std::function<cs::var()>);
-
-		void destroy(fiber_id);
-
-		cs::var return_value(fiber_id);
-
-		bool resume(fiber_id);
+		cs::fiber_t create(const cs::context_t &, std::function<cs::var()>);
 
 		void yield();
-
-		fiber_id current();
 
 		template <typename Function>
 		cs::var await(Function &&func)
@@ -157,68 +147,5 @@ namespace cs_impl {
 
 			return std::move(ret);
 		}
-
-		template <typename Type>
-		class Channel {
-			std::list<Type> _list;
-			fiber_id _taker;
-
-		public:
-			Channel()
-			{
-				_taker = 0;
-			}
-
-			explicit Channel(fiber_id id)
-			{
-				_taker = id;
-			}
-
-			inline void consumer(fiber_id id)
-			{
-				_taker = id;
-			}
-
-			inline void push(const Type &obj)
-			{
-				_list.push_back(obj);
-				if (_taker && _taker != current())
-					resume(_taker);
-			}
-
-			inline Type pop()
-			{
-				if (!_taker)
-					_taker = current();
-
-				while (_list.empty())
-					yield();
-
-				Type obj = std::move(_list.front());
-				_list.pop_front();
-				return std::move(obj);
-			}
-
-			inline void clear()
-			{
-				_list.clear();
-			}
-
-			inline void touch()
-			{
-				if (_taker && _taker != current())
-					resume(_taker);
-			}
-
-			inline size_t size()
-			{
-				return _list.size();
-			}
-
-			inline bool empty()
-			{
-				return _list.empty();
-			}
-		};
 	}
 }

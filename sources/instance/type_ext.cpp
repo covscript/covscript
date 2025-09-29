@@ -40,14 +40,6 @@
 #define cs_sys_stat stat
 #endif
 
-cs::fiber_type::fiber_type(fiber_id _id) : id(_id) {}
-
-cs::fiber_type::~fiber_type()
-{
-	if (id != 0)
-		cs_impl::fiber::destroy(id);
-}
-
 namespace cs_impl {
 	namespace member_visitor_cs_ext {
 		using namespace cs;
@@ -1086,41 +1078,6 @@ namespace cs_impl {
 		}
 	}
 
-	namespace channel_cs_ext {
-		using namespace cs;
-		using channel_type = fiber::Channel<var>;
-		namespace_t channel_ext = cs::make_shared_namespace<cs::name_space>();
-
-		void consumer(channel_type &ch, const fiber_t &co)
-		{
-			ch.consumer(co->id);
-		}
-
-		void init()
-		{
-			(*channel_ext)
-			.add_var("consumer", make_cni(consumer))
-			.add_var("push", make_cni(&channel_type::push))
-			.add_var("pop", make_cni(&channel_type::pop))
-			.add_var("clear", make_cni(&channel_type::clear))
-			.add_var("touch", make_cni(&channel_type::touch))
-			.add_var("size", make_cni(&channel_type::size, callable::types::member_visitor))
-			.add_var("empty", make_cni(&channel_type::empty));
-		}
-	}
-
-	template <>
-	constexpr const char *get_name_of_type<channel_cs_ext::channel_type>()
-	{
-		return "cs::fiber::channel";
-	}
-
-	template <>
-	cs::namespace_t &get_ext<channel_cs_ext::channel_type>()
-	{
-		return channel_cs_ext::channel_ext;
-	}
-
 	namespace fiber_cs_ext {
 		using namespace cs;
 
@@ -1193,9 +1150,7 @@ namespace cs_impl {
 			.add_var("create", var::make_protect<callable>(create))
 			.add_var("return_value", make_cni(return_value))
 			.add_var("resume", make_cni(resume))
-			.add_var("yield", make_cni(&fiber::yield))
-			.add_var("channel", var::make_protect<type_t>([]() -> var
-			{ return var::make<channel_cs_ext::channel_type>(); }, type_id(typeid(channel_cs_ext::channel_type)), channel_cs_ext::channel_ext));
+			.add_var("yield", make_cni(&fiber::yield));
 		}
 	}
 
@@ -1976,7 +1931,6 @@ namespace cs_impl {
 			ostream_cs_ext::init();
 			system_cs_ext::init();
 			time_cs_ext::init();
-			channel_cs_ext::init();
 			fiber_cs_ext::init();
 			runtime_cs_ext::init();
 			math_cs_ext::init();
