@@ -1,5 +1,44 @@
-var channel = new fiber.channel
-var co_b_exit = false
+class channel_type
+    var buffer = new list
+    var taker = null
+
+    function consumer(fi)
+        taker = fi
+    end
+
+    function touch()
+        if taker != null && !taker.is_running()
+            system.out.println("toucher resume taker")
+            taker.resume()
+        else
+            fiber.yield()
+        end
+    end
+
+    function push(val)
+        buffer.push_back(val)
+        touch()
+    end
+
+    function pop()
+        while buffer.empty()
+            touch()
+        end
+        var val = buffer.front
+        buffer.pop_front()
+        return val
+    end
+
+    function size()
+        return buffer.size
+    end
+
+    function empty()
+        return buffer.empty()
+    end
+end
+
+var channel = new channel_type
 
 function co_a()
     var i = channel.pop()
@@ -14,10 +53,11 @@ function co_b(i)
     system.out.println("21, async waiting for input")
     var val = runtime.await(system.in.getline)
     system.out.println("22, input = " + val)
-    co_b_exit = true
 end
 
 var rt1 = fiber.create(co_a), rt2 = fiber.create(co_b, "20")
+
+channel.consumer(rt1)
 
 system.console.gotoxy(0,0)
 
@@ -41,7 +81,7 @@ var count = 0
 loop
     ++count
     rt2.resume()
-until co_b_exit
+until rt2.is_finished()
 var blank = new string
 foreach i in range(20) do blank += " "
 system.out.print(blank + "\r")

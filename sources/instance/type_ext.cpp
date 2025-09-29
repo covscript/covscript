@@ -40,14 +40,6 @@
 #define cs_sys_stat stat
 #endif
 
-cs::fiber_type::fiber_type(fiber_id _id) : id(_id) {}
-
-cs::fiber_type::~fiber_type()
-{
-	if (id != 0)
-		cs_impl::fiber::destroy(id);
-}
-
 namespace cs_impl {
 	namespace member_visitor_cs_ext {
 		using namespace cs;
@@ -581,7 +573,7 @@ namespace cs_impl {
 			{ return std::shared_ptr<std::istream>(buff.get(), [](std::istream *) {}); }))
 			.add_var("get_ostream", make_cni([](char_buff &buff) -> cs::ostream
 			{ return std::shared_ptr<std::ostream>(buff.get(), [](std::ostream *) {}); }))
-			.add_var("get_string", make_cni([](char_buff &buff) -> cs::string
+			.add_var("get_string", make_cni([](char_buff &buff) -> string
 			{ return std::move(buff->str()); }));
 		}
 	}
@@ -1086,41 +1078,6 @@ namespace cs_impl {
 		}
 	}
 
-	namespace channel_cs_ext {
-		using namespace cs;
-		using channel_type = fiber::Channel<var>;
-		namespace_t channel_ext = cs::make_shared_namespace<cs::name_space>();
-
-		void consumer(channel_type &ch, const fiber_t &co)
-		{
-			ch.consumer(co->id);
-		}
-
-		void init()
-		{
-			(*channel_ext)
-			.add_var("consumer", make_cni(consumer))
-			.add_var("push", make_cni(&channel_type::push))
-			.add_var("pop", make_cni(&channel_type::pop))
-			.add_var("clear", make_cni(&channel_type::clear))
-			.add_var("touch", make_cni(&channel_type::touch))
-			.add_var("size", make_cni(&channel_type::size, callable::types::member_visitor))
-			.add_var("empty", make_cni(&channel_type::empty));
-		}
-	}
-
-	template <>
-	constexpr const char *get_name_of_type<channel_cs_ext::channel_type>()
-	{
-		return "cs::fiber::channel";
-	}
-
-	template <>
-	cs::namespace_t &get_ext<channel_cs_ext::channel_type>()
-	{
-		return channel_cs_ext::channel_ext;
-	}
-
 	namespace fiber_cs_ext {
 		using namespace cs;
 
@@ -1162,7 +1119,7 @@ namespace cs_impl {
 				if (impl_f.target_type() != typeid(function))
 					throw lang_error("Only can create coroutine from covscript function.");
 				function const *fptr = impl_f.target<function>();
-				return std::make_shared<fiber_type>(fiber::create(fptr->get_context(), fiber_function(fptr, vector(args.begin() + 1, args.end()))));
+				return fiber::create(fptr->get_context(), fiber_function(fptr, vector(args.begin() + 1, args.end())));
 			}
 			else if (func.type() == typeid(object_method)) {
 				const auto &om = func.const_val<object_method>();
@@ -1172,19 +1129,29 @@ namespace cs_impl {
 				function const *fptr = impl_f.target<function>();
 				vector argument{om.object};
 				argument.insert(argument.end(), args.begin() + 1, args.end());
-				return std::make_shared<fiber_type>(fiber::create(fptr->get_context(), fiber_function(fptr, std::move(argument))));
+				return fiber::create(fptr->get_context(), fiber_function(fptr, std::move(argument)));
 			}
 			return null_pointer;
 		}
 
 		var return_value(const fiber_t &fiber)
 		{
-			return fiber::return_value(fiber->id);
+			return fiber->return_value();
 		}
 
-		bool resume(const fiber_t &fiber)
+		bool is_running(const fiber_t &fiber)
 		{
-			return fiber::resume(fiber->id);
+			return fiber->get_state() == fiber_state::running;
+		}
+
+		bool is_suspended(const fiber_t &fiber)
+		{
+			return fiber->get_state() == fiber_state::suspended;
+		}
+
+		bool is_finished(const fiber_t &fiber)
+		{
+			return fiber->get_state() == fiber_state::finished;
 		}
 
 		void init()
@@ -1192,10 +1159,11 @@ namespace cs_impl {
 			(*fiber_ext)
 			.add_var("create", var::make_protect<callable>(create))
 			.add_var("return_value", make_cni(return_value))
-			.add_var("resume", make_cni(resume))
-			.add_var("yield", make_cni(&fiber::yield))
-			.add_var("channel", var::make_protect<type_t>([]() -> var
-			{ return var::make<channel_cs_ext::channel_type>(); }, type_id(typeid(channel_cs_ext::channel_type)), channel_cs_ext::channel_ext));
+			.add_var("is_running", make_cni(is_running))
+			.add_var("is_suspended", make_cni(is_suspended))
+			.add_var("is_finished", make_cni(is_finished))
+			.add_var("resume", make_cni(fiber::resume))
+			.add_var("yield", make_cni(fiber::yield));
 		}
 	}
 
@@ -1332,7 +1300,28 @@ namespace cs_impl {
 		{
 			if (!is_native_callable(fn))
 				throw lang_error("Asynchronous waiting only available on native functions.");
-			return fiber::await(async_callable(fn, std::move(args)));
+
+			async_callable func(fn, std::move(args));
+			var ret;
+			if (!current_process->fiber_stack.empty()) {
+				thread_guard guard;
+				auto future = std::async(std::launch::async, func);
+				while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
+					fiber::yield();
+				ret = future.get();
+			}
+			else
+				ret = func();
+
+			std::exception_ptr e = nullptr;
+			current_process->eptr_mutex.lock();
+			if (current_process->eptr != nullptr)
+				std::swap(current_process->eptr, e);
+			current_process->eptr_mutex.unlock();
+			if (e != nullptr)
+				std::rethrow_exception(e);
+
+			return std::move(ret);
 		}
 
 		string get_import_path()
@@ -1363,7 +1352,7 @@ namespace cs_impl {
 				t = args[0].const_val<numeric>().as_integer();
 				return var::make<std::tm>(*std::localtime(&t));
 			default:
-				throw cs::runtime_error(
+				throw runtime_error(
 				    "Wrong size of the arguments. Expected 0 or 1, provided " + std::to_string(args.size()));
 			}
 		}
@@ -1379,7 +1368,7 @@ namespace cs_impl {
 				t = args[0].const_val<numeric>().as_integer();
 				return var::make<std::tm>(*std::gmtime(&t));
 			default:
-				throw cs::runtime_error(
+				throw runtime_error(
 				    "Wrong size of the arguments. Expected 0 or 1, provided " + std::to_string(args.size()));
 			}
 		}
@@ -1874,7 +1863,7 @@ namespace cs_impl {
 		{
 			DIR *dir = ::opendir(path.c_str());
 			if (dir == nullptr)
-				throw cs::lang_error("Path does not exist.");
+				throw lang_error("Path does not exist.");
 			array
 			entries;
 			for (dirent *dp = ::readdir(dir); dp != nullptr; dp = ::readdir(dir))
@@ -1976,7 +1965,6 @@ namespace cs_impl {
 			ostream_cs_ext::init();
 			system_cs_ext::init();
 			time_cs_ext::init();
-			channel_cs_ext::init();
 			fiber_cs_ext::init();
 			runtime_cs_ext::init();
 			math_cs_ext::init();

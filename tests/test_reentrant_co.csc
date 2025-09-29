@@ -12,6 +12,7 @@ function body0()
     tracer.id = "Body 0"
     system.out.println("Body 0 start")
     if test_exception
+        system.out.println("Body 0 throw")
         throw runtime.exception("Test Exception")
     end
     system.out.println("Body 0 yield")
@@ -33,13 +34,21 @@ function body1()
     system.out.println("Body 1 exit")
 end
 
-system.out.println("Main start")
-var c1 = fiber.create(body1)
-c1.resume()
-system.out.println("Main resume")
-try
+function main()
+    system.out.println("Main start")
+    var c1 = fiber.create(body1)
     c1.resume()
-catch e
-    system.out.println(e.what)
+    system.out.println("Main resume")
+    try
+        c1.resume()
+    catch e
+        system.out.println("What: " + e.what)
+    end
+    system.out.println("Main exit")
 end
-system.out.println("Main exit")
+
+system.out.println("Test without Exception")
+main()
+test_exception = true
+system.out.println("Test with Exception")
+main()

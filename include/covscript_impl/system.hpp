@@ -26,7 +26,6 @@
  */
 
 #include <covscript/core/core.hpp>
-#include <future>
 
 namespace cs_impl {
 	namespace platform {
@@ -116,109 +115,5 @@ namespace cs_impl {
 		bool mkdir(std::string);
 
 		std::string get_current_dir();
-	}
-	namespace fiber {
-		using cs::fiber_id;
-
-		fiber_id create(const cs::context_t &, std::function<cs::var()>);
-
-		void destroy(fiber_id);
-
-		cs::var return_value(fiber_id);
-
-		bool resume(fiber_id);
-
-		void yield();
-
-		fiber_id current();
-
-		template <typename Function>
-		cs::var await(Function &&func)
-		{
-			cs::var ret;
-			if (current() != 0) {
-				cs::thread_guard guard;
-				auto future = std::async(std::launch::async, std::forward<Function>(func));
-				while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
-					yield();
-				ret = future.get();
-			}
-			else
-				ret = func();
-
-			cs::current_process->eptr_mutex.lock();
-			if (cs::current_process->eptr != nullptr) {
-				std::exception_ptr e = nullptr;
-				std::swap(cs::current_process->eptr, e);
-				cs::current_process->eptr_mutex.unlock();
-				std::rethrow_exception(e);
-			}
-			cs::current_process->eptr_mutex.unlock();
-
-			return std::move(ret);
-		}
-
-		template <typename Type>
-		class Channel {
-			std::list<Type> _list;
-			fiber_id _taker;
-
-		public:
-			Channel()
-			{
-				_taker = 0;
-			}
-
-			explicit Channel(fiber_id id)
-			{
-				_taker = id;
-			}
-
-			inline void consumer(fiber_id id)
-			{
-				_taker = id;
-			}
-
-			inline void push(const Type &obj)
-			{
-				_list.push_back(obj);
-				if (_taker && _taker != current())
-					resume(_taker);
-			}
-
-			inline Type pop()
-			{
-				if (!_taker)
-					_taker = current();
-
-				while (_list.empty())
-					yield();
-
-				Type obj = std::move(_list.front());
-				_list.pop_front();
-				return std::move(obj);
-			}
-
-			inline void clear()
-			{
-				_list.clear();
-			}
-
-			inline void touch()
-			{
-				if (_taker && _taker != current())
-					resume(_taker);
-			}
-
-			inline size_t size()
-			{
-				return _list.size();
-			}
-
-			inline bool empty()
-			{
-				return _list.empty();
-			}
-		};
 	}
 }
