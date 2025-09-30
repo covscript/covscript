@@ -2,12 +2,11 @@
 
 # Covariant Script Programming Language: The Interpreter #
 
-![](https://github.com/covscript/covscript/workflows/build/badge.svg)
-![](https://github.com/covscript/covscript/workflows/CodeQL/badge.svg)
+![Build & Test](https://github.com/covscript/covscript/actions/workflows/build.yml/badge.svg)
+![CodeQL Advanced](https://github.com/covscript/covscript/actions/workflows/codeql-analysis.yml/badge.svg)
 [![](https://img.shields.io/github/stars/covscript/covscript?logo=GitHub)](https://github.com/covscript/covscript/stargazers)
 [![](https://img.shields.io/github/languages/top/covscript/covscript)](http://www.cplusplus.com/)
 [![](https://img.shields.io/github/license/covscript/covscript)](http://www.apache.org/licenses/LICENSE-2.0)
-
 [![](https://img.shields.io/github/v/release/covscript/covscript)](https://github.com/covscript/covscript/releases/latest)
 [![](https://zenodo.org/badge/79646991.svg)](https://zenodo.org/doi/10.5281/zenodo.10004374)
 
