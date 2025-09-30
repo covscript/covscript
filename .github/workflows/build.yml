@@ -1,17 +1,19 @@
-name: build
+name: Build & Test
 
 on: [ push ]
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     strategy:
       matrix:
         os: [ ubuntu-latest, windows-latest, macOS-latest ]
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -31,19 +33,19 @@ jobs:
           build/bin/cs tests/test_dead_co.csc
           build/bin/cs tests/inherit.csc
 
-      - uses: actions/upload-artifact@master
+      - uses: actions/upload-artifact@main
         if: matrix.os == 'ubuntu-latest'
         with:
           name: covscript-ubuntu
           path: build
 
-      - uses: actions/upload-artifact@master
+      - uses: actions/upload-artifact@main
         if: matrix.os == 'macOS-latest'
         with:
           name: covscript-macos
           path: build
 
-      - uses: actions/upload-artifact@master
+      - uses: actions/upload-artifact@main
         if: matrix.os == 'windows-latest'
         with:
           name: covscript-windows
