@@ -1006,7 +1006,9 @@ namespace cs_impl {
 			using namespace cs;
 			(*pair_ext)
 			.add_var("first", make_member_visitor(&pair::first))
-			.add_var("second", make_member_visitor(&pair::second));
+			.add_var("key", make_member_visitor(&pair::first))
+			.add_var("second", make_member_visitor(&pair::second))
+			.add_var("value", make_member_visitor(&pair::second));
 		}
 	}
 	namespace time_cs_ext {
@@ -1609,7 +1611,12 @@ namespace cs_impl {
 
 		string append(string &str, const var &val)
 		{
-			str.append(val.to_string());
+			if (val.type() == typeid(char))
+				str.push_back(val.const_val<char>());
+			else if (val.type() == typeid(string))
+				str.append(val.const_val<string>());
+			else
+				str.append(val.to_string());
 			return str;
 		}
 
