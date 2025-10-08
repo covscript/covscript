@@ -244,6 +244,11 @@ namespace cs_impl {
 			return std::ifstream(path).is_open();
 		}
 
+		bool is_file(const std::string &path)
+		{
+			return cs_system_impl::is_regular_file(path);
+		}
+
 		bool is_dir(const std::string &path)
 		{
 			return cs_system_impl::is_directory(path);

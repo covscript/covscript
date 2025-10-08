@@ -274,7 +274,7 @@ namespace cs {
 		void resume(const fiber_t &fi_p)
 		{
 			static global_ctx_holder global_ctx;
-			win32_fiber *fi = dynamic_cast<win32_fiber *>(fi_p.get());
+			win32_fiber *fi = static_cast<win32_fiber *>(fi_p.get());
 			if (fi == nullptr)
 				throw internal_error("Resuming a corrupted fiber.");
 			if (fi->state == fiber_state::running || fi->state == fiber_state::finished)
@@ -284,7 +284,7 @@ namespace cs {
 				if (fi->ctx == nullptr)
 					throw lang_error("Fiber create failed.");
 				if (!current_process->fiber_stack.empty())
-					fi->prev_ctx = dynamic_cast<win32_fiber *>(current_process->fiber_stack.top().get())->ctx;
+					fi->prev_ctx = static_cast<win32_fiber *>(current_process->fiber_stack.top().get())->ctx;
 				else
 					fi->prev_ctx = global_ctx.ctx;
 			}
@@ -301,7 +301,7 @@ namespace cs {
 			else
 				throw internal_error("Fiber stack corrupted.");
 			if (!current_process->fiber_stack.empty())
-				dynamic_cast<win32_fiber *>(current_process->fiber_stack.top().get())->cs_swap_in();
+				static_cast<win32_fiber *>(current_process->fiber_stack.top().get())->cs_swap_in();
 			else
 				fi->cs_swap_out();
 			if (fi->eptr != nullptr) {
@@ -315,7 +315,7 @@ namespace cs {
 		{
 			if (current_process->fiber_stack.empty())
 				throw lang_error("Cannot yield outside a fiber.");
-			win32_fiber *fi = dynamic_cast<win32_fiber *>(current_process->fiber_stack.top().get());
+			win32_fiber *fi = static_cast<win32_fiber *>(current_process->fiber_stack.top().get());
 			fi->state = fiber_state::suspended;
 			SwitchToFiber(fi->prev_ctx);
 		}

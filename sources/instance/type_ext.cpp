@@ -259,7 +259,9 @@ namespace cs_impl {
 			.add_var("is_integer", make_cni(is_integer))
 			.add_var("is_float", make_cni(is_float))
 			.add_var("ntoi", make_cni(ntoi))
-			.add_var("ntof", make_cni(ntof));
+			.add_var("to_integer", make_cni(ntoi))
+			.add_var("ntof", make_cni(ntof))
+			.add_var("to_float", make_cni(ntof));
 		}
 	}
 	namespace char_cs_ext {
@@ -330,11 +332,16 @@ namespace cs_impl {
 			return std::toupper(c);
 		}
 
+		numeric to_ascii(char c)
+		{
+			return static_cast<numeric_integer>(static_cast<unsigned char>(c));
+		}
+
 		char from_ascii(const numeric &ascii)
 		{
 			if (ascii.as_integer() < 0 || ascii.as_integer() > 255)
 				throw lang_error("Out of range.");
-			return static_cast<char>(ascii.as_integer());
+			return static_cast<char>(static_cast<unsigned char>(ascii.as_integer()));
 		}
 
 		void init()
@@ -353,6 +360,7 @@ namespace cs_impl {
 			.add_var("ispunct", make_cni(ispunct, true))
 			.add_var("tolower", make_cni(tolower, true))
 			.add_var("toupper", make_cni(toupper, true))
+			.add_var("to_ascii", make_cni(to_ascii, true))
 			.add_var("from_ascii", make_cni(from_ascii, true));
 		}
 	}
@@ -1751,7 +1759,9 @@ namespace cs_impl {
 			.add_var("clear", make_cni(clear, true))
 			.add_var("size", make_cni(size, callable::types::member_visitor))
 			.add_var("tolower", make_cni(tolower, true))
+			.add_var("to_lower", make_cni(tolower, true))
 			.add_var("toupper", make_cni(toupper, true))
+			.add_var("to_upper", make_cni(tolower, true))
 			.add_var("to_number", make_cni(to_number, true))
 			.add_var("split", make_cni(split, true));
 		}
@@ -1904,9 +1914,7 @@ namespace cs_impl {
 			.add_var("rename", make_cni(move))
 			.add_var("remove", make_cni(remove))
 			.add_var("exist", make_cni(is_dir))
-			.add_var("is_file", make_cni([](const std::string &path) {
-				return !is_dir(path);
-			}))
+			.add_var("is_file", make_cni(is_file))
 			.add_var("is_directory", make_cni(is_dir))
 			.add_var("mkdir", make_cni(mkdir))
 			.add_var("mkdir_p", make_cni(mkdir_p))

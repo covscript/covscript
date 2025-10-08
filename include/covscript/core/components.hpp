@@ -359,10 +359,11 @@ namespace cs {
 			case 0b10:
 				return data._int / rhs.data._num;
 			case 0b11:
-				if (data._int % rhs.data._int != 0)
-					return static_cast<numeric_float>(data._int) / rhs.data._int;
+				std::lldiv_t divres = std::lldiv(data._int, rhs.data._int);
+				if (divres.rem == 0)
+					return divres.quot;
 				else
-					return data._int / rhs.data._int;
+					return static_cast<numeric_float>(data._int) / rhs.data._int;
 			}
 		}
 
