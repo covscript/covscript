@@ -356,6 +356,7 @@ void covscript_main(int args_size, char *args[])
 
 int main(int args_size, char *args[])
 {
+	std::ios::sync_with_stdio(false);
 	int errorcode = 0;
 	try {
 		covscript_main(args_size, args);

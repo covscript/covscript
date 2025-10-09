@@ -2,11 +2,10 @@
 set config=MinSizeRel
 mkdir cmake-build\msvc_win64
 cd    cmake-build\msvc_win64
-cmake -G "Visual Studio 17 2022" -A x64 ..\..
-cmake --build . --config %config% --target covscript
-cmake --build . --config %config% --target covscript_debug
-cmake --build . --config %config% --target cs
-cmake --build . --config %config% --target cs_dbg
+cmake -G "Visual Studio 17 2022" -A "x64" ..\..
+cmake --build . --config %config% --target covscript -- /m
+cmake --build . --config %config% --target cs -- /m
+cmake --build . --config %config% --target cs_dbg -- /m
 cd ..\..
 rd /S /Q build
 mkdir build\bin
@@ -17,4 +16,5 @@ rd /S /Q csdev
 mkdir csdev\include\covscript
 mkdir csdev\lib
 xcopy /E /Y include\covscript csdev\include\covscript
+xcopy /E /Y csbuild\deps\include\covscript csdev\include\covscript
 xcopy /E /Y build\lib         csdev\lib\

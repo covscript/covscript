@@ -86,6 +86,8 @@ namespace cs_impl {
 // Detection
 		bool exist(const std::string &);
 
+		bool is_file(const std::string &);
+
 		bool is_dir(const std::string &);
 
 		bool is_exe(const std::string &);

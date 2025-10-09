@@ -355,7 +355,7 @@ namespace cs {
 
 			static void entry() noexcept
 			{
-				unix_fiber *fi = dynamic_cast<unix_fiber *>(current_process->fiber_stack.top().get());
+				unix_fiber *fi = static_cast<unix_fiber *>(current_process->fiber_stack.top().get());
 				try {
 					fi->state = fiber_state::running;
 					var ret = fi->func();
@@ -413,7 +413,7 @@ namespace cs {
 		void resume(const fiber_t &fi_p)
 		{
 			static cs_fiber_ucontext_t global_ctx;
-			unix_fiber *fi = dynamic_cast<unix_fiber *>(fi_p.get());
+			unix_fiber *fi = static_cast<unix_fiber *>(fi_p.get());
 			if (fi == nullptr)
 				throw internal_error("Resuming a corrupted fiber.");
 			if (fi->state == fiber_state::running || fi->state == fiber_state::finished)
@@ -426,7 +426,7 @@ namespace cs {
 				fi->ctx.uc_link = nullptr;
 				cs_fiber_makecontext(&fi->ctx, reinterpret_cast<void (*)()>(unix_fiber::entry), 0);
 				if (!current_process->fiber_stack.empty())
-					fi->prev_ctx = &dynamic_cast<unix_fiber *>(current_process->fiber_stack.top().get())->ctx;
+					fi->prev_ctx = &static_cast<unix_fiber *>(current_process->fiber_stack.top().get())->ctx;
 				else
 					fi->prev_ctx = &global_ctx;
 			}
@@ -444,7 +444,7 @@ namespace cs {
 			else
 				throw internal_error("Fiber stack corrupted.");
 			if (!current_process->fiber_stack.empty())
-				dynamic_cast<unix_fiber *>(current_process->fiber_stack.top().get())->cs_swap_in();
+				static_cast<unix_fiber *>(current_process->fiber_stack.top().get())->cs_swap_in();
 			else
 				fi->cs_swap_out();
 			if (fi->eptr != nullptr) {
@@ -458,7 +458,7 @@ namespace cs {
 		{
 			if (current_process->fiber_stack.empty())
 				throw lang_error("Cannot yield outside a fiber.");
-			unix_fiber *fi = dynamic_cast<unix_fiber *>(current_process->fiber_stack.top().get());
+			unix_fiber *fi = static_cast<unix_fiber *>(current_process->fiber_stack.top().get());
 			fi->state = fiber_state::suspended;
 			cs_fiber_swapcontext(&fi->ctx, fi->prev_ctx);
 		}
