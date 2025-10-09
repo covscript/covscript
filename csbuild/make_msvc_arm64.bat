@@ -4,7 +4,9 @@ set config=MinSizeRel
 mkdir cmake-build\msvc_arm64
 cd    cmake-build\msvc_arm64
 cmake -G "Visual Studio 16 2019" -A "ARM64" -DCS_COMPATIBILITY_MODE=1 ..\..
-cmake --build . --config %config% --target cs cs_dbg covscript
+cmake --build . --config %config% --target covscript -- /m
+cmake --build . --config %config% --target cs -- /m
+cmake --build . --config %config% --target cs_dbg -- /m
 cd ..\..
 rd /S /Q build
 mkdir build\bin

@@ -12,13 +12,13 @@ if (MSVC)
     set(CMAKE_RC_FLAGS "/nologo /c65001")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     # Common flags for GCC/Clang
-    set(CMAKE_CXX_FLAGS "-s -O2 -DNDEBUG -fPIC")
+    set(CMAKE_CXX_FLAGS "-O2 -DNDEBUG -fPIC")
     if (WIN32)
         # MinGW or Clang on Windows
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --static")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --static -s")
     elseif (UNIX AND NOT APPLE)
         # Linux
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-plt")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-plt -s")
     elseif (APPLE)
         # macOS
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
