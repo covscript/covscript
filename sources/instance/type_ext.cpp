@@ -684,6 +684,20 @@ namespace cs_impl {
 			in->ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
 		}
 
+		string readsome(istream &in, const numeric &n)
+		{
+			std::vector<char> buff(n.as_integer());
+			in->readsome(buff.data(), n.as_integer());
+			return string(buff.begin(), buff.end());
+		}
+
+		string read(istream &in, const numeric &n)
+		{
+			std::vector<char> buff(n.as_integer());
+			in->read(buff.data(), n.as_integer());
+			return string(buff.begin(), buff.end());
+		}
+
 		void init()
 		{
 			(*istream_ext)
@@ -697,7 +711,9 @@ namespace cs_impl {
 			.add_var("good", make_cni(good))
 			.add_var("eof", make_cni(eof))
 			.add_var("input", make_cni(input))
-			.add_var("ignore", make_cni(ignore));
+			.add_var("ignore", make_cni(ignore))
+			.add_var("readsome", make_cni(readsome))
+			.add_var("read", make_cni(read));
 		}
 	}
 	namespace ostream_cs_ext {
