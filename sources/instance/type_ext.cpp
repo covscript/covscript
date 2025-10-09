@@ -225,6 +225,23 @@ namespace cs_impl {
 			return std::move(lst);
 		}
 
+		string join(const array &arr, const string &sep)
+		{
+			string str;
+			bool insert_sep = false;
+			for (auto &it : arr) {
+				if (insert_sep)
+					str.append(sep);
+				else
+					insert_sep = true;
+				if (it.type() == typeid(string))
+					str.append(it.const_val<string>());
+				else
+					str.append(it.to_string());
+			}
+			return str;
+		}
+
 		void init()
 		{
 			(*array_iterator_ext)
@@ -253,7 +270,8 @@ namespace cs_impl {
 			.add_var("to_hash_set", make_cni(to_hash_set, true))
 			.add_var("to_hash_map", make_cni(to_hash_map, true))
 			.add_var("enumerate", make_cni(enumerate, true))
-			.add_var("to_list", make_cni(to_list, true));
+			.add_var("to_list", make_cni(to_list, true))
+			.add_var("join", make_cni(join, true));
 		}
 	}
 	namespace number_cs_ext {
@@ -708,9 +726,10 @@ namespace cs_impl {
 
 		string read(istream &in, const numeric &n)
 		{
-			std::vector<char> buff(n.as_integer());
-			in->read(buff.data(), buff.size());
-			return string(buff.begin(), buff.begin() + in->gcount());
+			string buff(n.as_integer(), '\0');
+			in->read(&buff[0], buff.size());
+			buff.resize(in->gcount());
+			return buff;
 		}
 
 		void init()
@@ -1687,7 +1706,10 @@ namespace cs_impl {
 
 		string insert(string &str, const numeric &posit, const var &val)
 		{
-			str.insert(posit.as_integer(), val.to_string());
+			if (val.type() == typeid(string))
+				str.insert(posit.as_integer(), val.const_val<string>());
+			else
+				str.insert(posit.as_integer(), val.to_string());
 			return str;
 		}
 
@@ -1699,7 +1721,10 @@ namespace cs_impl {
 
 		string replace(string &str, const numeric &posit, const numeric &count, const var &val)
 		{
-			str.replace(posit.as_integer(), count.as_integer(), val.to_string());
+			if (val.type() == typeid(string))
+				str.replace(posit.as_integer(), count.as_integer(), val.const_val<string>());
+			else
+				str.replace(posit.as_integer(), count.as_integer(), val.to_string());
 			return str;
 		}
 
@@ -1775,29 +1800,37 @@ namespace cs_impl {
 
 		array split(const string &str, const array &signals)
 		{
-			array
-			arr;
+			bool is_sep[256] = {false};
+			for (auto &sig : signals)
+				is_sep[static_cast<unsigned char>(sig.const_val<char>())] = true;
+			array arr;
 			string buf;
-			bool found = false;
-			for (auto &ch : str) {
-				for (auto &sig : signals) {
-					if (ch == sig.const_val<char>()) {
-						if (!buf.empty()) {
-							arr.emplace_back(buf);
-							buf.clear();
-						}
-						found = true;
-						break;
+			for (auto ch : str) {
+				if (is_sep[static_cast<unsigned char>(ch)]) {
+					if (!buf.empty()) {
+						arr.emplace_back(std::move(buf));
+						buf.clear();
 					}
 				}
-				if (found)
-					found = false;
 				else
 					buf.push_back(ch);
 			}
 			if (!buf.empty())
 				arr.emplace_back(buf);
-			return std::move(arr);
+			return arr;
+		}
+
+		string trim(const string &str)
+		{
+			if (str.empty())
+				return "";
+			std::size_t beg = 0;
+			std::size_t end = str.size() - 1;
+			while (beg <= end && (std::isspace(str[beg]) || std::iscntrl(str[beg])))
+				++beg;
+			while (end >= beg && (std::isspace(str[end]) || std::iscntrl(str[end])))
+				--end;
+			return str.substr(beg, end - beg + 1);
 		}
 
 		void init()
@@ -1820,7 +1853,8 @@ namespace cs_impl {
 			.add_var("toupper", make_cni(toupper, true))
 			.add_var("to_upper", make_cni(tolower, true))
 			.add_var("to_number", make_cni(to_number, true))
-			.add_var("split", make_cni(split, true));
+			.add_var("split", make_cni(split, true))
+			.add_var("trim", make_cni(trim, true));
 		}
 	}
 	namespace console_cs_ext {
