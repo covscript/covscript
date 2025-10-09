@@ -483,8 +483,9 @@ namespace cs_impl {
 
 		void insert(hash_map &map, const var &key, const var &val)
 		{
-			if (map.count(key) > 0)
-				map.at(key).swap(copy(val), true);
+			auto it = map.find(key);
+			if (it != map.end())
+				it->second.swap(copy(val), true);
 			else
 				map.emplace(copy(key), copy(val));
 		}
@@ -505,6 +506,24 @@ namespace cs_impl {
 			return map.count(key) > 0;
 		}
 
+		var keys(const hash_map &map)
+		{
+			var val = var::make<array>();
+			array &arr = val.val<array>();
+			for (auto &it : map)
+				arr.emplace_back(copy(it.first));
+			return val;
+		}
+
+		var values(const hash_map &map)
+		{
+			var val = var::make<array>();
+			array &arr = val.val<array>();
+			for (auto &it : map)
+				arr.emplace_back(copy(it.second));
+			return val;
+		}
+
 		void init()
 		{
 			(*hash_map_ext)
@@ -514,7 +533,9 @@ namespace cs_impl {
 			.add_var("insert", make_cni(insert, true))
 			.add_var("erase", make_cni(erase, true))
 			.add_var("at", make_cni(at, true))
-			.add_var("exist", make_cni(exist, true));
+			.add_var("exist", make_cni(exist, true))
+			.add_var("keys", make_cni(keys, true))
+			.add_var("values", make_cni(values, true));
 		}
 	}
 	namespace iostream_cs_ext {

@@ -493,8 +493,7 @@ namespace cs {
 			if (b.const_val<numeric>() >= 0) {
 				posit = b.const_val<numeric>().as_integer();
 				if (posit >= arr.size()) {
-					for (std::size_t i = posit - arr.size() + 1; i > 0; --i)
-						arr.emplace_back(numeric(0));
+					arr.resize(posit, numeric(0));
 				}
 			}
 			else {
@@ -506,9 +505,10 @@ namespace cs {
 		}
 		else if (a.type() == typeid(hash_map)) {
 			auto &map = a.val<hash_map>();
-			if (map.count(b) == 0)
-				map.emplace(copy(b), numeric(0));
-			return map.at(b);
+			auto it = map.find(b);
+			if (it == map.end())
+				it = map.emplace(copy(b), numeric(0)).first;
+			return it->second;
 		}
 		else if (a.type() == typeid(string))
 			throw runtime_error("Access string object as lvalue.");
@@ -526,9 +526,7 @@ namespace cs {
 			if (b.const_val<numeric>() >= 0) {
 				posit = b.const_val<numeric>().as_integer();
 				if (posit >= carr.size()) {
-					auto &arr = a.val<array>();
-					for (std::size_t i = posit - arr.size() + 1; i > 0; --i)
-						arr.emplace_back(numeric(0));
+					a.val<array>().resize(posit, numeric(0));
 				}
 			}
 			else {
@@ -540,9 +538,10 @@ namespace cs {
 		}
 		else if (a.type() == typeid(hash_map)) {
 			const auto &cmap = a.const_val<hash_map>();
-			if (cmap.count(b) == 0)
-				a.val<hash_map>().emplace(copy(b), numeric(0));
-			return cmap.at(b);
+			auto it = cmap.find(b);
+			if (it == cmap.end())
+				it = a.val<hash_map>().emplace(copy(b), numeric(0)).first;
+			return it->second;
 		}
 		else if (a.type() == typeid(string)) {
 			if (b.type() != typeid(numeric))
