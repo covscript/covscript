@@ -52,6 +52,15 @@ namespace cs_impl {
 		}
 	}
 
+	inline void insert_or_assign(cs::hash_map &map, const cs::var &key, const cs::var &val)
+	{
+		auto it = map.find(key);
+		if (it == map.end())
+			map.emplace(cs::copy(key), cs::copy(val));
+		else
+			it->second.swap(cs::copy(val), true);
+	}
+
 	namespace array_cs_ext {
 		using namespace cs;
 
@@ -185,10 +194,26 @@ namespace cs_impl {
 			for (auto &it : arr) {
 				if (it.type() == typeid(pair)) {
 					const auto &p = it.const_val<pair>();
-					map[p.first] = copy(p.second);
+					insert_or_assign(map, p.first, p.second);
 				}
 				else
 					throw lang_error("Wrong syntax for hash map.");
+			}
+			return var::make<hash_map>(std::move(map));
+		}
+
+		var enumerate(const array &arr)
+		{
+			hash_map map;
+			std::size_t idx = 0;
+			for (auto &it : arr) {
+				if (it.type() == typeid(pair)) {
+					const auto &p = it.const_val<pair>();
+					insert_or_assign(map, p.first, p.second);
+				}
+				else
+					insert_or_assign(map, var::make<numeric>(idx), it);
+				++idx;
 			}
 			return var::make<hash_map>(std::move(map));
 		}
@@ -227,6 +252,7 @@ namespace cs_impl {
 			.add_var("sort", make_cni(sort, true))
 			.add_var("to_hash_set", make_cni(to_hash_set, true))
 			.add_var("to_hash_map", make_cni(to_hash_map, true))
+			.add_var("enumerate", make_cni(enumerate, true))
 			.add_var("to_list", make_cni(to_list, true));
 		}
 	}
@@ -483,11 +509,7 @@ namespace cs_impl {
 
 		void insert(hash_map &map, const var &key, const var &val)
 		{
-			auto it = map.find(key);
-			if (it != map.end())
-				it->second.swap(copy(val), true);
-			else
-				map.emplace(copy(key), copy(val));
+			insert_or_assign(map, key, val);
 		}
 
 		void erase(hash_map &map, const var &key)
@@ -684,18 +706,11 @@ namespace cs_impl {
 			in->ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
 		}
 
-		string readsome(istream &in, const numeric &n)
-		{
-			std::vector<char> buff(n.as_integer());
-			in->readsome(buff.data(), n.as_integer());
-			return string(buff.begin(), buff.end());
-		}
-
 		string read(istream &in, const numeric &n)
 		{
 			std::vector<char> buff(n.as_integer());
-			in->read(buff.data(), n.as_integer());
-			return string(buff.begin(), buff.end());
+			in->read(buff.data(), buff.size());
+			return string(buff.begin(), buff.begin() + in->gcount());
 		}
 
 		void init()
@@ -712,7 +727,6 @@ namespace cs_impl {
 			.add_var("eof", make_cni(eof))
 			.add_var("input", make_cni(input))
 			.add_var("ignore", make_cni(ignore))
-			.add_var("readsome", make_cni(readsome))
 			.add_var("read", make_cni(read));
 		}
 	}
@@ -760,6 +774,11 @@ namespace cs_impl {
 			*out << val << std::endl;
 		}
 
+		void write(ostream &out, const string &str)
+		{
+			out->write(str.data(), str.size());
+		}
+
 		void init()
 		{
 			(*ostream_ext)
@@ -770,7 +789,8 @@ namespace cs_impl {
 			.add_var("flush", make_cni(flush))
 			.add_var("good", make_cni(good))
 			.add_var("print", make_cni(print))
-			.add_var("println", make_cni(println));
+			.add_var("println", make_cni(println))
+			.add_var("write", make_cni(write));
 		}
 	}
 	namespace list_cs_ext {
@@ -1992,6 +2012,8 @@ namespace cs_impl {
 			.add_var("path", make_namespace(path_ext))
 			.add_var("in", var::make_protect<istream>(&std::cin, [](std::istream *) {}))
 			.add_var("out", var::make_protect<ostream>(&std::cout, [](std::ostream *) {}))
+			.add_var("err", var::make_protect<ostream>(&std::cerr, [](std::ostream *) {}))
+			.add_var("log", var::make_protect<ostream>(&std::clog, [](std::ostream *) {}))
 			.add_var("run", make_cni(run))
 			.add_var("getenv", make_cni(getenv))
 			.add_var("exit", make_cni(exit))
