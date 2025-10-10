@@ -11,13 +11,8 @@ if (MSVC)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
     set(CMAKE_RC_FLAGS "/nologo /c65001")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    include(CheckLinkerFlag)
-    check_linker_flag(CXX "-s" LINKER_SUPPORTS_STRIP)
     # Common flags for GCC/Clang
     set(CMAKE_CXX_FLAGS "-O2 -DNDEBUG -fPIC")
-    if (LINKER_SUPPORTS_STRIP)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-s")
-    endif ()
     if (WIN32)
         # MinGW or Clang on Windows
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --static")
@@ -26,7 +21,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-plt")
     elseif (APPLE)
         # macOS
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-x")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     endif ()
 endif ()
 
