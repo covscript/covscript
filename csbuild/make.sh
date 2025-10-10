@@ -24,6 +24,7 @@ mkdir -p build/bin
 mkdir -p build/lib
 find cmake-build/unix -maxdepth 1 -type f -name 'cs*' -exec mv {} build/bin/ \;
 find cmake-build/unix -maxdepth 1 -type f -name 'libcovscript*.a' -exec mv {} build/lib/ \;
+strip -x build/bin/cs*
 rm -rf csdev
 mkdir -p csdev/include/covscript
 mkdir -p csdev/lib
