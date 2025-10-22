@@ -526,7 +526,7 @@ namespace cs {
 			if (b.const_val<numeric>() >= 0) {
 				posit = b.const_val<numeric>().as_integer();
 				if (posit >= carr.size()) {
-					a.val<array>().resize(posit, numeric(0));
+					a.val<array>().resize(posit + 1, numeric(0));
 				}
 			}
 			else {
