@@ -20,7 +20,7 @@
  * of the People's Republic of China(Registration Number: 2020SR0408026)
  * and is protected by the Copyright Law of the People's Republic of China.
  *
- * Email:   lee@covariant.cn, mikecovlee@163.com
+ * Email:   mikecovlee@163.com
  * Github:  https://github.com/mikecovlee
  * Website: http://covscript.org.cn
  */

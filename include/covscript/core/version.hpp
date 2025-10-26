@@ -20,7 +20,7 @@
 * of the People's Republic of China(Registration Number: 2020SR0408026)
 * and is protected by the Copyright Law of the People's Republic of China.
 *
-* Email:   lee@covariant.cn, mikecovlee@163.com
+* Email:   mikecovlee@163.com
 * Github:  https://github.com/mikecovlee
 * Website: http://covscript.org.cn
 *
@@ -31,16 +31,21 @@
 *   | Major
 * Master
 *
+* Note for Version:
+*   Starting from v3.4.4 (Build 11), the minor version will replace the
+*   build version number for iteration during the release. The build version
+*   number will only used to identify the nightly update before the release.
+*
 * Note for ABI Version:
 *   Starting from v3.4.2 (Build 21), only the first four digits of the ABI
 *   version will be compared. If the first four digits are the same and
 *   the last two digits are different, it will be regarded as a compatible
 *   version.
 */
-#define COVSCRIPT_VERSION_NUM 3,4,4,11
-#define COVSCRIPT_VERSION_STR "3.4.4 Castor fiber(Stable) Build 11"
+#define COVSCRIPT_VERSION_NUM 3,4,5,1
+#define COVSCRIPT_VERSION_STR "3.4.5 Castor fiber(Stable) Build 1"
 #define COVSCRIPT_STD_VERSION 251001
 #define COVSCRIPT_API_VERSION 251001
-#define COVSCRIPT_ABI_VERSION 251001
+#define COVSCRIPT_ABI_VERSION 251002
 #define CS_VERSION_STR_MIXER(VER) #VER
 #define CS_GET_VERSION_STR(VER) CS_VERSION_STR_MIXER(VER)
