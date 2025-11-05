@@ -162,12 +162,9 @@ namespace cs_impl {
 			if (fd < 0)
 				return false;
 #ifdef COVSCRIPT_PLATFORM_DARWIN
-			uint32_t header;
+			uint32_t header = 0;
 #else
-#ifndef COVSCRIPT_PLATFORM_LINUX
-#warning Compatible Mode for Linux System
-#endif
-			char header[4] = {0};
+			uint8_t header[4] = {0};
 #endif
 			int nread = read(fd, reinterpret_cast<void *>(&header), sizeof(header));
 			close(fd);
@@ -177,9 +174,6 @@ namespace cs_impl {
 			if (header == MH_MAGIC || header == MH_CIGAM || header == MH_MAGIC_64 || header == MH_CIGAM_64)
 				return true;
 #else
-#ifndef COVSCRIPT_PLATFORM_LINUX
-#warning Compatible Mode for Linux System
-#endif
 			if (header[0] == 0x7f && header[1] == 'E' && header[2] == 'L' && header[3] == 'F')
 				return true;
 #endif
