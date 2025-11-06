@@ -43,11 +43,11 @@ CNI_ROOT_NAMESPACE {
     })
 
     CNI_V(modify_mem_fn, [](cs::object_method &om, const cs::var &target) {
-        if (target.type() == typeid(cs::object_method))
+        if (target.is_type_of<cs::object_method>())
             modify_function(om.callable,
                             target.val<cs::object_method>().callable.const_val<cs::callable>().get_raw_data(),
                             cs::callable::types::member_fn);
-        else if (target.type() == typeid(cs::callable))
+        else if (target.is_type_of<cs::callable>())
             modify_function(om.callable, target.const_val<cs::callable>().get_raw_data(),
                             cs::callable::types::member_fn);
         else
@@ -57,9 +57,9 @@ CNI_ROOT_NAMESPACE {
     void proxy(cs::type_t &type, const cs::array &arr) {
         cs::map_t<cs::string, cs::var> map;
         for (auto &it: arr) {
-            if (it.type() == typeid(cs::pair)) {
+            if (it.is_type_of<cs::pair>()) {
                 const cs::pair &p = it.const_val<cs::pair>();
-                if (p.first.type() == typeid(cs::string)) {
+                if (p.first.is_type_of<cs::string>()) {
                     map.emplace(p.first.const_val<cs::string>(), p.second);
                     continue;
                 }
@@ -70,11 +70,11 @@ CNI_ROOT_NAMESPACE {
             cs::var cs_struct = type.constructor();
             for (auto &it: map) {
                 cs::var &om = cs_struct.val<cs::structure>().get_var(it.first);
-                if (it.second.type() == typeid(cs::object_method))
+                if (it.second.is_type_of<cs::object_method>())
                     modify_function(om,
                                     it.second.val<cs::object_method>().callable.const_val<cs::callable>().get_raw_data(),
                                     cs::callable::types::member_fn);
-                else if (it.second.type() == typeid(cs::callable))
+                else if (it.second.is_type_of<cs::callable>())
                     modify_function(om, it.second.const_val<cs::callable>().get_raw_data(),
                                     cs::callable::types::member_fn);
                 else

@@ -236,7 +236,7 @@ namespace cs_impl {
 		using source_type = typename cni_decayed_convertor<_SourceT, _TargetT>::source_type;
 		static _TargetT convert(any &val)
 		{
-			if (val.type() == typeid(source_type)) {
+			if (val.is_type_of<source_type>()) {
 				try {
 					return cni_decayed_convertor<_SourceT, _TargetT>::convert_to_cpp(val);
 				}
@@ -246,7 +246,7 @@ namespace cs_impl {
 					                        cxx_demangle(get_name_of_type<_SourceT>()));
 				}
 			}
-			else if (val.type() == typeid(_TargetT))
+			else if (val.is_type_of<_TargetT>())
 				return convert_helper<_TargetT>::get_val(val);
 			else
 				throw cs::runtime_error("Invalid Argument. At " + std::to_string(index + 1) + ". Expected " +
@@ -260,7 +260,7 @@ namespace cs_impl {
 	struct try_convert_and_check<_TargetT, _TargetT, _CheckT, index> {
 		static _TargetT convert(any &val)
 		{
-			if (val.type() == typeid(_TargetT))
+			if (val.is_type_of<_TargetT>())
 				return convert_helper<_TargetT>::get_val(val);
 			else
 				throw cs::runtime_error("Invalid Argument. At " + std::to_string(index + 1) + ". Expected " +

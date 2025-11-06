@@ -156,7 +156,7 @@ namespace cs {
 	{
 		if (mParent.root().usable()) {
 			var builder = mContext->instance->parse_expr(mParent.root());
-			if (builder.type() == typeid(type_t)) {
+			if (builder.is_type_of<type_t>()) {
 				const auto &t = builder.const_val<type_t>();
 				if (mTypeId == t.id)
 					throw runtime_error("Can not inherit itself.");
@@ -183,12 +183,12 @@ namespace cs {
 		scope_guard scope(mContext);
 		if (mParent.root().usable()) {
 			var builder = mContext->instance->parse_expr(mParent.root());
-			if (builder.type() == typeid(type_t)) {
+			if (builder.is_type_of<type_t>()) {
 				const auto &t = builder.const_val<type_t>();
 				if (mTypeId == t.id)
 					throw runtime_error("Can not inherit itself.");
 				var parent = t.constructor();
-				if (parent.type() == typeid(structure)) {
+				if (parent.is_type_of<structure>()) {
 					parent.protect();
 					mContext->instance->storage.involve_domain(parent.const_val<structure>().get_domain());
 					mContext->instance->storage.add_var_no_return("parent", parent, true);
@@ -717,17 +717,17 @@ namespace cs {
 	{
 		CS_DEBUGGER_STEP(this);
 		const var &obj = context->instance->parse_expr(this->mObj.root());
-		if (obj.type() == typeid(string))
+		if (obj.is_type_of<string>())
 			foreach_helper<string, char>(context, this->mIt, obj, this->mBlock);
-		else if (obj.type() == typeid(list))
+		else if (obj.is_type_of<list>())
 			foreach_helper<list, var>(context, this->mIt, obj, this->mBlock);
-		else if (obj.type() == typeid(array))
+		else if (obj.is_type_of<array>())
 			foreach_helper<array, var>(context, this->mIt, obj, this->mBlock);
-		else if (obj.type() == typeid(hash_set))
+		else if (obj.is_type_of<hash_set>())
 			foreach_helper<hash_set, var>(context, this->mIt, obj, this->mBlock);
-		else if (obj.type() == typeid(hash_map))
+		else if (obj.is_type_of<hash_map>())
 			foreach_helper<hash_map, pair>(context, this->mIt, obj, this->mBlock);
-		else if (obj.type() == typeid(range_type))
+		else if (obj.is_type_of<range_type>())
 			foreach_helper<range_type, numeric>(context, this->mIt, obj, this->mBlock);
 		else
 			throw runtime_error("Unsupported type(foreach)");

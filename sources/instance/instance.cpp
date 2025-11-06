@@ -318,7 +318,7 @@ namespace cs {
 		}
 		else {
 			var ns = context->instance->parse_expr(it, true);
-			if (ns.type() == typeid(namespace_t))
+			if (ns.is_type_of<namespace_t>())
 				context->instance->storage.involve_domain(ns.const_val<namespace_t>()->get_domain(), override);
 			else
 				throw runtime_error("Only support involve namespace.");

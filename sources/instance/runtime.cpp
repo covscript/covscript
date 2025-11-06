@@ -28,9 +28,9 @@
 namespace cs {
 	var runtime_type::parse_add(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
 			return a.const_val<numeric>() + b.const_val<numeric>();
-		else if (a.type() == typeid(string) && b.usable())
+		else if (a.is_type_of<string>() && b.usable())
 			return var::make<std::string>(a.const_val<string>() + b.to_string());
 		else
 			throw runtime_error("Unsupported operator operations(Add).");
@@ -44,7 +44,7 @@ namespace cs {
 
 	var runtime_type::parse_sub(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
 			return a.const_val<numeric>() - b.const_val<numeric>();
 		else
 			throw runtime_error("Unsupported operator operations(Sub).");
@@ -58,7 +58,7 @@ namespace cs {
 
 	var runtime_type::parse_minus(const var &b)
 	{
-		if (b.type() == typeid(numeric))
+		if (b.is_type_of<numeric>())
 			return -b.const_val<numeric>();
 		else
 			throw runtime_error("Unsupported operator operations(Minus).");
@@ -66,7 +66,7 @@ namespace cs {
 
 	var runtime_type::parse_mul(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
 			return a.const_val<numeric>() * b.const_val<numeric>();
 		else
 			throw runtime_error("Unsupported operator operations(Mul).");
@@ -80,7 +80,7 @@ namespace cs {
 
 	var runtime_type::parse_escape(const var &b)
 	{
-		if (b.type() == typeid(pointer)) {
+		if (b.is_type_of<pointer>()) {
 			const auto &ptr = b.const_val<pointer>();
 			if (ptr.data.usable())
 				return ptr.data;
@@ -93,7 +93,7 @@ namespace cs {
 
 	var runtime_type::parse_div(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
 			return a.const_val<numeric>() / b.const_val<numeric>();
 		else
 			throw runtime_error("Unsupported operator operations(Div).");
@@ -107,7 +107,7 @@ namespace cs {
 
 	var runtime_type::parse_mod(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
 			return numeric(std::fmod(a.const_val<numeric>().as_float(), b.const_val<numeric>().as_float()));
 		else
 			throw runtime_error("Unsupported operator operations(Mod).");
@@ -121,7 +121,7 @@ namespace cs {
 
 	var runtime_type::parse_pow(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
 			return numeric(std::pow(a.const_val<numeric>().as_float(), b.const_val<numeric>().as_float()));
 		else
 			throw runtime_error("Unsupported operator operations(Pow).");
@@ -135,7 +135,7 @@ namespace cs {
 
 	var &runtime_type::parse_dot_lhs(const var &a, token_base *b)
 	{
-		if (a.type() == typeid(constant_values)) {
+		if (a.is_type_of<constant_values>()) {
 			switch (a.const_val<constant_values>()) {
 			case constant_values::global_namespace:
 				return storage.get_var_global(static_cast<token_id *>(b)->get_id());
@@ -145,11 +145,11 @@ namespace cs {
 				throw runtime_error("Unknown scope tag.");
 			}
 		}
-		else if (a.type() == typeid(namespace_t))
+		else if (a.is_type_of<namespace_t>())
 			return a.val<namespace_t>()->get_var(static_cast<token_id *>(b)->get_id());
-		else if (a.type() == typeid(type_t))
+		else if (a.is_type_of<type_t>())
 			return a.const_val<type_t>().get_var(static_cast<token_id *>(b)->get_id());
-		else if (a.type() == typeid(structure)) {
+		else if (a.is_type_of<structure>()) {
 			var &val = a.val<structure>().get_var(static_cast<token_id *>(b)->get_id());
 			if (val.type() != typeid(callable) || !val.const_val<callable>().is_member_fn())
 				return val;
@@ -159,13 +159,13 @@ namespace cs {
 		else {
 			try {
 				var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
-				if (val.type() == typeid(callable))
+				if (val.is_type_of<callable>())
 					throw runtime_error("Can not visit member function as lvalue.");
 				else
 					return val;
 			}
 			catch (...) {
-				if (a.type() == typeid(hash_map)) {
+				if (a.is_type_of<hash_map>()) {
 					auto &cmap = a.val<hash_map>();
 					const string &str = static_cast<token_id *>(b)->get_id().get_id();
 					if (cmap.count(str) == 0)
@@ -180,7 +180,7 @@ namespace cs {
 
 	var runtime_type::parse_dot(const var &a, token_base *b)
 	{
-		if (a.type() == typeid(constant_values)) {
+		if (a.is_type_of<constant_values>()) {
 			switch (a.const_val<constant_values>()) {
 			case constant_values::global_namespace:
 				return storage.get_var_global(static_cast<token_id *>(b)->get_id());
@@ -190,13 +190,13 @@ namespace cs {
 				throw runtime_error("Unknown scope tag.");
 			}
 		}
-		else if (a.type() == typeid(namespace_t))
+		else if (a.is_type_of<namespace_t>())
 			return a.val<namespace_t>()->get_var(static_cast<token_id *>(b)->get_id());
-		else if (a.type() == typeid(type_t))
+		else if (a.is_type_of<type_t>())
 			return a.const_val<type_t>().get_var(static_cast<token_id *>(b)->get_id());
-		else if (a.type() == typeid(structure)) {
+		else if (a.is_type_of<structure>()) {
 			var &val = a.val<structure>().get_var(static_cast<token_id *>(b)->get_id());
-			if (val.type() == typeid(callable) && val.const_val<callable>().is_member_fn())
+			if (val.is_type_of<callable>() && val.const_val<callable>().is_member_fn())
 				return var::make_protect<object_method>(a, val);
 			else
 				return val;
@@ -204,7 +204,7 @@ namespace cs {
 		else {
 			try {
 				var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
-				if (val.type() == typeid(callable)) {
+				if (val.is_type_of<callable>()) {
 					const callable &func = val.const_val<callable>();
 					switch (func.type()) {
 					case callable::types::member_visitor: {
@@ -221,7 +221,7 @@ namespace cs {
 					return val;
 			}
 			catch (...) {
-				if (a.type() == typeid(hash_map)) {
+				if (a.is_type_of<hash_map>()) {
 					const auto &cmap = a.const_val<hash_map>();
 					const string &str = static_cast<token_id *>(b)->get_id().get_id();
 					if (cmap.count(str) == 0)
@@ -236,7 +236,7 @@ namespace cs {
 
 	var runtime_type::parse_arrow(const var &a, token_base *b)
 	{
-		if (a.type() == typeid(pointer))
+		if (a.is_type_of<pointer>())
 			return parse_dot(a.const_val<pointer>().data, b);
 		else
 			throw runtime_error("Unsupported operator operations(Arraw).");
@@ -244,9 +244,9 @@ namespace cs {
 
 	var runtime_type::parse_typeid(const var &b)
 	{
-		if (b.type() == typeid(type_t))
+		if (b.is_type_of<type_t>())
 			return b.const_val<type_t>().id;
-		else if (b.type() == typeid(structure))
+		else if (b.is_type_of<structure>())
 			return b.const_val<structure>().get_id();
 		else
 			return var::make<type_id>(b.type());
@@ -254,7 +254,7 @@ namespace cs {
 
 	var runtime_type::parse_new(const var &b)
 	{
-		if (b.type() == typeid(type_t))
+		if (b.is_type_of<type_t>())
 			return b.const_val<type_t>().constructor();
 		else
 			throw runtime_error("Unsupported operator operations(New).");
@@ -262,7 +262,7 @@ namespace cs {
 
 	var runtime_type::parse_gcnew(const var &b)
 	{
-		if (b.type() == typeid(type_t))
+		if (b.is_type_of<type_t>())
 			return var::make<pointer>(b.const_val<type_t>().constructor());
 		else
 			throw runtime_error("Unsupported operator operations(GcNew).");
@@ -270,9 +270,9 @@ namespace cs {
 
 	var runtime_type::parse_und(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
 			return boolean(a.const_val<numeric>() < b.const_val<numeric>());
-		else if (a.type() == typeid(string) && b.type() == typeid(string))
+		else if (a.is_type_of<string>() && b.is_type_of<string>())
 			return boolean(a.const_val<string>() < b.const_val<string>());
 		else
 			throw runtime_error("Unsupported operator operations(Und).");
@@ -280,9 +280,9 @@ namespace cs {
 
 	var runtime_type::parse_abo(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
 			return boolean(a.const_val<numeric>() > b.const_val<numeric>());
-		else if (a.type() == typeid(string) && b.type() == typeid(string))
+		else if (a.is_type_of<string>() && b.is_type_of<string>())
 			return boolean(a.const_val<string>() > b.const_val<string>());
 		else
 			throw runtime_error("Unsupported operator operations(Abo).");
@@ -290,9 +290,9 @@ namespace cs {
 
 	var runtime_type::parse_ueq(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
 			return boolean(a.const_val<numeric>() <= b.const_val<numeric>());
-		else if (a.type() == typeid(string) && b.type() == typeid(string))
+		else if (a.is_type_of<string>() && b.is_type_of<string>())
 			return boolean(a.const_val<string>() <= b.const_val<string>());
 		else
 			throw runtime_error("Unsupported operator operations(Ueq).");
@@ -300,9 +300,9 @@ namespace cs {
 
 	var runtime_type::parse_aeq(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
+		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
 			return boolean(a.const_val<numeric>() >= b.const_val<numeric>());
-		else if (a.type() == typeid(string) && b.type() == typeid(string))
+		else if (a.is_type_of<string>() && b.is_type_of<string>())
 			return boolean(a.const_val<string>() >= b.const_val<string>());
 		else
 			throw runtime_error("Unsupported operator operations(Aeq).");
@@ -358,7 +358,7 @@ namespace cs {
 
 	var runtime_type::parse_choice(const var &a, const tree_type<token_base *>::iterator &b)
 	{
-		if (a.type() == typeid(boolean)) {
+		if (a.is_type_of<boolean>()) {
 			if (a.const_val<boolean>())
 				return parse_expr(b.left());
 			else
@@ -399,7 +399,7 @@ namespace cs {
 
 	var runtime_type::parse_not(const var &b)
 	{
-		if (b.type() == typeid(boolean))
+		if (b.is_type_of<boolean>())
 			return boolean(!b.const_val<boolean>());
 		else
 			throw runtime_error("Unsupported operator operations(Not).");
@@ -444,7 +444,7 @@ namespace cs {
 
 	var runtime_type::parse_fcall(const var &a, token_base *b)
 	{
-		if (a.type() == typeid(callable)) {
+		if (a.is_type_of<callable>()) {
 			vector args;
 			token_base *ptr = nullptr;
 			args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
@@ -461,7 +461,7 @@ namespace cs {
 			}
 			return a.const_val<callable>().call(args);
 		}
-		else if (a.type() == typeid(object_method)) {
+		else if (a.is_type_of<object_method>()) {
 			const auto &om = a.const_val<object_method>();
 			vector args{om.object};
 			token_base *ptr = nullptr;
@@ -485,7 +485,7 @@ namespace cs {
 
 	var &runtime_type::parse_access_lhs(const var &a, const var &b)
 	{
-		if (a.type() == typeid(array)) {
+		if (a.is_type_of<array>()) {
 			if (b.type() != typeid(numeric))
 				throw runtime_error("Index must be a numeric.");
 			auto &arr = a.val<array>();
@@ -503,14 +503,14 @@ namespace cs {
 			}
 			return arr[posit];
 		}
-		else if (a.type() == typeid(hash_map)) {
+		else if (a.is_type_of<hash_map>()) {
 			auto &map = a.val<hash_map>();
 			auto it = map.find(b);
 			if (it == map.end())
 				it = map.emplace(copy(b), numeric(0)).first;
 			return it->second;
 		}
-		else if (a.type() == typeid(string))
+		else if (a.is_type_of<string>())
 			throw runtime_error("Access string object as lvalue.");
 		else
 			throw runtime_error("Access non-array or string object.");
@@ -518,7 +518,7 @@ namespace cs {
 
 	var runtime_type::parse_access(const var &a, const var &b)
 	{
-		if (a.type() == typeid(array)) {
+		if (a.is_type_of<array>()) {
 			if (b.type() != typeid(numeric))
 				throw runtime_error("Index must be a numeric.");
 			const auto &carr = a.const_val<array>();
@@ -536,14 +536,14 @@ namespace cs {
 			}
 			return carr[posit];
 		}
-		else if (a.type() == typeid(hash_map)) {
+		else if (a.is_type_of<hash_map>()) {
 			const auto &cmap = a.const_val<hash_map>();
 			auto it = cmap.find(b);
 			if (it == cmap.end())
 				it = a.val<hash_map>().emplace(copy(b), numeric(0)).first;
 			return it->second;
 		}
-		else if (a.type() == typeid(string)) {
+		else if (a.is_type_of<string>()) {
 			if (b.type() != typeid(numeric))
 				throw runtime_error("Index must be a numeric.");
 			const auto &cstr = a.const_val<string>();

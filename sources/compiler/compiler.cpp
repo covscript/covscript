@@ -44,7 +44,7 @@ namespace cs {
 	bool token_value::dump(std::ostream &o) const
 	{
 		o << "< Value = ";
-		if (mVal.type() == typeid(cs::string)) {
+		if (mVal.is_type_of<cs::string>()) {
 			o << "\"";
 			const cs::string &str = mVal.const_val<cs::string>();
 			for (auto ch: str) {
@@ -55,7 +55,7 @@ namespace cs {
 			}
 			o << "\"";
 		}
-		else if (mVal.type() == typeid(char)) {
+		else if (mVal.is_type_of<char>()) {
 			o << "\'";
 			char ch = mVal.const_val<char>();
 			if (escape_char.count(ch) > 0)
@@ -873,7 +873,7 @@ namespace cs {
 				opt_expr(tree, it.right().right(), do_optm);
 				token_value *val = dynamic_cast<token_value *>(it.left().data());
 				if (val != nullptr) {
-					if (val->get_value().type() == typeid(boolean)) {
+					if (val->get_value().is_type_of<boolean>()) {
 						if (val->get_value().const_val<boolean>())
 							tree.reserve_left(it.right());
 						else
@@ -923,7 +923,7 @@ namespace cs {
 					throw compile_error("Wrong syntax for function call.");
 				if (lptr->get_type() == token_types::value) {
 					var &a = static_cast<token_value *>(lptr)->get_value();
-					if (a.type() == typeid(callable) && a.const_val<callable>().is_request_fold()) {
+					if (a.is_type_of<callable>() && a.const_val<callable>().is_request_fold()) {
 						token_base *ptr = nullptr;
 						for (auto &tree: static_cast<token_arglist *>(rptr)->get_arglist()) {
 							ptr = tree.root().data();
@@ -957,7 +957,7 @@ namespace cs {
 							it.data() = oldt;
 						}
 					}
-					else if (a.type() == typeid(object_method) &&
+					else if (a.is_type_of<object_method>() &&
 					         a.const_val<object_method>().is_request_fold) {
 						token_base *ptr = nullptr;
 						for (auto &tree: static_cast<token_arglist *>(rptr)->get_arglist()) {

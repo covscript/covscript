@@ -27,12 +27,10 @@
 #include <covscript/import/mozart/base.hpp>
 #include <atomic>
 
-namespace cs
-{
+namespace cs {
 	extern std::atomic_size_t global_thread_counter;
 
-	struct thread_guard final
-	{
+	struct thread_guard final {
 		thread_guard()
 		{
 			++global_thread_counter;
@@ -47,9 +45,8 @@ namespace cs
 
 	struct csym_info;
 
-	// Exceptions
-	class exception final : public std::exception
-	{
+// Exceptions
+	class exception final : public std::exception {
 		std::size_t mLine = 0;
 		std::string mFile, mCode, mWhat, mStr;
 
@@ -63,7 +60,7 @@ namespace cs
 			return "File \"" + file + "\", line <INTERNAL>: " + what + "\n";
 		}
 
-	   public:
+	public:
 		exception() = delete;
 
 		exception(std::size_t line, std::string file, std::string code, std::string what) noexcept : mLine(line), mFile(std::move(file)), mCode(std::move(code)), mWhat(std::move(what))
@@ -94,11 +91,10 @@ namespace cs
 		}
 	};
 
-	class compile_error final : public std::exception
-	{
+	class compile_error final : public std::exception {
 		std::string mWhat = "Compile Error";
 
-	   public:
+	public:
 		compile_error() = default;
 
 		explicit compile_error(const std::string &str) noexcept : mWhat("Compile Error: " + str) {}
@@ -119,11 +115,10 @@ namespace cs
 		}
 	};
 
-	class runtime_error final : public std::exception
-	{
+	class runtime_error final : public std::exception {
 		std::string mWhat = "Runtime Error";
 
-	   public:
+	public:
 		runtime_error() = default;
 
 		explicit runtime_error(const std::string &str) noexcept : mWhat("Runtime Error: " + str) {}
@@ -144,11 +139,10 @@ namespace cs
 		}
 	};
 
-	class internal_error final : public std::exception
-	{
+	class internal_error final : public std::exception {
 		std::string mWhat = "Internal Error";
 
-	   public:
+	public:
 		internal_error() = default;
 
 		explicit internal_error(const std::string &str) noexcept : mWhat("Internal Error: " + str) {}
@@ -169,11 +163,10 @@ namespace cs
 		}
 	};
 
-	class lang_error final
-	{
+	class lang_error final {
 		std::string mWhat;
 
-	   public:
+	public:
 		lang_error() = default;
 
 		explicit lang_error(std::string str) noexcept : mWhat(std::move(str)) {}
@@ -194,11 +187,10 @@ namespace cs
 		}
 	};
 
-	class fatal_error final : public std::exception
-	{
+	class fatal_error final : public std::exception {
 		std::string mWhat = "Fatal Error";
 
-	   public:
+	public:
 		fatal_error() = default;
 
 		explicit fatal_error(const std::string &str) noexcept : mWhat("Fatal Error: " + str) {}
@@ -219,11 +211,10 @@ namespace cs
 		}
 	};
 
-	class forward_exception final : public std::exception
-	{
+	class forward_exception final : public std::exception {
 		std::string mWhat;
 
-	   public:
+	public:
 		forward_exception() = delete;
 
 		explicit forward_exception(const char *str) noexcept : mWhat(str) {}
@@ -244,14 +235,12 @@ namespace cs
 		}
 	};
 
-	// Numeric
+// Numeric
 	using numeric_float = long double;
 	using numeric_integer = long long int;
 
-	class numeric final
-	{
-		union
-		{
+	class numeric final {
+		union {
 			numeric_float _num;
 			numeric_integer _int;
 		} data;
@@ -262,7 +251,7 @@ namespace cs
 			return lhs << 1 | rhs;
 		}
 
-	   public:
+	public:
 		numeric()
 		{
 			data._int = 0;
@@ -271,13 +260,11 @@ namespace cs
 		template <typename T, typename = std::enable_if_t<!std::is_same<std::decay_t<T>, numeric>::value>>
 		numeric(T &&dat)
 		{
-			if (std::is_floating_point<std::decay_t<T>>::value)
-			{
+			if (std::is_floating_point<std::decay_t<T>>::value) {
 				type = 0;
 				data._num = static_cast<numeric_float>(dat);
 			}
-			else if (std::is_integral<std::decay_t<T>>::value)
-			{
+			else if (std::is_integral<std::decay_t<T>>::value) {
 				type = 1;
 				data._int = static_cast<numeric_integer>(dat);
 			}
@@ -293,17 +280,16 @@ namespace cs
 
 		numeric operator+(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type))
-			{
-				default:
-				case 0b00:
-					return data._num + rhs.data._num;
-				case 0b01:
-					return data._num + rhs.data._int;
-				case 0b10:
-					return data._int + rhs.data._num;
-				case 0b11:
-					return data._int + rhs.data._int;
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num + rhs.data._num;
+			case 0b01:
+				return data._num + rhs.data._int;
+			case 0b10:
+				return data._int + rhs.data._num;
+			case 0b11:
+				return data._int + rhs.data._int;
 			}
 		}
 
@@ -318,17 +304,16 @@ namespace cs
 
 		numeric operator-(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type))
-			{
-				default:
-				case 0b00:
-					return data._num - rhs.data._num;
-				case 0b01:
-					return data._num - rhs.data._int;
-				case 0b10:
-					return data._int - rhs.data._num;
-				case 0b11:
-					return data._int - rhs.data._int;
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num - rhs.data._num;
+			case 0b01:
+				return data._num - rhs.data._int;
+			case 0b10:
+				return data._int - rhs.data._num;
+			case 0b11:
+				return data._int - rhs.data._int;
 			}
 		}
 
@@ -343,17 +328,16 @@ namespace cs
 
 		numeric operator*(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type))
-			{
-				default:
-				case 0b00:
-					return data._num * rhs.data._num;
-				case 0b01:
-					return data._num * rhs.data._int;
-				case 0b10:
-					return data._int * rhs.data._num;
-				case 0b11:
-					return data._int * rhs.data._int;
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num * rhs.data._num;
+			case 0b01:
+				return data._num * rhs.data._int;
+			case 0b10:
+				return data._int * rhs.data._num;
+			case 0b11:
+				return data._int * rhs.data._int;
 			}
 		}
 
@@ -368,21 +352,20 @@ namespace cs
 
 		numeric operator/(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type))
-			{
-				default:
-				case 0b00:
-					return data._num / rhs.data._num;
-				case 0b01:
-					return data._num / rhs.data._int;
-				case 0b10:
-					return data._int / rhs.data._num;
-				case 0b11:
-					std::lldiv_t divres = std::lldiv(data._int, rhs.data._int);
-					if (divres.rem == 0)
-						return divres.quot;
-					else
-						return static_cast<numeric_float>(data._int) / rhs.data._int;
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num / rhs.data._num;
+			case 0b01:
+				return data._num / rhs.data._int;
+			case 0b10:
+				return data._int / rhs.data._num;
+			case 0b11:
+				std::lldiv_t divres = std::lldiv(data._int, rhs.data._int);
+				if (divres.rem == 0)
+					return divres.quot;
+				else
+					return static_cast<numeric_float>(data._int) / rhs.data._int;
 			}
 		}
 
@@ -397,8 +380,7 @@ namespace cs
 
 		numeric &operator=(const numeric &num)
 		{
-			if (this != &num)
-			{
+			if (this != &num) {
 				data = num.data;
 				type = num.type;
 			}
@@ -408,13 +390,11 @@ namespace cs
 		template <typename T, typename = std::enable_if_t<!std::is_same<std::decay_t<T>, numeric>::value>>
 		numeric &operator=(T &&dat)
 		{
-			if (std::is_floating_point<std::decay_t<T>>::value)
-			{
+			if (std::is_floating_point<std::decay_t<T>>::value) {
 				type = 0;
 				data._num = static_cast<numeric_float>(dat);
 			}
-			else if (std::is_integral<std::decay_t<T>>::value)
-			{
+			else if (std::is_integral<std::decay_t<T>>::value) {
 				type = 1;
 				data._int = static_cast<numeric_integer>(dat);
 			}
@@ -425,17 +405,16 @@ namespace cs
 
 		bool operator<(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type))
-			{
-				default:
-				case 0b00:
-					return data._num < rhs.data._num;
-				case 0b01:
-					return data._num < rhs.data._int;
-				case 0b10:
-					return data._int < rhs.data._num;
-				case 0b11:
-					return data._int < rhs.data._int;
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num < rhs.data._num;
+			case 0b01:
+				return data._num < rhs.data._int;
+			case 0b10:
+				return data._int < rhs.data._num;
+			case 0b11:
+				return data._int < rhs.data._int;
 			}
 		}
 
@@ -450,17 +429,16 @@ namespace cs
 
 		bool operator<=(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type))
-			{
-				default:
-				case 0b00:
-					return data._num <= rhs.data._num;
-				case 0b01:
-					return data._num <= rhs.data._int;
-				case 0b10:
-					return data._int <= rhs.data._num;
-				case 0b11:
-					return data._int <= rhs.data._int;
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num <= rhs.data._num;
+			case 0b01:
+				return data._num <= rhs.data._int;
+			case 0b10:
+				return data._int <= rhs.data._num;
+			case 0b11:
+				return data._int <= rhs.data._int;
 			}
 		}
 
@@ -475,17 +453,16 @@ namespace cs
 
 		bool operator>(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type))
-			{
-				default:
-				case 0b00:
-					return data._num > rhs.data._num;
-				case 0b01:
-					return data._num > rhs.data._int;
-				case 0b10:
-					return data._int > rhs.data._num;
-				case 0b11:
-					return data._int > rhs.data._int;
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num > rhs.data._num;
+			case 0b01:
+				return data._num > rhs.data._int;
+			case 0b10:
+				return data._int > rhs.data._num;
+			case 0b11:
+				return data._int > rhs.data._int;
 			}
 		}
 
@@ -500,17 +477,16 @@ namespace cs
 
 		bool operator>=(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type))
-			{
-				default:
-				case 0b00:
-					return data._num >= rhs.data._num;
-				case 0b01:
-					return data._num >= rhs.data._int;
-				case 0b10:
-					return data._int >= rhs.data._num;
-				case 0b11:
-					return data._int >= rhs.data._int;
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num >= rhs.data._num;
+			case 0b01:
+				return data._num >= rhs.data._int;
+			case 0b10:
+				return data._int >= rhs.data._num;
+			case 0b11:
+				return data._int >= rhs.data._int;
 			}
 		}
 
@@ -525,17 +501,16 @@ namespace cs
 
 		bool operator==(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type))
-			{
-				default:
-				case 0b00:
-					return data._num == rhs.data._num;
-				case 0b01:
-					return data._num == rhs.data._int;
-				case 0b10:
-					return data._int == rhs.data._num;
-				case 0b11:
-					return data._int == rhs.data._int;
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num == rhs.data._num;
+			case 0b01:
+				return data._num == rhs.data._int;
+			case 0b10:
+				return data._int == rhs.data._num;
+			case 0b11:
+				return data._int == rhs.data._int;
 			}
 		}
 
@@ -550,17 +525,16 @@ namespace cs
 
 		bool operator!=(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type))
-			{
-				default:
-				case 0b00:
-					return data._num != rhs.data._num;
-				case 0b01:
-					return data._num != rhs.data._int;
-				case 0b10:
-					return data._int != rhs.data._num;
-				case 0b11:
-					return data._int != rhs.data._int;
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return data._num != rhs.data._num;
+			case 0b01:
+				return data._num != rhs.data._int;
+			case 0b10:
+				return data._int != rhs.data._num;
+			case 0b11:
+				return data._int != rhs.data._int;
 			}
 		}
 
@@ -642,13 +616,12 @@ namespace cs
 		}
 	};
 
-	// Static Stack
+// Static Stack
 	template <typename T>
-	class stack_type final
-	{
+	class stack_type final {
 		mutable std::vector<T> m_impl;
 
-	   public:
+	public:
 		using iterator = typename std::vector<T>::reverse_iterator;
 
 		void resize(std::size_t size)
@@ -734,15 +707,14 @@ namespace cs
 		}
 	};
 
-	// Buffer Pool
+// Buffer Pool
 	template <typename T, std::size_t blck_size, template <typename> class allocator_t = std::allocator>
-	class allocator_type final
-	{
+	class allocator_type final {
 		T *mPool[blck_size];
 		allocator_t<T> mAlloc;
 		std::size_t mOffset = 0;
 
-	   public:
+	public:
 		allocator_type()
 		{
 			while (mOffset < blck_size / 2)
@@ -777,14 +749,28 @@ namespace cs
 			else
 				mAlloc.deallocate(ptr, 1);
 		}
+
+		inline T *allocate(std::size_t n)
+		{
+			if (n == 1 && mOffset > 0)
+				return mPool[--mOffset];
+			else
+				return mAlloc.allocate(n);
+		}
+
+		inline void deallocate(T *ptr, std::size_t n)
+		{
+			if (n == 1 && mOffset < blck_size)
+				mPool[mOffset++] = ptr;
+			else
+				mAlloc.deallocate(ptr, n);
+		}
 	};
 
-	// Binary Tree
+// Binary Tree
 	template <typename T>
-	class tree_type final
-	{
-		struct tree_node final
-		{
+	class tree_type final {
+		struct tree_node final {
 			tree_node *root = nullptr;
 			tree_node *left = nullptr;
 			tree_node *right = nullptr;
@@ -817,8 +803,7 @@ namespace cs
 
 		static void destroy(tree_node *raw)
 		{
-			if (raw != nullptr)
-			{
+			if (raw != nullptr) {
 				destroy(raw->left);
 				destroy(raw->right);
 				delete raw;
@@ -827,16 +812,15 @@ namespace cs
 
 		tree_node *mRoot = nullptr;
 
-	   public:
-		class iterator final
-		{
+	public:
+		class iterator final {
 			friend class tree_type;
 
 			tree_node *mData = nullptr;
 
 			iterator(tree_node *ptr) : mData(ptr) {}
 
-		   public:
+		public:
 			iterator() = default;
 
 			iterator(const iterator &) = default;
@@ -922,8 +906,7 @@ namespace cs
 
 		tree_type &operator=(const tree_type &t)
 		{
-			if (&t != this)
-			{
+			if (&t != this) {
 				destroy(this->mRoot);
 				this->mRoot = copy(t.mRoot);
 			}
@@ -938,8 +921,7 @@ namespace cs
 
 		void assign(const tree_type &t)
 		{
-			if (&t != this)
-			{
+			if (&t != this) {
 				destroy(this->mRoot);
 				this->mRoot = copy(t.mRoot);
 			}
@@ -968,8 +950,7 @@ namespace cs
 
 		iterator insert_root_left(iterator it, const T &data)
 		{
-			if (it.mData == mRoot)
-			{
+			if (it.mData == mRoot) {
 				mRoot = new tree_node(nullptr, mRoot, nullptr, data);
 				return mRoot;
 			}
@@ -986,8 +967,7 @@ namespace cs
 
 		iterator insert_root_right(iterator it, const T &data)
 		{
-			if (it.mData == mRoot)
-			{
+			if (it.mData == mRoot) {
 				mRoot = new tree_node(nullptr, nullptr, mRoot, data);
 				return mRoot;
 			}
@@ -1049,8 +1029,7 @@ namespace cs
 		template <typename... Args>
 		iterator emplace_root_left(iterator it, Args &&...args)
 		{
-			if (it.mData == mRoot)
-			{
+			if (it.mData == mRoot) {
 				mRoot = new tree_node(nullptr, mRoot, nullptr, std::forward<Args>(args)...);
 				return mRoot;
 			}
@@ -1068,8 +1047,7 @@ namespace cs
 		template <typename... Args>
 		iterator emplace_root_right(iterator it, Args &&...args)
 		{
-			if (it.mData == mRoot)
-			{
+			if (it.mData == mRoot) {
 				mRoot = new tree_node(nullptr, nullptr, mRoot, std::forward<Args>(args)...);
 				return mRoot;
 			}
@@ -1136,15 +1114,13 @@ namespace cs
 		{
 			if (!it.usable())
 				throw cov::error("E000E");
-			if (it.mData == mRoot)
-			{
+			if (it.mData == mRoot) {
 				destroy(mRoot);
 				mRoot = nullptr;
 				return nullptr;
 			}
 			tree_node *root = it.mData->root;
-			if (root != nullptr)
-			{
+			if (root != nullptr) {
 				if (it.mData == root->left)
 					root->left = nullptr;
 				else
@@ -1162,8 +1138,7 @@ namespace cs
 			tree_node *root = it.mData->root;
 			it.mData->left = nullptr;
 			reserve->root = root;
-			if (root != nullptr)
-			{
+			if (root != nullptr) {
 				if (it.mData == root->left)
 					root->left = reserve;
 				else
@@ -1183,8 +1158,7 @@ namespace cs
 			tree_node *root = it.mData->root;
 			it.mData->right = nullptr;
 			reserve->root = root;
-			if (root != nullptr)
-			{
+			if (root != nullptr) {
 				if (it.mData == root->left)
 					root->left = reserve;
 				else
@@ -1228,15 +1202,14 @@ namespace cs
 		}
 	};
 
-	class event_type final
-	{
-	   public:
+	class event_type final {
+	public:
 		using listener_type = std::function<bool(void *)>;
 
-	   private:
+	private:
 		std::forward_list<listener_type> m_listener;
 
-	   public:
+	public:
 		event_type() = delete;
 
 		event_type(const event_type &) = delete;

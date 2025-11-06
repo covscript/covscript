@@ -418,11 +418,11 @@ namespace cs {
 	template<typename... ArgsT>
 	static var invoke(const var &func, ArgsT &&... _args)
 	{
-		if (func.type() == typeid(callable)) {
+		if (func.is_type_of<callable>()) {
 			vector args{std::forward<ArgsT>(_args)...};
 			return func.const_val<callable>().call(args);
 		}
-		else if (func.type() == typeid(object_method)) {
+		else if (func.is_type_of<object_method>()) {
 			const auto &om = func.const_val<object_method>();
 			vector args{om.object, std::forward<ArgsT>(_args)...};
 			return om.callable.const_val<callable>().call(args);
@@ -1142,7 +1142,7 @@ std::string cs_impl::to_string<cs::structure>(const cs::structure &stut)
 {
 	if (stut.get_domain().exist("to_string")) {
 		cs::var func = stut.get_domain().get_var("to_string");
-		if (func.type() == typeid(cs::callable))
+		if (func.is_type_of<cs::callable>())
 			return cs::invoke(func, cs::var::make<cs::structure>(&stut)).to_string();
 	}
 	return "[cs::structure_" + stut.type_name() + "]";

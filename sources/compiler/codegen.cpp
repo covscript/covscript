@@ -87,7 +87,7 @@ namespace cs {
 			if (id == nullptr || id->get_type() != token_types::id)
 				throw compile_error(
 				    "Wrong grammar for import-as statement, expect <package name> or <package name>.<namespace id>...");
-			if (ext.type() == typeid(namespace_t))
+			if (ext.is_type_of<namespace_t>())
 				return ext.const_val<namespace_t>()->get_var(static_cast<token_id *>(id)->get_id());
 			else
 				throw compile_error("Access non-namespace object.");
@@ -137,7 +137,7 @@ namespace cs {
 		token_value *vptr = dynamic_cast<token_value *>(tree.root().data());
 		if (vptr != nullptr) {
 			var ns = vptr->get_value();
-			if (ns.type() == typeid(namespace_t)) {
+			if (ns.is_type_of<namespace_t>()) {
 				auto &domain = ns.const_val<namespace_t>()->get_domain();
 				for (auto &it: domain) {
 					if (domain.get_var_by_id(it.second).is_protect())

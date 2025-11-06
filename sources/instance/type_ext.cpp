@@ -192,7 +192,7 @@ namespace cs_impl {
 		{
 			hash_map map;
 			for (auto &it : arr) {
-				if (it.type() == typeid(pair)) {
+				if (it.is_type_of<pair>()) {
 					const auto &p = it.const_val<pair>();
 					insert_or_assign(map, p.first, p.second);
 				}
@@ -207,7 +207,7 @@ namespace cs_impl {
 			hash_map map;
 			std::size_t idx = 0;
 			for (auto &it : arr) {
-				if (it.type() == typeid(pair)) {
+				if (it.is_type_of<pair>()) {
 					const auto &p = it.const_val<pair>();
 					insert_or_assign(map, p.first, p.second);
 				}
@@ -234,7 +234,7 @@ namespace cs_impl {
 					str.append(sep);
 				else
 					insert_sep = true;
-				if (it.type() == typeid(string))
+				if (it.is_type_of<string>())
 					str.append(it.const_val<string>());
 				else
 					str.append(it.to_string());
@@ -1200,14 +1200,14 @@ namespace cs_impl {
 			if (args.empty())
 				throw lang_error("Empty arguments. Expected: fiber.create(function, arguments...)");
 			const var &func = args.front();
-			if (func.type() == typeid(callable)) {
+			if (func.is_type_of<callable>()) {
 				const callable::function_type &impl_f = func.const_val<callable>().get_raw_data();
 				if (impl_f.target_type() != typeid(function))
 					throw lang_error("Only can create coroutine from covscript function.");
 				function const *fptr = impl_f.target<function>();
 				return fiber::create(fptr->get_context(), fiber_function(fptr, vector(args.begin() + 1, args.end())));
 			}
-			else if (func.type() == typeid(object_method)) {
+			else if (func.is_type_of<object_method>()) {
 				const auto &om = func.const_val<object_method>();
 				const callable::function_type &impl_f = om.callable.const_val<callable>().get_raw_data();
 				if (impl_f.target_type() != typeid(function))
@@ -1516,14 +1516,14 @@ namespace cs_impl {
 
 		numeric argument_count(const var &func)
 		{
-			if (func.type() == typeid(object_method)) {
+			if (func.is_type_of<object_method>()) {
 				const callable::function_type &target = func.const_val<object_method>().callable.const_val<callable>().get_raw_data();
 				if (target.target_type() == typeid(function))
 					return target.target<function>()->argument_count() - 1;
 				else
 					return target.target<cni>()->argument_count() - 1;
 			}
-			else if (func.type() == typeid(callable)) {
+			else if (func.is_type_of<callable>()) {
 				const callable::function_type &target = func.const_val<callable>().get_raw_data();
 				if (target.target_type() == typeid(function))
 					return target.target<function>()->argument_count();
@@ -1590,10 +1590,10 @@ namespace cs_impl {
 
 		var wait_for(const numeric &mill_sec, const var &func, const array &argument)
 		{
-			if (func.type() == typeid(callable)) {
+			if (func.is_type_of<callable>()) {
 				return wait_for_impl(mill_sec.as_integer(), func.const_val<callable>(), vector(argument.begin(), argument.end()));
 			}
-			else if (func.type() == typeid(object_method)) {
+			else if (func.is_type_of<object_method>()) {
 				const auto &om = func.const_val<object_method>();
 				vector args{om.object};
 				args.insert(args.end(), argument.begin(), argument.end());
@@ -1605,10 +1605,10 @@ namespace cs_impl {
 
 		var wait_until(const numeric &mill_sec, const var &func, const array &argument)
 		{
-			if (func.type() == typeid(callable)) {
+			if (func.is_type_of<callable>()) {
 				return wait_until_impl(mill_sec.as_integer(), func.const_val<callable>(), vector(argument.begin(), argument.end()));
 			}
-			else if (func.type() == typeid(object_method)) {
+			else if (func.is_type_of<object_method>()) {
 				const auto &om = func.const_val<object_method>();
 				vector args{om.object};
 				args.insert(args.end(), argument.begin(), argument.end());
@@ -1623,10 +1623,10 @@ namespace cs_impl {
 			if (args.empty())
 				throw lang_error("Empty arguments. Expected: runtime.await(function, arguments...)");
 			const var &func = args.front();
-			if (func.type() == typeid(callable)) {
+			if (func.is_type_of<callable>()) {
 				return await_impl(func.const_val<callable>(), vector(args.begin() + 1, args.end()));
 			}
-			else if (func.type() == typeid(object_method)) {
+			else if (func.is_type_of<object_method>()) {
 				const auto &om = func.const_val<object_method>();
 				vector argument{om.object};
 				argument.insert(argument.end(), args.begin() + 1, args.end());
@@ -1695,9 +1695,9 @@ namespace cs_impl {
 
 		string append(string &str, const var &val)
 		{
-			if (val.type() == typeid(char))
+			if (val.is_type_of<char>())
 				str.push_back(val.const_val<char>());
-			else if (val.type() == typeid(string))
+			else if (val.is_type_of<string>())
 				str.append(val.const_val<string>());
 			else
 				str.append(val.to_string());
@@ -1706,7 +1706,7 @@ namespace cs_impl {
 
 		string insert(string &str, const numeric &posit, const var &val)
 		{
-			if (val.type() == typeid(string))
+			if (val.is_type_of<string>())
 				str.insert(posit.as_integer(), val.const_val<string>());
 			else
 				str.insert(posit.as_integer(), val.to_string());
@@ -1721,7 +1721,7 @@ namespace cs_impl {
 
 		string replace(string &str, const numeric &posit, const numeric &count, const var &val)
 		{
-			if (val.type() == typeid(string))
+			if (val.is_type_of<string>())
 				str.replace(posit.as_integer(), count.as_integer(), val.const_val<string>());
 			else
 				str.replace(posit.as_integer(), count.as_integer(), val.to_string());
