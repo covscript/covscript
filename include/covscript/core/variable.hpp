@@ -538,19 +538,24 @@ namespace cs_impl {
 	using default_allocator = cs::allocator_type<T, default_allocate_buffer_size, default_allocator_provider>;
 
 	class any final {
-		using holder_impl = basic_var<64, default_allocator>;
 		struct proxy
 		{
 			bool is_rvalue = false;
 			unsigned protect_level = 0;
 			std::size_t refcount = 1;
-			holder_impl data;
+			basic_var<64, default_allocator> data;
 
-			proxy() = delete;
+			proxy() = default;
 
-			proxy(std::size_t rc, holder_impl d) : refcount(rc), data(std::move(d)) {}
+			template <typename T>
+			proxy(std::size_t rc, T &&d) : refcount(rc), data(std::forward<T>(d))
+			{
+			}
 
-			proxy(short pl, std::size_t rc, holder_impl d) : protect_level(pl), refcount(rc), data(std::move(d)) {}
+			template <typename T>
+			proxy(unsigned pl, std::size_t rc, T &&d) : protect_level(pl), refcount(rc), data(std::forward<T>(d))
+			{
+			}
 		};
 
 		static cs::allocator_type<proxy, default_allocate_buffer_size * default_allocate_buffer_multiplier, default_allocator_provider> allocator;
@@ -585,7 +590,7 @@ namespace cs_impl {
 			if (this->mDat != nullptr && obj.mDat != nullptr && raw) {
 				if (mDat->is_rvalue || this->mDat->protect_level > 0 || obj.mDat->protect_level > 0)
 					throw cov::error("E000J");
-				std::swap(this->mDat->data, obj.mDat->data);
+				this->mDat->data.swap(obj.mDat->data);
 			}
 			else
 				std::swap(this->mDat, obj.mDat);
@@ -596,7 +601,7 @@ namespace cs_impl {
 			if (this->mDat != nullptr && obj.mDat != nullptr && raw) {
 				if (mDat->is_rvalue || this->mDat->protect_level > 0 || obj.mDat->protect_level > 0)
 					throw cov::error("E000J");
-				std::swap(this->mDat->data, obj.mDat->data);
+				this->mDat->data.swap(obj.mDat->data);
 			}
 			else
 				std::swap(this->mDat, obj.mDat);
@@ -630,32 +635,47 @@ namespace cs_impl {
 		template <typename T, typename... ArgsT>
 		static any make(ArgsT &&...args)
 		{
-			return any(allocator.alloc(1, holder_impl::make<T>(std::forward<ArgsT>(args)...)));
+			proxy *dat = allocator.alloc();
+			dat->protect_level = 0;
+			dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			return any(dat);
 		}
 
 		template <typename T, typename... ArgsT>
 		static any make_protect(ArgsT &&...args)
 		{
-			return any(allocator.alloc(1, 1, holder_impl::make<T>(std::forward<ArgsT>(args)...)));
+			proxy *dat = allocator.alloc();
+			dat->protect_level = 1;
+			dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			return any(dat);
 		}
 
 		template <typename T, typename... ArgsT>
 		static any make_constant(ArgsT &&...args)
 		{
-			return any(allocator.alloc(2, 1, holder_impl::make<T>(std::forward<ArgsT>(args)...)));
+			proxy *dat = allocator.alloc();
+			dat->protect_level = 2;
+			dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			return any(dat);
 		}
 
 		template <typename T, typename... ArgsT>
 		static any make_single(ArgsT &&...args)
 		{
-			return any(allocator.alloc(3, 1, holder_impl::make<T>(std::forward<ArgsT>(args)...)));
+			proxy *dat = allocator.alloc();
+			dat->protect_level = 3;
+			dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			return any(dat);
 		}
 
 		constexpr any() = default;
 
 		template <typename T>
-		any(const T &dat) : mDat(allocator.alloc(1, holder_impl::make<T>(dat)))
+		any(const T &dat)
 		{
+			mDat = allocator.alloc();
+			mDat->protect_level = 0;
+			mDat->data.construct_store<cs_impl::var_storage_t<T>>(dat);
 		}
 
 		any(const any &v) : mDat(v.duplicate()) {}
@@ -872,7 +892,8 @@ namespace cs_impl {
 			}
 			else {
 				recycle();
-				mDat = allocator.alloc(1, holder_impl::make<T>(dat));
+				mDat = allocator.alloc();
+				mDat->data.construct_store<var_storage_t<T>>(dat);
 			}
 		}
 
