@@ -293,6 +293,8 @@ namespace cs_impl {
 	template <typename T>
 	using var_storage_t = typename var_storage<std::decay_t<T>>::type;
 
+	constexpr std::size_t aligned_element_size = (std::max) (alignof(std::max_align_t), sizeof(void *));
+
 	template <std::size_t align_size,
 	          template <typename> class allocator_t>
 	class basic_var final {
@@ -306,10 +308,10 @@ namespace cs_impl {
 		}
 
 		static_assert(align_size % 8 == 0, "align_size must be a multiple of 8.");
-		static_assert(align_size >= (std::max) (alignof(std::max_align_t), sizeof(void *)),
+		static_assert(align_size >= aligned_element_size,
 		              "align_size must greater than alignof(std::max_align_t).");
 
-		using aligned_storage_t = std::aligned_storage_t<align_size - (std::max) (alignof(std::max_align_t), sizeof(void *)), alignof(std::max_align_t)>;
+		using aligned_storage_t = std::aligned_storage_t<align_size - aligned_element_size, alignof(std::max_align_t)>;
 
 		enum class var_op
 		{
@@ -538,22 +540,28 @@ namespace cs_impl {
 	using default_allocator = cs::allocator_type<T, default_allocate_buffer_size, default_allocator_provider>;
 
 	class any final {
-		struct proxy
+		struct align_helper
 		{
 			bool is_rvalue = false;
-			unsigned protect_level = 0;
-			std::size_t refcount = 1;
-			basic_var<64, default_allocator> data;
+			std::uint8_t protect_level = 0;
+			std::uint32_t refcount = 1;
+		};
+		struct alignas(64) proxy
+		{
+			bool is_rvalue = false;
+			std::uint8_t protect_level = 0;
+			std::uint32_t refcount = 1;
+			basic_var<64 - sizeof(align_helper), default_allocator> data;
 
 			proxy() = default;
 
 			template <typename T>
-			proxy(std::size_t rc, T &&d) : refcount(rc), data(std::forward<T>(d))
+			proxy(std::uint32_t rc, T &&d) : refcount(rc), data(std::forward<T>(d))
 			{
 			}
 
 			template <typename T>
-			proxy(unsigned pl, std::size_t rc, T &&d) : protect_level(pl), refcount(rc), data(std::forward<T>(d))
+			proxy(std::uint8_t pl, std::uint32_t rc, T &&d) : protect_level(pl), refcount(rc), data(std::forward<T>(d))
 			{
 			}
 		};
