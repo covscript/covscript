@@ -937,7 +937,7 @@ typename cs_impl::basic_var<align_size, allocator_t>::var_op_result cs_impl::bas
 		::new (&static_cast<basic_var *>(rhs)->m_store.buffer) T(*ptr);
 		break;
 	case var_op::move:
-		::new (&static_cast<basic_var *>(rhs)->m_store.buffer) T(std::move(*ptr));
+		::new (&static_cast<basic_var *>(rhs)->m_store.buffer) T(std::move(*const_cast<T *>(ptr)));
 		break;
 	case var_op::destroy:
 		ptr->~T();
@@ -988,7 +988,7 @@ typename cs_impl::basic_var<align_size, allocator_t>::var_op_result cs_impl::bas
 	}
 	case var_op::move: {
 		T *nptr = get_allocator<T>().allocate(1);
-		::new (nptr) T(std::move(*ptr));
+		::new (nptr) T(std::move(*const_cast<T *>(ptr)));
 		static_cast<basic_var *>(rhs)->m_store.ptr = nptr;
 		break;
 	}

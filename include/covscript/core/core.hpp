@@ -851,6 +851,8 @@ namespace cs {
 				invoke(m_data->get_var("initialize"), var::make<structure>(this));
 		}
 
+		structure(structure &&s) noexcept = default;
+
 		structure(const structure &s) : m_id(s.m_id), m_name(s.m_name),
 			m_data(std::make_shared<domain_type>())
 		{
