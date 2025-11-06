@@ -306,7 +306,7 @@ namespace cs_impl {
 		}
 
 		static_assert(align_size % 8 == 0, "align_size must be a multiple of 8.");
-		static_assert(align_size >= std::max(alignof(std::max_align_t), sizeof(void *)),
+		static_assert(align_size >= (std::max) (alignof(std::max_align_t), sizeof(void *)),
 		              "align_size must greater than alignof(std::max_align_t).");
 
 		using aligned_storage_t = std::aligned_storage_t<align_size - (std::max) (alignof(std::max_align_t), sizeof(void *)), alignof(std::max_align_t)>;

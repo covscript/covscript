@@ -292,7 +292,7 @@ namespace cs {
 		std::function<void(tree_type<token_base *>::iterator, const var &)> process;
 		process = [&process, this, constant, link](tree_type<token_base *>::iterator it, const var &val) {
 			auto &pl = static_cast<token_parallel *>(it.data())->get_parallel();
-			if (val.type() != typeid(array))
+			if (!val.is_type_of<array>())
 				throw runtime_error("Only support structured binding with array while variable definition.");
 			auto &arr = val.const_val<array>();
 			if (pl.size() != arr.size())

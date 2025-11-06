@@ -867,7 +867,7 @@ namespace cs {
 	{
 		CS_DEBUGGER_STEP(this);
 		var e = context->instance->parse_expr(this->mTree.root());
-		if (e.type() != typeid(lang_error))
+		if (!e.is_type_of<lang_error>())
 			throw runtime_error("Throwing unsupported exception.");
 		else
 			throw e.const_val<lang_error>();

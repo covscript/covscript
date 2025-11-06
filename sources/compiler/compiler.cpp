@@ -778,7 +778,7 @@ namespace cs {
 		case token_types::id: {
 			var value = context->instance->storage.get_var_optimizable(static_cast<token_id *>(token)->get_id());
 			if (value.usable() && value.is_protect()) {
-				if (do_optm == optm_type::enable_namespace_optm || value.type() != typeid(namespace_t) ||
+				if (do_optm == optm_type::enable_namespace_optm || !value.is_type_of<namespace_t>() ||
 				        !value.const_val<namespace_t>()->get_domain().exist("__PRAGMA_CS_NAMESPACE_DEFINITION__"))
 					it.data() = new_value(value);
 			}

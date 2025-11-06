@@ -151,7 +151,7 @@ namespace cs {
 			return a.const_val<type_t>().get_var(static_cast<token_id *>(b)->get_id());
 		else if (a.is_type_of<structure>()) {
 			var &val = a.val<structure>().get_var(static_cast<token_id *>(b)->get_id());
-			if (val.type() != typeid(callable) || !val.const_val<callable>().is_member_fn())
+			if (!val.is_type_of<callable>() || !val.const_val<callable>().is_member_fn())
 				return val;
 			else
 				throw runtime_error("Can not visit member function as lvalue.");
@@ -341,7 +341,7 @@ namespace cs {
 
 	var runtime_type::parse_bind(token_base *a, const var &b)
 	{
-		if (b.type() != typeid(array))
+		if (!b.is_type_of<array>())
 			throw runtime_error("Only support structured binding with array.");
 		auto &pl = static_cast<token_parallel *>(a)->get_parallel();
 		auto &arr = b.const_val<array>();
@@ -370,7 +370,7 @@ namespace cs {
 
 	var runtime_type::parse_pair(const var &a, const var &b)
 	{
-		if (a.type() != typeid(pair) && b.type() != typeid(pair))
+		if (!a.is_type_of<pair>() && !b.is_type_of<pair>())
 			return var::make<pair>(copy(a), copy(b));
 		else
 			throw runtime_error("Unsupported operator operations(Pair).");
@@ -486,7 +486,7 @@ namespace cs {
 	var &runtime_type::parse_access_lhs(const var &a, const var &b)
 	{
 		if (a.is_type_of<array>()) {
-			if (b.type() != typeid(numeric))
+			if (!b.is_type_of<numeric>())
 				throw runtime_error("Index must be a numeric.");
 			auto &arr = a.val<array>();
 			std::size_t posit = 0;
@@ -519,7 +519,7 @@ namespace cs {
 	var runtime_type::parse_access(const var &a, const var &b)
 	{
 		if (a.is_type_of<array>()) {
-			if (b.type() != typeid(numeric))
+			if (!b.is_type_of<numeric>())
 				throw runtime_error("Index must be a numeric.");
 			const auto &carr = a.const_val<array>();
 			std::size_t posit = 0;
@@ -544,7 +544,7 @@ namespace cs {
 			return it->second;
 		}
 		else if (a.is_type_of<string>()) {
-			if (b.type() != typeid(numeric))
+			if (!b.is_type_of<numeric>())
 				throw runtime_error("Index must be a numeric.");
 			const auto &cstr = a.const_val<string>();
 			if (b.const_val<numeric>() >= 0)
