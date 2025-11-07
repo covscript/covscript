@@ -201,7 +201,7 @@ namespace cs_impl {
 	}
 
 	template <typename T>
-	static std::string to_string(const T &val)
+	static cs::string_borrower to_string(const T &val)
 	{
 		return to_string_if<T, to_string_helper<T>::value>::to_string(val);
 	}
@@ -530,11 +530,11 @@ namespace cs_impl {
 			return m_dispatcher(var_op::to_integer, this, nullptr)._int;
 		}
 
-		inline std::string to_string() const
+		inline cs::string_borrower to_string() const
 		{
-			std::string str;
-			m_dispatcher(var_op::to_string, this, &str);
-			return str;
+			cs::string_borrower borrower;
+			m_dispatcher(var_op::to_string, this, &borrower);
+			return borrower;
 		}
 
 		inline std::size_t hash() const
@@ -558,20 +558,14 @@ namespace cs_impl {
 		}
 	};
 
-// Be careful when you adjust the buffer size.
-	constexpr std::size_t default_allocate_buffer_size = 64;
 	constexpr std::size_t default_allocate_buffer_multiplier = 8;
-	template <typename T>
-	using default_allocator_provider = std::allocator<T>;
-	template <typename T>
-	using default_allocator = cs::allocator_type<T, default_allocate_buffer_size, default_allocator_provider>;
 
 	class any final {
 		struct proxy
 		{
 			std::uint32_t refcount = 1;
 			std::int8_t protect_level = 0;
-			basic_var<32, default_allocator> data;
+			basic_var<32, cs::default_allocator> data;
 
 			proxy() = default;
 
@@ -586,7 +580,7 @@ namespace cs_impl {
 			}
 		};
 
-		static cs::allocator_type<proxy, default_allocate_buffer_size * default_allocate_buffer_multiplier, default_allocator_provider> allocator;
+		static cs::allocator_type<proxy, cs::default_allocate_buffer_size * default_allocate_buffer_multiplier, cs::default_allocator_provider> allocator;
 
 		proxy *mDat = nullptr;
 
@@ -733,7 +727,7 @@ namespace cs_impl {
 			return this->mDat->data.to_integer();
 		}
 
-		std::string to_string() const
+		cs::string_borrower to_string() const
 		{
 			if (this->mDat == nullptr)
 				return "Null";
@@ -943,13 +937,13 @@ namespace cs_impl {
 	};
 
 	template <>
-	std::string to_string<std::string>(const std::string &str)
+	cs::string_borrower to_string<std::string>(const std::string &str)
 	{
 		return str;
 	}
 
 	template <>
-	std::string to_string<bool>(const bool &v)
+	cs::string_borrower to_string<bool>(const bool &v)
 	{
 		if (v)
 			return "true";
@@ -1010,7 +1004,7 @@ typename cs_impl::basic_var<align_size, allocator_t>::var_op_result cs_impl::bas
 	case var_op::to_integer:
 		return var_op_result::from_int(cs_impl::to_integer(*ptr));
 	case var_op::to_string:
-		*static_cast<std::string *>(rhs) = cs_impl::to_string(*ptr);
+		*static_cast<cs::string_borrower *>(rhs) = cs_impl::to_string(*ptr);
 		return var_op_result();
 	case var_op::hash:
 		return var_op_result::from_uint(cs_impl::hash<T>(*ptr));
@@ -1061,7 +1055,7 @@ typename cs_impl::basic_var<align_size, allocator_t>::var_op_result cs_impl::bas
 	case var_op::to_integer:
 		return var_op_result::from_int(cs_impl::to_integer(*ptr));
 	case var_op::to_string:
-		*static_cast<std::string *>(rhs) = cs_impl::to_string(*ptr);
+		*static_cast<cs::string_borrower *>(rhs) = cs_impl::to_string(*ptr);
 		return var_op_result();
 	case var_op::hash:
 		return var_op_result::from_uint(cs_impl::hash<T>(*ptr));

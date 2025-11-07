@@ -1142,7 +1142,7 @@ namespace cs {
 }
 
 template<>
-std::string cs_impl::to_string<cs::structure>(const cs::structure &stut)
+cs::string_borrower cs_impl::to_string<cs::structure>(const cs::structure &stut)
 {
 	if (stut.get_domain().exist("to_string")) {
 		cs::var func = stut.get_domain().get_var("to_string");

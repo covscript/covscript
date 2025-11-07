@@ -256,13 +256,15 @@ namespace cs {
 		{
 			if (exp == 0) // base^0
 				return 1;
-			if (base == 0 && exp < 0) { // 0^negative
+			if (base == 0 && exp < 0) {
+				// 0^negative
 				errno = EDOM;
 				feraiseexcept(FE_DIVBYZERO);
 				return std::numeric_limits<numeric_float>::infinity();
 			}
 			bool neg = false;
-			if (exp < 0) { // negative exponent
+			if (exp < 0) {
+				// negative exponent
 				neg = true;
 				if (exp == (std::numeric_limits<numeric_integer>::min)())
 					return numeric_float(1.0) / (int_pow(base, exp + 1).as_float() * base);
@@ -844,6 +846,152 @@ namespace cs {
 		}
 	};
 
+// Be careful when you adjust the buffer size.
+	constexpr std::size_t default_allocate_buffer_size = 64;
+	template <typename T>
+	using default_allocator_provider = std::allocator<T>;
+	template <typename T>
+	using default_allocator = cs::allocator_type<T, default_allocate_buffer_size, default_allocator_provider>;
+
+// String borrower
+	template <typename CharT,
+	          template <typename> class allocator_t = default_allocator>
+	class basic_string_borrower final {
+		using stl_string = std::basic_string<CharT>;
+		using allocator_type = allocator_t<stl_string>;
+
+		static allocator_type &get_allocator()
+		{
+			static allocator_type allocator;
+			return allocator;
+		}
+
+		void *m_data = nullptr;
+		bool m_own = false;
+
+		void destroy()
+		{
+			if (m_own && m_data) {
+				stl_string *p = static_cast<stl_string *>(m_data);
+				p->~basic_string();
+				get_allocator().deallocate(p, 1);
+			}
+			m_data = nullptr;
+			m_own = false;
+		}
+
+	public:
+		basic_string_borrower() noexcept = default;
+
+		basic_string_borrower(const CharT *str) noexcept : m_data(const_cast<CharT *>(str)), m_own(false) {}
+
+		basic_string_borrower(const stl_string &str) noexcept : m_data(const_cast<CharT *>(str.data())), m_own(false) {}
+
+		basic_string_borrower(stl_string &&str) : m_own(true)
+		{
+			stl_string *p = get_allocator().allocate(1);
+			::new (p) stl_string(std::move(str));
+			m_data = p;
+		}
+
+		basic_string_borrower(const basic_string_borrower &other) : m_own(other.m_own)
+		{
+			if (other.m_own) {
+				stl_string *p = get_allocator().allocate(1);
+				::new (p) stl_string(*static_cast<const stl_string *>(other.m_data));
+				m_data = p;
+			}
+			else
+				m_data = other.m_data;
+		}
+
+		basic_string_borrower(basic_string_borrower &&other) noexcept
+			: m_data(other.m_data), m_own(other.m_own)
+		{
+			other.m_data = nullptr;
+			other.m_own = false;
+		}
+
+		basic_string_borrower &operator=(const basic_string_borrower &other)
+		{
+			if (this != &other) {
+				destroy();
+				m_own = other.m_own;
+				if (other.m_own) {
+					stl_string *p = get_allocator().allocate(1);
+					::new (p) stl_string(*static_cast<const stl_string *>(other.m_data));
+					m_data = p;
+				}
+				else
+					m_data = other.m_data;
+			}
+			return *this;
+		}
+
+		basic_string_borrower &operator=(basic_string_borrower &&other) noexcept
+		{
+			if (this != &other) {
+				destroy();
+				m_data = other.m_data;
+				m_own = other.m_own;
+				other.m_data = nullptr;
+				other.m_own = false;
+			}
+			return *this;
+		}
+
+		~basic_string_borrower()
+		{
+			destroy();
+		}
+
+		const CharT *data() const noexcept
+		{
+			if (m_own)
+				return static_cast<const stl_string *>(m_data)->data();
+			else if (m_data)
+				return static_cast<const CharT *>(m_data);
+			else
+				return nullptr;
+		}
+
+		operator const CharT *() const noexcept
+		{
+			return data();
+		}
+
+		bool usable() const noexcept
+		{
+			return m_data != nullptr;
+		}
+
+		operator bool() const noexcept
+		{
+			return usable();
+		}
+
+		stl_string extract() && {
+			if (m_own)
+			{
+				stl_string str = std::move(*static_cast<stl_string *>(m_data));
+				destroy();
+				return str;
+			}
+			else
+				return static_cast<const CharT *>(m_data);
+		}
+
+		stl_string extract() const &
+		{
+			if (m_own)
+				return *static_cast<const stl_string *>(m_data);
+			else
+				return static_cast<const CharT *>(m_data);
+		}
+	};
+
+	using string_borrower = basic_string_borrower<char>;
+
 // Binary Tree
 	template <typename T>
 	class tree_type final {
@@ -1310,3 +1458,14 @@ namespace cs {
 		}
 	};
 } // namespace cs
+
+namespace std {
+	static std::string operator+(const std::string &lhs, const cs::string_borrower &rhs)
+	{
+		return lhs + rhs.data();
+	}
+	static std::ostream &operator<<(std::ostream &lhs, const cs::string_borrower &rhs)
+	{
+		return lhs << rhs.data();
+	}
+} // namespace std

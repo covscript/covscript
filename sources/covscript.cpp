@@ -88,7 +88,7 @@ std::ostream &operator<<(std::ostream &out, const cs_impl::any &val)
 }
 
 namespace cs_impl {
-	cs::allocator_type<any::proxy, default_allocate_buffer_size*default_allocate_buffer_multiplier, default_allocator_provider> any::allocator;
+	cs::allocator_type<any::proxy, cs::default_allocate_buffer_size * default_allocate_buffer_multiplier, cs::default_allocator_provider> any::allocator;
 	cs::namespace_t member_visitor_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t array_ext = cs::make_shared_namespace<cs::name_space>();
@@ -375,9 +375,12 @@ namespace cs {
 		return val.to_integer();
 	}
 
-	string to_string(const var &val)
+	var to_string(const var &val)
 	{
-		return val.to_string();
+		if (val.is_type_of<string>())
+			return val;
+		else
+			return val.to_string().extract();
 	}
 
 	string type(const var &a)

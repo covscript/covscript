@@ -105,7 +105,7 @@ namespace cs_impl {
 
 // To String
 	template<>
-	std::string to_string<cs::numeric>(const cs::numeric &val)
+	cs::string_borrower to_string<cs::numeric>(const cs::numeric &val)
 	{
 		if (!val.is_integer()) {
 			std::stringstream ss;
@@ -119,80 +119,80 @@ namespace cs_impl {
 	}
 
 	template<>
-	std::string to_string<char>(const char &c)
+	cs::string_borrower to_string<char>(const char &c)
 	{
 		return std::string(1, c);
 	}
 
 	template<>
-	std::string to_string<cs::list>(const cs::list &lst)
+	cs::string_borrower to_string<cs::list>(const cs::list &lst)
 	{
 		if (lst.empty())
 			return "list => {}";
 		std::string str = "list => {";
 		for (const cs::var &it: lst)
-			str += it.to_string() + ", ";
+			str += it.to_string().extract() + ", ";
 		str.resize(str.size() - 2);
 		str += "}";
 		return std::move(str);
 	}
 
 	template<>
-	std::string to_string<cs::array>(const cs::array &arr)
+	cs::string_borrower to_string<cs::array>(const cs::array &arr)
 	{
 		if (arr.empty())
 			return "{}";
 		std::string str = "{";
 		for (const cs::var &it: arr)
-			str += it.to_string() + ", ";
+			str += it.to_string().extract() + ", ";
 		str.resize(str.size() - 2);
 		str += "}";
 		return std::move(str);
 	}
 
 	template<>
-	std::string to_string<cs::pair>(const cs::pair &p)
+	cs::string_borrower to_string<cs::pair>(const cs::pair &p)
 	{
-		return p.first.to_string() + " : " + p.second.to_string();
+		return p.first.to_string().extract() + " : " + p.second.to_string();
 	}
 
 	template<>
-	std::string to_string<cs::hash_set>(const cs::hash_set &set)
+	cs::string_borrower to_string<cs::hash_set>(const cs::hash_set &set)
 	{
 		if (set.empty())
 			return "cs::hash_set => {}";
 		std::string str = "cs::hash_set => {";
 		for (const cs::var &it: set)
-			str += it.to_string() + ", ";
+			str += it.to_string().extract() + ", ";
 		str.resize(str.size() - 2);
 		str += "}";
 		return std::move(str);
 	}
 
 	template<>
-	std::string to_string<cs::hash_map>(const cs::hash_map &map)
+	cs::string_borrower to_string<cs::hash_map>(const cs::hash_map &map)
 	{
 		if (map.empty())
 			return "cs::hash_map => {}";
 		std::string str = "cs::hash_map => {";
 		for (const cs::pair &it: map)
-			str += cs_impl::to_string(it) + ", ";
+			str += cs_impl::to_string(it).extract() + ", ";
 		str.resize(str.size() - 2);
 		str += "}";
 		return std::move(str);
 	}
 
 	template<>
-	std::string to_string<cs::pointer>(const cs::pointer &ptr)
+	cs::string_borrower to_string<cs::pointer>(const cs::pointer &ptr)
 	{
 		if (ptr == cs::null_pointer)
 			return "null";
 		else
-			return "cs::pointer => " + ptr.data.to_string();
+			return "cs::pointer => " + ptr.data.to_string().extract();
 	}
 
 	template<>
-	std::string to_string<cs::type_id>(const cs::type_id &id)
+	cs::string_borrower to_string<cs::type_id>(const cs::type_id &id)
 	{
 		if (id.type_hash != 0)
 			return cxx_demangle(id.type_idx.name()) + "_" + to_string(id.type_hash);
@@ -201,26 +201,26 @@ namespace cs_impl {
 	}
 
 	template<>
-	std::string to_string<cs::range_type>(const cs::range_type &range)
+	cs::string_borrower to_string<cs::range_type>(const cs::range_type &range)
 	{
 		if (range.empty())
 			return "cs::range => {}";
 		std::string str = "cs::range => {";
 		for (cs::numeric it: range)
-			str += to_string(it) + ", ";
+			str += to_string(it).extract() + ", ";
 		str.resize(str.size() - 2);
 		str += "}";
 		return std::move(str);
 	}
 
 	template<>
-	std::string to_string<cs::char_buff>(const cs::char_buff &buff)
+	cs::string_borrower to_string<cs::char_buff>(const cs::char_buff &buff)
 	{
 		return buff->str();
 	}
 
 	template<>
-	std::string to_string<std::tm>(const std::tm &t)
+	cs::string_borrower to_string<std::tm>(const std::tm &t)
 	{
 		return std::asctime(&t);
 	}
