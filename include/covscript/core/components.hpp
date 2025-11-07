@@ -264,7 +264,7 @@ namespace cs {
 			bool neg = false;
 			if (exp < 0) { // negative exponent
 				neg = true;
-				if (exp == std::numeric_limits<numeric_integer>::min())
+				if (exp == (std::numeric_limits<numeric_integer>::min)())
 					return numeric_float(1.0) / (int_pow(base, exp + 1).as_float() * base);
 				exp = -exp;
 			}
