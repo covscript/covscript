@@ -1,29 +1,29 @@
 #pragma once
 /*
-* Covariant Script Variant
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script Variant
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 #include <typeinfo>
 #include <typeindex>
 #include <stdexcept>
@@ -31,18 +31,18 @@
 namespace variant_impl {
 	using byte_t = unsigned char;
 
-	template<typename _From, typename _To>
+	template <typename _From, typename _To>
 	class convertible final {
-		template<typename T>
+		template <typename T>
 		static void test(T);
 
-		template<typename _F, typename _T>
+		template <typename _F, typename _T>
 		static constexpr bool convert_helper(float)
 		{
 			return false;
 		}
 
-		template<typename _F, typename _T, typename = decltype(test<_T>(std::declval<_F>()))>
+		template <typename _F, typename _T, typename = decltype(test<_T>(std::declval<_F>()))>
 		static constexpr bool convert_helper(int)
 		{
 			return true;
@@ -54,7 +54,7 @@ namespace variant_impl {
 		static constexpr bool value = convert_helper<_From, _To>(0);
 	};
 
-	template<typename T>
+	template <typename T>
 	class convertible<T, T> final {
 	public:
 		convertible() = delete;
@@ -62,22 +62,24 @@ namespace variant_impl {
 		static constexpr bool value = true;
 	};
 
-	template<bool value, typename T>
+	template <bool value, typename T>
 	struct convert_if;
 
-	template<typename T>
+	template <typename T>
 	struct convert_if<true, T> {
-		template<typename X>
+		template <typename X>
 		static void emplace(const byte_t *src, X &&dat)
 		{
-			::new(src) T(std::forward<X>(dat));
+			::new (src) T(std::forward<X>(dat));
 		}
 	};
 
-	template<typename T>
+	template <typename T>
 	struct convert_if<false, T> {
-		template<typename X>
-		static void emplace(byte_t *, X &&) {}
+		template <typename X>
+		static void emplace(byte_t *, X &&)
+		{
+		}
 	};
 
 	class base_holder {
@@ -89,13 +91,15 @@ namespace variant_impl {
 		virtual ~base_holder() = default;
 	};
 
-	template<typename T>
+	template <typename T>
 	class holder : public base_holder {
 	public:
 		T data;
 
-		template<typename... _ArgsT>
-		holder(_ArgsT &&... args) : data(std::forward<_ArgsT>(args)...) {}
+		template <typename... _ArgsT>
+		holder(_ArgsT &&...args) : data(std::forward<_ArgsT>(args)...)
+		{
+		}
 
 		const std::type_info &get_type() const noexcept override
 		{
@@ -104,14 +108,14 @@ namespace variant_impl {
 
 		void copy_data(byte_t *dest) override
 		{
-			::new(dest) T(data);
+			::new (dest) T(data);
 		}
 	};
 
-	template<typename... ArgsT>
+	template <typename... ArgsT>
 	struct template_args_iterator;
 
-	template<typename T>
+	template <typename T>
 	struct template_args_iterator<holder<T>> {
 		static constexpr std::size_t get_max_size(std::size_t size = 0)
 		{
@@ -121,7 +125,7 @@ namespace variant_impl {
 				return size;
 		}
 
-		template<typename X>
+		template <typename X>
 		static void emplace(byte_t *src, X &&dat)
 		{
 			if (convertible<X, T>::value)
@@ -131,7 +135,7 @@ namespace variant_impl {
 		}
 	};
 
-	template<typename T, typename... ArgsT>
+	template <typename T, typename... ArgsT>
 	struct template_args_iterator<holder<T>, ArgsT...> {
 		static constexpr std::size_t get_max_size(std::size_t size = 0)
 		{
@@ -141,7 +145,7 @@ namespace variant_impl {
 				return template_args_iterator<ArgsT...>::get_max_size(size);
 		}
 
-		template<typename X>
+		template <typename X>
 		static void emplace(byte_t *src, X &&dat)
 		{
 			if (convertible<X, T>::value)
@@ -154,7 +158,7 @@ namespace variant_impl {
 	struct monostate final {
 	};
 
-	template<typename... ArgsT>
+	template <typename... ArgsT>
 	class variant final {
 		using template_iterator_t = template_args_iterator<holder<monostate>, holder<ArgsT>...>;
 		byte_t data_container[template_iterator_t::get_max_size()];
@@ -163,7 +167,7 @@ namespace variant_impl {
 	public:
 		variant()
 		{
-			::new(data_container) holder<monostate>;
+			::new (data_container) holder<monostate>;
 		}
 
 		variant(const variant &var)
@@ -171,10 +175,10 @@ namespace variant_impl {
 			data_ptr->copy_data(data_container);
 		}
 
-		template<typename T>
+		template <typename T>
 		variant(const T &t)
 		{
-			::new(data_container) holder<T>(t);
+			::new (data_container) holder<T>(t);
 		}
 
 		~variant()
@@ -191,22 +195,22 @@ namespace variant_impl {
 			return *this;
 		}
 
-		template<typename T>
+		template <typename T>
 		variant &operator=(const T &t)
 		{
 			data_ptr->~base_holder();
-			::new(data_container) holder<T>(t);
+			::new (data_container) holder<T>(t);
 			return *this;
 		}
 
-		template<typename T, typename... ElementT>
-		void emplace(ElementT &&... args)
+		template <typename T, typename... ElementT>
+		void emplace(ElementT &&...args)
 		{
 			data_ptr->~base_holder();
-			::new(data_container) holder<T>(std::forward<ElementT>(args)...);
+			::new (data_container) holder<T>(std::forward<ElementT>(args)...);
 		}
 
-		template<typename T>
+		template <typename T>
 		void force_emplace(T &&dat)
 		{
 			data_ptr->~base_holder();
@@ -218,7 +222,7 @@ namespace variant_impl {
 			return data_ptr->get_type();
 		}
 
-		template<typename T>
+		template <typename T>
 		T &get() const
 		{
 			if (data_ptr->get_type() == typeid(T))
@@ -227,13 +231,13 @@ namespace variant_impl {
 				throw std::logic_error("Type does not match.");
 		}
 
-		template<typename T>
+		template <typename T>
 		operator T &()
 		{
 			return get<T>();
 		}
 
-		template<typename T>
+		template <typename T>
 		operator const T &() const
 		{
 			return get<T>();

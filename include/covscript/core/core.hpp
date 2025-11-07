@@ -1,33 +1,33 @@
 #pragma once
 /*
-* Covariant Script Programming Language
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*
-* Namespaces:
-* cs: Main Namespace
-* cs_impl: Implement Namespace
-*/
+ * Covariant Script Programming Language
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ *
+ * Namespaces:
+ * cs: Main Namespace
+ * cs_impl: Implement Namespace
+ */
 // Configs
 #ifndef COVSCRIPT_STACK_PRESERVE
 #define COVSCRIPT_STACK_PRESERVE 64
@@ -78,17 +78,18 @@ namespace cs {
 // Process Context
 	class process_context final {
 		std::atomic<bool> is_sigint_raised{};
+
 	public:
-// Version
+		// Version
 		const std::string version = COVSCRIPT_VERSION_STR;
 		const numeric std_version = COVSCRIPT_STD_VERSION;
-// Output Precision
+		// Output Precision
 		int output_precision = 8;
-// Exit code
+		// Exit code
 		int exit_code = 0;
-// Import Path
+		// Import Path
 		std::string import_path = ".";
-// Stack
+		// Stack
 		std::size_t stack_size = COVSCRIPT_STACK_PRESERVE;
 
 		stack_type<var> stack;
@@ -97,7 +98,7 @@ namespace cs {
 #endif
 		stack_type<fiber_t> fiber_stack;
 
-// Stack Resize must before any context instance start
+		// Stack Resize must before any context instance start
 		void resize_stack(std::size_t size)
 		{
 			stack_size = size;
@@ -116,14 +117,14 @@ namespace cs {
 				return COVSCRIPT_STACK_PRESERVE;
 		}
 
-// Event Handling
+		// Event Handling
 		static void cleanup_context();
 
 		static bool on_process_exit_default_handler(void *);
 
 		event_type on_process_exit;
 
-// DO NOT TOUCH THIS EVENT DIRECTLY!!
+		// DO NOT TOUCH THIS EVENT DIRECTLY!!
 		event_type on_process_sigint;
 
 		inline void poll_event()
@@ -139,7 +140,7 @@ namespace cs {
 			is_sigint_raised = true;
 		}
 
-// Exception Handling
+		// Exception Handling
 		std::exception_ptr eptr = nullptr;
 		std::mutex eptr_mutex;
 
@@ -195,11 +196,17 @@ namespace cs {
 	public:
 		using function_type = std::function<var(vector &)>;
 		enum class types {
-			normal, request_fold, member_fn, member_visitor, force_regular
+			normal,
+			request_fold,
+			member_fn,
+			member_visitor,
+			force_regular
 		};
+
 	private:
 		function_type mFunc;
 		types mType = types::normal;
+
 	public:
 		callable() = delete;
 
@@ -234,7 +241,10 @@ namespace cs {
 	};
 
 	enum class fiber_state {
-		ready, running, suspended, finished
+		ready,
+		running,
+		suspended,
+		finished
 	};
 
 	class fiber_type {
@@ -258,7 +268,7 @@ namespace cs {
 		void resume(const fiber_t &);
 
 		void yield();
-	}
+	} // namespace fiber
 
 	class function final {
 		context_t mContext;
@@ -302,15 +312,13 @@ namespace cs {
 		function(const function &) = default;
 
 #ifdef CS_DEBUGGER
-		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false) :
-			mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
+		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false) : mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
 		{
 			init_call_ptr();
 		}
 #else
 
-		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false) :
-			mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
+		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false) : mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
 		{
 			init_call_ptr();
 		}
@@ -345,7 +353,7 @@ namespace cs {
 			if (!mIsVargs) {
 				std::vector<std::string> args{reserve};
 				args.reserve(mArgs.size());
-				for (auto &name: mArgs) {
+				for (auto &name : mArgs) {
 					if (name != reserve)
 						args.emplace_back(std::move(name));
 					else
@@ -359,8 +367,8 @@ namespace cs {
 			auto rpos = mDecl.rfind(')');
 			prefix = mDecl.substr(0, lpos);
 			suffix = mDecl.substr(rpos);
-			if(mArgs.size() > 1 || mIsVargs)
-				mDecl = prefix + "this" + (mIsVargs ? ", ..." : ", ") + mDecl.substr(lpos, rpos-lpos) + suffix;
+			if (mArgs.size() > 1 || mIsVargs)
+				mDecl = prefix + "this" + (mIsVargs ? ", ..." : ", ") + mDecl.substr(lpos, rpos - lpos) + suffix;
 			else
 				mDecl = prefix + "this" + suffix;
 #endif
@@ -372,19 +380,19 @@ namespace cs {
 		}
 
 #ifdef CS_DEBUGGER
-		const std::string& get_declaration() const
+		const std::string &get_declaration() const
 		{
 			return mDecl;
 		}
 
-		statement_base* get_raw_statement() const
+		statement_base *get_raw_statement() const
 		{
 			return mStmt;
 		}
 
 		void set_debugger_state(bool match) const
 		{
-			mMatch=match;
+			mMatch = match;
 		}
 #endif
 	};
@@ -396,8 +404,7 @@ namespace cs {
 
 		object_method() = delete;
 
-		object_method(var obj, var func, bool request_fold = false) : object(std::move(obj)), callable(std::move(func)),
-			is_request_fold(request_fold) {}
+		object_method(var obj, var func, bool request_fold = false) : object(std::move(obj)), callable(std::move(func)), is_request_fold(request_fold) {}
 
 		~object_method() = default;
 	};
@@ -415,8 +422,8 @@ namespace cs {
 	var try_move(const var &);
 
 // Invoke
-	template<typename... ArgsT>
-	static var invoke(const var &func, ArgsT &&... _args)
+	template <typename... ArgsT>
+	static var invoke(const var &func, ArgsT &&..._args)
 	{
 		if (func.is_type_of<callable>()) {
 			vector args{std::forward<ArgsT>(_args)...};
@@ -500,6 +507,7 @@ namespace cs {
 		mutable std::size_t m_domain_id = 0, m_slot_id = 0;
 		mutable std::shared_ptr<domain_ref> m_ref;
 		std::string m_id;
+
 	public:
 		var_id() = delete;
 
@@ -551,10 +559,9 @@ namespace cs {
 	public:
 		domain_type() : m_ref(std::make_shared<domain_ref>(this)) {}
 
-		domain_type(const domain_type &domain) : m_reflect(domain.m_reflect), m_ref(std::make_shared<domain_ref>(this)),
-			m_slot(domain.m_slot) {}
+		domain_type(const domain_type &domain) : m_reflect(domain.m_reflect), m_ref(std::make_shared<domain_ref>(this)), m_slot(domain.m_slot) {}
 
-		domain_type(domain_type &&domain) noexcept: m_ref(std::make_shared<domain_ref>(this))
+		domain_type(domain_type &&domain) noexcept : m_ref(std::make_shared<domain_ref>(this))
 		{
 			std::swap(m_reflect, domain.m_reflect);
 			std::swap(m_slot, domain.m_slot);
@@ -764,15 +771,15 @@ namespace cs {
 
 		type_t(std::function<var()> c, const type_id &i) : constructor(std::move(c)), id(i) {}
 
-		type_t(std::function<var()> c, const type_id &i, namespace_t ext) : constructor(std::move(c)), id(i),
-			extensions(std::move(ext)) {}
+		type_t(std::function<var()> c, const type_id &i, namespace_t ext) : constructor(std::move(c)), id(i), extensions(std::move(ext)) {}
 
-		template<typename T>
+		template <typename T>
 		var &get_var(T &&) const;
 	};
 
 	class range_iterator final {
 		numeric m_step, m_index;
+
 	public:
 		range_iterator() = delete;
 
@@ -808,6 +815,7 @@ namespace cs {
 
 	class range_type final {
 		numeric m_start, m_stop, m_step;
+
 	public:
 		range_type() = delete;
 
@@ -840,6 +848,7 @@ namespace cs {
 		std::string m_name;
 		domain_t m_data;
 		type_id m_id;
+
 	public:
 		structure() = delete;
 
@@ -853,8 +862,7 @@ namespace cs {
 
 		structure(structure &&s) noexcept = default;
 
-		structure(const structure &s) : m_id(s.m_id), m_name(s.m_name),
-			m_data(std::make_shared<domain_type>())
+		structure(const structure &s) : m_id(s.m_id), m_name(s.m_name), m_data(std::make_shared<domain_type>())
 		{
 			if (s.m_data->exist("parent")) {
 				var &_p = s.m_data->get_var("parent");
@@ -862,7 +870,7 @@ namespace cs {
 				var p = copy(_p);
 				auto &parent = p.val<structure>();
 				m_data->add_var("parent", p);
-				for (auto &it: *parent.m_data) {
+				for (auto &it : *parent.m_data) {
 					// Handle overriding
 					const var &v = s.m_data->get_var(it.first);
 					if (!_parent.m_data->get_var(it.first).is_same(v))
@@ -871,15 +879,14 @@ namespace cs {
 						m_data->add_var(it.first, parent.m_data->get_var_by_id(it.second));
 				}
 			}
-			for (auto &it: *s.m_data)
+			for (auto &it : *s.m_data)
 				if (!m_data->exist(it.first))
 					m_data->add_var(it.first, copy(s.m_data->get_var_by_id(it.second)));
 			if (m_data->exist("duplicate"))
 				invoke(m_data->get_var("duplicate"), var::make<structure>(this), var::make<structure>(&s));
 		}
 
-		explicit structure(const structure *s) : m_shadow(true), m_id(s->m_id), m_name(s->m_name),
-			m_data(s->m_data) {}
+		explicit structure(const structure *s) : m_shadow(true), m_id(s->m_id), m_name(s->m_name), m_data(s->m_data) {}
 
 		~structure()
 		{
@@ -895,9 +902,10 @@ namespace cs {
 				return false;
 			if (!m_shadow && m_data->exist("equal"))
 				return invoke(m_data->get_var("equal"), var::make<structure>(this),
-				              var::make<structure>(&s)).const_val<bool>();
+				              var::make<structure>(&s))
+				       .const_val<bool>();
 			else {
-				for (auto &it: *m_data)
+				for (auto &it : *m_data)
 					if (it.first != "parent" && s.m_data->get_var(it.first) != m_data->get_var_by_id(it.second))
 						return false;
 				return true;
@@ -919,7 +927,7 @@ namespace cs {
 			return m_id;
 		}
 
-		template<typename T>
+		template <typename T>
 		var &get_var(T &&name) const
 		{
 			if (m_data->exist(name))
@@ -937,6 +945,7 @@ namespace cs {
 		std::string mName;
 		tree_type<token_base *> mParent;
 		std::deque<statement_base *> mMethod;
+
 	public:
 		struct_builder() = delete;
 
@@ -971,6 +980,7 @@ namespace cs {
 	class name_space {
 		domain_type *m_data = nullptr;
 		bool is_ref = false;
+
 	public:
 		name_space() : m_data(new domain_type) {}
 
@@ -1033,7 +1043,7 @@ namespace cs {
 
 		void copy_domain(const domain_type &domain)
 		{
-			for (auto &it: domain)
+			for (auto &it : domain)
 				m_data->add_var(it.first, domain.get_var_by_id(it.second));
 		}
 
@@ -1047,7 +1057,7 @@ namespace cs {
 		}
 	};
 
-	template<typename T>
+	template <typename T>
 	var &type_t::get_var(T &&name) const
 	{
 		if (extensions.get() != nullptr)
@@ -1057,9 +1067,10 @@ namespace cs {
 	}
 
 // Internal Garbage Collection
-	template<typename T>
+	template <typename T>
 	class garbage_collector final {
 		set_t<T *> table;
+
 	public:
 		garbage_collector() = default;
 
@@ -1072,7 +1083,7 @@ namespace cs {
 
 		void collect()
 		{
-			for (auto &ptr: table)
+			for (auto &ptr : table)
 				::operator delete(ptr);
 			table.clear();
 		}
@@ -1092,10 +1103,10 @@ namespace cs {
 		constexpr char dll_compatible_check[] = "__CS_ABI_COMPATIBLE__";
 		constexpr char dll_main_entrance[] = "__CS_EXTENSION_MAIN__";
 
-		typedef int(*dll_compatible_check_t)();
+		typedef int (*dll_compatible_check_t)();
 
-		typedef void(*dll_main_entrance_t)(name_space *, process_context *);
-	}
+		typedef void (*dll_main_entrance_t)(name_space *, process_context *);
+	} // namespace dll_resources
 
 	class extension final : public name_space {
 	public:
@@ -1107,7 +1118,7 @@ namespace cs {
 
 		inline static int truncate(int n, int m)
 		{
-			return n == 0 ? 0 : n / int(std::pow(10, (std::max)(int(std::log10(std::abs(n))) - (std::max)(m, 0) + 1, 0)));
+			return n == 0 ? 0 : n / int(std::pow(10, (std::max) (int(std::log10(std::abs(n))) - (std::max) (m, 0) + 1, 0)));
 		}
 
 		explicit extension(const std::string &path)
@@ -1131,7 +1142,7 @@ namespace cs {
 
 	var make_namespace(const namespace_t &);
 
-	template<typename T, typename...ArgsT>
+	template <typename T, typename... ArgsT>
 	static namespace_t make_shared_namespace(ArgsT &&...args)
 	{
 		return std::make_shared<T>(std::forward<ArgsT>(args)...);
@@ -1139,9 +1150,9 @@ namespace cs {
 
 // Literal format
 	numeric parse_number(const std::string &);
-}
+} // namespace cs
 
-template<>
+template <>
 cs::string_borrower cs_impl::to_string<cs::structure>(const cs::structure &stut)
 {
 	if (stut.get_domain().exist("to_string")) {

@@ -1,29 +1,29 @@
 #pragma once
 /*
-* Covariant Script Symbols
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script Symbols
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 #include <covscript/impl/type_ext.hpp>
 
 namespace cs {
@@ -137,22 +137,27 @@ namespace cs {
 		error_
 	};
 	enum class constant_values {
-		local_namepace, global_namespace
+		local_namepace,
+		global_namespace
 	};
 	/*
-	* Grammar Types
-	* Null: Do not use!
-	* Single: Single Line Statement.
-	* Block: Statement with code block.
-	* Jit Command: Statement whitch execute in compile time.
-	*/
+	 * Grammar Types
+	 * Null: Do not use!
+	 * Single: Single Line Statement.
+	 * Block: Statement with code block.
+	 * Jit Command: Statement whitch execute in compile time.
+	 */
 	enum class method_types {
-		null, single, block, jit_command
+		null,
+		single,
+		block,
+		jit_command
 	};
 
-	template<typename Key, typename T>
+	template <typename Key, typename T>
 	class mapping final {
 		std::map<Key, T> mDat;
+
 	public:
 		mapping(std::initializer_list<std::pair<const Key, T>> l) : mDat(l) {}
 
@@ -173,6 +178,7 @@ namespace cs {
 
 	protected:
 		std::size_t line_num = 1;
+
 	public:
 		static garbage_collector<token_base> gc;
 
@@ -231,6 +237,7 @@ namespace cs {
 
 	class token_action final : public token_base {
 		action_types mType;
+
 	public:
 		token_action() = delete;
 
@@ -255,6 +262,7 @@ namespace cs {
 
 	class token_signal final : public token_base {
 		signal_types mType;
+
 	public:
 		token_signal() = delete;
 
@@ -281,6 +289,7 @@ namespace cs {
 
 	class token_id final : public token_base {
 		var_id mId;
+
 	public:
 		token_id() = delete;
 
@@ -305,6 +314,7 @@ namespace cs {
 
 	class token_vargs final : public token_base {
 		std::string mId;
+
 	public:
 		token_vargs() = delete;
 
@@ -329,6 +339,7 @@ namespace cs {
 
 	class token_expand final : public token_base {
 		tree_type<token_base *> mTree;
+
 	public:
 		token_expand() = delete;
 
@@ -350,6 +361,7 @@ namespace cs {
 	class token_value final : public token_base {
 		static const map_t<char, char> escape_char;
 		var mVal;
+
 	public:
 		token_value() = delete;
 
@@ -372,6 +384,7 @@ namespace cs {
 		friend class compiler_type;
 
 		std::string m_data, m_literal;
+
 	public:
 		token_literal() = delete;
 
@@ -401,6 +414,7 @@ namespace cs {
 
 	class token_sblist final : public token_base {
 		std::deque<std::deque<token_base *>> mList;
+
 	public:
 		token_sblist() = delete;
 
@@ -424,6 +438,7 @@ namespace cs {
 	class token_mblist final :
 		public token_base {
 		std::deque<std::deque<token_base *>> mList;
+
 	public:
 		token_mblist() = delete;
 
@@ -448,6 +463,7 @@ namespace cs {
 
 	class token_lblist final : public token_base {
 		std::deque<std::deque<token_base *>> mList;
+
 	public:
 		token_lblist() = delete;
 
@@ -472,6 +488,7 @@ namespace cs {
 
 	class token_expr final : public token_base {
 		tree_type<token_base *> mTree;
+
 	public:
 		token_expr() = delete;
 
@@ -491,22 +508,25 @@ namespace cs {
 	};
 
 	class token_arglist final : public token_base {
-		std::deque<tree_type<token_base * >> mTreeList;
+		std::deque<tree_type<token_base *>> mTreeList;
+
 	public:
 		token_arglist() = default;
 
-		explicit token_arglist(std::deque<tree_type<token_base * >>
+		explicit token_arglist(std::deque<tree_type<token_base *>>
 
 		                       tlist) :
 
-			mTreeList(std::move(tlist)) {}
+			mTreeList(std::move(tlist))
+		{
+		}
 
 		token_types get_type() const noexcept override
 		{
 			return token_types::arglist;
 		}
 
-		std::deque<tree_type<token_base * >> &get_arglist() noexcept
+		std::deque<tree_type<token_base *>> &get_arglist() noexcept
 		{
 			return this->mTreeList;
 		}
@@ -515,22 +535,25 @@ namespace cs {
 	};
 
 	class token_array final : public token_base {
-		std::deque<tree_type<token_base * >> mTreeList;
+		std::deque<tree_type<token_base *>> mTreeList;
+
 	public:
 		token_array() = default;
 
-		explicit token_array(std::deque<tree_type<token_base * >>
+		explicit token_array(std::deque<tree_type<token_base *>>
 
 		                     tlist) :
 
-			mTreeList(std::move(tlist)) {}
+			mTreeList(std::move(tlist))
+		{
+		}
 
 		token_types get_type() const noexcept override
 		{
 			return token_types::array;
 		}
 
-		std::deque<tree_type<token_base * >> &get_array() noexcept
+		std::deque<tree_type<token_base *>> &get_array() noexcept
 		{
 			return this->mTreeList;
 		}
@@ -539,22 +562,25 @@ namespace cs {
 	};
 
 	class token_parallel final : public token_base {
-		std::deque<tree_type<token_base * >> mTreeList;
+		std::deque<tree_type<token_base *>> mTreeList;
+
 	public:
 		token_parallel() = default;
 
-		explicit token_parallel(std::deque<tree_type<token_base * >>
+		explicit token_parallel(std::deque<tree_type<token_base *>>
 
 		                        tlist) :
 
-			mTreeList(std::move(tlist)) {}
+			mTreeList(std::move(tlist))
+		{
+		}
 
 		token_types get_type() const noexcept override
 		{
 			return token_types::parallel;
 		}
 
-		std::deque<tree_type<token_base * >> &get_parallel() noexcept
+		std::deque<tree_type<token_base *>> &get_parallel() noexcept
 		{
 			return this->mTreeList;
 		}
@@ -598,6 +624,7 @@ namespace cs {
 	protected:
 		context_t context;
 		std::size_t line_num = 1;
+
 	public:
 		static garbage_collector<statement_base> gc;
 
@@ -721,4 +748,4 @@ namespace cs {
 			return nullptr;
 		}
 	};
-}
+} // namespace cs

@@ -44,7 +44,7 @@ namespace cs_system_impl {
 	{
 		return ::_mkdir(path.c_str()) == 0;
 	}
-}
+} // namespace cs_system_impl
 
 HANDLE StdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -111,7 +111,7 @@ namespace cs_impl {
 		{
 			return ::kbhit();
 		}
-	}
+	} // namespace conio
 
 	namespace file_system {
 		bool is_exe(const std::string &path)
@@ -170,8 +170,8 @@ namespace cs_impl {
 				throw cs::runtime_error(str.str());
 			}
 		}
-	}
-}
+	} // namespace file_system
+} // namespace cs_impl
 
 namespace cs {
 	namespace fiber {
@@ -319,5 +319,5 @@ namespace cs {
 			fi->state = fiber_state::suspended;
 			SwitchToFiber(fi->prev_ctx);
 		}
-	}
-}
+	} // namespace fiber
+} // namespace cs

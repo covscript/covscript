@@ -1,29 +1,29 @@
 #pragma once
 /*
-* Covariant Script Implementation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script Implementation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 #include <covscript/impl/runtime.hpp>
 
 namespace cs {
@@ -44,6 +44,7 @@ namespace cs {
 		// Fiber Stack Pointer
 		stack_pointer fiber_sp = nullptr;
 		stack_pointer &fiber_stack;
+
 	public:
 		// Status
 		bool return_fcall = false;
@@ -81,18 +82,18 @@ namespace cs {
 		void dump_ast(std::ostream &);
 
 		// Parse variable definition
-		void check_declar_var(tree_type<token_base *>::iterator, bool= false);
+		void check_declar_var(tree_type<token_base *>::iterator, bool = false);
 
-		void check_define_var(tree_type<token_base *>::iterator, bool= false, bool= false);
+		void check_define_var(tree_type<token_base *>::iterator, bool = false, bool = false);
 
-		void parse_define_var(tree_type<token_base *>::iterator, bool= false, bool= false);
+		void parse_define_var(tree_type<token_base *>::iterator, bool = false, bool = false);
 
-		void check_define_structured_binding(tree_type<token_base *>::iterator, bool= false);
+		void check_define_structured_binding(tree_type<token_base *>::iterator, bool = false);
 
-		void parse_define_structured_binding(tree_type<token_base *>::iterator, bool= false, bool= false);
+		void parse_define_structured_binding(tree_type<token_base *>::iterator, bool = false, bool = false);
 
 		// Parse using statement
-		void parse_using(tree_type<token_base *>::iterator, bool= false);
+		void parse_using(tree_type<token_base *>::iterator, bool = false);
 
 		// Coroutines
 		void swap_context(stack_type<domain_type> *stack)
@@ -158,6 +159,7 @@ namespace cs {
 // Guarder
 	class scope_guard final {
 		const context_t &context;
+
 	public:
 		scope_guard() = delete;
 
@@ -224,4 +226,4 @@ namespace cs {
 	};
 
 	std::string get_sdk_path();
-}
+} // namespace cs

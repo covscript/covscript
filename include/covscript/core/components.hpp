@@ -845,7 +845,9 @@ namespace cs {
 				mAlloc.deallocate(ptr, n);
 		}
 	};
+} // namespace cs
 
+namespace cs_impl {
 // Be careful when you adjust the buffer size.
 	constexpr std::size_t default_allocate_buffer_size = 64;
 	template <typename T>
@@ -989,8 +991,10 @@ namespace cs {
 				return static_cast<const CharT *>(m_data);
 		}
 	};
+} // namespace cs_impl
 
-	using string_borrower = basic_string_borrower<char>;
+namespace cs {
+	using string_borrower = cs_impl::basic_string_borrower<char>;
 
 // Binary Tree
 	template <typename T>
@@ -1459,13 +1463,12 @@ namespace cs {
 	};
 } // namespace cs
 
-namespace std {
-	static std::string operator+(const std::string &lhs, const cs::string_borrower &rhs)
-	{
-		return lhs + rhs.data();
-	}
-	static std::ostream &operator<<(std::ostream &lhs, const cs::string_borrower &rhs)
-	{
-		return lhs << rhs.data();
-	}
-} // namespace std
+static std::string operator+(const std::string &lhs, const cs::string_borrower &rhs)
+{
+	return lhs + rhs.data();
+}
+
+static std::ostream &operator<<(std::ostream &lhs, const cs::string_borrower &rhs)
+{
+	return lhs << rhs.data();
+}

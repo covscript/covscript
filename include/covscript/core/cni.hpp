@@ -32,7 +32,9 @@ namespace cs_impl {
 	using decay_t = typename std::decay<T>::type;
 
 	template <typename... ArgsT>
-	inline void result_container(ArgsT &&...) {}
+	inline void result_container(ArgsT &&...)
+	{
+	}
 
 	template <typename T>
 	struct cni_modify {
@@ -497,7 +499,9 @@ namespace cs_impl {
 		template <typename T>
 		explicit cni(T &&val) : mCni(
 			    construct_helper<typename cni_modify<typename cov::remove_reference<T>::type>::type>::construct(
-			        std::forward<T>(val))) {}
+			        std::forward<T>(val)))
+		{
+		}
 
 		template <typename T, typename X>
 		cni(T &&val, cni_type<X>) : mCni(
@@ -608,7 +612,7 @@ namespace cs_impl {
 			m_setter(val);
 		}
 	};
-}
+} // namespace cs_impl
 
 namespace cs {
 	using cs_impl::cni;
@@ -739,4 +743,4 @@ namespace cs {
 		}),
 		cs::callable::types::member_visitor);
 	}
-}
+} // namespace cs

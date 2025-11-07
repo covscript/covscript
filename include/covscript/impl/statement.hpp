@@ -1,34 +1,35 @@
 #pragma once
 /*
-* Covariant Script Statement
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script Statement
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 #include <covscript/impl/impl.hpp>
 
 namespace cs {
 	class statement_expression final : public statement_base {
 		tree_type<token_base *> mTree;
+
 	public:
 		statement_expression() = delete;
 
@@ -50,6 +51,7 @@ namespace cs {
 
 	class statement_import final : public statement_base {
 		std::vector<std::pair<std::string, var>> m_var_list;
+
 	public:
 		statement_import() = delete;
 
@@ -69,6 +71,7 @@ namespace cs {
 	class statement_involve final : public statement_base {
 		bool mOverride = false;
 		tree_type<token_base *> mTree;
+
 	public:
 		statement_involve() = delete;
 
@@ -88,11 +91,13 @@ namespace cs {
 	class statement_var final : public statement_base {
 		tree_type<token_base *> mTree;
 		bool link = false;
+
 	public:
 		statement_var() = delete;
 
 		statement_var(tree_type<token_base *> tree, context_t c, bool _l, token_base *ptr) : statement_base(
-			    std::move(c), ptr), link(_l),
+			    std::move(c), ptr),
+			link(_l),
 			mTree(std::move(tree)) {}
 
 		statement_types get_type() const noexcept override
@@ -107,6 +112,7 @@ namespace cs {
 
 	class statement_constant final : public statement_base {
 		tree_type<token_base *> mTree;
+
 	public:
 		statement_constant() = delete;
 
@@ -158,6 +164,7 @@ namespace cs {
 
 	class statement_block final : public statement_base {
 		std::deque<statement_base *> mBlock;
+
 	public:
 		statement_block() = delete;
 
@@ -183,12 +190,12 @@ namespace cs {
 	class statement_namespace final : public statement_base {
 		std::string mName;
 		std::deque<statement_base *> mBlock;
+
 	public:
 		statement_namespace() = delete;
 
 		statement_namespace(token_base *tbp, std::deque<statement_base *> block, context_t c, token_base *ptr)
-			: statement_base(std::move(c), ptr), mName(static_cast<token_id *>(tbp)->get_id()),
-			  mBlock(std::move(block)) {}
+			: statement_base(std::move(c), ptr), mName(static_cast<token_id *>(tbp)->get_id()), mBlock(std::move(block)) {}
 
 		statement_types get_type() const noexcept override
 		{
@@ -203,12 +210,12 @@ namespace cs {
 	class statement_if final : public statement_base {
 		tree_type<token_base *> mTree;
 		std::deque<statement_base *> mBlock;
+
 	public:
 		statement_if() = delete;
 
 		statement_if(tree_type<token_base *> tree, std::deque<statement_base *> block, context_t c,
-		             token_base *ptr) : statement_base(std::move(c), ptr), mTree(std::move(tree)),
-			mBlock(std::move(block)) {}
+		             token_base *ptr) : statement_base(std::move(c), ptr), mTree(std::move(tree)), mBlock(std::move(block)) {}
 
 		statement_types get_type() const noexcept override
 		{
@@ -224,13 +231,13 @@ namespace cs {
 		tree_type<token_base *> mTree;
 		std::deque<statement_base *> mBlock;
 		std::deque<statement_base *> mElseBlock;
+
 	public:
 		statement_ifelse() = delete;
 
 		statement_ifelse(tree_type<token_base *> tree, std::deque<statement_base *> btrue,
-		                 std::deque<statement_base *> bfalse, context_t c, token_base *ptr) : statement_base(
-			                     std::move(c),
-			                     ptr),
+		                 std::deque<statement_base *> bfalse, context_t c, token_base *ptr) : statement_base(std::move(c),
+			                         ptr),
 			mTree(std::move(tree)),
 			mBlock(std::move(btrue)),
 			mElseBlock(std::move(
@@ -270,6 +277,7 @@ namespace cs {
 		tree_type<token_base *> mTree;
 		statement_block *mDefault = nullptr;
 		map_t<var, statement_block *> mCases;
+
 	public:
 		statement_switch() = delete;
 
@@ -292,6 +300,7 @@ namespace cs {
 	class statement_case final : public statement_base {
 		var mTag;
 		statement_block *mBlock;
+
 	public:
 		statement_case() = delete;
 
@@ -326,6 +335,7 @@ namespace cs {
 
 	class statement_default final : public statement_base {
 		statement_block *mBlock;
+
 	public:
 		statement_default() = delete;
 
@@ -359,12 +369,12 @@ namespace cs {
 	class statement_while final : public statement_base {
 		tree_type<token_base *> mTree;
 		std::deque<statement_base *> mBlock;
+
 	public:
 		statement_while() = delete;
 
 		statement_while(tree_type<token_base *> tree, std::deque<statement_base *> b, context_t c,
-		                token_base *ptr) : statement_base(std::move(c), ptr), mTree(std::move(tree)),
-			mBlock(std::move(b)) {}
+		                token_base *ptr) : statement_base(std::move(c), ptr), mTree(std::move(tree)), mBlock(std::move(b)) {}
 
 		statement_types get_type() const noexcept override
 		{
@@ -378,6 +388,7 @@ namespace cs {
 
 	class statement_until final : public statement_base {
 		token_expr *mExpr = nullptr;
+
 	public:
 		statement_until() = delete;
 
@@ -407,6 +418,7 @@ namespace cs {
 
 	class statement_loop final : public statement_base {
 		std::deque<statement_base *> mBlock;
+
 	public:
 		statement_loop() = delete;
 
@@ -426,6 +438,7 @@ namespace cs {
 	class statement_loop_until final : public statement_base {
 		tree_type<token_base *> mExpr;
 		std::deque<statement_base *> mBlock;
+
 	public:
 		statement_loop_until() = delete;
 
@@ -445,12 +458,14 @@ namespace cs {
 	class statement_for final : public statement_base {
 		std::deque<tree_type<token_base *>> mParallel;
 		std::deque<statement_base *> mBlock;
+
 	public:
 		statement_for() = delete;
 
 		statement_for(std::deque<tree_type<token_base *>> parallel_list, std::deque<statement_base *> block,
 		              context_t c, token_base *ptr) : statement_base(std::move(c), ptr),
-			mParallel(std::move(parallel_list)), mBlock(std::move(block)) {}
+			mParallel(std::move(parallel_list)),
+			mBlock(std::move(block)) {}
 
 		statement_types get_type() const noexcept override
 		{
@@ -466,12 +481,12 @@ namespace cs {
 		std::string mIt;
 		tree_type<token_base *> mObj;
 		std::deque<statement_base *> mBlock;
+
 	public:
 		statement_foreach() = delete;
 
 		statement_foreach(std::string it, tree_type<token_base *> tree, std::deque<statement_base *> b, context_t c,
-		                  token_base *ptr) : statement_base(std::move(c), ptr), mIt(std::move(it)),
-			mObj(std::move(tree)), mBlock(std::move(b)) {}
+		                  token_base *ptr) : statement_base(std::move(c), ptr), mIt(std::move(it)), mObj(std::move(tree)), mBlock(std::move(b)) {}
 
 		statement_types get_type() const noexcept override
 		{
@@ -488,6 +503,7 @@ namespace cs {
 		struct_builder mBuilder;
 		tree_type<token_base *> mParent;
 		std::deque<statement_base *> mBlock;
+
 	public:
 		statement_struct() = delete;
 
@@ -523,6 +539,7 @@ namespace cs {
 #endif
 		std::vector<std::string> mArgs;
 		std::deque<statement_base *> mBlock;
+
 	public:
 		statement_function() = delete;
 
@@ -532,8 +549,7 @@ namespace cs {
 		                   const std::deque<statement_base *> &body, bool is_override, bool is_vargs,
 		                   const context_t &c,
 		                   token_base *ptr)
-			: statement_base(c, ptr), mName(std::move(name)), mFunc(c, decl, this, args, body, is_vargs),
-			  mOverride(is_override), mDecl(decl), mArgs(args), mBlock(body) {}
+			: statement_base(c, ptr), mName(std::move(name)), mFunc(c, decl, this, args, body, is_vargs), mOverride(is_override), mDecl(decl), mArgs(args), mBlock(body) {}
 
 #else
 
@@ -541,10 +557,7 @@ namespace cs {
 		                   const std::deque<statement_base *> &body, bool is_override, bool is_vargs,
 		                   const context_t &c,
 		                   token_base *ptr)
-			: statement_base(c, ptr), mName(std::move(name)), mFunc(c, args, body, is_vargs),
-			  mOverride(is_override),
-			  mArgs(args),
-			  mBlock(body) {}
+			: statement_base(c, ptr), mName(std::move(name)), mFunc(c, args, body, is_vargs), mOverride(is_override), mArgs(args), mBlock(body) {}
 
 #endif
 
@@ -575,6 +588,7 @@ namespace cs {
 
 	class statement_return final : public statement_base {
 		tree_type<token_base *> mTree;
+
 	public:
 		statement_return() = delete;
 
@@ -601,12 +615,12 @@ namespace cs {
 		std::string mName;
 		std::deque<statement_base *> mTryBody;
 		std::deque<statement_base *> mCatchBody;
+
 	public:
 		statement_try() = delete;
 
 		statement_try(std::string name, std::deque<statement_base *> tbody,
-		              std::deque<statement_base *> cbody, context_t c, token_base *ptr) : statement_base(
-			                  std::move(c), ptr),
+		              std::deque<statement_base *> cbody, context_t c, token_base *ptr) : statement_base(std::move(c), ptr),
 			mName(std::move(name)),
 			mTryBody(std::move(tbody)),
 			mCatchBody(
@@ -624,6 +638,7 @@ namespace cs {
 
 	class statement_catch final : public statement_base {
 		std::string mName;
+
 	public:
 		statement_catch() = delete;
 
@@ -653,6 +668,7 @@ namespace cs {
 
 	class statement_throw final : public statement_base {
 		tree_type<token_base *> mTree;
+
 	public:
 		statement_throw() = delete;
 
@@ -668,4 +684,4 @@ namespace cs {
 
 		void dump(std::ostream &) const override;
 	};
-}
+} // namespace cs

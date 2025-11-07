@@ -296,7 +296,7 @@ namespace cs_impl {
 	constexpr std::size_t aligned_element_size = (std::max) (alignof(std::max_align_t), sizeof(void *));
 
 	template <std::size_t align_size,
-	          template <typename> class allocator_t>
+	          template <typename> class allocator_t = default_allocator>
 	class basic_var final {
 		friend class any;
 
@@ -558,14 +558,20 @@ namespace cs_impl {
 		}
 	};
 
-	constexpr std::size_t default_allocate_buffer_multiplier = 8;
+#ifndef CS_VAR_ALLOC_MULTIPLIER
+#define CS_VAR_ALLOC_MULTIPLIER 8
+#endif
+
+#ifndef CS_VAR_SVO_ALIGN
+#define CS_VAR_SVO_ALIGN 32
+#endif
 
 	class any final {
 		struct proxy
 		{
 			std::uint32_t refcount = 1;
 			std::int8_t protect_level = 0;
-			basic_var<32, cs::default_allocator> data;
+			basic_var<CS_VAR_SVO_ALIGN> data;
 
 			proxy() = default;
 
@@ -580,7 +586,7 @@ namespace cs_impl {
 			}
 		};
 
-		static cs::allocator_type<proxy, cs::default_allocate_buffer_size * default_allocate_buffer_multiplier, cs::default_allocator_provider> allocator;
+		static cs::allocator_type<proxy, default_allocate_buffer_size * CS_VAR_ALLOC_MULTIPLIER, default_allocator_provider> allocator;
 
 		proxy *mDat = nullptr;
 
@@ -962,7 +968,11 @@ namespace cs_impl {
 	};
 } // namespace cs_impl
 
-std::ostream &operator<<(std::ostream &, const cs_impl::any &);
+static std::ostream &operator<<(std::ostream &out, const cs_impl::any &val)
+{
+	out << val.to_string();
+	return out;
+}
 
 namespace std {
 	template <>

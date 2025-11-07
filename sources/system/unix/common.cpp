@@ -56,7 +56,7 @@ namespace cs_system_impl {
 	{
 		return ::mkdir(path.c_str(), mode) == 0;
 	}
-}
+} // namespace cs_system_impl
 
 void terminal_lnbuf(int yn)
 {
@@ -111,7 +111,7 @@ namespace cs_impl {
 				tty.c_lflag &= ~ECHO;
 			else
 				tty.c_lflag |= ECHO;
-			(void)tcsetattr(STDIN_FILENO, TCSANOW, &tty);
+			(void) tcsetattr(STDIN_FILENO, TCSANOW, &tty);
 		}
 
 		void cursor(bool mode)
@@ -153,7 +153,7 @@ namespace cs_impl {
 			terminal_echo(1);
 			return ret;
 		}
-	}
+	} // namespace conio
 
 	namespace file_system {
 		bool is_exe(const std::string &path)
@@ -223,8 +223,8 @@ namespace cs_impl {
 			}
 			}
 		}
-	}
-}
+	} // namespace file_system
+} // namespace cs_impl
 
 #ifdef CS_FIBER_LIBUCONTEXT_IMPL
 
@@ -282,7 +282,7 @@ namespace cs {
 					throw std::runtime_error("Failed to get page size.");
 				if ((align & (align - 1)) != 0 || align == 0)
 					throw std::invalid_argument("align must be a power of two.");
-				if ((size_t)pagesize % align != 0)
+				if ((size_t) pagesize % align != 0)
 					throw std::invalid_argument("align must divide system page size.");
 
 				size_t rounded = (stack_size + pagesize - 1) & ~(pagesize - 1);
@@ -294,16 +294,16 @@ namespace cs {
 					throw std::runtime_error(std::string("mmap failed: ") + std::strerror(errno));
 
 				if (mprotect(addr, pagesize, PROT_NONE) != 0 ||
-				        mprotect((char *)addr + pagesize + rounded, pagesize, PROT_NONE) != 0) {
+				        mprotect((char *) addr + pagesize + rounded, pagesize, PROT_NONE) != 0) {
 					munmap(addr, total);
 					throw std::runtime_error(std::string("mprotect failed: ") + std::strerror(errno));
 				}
 
 				base = addr;
 				size = total;
-				uintptr_t aligned_sp = align_up((uintptr_t)addr + pagesize, align);
-				sp = (void *)aligned_sp;
-				usable_size = rounded - (aligned_sp - ((uintptr_t)addr + pagesize));
+				uintptr_t aligned_sp = align_up((uintptr_t) addr + pagesize, align);
+				sp = (void *) aligned_sp;
+				usable_size = rounded - (aligned_sp - ((uintptr_t) addr + pagesize));
 
 				if (usable_size == 0)
 					throw std::runtime_error("Stack usable size is zero after alignment");
@@ -456,5 +456,5 @@ namespace cs {
 			fi->state = fiber_state::suspended;
 			cs_fiber_swapcontext(&fi->ctx, fi->prev_ctx);
 		}
-	}
-}
+	} // namespace fiber
+} // namespace cs

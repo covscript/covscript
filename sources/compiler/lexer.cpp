@@ -1,28 +1,28 @@
 /*
-* Covariant Script Lexer
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script Lexer
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 #include <covscript/impl/compiler.hpp>
 #include <codecvt>
 #include <cwctype>
@@ -52,7 +52,7 @@ namespace cs {
 			{
 				std::string local;
 				local.reserve(str.size());
-				for (auto ch: str)
+				for (auto ch : str)
 					local.push_back(ch);
 				return std::move(local);
 			}
@@ -67,6 +67,7 @@ namespace cs {
 			std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> cvt;
 
 			static constexpr std::uint32_t ascii_max = 0x7F;
+
 		public:
 			std::u32string local2wide(const std::deque<char> &local) override
 			{
@@ -104,6 +105,7 @@ namespace cs {
 
 			static constexpr std::uint8_t u8_blck_begin = 0x80;
 			static constexpr std::uint32_t u32_blck_begin = 0x8000;
+
 		public:
 			std::u32string local2wide(const std::deque<char> &local) override
 			{
@@ -132,7 +134,7 @@ namespace cs {
 			std::string wide2local(const std::u32string &wide) override
 			{
 				std::string local;
-				for (auto &ch: wide) {
+				for (auto &ch : wide) {
 					if (ch & u32_blck_begin)
 						local.push_back(ch >> 8);
 					local.push_back(ch);
@@ -158,7 +160,7 @@ namespace cs {
 					return ch == '_' || std::iswalnum(ch);
 			}
 		};
-	}
+	} // namespace codecvt
 
 	void compiler_type::process_char_buff(const std::deque<char> &raw_buff, std::deque<token_base *> &tokens,
 	                                      charset encoding)
@@ -300,7 +302,7 @@ namespace cs {
 				}
 				type = token_types::null;
 				std::u32string sig;
-				for (auto &ch: tmp) {
+				for (auto &ch : tmp) {
 					if (!signal_map.exist(cvt->wide2local(sig + ch))) {
 						tokens.push_back(new token_signal(signal_map.match(cvt->wide2local(sig))));
 						sig = ch;
@@ -347,7 +349,7 @@ namespace cs {
 			break;
 		case token_types::signal: {
 			std::u32string sig;
-			for (auto &ch: tmp) {
+			for (auto &ch : tmp) {
 				if (!signal_map.exist(cvt->wide2local(sig + ch))) {
 					tokens.push_back(new token_signal(signal_map.match(cvt->wide2local(sig))));
 					sig = ch;
@@ -465,7 +467,7 @@ namespace cs {
 		explicit preprocessor(const context_t &context, compiler_type &compiler, const std::deque<char> &char_buff,
 		                      std::deque<token_base *> &tokens, charset encoding)
 		{
-			for (auto &ch: char_buff) {
+			for (auto &ch : char_buff) {
 				if (ch == '\n') {
 					process_endline(context, compiler, tokens, encoding);
 					continue;
@@ -508,14 +510,14 @@ namespace cs {
 		std::deque<token_base *> oldt, expr;
 		std::swap(tokens, oldt);
 		tokens.clear();
-		for (auto &ptr: oldt) {
+		for (auto &ptr : oldt) {
 			if (ptr->get_type() == token_types::signal &&
 			        static_cast<token_signal *>(ptr)->get_signal() == signal_types::endline_)
 				ptr = new token_endline(ptr->get_line_num());
 			if (ptr->get_type() == token_types::action || ptr->get_type() == token_types::endline) {
 				if (!expr.empty()) {
 					translator.match_grammar(context, expr);
-					for (auto &it: expr)
+					for (auto &it : expr)
 						tokens.push_back(it);
 					expr.clear();
 				}
@@ -525,7 +527,7 @@ namespace cs {
 				expr.push_back(ptr);
 		}
 		std::deque<token_base *> tmp;
-		for (auto &ptr: tokens) {
+		for (auto &ptr : tokens) {
 			tmp.push_back(ptr);
 			if (ptr != nullptr && ptr->get_type() == token_types::endline) {
 				if (tmp.size() > 1)
@@ -565,7 +567,7 @@ namespace cs {
 				break;
 			}
 		};
-		for (auto &ptr: oldt) {
+		for (auto &ptr : oldt) {
 			if (ptr->get_type() == token_types::signal) {
 				switch (static_cast<token_signal *>(ptr)->get_signal()) {
 				default:
@@ -647,7 +649,7 @@ namespace cs {
 		std::deque<std::deque<token_base *>> blist;
 		std::deque<token_base *> btokens;
 		std::deque<int> blist_stack;
-		for (auto &ptr: oldt) {
+		for (auto &ptr : oldt) {
 			if (ptr->get_type() == token_types::signal) {
 				switch (static_cast<token_signal *>(ptr)->get_signal()) {
 				default:
@@ -730,4 +732,4 @@ namespace cs {
 		if (!blist_stack.empty())
 			throw compile_error("Parentheses do not match.");
 	}
-}
+} // namespace cs

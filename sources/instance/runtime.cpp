@@ -1,28 +1,28 @@
 /*
-* Covariant Script Runtime
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script Runtime
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 #include <covscript/impl/runtime.hpp>
 
 namespace cs {
@@ -447,12 +447,12 @@ namespace cs {
 			vector args;
 			token_base *ptr = nullptr;
 			args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
-			for (auto &tree: static_cast<token_arglist *>(b)->get_arglist()) {
+			for (auto &tree : static_cast<token_arglist *>(b)->get_arglist()) {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
 					const auto &arr = val.const_val<array>();
-					for (auto &it: arr)
+					for (auto &it : arr)
 						args.push_back(lvalue(it));
 				}
 				else
@@ -465,12 +465,12 @@ namespace cs {
 			vector args{om.object};
 			token_base *ptr = nullptr;
 			args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
-			for (auto &tree: static_cast<token_arglist *>(b)->get_arglist()) {
+			for (auto &tree : static_cast<token_arglist *>(b)->get_arglist()) {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
 					const auto &arr = val.const_val<array>();
-					for (auto &it: arr)
+					for (auto &it : arr)
 						args.push_back(lvalue(it));
 				}
 				else
@@ -587,12 +587,12 @@ namespace cs {
 		case token_types::array: {
 			array arr;
 			token_base *ptr = nullptr;
-			for (auto &tree: static_cast<token_array *>(token)->get_array()) {
+			for (auto &tree : static_cast<token_array *>(token)->get_array()) {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
 					const auto &child_arr = val.const_val<array>();
-					for (auto &it: child_arr)
+					for (auto &it : child_arr)
 						arr.push_back(copy(it));
 				}
 				else
@@ -604,7 +604,7 @@ namespace cs {
 			if (disable_parallel)
 				throw runtime_error("Do not allowed parallel list.");
 			var result;
-			for (auto &tree: static_cast<token_parallel *>(token)->get_parallel())
+			for (auto &tree : static_cast<token_parallel *>(token)->get_parallel())
 				result = parse_expr(tree.root());
 			return result;
 		}
@@ -731,4 +731,4 @@ namespace cs {
 		}
 		throw internal_error("Unrecognized expression.");
 	}
-}
+} // namespace cs

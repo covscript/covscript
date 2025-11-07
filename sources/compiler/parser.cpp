@@ -1,28 +1,28 @@
 /*
-* Covariant Script Parser
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script Parser
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 #include <covscript/impl/compiler.hpp>
 
 namespace cs {
@@ -115,7 +115,7 @@ namespace cs {
 				expected_fcall = false;
 				break;
 			case token_types::sblist: {
-				for (auto &list: static_cast<token_sblist *>(ptr)->get_list())
+				for (auto &list : static_cast<token_sblist *>(ptr)->get_list())
 					kill_brackets(list, line_num);
 				if (expected_fcall) {
 					std::deque<tree_type<token_base *>> tlist;
@@ -123,7 +123,7 @@ namespace cs {
 						expected_fdef = false;
 						no_optimize = true;
 					}
-					for (auto &list: static_cast<token_sblist *>(ptr)->get_list()) {
+					for (auto &list : static_cast<token_sblist *>(ptr)->get_list()) {
 						tree_type<token_base *> tree;
 						gen_tree(tree, list);
 						tlist.push_back(tree);
@@ -152,10 +152,10 @@ namespace cs {
 				continue;
 			}
 			case token_types::lblist: {
-				for (auto &list: static_cast<token_lblist *>(ptr)->get_list())
+				for (auto &list : static_cast<token_lblist *>(ptr)->get_list())
 					kill_brackets(list, line_num);
 				std::deque<tree_type<token_base *>> tlist;
-				for (auto &list: static_cast<token_lblist *>(ptr)->get_list()) {
+				for (auto &list : static_cast<token_lblist *>(ptr)->get_list()) {
 					tree_type<token_base *> tree;
 					gen_tree(tree, list);
 					tlist.push_back(tree);
@@ -215,8 +215,7 @@ namespace cs {
 				break;
 			}
 			}
-			tokens.
-			push_back(ptr);
+			tokens.push_back(ptr);
 		}
 	}
 
@@ -224,7 +223,7 @@ namespace cs {
 	                                std::deque<token_base *> &objects)
 	{
 		bool request_signal = false;
-		for (auto &ptr: raw) {
+		for (auto &ptr : raw) {
 			if (ptr->get_type() == token_types::action)
 				throw compile_error("Wrong format of expression.");
 			if (ptr->get_type() == token_types::signal) {
@@ -247,12 +246,12 @@ namespace cs {
 	{
 		if (objects.empty() || signals.empty() || objects.size() != signals.size() + 1)
 			throw compile_error("Unexpected grammar when building expression tree.");
-		for (auto &obj: objects) {
+		for (auto &obj : objects) {
 			if (obj != nullptr && obj->get_type() == token_types::sblist) {
 				auto *sbl = static_cast<token_sblist *>(obj);
 				std::deque<token_base *> tokens;
-				for (auto &list: sbl->get_list()) {
-					for (auto &it: list)
+				for (auto &list : sbl->get_list()) {
+					for (auto &it : list)
 						tokens.push_back(it);
 					tokens.push_back(new token_signal(signal_types::com_));
 				}
@@ -306,8 +305,8 @@ namespace cs {
 			if (obj != nullptr && obj->get_type() == token_types::sblist) {
 				auto *sbl = static_cast<token_sblist *>(obj);
 				std::deque<token_base *> tokens;
-				for (auto &list: sbl->get_list()) {
-					for (auto &it: list)
+				for (auto &list : sbl->get_list()) {
+					for (auto &it : list)
 						tokens.push_back(it);
 					tokens.push_back(new token_signal(signal_types::com_));
 				}
@@ -331,7 +330,7 @@ namespace cs {
 		std::deque<token_base *> oldt, expr;
 		std::swap(tokens, oldt);
 		tokens.clear();
-		for (auto &ptr: oldt) {
+		for (auto &ptr : oldt) {
 			if (ptr->get_type() == token_types::action || ptr->get_type() == token_types::endline) {
 				if (!expr.empty()) {
 					tree_type<token_base *> tree;
@@ -345,4 +344,4 @@ namespace cs {
 				expr.push_back(ptr);
 		}
 	}
-}
+} // namespace cs

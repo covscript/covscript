@@ -1,29 +1,29 @@
 #pragma once
 /*
-* Covariant Script Compiler
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script Compiler
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 #include <covscript/impl/symbols.hpp>
 
 namespace cs {
@@ -43,6 +43,7 @@ namespace cs {
 		}
 
 		std::list<std::shared_ptr<data_type>> m_data;
+
 	public:
 		translator_type() = default;
 
@@ -61,7 +62,7 @@ namespace cs {
 			if (raw.size() <= 1)
 				throw compile_error("Empty input when matching grammar.");
 			std::list<std::shared_ptr<data_type>> stack;
-			for (auto &it: m_data)
+			for (auto &it : m_data)
 				if (cs::translator_type::compare(it->first.front(), raw.front()))
 					stack.push_back(it);
 			stack.remove_if([&](const std::shared_ptr<data_type> &dat) {
@@ -88,7 +89,9 @@ namespace cs {
 	};
 
 	enum class charset {
-		ascii, utf8, gbk
+		ascii,
+		utf8,
+		gbk
 	};
 
 	struct csym_info {
@@ -158,7 +161,7 @@ namespace cs {
 			return signal_left_associative.count(static_cast<token_signal *>(ptr)->get_signal()) > 0;
 		}
 
-		void kill_brackets(std::deque<token_base *> &, std::size_t= 1);
+		void kill_brackets(std::deque<token_base *> &, std::size_t = 1);
 
 		void split_token(std::deque<token_base *> &raw, std::deque<token_base *> &, std::deque<token_base *> &);
 
@@ -187,11 +190,14 @@ namespace cs {
 		}
 
 		enum class trim_type {
-			normal, no_expr_fold, no_this_deduce
+			normal,
+			no_expr_fold,
+			no_this_deduce
 		};
 
 		enum class optm_type {
-			normal, enable_namespace_optm
+			normal,
+			enable_namespace_optm
 		};
 
 		void trim_expression(tree_type<token_base *> &tree, trim_type do_trim = trim_type::normal)
@@ -251,7 +257,7 @@ namespace cs {
 
 		void utilize_metadata()
 		{
-			for (auto &it: constant_pool)
+			for (auto &it : constant_pool)
 				it.mark_constant();
 		}
 
@@ -294,7 +300,7 @@ namespace cs {
 			process_char_buff(buff, tokens, encoding);
 			tokens.push_back(new token_endline(line_num));
 			process_token_buff(tokens, ast);
-			for (auto &line: ast)
+			for (auto &line : ast)
 				process_line(line);
 		}
 
@@ -330,4 +336,4 @@ namespace cs {
 		// AST Debugger
 		static void dump_expr(tree_type<token_base *>::iterator, std::ostream &);
 	};
-}
+} // namespace cs
