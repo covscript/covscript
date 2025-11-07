@@ -887,6 +887,8 @@ namespace cs {
 				invoke(m_data->get_var("finalize"), var::make<structure>(this));
 		}
 
+		structure &operator=(structure &&) noexcept = default;
+
 		bool operator==(const structure &s) const
 		{
 			if (s.m_id != m_id)

@@ -189,7 +189,7 @@ namespace cs {
 			val.detach();
 		}
 		else
-			val.mark_as_rvalue(false);
+			val.mark_trivial();
 	}
 
 	var copy(var val)
@@ -199,19 +199,20 @@ namespace cs {
 			val.detach();
 		}
 		else
-			val.mark_as_rvalue(false);
+			val.mark_trivial();
 		return val;
 	}
 
 	var lvalue(const var &val)
 	{
-		val.mark_as_rvalue(false);
+		if (val.is_rvalue())
+			val.mark_trivial();
 		return val;
 	}
 
 	var rvalue(const var &val)
 	{
-		val.mark_as_rvalue(true);
+		val.try_move();
 		return val;
 	}
 

@@ -252,15 +252,14 @@ namespace cs {
 		void utilize_metadata()
 		{
 			for (auto &it: constant_pool)
-				it.constant();
+				it.mark_constant();
 		}
 
 		void add_constant(const var &val)
 		{
 			if (!val.is_protect()) {
 				constant_pool.push_back(val);
-				constant_pool.back().protect();
-				constant_pool.back().mark_as_rvalue(false);
+				constant_pool.back().mark_protect();
 			}
 		}
 

@@ -750,7 +750,7 @@ namespace cs {
 				if (find_self_ref) {
 					var lambda = var::make<object_method>(var(), var::make_protect<callable>(func));
 					lambda.val<object_method>().object = lambda;
-					lambda.protect();
+					lambda.mark_protect();
 					it.data() = new_value(lambda);
 				}
 				else

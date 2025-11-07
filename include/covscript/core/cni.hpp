@@ -136,7 +136,7 @@ namespace cs_impl {
 		{
 			using decayed_target_t = decay_t<_TargetT>;
 			val.assign(any::make<decayed_target_t>(_ConvertorT::convert(convert_helper<_SourceT>::get_val(val))));
-			val.constant();
+			val.mark_constant();
 			return convert_helper<_TargetT>::get_val(val);
 		}
 	};

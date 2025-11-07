@@ -189,7 +189,7 @@ namespace cs {
 					throw runtime_error("Can not inherit itself.");
 				var parent = t.constructor();
 				if (parent.is_type_of<structure>()) {
-					parent.protect();
+					parent.mark_protect();
 					mContext->instance->storage.involve_domain(parent.const_val<structure>().get_domain());
 					mContext->instance->storage.add_var_no_return("parent", parent, true);
 				}

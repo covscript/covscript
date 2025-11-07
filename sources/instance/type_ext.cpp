@@ -1343,7 +1343,7 @@ namespace cs_impl {
 						val.detach();
 					}
 					else
-						val.mark_as_rvalue(false);
+						val.mark_trivial();
 				}
 			}
 
