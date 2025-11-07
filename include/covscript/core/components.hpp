@@ -350,7 +350,7 @@ namespace cs {
 				return data._num * rhs;
 		}
 
-		numeric operator/(const numeric &rhs) const noexcept
+		numeric operator/(const numeric &rhs) const
 		{
 			switch (get_composite_type(type, rhs.type)) {
 			default:
@@ -370,12 +370,60 @@ namespace cs {
 		}
 
 		template <typename T, typename = std::enable_if_t<!std::is_same<std::decay_t<T>, numeric>::value>>
-		numeric operator/(T &&rhs) const noexcept
+		numeric operator/(T &&rhs) const
 		{
 			if (type)
 				return data._int / rhs;
 			else
 				return data._num / rhs;
+		}
+
+		numeric operator%(const numeric &rhs) const
+		{
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return std::fmod(data._num, rhs.data._num);
+			case 0b01:
+				return std::fmod(data._num, rhs.data._int);
+			case 0b10:
+				return std::fmod(data._int, rhs.data._num);
+			case 0b11:
+				return data._int % rhs.data._int;
+			}
+		}
+
+		template <typename T, typename = std::enable_if_t<!std::is_same<std::decay_t<T>, numeric>::value>>
+		numeric operator%(T &&rhs) const
+		{
+			if (type)
+				return data._int % rhs;
+			else
+				return std::fmod(data._num, rhs);
+		}
+
+		numeric operator^(const numeric &rhs) const noexcept
+		{
+			switch (get_composite_type(type, rhs.type)) {
+			default:
+			case 0b00:
+				return std::pow(data._num, rhs.data._num);
+			case 0b01:
+				return std::pow(data._num, rhs.data._int);
+			case 0b10:
+				return std::pow(data._int, rhs.data._num);
+			case 0b11:
+				return std::pow(data._int, rhs.data._int);
+			}
+		}
+
+		template <typename T, typename = std::enable_if_t<!std::is_same<std::decay_t<T>, numeric>::value>>
+		numeric operator^(T &&rhs) const noexcept
+		{
+			if (type)
+				return std::pow(data._int, rhs);
+			else
+				return std::pow(data._num, rhs);
 		}
 
 		numeric &operator=(const numeric &num)

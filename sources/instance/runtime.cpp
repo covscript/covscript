@@ -108,7 +108,7 @@ namespace cs {
 	var runtime_type::parse_mod(const var &a, const var &b)
 	{
 		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
-			return numeric(std::fmod(a.const_val<numeric>().as_float(), b.const_val<numeric>().as_float()));
+			return a.const_val<numeric>() % b.const_val<numeric>();
 		else
 			throw runtime_error("Unsupported operator operations(Mod).");
 	}
@@ -122,7 +122,7 @@ namespace cs {
 	var runtime_type::parse_pow(const var &a, const var &b)
 	{
 		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
-			return numeric(std::pow(a.const_val<numeric>().as_float(), b.const_val<numeric>().as_float()));
+			return a.const_val<numeric>() ^ b.const_val<numeric>();
 		else
 			throw runtime_error("Unsupported operator operations(Pow).");
 	}
@@ -386,8 +386,7 @@ namespace cs {
 		return boolean(!a.compare(b));
 	}
 
-	var
-	runtime_type::parse_and(const tree_type<token_base *>::iterator &a, const tree_type<token_base *>::iterator &b)
+	var runtime_type::parse_and(const tree_type<token_base *>::iterator &a, const tree_type<token_base *>::iterator &b)
 	{
 		return var::make<boolean>(parse_expr(a).const_val<boolean>() && parse_expr(b).const_val<boolean>());
 	}
