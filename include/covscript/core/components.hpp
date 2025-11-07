@@ -26,6 +26,7 @@
  */
 #include <covscript/import/mozart/base.hpp>
 #include <atomic>
+#include <cfenv>
 
 namespace cs {
 	extern std::atomic_size_t global_thread_counter;
@@ -251,6 +252,34 @@ namespace cs {
 			return lhs << 1 | rhs;
 		}
 
+		inline static numeric int_pow(numeric_integer base, numeric_integer exp)
+		{
+			if (exp == 0) // base^0
+				return 1;
+			if (base == 0 && exp < 0) { // 0^negative
+				errno = EDOM;
+				feraiseexcept(FE_DIVBYZERO);
+				return std::numeric_limits<numeric_float>::infinity();
+			}
+			bool neg = false;
+			if (exp < 0) { // negative exponent
+				neg = true;
+				if (exp == std::numeric_limits<numeric_integer>::min())
+					return numeric_float(1.0) / (int_pow(base, exp + 1).as_float() * base);
+				exp = -exp;
+			}
+			numeric_integer result = 1;
+			while (exp > 0) {
+				if (exp & 1) result *= base;
+				base *= base;
+				exp >>= 1;
+			}
+			if (neg) // return float if negative exponent
+				return numeric_float(1.0) / result;
+			else
+				return result;
+		}
+
 	public:
 		numeric()
 		{
@@ -413,7 +442,7 @@ namespace cs {
 			case 0b10:
 				return std::pow(data._int, rhs.data._num);
 			case 0b11:
-				return std::pow(data._int, rhs.data._int);
+				return int_pow(data._int, rhs.data._int);
 			}
 		}
 
