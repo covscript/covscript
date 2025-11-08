@@ -82,7 +82,6 @@ namespace cs_impl {
 #endif
 
 namespace cs_impl {
-	cs::allocator_type<any::proxy, default_allocate_buffer_size * CS_VAR_ALLOC_MULTIPLIER, default_allocator_provider> any::allocator;
 	cs::namespace_t member_visitor_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t array_ext = cs::make_shared_namespace<cs::name_space>();

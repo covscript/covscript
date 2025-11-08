@@ -34,13 +34,13 @@ namespace cs {
 	struct thread_guard final {
 		thread_guard()
 		{
-			++global_thread_counter;
+			global_thread_counter.fetch_add(1, std::memory_order_relaxed);
 		}
 		thread_guard(const thread_guard &) = delete;
 		thread_guard(thread_guard &&) noexcept = delete;
 		~thread_guard()
 		{
-			--global_thread_counter;
+			global_thread_counter.fetch_sub(1, std::memory_order_relaxed);
 		}
 	};
 
@@ -812,18 +812,18 @@ namespace cs {
 		inline T *alloc(ArgsT &&...args)
 		{
 			T *ptr = nullptr;
-			if (mOffset > 0 && global_thread_counter == 0)
+			if (mOffset > 0 && global_thread_counter.load(std::memory_order_acquire) == 0)
 				ptr = mPool[--mOffset];
 			else
 				ptr = mAlloc.allocate(1);
-			mAlloc.construct(ptr, std::forward<ArgsT>(args)...);
+			::new (ptr) T(std::forward<ArgsT>(args)...);
 			return ptr;
 		}
 
 		inline void free(T *ptr)
 		{
-			mAlloc.destroy(ptr);
-			if (mOffset < blck_size && global_thread_counter == 0)
+			ptr->~T();
+			if (mOffset < blck_size && global_thread_counter.load(std::memory_order_acquire) == 0)
 				mPool[mOffset++] = ptr;
 			else
 				mAlloc.deallocate(ptr, 1);
@@ -847,13 +847,15 @@ namespace cs {
 	};
 } // namespace cs
 
+#ifndef CS_ALLOCATOR_BUFFER_MAX
+#define CS_ALLOCATOR_BUFFER_MAX 64
+#endif
+
 namespace cs_impl {
-// Be careful when you adjust the buffer size.
-	constexpr std::size_t default_allocate_buffer_size = 64;
 	template <typename T>
 	using default_allocator_provider = std::allocator<T>;
 	template <typename T>
-	using default_allocator = cs::allocator_type<T, default_allocate_buffer_size, default_allocator_provider>;
+	using default_allocator = cs::allocator_type<T, CS_ALLOCATOR_BUFFER_MAX, default_allocator_provider>;
 
 // String borrower
 	template <typename CharT,
@@ -862,7 +864,7 @@ namespace cs_impl {
 		using stl_string = std::basic_string<CharT>;
 		using allocator_type = allocator_t<stl_string>;
 
-		static allocator_type &get_allocator()
+		inline static allocator_type &get_allocator()
 		{
 			static allocator_type allocator;
 			return allocator;

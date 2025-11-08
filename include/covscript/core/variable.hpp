@@ -114,15 +114,15 @@ namespace cs_impl {
 
 	template <typename T>
 	struct to_integer_if<T, true> {
-		static long to_integer(const T &val)
+		static std::intptr_t to_integer(const T &val)
 		{
-			return static_cast<long>(val);
+			return static_cast<std::intptr_t>(val);
 		}
 	};
 
 	template <typename T>
 	struct to_integer_if<T, false> {
-		static long to_integer(const T &)
+		static std::intptr_t to_integer(const T &)
 		{
 			throw cov::error("E000M");
 		}
@@ -207,9 +207,9 @@ namespace cs_impl {
 	}
 
 	template <typename T>
-	static long to_integer(const T &val)
+	static std::intptr_t to_integer(const T &val)
 	{
-		return to_integer_if<T, cov::castable<T, long>::value>::to_integer(val);
+		return to_integer_if<T, cov::castable<T, std::intptr_t>::value>::to_integer(val);
 	}
 
 	template <typename T>
@@ -367,7 +367,7 @@ namespace cs_impl {
 		template <typename T>
 		struct var_op_heap_dispatcher
 		{
-			static allocator_t<T> &get_allocator()
+			inline static allocator_t<T> &get_allocator()
 			{
 				static allocator_t<T> allocator;
 				return allocator;
@@ -525,7 +525,7 @@ namespace cs_impl {
 			return (m_dispatcher == obj.m_dispatcher || type() == obj.type()) && m_dispatcher(var_op::compare, this, (void *) &obj)._int;
 		}
 
-		inline long to_integer() const
+		inline std::intptr_t to_integer() const
 		{
 			return m_dispatcher(var_op::to_integer, this, nullptr)._int;
 		}
@@ -586,7 +586,13 @@ namespace cs_impl {
 			}
 		};
 
-		static cs::allocator_type<proxy, default_allocate_buffer_size * CS_VAR_ALLOC_MULTIPLIER, default_allocator_provider> allocator;
+		using allocator_t = cs::allocator_type<proxy, CS_ALLOCATOR_BUFFER_MAX * CS_VAR_ALLOC_MULTIPLIER, default_allocator_provider>;
+
+		inline static allocator_t &get_allocator()
+		{
+			static allocator_t allocator;
+			return allocator;
+		}
 
 		proxy *mDat = nullptr;
 
@@ -604,7 +610,7 @@ namespace cs_impl {
 			if (mDat != nullptr)
 			{
 				if (--mDat->refcount == 0) {
-					allocator.free(mDat);
+					get_allocator().free(mDat);
 					mDat = nullptr;
 				}
 			}
@@ -640,7 +646,7 @@ namespace cs_impl {
 			if (mDat != nullptr) {
 				if (mDat->protect_level > 2)
 					throw cov::error("E000L");
-				proxy *dat = allocator.alloc(1, mDat->data);
+				proxy *dat = get_allocator().alloc(1, mDat->data);
 				recycle();
 				mDat = dat;
 			}
@@ -660,7 +666,7 @@ namespace cs_impl {
 		template <typename T, typename... ArgsT>
 		static any make(ArgsT &&...args)
 		{
-			proxy *dat = allocator.alloc();
+			proxy *dat = get_allocator().alloc();
 			dat->protect_level = 0;
 			dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
 			return any(dat);
@@ -669,7 +675,7 @@ namespace cs_impl {
 		template <typename T, typename... ArgsT>
 		static any make_protect(ArgsT &&...args)
 		{
-			proxy *dat = allocator.alloc();
+			proxy *dat = get_allocator().alloc();
 			dat->protect_level = 1;
 			dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
 			return any(dat);
@@ -678,7 +684,7 @@ namespace cs_impl {
 		template <typename T, typename... ArgsT>
 		static any make_constant(ArgsT &&...args)
 		{
-			proxy *dat = allocator.alloc();
+			proxy *dat = get_allocator().alloc();
 			dat->protect_level = 2;
 			dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
 			return any(dat);
@@ -687,7 +693,7 @@ namespace cs_impl {
 		template <typename T, typename... ArgsT>
 		static any make_single(ArgsT &&...args)
 		{
-			proxy *dat = allocator.alloc();
+			proxy *dat = get_allocator().alloc();
 			dat->protect_level = 3;
 			dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
 			return any(dat);
@@ -698,7 +704,7 @@ namespace cs_impl {
 		template <typename T>
 		any(const T &dat)
 		{
-			mDat = allocator.alloc();
+			mDat = get_allocator().alloc();
 			mDat->protect_level = 0;
 			mDat->data.construct_store<cs_impl::var_storage_t<T>>(dat);
 		}
@@ -726,7 +732,7 @@ namespace cs_impl {
 			return this->mDat != nullptr ? this->mDat->data.is_type_of<T>() : false;
 		}
 
-		long to_integer() const
+		cs::numeric_integer to_integer() const
 		{
 			if (this->mDat == nullptr)
 				return 0;
@@ -912,7 +918,7 @@ namespace cs_impl {
 				else {
 					recycle();
 					if (obj.mDat != nullptr)
-						mDat = allocator.alloc(1, obj.mDat->data);
+						mDat = get_allocator().alloc(1, obj.mDat->data);
 					else
 						mDat = nullptr;
 				}
@@ -929,7 +935,7 @@ namespace cs_impl {
 			}
 			else {
 				recycle();
-				mDat = allocator.alloc();
+				mDat = get_allocator().alloc();
 				mDat->data.construct_store<var_storage_t<T>>(dat);
 			}
 		}

@@ -227,13 +227,13 @@ namespace cs_impl {
 
 // To Integer
 	template <>
-	long to_integer<cs::numeric>(const cs::numeric &num)
+	std::intptr_t to_integer<cs::numeric>(const cs::numeric &num)
 	{
 		return num.as_integer();
 	}
 
 	template <>
-	long to_integer<std::string>(const std::string &str)
+	std::intptr_t to_integer<std::string>(const std::string &str)
 	{
 		for (auto &ch : str) {
 			if (!std::isdigit(ch))
