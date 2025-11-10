@@ -324,7 +324,11 @@ namespace cs_impl {
 			aeqcmp,     // lhs >= rhs
 			ueqcmp,     // lhs <= rhs
 			index,      // data[index]
-			access,     // data.member
+			cindex,     // const_data[index]
+			index_ref,  // ref to data[index]
+			index_cref, // ref to const_data[index]
+			access,     // ref to data.member
+			caccess,    // ref to const_data.member
 			fcall,      // func(args)
 		};
 	}
@@ -373,7 +377,7 @@ namespace cs_impl {
 		};
 
 		template <typename T>
-		static var_op_result call_operator(operators::type, void *, void *);
+		static inline var_op_result call_operator(operators::type, void *, void *);
 
 		template <typename T>
 		struct var_op_svo_dispatcher
@@ -641,7 +645,7 @@ namespace cs_impl {
 			}
 		}
 
-		explicit any(proxy *dat) : mDat(dat) {}
+		any(proxy *dat) : mDat(dat) {}
 
 	public:
 		void swap(any &obj, bool raw = false)
@@ -1086,20 +1090,52 @@ namespace cs_impl {
 				return mDat->data.m_dispatcher(operators::type::ueqcmp, &mDat->data, &rhs.mDat->data)._int;
 		}
 
-		any &index(const any &idx) const
+		any index(const any &idx) const
 		{
 			if (!usable() || !idx.usable())
 				throw cov::error("E0005");
+			if (this->mDat->protect_level > 1)
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::cindex, &mDat->data, (void *) &idx)._ptr);
 			else
-				return *static_cast<any *>(mDat->data.m_dispatcher(operators::type::index, &mDat->data, (void *) &idx)._ptr);
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::index, &mDat->data, (void *) &idx)._ptr);
+		}
+
+		any &index_ref(const any &idx) const
+		{
+			if (!usable() || !idx.usable())
+				throw cov::error("E0005");
+			if (this->mDat->protect_level > 1)
+				throw cov::error("E000K");
+			return *static_cast<any *>(mDat->data.m_dispatcher(operators::type::index_ref, &mDat->data, (void *) &idx)._ptr);
+		}
+
+		const any &index_cref(const any &idx) const
+		{
+			if (!usable() || !idx.usable())
+				throw cov::error("E0005");
+			if (this->mDat->protect_level > 1)
+				throw cov::error("E000K");
+			return *static_cast<const any *>(mDat->data.m_dispatcher(operators::type::index_cref, &mDat->data, (void *) &idx)._ptr);
 		}
 
 		any &access(cs::string_borrower member) const
 		{
+			if (!member.usable())
+				throw cs::internal_error("Access with null string.");
 			if (!usable())
 				throw cov::error("E0005");
-			else
-				return *static_cast<any *>(mDat->data.m_dispatcher(operators::type::access, &mDat->data, &member)._ptr);
+			if (this->mDat->protect_level > 1)
+				throw cov::error("E000K");
+			return *static_cast<any *>(mDat->data.m_dispatcher(operators::type::access, &mDat->data, &member)._ptr);
+		}
+
+		const any &const_access(cs::string_borrower member) const
+		{
+			if (!member.usable())
+				throw cs::internal_error("Access with null string.");
+			if (!usable())
+				throw cov::error("E0005");
+			return *static_cast<const any *>(mDat->data.m_dispatcher(operators::type::access, &mDat->data, &member)._ptr);
 		}
 
 		any fcall(cs::vector &args) const

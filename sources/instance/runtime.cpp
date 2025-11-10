@@ -484,75 +484,12 @@ namespace cs {
 
 	var &runtime_type::parse_access_lhs(const var &a, const var &b)
 	{
-		if (a.is_type_of<array>()) {
-			if (!b.is_type_of<numeric>())
-				throw runtime_error("Index must be a numeric.");
-			auto &arr = a.val<array>();
-			std::size_t posit = 0;
-			if (b.const_val<numeric>() >= 0) {
-				posit = b.const_val<numeric>().as_integer();
-				if (posit >= arr.size()) {
-					arr.resize(posit, numeric(0));
-				}
-			}
-			else {
-				if (-b.const_val<numeric>() > arr.size())
-					throw runtime_error("Out of range.");
-				posit = arr.size() + b.const_val<numeric>().as_integer();
-			}
-			return arr[posit];
-		}
-		else if (a.is_type_of<hash_map>()) {
-			auto &map = a.val<hash_map>();
-			auto it = map.find(b);
-			if (it == map.end())
-				it = map.emplace(copy(b), numeric(0)).first;
-			return it->second;
-		}
-		else if (a.is_type_of<string>())
-			throw runtime_error("Access string object as lvalue.");
-		else
-			throw runtime_error("Access non-array or string object.");
+		return a.index_ref(b);
 	}
 
 	var runtime_type::parse_access(const var &a, const var &b)
 	{
-		if (a.is_type_of<array>()) {
-			if (!b.is_type_of<numeric>())
-				throw runtime_error("Index must be a numeric.");
-			const auto &carr = a.const_val<array>();
-			std::size_t posit = 0;
-			if (b.const_val<numeric>() >= 0) {
-				posit = b.const_val<numeric>().as_integer();
-				if (posit >= carr.size()) {
-					a.val<array>().resize(posit + 1, numeric(0));
-				}
-			}
-			else {
-				if (-b.const_val<numeric>() > carr.size())
-					throw runtime_error("Out of range.");
-				posit = carr.size() + b.const_val<numeric>().as_integer();
-			}
-			return carr[posit];
-		}
-		else if (a.is_type_of<hash_map>()) {
-			const auto &cmap = a.const_val<hash_map>();
-			auto it = cmap.find(b);
-			if (it == cmap.end())
-				it = a.val<hash_map>().emplace(copy(b), numeric(0)).first;
-			return it->second;
-		}
-		else if (a.is_type_of<string>()) {
-			if (!b.is_type_of<numeric>())
-				throw runtime_error("Index must be a numeric.");
-			const auto &cstr = a.const_val<string>();
-			if (b.const_val<numeric>() >= 0)
-				return var::make_constant<char>(cstr[b.const_val<numeric>().as_integer()]);
-			else
-				return var::make_constant<char>(cstr[cstr.size() + b.const_val<numeric>().as_integer()]);
-		}
-		else
-			throw runtime_error("Access non-array or string object.");
+		return a.index(b);
 	}
 
 	var runtime_type::parse_expr(const tree_type<token_base *>::iterator &it, bool disable_parallel)

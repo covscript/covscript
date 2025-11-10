@@ -31,109 +31,133 @@
 namespace cs_impl {
 	namespace operators {
 		template <typename T>
-		static any add(const T &lhs, const any &rhs)
+		inline any add(const T &lhs, const any &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support + operator.");
 		}
 
 		template <typename T>
-		static any sub(const T &lhs, const any &rhs)
+		inline any sub(const T &lhs, const any &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support - operator.");
 		}
 
 		template <typename T>
-		static any mul(const T &lhs, const any &rhs)
+		inline any mul(const T &lhs, const any &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support * operator.");
 		}
 
 		template <typename T>
-		static any div(const T &lhs, const any &rhs)
+		inline any div(const T &lhs, const any &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support / operator.");
 		}
 
 		template <typename T>
-		static any mod(const T &lhs, const any &rhs)
+		inline any mod(const T &lhs, const any &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support \% operator.");
 		}
 
 		template <typename T>
-		static any pow(const T &lhs, const any &rhs)
+		inline any pow(const T &lhs, const any &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support ^ operator.");
 		}
 
 		template <typename T>
-		static any minus(const T &val)
+		inline any minus(const T &val)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support -val operator.");
 		}
 
 		template <typename T>
-		static any &escape(T &val)
+		inline any &escape(T &val)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support *val operator.");
 		}
 
 		template <typename T>
-		static void selfinc(T &val)
+		inline void selfinc(T &val)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support ++ operator.");
 		}
 
 		template <typename T>
-		static void selfdec(T &val)
+		inline void selfdec(T &val)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support -- operator.");
 		}
 
 		template <typename T>
-		static bool compare(const T &a, const T &b)
+		inline bool compare(const T &a, const T &b)
 		{
 			return compare_if<T, compare_helper<T>::value>::compare(a, b);
 		}
 
 		template <typename T>
-		static bool abocmp(const T &lhs, const T &rhs)
+		inline bool abocmp(const T &lhs, const T &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support > operator.");
 		}
 
 		template <typename T>
-		static bool undcmp(const T &lhs, const T &rhs)
+		inline bool undcmp(const T &lhs, const T &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support < operator.");
 		}
 
 		template <typename T>
-		static bool aeqcmp(const T &lhs, const T &rhs)
+		inline bool aeqcmp(const T &lhs, const T &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support >= operator.");
 		}
 
 		template <typename T>
-		static bool ueqcmp(const T &lhs, const T &rhs)
+		inline bool ueqcmp(const T &lhs, const T &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support <= operator.");
 		}
 
 		template <typename T>
-		static any &index(T &data, const any &index)
+		inline const any &index_ref(const T &data, const any &index)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support data[index] operator.");
 		}
 
 		template <typename T>
-		static any &access(T &data, const cs::string_borrower &meber)
+		inline any &index_ref(T &data, const any &index)
+		{
+			return const_cast<any &>(index_ref((const T &) data, index));
+		}
+
+		template <typename T>
+		inline any index(const T &data, const any &idx)
+		{
+			return index_ref(data, idx);
+		}
+
+		template <typename T>
+		inline any index(T &data, const any &idx)
+		{
+			return index_ref(data, idx);
+		}
+
+		template <typename T>
+		inline const any &access(const T &data, const cs::string_borrower &meber)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support data.member operator.");
 		}
 
 		template <typename T>
-		static any fcall(const T &func, cs::vector &args)
+		inline any &access(T &data, const cs::string_borrower &meber)
+		{
+			return const_cast<any &>(access((const T &) data, meber));
+		}
+
+		template <typename T>
+		inline any fcall(const T &func, cs::vector &args)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support func(...) operator.");
 		}
@@ -223,10 +247,26 @@ typename cs_impl::basic_var<align_size, allocator_t>::var_op_result cs_impl::bas
 		return var_op_result::from_int(operators::aeqcmp(*static_cast<const T *>(lhs), static_cast<const basic_var *>(rhs)->template unchecked_get<T>()));
 	case operators::type::ueqcmp:
 		return var_op_result::from_int(operators::ueqcmp(*static_cast<const T *>(lhs), static_cast<const basic_var *>(rhs)->template unchecked_get<T>()));
-	case operators::type::index:
-		return var_op_result::from_ptr(&operators::index(*static_cast<T *>(lhs), *static_cast<const any *>(rhs)));
+	case operators::type::index: {
+		any result = operators::index(*static_cast<T *>(lhs), *static_cast<const any *>(rhs));
+		any::proxy *pxy = nullptr;
+		std::swap(result.mDat, pxy);
+		return var_op_result::from_ptr(pxy);
+	}
+	case operators::type::cindex: {
+		any result = operators::index(*static_cast<const T *>(lhs), *static_cast<const any *>(rhs));
+		any::proxy *pxy = nullptr;
+		std::swap(result.mDat, pxy);
+		return var_op_result::from_ptr(pxy);
+	}
+	case operators::type::index_ref:
+		return var_op_result::from_ptr(&operators::index_ref(*static_cast<T *>(lhs), *static_cast<const any *>(rhs)));
+	case operators::type::index_cref:
+		return var_op_result::from_ptr((void *) &operators::index_ref(*static_cast<const T *>(lhs), *static_cast<const any *>(rhs)));
 	case operators::type::access:
 		return var_op_result::from_ptr(&operators::access(*static_cast<T *>(lhs), *static_cast<const cs::string_borrower *>(rhs)));
+	case operators::type::caccess:
+		return var_op_result::from_ptr((void *) &operators::access(*static_cast<const T *>(lhs), *static_cast<const cs::string_borrower *>(rhs)));
 	case operators::type::fcall: {
 		any result = operators::fcall(*static_cast<const T *>(lhs), *static_cast<cs::vector *>(rhs));
 		any::proxy *pxy = nullptr;
@@ -765,4 +805,26 @@ namespace cs_impl {
 	{
 		return path_info_ext;
 	}
+
+// Operators
+	template <>
+	any &operators::index_ref<cs::array>(cs::array &, const any &);
+	template <>
+	const any &operators::index_ref<cs::array>(const cs::array &, const any &);
+	template <>
+	any operators::add<cs::array>(const cs::array &, const any &);
+	template <>
+	any operators::mul<cs::array>(const cs::array &, const any &);
+	template <>
+	any &operators::index_ref<cs::hash_map>(cs::hash_map &, const any &);
+	template <>
+	const any &operators::index_ref<cs::hash_map>(const cs::hash_map &, const any &);
+	template <>
+	const any &operators::index_ref<cs::string>(const cs::string &, const any &);
+	template <>
+	any operators::index<cs::string>(const cs::string &, const any &);
+	template <>
+	any operators::add<cs::string>(const cs::string &, const any &);
+	template <>
+	any operators::mul<cs::string>(const cs::string &, const any &);
 } // namespace cs_impl
