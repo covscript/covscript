@@ -293,6 +293,42 @@ namespace cs_impl {
 	template <typename T>
 	using var_storage_t = typename var_storage<std::decay_t<T>>::type;
 
+	namespace operators {
+		enum class type
+		{
+			get,
+			copy,
+			move,
+			swap,
+			destroy,
+			type_id,    // typeid(val)
+			type_name,  // type(val)
+			to_integer, // to_integer(val)
+			to_string,  // to_string(val)
+			hash,       // hash(val)
+			detach,     // clone(val)
+			ext_ns,     // helper for access
+			add,        // lhs + rhs
+			sub,        // lhs - rhs
+			mul,        // lhs * rhs
+			div,        // lhs / rhs
+			mod,        // lhs % rhs
+			pow,        // lhs ^ rhs
+			minus,      // -val
+			escape,     // *val
+			selfinc,    // ++val
+			selfdec,    // --val
+			compare,    // lhs == rhs
+			abocmp,     // lhs > rhs
+			undcmp,     // lhs < rhs
+			aeqcmp,     // lhs >= rhs
+			ueqcmp,     // lhs <= rhs
+			index,      // data[index]
+			access,     // data.member
+			fcall,      // func(args)
+		};
+	}
+
 	constexpr std::size_t aligned_element_size = (std::max) (alignof(std::max_align_t), sizeof(void *));
 
 	template <std::size_t align_size,
@@ -305,23 +341,6 @@ namespace cs_impl {
 		              "align_size must greater than alignof(std::max_align_t).");
 
 		using aligned_storage_t = std::aligned_storage_t<align_size - aligned_element_size, alignof(std::max_align_t)>;
-
-		enum class var_op
-		{
-			get,
-			copy,
-			move,
-			swap,
-			destroy,
-			compare,
-			rtti_type,
-			type_name,
-			to_integer,
-			to_string,
-			hash,
-			detach,
-			ext_ns
-		};
 
 		union var_op_result
 		{
@@ -354,6 +373,9 @@ namespace cs_impl {
 		};
 
 		template <typename T>
+		static var_op_result call_operator(operators::type, const basic_var *, void *);
+
+		template <typename T>
 		struct var_op_svo_dispatcher
 		{
 			template <typename... ArgsT>
@@ -361,7 +383,7 @@ namespace cs_impl {
 			{
 				::new (&val->m_store.buffer) T(std::forward<ArgsT>(args)...);
 			}
-			static inline var_op_result dispatcher(var_op, const basic_var *, void *);
+			static inline var_op_result dispatcher(operators::type, const basic_var *, void *);
 		};
 
 		template <typename T>
@@ -379,10 +401,10 @@ namespace cs_impl {
 				::new (ptr) T(std::forward<ArgsT>(args)...);
 				val->m_store.ptr = ptr;
 			}
-			static inline var_op_result dispatcher(var_op, const basic_var *, void *);
+			static inline var_op_result dispatcher(operators::type, const basic_var *, void *);
 		};
 
-		using dispatcher_t = var_op_result (*)(var_op, const basic_var *, void *);
+		using dispatcher_t = var_op_result (*)(operators::type, const basic_var *, void *);
 
 		template <typename T>
 		using dispatcher_class = std::conditional_t<(sizeof(T) > sizeof(aligned_storage_t)),
@@ -400,13 +422,13 @@ namespace cs_impl {
 		template <typename T>
 		inline T &unchecked_get() noexcept
 		{
-			return *static_cast<T *>(m_dispatcher(var_op::get, this, nullptr)._ptr);
+			return *static_cast<T *>(m_dispatcher(operators::type::get, this, nullptr)._ptr);
 		}
 
 		template <typename T>
 		inline const T &unchecked_get() const noexcept
 		{
-			return *static_cast<const T *>(m_dispatcher(var_op::get, this, nullptr)._ptr);
+			return *static_cast<const T *>(m_dispatcher(operators::type::get, this, nullptr)._ptr);
 		}
 
 		template <typename T, typename... ArgsT>
@@ -420,7 +442,7 @@ namespace cs_impl {
 		inline void destroy_store()
 		{
 			if (m_dispatcher != nullptr) {
-				m_dispatcher(var_op::destroy, this, nullptr);
+				m_dispatcher(operators::type::destroy, this, nullptr);
 				m_dispatcher = nullptr;
 			}
 		}
@@ -429,7 +451,7 @@ namespace cs_impl {
 		{
 			destroy_store();
 			if (other.m_dispatcher != nullptr) {
-				other.m_dispatcher(var_op::copy, &other, this);
+				other.m_dispatcher(operators::type::copy, &other, this);
 				m_dispatcher = other.m_dispatcher;
 			}
 		}
@@ -438,7 +460,7 @@ namespace cs_impl {
 		{
 			destroy_store();
 			if (other.m_dispatcher != nullptr) {
-				other.m_dispatcher(var_op::move, &other, this);
+				other.m_dispatcher(operators::type::move, &other, this);
 				m_dispatcher = other.m_dispatcher;
 				other.m_dispatcher = nullptr;
 			}
@@ -465,7 +487,7 @@ namespace cs_impl {
 				other.move_store(tmp);
 			}
 			else
-				m_dispatcher(var_op::swap, this, (void *) &other);
+				m_dispatcher(operators::type::swap, this, (void *) &other);
 		}
 
 		template <typename T, typename store_t = cs_impl::var_storage_t<T>,
@@ -511,7 +533,7 @@ namespace cs_impl {
 
 		inline const std::type_info &type() const noexcept
 		{
-			return *static_cast<const std::type_info *>(m_dispatcher(var_op::rtti_type, this, nullptr)._ptr);
+			return *static_cast<const std::type_info *>(m_dispatcher(operators::type::type_id, this, nullptr)._ptr);
 		}
 
 		template <typename T, typename store_t = cs_impl::var_storage_t<T>>
@@ -522,39 +544,39 @@ namespace cs_impl {
 
 		inline bool compare(const basic_var &obj) const
 		{
-			return (m_dispatcher == obj.m_dispatcher || type() == obj.type()) && m_dispatcher(var_op::compare, this, (void *) &obj)._int;
+			return (m_dispatcher == obj.m_dispatcher || type() == obj.type()) && m_dispatcher(operators::type::compare, this, (void *) &obj)._int;
 		}
 
 		inline std::intptr_t to_integer() const
 		{
-			return m_dispatcher(var_op::to_integer, this, nullptr)._int;
+			return m_dispatcher(operators::type::to_integer, this, nullptr)._int;
 		}
 
 		inline cs::string_borrower to_string() const
 		{
 			cs::string_borrower borrower;
-			m_dispatcher(var_op::to_string, this, &borrower);
+			m_dispatcher(operators::type::to_string, this, &borrower);
 			return borrower;
 		}
 
 		inline std::size_t hash() const
 		{
-			return m_dispatcher(var_op::hash, this, nullptr)._uint;
+			return m_dispatcher(operators::type::hash, this, nullptr)._uint;
 		}
 
 		inline void detach()
 		{
-			m_dispatcher(var_op::detach, this, nullptr);
+			m_dispatcher(operators::type::detach, this, nullptr);
 		}
 
 		inline cs::namespace_t &get_ext() const
 		{
-			return *static_cast<cs::namespace_t *>(m_dispatcher(var_op::ext_ns, this, nullptr)._ptr);
+			return *static_cast<cs::namespace_t *>(m_dispatcher(operators::type::ext_ns, this, nullptr)._ptr);
 		}
 
 		inline const char *get_type_name() const
 		{
-			return static_cast<const char *>(m_dispatcher(var_op::type_name, this, nullptr)._ptr);
+			return static_cast<const char *>(m_dispatcher(operators::type::type_name, this, nullptr)._ptr);
 		}
 	};
 
@@ -567,6 +589,9 @@ namespace cs_impl {
 #endif
 
 	class any final {
+		template <std::size_t align_size, template <typename> class allocator_t>
+		friend class basic_var;
+
 		struct proxy
 		{
 			std::uint32_t refcount = 1;
@@ -946,6 +971,144 @@ namespace cs_impl {
 			assign(dat);
 			return *this;
 		}
+
+		any operator+(const any &rhs) const
+		{
+			if (!usable() || !rhs.usable())
+				throw cov::error("E0005");
+			else
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::add, &mDat->data, (void *)&rhs)._ptr);
+		}
+
+		any operator-(const any &rhs) const
+		{
+			if (!usable() || !rhs.usable())
+				throw cov::error("E0005");
+			else
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::sub, &mDat->data, (void *)&rhs)._ptr);
+		}
+
+		any operator*(const any &rhs) const
+		{
+			if (!usable() || !rhs.usable())
+				throw cov::error("E0005");
+			else
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::mul, &mDat->data, (void *)&rhs)._ptr);
+		}
+
+		any operator/(const any &rhs) const
+		{
+			if (!usable() || !rhs.usable())
+				throw cov::error("E0005");
+			else
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::div, &mDat->data, (void *)&rhs)._ptr);
+		}
+
+		any operator%(const any &rhs) const
+		{
+			if (!usable() || !rhs.usable())
+				throw cov::error("E0005");
+			else
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::mod, &mDat->data, (void *)&rhs)._ptr);
+		}
+
+		any operator^(const any &rhs) const
+		{
+			if (!usable() || !rhs.usable())
+				throw cov::error("E0005");
+			else
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::pow, &mDat->data, (void *)&rhs)._ptr);
+		}
+
+		any operator-() const
+		{
+			if (!usable())
+				throw cov::error("E0005");
+			else
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::minus, &mDat->data, nullptr)._ptr);
+		}
+
+		any &operator*() const
+		{
+			if (!usable())
+				throw cov::error("E0005");
+			else
+				return *static_cast<any *>(mDat->data.m_dispatcher(operators::type::escape, &mDat->data, nullptr)._ptr);
+		}
+
+		any &operator++()
+		{
+			if (!usable())
+				throw cov::error("E0005");
+			else
+				mDat->data.m_dispatcher(operators::type::selfinc, &mDat->data, nullptr);
+			return *this;
+		}
+
+		any &operator--()
+		{
+			if (!usable())
+				throw cov::error("E0005");
+			else
+				mDat->data.m_dispatcher(operators::type::selfdec, &mDat->data, nullptr);
+			return *this;
+		}
+
+		bool operator>(const any &rhs) const
+		{
+			if (!usable() || !rhs.usable())
+				return !usable() && !rhs.usable();
+			else
+				return mDat->data.m_dispatcher(operators::type::abocmp, &mDat->data, &rhs.mDat->data)._int;
+		}
+
+		bool operator<(const any &rhs) const
+		{
+			if (!usable() || !rhs.usable())
+				return !usable() && !rhs.usable();
+			else
+				return mDat->data.m_dispatcher(operators::type::undcmp, &mDat->data, &rhs.mDat->data)._int;
+		}
+
+		bool operator>=(const any &rhs) const
+		{
+			if (!usable() || !rhs.usable())
+				return !usable() && !rhs.usable();
+			else
+				return mDat->data.m_dispatcher(operators::type::aeqcmp, &mDat->data, &rhs.mDat->data)._int;
+		}
+
+		bool operator<=(const any &rhs) const
+		{
+			if (!usable() || !rhs.usable())
+				return !usable() && !rhs.usable();
+			else
+				return mDat->data.m_dispatcher(operators::type::ueqcmp, &mDat->data, &rhs.mDat->data)._int;
+		}
+
+		any &index(const any &idx) const
+		{
+			if (!usable() || !idx.usable())
+				throw cov::error("E0005");
+			else
+				return *static_cast<any *>(mDat->data.m_dispatcher(operators::type::index, &mDat->data, (void *)&idx)._ptr);
+		}
+
+		any &access(cs::string_borrower member) const
+		{
+			if (!usable())
+				throw cov::error("E0005");
+			else
+				return *static_cast<any *>(mDat->data.m_dispatcher(operators::type::access, &mDat->data, &member)._ptr);
+		}
+
+		any fcall(cs::vector &args) const
+		{
+			if (!usable())
+				throw cov::error("E0005");
+			else
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::fcall, &mDat->data, &args)._ptr);
+		}
 	};
 
 	template <>
@@ -993,94 +1156,58 @@ namespace std {
 template <std::size_t align_size, template <typename> class allocator_t>
 template <typename T>
 typename cs_impl::basic_var<align_size, allocator_t>::var_op_result cs_impl::basic_var<align_size, allocator_t>::var_op_svo_dispatcher<T>::dispatcher(
-    cs_impl::basic_var<align_size, allocator_t>::var_op op, const cs_impl::basic_var<align_size, allocator_t> *lhs, void *rhs)
+    cs_impl::operators::type op, const cs_impl::basic_var<align_size, allocator_t> *lhs, void *rhs)
 {
 	const T *ptr = reinterpret_cast<const T *>(&lhs->m_store.buffer);
 	switch (op) {
-	case var_op::get:
+	case operators::type::get:
 		return var_op_result::from_ptr(const_cast<T *>(ptr));
-	case var_op::copy:
+	case operators::type::copy:
 		::new (&static_cast<basic_var *>(rhs)->m_store.buffer) T(*ptr);
 		return var_op_result();
-	case var_op::move:
+	case operators::type::move:
 		::new (&static_cast<basic_var *>(rhs)->m_store.buffer) T(std::move(*const_cast<T *>(ptr)));
 		return var_op_result();
-	case var_op::swap:
+	case operators::type::swap:
 		std::swap(*const_cast<T *>(ptr), static_cast<basic_var *>(rhs)->template unchecked_get<T>());
 		return var_op_result();
-	case var_op::destroy:
+	case operators::type::destroy:
 		ptr->~T();
 		return var_op_result();
-	case var_op::compare:
-		return var_op_result::from_int(cs_impl::compare(*ptr, static_cast<const basic_var *>(rhs)->template unchecked_get<T>()));
-	case var_op::rtti_type:
-		return var_op_result::from_ptr((void *) &typeid(T));
-	case var_op::type_name:
-		return var_op_result::from_ptr((void *) cs_impl::get_name_of_type<T>());
-	case var_op::to_integer:
-		return var_op_result::from_int(cs_impl::to_integer(*ptr));
-	case var_op::to_string:
-		*static_cast<cs::string_borrower *>(rhs) = cs_impl::to_string(*ptr);
-		return var_op_result();
-	case var_op::hash:
-		return var_op_result::from_uint(cs_impl::hash<T>(*ptr));
-	case var_op::detach:
-		cs_impl::detach<T>(*const_cast<T *>(ptr));
-		return var_op_result();
-	case var_op::ext_ns:
-		return var_op_result::from_ptr(&cs_impl::get_ext<T>());
 	default:
-		return var_op_result();
+		return basic_var::call_operator<T>(op, lhs, rhs);
 	}
 }
 
 template <std::size_t align_size, template <typename> class allocator_t>
 template <typename T>
 typename cs_impl::basic_var<align_size, allocator_t>::var_op_result cs_impl::basic_var<align_size, allocator_t>::var_op_heap_dispatcher<T>::dispatcher(
-    cs_impl::basic_var<align_size, allocator_t>::var_op op, const cs_impl::basic_var<align_size, allocator_t> *lhs, void *rhs)
+    cs_impl::operators::type op, const cs_impl::basic_var<align_size, allocator_t> *lhs, void *rhs)
 {
 	const T *ptr = static_cast<const T *>(lhs->m_store.ptr);
 	switch (op) {
-	case var_op::get:
+	case operators::type::get:
 		return var_op_result::from_ptr(const_cast<T *>(ptr));
-	case var_op::copy: {
+	case operators::type::copy: {
 		T *nptr = get_allocator().allocate(1);
 		::new (nptr) T(*ptr);
 		static_cast<basic_var *>(rhs)->m_store.ptr = nptr;
 		return var_op_result();
 	}
-	case var_op::move: {
+	case operators::type::move: {
 		T *nptr = get_allocator().allocate(1);
 		::new (nptr) T(std::move(*const_cast<T *>(ptr)));
 		static_cast<basic_var *>(rhs)->m_store.ptr = nptr;
 		return var_op_result();
 	}
-	case var_op::swap:
+	case operators::type::swap:
 		std::swap(*const_cast<T *>(ptr), static_cast<basic_var *>(rhs)->template unchecked_get<T>());
 		return var_op_result();
-	case var_op::destroy:
+	case operators::type::destroy:
 		ptr->~T();
 		get_allocator().deallocate(const_cast<T *>(ptr), 1);
 		return var_op_result();
-	case var_op::compare:
-		return var_op_result::from_int(cs_impl::compare(*ptr, static_cast<const basic_var *>(rhs)->template unchecked_get<T>()));
-	case var_op::rtti_type:
-		return var_op_result::from_ptr((void *) &typeid(T));
-	case var_op::type_name:
-		return var_op_result::from_ptr((void *) cs_impl::get_name_of_type<T>());
-	case var_op::to_integer:
-		return var_op_result::from_int(cs_impl::to_integer(*ptr));
-	case var_op::to_string:
-		*static_cast<cs::string_borrower *>(rhs) = cs_impl::to_string(*ptr);
-		return var_op_result();
-	case var_op::hash:
-		return var_op_result::from_uint(cs_impl::hash<T>(*ptr));
-	case var_op::detach:
-		cs_impl::detach<T>(*const_cast<T *>(ptr));
-		return var_op_result();
-	case var_op::ext_ns:
-		return var_op_result::from_ptr(&cs_impl::get_ext<T>());
 	default:
-		return var_op_result();
+		return basic_var::call_operator<T>(op, lhs, rhs);
 	}
 }
