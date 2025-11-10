@@ -143,94 +143,92 @@ namespace cs_impl {
 template <std::size_t align_size, template <typename> class allocator_t>
 template <typename T>
 typename cs_impl::basic_var<align_size, allocator_t>::var_op_result cs_impl::basic_var<align_size, allocator_t>::call_operator(
-    cs_impl::operators::type op, const cs_impl::basic_var<align_size, allocator_t> *lhs, void *rhs)
+    cs_impl::operators::type op, void *lhs, void *rhs)
 {
-	const T *ptr = reinterpret_cast<const T *>(&lhs->m_store.buffer);
 	switch (op) {
 	case operators::type::type_id:
 		return var_op_result::from_ptr((void *) &typeid(T));
 	case operators::type::type_name:
 		return var_op_result::from_ptr((void *) cs_impl::get_name_of_type<T>());
 	case operators::type::to_integer:
-		return var_op_result::from_int(cs_impl::to_integer(*ptr));
+		return var_op_result::from_int(cs_impl::to_integer(*static_cast<const T *>(lhs)));
 	case operators::type::to_string:
-		*static_cast<cs::string_borrower *>(rhs) = cs_impl::to_string(*ptr);
+		*static_cast<cs::string_borrower *>(rhs) = cs_impl::to_string(*static_cast<const T *>(lhs));
 		return var_op_result();
 	case operators::type::hash:
-		return var_op_result::from_uint(cs_impl::hash<T>(*ptr));
+		return var_op_result::from_uint(cs_impl::hash<T>(*static_cast<const T *>(lhs)));
 	case operators::type::detach:
-		cs_impl::detach<T>(*const_cast<T *>(ptr));
+		cs_impl::detach<T>(*static_cast<T *>(lhs));
 		return var_op_result();
 	case operators::type::ext_ns:
 		return var_op_result::from_ptr(&cs_impl::get_ext<T>());
 	case operators::type::add: {
-		any result = operators::add(*ptr, *static_cast<const any *>(rhs));
+		any result = operators::add(*static_cast<const T *>(lhs), *static_cast<const any *>(rhs));
 		any::proxy *pxy = nullptr;
 		std::swap(result.mDat, pxy);
 		return var_op_result::from_ptr(pxy);
 	}
 	case operators::type::sub: {
-		any result = operators::sub(*ptr, *static_cast<const any *>(rhs));
+		any result = operators::sub(*static_cast<const T *>(lhs), *static_cast<const any *>(rhs));
 		any::proxy *pxy = nullptr;
 		std::swap(result.mDat, pxy);
 		return var_op_result::from_ptr(pxy);
 	}
 	case operators::type::mul: {
-		any result = operators::mul(*ptr, *static_cast<const any *>(rhs));
+		any result = operators::mul(*static_cast<const T *>(lhs), *static_cast<const any *>(rhs));
 		any::proxy *pxy = nullptr;
 		std::swap(result.mDat, pxy);
 		return var_op_result::from_ptr(pxy);
 	}
 	case operators::type::div: {
-		any result = operators::div(*ptr, *static_cast<const any *>(rhs));
+		any result = operators::div(*static_cast<const T *>(lhs), *static_cast<const any *>(rhs));
 		any::proxy *pxy = nullptr;
 		std::swap(result.mDat, pxy);
 		return var_op_result::from_ptr(pxy);
 	}
 	case operators::type::mod: {
-		any result = operators::mod(*ptr, *static_cast<const any *>(rhs));
+		any result = operators::mod(*static_cast<const T *>(lhs), *static_cast<const any *>(rhs));
 		any::proxy *pxy = nullptr;
 		std::swap(result.mDat, pxy);
 		return var_op_result::from_ptr(pxy);
 	}
 	case operators::type::pow: {
-		any result = operators::pow(*ptr, *static_cast<const any *>(rhs));
+		any result = operators::pow(*static_cast<const T *>(lhs), *static_cast<const any *>(rhs));
 		any::proxy *pxy = nullptr;
 		std::swap(result.mDat, pxy);
 		return var_op_result::from_ptr(pxy);
 	}
 	case operators::type::minus: {
-		any result = operators::minus(*ptr);
+		any result = operators::minus(*static_cast<const T *>(lhs));
 		any::proxy *pxy = nullptr;
 		std::swap(result.mDat, pxy);
 		return var_op_result::from_ptr(pxy);
 	}
 	case operators::type::escape:
-		return var_op_result::from_ptr(&operators::escape(*const_cast<T *>(ptr)));
+		return var_op_result::from_ptr(&operators::escape(*static_cast<T *>(lhs)));
 	case operators::type::selfinc:
-		operators::selfinc(*const_cast<T *>(ptr));
+		operators::selfinc(*static_cast<T *>(lhs));
 		return var_op_result();
 	case operators::type::selfdec:
-		operators::selfdec(*const_cast<T *>(ptr));
+		operators::selfdec(*static_cast<T *>(lhs));
 		return var_op_result();
 	// Special operators, type check finished outside.
 	case operators::type::compare:
-		return var_op_result::from_int(operators::compare(*ptr, static_cast<const basic_var *>(rhs)->template unchecked_get<T>()));
+		return var_op_result::from_int(operators::compare(*static_cast<const T *>(lhs), static_cast<const basic_var *>(rhs)->template unchecked_get<T>()));
 	case operators::type::abocmp:
-		return var_op_result::from_int(operators::abocmp(*ptr, static_cast<const basic_var *>(rhs)->template unchecked_get<T>()));
+		return var_op_result::from_int(operators::abocmp(*static_cast<const T *>(lhs), static_cast<const basic_var *>(rhs)->template unchecked_get<T>()));
 	case operators::type::undcmp:
-		return var_op_result::from_int(operators::undcmp(*ptr, static_cast<const basic_var *>(rhs)->template unchecked_get<T>()));
+		return var_op_result::from_int(operators::undcmp(*static_cast<const T *>(lhs), static_cast<const basic_var *>(rhs)->template unchecked_get<T>()));
 	case operators::type::aeqcmp:
-		return var_op_result::from_int(operators::aeqcmp(*ptr, static_cast<const basic_var *>(rhs)->template unchecked_get<T>()));
+		return var_op_result::from_int(operators::aeqcmp(*static_cast<const T *>(lhs), static_cast<const basic_var *>(rhs)->template unchecked_get<T>()));
 	case operators::type::ueqcmp:
-		return var_op_result::from_int(operators::ueqcmp(*ptr, static_cast<const basic_var *>(rhs)->template unchecked_get<T>()));
+		return var_op_result::from_int(operators::ueqcmp(*static_cast<const T *>(lhs), static_cast<const basic_var *>(rhs)->template unchecked_get<T>()));
 	case operators::type::index:
-		return var_op_result::from_ptr(&operators::index(*const_cast<T *>(ptr), *static_cast<const any *>(rhs)));
+		return var_op_result::from_ptr(&operators::index(*static_cast<T *>(lhs), *static_cast<const any *>(rhs)));
 	case operators::type::access:
-		return var_op_result::from_ptr(&operators::access(*const_cast<T *>(ptr), *static_cast<const cs::string_borrower *>(rhs)));
-	case operators::type::fcall:
-	{
-		any result = operators::fcall(*ptr, *static_cast<cs::vector *>(rhs));
+		return var_op_result::from_ptr(&operators::access(*static_cast<T *>(lhs), *static_cast<const cs::string_borrower *>(rhs)));
+	case operators::type::fcall: {
+		any result = operators::fcall(*static_cast<const T *>(lhs), *static_cast<cs::vector *>(rhs));
 		any::proxy *pxy = nullptr;
 		std::swap(result.mDat, pxy);
 		return var_op_result::from_ptr(pxy);

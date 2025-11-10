@@ -373,7 +373,7 @@ namespace cs_impl {
 		};
 
 		template <typename T>
-		static var_op_result call_operator(operators::type, const basic_var *, void *);
+		static var_op_result call_operator(operators::type, void *, void *);
 
 		template <typename T>
 		struct var_op_svo_dispatcher
@@ -977,7 +977,7 @@ namespace cs_impl {
 			if (!usable() || !rhs.usable())
 				throw cov::error("E0005");
 			else
-				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::add, &mDat->data, (void *)&rhs)._ptr);
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::add, &mDat->data, (void *) &rhs)._ptr);
 		}
 
 		any operator-(const any &rhs) const
@@ -985,7 +985,7 @@ namespace cs_impl {
 			if (!usable() || !rhs.usable())
 				throw cov::error("E0005");
 			else
-				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::sub, &mDat->data, (void *)&rhs)._ptr);
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::sub, &mDat->data, (void *) &rhs)._ptr);
 		}
 
 		any operator*(const any &rhs) const
@@ -993,7 +993,7 @@ namespace cs_impl {
 			if (!usable() || !rhs.usable())
 				throw cov::error("E0005");
 			else
-				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::mul, &mDat->data, (void *)&rhs)._ptr);
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::mul, &mDat->data, (void *) &rhs)._ptr);
 		}
 
 		any operator/(const any &rhs) const
@@ -1001,7 +1001,7 @@ namespace cs_impl {
 			if (!usable() || !rhs.usable())
 				throw cov::error("E0005");
 			else
-				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::div, &mDat->data, (void *)&rhs)._ptr);
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::div, &mDat->data, (void *) &rhs)._ptr);
 		}
 
 		any operator%(const any &rhs) const
@@ -1009,7 +1009,7 @@ namespace cs_impl {
 			if (!usable() || !rhs.usable())
 				throw cov::error("E0005");
 			else
-				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::mod, &mDat->data, (void *)&rhs)._ptr);
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::mod, &mDat->data, (void *) &rhs)._ptr);
 		}
 
 		any operator^(const any &rhs) const
@@ -1017,7 +1017,7 @@ namespace cs_impl {
 			if (!usable() || !rhs.usable())
 				throw cov::error("E0005");
 			else
-				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::pow, &mDat->data, (void *)&rhs)._ptr);
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::pow, &mDat->data, (void *) &rhs)._ptr);
 		}
 
 		any operator-() const
@@ -1091,7 +1091,7 @@ namespace cs_impl {
 			if (!usable() || !idx.usable())
 				throw cov::error("E0005");
 			else
-				return *static_cast<any *>(mDat->data.m_dispatcher(operators::type::index, &mDat->data, (void *)&idx)._ptr);
+				return *static_cast<any *>(mDat->data.m_dispatcher(operators::type::index, &mDat->data, (void *) &idx)._ptr);
 		}
 
 		any &access(cs::string_borrower member) const
@@ -1175,7 +1175,7 @@ typename cs_impl::basic_var<align_size, allocator_t>::var_op_result cs_impl::bas
 		ptr->~T();
 		return var_op_result();
 	default:
-		return basic_var::call_operator<T>(op, lhs, rhs);
+		return basic_var::call_operator<T>(op, const_cast<T *>(ptr), rhs);
 	}
 }
 
@@ -1208,6 +1208,6 @@ typename cs_impl::basic_var<align_size, allocator_t>::var_op_result cs_impl::bas
 		get_allocator().deallocate(const_cast<T *>(ptr), 1);
 		return var_op_result();
 	default:
-		return basic_var::call_operator<T>(op, lhs, rhs);
+		return basic_var::call_operator<T>(op, const_cast<T *>(ptr), rhs);
 	}
 }
