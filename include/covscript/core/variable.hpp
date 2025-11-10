@@ -329,6 +329,7 @@ namespace cs_impl {
 			index_cref, // ref to const_data[index]
 			access,     // ref to data.member
 			caccess,    // ref to const_data.member
+			prep_call,  // prepare before call
 			fcall,      // func(args)
 		};
 	}
@@ -1040,7 +1041,7 @@ namespace cs_impl {
 				return *static_cast<any *>(mDat->data.m_dispatcher(operators::type::escape, &mDat->data, nullptr)._ptr);
 		}
 
-		any &operator++()
+		const any &operator++() const
 		{
 			if (!usable())
 				throw cov::error("E0005");
@@ -1049,7 +1050,7 @@ namespace cs_impl {
 			return *this;
 		}
 
-		any &operator--()
+		const any &operator--() const
 		{
 			if (!usable())
 				throw cov::error("E0005");
@@ -1136,6 +1137,14 @@ namespace cs_impl {
 			if (!usable())
 				throw cov::error("E0005");
 			return *static_cast<const any *>(mDat->data.m_dispatcher(operators::type::access, &mDat->data, &member)._ptr);
+		}
+
+		void prep_call(cs::vector &args) const
+		{
+			if (!usable())
+				throw cov::error("E0005");
+			else
+				mDat->data.m_dispatcher(operators::type::prep_call, &mDat->data, &args);
 		}
 
 		any fcall(cs::vector &args) const

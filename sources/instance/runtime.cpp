@@ -28,12 +28,7 @@
 namespace cs {
 	var runtime_type::parse_add(const var &a, const var &b)
 	{
-		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
-			return a.const_val<numeric>() + b.const_val<numeric>();
-		else if (a.is_type_of<string>() && b.usable())
-			return var::make<std::string>(a.const_val<string>() + b.to_string());
-		else
-			throw runtime_error("Unsupported operator operations(Add).");
+		return a + b;
 	}
 
 	var runtime_type::parse_addasi(var a, const var &b)
@@ -44,10 +39,7 @@ namespace cs {
 
 	var runtime_type::parse_sub(const var &a, const var &b)
 	{
-		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
-			return a.const_val<numeric>() - b.const_val<numeric>();
-		else
-			throw runtime_error("Unsupported operator operations(Sub).");
+		return a - b;
 	}
 
 	var runtime_type::parse_subasi(var a, const var &b)
@@ -58,18 +50,12 @@ namespace cs {
 
 	var runtime_type::parse_minus(const var &b)
 	{
-		if (b.is_type_of<numeric>())
-			return -b.const_val<numeric>();
-		else
-			throw runtime_error("Unsupported operator operations(Minus).");
+		return -b;
 	}
 
 	var runtime_type::parse_mul(const var &a, const var &b)
 	{
-		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
-			return a.const_val<numeric>() * b.const_val<numeric>();
-		else
-			throw runtime_error("Unsupported operator operations(Mul).");
+		return a * b;
 	}
 
 	var runtime_type::parse_mulasi(var a, const var &b)
@@ -80,23 +66,12 @@ namespace cs {
 
 	var runtime_type::parse_escape(const var &b)
 	{
-		if (b.is_type_of<pointer>()) {
-			const auto &ptr = b.const_val<pointer>();
-			if (ptr.data.usable())
-				return ptr.data;
-			else
-				throw runtime_error("Escape from null pointer.");
-		}
-		else
-			throw runtime_error("Unsupported operator operations(Escape).");
+		return *b;
 	}
 
 	var runtime_type::parse_div(const var &a, const var &b)
 	{
-		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
-			return a.const_val<numeric>() / b.const_val<numeric>();
-		else
-			throw runtime_error("Unsupported operator operations(Div).");
+		return a / b;
 	}
 
 	var runtime_type::parse_divasi(var a, const var &b)
@@ -107,10 +82,7 @@ namespace cs {
 
 	var runtime_type::parse_mod(const var &a, const var &b)
 	{
-		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
-			return a.const_val<numeric>() % b.const_val<numeric>();
-		else
-			throw runtime_error("Unsupported operator operations(Mod).");
+		return a % b;
 	}
 
 	var runtime_type::parse_modasi(var a, const var &b)
@@ -121,10 +93,7 @@ namespace cs {
 
 	var runtime_type::parse_pow(const var &a, const var &b)
 	{
-		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
-			return a.const_val<numeric>() ^ b.const_val<numeric>();
-		else
-			throw runtime_error("Unsupported operator operations(Pow).");
+		return a ^ b;
 	}
 
 	var runtime_type::parse_powasi(var a, const var &b)
@@ -236,10 +205,7 @@ namespace cs {
 
 	var runtime_type::parse_arrow(const var &a, token_base *b)
 	{
-		if (a.is_type_of<pointer>())
-			return parse_dot(a.const_val<pointer>().data, b);
-		else
-			throw runtime_error("Unsupported operator operations(Arraw).");
+		return parse_dot(*a, b);
 	}
 
 	var runtime_type::parse_typeid(const var &b)
@@ -270,42 +236,22 @@ namespace cs {
 
 	var runtime_type::parse_und(const var &a, const var &b)
 	{
-		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
-			return boolean(a.const_val<numeric>() < b.const_val<numeric>());
-		else if (a.is_type_of<string>() && b.is_type_of<string>())
-			return boolean(a.const_val<string>() < b.const_val<string>());
-		else
-			throw runtime_error("Unsupported operator operations(Und).");
+		return a < b;
 	}
 
 	var runtime_type::parse_abo(const var &a, const var &b)
 	{
-		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
-			return boolean(a.const_val<numeric>() > b.const_val<numeric>());
-		else if (a.is_type_of<string>() && b.is_type_of<string>())
-			return boolean(a.const_val<string>() > b.const_val<string>());
-		else
-			throw runtime_error("Unsupported operator operations(Abo).");
+		return a > b;
 	}
 
 	var runtime_type::parse_ueq(const var &a, const var &b)
 	{
-		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
-			return boolean(a.const_val<numeric>() <= b.const_val<numeric>());
-		else if (a.is_type_of<string>() && b.is_type_of<string>())
-			return boolean(a.const_val<string>() <= b.const_val<string>());
-		else
-			throw runtime_error("Unsupported operator operations(Ueq).");
+		return a <= b;
 	}
 
 	var runtime_type::parse_aeq(const var &a, const var &b)
 	{
-		if (a.is_type_of<numeric>() && b.is_type_of<numeric>())
-			return boolean(a.const_val<numeric>() >= b.const_val<numeric>());
-		else if (a.is_type_of<string>() && b.is_type_of<string>())
-			return boolean(a.const_val<string>() >= b.const_val<string>());
-		else
-			throw runtime_error("Unsupported operator operations(Aeq).");
+		return a >= b;
 	}
 
 	var runtime_type::parse_asi(var a, const var &b)
@@ -409,14 +355,19 @@ namespace cs {
 		if (a.usable()) {
 			if (b.usable())
 				throw runtime_error("Unsupported operator operations(Inc).");
-			else
+			else if (a.is_type_of<numeric>())
 				return a.val<numeric>()++;
+			else {
+				var oldt = copy(a);
+				++a;
+				return oldt;
+			}
 		}
 		else {
 			if (!b.usable())
 				throw runtime_error("Unsupported operator operations(Inc).");
 			else
-				return ++b.val<numeric>();
+				return ++b;
 		}
 	}
 
@@ -425,14 +376,19 @@ namespace cs {
 		if (a.usable()) {
 			if (b.usable())
 				throw runtime_error("Unsupported operator operations(Dec).");
-			else
+			else if (a.is_type_of<numeric>())
 				return a.val<numeric>()--;
+			else {
+				var oldt = copy(a);
+				--a;
+				return oldt;
+			}
 		}
 		else {
 			if (!b.usable())
 				throw runtime_error("Unsupported operator operations(Dec).");
 			else
-				return --b.val<numeric>();
+				return --b;
 		}
 	}
 
@@ -443,43 +399,22 @@ namespace cs {
 
 	var runtime_type::parse_fcall(const var &a, token_base *b)
 	{
-		if (a.is_type_of<callable>()) {
-			vector args;
-			token_base *ptr = nullptr;
-			args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
-			for (auto &tree : static_cast<token_arglist *>(b)->get_arglist()) {
-				ptr = tree.root().data();
-				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
-					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
-					const auto &arr = val.const_val<array>();
-					for (auto &it : arr)
-						args.push_back(lvalue(it));
-				}
-				else
-					args.push_back(lvalue(parse_expr(tree.root())));
+		vector args;
+		a.prep_call(args);
+		token_base *ptr = nullptr;
+		args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
+		for (auto &tree : static_cast<token_arglist *>(b)->get_arglist()) {
+			ptr = tree.root().data();
+			if (ptr != nullptr && ptr->get_type() == token_types::expand) {
+				var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
+				const auto &arr = val.const_val<array>();
+				for (auto &it : arr)
+					args.push_back(lvalue(it));
 			}
-			return a.const_val<callable>().call(args);
+			else
+				args.push_back(lvalue(parse_expr(tree.root())));
 		}
-		else if (a.is_type_of<object_method>()) {
-			const auto &om = a.const_val<object_method>();
-			vector args{om.object};
-			token_base *ptr = nullptr;
-			args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
-			for (auto &tree : static_cast<token_arglist *>(b)->get_arglist()) {
-				ptr = tree.root().data();
-				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
-					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
-					const auto &arr = val.const_val<array>();
-					for (auto &it : arr)
-						args.push_back(lvalue(it));
-				}
-				else
-					args.push_back(lvalue(parse_expr(tree.root())));
-			}
-			return om.callable.const_val<callable>().call(args);
-		}
-		else
-			throw runtime_error("Unsupported operator operations(Fcall).");
+		return a.fcall(args);
 	}
 
 	var &runtime_type::parse_access_lhs(const var &a, const var &b)

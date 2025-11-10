@@ -31,138 +31,151 @@
 namespace cs_impl {
 	namespace operators {
 		template <typename T>
-		inline any add(const T &lhs, const any &rhs)
+		static any add(const T &lhs, const any &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support + operator.");
 		}
 
 		template <typename T>
-		inline any sub(const T &lhs, const any &rhs)
+		static any sub(const T &lhs, const any &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support - operator.");
 		}
 
 		template <typename T>
-		inline any mul(const T &lhs, const any &rhs)
+		static any mul(const T &lhs, const any &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support * operator.");
 		}
 
 		template <typename T>
-		inline any div(const T &lhs, const any &rhs)
+		static any div(const T &lhs, const any &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support / operator.");
 		}
 
 		template <typename T>
-		inline any mod(const T &lhs, const any &rhs)
+		static any mod(const T &lhs, const any &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support \% operator.");
 		}
 
 		template <typename T>
-		inline any pow(const T &lhs, const any &rhs)
+		static any pow(const T &lhs, const any &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support ^ operator.");
 		}
 
 		template <typename T>
-		inline any minus(const T &val)
+		static any minus(const T &val)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support -val operator.");
 		}
 
 		template <typename T>
-		inline any &escape(T &val)
+		static any &escape(T &val)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support *val operator.");
 		}
 
 		template <typename T>
-		inline void selfinc(T &val)
+		static void selfinc(T &val)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support ++ operator.");
 		}
 
 		template <typename T>
-		inline void selfdec(T &val)
+		static void selfdec(T &val)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support -- operator.");
 		}
 
 		template <typename T>
-		inline bool compare(const T &a, const T &b)
+		static bool compare(const T &a, const T &b)
 		{
 			return compare_if<T, compare_helper<T>::value>::compare(a, b);
 		}
 
 		template <typename T>
-		inline bool abocmp(const T &lhs, const T &rhs)
+		static bool abocmp(const T &lhs, const T &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support > operator.");
 		}
 
 		template <typename T>
-		inline bool undcmp(const T &lhs, const T &rhs)
+		static bool undcmp(const T &lhs, const T &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support < operator.");
 		}
 
 		template <typename T>
-		inline bool aeqcmp(const T &lhs, const T &rhs)
+		static bool aeqcmp(const T &lhs, const T &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support >= operator.");
 		}
 
 		template <typename T>
-		inline bool ueqcmp(const T &lhs, const T &rhs)
+		static bool ueqcmp(const T &lhs, const T &rhs)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support <= operator.");
 		}
 
 		template <typename T>
-		inline const any &index_ref(const T &data, const any &index)
+		static const any &index_ref(const T &data, const any &index)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support data[index] operator.");
 		}
 
 		template <typename T>
-		inline any &index_ref(T &data, const any &index)
+		static any &index_ref(T &data, const any &index)
 		{
 			return const_cast<any &>(index_ref((const T &) data, index));
 		}
 
 		template <typename T>
-		inline any index(const T &data, const any &idx)
+		static any index(const T &data, const any &idx)
 		{
 			return index_ref(data, idx);
 		}
 
 		template <typename T>
-		inline any index(T &data, const any &idx)
+		static any index(T &data, const any &idx)
 		{
 			return index_ref(data, idx);
 		}
 
 		template <typename T>
-		inline const any &access(const T &data, const cs::string_borrower &meber)
+		static const any &access(const T &data, const cs::string_borrower &meber)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support data.member operator.");
 		}
 
 		template <typename T>
-		inline any &access(T &data, const cs::string_borrower &meber)
+		static any &access(T &data, const cs::string_borrower &meber)
 		{
 			return const_cast<any &>(access((const T &) data, meber));
 		}
 
 		template <typename T>
-		inline any fcall(const T &func, cs::vector &args)
+		static void prep_call(const T &func, cs::vector &args)
+		{
+		}
+
+		template <typename T>
+		static any fcall(const T &func, cs::vector &args)
 		{
 			throw cs::lang_error("Type " + cxx_demangle(get_name_of_type<T>()) + " does not support func(...) operator.");
 		}
 	} // namespace operators
 } // namespace cs_impl
+
+#if defined(__GNUC__) || defined(__clang__)
+#define CS_IMPL_UNREACHABLE() __builtin_unreachable()
+#elif defined(_MSC_VER)
+#define CS_IMPL_UNREACHABLE() __assume(false)
+#else
+#define CS_IMPL_UNREACHABLE() std::abort()
+#endif
 
 template <std::size_t align_size, template <typename> class allocator_t>
 template <typename T>
@@ -267,6 +280,9 @@ typename cs_impl::basic_var<align_size, allocator_t>::var_op_result cs_impl::bas
 		return var_op_result::from_ptr(&operators::access(*static_cast<T *>(lhs), *static_cast<const cs::string_borrower *>(rhs)));
 	case operators::type::caccess:
 		return var_op_result::from_ptr((void *) &operators::access(*static_cast<const T *>(lhs), *static_cast<const cs::string_borrower *>(rhs)));
+	case operators::type::prep_call:
+		operators::prep_call(*static_cast<const T *>(lhs), *static_cast<cs::vector *>(rhs));
+		return var_op_result();
 	case operators::type::fcall: {
 		any result = operators::fcall(*static_cast<const T *>(lhs), *static_cast<cs::vector *>(rhs));
 		any::proxy *pxy = nullptr;
@@ -274,7 +290,7 @@ typename cs_impl::basic_var<align_size, allocator_t>::var_op_result cs_impl::bas
 		return var_op_result::from_ptr(pxy);
 	}
 	default:
-		throw cs::internal_error("Unknown var operator.");
+		CS_IMPL_UNREACHABLE();
 	}
 }
 
@@ -806,25 +822,289 @@ namespace cs_impl {
 		return path_info_ext;
 	}
 
-// Operators
+// Operator +
 	template <>
-	any &operators::index_ref<cs::array>(cs::array &, const any &);
+	any operators::add<cs::numeric>(const cs::numeric &lhs, const any &rhs)
+	{
+		return lhs + rhs.const_val<cs::numeric>();
+	}
+
 	template <>
-	const any &operators::index_ref<cs::array>(const cs::array &, const any &);
+	any operators::add<cs::string>(const cs::string &lhs, const any &rhs)
+	{
+		any str = any::make<cs::string>(lhs);
+		cs::string &lhs_ref = str.val<cs::string>();
+		if (rhs.is_type_of<cs::string>())
+			lhs_ref.append(rhs.const_val<cs::string>());
+		else
+			lhs_ref.append(rhs.to_string());
+		return str;
+	}
+
 	template <>
-	any operators::add<cs::array>(const cs::array &, const any &);
+	any operators::add<cs::array>(const cs::array &lhs, const any &rhs)
+	{
+		any arr = any::make<cs::array>(lhs);
+		cs::array &lhs_ref = arr.val<cs::array>();
+		if (rhs.is_type_of<cs::array>()) {
+			const cs::array &rhs_ref = rhs.const_val<cs::array>();
+			lhs_ref.insert(lhs_ref.end(), rhs_ref.begin(), rhs_ref.end());
+		}
+		else
+			lhs_ref.emplace_back(rhs);
+		detach(lhs_ref);
+		return arr;
+	}
+
+// Operator -
 	template <>
-	any operators::mul<cs::array>(const cs::array &, const any &);
+	any operators::sub<cs::numeric>(const cs::numeric &lhs, const any &rhs)
+	{
+		return lhs - rhs.const_val<cs::numeric>();
+	}
+
+// Operator *
 	template <>
-	any &operators::index_ref<cs::hash_map>(cs::hash_map &, const any &);
+	any operators::mul<cs::numeric>(const cs::numeric &lhs, const any &rhs)
+	{
+		return lhs * rhs.const_val<cs::numeric>();
+	}
+
 	template <>
-	const any &operators::index_ref<cs::hash_map>(const cs::hash_map &, const any &);
+	any operators::mul<cs::string>(const cs::string &lhs, const any &rhs)
+	{
+		any str = any::make<cs::string>();
+		cs::string &lhs_ref = str.val<cs::string>();
+		cs::numeric_integer times = rhs.const_val<cs::numeric>().as_integer();
+		if (times <= 0)
+			throw cs::lang_error("Can not multiply string with negative number.");
+		lhs_ref.reserve(lhs.size() * times);
+		while (times-- > 0)
+			lhs_ref.append(lhs);
+		return str;
+	}
+
 	template <>
-	const any &operators::index_ref<cs::string>(const cs::string &, const any &);
+	any operators::mul<cs::array>(const cs::array &lhs, const any &rhs)
+	{
+		any arr = any::make<cs::array>();
+		cs::array &lhs_ref = arr.val<cs::array>();
+		cs::numeric_integer times = rhs.const_val<cs::numeric>().as_integer();
+		if (times <= 0)
+			throw cs::lang_error("Can not multiply array with negative number.");
+		while (times-- > 0)
+			lhs_ref.insert(lhs_ref.end(), lhs.begin(), lhs.end());
+		detach(lhs_ref);
+		return arr;
+	}
+
+// Operator /
 	template <>
-	any operators::index<cs::string>(const cs::string &, const any &);
+	any operators::div<cs::numeric>(const cs::numeric &lhs, const any &rhs)
+	{
+		return lhs / rhs.const_val<cs::numeric>();
+	}
+
+// Operator %
 	template <>
-	any operators::add<cs::string>(const cs::string &, const any &);
+	any operators::mod<cs::numeric>(const cs::numeric &lhs, const any &rhs)
+	{
+		return lhs % rhs.const_val<cs::numeric>();
+	}
+
+// Operator ^
 	template <>
-	any operators::mul<cs::string>(const cs::string &, const any &);
+	any operators::pow<cs::numeric>(const cs::numeric &lhs, const any &rhs)
+	{
+		return lhs ^ rhs.const_val<cs::numeric>();
+	}
+
+// Operator -val
+	template <>
+	any operators::minus<cs::numeric>(const cs::numeric &lhs)
+	{
+		if (lhs.is_float())
+			return cs::numeric(-lhs.as_float());
+		else
+			return cs::numeric(-lhs.as_integer());
+	}
+
+// Operator *val
+	template <>
+	any &operators::escape<cs::pointer>(cs::pointer &ptr)
+	{
+		if (ptr.data.usable())
+			return ptr.data;
+		else
+			throw cs::runtime_error("Escape from null pointer.");
+	}
+
+	template <>
+	any &operators::escape<cs::array::iterator>(cs::array::iterator &it)
+	{
+		return *it;
+	}
+
+	template <>
+	any &operators::escape<cs::list::iterator>(cs::list::iterator &it)
+	{
+		return *it;
+	}
+
+// Operator ++
+	template <>
+	void operators::selfinc<cs::numeric>(cs::numeric &lhs)
+	{
+		++lhs;
+	}
+
+	template <>
+	void operators::selfinc<cs::array::iterator>(cs::array::iterator &lhs)
+	{
+		++lhs;
+	}
+
+	template <>
+	void operators::selfinc<cs::list::iterator>(cs::list::iterator &lhs)
+	{
+		++lhs;
+	}
+
+// Operator --
+	template <>
+	void operators::selfdec<cs::numeric>(cs::numeric &lhs)
+	{
+		--lhs;
+	}
+
+	template <>
+	void operators::selfdec<cs::array::iterator>(cs::array::iterator &lhs)
+	{
+		--lhs;
+	}
+
+	template <>
+	void operators::selfdec<cs::list::iterator>(cs::list::iterator &lhs)
+	{
+		--lhs;
+	}
+
+// Operator >
+	template <>
+	bool operators::abocmp<cs::numeric>(const cs::numeric &lhs, const cs::numeric &rhs)
+	{
+		return lhs > rhs;
+	}
+
+	template <>
+	bool operators::abocmp<cs::string>(const cs::string &lhs, const cs::string &rhs)
+	{
+		return lhs > rhs;
+	}
+
+// Operator >
+	template <>
+	bool operators::undcmp<cs::numeric>(const cs::numeric &lhs, const cs::numeric &rhs)
+	{
+		return lhs < rhs;
+	}
+
+	template <>
+	bool operators::undcmp<cs::string>(const cs::string &lhs, const cs::string &rhs)
+	{
+		return lhs < rhs;
+	}
+
+// Operator >=
+	template <>
+	bool operators::aeqcmp<cs::numeric>(const cs::numeric &lhs, const cs::numeric &rhs)
+	{
+		return lhs >= rhs;
+	}
+
+	template <>
+	bool operators::aeqcmp<cs::string>(const cs::string &lhs, const cs::string &rhs)
+	{
+		return lhs >= rhs;
+	}
+
+// Operator >=
+	template <>
+	bool operators::ueqcmp<cs::numeric>(const cs::numeric &lhs, const cs::numeric &rhs)
+	{
+		return lhs <= rhs;
+	}
+
+	template <>
+	bool operators::ueqcmp<cs::string>(const cs::string &lhs, const cs::string &rhs)
+	{
+		return lhs <= rhs;
+	}
+
+// Operator []
+	template <>
+	const any &operators::index_ref<cs::string>(const cs::string &str, const any &idx)
+	{
+		throw cs::lang_error("Referencing elements of a string is not supported.");
+	}
+
+	template <>
+	any operators::index<cs::string>(const cs::string &str, const any &idx)
+	{
+		cs::numeric_integer pos = idx.const_val<cs::numeric>().as_integer();
+		if (pos < 0)
+			pos = str.size() + pos;
+		return any::make_constant<char>(str.at(pos));
+	}
+
+	template <>
+	any &operators::index_ref<cs::array>(cs::array &arr, const any &pos)
+	{
+		cs::numeric_integer idx = pos.const_val<cs::numeric>().as_integer();
+		if (idx < 0)
+			idx = arr.size() + idx;
+		if (idx > arr.size())
+			arr.resize(idx + 1, cs::numeric(0));
+		return arr[idx];
+	}
+
+	template <>
+	const any &operators::index_ref<cs::array>(const cs::array &arr, const any &idx)
+	{
+		return arr.at(idx.const_val<cs::numeric>().as_integer());
+	}
+
+	template <>
+	any &operators::index_ref<cs::hash_map>(cs::hash_map &map, const any &key)
+	{
+		auto it = map.find(key);
+		if (it == map.end())
+			it = map.emplace(cs::copy(key), cs::numeric(0)).first;
+		return it->second;
+	}
+
+	template <>
+	const any &operators::index_ref<cs::hash_map>(const cs::hash_map &map, const any &key)
+	{
+		return map.at(key);
+	}
+
+// Operator ()
+	template <>
+	any operators::fcall<cs::callable>(const cs::callable &fn, cs::vector &args)
+	{
+		return fn.call(args);
+	}
+
+	template <>
+	void operators::prep_call<cs::object_method>(const cs::object_method &fn, cs::vector &args)
+	{
+		args.push_back(fn.object);
+	}
+
+	template <>
+	any operators::fcall<cs::object_method>(const cs::object_method &fn, cs::vector &args)
+	{
+		return fn.callable.const_val<cs::callable>().call(args);
+	}
 } // namespace cs_impl

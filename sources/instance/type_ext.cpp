@@ -65,19 +65,9 @@ namespace cs_impl {
 		using namespace cs;
 
 // Element access
-		const var &at(const array &arr, const numeric &posit)
+		var at(array &arr, const numeric &posit)
 		{
 			return arr.at(posit.as_integer());
-		}
-
-		var &index(cs::array &arr, const numeric &pos)
-		{
-			numeric_integer idx = pos.as_integer();
-			if (idx < 0)
-				idx = arr.size() + idx;
-			if (idx > arr.size())
-				arr.resize(idx + 1, numeric(0));
-			return arr[idx];
 		}
 
 		var front(const array &arr)
@@ -284,47 +274,6 @@ namespace cs_impl {
 			.add_var("join", make_cni(join, true));
 		}
 	} // namespace array_cs_ext
-
-	template <>
-	any &operators::index_ref<cs::array>(cs::array &arr, const any &idx)
-	{
-		return array_cs_ext::index(arr, idx.const_val<cs::numeric>());
-	}
-
-	template <>
-	const any &operators::index_ref<cs::array>(const cs::array &arr, const any &idx)
-	{
-		return array_cs_ext::at(arr, idx.const_val<cs::numeric>());
-	}
-
-	template <>
-	any operators::add<cs::array>(const cs::array &lhs, const any &rhs)
-	{
-		any arr = any::make<cs::array>(lhs);
-		cs::array &lhs_ref = arr.val<cs::array>();
-		if (rhs.is_type_of<cs::array>()) {
-			const cs::array &rhs_ref = rhs.const_val<cs::array>();
-			lhs_ref.insert(lhs_ref.end(), rhs_ref.begin(), rhs_ref.end());
-		}
-		else
-			lhs_ref.emplace_back(rhs);
-		detach(lhs_ref);
-		return arr;
-	}
-
-	template <>
-	any operators::mul<cs::array>(const cs::array &lhs, const any &rhs)
-	{
-		any arr = any::make<cs::array>();
-		cs::array &lhs_ref = arr.val<cs::array>();
-		cs::numeric_integer times = rhs.const_val<cs::numeric>().as_integer();
-		if (times <= 0)
-			throw cs::lang_error("Can not multiply array with negative number.");
-		while (times-- > 0)
-			lhs_ref.insert(lhs_ref.end(), lhs.begin(), lhs.end());
-		detach(lhs_ref);
-		return arr;
-	}
 
 	namespace number_cs_ext {
 		using namespace cs;
@@ -588,17 +537,9 @@ namespace cs_impl {
 		}
 
 // Lookup
-		const var &at(const hash_map &map, const var &key)
+		var at(hash_map &map, const var &key)
 		{
 			return map.at(key);
-		}
-
-		var &index(hash_map &map, const var &key)
-		{
-			auto it = map.find(key);
-			if (it == map.end())
-				it = map.emplace(copy(key), numeric(0)).first;
-			return it->second;
 		}
 
 		bool exist(hash_map &map, const var &key)
@@ -638,18 +579,6 @@ namespace cs_impl {
 			.add_var("values", make_cni(values, true));
 		}
 	} // namespace hash_map_cs_ext
-
-	template <>
-	any &operators::index_ref<cs::hash_map>(cs::hash_map &map, const any &idx)
-	{
-		return hash_map_cs_ext::index(map, idx);
-	}
-
-	template <>
-	const any &operators::index_ref<cs::hash_map>(const cs::hash_map &map, const any &idx)
-	{
-		return hash_map_cs_ext::at(map, idx);
-	}
 
 	namespace iostream_cs_ext {
 		using namespace cs;
@@ -1930,47 +1859,6 @@ namespace cs_impl {
 			.add_var("trim", make_cni(trim, true));
 		}
 	} // namespace string_cs_ext
-
-	template <>
-	const any &operators::index_ref<cs::string>(const cs::string &str, const any &idx)
-	{
-		throw cs::lang_error("Referencing elements of a string is not supported.");
-	}
-
-	template <>
-	any operators::index<cs::string>(const cs::string &str, const any &idx)
-	{
-		cs::numeric_integer pos = idx.const_val<cs::numeric>().as_integer();
-		if (pos < 0)
-			pos = str.size() + pos;
-		return any::make_constant<char>(str.at(pos));
-	}
-
-	template <>
-	any operators::add<cs::string>(const cs::string &lhs, const any &rhs)
-	{
-		any str = any::make<cs::string>(lhs);
-		cs::string &lhs_ref = str.val<cs::string>();
-		if (rhs.is_type_of<cs::string>())
-			lhs_ref.append(rhs.const_val<cs::string>());
-		else
-			lhs_ref.append(rhs.to_string());
-		return str;
-	}
-
-	template <>
-	any operators::mul<cs::string>(const cs::string &lhs, const any &rhs)
-	{
-		any str = any::make<cs::string>();
-		cs::string &lhs_ref = str.val<cs::string>();
-		cs::numeric_integer times = rhs.const_val<cs::numeric>().as_integer();
-		if (times <= 0)
-			throw cs::lang_error("Can not multiply string with negative number.");
-		lhs_ref.reserve(lhs.size() * times);
-		while (times-- > 0)
-			lhs_ref.append(lhs);
-		return str;
-	}
 
 	namespace console_cs_ext {
 		using namespace cs;
