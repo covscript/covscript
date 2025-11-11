@@ -135,7 +135,7 @@ namespace cs {
 		template <typename T>
 		static inline var index(T &data, const var &idx)
 		{
-			return index_ref(data, idx);
+			return index((const T &) data, idx);
 		}
 
 		template <typename T>
@@ -153,7 +153,7 @@ namespace cs {
 		template <typename T>
 		static inline var access(T &data, const string &id)
 		{
-			return access_ref(data, id);
+			return access((const T &) data, id);
 		}
 
 		template <typename T>
@@ -1179,6 +1179,12 @@ namespace cs {
 	}
 
 	template <>
+	var operators::index<cs::array>(cs::array &arr, const var &idx)
+	{
+		return index_ref(arr, idx);
+	}
+
+	template <>
 	var &operators::index_ref<cs::hash_map>(cs::hash_map &map, const var &key)
 	{
 		auto it = map.find(key);
@@ -1191,6 +1197,12 @@ namespace cs {
 	var operators::index<cs::hash_map>(const cs::hash_map &map, const var &key)
 	{
 		return map.at(key);
+	}
+
+	template <>
+	var operators::index<cs::hash_map>(cs::hash_map &map, const var &key)
+	{
+		return index_ref(map, key);
 	}
 
 // Operator .
