@@ -860,7 +860,13 @@ namespace cs {
 				invoke(m_data->get_var("initialize"), var::make<structure>(this));
 		}
 
-		structure(structure &&s) noexcept = default;
+		structure(structure &&s) noexcept : m_shadow(s.m_shadow), m_data(nullptr), m_id(typeid(void))
+		{
+			s.m_shadow = true;
+			std::swap(m_name, s.m_name);
+			std::swap(m_data, s.m_data);
+			std::swap(m_id, s.m_id);
+		}
 
 		structure(const structure &s) : m_id(s.m_id), m_name(s.m_name), m_data(std::make_shared<domain_type>())
 		{
@@ -894,7 +900,14 @@ namespace cs {
 				invoke(m_data->get_var("finalize"), var::make<structure>(this));
 		}
 
-		structure &operator=(structure &&) noexcept = default;
+		structure &operator=(structure &&s) noexcept
+		{
+			std::swap(m_shadow, s.m_shadow);
+			std::swap(m_name, s.m_name);
+			std::swap(m_data, s.m_data);
+			std::swap(m_id, s.m_id);
+			return *this;
+		}
 
 		bool operator==(const structure &s) const
 		{
@@ -1151,14 +1164,3 @@ namespace cs {
 // Literal format
 	numeric parse_number(const std::string &);
 } // namespace cs
-
-template <>
-cs::string_borrower cs_impl::to_string<cs::structure>(const cs::structure &stut)
-{
-	if (stut.get_domain().exist("to_string")) {
-		cs::var func = stut.get_domain().get_var("to_string");
-		if (func.is_type_of<cs::callable>())
-			return cs::invoke(func, cs::var::make<cs::structure>(&stut)).to_string();
-	}
-	return "[cs::structure_" + stut.type_name() + "]";
-}

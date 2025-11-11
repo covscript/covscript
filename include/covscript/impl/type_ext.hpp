@@ -582,6 +582,17 @@ namespace cs_impl {
 	}
 
 	template <>
+	cs::string_borrower to_string<cs::structure>(const cs::structure &stut)
+	{
+		if (stut.get_domain().exist("to_string")) {
+			cs::var func = stut.get_domain().get_var("to_string");
+			if (func.is_type_of<cs::callable>())
+				return cs::invoke(func, cs::var::make<cs::structure>(&stut)).to_string();
+		}
+		return "[cs::structure_" + stut.type_name() + "]";
+	}
+
+	template <>
 	cs::string_borrower to_string<cs::char_buff>(const cs::char_buff &buff)
 	{
 		return buff->str();
@@ -627,6 +638,12 @@ namespace cs_impl {
 			return hash(num.as_integer());
 		else
 			return hash(num.as_float());
+	}
+
+	template <>
+	std::size_t hash<cs::structure>(const cs::structure &obj)
+	{
+		return cs::invoke(obj.get_var("hash"), cs::var::make<cs::structure>(&obj)).const_val<cs::numeric>().as_integer();
 	}
 
 // Type name
@@ -960,11 +977,23 @@ namespace cs {
 		return arr;
 	}
 
+	template <>
+	var operators::add<cs::structure>(const cs::structure &lhs, const var &rhs)
+	{
+		return invoke(lhs.get_var("op_add"), var::make<cs::structure>(&lhs), rhs);
+	}
+
 // Operator -
 	template <>
 	var operators::sub<cs::numeric>(const cs::numeric &lhs, const var &rhs)
 	{
 		return lhs - rhs.const_val<cs::numeric>();
+	}
+
+	template <>
+	var operators::sub<cs::structure>(const cs::structure &lhs, const var &rhs)
+	{
+		return invoke(lhs.get_var("op_sub"), var::make<cs::structure>(&lhs), rhs);
 	}
 
 // Operator *
@@ -1002,11 +1031,23 @@ namespace cs {
 		return arr;
 	}
 
+	template <>
+	var operators::mul<cs::structure>(const cs::structure &lhs, const var &rhs)
+	{
+		return invoke(lhs.get_var("op_mul"), var::make<cs::structure>(&lhs), rhs);
+	}
+
 // Operator /
 	template <>
 	var operators::div<cs::numeric>(const cs::numeric &lhs, const var &rhs)
 	{
 		return lhs / rhs.const_val<cs::numeric>();
+	}
+
+	template <>
+	var operators::div<cs::structure>(const cs::structure &lhs, const var &rhs)
+	{
+		return invoke(lhs.get_var("op_div"), var::make<cs::structure>(&lhs), rhs);
 	}
 
 // Operator %
@@ -1016,11 +1057,23 @@ namespace cs {
 		return lhs % rhs.const_val<cs::numeric>();
 	}
 
+	template <>
+	var operators::mod<cs::structure>(const cs::structure &lhs, const var &rhs)
+	{
+		return invoke(lhs.get_var("op_mod"), var::make<cs::structure>(&lhs), rhs);
+	}
+
 // Operator ^
 	template <>
 	var operators::pow<cs::numeric>(const cs::numeric &lhs, const var &rhs)
 	{
 		return lhs ^ rhs.const_val<cs::numeric>();
+	}
+
+	template <>
+	var operators::pow<cs::structure>(const cs::structure &lhs, const var &rhs)
+	{
+		return invoke(lhs.get_var("op_pow"), var::make<cs::structure>(&lhs), rhs);
 	}
 
 // Operator -val
@@ -1074,6 +1127,12 @@ namespace cs {
 		++lhs;
 	}
 
+	template <>
+	void operators::selfinc<cs::structure>(cs::structure &lhs)
+	{
+		invoke(lhs.get_var("op_inc"), var::make<cs::structure>(&lhs));
+	}
+
 // Operator --
 	template <>
 	void operators::selfdec<cs::numeric>(cs::numeric &lhs)
@@ -1093,6 +1152,12 @@ namespace cs {
 		--lhs;
 	}
 
+	template <>
+	void operators::selfdec<cs::structure>(cs::structure &lhs)
+	{
+		invoke(lhs.get_var("op_dec"), var::make<cs::structure>(&lhs));
+	}
+
 // Operator >
 	template <>
 	bool operators::abocmp<cs::numeric>(const cs::numeric &lhs, const cs::numeric &rhs)
@@ -1104,6 +1169,15 @@ namespace cs {
 	bool operators::abocmp<cs::string>(const cs::string &lhs, const cs::string &rhs)
 	{
 		return lhs > rhs;
+	}
+
+	template <>
+	bool operators::abocmp<cs::structure>(const cs::structure &lhs, const cs::structure &rhs)
+	{
+		if (lhs.get_id() == rhs.get_id())
+			return invoke(lhs.get_var("greater"), var::make<cs::structure>(&lhs), var::make<cs::structure>(&rhs)).const_val<bool>();
+		else
+			return false;
 	}
 
 // Operator >
@@ -1119,6 +1193,15 @@ namespace cs {
 		return lhs < rhs;
 	}
 
+	template <>
+	bool operators::undcmp<cs::structure>(const cs::structure &lhs, const cs::structure &rhs)
+	{
+		if (lhs.get_id() == rhs.get_id())
+			return invoke(lhs.get_var("less"), var::make<cs::structure>(&lhs), var::make<cs::structure>(&rhs)).const_val<bool>();
+		else
+			return false;
+	}
+
 // Operator >=
 	template <>
 	bool operators::aeqcmp<cs::numeric>(const cs::numeric &lhs, const cs::numeric &rhs)
@@ -1132,6 +1215,15 @@ namespace cs {
 		return lhs >= rhs;
 	}
 
+	template <>
+	bool operators::aeqcmp<cs::structure>(const cs::structure &lhs, const cs::structure &rhs)
+	{
+		if (lhs.get_id() == rhs.get_id())
+			return invoke(lhs.get_var("greater_equal"), var::make<cs::structure>(&lhs), var::make<cs::structure>(&rhs)).const_val<bool>();
+		else
+			return false;
+	}
+
 // Operator >=
 	template <>
 	bool operators::ueqcmp<cs::numeric>(const cs::numeric &lhs, const cs::numeric &rhs)
@@ -1143,6 +1235,15 @@ namespace cs {
 	bool operators::ueqcmp<cs::string>(const cs::string &lhs, const cs::string &rhs)
 	{
 		return lhs <= rhs;
+	}
+
+	template <>
+	bool operators::ueqcmp<cs::structure>(const cs::structure &lhs, const cs::structure &rhs)
+	{
+		if (lhs.get_id() == rhs.get_id())
+			return invoke(lhs.get_var("less_equal"), var::make<cs::structure>(&lhs), var::make<cs::structure>(&rhs)).const_val<bool>();
+		else
+			return false;
 	}
 
 // Operator []
@@ -1205,6 +1306,12 @@ namespace cs {
 		return index_ref(map, key);
 	}
 
+	template <>
+	var operators::index<cs::structure>(const cs::structure &lhs, const var &idx)
+	{
+		return invoke(lhs.get_var("op_index"), var::make<cs::structure>(&lhs), idx);
+	}
+
 // Operator .
 	template <>
 	var &operators::access_ref<cs::hash_map>(cs::hash_map &map, const string &key)
@@ -1232,5 +1339,17 @@ namespace cs {
 	var operators::fcall<cs::object_method>(const cs::object_method &fn, cs::vector &args)
 	{
 		return fn.callable.const_val<cs::callable>().call(args);
+	}
+
+	template <>
+	void operators::prep_call<cs::structure>(const cs::structure &lhs, cs::vector &args)
+	{
+		args.push_back(var::make<cs::structure>(&lhs));
+	}
+
+	template <>
+	var operators::fcall<cs::structure>(const cs::structure &lhs, cs::vector &args)
+	{
+		return lhs.get_var("op_call").fcall(args);
 	}
 } // namespace cs
