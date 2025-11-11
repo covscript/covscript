@@ -980,7 +980,7 @@ namespace cs {
 		var str = var::make<cs::string>();
 		cs::string &lhs_ref = str.val<cs::string>();
 		cs::numeric_integer times = rhs.const_val<cs::numeric>().as_integer();
-		if (times <= 0)
+		if (times < 0)
 			throw cs::lang_error("Can not multiply string with negative number.");
 		lhs_ref.reserve(lhs.size() * times);
 		while (times-- > 0)
@@ -994,7 +994,7 @@ namespace cs {
 		var arr = var::make<cs::array>();
 		cs::array &lhs_ref = arr.val<cs::array>();
 		cs::numeric_integer times = rhs.const_val<cs::numeric>().as_integer();
-		if (times <= 0)
+		if (times < 0)
 			throw cs::lang_error("Can not multiply array with negative number.");
 		while (times-- > 0)
 			lhs_ref.insert(lhs_ref.end(), lhs.begin(), lhs.end());
