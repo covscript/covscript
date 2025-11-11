@@ -121,21 +121,15 @@ namespace cs {
 		}
 
 		template <typename T>
-		static inline const var &index_ref(const T &data, const var &index)
+		static inline var &index_ref(T &data, const var &index)
 		{
 			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support data[index] operator.");
 		}
 
 		template <typename T>
-		static inline var &index_ref(T &data, const var &index)
-		{
-			return const_cast<var &>(index_ref((const T &) data, index));
-		}
-
-		template <typename T>
 		static inline var index(const T &data, const var &idx)
 		{
-			return index_ref(data, idx);
+			return index_ref(const_cast<T &>(data), idx);
 		}
 
 		template <typename T>
@@ -145,15 +139,21 @@ namespace cs {
 		}
 
 		template <typename T>
-		static inline const var &access(const T &data, const string_borrower &meber)
+		static inline var &access_ref(T &data, const string &id)
 		{
 			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support data.member operator.");
 		}
 
 		template <typename T>
-		static inline var &access(T &data, const string_borrower &meber)
+		static inline var access(const T &data, const string &id)
 		{
-			return const_cast<var &>(access((const T &) data, meber));
+			return access_ref(const_cast<T &>(data), id);
+		}
+
+		template <typename T>
+		static inline var access(T &data, const string &id)
+		{
+			return access_ref(data, id);
 		}
 
 		template <typename T>
@@ -357,21 +357,27 @@ cs_impl::operators::result cs_impl::operators::handler<T>::index_ref(void *lhs, 
 }
 
 template <typename T>
-cs_impl::operators::result cs_impl::operators::handler<T>::index_cref(void *lhs, void *rhs)
-{
-	return result::from_ptr((void *) &cs::operators::index_ref(*static_cast<const T *>(lhs), *static_cast<const any *>(rhs)));
-}
-
-template <typename T>
 cs_impl::operators::result cs_impl::operators::handler<T>::access(void *lhs, void *rhs)
 {
-	return result::from_ptr(&cs::operators::access(*static_cast<T *>(lhs), *static_cast<const cs::string_borrower *>(rhs)));
+	any result = cs::operators::access(*static_cast<T *>(lhs), *static_cast<const cs::string *>(rhs));
+	any::proxy *pxy = nullptr;
+	std::swap(result.mDat, pxy);
+	return result::from_ptr(pxy);
 }
 
 template <typename T>
 cs_impl::operators::result cs_impl::operators::handler<T>::caccess(void *lhs, void *rhs)
 {
-	return result::from_ptr((void *) &cs::operators::access(*static_cast<const T *>(lhs), *static_cast<const cs::string_borrower *>(rhs)));
+	any result = cs::operators::access(*static_cast<const T *>(lhs), *static_cast<const cs::string *>(rhs));
+	any::proxy *pxy = nullptr;
+	std::swap(result.mDat, pxy);
+	return result::from_ptr(pxy);
+}
+
+template <typename T>
+cs_impl::operators::result cs_impl::operators::handler<T>::access_ref(void *lhs, void *rhs)
+{
+	return result::from_ptr(&cs::operators::access_ref(*static_cast<T *>(lhs), *static_cast<const cs::string *>(rhs)));
 }
 
 template <typename T>
@@ -1141,7 +1147,7 @@ namespace cs {
 
 // Operator []
 	template <>
-	const var &operators::index_ref<cs::string>(const cs::string &str, const var &idx)
+	var &operators::index_ref<cs::string>(cs::string &str, const var &idx)
 	{
 		throw cs::lang_error("Referencing elements of a string is not supported.");
 	}
@@ -1167,7 +1173,7 @@ namespace cs {
 	}
 
 	template <>
-	const var &operators::index_ref<cs::array>(const cs::array &arr, const var &idx)
+	var operators::index<cs::array>(const cs::array &arr, const var &idx)
 	{
 		return arr.at(idx.const_val<cs::numeric>().as_integer());
 	}
@@ -1182,9 +1188,19 @@ namespace cs {
 	}
 
 	template <>
-	const var &operators::index_ref<cs::hash_map>(const cs::hash_map &map, const var &key)
+	var operators::index<cs::hash_map>(const cs::hash_map &map, const var &key)
 	{
 		return map.at(key);
+	}
+
+// Operator .
+	template <>
+	var &operators::access_ref<cs::hash_map>(cs::hash_map &map, const string &key)
+	{
+		auto it = map.find(key);
+		if (it == map.end())
+			throw runtime_error(std::string("Key \"") + key + "\" does not exist.");
+		return it->second;
 	}
 
 // Operator ()

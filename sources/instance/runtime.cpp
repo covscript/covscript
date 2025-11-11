@@ -127,22 +127,10 @@ namespace cs {
 		}
 		else {
 			try {
-				var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
-				if (val.is_type_of<callable>())
-					throw runtime_error("Can not visit member function as lvalue.");
-				else
-					return val;
+				return a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
 			}
 			catch (...) {
-				if (a.is_type_of<hash_map>()) {
-					auto &cmap = a.val<hash_map>();
-					const string &str = static_cast<token_id *>(b)->get_id().get_id();
-					if (cmap.count(str) == 0)
-						throw runtime_error(std::string("Key \"") + str + "\" does not exist.");
-					return cmap.at(str);
-				}
-				else
-					throw;
+				return a.access_ref(static_cast<token_id *>(b)->get_id());
 			}
 		}
 	}
@@ -181,7 +169,7 @@ namespace cs {
 						return func.call(args);
 					}
 					case callable::types::force_regular:
-						throw runtime_error("Cannot call regular function as member function.");
+						return val;
 					default:
 						return var::make_protect<object_method>(a, val, func.is_request_fold());
 					}
@@ -190,15 +178,7 @@ namespace cs {
 					return val;
 			}
 			catch (...) {
-				if (a.is_type_of<hash_map>()) {
-					const auto &cmap = a.const_val<hash_map>();
-					const string &str = static_cast<token_id *>(b)->get_id().get_id();
-					if (cmap.count(str) == 0)
-						throw runtime_error(std::string("Key \"") + str + "\" does not exist.");
-					return cmap.at(str);
-				}
-				else
-					throw;
+				return a.access(static_cast<token_id *>(b)->get_id());
 			}
 		}
 	}
@@ -400,9 +380,9 @@ namespace cs {
 	var runtime_type::parse_fcall(const var &a, token_base *b)
 	{
 		vector args;
-		a.prep_call(args);
 		token_base *ptr = nullptr;
 		args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
+		a.prep_call(args);
 		for (auto &tree : static_cast<token_arglist *>(b)->get_arglist()) {
 			ptr = tree.root().data();
 			if (ptr != nullptr && ptr->get_type() == token_types::expand) {

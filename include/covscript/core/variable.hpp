@@ -355,9 +355,9 @@ namespace cs_impl {
 			index = 27,      // data[index]
 			cindex = 28,     // const_data[index]
 			index_ref = 29,  // ref to data[index]
-			index_cref = 30, // ref to const_data[index]
-			access = 31,     // ref to data.member
-			caccess = 32,    // ref to const_data.member
+			access = 30,     // data.member
+			caccess = 31,    // const_data.member
+			access_ref = 32, // const_data.member
 			prep_call = 33,  // prepare before call
 			fcall = 34,      // func(args)
 		};
@@ -365,65 +365,35 @@ namespace cs_impl {
 		struct handler
 		{
 			static result get(void *lhs, void *rhs);
-
 			static result type_id(void *lhs, void *rhs);
-
 			static result type_name(void *lhs, void *rhs);
-
 			static result to_integer(void *lhs, void *rhs);
-
 			static result to_string(void *lhs, void *rhs);
-
 			static result hash(void *lhs, void *rhs);
-
 			static result detach(void *lhs, void *rhs);
-
 			static result ext_ns(void *lhs, void *rhs);
-
 			static result add(void *lhs, void *rhs);
-
 			static result sub(void *lhs, void *rhs);
-
 			static result mul(void *lhs, void *rhs);
-
 			static result div(void *lhs, void *rhs);
-
 			static result mod(void *lhs, void *rhs);
-
 			static result pow(void *lhs, void *rhs);
-
 			static result minus(void *lhs, void *rhs);
-
 			static result escape(void *lhs, void *rhs);
-
 			static result selfinc(void *lhs, void *rhs);
-
 			static result selfdec(void *lhs, void *rhs);
-
 			static result compare(void *lhs, void *rhs);
-
 			static result abocmp(void *lhs, void *rhs);
-
 			static result undcmp(void *lhs, void *rhs);
-
 			static result aeqcmp(void *lhs, void *rhs);
-
 			static result ueqcmp(void *lhs, void *rhs);
-
 			static result index(void *lhs, void *rhs);
-
 			static result cindex(void *lhs, void *rhs);
-
 			static result index_ref(void *lhs, void *rhs);
-
-			static result index_cref(void *lhs, void *rhs);
-
 			static result access(void *lhs, void *rhs);
-
 			static result caccess(void *lhs, void *rhs);
-
+			static result access_ref(void *lhs, void *rhs);
 			static result prep_call(void *lhs, void *rhs);
-
 			static result fcall(void *lhs, void *rhs);
 		};
 	} // namespace operators
@@ -504,9 +474,9 @@ namespace cs_impl {
 					op_handler::index,
 					op_handler::cindex,
 					op_handler::index_ref,
-					op_handler::index_cref,
 					op_handler::access,
 					op_handler::caccess,
+					op_handler::access_ref,
 					op_handler::prep_call,
 					op_handler::fcall,
 				};
@@ -590,9 +560,9 @@ namespace cs_impl {
 					op_handler::index,
 					op_handler::cindex,
 					op_handler::index_ref,
-					op_handler::index_cref,
 					op_handler::access,
 					op_handler::caccess,
+					op_handler::access_ref,
 					op_handler::prep_call,
 					op_handler::fcall,
 				};
@@ -1312,33 +1282,23 @@ namespace cs_impl {
 			return *static_cast<any *>(mDat->data.m_dispatcher(operators::type::index_ref, &mDat->data, (void *) &idx)._ptr);
 		}
 
-		const any &index_cref(const any &idx) const
+		any access(const cs::string &id) const
 		{
-			if (!usable() || !idx.usable())
+			if (!usable())
 				throw cov::error("E0005");
 			if (this->mDat->protect_level > 1)
-				throw cov::error("E000K");
-			return *static_cast<const any *>(mDat->data.m_dispatcher(operators::type::index_cref, &mDat->data, (void *) &idx)._ptr);
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::caccess, &mDat->data, (void *) &id)._ptr);
+			else
+				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::access, &mDat->data, (void *) &id)._ptr);
 		}
 
-		any &access(cs::string_borrower member) const
+		any &access_ref(const cs::string &id) const
 		{
-			if (!member.usable())
-				throw cs::internal_error("Access with null string.");
 			if (!usable())
 				throw cov::error("E0005");
 			if (this->mDat->protect_level > 1)
 				throw cov::error("E000K");
-			return *static_cast<any *>(mDat->data.m_dispatcher(operators::type::access, &mDat->data, &member)._ptr);
-		}
-
-		const any &const_access(cs::string_borrower member) const
-		{
-			if (!member.usable())
-				throw cs::internal_error("Access with null string.");
-			if (!usable())
-				throw cov::error("E0005");
-			return *static_cast<const any *>(mDat->data.m_dispatcher(operators::type::access, &mDat->data, &member)._ptr);
+			return *static_cast<any *>(mDat->data.m_dispatcher(operators::type::access_ref, &mDat->data, (void *) &id)._ptr);
 		}
 
 		void prep_call(cs::vector &args) const
