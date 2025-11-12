@@ -2,7 +2,17 @@ cmake_minimum_required(VERSION 3.13)
 
 project(covscript)
 
-# add_compile_definitions(-DCS_ENABLE_VAROP_PERF)
+# Uncomment this for profiling
+# add_compile_definitions(-DCS_ENABLE_PROFILING)
+
+# Uncomment this to force aligning with cache line
+# add_compile_definitions(-DCS_VAR_SVO_ALIGN=64)
+
+# Uncomment this to force use heap allocator
+# add_compile_definitions(-DCS_DISABLE_VAR_SVO)
+
+# Uncomment this to use aggressive optimizations like force inline
+# add_compile_definitions(-DCS_AGGRESSIVE_OPTIMIZE)
 
 # Compiler Options
 set(CMAKE_CXX_STANDARD 14)

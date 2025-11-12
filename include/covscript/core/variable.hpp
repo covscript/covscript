@@ -498,7 +498,7 @@ namespace cs_impl {
 					return op_handler::prep_call(ptr, rhs);
 				else if (op == operators::type::fcall)
 					return op_handler::fcall(ptr, rhs);
-				else				
+				else
 					return op_handlers[static_cast<unsigned>(op)](ptr, rhs);
 #else
 				return op_handlers[static_cast<unsigned>(op)]((void *) &lhs->m_store.buffer, rhs);
@@ -602,7 +602,7 @@ namespace cs_impl {
 					return op_handler::prep_call(ptr, rhs);
 				else if (op == operators::type::fcall)
 					return op_handler::fcall(ptr, rhs);
-				else				
+				else
 					return op_handlers[static_cast<unsigned>(op)](ptr, rhs);
 #else
 				return op_handlers[static_cast<unsigned>(op)]((void *) lhs->m_store.ptr, rhs);
@@ -612,9 +612,14 @@ namespace cs_impl {
 
 		using dispatcher_t = operators::result (*)(operators::type, const basic_var *, void *);
 
+#ifndef CS_DISABLE_VAR_SVO
 		template <typename T>
 		using dispatcher_class = std::conditional_t<(sizeof(T) > sizeof(aligned_storage_t)),
 		      var_op_heap_dispatcher<T>, var_op_svo_dispatcher<T>>;
+#else
+		template <typename T>
+		using dispatcher_class = var_op_heap_dispatcher<T>;
+#endif
 
 		dispatcher_t m_dispatcher = nullptr;
 		union store_impl
@@ -786,7 +791,11 @@ namespace cs_impl {
 #endif
 
 #ifndef CS_VAR_SVO_ALIGN
+#ifndef CS_DISABLE_VAR_SVO
 #define CS_VAR_SVO_ALIGN 32
+#else
+#define CS_VAR_SVO_ALIGN (2 * sizeof(void *))
+#endif
 #endif
 
 	class any final {
