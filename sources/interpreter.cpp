@@ -208,6 +208,10 @@ void covscript_main(int args_size, char *args[])
 		return;
 	}
 	if (!repl && index != args_size) {
+#ifdef CS_ENABLE_PROFILING
+		std::cout << "CovScript: Perf mode, may slow down interpret speed." << std::endl;
+		std::memset((void *) &cs_impl::op_perf, 0, sizeof(cs_impl::op_perf));
+#endif
 		std::string path = cs::process_path(args[index]);
 		if (path != "STDIN") {
 			if (!cs_impl::file_system::exist(path) || cs_impl::file_system::is_dir(path) ||
@@ -256,6 +260,11 @@ void covscript_main(int args_size, char *args[])
 			}
 			if (!compile_only)
 				context->instance->interpret();
+#ifdef CS_ENABLE_PROFILING
+			std::cout << "Perf Result:" << std::endl;
+			for (std::size_t i = 0; i < 40; ++i)
+				std::cout << "OP_" << i << "\t" << cs_impl::op_perf[i] << std::endl;
+#endif
 		}
 		catch (const cs::exception &ce) {
 			if (std::strstr(ce.what(), "CS_EXIT") == nullptr) {

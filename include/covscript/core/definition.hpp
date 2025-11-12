@@ -73,22 +73,6 @@
 #endif
 #endif
 
-// Compiler Detection
-
-#if defined(__clang__)
-#define COVSCRIPT_COMPILER_CLANG
-#define COVSCRIPT_COMPILER_SIMPLE_NAME "clang"
-#elif defined(__GNUC__)
-#define COVSCRIPT_COMPILER_GNUC
-#define COVSCRIPT_COMPILER_SIMPLE_NAME "gcc"
-#elif defined(_MSC_VER)
-#define COVSCRIPT_COMPILER_MSVC
-#define COVSCRIPT_COMPILER_SIMPLE_NAME "msvc"
-#else
-#define COVSCRIPT_COMPILER_UNKNOWN
-#define COVSCRIPT_COMPILER_SIMPLE_NAME "unknown"
-#endif
-
 // MinGW suffix
 
 #if defined(__MINGW64__)

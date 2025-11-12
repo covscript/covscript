@@ -247,12 +247,12 @@ namespace cs {
 		} data;
 		bool type = 1;
 
-		inline static std::uint8_t get_composite_type(bool lhs, bool rhs) noexcept
+		static COVSCRIPT_ALWAYS_INLINE std::uint8_t get_composite_type(bool lhs, bool rhs) noexcept
 		{
 			return lhs << 1 | rhs;
 		}
 
-		inline static numeric int_pow(numeric_integer base, numeric_integer exp)
+		static inline numeric int_pow(numeric_integer base, numeric_integer exp)
 		{
 			if (exp == 0) // base^0
 				return 1;
@@ -864,7 +864,7 @@ namespace cs_impl {
 		using stl_string = std::basic_string<CharT>;
 		using allocator_type = allocator_t<stl_string>;
 
-		inline static allocator_type &get_allocator()
+		static inline allocator_type &get_allocator()
 		{
 			static allocator_type allocator;
 			return allocator;

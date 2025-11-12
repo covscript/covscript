@@ -28,6 +28,24 @@
  * cs: Main Namespace
  * cs_impl: Implement Namespace
  */
+// Compiler Detection
+#if defined(__clang__)
+#define COVSCRIPT_COMPILER_CLANG
+#define COVSCRIPT_COMPILER_SIMPLE_NAME "clang"
+#define COVSCRIPT_ALWAYS_INLINE inline __attribute__((always_inline))
+#elif defined(__GNUC__)
+#define COVSCRIPT_COMPILER_GNUC
+#define COVSCRIPT_COMPILER_SIMPLE_NAME "gcc"
+#define COVSCRIPT_ALWAYS_INLINE inline __attribute__((always_inline))
+#elif defined(_MSC_VER)
+#define COVSCRIPT_COMPILER_MSVC
+#define COVSCRIPT_COMPILER_SIMPLE_NAME "msvc"
+#define COVSCRIPT_ALWAYS_INLINE __forceinline
+#else
+#define COVSCRIPT_COMPILER_UNKNOWN
+#define COVSCRIPT_COMPILER_SIMPLE_NAME "unknown"
+#define COVSCRIPT_ALWAYS_INLINE inline
+#endif
 // Configs
 #ifndef COVSCRIPT_STACK_PRESERVE
 #define COVSCRIPT_STACK_PRESERVE 64
@@ -1129,7 +1147,7 @@ namespace cs {
 
 		extension(const extension &) = delete;
 
-		inline static int truncate(int n, int m)
+		static inline int truncate(int n, int m)
 		{
 			return n == 0 ? 0 : n / int(std::pow(10, (std::max) (int(std::log10(std::abs(n))) - (std::max) (m, 0) + 1, 0)));
 		}

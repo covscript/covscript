@@ -1853,7 +1853,7 @@ namespace cs_impl {
 			.add_var("tolower", make_cni(tolower, true))
 			.add_var("to_lower", make_cni(tolower, true))
 			.add_var("toupper", make_cni(toupper, true))
-			.add_var("to_upper", make_cni(tolower, true))
+			.add_var("to_upper", make_cni(toupper, true))
 			.add_var("to_number", make_cni(to_number, true))
 			.add_var("split", make_cni(split, true))
 			.add_var("trim", make_cni(trim, true));

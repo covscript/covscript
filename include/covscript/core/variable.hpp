@@ -302,21 +302,21 @@ namespace cs_impl {
 
 			constexpr result() : _ptr(nullptr) {}
 
-			static constexpr result from_ptr(void *p) noexcept
+			static COVSCRIPT_ALWAYS_INLINE constexpr result from_ptr(void *p) noexcept
 			{
 				result r;
 				r._ptr = p;
 				return r;
 			}
 
-			static constexpr result from_int(std::intptr_t i) noexcept
+			static COVSCRIPT_ALWAYS_INLINE constexpr result from_int(std::intptr_t i) noexcept
 			{
 				result r;
 				r._int = i;
 				return r;
 			}
 
-			static constexpr result from_uint(std::uintptr_t ui) noexcept
+			static COVSCRIPT_ALWAYS_INLINE constexpr result from_uint(std::uintptr_t ui) noexcept
 			{
 				result r;
 				r._uint = ui;
@@ -364,39 +364,43 @@ namespace cs_impl {
 		template <typename T>
 		struct handler
 		{
-			static result get(void *lhs, void *rhs);
-			static result type_id(void *lhs, void *rhs);
-			static result type_name(void *lhs, void *rhs);
-			static result to_integer(void *lhs, void *rhs);
-			static result to_string(void *lhs, void *rhs);
-			static result hash(void *lhs, void *rhs);
-			static result detach(void *lhs, void *rhs);
-			static result ext_ns(void *lhs, void *rhs);
-			static result add(void *lhs, void *rhs);
-			static result sub(void *lhs, void *rhs);
-			static result mul(void *lhs, void *rhs);
-			static result div(void *lhs, void *rhs);
-			static result mod(void *lhs, void *rhs);
-			static result pow(void *lhs, void *rhs);
-			static result minus(void *lhs, void *rhs);
-			static result escape(void *lhs, void *rhs);
-			static result selfinc(void *lhs, void *rhs);
-			static result selfdec(void *lhs, void *rhs);
-			static result compare(void *lhs, void *rhs);
-			static result abocmp(void *lhs, void *rhs);
-			static result undcmp(void *lhs, void *rhs);
-			static result aeqcmp(void *lhs, void *rhs);
-			static result ueqcmp(void *lhs, void *rhs);
-			static result index(void *lhs, void *rhs);
-			static result cindex(void *lhs, void *rhs);
-			static result index_ref(void *lhs, void *rhs);
-			static result access(void *lhs, void *rhs);
-			static result caccess(void *lhs, void *rhs);
-			static result access_ref(void *lhs, void *rhs);
-			static result prep_call(void *lhs, void *rhs);
-			static result fcall(void *lhs, void *rhs);
+			static COVSCRIPT_ALWAYS_INLINE result get(void *lhs, void *rhs);
+			static COVSCRIPT_ALWAYS_INLINE result type_id(void *lhs, void *rhs);
+			static inline result type_name(void *lhs, void *rhs);
+			static inline result to_integer(void *lhs, void *rhs);
+			static inline result to_string(void *lhs, void *rhs);
+			static inline result hash(void *lhs, void *rhs);
+			static inline result detach(void *lhs, void *rhs);
+			static inline result ext_ns(void *lhs, void *rhs);
+			static inline result add(void *lhs, void *rhs);
+			static inline result sub(void *lhs, void *rhs);
+			static inline result mul(void *lhs, void *rhs);
+			static inline result div(void *lhs, void *rhs);
+			static inline result mod(void *lhs, void *rhs);
+			static inline result pow(void *lhs, void *rhs);
+			static inline result minus(void *lhs, void *rhs);
+			static inline result escape(void *lhs, void *rhs);
+			static inline result selfinc(void *lhs, void *rhs);
+			static inline result selfdec(void *lhs, void *rhs);
+			static inline result compare(void *lhs, void *rhs);
+			static inline result abocmp(void *lhs, void *rhs);
+			static inline result undcmp(void *lhs, void *rhs);
+			static inline result aeqcmp(void *lhs, void *rhs);
+			static inline result ueqcmp(void *lhs, void *rhs);
+			static inline result index(void *lhs, void *rhs);
+			static inline result cindex(void *lhs, void *rhs);
+			static inline result index_ref(void *lhs, void *rhs);
+			static inline result access(void *lhs, void *rhs);
+			static inline result caccess(void *lhs, void *rhs);
+			static inline result access_ref(void *lhs, void *rhs);
+			static COVSCRIPT_ALWAYS_INLINE result prep_call(void *lhs, void *rhs);
+			static COVSCRIPT_ALWAYS_INLINE result fcall(void *lhs, void *rhs);
 		};
 	} // namespace operators
+
+#ifdef CS_ENABLE_PROFILING
+	extern volatile std::size_t op_perf[40];
+#endif
 
 	constexpr std::size_t aligned_element_size = (std::max) (alignof(std::max_align_t), sizeof(void *));
 
@@ -414,28 +418,28 @@ namespace cs_impl {
 		template <typename T>
 		struct var_op_svo_dispatcher
 		{
-			static operators::result op_copy(void *lhs, void *rhs)
+			static COVSCRIPT_ALWAYS_INLINE operators::result op_copy(void *lhs, void *rhs)
 			{
 				::new (&static_cast<basic_var *>(rhs)->m_store.buffer) T(*static_cast<const T *>(lhs));
 				return operators::result();
 			}
-			static operators::result op_move(void *lhs, void *rhs)
+			static COVSCRIPT_ALWAYS_INLINE operators::result op_move(void *lhs, void *rhs) noexcept
 			{
 				::new (&static_cast<basic_var *>(rhs)->m_store.buffer) T(std::move(*static_cast<T *>(lhs)));
 				return operators::result();
 			}
-			static operators::result op_swap(void *lhs, void *rhs)
+			static COVSCRIPT_ALWAYS_INLINE operators::result op_swap(void *lhs, void *rhs) noexcept
 			{
 				std::swap(*static_cast<T *>(lhs), static_cast<basic_var *>(rhs)->template unchecked_get<T>());
 				return operators::result();
 			}
-			static operators::result op_destroy(void *lhs, void *rhs)
+			static COVSCRIPT_ALWAYS_INLINE operators::result op_destroy(void *lhs, void *rhs)
 			{
 				static_cast<T *>(lhs)->~T();
 				return operators::result();
 			}
 			template <typename... ArgsT>
-			static inline void construct(basic_var *val, ArgsT &&...args)
+			static COVSCRIPT_ALWAYS_INLINE void construct(basic_var *val, ArgsT &&...args)
 			{
 				::new (&val->m_store.buffer) T(std::forward<ArgsT>(args)...);
 			}
@@ -480,38 +484,52 @@ namespace cs_impl {
 					op_handler::prep_call,
 					op_handler::fcall,
 				};
-				return op_handlers[static_cast<unsigned>(op)]((void *) &lhs->m_store.buffer, rhs);
+#ifdef CS_ENABLE_PROFILING
+				++op_perf[static_cast<unsigned>(op)];
+#endif
+				void *ptr = (void *) &lhs->m_store.buffer;
+				// Optimize hotspot operators
+				if (op == operators::type::get)
+					return operators::result::from_ptr(ptr);
+				else if (op == operators::type::destroy)
+					return op_destroy(ptr, nullptr);
+				else if (op == operators::type::prep_call)
+					return op_handler::prep_call(ptr, rhs);
+				else if (op == operators::type::fcall)
+					return op_handler::fcall(ptr, rhs);
+				else				
+					return op_handlers[static_cast<unsigned>(op)](ptr, rhs);
 			}
 		};
 
 		template <typename T>
 		struct var_op_heap_dispatcher
 		{
-			inline static allocator_t<T> &get_allocator()
+			static allocator_t<T> &get_allocator()
 			{
 				static allocator_t<T> allocator;
 				return allocator;
 			}
-			static operators::result op_copy(void *lhs, void *rhs)
+			static COVSCRIPT_ALWAYS_INLINE operators::result op_copy(void *lhs, void *rhs)
 			{
 				T *nptr = get_allocator().allocate(1);
 				::new (nptr) T(*static_cast<const T *>(lhs));
 				static_cast<basic_var *>(rhs)->m_store.ptr = nptr;
 				return operators::result();
 			}
-			static operators::result op_move(void *lhs, void *rhs)
+			static COVSCRIPT_ALWAYS_INLINE operators::result op_move(void *lhs, void *rhs) noexcept
 			{
 				T *nptr = get_allocator().allocate(1);
 				::new (nptr) T(std::move(*static_cast<T *>(lhs)));
 				static_cast<basic_var *>(rhs)->m_store.ptr = nptr;
 				return operators::result();
 			}
-			static operators::result op_swap(void *lhs, void *rhs)
+			static COVSCRIPT_ALWAYS_INLINE operators::result op_swap(void *lhs, void *rhs) noexcept
 			{
 				std::swap(*static_cast<T *>(lhs), static_cast<basic_var *>(rhs)->template unchecked_get<T>());
 				return operators::result();
 			}
-			static operators::result op_destroy(void *lhs, void *rhs)
+			static COVSCRIPT_ALWAYS_INLINE operators::result op_destroy(void *lhs, void *rhs)
 			{
 				T *ptr = static_cast<T *>(lhs);
 				ptr->~T();
@@ -519,7 +537,7 @@ namespace cs_impl {
 				return operators::result();
 			}
 			template <typename... ArgsT>
-			static inline void construct(basic_var *val, ArgsT &&...args)
+			static COVSCRIPT_ALWAYS_INLINE void construct(basic_var *val, ArgsT &&...args)
 			{
 				T *ptr = get_allocator().allocate(1);
 				::new (ptr) T(std::forward<ArgsT>(args)...);
@@ -566,7 +584,21 @@ namespace cs_impl {
 					op_handler::prep_call,
 					op_handler::fcall,
 				};
-				return op_handlers[static_cast<unsigned>(op)]((void *) lhs->m_store.ptr, rhs);
+#ifdef CS_ENABLE_PROFILING
+				++op_perf[static_cast<unsigned>(op)];
+#endif
+				void *ptr = (void *) lhs->m_store.ptr;
+				// Optimize hotspot operators
+				if (op == operators::type::get)
+					return operators::result::from_ptr(ptr);
+				else if (op == operators::type::destroy)
+					return op_destroy(ptr, nullptr);
+				else if (op == operators::type::prep_call)
+					return op_handler::prep_call(ptr, rhs);
+				else if (op == operators::type::fcall)
+					return op_handler::fcall(ptr, rhs);
+				else				
+					return op_handlers[static_cast<unsigned>(op)](ptr, rhs);
 			}
 		};
 
@@ -586,13 +618,13 @@ namespace cs_impl {
 		} m_store;
 
 		template <typename T>
-		inline T &unchecked_get() noexcept
+		COVSCRIPT_ALWAYS_INLINE T &unchecked_get() noexcept
 		{
 			return *static_cast<T *>(m_dispatcher(operators::type::get, this, nullptr)._ptr);
 		}
 
 		template <typename T>
-		inline const T &unchecked_get() const noexcept
+		COVSCRIPT_ALWAYS_INLINE const T &unchecked_get() const noexcept
 		{
 			return *static_cast<const T *>(m_dispatcher(operators::type::get, this, nullptr)._ptr);
 		}
@@ -636,7 +668,7 @@ namespace cs_impl {
 
 	public:
 		template <typename T, typename store_t = cs_impl::var_storage_t<T>, typename... ArgsT>
-		inline static basic_var make(ArgsT &&...args)
+		static inline basic_var make(ArgsT &&...args)
 		{
 			basic_var data;
 			data.construct_store<store_t>(std::forward<ArgsT>(args)...);
@@ -776,7 +808,7 @@ namespace cs_impl {
 
 		using allocator_t = cs::allocator_type<proxy, CS_ALLOCATOR_BUFFER_MAX * CS_VAR_ALLOC_MULTIPLIER, default_allocator_provider>;
 
-		inline static allocator_t &get_allocator()
+		static inline allocator_t &get_allocator()
 		{
 			static allocator_t allocator;
 			return allocator;
@@ -785,7 +817,7 @@ namespace cs_impl {
 		proxy *mDat = nullptr;
 
 		template <typename T>
-		inline T &unchecked_get() const noexcept
+		COVSCRIPT_ALWAYS_INLINE T &unchecked_get() const noexcept
 		{
 			return mDat->data.unchecked_get<T>();
 		}

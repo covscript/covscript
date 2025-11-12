@@ -260,7 +260,7 @@ extern "C"
 namespace cs {
 	namespace fiber {
 		class unix_fiber_stack {
-			inline static uintptr_t align_up(uintptr_t ptr, size_t align)
+			static inline uintptr_t align_up(uintptr_t ptr, size_t align)
 			{
 				return (ptr + align - 1) & ~(align - 1);
 			}

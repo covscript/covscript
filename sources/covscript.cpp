@@ -82,6 +82,9 @@ namespace cs_impl {
 #endif
 
 namespace cs_impl {
+#ifdef CS_ENABLE_PROFILING
+	volatile std::size_t op_perf[40];
+#endif
 	cs::namespace_t member_visitor_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t array_ext = cs::make_shared_namespace<cs::name_space>();

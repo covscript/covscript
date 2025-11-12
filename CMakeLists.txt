@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.13)
 
 project(covscript)
 
+# add_compile_definitions(-DCS_ENABLE_VAROP_PERF)
+
 # Compiler Options
 set(CMAKE_CXX_STANDARD 14)
 
