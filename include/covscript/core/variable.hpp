@@ -487,6 +487,7 @@ namespace cs_impl {
 #ifdef CS_ENABLE_PROFILING
 				++op_perf[static_cast<unsigned>(op)];
 #endif
+#ifdef CS_AGGRESSIVE_OPTIMIZE
 				void *ptr = (void *) &lhs->m_store.buffer;
 				// Optimize hotspot operators
 				if (op == operators::type::get)
@@ -499,6 +500,9 @@ namespace cs_impl {
 					return op_handler::fcall(ptr, rhs);
 				else				
 					return op_handlers[static_cast<unsigned>(op)](ptr, rhs);
+#else
+				return op_handlers[static_cast<unsigned>(op)]((void *) &lhs->m_store.buffer, rhs);
+#endif
 			}
 		};
 
@@ -587,6 +591,7 @@ namespace cs_impl {
 #ifdef CS_ENABLE_PROFILING
 				++op_perf[static_cast<unsigned>(op)];
 #endif
+#ifdef CS_AGGRESSIVE_OPTIMIZE
 				void *ptr = (void *) lhs->m_store.ptr;
 				// Optimize hotspot operators
 				if (op == operators::type::get)
@@ -599,6 +604,9 @@ namespace cs_impl {
 					return op_handler::fcall(ptr, rhs);
 				else				
 					return op_handlers[static_cast<unsigned>(op)](ptr, rhs);
+#else
+				return op_handlers[static_cast<unsigned>(op)]((void *) lhs->m_store.ptr, rhs);
+#endif
 			}
 		};
 

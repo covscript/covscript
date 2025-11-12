@@ -28,19 +28,31 @@
  * cs: Main Namespace
  * cs_impl: Implement Namespace
  */
-// Compiler Detection
+// Compiler Detection & Optimization
 #if defined(__clang__)
 #define COVSCRIPT_COMPILER_CLANG
 #define COVSCRIPT_COMPILER_SIMPLE_NAME "clang"
+#ifdef CS_AGGRESSIVE_OPTIMIZE
 #define COVSCRIPT_ALWAYS_INLINE inline __attribute__((always_inline))
+#else
+#define COVSCRIPT_ALWAYS_INLINE inline
+#endif
 #elif defined(__GNUC__)
 #define COVSCRIPT_COMPILER_GNUC
 #define COVSCRIPT_COMPILER_SIMPLE_NAME "gcc"
+#ifdef CS_AGGRESSIVE_OPTIMIZE
 #define COVSCRIPT_ALWAYS_INLINE inline __attribute__((always_inline))
+#else
+#define COVSCRIPT_ALWAYS_INLINE inline
+#endif
 #elif defined(_MSC_VER)
 #define COVSCRIPT_COMPILER_MSVC
 #define COVSCRIPT_COMPILER_SIMPLE_NAME "msvc"
+#ifdef CS_AGGRESSIVE_OPTIMIZE
 #define COVSCRIPT_ALWAYS_INLINE __forceinline
+#else
+#define COVSCRIPT_ALWAYS_INLINE inline
+#endif
 #else
 #define COVSCRIPT_COMPILER_UNKNOWN
 #define COVSCRIPT_COMPILER_SIMPLE_NAME "unknown"
