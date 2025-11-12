@@ -30,7 +30,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --static")
     elseif (UNIX AND NOT APPLE)
         # Linux
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto=jobserver -fno-plt")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto=8 -fno-plt")
         add_compile_definitions(-DCS_VAR_SVO_ALIGN=64)
     elseif (APPLE)
         # macOS
