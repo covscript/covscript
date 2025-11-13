@@ -145,7 +145,7 @@ namespace cs {
 				auto &domain = ns.const_val<namespace_t>()->get_domain();
 				for (auto &it : domain) {
 					if (domain.get_var_by_id(it.second).is_protect())
-						context->instance->storage.add_record(it.first);
+						context->instance->storage.add_record(it.first.data());
 				}
 				context->instance->storage.involve_domain(domain);
 			}

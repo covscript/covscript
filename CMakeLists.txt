@@ -18,7 +18,7 @@ option(CS_AGGRESSIVE_OPTIMIZE "Enable aggressive optimizations" OFF)
 option(CS_COMPATIBILITY_MODE "Enable compatible mode" OFF)
 
 # Compiler Options
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 if (MSVC)
     # MSVC Windows

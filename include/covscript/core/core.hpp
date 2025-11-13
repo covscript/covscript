@@ -541,7 +541,7 @@ namespace cs {
 	public:
 		var_id() = delete;
 
-		var_id(std::string name) : m_id(std::move(name)) {}
+		explicit var_id(std::string name) : m_id(std::move(name)) {}
 
 		var_id(const var_id &) = default;
 
@@ -573,18 +573,18 @@ namespace cs {
 	};
 
 	class domain_type final {
-		map_t<std::string, std::size_t> m_reflect;
+		map_t<std::string_view, std::size_t> m_reflect;
 		std::shared_ptr<domain_ref> m_ref;
 		std::vector<var> m_slot;
 		bool optimize = false;
 
-		inline std::size_t get_slot_id(const std::string &name) const
+		inline std::size_t get_slot_id(std::string_view name) const
 		{
 			auto it = m_reflect.find(name);
 			if (it != m_reflect.end())
 				return it->second;
 			else
-				throw runtime_error("Use of undefined variable \"" + name + "\".");
+				throw runtime_error("Use of undefined variable \"" + std::string(name) + "\".");
 		}
 
 	public:
@@ -620,7 +620,7 @@ namespace cs {
 			return id.m_ref == m_ref;
 		}
 
-		inline bool exist(const std::string &name) const noexcept
+		inline bool exist(std::string_view name) const noexcept
 		{
 			return m_reflect.find(name) != m_reflect.end();
 		}
@@ -630,7 +630,7 @@ namespace cs {
 			return m_reflect.find(id.m_id) != m_reflect.end();
 		}
 
-		domain_type &add_var(const std::string &name, const var &val)
+		domain_type &add_var(std::string_view name, const var &val)
 		{
 			auto it = m_reflect.find(name);
 			if (it == m_reflect.end()) {
@@ -661,7 +661,7 @@ namespace cs {
 			return *this;
 		}
 
-		bool add_var_optimal(const std::string &name, const var &val, bool override = false)
+		bool add_var_optimal(std::string_view name, const var &val, bool override = false)
 		{
 			auto it = m_reflect.find(name);
 			if (it != m_reflect.end()) {
@@ -722,22 +722,22 @@ namespace cs {
 			return m_slot[id.m_slot_id];
 		}
 
-		var &get_var(const std::string &name)
+		var &get_var(std::string_view name)
 		{
 			auto it = m_reflect.find(name);
 			if (it != m_reflect.end())
 				return m_slot[it->second];
 			else
-				throw runtime_error("Use of undefined variable \"" + name + "\".");
+				throw runtime_error("Use of undefined variable \"" + std::string(name) + "\".");
 		}
 
-		const var &get_var(const std::string &name) const
+		const var &get_var(std::string_view name) const
 		{
 			auto it = m_reflect.find(name);
 			if (it != m_reflect.end())
 				return m_slot[it->second];
 			else
-				throw runtime_error("Use of undefined variable \"" + name + "\".");
+				throw runtime_error("Use of undefined variable \"" + std::string(name) + "\".");
 		}
 
 		var *get_var_opt(const var_id &id)
@@ -764,7 +764,7 @@ namespace cs {
 			return &m_slot[id.m_slot_id];
 		}
 
-		var *get_var_opt(const std::string &name)
+		var *get_var_opt(std::string_view name)
 		{
 			auto it = m_reflect.find(name);
 			if (it != m_reflect.end())
@@ -773,7 +773,7 @@ namespace cs {
 				return nullptr;
 		}
 
-		const var *get_var_opt(const std::string &name) const
+		const var *get_var_opt(std::string_view name) const
 		{
 			auto it = m_reflect.find(name);
 			if (it != m_reflect.end())
@@ -1083,7 +1083,7 @@ namespace cs {
 				delete m_data;
 		}
 
-		name_space &add_var(const std::string &name, const var &var)
+		name_space &add_var(std::string_view name, const var &var)
 		{
 			m_data->add_var(name, var);
 			return *this;
@@ -1095,12 +1095,12 @@ namespace cs {
 			return *this;
 		}
 
-		var &get_var(const std::string &name)
+		var &get_var(std::string_view name)
 		{
 			return m_data->get_var(name);
 		}
 
-		const var &get_var(const std::string &name) const
+		const var &get_var(std::string_view name) const
 		{
 			return m_data->get_var(name);
 		}

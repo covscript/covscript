@@ -22,7 +22,6 @@ This project is an officially maintained Covariant Script interpreter.
 ## Features ##
 
 + Cross-platform, supporting most mainstream Operating Systems
-    + Compatible with legacy compilers -- written in C++ 14
     + Apple macOS: Universal binary with x86_64 (Intel) and ARM64 (Apple Silicon)
     + Linux and Unix: x86, ARM, MIPS, LoongArch
     + Microsoft Windows: x86

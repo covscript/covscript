@@ -22,7 +22,6 @@
 ## 特点 ##
 
 + 全平台可用，支持大多数主流操作系统
-    + 使用 C++ 14 标准编写，支持版本较老的编译器
     + Apple macOS: 通用二进制，同时支持 x86_64 (Intel) 和 ARM64 (Apple Silicon)
     + Linux 和类 Unix: x86, ARM, MIPS, LoongArch
     + Microsoft Windows: x86, ARM
