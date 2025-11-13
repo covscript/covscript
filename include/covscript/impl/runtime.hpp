@@ -160,15 +160,13 @@ namespace cs {
 		inline var &get_var(const std::string &name)
 		{
 			if (fiber_stack != nullptr) {
-				for (auto &domain : *fiber_stack)
-				{
+				for (auto &domain : *fiber_stack) {
 					var *ptr = domain.get_var_opt(name);
 					if (ptr != nullptr)
 						return *ptr;
 				}
 			}
-			for (auto &domain : m_data)
-			{
+			for (auto &domain : m_data) {
 				var *ptr = domain.get_var_opt(name);
 				if (ptr != nullptr)
 					return *ptr;
@@ -208,11 +206,13 @@ namespace cs {
 			return m_data.bottom().get_var(name);
 		}
 
-		var get_var_optimizable(const std::string &name)
+		template <typename T>
+		var get_var_optimizable(T &&name)
 		{
 			if (m_data.size() == m_set.size()) {
 				for (std::size_t i = 0, size = m_data.size(); i < size; ++i) {
-					if (m_set[i].find(name) != m_set[i].end()) {
+					auto &current_set = m_set[i];
+					if (current_set.find(name) != current_set.end()) {
 						var *ptr = m_data[i].get_var_opt(name);
 						if (ptr != nullptr)
 							return *ptr;
@@ -222,11 +222,6 @@ namespace cs {
 				}
 			}
 			return var();
-		}
-
-		var get_var_optimizable(const var_id &id)
-		{
-			return get_var_optimizable(id.get_id());
 		}
 
 		domain_manager &add_record(const string &name)
