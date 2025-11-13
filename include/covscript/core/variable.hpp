@@ -792,7 +792,7 @@ namespace cs_impl {
 
 #ifndef CS_VAR_SVO_ALIGN
 #ifndef CS_DISABLE_VAR_SVO
-#define CS_VAR_SVO_ALIGN 32
+#define CS_VAR_SVO_ALIGN 64
 #else
 #define CS_VAR_SVO_ALIGN (2 * sizeof(void *))
 #endif

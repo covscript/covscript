@@ -2,17 +2,20 @@ cmake_minimum_required(VERSION 3.13)
 
 project(covscript)
 
-# Uncomment this for profiling
-# add_compile_definitions(-DCS_ENABLE_PROFILING)
+# Profiling
+option(CS_ENABLE_PROFILING "Enable profiling support" OFF)
 
-# Uncomment this to force aligning with cache line
-# add_compile_definitions(-DCS_VAR_SVO_ALIGN=64)
+# Align SVO on different cache line
+option(CS_VAR_SVO_ALIGN "Custom SVO alignment (set > 0 to enable)" 0)
 
-# Uncomment this to force use heap allocator
-# add_compile_definitions(-DCS_DISABLE_VAR_SVO)
+# Force use heap allocator
+option(CS_DISABLE_VAR_SVO "Force heap allocator" OFF)
 
-# Uncomment this to use aggressive optimizations like force inline
-# add_compile_definitions(-DCS_AGGRESSIVE_OPTIMIZE)
+# Aggressive optimization (force inline, etc.)
+option(CS_AGGRESSIVE_OPTIMIZE "Enable aggressive optimizations" OFF)
+
+# Use STL containers instead of custom high-performance
+option(CS_COMPATIBILITY_MODE "Enable compatible mode" OFF)
 
 # Compiler Options
 set(CMAKE_CXX_STANDARD 14)
@@ -31,13 +34,32 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     elseif (UNIX AND NOT APPLE)
         # Linux
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto=8 -fno-plt")
-        add_compile_definitions(-DCS_VAR_SVO_ALIGN=64)
     elseif (APPLE)
         # macOS
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
-        add_compile_definitions(-DCS_VAR_SVO_ALIGN=64 -DCS_AGGRESSIVE_OPTIMIZE)
+        set(CS_AGGRESSIVE_OPTIMIZE ON CACHE BOOL "Enable aggressive optimizations" FORCE)
     endif ()
 endif ()
+
+if(CS_ENABLE_PROFILING)
+    message("CovScript: Enable Profiling Support")
+    add_compile_definitions(CS_ENABLE_PROFILING)
+endif()
+
+if(CS_VAR_SVO_ALIGN GREATER 0)
+    message("CovScript: Custom SVO Alignment = ${CS_VAR_SVO_ALIGN}")
+    add_compile_definitions(CS_VAR_SVO_ALIGN=${CS_VAR_SVO_ALIGN})
+endif()
+
+if(CS_DISABLE_VAR_SVO)
+    message("CovScript: Force Heap Allocator")
+    add_compile_definitions(CS_DISABLE_VAR_SVO)
+endif()
+
+if(CS_AGGRESSIVE_OPTIMIZE)
+    message("CovScript: Enable Aggressive Optimizations")
+    add_compile_definitions(CS_AGGRESSIVE_OPTIMIZE)
+endif()
 
 if (CS_COMPATIBILITY_MODE)
     message("CovScript: Configuring Compatibility Mode")
