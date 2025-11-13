@@ -29,9 +29,10 @@ jobs:
       - name: Test
         run: |
           build/bin/cs -v
-          build/bin/cs .github/workflows/benchmark.csc
+          build/bin/cs tests/benchmark.csc
           build/bin/cs tests/test_reentrant_co.csc
           build/bin/cs tests/test_dead_co.csc
+          build/bin/cs tests/struct_op.csc
           build/bin/cs tests/inherit.csc
 
       - uses: actions/upload-artifact@v4

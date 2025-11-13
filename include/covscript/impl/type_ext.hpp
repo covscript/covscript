@@ -1268,8 +1268,8 @@ namespace cs {
 		cs::numeric_integer idx = pos.const_val<cs::numeric>().as_integer();
 		if (idx < 0)
 			idx = arr.size() + idx;
-		if (idx > arr.size())
-			arr.resize(idx + 1, cs::numeric(0));
+		while (idx >= arr.size())
+			arr.emplace_back(var::make<numeric>(0));
 		return arr[idx];
 	}
 
