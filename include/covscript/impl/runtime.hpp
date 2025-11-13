@@ -157,29 +157,22 @@ namespace cs {
 			return false;
 		}
 
-		inline bool var_exist_current(const string &name) noexcept
-		{
-			if (fiber_stack != nullptr)
-				return fiber_stack->top().exist(name);
-			else
-				return m_data.top().exist(name);
-		}
-
-		inline bool var_exist_global(const string &name) noexcept
-		{
-			return m_data.bottom().exist(name);
-		}
-
 		inline var &get_var(const std::string &name)
 		{
 			if (fiber_stack != nullptr) {
 				for (auto &domain : *fiber_stack)
-					if (domain.exist(name))
-						return domain.get_var_no_check(name);
+				{
+					var *ptr = domain.get_var_opt(name);
+					if (ptr != nullptr)
+						return *ptr;
+				}
 			}
 			for (auto &domain : m_data)
-				if (domain.exist(name))
-					return domain.get_var_no_check(name);
+			{
+				var *ptr = domain.get_var_opt(name);
+				if (ptr != nullptr)
+					return *ptr;
+			}
 			throw runtime_error("Use of undefined variable \"" + name + "\".");
 		}
 
@@ -215,20 +208,25 @@ namespace cs {
 			return m_data.bottom().get_var(name);
 		}
 
-		template <typename T>
-		var get_var_optimizable(T &&name)
+		var get_var_optimizable(const std::string &name)
 		{
 			if (m_data.size() == m_set.size()) {
 				for (std::size_t i = 0, size = m_data.size(); i < size; ++i) {
-					if (m_set[i].count(name) > 0) {
-						if (m_data[i].exist(name))
-							return m_data[i].get_var_no_check(name);
+					if (m_set[i].find(name) != m_set[i].end()) {
+						var *ptr = m_data[i].get_var_opt(name);
+						if (ptr != nullptr)
+							return *ptr;
 						else
 							break;
 					}
 				}
 			}
 			return var();
+		}
+
+		var get_var_optimizable(const var_id &id)
+		{
+			return get_var_optimizable(id.get_id());
 		}
 
 		domain_manager &add_record(const string &name)
@@ -304,7 +302,7 @@ namespace cs {
 		template <typename T>
 		domain_manager &add_var_global(T &&name, const var &var)
 		{
-			if (var_exist_global(name))
+			if (m_data.bottom().exist(name))
 				throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 			else
 				m_data.bottom().add_var(name, var);

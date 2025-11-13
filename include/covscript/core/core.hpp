@@ -580,8 +580,9 @@ namespace cs {
 
 		inline std::size_t get_slot_id(const std::string &name) const
 		{
-			if (m_reflect.count(name) > 0)
-				return m_reflect.at(name);
+			auto it = m_reflect.find(name);
+			if (it != m_reflect.end())
+				return it->second;
 			else
 				throw runtime_error("Use of undefined variable \"" + name + "\".");
 		}
@@ -621,28 +622,30 @@ namespace cs {
 
 		inline bool exist(const std::string &name) const noexcept
 		{
-			return m_reflect.count(name) > 0;
+			return m_reflect.find(name) != m_reflect.end();
 		}
 
 		inline bool exist(const var_id &id) const noexcept
 		{
-			return m_reflect.count(id.m_id) > 0;
+			return m_reflect.find(id.m_id) != m_reflect.end();
 		}
 
 		domain_type &add_var(const std::string &name, const var &val)
 		{
-			if (m_reflect.count(name) == 0) {
+			auto it = m_reflect.find(name);
+			if (it == m_reflect.end()) {
 				m_slot.push_back(val);
 				m_reflect.emplace(name, m_slot.size() - 1);
 			}
 			else
-				m_slot[m_reflect[name]] = val;
+				m_slot[it->second] = val;
 			return *this;
 		}
 
 		domain_type &add_var(const var_id &id, const var &val)
 		{
-			if (m_reflect.count(id.m_id) == 0) {
+			auto it = m_reflect.find(id.m_id);
+			if (it == m_reflect.end()) {
 				m_slot.push_back(val);
 				m_reflect.emplace(id.m_id, m_slot.size() - 1);
 				id.m_slot_id = m_slot.size() - 1;
@@ -650,7 +653,7 @@ namespace cs {
 			}
 			else {
 				if (id.m_ref != m_ref) {
-					id.m_slot_id = m_reflect[id.m_id];
+					id.m_slot_id = it->second;
 					id.m_ref = m_ref;
 				}
 				m_slot[id.m_slot_id] = val;
@@ -660,20 +663,23 @@ namespace cs {
 
 		bool add_var_optimal(const std::string &name, const var &val, bool override = false)
 		{
-			if (m_reflect.count(name) > 0) {
+			auto it = m_reflect.find(name);
+			if (it != m_reflect.end()) {
 				if (optimize) {
-					m_slot[m_reflect.at(name)] = val;
+					m_slot[it->second] = val;
 					return true;
 				}
 				else if (override) {
-					add_var(name, val);
+					m_slot.push_back(val);
+					m_reflect.emplace(name, m_slot.size() - 1);
 					return true;
 				}
 				else
 					return false;
 			}
 			else {
-				add_var(name, val);
+				m_slot.push_back(val);
+				m_reflect.emplace(name, m_slot.size() - 1);
 				return true;
 			}
 		}
@@ -718,18 +724,62 @@ namespace cs {
 
 		var &get_var(const std::string &name)
 		{
-			if (m_reflect.count(name) > 0)
-				return m_slot[m_reflect.at(name)];
+			auto it = m_reflect.find(name);
+			if (it != m_reflect.end())
+				return m_slot[it->second];
 			else
 				throw runtime_error("Use of undefined variable \"" + name + "\".");
 		}
 
 		const var &get_var(const std::string &name) const
 		{
-			if (m_reflect.count(name) > 0)
-				return m_slot[m_reflect.at(name)];
+			auto it = m_reflect.find(name);
+			if (it != m_reflect.end())
+				return m_slot[it->second];
 			else
 				throw runtime_error("Use of undefined variable \"" + name + "\".");
+		}
+
+		var *get_var_opt(const var_id &id)
+		{
+			if (id.m_ref != m_ref) {
+				auto it = m_reflect.find(id.m_id);
+				if (it == m_reflect.end())
+					return nullptr;
+				id.m_slot_id = it->second;
+				id.m_ref = m_ref;
+			}
+			return &m_slot[id.m_slot_id];
+		}
+
+		const var *get_var_opt(const var_id &id) const
+		{
+			if (id.m_ref != m_ref) {
+				auto it = m_reflect.find(id.m_id);
+				if (it == m_reflect.end())
+					return nullptr;
+				id.m_slot_id = it->second;
+				id.m_ref = m_ref;
+			}
+			return &m_slot[id.m_slot_id];
+		}
+
+		var *get_var_opt(const std::string &name)
+		{
+			auto it = m_reflect.find(name);
+			if (it != m_reflect.end())
+				return &m_slot[it->second];
+			else
+				return nullptr;
+		}
+
+		const var *get_var_opt(const std::string &name) const
+		{
+			auto it = m_reflect.find(name);
+			if (it != m_reflect.end())
+				return &m_slot[it->second];
+			else
+				return nullptr;
 		}
 
 		var &get_var_no_check(const var_id &id) noexcept
@@ -758,16 +808,6 @@ namespace cs {
 				id.m_ref = m_ref;
 			}
 			return m_slot[id.m_slot_id];
-		}
-
-		inline var &get_var_no_check(const std::string &name) noexcept
-		{
-			return m_slot[m_reflect.at(name)];
-		}
-
-		inline const var &get_var_no_check(const std::string &name) const noexcept
-		{
-			return m_slot[m_reflect.at(name)];
 		}
 
 		inline auto begin() const
@@ -973,8 +1013,9 @@ namespace cs {
 		template <typename T>
 		var &get_var(T &&name) const
 		{
-			if (m_data->exist(name))
-				return m_data->get_var_no_check(name);
+			var *ptr = m_data->get_var_opt(name);
+			if (ptr != nullptr)
+				return *ptr;
 			else
 				throw runtime_error("Struct \"" + m_name + "\" have no member called \"" + std::string(name) + "\".");
 		}
