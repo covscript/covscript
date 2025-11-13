@@ -670,8 +670,7 @@ namespace cs {
 					return true;
 				}
 				else if (override) {
-					m_slot.push_back(val);
-					m_reflect.emplace(name, m_slot.size() - 1);
+					m_slot[it->second] = val;
 					return true;
 				}
 				else

@@ -163,8 +163,9 @@ namespace cs {
 				if (t.id.type_hash) {
 					for (std::size_t it = t.id.type_hash;;) {
 						type_id::inherit_map[it].insert(mTypeId.type_hash);
-						if (mParentMap.count(it) > 0)
-							it = mParentMap[it];
+						auto map_it = mParentMap.find(it);
+						if (map_it != mParentMap.end())
+							it = map_it->second;
 						else
 							break;
 					}
@@ -452,8 +453,9 @@ namespace cs {
 	{
 		CS_DEBUGGER_STEP(this);
 		var key = context->instance->parse_expr(mTree.root());
-		if (mCases.count(key) > 0)
-			mCases[key]->run();
+		auto it = mCases.find(key);
+		if (it != mCases.end())
+			it->second->run();
 		else if (mDefault != nullptr)
 			mDefault->run();
 	}
