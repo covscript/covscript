@@ -32,7 +32,9 @@ namespace cs_impl {
 	using decay_t = typename std::decay<T>::type;
 
 	template <typename... ArgsT>
-	inline void result_container(ArgsT &&...) {}
+	inline void result_container(ArgsT &&...)
+	{
+	}
 
 	template <typename T>
 	struct cni_modify {
@@ -136,7 +138,7 @@ namespace cs_impl {
 		{
 			using decayed_target_t = decay_t<_TargetT>;
 			val.assign(any::make<decayed_target_t>(_ConvertorT::convert(convert_helper<_SourceT>::get_val(val))));
-			val.constant();
+			val.mark_constant();
 			return convert_helper<_TargetT>::get_val(val);
 		}
 	};
@@ -196,7 +198,7 @@ namespace cs_impl {
 	struct check_args_helper {
 		static char check(const any &val)
 		{
-			if (typeid(T) != val.type())
+			if (!val.is_type_of<T>())
 				throw cs::runtime_error("Invalid Argument. At " + std::to_string(index + 1) + ". Expected " +
 				                        cxx_demangle(get_name_of_type<T>()) + ", provided " + val.get_type_name());
 			else
@@ -236,7 +238,7 @@ namespace cs_impl {
 		using source_type = typename cni_decayed_convertor<_SourceT, _TargetT>::source_type;
 		static _TargetT convert(any &val)
 		{
-			if (val.type() == typeid(source_type)) {
+			if (val.is_type_of<source_type>()) {
 				try {
 					return cni_decayed_convertor<_SourceT, _TargetT>::convert_to_cpp(val);
 				}
@@ -246,7 +248,7 @@ namespace cs_impl {
 					                        cxx_demangle(get_name_of_type<_SourceT>()));
 				}
 			}
-			else if (val.type() == typeid(_TargetT))
+			else if (val.is_type_of<_TargetT>())
 				return convert_helper<_TargetT>::get_val(val);
 			else
 				throw cs::runtime_error("Invalid Argument. At " + std::to_string(index + 1) + ". Expected " +
@@ -260,7 +262,7 @@ namespace cs_impl {
 	struct try_convert_and_check<_TargetT, _TargetT, _CheckT, index> {
 		static _TargetT convert(any &val)
 		{
-			if (val.type() == typeid(_TargetT))
+			if (val.is_type_of<_TargetT>())
 				return convert_helper<_TargetT>::get_val(val);
 			else
 				throw cs::runtime_error("Invalid Argument. At " + std::to_string(index + 1) + ". Expected " +
@@ -497,7 +499,9 @@ namespace cs_impl {
 		template <typename T>
 		explicit cni(T &&val) : mCni(
 			    construct_helper<typename cni_modify<typename cov::remove_reference<T>::type>::type>::construct(
-			        std::forward<T>(val))) {}
+			        std::forward<T>(val)))
+		{
+		}
 
 		template <typename T, typename X>
 		cni(T &&val, cni_type<X>) : mCni(
@@ -608,7 +612,7 @@ namespace cs_impl {
 			m_setter(val);
 		}
 	};
-}
+} // namespace cs_impl
 
 namespace cs {
 	using cs_impl::cni;
@@ -739,4 +743,4 @@ namespace cs {
 		}),
 		cs::callable::types::member_visitor);
 	}
-}
+} // namespace cs

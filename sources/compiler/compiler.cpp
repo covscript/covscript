@@ -1,28 +1,28 @@
 /*
-* Covariant Script Compiler
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script Compiler
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 #include <covscript/impl/codegen.hpp>
 #include <regex>
 
@@ -44,10 +44,10 @@ namespace cs {
 	bool token_value::dump(std::ostream &o) const
 	{
 		o << "< Value = ";
-		if (mVal.type() == typeid(cs::string)) {
+		if (mVal.is_type_of<cs::string>()) {
 			o << "\"";
 			const cs::string &str = mVal.const_val<cs::string>();
-			for (auto ch: str) {
+			for (auto ch : str) {
 				if (escape_char.count(ch) > 0)
 					o << '\\' << escape_char.at(ch);
 				else
@@ -55,7 +55,7 @@ namespace cs {
 			}
 			o << "\"";
 		}
-		else if (mVal.type() == typeid(char)) {
+		else if (mVal.is_type_of<char>()) {
 			o << "\'";
 			char ch = mVal.const_val<char>();
 			if (escape_char.count(ch) > 0)
@@ -263,7 +263,7 @@ namespace cs {
 	bool token_arglist::dump(std::ostream &o) const
 	{
 		o << "< ArgumentList = {";
-		for (auto &tree: mTreeList) {
+		for (auto &tree : mTreeList) {
 			o << "< ChildExpression: ";
 			compiler_type::dump_expr(tree.root(), o);
 			o << " >";
@@ -275,7 +275,7 @@ namespace cs {
 	bool token_array::dump(std::ostream &o) const
 	{
 		o << "< ArrayList = {";
-		for (auto &tree: mTreeList) {
+		for (auto &tree : mTreeList) {
 			o << "< ChildExpression: ";
 			compiler_type::dump_expr(tree.root(), o);
 			o << " >";
@@ -287,7 +287,7 @@ namespace cs {
 	bool token_parallel::dump(std::ostream &o) const
 	{
 		o << "< ParallelList = {";
-		for (auto &tree: mTreeList) {
+		for (auto &tree : mTreeList) {
 			o << "< ChildExpression: ";
 			compiler_type::dump_expr(tree.root(), o);
 			o << " >";
@@ -297,122 +297,151 @@ namespace cs {
 	}
 
 	const mapping<std::string, signal_types> compiler_type::signal_map = {
-		{";",   signal_types::endline_},
-		{"+",   signal_types::add_},
-		{"+=",  signal_types::addasi_},
-		{"-",   signal_types::sub_},
-		{"-=",  signal_types::subasi_},
-		{"*",   signal_types::mul_},
-		{"*=",  signal_types::mulasi_},
-		{"/",   signal_types::div_},
-		{"/=",  signal_types::divasi_},
-		{"%",   signal_types::mod_},
-		{"%=",  signal_types::modasi_},
-		{"^",   signal_types::pow_},
-		{"^=",  signal_types::powasi_},
-		{">",   signal_types::abo_},
-		{"<",   signal_types::und_},
-		{"=",   signal_types::asi_},
-		{":=",  signal_types::lnkasi_},
-		{"&",   signal_types::addr_},
-		{"|",   signal_types::error_},
-		{"&&",  signal_types::and_},
-		{"||",  signal_types::or_},
-		{"!",   signal_types::not_},
-		{"==",  signal_types::equ_},
-		{"!=",  signal_types::neq_},
-		{">=",  signal_types::aeq_},
-		{"<=",  signal_types::ueq_},
-		{"(",   signal_types::slb_},
-		{")",   signal_types::srb_},
-		{"[",   signal_types::mlb_},
-		{"]",   signal_types::mrb_},
-		{"{",   signal_types::llb_},
-		{"}",   signal_types::lrb_},
-		{",",   signal_types::com_},
-		{".",   signal_types::dot_},
-		{"()",  signal_types::esb_},
-		{"[]",  signal_types::emb_},
-		{"{}",  signal_types::elb_},
-		{"++",  signal_types::inc_},
-		{"--",  signal_types::dec_},
-		{":",   signal_types::pair_},
-		{"?",   signal_types::choice_},
-		{"->",  signal_types::arrow_},
-		{"..",  signal_types::error_},
+		{";", signal_types::endline_},
+		{"+", signal_types::add_},
+		{"+=", signal_types::addasi_},
+		{"-", signal_types::sub_},
+		{"-=", signal_types::subasi_},
+		{"*", signal_types::mul_},
+		{"*=", signal_types::mulasi_},
+		{"/", signal_types::div_},
+		{"/=", signal_types::divasi_},
+		{"%", signal_types::mod_},
+		{"%=", signal_types::modasi_},
+		{"^", signal_types::pow_},
+		{"^=", signal_types::powasi_},
+		{">", signal_types::abo_},
+		{"<", signal_types::und_},
+		{"=", signal_types::asi_},
+		{":=", signal_types::lnkasi_},
+		{"&", signal_types::addr_},
+		{"|", signal_types::error_},
+		{"&&", signal_types::and_},
+		{"||", signal_types::or_},
+		{"!", signal_types::not_},
+		{"==", signal_types::equ_},
+		{"!=", signal_types::neq_},
+		{">=", signal_types::aeq_},
+		{"<=", signal_types::ueq_},
+		{"(", signal_types::slb_},
+		{")", signal_types::srb_},
+		{"[", signal_types::mlb_},
+		{"]", signal_types::mrb_},
+		{"{", signal_types::llb_},
+		{"}", signal_types::lrb_},
+		{",", signal_types::com_},
+		{".", signal_types::dot_},
+		{"()", signal_types::esb_},
+		{"[]", signal_types::emb_},
+		{"{}", signal_types::elb_},
+		{"++", signal_types::inc_},
+		{"--", signal_types::dec_},
+		{":", signal_types::pair_},
+		{"?", signal_types::choice_},
+		{"->", signal_types::arrow_},
+		{"..", signal_types::error_},
 		{"...", signal_types::vargs_}
 	};
 
 	const mapping<std::string, action_types> compiler_type::action_map = {
-		{"import",    action_types::import_},
-		{"as",        action_types::as_},
-		{"package",   action_types::package_},
-		{"using",     action_types::using_},
+		{"import", action_types::import_},
+		{"as", action_types::as_},
+		{"package", action_types::package_},
+		{"using", action_types::using_},
 		{"namespace", action_types::namespace_},
-		{"struct",    action_types::struct_},
-		{"class",     action_types::struct_},
-		{"extends",   action_types::extends_},
-		{"block",     action_types::block_},
-		{"end",       action_types::endblock_},
-		{"var",       action_types::var_},
-		{"link",      action_types::link_},
-		{"constant",  action_types::constant_},
-		{"do",        action_types::do_},
-		{"if",        action_types::if_},
-		{"else",      action_types::else_},
-		{"switch",    action_types::switch_},
-		{"case",      action_types::case_},
-		{"default",   action_types::default_},
-		{"while",     action_types::while_},
-		{"until",     action_types::until_},
-		{"loop",      action_types::loop_},
-		{"for",       action_types::for_},
-		{"foreach",   action_types::foreach_},
-		{"in",        action_types::in_},
-		{"break",     action_types::break_},
-		{"continue",  action_types::continue_},
-		{"function",  action_types::function_},
-		{"override",  action_types::override_},
-		{"return",    action_types::return_},
-		{"try",       action_types::try_},
-		{"catch",     action_types::catch_},
-		{"throw",     action_types::throw_}
+		{"struct", action_types::struct_},
+		{"class", action_types::struct_},
+		{"extends", action_types::extends_},
+		{"block", action_types::block_},
+		{"end", action_types::endblock_},
+		{"var", action_types::var_},
+		{"link", action_types::link_},
+		{"constant", action_types::constant_},
+		{"do", action_types::do_},
+		{"if", action_types::if_},
+		{"else", action_types::else_},
+		{"switch", action_types::switch_},
+		{"case", action_types::case_},
+		{"default", action_types::default_},
+		{"while", action_types::while_},
+		{"until", action_types::until_},
+		{"loop", action_types::loop_},
+		{"for", action_types::for_},
+		{"foreach", action_types::foreach_},
+		{"in", action_types::in_},
+		{"break", action_types::break_},
+		{"continue", action_types::continue_},
+		{"function", action_types::function_},
+		{"override", action_types::override_},
+		{"return", action_types::return_},
+		{"try", action_types::try_},
+		{"catch", action_types::catch_},
+		{"throw", action_types::throw_}
 	};
 
 	const mapping<std::string, std::function<token_base *()>> compiler_type::reserved_map = {
-		{"and",    []() -> token_base * { return new token_signal(signal_types::and_); }},
-		{"or",     []() -> token_base * { return new token_signal(signal_types::or_); }},
-		{"not",    []() -> token_base * { return new token_signal(signal_types::not_); }},
-		{"typeid", []() -> token_base * { return new token_signal(signal_types::typeid_); }},
-		{"new",    []() -> token_base * { return new token_signal(signal_types::new_); }},
-		{"gcnew",  []() -> token_base * { return new token_signal(signal_types::gcnew_); }},
 		{
-			"local",  []() -> token_base * {
+			"and", []() -> token_base *
+			{ return new token_signal(signal_types::and_); }
+		},
+		{
+			"or", []() -> token_base *
+			{ return new token_signal(signal_types::or_); }
+		},
+		{
+			"not", []() -> token_base *
+			{ return new token_signal(signal_types::not_); }
+		},
+		{
+			"typeid", []() -> token_base *
+			{ return new token_signal(signal_types::typeid_); }
+		},
+		{
+			"new", []() -> token_base *
+			{ return new token_signal(signal_types::new_); }
+		},
+		{
+			"gcnew", []() -> token_base *
+			{ return new token_signal(signal_types::gcnew_); }
+		},
+		{
+			"local", []() -> token_base *
+			{
 				return new token_value(var::make_constant<constant_values>(constant_values::local_namepace));
 			}
 		},
 		{
-			"global", []() -> token_base * {
+			"global", []() -> token_base *
+			{
 				return new token_value(var::make_constant<constant_values>(constant_values::global_namespace));
 			}
 		},
-		{"null",   []() -> token_base * { return new token_value(null_pointer); }},
-		{"true",   []() -> token_base * { return new token_value(var::make_constant<bool>(true)); }},
-		{"false",  []() -> token_base * { return new token_value(var::make_constant<bool>(false)); }}
+		{
+			"null", []() -> token_base *
+			{ return new token_value(null_pointer); }
+		},
+		{
+			"true", []() -> token_base *
+			{ return new token_value(var::make_constant<bool>(true)); }
+		},
+		{
+			"false", []() -> token_base *
+			{ return new token_value(var::make_constant<bool>(false)); }
+		}
 	};
 
 	const mapping<char32_t, char32_t> compiler_type::escape_map = {
-		{'a',  '\a'},
-		{'b',  '\b'},
-		{'f',  '\f'},
-		{'n',  '\n'},
-		{'r',  '\r'},
-		{'t',  '\t'},
-		{'v',  '\v'},
+		{'a', '\a'},
+		{'b', '\b'},
+		{'f', '\f'},
+		{'n', '\n'},
+		{'r', '\r'},
+		{'t', '\t'},
+		{'v', '\v'},
 		{'\\', '\\'},
 		{'\'', '\''},
 		{'\"', '\"'},
-		{'0',  '\0'}
+		{'0', '\0'}
 	};
 
 	const set_t<char32_t> compiler_type::signals = {
@@ -421,48 +450,48 @@ namespace cs {
 	};
 
 	const mapping<signal_types, int> compiler_type::signal_level_map = {
-		{signal_types::add_,    10},
+		{signal_types::add_, 10},
 		{signal_types::addasi_, 1},
-		{signal_types::sub_,    10},
+		{signal_types::sub_, 10},
 		{signal_types::subasi_, 1},
-		{signal_types::mul_,    11},
+		{signal_types::mul_, 11},
 		{signal_types::mulasi_, 1},
-		{signal_types::div_,    11},
+		{signal_types::div_, 11},
 		{signal_types::divasi_, 1},
-		{signal_types::mod_,    12},
+		{signal_types::mod_, 12},
 		{signal_types::modasi_, 1},
-		{signal_types::pow_,    12},
+		{signal_types::pow_, 12},
 		{signal_types::powasi_, 1},
-		{signal_types::com_,    0},
-		{signal_types::dot_,    15},
-		{signal_types::arrow_,  15},
-		{signal_types::und_,    9},
-		{signal_types::abo_,    9},
-		{signal_types::asi_,    1},
+		{signal_types::com_, 0},
+		{signal_types::dot_, 15},
+		{signal_types::arrow_, 15},
+		{signal_types::und_, 9},
+		{signal_types::abo_, 9},
+		{signal_types::asi_, 1},
 		{signal_types::lnkasi_, 1},
 		{signal_types::choice_, 3},
-		{signal_types::pair_,   4},
-		{signal_types::equ_,    9},
-		{signal_types::ueq_,    9},
-		{signal_types::aeq_,    9},
-		{signal_types::neq_,    9},
+		{signal_types::pair_, 4},
+		{signal_types::equ_, 9},
+		{signal_types::ueq_, 9},
+		{signal_types::aeq_, 9},
+		{signal_types::neq_, 9},
 		{signal_types::lambda_, 2},
 		{signal_types::vardef_, 20},
 		{signal_types::varchk_, 20},
 		{signal_types::varprt_, 20},
-		{signal_types::or_,     6},
-		{signal_types::and_,    7},
-		{signal_types::not_,    8},
-		{signal_types::inc_,    13},
-		{signal_types::dec_,    13},
-		{signal_types::addr_,   13},
-		{signal_types::fcall_,  15},
-		{signal_types::emb_,    15},
+		{signal_types::or_, 6},
+		{signal_types::and_, 7},
+		{signal_types::not_, 8},
+		{signal_types::inc_, 13},
+		{signal_types::dec_, 13},
+		{signal_types::addr_, 13},
+		{signal_types::fcall_, 15},
+		{signal_types::emb_, 15},
 		{signal_types::access_, 15},
 		{signal_types::typeid_, 14},
-		{signal_types::new_,    14},
-		{signal_types::gcnew_,  14},
-		{signal_types::vargs_,  20}
+		{signal_types::new_, 14},
+		{signal_types::gcnew_, 14},
+		{signal_types::vargs_, 20}
 	};
 
 	const set_t<signal_types> compiler_type::signal_left_associative = {
@@ -486,7 +515,7 @@ namespace cs {
 		case token_types::expr:
 			return find_id_ref(static_cast<token_expr *>(it.data())->get_tree().root(), id);
 		case token_types::array: {
-			for (auto &tree: static_cast<token_array *>(token)->get_array()) {
+			for (auto &tree : static_cast<token_array *>(token)->get_array()) {
 				if (find_id_ref(tree.root(), id))
 					return true;
 			}
@@ -532,7 +561,7 @@ namespace cs {
 			return;
 		}
 		case token_types::array: {
-			for (auto &tree: static_cast<token_array *>(token)->get_array())
+			for (auto &tree : static_cast<token_array *>(token)->get_array())
 				trim_expression(tree, do_trim);
 			return;
 		}
@@ -594,11 +623,11 @@ namespace cs {
 					else
 						parallel_list = new token_parallel();
 					if (rptr != nullptr && rptr->get_type() == token_types::parallel)
-						for (auto &tree: static_cast<token_parallel *>(rptr)->get_parallel())
+						for (auto &tree : static_cast<token_parallel *>(rptr)->get_parallel())
 							parallel_list->get_parallel().push_back(tree);
 					else if (rptr != nullptr)
 						parallel_list->get_parallel().emplace_back(it.right());
-					for (auto &lst: parallel_list->get_parallel())
+					for (auto &lst : parallel_list->get_parallel())
 						trim_expr(lst, lst.root(), do_trim);
 					it.data() = parallel_list;
 				}
@@ -698,13 +727,13 @@ namespace cs {
 					throw compile_error("Wrong grammar for lambda expression.");
 				std::vector<std::string> args;
 				bool is_vargs = false;
-				for (auto &item: static_cast<token_arglist *>(lptr)->get_arglist()) {
+				for (auto &item : static_cast<token_arglist *>(lptr)->get_arglist()) {
 					if (item.root().data() == nullptr)
 						throw internal_error("Null pointer accessed.");
 					try_fix_this_deduction(item.root());
 					if (item.root().data()->get_type() == token_types::id) {
 						const std::string &str = static_cast<token_id *>(item.root().data())->get_id();
-						for (auto &it: args)
+						for (auto &it : args)
 							if (it == str)
 								throw compile_error("Redefinition of function argument.");
 						args.push_back(str);
@@ -723,7 +752,7 @@ namespace cs {
 				if (!is_vargs && find_self_ref) {
 					std::vector<std::string> new_args{"self"};
 					new_args.reserve(args.size());
-					for (auto &name: args) {
+					for (auto &name : args) {
 						if (name != "self")
 							new_args.emplace_back(std::move(name));
 						else
@@ -734,15 +763,15 @@ namespace cs {
 				statement_base *ret = new statement_return(tree_type<token_base *>(it.right()), context,
 				    new token_endline(token->get_line_num()));
 #ifdef CS_DEBUGGER
-				std::string decl="function [lambda](";
-				if(args.size()!=0) {
-					for(auto& it:args)
-						decl+=it+", ";
+				std::string decl = "function [lambda](";
+				if (args.size() != 0) {
+					for (auto &it : args)
+						decl += it + ", ";
 					decl.pop_back();
-					decl[decl.size()-1]=')';
+					decl[decl.size() - 1] = ')';
 				}
 				else
-					decl+=")";
+					decl += ")";
 				function func(context, decl, ret, args, std::deque<statement_base *> {ret}, is_vargs, true);
 #else
 				function func(context, args, std::deque<statement_base *> {ret}, is_vargs, true);
@@ -750,7 +779,7 @@ namespace cs {
 				if (find_self_ref) {
 					var lambda = var::make<object_method>(var(), var::make_protect<callable>(func));
 					lambda.val<object_method>().object = lambda;
-					lambda.protect();
+					lambda.mark_protect();
 					it.data() = new_value(lambda);
 				}
 				else
@@ -778,7 +807,7 @@ namespace cs {
 		case token_types::id: {
 			var value = context->instance->storage.get_var_optimizable(static_cast<token_id *>(token)->get_id());
 			if (value.usable() && value.is_protect()) {
-				if (do_optm == optm_type::enable_namespace_optm || value.type() != typeid(namespace_t) ||
+				if (do_optm == optm_type::enable_namespace_optm || !value.is_type_of<namespace_t>() ||
 				        !value.const_val<namespace_t>()->get_domain().exist("__PRAGMA_CS_NAMESPACE_DEFINITION__"))
 					it.data() = new_value(value);
 			}
@@ -802,7 +831,7 @@ namespace cs {
 		}
 		case token_types::array: {
 			token_base *ptr = nullptr;
-			for (auto &tree: static_cast<token_array *>(token)->get_array()) {
+			for (auto &tree : static_cast<token_array *>(token)->get_array()) {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 					auto &child_tree = static_cast<token_expand *>(ptr)->get_tree();
@@ -819,18 +848,19 @@ namespace cs {
 			token_base *oldt = it.data();
 			try {
 				array arr;
-				for (auto &tree: static_cast<token_array *>(token)->get_array()) {
+				for (auto &tree : static_cast<token_array *>(token)->get_array()) {
 					ptr = tree.root().data();
 					if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 						const auto &child_arr = context->instance->parse_expr(
-						                            static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
-						for (auto &it: child_arr)
+						                            static_cast<token_expand *>(ptr)->get_tree().root())
+						                        .const_val<array>();
+						for (auto &it : child_arr)
 							arr.push_back(copy(it));
 					}
 					else
 						arr.push_back(copy(context->instance->parse_expr(tree.root())));
 				}
-				for (auto &it: arr)
+				for (auto &it : arr)
 					add_constant(it);
 				it.data() = new_value(var::make<array>(std::move(arr)));
 			}
@@ -840,7 +870,7 @@ namespace cs {
 			return;
 		}
 		case token_types::parallel: {
-			for (auto &tree: static_cast<token_parallel *>(token)->get_parallel())
+			for (auto &tree : static_cast<token_parallel *>(token)->get_parallel())
 				optimize_expression(tree, do_optm);
 			return;
 		}
@@ -873,7 +903,7 @@ namespace cs {
 				opt_expr(tree, it.right().right(), do_optm);
 				token_value *val = dynamic_cast<token_value *>(it.left().data());
 				if (val != nullptr) {
-					if (val->get_value().type() == typeid(boolean)) {
+					if (val->get_value().is_type_of<boolean>()) {
 						if (val->get_value().const_val<boolean>())
 							tree.reserve_left(it.right());
 						else
@@ -923,9 +953,9 @@ namespace cs {
 					throw compile_error("Wrong syntax for function call.");
 				if (lptr->get_type() == token_types::value) {
 					var &a = static_cast<token_value *>(lptr)->get_value();
-					if (a.type() == typeid(callable) && a.const_val<callable>().is_request_fold()) {
+					if (a.is_type_of<callable>() && a.const_val<callable>().is_request_fold()) {
 						token_base *ptr = nullptr;
-						for (auto &tree: static_cast<token_arglist *>(rptr)->get_arglist()) {
+						for (auto &tree : static_cast<token_arglist *>(rptr)->get_arglist()) {
 							ptr = tree.root().data();
 							if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 								if (!optimizable(static_cast<token_expand *>(ptr)->get_tree().root()))
@@ -940,12 +970,13 @@ namespace cs {
 						try {
 							vector args;
 							args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
-							for (auto &tree: static_cast<token_arglist *>(rptr)->get_arglist()) {
+							for (auto &tree : static_cast<token_arglist *>(rptr)->get_arglist()) {
 								ptr = tree.root().data();
 								if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 									const auto &arr = context->instance->parse_expr(
-									                      static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
-									for (auto &it: arr)
+									                      static_cast<token_expand *>(ptr)->get_tree().root())
+									                  .const_val<array>();
+									for (auto &it : arr)
 										args.push_back(lvalue(it));
 								}
 								else
@@ -957,10 +988,10 @@ namespace cs {
 							it.data() = oldt;
 						}
 					}
-					else if (a.type() == typeid(object_method) &&
+					else if (a.is_type_of<object_method>() &&
 					         a.const_val<object_method>().is_request_fold) {
 						token_base *ptr = nullptr;
-						for (auto &tree: static_cast<token_arglist *>(rptr)->get_arglist()) {
+						for (auto &tree : static_cast<token_arglist *>(rptr)->get_arglist()) {
 							ptr = tree.root().data();
 							if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 								if (!optimizable(static_cast<token_expand *>(ptr)->get_tree().root()))
@@ -976,12 +1007,13 @@ namespace cs {
 							const auto &om = a.const_val<object_method>();
 							vector args{om.object};
 							args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
-							for (auto &tree: static_cast<token_arglist *>(rptr)->get_arglist()) {
+							for (auto &tree : static_cast<token_arglist *>(rptr)->get_arglist()) {
 								ptr = tree.root().data();
 								if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 									const auto &arr = context->instance->parse_expr(
-									                      static_cast<token_expand *>(ptr)->get_tree().root()).const_val<array>();
-									for (auto &it: arr)
+									                      static_cast<token_expand *>(ptr)->get_tree().root())
+									                  .const_val<array>();
+									for (auto &it : arr)
 										args.push_back(lvalue(it));
 								}
 								else
@@ -1005,10 +1037,8 @@ namespace cs {
 			token_base *oldt = it.data();
 			try {
 				token_value *token = new_value(context->instance->parse_expr(it));
-				tree.
-				erase_left(it);
-				tree.
-				erase_right(it);
+				tree.erase_left(it);
+				tree.erase_right(it);
 				it.data() = token;
 			}
 			catch (...) {
@@ -1078,7 +1108,7 @@ namespace cs {
 			return;
 		csym.file = match.str(1);
 		std::string map_str = match.str(2);
-		for (auto &ch: map_str) {
+		for (auto &ch : map_str) {
 			if (ch == ',') {
 				if (!buff.empty()) {
 					if (buff != "-")
@@ -1128,12 +1158,12 @@ namespace cs {
 
 	void translator_type::match_grammar(const context_t &context, std::deque<token_base *> &raw)
 	{
-		for (auto &dat: m_data) {
+		for (auto &dat : m_data) {
 			bool matched = false;
 			{
 				bool failed = false, skip_useless = false;
 				std::size_t i = 0;
-				for (auto &it: dat->first) {
+				for (auto &it : dat->first) {
 					switch (it->get_type()) {
 					default:
 						break;
@@ -1191,7 +1221,7 @@ namespace cs {
 				// If matched, find and replace all id token with correspondent action token.
 				bool skip_useless = false;
 				std::size_t i = 0;
-				for (auto &it: dat->first) {
+				for (auto &it : dat->first) {
 					switch (it->get_type()) {
 					default:
 						break;
@@ -1236,7 +1266,7 @@ namespace cs {
 		std::size_t method_line_num = 0, line_num = 0;
 		std::deque<std::deque<token_base *>> tmp;
 		stack_type<method_base *> methods;
-		for (auto &it: lines) {
+		for (auto &it : lines) {
 			std::deque<token_base *> line = it;
 			line_num = static_cast<token_endline *>(line.back())->get_line_num();
 			try {
@@ -1316,4 +1346,4 @@ namespace cs {
 		if (!methods.empty())
 			throw compile_error("Lack of the \"end\" signal.");
 	}
-}
+} // namespace cs

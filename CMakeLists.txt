@@ -2,6 +2,21 @@ cmake_minimum_required(VERSION 3.13)
 
 project(covscript)
 
+# Profiling
+option(CS_ENABLE_PROFILING "Enable profiling support" OFF)
+
+# Align SVO on different cache line
+option(CS_VAR_SVO_ALIGN "Custom SVO alignment (set > 0 to enable)" 0)
+
+# Force use heap allocator
+option(CS_DISABLE_VAR_SVO "Force heap allocator" OFF)
+
+# Aggressive optimization (force inline, etc.)
+option(CS_AGGRESSIVE_OPTIMIZE "Enable aggressive optimizations" OFF)
+
+# Use STL containers instead of custom high-performance
+option(CS_COMPATIBILITY_MODE "Enable compatible mode" OFF)
+
 # Compiler Options
 set(CMAKE_CXX_STANDARD 14)
 
@@ -18,12 +33,33 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --static")
     elseif (UNIX AND NOT APPLE)
         # Linux
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-plt")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto=8 -fno-plt")
     elseif (APPLE)
         # macOS
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
+        set(CS_AGGRESSIVE_OPTIMIZE ON CACHE BOOL "Enable aggressive optimizations" FORCE)
     endif ()
 endif ()
+
+if(CS_ENABLE_PROFILING)
+    message("CovScript: Enable Profiling Support")
+    add_compile_definitions(CS_ENABLE_PROFILING)
+endif()
+
+if(CS_VAR_SVO_ALIGN GREATER 0)
+    message("CovScript: Custom SVO Alignment = ${CS_VAR_SVO_ALIGN}")
+    add_compile_definitions(CS_VAR_SVO_ALIGN=${CS_VAR_SVO_ALIGN})
+endif()
+
+if(CS_DISABLE_VAR_SVO)
+    message("CovScript: Force Heap Allocator")
+    add_compile_definitions(CS_DISABLE_VAR_SVO)
+endif()
+
+if(CS_AGGRESSIVE_OPTIMIZE)
+    message("CovScript: Enable Aggressive Optimizations")
+    add_compile_definitions(CS_AGGRESSIVE_OPTIMIZE)
+endif()
 
 if (CS_COMPATIBILITY_MODE)
     message("CovScript: Configuring Compatibility Mode")

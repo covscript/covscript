@@ -1,29 +1,29 @@
 #pragma once
 /*
-* Covariant Script Definition
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script Definition
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 
 // OS Detection
 
@@ -71,22 +71,6 @@
 #ifndef COVSCRIPT_PLATFORM_HOME
 #error COVSCRIPT_PLATFORM_HOME not defined. Can not detect automatically.
 #endif
-#endif
-
-// Compiler Detection
-
-#if defined(__clang__)
-#define COVSCRIPT_COMPILER_CLANG
-#define COVSCRIPT_COMPILER_SIMPLE_NAME "clang"
-#elif defined(__GNUC__)
-#define COVSCRIPT_COMPILER_GNUC
-#define COVSCRIPT_COMPILER_SIMPLE_NAME "gcc"
-#elif defined(_MSC_VER)
-#define COVSCRIPT_COMPILER_MSVC
-#define COVSCRIPT_COMPILER_SIMPLE_NAME "msvc"
-#else
-#define COVSCRIPT_COMPILER_UNKNOWN
-#define COVSCRIPT_COMPILER_SIMPLE_NAME "unknown"
 #endif
 
 // MinGW suffix
@@ -160,7 +144,7 @@ namespace cs_impl {
 	class any;
 
 	class cni;
-}
+} // namespace cs_impl
 namespace cs {
 	class compiler_type;
 
@@ -183,11 +167,15 @@ namespace cs {
 	class name_space;
 
 #ifndef CS_COMPATIBILITY_MODE
-	template<typename _kT, typename _vT> using map_t = phmap::flat_hash_map<_kT, _vT>;
-	template<typename _Tp> using set_t = phmap::flat_hash_set<_Tp>;
+	template <typename _kT, typename _vT>
+	using map_t = phmap::flat_hash_map<_kT, _vT>;
+	template <typename _Tp>
+	using set_t = phmap::flat_hash_set<_Tp>;
 #else
-	template<typename _kT, typename _vT> using map_t = std::unordered_map<_kT, _vT>;
-	template<typename _Tp> using set_t = std::unordered_set<_Tp>;
+	template <typename _kT, typename _vT>
+	using map_t = std::unordered_map<_kT, _vT>;
+	template <typename _Tp>
+	using set_t = std::unordered_set<_Tp>;
 #endif
 	using var = cs_impl::any;
 	using boolean = bool;
@@ -212,9 +200,9 @@ namespace cs {
 // Compatible declaration since 210503
 	using number = numeric_float;
 
-	typedef void(*cs_exception_handler)(const lang_error &);
+	typedef void (*cs_exception_handler)(const lang_error &);
 
-	typedef void(*std_exception_handler)(const std::exception &);
+	typedef void (*std_exception_handler)(const std::exception &);
 
 // Path seperator and delimiter
 #ifdef COVSCRIPT_PLATFORM_WIN32
@@ -240,14 +228,14 @@ namespace cs {
 	    "of the People's Republic of China(Registration Number: 2020SR0408026)\n"
 	    "and is protected by the Copyright Law of the People's Republic of China.\n"
 	    "\nPlease visit http://covscript.org.cn for more information.";
-}
+} // namespace cs
 
 // Debugger Hooks
 
 #ifdef CS_DEBUGGER
-void cs_debugger_step_callback(cs::statement_base*);
-void cs_debugger_func_breakpoint(const std::string&, const cs::var&);
-void cs_debugger_func_callback(const std::string&, cs::statement_base*);
+void cs_debugger_step_callback(cs::statement_base *);
+void cs_debugger_func_breakpoint(const std::string &, const cs::var &);
+void cs_debugger_func_callback(const std::string &, cs::statement_base *);
 #define CS_DEBUGGER_STEP(STMT) cs_debugger_step_callback(STMT)
 #else
 #define CS_DEBUGGER_STEP(STMT)

@@ -1,5 +1,4 @@
 #include "./resources.rc"
 
 A ICON
-"../docs/covariant_script_interpreter.ico"
-MY_VERSION_INFO_APP("Covariant Script Interpreter", "cs")
+"../docs/covariant_script_interpreter.ico" MY_VERSION_INFO_APP("Covariant Script Interpreter", "cs")

@@ -1,39 +1,34 @@
 /*
-* Covariant Script Runtime
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script Runtime
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 #include <covscript/impl/runtime.hpp>
 
 namespace cs {
 	var runtime_type::parse_add(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
-			return a.const_val<numeric>() + b.const_val<numeric>();
-		else if (a.type() == typeid(string) && b.usable())
-			return var::make<std::string>(a.const_val<string>() + b.to_string());
-		else
-			throw runtime_error("Unsupported operator operations(Add).");
+		return a + b;
 	}
 
 	var runtime_type::parse_addasi(var a, const var &b)
@@ -44,10 +39,7 @@ namespace cs {
 
 	var runtime_type::parse_sub(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
-			return a.const_val<numeric>() - b.const_val<numeric>();
-		else
-			throw runtime_error("Unsupported operator operations(Sub).");
+		return a - b;
 	}
 
 	var runtime_type::parse_subasi(var a, const var &b)
@@ -58,18 +50,12 @@ namespace cs {
 
 	var runtime_type::parse_minus(const var &b)
 	{
-		if (b.type() == typeid(numeric))
-			return -b.const_val<numeric>();
-		else
-			throw runtime_error("Unsupported operator operations(Minus).");
+		return -b;
 	}
 
 	var runtime_type::parse_mul(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
-			return a.const_val<numeric>() * b.const_val<numeric>();
-		else
-			throw runtime_error("Unsupported operator operations(Mul).");
+		return a * b;
 	}
 
 	var runtime_type::parse_mulasi(var a, const var &b)
@@ -80,23 +66,12 @@ namespace cs {
 
 	var runtime_type::parse_escape(const var &b)
 	{
-		if (b.type() == typeid(pointer)) {
-			const auto &ptr = b.const_val<pointer>();
-			if (ptr.data.usable())
-				return ptr.data;
-			else
-				throw runtime_error("Escape from null pointer.");
-		}
-		else
-			throw runtime_error("Unsupported operator operations(Escape).");
+		return *b;
 	}
 
 	var runtime_type::parse_div(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
-			return a.const_val<numeric>() / b.const_val<numeric>();
-		else
-			throw runtime_error("Unsupported operator operations(Div).");
+		return a / b;
 	}
 
 	var runtime_type::parse_divasi(var a, const var &b)
@@ -107,10 +82,7 @@ namespace cs {
 
 	var runtime_type::parse_mod(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
-			return numeric(std::fmod(a.const_val<numeric>().as_float(), b.const_val<numeric>().as_float()));
-		else
-			throw runtime_error("Unsupported operator operations(Mod).");
+		return a % b;
 	}
 
 	var runtime_type::parse_modasi(var a, const var &b)
@@ -121,10 +93,7 @@ namespace cs {
 
 	var runtime_type::parse_pow(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
-			return numeric(std::pow(a.const_val<numeric>().as_float(), b.const_val<numeric>().as_float()));
-		else
-			throw runtime_error("Unsupported operator operations(Pow).");
+		return a ^ b;
 	}
 
 	var runtime_type::parse_powasi(var a, const var &b)
@@ -135,7 +104,7 @@ namespace cs {
 
 	var &runtime_type::parse_dot_lhs(const var &a, token_base *b)
 	{
-		if (a.type() == typeid(constant_values)) {
+		if (a.is_type_of<constant_values>()) {
 			switch (a.const_val<constant_values>()) {
 			case constant_values::global_namespace:
 				return storage.get_var_global(static_cast<token_id *>(b)->get_id());
@@ -145,42 +114,30 @@ namespace cs {
 				throw runtime_error("Unknown scope tag.");
 			}
 		}
-		else if (a.type() == typeid(namespace_t))
+		else if (a.is_type_of<namespace_t>())
 			return a.val<namespace_t>()->get_var(static_cast<token_id *>(b)->get_id());
-		else if (a.type() == typeid(type_t))
+		else if (a.is_type_of<type_t>())
 			return a.const_val<type_t>().get_var(static_cast<token_id *>(b)->get_id());
-		else if (a.type() == typeid(structure)) {
+		else if (a.is_type_of<structure>()) {
 			var &val = a.val<structure>().get_var(static_cast<token_id *>(b)->get_id());
-			if (val.type() != typeid(callable) || !val.const_val<callable>().is_member_fn())
+			if (!val.is_type_of<callable>() || !val.const_val<callable>().is_member_fn())
 				return val;
 			else
 				throw runtime_error("Can not visit member function as lvalue.");
 		}
 		else {
 			try {
-				var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
-				if (val.type() == typeid(callable))
-					throw runtime_error("Can not visit member function as lvalue.");
-				else
-					return val;
+				return a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
 			}
 			catch (...) {
-				if (a.type() == typeid(hash_map)) {
-					auto &cmap = a.val<hash_map>();
-					const string &str = static_cast<token_id *>(b)->get_id().get_id();
-					if (cmap.count(str) == 0)
-						throw runtime_error(std::string("Key \"") + str + "\" does not exist.");
-					return cmap.at(str);
-				}
-				else
-					throw;
+				return a.access_ref(static_cast<token_id *>(b)->get_id());
 			}
 		}
 	}
 
 	var runtime_type::parse_dot(const var &a, token_base *b)
 	{
-		if (a.type() == typeid(constant_values)) {
+		if (a.is_type_of<constant_values>()) {
 			switch (a.const_val<constant_values>()) {
 			case constant_values::global_namespace:
 				return storage.get_var_global(static_cast<token_id *>(b)->get_id());
@@ -190,13 +147,13 @@ namespace cs {
 				throw runtime_error("Unknown scope tag.");
 			}
 		}
-		else if (a.type() == typeid(namespace_t))
+		else if (a.is_type_of<namespace_t>())
 			return a.val<namespace_t>()->get_var(static_cast<token_id *>(b)->get_id());
-		else if (a.type() == typeid(type_t))
+		else if (a.is_type_of<type_t>())
 			return a.const_val<type_t>().get_var(static_cast<token_id *>(b)->get_id());
-		else if (a.type() == typeid(structure)) {
+		else if (a.is_type_of<structure>()) {
 			var &val = a.val<structure>().get_var(static_cast<token_id *>(b)->get_id());
-			if (val.type() == typeid(callable) && val.const_val<callable>().is_member_fn())
+			if (val.is_type_of<callable>() && val.const_val<callable>().is_member_fn())
 				return var::make_protect<object_method>(a, val);
 			else
 				return val;
@@ -204,7 +161,7 @@ namespace cs {
 		else {
 			try {
 				var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
-				if (val.type() == typeid(callable)) {
+				if (val.is_type_of<callable>()) {
 					const callable &func = val.const_val<callable>();
 					switch (func.type()) {
 					case callable::types::member_visitor: {
@@ -212,7 +169,7 @@ namespace cs {
 						return func.call(args);
 					}
 					case callable::types::force_regular:
-						throw runtime_error("Cannot call regular function as member function.");
+						return val;
 					default:
 						return var::make_protect<object_method>(a, val, func.is_request_fold());
 					}
@@ -221,32 +178,21 @@ namespace cs {
 					return val;
 			}
 			catch (...) {
-				if (a.type() == typeid(hash_map)) {
-					const auto &cmap = a.const_val<hash_map>();
-					const string &str = static_cast<token_id *>(b)->get_id().get_id();
-					if (cmap.count(str) == 0)
-						throw runtime_error(std::string("Key \"") + str + "\" does not exist.");
-					return cmap.at(str);
-				}
-				else
-					throw;
+				return a.access(static_cast<token_id *>(b)->get_id());
 			}
 		}
 	}
 
 	var runtime_type::parse_arrow(const var &a, token_base *b)
 	{
-		if (a.type() == typeid(pointer))
-			return parse_dot(a.const_val<pointer>().data, b);
-		else
-			throw runtime_error("Unsupported operator operations(Arraw).");
+		return parse_dot(*a, b);
 	}
 
 	var runtime_type::parse_typeid(const var &b)
 	{
-		if (b.type() == typeid(type_t))
+		if (b.is_type_of<type_t>())
 			return b.const_val<type_t>().id;
-		else if (b.type() == typeid(structure))
+		else if (b.is_type_of<structure>())
 			return b.const_val<structure>().get_id();
 		else
 			return var::make<type_id>(b.type());
@@ -254,7 +200,7 @@ namespace cs {
 
 	var runtime_type::parse_new(const var &b)
 	{
-		if (b.type() == typeid(type_t))
+		if (b.is_type_of<type_t>())
 			return b.const_val<type_t>().constructor();
 		else
 			throw runtime_error("Unsupported operator operations(New).");
@@ -262,7 +208,7 @@ namespace cs {
 
 	var runtime_type::parse_gcnew(const var &b)
 	{
-		if (b.type() == typeid(type_t))
+		if (b.is_type_of<type_t>())
 			return var::make<pointer>(b.const_val<type_t>().constructor());
 		else
 			throw runtime_error("Unsupported operator operations(GcNew).");
@@ -270,42 +216,22 @@ namespace cs {
 
 	var runtime_type::parse_und(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
-			return boolean(a.const_val<numeric>() < b.const_val<numeric>());
-		else if (a.type() == typeid(string) && b.type() == typeid(string))
-			return boolean(a.const_val<string>() < b.const_val<string>());
-		else
-			throw runtime_error("Unsupported operator operations(Und).");
+		return a < b;
 	}
 
 	var runtime_type::parse_abo(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
-			return boolean(a.const_val<numeric>() > b.const_val<numeric>());
-		else if (a.type() == typeid(string) && b.type() == typeid(string))
-			return boolean(a.const_val<string>() > b.const_val<string>());
-		else
-			throw runtime_error("Unsupported operator operations(Abo).");
+		return a > b;
 	}
 
 	var runtime_type::parse_ueq(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
-			return boolean(a.const_val<numeric>() <= b.const_val<numeric>());
-		else if (a.type() == typeid(string) && b.type() == typeid(string))
-			return boolean(a.const_val<string>() <= b.const_val<string>());
-		else
-			throw runtime_error("Unsupported operator operations(Ueq).");
+		return a <= b;
 	}
 
 	var runtime_type::parse_aeq(const var &a, const var &b)
 	{
-		if (a.type() == typeid(numeric) && b.type() == typeid(numeric))
-			return boolean(a.const_val<numeric>() >= b.const_val<numeric>());
-		else if (a.type() == typeid(string) && b.type() == typeid(string))
-			return boolean(a.const_val<string>() >= b.const_val<string>());
-		else
-			throw runtime_error("Unsupported operator operations(Aeq).");
+		return a >= b;
 	}
 
 	var runtime_type::parse_asi(var a, const var &b)
@@ -341,7 +267,7 @@ namespace cs {
 
 	var runtime_type::parse_bind(token_base *a, const var &b)
 	{
-		if (b.type() != typeid(array))
+		if (!b.is_type_of<array>())
 			throw runtime_error("Only support structured binding with array.");
 		auto &pl = static_cast<token_parallel *>(a)->get_parallel();
 		auto &arr = b.const_val<array>();
@@ -358,7 +284,7 @@ namespace cs {
 
 	var runtime_type::parse_choice(const var &a, const tree_type<token_base *>::iterator &b)
 	{
-		if (a.type() == typeid(boolean)) {
+		if (a.is_type_of<boolean>()) {
 			if (a.const_val<boolean>())
 				return parse_expr(b.left());
 			else
@@ -370,7 +296,7 @@ namespace cs {
 
 	var runtime_type::parse_pair(const var &a, const var &b)
 	{
-		if (a.type() != typeid(pair) && b.type() != typeid(pair))
+		if (!a.is_type_of<pair>() && !b.is_type_of<pair>())
 			return var::make<pair>(copy(a), copy(b));
 		else
 			throw runtime_error("Unsupported operator operations(Pair).");
@@ -386,8 +312,7 @@ namespace cs {
 		return boolean(!a.compare(b));
 	}
 
-	var
-	runtime_type::parse_and(const tree_type<token_base *>::iterator &a, const tree_type<token_base *>::iterator &b)
+	var runtime_type::parse_and(const tree_type<token_base *>::iterator &a, const tree_type<token_base *>::iterator &b)
 	{
 		return var::make<boolean>(parse_expr(a).const_val<boolean>() && parse_expr(b).const_val<boolean>());
 	}
@@ -399,7 +324,7 @@ namespace cs {
 
 	var runtime_type::parse_not(const var &b)
 	{
-		if (b.type() == typeid(boolean))
+		if (b.is_type_of<boolean>())
 			return boolean(!b.const_val<boolean>());
 		else
 			throw runtime_error("Unsupported operator operations(Not).");
@@ -410,14 +335,19 @@ namespace cs {
 		if (a.usable()) {
 			if (b.usable())
 				throw runtime_error("Unsupported operator operations(Inc).");
-			else
+			else if (a.is_type_of<numeric>())
 				return a.val<numeric>()++;
+			else {
+				var oldt = copy(a);
+				++a;
+				return oldt;
+			}
 		}
 		else {
 			if (!b.usable())
 				throw runtime_error("Unsupported operator operations(Inc).");
 			else
-				return ++b.val<numeric>();
+				return ++b;
 		}
 	}
 
@@ -426,14 +356,19 @@ namespace cs {
 		if (a.usable()) {
 			if (b.usable())
 				throw runtime_error("Unsupported operator operations(Dec).");
-			else
+			else if (a.is_type_of<numeric>())
 				return a.val<numeric>()--;
+			else {
+				var oldt = copy(a);
+				--a;
+				return oldt;
+			}
 		}
 		else {
 			if (!b.usable())
 				throw runtime_error("Unsupported operator operations(Dec).");
 			else
-				return --b.val<numeric>();
+				return --b;
 		}
 	}
 
@@ -444,116 +379,32 @@ namespace cs {
 
 	var runtime_type::parse_fcall(const var &a, token_base *b)
 	{
-		if (a.type() == typeid(callable)) {
-			vector args;
-			token_base *ptr = nullptr;
-			args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
-			for (auto &tree: static_cast<token_arglist *>(b)->get_arglist()) {
-				ptr = tree.root().data();
-				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
-					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
-					const auto &arr = val.const_val<array>();
-					for (auto &it: arr)
-						args.push_back(lvalue(it));
-				}
-				else
-					args.push_back(lvalue(parse_expr(tree.root())));
+		vector args;
+		token_base *ptr = nullptr;
+		args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
+		a.prep_call(args);
+		for (auto &tree : static_cast<token_arglist *>(b)->get_arglist()) {
+			ptr = tree.root().data();
+			if (ptr != nullptr && ptr->get_type() == token_types::expand) {
+				var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
+				const auto &arr = val.const_val<array>();
+				for (auto &it : arr)
+					args.push_back(lvalue(it));
 			}
-			return a.const_val<callable>().call(args);
+			else
+				args.push_back(lvalue(parse_expr(tree.root())));
 		}
-		else if (a.type() == typeid(object_method)) {
-			const auto &om = a.const_val<object_method>();
-			vector args{om.object};
-			token_base *ptr = nullptr;
-			args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
-			for (auto &tree: static_cast<token_arglist *>(b)->get_arglist()) {
-				ptr = tree.root().data();
-				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
-					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
-					const auto &arr = val.const_val<array>();
-					for (auto &it: arr)
-						args.push_back(lvalue(it));
-				}
-				else
-					args.push_back(lvalue(parse_expr(tree.root())));
-			}
-			return om.callable.const_val<callable>().call(args);
-		}
-		else
-			throw runtime_error("Unsupported operator operations(Fcall).");
+		return a.fcall(args);
 	}
 
 	var &runtime_type::parse_access_lhs(const var &a, const var &b)
 	{
-		if (a.type() == typeid(array)) {
-			if (b.type() != typeid(numeric))
-				throw runtime_error("Index must be a numeric.");
-			auto &arr = a.val<array>();
-			std::size_t posit = 0;
-			if (b.const_val<numeric>() >= 0) {
-				posit = b.const_val<numeric>().as_integer();
-				if (posit >= arr.size()) {
-					arr.resize(posit, numeric(0));
-				}
-			}
-			else {
-				if (-b.const_val<numeric>() > arr.size())
-					throw runtime_error("Out of range.");
-				posit = arr.size() + b.const_val<numeric>().as_integer();
-			}
-			return arr[posit];
-		}
-		else if (a.type() == typeid(hash_map)) {
-			auto &map = a.val<hash_map>();
-			auto it = map.find(b);
-			if (it == map.end())
-				it = map.emplace(copy(b), numeric(0)).first;
-			return it->second;
-		}
-		else if (a.type() == typeid(string))
-			throw runtime_error("Access string object as lvalue.");
-		else
-			throw runtime_error("Access non-array or string object.");
+		return a.index_ref(b);
 	}
 
 	var runtime_type::parse_access(const var &a, const var &b)
 	{
-		if (a.type() == typeid(array)) {
-			if (b.type() != typeid(numeric))
-				throw runtime_error("Index must be a numeric.");
-			const auto &carr = a.const_val<array>();
-			std::size_t posit = 0;
-			if (b.const_val<numeric>() >= 0) {
-				posit = b.const_val<numeric>().as_integer();
-				if (posit >= carr.size()) {
-					a.val<array>().resize(posit + 1, numeric(0));
-				}
-			}
-			else {
-				if (-b.const_val<numeric>() > carr.size())
-					throw runtime_error("Out of range.");
-				posit = carr.size() + b.const_val<numeric>().as_integer();
-			}
-			return carr[posit];
-		}
-		else if (a.type() == typeid(hash_map)) {
-			const auto &cmap = a.const_val<hash_map>();
-			auto it = cmap.find(b);
-			if (it == cmap.end())
-				it = a.val<hash_map>().emplace(copy(b), numeric(0)).first;
-			return it->second;
-		}
-		else if (a.type() == typeid(string)) {
-			if (b.type() != typeid(numeric))
-				throw runtime_error("Index must be a numeric.");
-			const auto &cstr = a.const_val<string>();
-			if (b.const_val<numeric>() >= 0)
-				return var::make_constant<char>(cstr[b.const_val<numeric>().as_integer()]);
-			else
-				return var::make_constant<char>(cstr[cstr.size() + b.const_val<numeric>().as_integer()]);
-		}
-		else
-			throw runtime_error("Access non-array or string object.");
+		return a.index(b);
 	}
 
 	var runtime_type::parse_expr(const tree_type<token_base *>::iterator &it, bool disable_parallel)
@@ -588,12 +439,12 @@ namespace cs {
 		case token_types::array: {
 			array arr;
 			token_base *ptr = nullptr;
-			for (auto &tree: static_cast<token_array *>(token)->get_array()) {
+			for (auto &tree : static_cast<token_array *>(token)->get_array()) {
 				ptr = tree.root().data();
 				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
 					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
 					const auto &child_arr = val.const_val<array>();
-					for (auto &it: child_arr)
+					for (auto &it : child_arr)
 						arr.push_back(copy(it));
 				}
 				else
@@ -605,7 +456,7 @@ namespace cs {
 			if (disable_parallel)
 				throw runtime_error("Do not allowed parallel list.");
 			var result;
-			for (auto &tree: static_cast<token_parallel *>(token)->get_parallel())
+			for (auto &tree : static_cast<token_parallel *>(token)->get_parallel())
 				result = parse_expr(tree.root());
 			return result;
 		}
@@ -732,4 +583,4 @@ namespace cs {
 		}
 		throw internal_error("Unrecognized expression.");
 	}
-}
+} // namespace cs

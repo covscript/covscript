@@ -14,7 +14,7 @@ struct cs_impl::type_conversion_cs<wrapper> {
 
 template <>
 struct cs_impl::type_convertor<cs::numeric, wrapper> {
-	inline static wrapper convert(const cs::numeric &num)
+	static inline wrapper convert(const cs::numeric &num)
 	{
 		return wrapper(num.as_integer());
 	}

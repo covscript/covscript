@@ -1,28 +1,28 @@
 /*
-* Covariant Script Programming Language Debugger
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script Programming Language Debugger
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 #define CS_DEBUGGER
 
 #include <covscript_impl/variant.hpp>
@@ -151,15 +151,17 @@ class breakpoint_recorder final {
 		std::size_t id = 0;
 		variant_impl::variant<std::size_t, std::string, cs::var> data;
 
-		template<typename T>
-		breakpoint(std::size_t _id, T &&_data):id(_id), data(std::forward<T>(_data)) {}
+		template <typename T>
+		breakpoint(std::size_t _id, T &&_data) : id(_id), data(std::forward<T>(_data))
+		{
+		}
 	};
 
 	static std::size_t m_id;
 	std::forward_list<breakpoint> m_breakpoints;
 	cs::map_t<std::string, std::pair<std::size_t, bool>> m_pending;
-public:
 
+public:
 	breakpoint_recorder() = default;
 
 	std::size_t add_line(std::size_t line_num)
@@ -196,7 +198,7 @@ public:
 			target.target<cs::function>()->set_debugger_state(true);
 			auto key = m_pending.find(name);
 			if (key->second.second) {
-				for (auto &it: m_breakpoints) {
+				for (auto &it : m_breakpoints) {
 					if (it.id == key->second.first) {
 						it.data.emplace<cs::var>(function);
 						key->second.second = false;
@@ -215,8 +217,7 @@ public:
 				    false);
 			else if (b.id == id && b.data.type() == typeid(std::string))
 				m_pending.erase(m_pending.find(b.data.get<std::string>()));
-			return b.id == id;
-		});
+			return b.id == id; });
 		auto it = m_pending.begin();
 		for (; it != m_pending.end(); ++it)
 			if (it->second.first == id)
@@ -227,7 +228,7 @@ public:
 
 	bool exist(std::size_t line_num) const
 	{
-		for (auto &b: m_breakpoints)
+		for (auto &b : m_breakpoints)
 			if (b.data.type() == typeid(std::size_t) && b.data.get<std::size_t>() == line_num)
 				return true;
 		return false;
@@ -235,8 +236,9 @@ public:
 
 	void list() const
 	{
-		std::cout << "ID\tBreakpoint\n" << std::endl;
-		for (auto &b: m_breakpoints) {
+		std::cout << "ID\tBreakpoint\n"
+		          << std::endl;
+		for (auto &b : m_breakpoints) {
 			std::cout << b.id << "\t";
 			if (b.data.type() == typeid(cs::var)) {
 				auto func = b.data.get<cs::var>().const_val<cs::callable>().get_raw_data().target<cs::function>();
@@ -252,9 +254,9 @@ public:
 
 	void reset()
 	{
-		for (auto &it: m_pending) {
+		for (auto &it : m_pending) {
 			it.second.second = true;
-			for (auto &b: m_breakpoints) {
+			for (auto &b : m_breakpoints) {
 				if (b.id == it.second.first) {
 					b.data.emplace<std::string>(it.first);
 					break;
@@ -268,10 +270,11 @@ using callback_t = std::function<bool(const std::string &)>;
 
 class function_map_t final {
 	cs::map_t<std::string, callback_t> m_map;
+
 public:
 	function_map_t() = default;
 
-	template<typename T>
+	template <typename T>
 	void add_func(const std::string &name, const std::string &shortcut, T &&func)
 	{
 		m_map.emplace(name, std::forward<T>(func));
@@ -293,7 +296,8 @@ std::size_t time()
 {
 	static std::chrono::time_point<std::chrono::high_resolution_clock> timer(std::chrono::high_resolution_clock::now());
 	return std::chrono::duration_cast<std::chrono::milliseconds>(
-	           std::chrono::high_resolution_clock::now() - timer).count();
+	           std::chrono::high_resolution_clock::now() - timer)
+	       .count();
 }
 
 std::size_t breakpoint_recorder::m_id = 0;
@@ -448,7 +452,7 @@ cs::array split(const std::string &str)
 {
 	cs::array arr{path};
 	std::string buf;
-	for (auto &ch: str) {
+	for (auto &ch : str) {
 		if (std::isspace(ch)) {
 			if (!buf.empty()) {
 				arr.emplace_back(buf);
@@ -469,7 +473,8 @@ void covscript_main(int args_size, char *args[])
 		int index = covscript_args(args_size, args);
 		cs::current_process->import_path += cs::path_delimiter + cs::get_import_path();
 		if (show_help_info) {
-			std::cout << "Usage: cs_dbg [options...] <FILE>\n" << "Options:\n";
+			std::cout << "Usage: cs_dbg [options...] <FILE>\n"
+			          << "Options:\n";
 			std::cout << "    Option                Mnemonic   Function\n";
 			std::cout << "  --help                 -h          Show help infomation\n";
 			std::cout << "  --silent               -s          Close the command prompt\n";
@@ -514,15 +519,12 @@ void covscript_main(int args_size, char *args[])
 		}
 		cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
 			cs::current_process->exit_code = *static_cast<int *>(code);
-			throw cs::fatal_error("CS_DEBUGGER_EXIT");
-		});
-		cs::current_process->on_process_sigint.add_listener([](void *) -> bool {
-			throw cs::fatal_error("CS_SIGINT");
-		});
+			throw cs::fatal_error("CS_DEBUGGER_EXIT"); });
+		cs::current_process->on_process_sigint.add_listener([](void *) -> bool
+		{ throw cs::fatal_error("CS_SIGINT"); });
 		cs::current_process->on_process_sigint.add_listener([](void *) -> bool {
 			std::cin.clear();
-			return false;
-		});
+			return false; });
 		func_map.add_func("quit", "q", [](const std::string &cmd) -> bool {
 			if (context.get() != nullptr)
 			{
@@ -541,8 +543,7 @@ void covscript_main(int args_size, char *args[])
 					return true;
 				}
 			}
-			return false;
-		});
+			return false; });
 		func_map.add_func("help", "h", [](const std::string &cmd) -> bool {
 			std::cout << "Command           Shortcut    Function\n\n";
 			std::cout << "quit                     q    Exit the debugger\n";
@@ -558,33 +559,28 @@ void covscript_main(int args_size, char *args[])
 			std::cout << "optimizer [on|off]       o    Turn on or turn off the optimizer\n";
 			std::cout << "run <...>                r    Run program with specific arguments\n";
 			std::cout << std::endl;
-			return true;
-		});
+			return true; });
 		func_map.add_func("next", "n", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
-			return false;
-		});
+			return false; });
 		func_map.add_func("step", "s", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
 			step_into_function = true;
-			return false;
-		});
+			return false; });
 		func_map.add_func("continue", "c", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
 			exec_by_step = false;
-			return false;
-		});
+			return false; });
 		func_map.add_func("backtrace", "bt", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
 			for (auto &func: cs::current_process->stack_backtrace)
 				std::cout << func << std::endl;
 			std::cout << "function main()" << std::endl;
-			return true;
-		});
+			return true; });
 		func_map.add_func("break", "b", [](const std::string &cmd) -> bool {
 			bool is_line = true;
 			for (auto &ch: cmd)
@@ -627,16 +623,13 @@ void covscript_main(int args_size, char *args[])
 				}
 			}
 			std::cout << "Breakpoint " << id << result << std::endl;
-			return true;
-		});
+			return true; });
 		func_map.add_func("lsbreak", "lb", [](const std::string &cmd) -> bool {
 			breakpoints.list();
-			return true;
-		});
+			return true; });
 		func_map.add_func("rmbreak", "rb", [](const std::string &cmd) -> bool {
 			breakpoints.remove(std::stoul(cmd));
-			return true;
-		});
+			return true; });
 		func_map.add_func("optimizer", "o", [](const std::string &cmd) -> bool {
 			if (context.get() != nullptr)
 			{
@@ -649,8 +642,7 @@ void covscript_main(int args_size, char *args[])
 				no_optimize = true;
 			else
 				std::cout << "Invalid option: \"" << cmd << R"(". Use "on" or "off".)" << std::endl;
-			return true;
-		});
+			return true; });
 		func_map.add_func("run", "r", [](const std::string &cmd) -> bool {
 			if (context.get() != nullptr)
 			{
@@ -708,8 +700,7 @@ void covscript_main(int args_size, char *args[])
 			          << cs::current_process->exit_code << ", up to " << time() - start_time << "ms."
 			          << std::endl;
 			reset_status();
-			return !quit_sig;
-		});
+			return !quit_sig; });
 		func_map.add_func("print", "p", [](const std::string &cmd) -> bool {
 			if (context.get() == nullptr)
 			{
@@ -732,8 +723,7 @@ void covscript_main(int args_size, char *args[])
 					throw;
 				std::cout << "Evaluation Failed: " << e.what() << std::endl;
 			}
-			return true;
-		});
+			return true; });
 		activate_sigint_handler();
 		for (bool result = true; result;) {
 			try {

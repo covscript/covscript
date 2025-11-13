@@ -50,7 +50,7 @@ namespace cs_impl {
 			.add_var("get", make_cni(&member_visitor::get, true))
 			.add_var("set", make_cni(&member_visitor::set, true));
 		}
-	}
+	} // namespace member_visitor_cs_ext
 
 	inline void insert_or_assign(cs::hash_map &map, const cs::var &key, const cs::var &val)
 	{
@@ -65,7 +65,7 @@ namespace cs_impl {
 		using namespace cs;
 
 // Element access
-		var at(const array &arr, const numeric &posit)
+		var at(array &arr, const numeric &posit)
 		{
 			return arr.at(posit.as_integer());
 		}
@@ -192,7 +192,7 @@ namespace cs_impl {
 		{
 			hash_map map;
 			for (auto &it : arr) {
-				if (it.type() == typeid(pair)) {
+				if (it.is_type_of<pair>()) {
 					const auto &p = it.const_val<pair>();
 					insert_or_assign(map, p.first, p.second);
 				}
@@ -207,7 +207,7 @@ namespace cs_impl {
 			hash_map map;
 			std::size_t idx = 0;
 			for (auto &it : arr) {
-				if (it.type() == typeid(pair)) {
+				if (it.is_type_of<pair>()) {
 					const auto &p = it.const_val<pair>();
 					insert_or_assign(map, p.first, p.second);
 				}
@@ -234,7 +234,7 @@ namespace cs_impl {
 					str.append(sep);
 				else
 					insert_sep = true;
-				if (it.type() == typeid(string))
+				if (it.is_type_of<string>())
 					str.append(it.const_val<string>());
 				else
 					str.append(it.to_string());
@@ -273,7 +273,8 @@ namespace cs_impl {
 			.add_var("to_list", make_cni(to_list, true))
 			.add_var("join", make_cni(join, true));
 		}
-	}
+	} // namespace array_cs_ext
+
 	namespace number_cs_ext {
 		using namespace cs;
 
@@ -307,7 +308,7 @@ namespace cs_impl {
 			.add_var("ntof", make_cni(ntof))
 			.add_var("to_float", make_cni(ntof));
 		}
-	}
+	} // namespace number_cs_ext
 	namespace char_cs_ext {
 		using namespace cs;
 
@@ -407,7 +408,7 @@ namespace cs_impl {
 			.add_var("to_ascii", make_cni(to_ascii, true))
 			.add_var("from_ascii", make_cni(from_ascii, true));
 		}
-	}
+	} // namespace char_cs_ext
 	namespace except_cs_ext {
 		using namespace cs;
 
@@ -420,7 +421,7 @@ namespace cs_impl {
 		{
 			except_ext->add_var("what", make_cni(what, callable::types::member_visitor));
 		}
-	}
+	} // namespace except_cs_ext
 	namespace hash_set_cs_ext {
 		using namespace cs;
 
@@ -504,7 +505,7 @@ namespace cs_impl {
 			.add_var("merge", make_cni(merge, callable::types::force_regular))
 			.add_var("subtract", make_cni(subtract, callable::types::force_regular));
 		}
-	}
+	} // namespace hash_set_cs_ext
 	namespace hash_map_cs_ext {
 		using namespace cs;
 
@@ -577,7 +578,8 @@ namespace cs_impl {
 			.add_var("keys", make_cni(keys, true))
 			.add_var("values", make_cni(values, true));
 		}
-	}
+	} // namespace hash_map_cs_ext
+
 	namespace iostream_cs_ext {
 		using namespace cs;
 
@@ -631,7 +633,7 @@ namespace cs_impl {
 			}))
 			.add_var("setprecision", make_cni(setprecision));
 		}
-	}
+	} // namespace iostream_cs_ext
 	namespace charbuff_cs_ext {
 		using namespace cs;
 
@@ -645,7 +647,7 @@ namespace cs_impl {
 			.add_var("get_string", make_cni([](char_buff &buff) -> string
 			{ return std::move(buff->str()); }));
 		}
-	}
+	} // namespace charbuff_cs_ext
 	namespace istream_cs_ext {
 		using namespace cs;
 
@@ -748,7 +750,7 @@ namespace cs_impl {
 			.add_var("ignore", make_cni(ignore))
 			.add_var("read", make_cni(read));
 		}
-	}
+	} // namespace istream_cs_ext
 	namespace ostream_cs_ext {
 		using namespace cs;
 
@@ -811,7 +813,7 @@ namespace cs_impl {
 			.add_var("println", make_cni(println))
 			.add_var("write", make_cni(write));
 		}
-	}
+	} // namespace ostream_cs_ext
 	namespace list_cs_ext {
 		using namespace cs;
 
@@ -955,7 +957,7 @@ namespace cs_impl {
 			.add_var("unique", make_cni(unique, true))
 			.add_var("sort", make_cni(sort, true));
 		}
-	}
+	} // namespace list_cs_ext
 	namespace math_cs_ext {
 		using namespace cs;
 
@@ -1027,17 +1029,17 @@ namespace cs_impl {
 		numeric _min(const numeric &a, const numeric &b)
 		{
 			if (a.is_integer() && b.is_integer())
-				return (std::min)(a.as_integer(), b.as_integer());
+				return (std::min) (a.as_integer(), b.as_integer());
 			else
-				return (std::min)(a.as_float(), b.as_float());
+				return (std::min) (a.as_float(), b.as_float());
 		}
 
 		numeric _max(const numeric &a, const numeric &b)
 		{
 			if (a.is_integer() && b.is_integer())
-				return (std::max)(a.as_integer(), b.as_integer());
+				return (std::max) (a.as_integer(), b.as_integer());
 			else
-				return (std::max)(a.as_float(), b.as_float());
+				return (std::max) (a.as_float(), b.as_float());
 		}
 
 		numeric rand(const numeric &b, const numeric &e)
@@ -1083,7 +1085,7 @@ namespace cs_impl {
 			.add_var("rand", make_cni(rand))
 			.add_var("randint", make_cni(randint));
 		}
-	}
+	} // namespace math_cs_ext
 	namespace pair_cs_ext {
 		void init()
 		{
@@ -1094,7 +1096,7 @@ namespace cs_impl {
 			.add_var("second", make_member_visitor(&pair::second))
 			.add_var("value", make_member_visitor(&pair::second));
 		}
-	}
+	} // namespace pair_cs_ext
 	namespace time_cs_ext {
 		using namespace cs;
 
@@ -1162,7 +1164,7 @@ namespace cs_impl {
 			.add_var("is_dst", make_cni(is_dst, callable::types::member_visitor))
 			.add_var("unixtime", make_cni(unixtime, callable::types::member_visitor));
 		}
-	}
+	} // namespace time_cs_ext
 
 	namespace fiber_cs_ext {
 		using namespace cs;
@@ -1200,14 +1202,14 @@ namespace cs_impl {
 			if (args.empty())
 				throw lang_error("Empty arguments. Expected: fiber.create(function, arguments...)");
 			const var &func = args.front();
-			if (func.type() == typeid(callable)) {
+			if (func.is_type_of<callable>()) {
 				const callable::function_type &impl_f = func.const_val<callable>().get_raw_data();
 				if (impl_f.target_type() != typeid(function))
 					throw lang_error("Only can create coroutine from covscript function.");
 				function const *fptr = impl_f.target<function>();
 				return fiber::create(fptr->get_context(), fiber_function(fptr, vector(args.begin() + 1, args.end())));
 			}
-			else if (func.type() == typeid(object_method)) {
+			else if (func.is_type_of<object_method>()) {
 				const auto &om = func.const_val<object_method>();
 				const callable::function_type &impl_f = om.callable.const_val<callable>().get_raw_data();
 				if (impl_f.target_type() != typeid(function))
@@ -1251,7 +1253,7 @@ namespace cs_impl {
 			.add_var("resume", make_cni(fiber::resume))
 			.add_var("yield", make_cni(fiber::yield));
 		}
-	}
+	} // namespace fiber_cs_ext
 
 	namespace runtime_cs_ext {
 		using namespace cs;
@@ -1343,7 +1345,7 @@ namespace cs_impl {
 						val.detach();
 					}
 					else
-						val.mark_as_rvalue(false);
+						val.mark_trivial();
 				}
 			}
 
@@ -1516,14 +1518,14 @@ namespace cs_impl {
 
 		numeric argument_count(const var &func)
 		{
-			if (func.type() == typeid(object_method)) {
+			if (func.is_type_of<object_method>()) {
 				const callable::function_type &target = func.const_val<object_method>().callable.const_val<callable>().get_raw_data();
 				if (target.target_type() == typeid(function))
 					return target.target<function>()->argument_count() - 1;
 				else
 					return target.target<cni>()->argument_count() - 1;
 			}
-			else if (func.type() == typeid(callable)) {
+			else if (func.is_type_of<callable>()) {
 				const callable::function_type &target = func.const_val<callable>().get_raw_data();
 				if (target.target_type() == typeid(function))
 					return target.target<function>()->argument_count();
@@ -1590,10 +1592,10 @@ namespace cs_impl {
 
 		var wait_for(const numeric &mill_sec, const var &func, const array &argument)
 		{
-			if (func.type() == typeid(callable)) {
+			if (func.is_type_of<callable>()) {
 				return wait_for_impl(mill_sec.as_integer(), func.const_val<callable>(), vector(argument.begin(), argument.end()));
 			}
-			else if (func.type() == typeid(object_method)) {
+			else if (func.is_type_of<object_method>()) {
 				const auto &om = func.const_val<object_method>();
 				vector args{om.object};
 				args.insert(args.end(), argument.begin(), argument.end());
@@ -1605,10 +1607,10 @@ namespace cs_impl {
 
 		var wait_until(const numeric &mill_sec, const var &func, const array &argument)
 		{
-			if (func.type() == typeid(callable)) {
+			if (func.is_type_of<callable>()) {
 				return wait_until_impl(mill_sec.as_integer(), func.const_val<callable>(), vector(argument.begin(), argument.end()));
 			}
-			else if (func.type() == typeid(object_method)) {
+			else if (func.is_type_of<object_method>()) {
 				const auto &om = func.const_val<object_method>();
 				vector args{om.object};
 				args.insert(args.end(), argument.begin(), argument.end());
@@ -1623,10 +1625,10 @@ namespace cs_impl {
 			if (args.empty())
 				throw lang_error("Empty arguments. Expected: runtime.await(function, arguments...)");
 			const var &func = args.front();
-			if (func.type() == typeid(callable)) {
+			if (func.is_type_of<callable>()) {
 				return await_impl(func.const_val<callable>(), vector(args.begin() + 1, args.end()));
 			}
-			else if (func.type() == typeid(object_method)) {
+			else if (func.is_type_of<object_method>()) {
 				const auto &om = func.const_val<object_method>();
 				vector argument{om.object};
 				argument.insert(argument.end(), args.begin() + 1, args.end());
@@ -1682,7 +1684,7 @@ namespace cs_impl {
 			.add_var("link_var", make_cni(link_var))
 			.add_var("unlink_var", make_cni(unlink_var));
 		}
-	}
+	} // namespace runtime_cs_ext
 
 	namespace string_cs_ext {
 		using namespace cs;
@@ -1695,9 +1697,9 @@ namespace cs_impl {
 
 		string append(string &str, const var &val)
 		{
-			if (val.type() == typeid(char))
+			if (val.is_type_of<char>())
 				str.push_back(val.const_val<char>());
-			else if (val.type() == typeid(string))
+			else if (val.is_type_of<string>())
 				str.append(val.const_val<string>());
 			else
 				str.append(val.to_string());
@@ -1706,7 +1708,7 @@ namespace cs_impl {
 
 		string insert(string &str, const numeric &posit, const var &val)
 		{
-			if (val.type() == typeid(string))
+			if (val.is_type_of<string>())
 				str.insert(posit.as_integer(), val.const_val<string>());
 			else
 				str.insert(posit.as_integer(), val.to_string());
@@ -1721,7 +1723,7 @@ namespace cs_impl {
 
 		string replace(string &str, const numeric &posit, const numeric &count, const var &val)
 		{
-			if (val.type() == typeid(string))
+			if (val.is_type_of<string>())
 				str.replace(posit.as_integer(), count.as_integer(), val.const_val<string>());
 			else
 				str.replace(posit.as_integer(), count.as_integer(), val.to_string());
@@ -1851,12 +1853,13 @@ namespace cs_impl {
 			.add_var("tolower", make_cni(tolower, true))
 			.add_var("to_lower", make_cni(tolower, true))
 			.add_var("toupper", make_cni(toupper, true))
-			.add_var("to_upper", make_cni(tolower, true))
+			.add_var("to_upper", make_cni(toupper, true))
 			.add_var("to_number", make_cni(to_number, true))
 			.add_var("split", make_cni(split, true))
 			.add_var("trim", make_cni(trim, true));
 		}
-	}
+	} // namespace string_cs_ext
+
 	namespace console_cs_ext {
 		using namespace cs;
 		using namespace cs_impl;
@@ -1913,7 +1916,7 @@ namespace cs_impl {
 			.add_var("getch", make_cni(getch))
 			.add_var("kbhit", make_cni(kbhit));
 		}
-	}
+	} // namespace console_cs_ext
 
 	namespace file_cs_ext {
 		using namespace cs;
@@ -1951,7 +1954,7 @@ namespace cs_impl {
 			.add_var("can_write", make_cni(can_write))
 			.add_var("can_execute", make_cni(can_execute));
 		}
-	}
+	} // namespace file_cs_ext
 
 	namespace path_cs_ext {
 		using namespace cs;
@@ -2012,7 +2015,7 @@ namespace cs_impl {
 			.add_var("chmod", make_cni(chmod))
 			.add_var("chmod_r", make_cni(chmod_r));
 		}
-	}
+	} // namespace path_cs_ext
 	namespace system_cs_ext {
 		using namespace cs;
 
@@ -2059,7 +2062,7 @@ namespace cs_impl {
 			.add_var("is_platform_darwin", make_cni(platform::is_platform_darwin))
 			.add_var("is_platform_unix", make_cni(platform::is_platform_unix));
 		}
-	}
+	} // namespace system_cs_ext
 
 	void init_extensions()
 	{
@@ -2087,4 +2090,4 @@ namespace cs_impl {
 			hash_map_cs_ext::init();
 		}
 	}
-}
+} // namespace cs_impl

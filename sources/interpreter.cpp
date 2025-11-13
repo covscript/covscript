@@ -1,28 +1,28 @@
 /*
-* Covariant Script Programming Language Interpreter
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script Programming Language Interpreter
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 #include <covscript_impl/system.hpp>
 #include <covscript/covscript.hpp>
 #include <iostream>
@@ -208,6 +208,10 @@ void covscript_main(int args_size, char *args[])
 		return;
 	}
 	if (!repl && index != args_size) {
+#ifdef CS_ENABLE_PROFILING
+		std::cout << "CovScript: Perf mode, may slow down interpret speed." << std::endl;
+		std::memset((void *) &cs_impl::op_perf, 0, sizeof(cs_impl::op_perf));
+#endif
 		std::string path = cs::process_path(args[index]);
 		if (path != "STDIN") {
 			if (!cs_impl::file_system::exist(path) || cs_impl::file_system::is_dir(path) ||
@@ -223,8 +227,7 @@ void covscript_main(int args_size, char *args[])
 		cs::current_process->on_process_exit.add_listener([&context](void *code) -> bool {
 			cs::current_process->exit_code = *static_cast<int *>(code);
 			throw cs::fatal_error("CS_EXIT");
-			return true;
-		});
+			return true; });
 		context->compiler->disable_optimizer = no_optimize;
 		// Reads cSYM
 		if (!csym_path.empty())
@@ -247,16 +250,21 @@ void covscript_main(int args_size, char *args[])
 			if (dump_dependency) {
 				if (!log_path.empty()) {
 					std::ofstream out(::log_path);
-					for (auto &it: context->compiler->modules)
+					for (auto &it : context->compiler->modules)
 						out << it.first << std::endl;
 				}
 				else {
-					for (auto &it: context->compiler->modules)
+					for (auto &it : context->compiler->modules)
 						std::cout << it.first << std::endl;
 				}
 			}
 			if (!compile_only)
 				context->instance->interpret();
+#ifdef CS_ENABLE_PROFILING
+			std::cout << "Perf Result:" << std::endl;
+			for (std::size_t i = 0; i < 40; ++i)
+				std::cout << "OP_" << i << "\t" << cs_impl::op_perf[i] << std::endl;
+#endif
 		}
 		catch (const cs::exception &ce) {
 			if (std::strstr(ce.what(), "CS_EXIT") == nullptr) {
@@ -289,15 +297,12 @@ void covscript_main(int args_size, char *args[])
 		activate_sigint_handler();
 		cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
 			cs::current_process->exit_code = *static_cast<int *>(code);
-			throw cs::fatal_error("CS_EXIT");
-		});
-		cs::current_process->on_process_sigint.add_listener([](void *) -> bool {
-			throw cs::fatal_error("CS_SIGINT");
-		});
+			throw cs::fatal_error("CS_EXIT"); });
+		cs::current_process->on_process_sigint.add_listener([](void *) -> bool
+		{ throw cs::fatal_error("CS_SIGINT"); });
 		cs::current_process->on_process_sigint.add_listener([](void *) -> bool {
 			std::cin.clear();
-			return false;
-		});
+			return false; });
 		context->compiler->disable_optimizer = no_optimize;
 		cs::repl repl(context);
 		std::ofstream log_stream;

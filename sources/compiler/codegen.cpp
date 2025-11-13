@@ -1,28 +1,28 @@
 /*
-* Covariant Script Code Generating
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script Code Generating
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 #include <covscript/impl/codegen.hpp>
 
 namespace cs {
@@ -55,7 +55,7 @@ namespace cs {
 		};
 		if (tree.root().data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
-			for (auto &t: parallel_list)
+			for (auto &t : parallel_list)
 				process(t);
 		}
 		else
@@ -87,7 +87,7 @@ namespace cs {
 			if (id == nullptr || id->get_type() != token_types::id)
 				throw compile_error(
 				    "Wrong grammar for import-as statement, expect <package name> or <package name>.<namespace id>...");
-			if (ext.type() == typeid(namespace_t))
+			if (ext.is_type_of<namespace_t>())
 				return ext.const_val<namespace_t>()->get_var(static_cast<token_id *>(id)->get_id());
 			else
 				throw compile_error("Access non-namespace object.");
@@ -127,7 +127,11 @@ namespace cs {
 		if (!context->package_name.empty())
 			throw compile_error(std::string("Redefinition of package: ") + context->package_name);
 		context->package_name = static_cast<token_id *>(static_cast<token_expr *>(raw.front().at(
-		                            1))->get_tree().root().data())->get_id();
+		                            1))
+		                        ->get_tree()
+		                        .root()
+		                        .data())
+		                        ->get_id();
 		return nullptr;
 	}
 
@@ -137,9 +141,9 @@ namespace cs {
 		token_value *vptr = dynamic_cast<token_value *>(tree.root().data());
 		if (vptr != nullptr) {
 			var ns = vptr->get_value();
-			if (ns.type() == typeid(namespace_t)) {
+			if (ns.is_type_of<namespace_t>()) {
 				auto &domain = ns.const_val<namespace_t>()->get_domain();
-				for (auto &it: domain) {
+				for (auto &it : domain) {
 					if (domain.get_var_by_id(it.second).is_protect())
 						context->instance->storage.add_record(it.first);
 				}
@@ -207,7 +211,11 @@ namespace cs {
 	void method_namespace::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::string name = static_cast<token_id *>(static_cast<token_expr *>(raw.front().at(
-		                       1))->get_tree().root().data())->get_id();
+		                       1))
+		                   ->get_tree()
+		                   .root()
+		                   .data())
+		                   ->get_id();
 		context->instance->storage.add_var_no_return("__PRAGMA_CS_NAMESPACE_DEFINITION__", name);
 	}
 
@@ -216,7 +224,7 @@ namespace cs {
 	{
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		for (auto &ptr: body)
+		for (auto &ptr : body)
 			if (ptr->get_type() != statement_types::import_ && ptr->get_type() != statement_types::involve_ &&
 			        ptr->get_type() != statement_types::var_ && ptr->get_type() != statement_types::function_ &&
 			        ptr->get_type() != statement_types::namespace_ && ptr->get_type() != statement_types::struct_)
@@ -236,7 +244,7 @@ namespace cs {
 		bool have_else = false;
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		for (auto &ptr: body) {
+		for (auto &ptr : body) {
 			if (ptr->get_type() == statement_types::else_) {
 				if (!have_else)
 					have_else = true;
@@ -250,7 +258,7 @@ namespace cs {
 			std::deque<statement_base *> body_true;
 			std::deque<statement_base *> body_false;
 			bool now_place = true;
-			for (auto &ptr: body) {
+			for (auto &ptr : body) {
 				if (ptr->get_type() == statement_types::else_) {
 					now_place = false;
 					continue;
@@ -297,7 +305,7 @@ namespace cs {
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		statement_block *dptr = nullptr;
 		map_t<var, statement_block *> cases;
-		for (auto &it: body) {
+		for (auto &it : body) {
 			try {
 				if (it->get_type() == statement_types::case_) {
 					auto *scptr = static_cast<statement_case *>(it);
@@ -432,10 +440,7 @@ namespace cs {
 		if (parallel_list.size() != 3)
 			throw compile_error("Wrong grammar in for statement, expect <id> = <expression>, <condition>, <process>");
 		context->instance->check_define_var(parallel_list[0].root());
-		return new statement_for(parallel_list, {
-			new statement_expression(static_cast<token_expr *>(raw.front().at(3))->get_tree(),
-			                         context, raw.front().back())
-		}, context, raw.front().back());
+		return new statement_for(parallel_list, {new statement_expression(static_cast<token_expr *>(raw.front().at(3))->get_tree(), context, raw.front().back())}, context, raw.front().back());
 	}
 
 	void method_foreach::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
@@ -470,11 +475,8 @@ namespace cs {
 		const std::string &it = static_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		return new statement_foreach(it, static_cast<token_expr *>(raw.front().at(3))->get_tree(), {
-			new statement_expression(static_cast<token_expr *>(raw.front().at(5))->get_tree(),
-			                         context, raw.front().back())
-		}, context,
-		raw.front().back());
+		return new statement_foreach(it, static_cast<token_expr *>(raw.front().at(3))->get_tree(), {new statement_expression(static_cast<token_expr *>(raw.front().at(5))->get_tree(), context, raw.front().back())}, context,
+		                             raw.front().back());
 	}
 
 	statement_base *method_break::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
@@ -505,13 +507,13 @@ namespace cs {
 		if (t.root().right().data()->get_type() != token_types::arglist)
 			throw compile_error("Wrong grammar for function definition, expect argument list.");
 		std::vector<std::string> args;
-		for (auto &it: static_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
+		for (auto &it : static_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
 			if (it.root().data() == nullptr)
 				throw internal_error("Null pointer accessed.");
 			context->compiler->try_fix_this_deduction(it.root());
 			if (it.root().data()->get_type() == token_types::id) {
 				const std::string &str = static_cast<token_id *>(it.root().data())->get_id();
-				for (auto &it: args)
+				for (auto &it : args)
 					if (it == str)
 						throw compile_error("Redefinition of function argument.");
 				context->instance->storage.add_record(str);
@@ -536,7 +538,7 @@ namespace cs {
 		std::string name = static_cast<token_id *>(t.root().left().data())->get_id();
 		std::vector<std::string> args;
 		bool is_vargs = false;
-		for (auto &it: static_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
+		for (auto &it : static_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
 			if (it.root().data()->get_type() == token_types::id)
 				args.push_back(static_cast<token_id *>(it.root().data())->get_id());
 			else if (it.root().data()->get_type() == token_types::vargs) {
@@ -547,17 +549,17 @@ namespace cs {
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 #ifdef CS_DEBUGGER
-		std::string decl="function "+name+"(";
-		if(args.size()!=0) {
-			for(auto& it:args)
-				decl+=it+", ";
+		std::string decl = "function " + name + "(";
+		if (args.size() != 0) {
+			for (auto &it : args)
+				decl += it + ", ";
 			decl.pop_back();
-			decl[decl.size()-1]=')';
+			decl[decl.size() - 1] = ')';
 		}
 		else
-			decl+=")";
-		if(raw.front().size() == 4)
-			decl+=" override";
+			decl += ")";
+		if (raw.front().size() == 4)
+			decl += " override";
 		return new statement_function(name, decl, args, body, raw.front().size() == 4, is_vargs, context, raw.front().back());
 #else
 		return new statement_function(name, args, body, raw.front().size() == 4, is_vargs, context, raw.front().back());
@@ -595,7 +597,7 @@ namespace cs {
 		std::string name = static_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		for (auto &ptr: body) {
+		for (auto &ptr : body) {
 			try {
 				switch (ptr->get_type()) {
 				default:
@@ -628,7 +630,7 @@ namespace cs {
 		std::string name;
 		std::deque<statement_base *> tbody, cbody;
 		bool founded = false;
-		for (auto &ptr: body) {
+		for (auto &ptr : body) {
 			if (ptr->get_type() == statement_types::catch_) {
 				name = static_cast<statement_catch *>(ptr)->get_name();
 				founded = true;
@@ -659,4 +661,4 @@ namespace cs {
 		return new statement_throw(static_cast<token_expr *>(raw.front().at(1))->get_tree(), context,
 		                           raw.front().back());
 	}
-}
+} // namespace cs

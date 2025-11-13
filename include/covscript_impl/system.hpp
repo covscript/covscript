@@ -64,7 +64,7 @@ namespace cs_impl {
 			return false;
 #endif
 		}
-	}
+	} // namespace platform
 	namespace conio {
 		int terminal_width();
 
@@ -81,7 +81,7 @@ namespace cs_impl {
 		int getch();
 
 		int kbhit();
-	}
+	} // namespace conio
 	namespace file_system {
 // Detection
 		bool exist(const std::string &);
@@ -117,5 +117,5 @@ namespace cs_impl {
 		bool mkdir(std::string);
 
 		std::string get_current_dir();
-	}
-}
+	} // namespace file_system
+} // namespace cs_impl

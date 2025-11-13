@@ -8,8 +8,9 @@ jobs:
     permissions:
       contents: read
     strategy:
+      fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest, macOS-latest ]
+        os: [ ubuntu-22.04, ubuntu-22.04-arm, macos-14, windows-2022 ]
 
     steps:
       - name: Checkout
@@ -28,25 +29,13 @@ jobs:
       - name: Test
         run: |
           build/bin/cs -v
-          build/bin/cs .github/workflows/benchmark.csc
+          build/bin/cs tests/benchmark.csc
           build/bin/cs tests/test_reentrant_co.csc
           build/bin/cs tests/test_dead_co.csc
+          build/bin/cs tests/struct_op.csc
           build/bin/cs tests/inherit.csc
 
-      - uses: actions/upload-artifact@main
-        if: matrix.os == 'ubuntu-latest'
+      - uses: actions/upload-artifact@v4
         with:
-          name: covscript-ubuntu
-          path: build
-
-      - uses: actions/upload-artifact@main
-        if: matrix.os == 'macOS-latest'
-        with:
-          name: covscript-macos
-          path: build
-
-      - uses: actions/upload-artifact@main
-        if: matrix.os == 'windows-latest'
-        with:
-          name: covscript-windows
+          name: covscript-${{ matrix.os }}
           path: build

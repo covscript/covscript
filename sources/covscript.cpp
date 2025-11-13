@@ -1,28 +1,28 @@
 /*
-* Covariant Script Programming Language
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* Copyright (C) 2017-2025 Michael Lee(李登淳)
-*
-* This software is registered with the National Copyright Administration
-* of the People's Republic of China(Registration Number: 2020SR0408026)
-* and is protected by the Copyright Law of the People's Republic of China.
-*
-* Email:   mikecovlee@163.com
-* Github:  https://github.com/mikecovlee
-* Website: http://covscript.org.cn
-*/
+ * Covariant Script Programming Language
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Copyright (C) 2017-2025 Michael Lee(李登淳)
+ *
+ * This software is registered with the National Copyright Administration
+ * of the People's Republic of China(Registration Number: 2020SR0408026)
+ * and is protected by the Copyright Law of the People's Republic of China.
+ *
+ * Email:   mikecovlee@163.com
+ * Github:  https://github.com/mikecovlee
+ * Website: http://covscript.org.cn
+ */
 #include <covscript/impl/codegen.hpp>
 #include <covscript_impl/system.hpp>
 #include <covscript/covscript.hpp>
@@ -52,7 +52,7 @@
 #include <Dbghelp.h>
 #pragma comment(lib, "DbgHelp")
 namespace cs_impl {
-	std::string cxx_demangle(const char* name)
+	std::string cxx_demangle(const char *name)
 	{
 		char buffer[1024];
 		DWORD length = UnDecorateSymbolName(name, buffer, sizeof(buffer), 0);
@@ -61,7 +61,7 @@ namespace cs_impl {
 		else
 			return name;
 	}
-}
+} // namespace cs_impl
 #elif defined __GNUC__
 
 #include <cxxabi.h>
@@ -78,17 +78,13 @@ namespace cs_impl {
 		else
 			return name;
 	}
-}
+} // namespace cs_impl
 #endif
 
-std::ostream &operator<<(std::ostream &out, const cs_impl::any &val)
-{
-	out << val.to_string();
-	return out;
-}
-
 namespace cs_impl {
-	cs::allocator_type<any::proxy, default_allocate_buffer_size*default_allocate_buffer_multiplier, default_allocator_provider> any::allocator;
+#ifdef CS_ENABLE_PROFILING
+	volatile std::size_t op_perf[40];
+#endif
 	cs::namespace_t member_visitor_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t except_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t array_ext = cs::make_shared_namespace<cs::name_space>();
@@ -119,7 +115,7 @@ namespace cs_impl {
 	cs::namespace_t path_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t path_type_ext = cs::make_shared_namespace<cs::name_space>();
 	cs::namespace_t path_info_ext = cs::make_shared_namespace<cs::name_space>();
-}
+} // namespace cs_impl
 
 namespace cs {
 	std::atomic_size_t global_thread_counter(0);
@@ -144,7 +140,7 @@ namespace cs {
 		while (!current_process->stack.empty())
 			current_process->stack.pop_no_return();
 #ifdef CS_DEBUGGER
-		while(!current_process->stack_backtrace.empty())
+		while (!current_process->stack_backtrace.empty())
 			current_process->stack_backtrace.pop_no_return();
 #endif
 	}
@@ -163,12 +159,10 @@ namespace cs {
 		new_process->output_precision = current_process->output_precision;
 		new_process->import_path = current_process->import_path;
 		process_context *curr = current_process;
-		new_process->on_process_exit.add_listener([curr](void *data) -> bool {
-			return curr->on_process_exit.touch(data);
-		});
-		new_process->on_process_sigint.add_listener([curr](void *data) -> bool {
-			return curr->on_process_sigint.touch(data);
-		});
+		new_process->on_process_exit.add_listener([curr](void *data) -> bool
+		{ return curr->on_process_exit.touch(data); });
+		new_process->on_process_sigint.add_listener([curr](void *data) -> bool
+		{ return curr->on_process_sigint.touch(data); });
 		new_process->std_eh_callback = current_process->std_eh_callback;
 		new_process->cs_eh_callback = current_process->cs_eh_callback;
 		return std::move(new_process);
@@ -189,7 +183,7 @@ namespace cs {
 			val.detach();
 		}
 		else
-			val.mark_as_rvalue(false);
+			val.mark_trivial();
 	}
 
 	var copy(var val)
@@ -199,19 +193,20 @@ namespace cs {
 			val.detach();
 		}
 		else
-			val.mark_as_rvalue(false);
+			val.mark_trivial();
 		return val;
 	}
 
 	var lvalue(const var &val)
 	{
-		val.mark_as_rvalue(false);
+		if (val.is_rvalue())
+			val.mark_trivial();
 		return val;
 	}
 
 	var rvalue(const var &val)
 	{
-		val.mark_as_rvalue(true);
+		val.try_move();
 		return val;
 	}
 
@@ -323,20 +318,15 @@ namespace cs {
 
 			// in case of: /main.csc
 			if (pos > 0) {
-				context->import_path = script.substr(0, pos)
-				                       + cs::path_delimiter + context->import_path;
+				context->import_path = script.substr(0, pos) + cs::path_delimiter + context->import_path;
 			}
 			else {
-				context->import_path = std::to_string(cs::path_separator)
-				                       + cs::path_delimiter + context->import_path;
+				context->import_path = std::to_string(cs::path_separator) + cs::path_delimiter + context->import_path;
 			}
-
 		}
 		else {
 			// If it's relative path
-			prepend_import_path(cs_impl::file_system::get_current_dir()
-			                    + cs::path_separator
-			                    + script, context);
+			prepend_import_path(cs_impl::file_system::get_current_dir() + cs::path_separator + script, context);
 		}
 	}
 
@@ -374,9 +364,12 @@ namespace cs {
 		return val.to_integer();
 	}
 
-	string to_string(const var &val)
+	var to_string(const var &val)
 	{
-		return val.to_string();
+		if (val.is_type_of<string>())
+			return val;
+		else
+			return val.to_string().extract();
 	}
 
 	string type(const var &a)
@@ -417,21 +410,27 @@ namespace cs {
 		.add_method({new token_expr(tree_type<token_base *>()), new token_endline(0)}, new method_expression)
 		// Import Grammar
 		.add_method({new token_action(action_types::import_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_import)
+		             new token_endline(0)},
+		            new method_import)
 		.add_method({new token_action(action_types::import_), new token_expr(tree_type<token_base *>()),
 		             new token_action(action_types::as_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_import_as)
+		             new token_endline(0)},
+		            new method_import_as)
 		// Package Grammar
 		.add_method({new token_action(action_types::package_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_package)
+		             new token_endline(0)},
+		            new method_package)
 		// Involve Grammar
 		.add_method({new token_action(action_types::using_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_involve)
+		             new token_endline(0)},
+		            new method_involve)
 		// Var Grammar
 		.add_method({new token_action(action_types::var_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_var)
+		             new token_endline(0)},
+		            new method_var)
 		.add_method({new token_action(action_types::link_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_link)
+		             new token_endline(0)},
+		            new method_link)
 		.add_method({new token_action(action_types::constant_), new token_expr(tree_type<token_base *>()),
 		             new token_endline(0)},
 		            new method_constant)
@@ -441,42 +440,52 @@ namespace cs {
 		.add_method({new token_action(action_types::block_), new token_endline(0)}, new method_block)
 		// Namespace Grammar
 		.add_method({new token_action(action_types::namespace_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_namespace)
+		             new token_endline(0)},
+		            new method_namespace)
 		// If Grammar
 		.add_method({new token_action(action_types::if_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_if)
+		             new token_endline(0)},
+		            new method_if)
 		// Else Grammar
 		.add_method({new token_action(action_types::else_), new token_endline(0)}, new method_else)
 		// Switch Grammar
 		.add_method({new token_action(action_types::switch_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_switch)
+		             new token_endline(0)},
+		            new method_switch)
 		// Case Grammar
 		.add_method({new token_action(action_types::case_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_case)
+		             new token_endline(0)},
+		            new method_case)
 		// Default Grammar
 		.add_method({new token_action(action_types::default_), new token_endline(0)},
 		            new method_default)
 		// While Grammar
 		.add_method({new token_action(action_types::while_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_while)
+		             new token_endline(0)},
+		            new method_while)
 		// Until Grammar
 		.add_method({new token_action(action_types::until_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_until)
+		             new token_endline(0)},
+		            new method_until)
 		// Loop Grammar
 		.add_method({new token_action(action_types::loop_), new token_endline(0)}, new method_loop)
 		// For Grammar
 		.add_method({new token_action(action_types::for_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_for)
+		             new token_endline(0)},
+		            new method_for)
 		.add_method({new token_action(action_types::for_), new token_expr(tree_type<token_base *>()),
 		             new token_action(action_types::do_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_for_do)
+		             new token_endline(0)},
+		            new method_for_do)
 		.add_method({new token_action(action_types::foreach_), new token_expr(tree_type<token_base *>()),
 		             new token_action(action_types::in_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_foreach)
+		             new token_endline(0)},
+		            new method_foreach)
 		.add_method({new token_action(action_types::foreach_), new token_expr(tree_type<token_base *>()),
 		             new token_action(action_types::in_), new token_expr(tree_type<token_base *>()),
 		             new token_action(action_types::do_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_foreach_do)
+		             new token_endline(0)},
+		            new method_foreach_do)
 		// Break Grammar
 		.add_method({new token_action(action_types::break_), new token_endline(0)}, new method_break)
 		// Continue Grammar
@@ -484,51 +493,62 @@ namespace cs {
 		            new method_continue)
 		// Function Grammar
 		.add_method({new token_action(action_types::function_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_function)
+		             new token_endline(0)},
+		            new method_function)
 		.add_method({new token_action(action_types::function_), new token_expr(tree_type<token_base *>()),
 		             new token_action(action_types::override_), new token_endline(0)},
 		            new method_function)
 		// Return Grammar
 		.add_method({new token_action(action_types::return_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_return)
+		             new token_endline(0)},
+		            new method_return)
 		.add_method({new token_action(action_types::return_), new token_endline(0)},
 		            new method_return_no_value)
 		// Struct Grammar
 		.add_method({new token_action(action_types::struct_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_struct)
+		             new token_endline(0)},
+		            new method_struct)
 		.add_method({new token_action(action_types::struct_), new token_expr(tree_type<token_base *>()),
 		             new token_action(action_types::extends_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_struct)
+		             new token_endline(0)},
+		            new method_struct)
 		// Try Grammar
 		.add_method({new token_action(action_types::try_), new token_endline(0)}, new method_try)
 		// Catch Grammar
 		.add_method({new token_action(action_types::catch_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_catch)
+		             new token_endline(0)},
+		            new method_catch)
 		// Throw Grammar
 		.add_method({new token_action(action_types::throw_), new token_expr(tree_type<token_base *>()),
-		             new token_endline(0)}, new method_throw);
+		             new token_endline(0)},
+		            new method_throw);
 		// Init Runtime
 		context->instance->storage
 		// Internal Types
-		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char),
-		                  cs_impl::char_ext)
-		.add_buildin_type("number", []() -> var { return var::make<numeric>(0); }, typeid(numeric),
-		                  cs_impl::number_ext)
-		.add_buildin_type("integer", []() -> var { return var::make<numeric>(0); }, typeid(numeric))
-		.add_buildin_type("float", []() -> var { return var::make<numeric>(0.0); }, typeid(numeric))
-		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
-		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
-		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string),
-		                  cs_impl::string_ext)
-		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), cs_impl::list_ext)
-		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array),
-		                  cs_impl::array_ext)
-		.add_buildin_type("pair", []() -> var { return var::make<pair>(numeric(0), numeric(0)); }, typeid(pair),
-		                  cs_impl::pair_ext)
-		.add_buildin_type("hash_set", []() -> var { return var::make<hash_set>(); }, typeid(hash_set),
-		                  cs_impl::hash_set_ext)
-		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, typeid(hash_map),
-		                  cs_impl::hash_map_ext)
+		.add_buildin_type("char", []() -> var
+		{ return var::make<char>('\0'); }, typeid(char), cs_impl::char_ext)
+		.add_buildin_type("number", []() -> var
+		{ return var::make<numeric>(0); }, typeid(numeric), cs_impl::number_ext)
+		.add_buildin_type("integer", []() -> var
+		{ return var::make<numeric>(0); }, typeid(numeric))
+		.add_buildin_type("float", []() -> var
+		{ return var::make<numeric>(0.0); }, typeid(numeric))
+		.add_buildin_type("boolean", []() -> var
+		{ return var::make<boolean>(true); }, typeid(boolean))
+		.add_buildin_type("pointer", []() -> var
+		{ return var::make<pointer>(null_pointer); }, typeid(pointer))
+		.add_buildin_type("string", []() -> var
+		{ return var::make<string>(); }, typeid(string), cs_impl::string_ext)
+		.add_buildin_type("list", []() -> var
+		{ return var::make<list>(); }, typeid(list), cs_impl::list_ext)
+		.add_buildin_type("array", []() -> var
+		{ return var::make<array>(); }, typeid(array), cs_impl::array_ext)
+		.add_buildin_type("pair", []() -> var
+		{ return var::make<pair>(numeric(0), numeric(0)); }, typeid(pair), cs_impl::pair_ext)
+		.add_buildin_type("hash_set", []() -> var
+		{ return var::make<hash_set>(); }, typeid(hash_set), cs_impl::hash_set_ext)
+		.add_buildin_type("hash_map", []() -> var
+		{ return var::make<hash_map>(); }, typeid(hash_map), cs_impl::hash_map_ext)
 		// Context
 		.add_buildin_var("context", var::make_constant<context_t>(context))
 		// Add Internal Functions to storage
@@ -560,24 +580,30 @@ namespace cs {
 		// Init Runtime
 		context->instance->storage
 		// Internal Types
-		.add_buildin_type("char", []() -> var { return var::make<char>('\0'); }, typeid(char),
-		                  cs_impl::char_ext)
-		.add_buildin_type("number", []() -> var { return var::make<numeric>(0); }, typeid(numeric))
-		.add_buildin_type("integer", []() -> var { return var::make<numeric>(0); }, typeid(numeric))
-		.add_buildin_type("float", []() -> var { return var::make<numeric>(0.0); }, typeid(numeric))
-		.add_buildin_type("boolean", []() -> var { return var::make<boolean>(true); }, typeid(boolean))
-		.add_buildin_type("pointer", []() -> var { return var::make<pointer>(null_pointer); }, typeid(pointer))
-		.add_buildin_type("string", []() -> var { return var::make<string>(); }, typeid(string),
-		                  cs_impl::string_ext)
-		.add_buildin_type("list", []() -> var { return var::make<list>(); }, typeid(list), cs_impl::list_ext)
-		.add_buildin_type("array", []() -> var { return var::make<array>(); }, typeid(array),
-		                  cs_impl::array_ext)
-		.add_buildin_type("pair", []() -> var { return var::make<pair>(numeric(0), numeric(0)); }, typeid(pair),
-		                  cs_impl::pair_ext)
-		.add_buildin_type("hash_set", []() -> var { return var::make<hash_set>(); }, typeid(hash_set),
-		                  cs_impl::hash_set_ext)
-		.add_buildin_type("hash_map", []() -> var { return var::make<hash_map>(); }, typeid(hash_map),
-		                  cs_impl::hash_map_ext)
+		.add_buildin_type("char", []() -> var
+		{ return var::make<char>('\0'); }, typeid(char), cs_impl::char_ext)
+		.add_buildin_type("number", []() -> var
+		{ return var::make<numeric>(0); }, typeid(numeric))
+		.add_buildin_type("integer", []() -> var
+		{ return var::make<numeric>(0); }, typeid(numeric))
+		.add_buildin_type("float", []() -> var
+		{ return var::make<numeric>(0.0); }, typeid(numeric))
+		.add_buildin_type("boolean", []() -> var
+		{ return var::make<boolean>(true); }, typeid(boolean))
+		.add_buildin_type("pointer", []() -> var
+		{ return var::make<pointer>(null_pointer); }, typeid(pointer))
+		.add_buildin_type("string", []() -> var
+		{ return var::make<string>(); }, typeid(string), cs_impl::string_ext)
+		.add_buildin_type("list", []() -> var
+		{ return var::make<list>(); }, typeid(list), cs_impl::list_ext)
+		.add_buildin_type("array", []() -> var
+		{ return var::make<array>(); }, typeid(array), cs_impl::array_ext)
+		.add_buildin_type("pair", []() -> var
+		{ return var::make<pair>(numeric(0), numeric(0)); }, typeid(pair), cs_impl::pair_ext)
+		.add_buildin_type("hash_set", []() -> var
+		{ return var::make<hash_set>(); }, typeid(hash_set), cs_impl::hash_set_ext)
+		.add_buildin_type("hash_map", []() -> var
+		{ return var::make<hash_map>(); }, typeid(hash_map), cs_impl::hash_map_ext)
 		// Context
 		.add_buildin_var("context", var::make_constant<context_t>(context))
 		// Add Internal Functions to storage
@@ -612,7 +638,7 @@ namespace cs {
 		while (!current_process->stack.empty())
 			current_process->stack.pop_no_return();
 #ifdef CS_DEBUGGER
-		while(!current_process->stack_backtrace.empty())
+		while (!current_process->stack_backtrace.empty())
 			current_process->stack_backtrace.pop_no_return();
 #endif
 		if (context) {
@@ -632,9 +658,9 @@ namespace cs {
 	{
 		tree_type<cs::token_base *> tree;
 		std::deque<char> buff;
-		for (auto &ch: expr)
+		for (auto &ch : expr)
 			buff.push_back(ch);
 		context->compiler->build_expr(buff, tree);
 		return context->instance->parse_expr(tree.root());
 	}
-}
+} // namespace cs
