@@ -432,7 +432,6 @@ namespace cs_impl {
 			}
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_swap(void *lhs, void *rhs) noexcept
 			{
-				static_assert(std::is_swappable<T>::value, "CovScript requires type satisfy swappable requirement (try add move constructor to your class).");
 				std::swap(*static_cast<T *>(lhs), static_cast<basic_var *>(rhs)->template unchecked_get<T>());
 				return operators::result();
 			}
@@ -535,7 +534,6 @@ namespace cs_impl {
 			}
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_swap(void *lhs, void *rhs) noexcept
 			{
-				static_assert(std::is_swappable<T>::value, "CovScript requires type satisfy swappable requirement (try add move constructor to your class).");
 				std::swap(*static_cast<T *>(lhs), static_cast<basic_var *>(rhs)->template unchecked_get<T>());
 				return operators::result();
 			}
