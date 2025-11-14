@@ -33,7 +33,11 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --static")
     elseif (UNIX AND NOT APPLE)
         # Linux
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto=8 -fno-plt")
+        if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto=8 -fno-plt")
+        else ()
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
+        endif ()
     elseif (APPLE)
         # macOS
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")

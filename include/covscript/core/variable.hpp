@@ -420,16 +420,19 @@ namespace cs_impl {
 		{
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_copy(void *lhs, void *rhs)
 			{
+				static_assert(std::is_copy_constructible<T>::value, "CovScript requires type supports copy constructor.");
 				::new (&static_cast<basic_var *>(rhs)->m_store.buffer) T(*static_cast<const T *>(lhs));
 				return operators::result();
 			}
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_move(void *lhs, void *rhs) noexcept
 			{
+				static_assert(std::is_move_constructible<T>::value, "CovScript requires type supports move constructor.");
 				::new (&static_cast<basic_var *>(rhs)->m_store.buffer) T(std::move(*static_cast<T *>(lhs)));
 				return operators::result();
 			}
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_swap(void *lhs, void *rhs) noexcept
 			{
+				static_assert(std::is_swappable<T>::value, "CovScript requires type satisfy swappable requirement (try add move constructor to your class).");
 				std::swap(*static_cast<T *>(lhs), static_cast<basic_var *>(rhs)->template unchecked_get<T>());
 				return operators::result();
 			}
@@ -516,6 +519,7 @@ namespace cs_impl {
 			}
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_copy(void *lhs, void *rhs)
 			{
+				static_assert(std::is_copy_constructible<T>::value, "CovScript requires type supports copy constructor.");
 				T *nptr = get_allocator().allocate(1);
 				::new (nptr) T(*static_cast<const T *>(lhs));
 				static_cast<basic_var *>(rhs)->m_store.ptr = nptr;
@@ -523,6 +527,7 @@ namespace cs_impl {
 			}
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_move(void *lhs, void *rhs) noexcept
 			{
+				static_assert(std::is_move_constructible<T>::value, "CovScript requires type supports move constructor.");
 				T *nptr = get_allocator().allocate(1);
 				::new (nptr) T(std::move(*static_cast<T *>(lhs)));
 				static_cast<basic_var *>(rhs)->m_store.ptr = nptr;
@@ -530,6 +535,7 @@ namespace cs_impl {
 			}
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_swap(void *lhs, void *rhs) noexcept
 			{
+				static_assert(std::is_swappable<T>::value, "CovScript requires type satisfy swappable requirement (try add move constructor to your class).");
 				std::swap(*static_cast<T *>(lhs), static_cast<basic_var *>(rhs)->template unchecked_get<T>());
 				return operators::result();
 			}
