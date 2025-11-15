@@ -76,7 +76,7 @@ namespace cs {
 
 			std::string wide2local(const std::u32string &ustr) override
 			{
-				return ::utf8::utf32to8(ustr);;
+				return ::utf8::utf32to8(ustr);
 			}
 
 			bool is_identifier(char32_t ch) override
