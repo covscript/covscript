@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.16)
 
 project(covscript)
 
@@ -18,7 +18,7 @@ option(CS_AGGRESSIVE_OPTIMIZE "Enable aggressive optimizations" OFF)
 option(CS_COMPATIBILITY_MODE "Enable compatible mode" OFF)
 
 # Compiler Options
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 if (MSVC)
     # MSVC Windows
@@ -70,7 +70,7 @@ if (CS_COMPATIBILITY_MODE)
     add_compile_definitions(CS_COMPATIBILITY_MODE)
 endif ()
 
-include_directories(include csbuild/deps/include)
+include_directories(include third-party/include third-party/utfcpp)
 
 # Source Code
 set(SOURCE_CODE
@@ -136,7 +136,7 @@ if (UNIX AND NOT APPLE)
     # Use system implementation by default in Linux
     if (NOT HAVE_GLIBC OR CS_FIBER_LIBUCONTEXT_IMPL)
         message("-- CovScript: Using libucontext implementation of fiber")
-        add_subdirectory(csbuild/deps)
+        add_subdirectory(third-party)
         target_compile_definitions(sdk_objects PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)
         target_compile_definitions(covscript_debug_sdk PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)
         target_link_libraries(sdk_objects PUBLIC ucontext)
@@ -160,7 +160,7 @@ if (APPLE)
 
     # Use libucontext by default in macOS
     if (NOT CS_FIBER_SYSTEM_IMPL)
-        add_subdirectory(csbuild/deps)
+        add_subdirectory(third-party)
         target_compile_definitions(sdk_objects PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)
         target_compile_definitions(covscript_debug_sdk PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)
         target_compile_definitions(sdk_objects_arm PRIVATE CS_FIBER_LIBUCONTEXT_IMPL)

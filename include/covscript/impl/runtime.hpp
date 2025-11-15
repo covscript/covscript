@@ -212,7 +212,7 @@ namespace cs {
 			if (m_data.size() == m_set.size()) {
 				for (std::size_t i = 0, size = m_data.size(); i < size; ++i) {
 					auto &current_set = m_set[i];
-					if (current_set.find(name) != current_set.end()) {
+					if (current_set.find((const std::string &) name) != current_set.end()) {
 						var *ptr = m_data[i].get_var_opt(name);
 						if (ptr != nullptr)
 							return *ptr;

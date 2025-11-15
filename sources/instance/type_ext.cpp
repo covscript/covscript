@@ -23,16 +23,147 @@
  * Github:  https://github.com/mikecovlee
  * Website: http://covscript.org.cn
  */
-#include <covscript_impl/dirent/dirent.hpp>
-#include <covscript_impl/mozart/random.hpp>
-#include <covscript_impl/mozart/timer.hpp>
-#include <covscript_impl/system.hpp>
+#include <covscript/impl/system.hpp>
 #include <covscript/impl/impl.hpp>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <filesystem>
 #include <algorithm>
 #include <iostream>
+#include <chrono>
+#include <random>
 #include <future>
+
+namespace cov {
+	class timer final {
+		static std::chrono::time_point<std::chrono::high_resolution_clock> m_timer;
+
+	public:
+		typedef unsigned long timer_t;
+		enum class time_unit {
+			nano_sec,
+			micro_sec,
+			milli_sec,
+			second,
+			minute
+		};
+
+		static void reset()
+		{
+			m_timer = std::chrono::high_resolution_clock::now();
+		}
+
+		static timer_t time(time_unit unit)
+		{
+			switch (unit) {
+			case time_unit::nano_sec:
+				return std::chrono::duration_cast<std::chrono::nanoseconds>(
+				           std::chrono::high_resolution_clock::now() - m_timer)
+				       .count();
+			case time_unit::micro_sec:
+				return std::chrono::duration_cast<std::chrono::microseconds>(
+				           std::chrono::high_resolution_clock::now() - m_timer)
+				       .count();
+			case time_unit::milli_sec:
+				return std::chrono::duration_cast<std::chrono::milliseconds>(
+				           std::chrono::high_resolution_clock::now() - m_timer)
+				       .count();
+			case time_unit::second:
+				return std::chrono::duration_cast<std::chrono::seconds>(
+				           std::chrono::high_resolution_clock::now() - m_timer)
+				       .count();
+			case time_unit::minute:
+				return std::chrono::duration_cast<std::chrono::minutes>(
+				           std::chrono::high_resolution_clock::now() - m_timer)
+				       .count();
+			}
+			return 0;
+		}
+
+		static void delay(time_unit unit, timer_t time)
+		{
+			switch (unit) {
+			case time_unit::nano_sec:
+				std::this_thread::sleep_for(std::chrono::nanoseconds(time));
+				break;
+			case time_unit::micro_sec:
+				std::this_thread::sleep_for(std::chrono::microseconds(time));
+				break;
+			case time_unit::milli_sec:
+				std::this_thread::sleep_for(std::chrono::milliseconds(time));
+				break;
+			case time_unit::second:
+				std::this_thread::sleep_for(std::chrono::seconds(time));
+				break;
+			case time_unit::minute:
+				std::this_thread::sleep_for(std::chrono::minutes(time));
+				break;
+			}
+		}
+
+		static timer_t measure(time_unit unit, const std::function<void()> &func)
+		{
+			timer_t begin(0), end(0);
+			begin = time(unit);
+			func();
+			end = time(unit);
+			return end - begin;
+		}
+	};
+
+	std::chrono::time_point<std::chrono::high_resolution_clock> timer::m_timer(std::chrono::high_resolution_clock::now());
+
+	namespace random {
+		static std::random_device random_engine;
+		template <typename T, bool is_integral>
+		struct random_traits;
+
+		template <typename T>
+		struct random_traits<T, true> {
+			static T rand(T begin, T end)
+			{
+				return std::uniform_int_distribution<T>(begin, end)(random_engine);
+			}
+		};
+
+		template <typename T>
+		struct random_traits<T, false> {
+			static T rand(T begin, T end)
+			{
+				return std::uniform_real_distribution<T>(begin, end)(random_engine);
+			}
+		};
+	} // namespace random
+
+	template <typename T>
+	T rand(T begin, T end)
+	{
+		return random::random_traits<T, std::is_integral<T>::value>::rand(begin, end);
+	}
+} // namespace cov
+
+cs_impl::file_type get_file_type(const std::filesystem::directory_entry &entry)
+{
+	std::error_code ec;
+	if (entry.is_block_file(ec))
+		return cs_impl::file_type::block;
+	else if (entry.is_character_file(ec))
+		return cs_impl::file_type::block;
+	else if (entry.is_directory(ec))
+		return cs_impl::file_type::block;
+	else if (entry.is_fifo(ec))
+		return cs_impl::file_type::block;
+	else if (entry.is_regular_file(ec))
+		return cs_impl::file_type::block;
+	else if (entry.is_socket(ec))
+		return cs_impl::file_type::block;
+	else if (entry.is_symlink(ec))
+		return cs_impl::file_type::block;
+	else if (entry.is_other(ec))
+		return cs_impl::file_type::block;
+	else
+		return cs_impl::file_type::block;
+}
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
 #define cs_sys_stat _stat
@@ -1965,21 +2096,20 @@ namespace cs_impl {
 			return info.name;
 		}
 
-		int type(const path_info &info)
+		file_type type(const path_info &info)
 		{
 			return info.type;
 		}
 
 		array scan(const string &path)
 		{
-			DIR *dir = ::opendir(path.c_str());
-			if (dir == nullptr)
-				throw lang_error("Path does not exist.");
-			array
-			entries;
-			for (dirent *dp = ::readdir(dir); dp != nullptr; dp = ::readdir(dir))
-				entries.push_back(var::make<path_info>(dp->d_name, dp->d_type));
-			::closedir(dir);
+			if (!std::filesystem::exists(path))
+				throw lang_error("Directory does not exist.");
+			if (!std::filesystem::is_directory(path))
+				throw lang_error("Path is not a directory.");
+			array entries;
+			for (auto &entry : std::filesystem::directory_iterator(path))
+				entries.push_back(var::make<path_info>(entry.path().filename().string(), get_file_type(entry)));
 			return std::move(entries);
 		}
 
@@ -1987,14 +2117,14 @@ namespace cs_impl {
 		{
 			using namespace cs_impl::file_system;
 			(*path_type_ext)
-			.add_var("unknown", var::make_constant<int>(DT_UNKNOWN))
-			.add_var("fifo", var::make_constant<int>(DT_FIFO))
-			.add_var("sock", var::make_constant<int>(DT_SOCK))
-			.add_var("chr", var::make_constant<int>(DT_CHR))
-			.add_var("dir", var::make_constant<int>(DT_DIR))
-			.add_var("blk", var::make_constant<int>(DT_BLK))
-			.add_var("reg", var::make_constant<int>(DT_REG))
-			.add_var("lnk", var::make_constant<int>(DT_LNK));
+			.add_var("unknown", var::make_constant<file_type>(file_type::unknown))
+			.add_var("fifo", var::make_constant<file_type>(file_type::fifo))
+			.add_var("sock", var::make_constant<file_type>(file_type::socket))
+			.add_var("chr", var::make_constant<file_type>(file_type::character))
+			.add_var("dir", var::make_constant<file_type>(file_type::directory))
+			.add_var("blk", var::make_constant<file_type>(file_type::block))
+			.add_var("reg", var::make_constant<file_type>(file_type::regular))
+			.add_var("lnk", var::make_constant<file_type>(file_type::symlink));
 			(*path_info_ext)
 			.add_var("name", make_cni(name, callable::types::member_visitor))
 			.add_var("type", make_cni(type, callable::types::member_visitor));

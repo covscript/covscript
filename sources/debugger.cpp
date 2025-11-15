@@ -25,10 +25,10 @@
  */
 #define CS_DEBUGGER
 
-#include <covscript_impl/variant.hpp>
-#include <covscript_impl/system.hpp>
+#include <covscript/impl/system.hpp>
 #include <covscript/covscript.hpp>
 #include <iostream>
+#include <variant>
 #include <chrono>
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
@@ -149,7 +149,7 @@ int covscript_args(int args_size, char *args[])
 class breakpoint_recorder final {
 	struct breakpoint final {
 		std::size_t id = 0;
-		variant_impl::variant<std::size_t, std::string, cs::var> data;
+		std::variant<std::size_t, std::string, cs::var> data;
 
 		template <typename T>
 		breakpoint(std::size_t _id, T &&_data) : id(_id), data(std::forward<T>(_data))
@@ -212,11 +212,11 @@ public:
 	void remove(std::size_t id)
 	{
 		m_breakpoints.remove_if([this, id](const breakpoint &b) -> bool {
-			if (b.id == id && b.data.type() == typeid(cs::var))
-				b.data.get<cs::var>().const_val<cs::callable>().get_raw_data().target<cs::function>()->set_debugger_state(
+			if (b.id == id && b.data.index() == 2)
+				std::get<cs::var>(b.data).const_val<cs::callable>().get_raw_data().target<cs::function>()->set_debugger_state(
 				    false);
-			else if (b.id == id && b.data.type() == typeid(std::string))
-				m_pending.erase(m_pending.find(b.data.get<std::string>()));
+			else if (b.id == id && b.data.index() == 1)
+				m_pending.erase(m_pending.find(std::get<std::string>(b.data)));
 			return b.id == id; });
 		auto it = m_pending.begin();
 		for (; it != m_pending.end(); ++it)
@@ -229,7 +229,7 @@ public:
 	bool exist(std::size_t line_num) const
 	{
 		for (auto &b : m_breakpoints)
-			if (b.data.type() == typeid(std::size_t) && b.data.get<std::size_t>() == line_num)
+			if (b.data.index() == 0 && std::get<std::size_t>(b.data) == line_num)
 				return true;
 		return false;
 	}
@@ -240,15 +240,15 @@ public:
 		          << std::endl;
 		for (auto &b : m_breakpoints) {
 			std::cout << b.id << "\t";
-			if (b.data.type() == typeid(cs::var)) {
-				auto func = b.data.get<cs::var>().const_val<cs::callable>().get_raw_data().target<cs::function>();
+			if (b.data.index() == 2) {
+				auto func = std::get<cs::var>(b.data).const_val<cs::callable>().get_raw_data().target<cs::function>();
 				std::cout << "line " << func->get_raw_statement()->get_line_num() << ", " << func->get_declaration()
 				          << std::endl;
 			}
-			else if (b.data.type() == typeid(std::string))
-				std::cout << "\"" << b.data.get<std::string>() << "\"(pending)" << std::endl;
+			else if (b.data.index() == 1)
+				std::cout << "\"" << std::get<std::string>(b.data) << "\"(pending)" << std::endl;
 			else
-				std::cout << "line " << b.data.get<std::size_t>() << std::endl;
+				std::cout << "line " << std::get<std::size_t>(b.data) << std::endl;
 		}
 	}
 
