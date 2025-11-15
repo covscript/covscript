@@ -24,7 +24,7 @@
  * Github:  https://github.com/mikecovlee
  * Website: http://covscript.org.cn
  */
-#include <covscript/import/mozart/traits.hpp>
+#include <type_traits>
 
 namespace cs_impl {
 // Name Demangle
@@ -124,7 +124,7 @@ namespace cs_impl {
 	struct to_integer_if<T, false> {
 		static std::intptr_t to_integer(const T &)
 		{
-			throw cov::error("E000M");
+			throw cs::runtime_error("Does not support conversion of the specified type to integer");
 		}
 	};
 
@@ -172,7 +172,7 @@ namespace cs_impl {
 	struct hash_if<T, X, false> {
 		static std::size_t hash(const X &val)
 		{
-			throw cov::error("E000F");
+			throw cs::runtime_error("Does not support the specified type of hash operation");
 		}
 	};
 
@@ -209,7 +209,7 @@ namespace cs_impl {
 	template <typename T>
 	static std::intptr_t to_integer(const T &val)
 	{
-		return to_integer_if<T, cov::castable<T, std::intptr_t>::value>::to_integer(val);
+		return to_integer_if<T, std::is_convertible<T, std::intptr_t>::value>::to_integer(val);
 	}
 
 	template <typename T>
@@ -870,7 +870,7 @@ namespace cs_impl {
 		{
 			if (this->mDat != nullptr && obj.mDat != nullptr && raw) {
 				if (mDat->protect_level != 0 || obj.mDat->protect_level > 0)
-					throw cov::error("E000J");
+					throw cs::runtime_error("The variable has been protected");
 				this->mDat->data.swap(obj.mDat->data);
 			}
 			else
@@ -881,7 +881,7 @@ namespace cs_impl {
 		{
 			if (this->mDat != nullptr && obj.mDat != nullptr && raw) {
 				if (mDat->protect_level != 0 || obj.mDat->protect_level > 0)
-					throw cov::error("E000J");
+					throw cs::runtime_error("The variable has been protected");
 				this->mDat->data.swap(obj.mDat->data);
 			}
 			else
@@ -892,7 +892,7 @@ namespace cs_impl {
 		{
 			if (mDat != nullptr) {
 				if (mDat->protect_level > 2)
-					throw cov::error("E000L");
+					throw cs::runtime_error("Duplicate singleton objects are not allowed");
 				proxy *dat = get_allocator().alloc(1, mDat->data);
 				recycle();
 				mDat = dat;
@@ -1005,7 +1005,7 @@ namespace cs_impl {
 			if (this->mDat != nullptr)
 			{
 				if (this->mDat->protect_level > 2)
-					throw cov::error("E000L");
+					throw cs::runtime_error("Duplicate singleton objects are not allowed");
 				this->mDat->data.detach();
 			}
 		}
@@ -1060,7 +1060,7 @@ namespace cs_impl {
 			if (this->mDat != nullptr)
 			{
 				if (this->mDat->protect_level > 0)
-					throw cov::error("E000G");
+					throw cs::runtime_error("Constant tagged objects can not be copied");
 				this->mDat->protect_level = 0;
 			}
 		}
@@ -1070,7 +1070,7 @@ namespace cs_impl {
 			if (this->mDat != nullptr)
 			{
 				if (this->mDat->protect_level > 1)
-					throw cov::error("E000G");
+					throw cs::runtime_error("Constant tagged objects can not be copied");
 				this->mDat->protect_level = 1;
 			}
 		}
@@ -1080,7 +1080,7 @@ namespace cs_impl {
 			if (this->mDat != nullptr)
 			{
 				if (this->mDat->protect_level > 2)
-					throw cov::error("E000G");
+					throw cs::runtime_error("Constant tagged objects can not be copied");
 				this->mDat->protect_level = 2;
 			}
 		}
@@ -1090,7 +1090,7 @@ namespace cs_impl {
 			if (this->mDat != nullptr)
 			{
 				if (this->mDat->protect_level > 3)
-					throw cov::error("E000G");
+					throw cs::runtime_error("Constant tagged objects can not be copied");
 				this->mDat->protect_level = 3;
 			}
 		}
@@ -1115,11 +1115,11 @@ namespace cs_impl {
 		T &val() const
 		{
 			if (this->mDat == nullptr)
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			if (!this->mDat->data.is_type_of<T>())
-				throw cov::error("E0006");
+				throw cs::runtime_error("The requested type is different from the object type");
 			if (this->mDat->protect_level > 1)
-				throw cov::error("E000K");
+				throw cs::runtime_error("It is not allowed to change the value of a constant");
 			return this->mDat->data.unchecked_get<T>();
 		}
 
@@ -1127,9 +1127,9 @@ namespace cs_impl {
 		const T &const_val() const
 		{
 			if (this->mDat == nullptr)
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			if (!this->mDat->data.is_type_of<T>())
-				throw cov::error("E0006");
+				throw cs::runtime_error("The requested type is different from the object type");
 			return this->mDat->data.unchecked_get<T>();
 		}
 
@@ -1144,7 +1144,7 @@ namespace cs_impl {
 			if (&obj != this && obj.mDat != mDat) {
 				if (mDat != nullptr && obj.mDat != nullptr && raw) {
 					if (mDat->protect_level != 0 || obj.mDat->protect_level > 0)
-						throw cov::error("E000J");
+						throw cs::runtime_error("The variable has been protected");
 					mDat->data.copy_store(obj.mDat->data);
 				}
 				else {
@@ -1162,7 +1162,7 @@ namespace cs_impl {
 		{
 			if (mDat != nullptr && raw) {
 				if (mDat->protect_level != 0)
-					throw cov::error("E000J");
+					throw cs::runtime_error("The variable has been protected");
 				mDat->data.construct_store<var_storage_t<T>>(dat);
 			}
 			else {
@@ -1182,7 +1182,7 @@ namespace cs_impl {
 		any operator+(const any &rhs) const
 		{
 			if (!usable() || !rhs.usable())
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			else
 				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::add, &mDat->data, (void *) &rhs)._ptr);
 		}
@@ -1190,7 +1190,7 @@ namespace cs_impl {
 		any operator-(const any &rhs) const
 		{
 			if (!usable() || !rhs.usable())
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			else
 				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::sub, &mDat->data, (void *) &rhs)._ptr);
 		}
@@ -1198,7 +1198,7 @@ namespace cs_impl {
 		any operator*(const any &rhs) const
 		{
 			if (!usable() || !rhs.usable())
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			else
 				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::mul, &mDat->data, (void *) &rhs)._ptr);
 		}
@@ -1206,7 +1206,7 @@ namespace cs_impl {
 		any operator/(const any &rhs) const
 		{
 			if (!usable() || !rhs.usable())
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			else
 				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::div, &mDat->data, (void *) &rhs)._ptr);
 		}
@@ -1214,7 +1214,7 @@ namespace cs_impl {
 		any operator%(const any &rhs) const
 		{
 			if (!usable() || !rhs.usable())
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			else
 				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::mod, &mDat->data, (void *) &rhs)._ptr);
 		}
@@ -1222,7 +1222,7 @@ namespace cs_impl {
 		any operator^(const any &rhs) const
 		{
 			if (!usable() || !rhs.usable())
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			else
 				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::pow, &mDat->data, (void *) &rhs)._ptr);
 		}
@@ -1230,7 +1230,7 @@ namespace cs_impl {
 		any operator-() const
 		{
 			if (!usable())
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			else
 				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::minus, &mDat->data, nullptr)._ptr);
 		}
@@ -1238,7 +1238,7 @@ namespace cs_impl {
 		any &operator*() const
 		{
 			if (!usable())
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			else
 				return *static_cast<any *>(mDat->data.m_dispatcher(operators::type::escape, &mDat->data, nullptr)._ptr);
 		}
@@ -1246,7 +1246,7 @@ namespace cs_impl {
 		const any &operator++() const
 		{
 			if (!usable())
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			else
 				mDat->data.m_dispatcher(operators::type::selfinc, &mDat->data, nullptr);
 			return *this;
@@ -1255,7 +1255,7 @@ namespace cs_impl {
 		const any &operator--() const
 		{
 			if (!usable())
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			else
 				mDat->data.m_dispatcher(operators::type::selfdec, &mDat->data, nullptr);
 			return *this;
@@ -1319,7 +1319,7 @@ namespace cs_impl {
 		any index(const any &idx) const
 		{
 			if (!usable() || !idx.usable())
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			if (this->mDat->protect_level > 1)
 				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::cindex, &mDat->data, (void *) &idx)._ptr);
 			else
@@ -1329,16 +1329,16 @@ namespace cs_impl {
 		any &index_ref(const any &idx) const
 		{
 			if (!usable() || !idx.usable())
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			if (this->mDat->protect_level > 1)
-				throw cov::error("E000K");
+				throw cs::runtime_error("It is not allowed to change the value of a constant");
 			return *static_cast<any *>(mDat->data.m_dispatcher(operators::type::index_ref, &mDat->data, (void *) &idx)._ptr);
 		}
 
 		any access(const cs::string &id) const
 		{
 			if (!usable())
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			if (this->mDat->protect_level > 1)
 				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::caccess, &mDat->data, (void *) &id)._ptr);
 			else
@@ -1348,16 +1348,16 @@ namespace cs_impl {
 		any &access_ref(const cs::string &id) const
 		{
 			if (!usable())
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			if (this->mDat->protect_level > 1)
-				throw cov::error("E000K");
+				throw cs::runtime_error("It is not allowed to change the value of a constant");
 			return *static_cast<any *>(mDat->data.m_dispatcher(operators::type::access_ref, &mDat->data, (void *) &id)._ptr);
 		}
 
 		void prep_call(cs::vector &args) const
 		{
 			if (!usable())
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			else
 				mDat->data.m_dispatcher(operators::type::prep_call, &mDat->data, &args);
 		}
@@ -1365,7 +1365,7 @@ namespace cs_impl {
 		any fcall(cs::vector &args) const
 		{
 			if (!usable())
-				throw cov::error("E0005");
+				throw cs::runtime_error("Uses uninitialized objects");
 			else
 				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::fcall, &mDat->data, &args)._ptr);
 		}

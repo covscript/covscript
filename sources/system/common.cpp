@@ -24,8 +24,8 @@
  * Website: http://covscript.org.cn
  */
 
-#include <covscript_impl/dirent/dirent.hpp>
-#include <covscript_impl/system.hpp>
+#include <covscript/impl/system.hpp>
+#include <filesystem>
 #include <fcntl.h>
 
 namespace cs_system_impl {
@@ -69,64 +69,34 @@ namespace cs_system_impl {
 		return std::move(results);
 	}
 
-	int get_file_type(const std::string &path)
-	{
-		struct stat s {};
-		if (stat(path.c_str(), &s) != 0) {
-			return DT_UNKNOWN;
-		}
-		if (S_ISDIR(s.st_mode)) {
-			return DT_DIR;
-		}
-		else if (S_ISREG(s.st_mode)) {
-			return DT_REG;
-		}
-		else if (S_ISLNK(s.st_mode)) {
-			return DT_LNK;
-		}
-		else if (S_ISFIFO(s.st_mode)) {
-			return DT_FIFO;
-		}
-		else if (S_ISBLK(s.st_mode)) {
-			return DT_BLK;
-		}
-		else if (S_ISCHR(s.st_mode)) {
-			return DT_CHR;
-		}
-		else if (S_ISSOCK(s.st_mode)) {
-			return DT_SOCK;
-		}
-		return DT_UNKNOWN;
-	}
-
 	inline bool is_directory(const std::string &path)
 	{
-		return get_file_type(path) == DT_DIR;
+		return std::filesystem::is_directory(path);
 	}
 
 	inline bool is_regular_file(const std::string &path)
 	{
-		return get_file_type(path) == DT_REG;
+		return std::filesystem::is_regular_file(path);
 	}
 
 	inline bool is_block_file(const std::string &path)
 	{
-		return get_file_type(path) == DT_BLK;
+		return std::filesystem::is_block_file(path);
 	}
 
 	inline bool is_char_file(const std::string &path)
 	{
-		return get_file_type(path) == DT_CHR;
+		return std::filesystem::is_character_file(path);
 	}
 
 	inline bool is_link_file(const std::string &path)
 	{
-		return get_file_type(path) == DT_LNK;
+		return std::filesystem::is_symlink(path);
 	}
 
 	inline bool is_fifo_file(const std::string &path)
 	{
-		return get_file_type(path) == DT_FIFO;
+		return std::filesystem::is_fifo(path);
 	}
 
 	unsigned int parse_mode(const std::string &modeString)

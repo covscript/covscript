@@ -25,12 +25,13 @@
  */
 
 #include <covscript/impl/impl.hpp>
-#include <covscript_impl/system.hpp>
+#include <covscript/impl/system.hpp>
 #include <direct.h>
 #include <conio.h>
 #include <cassert>
 #include <cstdlib>
 #include <string>
+#include <utf8.h>
 #include <io.h>
 
 namespace cs_system_impl {
@@ -320,4 +321,29 @@ namespace cs {
 			SwitchToFiber(fi->prev_ctx);
 		}
 	} // namespace fiber
+
+	namespace dll {
+		void *open(std::string_view path)
+		{
+			std::wstring wpath = utf8::utf8to16(path);
+			void *sym = ::LoadLibraryW(wpath.c_str());
+			if (sym == nullptr) {
+				static WCHAR szBuf[256];
+				::FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, ::GetLastError(),
+				                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), szBuf, sizeof(szBuf) / sizeof(WCHAR), nullptr);
+				throw cs::runtime_error(utf8::utf16to8(szBuf));
+			}
+			return sym;
+		}
+
+		void *find_symbol(void *handle, std::string_view symbol)
+		{
+			return reinterpret_cast<void *>(::GetProcAddress(handle, symbol.data()));
+		}
+
+		void close(void *handle)
+		{
+			::FreeLibrary(handle);
+		}
+	} // namespace dll
 } // namespace cs

@@ -24,9 +24,9 @@
  * Website: http://covscript.org.cn
  */
 #include <covscript/impl/compiler.hpp>
-#include <codecvt>
 #include <cwctype>
 #include <climits>
+#include <utf8.h>
 
 namespace cs {
 	namespace codecvt {
@@ -64,20 +64,19 @@ namespace cs {
 		};
 
 		class utf8 final : public charset {
-			std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> cvt;
-
 			static constexpr std::uint32_t ascii_max = 0x7F;
 
 		public:
 			std::u32string local2wide(const std::deque<char> &local) override
 			{
-				std::string str(local.begin(), local.end());
-				return cvt.from_bytes(str);
+				std::u32string ustr;
+				::utf8::utf8to32(local.begin(), local.end(), std::back_inserter(ustr));
+				return ustr;
 			}
 
-			std::string wide2local(const std::u32string &str) override
+			std::string wide2local(const std::u32string &ustr) override
 			{
-				return cvt.to_bytes(str);
+				return ::utf8::utf32to8(ustr);
 			}
 
 			bool is_identifier(char32_t ch) override

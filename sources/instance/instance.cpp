@@ -23,7 +23,7 @@
  * Github:  https://github.com/mikecovlee
  * Website: http://covscript.org.cn
  */
-#include <covscript_impl/system.hpp>
+#include <covscript/impl/system.hpp>
 #include <covscript/covscript.hpp>
 
 namespace cs {

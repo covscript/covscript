@@ -65,11 +65,9 @@
 #ifndef COVSCRIPT_FIBER_STACK_LIMIT
 #define COVSCRIPT_FIBER_STACK_LIMIT (1024 * 1024)
 #endif
-// LibDLL
-#include <covscript/import/libdll/dll.hpp>
 // Hash Map and Set
 #ifndef CS_COMPATIBILITY_MODE
-#include <covscript/import/parallel_hashmap/phmap.h>
+#include <parallel_hashmap/phmap.h>
 #else
 #include <unordered_map>
 #include <unordered_set>
@@ -1182,39 +1180,47 @@ namespace cs {
 		}
 	};
 
-	namespace dll_resources {
-		constexpr char dll_compatible_check[] = "__CS_ABI_COMPATIBLE__";
-		constexpr char dll_main_entrance[] = "__CS_EXTENSION_MAIN__";
+	namespace dll {
+		constexpr char compatible_check[] = "__CS_ABI_COMPATIBLE__";
+		constexpr char main_entrance[] = "__CS_EXTENSION_MAIN__";
 
-		typedef int (*dll_compatible_check_t)();
+		typedef int (*compatible_check_t)();
 
-		typedef void (*dll_main_entrance_t)(name_space *, process_context *);
-	} // namespace dll_resources
+		typedef void (*main_entrance_t)(name_space *, process_context *);
+
+		void *open(std::string_view);
+
+		void *find_symbol(void *, std::string_view);
+
+		void close(void *);
+	} // namespace dll
 
 	class extension final : public name_space {
-	public:
-		static garbage_collector<cov::dll> gc;
+		void *mHandle;
 
+	public:
 		extension() = delete;
 
 		extension(const extension &) = delete;
+
+		virtual ~extension()
+		{
+			dll::close(mHandle);
+		}
 
 		static inline int truncate(int n, int m)
 		{
 			return n == 0 ? 0 : n / int(std::pow(10, (std::max) (int(std::log10(std::abs(n))) - (std::max) (m, 0) + 1, 0)));
 		}
 
-		explicit extension(const std::string &path)
+		explicit extension(std::string_view path)
 		{
-			using namespace dll_resources;
-			cov::dll *dll = new cov::dll(path);
-			gc.add(dll);
-			dll_compatible_check_t dll_check = reinterpret_cast<dll_compatible_check_t>(dll->get_address(
-			                                       dll_compatible_check));
+			mHandle = dll::open(path);
+			dll::compatible_check_t dll_check = reinterpret_cast<dll::compatible_check_t>(dll::find_symbol(mHandle, dll::compatible_check));
 			if (dll_check == nullptr || truncate(dll_check(), 4) != truncate(COVSCRIPT_ABI_VERSION, 4))
 				throw runtime_error("Incompatible Covariant Script Extension.(Target: " + std::to_string(dll_check()) +
 				                    ", Current: " + std::to_string(COVSCRIPT_ABI_VERSION) + ")");
-			dll_main_entrance_t dll_main = reinterpret_cast<dll_main_entrance_t>(dll->get_address(dll_main_entrance));
+			dll::main_entrance_t dll_main = reinterpret_cast<dll::main_entrance_t>(dll::find_symbol(mHandle, dll::main_entrance));
 			if (dll_main != nullptr) {
 				dll_main(this, current_process);
 			}
