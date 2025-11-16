@@ -26,6 +26,7 @@
 
 #include <covscript/impl/impl.hpp>
 #include <covscript/impl/system.hpp>
+#include <windows.h>
 #include <direct.h>
 #include <conio.h>
 #include <cassert>
