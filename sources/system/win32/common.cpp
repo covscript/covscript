@@ -28,7 +28,6 @@
 #include <covscript/impl/system.hpp>
 #include <windows.h>
 #include <direct.h>
-#include <limits.h>
 #include <conio.h>
 #include <cassert>
 #include <cstdlib>
@@ -175,25 +174,23 @@ namespace cs_impl {
 
 		std::string get_current_dir()
 		{
-			char temp[PATH_MAX] = "";
-
-			if (::_getcwd(temp, PATH_MAX) != nullptr) {
-				return std::string(temp);
+			char *buf = ::_getcwd(nullptr, 0);
+			if (buf == nullptr) {
+				int error = errno;
+				switch (error) {
+				case EACCES:
+					throw cs::runtime_error("Permission denied");
+				case ENOMEM:
+					throw cs::runtime_error("Out of memory");
+				case ERANGE:
+					throw cs::runtime_error("Path too long");
+				default:
+					throw cs::runtime_error("Unknown errno: " + std::to_string(error));
+				}
 			}
-
-			int error = errno;
-			switch (error) {
-			case EACCES:
-				throw cs::runtime_error("Permission denied");
-
-			case ENOMEM:
-				throw cs::runtime_error("Out of memory");
-
-			default:
-				std::stringstream str;
-				str << "Unrecognised errno: " << error;
-				throw cs::runtime_error(str.str());
-			}
+			std::string result(buf);
+			free(buf);
+			return result;
 		}
 	} // namespace file_system
 } // namespace cs_impl

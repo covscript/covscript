@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Rename
-mv cs cs_x86
-mv cs_dbg cs_dbg_x86
-mv libcovscript.a libcovscript_x86.a
-mv libcovscript_sdk.a libcovscript_sdk_x86.a
-mv libcovscript_debug_sdk.a libcovscript_debug_sdk_x86.a
+mv cs cs_arm
+mv cs_dbg cs_dbg_arm
+mv libcovscript.a libcovscript_arm.a
+mv libcovscript_sdk.a libcovscript_sdk_arm.a
+mv libcovscript_debug_sdk.a libcovscript_debug_sdk_arm.a
 # Check file information
 otool -L libcovscript_x86.a
 otool -L libcovscript_sdk_x86.a

@@ -15,7 +15,7 @@ cmake -G "Unix Makefiles" ../..
 make cs cs_dbg covscript -j$CPU_NUM
 # Running lipo in macOS
 if [[ "$(uname)" == "Darwin" ]]; then
-    make cs_arm cs_dbg_arm covscript_arm -j$CPU_NUM
+    make cs_x86 cs_dbg_x86 covscript_x86 -j$CPU_NUM
     bash ../../csbuild/create_universal.sh
 fi
 cd ../..
