@@ -35,6 +35,28 @@
 #include <utf8.h>
 #include <io.h>
 
+std::wstring utf8_to_wstring(const std::string &utf8)
+{
+	std::wstring out;
+#if WCHAR_MAX == 0xffff
+	utf8::utf8to16(utf8.begin(), utf8.end(), std::back_inserter(out));
+#else
+	utf8::utf8to32(utf8.begin(), utf8.end(), std::back_inserter(out));
+#endif
+	return out;
+}
+
+std::string wstring_to_utf8(const std::wstring &wide)
+{
+	std::string out;
+#if WCHAR_MAX == 0xffff
+	utf8::utf16to8(wide.begin(), wide.end(), std::back_inserter(out));
+#else
+	utf8::utf32to8(wide.begin(), wide.end(), std::back_inserter(out));
+#endif
+	return out;
+}
+
 namespace cs_system_impl {
 	bool chmod_impl(const std::string &path, unsigned int mode)
 	{
@@ -326,13 +348,13 @@ namespace cs {
 	namespace dll {
 		void *open(std::string_view path)
 		{
-			std::wstring wpath = utf8::utf8to16(path);
+			std::wstring wpath = utf8_to_wstring(path);
 			void *sym = ::LoadLibraryW(wpath.c_str());
 			if (sym == nullptr) {
 				static WCHAR szBuf[256];
 				::FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, ::GetLastError(),
 				                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), szBuf, sizeof(szBuf) / sizeof(WCHAR), nullptr);
-				throw cs::runtime_error(utf8::utf16to8(szBuf));
+				throw cs::runtime_error(wstring_to_utf8(szBuf));
 			}
 			return sym;
 		}
