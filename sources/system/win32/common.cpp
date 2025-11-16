@@ -28,6 +28,7 @@
 #include <covscript/impl/system.hpp>
 #include <windows.h>
 #include <direct.h>
+#include <limits.h>
 #include <conio.h>
 #include <cassert>
 #include <cstdlib>
@@ -35,7 +36,7 @@
 #include <utf8.h>
 #include <io.h>
 
-std::wstring utf8_to_wstring(const std::string &utf8)
+std::wstring utf8_to_wstring(std::string_view utf8)
 {
 	std::wstring out;
 #if WCHAR_MAX == 0xffff
@@ -46,7 +47,7 @@ std::wstring utf8_to_wstring(const std::string &utf8)
 	return out;
 }
 
-std::string wstring_to_utf8(const std::wstring &wide)
+std::string wstring_to_utf8(std::wstring_view wide)
 {
 	std::string out;
 #if WCHAR_MAX == 0xffff
@@ -361,12 +362,12 @@ namespace cs {
 
 		void *find_symbol(void *handle, std::string_view symbol)
 		{
-			return reinterpret_cast<void *>(::GetProcAddress(handle, symbol.data()));
+			return reinterpret_cast<void *>(::GetProcAddress((HMODULE) handle, symbol.data()));
 		}
 
 		void close(void *handle)
 		{
-			::FreeLibrary(handle);
+			::FreeLibrary((HMODULE) handle);
 		}
 	} // namespace dll
 } // namespace cs
