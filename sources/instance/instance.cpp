@@ -196,7 +196,7 @@ namespace cs {
 			if (root == nullptr || root->get_type() != token_types::id)
 				throw runtime_error("Wrong grammar for variable declaration.");
 			if (regist)
-				storage.add_record(static_cast<token_id *>(root)->get_id());
+				storage.add_record(static_cast<token_id *>(root)->get_id().get_id());
 		}
 	}
 
@@ -224,7 +224,7 @@ namespace cs {
 				if (constant && right->get_type() != token_types::value)
 					throw runtime_error("Wrong grammar for constant variable definition(3).");
 				if (regist)
-					storage.add_record(static_cast<token_id *>(left)->get_id());
+					storage.add_record(static_cast<token_id *>(left)->get_id().get_id());
 				break;
 			}
 			case signal_types::bind_: {
@@ -281,7 +281,7 @@ namespace cs {
 					throw runtime_error("Wrong grammar for variable definition(8).");
 			}
 			else if (regist)
-				storage.add_record(static_cast<token_id *>(root)->get_id());
+				storage.add_record(static_cast<token_id *>(root)->get_id().get_id());
 		}
 	}
 

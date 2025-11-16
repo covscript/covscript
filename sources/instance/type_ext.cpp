@@ -1336,17 +1336,17 @@ namespace cs_impl {
 			const var &func = args.front();
 			if (func.is_type_of<callable>()) {
 				const callable::function_type &impl_f = func.const_val<callable>().get_raw_data();
-				if (impl_f.target_type() != typeid(function))
+				if (impl_f.target_type() != typeid(function_ptr))
 					throw lang_error("Only can create coroutine from covscript function.");
-				function const *fptr = impl_f.target<function>();
+				function const *fptr = impl_f.target<function_ptr>()->fptr;
 				return fiber::create(fptr->get_context(), fiber_function(fptr, vector(args.begin() + 1, args.end())));
 			}
 			else if (func.is_type_of<object_method>()) {
 				const auto &om = func.const_val<object_method>();
 				const callable::function_type &impl_f = om.callable.const_val<callable>().get_raw_data();
-				if (impl_f.target_type() != typeid(function))
+				if (impl_f.target_type() != typeid(function_ptr))
 					throw lang_error("Only can create coroutine from covscript function.");
-				function const *fptr = impl_f.target<function>();
+				function const *fptr = impl_f.target<function_ptr>()->fptr;
 				vector argument{om.object};
 				argument.insert(argument.end(), args.begin() + 1, args.end());
 				return fiber::create(fptr->get_context(), fiber_function(fptr, std::move(argument)));
@@ -1462,7 +1462,7 @@ namespace cs_impl {
 
 		bool is_native_callable(const callable &func)
 		{
-			return func.get_raw_data().target_type() != typeid(function) || func.get_raw_data().target<function>()->is_el_func();
+			return func.get_raw_data().target_type() != typeid(function_ptr) || func.get_raw_data().target<function_ptr>()->fptr->is_el_func();
 		}
 
 		class async_callable final : public async_base {
@@ -1511,7 +1511,7 @@ namespace cs_impl {
 		std::unique_ptr<async_base> make_async_wrapper(const callable &func, vector data)
 		{
 			if (is_native_callable(func))
-				return std::make_unique<async_function>(func.get_raw_data().target<function>(), std::move(data));
+				return std::make_unique<async_function>(func.get_raw_data().target<function_ptr>()->fptr, std::move(data));
 			else
 				return std::make_unique<async_callable>(func, std::move(data));
 		}
@@ -1652,15 +1652,15 @@ namespace cs_impl {
 		{
 			if (func.is_type_of<object_method>()) {
 				const callable::function_type &target = func.const_val<object_method>().callable.const_val<callable>().get_raw_data();
-				if (target.target_type() == typeid(function))
-					return target.target<function>()->argument_count() - 1;
+				if (target.target_type() == typeid(function_ptr))
+					return target.target<function_ptr>()->fptr->argument_count() - 1;
 				else
 					return target.target<cni>()->argument_count() - 1;
 			}
 			else if (func.is_type_of<callable>()) {
 				const callable::function_type &target = func.const_val<callable>().get_raw_data();
-				if (target.target_type() == typeid(function))
-					return target.target<function>()->argument_count();
+				if (target.target_type() == typeid(function_ptr))
+					return target.target<function_ptr>()->fptr->argument_count();
 				else
 					return target.target<cni>()->argument_count();
 			}

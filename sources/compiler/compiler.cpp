@@ -649,7 +649,7 @@ namespace cs {
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
 					throw compile_error("Wrong grammar for variable declaration.");
-				context->instance->storage.add_record(static_cast<token_id *>(rptr)->get_id());
+				context->instance->storage.add_record(static_cast<token_id *>(rptr)->get_id().get_id());
 				it.data() = rptr;
 				return;
 			}

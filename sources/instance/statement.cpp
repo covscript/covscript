@@ -772,10 +772,10 @@ namespace cs {
 		CS_DEBUGGER_STEP(this);
 		if (this->mIsMemFn)
 			context->instance->storage.add_var_no_return(this->mName,
-			        var::make_protect<callable>(this->mFunc, callable::types::member_fn),
+			        var::make_protect<callable>(function_ptr{&this->mFunc}, callable::types::member_fn),
 			        mOverride);
 		else {
-			var func = var::make_protect<callable>(this->mFunc);
+			var func = var::make_protect<callable>(function_ptr{&this->mFunc});
 #ifdef CS_DEBUGGER
 			if (context->instance->storage.is_initial())
 				cs_debugger_func_breakpoint(this->mName, func);

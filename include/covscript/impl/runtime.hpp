@@ -31,9 +31,9 @@ namespace cs {
 
 	class domain_manager {
 		const stack_pointer &fiber_stack;
-		stack_type<set_t<string>> m_set;
+		stack_type<set_t<std::string_view>> m_set;
 		stack_type<domain_type> m_data;
-		set_t<string> buildin_symbols;
+		set_t<std::string_view> buildin_symbols;
 
 	public:
 		explicit domain_manager(const stack_pointer &fiber_sp) : fiber_stack(fiber_sp)
@@ -143,12 +143,12 @@ namespace cs {
 				m_data.top().next();
 		}
 
-		bool exist_record(const string &name)
+		bool exist_record(std::string_view name)
 		{
 			return m_set.top().count(name) > 0;
 		}
 
-		bool exist_record_in_struct(const string &name)
+		bool exist_record_in_struct(std::string_view name)
 		{
 			for (auto &set : m_set) {
 				if (set.count(name) > 0)
@@ -224,10 +224,10 @@ namespace cs {
 			return var();
 		}
 
-		domain_manager &add_record(const string &name)
+		domain_manager &add_record(std::string_view name)
 		{
 			if (exist_record(name))
-				throw runtime_error("Redefinition of variable \"" + name + "\".");
+				throw runtime_error("Redefinition of variable \"" + std::string(name) + "\".");
 			else
 				m_set.top().emplace(name);
 			return *this;

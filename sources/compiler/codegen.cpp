@@ -450,7 +450,7 @@ namespace cs {
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::id)
 			throw compile_error("Wrong grammar in foreach statement, expect <id>");
-		context->instance->storage.add_record(static_cast<token_id *>(t.root().data())->get_id());
+		context->instance->storage.add_record(static_cast<token_id *>(t.root().data())->get_id().get_id());
 	}
 
 	statement_base *

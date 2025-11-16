@@ -177,9 +177,9 @@ public:
 		else if (function.type() != typeid(cs::callable))
 			throw cs::runtime_error("Debugger just can break at specific line or function.");
 		const cs::callable::function_type &target = function.const_val<cs::callable>().get_raw_data();
-		if (target.target_type() != typeid(cs::function))
+		if (target.target_type() != typeid(cs::function_ptr))
 			throw cs::runtime_error("Debugger can not break at CNI function.");
-		target.target<cs::function>()->set_debugger_state(true);
+		target.target<cs::function_ptr>()->fptr->set_debugger_state(true);
 		m_breakpoints.emplace_front(++m_id, function);
 		return m_id;
 	}
@@ -195,7 +195,7 @@ public:
 	{
 		if (m_pending.count(name) > 0) {
 			const cs::callable::function_type &target = function.const_val<cs::callable>().get_raw_data();
-			target.target<cs::function>()->set_debugger_state(true);
+			target.target<cs::function_ptr>()->fptr->set_debugger_state(true);
 			auto key = m_pending.find(name);
 			if (key->second.second) {
 				for (auto &it : m_breakpoints) {
@@ -213,7 +213,7 @@ public:
 	{
 		m_breakpoints.remove_if([this, id](const breakpoint &b) -> bool {
 			if (b.id == id && b.data.index() == 2)
-				std::get<cs::var>(b.data).const_val<cs::callable>().get_raw_data().target<cs::function>()->set_debugger_state(
+				std::get<cs::var>(b.data).const_val<cs::callable>().get_raw_data().target<cs::function_ptr>()->fptr->set_debugger_state(
 				    false);
 			else if (b.id == id && b.data.index() == 1)
 				m_pending.erase(m_pending.find(std::get<std::string>(b.data)));
@@ -241,7 +241,7 @@ public:
 		for (auto &b : m_breakpoints) {
 			std::cout << b.id << "\t";
 			if (b.data.index() == 2) {
-				auto func = std::get<cs::var>(b.data).const_val<cs::callable>().get_raw_data().target<cs::function>();
+				auto func = std::get<cs::var>(b.data).const_val<cs::callable>().get_raw_data().target<cs::function_ptr>()->fptr;
 				std::cout << "line " << func->get_raw_statement()->get_line_num() << ", " << func->get_declaration()
 				          << std::endl;
 			}
