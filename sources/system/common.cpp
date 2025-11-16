@@ -69,36 +69,6 @@ namespace cs_system_impl {
 		return std::move(results);
 	}
 
-	inline bool is_directory(const std::string &path)
-	{
-		return std::filesystem::is_directory(path);
-	}
-
-	inline bool is_regular_file(const std::string &path)
-	{
-		return std::filesystem::is_regular_file(path);
-	}
-
-	inline bool is_block_file(const std::string &path)
-	{
-		return std::filesystem::is_block_file(path);
-	}
-
-	inline bool is_char_file(const std::string &path)
-	{
-		return std::filesystem::is_character_file(path);
-	}
-
-	inline bool is_link_file(const std::string &path)
-	{
-		return std::filesystem::is_symlink(path);
-	}
-
-	inline bool is_fifo_file(const std::string &path)
-	{
-		return std::filesystem::is_fifo(path);
-	}
-
 	unsigned int parse_mode(const std::string &modeString)
 	{
 		const char *perm = modeString.c_str();
@@ -127,7 +97,7 @@ namespace cs_system_impl {
 			path = cs::path_separator;
 		for (const auto &dir : dirs) {
 			path += dir + cs::path_separator;
-			if (is_directory(path))
+			if (std::filesystem::is_directory(path))
 				continue;
 			if (!mkdir_impl(path, mode))
 				return false;
@@ -146,6 +116,26 @@ constexpr char path_delimiter_reversed = ';';
 
 namespace cs_impl {
 	namespace file_system {
+		bool exist(const std::string &path)
+		{
+			return std::filesystem::exists(path);
+		}
+
+		bool is_file(const std::string &path)
+		{
+			return std::filesystem::is_regular_file(path);
+		}
+
+		bool is_dir(const std::string &path)
+		{
+			return std::filesystem::is_directory(path);
+		}
+
+		bool is_absolute_path(const std::string &path)
+		{
+			return std::filesystem::path(path).is_absolute();
+		}
+
 		bool chmod_r(const std::string &path_input, const std::string &mode)
 		{
 			auto dirs = cs_system_impl::split(path_input, {'/', '\\'});
@@ -169,58 +159,42 @@ namespace cs_impl {
 
 		bool move(const std::string &source, const std::string &dest)
 		{
-			return std::rename(source.c_str(), dest.c_str()) == 0;
+			std::error_code ec;
+			std::filesystem::rename(source, dest, ec);
+			return !ec;
 		}
 
 		bool copy(const std::string &source, const std::string &dest)
 		{
-			std::ifstream in(source, std::ios_base::in | std::ios_base::binary);
-			std::ofstream out(dest, std::ios_base::out | std::ios_base::binary);
-			if (!in || !out)
-				return false;
-			char buffer[256];
-			while (!in.eof()) {
-				in.read(buffer, 256);
-				out.write(buffer, in.gcount());
-			}
-			return true;
+			std::error_code ec;
+			std::filesystem::copy_file(source, dest,
+			                           std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing, ec);
+			return !ec;
 		}
 
 		bool remove(const std::string &path)
 		{
-			return std::remove(path.c_str()) == 0;
+			std::error_code ec;
+			return std::filesystem::remove_all(path, ec) > 0 && !ec;
 		}
 
 		bool mkdir_p(const std::string &path)
 		{
-			if (path.size() > 0 && (path[0] == '/' || path[0] == '\\'))
-				return cs_system_impl::mkdir_dirs(cs_system_impl::split(path, {'/', '\\'}), 0755, true);
-			else
-				return cs_system_impl::mkdir_dirs(cs_system_impl::split(path, {'/', '\\'}), 0755, false);
+			std::error_code ec;
+			std::filesystem::create_directories(path, ec);
+			return !ec;
 		}
 
 		bool mkdir(std::string path)
 		{
-			for (auto &ch : path) {
-				if (ch == path_separator_reversed)
-					ch = cs::path_separator;
-			}
-			return cs_system_impl::mkdir_impl(path, 0755);
+			std::error_code ec;
+			std::filesystem::create_directory(path, ec);
+			return !ec;
 		}
 
-		bool exist(const std::string &path)
+		std::string get_current_dir()
 		{
-			return std::ifstream(path).is_open();
-		}
-
-		bool is_file(const std::string &path)
-		{
-			return cs_system_impl::is_regular_file(path);
-		}
-
-		bool is_dir(const std::string &path)
-		{
-			return cs_system_impl::is_directory(path);
+			return std::filesystem::current_path().string();
 		}
 	} // namespace file_system
 } // namespace cs_impl

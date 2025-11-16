@@ -202,35 +202,6 @@ namespace cs_impl {
 		{
 			return access(path.c_str(), X_OK) == 0;
 		}
-
-		bool is_absolute_path(const std::string &path)
-		{
-			return !path.empty() && path[0] == '/';
-		}
-
-		std::string get_current_dir()
-		{
-			char temp[PATH_MAX] = "";
-
-			if (::getcwd(temp, PATH_MAX) != nullptr) {
-				return std::string(temp);
-			}
-
-			int error = errno;
-			switch (error) {
-			case EACCES:
-				throw cs::runtime_error("Permission denied");
-
-			case ENOMEM:
-				throw cs::runtime_error("Out of memory");
-
-			default: {
-				std::stringstream str;
-				str << "Unrecognised errno: " << error;
-				throw cs::runtime_error(str.str());
-			}
-			}
-		}
 	} // namespace file_system
 } // namespace cs_impl
 

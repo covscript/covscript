@@ -165,33 +165,6 @@ namespace cs_impl {
 				return false;
 			return header[0] == 'M' && header[1] == 'Z';
 		}
-
-		bool is_absolute_path(const std::string &path)
-		{
-			return (!path.empty() && path[0] == '/') // for mingw, cygwin
-			       || (path.size() >= 3 && path[1] == ':' && path[2] == '\\');
-		}
-
-		std::string get_current_dir()
-		{
-			char *buf = ::_getcwd(nullptr, 0);
-			if (buf == nullptr) {
-				int error = errno;
-				switch (error) {
-				case EACCES:
-					throw cs::runtime_error("Permission denied");
-				case ENOMEM:
-					throw cs::runtime_error("Out of memory");
-				case ERANGE:
-					throw cs::runtime_error("Path too long");
-				default:
-					throw cs::runtime_error("Unknown errno: " + std::to_string(error));
-				}
-			}
-			std::string result(buf);
-			free(buf);
-			return result;
-		}
 	} // namespace file_system
 } // namespace cs_impl
 
