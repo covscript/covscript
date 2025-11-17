@@ -636,7 +636,7 @@ namespace cs {
 			return m_reflect.find(id.m_id) != m_reflect.end();
 		}
 
-		domain_type &add_var(std::string_view name, const var &val)
+		domain_type &add_var(const char *name, const var &val)
 		{
 			auto it = m_reflect.find(name);
 			if (it == m_reflect.end()) {
@@ -667,7 +667,7 @@ namespace cs {
 			return *this;
 		}
 
-		bool add_var_optimal(std::string_view name, const var &val, bool override = false)
+		bool add_var_optimal(const char *name, const var &val, bool override = false)
 		{
 			auto it = m_reflect.find(name);
 			if (it != m_reflect.end()) {
@@ -1087,16 +1087,10 @@ namespace cs {
 			if (!is_ref)
 				delete m_data;
 		}
-
-		name_space &add_var(std::string_view name, const var &var)
+		template <typename T>
+		name_space &add_var(T &&id, const var &var)
 		{
-			m_data->add_var(name, var);
-			return *this;
-		}
-
-		name_space &add_var(const var_id &id, const var &var)
-		{
-			m_data->add_var(id, var);
+			m_data->add_var(std::forward<T>(id), var);
 			return *this;
 		}
 

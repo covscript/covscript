@@ -106,7 +106,7 @@ namespace cs {
 		token_base *token_alias = tree_alias.root().data();
 		if (token_alias->get_type() != token_types::id)
 			throw compile_error("Wrong grammar for import-as statement, expect <id> in alias.");
-		const string &alias_name = static_cast<token_id *>(token_alias)->get_id().get_id();
+		const var_id &alias_name = static_cast<token_id *>(token_alias)->get_id();
 		var ext = get_namespace(context, tree_package.root());
 		context->compiler->add_constant(ext);
 		context->instance->storage.add_var_no_return(alias_name, ext);
@@ -211,11 +211,11 @@ namespace cs {
 	void method_namespace::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		const var_id &name = static_cast<token_id *>(static_cast<token_expr *>(raw.front().at(
-		                       1))
-		                   ->get_tree()
-		                   .root()
-		                   .data())
-		                   ->get_id();
+		                         1))
+		                     ->get_tree()
+		                     .root()
+		                     .data())
+		                     ->get_id();
 		context->instance->storage.add_var_no_return("__PRAGMA_CS_NAMESPACE_DEFINITION__", var::make<const var_id *>(&name));
 	}
 

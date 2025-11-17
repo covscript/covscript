@@ -43,7 +43,7 @@ namespace cs {
 		fcall_guard fcall;
 #endif
 		for (std::size_t i = 0; i < args.size(); ++i)
-			_this->mContext->instance->storage.add_var_no_return(_this->mArgs[i], args[i]);
+			_this->mContext->instance->storage.add_var_no_return(_this->mArgs[i].data(), args[i]);
 		for (auto &ptr : _this->mBody) {
 			try {
 				ptr->run();
@@ -83,7 +83,7 @@ namespace cs {
 				_this->mContext->instance->storage.add_var_no_return("self", args[i++]);
 			for (; i < args.size(); ++i)
 				arr.push_back(args[i]);
-			_this->mContext->instance->storage.add_var_no_return(_this->mArgs.front(), arg_list);
+			_this->mContext->instance->storage.add_var_no_return(_this->mArgs.front().data(), arg_list);
 		}
 		for (auto &ptr : _this->mBody) {
 			try {
@@ -117,7 +117,7 @@ namespace cs {
 			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
 #endif
 		for (std::size_t i = 0; i < args.size(); ++i)
-			_this->mContext->instance->storage.add_var_no_return(_this->mArgs[i], args[i]);
+			_this->mContext->instance->storage.add_var_no_return(_this->mArgs[i].data(), args[i]);
 		try {
 			return _this->mContext->instance->parse_expr(static_cast<const statement_return *>(_this->mBody.front())->get_tree().root());
 		}
@@ -236,7 +236,7 @@ namespace cs {
 	void statement_import::run_impl()
 	{
 		for (auto &val : m_var_list)
-			context->instance->storage.add_var_no_return(val.first, val.second, true);
+			context->instance->storage.add_var_no_return(val.first.data(), val.second, true);
 	}
 
 	void statement_import::dump(std::ostream &o) const
@@ -336,7 +336,7 @@ namespace cs {
 	void statement_namespace::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
-		context->instance->storage.add_var_no_return(this->mName,
+		context->instance->storage.add_var_no_return(this->mName.data(),
 		make_namespace(make_shared_namespace<name_space>([this] {
 			scope_guard scope(context);
 			for (auto &ptr: mBlock)
@@ -751,7 +751,7 @@ namespace cs {
 	{
 		CS_DEBUGGER_STEP(this);
 		this->mBuilder.do_inherit();
-		context->instance->storage.add_struct(this->mName, this->mBuilder);
+		context->instance->storage.add_struct(this->mName.data(), this->mBuilder);
 	}
 
 	void statement_struct::dump(std::ostream &o) const
@@ -771,16 +771,16 @@ namespace cs {
 	{
 		CS_DEBUGGER_STEP(this);
 		if (this->mIsMemFn)
-			context->instance->storage.add_var_no_return(this->mName,
-			        var::make_protect<callable>(function_ptr{&this->mFunc}, callable::types::member_fn),
-			        mOverride);
+			context->instance->storage.add_var_no_return(this->mName.data(),
+			                          var::make_protect<callable>(function_ptr{&this->mFunc}, callable::types::member_fn),
+			                          mOverride);
 		else {
 			var func = var::make_protect<callable>(function_ptr{&this->mFunc});
 #ifdef CS_DEBUGGER
 			if (context->instance->storage.is_initial())
 				cs_debugger_func_breakpoint(this->mName, func);
 #endif
-			context->instance->storage.add_var_no_return(this->mName, func, mOverride);
+			context->instance->storage.add_var_no_return(this->mName.data(), func, mOverride);
 		}
 	}
 
@@ -827,7 +827,7 @@ namespace cs {
 			}
 			catch (const lang_error &le) {
 				scope.reset();
-				context->instance->storage.add_var_no_return(mName, le);
+				context->instance->storage.add_var_no_return(mName.data(), le);
 				for (auto &ptr : mCatchBody) {
 					try {
 						ptr->run();
