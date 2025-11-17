@@ -210,13 +210,13 @@ namespace cs {
 
 	void method_namespace::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		std::string name = static_cast<token_id *>(static_cast<token_expr *>(raw.front().at(
+		const var_id &name = static_cast<token_id *>(static_cast<token_expr *>(raw.front().at(
 		                       1))
 		                   ->get_tree()
 		                   .root()
 		                   .data())
 		                   ->get_id();
-		context->instance->storage.add_var_no_return("__PRAGMA_CS_NAMESPACE_DEFINITION__", name);
+		context->instance->storage.add_var_no_return("__PRAGMA_CS_NAMESPACE_DEFINITION__", var::make<const var_id *>(&name));
 	}
 
 	statement_base *
@@ -235,7 +235,7 @@ namespace cs {
 
 	void method_namespace::postprocess(const context_t &context, const domain_type &domain)
 	{
-		context->instance->storage.add_var_no_return(domain.get_var("__PRAGMA_CS_NAMESPACE_DEFINITION__").const_val<string>(),
+		context->instance->storage.add_var_no_return(*domain.get_var("__PRAGMA_CS_NAMESPACE_DEFINITION__").const_val<const var_id *>(),
 		                          make_namespace(make_shared_namespace<name_space>(domain)));
 	}
 
@@ -457,7 +457,7 @@ namespace cs {
 	method_foreach::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
-		const std::string &it = static_cast<token_id *>(t.root().data())->get_id();
+		const var_id &it = static_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		return new statement_foreach(it, static_cast<token_expr *>(raw.front().at(3))->get_tree(), body, context,
@@ -472,7 +472,7 @@ namespace cs {
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::id)
 			throw compile_error("Wrong grammar in foreach statement, expect <id>");
-		const std::string &it = static_cast<token_id *>(t.root().data())->get_id();
+		const var_id &it = static_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		return new statement_foreach(it, static_cast<token_expr *>(raw.front().at(3))->get_tree(), {new statement_expression(static_cast<token_expr *>(raw.front().at(5))->get_tree(), context, raw.front().back())}, context,

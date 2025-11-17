@@ -677,7 +677,7 @@ namespace cs {
 	}
 
 	template <typename T, typename X>
-	void foreach_helper(const context_t &context, const string &iterator, const var &obj,
+	void foreach_helper(const context_t &context, const var_id &iterator, const var &obj,
 	                    std::deque<statement_base *> &body)
 	{
 		if (obj.const_val<T>().empty())
