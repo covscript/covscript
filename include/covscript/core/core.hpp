@@ -547,7 +547,7 @@ namespace cs {
 	public:
 		var_id() = delete;
 
-		var_id(std::string_view name) : m_id(name) {}
+		explicit var_id(std::string_view name) : m_id(name) {}
 
 		var_id(const var_id &) = default;
 
@@ -955,14 +955,14 @@ namespace cs {
 					// Handle overriding
 					const var &v = s.m_data->get_var(it.first);
 					if (!_parent.m_data->get_var(it.first).is_same(v))
-						m_data->add_var(it.first, copy(v));
+						m_data->add_var(it.first.data(), copy(v));
 					else
-						m_data->add_var(it.first, parent.m_data->get_var_by_id(it.second));
+						m_data->add_var(it.first.data(), parent.m_data->get_var_by_id(it.second));
 				}
 			}
 			for (auto &it : *s.m_data)
 				if (!m_data->exist(it.first))
-					m_data->add_var(it.first, copy(s.m_data->get_var_by_id(it.second)));
+					m_data->add_var(it.first.data(), copy(s.m_data->get_var_by_id(it.second)));
 			if (m_data->exist("duplicate"))
 				invoke(m_data->get_var("duplicate"), var::make<structure>(this), var::make<structure>(&s));
 		}
@@ -1127,7 +1127,7 @@ namespace cs {
 		void copy_domain(const domain_type &domain)
 		{
 			for (auto &it : domain)
-				m_data->add_var(it.first, domain.get_var_by_id(it.second));
+				m_data->add_var(it.first.data(), domain.get_var_by_id(it.second));
 		}
 
 		name_space &operator=(const name_space &ns)

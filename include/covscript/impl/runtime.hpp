@@ -100,7 +100,7 @@ namespace cs {
 			const domain_type &global = m_data.bottom();
 			for (auto &it : global) {
 				if (buildin_symbols.count(it.first) == 0)
-					nm->add_var(it.first, global.get_var_by_id(it.second));
+					nm->add_var(it.first.data(), global.get_var_by_id(it.second));
 			}
 			return nm;
 		}
@@ -351,7 +351,7 @@ namespace cs {
 		void involve_domain(const domain_type &domain, bool is_override = false)
 		{
 			for (auto &it : domain)
-				add_var(it.first, domain.get_var_by_id(it.second), is_override);
+				add_var(it.first.data(), domain.get_var_by_id(it.second), is_override);
 		}
 	};
 
