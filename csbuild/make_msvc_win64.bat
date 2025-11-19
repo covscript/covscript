@@ -16,6 +16,6 @@ xcopy /Y cmake-build\msvc_win64\%config%\*.lib build\lib\
 rd /S /Q csdev
 mkdir csdev\include\covscript
 mkdir csdev\lib
-xcopy /E /Y include\covscript csdev\include\covscript
-xcopy /E /Y csbuild\deps\include\covscript csdev\include\covscript
-xcopy /E /Y build\lib         csdev\lib\
+xcopy /E /Y include\ csdev\include\
+xcopy /E /Y third-party\include\ csdev\include\
+xcopy /E /Y build\lib            csdev\lib\

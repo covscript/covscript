@@ -28,6 +28,6 @@ strip -x build/bin/cs*
 rm -rf csdev
 mkdir -p csdev/include/covscript
 mkdir -p csdev/lib
-cp -r include/covscript csdev/include/
-cp -r third-party/include/ csdev/include/
-cp -r build/lib         csdev/
+cp -r include/* csdev/include/
+cp -r third-party/include/* csdev/include/
+cp -r build/lib             csdev/
