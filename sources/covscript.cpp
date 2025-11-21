@@ -24,7 +24,7 @@
  * Website: http://covscript.org.cn
  */
 #include <covscript/impl/codegen.hpp>
-#include <covscript_impl/system.hpp>
+#include <covscript/impl/system.hpp>
 #include <covscript/covscript.hpp>
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
@@ -233,8 +233,6 @@ namespace cs {
 			throw lang_error("Wrong literal format.");
 		}
 	}
-
-	garbage_collector<cov::dll> extension::gc;
 
 	garbage_collector<token_base> token_base::gc;
 
@@ -630,7 +628,6 @@ namespace cs {
 		statement_base::gc.collect();
 		method_base::gc.collect();
 		token_base::gc.collect();
-		extension::gc.collect();
 	}
 
 	void collect_garbage(context_t &context)

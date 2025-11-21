@@ -24,7 +24,97 @@
  * Github:  https://github.com/mikecovlee
  * Website: http://covscript.org.cn
  */
-#include <covscript/import/mozart/bind.hpp>
+#include <utility>
+
+namespace cov {
+	template <typename>
+	class function_index;
+
+	template <typename>
+	class executor_index;
+
+	template <typename>
+	struct function_parser;
+
+	template <bool, typename>
+	struct function_resolver;
+
+	template <typename _Tp>
+	class is_functional {
+		template <typename T, decltype(&T::operator()) X>
+		struct matcher;
+
+		template <typename T>
+		static constexpr bool match(T *)
+		{
+			return false;
+		}
+
+		template <typename T>
+		static constexpr bool match(matcher<T, &T::operator()> *)
+		{
+			return true;
+		}
+
+	public:
+		static constexpr bool value = match<_Tp>(nullptr);
+	};
+
+	template <typename _rT, typename... Args>
+	class function_index<_rT (*)(Args...)> {
+	public:
+		typedef _rT (*type)(Args...);
+
+		typedef _rT (*common_type)(Args...);
+	};
+
+	template <typename _Tp, typename _rT, typename... Args>
+	class function_index<_rT (_Tp::*)(Args...)> {
+	public:
+		typedef _rT (_Tp::*type)(Args...);
+
+		typedef _rT (*common_type)(_Tp &, Args...);
+	};
+
+	template <typename _Tp, typename _rT, typename... Args>
+	class function_index<_rT (_Tp::*)(Args...) const> {
+	public:
+		typedef _rT (_Tp::*type)(Args...) const;
+
+		typedef _rT (*common_type)(const _Tp &, Args...);
+	};
+
+	template <typename _Tp, typename _rT, typename... _ArgsT>
+	class executor_index<_rT (_Tp::*)(_ArgsT...)> {
+	public:
+		typedef _rT (_Tp::*type)(_ArgsT...);
+
+		typedef _rT (*common_type)(_ArgsT...);
+	};
+
+	template <typename _Tp, typename _rT, typename... _ArgsT>
+	class executor_index<_rT (_Tp::*)(_ArgsT...) const> {
+	public:
+		typedef _rT (_Tp::*type)(_ArgsT...) const;
+
+		typedef _rT (*common_type)(_ArgsT...);
+	};
+
+	template <typename _Tp>
+	struct function_resolver<true, _Tp> {
+		typedef executor_index<decltype(&_Tp::operator())> type;
+	};
+
+	template <typename _Tp>
+	struct function_resolver<false, _Tp> {
+		typedef function_index<_Tp> type;
+	};
+
+	template <typename _Tp>
+	struct function_parser {
+		typedef typename function_resolver<is_functional<_Tp>::value, _Tp>::type type;
+	};
+} // namespace cov
 
 namespace cs_impl {
 // Utilities
@@ -49,9 +139,9 @@ namespace cs_impl {
 	template <typename T>
 	struct convert_helper {
 	private:
-		using Bare = typename cov::remove_reference<T>::type;
+		using Bare = typename std::remove_reference<T>::type;
 		static constexpr bool IsRef = std::is_reference<T>::value;
-		static constexpr bool IsConst = std::is_const<typename cov::remove_reference<T>::type>::value;
+		static constexpr bool IsConst = std::is_const<typename std::remove_reference<T>::type>::value;
 
 		static_assert(!std::is_rvalue_reference<T>::value,
 		              "convert to rvalue reference (T&&) is not allowed. Use T or T& / const T&.");
@@ -65,7 +155,7 @@ namespace cs_impl {
 
 	template <typename T>
 	struct convert_helper<T &> {
-		using Bare = typename cov::remove_reference<T>::type;
+		using Bare = typename std::remove_reference<T>::type;
 		static Bare &get_val(any &v)
 		{
 			return v.val<Bare>();
@@ -74,7 +164,7 @@ namespace cs_impl {
 
 	template <typename T>
 	struct convert_helper<const T &> {
-		using Bare = typename cov::remove_reference<T>::type;
+		using Bare = typename std::remove_reference<T>::type;
 		static const Bare &get_val(any &v)
 		{
 			return v.const_val<Bare>();
@@ -214,11 +304,11 @@ namespace cs_impl {
 		}
 	};
 
-	template <typename... ArgsT, int... Seq>
-	void check_args_base(const cs::vector &args, const cov::sequence<Seq...> &)
+	template <typename... ArgsT, size_t... Seq>
+	void check_args_base(const cs::vector &args, const std::index_sequence<Seq...> &)
 	{
 		result_container(
-		    check_args_helper<typename cov::remove_constant<typename cov::remove_reference<ArgsT>::type>::type, Seq>::check(
+		    check_args_helper<typename std::remove_const<typename std::remove_reference<ArgsT>::type>::type, Seq>::check(
 		        args[Seq])...);
 	}
 
@@ -226,7 +316,7 @@ namespace cs_impl {
 	void check_args(const cs::vector &args)
 	{
 		if (sizeof...(ArgTypes) == args.size())
-			check_args_base<ArgTypes...>(args, cov::make_sequence<sizeof...(ArgTypes)>::result);
+			check_args_base<ArgTypes...>(args, std::make_index_sequence<sizeof...(ArgTypes)> {});
 		else
 			throw cs::runtime_error(
 			    "Wrong size of the arguments. Expected " + std::to_string(sizeof...(ArgTypes)) + ", provided " +
@@ -280,7 +370,7 @@ namespace cs_impl {
 	};
 
 	template <typename _TargetT, typename _SourceT, std::size_t index>
-	using try_convert = try_convert_and_check<_TargetT, _SourceT, typename cov::remove_constant<typename cov::remove_reference<_TargetT>::type>::type, index>;
+	using try_convert = try_convert_and_check<_TargetT, _SourceT, typename std::remove_const<typename std::remove_reference<_TargetT>::type>::type, index>;
 
 // Static argument check
 	template <typename RetT, typename... ArgsT>
@@ -310,8 +400,8 @@ namespace cs_impl {
 	class cni_helper<void (*)(_Target_ArgsT...), void (*)(_Source_ArgsT...)> {
 		std::function<void(_Target_ArgsT...)> mFunc;
 
-		template <int... S>
-		void _call(cs::vector &args, const cov::sequence<S...> &) const
+		template <size_t... S>
+		void _call(cs::vector &args, const std::index_sequence<S...> &) const
 		{
 			mFunc(try_convert<_Target_ArgsT, _Source_ArgsT, S>::convert(args[S])...);
 		}
@@ -335,7 +425,7 @@ namespace cs_impl {
 				    "Wrong size of the arguments. Expected " + std::to_string(sizeof...(_Target_ArgsT)) +
 				    ", provided " +
 				    std::to_string(args.size()));
-			_call(args, cov::make_sequence<sizeof...(_Source_ArgsT)>::result);
+			_call(args, std::make_index_sequence<sizeof...(_Source_ArgsT)>{});
 			return cs::null_pointer;
 		}
 	};
@@ -344,8 +434,8 @@ namespace cs_impl {
 	class cni_helper<_Target_RetT (*)(_Target_ArgsT...), _Source_RetT (*)(_Source_ArgsT...)> {
 		std::function<_Target_RetT(_Target_ArgsT...)> mFunc;
 
-		template <int... S>
-		any _call(cs::vector &args, const cov::sequence<S...> &) const
+		template <size_t... S>
+		any _call(cs::vector &args, const std::index_sequence<S...> &) const
 		{
 			return cni_decayed_convertor<_Target_RetT, _Source_RetT>::convert_to_cs(
 			    mFunc(try_convert<_Target_ArgsT, _Source_ArgsT, S>::convert(args[S])...));
@@ -370,7 +460,7 @@ namespace cs_impl {
 				    "Wrong size of the arguments. Expected " + std::to_string(sizeof...(_Target_ArgsT)) +
 				    ", provided " +
 				    std::to_string(args.size()));
-			return _call(args, cov::make_sequence<sizeof...(_Source_ArgsT)>::result);
+			return _call(args, std::make_index_sequence<sizeof...(_Source_ArgsT)>{});
 		}
 	};
 
@@ -498,18 +588,18 @@ namespace cs_impl {
 
 		template <typename T>
 		explicit cni(T &&val) : mCni(
-			    construct_helper<typename cni_modify<typename cov::remove_reference<T>::type>::type>::construct(
+			    construct_helper<typename cni_modify<typename std::remove_reference<T>::type>::type>::construct(
 			        std::forward<T>(val)))
 		{
 		}
 
 		template <typename T, typename X>
 		cni(T &&val, cni_type<X>) : mCni(
-			    new cni_holder<typename cni_modify<typename cov::remove_reference<T>::type>::type, typename cni_modify<X>::type>(
+			    new cni_holder<typename cni_modify<typename std::remove_reference<T>::type>::type, typename cni_modify<X>::type>(
 			        std::forward<T>(val)))
 		{
 			// Analysis the function
-			using target_function_type = typename cov::function_parser<typename cni_modify<typename cov::remove_reference<T>::type>::type>::type::common_type;
+			using target_function_type = typename cov::function_parser<typename cni_modify<typename std::remove_reference<T>::type>::type>::type::common_type;
 			using source_function_type = typename cov::function_parser<typename cni_modify<X>::type>::type::common_type;
 			// Check consistency
 			// Argument size
@@ -518,7 +608,7 @@ namespace cs_impl {
 			    "Invalid argument size.");
 			// Return type
 			static_assert(
-			    cni_convertible<typename cov::resolver<target_function_type>::return_type, typename cov::resolver<source_function_type>::return_type>::value,
+			    cni_convertible<typename cov::function_parser<target_function_type>::type::return_type, typename cov::function_parser<source_function_type>::type::return_type>::value,
 			    "Invalid conversion.");
 			// Argument type
 			check_conversion(target_function_type(nullptr), source_function_type(nullptr));

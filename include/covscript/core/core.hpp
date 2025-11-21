@@ -65,11 +65,9 @@
 #ifndef COVSCRIPT_FIBER_STACK_LIMIT
 #define COVSCRIPT_FIBER_STACK_LIMIT (1024 * 1024)
 #endif
-// LibDLL
-#include <covscript/import/libdll/dll.hpp>
 // Hash Map and Set
 #ifndef CS_COMPATIBILITY_MODE
-#include <covscript/import/parallel_hashmap/phmap.h>
+#include <parallel_hashmap/phmap.h>
 #else
 #include <unordered_map>
 #include <unordered_set>
@@ -377,17 +375,17 @@ namespace cs {
 			return call_ptr == &call_el;
 		}
 
-		void add_reserve_var(const std::string &reserve, bool is_mem_fn = false)
+		void add_reserve_var(std::string_view reserve, bool is_mem_fn = false)
 		{
 			mIsMemFn = is_mem_fn;
 			if (!mIsVargs) {
-				std::vector<std::string> args{reserve};
+				std::vector<std::string> args{std::string(reserve)};
 				args.reserve(mArgs.size());
 				for (auto &name : mArgs) {
 					if (name != reserve)
 						args.emplace_back(std::move(name));
 					else
-						throw runtime_error(std::string("Overwrite the default argument \"") + reserve + "\".");
+						throw runtime_error("Overwrite the default argument \"" + std::string(reserve) + "\".");
 				}
 				std::swap(mArgs, args);
 			}
@@ -425,6 +423,14 @@ namespace cs {
 			mMatch = match;
 		}
 #endif
+	};
+
+	struct function_ptr final {
+		function *fptr = nullptr;
+		var operator()(vector &args) const
+		{
+			return fptr->call(args);
+		}
 	};
 
 	struct object_method final {
@@ -541,7 +547,7 @@ namespace cs {
 	public:
 		var_id() = delete;
 
-		var_id(std::string name) : m_id(std::move(name)) {}
+		explicit var_id(std::string_view name) : m_id(name) {}
 
 		var_id(const var_id &) = default;
 
@@ -551,7 +557,7 @@ namespace cs {
 
 		var_id &operator=(var_id &&) = default;
 
-		inline void set_id(const std::string &id)
+		inline void set_id(std::string_view id)
 		{
 			m_id = id;
 		}
@@ -573,18 +579,18 @@ namespace cs {
 	};
 
 	class domain_type final {
-		map_t<std::string, std::size_t> m_reflect;
+		map_t<std::string_view, std::size_t> m_reflect;
 		std::shared_ptr<domain_ref> m_ref;
 		std::vector<var> m_slot;
 		bool optimize = false;
 
-		inline std::size_t get_slot_id(const std::string &name) const
+		inline std::size_t get_slot_id(std::string_view name) const
 		{
 			auto it = m_reflect.find(name);
 			if (it != m_reflect.end())
 				return it->second;
 			else
-				throw runtime_error("Use of undefined variable \"" + name + "\".");
+				throw runtime_error("Use of undefined variable \"" + std::string(name) + "\".");
 		}
 
 	public:
@@ -620,7 +626,7 @@ namespace cs {
 			return id.m_ref == m_ref;
 		}
 
-		inline bool exist(const std::string &name) const noexcept
+		inline bool exist(std::string_view name) const noexcept
 		{
 			return m_reflect.find(name) != m_reflect.end();
 		}
@@ -630,7 +636,7 @@ namespace cs {
 			return m_reflect.find(id.m_id) != m_reflect.end();
 		}
 
-		domain_type &add_var(const std::string &name, const var &val)
+		domain_type &add_var(const char *name, const var &val)
 		{
 			auto it = m_reflect.find(name);
 			if (it == m_reflect.end()) {
@@ -661,7 +667,7 @@ namespace cs {
 			return *this;
 		}
 
-		bool add_var_optimal(const std::string &name, const var &val, bool override = false)
+		bool add_var_optimal(const char *name, const var &val, bool override = false)
 		{
 			auto it = m_reflect.find(name);
 			if (it != m_reflect.end()) {
@@ -721,22 +727,22 @@ namespace cs {
 			return m_slot[id.m_slot_id];
 		}
 
-		var &get_var(const std::string &name)
+		var &get_var(std::string_view name)
 		{
 			auto it = m_reflect.find(name);
 			if (it != m_reflect.end())
 				return m_slot[it->second];
 			else
-				throw runtime_error("Use of undefined variable \"" + name + "\".");
+				throw runtime_error("Use of undefined variable \"" + std::string(name) + "\".");
 		}
 
-		const var &get_var(const std::string &name) const
+		const var &get_var(std::string_view name) const
 		{
 			auto it = m_reflect.find(name);
 			if (it != m_reflect.end())
 				return m_slot[it->second];
 			else
-				throw runtime_error("Use of undefined variable \"" + name + "\".");
+				throw runtime_error("Use of undefined variable \"" + std::string(name) + "\".");
 		}
 
 		var *get_var_opt(const var_id &id)
@@ -763,7 +769,7 @@ namespace cs {
 			return &m_slot[id.m_slot_id];
 		}
 
-		var *get_var_opt(const std::string &name)
+		var *get_var_opt(std::string_view name)
 		{
 			auto it = m_reflect.find(name);
 			if (it != m_reflect.end())
@@ -772,7 +778,7 @@ namespace cs {
 				return nullptr;
 		}
 
-		const var *get_var_opt(const std::string &name) const
+		const var *get_var_opt(std::string_view name) const
 		{
 			auto it = m_reflect.find(name);
 			if (it != m_reflect.end())
@@ -949,14 +955,14 @@ namespace cs {
 					// Handle overriding
 					const var &v = s.m_data->get_var(it.first);
 					if (!_parent.m_data->get_var(it.first).is_same(v))
-						m_data->add_var(it.first, copy(v));
+						m_data->add_var(it.first.data(), copy(v));
 					else
-						m_data->add_var(it.first, parent.m_data->get_var_by_id(it.second));
+						m_data->add_var(it.first.data(), parent.m_data->get_var_by_id(it.second));
 				}
 			}
 			for (auto &it : *s.m_data)
 				if (!m_data->exist(it.first))
-					m_data->add_var(it.first, copy(s.m_data->get_var_by_id(it.second)));
+					m_data->add_var(it.first.data(), copy(s.m_data->get_var_by_id(it.second)));
 			if (m_data->exist("duplicate"))
 				invoke(m_data->get_var("duplicate"), var::make<structure>(this), var::make<structure>(&s));
 		}
@@ -1081,25 +1087,19 @@ namespace cs {
 			if (!is_ref)
 				delete m_data;
 		}
-
-		name_space &add_var(const std::string &name, const var &var)
+		template <typename T>
+		name_space &add_var(T &&id, const var &var)
 		{
-			m_data->add_var(name, var);
+			m_data->add_var(std::forward<T>(id), var);
 			return *this;
 		}
 
-		name_space &add_var(const var_id &id, const var &var)
-		{
-			m_data->add_var(id, var);
-			return *this;
-		}
-
-		var &get_var(const std::string &name)
+		var &get_var(std::string_view name)
 		{
 			return m_data->get_var(name);
 		}
 
-		const var &get_var(const std::string &name) const
+		const var &get_var(std::string_view name) const
 		{
 			return m_data->get_var(name);
 		}
@@ -1127,7 +1127,7 @@ namespace cs {
 		void copy_domain(const domain_type &domain)
 		{
 			for (auto &it : domain)
-				m_data->add_var(it.first, domain.get_var_by_id(it.second));
+				m_data->add_var(it.first.data(), domain.get_var_by_id(it.second));
 		}
 
 		name_space &operator=(const name_space &ns)
@@ -1182,39 +1182,47 @@ namespace cs {
 		}
 	};
 
-	namespace dll_resources {
-		constexpr char dll_compatible_check[] = "__CS_ABI_COMPATIBLE__";
-		constexpr char dll_main_entrance[] = "__CS_EXTENSION_MAIN__";
+	namespace dll {
+		constexpr char compatible_check[] = "__CS_ABI_COMPATIBLE__";
+		constexpr char main_entrance[] = "__CS_EXTENSION_MAIN__";
 
-		typedef int (*dll_compatible_check_t)();
+		typedef int (*compatible_check_t)();
 
-		typedef void (*dll_main_entrance_t)(name_space *, process_context *);
-	} // namespace dll_resources
+		typedef void (*main_entrance_t)(name_space *, process_context *);
+
+		void *open(std::string_view);
+
+		void *find_symbol(void *, std::string_view);
+
+		void close(void *);
+	} // namespace dll
 
 	class extension final : public name_space {
-	public:
-		static garbage_collector<cov::dll> gc;
+		void *mHandle;
 
+	public:
 		extension() = delete;
 
 		extension(const extension &) = delete;
+
+		virtual ~extension()
+		{
+			dll::close(mHandle);
+		}
 
 		static inline int truncate(int n, int m)
 		{
 			return n == 0 ? 0 : n / int(std::pow(10, (std::max) (int(std::log10(std::abs(n))) - (std::max) (m, 0) + 1, 0)));
 		}
 
-		explicit extension(const std::string &path)
+		explicit extension(std::string_view path)
 		{
-			using namespace dll_resources;
-			cov::dll *dll = new cov::dll(path);
-			gc.add(dll);
-			dll_compatible_check_t dll_check = reinterpret_cast<dll_compatible_check_t>(dll->get_address(
-			                                       dll_compatible_check));
+			mHandle = dll::open(path);
+			dll::compatible_check_t dll_check = reinterpret_cast<dll::compatible_check_t>(dll::find_symbol(mHandle, dll::compatible_check));
 			if (dll_check == nullptr || truncate(dll_check(), 4) != truncate(COVSCRIPT_ABI_VERSION, 4))
 				throw runtime_error("Incompatible Covariant Script Extension.(Target: " + std::to_string(dll_check()) +
 				                    ", Current: " + std::to_string(COVSCRIPT_ABI_VERSION) + ")");
-			dll_main_entrance_t dll_main = reinterpret_cast<dll_main_entrance_t>(dll->get_address(dll_main_entrance));
+			dll::main_entrance_t dll_main = reinterpret_cast<dll::main_entrance_t>(dll::find_symbol(mHandle, dll::main_entrance));
 			if (dll_main != nullptr) {
 				dll_main(this, current_process);
 			}

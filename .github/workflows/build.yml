@@ -19,11 +19,11 @@ jobs:
           submodules: recursive
 
       - name: Build on Windows with MSVC
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2022'
         run: .github/workflows/make_msvc_win64.bat
 
       - name: Build on Linux and macOS
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2022'
         run: bash csbuild/make.sh
 
       - name: Test

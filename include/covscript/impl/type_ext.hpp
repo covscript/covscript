@@ -397,16 +397,25 @@ cs_impl::operators::result cs_impl::operators::handler<T>::fcall(void *lhs, void
 }
 
 namespace cs_impl {
-	namespace path_cs_ext {
-		struct path_info final {
-			std::string name;
-			int type;
+	enum class file_type {
+		block,
+		character,
+		directory,
+		fifo,
+		regular,
+		socket,
+		symlink,
+		unknown,
+	};
 
-			path_info() = delete;
+	struct path_info final {
+		std::string name;
+		file_type type;
 
-			path_info(const char *n, int t) : name(n), type(t) {}
-		};
-	} // namespace path_cs_ext
+		path_info() = delete;
+
+		path_info(const std::string &n, file_type t) : name(n), type(t) {}
+	};
 
 	void init_extensions();
 
@@ -628,7 +637,7 @@ namespace cs_impl {
 		if (id.type_hash == 0)
 			return id.type_idx.hash_code();
 		else
-			throw cov::error("E000F");
+			throw cs::runtime_error("Does not support the specified type of hash operation");
 	}
 
 	template <>
@@ -820,7 +829,7 @@ namespace cs_impl {
 	}
 
 	template <>
-	constexpr const char *get_name_of_type<path_cs_ext::path_info>()
+	constexpr const char *get_name_of_type<path_info>()
 	{
 		return "cs::system::path_info";
 	}
@@ -936,7 +945,7 @@ namespace cs_impl {
 	}
 
 	template <>
-	cs::namespace_t &get_ext<path_cs_ext::path_info>()
+	cs::namespace_t &get_ext<path_info>()
 	{
 		return path_info_ext;
 	}

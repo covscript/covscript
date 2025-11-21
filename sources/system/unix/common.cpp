@@ -25,7 +25,7 @@
  */
 
 #include <covscript/impl/impl.hpp>
-#include <covscript_impl/system.hpp>
+#include <covscript/impl/system.hpp>
 #include <sys/select.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -33,6 +33,7 @@
 #include <sys/mman.h>
 #include <termios.h>
 #include <unistd.h>
+#include <dlfcn.h>
 #include <sstream>
 #include <climits>
 #include <cassert>
@@ -44,6 +45,13 @@
 
 #include <mach-o/loader.h>
 
+#endif
+
+#ifdef RTLD_DEEPBIND
+// GNU extension
+#define COVLIBDLL_DLOPEN_ARGUMENTS (RTLD_LAZY | RTLD_DEEPBIND)
+#else
+#define COVLIBDLL_DLOPEN_ARGUMENTS (RTLD_LAZY)
 #endif
 
 namespace cs_system_impl {
@@ -193,35 +201,6 @@ namespace cs_impl {
 		bool can_execute(const std::string &path)
 		{
 			return access(path.c_str(), X_OK) == 0;
-		}
-
-		bool is_absolute_path(const std::string &path)
-		{
-			return !path.empty() && path[0] == '/';
-		}
-
-		std::string get_current_dir()
-		{
-			char temp[PATH_MAX] = "";
-
-			if (::getcwd(temp, PATH_MAX) != nullptr) {
-				return std::string(temp);
-			}
-
-			int error = errno;
-			switch (error) {
-			case EACCES:
-				throw cs::runtime_error("Permission denied");
-
-			case ENOMEM:
-				throw cs::runtime_error("Out of memory");
-
-			default: {
-				std::stringstream str;
-				str << "Unrecognised errno: " << error;
-				throw cs::runtime_error(str.str());
-			}
-			}
 		}
 	} // namespace file_system
 } // namespace cs_impl
@@ -457,4 +436,26 @@ namespace cs {
 			cs_fiber_swapcontext(&fi->ctx, fi->prev_ctx);
 		}
 	} // namespace fiber
+
+	namespace dll {
+		void *open(std::string_view path)
+		{
+			::dlerror();
+			void *sym = ::dlopen(path.data(), COVLIBDLL_DLOPEN_ARGUMENTS);
+			const char *err = ::dlerror();
+			if (err != nullptr)
+				throw cs::runtime_error(err);
+			return sym;
+		}
+
+		void *find_symbol(void *handle, std::string_view symbol)
+		{
+			return ::dlsym(handle, symbol.data());
+		}
+
+		void close(void *handle)
+		{
+			::dlclose(handle);
+		}
+	} // namespace dll
 } // namespace cs

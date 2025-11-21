@@ -25,13 +25,37 @@
  */
 
 #include <covscript/impl/impl.hpp>
-#include <covscript_impl/system.hpp>
+#include <covscript/impl/system.hpp>
+#include <windows.h>
 #include <direct.h>
 #include <conio.h>
 #include <cassert>
 #include <cstdlib>
 #include <string>
+#include <utf8.h>
 #include <io.h>
+
+std::wstring utf8_to_wstring(std::string_view utf8)
+{
+	std::wstring out;
+#if WCHAR_MAX == 0xffff
+	utf8::utf8to16(utf8.begin(), utf8.end(), std::back_inserter(out));
+#else
+	utf8::utf8to32(utf8.begin(), utf8.end(), std::back_inserter(out));
+#endif
+	return out;
+}
+
+std::string wstring_to_utf8(std::wstring_view wide)
+{
+	std::string out;
+#if WCHAR_MAX == 0xffff
+	utf8::utf16to8(wide.begin(), wide.end(), std::back_inserter(out));
+#else
+	utf8::utf32to8(wide.begin(), wide.end(), std::back_inserter(out));
+#endif
+	return out;
+}
 
 namespace cs_system_impl {
 	bool chmod_impl(const std::string &path, unsigned int mode)
@@ -140,35 +164,6 @@ namespace cs_impl {
 			if (nread < 0)
 				return false;
 			return header[0] == 'M' && header[1] == 'Z';
-		}
-
-		bool is_absolute_path(const std::string &path)
-		{
-			return (!path.empty() && path[0] == '/') // for mingw, cygwin
-			       || (path.size() >= 3 && path[1] == ':' && path[2] == '\\');
-		}
-
-		std::string get_current_dir()
-		{
-			char temp[PATH_MAX] = "";
-
-			if (::_getcwd(temp, PATH_MAX) != nullptr) {
-				return std::string(temp);
-			}
-
-			int error = errno;
-			switch (error) {
-			case EACCES:
-				throw cs::runtime_error("Permission denied");
-
-			case ENOMEM:
-				throw cs::runtime_error("Out of memory");
-
-			default:
-				std::stringstream str;
-				str << "Unrecognised errno: " << error;
-				throw cs::runtime_error(str.str());
-			}
 		}
 	} // namespace file_system
 } // namespace cs_impl
@@ -320,4 +315,29 @@ namespace cs {
 			SwitchToFiber(fi->prev_ctx);
 		}
 	} // namespace fiber
+
+	namespace dll {
+		void *open(std::string_view path)
+		{
+			std::wstring wpath = utf8_to_wstring(path);
+			void *sym = ::LoadLibraryW(wpath.c_str());
+			if (sym == nullptr) {
+				static WCHAR szBuf[256];
+				::FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, ::GetLastError(),
+				                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), szBuf, sizeof(szBuf) / sizeof(WCHAR), nullptr);
+				throw cs::runtime_error(wstring_to_utf8(szBuf));
+			}
+			return sym;
+		}
+
+		void *find_symbol(void *handle, std::string_view symbol)
+		{
+			return reinterpret_cast<void *>(::GetProcAddress((HMODULE) handle, symbol.data()));
+		}
+
+		void close(void *handle)
+		{
+			::FreeLibrary((HMODULE) handle);
+		}
+	} // namespace dll
 } // namespace cs

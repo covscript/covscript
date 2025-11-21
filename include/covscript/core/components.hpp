@@ -24,7 +24,6 @@
  * Github:  https://github.com/mikecovlee
  * Website: http://covscript.org.cn
  */
-#include <covscript/import/mozart/base.hpp>
 #include <atomic>
 #include <cfenv>
 
@@ -1072,35 +1071,35 @@ namespace cs {
 			T &data()
 			{
 				if (!this->usable())
-					throw cov::error("E000E");
+					throw runtime_error("Tree node is empty");
 				return this->mData->data;
 			}
 
 			const T &data() const
 			{
 				if (!this->usable())
-					throw cov::error("E000E");
+					throw runtime_error("Tree node is empty");
 				return this->mData->data;
 			}
 
 			iterator root() const
 			{
 				if (!this->usable())
-					throw cov::error("E000E");
+					throw runtime_error("Tree node is empty");
 				return this->mData->root;
 			}
 
 			iterator left() const
 			{
 				if (!this->usable())
-					throw cov::error("E000E");
+					throw runtime_error("Tree node is empty");
 				return this->mData->left;
 			}
 
 			iterator right() const
 			{
 				if (!this->usable())
-					throw cov::error("E000E");
+					throw runtime_error("Tree node is empty");
 				return this->mData->right;
 			}
 		};
@@ -1186,7 +1185,7 @@ namespace cs {
 				return mRoot;
 			}
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			tree_node *node = new tree_node(it.mData->root, it.mData, nullptr, data);
 			if (it.mData->root->left == it.mData)
 				it.mData->root->left = node;
@@ -1203,7 +1202,7 @@ namespace cs {
 				return mRoot;
 			}
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			tree_node *node = new tree_node(it.mData->root, nullptr, it.mData, data);
 			if (it.mData->root->left == it.mData)
 				it.mData->root->left = node;
@@ -1216,7 +1215,7 @@ namespace cs {
 		iterator insert_left_left(iterator it, const T &data)
 		{
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			tree_node *node = new tree_node(it.mData, it.mData->left, nullptr, data);
 			if (it.mData->left != nullptr)
 				it.mData->left->root = node;
@@ -1227,7 +1226,7 @@ namespace cs {
 		iterator insert_left_right(iterator it, const T &data)
 		{
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			tree_node *node = new tree_node(it.mData, nullptr, it.mData->left, data);
 			if (it.mData->left != nullptr)
 				it.mData->left->root = node;
@@ -1238,7 +1237,7 @@ namespace cs {
 		iterator insert_right_left(iterator it, const T &data)
 		{
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			tree_node *node = new tree_node(it.mData, it.mData->right, nullptr, data);
 			if (it.mData->right != nullptr)
 				it.mData->right->root = node;
@@ -1249,7 +1248,7 @@ namespace cs {
 		iterator insert_right_right(iterator it, const T &data)
 		{
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			tree_node *node = new tree_node(it.mData, nullptr, it.mData->right, data);
 			if (it.mData->right != nullptr)
 				it.mData->right->root = node;
@@ -1265,7 +1264,7 @@ namespace cs {
 				return mRoot;
 			}
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			tree_node *node = new tree_node(it.mData->root, it.mData, nullptr, std::forward<Args>(args)...);
 			if (it.mData->root->left == it.mData)
 				it.mData->root->left = node;
@@ -1283,7 +1282,7 @@ namespace cs {
 				return mRoot;
 			}
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			tree_node *node = new tree_node(it.mData->root, nullptr, it.mData, std::forward<Args>(args)...);
 			if (it.mData->root->left == it.mData)
 				it.mData->root->left = node;
@@ -1297,7 +1296,7 @@ namespace cs {
 		iterator emplace_left_left(iterator it, Args &&...args)
 		{
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			tree_node *node = new tree_node(it.mData, it.mData->left, nullptr, std::forward<Args>(args)...);
 			if (it.mData->left != nullptr)
 				it.mData->left->root = node;
@@ -1309,7 +1308,7 @@ namespace cs {
 		iterator emplace_left_right(iterator it, Args &&...args)
 		{
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			tree_node *node = new tree_node(it.mData, nullptr, it.mData->left, std::forward<Args>(args)...);
 			if (it.mData->left != nullptr)
 				it.mData->left->root = node;
@@ -1321,7 +1320,7 @@ namespace cs {
 		iterator emplace_right_left(iterator it, Args &&...args)
 		{
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			tree_node *node = new tree_node(it.mData, it.mData->right, nullptr, std::forward<Args>(args)...);
 			if (it.mData->right != nullptr)
 				it.mData->right->root = node;
@@ -1333,7 +1332,7 @@ namespace cs {
 		iterator emplace_right_right(iterator it, Args &&...args)
 		{
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			tree_node *node = new tree_node(it.mData, nullptr, it.mData->right, std::forward<Args>(args)...);
 			if (it.mData->right != nullptr)
 				it.mData->right->root = node;
@@ -1344,7 +1343,7 @@ namespace cs {
 		iterator erase(iterator it)
 		{
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			if (it.mData == mRoot) {
 				destroy(mRoot);
 				mRoot = nullptr;
@@ -1364,7 +1363,7 @@ namespace cs {
 		iterator reserve_left(iterator it)
 		{
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			tree_node *reserve = it.mData->left;
 			tree_node *root = it.mData->root;
 			it.mData->left = nullptr;
@@ -1384,7 +1383,7 @@ namespace cs {
 		iterator reserve_right(iterator it)
 		{
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			tree_node *reserve = it.mData->right;
 			tree_node *root = it.mData->root;
 			it.mData->right = nullptr;
@@ -1404,7 +1403,7 @@ namespace cs {
 		iterator erase_left(iterator it)
 		{
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			destroy(it.mData->left);
 			it.mData->left = nullptr;
 			return it;
@@ -1413,7 +1412,7 @@ namespace cs {
 		iterator erase_right(iterator it)
 		{
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			destroy(it.mData->right);
 			it.mData->right = nullptr;
 			return it;
@@ -1422,7 +1421,7 @@ namespace cs {
 		iterator merge(iterator it, const tree_type<T> &tree)
 		{
 			if (!it.usable())
-				throw cov::error("E000E");
+				throw runtime_error("Tree node is empty");
 			tree_node *root = tree.mRoot;
 			it.data() = root->data;
 			destroy(it.mData->left);
