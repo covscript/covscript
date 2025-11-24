@@ -31,3 +31,4 @@ mkdir -p csdev/lib
 cp -r include/* csdev/include/
 cp -r third-party/include/* csdev/include/
 cp -r build/lib             csdev/
+cp    csbuild/csbuild.cmake csdev/

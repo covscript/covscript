@@ -19,3 +19,4 @@ mkdir csdev\lib
 xcopy /E /Y include\ csdev\include\
 xcopy /E /Y third-party\include\ csdev\include\
 xcopy /E /Y build\lib            csdev\lib\
+xcopy /Y csbuild\csbuild.cmake   csdev\
