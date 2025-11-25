@@ -86,6 +86,7 @@ namespace cs {
 			}
 			collection.push_back(tmp);
 		}
+		std::exception_ptr eptr = nullptr;
 		for (auto &it : collection) {
 			std::string package_path = it + path_separator + name;
 			if (context->compiler->modules.count(package_path) > 0)
@@ -112,11 +113,18 @@ namespace cs {
 				return module;
 			}
 			else if (std::ifstream(package_path + ".cse")) {
-				namespace_t module = std::make_shared<extension>(package_path + ".cse");
-				context->compiler->modules.emplace(package_path, module);
-				return module;
+				try {
+					namespace_t module = std::make_shared<extension>(package_path + ".cse");
+					context->compiler->modules.emplace(package_path, module);
+					return module;
+				}
+				catch (...) {
+					eptr = std::current_exception();
+				}
 			}
 		}
+		if (eptr != nullptr)
+			std::rethrow_exception(eptr);
 		throw fatal_error("No such file or directory.");
 	}
 

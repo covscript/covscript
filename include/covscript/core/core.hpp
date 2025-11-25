@@ -105,10 +105,7 @@
 namespace cs {
 // Process Context
 	class process_context final {
-		friend void *dll::open(std::string_view);
-
 		std::atomic<bool> is_sigint_raised{};
-		std::vector<void *> extensions;
 
 	public:
 		// Version
@@ -197,12 +194,6 @@ namespace cs {
 		{
 			resize_stack(ss);
 			is_sigint_raised = false;
-		}
-
-		~process_context()
-		{
-			for (auto &ext : extensions)
-				dll::close(ext);
 		}
 
 		std::unique_ptr<process_context> fork();
@@ -1198,6 +1189,12 @@ namespace cs {
 		typedef int (*compatible_check_t)();
 
 		typedef void (*main_entrance_t)(name_space *, process_context *);
+
+		void *open(std::string_view);
+
+		void *find_symbol(void *, std::string_view);
+
+		void close(void *);
 	} // namespace dll
 
 	class extension final : public name_space {
@@ -1220,14 +1217,14 @@ namespace cs {
 			mHandle = dll::open(path);
 			dll::compatible_check_t dll_check = reinterpret_cast<dll::compatible_check_t>(dll::find_symbol(mHandle, dll::compatible_check));
 			if (dll_check == nullptr || truncate(dll_check(), 4) != truncate(COVSCRIPT_ABI_VERSION, 4))
-				throw runtime_error("Incompatible Covariant Script Extension.(Target: " + std::to_string(dll_check()) +
-				                    ", Current: " + std::to_string(COVSCRIPT_ABI_VERSION) + ")");
+				throw runtime_error("Incompatible Extension. (Target ABI: " + std::to_string(dll_check()) +
+				                    ", Current ABI: " + std::to_string(COVSCRIPT_ABI_VERSION) + ")");
 			dll::main_entrance_t dll_main = reinterpret_cast<dll::main_entrance_t>(dll::find_symbol(mHandle, dll::main_entrance));
 			if (dll_main != nullptr) {
 				dll_main(this, current_process);
 			}
 			else
-				throw runtime_error("Broken Covariant Script Extension.");
+				throw runtime_error("Broken Extension.");
 		}
 	};
 
