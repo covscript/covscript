@@ -45,6 +45,14 @@ namespace cs {
 
 	struct csym_info;
 
+	namespace dll {
+		void *open(std::string_view);
+
+		void *find_symbol(void *, std::string_view);
+
+		void close(void *);
+	} // namespace dll
+
 // Exceptions
 	class exception final : public std::exception {
 		std::size_t mLine = 0;

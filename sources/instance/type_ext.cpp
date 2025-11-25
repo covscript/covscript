@@ -149,21 +149,21 @@ cs_impl::file_type get_file_type(const std::filesystem::directory_entry &entry)
 	if (entry.is_block_file(ec))
 		return cs_impl::file_type::block;
 	else if (entry.is_character_file(ec))
-		return cs_impl::file_type::block;
+		return cs_impl::file_type::character;
 	else if (entry.is_directory(ec))
-		return cs_impl::file_type::block;
+		return cs_impl::file_type::directory;
 	else if (entry.is_fifo(ec))
-		return cs_impl::file_type::block;
+		return cs_impl::file_type::fifo;
 	else if (entry.is_regular_file(ec))
-		return cs_impl::file_type::block;
+		return cs_impl::file_type::regular;
 	else if (entry.is_socket(ec))
-		return cs_impl::file_type::block;
+		return cs_impl::file_type::socket;
 	else if (entry.is_symlink(ec))
-		return cs_impl::file_type::block;
+		return cs_impl::file_type::symlink;
 	else if (entry.is_other(ec))
-		return cs_impl::file_type::block;
+		return cs_impl::file_type::unknown;
 	else
-		return cs_impl::file_type::block;
+		return cs_impl::file_type::unknown;
 }
 
 #ifdef COVSCRIPT_PLATFORM_WIN32

@@ -445,6 +445,7 @@ namespace cs {
 			const char *err = ::dlerror();
 			if (err != nullptr)
 				throw cs::runtime_error(err);
+			current_process->extensions.push_back(sym);
 			return sym;
 		}
 
