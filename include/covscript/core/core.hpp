@@ -1191,6 +1191,15 @@ namespace cs {
 		}
 	};
 
+	namespace dll {
+		constexpr char compatible_check[] = "__CS_ABI_COMPATIBLE__";
+		constexpr char main_entrance[] = "__CS_EXTENSION_MAIN__";
+
+		typedef int (*compatible_check_t)();
+
+		typedef void (*main_entrance_t)(name_space *, process_context *);
+	} // namespace dll
+
 	class extension final : public name_space {
 		void *mHandle;
 
