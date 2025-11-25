@@ -294,37 +294,32 @@ namespace cs_impl {
 	using var_storage_t = typename var_storage<std::decay_t<T>>::type;
 
 	namespace operators {
-		union result
-		{
+		union result {
 			std::uintptr_t _uint;
 			std::intptr_t _int;
 			void *_ptr;
 
 			constexpr result() : _ptr(nullptr) {}
 
-			static COVSCRIPT_ALWAYS_INLINE constexpr result from_ptr(void *p) noexcept
-			{
+			static COVSCRIPT_ALWAYS_INLINE constexpr result from_ptr(void *p) noexcept {
 				result r;
 				r._ptr = p;
 				return r;
 			}
 
-			static COVSCRIPT_ALWAYS_INLINE constexpr result from_int(std::intptr_t i) noexcept
-			{
+			static COVSCRIPT_ALWAYS_INLINE constexpr result from_int(std::intptr_t i) noexcept {
 				result r;
 				r._int = i;
 				return r;
 			}
 
-			static COVSCRIPT_ALWAYS_INLINE constexpr result from_uint(std::uintptr_t ui) noexcept
-			{
+			static COVSCRIPT_ALWAYS_INLINE constexpr result from_uint(std::uintptr_t ui) noexcept {
 				result r;
 				r._uint = ui;
 				return r;
 			}
 		};
-		enum class type : unsigned
-		{
+		enum class type : unsigned {
 			copy = 0,
 			move = 1,
 			swap = 2,
@@ -362,8 +357,7 @@ namespace cs_impl {
 			fcall = 34,      // func(args)
 		};
 		template <typename T>
-		struct handler
-		{
+		struct handler {
 			static COVSCRIPT_ALWAYS_INLINE result get(void *lhs, void *rhs);
 			static COVSCRIPT_ALWAYS_INLINE result type_id(void *lhs, void *rhs);
 			static inline result type_name(void *lhs, void *rhs);
@@ -416,8 +410,7 @@ namespace cs_impl {
 		using aligned_storage_t = std::aligned_storage_t<align_size - aligned_element_size, alignof(std::max_align_t)>;
 
 		template <typename T>
-		struct var_op_svo_dispatcher
-		{
+		struct var_op_svo_dispatcher {
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_copy(void *lhs, void *rhs)
 			{
 				static_assert(std::is_copy_constructible<T>::value, "CovScript requires type supports copy constructor.");
@@ -509,8 +502,7 @@ namespace cs_impl {
 		};
 
 		template <typename T>
-		struct var_op_heap_dispatcher
-		{
+		struct var_op_heap_dispatcher {
 			static allocator_t<T> &get_allocator()
 			{
 				static allocator_t<T> allocator;
@@ -626,8 +618,7 @@ namespace cs_impl {
 #endif
 
 		dispatcher_t m_dispatcher = nullptr;
-		union store_impl
-		{
+		union store_impl {
 			aligned_storage_t buffer;
 			void *ptr;
 
@@ -694,8 +685,7 @@ namespace cs_impl {
 
 		inline void swap(basic_var &other) noexcept
 		{
-			if (m_dispatcher != other.m_dispatcher && type() != other.type())
-			{
+			if (m_dispatcher != other.m_dispatcher && type() != other.type()) {
 				basic_var tmp;
 				tmp.move_store(*this);
 				move_store(other);
@@ -736,8 +726,7 @@ namespace cs_impl {
 
 		basic_var &operator=(basic_var &&obj) noexcept
 		{
-			if (&obj != this)
-			{
+			if (&obj != this) {
 				destroy_store();
 				m_dispatcher = obj.m_dispatcher;
 				m_store = obj.m_store;
@@ -808,8 +797,7 @@ namespace cs_impl {
 		template <std::size_t align_size, template <typename> class allocator_t>
 		friend class basic_var;
 
-		struct proxy
-		{
+		struct proxy {
 			std::uint32_t refcount = 1;
 			std::int8_t protect_level = 0;
 			basic_var<CS_VAR_SVO_ALIGN> data;
@@ -845,8 +833,7 @@ namespace cs_impl {
 
 		proxy *duplicate() const noexcept
 		{
-			if (mDat != nullptr)
-			{
+			if (mDat != nullptr) {
 				++mDat->refcount;
 			}
 			return mDat;
@@ -854,8 +841,7 @@ namespace cs_impl {
 
 		void recycle() noexcept
 		{
-			if (mDat != nullptr)
-			{
+			if (mDat != nullptr) {
 				if (--mDat->refcount == 0) {
 					get_allocator().free(mDat);
 					mDat = nullptr;
@@ -1002,8 +988,7 @@ namespace cs_impl {
 
 		void detach() const
 		{
-			if (this->mDat != nullptr)
-			{
+			if (this->mDat != nullptr) {
 				if (this->mDat->protect_level > 2)
 					throw cs::runtime_error("Duplicate singleton objects are not allowed");
 				this->mDat->data.detach();
@@ -1057,8 +1042,7 @@ namespace cs_impl {
 
 		void mark_trivial() const
 		{
-			if (this->mDat != nullptr)
-			{
+			if (this->mDat != nullptr) {
 				if (this->mDat->protect_level > 0)
 					throw cs::runtime_error("Constant tagged objects can not be copied");
 				this->mDat->protect_level = 0;
@@ -1067,8 +1051,7 @@ namespace cs_impl {
 
 		void mark_protect() const
 		{
-			if (this->mDat != nullptr)
-			{
+			if (this->mDat != nullptr) {
 				if (this->mDat->protect_level > 1)
 					throw cs::runtime_error("Constant tagged objects can not be copied");
 				this->mDat->protect_level = 1;
@@ -1077,8 +1060,7 @@ namespace cs_impl {
 
 		void mark_constant() const
 		{
-			if (this->mDat != nullptr)
-			{
+			if (this->mDat != nullptr) {
 				if (this->mDat->protect_level > 2)
 					throw cs::runtime_error("Constant tagged objects can not be copied");
 				this->mDat->protect_level = 2;
@@ -1087,8 +1069,7 @@ namespace cs_impl {
 
 		void mark_single() const
 		{
-			if (this->mDat != nullptr)
-			{
+			if (this->mDat != nullptr) {
 				if (this->mDat->protect_level > 3)
 					throw cs::runtime_error("Constant tagged objects can not be copied");
 				this->mDat->protect_level = 3;

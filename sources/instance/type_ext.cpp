@@ -197,7 +197,7 @@ namespace cs_impl {
 		using namespace cs;
 
 // Element access
-		var at(array &arr, const numeric &posit)
+		var at(const array &arr, const numeric &posit)
 		{
 			return arr.at(posit.as_integer());
 		}
