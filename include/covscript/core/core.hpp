@@ -105,7 +105,10 @@
 namespace cs {
 // Process Context
 	class process_context final {
+		friend void *dll::open(std::string_view);
+
 		std::atomic<bool> is_sigint_raised{};
+		std::vector<void *> extensions;
 
 	public:
 		// Version
@@ -194,6 +197,12 @@ namespace cs {
 		{
 			resize_stack(ss);
 			is_sigint_raised = false;
+		}
+
+		~process_context()
+		{
+			for (auto &ext : extensions)
+				dll::close(ext);
 		}
 
 		std::unique_ptr<process_context> fork();
@@ -1182,21 +1191,6 @@ namespace cs {
 		}
 	};
 
-	namespace dll {
-		constexpr char compatible_check[] = "__CS_ABI_COMPATIBLE__";
-		constexpr char main_entrance[] = "__CS_EXTENSION_MAIN__";
-
-		typedef int (*compatible_check_t)();
-
-		typedef void (*main_entrance_t)(name_space *, process_context *);
-
-		void *open(std::string_view);
-
-		void *find_symbol(void *, std::string_view);
-
-		void close(void *);
-	} // namespace dll
-
 	class extension final : public name_space {
 		void *mHandle;
 
@@ -1205,10 +1199,7 @@ namespace cs {
 
 		extension(const extension &) = delete;
 
-		virtual ~extension()
-		{
-			dll::close(mHandle);
-		}
+		virtual ~extension() = default;
 
 		static inline int truncate(int n, int m)
 		{

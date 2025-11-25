@@ -45,6 +45,21 @@ namespace cs {
 
 	struct csym_info;
 
+	namespace dll {
+		constexpr char compatible_check[] = "__CS_ABI_COMPATIBLE__";
+		constexpr char main_entrance[] = "__CS_EXTENSION_MAIN__";
+
+		typedef int (*compatible_check_t)();
+
+		typedef void (*main_entrance_t)(name_space *, process_context *);
+
+		void *open(std::string_view);
+
+		void *find_symbol(void *, std::string_view);
+
+		void close(void *);
+	} // namespace dll
+
 // Exceptions
 	class exception final : public std::exception {
 		std::size_t mLine = 0;
