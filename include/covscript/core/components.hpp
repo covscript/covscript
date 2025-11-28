@@ -1462,6 +1462,65 @@ namespace cs {
 			return false;
 		}
 	};
+
+	namespace codecvt {
+		class charset {
+		public:
+			virtual ~charset() = default;
+
+			virtual std::u32string local2wide(const std::deque<char> &) = 0;
+
+			virtual std::string wide2local(const std::u32string &) = 0;
+
+			virtual bool is_identifier(char32_t) = 0;
+		};
+
+		class ascii final : public charset {
+		public:
+			std::u32string local2wide(const std::deque<char> &local) override
+			{
+				return std::u32string(local.begin(), local.end());
+			}
+
+			std::string wide2local(const std::u32string &wide) override
+			{
+				return std::string(wide.begin(), wide.end());
+			}
+
+			bool is_identifier(char32_t ch) override
+			{
+				return ch == '_' || std::iswalnum(ch);
+			}
+		};
+
+		class utf8 final : public charset {
+			static constexpr std::uint32_t ascii_max = 0x7F;
+
+		public:
+			std::u32string local2wide(const std::deque<char> &local) override;
+
+			std::string wide2local(const std::u32string &ustr) override;
+
+			bool is_identifier(char32_t ch) override;
+		};
+
+		class gbk final : public charset {
+			static inline char32_t set_zero(char32_t ch)
+			{
+				return ch & 0x0000ffff;
+			}
+
+			static constexpr std::uint8_t u8_blck_begin = 0x80;
+			static constexpr std::uint32_t u32_blck_begin = 0x8000;
+
+		public:
+			std::u32string local2wide(const std::deque<char> &local) override;
+
+			std::string wide2local(const std::u32string &wide) override;
+
+			bool is_identifier(char32_t ch) override;
+		};
+	} // namespace codecvt
 } // namespace cs
 
 static std::string operator+(const std::string &lhs, const cs::string_borrower &rhs)
