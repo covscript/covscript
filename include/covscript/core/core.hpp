@@ -499,8 +499,7 @@ namespace cs {
 
 		type_id(const std::type_index &id, std::size_t hash = 0) : type_idx(id), type_hash(hash) {}
 
-		inline bool is_a(const type_id &id) const
-		{
+		inline bool is_a(const type_id &id) const {
 			if (&id == this)
 				return true;
 			if (type_hash && id.type_hash)

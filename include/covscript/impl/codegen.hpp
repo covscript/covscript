@@ -44,7 +44,8 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_import final : public method_base {
+	class method_import final :
+		public method_base {
 		std::deque<statement_base *> mResult;
 
 	public:

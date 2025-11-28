@@ -24,6 +24,7 @@
  * Github:  https://github.com/mikecovlee
  * Website: http://covscript.org.cn
  */
+#include <cwctype>
 #include <atomic>
 #include <cfenv>
 
@@ -1462,6 +1463,66 @@ namespace cs {
 			return false;
 		}
 	};
+
+	namespace codecvt {
+		class charset {
+		public:
+			virtual ~charset() = default;
+
+			virtual std::u32string local2wide(const std::deque<char> &) = 0;
+
+			virtual std::u32string local2wide(std::string_view) = 0;
+
+			virtual std::string wide2local(const std::u32string &) = 0;
+
+			virtual bool is_identifier(char32_t) = 0;
+		};
+
+		class ascii final : public charset {
+		public:
+			std::u32string local2wide(const std::deque<char> &local) override
+			{
+				return std::u32string(local.begin(), local.end());
+			}
+
+			std::u32string local2wide(std::string_view local) override
+			{
+				return std::u32string(local.begin(), local.end());
+			}
+
+			std::string wide2local(const std::u32string &wide) override
+			{
+				return std::string(wide.begin(), wide.end());
+			}
+
+			bool is_identifier(char32_t ch) override
+			{
+				return ch == '_' || std::iswalnum(ch);
+			}
+		};
+
+		class utf8 final : public charset {
+		public:
+			std::u32string local2wide(const std::deque<char> &local) override;
+
+			std::u32string local2wide(std::string_view local) override;
+
+			std::string wide2local(const std::u32string &ustr) override;
+
+			bool is_identifier(char32_t ch) override;
+		};
+
+		class gbk final : public charset {
+		public:
+			std::u32string local2wide(const std::deque<char> &local) override;
+
+			std::u32string local2wide(std::string_view local) override;
+
+			std::string wide2local(const std::u32string &wide) override;
+
+			bool is_identifier(char32_t ch) override;
+		};
+	} // namespace codecvt
 } // namespace cs
 
 static std::string operator+(const std::string &lhs, const cs::string_borrower &rhs)
