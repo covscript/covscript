@@ -24,6 +24,7 @@
  * Github:  https://github.com/mikecovlee
  * Website: http://covscript.org.cn
  */
+#include <cwctype>
 #include <atomic>
 #include <cfenv>
 

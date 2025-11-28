@@ -24,7 +24,6 @@
  * Website: http://covscript.org.cn
  */
 #include <covscript/impl/compiler.hpp>
-#include <cwctype>
 #include <climits>
 #include <utf8.h>
 
