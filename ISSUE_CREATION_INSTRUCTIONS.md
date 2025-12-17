@@ -29,7 +29,7 @@ gh issue create \
 Since this has been committed to the PR branch `copilot/review-code-and-suggest-improvements`, you can:
 
 1. Create the issue manually via web interface
-2. Reference the commit in the issue: `See commit fba910b for details`
+2. Reference the PR branch in the issue: `See branch copilot/review-code-and-suggest-improvements for details`
 3. Link to the file: https://github.com/covscript/covscript/blob/copilot/review-code-and-suggest-improvements/CODE_REVIEW_IMPROVEMENTS.md
 
 ## Issue Summary (for quick reference)
