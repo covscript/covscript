@@ -99,8 +99,7 @@ Option|Mnemonic|Function
 `--log-path <PATH>`|`-l <PATH>` |Set the log and AST exporting path
 `--import-path <PATH>`|`-i <PATH>`|Set the import path
 
-The default stack size is **1000**. When the stack size is set larger than the default value, the stack size of the coroutine will be dynamically adjusted to one tenth of the set size; when the stack
-size is set smaller than the default value, the stack size of the coroutine will remain at **100**.
+The default stack size is **64**. This is the initial reserved size - the stack will grow automatically as needed, with the upper limit determined by system constraints. When the stack size is set to **1000** or larger, the stack size of the coroutine will be dynamically adjusted to one tenth of the set size; when the stack size is set smaller than **1000**, the stack size of the coroutine will remain at **64**.
 
 **Note that if you do not set the log path, it will be directly output to the standard output stream.**
 
