@@ -24,7 +24,7 @@ This project is an officially maintained Covariant Script interpreter.
 + Cross-platform, supporting most mainstream Operating Systems
     + Apple macOS: Universal binary with x86_64 (Intel) and ARM64 (Apple Silicon)
     + Linux and Unix: x86, ARM, MIPS, LoongArch
-    + Microsoft Windows: x86
+    + Microsoft Windows: x86, ARM
     + [New!] Google Android: x86, ARM (The complete environment is available in [Termux](https://github.com/termux/termux-app) environment)
 + Powerful and bloat-free extension system
     + C/C++ Native Interface(CNI) System: translate invoking from both C/C++ and Covariant Script
@@ -92,15 +92,15 @@ Option|Mnemonic|Function
 Option|Mnemonic|Function
 :---:|:---:|:--:
 `--no-optimize`|`-o`|Disable optimizer
-`--help`|`-h`|Show help infomation
-`--version`|`-v`|Show version infomation
+`--help`|`-h`|Show help information
+`--version`|`-v`|Show version information
 `--wait-before-exit`|`-w`|Wait before process exit
 `--stack-resize <SIZE>`|`-S <SIZE>`|Reset the size of runtime stack
-`--log-path <PATH>`|`-l <PATH>` |Set the log path
+`--log-path <PATH>`|`-l <PATH>` |Set the log and AST exporting path
 `--import-path <PATH>`|`-i <PATH>`|Set the import path
 
 The default stack size is **1000**. When the stack size is set larger than the default value, the stack size of the coroutine will be dynamically adjusted to one tenth of the set size; when the stack
-size is set smaller than the default value, the stack size of the coroutine will be will remain at **100**.
+size is set smaller than the default value, the stack size of the coroutine will remain at **100**.
 
 **Note that if you do not set the log path, it will be directly output to the standard output stream.**
 
@@ -112,8 +112,8 @@ size is set smaller than the default value, the stack size of the coroutine will
 
 Option|Mnemonic|Function
 :-----------------------:|:------:|:--:
-`--help`|`-h`|Show help infomation
-`--version`|`-v`|Show version infomation
+`--help`|`-h`|Show help information
+`--version`|`-v`|Show version information
 `--silent`|`-s`|Close the command prompt
 `--wait-before-exit`|`-w`|Wait before process exit
 `--csym <FILE>`|`-g <FILE>`|Read cSYM from file
@@ -123,11 +123,11 @@ Option|Mnemonic|Function
 
 The stack size policy is the same as for the interpreter.
 
-**Note that if you do not set the log path, it will be printed to stdout.**
+**Note that if you do not set the log path, it will be directly output to the standard output stream.**
 
 ## Examples ##
 
-The [covscript-example](https://github.com/covscript/covscript-example) repository contains several example programs written by Covariant Script.
+The [covscript-example](https://github.com/covscript/covscript-example) repository contains several example programs written in Covariant Script.
 
 ## Copyright ##
 
