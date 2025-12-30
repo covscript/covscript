@@ -14,6 +14,8 @@
 **Covariant Script** is an open source, cross-platform programming language.  
 This project is an officially maintained Covariant Script interpreter.
 
+**[Sponsor This Project](SPONSORING.md)** - Support development and contribute to the community's future
+
 ## Switch language ##
 
 - [简体中文](./README-zh.md)
@@ -135,6 +137,17 @@ under Apache 2.0**
 **Copyright © 2017-2025 Michael Lee(李登淳)**  
 *This software is registered with the National Copyright Administration of the People's Republic of China(Registration
 Number: 2020SR0408026) and is protected by the Copyright Law of the People's Republic of China.*
+
+### For Contributors
+
+When contributing to Covariant Script:
+- Your contributions are always attributed to you
+- Your name/GitHub handle is preserved in project history
+- Significant contributors may be recognized in version release notes and documentation
+- You retain copyright to your contributions under the Apache 2.0 license
+- **Active contributors may receive bonuses from sponsorship funds** (distributed annually based on contribution metrics)
+
+For a complete list of contributors, please visit our [Contributors page](CONTRIBUTORS.md). For sponsorship details, see [Sponsoring page](SPONSORING.md).
 
 ## Citation ##
 
