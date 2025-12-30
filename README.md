@@ -130,6 +130,27 @@ The stack size policy is the same as for the interpreter.
 
 The [covscript-example](https://github.com/covscript/covscript-example) repository contains several example programs written in Covariant Script.
 
+## Related Projects ##
+
+Explore these official projects to enhance your Covariant Script experience:
+
+- **[Handbook](https://github.com/covscript/handbook)** - Comprehensive getting started guide, tutorials, and best practices for learning CovScript
+- **[VSCode Extension](https://github.com/covscript/covscript-vscode)** - Official VSCode extension with syntax highlighting, code completion, and debugging support
+- **[Package Manager (cspkg)](https://github.com/covscript/cspkg)** - Official package manager for easy dependency management and package distribution
+- **[Examples](https://github.com/covscript/covscript-example)** - Collection of example programs and use cases
+
+## Tools & Resources ##
+
+### Development Tools
+- **VSCode Extension** - Recommended IDE integration with full language support
+- **Package Manager** - Manage dependencies with `cspkg` command-line tool
+- **Handbook** - Official documentation and learning resources
+
+### Community
+- **[GitHub Discussions](https://github.com/covscript/covscript/discussions)** - Ask questions and discuss with the community
+- **[GitHub Issues](https://github.com/covscript/covscript/issues)** - Report bugs and request features
+- **WeChat Group** - Email [mikecovlee@163.com](mailto:mikecovlee@163.com) to join our community chat
+
 ## Copyright ##
 
 **The author of the Covariant Script Programming Language is [@mikecovlee](https://github.com/mikecovlee/), licensed

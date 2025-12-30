@@ -152,6 +152,27 @@
 
 想看看谁已经为项目做出了贡献？来逛逛我们的[贡献者页面](CONTRIBUTORS-zh.md)吧！详细的赞助和分红说明，请查看 [赞助页面](SPONSORING-zh.md)。
 
+## 相关项目 ##
+
+为了更好的 CovScript 体验，我们推荐以下官方项目：
+
+- **[官方手册](https://github.com/covscript/handbook)** - 完整的入门指南、教程和最佳实践文档
+- **[VSCode 扩展](https://github.com/covscript/covscript-vscode)** - 官方 VSCode 扩展，提供语法高亮、代码补全和调试支持
+- **[包管理器 (cspkg)](https://github.com/covscript/cspkg)** - 官方包管理系统，便于依赖管理和包分发
+- **[示例项目](https://github.com/covscript/covscript-example)** - 精选示例程序和常见用法
+
+## 开发工具 ##
+
+### IDE 和编辑器支持
+- **VSCode 扩展** - 推荐使用，支持完整的语言功能
+- **包管理器** - 使用 `cspkg` 命令行工具管理依赖
+- **官方手册** - 包含完整文档和学习资源
+
+### 社区交流
+- **[GitHub Discussions](https://github.com/covscript/covscript/discussions)** - 讨论和提问
+- **[GitHub Issues](https://github.com/covscript/covscript/issues)** - 报告 Bug 和建议功能
+- **微信群** - 发邮件至 [mikecovlee@163.com](mailto:mikecovlee@163.com) 加入社区
+
 ## 引用 ##
 
 如果 CovScript 为您的工作增添了一些便利，请引用该仓库。
