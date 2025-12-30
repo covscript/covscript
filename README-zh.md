@@ -14,6 +14,8 @@
 **Covariant Script**是一种开源的跨平台编程语言  
 此项目为官方维护的Covariant Script解释器
 
+**[赞助此项目](SPONSORING-zh.md)** - 支持开发，共建社区未来
+
 ## 切换语言 ##
 
 - [简体中文](./README-zh.md)
@@ -104,7 +106,7 @@
 `--log-path <路径>`|`-l <路径>` |设置日志输出路径
 `--import-path <路径>`|`-i <路径>`|设置引入查找路径
 
-默认栈大小为**1000**，当设置的栈大小大于默认值时，协程的栈大小会动态调整为设置大小的十分之一；当堆栈大小设置小于默认值时，协程的堆栈大小将保持在**100**
+默认栈大小为**64**。这只是初始预留大小，栈会根据需要自动增长，其上限取决于系统对栈的限制。当设置的栈大小为**1000**或更大时，协程的栈大小会动态调整为设置大小的十分之一；当设置的栈大小小于**1000**时，协程的栈大小将保持在**64**
 
 **注意，若不设置日志输出路径，将直接输出至标准输出流**
 
@@ -138,6 +140,38 @@
 **Covariant Script 编程语言的作者是 [@mikecovlee](https://github.com/mikecovlee/)，基于 Apache 2.0 协议分发。**  
 **版权所有 © 2017-2025 李登淳(Michael Lee)**  
 *该软件已在中华人民共和国国家版权局注册（登记号：2020SR0408026），受中华人民共和国著作权法保护。*
+
+### 贡献者福利
+
+加入我们的贡献者行列，你会得到：
+- 你的名字/GitHub 账号永远被保留在项目历史中
+- 代码贡献通过 Git 自动署名
+- 重要贡献者有机会在版本发布说明中被提及
+- 你保留对贡献代码的著作权（Apache 2.0 协议）
+- **活跃贡献者有机会从赞助资金中获得分红**（按年度根据贡献度分配）
+
+想看看谁已经为项目做出了贡献？来逛逛我们的[贡献者页面](CONTRIBUTORS-zh.md)吧！详细的赞助和分红说明，请查看 [赞助页面](SPONSORING-zh.md)。
+
+## 相关项目 ##
+
+为了更好的 CovScript 体验，我们推荐以下官方项目：
+
+- **[官方手册](https://github.com/covscript/handbook)** - 完整的入门指南、教程和最佳实践文档
+- **[VSCode 扩展](https://github.com/covscript/covscript-vscode)** - 官方 VSCode 扩展，提供语法高亮、代码补全和调试支持
+- **[包管理器 (cspkg)](https://github.com/covscript/cspkg)** - 官方包管理系统，便于依赖管理和包分发
+- **[示例项目](https://github.com/covscript/covscript-example)** - 精选示例程序和常见用法
+
+## 开发工具 ##
+
+### IDE 和编辑器支持
+- **VSCode 扩展** - 推荐使用，支持完整的语言功能
+- **包管理器** - 使用 `cspkg` 命令行工具管理依赖
+- **官方手册** - 包含完整文档和学习资源
+
+### 社区交流
+- **[GitHub Discussions](https://github.com/covscript/covscript/discussions)** - 讨论和提问
+- **[GitHub Issues](https://github.com/covscript/covscript/issues)** - 报告 Bug 和建议功能
+- **微信群** - 发邮件至 [mikecovlee@163.com](mailto:mikecovlee@163.com) 加入社区
 
 ## 引用 ##
 

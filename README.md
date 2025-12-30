@@ -14,6 +14,8 @@
 **Covariant Script** is an open source, cross-platform programming language.  
 This project is an officially maintained Covariant Script interpreter.
 
+**[Sponsor This Project](SPONSORING.md)** - Support development and contribute to the community's future
+
 ## Switch language ##
 
 - [简体中文](./README-zh.md)
@@ -24,7 +26,7 @@ This project is an officially maintained Covariant Script interpreter.
 + Cross-platform, supporting most mainstream Operating Systems
     + Apple macOS: Universal binary with x86_64 (Intel) and ARM64 (Apple Silicon)
     + Linux and Unix: x86, ARM, MIPS, LoongArch
-    + Microsoft Windows: x86
+    + Microsoft Windows: x86, ARM
     + [New!] Google Android: x86, ARM (The complete environment is available in [Termux](https://github.com/termux/termux-app) environment)
 + Powerful and bloat-free extension system
     + C/C++ Native Interface(CNI) System: translate invoking from both C/C++ and Covariant Script
@@ -92,15 +94,14 @@ Option|Mnemonic|Function
 Option|Mnemonic|Function
 :---:|:---:|:--:
 `--no-optimize`|`-o`|Disable optimizer
-`--help`|`-h`|Show help infomation
-`--version`|`-v`|Show version infomation
+`--help`|`-h`|Show help information
+`--version`|`-v`|Show version information
 `--wait-before-exit`|`-w`|Wait before process exit
 `--stack-resize <SIZE>`|`-S <SIZE>`|Reset the size of runtime stack
-`--log-path <PATH>`|`-l <PATH>` |Set the log path
+`--log-path <PATH>`|`-l <PATH>` |Set the log and AST exporting path
 `--import-path <PATH>`|`-i <PATH>`|Set the import path
 
-The default stack size is **1000**. When the stack size is set larger than the default value, the stack size of the coroutine will be dynamically adjusted to one tenth of the set size; when the stack
-size is set smaller than the default value, the stack size of the coroutine will be will remain at **100**.
+The default stack size is **64**. This is the initial reserved size - the stack will grow automatically as needed, with the upper limit determined by system constraints. When the stack size is set to **1000** or larger, the stack size of the coroutine will be dynamically adjusted to one tenth of the set size; when the stack size is set smaller than **1000**, the stack size of the coroutine will remain at **64**.
 
 **Note that if you do not set the log path, it will be directly output to the standard output stream.**
 
@@ -112,8 +113,8 @@ size is set smaller than the default value, the stack size of the coroutine will
 
 Option|Mnemonic|Function
 :-----------------------:|:------:|:--:
-`--help`|`-h`|Show help infomation
-`--version`|`-v`|Show version infomation
+`--help`|`-h`|Show help information
+`--version`|`-v`|Show version information
 `--silent`|`-s`|Close the command prompt
 `--wait-before-exit`|`-w`|Wait before process exit
 `--csym <FILE>`|`-g <FILE>`|Read cSYM from file
@@ -123,11 +124,32 @@ Option|Mnemonic|Function
 
 The stack size policy is the same as for the interpreter.
 
-**Note that if you do not set the log path, it will be printed to stdout.**
+**Note that if you do not set the log path, it will be directly output to the standard output stream.**
 
 ## Examples ##
 
-The [covscript-example](https://github.com/covscript/covscript-example) repository contains several example programs written by Covariant Script.
+The [covscript-example](https://github.com/covscript/covscript-example) repository contains several example programs written in Covariant Script.
+
+## Related Projects ##
+
+Explore these official projects to enhance your Covariant Script experience:
+
+- **[Handbook](https://github.com/covscript/handbook)** - Comprehensive getting started guide, tutorials, and best practices for learning CovScript
+- **[VSCode Extension](https://github.com/covscript/covscript-vscode)** - Official VSCode extension with syntax highlighting, code completion, and debugging support
+- **[Package Manager (cspkg)](https://github.com/covscript/cspkg)** - Official package manager for easy dependency management and package distribution
+- **[Examples](https://github.com/covscript/covscript-example)** - Collection of example programs and use cases
+
+## Tools & Resources ##
+
+### Development Tools
+- **VSCode Extension** - Recommended IDE integration with full language support
+- **Package Manager** - Manage dependencies with `cspkg` command-line tool
+- **Handbook** - Official documentation and learning resources
+
+### Community
+- **[GitHub Discussions](https://github.com/covscript/covscript/discussions)** - Ask questions and discuss with the community
+- **[GitHub Issues](https://github.com/covscript/covscript/issues)** - Report bugs and request features
+- **WeChat Group** - Email [mikecovlee@163.com](mailto:mikecovlee@163.com) to join our community chat
 
 ## Copyright ##
 
@@ -136,6 +158,17 @@ under Apache 2.0**
 **Copyright © 2017-2025 Michael Lee(李登淳)**  
 *This software is registered with the National Copyright Administration of the People's Republic of China(Registration
 Number: 2020SR0408026) and is protected by the Copyright Law of the People's Republic of China.*
+
+### For Contributors
+
+When contributing to Covariant Script:
+- Your contributions are always attributed to you
+- Your name/GitHub handle is preserved in project history
+- Significant contributors may be recognized in version release notes and documentation
+- You retain copyright to your contributions under the Apache 2.0 license
+- **Active contributors may receive bonuses from sponsorship funds** (distributed annually based on contribution metrics)
+
+For a complete list of contributors, please visit our [Contributors page](CONTRIBUTORS.md). For sponsorship details, see [Sponsoring page](SPONSORING.md).
 
 ## Citation ##
 

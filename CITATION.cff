@@ -1,11 +1,14 @@
 cff-version: 1.2.0
-message: "If you use CovScript Interpreter, please cite it as below."
+message: "If you use CovScript Interpreter in your work, please cite it using the metadata below."
 authors:
 - family-names: "Li"
   given-names: "Dengchun"
   orcid: "https://orcid.org/0000-0001-6002-1661"
 title: "CovScript Interpreter"
+type: software
 version: 3.4.6
 doi: 10.5281/zenodo.10004375
 date-released: 2025-11-27
-url: "https://github.com/covscript/covscript"
+repository-code: "https://github.com/covscript/covscript"
+url: "https://covscript.org.cn"
+license: Apache-2.0
