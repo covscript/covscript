@@ -69,7 +69,7 @@ Unsure where to begin? You can start by looking through issues labeled as:
 
 ### Prerequisites
 
-- CMake 3.10 or higher
+- CMake 3.16 or higher
 - C++17 compatible compiler (GCC 7+, Clang 5+, MSVC 2017+)
 - Git
 
