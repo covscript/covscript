@@ -24,7 +24,6 @@
  * Website: http://covscript.org.cn
  */
 #include <covscript/impl/codegen.hpp>
-#include <regex>
 
 namespace cs {
 	const map_t<char, char> token_value::escape_char = {
@@ -1072,9 +1071,62 @@ namespace cs {
 		if (!ifs.is_open())
 			return;
 		csym_info csym;
-		std::regex reg("^#\\$cSYM/1\\.0\\(([^\\)]*)\\):(.*)$");
-		// Read file
-		std::string header, buff;
+		// Stream-parse header line directly: avoids allocating a large header string,
+		// a map_str copy, and per-number temp buffers.
+		static constexpr char csym_prefix[] = "#$cSYM/1.0(";
+		static constexpr std::size_t prefix_len = sizeof(csym_prefix) - 1;
+		// Verify magic prefix
+		for (std::size_t i = 0; i < prefix_len; ++i) {
+			if (!ifs || ifs.get() != static_cast<unsigned char>(csym_prefix[i]))
+				throw compile_error("Invalid cSYM file (bad magic): " + csym_path);
+		}
+		// Read filename until ')'
+		for (int ch = ifs.get(); ifs; ch = ifs.get()) {
+			if (ch == ')')
+				break;
+			if (ch == '\n' || ch == '\r')
+				throw compile_error("Invalid cSYM file (unterminated filename field): " + csym_path);
+			csym.file += static_cast<char>(ch);
+		}
+		// Expect ':'
+		if (!ifs || ifs.get() != ':')
+			throw compile_error("Invalid cSYM file (missing ':' after filename): " + csym_path);
+		// Parse comma-separated map entries directly as integers (no intermediate strings)
+		{
+			unsigned long long num = 0;
+			bool has_entry = false, is_dash = false;
+			auto flush = [&] {
+				csym.map.push_back(is_dash ? 0 : num + 1);
+				num = 0;
+				has_entry = false;
+				is_dash = false;
+			};
+			for (int ch = ifs.get(); ifs; ch = ifs.get()) {
+				if (ch == '\r') {
+					if (ifs.peek() == '\n')
+						ifs.get();
+					break;
+				}
+				if (ch == '\n')
+					break;
+				if (ch == ',') {
+					if (has_entry)
+						flush();
+				}
+				else if (ch == '-' && !has_entry) {
+					is_dash = true;
+					has_entry = true;
+				}
+				else if (ch >= '0' && ch <= '9') {
+					num = num * 10 + static_cast<unsigned>(ch - '0');
+					has_entry = true;
+				}
+			}
+			if (has_entry)
+				flush();
+		}
+		// Read remaining lines into csym.codes
+		std::string buff;
 		bool expect_n = false;
 		for (int ch = ifs.get(); ifs; ch = ifs.get()) {
 			if (expect_n) {
@@ -1084,12 +1136,8 @@ namespace cs {
 			}
 			switch (ch) {
 			case '\n':
-				if (!header.empty()) {
-					csym.codes.emplace_back(buff);
-					buff.clear();
-				}
-				else
-					std::swap(header, buff);
+				csym.codes.emplace_back(buff);
+				buff.clear();
 				break;
 			case '\r':
 				expect_n = true;
@@ -1099,35 +1147,8 @@ namespace cs {
 				break;
 			}
 		}
-		if (!buff.empty()) {
+		if (!buff.empty())
 			csym.codes.emplace_back(buff);
-		}
-		// Parsing header
-		std::smatch match;
-		if (!std::regex_match(header, match, reg))
-			return;
-		csym.file = match.str(1);
-		std::string map_str = match.str(2);
-		for (auto &ch : map_str) {
-			if (ch == ',') {
-				if (!buff.empty()) {
-					if (buff != "-")
-						csym.map.push_back(std::stoull(buff) + 1);
-					else
-						csym.map.push_back(0);
-					buff.clear();
-				}
-			}
-			else
-				buff += ch;
-		}
-		if (!buff.empty()) {
-			if (buff != "-")
-				csym.map.push_back(std::stoull(buff) + 1);
-			else
-				csym.map.push_back(0);
-			buff.clear();
-		}
 		csyms.emplace(module_path, std::move(csym));
 	}
 
