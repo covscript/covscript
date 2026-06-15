@@ -35,6 +35,7 @@
 #include <random>
 #include <future>
 #include <mutex>
+#include <limits>
 
 namespace cov {
 	class timer final {

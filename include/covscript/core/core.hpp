@@ -217,6 +217,16 @@ namespace cs {
 		context_type(const context_type &) = default;
 
 		~context_type() = default;
+
+		// Safe access to a source line by 1-based line number.
+		// Returns an empty string when line_num is 0 or out of range.
+		const string &get_file_line(std::size_t line_num) const noexcept
+		{
+			static const string empty_line;
+			if (line_num == 0 || line_num > file_buff.size())
+				return empty_line;
+			return file_buff[line_num - 1];
+		}
 	};
 
 // Callable and Function

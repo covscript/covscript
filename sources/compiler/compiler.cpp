@@ -24,6 +24,7 @@
  * Website: http://covscript.org.cn
  */
 #include <covscript/impl/codegen.hpp>
+#include <limits>
 
 namespace cs {
 	const map_t<char, char> token_value::escape_char = {
@@ -1364,7 +1365,7 @@ namespace cs {
 				throw e;
 			}
 			catch (const std::exception &e) {
-				throw exception(line_num, context->file_path, context->file_buff.at(line_num - 1), e.what());
+				throw exception(line_num, context->file_path, context->get_file_line(line_num), e.what());
 			}
 		}
 		if (!methods.empty())
