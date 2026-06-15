@@ -1118,7 +1118,10 @@ namespace cs {
 					has_entry = true;
 				}
 				else if (ch >= '0' && ch <= '9') {
-					num = num * 10 + static_cast<unsigned>(ch - '0');
+					unsigned digit = static_cast<unsigned>(ch - '0');
+					if (num > (std::numeric_limits<unsigned long long>::max() - digit) / 10)
+						throw compile_error("Integer overflow in cSYM file: " + csym_path);
+					num = num * 10 + digit;
 					has_entry = true;
 				}
 			}

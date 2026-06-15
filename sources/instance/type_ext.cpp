@@ -198,7 +198,7 @@ namespace cs_impl {
 // Valid range is [0, size); throws cs::lang_error otherwise.
 	inline std::size_t check_index(cs::numeric_integer idx, std::size_t size)
 	{
-		if (idx < 0 || static_cast<std::size_t>(idx) >= size)
+		if (idx < 0 || static_cast<unsigned long long>(idx) >= static_cast<unsigned long long>(size))
 			throw cs::lang_error("Index out of range.");
 		return static_cast<std::size_t>(idx);
 	}
@@ -207,7 +207,7 @@ namespace cs_impl {
 // Valid range is [0, size]; throws cs::lang_error otherwise.
 	inline std::size_t check_position(cs::numeric_integer idx, std::size_t size)
 	{
-		if (idx < 0 || static_cast<std::size_t>(idx) > size)
+		if (idx < 0 || static_cast<unsigned long long>(idx) > static_cast<unsigned long long>(size))
 			throw cs::lang_error("Position out of range.");
 		return static_cast<std::size_t>(idx);
 	}

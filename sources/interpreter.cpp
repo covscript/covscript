@@ -111,7 +111,7 @@ int covscript_args(int args_size, char *args[])
 			try {
 				cs::current_process->resize_stack(std::stoul(args[index]));
 			}
-			catch (const std::exception &e) {
+			catch (const std::exception &) {
 				throw cs::fatal_error(std::string("invalid stack size argument: ") + args[index]);
 			}
 			expect_stack_resize = 2;
