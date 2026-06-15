@@ -339,7 +339,7 @@ namespace cs {
 		if (tree.root().data()->get_type() != token_types::value) {
 			std::size_t line_num = static_cast<token_endline *>(raw.front().back())->get_line_num();
 			const char *what = "Case Tag must be a constant value.";
-			throw exception(line_num, context->file_path, context->file_buff.at(line_num - 1), what);
+			throw exception(line_num, context->file_path, context->get_file_line(line_num), what);
 		}
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);

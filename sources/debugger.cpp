@@ -108,7 +108,12 @@ int covscript_args(int args_size, char *args[])
 			expect_import_path = 2;
 		}
 		else if (expect_stack_resize == 1) {
-			cs::current_process->resize_stack(std::stoul(args[index]));
+			try {
+				cs::current_process->resize_stack(std::stoul(args[index]));
+			}
+			catch (const std::exception &) {
+				throw cs::fatal_error(std::string("invalid stack size argument: ") + args[index]);
+			}
 			expect_stack_resize = 2;
 		}
 		else if (args[index][0] == '-') {
@@ -628,7 +633,14 @@ void covscript_main(int args_size, char *args[])
 			breakpoints.list();
 			return true; });
 		func_map.add_func("rmbreak", "rb", [](const std::string &cmd) -> bool {
-			breakpoints.remove(std::stoul(cmd));
+			try
+			{
+				breakpoints.remove(std::stoul(cmd));
+			}
+			catch (...)
+			{
+				std::cout << "Invalid option: \"" << cmd << "\"" << std::endl;
+			}
 			return true; });
 		func_map.add_func("optimizer", "o", [](const std::string &cmd) -> bool {
 			if (context.get() != nullptr)

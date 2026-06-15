@@ -34,6 +34,8 @@
 #include <chrono>
 #include <random>
 #include <future>
+#include <mutex>
+#include <limits>
 
 namespace cov {
 	class timer final {
@@ -193,13 +195,31 @@ namespace cs_impl {
 			it->second.swap(cs::copy(val), true);
 	}
 
+// Validate a script-level element index and convert it to a container offset.
+// Valid range is [0, size); throws cs::lang_error otherwise.
+	inline std::size_t check_index(cs::numeric_integer idx, std::size_t size)
+	{
+		if (idx < 0 || static_cast<unsigned long long>(idx) >= static_cast<unsigned long long>(size))
+			throw cs::lang_error("Index out of range.");
+		return static_cast<std::size_t>(idx);
+	}
+
+// Validate a script-level position for insert/seek/substr operations.
+// Valid range is [0, size]; throws cs::lang_error otherwise.
+	inline std::size_t check_position(cs::numeric_integer idx, std::size_t size)
+	{
+		if (idx < 0 || static_cast<unsigned long long>(idx) > static_cast<unsigned long long>(size))
+			throw cs::lang_error("Position out of range.");
+		return static_cast<std::size_t>(idx);
+	}
+
 	namespace array_cs_ext {
 		using namespace cs;
 
 // Element access
 		var at(const array &arr, const numeric &posit)
 		{
-			return arr.at(posit.as_integer());
+			return arr.at(check_index(posit.as_integer(), arr.size()));
 		}
 
 		var front(const array &arr)
@@ -671,7 +691,10 @@ namespace cs_impl {
 // Lookup
 		var at(hash_map &map, const var &key)
 		{
-			return map.at(key);
+			auto it = map.find(key);
+			if (it == map.end())
+				throw lang_error("Key does not exist in hash_map.");
+			return it->second;
 		}
 
 		bool exist(hash_map &map, const var &key)
@@ -860,8 +883,13 @@ namespace cs_impl {
 
 		string read(istream &in, const numeric &n)
 		{
-			string buff(n.as_integer(), '\0');
-			in->read(&buff[0], buff.size());
+			numeric_integer count = n.as_integer();
+			if (count < 0)
+				throw lang_error("Read length cannot be negative.");
+			if (count == 0)
+				return string();
+			string buff(static_cast<std::size_t>(count), '\0');
+			in->read(&buff[0], static_cast<std::streamsize>(count));
 			buff.resize(in->gcount());
 			return buff;
 		}
@@ -1447,9 +1475,8 @@ namespace cs_impl {
 				catch (...) {
 					context_swap_out();
 					context_cleanup();
-					current_process->eptr_mutex.lock();
+					std::lock_guard<std::mutex> lock(current_process->eptr_mutex);
 					current_process->eptr = std::current_exception();
-					current_process->eptr_mutex.unlock();
 					return null_pointer;
 				}
 			}
@@ -1495,9 +1522,8 @@ namespace cs_impl {
 					return func.call(args);
 				}
 				catch (...) {
-					current_process->eptr_mutex.lock();
+					std::lock_guard<std::mutex> lock(current_process->eptr_mutex);
 					current_process->eptr = std::current_exception();
-					current_process->eptr_mutex.unlock();
 					return null_pointer;
 				}
 			}
@@ -1534,10 +1560,11 @@ namespace cs_impl {
 				ret = func();
 
 			std::exception_ptr e = nullptr;
-			current_process->eptr_mutex.lock();
-			if (current_process->eptr != nullptr)
-				std::swap(current_process->eptr, e);
-			current_process->eptr_mutex.unlock();
+			{
+				std::lock_guard<std::mutex> lock(current_process->eptr_mutex);
+				if (current_process->eptr != nullptr)
+					std::swap(current_process->eptr, e);
+			}
 			if (e != nullptr)
 				std::rethrow_exception(e);
 
@@ -1685,14 +1712,14 @@ namespace cs_impl {
 				throw lang_error("Target function deferred or timeout.");
 			}
 			else {
-				current_process->eptr_mutex.lock();
-				if (current_process->eptr != nullptr) {
-					std::exception_ptr e = nullptr;
-					std::swap(current_process->eptr, e);
-					current_process->eptr_mutex.unlock();
-					std::rethrow_exception(e);
+				std::exception_ptr e = nullptr;
+				{
+					std::lock_guard<std::mutex> lock(current_process->eptr_mutex);
+					if (current_process->eptr != nullptr)
+						std::swap(current_process->eptr, e);
 				}
-				current_process->eptr_mutex.unlock();
+				if (e != nullptr)
+					std::rethrow_exception(e);
 				return future.get();
 			}
 		}
@@ -1710,14 +1737,14 @@ namespace cs_impl {
 				throw lang_error("Target function deferred or timeout.");
 			}
 			else {
-				current_process->eptr_mutex.lock();
-				if (current_process->eptr != nullptr) {
-					std::exception_ptr e = nullptr;
-					std::swap(current_process->eptr, e);
-					current_process->eptr_mutex.unlock();
-					std::rethrow_exception(e);
+				std::exception_ptr e = nullptr;
+				{
+					std::lock_guard<std::mutex> lock(current_process->eptr_mutex);
+					if (current_process->eptr != nullptr)
+						std::swap(current_process->eptr, e);
 				}
-				current_process->eptr_mutex.unlock();
+				if (e != nullptr)
+					std::rethrow_exception(e);
 				return future.get();
 			}
 		}
@@ -1823,7 +1850,7 @@ namespace cs_impl {
 
 		string assign(string &str, const numeric &posit, char ch)
 		{
-			str.at(posit.as_integer()) = ch;
+			str.at(check_index(posit.as_integer(), str.size())) = ch;
 			return str;
 		}
 
@@ -1840,31 +1867,42 @@ namespace cs_impl {
 
 		string insert(string &str, const numeric &posit, const var &val)
 		{
+			std::size_t pos = check_position(posit.as_integer(), str.size());
 			if (val.is_type_of<string>())
-				str.insert(posit.as_integer(), val.const_val<string>());
+				str.insert(pos, val.const_val<string>());
 			else
-				str.insert(posit.as_integer(), val.to_string());
+				str.insert(pos, val.to_string());
 			return str;
 		}
 
 		string erase(string &str, const numeric &b, const numeric &e)
 		{
-			str.erase(b.as_integer(), e.as_integer());
+			numeric_integer count = e.as_integer();
+			if (count < 0)
+				throw lang_error("Erase count cannot be negative.");
+			str.erase(check_position(b.as_integer(), str.size()), static_cast<std::size_t>(count));
 			return str;
 		}
 
 		string replace(string &str, const numeric &posit, const numeric &count, const var &val)
 		{
+			numeric_integer cnt = count.as_integer();
+			if (cnt < 0)
+				throw lang_error("Replace count cannot be negative.");
+			std::size_t pos = check_position(posit.as_integer(), str.size());
 			if (val.is_type_of<string>())
-				str.replace(posit.as_integer(), count.as_integer(), val.const_val<string>());
+				str.replace(pos, static_cast<std::size_t>(cnt), val.const_val<string>());
 			else
-				str.replace(posit.as_integer(), count.as_integer(), val.to_string());
+				str.replace(pos, static_cast<std::size_t>(cnt), val.to_string());
 			return str;
 		}
 
 		string substr(const string &str, const numeric &b, const numeric &e)
 		{
-			return str.substr(b.as_integer(), e.as_integer());
+			numeric_integer count = e.as_integer();
+			if (count < 0)
+				throw lang_error("Substring length cannot be negative.");
+			return str.substr(check_position(b.as_integer(), str.size()), static_cast<std::size_t>(count));
 		}
 
 		numeric find(const string &str, const string &s, const numeric &posit)
@@ -1891,7 +1929,10 @@ namespace cs_impl {
 
 		string cut(string &str, const numeric &n)
 		{
-			for (std::size_t i = 0; i < n.as_integer(); ++i)
+			numeric_integer count = n.as_integer();
+			if (count < 0 || static_cast<std::size_t>(count) > str.size())
+				throw lang_error("Cut count out of range.");
+			for (numeric_integer i = 0; i < count; ++i)
 				str.pop_back();
 			return str;
 		}

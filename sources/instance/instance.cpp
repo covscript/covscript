@@ -39,7 +39,7 @@ namespace cs {
 
 	const std::string &statement_base::get_raw_code() const noexcept
 	{
-		return context->file_buff.at(line_num - 1);
+		return context->get_file_line(line_num);
 	}
 
 	namespace_t instance_type::source_import(const std::string &path)
