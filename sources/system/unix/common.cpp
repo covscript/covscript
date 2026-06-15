@@ -398,16 +398,16 @@ namespace cs {
 				fi->ctx.uc_stack.ss_size = fi->stack.get_ss();
 				fi->ctx.uc_link = nullptr;
 				cs_fiber_makecontext(&fi->ctx, reinterpret_cast<void (*)()>(unix_fiber::entry), 0);
-				if (!current_process->fiber_stack.empty())
-					fi->prev_ctx = &static_cast<unix_fiber *>(current_process->fiber_stack.top().get())->ctx;
-				else
-					fi->prev_ctx = &global_ctx;
 			}
-			else if (fi->state == fiber_state::suspended) {
-				if (fi->prev_ctx == nullptr)
-					throw internal_error("Fiber context corrupted.");
-				fi->state = fiber_state::running;
-			}
+			// Always (re)bind the return context to the current caller before resuming.
+			// A fiber may be resumed from a different caller than the one that started
+			// it (fibers are first-class objects), so binding prev_ctx only once on
+			// creation would make yield/finish jump back to a stale - possibly already
+			// destroyed - context.
+			if (!current_process->fiber_stack.empty())
+				fi->prev_ctx = &static_cast<unix_fiber *>(current_process->fiber_stack.top().get())->ctx;
+			else
+				fi->prev_ctx = &global_ctx;
 			fi->state = fiber_state::running;
 			current_process->fiber_stack.push(fi_p);
 			fi->cs_swap_in();

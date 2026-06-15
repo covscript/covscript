@@ -39,7 +39,10 @@ namespace cs {
 
 	const std::string &statement_base::get_raw_code() const noexcept
 	{
-		return context->file_buff.at(line_num - 1);
+		static const std::string empty_code;
+		if (line_num == 0 || line_num > context->file_buff.size())
+			return empty_code;
+		return context->file_buff[line_num - 1];
 	}
 
 	namespace_t instance_type::source_import(const std::string &path)
