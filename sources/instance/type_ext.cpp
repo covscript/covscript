@@ -885,8 +885,10 @@ namespace cs_impl {
 			numeric_integer count = n.as_integer();
 			if (count < 0)
 				throw lang_error("Read length cannot be negative.");
+			if (count == 0)
+				return string();
 			string buff(static_cast<std::size_t>(count), '\0');
-			in->read(&buff[0], buff.size());
+			in->read(&buff[0], static_cast<std::streamsize>(count));
 			buff.resize(in->gcount());
 			return buff;
 		}
