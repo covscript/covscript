@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Covariant Script Lexer
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -412,11 +412,11 @@ namespace cs {
 			try {
 				compiler.process_char_buff(buff, tokens, encoding);
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(line_num, context->file_path, line, e.what());
+				throw exception(line_num, context->file_path, line, exception_message(e));
 			}
 			for (auto it = tokens.rbegin(); it != tokens.rend(); ++it) {
 				if (*it != nullptr) {

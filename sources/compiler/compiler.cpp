@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Covariant Script Compiler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -1361,11 +1361,11 @@ namespace cs {
 					break;
 				}
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(line_num, context->file_path, context->get_file_line(line_num), e.what());
+				throw exception(line_num, context->file_path, context->get_file_line(line_num), exception_message(e));
 			}
 		}
 		if (!methods.empty())

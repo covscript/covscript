@@ -27,6 +27,7 @@
 #include <cwctype>
 #include <atomic>
 #include <cfenv>
+#include <string_view>
 
 namespace cs {
 	extern std::atomic_size_t global_thread_counter;
@@ -65,13 +66,11 @@ namespace cs {
 		// is wrapped into an exception that already carries file/line context.
 		static std::string strip_prefix(std::string what) noexcept
 		{
-			static const char *const prefixes[] = {
-				"Runtime Error: ", "Compile Error: ", "Internal Error: ", "Fatal Error: "
-			};
-			for (const char *prefix : prefixes) {
-				const std::size_t len = std::strlen(prefix);
-				if (what.compare(0, len, prefix) == 0) {
-					what.erase(0, len);
+			for (std::string_view prefix : {
+			            "Runtime Error: ", "Compile Error: ", "Internal Error: ", "Fatal Error: "
+			        }) {
+				if (what.size() >= prefix.size() && what.compare(0, prefix.size(), prefix.data(), prefix.size()) == 0) {
+					what.erase(0, prefix.size());
 					break;
 				}
 			}
@@ -110,12 +109,14 @@ namespace cs {
 	};
 
 	class compile_error final : public std::exception {
+		std::string mMsg;
 		std::string mWhat = "Compile Error";
 
 	public:
 		compile_error() = default;
 
-		explicit compile_error(const std::string &str) noexcept : mWhat("Compile Error: " + str) {}
+		explicit compile_error(std::string str) noexcept
+			: mMsg(std::move(str)), mWhat("Compile Error: " + mMsg) {}
 
 		compile_error(const compile_error &) = default;
 
@@ -127,6 +128,11 @@ namespace cs {
 
 		compile_error &operator=(compile_error &&) = default;
 
+		const std::string &message() const noexcept
+		{
+			return mMsg;
+		}
+
 		const char *what() const noexcept override
 		{
 			return this->mWhat.c_str();
@@ -134,12 +140,14 @@ namespace cs {
 	};
 
 	class runtime_error final : public std::exception {
+		std::string mMsg;
 		std::string mWhat = "Runtime Error";
 
 	public:
 		runtime_error() = default;
 
-		explicit runtime_error(const std::string &str) noexcept : mWhat("Runtime Error: " + str) {}
+		explicit runtime_error(std::string str) noexcept
+			: mMsg(std::move(str)), mWhat("Runtime Error: " + mMsg) {}
 
 		runtime_error(const runtime_error &) = default;
 
@@ -151,6 +159,11 @@ namespace cs {
 
 		runtime_error &operator=(runtime_error &&) = default;
 
+		const std::string &message() const noexcept
+		{
+			return mMsg;
+		}
+
 		const char *what() const noexcept override
 		{
 			return this->mWhat.c_str();
@@ -158,12 +171,14 @@ namespace cs {
 	};
 
 	class internal_error final : public std::exception {
+		std::string mMsg;
 		std::string mWhat = "Internal Error";
 
 	public:
 		internal_error() = default;
 
-		explicit internal_error(const std::string &str) noexcept : mWhat("Internal Error: " + str) {}
+		explicit internal_error(std::string str) noexcept
+			: mMsg(std::move(str)), mWhat("Internal Error: " + mMsg) {}
 
 		internal_error(const internal_error &) = default;
 
@@ -174,6 +189,11 @@ namespace cs {
 		internal_error &operator=(const internal_error &) = default;
 
 		internal_error &operator=(internal_error &&) = default;
+
+		const std::string &message() const noexcept
+		{
+			return mMsg;
+		}
 
 		const char *what() const noexcept override
 		{
@@ -237,12 +257,14 @@ namespace cs {
 	};
 
 	class fatal_error final : public std::exception {
+		std::string mMsg;
 		std::string mWhat = "Fatal Error";
 
 	public:
 		fatal_error() = default;
 
-		explicit fatal_error(const std::string &str) noexcept : mWhat("Fatal Error: " + str) {}
+		explicit fatal_error(std::string str) noexcept
+			: mMsg(std::move(str)), mWhat("Fatal Error: " + mMsg) {}
 
 		fatal_error(const fatal_error &) = default;
 
@@ -253,6 +275,11 @@ namespace cs {
 		fatal_error &operator=(const fatal_error &) = default;
 
 		fatal_error &operator=(fatal_error &&) = default;
+
+		const std::string &message() const noexcept
+		{
+			return mMsg;
+		}
 
 		const char *what() const noexcept override
 		{
@@ -283,6 +310,18 @@ namespace cs {
 			return this->mWhat.c_str();
 		}
 	};
+
+// Extracts the raw error message from a std::exception without category prefix.
+// For known CovScript error types, avoids the allocate-then-strip-prefix round trip;
+// for unknown types falls back to what() directly (no prefix to strip).
+	inline std::string exception_message(const std::exception &e) noexcept
+	{
+		if (const auto *p = dynamic_cast<const runtime_error *>(&e)) return p->message();
+		if (const auto *p = dynamic_cast<const compile_error *>(&e)) return p->message();
+		if (const auto *p = dynamic_cast<const internal_error *>(&e)) return p->message();
+		if (const auto *p = dynamic_cast<const fatal_error *>(&e)) return p->message();
+		return e.what();
+	}
 
 // Numeric
 	using numeric_float = long double;

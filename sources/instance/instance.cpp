@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Covariant Script Instance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -164,11 +164,11 @@ namespace cs {
 					throw exception(le.line(), le.file(), le.code(), std::string("Uncaught exception: ") + le.what());
 				throw fatal_error(std::string("Uncaught exception: ") + le.what());
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 		}
 	}
@@ -410,17 +410,17 @@ namespace cs {
 				throw exception(le.line(), le.file(), le.code(), std::string("Uncaught exception: ") + le.what());
 			throw fatal_error(std::string("Uncaught exception: ") + le.what());
 		}
-		catch (const cs::exception &e) {
+		catch (const cs::exception &) {
 			reset_status();
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
-			throw e;
+			throw;
 		}
 		catch (const std::exception &e) {
 			reset_status();
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
-			throw exception(line_num, context->file_path, code, e.what());
+			throw exception(line_num, context->file_path, code, exception_message(e));
 		}
 		context->compiler->utilize_metadata();
 		context->instance->storage.clear_set();
@@ -446,13 +446,13 @@ namespace cs {
 				throw exception(le.line(), le.file(), le.code(), std::string("Uncaught exception: ") + le.what());
 			throw fatal_error(std::string("Uncaught exception: ") + le.what());
 		}
-		catch (const cs::exception &e) {
+		catch (const cs::exception &) {
 			reset_status();
-			throw e;
+			throw;
 		}
 		catch (const std::exception &e) {
 			reset_status();
-			throw exception(line_num, context->file_path, code, e.what());
+			throw exception(line_num, context->file_path, code, exception_message(e));
 		}
 	}
 

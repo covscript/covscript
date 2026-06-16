@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Covariant Script Code Generating
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -322,11 +322,11 @@ namespace cs {
 				else
 					throw compile_error("Only 'case' and 'default' clauses are allowed inside a 'switch' statement");
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(it->get_line_num(), it->get_file_path(), it->get_raw_code(), e.what());
+				throw exception(it->get_line_num(), it->get_file_path(), it->get_raw_code(), exception_message(e));
 			}
 		}
 		return new statement_switch(static_cast<token_expr *>(raw.front().at(1))->get_tree(), cases, dptr, context,
@@ -609,11 +609,11 @@ namespace cs {
 					break;
 				}
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 		}
 		if (raw.front().size() == 5)

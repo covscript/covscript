@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Covariant Script Statement
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,11 +48,11 @@ namespace cs {
 			try {
 				ptr->run();
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 			if (_this->mContext->instance->return_fcall) {
 				_this->mContext->instance->return_fcall = false;
@@ -89,11 +89,11 @@ namespace cs {
 			try {
 				ptr->run();
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 			if (_this->mContext->instance->return_fcall) {
 				_this->mContext->instance->return_fcall = false;
@@ -121,12 +121,12 @@ namespace cs {
 		try {
 			return _this->mContext->instance->parse_expr(static_cast<const statement_return *>(_this->mBody.front())->get_tree().root());
 		}
-		catch (const cs::exception &e) {
-			throw e;
+		catch (const cs::exception &) {
+			throw;
 		}
 		catch (const std::exception &e) {
 			const statement_base *ptr = _this->mBody.front();
-			throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+			throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 		}
 	}
 
@@ -143,12 +143,12 @@ namespace cs {
 		try {
 			return _this->mContext->instance->parse_expr(static_cast<const statement_return *>(_this->mBody.front())->get_tree().root());
 		}
-		catch (const cs::exception &e) {
-			throw e;
+		catch (const cs::exception &) {
+			throw;
 		}
 		catch (const std::exception &e) {
 			const statement_base *ptr = _this->mBody.front();
-			throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+			throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 		}
 	}
 
@@ -204,11 +204,11 @@ namespace cs {
 			try {
 				ptr->run();
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 		}
 		return var::make<structure>(this->mTypeId, this->mName, scope.get());
@@ -314,11 +314,11 @@ namespace cs {
 			try {
 				ptr->run();
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 			if (context->instance->return_fcall || context->instance->break_block || context->instance->continue_block)
 				break;
@@ -344,12 +344,12 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
 					throw exception(ptr->get_line_num(), ptr->get_file_path(),
-					                ptr->get_raw_code(), e.what());
+					                ptr->get_raw_code(), exception_message(e));
 				}
 			}
 			return scope.get();
@@ -374,11 +374,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall || context->instance->break_block ||
 				        context->instance->continue_block)
@@ -406,11 +406,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall || context->instance->break_block ||
 				        context->instance->continue_block)
@@ -423,11 +423,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall || context->instance->break_block ||
 				        context->instance->continue_block)
@@ -496,11 +496,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall) {
 					return;
@@ -542,11 +542,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall) {
 					return;
@@ -586,11 +586,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall) {
 					return;
@@ -638,11 +638,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall) {
 					return;
@@ -694,11 +694,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall) {
 					return;
@@ -832,11 +832,11 @@ namespace cs {
 					try {
 						ptr->run();
 					}
-					catch (const cs::exception &e) {
-						throw e;
+					catch (const cs::exception &) {
+						throw;
 					}
 					catch (const std::exception &e) {
-						throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+						throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 					}
 					if (context->instance->return_fcall || context->instance->break_block ||
 					        context->instance->continue_block)
@@ -844,11 +844,11 @@ namespace cs {
 				}
 				return;
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 			if (context->instance->return_fcall || context->instance->break_block || context->instance->continue_block)
 				break;
