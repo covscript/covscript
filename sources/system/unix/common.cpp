@@ -374,7 +374,7 @@ namespace cs {
 				if (state == fiber_state::finished)
 					return ret_val;
 				else
-					throw lang_error("Fiber has not yet started or ended.");
+					throw lang_error("The fiber has not completed yet");
 			}
 		};
 
@@ -390,7 +390,7 @@ namespace cs {
 			if (fi == nullptr)
 				throw internal_error("Resuming a corrupted fiber.");
 			if (fi->state == fiber_state::running || fi->state == fiber_state::finished)
-				throw lang_error("Fiber is not reentrant.");
+				throw lang_error("A fiber cannot be resumed while it is already running or after it has finished");
 			if (fi->state == fiber_state::ready) {
 				memset(&fi->ctx, 0, sizeof(fi->ctx));
 				cs_fiber_getcontext(&fi->ctx);
@@ -430,7 +430,7 @@ namespace cs {
 		void yield()
 		{
 			if (current_process->fiber_stack.empty())
-				throw lang_error("Cannot yield outside a fiber.");
+				throw lang_error("Cannot yield outside a fiber");
 			unix_fiber *fi = static_cast<unix_fiber *>(current_process->fiber_stack.top().get());
 			fi->state = fiber_state::suspended;
 			cs_fiber_swapcontext(&fi->ctx, fi->prev_ctx);

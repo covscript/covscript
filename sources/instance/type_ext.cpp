@@ -200,7 +200,7 @@ namespace cs_impl {
 	inline std::size_t check_index(cs::numeric_integer idx, std::size_t size)
 	{
 		if (idx < 0 || static_cast<unsigned long long>(idx) >= static_cast<unsigned long long>(size))
-			throw cs::lang_error("Index out of range.");
+			throw cs::lang_error("Index out of range");
 		return static_cast<std::size_t>(idx);
 	}
 
@@ -209,7 +209,7 @@ namespace cs_impl {
 	inline std::size_t check_position(cs::numeric_integer idx, std::size_t size)
 	{
 		if (idx < 0 || static_cast<unsigned long long>(idx) > static_cast<unsigned long long>(size))
-			throw cs::lang_error("Position out of range.");
+			throw cs::lang_error("Position out of range");
 		return static_cast<std::size_t>(idx);
 	}
 
@@ -225,14 +225,14 @@ namespace cs_impl {
 		var front(const array &arr)
 		{
 			if (arr.empty())
-				throw lang_error("Call front() on empty array.");
+				throw lang_error("Cannot call 'front()' on an empty array");
 			return arr.front();
 		}
 
 		var back(const array &arr)
 		{
 			if (arr.empty())
-				throw lang_error("Call back() on empty array.");
+				throw lang_error("Cannot call 'back()' on an empty array");
 			return arr.back();
 		}
 
@@ -349,7 +349,7 @@ namespace cs_impl {
 					insert_or_assign(map, p.first, p.second);
 				}
 				else
-					throw lang_error("Wrong syntax for hash map.");
+					throw lang_error("Invalid hash map literal syntax");
 			}
 			return var::make<hash_map>(std::move(map));
 		}
@@ -537,7 +537,7 @@ namespace cs_impl {
 		char from_ascii(const numeric &ascii)
 		{
 			if (ascii.as_integer() < 0 || ascii.as_integer() > 255)
-				throw lang_error("Out of range.");
+				throw lang_error("Value out of range");
 			return static_cast<char>(static_cast<unsigned char>(ascii.as_integer()));
 		}
 
@@ -693,7 +693,7 @@ namespace cs_impl {
 		{
 			auto it = map.find(key);
 			if (it == map.end())
-				throw lang_error("Key does not exist in hash_map.");
+				throw lang_error("The key does not exist in the hash map");
 			return it->second;
 		}
 
@@ -745,7 +745,7 @@ namespace cs_impl {
 			else if (openmode & std::ios_base::out || openmode & std::ios_base::app)
 				return var::make<ostream>(new std::ofstream(path, openmode));
 			else
-				throw lang_error("Unsupported openmode.");
+				throw lang_error("Unsupported file open mode");
 		}
 
 		void setprecision(const numeric &pre)
@@ -885,7 +885,7 @@ namespace cs_impl {
 		{
 			numeric_integer count = n.as_integer();
 			if (count < 0)
-				throw lang_error("Read length cannot be negative.");
+				throw lang_error("Read length cannot be negative");
 			if (count == 0)
 				return string();
 			string buff(static_cast<std::size_t>(count), '\0');
@@ -981,14 +981,14 @@ namespace cs_impl {
 		var front(const list &lst)
 		{
 			if (lst.empty())
-				throw lang_error("Call front() on empty list.");
+				throw lang_error("Cannot call 'front()' on an empty list");
 			return lst.front();
 		}
 
 		var back(const list &lst)
 		{
 			if (lst.empty())
-				throw lang_error("Call back() on empty list.");
+				throw lang_error("Cannot call 'back()' on an empty list");
 			return lst.back();
 		}
 
@@ -1340,7 +1340,7 @@ namespace cs_impl {
 			var operator()()
 			{
 				if (func == nullptr)
-					throw lang_error("Asynchronous functions are not reentrant.");
+					throw lang_error("Asynchronous functions are not reentrant");
 				try {
 					var ret = func->call(args);
 					func = nullptr;
@@ -1360,12 +1360,12 @@ namespace cs_impl {
 		var create(vector &args)
 		{
 			if (args.empty())
-				throw lang_error("Empty arguments. Expected: fiber.create(function, arguments...)");
+				throw lang_error("Invalid call to 'fiber.create': expected 'fiber.create(function, arguments...)'");
 			const var &func = args.front();
 			if (func.is_type_of<callable>()) {
 				const callable::function_type &impl_f = func.const_val<callable>().get_raw_data();
 				if (impl_f.target_type() != typeid(function_ptr))
-					throw lang_error("Only can create coroutine from covscript function.");
+					throw lang_error("A coroutine can only be created from a CovScript function");
 				function const *fptr = impl_f.target<function_ptr>()->fptr;
 				return fiber::create(fptr->get_context(), fiber_function(fptr, vector(args.begin() + 1, args.end())));
 			}
@@ -1373,7 +1373,7 @@ namespace cs_impl {
 				const auto &om = func.const_val<object_method>();
 				const callable::function_type &impl_f = om.callable.const_val<callable>().get_raw_data();
 				if (impl_f.target_type() != typeid(function_ptr))
-					throw lang_error("Only can create coroutine from covscript function.");
+					throw lang_error("A coroutine can only be created from a CovScript function");
 				function const *fptr = impl_f.target<function_ptr>()->fptr;
 				vector argument{om.object};
 				argument.insert(argument.end(), args.begin() + 1, args.end());
@@ -1464,7 +1464,7 @@ namespace cs_impl {
 			var call() override
 			{
 				if (func == nullptr)
-					throw lang_error("Asynchronous functions are not reentrant.");
+					throw lang_error("Asynchronous functions are not reentrant");
 				try {
 					context_swap_in();
 					var ret = func->call(args);
@@ -1512,7 +1512,7 @@ namespace cs_impl {
 			async_callable(const callable &fn, vector data) : func(fn), args(std::move(data))
 			{
 				if (!is_native_callable(fn))
-					throw lang_error("Invoke non-parallelizable object.");
+					throw lang_error("This object cannot be invoked in parallel");
 				detach_args();
 			}
 
@@ -1545,7 +1545,7 @@ namespace cs_impl {
 		var await_impl(const callable &fn, vector args)
 		{
 			if (!is_native_callable(fn))
-				throw lang_error("Asynchronous waiting only available on native functions.");
+				throw lang_error("Asynchronous waiting is only available for native functions");
 
 			async_callable func(fn, std::move(args));
 			var ret;
@@ -1600,7 +1600,7 @@ namespace cs_impl {
 				return var::make<std::tm>(*std::localtime(&t));
 			default:
 				throw runtime_error(
-				    "Wrong size of the arguments. Expected 0 or 1, provided " + std::to_string(args.size()));
+				    "Wrong number of arguments: expected 0 or 1, got " + std::to_string(args.size()));
 			}
 		}
 
@@ -1616,7 +1616,7 @@ namespace cs_impl {
 				return var::make<std::tm>(*std::gmtime(&t));
 			default:
 				throw runtime_error(
-				    "Wrong size of the arguments. Expected 0 or 1, provided " + std::to_string(args.size()));
+				    "Wrong number of arguments: expected 0 or 1, got " + std::to_string(args.size()));
 			}
 		}
 
@@ -1692,7 +1692,7 @@ namespace cs_impl {
 					return target.target<cni>()->argument_count();
 			}
 			else
-				throw lang_error("Not a function.");
+				throw lang_error("The target value is not a function");
 		}
 
 		void add_string_literal(const context_t &context, const std::string &literal, const callable &func)
@@ -1709,7 +1709,7 @@ namespace cs_impl {
 			if (future.wait_for(std::chrono::milliseconds(mill_sec)) != std::future_status::ready) {
 				async_fn->context_swap_out();
 				async_fn->context_cleanup();
-				throw lang_error("Target function deferred or timeout.");
+				throw lang_error("The target function timed out or was deferred");
 			}
 			else {
 				std::exception_ptr e = nullptr;
@@ -1734,7 +1734,7 @@ namespace cs_impl {
 			        std::future_status::ready) {
 				async_fn->context_swap_out();
 				async_fn->context_cleanup();
-				throw lang_error("Target function deferred or timeout.");
+				throw lang_error("The target function timed out or was deferred");
 			}
 			else {
 				std::exception_ptr e = nullptr;
@@ -1761,7 +1761,7 @@ namespace cs_impl {
 				return wait_for_impl(mill_sec.as_integer(), om.callable.const_val<callable>(), std::move(args));
 			}
 			else
-				throw lang_error("Invoke non-callable object.");
+				throw lang_error("The target value is not callable");
 		}
 
 		var wait_until(const numeric &mill_sec, const var &func, const array &argument)
@@ -1776,13 +1776,13 @@ namespace cs_impl {
 				return wait_for_impl(mill_sec.as_integer(), om.callable.const_val<callable>(), std::move(args));
 			}
 			else
-				throw lang_error("Invoke non-callable object.");
+				throw lang_error("The target value is not callable");
 		}
 
 		var await(vector &args)
 		{
 			if (args.empty())
-				throw lang_error("Empty arguments. Expected: runtime.await(function, arguments...)");
+				throw lang_error("Invalid call to 'runtime.await': expected 'runtime.await(function, arguments...)'");
 			const var &func = args.front();
 			if (func.is_type_of<callable>()) {
 				return await_impl(func.const_val<callable>(), vector(args.begin() + 1, args.end()));
@@ -1794,7 +1794,7 @@ namespace cs_impl {
 				return await_impl(om.callable.const_val<callable>(), std::move(argument));
 			}
 			else
-				throw lang_error("Invoke non-callable object.");
+				throw lang_error("The target value is not callable");
 		}
 
 		void link_var(const context_t &context, const string &a, const var &b)
@@ -1879,7 +1879,7 @@ namespace cs_impl {
 		{
 			numeric_integer count = e.as_integer();
 			if (count < 0)
-				throw lang_error("Erase count cannot be negative.");
+				throw lang_error("Erase count cannot be negative");
 			str.erase(check_position(b.as_integer(), str.size()), static_cast<std::size_t>(count));
 			return str;
 		}
@@ -1888,7 +1888,7 @@ namespace cs_impl {
 		{
 			numeric_integer cnt = count.as_integer();
 			if (cnt < 0)
-				throw lang_error("Replace count cannot be negative.");
+				throw lang_error("Replace count cannot be negative");
 			std::size_t pos = check_position(posit.as_integer(), str.size());
 			if (val.is_type_of<string>())
 				str.replace(pos, static_cast<std::size_t>(cnt), val.const_val<string>());
@@ -1901,7 +1901,7 @@ namespace cs_impl {
 		{
 			numeric_integer count = e.as_integer();
 			if (count < 0)
-				throw lang_error("Substring length cannot be negative.");
+				throw lang_error("Substring length cannot be negative");
 			return str.substr(check_position(b.as_integer(), str.size()), static_cast<std::size_t>(count));
 		}
 
@@ -1931,7 +1931,7 @@ namespace cs_impl {
 		{
 			numeric_integer count = n.as_integer();
 			if (count < 0 || static_cast<std::size_t>(count) > str.size())
-				throw lang_error("Cut count out of range.");
+				throw lang_error("Cut count is out of range");
 			for (numeric_integer i = 0; i < count; ++i)
 				str.pop_back();
 			return str;
@@ -2146,9 +2146,9 @@ namespace cs_impl {
 		array scan(const string &path)
 		{
 			if (!std::filesystem::exists(path))
-				throw lang_error("Directory does not exist.");
+				throw lang_error("The directory does not exist");
 			if (!std::filesystem::is_directory(path))
-				throw lang_error("Path is not a directory.");
+				throw lang_error("The path is not a directory");
 			array entries;
 			for (auto &entry : std::filesystem::directory_iterator(path))
 				entries.push_back(var::make<path_info>(entry.path().filename().string(), get_file_type(entry)));
@@ -2200,7 +2200,7 @@ namespace cs_impl {
 		{
 			const char *str = std::getenv(name.c_str());
 			if (str == nullptr)
-				throw lang_error("Environment variable \"" + name + "\" is not exist.");
+				throw lang_error("Environment variable '" + name + "' does not exist");
 			return str;
 		}
 

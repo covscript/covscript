@@ -111,7 +111,7 @@ namespace cs {
 			case constant_values::local_namepace:
 				return storage.get_var_current(static_cast<token_id *>(b)->get_id());
 			default:
-				throw runtime_error("Unknown scope tag.");
+				throw runtime_error("Unknown namespace scope specifier");
 			}
 		}
 		else if (a.is_type_of<namespace_t>())
@@ -123,7 +123,7 @@ namespace cs {
 			if (!val.is_type_of<callable>() || !val.const_val<callable>().is_member_fn())
 				return val;
 			else
-				throw runtime_error("Can not visit member function as lvalue.");
+				throw runtime_error("Cannot use a member function as an lvalue");
 		}
 		else {
 			try {
@@ -144,7 +144,7 @@ namespace cs {
 			case constant_values::local_namepace:
 				return storage.get_var_current(static_cast<token_id *>(b)->get_id());
 			default:
-				throw runtime_error("Unknown scope tag.");
+				throw runtime_error("Unknown namespace scope specifier");
 			}
 		}
 		else if (a.is_type_of<namespace_t>())
@@ -203,7 +203,7 @@ namespace cs {
 		if (b.is_type_of<type_t>())
 			return b.const_val<type_t>().constructor();
 		else
-			throw runtime_error("Unsupported operator operations(New).");
+			throw runtime_error("The 'new' operator can only be applied to a type");
 	}
 
 	var runtime_type::parse_gcnew(const var &b)
@@ -211,7 +211,7 @@ namespace cs {
 		if (b.is_type_of<type_t>())
 			return var::make<pointer>(b.const_val<type_t>().constructor());
 		else
-			throw runtime_error("Unsupported operator operations(GcNew).");
+			throw runtime_error("The 'gcnew' operator can only be applied to a type");
 	}
 
 	var runtime_type::parse_und(const var &a, const var &b)
@@ -258,21 +258,21 @@ namespace cs {
 			case signal_types::access_:
 				return parse_lnkasi(parse_access_lhs(parse_expr(a.left()), parse_expr(a.right())), b);
 			default:
-				throw runtime_error("Unexpected left operand in link assign expression.");
+				throw runtime_error("Invalid left operand in link assignment expression");
 			}
 		}
 		else
-			throw runtime_error("Unexpected left operand in link assign expression.");
+			throw runtime_error("Invalid left operand in link assignment expression");
 	}
 
 	var runtime_type::parse_bind(token_base *a, const var &b)
 	{
 		if (!b.is_type_of<array>())
-			throw runtime_error("Only support structured binding with array.");
+			throw runtime_error("Structured binding requires an array on the right-hand side");
 		auto &pl = static_cast<token_parallel *>(a)->get_parallel();
 		auto &arr = b.const_val<array>();
 		if (pl.size() != arr.size())
-			throw runtime_error("Unmatched structured binding.");
+			throw runtime_error("Structured binding mismatch: the number of variables does not match the number of array elements");
 		for (std::size_t i = 0; i < pl.size(); ++i) {
 			if (pl[i].root().data()->get_type() == token_types::parallel)
 				parse_bind(pl[i].root().data(), arr[i]);
@@ -291,7 +291,7 @@ namespace cs {
 				return parse_expr(b.right());
 		}
 		else
-			throw runtime_error("Unsupported operator operations(Choice).");
+			throw runtime_error("The conditional operator requires a boolean condition");
 	}
 
 	var runtime_type::parse_pair(const var &a, const var &b)
@@ -299,7 +299,7 @@ namespace cs {
 		if (!a.is_type_of<pair>() && !b.is_type_of<pair>())
 			return var::make<pair>(copy(a), copy(b));
 		else
-			throw runtime_error("Unsupported operator operations(Pair).");
+			throw runtime_error("Cannot build a pair from values that are already pairs");
 	}
 
 	var runtime_type::parse_equ(const var &a, const var &b)
@@ -327,14 +327,14 @@ namespace cs {
 		if (b.is_type_of<boolean>())
 			return boolean(!b.const_val<boolean>());
 		else
-			throw runtime_error("Unsupported operator operations(Not).");
+			throw runtime_error("The 'not' operator requires a boolean operand");
 	}
 
 	var runtime_type::parse_inc(const var &a, const var &b)
 	{
 		if (a.usable()) {
 			if (b.usable())
-				throw runtime_error("Unsupported operator operations(Inc).");
+				throw runtime_error("Invalid use of increment operator");
 			else if (a.is_type_of<numeric>())
 				return a.val<numeric>()++;
 			else {
@@ -345,7 +345,7 @@ namespace cs {
 		}
 		else {
 			if (!b.usable())
-				throw runtime_error("Unsupported operator operations(Inc).");
+				throw runtime_error("Invalid use of increment operator");
 			else
 				return ++b;
 		}
@@ -355,7 +355,7 @@ namespace cs {
 	{
 		if (a.usable()) {
 			if (b.usable())
-				throw runtime_error("Unsupported operator operations(Dec).");
+				throw runtime_error("Invalid use of decrement operator");
 			else if (a.is_type_of<numeric>())
 				return a.val<numeric>()--;
 			else {
@@ -366,7 +366,7 @@ namespace cs {
 		}
 		else {
 			if (!b.usable())
-				throw runtime_error("Unsupported operator operations(Dec).");
+				throw runtime_error("Invalid use of decrement operator");
 			else
 				return --b;
 		}
@@ -410,7 +410,7 @@ namespace cs {
 	var runtime_type::parse_expr(const tree_type<token_base *>::iterator &it, bool disable_parallel)
 	{
 		if (!it.usable())
-			throw internal_error("The expression tree is not available.");
+			throw internal_error("The expression tree is not available");
 		token_base *token = it.data();
 		if (token == nullptr)
 			return var();
@@ -418,10 +418,10 @@ namespace cs {
 		default:
 			break;
 		case token_types::vargs:
-			throw runtime_error("Wrong declaration of variable argument list.");
+			throw runtime_error("Invalid variadic argument declaration");
 			break;
 		case token_types::expand:
-			throw runtime_error("Wrong expanding position.");
+			throw runtime_error("Invalid argument expansion position");
 			break;
 		case token_types::id:
 			return storage.get_var(static_cast<token_id *>(token)->get_id());
@@ -454,7 +454,7 @@ namespace cs {
 		}
 		case token_types::parallel: {
 			if (disable_parallel)
-				throw runtime_error("Do not allowed parallel list.");
+				throw runtime_error("Parallel expression list is not allowed in this context");
 			var result;
 			for (auto &tree : static_cast<token_parallel *>(token)->get_parallel())
 				result = parse_expr(tree.root());
@@ -581,6 +581,6 @@ namespace cs {
 			}
 		}
 		}
-		throw internal_error("Unrecognized expression.");
+		throw internal_error("Unrecognized expression");
 	}
 } // namespace cs

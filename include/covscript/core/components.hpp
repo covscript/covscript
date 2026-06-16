@@ -61,10 +61,27 @@ namespace cs {
 			return "File \"" + file + "\", line <INTERNAL>: " + what + "\n";
 		}
 
+		// Remove redundant category prefixes (e.g. "Runtime Error: ") when an error
+		// is wrapped into an exception that already carries file/line context.
+		static std::string strip_prefix(std::string what) noexcept
+		{
+			static const char *const prefixes[] = {
+				"Runtime Error: ", "Compile Error: ", "Internal Error: ", "Fatal Error: "
+			};
+			for (const char *prefix : prefixes) {
+				const std::size_t len = std::strlen(prefix);
+				if (what.compare(0, len, prefix) == 0) {
+					what.erase(0, len);
+					break;
+				}
+			}
+			return what;
+		}
+
 	public:
 		exception() = delete;
 
-		exception(std::size_t line, std::string file, std::string code, std::string what) noexcept : mLine(line), mFile(std::move(file)), mCode(std::move(code)), mWhat(std::move(what))
+		exception(std::size_t line, std::string file, std::string code, std::string what) noexcept : mLine(line), mFile(std::move(file)), mCode(std::move(code)), mWhat(strip_prefix(std::move(what)))
 		{
 			mStr = compose_what(mFile, mLine, mCode, mWhat);
 		}
@@ -166,6 +183,9 @@ namespace cs {
 
 	class lang_error final {
 		std::string mWhat;
+		bool mHasLoc = false;
+		std::size_t mLine = 0;
+		std::string mFile, mCode;
 
 	public:
 		lang_error() = default;
@@ -181,6 +201,34 @@ namespace cs {
 		lang_error &operator=(const lang_error &) = default;
 
 		lang_error &operator=(lang_error &&) = default;
+
+		void set_location(std::size_t line, std::string file, std::string code) noexcept
+		{
+			mHasLoc = true;
+			mLine = line;
+			mFile = std::move(file);
+			mCode = std::move(code);
+		}
+
+		bool has_location() const noexcept
+		{
+			return mHasLoc;
+		}
+
+		std::size_t line() const noexcept
+		{
+			return mLine;
+		}
+
+		const std::string &file() const noexcept
+		{
+			return mFile;
+		}
+
+		const std::string &code() const noexcept
+		{
+			return mCode;
+		}
 
 		const char *what() const noexcept
 		{

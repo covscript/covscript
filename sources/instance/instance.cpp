@@ -105,9 +105,9 @@ namespace cs {
 				context->compiler->swap_context(context);
 				rt->instance->interpret();
 				if (rt->package_name.empty())
-					throw runtime_error("Target file is not a package.");
+					throw runtime_error("The imported file is not a package (it has no 'package' declaration)");
 				if (rt->package_name != name)
-					throw runtime_error("Package name is different from file name.");
+					throw runtime_error("The package name declared in the file does not match the file name");
 				namespace_t module = std::make_shared<name_space>(*rt->instance->storage.get_namespace());
 				context->compiler->modules.emplace(package_path, module);
 				return module;
@@ -125,7 +125,7 @@ namespace cs {
 		}
 		if (eptr != nullptr)
 			std::rethrow_exception(eptr);
-		throw fatal_error("No such file or directory.");
+		throw fatal_error("No such file or directory");
 	}
 
 	void instance_type::compile(const std::string &path)
@@ -160,6 +160,8 @@ namespace cs {
 				ptr->run();
 			}
 			catch (const lang_error &le) {
+				if (le.has_location())
+					throw exception(le.line(), le.file(), le.code(), std::string("Uncaught exception: ") + le.what());
 				throw fatal_error(std::string("Uncaught exception: ") + le.what());
 			}
 			catch (const cs::exception &e) {
@@ -202,7 +204,7 @@ namespace cs {
 		else {
 			token_base *root = it.data();
 			if (root == nullptr || root->get_type() != token_types::id)
-				throw runtime_error("Wrong grammar for variable declaration.");
+				throw runtime_error("Invalid variable declaration: expected an identifier");
 			if (regist)
 				storage.add_record(static_cast<token_id *>(root)->get_id().get_id());
 		}
@@ -222,15 +224,15 @@ namespace cs {
 			if (root == nullptr)
 				throw internal_error("Null pointer accessed.");
 			if (root->get_type() != token_types::signal)
-				throw runtime_error("Wrong grammar for variable definition(1).");
+				throw runtime_error("Invalid variable definition: expected '<id> = <value>' or a structured binding");
 			switch (static_cast<token_signal *>(root)->get_signal()) {
 			case signal_types::asi_: {
 				token_base *left = it.left().data();
 				token_base *right = it.right().data();
 				if (left == nullptr || right == nullptr || left->get_type() != token_types::id)
-					throw runtime_error("Wrong grammar for variable definition(2).");
+					throw runtime_error("Invalid variable definition: the left-hand side must be an identifier");
 				if (constant && right->get_type() != token_types::value)
-					throw runtime_error("Wrong grammar for constant variable definition(3).");
+					throw runtime_error("A constant must be initialized with a constant value");
 				if (regist)
 					storage.add_record(static_cast<token_id *>(left)->get_id().get_id());
 				break;
@@ -238,12 +240,12 @@ namespace cs {
 			case signal_types::bind_: {
 				token_base *right = it.right().data();
 				if (constant && (right == nullptr || right->get_type() != token_types::value))
-					throw runtime_error("Wrong grammar for constant variable definition(4).");
+					throw runtime_error("A constant structured binding must be initialized with a constant value");
 				check_define_structured_binding(it.left(), regist);
 				break;
 			}
 			default:
-				throw runtime_error("Wrong grammar for variable definition(5).");
+				throw runtime_error("Invalid variable definition: expected '<id> = <value>' or a structured binding");
 			}
 		}
 	}
@@ -270,7 +272,7 @@ namespace cs {
 				break;
 			}
 			default:
-				throw runtime_error("Wrong grammar for variable definition(6).");
+				throw runtime_error("Invalid variable definition: expected '<id> = <value>' or a structured binding");
 			}
 		}
 	}
@@ -281,12 +283,12 @@ namespace cs {
 		for (auto &p_it : static_cast<token_parallel *>(it.data())->get_parallel()) {
 			token_base *root = p_it.root().data();
 			if (root == nullptr)
-				throw runtime_error("Wrong grammar for variable definition(7).");
+				throw runtime_error("Invalid structured binding: empty binding target");
 			if (root->get_type() != token_types::id) {
 				if (root->get_type() == token_types::parallel)
 					check_define_structured_binding(p_it.root(), regist);
 				else
-					throw runtime_error("Wrong grammar for variable definition(8).");
+					throw runtime_error("Invalid structured binding: each target must be an identifier");
 			}
 			else if (regist)
 				storage.add_record(static_cast<token_id *>(root)->get_id().get_id());
@@ -300,10 +302,10 @@ namespace cs {
 		process = [&process, this, constant, link](tree_type<token_base *>::iterator it, const var &val) {
 			auto &pl = static_cast<token_parallel *>(it.data())->get_parallel();
 			if (!val.is_type_of<array>())
-				throw runtime_error("Only support structured binding with array while variable definition.");
+				throw runtime_error("Structured binding requires an array on the right-hand side");
 			auto &arr = val.const_val<array>();
 			if (pl.size() != arr.size())
-				throw runtime_error("Unmatched structured binding while variable definition.");
+				throw runtime_error("Structured binding mismatch: the number of variables does not match the number of array elements");
 			for (std::size_t i = 0; i < pl.size(); ++i) {
 				if (pl[i].root().data()->get_type() == token_types::parallel)
 					process(pl[i].root(), arr[i]);
@@ -328,7 +330,7 @@ namespace cs {
 			if (ns.is_type_of<namespace_t>())
 				context->instance->storage.involve_domain(ns.const_val<namespace_t>()->get_domain(), override);
 			else
-				throw runtime_error("Only support involve namespace.");
+				throw runtime_error("Invalid 'using' statement: the target must be a namespace");
 		}
 	}
 
@@ -349,7 +351,7 @@ namespace cs {
 			method_base *m = context->compiler->match_method(line);
 			switch (m->get_type()) {
 			case method_types::null:
-				throw runtime_error("Null type of grammar.");
+				throw runtime_error("Unrecognized statement");
 				break;
 			case method_types::single: {
 				if (!methods.empty()) {
@@ -377,7 +379,7 @@ namespace cs {
 				}
 				else {
 					if (m->get_target_type() == statement_types::end_)
-						throw runtime_error("Hanging end statement.");
+						throw runtime_error("Unexpected 'end': there is no open block to close");
 					else {
 						m->preprocess(context, {line});
 						sptr = m->translate(context, {line});
@@ -404,6 +406,8 @@ namespace cs {
 			reset_status();
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
+			if (le.has_location())
+				throw exception(le.line(), le.file(), le.code(), std::string("Uncaught exception: ") + le.what());
 			throw fatal_error(std::string("Uncaught exception: ") + le.what());
 		}
 		catch (const cs::exception &e) {
@@ -438,6 +442,8 @@ namespace cs {
 		}
 		catch (const lang_error &le) {
 			reset_status();
+			if (le.has_location())
+				throw exception(le.line(), le.file(), le.code(), std::string("Uncaught exception: ") + le.what());
 			throw fatal_error(std::string("Uncaught exception: ") + le.what());
 		}
 		catch (const cs::exception &e) {
@@ -529,7 +535,7 @@ namespace cs {
 				}
 				else
 					throw exception(line_num, context->file_path, "@" + cmd + (arg.empty() ? "" : ": " + arg),
-					                "Wrong grammar for preprocessor command.");
+					                "Invalid preprocessor command");
 				context->file_buff.emplace_back();
 			}
 			return;

@@ -31,63 +31,70 @@
 namespace cs {
 	namespace operators {
 		template <typename T>
+		static inline std::string unsupported_operator_message(const char *op)
+		{
+			return "Type '" + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) +
+			       "' does not support the '" + std::string(op) + "' operator";
+		}
+
+		template <typename T>
 		static inline var add(const T &lhs, const var &rhs)
 		{
-			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support + operator.");
+			throw lang_error(unsupported_operator_message<T>("+"));
 		}
 
 		template <typename T>
 		static inline var sub(const T &lhs, const var &rhs)
 		{
-			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support - operator.");
+			throw lang_error(unsupported_operator_message<T>("-"));
 		}
 
 		template <typename T>
 		static inline var mul(const T &lhs, const var &rhs)
 		{
-			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support * operator.");
+			throw lang_error(unsupported_operator_message<T>("*"));
 		}
 
 		template <typename T>
 		static inline var div(const T &lhs, const var &rhs)
 		{
-			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support / operator.");
+			throw lang_error(unsupported_operator_message<T>("/"));
 		}
 
 		template <typename T>
 		static inline var mod(const T &lhs, const var &rhs)
 		{
-			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support \% operator.");
+			throw lang_error(unsupported_operator_message<T>("%"));
 		}
 
 		template <typename T>
 		static inline var pow(const T &lhs, const var &rhs)
 		{
-			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support ^ operator.");
+			throw lang_error(unsupported_operator_message<T>("^"));
 		}
 
 		template <typename T>
 		static inline var minus(const T &val)
 		{
-			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support -val operator.");
+			throw lang_error("Type '" + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + "' does not support unary '-'");
 		}
 
 		template <typename T>
 		static inline var &escape(T &val)
 		{
-			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support *val operator.");
+			throw lang_error("Type '" + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + "' does not support unary '*'");
 		}
 
 		template <typename T>
 		static inline void selfinc(T &val)
 		{
-			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support ++ operator.");
+			throw lang_error(unsupported_operator_message<T>("++"));
 		}
 
 		template <typename T>
 		static inline void selfdec(T &val)
 		{
-			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support -- operator.");
+			throw lang_error(unsupported_operator_message<T>("--"));
 		}
 
 		template <typename T>
@@ -99,31 +106,31 @@ namespace cs {
 		template <typename T>
 		static inline bool abocmp(const T &lhs, const T &rhs)
 		{
-			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support > operator.");
+			throw lang_error(unsupported_operator_message<T>(">"));
 		}
 
 		template <typename T>
 		static inline bool undcmp(const T &lhs, const T &rhs)
 		{
-			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support < operator.");
+			throw lang_error(unsupported_operator_message<T>("<"));
 		}
 
 		template <typename T>
 		static inline bool aeqcmp(const T &lhs, const T &rhs)
 		{
-			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support >= operator.");
+			throw lang_error(unsupported_operator_message<T>(">="));
 		}
 
 		template <typename T>
 		static inline bool ueqcmp(const T &lhs, const T &rhs)
 		{
-			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support <= operator.");
+			throw lang_error(unsupported_operator_message<T>("<="));
 		}
 
 		template <typename T>
 		static inline var &index_ref(T &data, const var &index)
 		{
-			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support data[index] operator.");
+			throw lang_error("Type '" + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + "' does not support indexing");
 		}
 
 		template <typename T>
@@ -141,7 +148,7 @@ namespace cs {
 		template <typename T>
 		static inline var &access_ref(T &data, const string &id)
 		{
-			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support data.member operator.");
+			throw lang_error("Type '" + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + "' does not support member access");
 		}
 
 		template <typename T>
@@ -164,7 +171,7 @@ namespace cs {
 		template <typename T>
 		static inline var fcall(const T &func, vector &args)
 		{
-			throw lang_error("Type " + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + " does not support func(...) operator.");
+			throw lang_error("Type '" + cs_impl::cxx_demangle(cs_impl::get_name_of_type<T>()) + "' is not callable");
 		}
 	} // namespace operators
 } // namespace cs
@@ -1019,7 +1026,7 @@ namespace cs {
 		cs::string &lhs_ref = str.val<cs::string>();
 		cs::numeric_integer times = rhs.const_val<cs::numeric>().as_integer();
 		if (times < 0)
-			throw cs::lang_error("Can not multiply string with negative number.");
+			throw cs::lang_error("A string cannot be multiplied by a negative number");
 		lhs_ref.reserve(lhs.size() * times);
 		while (times-- > 0)
 			lhs_ref.append(lhs);
@@ -1033,7 +1040,7 @@ namespace cs {
 		cs::array &lhs_ref = arr.val<cs::array>();
 		cs::numeric_integer times = rhs.const_val<cs::numeric>().as_integer();
 		if (times < 0)
-			throw cs::lang_error("Can not multiply array with negative number.");
+			throw cs::lang_error("An array cannot be multiplied by a negative number");
 		while (times-- > 0)
 			lhs_ref.insert(lhs_ref.end(), lhs.begin(), lhs.end());
 		detach(lhs_ref);
@@ -1259,7 +1266,7 @@ namespace cs {
 	template <>
 	var &operators::index_ref<cs::string>(cs::string &str, const var &idx)
 	{
-		throw cs::lang_error("Referencing elements of a string is not supported.");
+		throw cs::lang_error("String elements cannot be referenced directly");
 	}
 
 	template <>
