@@ -250,13 +250,17 @@ namespace cs {
 					continue;
 				}
 				type = token_types::null;
-				if (reserved_map.exist(cvt->wide2local(tmp))) {
-					tokens.push_back(reserved_map.match(cvt->wide2local(tmp))());
+				{
+					auto local_tmp = cvt->wide2local(tmp);
+					auto reserved = reserved_map.find(local_tmp);
+					if (reserved != nullptr) {
+						tokens.push_back((*reserved)());
+						tmp.clear();
+						break;
+					}
+					tokens.push_back(new token_id(local_tmp));
 					tmp.clear();
-					break;
 				}
-				tokens.push_back(new token_id(cvt->wide2local(tmp)));
-				tmp.clear();
 				break;
 			case token_types::literal:
 				if (!issignal(*it) && cvt->is_identifier(*it)) {
@@ -277,15 +281,19 @@ namespace cs {
 				type = token_types::null;
 				std::u32string sig;
 				for (auto &ch : tmp) {
-					if (!signal_map.exist(cvt->wide2local(sig + ch))) {
-						tokens.push_back(new token_signal(signal_map.match(cvt->wide2local(sig))));
+					auto next_sig = cvt->wide2local(sig + ch);
+					if (signal_map.find(next_sig) == nullptr) {
+						auto local_sig = cvt->wide2local(sig);
+						tokens.push_back(new token_signal(signal_map.match(local_sig)));
 						sig = ch;
 					}
 					else
 						sig += ch;
 				}
-				if (!sig.empty())
-					tokens.push_back(new token_signal(signal_map.match(cvt->wide2local(sig))));
+				if (!sig.empty()) {
+					auto local_sig = cvt->wide2local(sig);
+					tokens.push_back(new token_signal(signal_map.match(local_sig)));
+				}
 				tmp.clear();
 				break;
 			}
@@ -310,29 +318,37 @@ namespace cs {
 		switch (type) {
 		default:
 			break;
-		case token_types::id:
-			if (reserved_map.exist(cvt->wide2local(tmp))) {
-				tokens.push_back(reserved_map.match(cvt->wide2local(tmp))());
+		case token_types::id: {
+			auto local_tmp = cvt->wide2local(tmp);
+			auto reserved = reserved_map.find(local_tmp);
+			if (reserved != nullptr) {
+				tokens.push_back((*reserved)());
 				tmp.clear();
 				break;
 			}
-			tokens.push_back(new token_id(cvt->wide2local(tmp)));
-			break;
+			tokens.push_back(new token_id(local_tmp));
+			tmp.clear();
+		}
+		break;
 		case token_types::literal:
 			static_cast<token_literal *>(tokens.back())->m_literal = cvt->wide2local(tmp);
 			break;
 		case token_types::signal: {
 			std::u32string sig;
 			for (auto &ch : tmp) {
-				if (!signal_map.exist(cvt->wide2local(sig + ch))) {
-					tokens.push_back(new token_signal(signal_map.match(cvt->wide2local(sig))));
+				auto next_sig = cvt->wide2local(sig + ch);
+				if (signal_map.find(next_sig) == nullptr) {
+					auto local_sig = cvt->wide2local(sig);
+					tokens.push_back(new token_signal(signal_map.match(local_sig)));
 					sig = ch;
 				}
 				else
 					sig += ch;
 			}
-			if (!sig.empty())
-				tokens.push_back(new token_signal(signal_map.match(cvt->wide2local(sig))));
+			if (!sig.empty()) {
+				auto local_sig = cvt->wide2local(sig);
+				tokens.push_back(new token_signal(signal_map.match(local_sig)));
+			}
 			break;
 		}
 		case token_types::value:

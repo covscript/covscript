@@ -264,37 +264,28 @@ namespace cs {
 		tree.clear();
 		tree.emplace_root_left(tree.root(), signals.front());
 		tree.emplace_left_left(tree.root(), objects.front());
+		typename tree_type<token_base *>::iterator rightmost = tree.root();
 		for (std::size_t i = 1; i < signals.size(); ++i) {
+			rightmost = tree.emplace_right_right(rightmost, objects.at(i));
 			for (typename tree_type<token_base *>::iterator it = tree.root(); it.usable(); it = it.right()) {
 				if (!it.right().usable()) {
-					tree.emplace_right_right(it, objects.at(i));
-					break;
-				}
-			}
-			for (typename tree_type<token_base *>::iterator it = tree.root(); it.usable(); it = it.right()) {
-				if (!it.right().usable()) {
-					tree.emplace_root_left(it, signals.at(i));
+					rightmost = tree.emplace_root_left(it, signals.at(i));
 					break;
 				}
 				if (get_signal_level(it.data()) == get_signal_level(signals.at(i))) {
 					if (is_left_associative(it.data()))
-						tree.emplace_right_left(it, signals.at(i));
+						rightmost = tree.emplace_right_left(it, signals.at(i));
 					else
-						tree.emplace_root_left(it, signals.at(i));
+						rightmost = tree.emplace_root_left(it, signals.at(i));
 					break;
 				}
 				if (get_signal_level(it.data()) > get_signal_level(signals.at(i))) {
-					tree.emplace_root_left(it, signals.at(i));
+					rightmost = tree.emplace_root_left(it, signals.at(i));
 					break;
 				}
 			}
 		}
-		for (typename tree_type<token_base *>::iterator it = tree.root(); it.usable(); it = it.right()) {
-			if (!it.right().usable()) {
-				tree.emplace_right_right(it, objects.back());
-				break;
-			}
-		}
+		tree.emplace_right_right(rightmost, objects.back());
 	}
 
 	void compiler_type::gen_tree(tree_type<token_base *> &tree, std::deque<token_base *> &raw)

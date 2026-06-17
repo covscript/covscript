@@ -48,8 +48,9 @@ namespace cs {
 			o << "\"";
 			const cs::string &str = mVal.const_val<cs::string>();
 			for (auto ch : str) {
-				if (escape_char.count(ch) > 0)
-					o << '\\' << escape_char.at(ch);
+				auto it = escape_char.find(ch);
+				if (it != escape_char.end())
+					o << '\\' << it->second;
 				else
 					o << ch;
 			}
@@ -58,8 +59,9 @@ namespace cs {
 		else if (mVal.is_type_of<char>()) {
 			o << "\'";
 			char ch = mVal.const_val<char>();
-			if (escape_char.count(ch) > 0)
-				o << '\\' << escape_char.at(ch);
+			auto it = escape_char.find(ch);
+			if (it != escape_char.end())
+				o << '\\' << it->second;
 			else
 				o << ch;
 			o << "\'";
@@ -1198,9 +1200,9 @@ namespace cs {
 							for (; i < raw.size(); ++i) {
 								if (raw[i]->get_type() == token_types::id) {
 									auto &id = static_cast<token_id *>(raw[i])->get_id();
-									if (context->compiler->action_map.exist(id) &&
-									        context->compiler->action_map.match(id) ==
-									        static_cast<token_action *>(it)->get_action())
+									auto action = context->compiler->action_map.find(id);
+									if (action != nullptr &&
+									        *action == static_cast<token_action *>(it)->get_action())
 										break;
 								}
 								else if (raw[i]->get_type() == token_types::action)
@@ -1214,9 +1216,9 @@ namespace cs {
 						// The "matched" condition is satisfied only if the target token is an id and it can match the grammar rule.
 						if (raw[i]->get_type() == token_types::id) {
 							auto &id = static_cast<token_id *>(raw[i])->get_id();
-							if (!context->compiler->action_map.exist(id) ||
-							        context->compiler->action_map.match(id) !=
-							        static_cast<token_action *>(it)->get_action()) {
+							auto action = context->compiler->action_map.find(id);
+							if (action == nullptr ||
+							        *action != static_cast<token_action *>(it)->get_action()) {
 								matched = false;
 								failed = true;
 							}
@@ -1256,9 +1258,9 @@ namespace cs {
 							for (; i < raw.size(); ++i) {
 								if (raw[i]->get_type() == token_types::id) {
 									auto &id = static_cast<token_id *>(raw[i])->get_id();
-									if (context->compiler->action_map.exist(id) &&
-									        context->compiler->action_map.match(id) ==
-									        static_cast<token_action *>(it)->get_action())
+									auto action = context->compiler->action_map.find(id);
+									if (action != nullptr &&
+									        *action == static_cast<token_action *>(it)->get_action())
 										break;
 								}
 								else if (raw[i]->get_type() == token_types::action)
@@ -1267,9 +1269,9 @@ namespace cs {
 						}
 						if (raw[i]->get_type() == token_types::id) {
 							auto &id = static_cast<token_id *>(raw[i])->get_id();
-							if (context->compiler->action_map.exist(id) &&
-							        context->compiler->action_map.match(id) ==
-							        static_cast<token_action *>(it)->get_action())
+							auto action = context->compiler->action_map.find(id);
+							if (action != nullptr &&
+							        *action == static_cast<token_action *>(it)->get_action())
 								raw[i] = it;
 						}
 						skip_useless = false;

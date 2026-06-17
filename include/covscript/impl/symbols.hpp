@@ -162,14 +162,21 @@ namespace cs {
 		mapping(std::initializer_list<std::pair<const Key, T>> l) : mDat(l) {}
 
 		bool exist(const Key &k) const {
-			return mDat.count(k) > 0;
+			return find(k) != nullptr;
 		}
 
-		const T &match(const Key &k) const
-		{
-			if (!exist(k))
+		const T *find(const Key &k) const noexcept {
+			auto it = mDat.find(k);
+			if (it == mDat.end())
+				return nullptr;
+			return &it->second;
+		}
+
+		const T &match(const Key &k) const {
+			auto *val = find(k);
+			if (val == nullptr)
 				throw compile_error("Undefined Mapping.");
-			return mDat.at(k);
+			return *val;
 		}
 	};
 

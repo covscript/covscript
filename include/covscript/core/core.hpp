@@ -1124,6 +1124,26 @@ namespace cs {
 			return m_data->get_var(id);
 		}
 
+		var *get_var_opt(std::string_view name)
+		{
+			return m_data->get_var_opt(name);
+		}
+
+		const var *get_var_opt(std::string_view name) const
+		{
+			return m_data->get_var_opt(name);
+		}
+
+		var *get_var_opt(const var_id &id)
+		{
+			return m_data->get_var_opt(id);
+		}
+
+		const var *get_var_opt(const var_id &id) const
+		{
+			return m_data->get_var_opt(id);
+		}
+
 		domain_type &get_domain() const
 		{
 			return *m_data;

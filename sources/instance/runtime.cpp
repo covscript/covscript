@@ -104,82 +104,82 @@ namespace cs {
 
 	var &runtime_type::parse_dot_lhs(const var &a, token_base *b)
 	{
+		const auto &id = static_cast<token_id *>(b)->get_id();
 		if (a.is_type_of<constant_values>()) {
 			switch (a.const_val<constant_values>()) {
 			case constant_values::global_namespace:
-				return storage.get_var_global(static_cast<token_id *>(b)->get_id());
+				return storage.get_var_global(id);
 			case constant_values::local_namepace:
-				return storage.get_var_current(static_cast<token_id *>(b)->get_id());
+				return storage.get_var_current(id);
 			default:
 				throw runtime_error("Unknown namespace scope specifier");
 			}
 		}
 		else if (a.is_type_of<namespace_t>())
-			return a.val<namespace_t>()->get_var(static_cast<token_id *>(b)->get_id());
+			return a.val<namespace_t>()->get_var(id);
 		else if (a.is_type_of<type_t>())
-			return a.const_val<type_t>().get_var(static_cast<token_id *>(b)->get_id());
+			return a.const_val<type_t>().get_var(id);
 		else if (a.is_type_of<structure>()) {
-			var &val = a.val<structure>().get_var(static_cast<token_id *>(b)->get_id());
+			var &val = a.val<structure>().get_var(id);
 			if (!val.is_type_of<callable>() || !val.const_val<callable>().is_member_fn())
 				return val;
 			else
 				throw runtime_error("Cannot use a member function as an lvalue");
 		}
 		else {
-			try {
-				return a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
+			if (const auto ext = a.get_ext_opt()) {
+				if (auto *val = ext->get_var_opt(id))
+					return *val;
 			}
-			catch (...) {
-				return a.access_ref(static_cast<token_id *>(b)->get_id());
-			}
+			return a.access_ref(id);
 		}
 	}
 
 	var runtime_type::parse_dot(const var &a, token_base *b)
 	{
+		const auto &id = static_cast<token_id *>(b)->get_id();
 		if (a.is_type_of<constant_values>()) {
 			switch (a.const_val<constant_values>()) {
 			case constant_values::global_namespace:
-				return storage.get_var_global(static_cast<token_id *>(b)->get_id());
+				return storage.get_var_global(id);
 			case constant_values::local_namepace:
-				return storage.get_var_current(static_cast<token_id *>(b)->get_id());
+				return storage.get_var_current(id);
 			default:
 				throw runtime_error("Unknown namespace scope specifier");
 			}
 		}
 		else if (a.is_type_of<namespace_t>())
-			return a.val<namespace_t>()->get_var(static_cast<token_id *>(b)->get_id());
+			return a.val<namespace_t>()->get_var(id);
 		else if (a.is_type_of<type_t>())
-			return a.const_val<type_t>().get_var(static_cast<token_id *>(b)->get_id());
+			return a.const_val<type_t>().get_var(id);
 		else if (a.is_type_of<structure>()) {
-			var &val = a.val<structure>().get_var(static_cast<token_id *>(b)->get_id());
+			var &val = a.val<structure>().get_var(id);
 			if (val.is_type_of<callable>() && val.const_val<callable>().is_member_fn())
 				return var::make_protect<object_method>(a, val);
 			else
 				return val;
 		}
 		else {
-			try {
-				var &val = a.get_ext()->get_var(static_cast<token_id *>(b)->get_id());
-				if (val.is_type_of<callable>()) {
-					const callable &func = val.const_val<callable>();
-					switch (func.type()) {
-					case callable::types::member_visitor: {
-						vector args{a};
-						return func.call(args);
+			if (const auto ext = a.get_ext_opt()) {
+				if (auto *val = ext->get_var_opt(id)) {
+					if (val->is_type_of<callable>()) {
+						const callable &func = val->const_val<callable>();
+						switch (func.type()) {
+						case callable::types::member_visitor: {
+							vector args{a};
+							return func.call(args);
+						}
+						case callable::types::force_regular:
+							return *val;
+						default:
+							return var::make_protect<object_method>(a, *val, func.is_request_fold());
+						}
 					}
-					case callable::types::force_regular:
-						return val;
-					default:
-						return var::make_protect<object_method>(a, val, func.is_request_fold());
-					}
+					else
+						return *val;
 				}
-				else
-					return val;
 			}
-			catch (...) {
-				return a.access(static_cast<token_id *>(b)->get_id());
-			}
+			return a.access(id);
 		}
 	}
 
