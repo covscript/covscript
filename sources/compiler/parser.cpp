@@ -142,7 +142,7 @@ namespace cs {
 			case token_types::mblist: {
 				auto *mbl = static_cast<token_mblist *>(ptr);
 				if (mbl->get_list().size() != 1)
-					throw compile_error("There are no more elements in middle bracket.");
+					throw compile_error("Invalid index expression: expected exactly one element inside '[...]'");
 				kill_brackets(mbl->get_list().front(), line_num);
 				tree_type<token_base *> tree;
 				gen_tree(tree, mbl->get_list().front());
@@ -197,7 +197,7 @@ namespace cs {
 						tokens.push_back(new token_arglist());
 					}
 					else
-						throw compile_error("Do not allow standalone empty small parentheses.");
+						throw compile_error("Standalone empty parentheses '()' are not allowed here");
 					expected_fcall = false;
 					continue;
 				case signal_types::emb_:
@@ -225,7 +225,7 @@ namespace cs {
 		bool request_signal = false;
 		for (auto &ptr : raw) {
 			if (ptr->get_type() == token_types::action)
-				throw compile_error("Wrong format of expression.");
+				throw compile_error("Invalid expression: a keyword cannot appear as a value in an expression");
 			if (ptr->get_type() == token_types::signal) {
 				if (!request_signal)
 					objects.push_back(nullptr);
@@ -245,7 +245,7 @@ namespace cs {
 	                               std::deque<token_base *> &objects)
 	{
 		if (objects.empty() || signals.empty() || objects.size() != signals.size() + 1)
-			throw compile_error("Unexpected grammar when building expression tree.");
+			throw compile_error("Invalid expression syntax while building the expression tree");
 		for (auto &obj : objects) {
 			if (obj != nullptr && obj->get_type() == token_types::sblist) {
 				auto *sbl = static_cast<token_sblist *>(obj);
@@ -264,37 +264,28 @@ namespace cs {
 		tree.clear();
 		tree.emplace_root_left(tree.root(), signals.front());
 		tree.emplace_left_left(tree.root(), objects.front());
+		tree_type<token_base *>::iterator rightmost = tree.root();
 		for (std::size_t i = 1; i < signals.size(); ++i) {
-			for (typename tree_type<token_base *>::iterator it = tree.root(); it.usable(); it = it.right()) {
+			rightmost = tree.emplace_right_right(rightmost, objects.at(i));
+			for (tree_type<token_base *>::iterator it = tree.root(); it.usable(); it = it.right()) {
 				if (!it.right().usable()) {
-					tree.emplace_right_right(it, objects.at(i));
-					break;
-				}
-			}
-			for (typename tree_type<token_base *>::iterator it = tree.root(); it.usable(); it = it.right()) {
-				if (!it.right().usable()) {
-					tree.emplace_root_left(it, signals.at(i));
+					rightmost = tree.emplace_root_left(it, signals.at(i));
 					break;
 				}
 				if (get_signal_level(it.data()) == get_signal_level(signals.at(i))) {
 					if (is_left_associative(it.data()))
-						tree.emplace_right_left(it, signals.at(i));
+						rightmost = tree.emplace_right_left(it, signals.at(i));
 					else
-						tree.emplace_root_left(it, signals.at(i));
+						rightmost = tree.emplace_root_left(it, signals.at(i));
 					break;
 				}
 				if (get_signal_level(it.data()) > get_signal_level(signals.at(i))) {
-					tree.emplace_root_left(it, signals.at(i));
+					rightmost = tree.emplace_root_left(it, signals.at(i));
 					break;
 				}
 			}
 		}
-		for (typename tree_type<token_base *>::iterator it = tree.root(); it.usable(); it = it.right()) {
-			if (!it.right().usable()) {
-				tree.emplace_right_right(it, objects.back());
-				break;
-			}
-		}
+		tree.emplace_right_right(rightmost, objects.back());
 	}
 
 	void compiler_type::gen_tree(tree_type<token_base *> &tree, std::deque<token_base *> &raw)

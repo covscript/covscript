@@ -32,7 +32,7 @@ namespace cs {
 		current_process->poll_event();
 		if (args.size() != _this->mArgs.size())
 			throw runtime_error(
-			    "Wrong size of arguments. Expected " + std::to_string(_this->mArgs.size()) + ", provided " +
+			    "Wrong number of arguments: expected " + std::to_string(_this->mArgs.size()) + ", got " +
 			    std::to_string(args.size()));
 		scope_guard scope(_this->mContext);
 #ifdef CS_DEBUGGER
@@ -48,11 +48,11 @@ namespace cs {
 			try {
 				ptr->run();
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 			if (_this->mContext->instance->return_fcall) {
 				_this->mContext->instance->return_fcall = false;
@@ -89,11 +89,11 @@ namespace cs {
 			try {
 				ptr->run();
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 			if (_this->mContext->instance->return_fcall) {
 				_this->mContext->instance->return_fcall = false;
@@ -108,7 +108,7 @@ namespace cs {
 		current_process->poll_event();
 		if (args.size() != _this->mArgs.size())
 			throw runtime_error(
-			    "Wrong size of arguments. Expected " + std::to_string(_this->mArgs.size()) + ", provided " +
+			    "Wrong number of arguments: expected " + std::to_string(_this->mArgs.size()) + ", got " +
 			    std::to_string(args.size()));
 		scope_guard scope(_this->mContext);
 #ifdef CS_DEBUGGER
@@ -121,12 +121,12 @@ namespace cs {
 		try {
 			return _this->mContext->instance->parse_expr(static_cast<const statement_return *>(_this->mBody.front())->get_tree().root());
 		}
-		catch (const cs::exception &e) {
-			throw e;
+		catch (const cs::exception &) {
+			throw;
 		}
 		catch (const std::exception &e) {
 			const statement_base *ptr = _this->mBody.front();
-			throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+			throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 		}
 	}
 
@@ -134,7 +134,7 @@ namespace cs {
 	{
 		current_process->poll_event();
 		if (!args.empty())
-			throw runtime_error("Wrong size of arguments. Expected none, provided " + std::to_string(args.size()));
+			throw runtime_error("Wrong number of arguments: expected none, got " + std::to_string(args.size()));
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
 		if (_this->mMatch)
@@ -143,12 +143,12 @@ namespace cs {
 		try {
 			return _this->mContext->instance->parse_expr(static_cast<const statement_return *>(_this->mBody.front())->get_tree().root());
 		}
-		catch (const cs::exception &e) {
-			throw e;
+		catch (const cs::exception &) {
+			throw;
 		}
 		catch (const std::exception &e) {
 			const statement_base *ptr = _this->mBody.front();
-			throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+			throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 		}
 	}
 
@@ -159,7 +159,7 @@ namespace cs {
 			if (builder.is_type_of<type_t>()) {
 				const auto &t = builder.const_val<type_t>();
 				if (mTypeId == t.id)
-					throw runtime_error("Can not inherit itself.");
+					throw runtime_error("A struct cannot inherit from itself");
 				if (t.id.type_hash) {
 					for (std::size_t it = t.id.type_hash;;) {
 						type_id::inherit_map[it].insert(mTypeId.type_hash);
@@ -172,10 +172,10 @@ namespace cs {
 					mParentMap[mTypeId.type_hash] = t.id.type_hash;
 				}
 				else
-					throw runtime_error("Target is not a struct.");
+					throw runtime_error("The parent of a struct must itself be a struct");
 			}
 			else
-				throw runtime_error("Target is not a type.");
+				throw runtime_error("The parent of a struct must be a type");
 		}
 	}
 
@@ -187,7 +187,7 @@ namespace cs {
 			if (builder.is_type_of<type_t>()) {
 				const auto &t = builder.const_val<type_t>();
 				if (mTypeId == t.id)
-					throw runtime_error("Can not inherit itself.");
+					throw runtime_error("A struct cannot inherit from itself");
 				var parent = t.constructor();
 				if (parent.is_type_of<structure>()) {
 					parent.mark_protect();
@@ -195,20 +195,20 @@ namespace cs {
 					mContext->instance->storage.add_var_no_return("parent", parent, true);
 				}
 				else
-					throw runtime_error("Target is not a struct.");
+					throw runtime_error("The parent of a struct must itself be a struct");
 			}
 			else
-				throw runtime_error("Target is not a type.");
+				throw runtime_error("The parent of a struct must be a type");
 		}
 		for (auto &ptr : this->mMethod) {
 			try {
 				ptr->run();
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 		}
 		return var::make<structure>(this->mTypeId, this->mName, scope.get());
@@ -314,11 +314,11 @@ namespace cs {
 			try {
 				ptr->run();
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 			if (context->instance->return_fcall || context->instance->break_block || context->instance->continue_block)
 				break;
@@ -344,12 +344,12 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
 					throw exception(ptr->get_line_num(), ptr->get_file_path(),
-					                ptr->get_raw_code(), e.what());
+					                ptr->get_raw_code(), exception_message(e));
 				}
 			}
 			return scope.get();
@@ -374,11 +374,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall || context->instance->break_block ||
 				        context->instance->continue_block)
@@ -406,11 +406,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall || context->instance->break_block ||
 				        context->instance->continue_block)
@@ -423,11 +423,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall || context->instance->break_block ||
 				        context->instance->continue_block)
@@ -496,11 +496,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall) {
 					return;
@@ -542,11 +542,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall) {
 					return;
@@ -586,11 +586,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall) {
 					return;
@@ -638,11 +638,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall) {
 					return;
@@ -694,11 +694,11 @@ namespace cs {
 				try {
 					ptr->run();
 				}
-				catch (const cs::exception &e) {
-					throw e;
+				catch (const cs::exception &) {
+					throw;
 				}
 				catch (const std::exception &e) {
-					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall) {
 					return;
@@ -733,7 +733,7 @@ namespace cs {
 		else if (obj.is_type_of<range_type>())
 			foreach_helper<range_type, numeric>(context, this->mIt, obj, this->mBlock);
 		else
-			throw runtime_error("Unsupported type(foreach)");
+			throw runtime_error("The 'foreach' loop does not support this type of value");
 	}
 
 	void statement_foreach::dump(std::ostream &o) const
@@ -804,7 +804,7 @@ namespace cs {
 	{
 		CS_DEBUGGER_STEP(this);
 		if (current_process->stack.empty())
-			throw runtime_error("Return outside function.");
+			throw runtime_error("'return' used outside of a function");
 		var ret = context->instance->parse_expr(this->mTree.root());
 		current_process->stack.top().swap(ret);
 		context->instance->return_fcall = true;
@@ -832,11 +832,11 @@ namespace cs {
 					try {
 						ptr->run();
 					}
-					catch (const cs::exception &e) {
-						throw e;
+					catch (const cs::exception &) {
+						throw;
 					}
 					catch (const std::exception &e) {
-						throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+						throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 					}
 					if (context->instance->return_fcall || context->instance->break_block ||
 					        context->instance->continue_block)
@@ -844,11 +844,11 @@ namespace cs {
 				}
 				return;
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 			if (context->instance->return_fcall || context->instance->break_block || context->instance->continue_block)
 				break;
@@ -871,9 +871,13 @@ namespace cs {
 		CS_DEBUGGER_STEP(this);
 		var e = context->instance->parse_expr(this->mTree.root());
 		if (!e.is_type_of<lang_error>())
-			throw runtime_error("Throwing unsupported exception.");
-		else
-			throw e.const_val<lang_error>();
+			throw runtime_error("Only 'error' objects can be thrown, but got an object of a different type");
+		else {
+			lang_error le = e.const_val<lang_error>();
+			if (!le.has_location())
+				le.set_location(get_line_num(), get_file_path(), get_raw_code());
+			throw le;
+		}
 	}
 
 	void statement_throw::dump(std::ostream &o) const

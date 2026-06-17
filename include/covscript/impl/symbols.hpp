@@ -162,14 +162,21 @@ namespace cs {
 		mapping(std::initializer_list<std::pair<const Key, T>> l) : mDat(l) {}
 
 		bool exist(const Key &k) const {
-			return mDat.count(k) > 0;
+			return find(k) != nullptr;
 		}
 
-		const T &match(const Key &k) const
-		{
-			if (!exist(k))
+		const T *find(const Key &k) const noexcept {
+			auto it = mDat.find(k);
+			if (it == mDat.end())
+				return nullptr;
+			return &it->second;
+		}
+
+		const T &match(const Key &k) const {
+			auto *val = find(k);
+			if (val == nullptr)
 				throw compile_error("Undefined Mapping.");
-			return mDat.at(k);
+			return *val;
 		}
 	};
 
@@ -668,7 +675,14 @@ namespace cs {
 		inline void run()
 		{
 			current_process->poll_event();
-			this->run_impl();
+			try {
+				this->run_impl();
+			}
+			catch (lang_error &le) {
+				if (!le.has_location())
+					le.set_location(this->get_line_num(), this->get_file_path(), this->get_raw_code());
+				throw;
+			}
 		}
 
 		virtual void repl_run_impl()
@@ -679,7 +693,14 @@ namespace cs {
 		inline void repl_run()
 		{
 			current_process->poll_event();
-			this->repl_run_impl();
+			try {
+				this->repl_run_impl();
+			}
+			catch (lang_error &le) {
+				if (!le.has_location())
+					le.set_location(this->get_line_num(), this->get_file_path(), this->get_raw_code());
+				throw;
+			}
 		}
 
 		virtual void dump(std::ostream &o) const

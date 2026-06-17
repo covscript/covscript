@@ -240,7 +240,7 @@ namespace cs {
 				if (state == fiber_state::finished)
 					return ret_val;
 				else
-					throw lang_error("Fiber has not yet started or ended.");
+					throw lang_error("The fiber has not completed yet");
 			}
 		};
 
@@ -273,11 +273,11 @@ namespace cs {
 			if (fi == nullptr)
 				throw internal_error("Resuming a corrupted fiber.");
 			if (fi->state == fiber_state::running || fi->state == fiber_state::finished)
-				throw lang_error("Fiber is not reentrant.");
+				throw lang_error("A fiber cannot be resumed while it is already running or after it has finished");
 			if (fi->state == fiber_state::ready) {
 				fi->ctx = CreateFiber(fi->stack_size, win32_fiber::entry, fi);
 				if (fi->ctx == nullptr)
-					throw lang_error("Fiber create failed.");
+					throw lang_error("Failed to create the fiber");
 			}
 			// Always (re)bind the return context to the current caller before resuming.
 			// A fiber may be resumed from a different caller than the one that started
@@ -310,7 +310,7 @@ namespace cs {
 		void yield()
 		{
 			if (current_process->fiber_stack.empty())
-				throw lang_error("Cannot yield outside a fiber.");
+				throw lang_error("Cannot yield outside a fiber");
 			win32_fiber *fi = static_cast<win32_fiber *>(current_process->fiber_stack.top().get());
 			fi->state = fiber_state::suspended;
 			SwitchToFiber(fi->prev_ctx);

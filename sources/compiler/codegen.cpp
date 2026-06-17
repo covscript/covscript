@@ -46,7 +46,7 @@ namespace cs {
 		auto process = [&context, &var_list](tree_type<token_base *> &t) {
 			token_base *token = t.root().data();
 			if (token == nullptr || token->get_type() != token_types::id)
-				throw compile_error("Wrong grammar for import statement, expect <package name>");
+				throw compile_error("Invalid 'import' statement: expected a package name");
 			const var_id &package_name = static_cast<token_id *>(token)->get_id();
 			const var &ext = make_namespace(context->instance->import(current_process->import_path, package_name));
 			context->compiler->add_constant(ext);
@@ -86,15 +86,15 @@ namespace cs {
 			token_base *id = it.right().data();
 			if (id == nullptr || id->get_type() != token_types::id)
 				throw compile_error(
-				    "Wrong grammar for import-as statement, expect <package name> or <package name>.<namespace id>...");
+				    "Invalid 'import' statement: expected '<package name>' or '<package name>.<namespace id>...'");
 			if (ext.is_type_of<namespace_t>())
 				return ext.const_val<namespace_t>()->get_var(static_cast<token_id *>(id)->get_id());
 			else
-				throw compile_error("Access non-namespace object.");
+				throw compile_error("Invalid 'import' statement: the value at the left-hand side of '.' is not a namespace");
 		}
 		else
 			throw compile_error(
-			    "Wrong grammar for import-as statement, expect <package name> or <package name>.<namespace id>...");
+			    "Invalid 'import' statement: expected '<package name>' or '<package name>.<namespace id>...'");
 	}
 
 	void method_import_as::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
@@ -105,7 +105,7 @@ namespace cs {
 			throw internal_error("Null pointer accessed.");
 		token_base *token_alias = tree_alias.root().data();
 		if (token_alias->get_type() != token_types::id)
-			throw compile_error("Wrong grammar for import-as statement, expect <id> in alias.");
+			throw compile_error("Invalid 'import ... as' statement: the alias must be an identifier");
 		const var_id &alias_name = static_cast<token_id *>(token_alias)->get_id();
 		var ext = get_namespace(context, tree_package.root());
 		context->compiler->add_constant(ext);
@@ -125,7 +125,7 @@ namespace cs {
 	method_package::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		if (!context->package_name.empty())
-			throw compile_error(std::string("Redefinition of package: ") + context->package_name);
+			throw compile_error("Invalid 'package' declaration: this file already declared its package name as '" + context->package_name + "'");
 		context->package_name = static_cast<token_id *>(static_cast<token_expr *>(raw.front().at(
 		                            1))
 		                        ->get_tree()
@@ -150,7 +150,7 @@ namespace cs {
 				context->instance->storage.involve_domain(domain);
 			}
 			else
-				throw compile_error("Only support involve namespace.");
+				throw compile_error("Invalid 'using' statement: the target must be a namespace");
 			mResult.emplace_back(new statement_involve(tree, true, context, raw.front().back()));
 		}
 		else
@@ -228,7 +228,7 @@ namespace cs {
 			if (ptr->get_type() != statement_types::import_ && ptr->get_type() != statement_types::involve_ &&
 			        ptr->get_type() != statement_types::var_ && ptr->get_type() != statement_types::function_ &&
 			        ptr->get_type() != statement_types::namespace_ && ptr->get_type() != statement_types::struct_)
-				throw compile_error("Unexpected statement in namespace definition.");
+				throw compile_error("Invalid 'namespace' body: only 'import', 'using', variable declarations, function definitions, 'namespace' definitions, and 'struct' definitions are allowed");
 		return new statement_namespace(static_cast<token_expr *>(raw.front().at(1))->get_tree().root().data(), body,
 		                               context, raw.front().back());
 	}
@@ -249,7 +249,7 @@ namespace cs {
 				if (!have_else)
 					have_else = true;
 				else
-					throw compile_error("Multi Else Grammar.");
+					throw compile_error("An 'if' block can only have one 'else' clause");
 			}
 		}
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
@@ -310,23 +310,23 @@ namespace cs {
 				if (it->get_type() == statement_types::case_) {
 					auto *scptr = static_cast<statement_case *>(it);
 					if (cases.count(scptr->get_tag()) > 0)
-						throw compile_error("Redefinition of case.");
+						throw compile_error("Duplicate 'case' label in 'switch' statement");
 					cases.emplace(scptr->get_tag(), scptr->get_block());
 				}
 				else if (it->get_type() == statement_types::default_) {
 					auto *sdptr = static_cast<statement_default *>(it);
 					if (dptr != nullptr)
-						throw compile_error("Redefinition of default case.");
+						throw compile_error("A 'switch' statement can only have one 'default' case");
 					dptr = sdptr->get_block();
 				}
 				else
-					throw compile_error("Unexpected statement in switch definition.");
+					throw compile_error("Only 'case' and 'default' clauses are allowed inside a 'switch' statement");
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(it->get_line_num(), it->get_file_path(), it->get_raw_code(), e.what());
+				throw exception(it->get_line_num(), it->get_file_path(), it->get_raw_code(), exception_message(e));
 			}
 		}
 		return new statement_switch(static_cast<token_expr *>(raw.front().at(1))->get_tree(), cases, dptr, context,
@@ -338,7 +338,7 @@ namespace cs {
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data()->get_type() != token_types::value) {
 			std::size_t line_num = static_cast<token_endline *>(raw.front().back())->get_line_num();
-			const char *what = "Case Tag must be a constant value.";
+			const char *what = "A 'case' label must be a constant value";
 			throw exception(line_num, context->file_path, context->get_file_line(line_num), what);
 		}
 		std::deque<statement_base *> body;
@@ -380,7 +380,7 @@ namespace cs {
 			return static_cast<method_loop *>(method)->translate(context, raw,
 			        static_cast<token_expr *>(code.at(1))->get_tree());
 		else
-			throw compile_error("Use until in non-loop statement.");
+			throw compile_error("The 'until' clause can only be used to close a 'loop' block");
 	}
 
 	statement_base *method_loop::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
@@ -412,10 +412,10 @@ namespace cs {
 		if (tree.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (tree.root().data()->get_type() != token_types::parallel)
-			throw compile_error("Wrong grammar in for statement, expect <id> = <expression>, <condition>, <process>");
+			throw compile_error("Invalid 'for' statement: expected '<id> = <expression>, <condition>, <process>'");
 		auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
 		if (parallel_list.size() != 3)
-			throw compile_error("Wrong grammar in for statement, expect <id> = <expression>, <condition>, <process>");
+			throw compile_error("Invalid 'for' statement: expected '<id> = <expression>, <condition>, <process>'");
 		context->instance->check_define_var(parallel_list[0].root(), true);
 	}
 
@@ -435,10 +435,10 @@ namespace cs {
 		if (tree.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (tree.root().data()->get_type() != token_types::parallel)
-			throw compile_error("Wrong grammar in for statement, expect <id> = <expression>, <condition>, <process>");
+			throw compile_error("Invalid 'for' statement: expected '<id> = <expression>, <condition>, <process>'");
 		auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
 		if (parallel_list.size() != 3)
-			throw compile_error("Wrong grammar in for statement, expect <id> = <expression>, <condition>, <process>");
+			throw compile_error("Invalid 'for' statement: expected '<id> = <expression>, <condition>, <process>'");
 		context->instance->check_define_var(parallel_list[0].root());
 		return new statement_for(parallel_list, {new statement_expression(static_cast<token_expr *>(raw.front().at(3))->get_tree(), context, raw.front().back())}, context, raw.front().back());
 	}
@@ -449,7 +449,7 @@ namespace cs {
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::id)
-			throw compile_error("Wrong grammar in foreach statement, expect <id>");
+			throw compile_error("Invalid 'foreach' statement: expected an identifier as the iterator");
 		context->instance->storage.add_record(static_cast<token_id *>(t.root().data())->get_id().get_id());
 	}
 
@@ -471,7 +471,7 @@ namespace cs {
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::id)
-			throw compile_error("Wrong grammar in foreach statement, expect <id>");
+			throw compile_error("Invalid 'foreach' statement: expected an identifier as the iterator");
 		const var_id &it = static_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
@@ -497,15 +497,15 @@ namespace cs {
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::signal ||
 		        static_cast<token_signal *>(t.root().data())->get_signal() != signal_types::fcall_)
-			throw compile_error("Wrong grammar for function definition.");
+			throw compile_error("Invalid function definition: expected 'function <name>(<arguments>)'");
 		if (t.root().left().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().left().data()->get_type() != token_types::id)
-			throw compile_error("Wrong grammar for function definition, expect function name.");
+			throw compile_error("Invalid function definition: expected a function name");
 		if (t.root().right().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().right().data()->get_type() != token_types::arglist)
-			throw compile_error("Wrong grammar for function definition, expect argument list.");
+			throw compile_error("Invalid function definition: expected an argument list");
 		std::vector<std::string> args;
 		for (auto &it : static_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
 			if (it.root().data() == nullptr)
@@ -515,19 +515,19 @@ namespace cs {
 				const std::string &str = static_cast<token_id *>(it.root().data())->get_id();
 				for (auto &it : args)
 					if (it == str)
-						throw compile_error("Redefinition of function argument.");
+						throw compile_error("Duplicate function argument name: " + str);
 				context->instance->storage.add_record(str);
 				args.push_back(str);
 			}
 			else if (it.root().data()->get_type() == token_types::vargs) {
 				const std::string &str = static_cast<token_vargs *>(it.root().data())->get_id();
 				if (!args.empty())
-					throw compile_error("Redefinition of function argument(Multi-define of vargs).");
+					throw compile_error("Invalid function definition: a variadic parameter '...<id>' must be the only parameter in the argument list");
 				context->instance->storage.add_record(str);
 				args.push_back(str);
 			}
 			else
-				throw compile_error("Unexpected element in function argument list.");
+				throw compile_error("Invalid function definition: unexpected element in the argument list; expected an identifier or a variadic parameter '...<id>'");
 		}
 	}
 
@@ -593,7 +593,7 @@ namespace cs {
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::id)
-			throw compile_error("Wrong grammar for struct definition, expect <id>");
+			throw compile_error("Invalid 'struct' definition: expected a struct name");
 		std::string name = static_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
@@ -601,7 +601,7 @@ namespace cs {
 			try {
 				switch (ptr->get_type()) {
 				default:
-					throw compile_error("Unexpected statement in structure definition.");
+					throw compile_error("Invalid 'struct' body: only variable and function definitions are allowed");
 				case statement_types::var_:
 					break;
 				case statement_types::function_:
@@ -609,11 +609,11 @@ namespace cs {
 					break;
 				}
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), e.what());
+				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 		}
 		if (raw.front().size() == 5)
@@ -642,7 +642,7 @@ namespace cs {
 				tbody.push_back(ptr);
 		}
 		if (!founded)
-			throw compile_error("Wrong grammar for try statement, expect catch statement.");
+			throw compile_error("Invalid 'try' statement: a matching 'catch' clause is required");
 		return new statement_try(name, tbody, cbody, context, raw.front().back());
 	}
 
@@ -652,7 +652,7 @@ namespace cs {
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::id)
-			throw compile_error("Wrong grammar for catch statement, expect <id>");
+			throw compile_error("Invalid 'catch' statement: expected an identifier to bind the caught error");
 		return new statement_catch(static_cast<token_id *>(t.root().data())->get_id(), context, raw.front().back());
 	}
 

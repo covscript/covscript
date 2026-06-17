@@ -123,10 +123,10 @@ namespace cs {
 	void exception::relocate_to_csym(const csym_info &csym)
 	{
 		if (mLine >= csym.map.size())
-			throw fatal_error("Invalid line when relocating symbols in cSYM.");
+			throw fatal_error("Invalid line number when relocating symbols in cSYM file");
 		std::size_t relocated_line = csym.map[mLine - 1];
 		if (relocated_line >= csym.codes.size())
-			throw fatal_error("Broken cSYM file.");
+			throw fatal_error("Malformed cSYM file: relocated line number is out of range");
 		if (relocated_line > 0) {
 			const std::string &relocated_code = csym.codes[relocated_line - 1];
 			mStr = compose_what(csym.file, relocated_line, relocated_code, mWhat);
@@ -230,7 +230,7 @@ namespace cs {
 				return std::stoll(str);
 		}
 		catch (const std::exception &e) {
-			throw lang_error("Wrong literal format.");
+			throw lang_error("Invalid numeric literal: cannot parse the given string as a number");
 		}
 	}
 

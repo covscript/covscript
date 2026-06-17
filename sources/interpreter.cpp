@@ -372,6 +372,24 @@ int main(int args_size, char *args[])
 		covscript_main(args_size, args);
 		errorcode = cs::current_process->exit_code;
 	}
+	catch (const cs::lang_error &le) {
+		std::string msg;
+		if (le.has_location())
+			msg = cs::exception(le.line(), le.file(), le.code(), std::string("Uncaught exception: ") + le.what()).what();
+		else
+			msg = std::string("Uncaught exception: ") + le.what();
+		if (!log_path.empty()) {
+			std::ofstream out(::log_path);
+			if (out) {
+				out << msg;
+				out.flush();
+			}
+			else
+				std::cerr << "Write log failed." << std::endl;
+		}
+		std::cerr << msg << std::endl;
+		errorcode = -1;
+	}
 	catch (const std::exception &e) {
 		if (!log_path.empty()) {
 			std::ofstream out(::log_path);

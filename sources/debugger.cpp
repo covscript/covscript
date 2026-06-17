@@ -183,7 +183,7 @@ public:
 			throw cs::runtime_error("Debugger just can break at specific line or function.");
 		const cs::callable::function_type &target = function.const_val<cs::callable>().get_raw_data();
 		if (target.target_type() != typeid(cs::function_ptr))
-			throw cs::runtime_error("Debugger can not break at CNI function.");
+			throw cs::runtime_error("The debugger cannot break at a CNI function");
 		target.target<cs::function_ptr>()->fptr->set_debugger_state(true);
 		m_breakpoints.emplace_front(++m_id, function);
 		return m_id;
@@ -645,7 +645,7 @@ void covscript_main(int args_size, char *args[])
 		func_map.add_func("optimizer", "o", [](const std::string &cmd) -> bool {
 			if (context.get() != nullptr)
 			{
-				std::cout << "Runtime Error: Can not tuning optimizer while interpreter is running." << std::endl;
+				std::cout << "Runtime Error: Cannot tune optimizer while the interpreter is running." << std::endl;
 				return true;
 			}
 			if (cmd == "on")
@@ -658,7 +658,7 @@ void covscript_main(int args_size, char *args[])
 		func_map.add_func("run", "r", [](const std::string &cmd) -> bool {
 			if (context.get() != nullptr)
 			{
-				std::cout << "Runtime Error: Can not run two or more instance at the same time." << std::endl;
+				std::cout << "Runtime Error: Cannot run two or more instances at the same time." << std::endl;
 				return true;
 			}
 			std::size_t start_time = 0;
@@ -763,6 +763,24 @@ int main(int args_size, char *args[])
 	int errorcode = 0;
 	try {
 		covscript_main(args_size, args);
+	}
+	catch (const cs::lang_error &le) {
+		std::string msg;
+		if (le.has_location())
+			msg = cs::exception(le.line(), le.file(), le.code(), std::string("Uncaught exception: ") + le.what()).what();
+		else
+			msg = std::string("Uncaught exception: ") + le.what();
+		if (!log_path.empty()) {
+			std::ofstream out(::log_path);
+			if (out) {
+				out << msg;
+				out.flush();
+			}
+			else
+				std::cerr << "Write log failed." << std::endl;
+		}
+		std::cerr << msg << std::endl;
+		errorcode = -1;
 	}
 	catch (const std::exception &e) {
 		if (!log_path.empty()) {

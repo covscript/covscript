@@ -48,8 +48,9 @@ namespace cs {
 			o << "\"";
 			const cs::string &str = mVal.const_val<cs::string>();
 			for (auto ch : str) {
-				if (escape_char.count(ch) > 0)
-					o << '\\' << escape_char.at(ch);
+				auto it = escape_char.find(ch);
+				if (it != escape_char.end())
+					o << '\\' << it->second;
 				else
 					o << ch;
 			}
@@ -58,8 +59,9 @@ namespace cs {
 		else if (mVal.is_type_of<char>()) {
 			o << "\'";
 			char ch = mVal.const_val<char>();
-			if (escape_char.count(ch) > 0)
-				o << '\\' << escape_char.at(ch);
+			auto it = escape_char.find(ch);
+			if (it != escape_char.end())
+				o << '\\' << it->second;
 			else
 				o << ch;
 			o << "\'";
@@ -571,25 +573,25 @@ namespace cs {
 				break;
 			case signal_types::addr_:
 				if (it.left().data() != nullptr)
-					throw compile_error("Wrong grammar for addr expression.");
+					throw compile_error("Invalid '&val' expression. Left-hand side of '&' must be empty.");
 				break;
 			case signal_types::new_:
 				if (it.left().data() != nullptr)
-					throw compile_error("Wrong grammar for new expression.");
+					throw compile_error("Invalid 'new' expression. Left-hand side of 'new' must be empty.");
 				break;
 			case signal_types::gcnew_:
 				if (it.left().data() != nullptr)
-					throw compile_error("Wrong grammar for gcnew expression.");
+					throw compile_error("Invalid 'gcnew' expression. Left-hand side of 'gcnew' must be empty.");
 				trim_expr(tree, it.right(), do_trim);
 				return;
 				break;
 			case signal_types::typeid_:
 				if (it.left().data() != nullptr)
-					throw compile_error("Wrong grammar for typeid expression.");
+					throw compile_error("Invalid 'typeid' expression. Left-hand side of 'typeid' must be empty.");
 				break;
 			case signal_types::not_:
 				if (it.left().data() != nullptr)
-					throw compile_error("Wrong grammar for not expression.");
+					throw compile_error("Invalid 'not' expression. Left-hand side of 'not' must be empty.");
 				break;
 			case signal_types::sub_:
 				if (it.left().data() == nullptr)
@@ -601,7 +603,7 @@ namespace cs {
 				break;
 			case signal_types::asi_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr)
-					throw compile_error("Wrong grammar for assign expression.");
+					throw compile_error("Invalid '=' expression. Both sides of '=' must be non-empty.");
 				trim_expr(tree, it.left(), do_trim);
 				if (it.left().data()->get_type() == token_types::parallel)
 					it.data() = new token_signal(signal_types::bind_);
@@ -636,7 +638,7 @@ namespace cs {
 			case signal_types::choice_: {
 				token_signal *sig = dynamic_cast<token_signal *>(it.right().data());
 				if (sig == nullptr || sig->get_signal() != signal_types::pair_)
-					throw compile_error("Wrong grammar for choice expression.");
+					throw compile_error("Invalid conditional expression. Conditional operator '?' must be followed by two sentences separated by ':'");
 				trim_expr(tree, it.left(), do_trim);
 				trim_expr(tree, it.right().left(), do_trim);
 				trim_expr(tree, it.right().right(), do_trim);
@@ -644,18 +646,18 @@ namespace cs {
 			}
 			case signal_types::vardef_: {
 				if (it.left().data() != nullptr)
-					throw compile_error("Wrong grammar for variable declaration.");
+					throw compile_error("Invalid variable declaration. Left-hand side of variable declaration must be empty.");
 				trim_expr(tree, it.right(), trim_type::no_this_deduce);
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
-					throw compile_error("Wrong grammar for variable declaration.");
+					throw compile_error("Invalid variable declaration. Right-hand side of variable declaration must be an identifier.");
 				context->instance->storage.add_record(static_cast<token_id *>(rptr)->get_id().get_id());
 				it.data() = rptr;
 				return;
 			}
 			case signal_types::varchk_: {
 				if (it.left().data() != nullptr)
-					throw compile_error("Wrong grammar for variable declaration.");
+					throw compile_error("Invalid variable declaration. Left-hand side of variable check must be empty.");
 				trim_expr(tree, it.right(), trim_type::no_this_deduce);
 				context->instance->check_declar_var(it.right(), true);
 				it.data() = it.right().data();
@@ -663,7 +665,7 @@ namespace cs {
 			}
 			case signal_types::varprt_: {
 				if (it.left().data() != nullptr)
-					throw compile_error("Wrong grammar for variable declaration.");
+					throw compile_error("Invalid variable declaration. Left-hand side of variable print must be empty.");
 				trim_expr(tree, it.right(), trim_type::no_this_deduce);
 				it.data() = it.right().data();
 				return;
@@ -671,14 +673,14 @@ namespace cs {
 			case signal_types::arrow_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr ||
 				        it.right().data()->get_type() != token_types::id)
-					throw compile_error("Wrong grammar for arrow expression.");
+					throw compile_error("Invalid member access expression '->'. Left-hand side of '->' must be non-empty and right-hand side of '->' must be an identifier.");
 				trim_expr(tree, it.left(), do_trim);
 				return;
 			case signal_types::dot_: {
 				trim_expr(tree, it.left(), do_trim);
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
-					throw compile_error("Wrong grammar for dot expression.");
+					throw compile_error("Invalid member access expression '.'. Left-hand side of '.' must be non-empty and right-hand side of '.' must be an identifier.");
 				return;
 			}
 			case signal_types::fcall_: {
@@ -687,19 +689,19 @@ namespace cs {
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
 				if (lptr == nullptr || rptr == nullptr || rptr->get_type() != token_types::arglist)
-					throw compile_error("Wrong syntax for function call.");
+					throw compile_error("Invalid function call expression. Left-hand side must be a callable expression and right-hand side must be an argument list.");
 				return;
 			}
 			case signal_types::vargs_: {
 				if (it.left().data() == nullptr) {
 					token_base *rptr = it.right().data();
 					if (rptr == nullptr || rptr->get_type() != token_types::id)
-						throw compile_error("Wrong grammar for vargs expression.");
+						throw compile_error("Invalid variadic argument declaration. Right-hand side of '...' must be an identifier.");
 					it.data() = new token_vargs(static_cast<token_id *>(rptr)->get_id());
 				}
 				else {
 					if (it.right().data() != nullptr)
-						throw compile_error("Wrong grammar for vargs expression.");
+						throw compile_error("Invalid variadic argument expansion. Right-hand side of '...' must be empty.");
 					trim_expr(tree, it.left(), do_trim);
 					it.data() = new token_expand(tree_type<token_base *>(it.left()));
 				}
@@ -712,7 +714,7 @@ namespace cs {
 				token_base *rptr = it.right().data();
 				if (!inside_lambda || lptr != nullptr || rptr == nullptr ||
 				        rptr->get_type() != token_types::arglist)
-					throw compile_error("Wrong grammar for lambda expression.");
+					throw compile_error("Invalid lambda expression. Left-hand side of lambda must be empty and right-hand side must be an argument list.");
 				it.data() = rptr;
 				return;
 			}
@@ -724,7 +726,7 @@ namespace cs {
 				trim_expr(tree, it.right(), trim_type::no_this_deduce);
 				token_base *rptr = it.right().data();
 				if (lptr == nullptr || rptr == nullptr || lptr->get_type() != token_types::arglist)
-					throw compile_error("Wrong grammar for lambda expression.");
+					throw compile_error("Invalid lambda expression. Left-hand side of lambda must be an argument list and right-hand side must be non-empty.");
 				std::vector<std::string> args;
 				bool is_vargs = false;
 				for (auto &item : static_cast<token_arglist *>(lptr)->get_arglist()) {
@@ -735,18 +737,18 @@ namespace cs {
 						const std::string &str = static_cast<token_id *>(item.root().data())->get_id();
 						for (auto &it : args)
 							if (it == str)
-								throw compile_error("Redefinition of function argument.");
+								throw compile_error("Duplicate function argument name: " + str);
 						args.push_back(str);
 					}
 					else if (item.root().data()->get_type() == token_types::vargs) {
 						const std::string &str = static_cast<token_vargs *>(item.root().data())->get_id();
 						if (!args.empty())
-							throw compile_error("Redefinition of function argument(Multi-define of vargs).");
+							throw compile_error("Invalid lambda expression: a variadic parameter '...<id>' must be the only parameter in the argument list");
 						args.push_back(str);
 						is_vargs = true;
 					}
 					else
-						throw compile_error("Unexpected element in function argument list.");
+						throw compile_error("Invalid lambda expression: unexpected element in the argument list; expected an identifier or a variadic parameter '...<id>'");
 				}
 				bool find_self_ref = find_id_ref(it.right(), "self");
 				if (!is_vargs && find_self_ref) {
@@ -756,7 +758,7 @@ namespace cs {
 						if (name != "self")
 							new_args.emplace_back(std::move(name));
 						else
-							throw runtime_error("Overwrite the default argument \"self\".");
+							throw runtime_error("Cannot redefine the implicit 'self' argument of a lambda");
 					}
 					std::swap(new_args, args);
 				}
@@ -881,23 +883,23 @@ namespace cs {
 			case signal_types::new_:
 				// Fix(2020-11-26): Terminate new expression optimization
 				if (it.left().data() != nullptr)
-					throw compile_error("Wrong grammar for new expression.");
+					throw compile_error("Invalid 'new' expression. Left-hand side of 'new' must be empty.");
 				return;
 			case signal_types::gcnew_:
 				if (it.left().data() != nullptr)
-					throw compile_error("Wrong grammar for gcnew expression.");
+					throw compile_error("Invalid 'gcnew' expression. Left-hand side of 'gcnew' must be empty.");
 				opt_expr(tree, it.right(), do_optm);
 				return;
 			case signal_types::asi_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr)
-					throw compile_error("Wrong grammar for assign expression.");
+					throw compile_error("Invalid '=' expression. Both sides of '=' must be non-empty.");
 				opt_expr(tree, it.left(), do_optm);
 				opt_expr(tree, it.right(), do_optm);
 				return;
 			case signal_types::choice_: {
 				token_signal *sig = dynamic_cast<token_signal *>(it.right().data());
 				if (sig == nullptr || sig->get_signal() != signal_types::pair_)
-					throw compile_error("Wrong grammar for choice expression.");
+					throw compile_error("Invalid conditional expression. Conditional operator '?' must be followed by two sentences separated by ':'");
 				opt_expr(tree, it.left(), do_optm);
 				opt_expr(tree, it.right().left(), do_optm);
 				opt_expr(tree, it.right().right(), do_optm);
@@ -911,14 +913,14 @@ namespace cs {
 						tree.reserve_right(it);
 					}
 					else
-						throw compile_error("Choice condition must be boolean.");
+						throw compile_error("Invalid conditional expression. The constant condition must evaluate to a boolean value.");
 				}
 				return;
 			}
 			case signal_types::arrow_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr ||
 				        it.right().data()->get_type() != token_types::id)
-					throw compile_error("Wrong grammar for arrow expression.");
+					throw compile_error("Invalid member access expression '->'. Left-hand side of '->' must be non-empty and right-hand side of '->' must be an identifier.");
 				opt_expr(tree, it.left(), do_optm);
 				return;
 			case signal_types::dot_: {
@@ -927,7 +929,7 @@ namespace cs {
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
 				if (rptr == nullptr || rptr->get_type() != token_types::id)
-					throw compile_error("Wrong grammar for dot expression.");
+					throw compile_error("Invalid member access expression '.'. Left-hand side of '.' must be non-empty and right-hand side of '.' must be an identifier.");
 				if (lptr != nullptr && lptr->get_type() == token_types::value) {
 					const var &a = static_cast<token_value *>(lptr)->get_value();
 					token_base *orig_ptr = it.data();
@@ -950,7 +952,7 @@ namespace cs {
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
 				if (lptr == nullptr || rptr == nullptr || rptr->get_type() != token_types::arglist)
-					throw compile_error("Wrong syntax for function call.");
+					throw compile_error("Invalid function call expression. Left-hand side must be a callable expression and right-hand side must be an argument list.");
 				if (lptr->get_type() == token_types::value) {
 					var &a = static_cast<token_value *>(lptr)->get_value();
 					if (a.is_type_of<callable>() && a.const_val<callable>().is_request_fold()) {
@@ -1198,9 +1200,9 @@ namespace cs {
 							for (; i < raw.size(); ++i) {
 								if (raw[i]->get_type() == token_types::id) {
 									auto &id = static_cast<token_id *>(raw[i])->get_id();
-									if (context->compiler->action_map.exist(id) &&
-									        context->compiler->action_map.match(id) ==
-									        static_cast<token_action *>(it)->get_action())
+									auto action = context->compiler->action_map.find(id);
+									if (action != nullptr &&
+									        *action == static_cast<token_action *>(it)->get_action())
 										break;
 								}
 								else if (raw[i]->get_type() == token_types::action)
@@ -1214,9 +1216,9 @@ namespace cs {
 						// The "matched" condition is satisfied only if the target token is an id and it can match the grammar rule.
 						if (raw[i]->get_type() == token_types::id) {
 							auto &id = static_cast<token_id *>(raw[i])->get_id();
-							if (!context->compiler->action_map.exist(id) ||
-							        context->compiler->action_map.match(id) !=
-							        static_cast<token_action *>(it)->get_action()) {
+							auto action = context->compiler->action_map.find(id);
+							if (action == nullptr ||
+							        *action != static_cast<token_action *>(it)->get_action()) {
 								matched = false;
 								failed = true;
 							}
@@ -1256,9 +1258,9 @@ namespace cs {
 							for (; i < raw.size(); ++i) {
 								if (raw[i]->get_type() == token_types::id) {
 									auto &id = static_cast<token_id *>(raw[i])->get_id();
-									if (context->compiler->action_map.exist(id) &&
-									        context->compiler->action_map.match(id) ==
-									        static_cast<token_action *>(it)->get_action())
+									auto action = context->compiler->action_map.find(id);
+									if (action != nullptr &&
+									        *action == static_cast<token_action *>(it)->get_action())
 										break;
 								}
 								else if (raw[i]->get_type() == token_types::action)
@@ -1267,9 +1269,9 @@ namespace cs {
 						}
 						if (raw[i]->get_type() == token_types::id) {
 							auto &id = static_cast<token_id *>(raw[i])->get_id();
-							if (context->compiler->action_map.exist(id) &&
-							        context->compiler->action_map.match(id) ==
-							        static_cast<token_action *>(it)->get_action())
+							auto action = context->compiler->action_map.find(id);
+							if (action != nullptr &&
+							        *action == static_cast<token_action *>(it)->get_action())
 								raw[i] = it;
 						}
 						skip_useless = false;
@@ -1300,7 +1302,7 @@ namespace cs {
 				method_base *m = this->match(line);
 				switch (m->get_type()) {
 				case method_types::null:
-					throw compile_error("Null type of grammar.");
+					throw compile_error("Unrecognized statement");
 					break;
 				case method_types::single: {
 					statement_base *sptr = nullptr;
@@ -1333,7 +1335,7 @@ namespace cs {
 					}
 					else {
 						if (m->get_target_type() == statement_types::end_)
-							throw compile_error("Hanging end statement.");
+							throw compile_error("Unexpected 'end': there is no open block to close");
 						else {
 							if (raw)
 								m->preprocess(context, {line});
@@ -1361,14 +1363,14 @@ namespace cs {
 					break;
 				}
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(line_num, context->file_path, context->get_file_line(line_num), e.what());
+				throw exception(line_num, context->file_path, context->get_file_line(line_num), exception_message(e));
 			}
 		}
 		if (!methods.empty())
-			throw compile_error("Lack of the \"end\" signal.");
+			throw compile_error("Missing 'end' to close the current block");
 	}
 } // namespace cs

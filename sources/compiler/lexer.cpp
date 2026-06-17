@@ -140,7 +140,7 @@ namespace cs {
 	                                      charset encoding)
 	{
 		if (raw_buff.empty())
-			throw compile_error("Received empty character buffer.");
+			throw compile_error("Received an empty character buffer");
 		std::unique_ptr<codecvt::charset> cvt = nullptr;
 		switch (encoding) {
 		case charset::ascii:
@@ -170,11 +170,11 @@ namespace cs {
 				}
 				else if (*it == '\'') {
 					if (tmp.empty())
-						throw compile_error("Do not allow empty character.");
+						throw compile_error("Empty character literal: '' is not allowed, a character literal must contain exactly one character");
 					if (tmp.size() > 1)
-						throw compile_error("Char must be a single character.");
+						throw compile_error("Multi-character literal: a character literal must contain exactly one character, use a string \"...\" instead");
 					if (tmp[0] > CHAR_MAX)
-						throw compile_error("Do not support unicode character. Please using string instead.");
+						throw compile_error("Unicode characters are not supported in character literals, use a string \"...\" instead");
 					tokens.push_back(new_value((char) tmp[0]));
 					tmp.clear();
 					inside_char = false;
@@ -241,7 +241,7 @@ namespace cs {
 					type = token_types::id;
 					continue;
 				}
-				throw compile_error(std::string("Uknown character: " + cvt->wide2local(std::u32string(1, *it))));
+				throw compile_error(std::string("Unknown character: " + cvt->wide2local(std::u32string(1, *it))));
 				break;
 			case token_types::id:
 				if (!issignal(*it) && cvt->is_identifier(*it)) {
@@ -250,13 +250,17 @@ namespace cs {
 					continue;
 				}
 				type = token_types::null;
-				if (reserved_map.exist(cvt->wide2local(tmp))) {
-					tokens.push_back(reserved_map.match(cvt->wide2local(tmp))());
+				{
+					auto local_tmp = cvt->wide2local(tmp);
+					auto reserved = reserved_map.find(local_tmp);
+					if (reserved != nullptr) {
+						tokens.push_back((*reserved)());
+						tmp.clear();
+						break;
+					}
+					tokens.push_back(new token_id(local_tmp));
 					tmp.clear();
-					break;
 				}
-				tokens.push_back(new token_id(cvt->wide2local(tmp)));
-				tmp.clear();
 				break;
 			case token_types::literal:
 				if (!issignal(*it) && cvt->is_identifier(*it)) {
@@ -277,15 +281,19 @@ namespace cs {
 				type = token_types::null;
 				std::u32string sig;
 				for (auto &ch : tmp) {
-					if (!signal_map.exist(cvt->wide2local(sig + ch))) {
-						tokens.push_back(new token_signal(signal_map.match(cvt->wide2local(sig))));
+					auto next_sig = cvt->wide2local(sig + ch);
+					if (signal_map.find(next_sig) == nullptr) {
+						auto local_sig = cvt->wide2local(sig);
+						tokens.push_back(new token_signal(signal_map.match(local_sig)));
 						sig = ch;
 					}
 					else
 						sig += ch;
 				}
-				if (!sig.empty())
-					tokens.push_back(new token_signal(signal_map.match(cvt->wide2local(sig))));
+				if (!sig.empty()) {
+					auto local_sig = cvt->wide2local(sig);
+					tokens.push_back(new token_signal(signal_map.match(local_sig)));
+				}
 				tmp.clear();
 				break;
 			}
@@ -302,37 +310,45 @@ namespace cs {
 			}
 		}
 		if (inside_char)
-			throw compile_error("Lack of the \'.");
+			throw compile_error("Unterminated character literal: missing closing '");
 		if (inside_str)
-			throw compile_error("Lack of the \".");
+			throw compile_error("Unterminated string literal: missing closing \"");
 		if (tmp.empty())
 			return;
 		switch (type) {
 		default:
 			break;
-		case token_types::id:
-			if (reserved_map.exist(cvt->wide2local(tmp))) {
-				tokens.push_back(reserved_map.match(cvt->wide2local(tmp))());
+		case token_types::id: {
+			auto local_tmp = cvt->wide2local(tmp);
+			auto reserved = reserved_map.find(local_tmp);
+			if (reserved != nullptr) {
+				tokens.push_back((*reserved)());
 				tmp.clear();
 				break;
 			}
-			tokens.push_back(new token_id(cvt->wide2local(tmp)));
-			break;
+			tokens.push_back(new token_id(local_tmp));
+			tmp.clear();
+		}
+		break;
 		case token_types::literal:
 			static_cast<token_literal *>(tokens.back())->m_literal = cvt->wide2local(tmp);
 			break;
 		case token_types::signal: {
 			std::u32string sig;
 			for (auto &ch : tmp) {
-				if (!signal_map.exist(cvt->wide2local(sig + ch))) {
-					tokens.push_back(new token_signal(signal_map.match(cvt->wide2local(sig))));
+				auto next_sig = cvt->wide2local(sig + ch);
+				if (signal_map.find(next_sig) == nullptr) {
+					auto local_sig = cvt->wide2local(sig);
+					tokens.push_back(new token_signal(signal_map.match(local_sig)));
 					sig = ch;
 				}
 				else
 					sig += ch;
 			}
-			if (!sig.empty())
-				tokens.push_back(new token_signal(signal_map.match(cvt->wide2local(sig))));
+			if (!sig.empty()) {
+				auto local_sig = cvt->wide2local(sig);
+				tokens.push_back(new token_signal(signal_map.match(local_sig)));
+			}
 			break;
 		}
 		case token_types::value:
@@ -401,7 +417,7 @@ namespace cs {
 					}
 					else
 						throw exception(line_num, context->file_path, "@" + command + (arg.empty() ? "" : ": " + arg),
-						                "Wrong grammar for preprocessor command.");
+						                "Invalid preprocessor command");
 				}
 				command.clear();
 			}
@@ -412,11 +428,11 @@ namespace cs {
 			try {
 				compiler.process_char_buff(buff, tokens, encoding);
 			}
-			catch (const cs::exception &e) {
-				throw e;
+			catch (const cs::exception &) {
+				throw;
 			}
 			catch (const std::exception &e) {
-				throw exception(line_num, context->file_path, line, e.what());
+				throw exception(line_num, context->file_path, line, exception_message(e));
 			}
 			for (auto it = tokens.rbegin(); it != tokens.rend(); ++it) {
 				if (*it != nullptr) {
@@ -474,7 +490,7 @@ namespace cs {
 			}
 			process_endline(context, compiler, tokens, encoding);
 			if (multi_line)
-				throw compile_error("Lack of the @end command.");
+				throw compile_error("Missing '@end' command to close the multi-line statement");
 		}
 	};
 
@@ -522,7 +538,7 @@ namespace cs {
 	void compiler_type::process_empty_brackets(std::deque<token_base *> &tokens)
 	{
 		if (tokens.empty())
-			throw compile_error("Received empty token buffer.");
+			throw compile_error("Received an empty token buffer");
 		std::deque<token_base *> oldt;
 		std::swap(tokens, oldt);
 		tokens.clear();
@@ -566,9 +582,9 @@ namespace cs {
 					continue;
 				case signal_types::srb_:
 					if (blist_stack.empty())
-						throw compile_error("Parentheses do not match.");
+						throw compile_error("Unexpected closing bracket: no opening bracket to match");
 					if (blist_stack.front() != 1)
-						throw compile_error("The parentheses type does not match.(Request Small Bracket)");
+						throw compile_error("Bracket type mismatch: ')' does not match the innermost opening bracket");
 					blist_stack.pop_front();
 					if (empty_bracket) {
 						empty_bracket = false;
@@ -578,9 +594,9 @@ namespace cs {
 					break;
 				case signal_types::mrb_:
 					if (blist_stack.empty())
-						throw compile_error("Parentheses do not match.");
+						throw compile_error("Unexpected closing bracket: no opening bracket to match");
 					if (blist_stack.front() != 2)
-						throw compile_error("The parentheses type does not match.(Request Middle Bracket)");
+						throw compile_error("Bracket type mismatch: ']' does not match the innermost opening bracket");
 					blist_stack.pop_front();
 					if (empty_bracket) {
 						empty_bracket = false;
@@ -590,9 +606,9 @@ namespace cs {
 					break;
 				case signal_types::lrb_:
 					if (blist_stack.empty())
-						throw compile_error("Parentheses do not match.");
+						throw compile_error("Unexpected closing bracket: no opening bracket to match");
 					if (blist_stack.front() != 3)
-						throw compile_error("The parentheses type does not match.(Request Large Bracket)");
+						throw compile_error("Bracket type mismatch: '}' does not match the innermost opening bracket");
 					blist_stack.pop_front();
 					if (empty_bracket) {
 						empty_bracket = false;
@@ -609,13 +625,13 @@ namespace cs {
 			tokens.push_back(ptr);
 		}
 		if (!blist_stack.empty())
-			throw compile_error("Parentheses do not match.");
+			throw compile_error("Unclosed bracket: one or more opening brackets were never closed");
 	}
 
 	void compiler_type::process_brackets(std::deque<token_base *> &tokens)
 	{
 		if (tokens.empty())
-			throw compile_error("Received empty token buffer.");
+			throw compile_error("Received an empty token buffer");
 		process_empty_brackets(tokens);
 		std::deque<token_base *> oldt;
 		std::swap(tokens, oldt);
@@ -645,9 +661,9 @@ namespace cs {
 					break;
 				case signal_types::srb_:
 					if (blist_stack.empty())
-						throw compile_error("Parentheses do not match.");
+						throw compile_error("Unexpected closing bracket: no opening bracket to match");
 					if (blist_stack.front() != 1)
-						throw compile_error("The parentheses type does not match.(Request Small Bracket)");
+						throw compile_error("Bracket type mismatch: ')' does not match the innermost opening bracket");
 					blist_stack.pop_front();
 					if (blist_stack.empty()) {
 						process_brackets(btokens);
@@ -660,9 +676,9 @@ namespace cs {
 					break;
 				case signal_types::mrb_:
 					if (blist_stack.empty())
-						throw compile_error("Parentheses do not match.");
+						throw compile_error("Unexpected closing bracket: no opening bracket to match");
 					if (blist_stack.front() != 2)
-						throw compile_error("The parentheses type does not match.(Request Middle Bracket)");
+						throw compile_error("Bracket type mismatch: ']' does not match the innermost opening bracket");
 					blist_stack.pop_front();
 					if (blist_stack.empty()) {
 						process_brackets(btokens);
@@ -675,9 +691,9 @@ namespace cs {
 					break;
 				case signal_types::lrb_:
 					if (blist_stack.empty())
-						throw compile_error("Parentheses do not match.");
+						throw compile_error("Unexpected closing bracket: no opening bracket to match");
 					if (blist_stack.front() != 3)
-						throw compile_error("The parentheses type does not match.(Request Large Bracket)");
+						throw compile_error("Bracket type mismatch: '}' does not match the innermost opening bracket");
 					blist_stack.pop_front();
 					if (blist_stack.empty()) {
 						process_brackets(btokens);
@@ -704,6 +720,6 @@ namespace cs {
 				btokens.push_back(ptr);
 		}
 		if (!blist_stack.empty())
-			throw compile_error("Parentheses do not match.");
+			throw compile_error("Unclosed bracket: one or more opening brackets were never closed");
 	}
 } // namespace cs
