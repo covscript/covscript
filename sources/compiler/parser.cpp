@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Covariant Script Parser
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -264,10 +264,10 @@ namespace cs {
 		tree.clear();
 		tree.emplace_root_left(tree.root(), signals.front());
 		tree.emplace_left_left(tree.root(), objects.front());
-		typename tree_type<token_base *>::iterator rightmost = tree.root();
+		tree_type<token_base *>::iterator rightmost = tree.root();
 		for (std::size_t i = 1; i < signals.size(); ++i) {
 			rightmost = tree.emplace_right_right(rightmost, objects.at(i));
-			for (typename tree_type<token_base *>::iterator it = tree.root(); it.usable(); it = it.right()) {
+			for (tree_type<token_base *>::iterator it = tree.root(); it.usable(); it = it.right()) {
 				if (!it.right().usable()) {
 					rightmost = tree.emplace_root_left(it, signals.at(i));
 					break;

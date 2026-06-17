@@ -314,7 +314,7 @@ namespace cs {
 // Extracts the raw error message from a std::exception without category prefix.
 // For known CovScript error types, avoids the allocate-then-strip-prefix round trip;
 // for unknown types falls back to what() directly (no prefix to strip).
-	inline std::string exception_message(const std::exception &e) noexcept
+	inline std::string exception_message(const std::exception &e)
 	{
 		if (const auto *p = dynamic_cast<const runtime_error *>(&e)) return p->message();
 		if (const auto *p = dynamic_cast<const compile_error *>(&e)) return p->message();

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Covariant Script OS Support: Win32 Common Functions
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
