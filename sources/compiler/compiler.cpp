@@ -572,28 +572,46 @@ namespace cs {
 			default:
 				break;
 
-			// ---- unary prefix: left must be null ----
+			// ---- unary prefix: left must be null, right must be non-null ----
 			case signal_types::addr_:
 			case signal_types::new_:
 			case signal_types::typeid_:
 			case signal_types::not_:
 				if (it.left().data() != nullptr)
 					throw compile_error("Invalid unary expression. Left-hand side must be empty.");
+				if (it.right().data() == nullptr)
+					throw compile_error("Invalid unary expression. Right-hand side (operand) must be non-empty.");
 				break;
 			case signal_types::gcnew_:
 				if (it.left().data() != nullptr)
 					throw compile_error("Invalid 'gcnew' expression. Left-hand side of 'gcnew' must be empty.");
+				if (it.right().data() == nullptr)
+					throw compile_error("Invalid 'gcnew' expression. Right-hand side (operand) must be non-empty.");
 				trim_expr(tree, it.right(), do_trim);
 				return;
 
 			// ---- ambiguous: unary when left null, binary otherwise ----
 			case signal_types::sub_:
-				if (it.left().data() == nullptr)
+				if (it.left().data() == nullptr) {
+					if (it.right().data() == nullptr)
+						throw compile_error("Invalid unary '-' expression. Operand must be non-empty.");
 					it.data() = new token_signal(signal_types::minus_);
+				}
+				else {
+					if (it.right().data() == nullptr)
+						throw compile_error("Invalid binary '-' expression. Both operands must be non-empty.");
+				}
 				break;
 			case signal_types::mul_:
-				if (it.left().data() == nullptr)
+				if (it.left().data() == nullptr) {
+					if (it.right().data() == nullptr)
+						throw compile_error("Invalid unary '*' (dereference) expression. Operand must be non-empty.");
 					it.data() = new token_signal(signal_types::escape_);
+				}
+				else {
+					if (it.right().data() == nullptr)
+						throw compile_error("Invalid binary '*' expression. Both operands must be non-empty.");
+				}
 				break;
 			case signal_types::inc_:
 			case signal_types::dec_:
@@ -685,6 +703,9 @@ namespace cs {
 				if (lptr == nullptr || rptr == nullptr || rptr->get_type() != token_types::id)
 					throw compile_error("Invalid member access expression '.'. Left-hand side of '.' must be non-empty and right-hand side of '.' must be an identifier.");
 				trim_expr(tree, it.left(), do_trim);
+				// Re-validate after trimming: trimming can fold an expression into a null token
+				if (it.left().data() == nullptr)
+					throw compile_error("Invalid member access expression '.'. Left-hand side of '.' must be non-empty after expression trimming.");
 				return;
 			}
 			case signal_types::fcall_: {
@@ -919,10 +940,14 @@ namespace cs {
 			case signal_types::new_:
 				if (it.left().data() != nullptr)
 					throw compile_error("Invalid 'new' expression. Left-hand side of 'new' must be empty.");
+				if (it.right().data() == nullptr)
+					throw compile_error("Invalid 'new' expression. Right-hand side (operand) must be non-empty.");
 				return;
 			case signal_types::gcnew_:
 				if (it.left().data() != nullptr)
 					throw compile_error("Invalid 'gcnew' expression. Left-hand side of 'gcnew' must be empty.");
+				if (it.right().data() == nullptr)
+					throw compile_error("Invalid 'gcnew' expression. Right-hand side (operand) must be non-empty.");
 				opt_expr(tree, it.right(), do_optm);
 				return;
 
@@ -969,8 +994,11 @@ namespace cs {
 					throw compile_error("Invalid member access expression '.'. Left-hand side of '.' must be non-empty and right-hand side of '.' must be an identifier.");
 				tree_type<token_base *> ltree(it.left());
 				opt_expr(tree, it.left(), optm_type::enable_namespace_optm);
+				// Re-validate after optimization: optimization can fold an expression into a null token
 				lptr = it.left().data();
-				if (lptr != nullptr && lptr->get_type() == token_types::value) {
+				if (lptr == nullptr)
+					throw compile_error("Invalid member access expression '.'. Left-hand side of '.' must be non-empty after expression optimization.");
+				if (lptr->get_type() == token_types::value) {
 					const var &a = static_cast<token_value *>(lptr)->get_value();
 					token_base *orig_ptr = it.data();
 					try {
@@ -1073,10 +1101,21 @@ namespace cs {
 			// ---- ambiguous: unary (converted by trim_expr) or prefix/postfix ----
 			case signal_types::sub_:
 			case signal_types::mul_:
+				if (it.left().data() == nullptr) {
+					if (it.right().data() == nullptr)
+						throw compile_error("Invalid unary expression. Operand must be non-empty.");
+				}
+				else {
+					if (it.right().data() == nullptr)
+						throw compile_error("Invalid binary expression. Both operands must be non-empty.");
+				}
+				break;
 			case signal_types::inc_:
 			case signal_types::dec_:
 			case signal_types::minus_:
 			case signal_types::escape_:
+				if (it.right().data() == nullptr)
+					throw compile_error("Invalid unary expression. Operand must be non-empty.");
 				break;
 
 			// ---- binary: both operands required ----
