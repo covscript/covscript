@@ -1407,9 +1407,10 @@ namespace cs {
 			if (line.empty())
 				throw compile_error("Invalid statement line: missing endline token.");
 			token_base *tail = line.back();
-			if (tail == nullptr || tail->get_type() != token_types::endline)
+			if (tail != nullptr && tail->get_type() == token_types::endline)
+				line_num = static_cast<token_endline *>(tail)->get_line_num();
+			else
 				throw compile_error("Invalid statement line: the last token must be an endline token.");
-			line_num = static_cast<token_endline *>(line.back())->get_line_num();
 			try {
 				if (raw)
 					context->compiler->process_line(line);
