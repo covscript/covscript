@@ -615,8 +615,13 @@ namespace cs {
 				break;
 			case signal_types::inc_:
 			case signal_types::dec_:
+				if ((it.left().data() == nullptr) == (it.right().data() == nullptr))
+					throw compile_error("Invalid increment/decrement expression. Exactly one operand must be non-empty.");
+				break;
 			case signal_types::minus_:
 			case signal_types::escape_:
+				if (it.right().data() == nullptr)
+					throw compile_error("Invalid unary expression. Operand must be non-empty.");
 				break;
 
 			// ---- explicit binary: both operands required ----
@@ -1112,6 +1117,10 @@ namespace cs {
 				break;
 			case signal_types::inc_:
 			case signal_types::dec_:
+				if ((it.left().data() == nullptr) == (it.right().data() == nullptr))
+					throw compile_error("Invalid increment/decrement expression. Exactly one operand must be non-empty.");
+				break;
+
 			case signal_types::minus_:
 			case signal_types::escape_:
 				if (it.right().data() == nullptr)
@@ -1395,6 +1404,11 @@ namespace cs {
 		stack_type<method_base *> methods;
 		for (auto &it : lines) {
 			std::deque<token_base *> line = it;
+			if (line.empty())
+				throw compile_error("Invalid statement line: missing endline token.");
+			token_base *tail = line.back();
+			if (tail == nullptr || tail->get_type() != token_types::endline)
+				throw compile_error("Invalid statement line: the last token must be an endline token.");
 			line_num = static_cast<token_endline *>(line.back())->get_line_num();
 			try {
 				if (raw)
