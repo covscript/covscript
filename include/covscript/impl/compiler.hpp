@@ -101,7 +101,9 @@ namespace cs {
 	};
 
 	class compiler_type final {
+#ifdef CS_UNIT_TEST
 		friend struct compiler_test_accessor;
+#endif
 
 	public:
 		// Symbol Table

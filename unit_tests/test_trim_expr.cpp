@@ -341,9 +341,8 @@ TEST(low_ternary_null_condition_throws)
 
 	// Fill in the pair_ node's children
 	auto pair_node = t.root().right();
-	cs::tree_type<cs::token_base *> pt(pair_node);
-	pt.emplace_left_left(pair_node, T_id("a"));
-	pt.emplace_right_right(pair_node, T_id("b"));
+	t.emplace_left_left(pair_node, T_id("a"));
+	t.emplace_right_right(pair_node, T_id("b"));
 
 	EXPECT_TRUE(trim_throws(t));
 }

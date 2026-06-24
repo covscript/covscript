@@ -94,6 +94,6 @@ TEST(lexer_string_adjacent_identifier_bound_check)
 
 	// Case 2: string immediately followed by identifier — valid lexer path
 	// The null literal_type tells the runtime to concatenate strings.
-	tree = build_expr_tree("\"hello\" + \"world\"");
+	tree = build_expr_tree("\"hello\"world");
 	EXPECT_TRUE(tree.root().usable());
 }

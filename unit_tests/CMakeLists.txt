@@ -18,6 +18,9 @@ else ()
     target_link_libraries(cs_unit_tests covscript_sdk)
 endif ()
 
+# Enable access to compiler private APIs for unit tests
+target_compile_definitions(cs_unit_tests PRIVATE CS_UNIT_TEST)
+
 # Platform-specific link libraries
 if (UNIX AND NOT APPLE)
     target_link_libraries(cs_unit_tests pthread dl)

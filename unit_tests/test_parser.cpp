@@ -27,8 +27,16 @@ TEST(parser_precedence_add_over_comma)
 	auto tree = build_expr_tree("a, b + c");
 	auto root = tree.root();
 	// After optimization, comma is converted to parallel list
-	EXPECT_TRUE(root.usable());
-	// Each element in the parallel list is a separate expression tree
+	EXPECT_TRUE(root.data() != nullptr);
+	EXPECT_TRUE(root.data()->get_type() == cs::token_types::parallel);
+	auto *parallel = static_cast<cs::token_parallel *>(root.data());
+	EXPECT_TRUE(parallel->get_parallel().size() == 2);
+	// First element: identifier "a"
+	EXPECT_TRUE(is_id(parallel->get_parallel()[0].root().data(), "a"));
+	// Second element: add_(b, c)
+	EXPECT_TRUE(is_signal(parallel->get_parallel()[1].root().data(), cs::signal_types::add_));
+	EXPECT_TRUE(is_id(parallel->get_parallel()[1].root().left().data(), "b"));
+	EXPECT_TRUE(is_id(parallel->get_parallel()[1].root().right().data(), "c"));
 }
 
 TEST(parser_precedence_pow_over_mul)
