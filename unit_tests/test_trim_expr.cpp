@@ -98,8 +98,8 @@ static bool opt_throws(cs::tree_type<cs::token_base *> &tree)
 }
 
 // Helper to avoid rvalue binding issue: evaluate on a local lvalue
-#define TRIM_THROWS(expr) ({ auto _t = (expr); trim_throws(_t); })
-#define OPT_THROWS(expr)  ({ auto _t = (expr); opt_throws(_t); })
+#define TRIM_THROWS(expr) ([&]{ auto _t = (expr); return trim_throws(_t); }())
+#define OPT_THROWS(expr)  ([&]{ auto _t = (expr); return opt_throws(_t); }())
 
 // =============================================================================
 // SECTION 1: Integration tests — full pipeline via build_expr
