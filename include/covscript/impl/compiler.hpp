@@ -101,6 +101,10 @@ namespace cs {
 	};
 
 	class compiler_type final {
+#ifdef CS_UNIT_TEST
+		friend struct compiler_test_accessor;
+#endif
+
 	public:
 		// Symbol Table
 		static const mapping<std::string, signal_types> signal_map;

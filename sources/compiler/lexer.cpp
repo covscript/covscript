@@ -193,9 +193,11 @@ namespace cs {
 				else if (*it == '\\') {
 					escape = true;
 				}
-				else if (*it == '\"') {
+				else if (*it == '"') {
 					inside_str = false;
-					if (!issignal(*(it + 1)) && cvt->is_identifier(*(it + 1))) {
+					auto next = it;
+					++next;
+					if (next != buff.end() && !issignal(*next) && cvt->is_identifier(*next)) {
 						tokens.push_back(new token_literal(cvt->wide2local(tmp), ""));
 						type = token_types::literal;
 					}

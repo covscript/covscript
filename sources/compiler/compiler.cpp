@@ -571,40 +571,66 @@ namespace cs {
 			switch (static_cast<token_signal *>(token)->get_signal()) {
 			default:
 				break;
+
+			// ---- unary prefix: left must be null, right must be non-null ----
 			case signal_types::addr_:
-				if (it.left().data() != nullptr)
-					throw compile_error("Invalid '&val' expression. Left-hand side of '&' must be empty.");
-				break;
 			case signal_types::new_:
+			case signal_types::typeid_:
+			case signal_types::not_:
 				if (it.left().data() != nullptr)
-					throw compile_error("Invalid 'new' expression. Left-hand side of 'new' must be empty.");
+					throw compile_error("Invalid unary expression. Left-hand side must be empty.");
+				if (it.right().data() == nullptr)
+					throw compile_error("Invalid unary expression. Right-hand side (operand) must be non-empty.");
 				break;
 			case signal_types::gcnew_:
 				if (it.left().data() != nullptr)
 					throw compile_error("Invalid 'gcnew' expression. Left-hand side of 'gcnew' must be empty.");
+				if (it.right().data() == nullptr)
+					throw compile_error("Invalid 'gcnew' expression. Right-hand side (operand) must be non-empty.");
 				trim_expr(tree, it.right(), do_trim);
 				return;
-				break;
-			case signal_types::typeid_:
-				if (it.left().data() != nullptr)
-					throw compile_error("Invalid 'typeid' expression. Left-hand side of 'typeid' must be empty.");
-				break;
-			case signal_types::not_:
-				if (it.left().data() != nullptr)
-					throw compile_error("Invalid 'not' expression. Left-hand side of 'not' must be empty.");
-				break;
+
+			// ---- ambiguous: unary when left null, binary otherwise ----
 			case signal_types::sub_:
-				if (it.left().data() == nullptr)
+				if (it.left().data() == nullptr) {
+					if (it.right().data() == nullptr)
+						throw compile_error("Invalid unary '-' expression. Operand must be non-empty.");
 					it.data() = new token_signal(signal_types::minus_);
+				}
+				else {
+					if (it.right().data() == nullptr)
+						throw compile_error("Invalid binary '-' expression. Both operands must be non-empty.");
+				}
 				break;
 			case signal_types::mul_:
-				if (it.left().data() == nullptr)
+				if (it.left().data() == nullptr) {
+					if (it.right().data() == nullptr)
+						throw compile_error("Invalid unary '*' (dereference) expression. Operand must be non-empty.");
 					it.data() = new token_signal(signal_types::escape_);
+				}
+				else {
+					if (it.right().data() == nullptr)
+						throw compile_error("Invalid binary '*' expression. Both operands must be non-empty.");
+				}
 				break;
+			case signal_types::inc_:
+			case signal_types::dec_:
+				if ((it.left().data() == nullptr) == (it.right().data() == nullptr))
+					throw compile_error("Invalid increment/decrement expression. Exactly one operand must be non-empty.");
+				break;
+			case signal_types::minus_:
+			case signal_types::escape_:
+				if (it.right().data() == nullptr)
+					throw compile_error("Invalid unary expression. Operand must be non-empty.");
+				break;
+
+			// ---- explicit binary: both operands required ----
 			case signal_types::asi_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr)
 					throw compile_error("Invalid '=' expression. Both sides of '=' must be non-empty.");
 				trim_expr(tree, it.left(), do_trim);
+				if (it.left().data() == nullptr)
+					throw compile_error("Invalid '=' expression. Left-hand side must be non-empty after expression trimming.");
 				if (it.left().data()->get_type() == token_types::parallel)
 					it.data() = new token_signal(signal_types::bind_);
 				trim_expr(tree, it.right(), do_trim);
@@ -636,10 +662,14 @@ namespace cs {
 				return;
 			}
 			case signal_types::choice_: {
+				if (it.left().data() == nullptr)
+					throw compile_error("Invalid conditional expression. Left-hand side of '?' must be non-empty.");
 				token_signal *sig = dynamic_cast<token_signal *>(it.right().data());
 				if (sig == nullptr || sig->get_signal() != signal_types::pair_)
 					throw compile_error("Invalid conditional expression. Conditional operator '?' must be followed by two sentences separated by ':'");
 				trim_expr(tree, it.left(), do_trim);
+				if (it.left().data() == nullptr)
+					throw compile_error("Invalid conditional expression. Left-hand side of '?' must be non-empty after expression trimming.");
 				trim_expr(tree, it.right().left(), do_trim);
 				trim_expr(tree, it.right().right(), do_trim);
 				return;
@@ -675,12 +705,18 @@ namespace cs {
 				        it.right().data()->get_type() != token_types::id)
 					throw compile_error("Invalid member access expression '->'. Left-hand side of '->' must be non-empty and right-hand side of '->' must be an identifier.");
 				trim_expr(tree, it.left(), do_trim);
+				if (it.left().data() == nullptr)
+					throw compile_error("Invalid member access expression '->'. Left-hand side of '->' must be non-empty after expression trimming.");
 				return;
 			case signal_types::dot_: {
-				trim_expr(tree, it.left(), do_trim);
+				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
-				if (rptr == nullptr || rptr->get_type() != token_types::id)
+				if (lptr == nullptr || rptr == nullptr || rptr->get_type() != token_types::id)
 					throw compile_error("Invalid member access expression '.'. Left-hand side of '.' must be non-empty and right-hand side of '.' must be an identifier.");
+				trim_expr(tree, it.left(), do_trim);
+				// Re-validate after trimming: trimming can fold an expression into a null token
+				if (it.left().data() == nullptr)
+					throw compile_error("Invalid member access expression '.'. Left-hand side of '.' must be non-empty after expression trimming.");
 				return;
 			}
 			case signal_types::fcall_: {
@@ -788,6 +824,36 @@ namespace cs {
 					it.data() = new_value(var::make_protect<callable>(func));
 				return;
 			}
+
+			// ---- binary arithmetic ----
+			case signal_types::add_:
+			case signal_types::div_:
+			case signal_types::mod_:
+			case signal_types::pow_:
+			// ---- binary comparison ----
+			case signal_types::abo_:
+			case signal_types::und_:
+			case signal_types::equ_:
+			case signal_types::ueq_:
+			case signal_types::aeq_:
+			case signal_types::neq_:
+			// ---- binary logical ----
+			case signal_types::and_:
+			case signal_types::or_:
+			// ---- compound assignment ----
+			case signal_types::addasi_:
+			case signal_types::subasi_:
+			case signal_types::mulasi_:
+			case signal_types::divasi_:
+			case signal_types::modasi_:
+			case signal_types::powasi_:
+			case signal_types::lnkasi_:
+			// ---- subscript / key-value ----
+			case signal_types::access_:
+			case signal_types::pair_:
+				if (it.left().data() == nullptr || it.right().data() == nullptr)
+					throw compile_error("Incomplete expression: both operands must be non-empty.");
+				break;
 			}
 		}
 		}
@@ -880,16 +946,23 @@ namespace cs {
 			switch (static_cast<token_signal *>(token)->get_signal()) {
 			default:
 				break;
+
+			// ---- unary: terminate optimization ----
 			case signal_types::new_:
-				// Fix(2020-11-26): Terminate new expression optimization
 				if (it.left().data() != nullptr)
 					throw compile_error("Invalid 'new' expression. Left-hand side of 'new' must be empty.");
+				if (it.right().data() == nullptr)
+					throw compile_error("Invalid 'new' expression. Right-hand side (operand) must be non-empty.");
 				return;
 			case signal_types::gcnew_:
 				if (it.left().data() != nullptr)
 					throw compile_error("Invalid 'gcnew' expression. Left-hand side of 'gcnew' must be empty.");
+				if (it.right().data() == nullptr)
+					throw compile_error("Invalid 'gcnew' expression. Right-hand side (operand) must be non-empty.");
 				opt_expr(tree, it.right(), do_optm);
 				return;
+
+			// ---- explicit binary ----
 			case signal_types::asi_:
 				if (it.left().data() == nullptr || it.right().data() == nullptr)
 					throw compile_error("Invalid '=' expression. Both sides of '=' must be non-empty.");
@@ -897,6 +970,8 @@ namespace cs {
 				opt_expr(tree, it.right(), do_optm);
 				return;
 			case signal_types::choice_: {
+				if (it.left().data() == nullptr)
+					throw compile_error("Invalid conditional expression. Left-hand side of '?' must be non-empty.");
 				token_signal *sig = dynamic_cast<token_signal *>(it.right().data());
 				if (sig == nullptr || sig->get_signal() != signal_types::pair_)
 					throw compile_error("Invalid conditional expression. Conditional operator '?' must be followed by two sentences separated by ':'");
@@ -924,13 +999,17 @@ namespace cs {
 				opt_expr(tree, it.left(), do_optm);
 				return;
 			case signal_types::dot_: {
-				tree_type<token_base *> ltree(it.left());
-				opt_expr(tree, it.left(), optm_type::enable_namespace_optm);
 				token_base *lptr = it.left().data();
 				token_base *rptr = it.right().data();
-				if (rptr == nullptr || rptr->get_type() != token_types::id)
+				if (lptr == nullptr || rptr == nullptr || rptr->get_type() != token_types::id)
 					throw compile_error("Invalid member access expression '.'. Left-hand side of '.' must be non-empty and right-hand side of '.' must be an identifier.");
-				if (lptr != nullptr && lptr->get_type() == token_types::value) {
+				tree_type<token_base *> ltree(it.left());
+				opt_expr(tree, it.left(), optm_type::enable_namespace_optm);
+				// Re-validate after optimization: optimization can fold an expression into a null token
+				lptr = it.left().data();
+				if (lptr == nullptr)
+					throw compile_error("Invalid member access expression '.'. Left-hand side of '.' must be non-empty after expression optimization.");
+				if (lptr->get_type() == token_types::value) {
 					const var &a = static_cast<token_value *>(lptr)->get_value();
 					token_base *orig_ptr = it.data();
 					try {
@@ -939,7 +1018,6 @@ namespace cs {
 							it.data() = new_value(v);
 					}
 					catch (...) {
-						// Fix(2020-12-05): Broken AST structure caused by tree_type::merge
 						it.data() = orig_ptr;
 						tree.merge(it.left(), ltree);
 					}
@@ -1030,6 +1108,50 @@ namespace cs {
 				}
 				return;
 			}
+
+			// ---- binary-only (unary forms already converted to minus_/escape_ by trim_expr) ----
+			case signal_types::sub_:
+			case signal_types::mul_:
+				if (it.left().data() == nullptr || it.right().data() == nullptr)
+					throw compile_error("Invalid binary expression. Both operands must be non-empty.");
+				break;
+			case signal_types::inc_:
+			case signal_types::dec_:
+				if ((it.left().data() == nullptr) == (it.right().data() == nullptr))
+					throw compile_error("Invalid increment/decrement expression. Exactly one operand must be non-empty.");
+				break;
+
+			case signal_types::minus_:
+			case signal_types::escape_:
+				if (it.right().data() == nullptr)
+					throw compile_error("Invalid unary expression. Operand must be non-empty.");
+				break;
+
+			// ---- binary: both operands required ----
+			case signal_types::add_:
+			case signal_types::div_:
+			case signal_types::mod_:
+			case signal_types::pow_:
+			case signal_types::abo_:
+			case signal_types::und_:
+			case signal_types::equ_:
+			case signal_types::ueq_:
+			case signal_types::aeq_:
+			case signal_types::neq_:
+			case signal_types::and_:
+			case signal_types::or_:
+			case signal_types::addasi_:
+			case signal_types::subasi_:
+			case signal_types::mulasi_:
+			case signal_types::divasi_:
+			case signal_types::modasi_:
+			case signal_types::powasi_:
+			case signal_types::lnkasi_:
+			case signal_types::access_:
+			case signal_types::pair_:
+				if (it.left().data() == nullptr || it.right().data() == nullptr)
+					throw compile_error("Incomplete expression: both operands must be non-empty.");
+				break;
 			}
 		}
 		}
@@ -1059,10 +1181,8 @@ namespace cs {
 		token_id *id = dynamic_cast<token_id *>(it.left().data());
 		if (id == nullptr || id->get_id().get_id() != "this")
 			return;
-		// Check if it was generated by AST trimmer
 		if (it.left().left().usable() && it.left().left().data() != nullptr &&
 		        it.left().left().data() == it.right().data()) {
-			// it.data() = it.right().data();
 			throw compile_error(std::string("Symbol collision with structure member \"") +
 			                    static_cast<token_id *>(it.right().data())->get_id().get_id() + "\".");
 		}
@@ -1074,16 +1194,12 @@ namespace cs {
 		if (!ifs.is_open())
 			return;
 		csym_info csym;
-		// Stream-parse header line directly: avoids allocating a large header string,
-		// a map_str copy, and per-number temp buffers.
 		static constexpr char csym_prefix[] = "#$cSYM/1.0(";
 		static constexpr std::size_t prefix_len = sizeof(csym_prefix) - 1;
-		// Verify magic prefix
 		for (std::size_t i = 0; i < prefix_len; ++i) {
 			if (!ifs || ifs.get() != static_cast<unsigned char>(csym_prefix[i]))
 				throw compile_error("Invalid cSYM file (bad magic): " + csym_path);
 		}
-		// Read filename until ')'
 		for (int ch = ifs.get(); ifs; ch = ifs.get()) {
 			if (ch == ')')
 				break;
@@ -1091,10 +1207,8 @@ namespace cs {
 				throw compile_error("Invalid cSYM file (unterminated filename field): " + csym_path);
 			csym.file += static_cast<char>(ch);
 		}
-		// Expect ':'
 		if (!ifs || ifs.get() != ':')
 			throw compile_error("Invalid cSYM file (missing ':' after filename): " + csym_path);
-		// Parse comma-separated map entries directly as integers (no intermediate strings)
 		{
 			unsigned long long num = 0;
 			bool has_entry = false, is_dash = false;
@@ -1131,7 +1245,6 @@ namespace cs {
 			if (has_entry)
 				flush();
 		}
-		// Read remaining lines into csym.codes
 		std::string buff;
 		bool expect_n = false;
 		for (int ch = ifs.get(); ifs; ch = ifs.get()) {
@@ -1196,7 +1309,6 @@ namespace cs {
 						break;
 					case token_types::action: {
 						if (skip_useless) {
-							// Keep looking for id token or action token that have been replaced.
 							for (; i < raw.size(); ++i) {
 								if (raw[i]->get_type() == token_types::id) {
 									auto &id = static_cast<token_id *>(raw[i])->get_id();
@@ -1213,7 +1325,6 @@ namespace cs {
 							failed = true;
 							break;
 						}
-						// The "matched" condition is satisfied only if the target token is an id and it can match the grammar rule.
 						if (raw[i]->get_type() == token_types::id) {
 							auto &id = static_cast<token_id *>(raw[i])->get_id();
 							auto action = context->compiler->action_map.find(id);
@@ -1245,7 +1356,6 @@ namespace cs {
 					matched = false;
 			}
 			if (matched) {
-				// If matched, find and replace all id token with correspondent action token.
 				bool skip_useless = false;
 				std::size_t i = 0;
 				for (auto &it : dat->first) {
@@ -1254,7 +1364,6 @@ namespace cs {
 						break;
 					case token_types::action: {
 						if (skip_useless) {
-							// Keep looking for id token or action token that have been replaced.
 							for (; i < raw.size(); ++i) {
 								if (raw[i]->get_type() == token_types::id) {
 									auto &id = static_cast<token_id *>(raw[i])->get_id();
@@ -1295,7 +1404,13 @@ namespace cs {
 		stack_type<method_base *> methods;
 		for (auto &it : lines) {
 			std::deque<token_base *> line = it;
-			line_num = static_cast<token_endline *>(line.back())->get_line_num();
+			if (line.empty())
+				throw compile_error("Invalid statement line: missing endline token.");
+			token_base *tail = line.back();
+			if (tail != nullptr && tail->get_type() == token_types::endline)
+				line_num = static_cast<token_endline *>(tail)->get_line_num();
+			else
+				throw compile_error("Invalid statement line: the last token must be an endline token.");
 			try {
 				if (raw)
 					context->compiler->process_line(line);
