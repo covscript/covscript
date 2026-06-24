@@ -26,7 +26,23 @@ jobs:
         if: matrix.os != 'windows-2022'
         run: bash csbuild/make.sh
 
-      - name: Test
+      - name: Build and run unit tests (Linux/macOS)
+        if: matrix.os != 'windows-2022'
+        run: |
+          cmake -DCS_BUILD_TESTS=ON -S . -B cmake-build/unix
+          cmake --build cmake-build/unix --target cs_unit_tests -- -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
+          cp cmake-build/unix/unit_tests/cs_unit_tests build/bin/
+          build/bin/cs_unit_tests
+
+      - name: Build and run unit tests (Windows MSVC)
+        if: matrix.os == 'windows-2022'
+        run: |
+          cmake -DCS_BUILD_TESTS=ON -S . -B cmake-build/msvc_win64
+          cmake --build cmake-build/msvc_win64 --config MinSizeRel --target cs_unit_tests
+          copy cmake-build\msvc_win64\unit_tests\MinSizeRel\cs_unit_tests.exe build\bin\
+          build\bin\cs_unit_tests.exe
+
+      - name: Integration Tests
         run: |
           build/bin/cs -v
           build/bin/cs tests/benchmark.csc
