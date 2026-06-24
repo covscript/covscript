@@ -629,6 +629,8 @@ namespace cs {
 				if (it.left().data() == nullptr || it.right().data() == nullptr)
 					throw compile_error("Invalid '=' expression. Both sides of '=' must be non-empty.");
 				trim_expr(tree, it.left(), do_trim);
+				if (it.left().data() == nullptr)
+					throw compile_error("Invalid '=' expression. Left-hand side must be non-empty after expression trimming.");
 				if (it.left().data()->get_type() == token_types::parallel)
 					it.data() = new token_signal(signal_types::bind_);
 				trim_expr(tree, it.right(), do_trim);
@@ -666,6 +668,8 @@ namespace cs {
 				if (sig == nullptr || sig->get_signal() != signal_types::pair_)
 					throw compile_error("Invalid conditional expression. Conditional operator '?' must be followed by two sentences separated by ':'");
 				trim_expr(tree, it.left(), do_trim);
+				if (it.left().data() == nullptr)
+					throw compile_error("Invalid conditional expression. Left-hand side of '?' must be non-empty after expression trimming.");
 				trim_expr(tree, it.right().left(), do_trim);
 				trim_expr(tree, it.right().right(), do_trim);
 				return;
@@ -701,6 +705,8 @@ namespace cs {
 				        it.right().data()->get_type() != token_types::id)
 					throw compile_error("Invalid member access expression '->'. Left-hand side of '->' must be non-empty and right-hand side of '->' must be an identifier.");
 				trim_expr(tree, it.left(), do_trim);
+				if (it.left().data() == nullptr)
+					throw compile_error("Invalid member access expression '->'. Left-hand side of '->' must be non-empty after expression trimming.");
 				return;
 			case signal_types::dot_: {
 				token_base *lptr = it.left().data();
@@ -1103,17 +1109,11 @@ namespace cs {
 				return;
 			}
 
-			// ---- ambiguous: unary (converted by trim_expr) or prefix/postfix ----
+			// ---- binary-only (unary forms already converted to minus_/escape_ by trim_expr) ----
 			case signal_types::sub_:
 			case signal_types::mul_:
-				if (it.left().data() == nullptr) {
-					if (it.right().data() == nullptr)
-						throw compile_error("Invalid unary expression. Operand must be non-empty.");
-				}
-				else {
-					if (it.right().data() == nullptr)
-						throw compile_error("Invalid binary expression. Both operands must be non-empty.");
-				}
+				if (it.left().data() == nullptr || it.right().data() == nullptr)
+					throw compile_error("Invalid binary expression. Both operands must be non-empty.");
 				break;
 			case signal_types::inc_:
 			case signal_types::dec_:

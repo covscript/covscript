@@ -178,7 +178,7 @@ namespace cs {
 				return false;
 			token_base *token = it.data();
 			if (token == nullptr)
-				return true;
+				return false;
 			switch (token->get_type()) {
 			default:
 				break;
