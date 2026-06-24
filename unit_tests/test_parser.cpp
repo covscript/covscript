@@ -237,7 +237,7 @@ TEST(parser_deeply_nested)
 	// Traverse: should be add_(add_(add_(add_(a,b),c),d),e)
 	int depth = 0;
 	for (auto it = root; it.usable() && is_signal(it.data(), cs::signal_types::add_);
-	     it = it.left()) {
+	        it = it.left()) {
 		++depth;
 	}
 	EXPECT_TRUE(depth == 4);

@@ -55,8 +55,14 @@ namespace cs {
 // Helpers: construct manual trees and run private compiler methods
 // ---------------------------------------------------------------------------
 
-static cs::token_id *T_id(const std::string &name) { return new cs::token_id(name); }
-static cs::token_signal *T_sig(cs::signal_types s) { return new cs::token_signal(s); }
+static cs::token_id *T_id(const std::string &name)
+{
+	return new cs::token_id(name);
+}
+static cs::token_signal *T_sig(cs::signal_types s)
+{
+	return new cs::token_signal(s);
+}
 
 // Following the same pattern as compiler_type::build_tree:
 //   1. emplace_root_left  → create root signal node
@@ -65,8 +71,8 @@ static cs::token_signal *T_sig(cs::signal_types s) { return new cs::token_signal
 // This ensures tree iterators are always "usable" even when the operand is null.
 
 static cs::tree_type<cs::token_base *> make_binary(cs::signal_types op,
-                                                    cs::token_base *left,
-                                                    cs::token_base *right)
+        cs::token_base *left,
+        cs::token_base *right)
 {
 	cs::tree_type<cs::token_base *> tree;
 	tree.emplace_root_left(tree.root(), T_sig(op));
@@ -76,7 +82,7 @@ static cs::tree_type<cs::token_base *> make_binary(cs::signal_types op,
 }
 
 static cs::tree_type<cs::token_base *> make_unary(cs::signal_types op,
-                                                   cs::token_base *operand)
+        cs::token_base *operand)
 {
 	cs::tree_type<cs::token_base *> tree;
 	tree.emplace_root_left(tree.root(), T_sig(op));
