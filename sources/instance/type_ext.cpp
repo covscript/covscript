@@ -605,7 +605,7 @@ namespace cs_impl {
 		}
 
 // Lookup
-		bool exist(hash_set &set, const var &val)
+		bool exist(const hash_set &set, const var &val)
 		{
 			return set.count(val) > 0;
 		}
@@ -689,7 +689,7 @@ namespace cs_impl {
 		}
 
 // Lookup
-		var at(hash_map &map, const var &key)
+		var at(const hash_map &map, const var &key)
 		{
 			auto it = map.find(key);
 			if (it == map.end())
@@ -697,7 +697,7 @@ namespace cs_impl {
 			return it->second;
 		}
 
-		bool exist(hash_map &map, const var &key)
+		bool exist(const hash_map &map, const var &key)
 		{
 			return map.count(key) > 0;
 		}
