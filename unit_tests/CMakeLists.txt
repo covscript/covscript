@@ -7,6 +7,7 @@ set(UNIT_TEST_SOURCES
     test_parser.cpp
     test_trim_expr.cpp
     test_translate.cpp
+    test_fiber.cpp
 )
 
 add_executable(cs_unit_tests ${UNIT_TEST_SOURCES})

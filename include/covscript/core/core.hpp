@@ -65,6 +65,12 @@
 #ifndef COVSCRIPT_FIBER_STACK_LIMIT
 #define COVSCRIPT_FIBER_STACK_LIMIT (1024 * 1024)
 #endif
+#ifndef COVSCRIPT_FIBER_BUSY_WAIT_COEF
+#define COVSCRIPT_FIBER_BUSY_WAIT_COEF 0.01
+#endif
+#ifndef COVSCRIPT_FIBER_BUSY_WAIT_MIN
+#define COVSCRIPT_FIBER_BUSY_WAIT_MIN 10
+#endif
 // Hash Map and Set
 #ifndef CS_COMPATIBILITY_MODE
 #include <parallel_hashmap/phmap.h>
@@ -88,6 +94,8 @@
 #include <utility>
 #include <cstring>
 #include <atomic>
+#include <chrono>
+#include <thread>
 #include <cctype>
 #include <string>
 #include <vector>
@@ -125,6 +133,10 @@ namespace cs {
 		stack_type<std::string> stack_backtrace;
 #endif
 		stack_type<fiber_t> fiber_stack;
+
+		// Fiber busy-wait backpressure parameters (runtime tunable via CNI or fiber.set_schedule_policy)
+		double fiber_busy_wait_coef = COVSCRIPT_FIBER_BUSY_WAIT_COEF;
+		std::size_t fiber_busy_wait_min = COVSCRIPT_FIBER_BUSY_WAIT_MIN;
 
 		// Stack Resize must before any context instance start
 		void resize_stack(std::size_t size)
@@ -282,10 +294,15 @@ namespace cs {
 		ready,
 		running,
 		suspended,
+		sleeping,
 		finished
 	};
 
 	class fiber_type {
+	public:
+		std::chrono::steady_clock::time_point wake_up_time{};
+		std::size_t busy_skip_count = 0;
+
 	protected:
 		fiber_type() = default;
 
@@ -301,9 +318,23 @@ namespace cs {
 	};
 
 	namespace fiber {
+		inline fiber_type const *current()
+		{
+			return cs::current_process->fiber_stack.empty() ? nullptr : cs::current_process->fiber_stack.top().get();
+		}
+
+		inline bool within()
+		{
+			return !cs::current_process->fiber_stack.empty();
+		}
+
 		fiber_t create(const context_t &, std::function<var()>);
 
+		fiber_t create_native(std::function<var()>);
+
 		void resume(const fiber_t &);
+
+		void sleep_for(std::size_t);
 
 		void yield();
 	} // namespace fiber
@@ -509,7 +540,8 @@ namespace cs {
 
 		type_id(const std::type_index &id, std::size_t hash = 0) : type_idx(id), type_hash(hash) {}
 
-		inline bool is_a(const type_id &id) const {
+		inline bool is_a(const type_id &id) const
+		{
 			if (&id == this)
 				return true;
 			if (type_hash && id.type_hash)

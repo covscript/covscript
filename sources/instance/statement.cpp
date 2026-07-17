@@ -716,6 +716,56 @@ namespace cs {
 		}
 	}
 
+	void struct_foreach_helper(const context_t &context, const var_id &iterator, const var &obj,
+	                           std::deque<statement_base *> &body)
+	{
+		var const *fptr = obj.val<structure>().get_domain().get_var_opt("next");
+		if (fptr == nullptr)
+			throw lang_error("The struct does not support iteration. Expect a 'next' method to be defined");
+		if (context->instance->break_block)
+			context->instance->break_block = false;
+		if (context->instance->continue_block)
+			context->instance->continue_block = false;
+		scope_guard scope(context);
+		while (true) {
+			current_process->poll_event();
+			vector args;
+			// Patch for struct member function call, since the first argument of a struct member function is the struct itself
+			if (fptr->is_type_of<callable>() && fptr->const_val<callable>().is_member_fn())
+				args.push_back(obj);
+			fptr->prep_call(args);
+			var tuple = fptr->fcall(args);
+			if (!tuple.is_type_of<array>() || tuple.const_val<array>().size() != 2)
+				throw lang_error("The 'next' method of the struct must return an array consisting of '{value, done: boolean}'");
+			if (tuple.const_val<array>()[1].const_val<boolean>())
+				break;
+			context->instance->storage.add_var_no_return(iterator, tuple.const_val<array>()[0]);
+			for (auto &ptr : body) {
+				try {
+					ptr->run();
+				}
+				catch (const cs::exception &) {
+					throw;
+				}
+				catch (const std::exception &e) {
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
+				}
+				if (context->instance->return_fcall) {
+					return;
+				}
+				if (context->instance->break_block) {
+					context->instance->break_block = false;
+					return;
+				}
+				if (context->instance->continue_block) {
+					context->instance->continue_block = false;
+					break;
+				}
+			}
+			scope.clear();
+		}
+	}
+
 	void statement_foreach::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
@@ -732,6 +782,8 @@ namespace cs {
 			foreach_helper<hash_map, pair>(context, this->mIt, obj, this->mBlock);
 		else if (obj.is_type_of<range_type>())
 			foreach_helper<range_type, numeric>(context, this->mIt, obj, this->mBlock);
+		else if (obj.is_type_of<structure>())
+			struct_foreach_helper(context, this->mIt, obj, this->mBlock);
 		else
 			throw runtime_error("The 'foreach' loop does not support this type of value");
 	}

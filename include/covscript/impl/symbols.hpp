@@ -161,18 +161,21 @@ namespace cs {
 	public:
 		mapping(std::initializer_list<std::pair<const Key, T>> l) : mDat(l) {}
 
-		bool exist(const Key &k) const {
+		bool exist(const Key &k) const
+		{
 			return find(k) != nullptr;
 		}
 
-		const T *find(const Key &k) const noexcept {
+		const T *find(const Key &k) const noexcept
+		{
 			auto it = mDat.find(k);
 			if (it == mDat.end())
 				return nullptr;
 			return &it->second;
 		}
 
-		const T &match(const Key &k) const {
+		const T &match(const Key &k) const
+		{
 			auto *val = find(k);
 			if (val == nullptr)
 				throw compile_error("Undefined Mapping.");
@@ -432,11 +435,13 @@ namespace cs {
 			return token_types::sblist;
 		}
 
-		std::deque<std::deque<token_base *>> &get_list() noexcept {
+		std::deque<std::deque<token_base *>> &get_list() noexcept
+		{
 			return this->mList;
 		}
 
-		bool dump(std::ostream &o) const override {
+		bool dump(std::ostream &o) const override
+		{
 			o << "< Small Bracket >";
 			return false;
 		}
