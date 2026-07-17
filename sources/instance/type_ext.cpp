@@ -1432,6 +1432,11 @@ namespace cs_impl {
 			return fiber->get_state() == fiber_state::finished;
 		}
 
+		void fiber_sleep_for(const numeric &duration)
+		{
+			fiber::sleep_for(duration.as_integer());
+		}
+
 		var fiber_current()
 		{
 			if (current_process->fiber_stack.empty())
@@ -1447,7 +1452,7 @@ namespace cs_impl {
 			.add_var("is_running", make_cni(is_running))
 			.add_var("is_suspended", make_cni(is_suspended))
 			.add_var("is_finished", make_cni(is_finished))
-			.add_var("sleep_for", make_cni(fiber::sleep_for))
+			.add_var("sleep_for", make_cni(fiber_sleep_for))
 			.add_var("within", make_cni(fiber::within))
 			.add_var("current", make_cni(fiber_current))
 			.add_var("resume", make_cni(fiber::resume))

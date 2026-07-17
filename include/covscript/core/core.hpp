@@ -330,7 +330,7 @@ namespace cs {
 
 		void resume(const fiber_t &);
 
-		void sleep_for(std::size_t ms);
+		void sleep_for(std::size_t);
 
 		void yield();
 	} // namespace fiber
