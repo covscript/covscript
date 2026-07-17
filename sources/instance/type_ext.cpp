@@ -1357,6 +1357,31 @@ namespace cs_impl {
 			}
 		};
 
+		class fiber_native_function final {
+			callable::function_type const *func;
+			vector args;
+
+		public:
+			fiber_native_function(callable::function_type const *fn, vector data) : func(fn), args(std::move(data)) {}
+
+			var operator()()
+			{
+				if (func == nullptr)
+					throw lang_error("Asynchronous functions are not reentrant");
+				try {
+					var ret = (*func)(args);
+					func = nullptr;
+					args.clear();
+					return std::move(ret);
+				}
+				catch (...) {
+					func = nullptr;
+					args.clear();
+					throw;
+				}
+			}
+		};
+
 		var create(vector &args)
 		{
 			if (args.empty())
@@ -1364,20 +1389,24 @@ namespace cs_impl {
 			const var &func = args.front();
 			if (func.is_type_of<callable>()) {
 				const callable::function_type &impl_f = func.const_val<callable>().get_raw_data();
-				if (impl_f.target_type() != typeid(function_ptr))
-					throw lang_error("A coroutine can only be created from a CovScript function");
-				function const *fptr = impl_f.target<function_ptr>()->fptr;
-				return fiber::create(fptr->get_context(), fiber_function(fptr, vector(args.begin() + 1, args.end())));
+				if (impl_f.target_type() == typeid(function_ptr)) {
+					function const *fptr = impl_f.target<function_ptr>()->fptr;
+					return fiber::create(fptr->get_context(), fiber_function(fptr, vector(args.begin() + 1, args.end())));
+				}
+				else
+					return fiber::create_native(fiber_native_function(&impl_f, vector(args.begin() + 1, args.end())));
 			}
 			else if (func.is_type_of<object_method>()) {
 				const auto &om = func.const_val<object_method>();
 				const callable::function_type &impl_f = om.callable.const_val<callable>().get_raw_data();
-				if (impl_f.target_type() != typeid(function_ptr))
-					throw lang_error("A coroutine can only be created from a CovScript function");
-				function const *fptr = impl_f.target<function_ptr>()->fptr;
 				vector argument{om.object};
 				argument.insert(argument.end(), args.begin() + 1, args.end());
-				return fiber::create(fptr->get_context(), fiber_function(fptr, std::move(argument)));
+				if (impl_f.target_type() == typeid(function_ptr)) {
+					function const *fptr = impl_f.target<function_ptr>()->fptr;
+					return fiber::create(fptr->get_context(), fiber_function(fptr, std::move(argument)));
+				}
+				else
+					return fiber::create_native(fiber_native_function(&impl_f, argument));
 			}
 			return null_pointer;
 		}
@@ -1394,12 +1423,20 @@ namespace cs_impl {
 
 		bool is_suspended(const fiber_t &fiber)
 		{
-			return fiber->get_state() == fiber_state::suspended;
+			auto state = fiber->get_state();
+			return state == fiber_state::suspended || state == fiber_state::sleeping;
 		}
 
 		bool is_finished(const fiber_t &fiber)
 		{
 			return fiber->get_state() == fiber_state::finished;
+		}
+
+		var fiber_current()
+		{
+			if (current_process->fiber_stack.empty())
+				return null_pointer;
+			return current_process->fiber_stack.top();
 		}
 
 		void init()
@@ -1410,6 +1447,9 @@ namespace cs_impl {
 			.add_var("is_running", make_cni(is_running))
 			.add_var("is_suspended", make_cni(is_suspended))
 			.add_var("is_finished", make_cni(is_finished))
+			.add_var("sleep_for", make_cni(fiber::sleep_for))
+			.add_var("within", make_cni(fiber::within))
+			.add_var("current", make_cni(fiber_current))
 			.add_var("resume", make_cni(fiber::resume))
 			.add_var("yield", make_cni(fiber::yield));
 		}
@@ -1622,6 +1662,21 @@ namespace cs_impl {
 
 		void delay(const numeric &time)
 		{
+			cs::numeric_integer t = time.as_integer();
+			if (t < 0)
+				return;
+			if (cs::fiber::within()) {
+				if (t >= COVSCRIPT_FIBER_BUSY_WAIT_MIN)
+					cs::fiber::sleep_for(t);
+				else
+					cs::fiber::yield();
+			}
+			else if (t != 0)
+				cov::timer::delay(cov::timer::time_unit::milli_sec, t);
+		}
+
+		void sleep_for(const numeric &time)
+		{
 			cov::timer::delay(cov::timer::time_unit::milli_sec, time.as_integer());
 		}
 
@@ -1820,6 +1875,7 @@ namespace cs_impl {
 			.add_var("local_time", var::make_protect<callable>(local_time))
 			.add_var("utc_time", var::make_protect<callable>(utc_time))
 			.add_var("delay", make_cni(delay))
+			.add_var("sleep_for", make_cni(sleep_for))
 			.add_var("exception", make_cni(exception))
 			.add_var("hash", make_cni(hash, true))
 			.add_var("build", make_cni(build))

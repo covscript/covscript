@@ -172,6 +172,7 @@ namespace cs {
 	namespace fiber {
 		class win32_fiber : public fiber_type {
 			friend void cs::fiber::resume(const fiber_t &);
+			friend void cs::fiber::sleep_for(std::size_t);
 			friend void cs::fiber::yield();
 
 			stack_type<domain_type> cs_stack;
@@ -205,6 +206,16 @@ namespace cs {
 
 		public:
 			win32_fiber() = delete;
+			// Native Function
+			win32_fiber(std::function<var()> f)
+				: cs_stack(0), cs_context(nullptr),
+				  func(std::move(f)),
+				  eptr(nullptr),
+				  state(fiber_state::ready),
+				  ret_val(null_pointer),
+				  stack_size(COVSCRIPT_FIBER_STACK_LIMIT) {}
+
+			// CovScript Function
 			win32_fiber(const context_t &cxt, std::function<var()> f)
 				: cs_stack(current_process->child_stack_size()),
 				  cs_context(cxt),
@@ -212,7 +223,7 @@ namespace cs {
 				  eptr(nullptr),
 				  state(fiber_state::ready),
 				  ret_val(null_pointer),
-				  stack_size(current_process->child_stack_size()) {}
+				  stack_size(COVSCRIPT_FIBER_STACK_LIMIT) {}
 
 			virtual ~win32_fiber()
 			{
@@ -222,12 +233,14 @@ namespace cs {
 
 			void cs_swap_in()
 			{
-				cs_context->instance->swap_context(&cs_stack);
+				if (cs_context)
+					cs_context->instance->swap_context(&cs_stack);
 			}
 
 			void cs_swap_out()
 			{
-				cs_context->instance->swap_context(nullptr);
+				if (cs_context)
+					cs_context->instance->swap_context(nullptr);
 			}
 
 			virtual fiber_state get_state() const
@@ -247,6 +260,11 @@ namespace cs {
 		fiber_t create(const context_t &cxt, std::function<var()> f)
 		{
 			return std::make_shared<win32_fiber>(cxt, std::move(f));
+		}
+
+		fiber_t create_native(std::function<var()> f)
+		{
+			return std::make_shared<win32_fiber>(std::move(f));
 		}
 
 		struct global_ctx_holder {
@@ -278,6 +296,27 @@ namespace cs {
 				fi->ctx = CreateFiber(fi->stack_size, win32_fiber::entry, fi);
 				if (fi->ctx == nullptr)
 					throw lang_error("Failed to create the fiber");
+			}
+			if (fi->state == fiber_state::sleeping) {
+				auto now = std::chrono::steady_clock::now();
+				if (now < fi->wake_up_time) {
+					fi->busy_skip_count++;
+					auto remain_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+					                     fi->wake_up_time - now).count();
+					auto wait_time = static_cast<std::size_t>(
+					                     fi->busy_skip_count * remain_ms * COVSCRIPT_FIBER_BUSY_WAIT_COEF);
+					if (wait_time > static_cast<std::size_t>(remain_ms))
+						wait_time = static_cast<std::size_t>(remain_ms);
+					if (wait_time >= COVSCRIPT_FIBER_BUSY_WAIT_MIN) {
+						if (!current_process->fiber_stack.empty())
+							sleep_for(wait_time);
+						else
+							std::this_thread::sleep_for(std::chrono::milliseconds(wait_time));
+						fi->busy_skip_count = 0;
+					}
+					return;
+				}
+				fi->busy_skip_count = 0;
 			}
 			// Always (re)bind the return context to the current caller before resuming.
 			// A fiber may be resumed from a different caller than the one that started
@@ -313,6 +352,17 @@ namespace cs {
 				throw lang_error("Cannot yield outside a fiber");
 			win32_fiber *fi = static_cast<win32_fiber *>(current_process->fiber_stack.top().get());
 			fi->state = fiber_state::suspended;
+			SwitchToFiber(fi->prev_ctx);
+		}
+
+		void sleep_for(std::size_t ms)
+		{
+			if (current_process->fiber_stack.empty())
+				throw lang_error("Cannot yield outside a fiber");
+			win32_fiber *fi = static_cast<win32_fiber *>(current_process->fiber_stack.top().get());
+			fi->wake_up_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(ms);
+			fi->busy_skip_count = 0;
+			fi->state = fiber_state::sleeping;
 			SwitchToFiber(fi->prev_ctx);
 		}
 	} // namespace fiber
