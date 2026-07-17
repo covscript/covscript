@@ -1358,24 +1358,20 @@ namespace cs_impl {
 		};
 
 		class fiber_native_function final {
-			callable::function_type const *func;
+			callable::function_type func;
 			vector args;
 
 		public:
-			fiber_native_function(callable::function_type const *fn, vector data) : func(fn), args(std::move(data)) {}
+			fiber_native_function(callable::function_type fn, vector data) : func(std::move(fn)), args(std::move(data)) {}
 
 			var operator()()
 			{
-				if (func == nullptr)
-					throw lang_error("Asynchronous functions are not reentrant");
 				try {
-					var ret = (*func)(args);
-					func = nullptr;
+					var ret = func(args);
 					args.clear();
 					return std::move(ret);
 				}
 				catch (...) {
-					func = nullptr;
 					args.clear();
 					throw;
 				}
@@ -1394,7 +1390,7 @@ namespace cs_impl {
 					return fiber::create(fptr->get_context(), fiber_function(fptr, vector(args.begin() + 1, args.end())));
 				}
 				else
-					return fiber::create_native(fiber_native_function(&impl_f, vector(args.begin() + 1, args.end())));
+					return fiber::create_native(fiber_native_function(impl_f, vector(args.begin() + 1, args.end())));
 			}
 			else if (func.is_type_of<object_method>()) {
 				const auto &om = func.const_val<object_method>();
@@ -1406,7 +1402,7 @@ namespace cs_impl {
 					return fiber::create(fptr->get_context(), fiber_function(fptr, std::move(argument)));
 				}
 				else
-					return fiber::create_native(fiber_native_function(&impl_f, argument));
+					return fiber::create_native(fiber_native_function(impl_f, argument));
 			}
 			return null_pointer;
 		}
@@ -1434,7 +1430,10 @@ namespace cs_impl {
 
 		void fiber_sleep_for(const numeric &duration)
 		{
-			fiber::sleep_for(duration.as_integer());
+			if (duration.as_integer() > 0)
+				fiber::sleep_for(duration.as_integer());
+			else
+				fiber::yield();
 		}
 
 		var fiber_current()
@@ -1668,21 +1667,20 @@ namespace cs_impl {
 		void delay(const numeric &time)
 		{
 			cs::numeric_integer t = time.as_integer();
-			if (t < 0)
-				return;
 			if (cs::fiber::within()) {
-				if (t >= COVSCRIPT_FIBER_BUSY_WAIT_MIN)
+				if (t > 0)
 					cs::fiber::sleep_for(t);
 				else
 					cs::fiber::yield();
 			}
-			else if (t != 0)
+			else if (t > 0)
 				cov::timer::delay(cov::timer::time_unit::milli_sec, t);
 		}
 
 		void sleep_for(const numeric &time)
 		{
-			cov::timer::delay(cov::timer::time_unit::milli_sec, time.as_integer());
+			if (time.as_integer() > 0)
+				cov::timer::delay(cov::timer::time_unit::milli_sec, time.as_integer());
 		}
 
 		var exception(const string &str)
