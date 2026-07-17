@@ -134,6 +134,10 @@ namespace cs {
 #endif
 		stack_type<fiber_t> fiber_stack;
 
+		// Fiber busy-wait backpressure parameters (runtime tunable via CNI or fiber.set_schedule_policy)
+		double fiber_busy_wait_coef = COVSCRIPT_FIBER_BUSY_WAIT_COEF;
+		std::size_t fiber_busy_wait_min = COVSCRIPT_FIBER_BUSY_WAIT_MIN;
+
 		// Stack Resize must before any context instance start
 		void resize_stack(std::size_t size)
 		{

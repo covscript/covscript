@@ -304,14 +304,21 @@ namespace cs {
 					auto remain_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
 					                     fi->wake_up_time - now).count();
 					auto wait_time = static_cast<std::size_t>(
-					                     fi->busy_skip_count * remain_ms * COVSCRIPT_FIBER_BUSY_WAIT_COEF);
+					                     fi->busy_skip_count * remain_ms * current_process->fiber_busy_wait_coef);
 					if (wait_time > static_cast<std::size_t>(remain_ms))
 						wait_time = static_cast<std::size_t>(remain_ms);
-					if (wait_time >= COVSCRIPT_FIBER_BUSY_WAIT_MIN) {
+					if (wait_time >= current_process->fiber_busy_wait_min) {
 						if (!current_process->fiber_stack.empty())
 							sleep_for(wait_time);
 						else
 							std::this_thread::sleep_for(std::chrono::milliseconds(wait_time));
+						fi->busy_skip_count = 0;
+					}
+					else if (wait_time == static_cast<std::size_t>(remain_ms) && remain_ms > 0) {
+						if (!current_process->fiber_stack.empty())
+							sleep_for(static_cast<std::size_t>(remain_ms));
+						else
+							std::this_thread::sleep_for(std::chrono::milliseconds(remain_ms));
 						fi->busy_skip_count = 0;
 					}
 					return;

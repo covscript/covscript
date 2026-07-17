@@ -1329,6 +1329,28 @@ namespace cs_impl {
 	namespace fiber_cs_ext {
 		using namespace cs;
 
+		void set_schedule_policy(const string &policy)
+		{
+			if (policy == "balanced") {
+				current_process->fiber_busy_wait_coef = 0.01;
+				current_process->fiber_busy_wait_min = 10;
+			}
+			else if (policy == "responsive") {
+				current_process->fiber_busy_wait_coef = 0.003;
+				current_process->fiber_busy_wait_min = 3;
+			}
+			else if (policy == "efficient") {
+				current_process->fiber_busy_wait_coef = 0.05;
+				current_process->fiber_busy_wait_min = 50;
+			}
+			else if (policy == "throughput") {
+				current_process->fiber_busy_wait_coef = 0.02;
+				current_process->fiber_busy_wait_min = 20;
+			}
+			else
+				throw lang_error("Unknown schedule policy: " + policy);
+		}
+
 		class fiber_function final {
 			const context_t &context;
 			function const *func;
@@ -1453,6 +1475,7 @@ namespace cs_impl {
 			.add_var("is_finished", make_cni(is_finished))
 			.add_var("sleep_for", make_cni(fiber_sleep_for))
 			.add_var("within", make_cni(fiber::within))
+			.add_var("set_schedule_policy", make_cni(set_schedule_policy))
 			.add_var("current", make_cni(fiber_current))
 			.add_var("resume", make_cni(fiber::resume))
 			.add_var("yield", make_cni(fiber::yield));
