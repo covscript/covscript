@@ -230,7 +230,8 @@ namespace cs {
 
 		compiler_type() = delete;
 
-		explicit compiler_type(context_t c) : context(std::move(c))
+		explicit compiler_type(context_t c)
+			: context(std::move(c))
 		{
 			type_id::inherit_map.clear();
 			struct_builder::reset_counter();

@@ -70,7 +70,8 @@ void signal_handler(int sig)
 
 void activate_sigint_handler()
 {
-	struct sigaction sa_usr {};
+	struct sigaction sa_usr {
+	};
 	sa_usr.sa_handler = &signal_handler;
 	sigemptyset(&sa_usr.sa_mask);
 	// sa_usr.sa_flags = SA_RESTART | SA_NODEFER;
@@ -157,7 +158,8 @@ class breakpoint_recorder final {
 		std::variant<std::size_t, std::string, cs::var> data;
 
 		template <typename T>
-		breakpoint(std::size_t _id, T &&_data) : id(_id), data(std::forward<T>(_data))
+		breakpoint(std::size_t _id, T &&_data)
+			: id(_id), data(std::forward<T>(_data))
 		{
 		}
 	};
@@ -518,8 +520,8 @@ void covscript_main(int args_size, char *args[])
 		if (!silent) {
 			std::cout << "Covariant Script Programming Language Debugger\nVersion: "
 			          << cs::current_process->version << " [" << COVSCRIPT_COMPILER_NAME << " on " << COVSCRIPT_PLATFORM_NAME << "]\n"
-			                                   "Copyright (C) 2017-2026 Michael Lee. All rights reserved.\n"
-			                                   "Please visit <http://covscript.org.cn/> for more information."
+			          "Copyright (C) 2017-2026 Michael Lee. All rights reserved.\n"
+			          "Please visit <http://covscript.org.cn/> for more information."
 			          << std::endl;
 		}
 		cs::current_process->on_process_exit.add_listener([](void *code) -> bool {

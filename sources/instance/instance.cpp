@@ -334,7 +334,8 @@ namespace cs {
 		}
 	}
 
-	repl::repl(context_t c) : context(std::move(c))
+	repl::repl(context_t c)
+		: context(std::move(c))
 	{
 		context->file_path = "<REPL_ENV>";
 		context->compiler->fold_expr = false;
@@ -367,7 +368,7 @@ namespace cs {
 					if (methods.empty()) {
 						if (m->get_target_type() == statement_types::end_)
 							sptr = static_cast<method_end *>(m)->translate_end(expected_method, context, tmp,
-							       line);
+							        line);
 						else
 							sptr = expected_method->translate(context, tmp);
 						tmp.clear();

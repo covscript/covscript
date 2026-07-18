@@ -364,12 +364,13 @@ namespace cni_namespace_impl {
 	}                                                                                                                                          \
 	CNI_REGISTER(NAME, cs::var::make_constant<cs::type_t>([]() -> cs::var { return FUNC; }, cs::type_id(typeid(TYPE)), NAME::__cni_namespace)) \
 	namespace NAME
-#define CNI_TYPE_EXT_V(NAME, TYPE, TYPE_NAME, FUNC)                                                                                                                                            \
-	namespace NAME                                                                                                                                                                             \
-	{                                                                                                                                                                                          \
-		static cs::namespace_t __cni_namespace = cs::make_shared_namespace<cs::name_space>();                                                                                                  \
-	}                                                                                                                                                                                          \
-	CNI_NAME_MIXER(_cni_register_, NAME)(__cni_namespace, #TYPE_NAME, cs::var::make_constant<cs::type_t>([]() -> cs::var { return FUNC; }, cs::type_id(typeid(TYPE)), NAME::__cni_namespace)); \
+#define CNI_TYPE_EXT_V(NAME, TYPE, TYPE_NAME, FUNC)                                                                                                        \
+	namespace NAME                                                                                                                                         \
+	{                                                                                                                                                      \
+		static cs::namespace_t __cni_namespace = cs::make_shared_namespace<cs::name_space>();                                                              \
+	}                                                                                                                                                      \
+	CNI_NAME_MIXER(_cni_register_, NAME)                                                                                                                   \
+	(__cni_namespace, #TYPE_NAME, cs::var::make_constant<cs::type_t>([]() -> cs::var { return FUNC; }, cs::type_id(typeid(TYPE)), NAME::__cni_namespace)); \
 	namespace NAME
 #define CNI(NAME) CNI_REGISTER(NAME, cs::make_cni(NAME, false))
 #define CNI_CONST(NAME) CNI_REGISTER(NAME, cs::make_cni(NAME, true))

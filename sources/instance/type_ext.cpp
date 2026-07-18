@@ -1189,17 +1189,17 @@ namespace cs_impl {
 		numeric _min(const numeric &a, const numeric &b)
 		{
 			if (a.is_integer() && b.is_integer())
-				return (std::min) (a.as_integer(), b.as_integer());
+				return (std::min)(a.as_integer(), b.as_integer());
 			else
-				return (std::min) (a.as_float(), b.as_float());
+				return (std::min)(a.as_float(), b.as_float());
 		}
 
 		numeric _max(const numeric &a, const numeric &b)
 		{
 			if (a.is_integer() && b.is_integer())
-				return (std::max) (a.as_integer(), b.as_integer());
+				return (std::max)(a.as_integer(), b.as_integer());
 			else
-				return (std::max) (a.as_float(), b.as_float());
+				return (std::max)(a.as_float(), b.as_float());
 		}
 
 		numeric rand(const numeric &b, const numeric &e)
@@ -1246,6 +1246,7 @@ namespace cs_impl {
 			.add_var("randint", make_cni(randint));
 		}
 	} // namespace math_cs_ext
+
 	namespace pair_cs_ext {
 		void init()
 		{
@@ -1257,6 +1258,7 @@ namespace cs_impl {
 			.add_var("value", make_member_visitor(&pair::second));
 		}
 	} // namespace pair_cs_ext
+
 	namespace time_cs_ext {
 		using namespace cs;
 
@@ -1326,6 +1328,183 @@ namespace cs_impl {
 		}
 	} // namespace time_cs_ext
 
+	namespace async_cs_ext {
+		using namespace cs;
+
+		bool is_native_callable(const callable &func)
+		{
+			return func.get_raw_data().target_type() != typeid(function_ptr);
+		}
+
+		class async_callable final {
+			callable func;
+			vector args;
+
+			void detach_args()
+			{
+				for (auto &val : args) {
+					if (!val.is_rvalue()) {
+						val.clone();
+						val.detach();
+					}
+					else
+						val.mark_trivial();
+				}
+			}
+
+		public:
+			async_callable(const callable &fn, vector data)
+				: func(fn), args(std::move(data))
+			{
+				if (!is_native_callable(fn))
+					throw lang_error("This object cannot be invoked in parallel");
+				detach_args();
+			}
+
+			var operator()()
+			{
+				try {
+					return func.call(args);
+				}
+				catch (...) {
+					std::lock_guard<std::mutex> lock(current_process->eptr_mutex);
+					current_process->eptr = std::current_exception();
+					return null_pointer;
+				}
+			}
+		};
+
+		void check_exception()
+		{
+			std::exception_ptr e = nullptr;
+			{
+				std::lock_guard<std::mutex> lock(current_process->eptr_mutex);
+				if (current_process->eptr != nullptr)
+					std::swap(current_process->eptr, e);
+			}
+			if (e != nullptr)
+				std::rethrow_exception(e);
+		}
+
+		var await_impl(const callable &fn, vector args)
+		{
+			if (fiber::within()) {
+				auto future = std::async(std::launch::async, async_callable(fn, std::move(args)));
+				while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
+					fiber::sleep_for(current_process->fiber_busy_wait_min);
+				var ret = future.get();
+				check_exception();
+				return std::move(ret);
+			}
+			else
+				return fn.call(args);
+		}
+
+		var await(vector &args)
+		{
+			if (args.empty())
+				throw lang_error("Invalid call to 'runtime.await': expected 'runtime.await(function, arguments...)'");
+			const var &func = args.front();
+			if (func.is_type_of<callable>()) {
+				return await_impl(func.const_val<callable>(), vector(args.begin() + 1, args.end()));
+			}
+			else if (func.is_type_of<object_method>()) {
+				const auto &om = func.const_val<object_method>();
+				vector argument{om.object};
+				argument.insert(argument.end(), args.begin() + 1, args.end());
+				return await_impl(om.callable.const_val<callable>(), std::move(argument));
+			}
+			else
+				throw lang_error("The target value is not callable");
+		}
+
+		class async_future final : public future_type {
+			std::future<var> future;
+
+		public:
+			async_future(const callable &fn, vector args)
+				: future(std::async(std::launch::async, async_callable(fn, std::move(args))))
+			{
+			}
+
+			bool wait_for(std::size_t ms) override
+			{
+				return future.wait_for(std::chrono::milliseconds(ms)) == std::future_status::ready;
+			}
+
+			void wait() override
+			{
+				future.wait();
+				check_exception();
+			}
+
+			var get() override
+			{
+				var result = future.get();
+				check_exception();
+				return std::move(result);
+			}
+		};
+
+		var create(vector &args)
+		{
+			if (args.empty())
+				throw lang_error("Invalid call to 'future.create': expected 'future.create(function, arguments...)'");
+			const var &func = args.front();
+			if (func.is_type_of<fiber_t>()) {
+				if (args.size() > 1)
+					throw lang_error("Invalid call to 'future.create', extra arguments are not allowed when creating a future from a fiber");
+				return fiber::get_future(func.const_val<fiber_t>());
+			}
+			else if (func.is_type_of<callable>()) {
+				const callable &fn = func.const_val<callable>();
+				if (!is_native_callable(fn))
+					throw lang_error("Async future can only be created from native functions");
+				return static_cast<future_t>(std::make_shared<async_future>(fn, vector(args.begin() + 1, args.end())));
+			}
+			else if (func.is_type_of<object_method>()) {
+				const auto &om = func.const_val<object_method>();
+				vector argument{om.object};
+				argument.insert(argument.end(), args.begin() + 1, args.end());
+				const callable &fn = om.callable.const_val<callable>();
+				if (!is_native_callable(fn))
+					throw lang_error("Async future can only be created from native functions");
+				return static_cast<future_t>(std::make_shared<async_future>(fn, std::move(argument)));
+			}
+			else
+				throw lang_error("Invalid call to 'future.create', the first argument must be a fiber or a callable object");
+		}
+
+		bool wait_for(const future_t &future, const numeric &ms)
+		{
+			if (ms.as_integer() < 0) {
+				future->wait();
+				return true;
+			}
+			else
+				return future->wait_for(ms.as_integer());
+		}
+
+		void wait(const future_t &future)
+		{
+			future->wait();
+		}
+
+		var get(const future_t &future)
+		{
+			return future->get();
+		}
+
+		void init()
+		{
+			(*future_ext)
+			.add_var("create", var::make_protect<callable>(create))
+			.add_var("wait_for", make_cni(wait_for))
+			.add_var("wait", make_cni(wait))
+			.add_var("get", make_cni(get));
+		}
+	} // namespace async_cs_ext
+
 	namespace fiber_cs_ext {
 		using namespace cs;
 
@@ -1357,7 +1536,8 @@ namespace cs_impl {
 			vector args;
 
 		public:
-			fiber_function(function const *fn, vector data) : context(fn->get_context()), func(fn), args(std::move(data)) {}
+			fiber_function(function const *fn, vector data)
+				: context(fn->get_context()), func(fn), args(std::move(data)) {}
 
 			var operator()()
 			{
@@ -1384,7 +1564,8 @@ namespace cs_impl {
 			vector args;
 
 		public:
-			fiber_native_function(callable::function_type fn, vector data) : func(std::move(fn)), args(std::move(data)) {}
+			fiber_native_function(callable::function_type fn, vector data)
+				: func(std::move(fn)), args(std::move(data)) {}
 
 			var operator()()
 			{
@@ -1426,7 +1607,8 @@ namespace cs_impl {
 				else
 					return fiber::create_native(fiber_native_function(impl_f, argument));
 			}
-			return null_pointer;
+			else
+				throw lang_error("Invalid call to 'fiber.create', the first argument must be a callable object");
 		}
 
 		var return_value(const fiber_t &fiber)
@@ -1469,6 +1651,7 @@ namespace cs_impl {
 		{
 			(*fiber_ext)
 			.add_var("create", var::make_protect<callable>(create))
+			.add_var("get_future", make_cni(fiber::get_future))
 			.add_var("return_value", make_cni(return_value))
 			.add_var("is_running", make_cni(is_running))
 			.add_var("is_suspended", make_cni(is_suspended))
@@ -1484,159 +1667,6 @@ namespace cs_impl {
 
 	namespace runtime_cs_ext {
 		using namespace cs;
-
-		class async_base {
-		public:
-			virtual ~async_base() = default;
-
-			virtual void context_swap_in() {}
-
-			virtual void context_swap_out() {}
-
-			virtual void context_cleanup() {}
-
-			virtual var call() = 0;
-		};
-
-		class async_function final : public async_base {
-			process_context *this_context = current_process;
-			std::unique_ptr<process_context> pcontext;
-			stack_type<domain_type> stack;
-			const context_t &context;
-			function const *func;
-			vector args;
-
-		public:
-			async_function(function const *fn, vector data) : context(fn->get_context()), pcontext(current_process->fork()), stack(current_process->child_stack_size()), func(fn), args(std::move(data)) {}
-
-			void context_swap_in() override
-			{
-				context->instance->swap_context(&stack);
-				current_process = pcontext.get();
-			}
-
-			void context_swap_out() override
-			{
-				context->instance->swap_context(nullptr);
-				current_process = this_context;
-			}
-
-			void context_cleanup() override
-			{
-				context->instance->clear_context();
-				func = nullptr;
-				args.clear();
-			}
-
-			var call() override
-			{
-				if (func == nullptr)
-					throw lang_error("Asynchronous functions are not reentrant");
-				try {
-					context_swap_in();
-					var ret = func->call(args);
-					context_swap_out();
-					context_cleanup();
-					return std::move(ret);
-				}
-				catch (...) {
-					context_swap_out();
-					context_cleanup();
-					std::lock_guard<std::mutex> lock(current_process->eptr_mutex);
-					current_process->eptr = std::current_exception();
-					return null_pointer;
-				}
-			}
-
-			var operator()()
-			{
-				return call();
-			}
-		};
-
-		bool is_native_callable(const callable &func)
-		{
-			return func.get_raw_data().target_type() != typeid(function_ptr) || func.get_raw_data().target<function_ptr>()->fptr->is_el_func();
-		}
-
-		class async_callable final : public async_base {
-			callable func;
-			vector args;
-
-			void detach_args()
-			{
-				for (auto &val : args) {
-					if (!val.is_rvalue()) {
-						val.clone();
-						val.detach();
-					}
-					else
-						val.mark_trivial();
-				}
-			}
-
-		public:
-			async_callable(const callable &fn, vector data) : func(fn), args(std::move(data))
-			{
-				if (!is_native_callable(fn))
-					throw lang_error("This object cannot be invoked in parallel");
-				detach_args();
-			}
-
-			var call() override
-			{
-				try {
-					return func.call(args);
-				}
-				catch (...) {
-					std::lock_guard<std::mutex> lock(current_process->eptr_mutex);
-					current_process->eptr = std::current_exception();
-					return null_pointer;
-				}
-			}
-
-			var operator()()
-			{
-				return call();
-			}
-		};
-
-		std::unique_ptr<async_base> make_async_wrapper(const callable &func, vector data)
-		{
-			if (is_native_callable(func))
-				return std::make_unique<async_function>(func.get_raw_data().target<function_ptr>()->fptr, std::move(data));
-			else
-				return std::make_unique<async_callable>(func, std::move(data));
-		}
-
-		var await_impl(const callable &fn, vector args)
-		{
-			if (!is_native_callable(fn))
-				throw lang_error("Asynchronous waiting is only available for native functions");
-
-			async_callable func(fn, std::move(args));
-			var ret;
-			if (!current_process->fiber_stack.empty()) {
-				thread_guard guard;
-				auto future = std::async(std::launch::async, func);
-				while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
-					fiber::yield();
-				ret = future.get();
-			}
-			else
-				ret = func();
-
-			std::exception_ptr e = nullptr;
-			{
-				std::lock_guard<std::mutex> lock(current_process->eptr_mutex);
-				if (current_process->eptr != nullptr)
-					std::swap(current_process->eptr, e);
-			}
-			if (e != nullptr)
-				std::rethrow_exception(e);
-
-			return std::move(ret);
-		}
 
 		string get_import_path()
 		{
@@ -1781,103 +1811,6 @@ namespace cs_impl {
 			context->instance->add_string_literal(literal, func);
 		}
 
-		var wait_for_impl(std::size_t mill_sec, const callable &func, vector args)
-		{
-			std::unique_ptr<async_base> async_fn(make_async_wrapper(func, std::move(args)));
-			std::future<var> future = std::async(std::launch::async, [&]() {
-				return async_fn->call();
-			});
-			if (future.wait_for(std::chrono::milliseconds(mill_sec)) != std::future_status::ready) {
-				async_fn->context_swap_out();
-				async_fn->context_cleanup();
-				throw lang_error("The target function timed out or was deferred");
-			}
-			else {
-				std::exception_ptr e = nullptr;
-				{
-					std::lock_guard<std::mutex> lock(current_process->eptr_mutex);
-					if (current_process->eptr != nullptr)
-						std::swap(current_process->eptr, e);
-				}
-				if (e != nullptr)
-					std::rethrow_exception(e);
-				return future.get();
-			}
-		}
-
-		var wait_until_impl(std::size_t mill_sec, const callable &func, vector args)
-		{
-			std::unique_ptr<async_base> async_fn(make_async_wrapper(func, std::move(args)));
-			std::future<var> future = std::async(std::launch::async, [&]() {
-				return async_fn->call();
-			});
-			if (future.wait_until(std::chrono::system_clock::now() + std::chrono::milliseconds(mill_sec)) !=
-			        std::future_status::ready) {
-				async_fn->context_swap_out();
-				async_fn->context_cleanup();
-				throw lang_error("The target function timed out or was deferred");
-			}
-			else {
-				std::exception_ptr e = nullptr;
-				{
-					std::lock_guard<std::mutex> lock(current_process->eptr_mutex);
-					if (current_process->eptr != nullptr)
-						std::swap(current_process->eptr, e);
-				}
-				if (e != nullptr)
-					std::rethrow_exception(e);
-				return future.get();
-			}
-		}
-
-		var wait_for(const numeric &mill_sec, const var &func, const array &argument)
-		{
-			if (func.is_type_of<callable>()) {
-				return wait_for_impl(mill_sec.as_integer(), func.const_val<callable>(), vector(argument.begin(), argument.end()));
-			}
-			else if (func.is_type_of<object_method>()) {
-				const auto &om = func.const_val<object_method>();
-				vector args{om.object};
-				args.insert(args.end(), argument.begin(), argument.end());
-				return wait_for_impl(mill_sec.as_integer(), om.callable.const_val<callable>(), std::move(args));
-			}
-			else
-				throw lang_error("The target value is not callable");
-		}
-
-		var wait_until(const numeric &mill_sec, const var &func, const array &argument)
-		{
-			if (func.is_type_of<callable>()) {
-				return wait_until_impl(mill_sec.as_integer(), func.const_val<callable>(), vector(argument.begin(), argument.end()));
-			}
-			else if (func.is_type_of<object_method>()) {
-				const auto &om = func.const_val<object_method>();
-				vector args{om.object};
-				args.insert(args.end(), argument.begin(), argument.end());
-				return wait_for_impl(mill_sec.as_integer(), om.callable.const_val<callable>(), std::move(args));
-			}
-			else
-				throw lang_error("The target value is not callable");
-		}
-
-		var await(vector &args)
-		{
-			if (args.empty())
-				throw lang_error("Invalid call to 'runtime.await': expected 'runtime.await(function, arguments...)'");
-			const var &func = args.front();
-			if (func.is_type_of<callable>()) {
-				return await_impl(func.const_val<callable>(), vector(args.begin() + 1, args.end()));
-			}
-			else if (func.is_type_of<object_method>()) {
-				const auto &om = func.const_val<object_method>();
-				vector argument{om.object};
-				argument.insert(argument.end(), args.begin() + 1, args.end());
-				return await_impl(om.callable.const_val<callable>(), std::move(argument));
-			}
-			else
-				throw lang_error("The target value is not callable");
-		}
-
 		void link_var(const context_t &context, const string &a, const var &b)
 		{
 			context->instance->storage.get_var(a) = b;
@@ -1912,9 +1845,7 @@ namespace cs_impl {
 			.add_var("argument_count", make_cni(argument_count, true))
 			.add_var("add_literal", make_cni(add_string_literal, true))
 			.add_var("get_current_dir", make_cni(file_system::get_current_dir))
-			.add_var("wait_for", make_cni(wait_for))
-			.add_var("wait_until", make_cni(wait_until))
-			.add_var("await", var::make_protect<callable>(await));
+			.add_var("await", var::make_protect<callable>(async_cs_ext::await));
 			(*context_ext)
 			.add_var("build", make_cni(build))
 			.add_var("solve", make_cni(solve))
@@ -2330,6 +2261,7 @@ namespace cs_impl {
 			ostream_cs_ext::init();
 			system_cs_ext::init();
 			time_cs_ext::init();
+			async_cs_ext::init();
 			fiber_cs_ext::init();
 			runtime_cs_ext::init();
 			math_cs_ext::init();

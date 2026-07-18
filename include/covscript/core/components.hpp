@@ -30,21 +30,6 @@
 #include <string_view>
 
 namespace cs {
-	extern std::atomic_size_t global_thread_counter;
-
-	struct thread_guard final {
-		thread_guard()
-		{
-			global_thread_counter.fetch_add(1, std::memory_order_relaxed);
-		}
-		thread_guard(const thread_guard &) = delete;
-		thread_guard(thread_guard &&) noexcept = delete;
-		~thread_guard()
-		{
-			global_thread_counter.fetch_sub(1, std::memory_order_relaxed);
-		}
-	};
-
 	struct csym_info;
 
 // Exceptions
@@ -80,7 +65,8 @@ namespace cs {
 	public:
 		exception() = delete;
 
-		exception(std::size_t line, std::string file, std::string code, std::string what) noexcept : mLine(line), mFile(std::move(file)), mCode(std::move(code)), mWhat(strip_prefix(std::move(what)))
+		exception(std::size_t line, std::string file, std::string code, std::string what) noexcept
+			: mLine(line), mFile(std::move(file)), mCode(std::move(code)), mWhat(strip_prefix(std::move(what)))
 		{
 			mStr = compose_what(mFile, mLine, mCode, mWhat);
 		}
@@ -210,7 +196,8 @@ namespace cs {
 	public:
 		lang_error() = default;
 
-		explicit lang_error(std::string str) noexcept : mWhat(std::move(str)) {}
+		explicit lang_error(std::string str) noexcept
+			: mWhat(std::move(str)) {}
 
 		lang_error(const lang_error &) = default;
 
@@ -293,7 +280,8 @@ namespace cs {
 	public:
 		forward_exception() = delete;
 
-		explicit forward_exception(const char *str) noexcept : mWhat(str) {}
+		explicit forward_exception(const char *str) noexcept
+			: mWhat(str) {}
 
 		forward_exception(const forward_exception &) = default;
 
@@ -390,9 +378,11 @@ namespace cs {
 				throw runtime_error("Construct numeric with incompatible type.");
 		}
 
-		numeric(const numeric &rhs) : data(rhs.data), type(rhs.type) {}
+		numeric(const numeric &rhs)
+			: data(rhs.data), type(rhs.type) {}
 
-		numeric(numeric &&rhs) noexcept : data(rhs.data), type(rhs.type) {}
+		numeric(numeric &&rhs) noexcept
+			: data(rhs.data), type(rhs.type) {}
 
 		~numeric() = default;
 
@@ -899,7 +889,7 @@ namespace cs {
 		inline T *alloc(ArgsT &&...args)
 		{
 			T *ptr = nullptr;
-			if (mOffset > 0 && global_thread_counter.load(std::memory_order_acquire) == 0)
+			if (mOffset > 0)
 				ptr = mPool[--mOffset];
 			else
 				ptr = mAlloc.allocate(1);
@@ -910,7 +900,7 @@ namespace cs {
 		inline void free(T *ptr)
 		{
 			ptr->~T();
-			if (mOffset < blck_size && global_thread_counter.load(std::memory_order_acquire) == 0)
+			if (mOffset < blck_size)
 				mPool[mOffset++] = ptr;
 			else
 				mAlloc.deallocate(ptr, 1);
@@ -974,18 +964,22 @@ namespace cs_impl {
 	public:
 		basic_string_borrower() noexcept = default;
 
-		basic_string_borrower(const CharT *str) noexcept : m_data(const_cast<CharT *>(str)), m_own(false) {}
+		basic_string_borrower(const CharT *str) noexcept
+			: m_data(const_cast<CharT *>(str)), m_own(false) {}
 
-		basic_string_borrower(const stl_string &str) noexcept : m_data(const_cast<CharT *>(str.data())), m_own(false) {}
+		basic_string_borrower(const stl_string &str) noexcept
+			: m_data(const_cast<CharT *>(str.data())), m_own(false) {}
 
-		basic_string_borrower(stl_string &&str) : m_own(true)
+		basic_string_borrower(stl_string &&str)
+			: m_own(true)
 		{
 			stl_string *p = get_allocator().allocate(1);
 			::new (p) stl_string(std::move(str));
 			m_data = p;
 		}
 
-		basic_string_borrower(const basic_string_borrower &other) : m_own(other.m_own)
+		basic_string_borrower(const basic_string_borrower &other)
+			: m_own(other.m_own)
 		{
 			if (other.m_own) {
 				stl_string *p = get_allocator().allocate(1);
@@ -1100,10 +1094,12 @@ namespace cs {
 
 			tree_node(tree_node &&) noexcept = default;
 
-			tree_node(tree_node *a, tree_node *b, tree_node *c, const T &dat) : root(a), left(b), right(c), data(dat) {}
+			tree_node(tree_node *a, tree_node *b, tree_node *c, const T &dat)
+				: root(a), left(b), right(c), data(dat) {}
 
 			template <typename... Args_T>
-			tree_node(tree_node *a, tree_node *b, tree_node *c, Args_T &&...args) : root(a), left(b), right(c), data(std::forward<Args_T>(args)...)
+			tree_node(tree_node *a, tree_node *b, tree_node *c, Args_T &&...args)
+				: root(a), left(b), right(c), data(std::forward<Args_T>(args)...)
 			{
 			}
 
@@ -1136,7 +1132,8 @@ namespace cs {
 
 			tree_node *mData = nullptr;
 
-			iterator(tree_node *ptr) : mData(ptr) {}
+			iterator(tree_node *ptr)
+				: mData(ptr) {}
 
 		public:
 			iterator() = default;
@@ -1208,11 +1205,14 @@ namespace cs {
 
 		tree_type() = default;
 
-		explicit tree_type(iterator it) : mRoot(copy(it.mData)) {}
+		explicit tree_type(iterator it)
+			: mRoot(copy(it.mData)) {}
 
-		tree_type(const tree_type &t) : mRoot(copy(t.mRoot)) {}
+		tree_type(const tree_type &t)
+			: mRoot(copy(t.mRoot)) {}
 
-		tree_type(tree_type &&t) noexcept : mRoot(nullptr)
+		tree_type(tree_type &&t) noexcept
+			: mRoot(nullptr)
 		{
 			swap(t);
 		}

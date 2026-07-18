@@ -197,12 +197,14 @@ namespace cs {
 		std_exception_handler std_eh_callback = &std_defalt_exception_handler;
 		cs_exception_handler cs_eh_callback = &cs_defalt_exception_handler;
 
-		process_context() : on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
+		process_context()
+			: on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
 		{
 			is_sigint_raised = false;
 		}
 
-		explicit process_context(std::size_t ss) : on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
+		explicit process_context(std::size_t ss)
+			: on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
 		{
 			resize_stack(ss);
 			is_sigint_raised = false;
@@ -262,7 +264,8 @@ namespace cs {
 
 		callable(const callable &) = default;
 
-		explicit callable(function_type func, types type = types::normal) : mFunc(std::move(func)), mType(type) {}
+		explicit callable(function_type func, types type = types::normal)
+			: mFunc(std::move(func)), mType(type) {}
 
 		bool is_request_fold() const
 		{
@@ -288,6 +291,23 @@ namespace cs {
 		{
 			return mFunc;
 		}
+	};
+
+	class future_type {
+	protected:
+		future_type() = default;
+
+	public:
+		future_type(const future_type &) = delete;
+		future_type &operator=(const future_type &) = delete;
+
+		virtual ~future_type() = default;
+
+		virtual bool wait_for(std::size_t) = 0;
+
+		virtual void wait() = 0;
+
+		virtual var get() = 0;
 	};
 
 	enum class fiber_state {
@@ -331,6 +351,8 @@ namespace cs {
 		fiber_t create(const context_t &, std::function<var()>);
 
 		fiber_t create_native(std::function<var()>);
+
+		future_t get_future(const fiber_t &);
 
 		void resume(const fiber_t &);
 
@@ -381,13 +403,15 @@ namespace cs {
 		function(const function &) = default;
 
 #ifdef CS_DEBUGGER
-		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false) : mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
+		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
+			: mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
 		{
 			init_call_ptr();
 		}
 #else
 
-		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false) : mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
+		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
+			: mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
 		{
 			init_call_ptr();
 		}
@@ -481,7 +505,8 @@ namespace cs {
 
 		object_method() = delete;
 
-		object_method(var obj, var func, bool request_fold = false) : object(std::move(obj)), callable(std::move(func)), is_request_fold(request_fold) {}
+		object_method(var obj, var func, bool request_fold = false)
+			: object(std::move(obj)), callable(std::move(func)), is_request_fold(request_fold) {}
 
 		~object_method() = default;
 	};
@@ -521,7 +546,8 @@ namespace cs {
 
 		pointer() = default;
 
-		explicit pointer(var v) : data(std::move(v)) {}
+		explicit pointer(var v)
+			: data(std::move(v)) {}
 
 		bool operator==(const pointer &ptr) const
 		{
@@ -538,7 +564,8 @@ namespace cs {
 
 		type_id() = delete;
 
-		type_id(const std::type_index &id, std::size_t hash = 0) : type_idx(id), type_hash(hash) {}
+		type_id(const std::type_index &id, std::size_t hash = 0)
+			: type_idx(id), type_hash(hash) {}
 
 		inline bool is_a(const type_id &id) const
 		{
@@ -574,7 +601,8 @@ namespace cs {
 	struct domain_ref final {
 		domain_type *domain = nullptr;
 
-		domain_ref(domain_type *ptr) : domain(ptr) {}
+		domain_ref(domain_type *ptr)
+			: domain(ptr) {}
 	};
 
 	class var_id final {
@@ -589,7 +617,8 @@ namespace cs {
 	public:
 		var_id() = delete;
 
-		explicit var_id(std::string_view name) : m_id(name) {}
+		explicit var_id(std::string_view name)
+			: m_id(name) {}
 
 		var_id(const var_id &) = default;
 
@@ -636,11 +665,14 @@ namespace cs {
 		}
 
 	public:
-		domain_type() : m_ref(std::make_shared<domain_ref>(this)) {}
+		domain_type()
+			: m_ref(std::make_shared<domain_ref>(this)) {}
 
-		domain_type(const domain_type &domain) : m_reflect(domain.m_reflect), m_ref(std::make_shared<domain_ref>(this)), m_slot(domain.m_slot) {}
+		domain_type(const domain_type &domain)
+			: m_reflect(domain.m_reflect), m_ref(std::make_shared<domain_ref>(this)), m_slot(domain.m_slot) {}
 
-		domain_type(domain_type &&domain) noexcept : m_ref(std::make_shared<domain_ref>(this))
+		domain_type(domain_type &&domain) noexcept
+			: m_ref(std::make_shared<domain_ref>(this))
 		{
 			std::swap(m_reflect, domain.m_reflect);
 			std::swap(m_slot, domain.m_slot);
@@ -886,9 +918,11 @@ namespace cs {
 
 		type_t() = delete;
 
-		type_t(std::function<var()> c, const type_id &i) : constructor(std::move(c)), id(i) {}
+		type_t(std::function<var()> c, const type_id &i)
+			: constructor(std::move(c)), id(i) {}
 
-		type_t(std::function<var()> c, const type_id &i, namespace_t ext) : constructor(std::move(c)), id(i), extensions(std::move(ext)) {}
+		type_t(std::function<var()> c, const type_id &i, namespace_t ext)
+			: constructor(std::move(c)), id(i), extensions(std::move(ext)) {}
 
 		template <typename T>
 		var &get_var(T &&) const;
@@ -900,7 +934,8 @@ namespace cs {
 	public:
 		range_iterator() = delete;
 
-		explicit range_iterator(numeric step, numeric index) : m_step(std::move(step)), m_index(std::move(index)) {}
+		explicit range_iterator(numeric step, numeric index)
+			: m_step(std::move(step)), m_index(std::move(index)) {}
 
 		range_iterator(const range_iterator &) = default;
 
@@ -936,7 +971,8 @@ namespace cs {
 	public:
 		range_type() = delete;
 
-		range_type(numeric start, numeric stop, numeric step) : m_start(std::move(start)), m_stop(std::move(stop)), m_step(std::move(step)) {}
+		range_type(numeric start, numeric stop, numeric step)
+			: m_start(std::move(start)), m_stop(std::move(stop)), m_step(std::move(step)) {}
 
 		range_type(const range_type &) = default;
 
@@ -969,15 +1005,17 @@ namespace cs {
 	public:
 		structure() = delete;
 
-		structure(const type_id &id, std::string name, const domain_type &data) : m_id(id),
-			m_name(std::move(name)),
-			m_data(std::make_shared<domain_type>(data))
+		structure(const type_id &id, std::string name, const domain_type &data)
+			: m_id(id),
+			  m_name(std::move(name)),
+			  m_data(std::make_shared<domain_type>(data))
 		{
 			if (m_data->exist("initialize"))
 				invoke(m_data->get_var("initialize"), var::make<structure>(this));
 		}
 
-		structure(structure &&s) noexcept : m_shadow(s.m_shadow), m_data(nullptr), m_id(typeid(void))
+		structure(structure &&s) noexcept
+			: m_shadow(s.m_shadow), m_data(nullptr), m_id(typeid(void))
 		{
 			s.m_shadow = true;
 			std::swap(m_name, s.m_name);
@@ -985,7 +1023,8 @@ namespace cs {
 			std::swap(m_id, s.m_id);
 		}
 
-		structure(const structure &s) : m_id(s.m_id), m_name(s.m_name), m_data(std::make_shared<domain_type>())
+		structure(const structure &s)
+			: m_id(s.m_id), m_name(s.m_name), m_data(std::make_shared<domain_type>())
 		{
 			if (s.m_data->exist("parent")) {
 				var &_p = s.m_data->get_var("parent");
@@ -1009,7 +1048,8 @@ namespace cs {
 				invoke(m_data->get_var("duplicate"), var::make<structure>(this), var::make<structure>(&s));
 		}
 
-		explicit structure(const structure *s) : m_shadow(true), m_id(s->m_id), m_name(s->m_name), m_data(s->m_data) {}
+		explicit structure(const structure *s)
+			: m_shadow(true), m_id(s->m_id), m_name(s->m_name), m_data(s->m_data) {}
 
 		~structure()
 		{
@@ -1081,11 +1121,12 @@ namespace cs {
 		struct_builder() = delete;
 
 		struct_builder(context_t c, std::string name, tree_type<token_base *> parent,
-		               std::deque<statement_base *> method) : mContext(std::move(c)),
-			mTypeId(typeid(structure), ++mCount),
-			mName(std::move(name)),
-			mParent(std::move(parent)),
-			mMethod(std::move(method)) {}
+		               std::deque<statement_base *> method)
+			: mContext(std::move(c)),
+			  mTypeId(typeid(structure), ++mCount),
+			  mName(std::move(name)),
+			  mParent(std::move(parent)),
+			  mMethod(std::move(method)) {}
 
 		struct_builder(const struct_builder &) = default;
 
@@ -1113,16 +1154,20 @@ namespace cs {
 		bool is_ref = false;
 
 	public:
-		name_space() : m_data(new domain_type) {}
+		name_space()
+			: m_data(new domain_type) {}
 
-		name_space(const name_space &ns) : m_data(new domain_type)
+		name_space(const name_space &ns)
+			: m_data(new domain_type)
 		{
 			copy_namespace(ns);
 		}
 
-		explicit name_space(domain_type dat) : m_data(new domain_type(std::move(dat))) {}
+		explicit name_space(domain_type dat)
+			: m_data(new domain_type(std::move(dat))) {}
 
-		explicit name_space(domain_type *dat) : m_data(dat), is_ref(true) {}
+		explicit name_space(domain_type *dat)
+			: m_data(dat), is_ref(true) {}
 
 		virtual ~name_space()
 		{
@@ -1271,7 +1316,7 @@ namespace cs {
 
 		static inline int truncate(int n, int m)
 		{
-			return n == 0 ? 0 : n / int(std::pow(10, (std::max) (int(std::log10(std::abs(n))) - (std::max) (m, 0) + 1, 0)));
+			return n == 0 ? 0 : n / int(std::pow(10, (std::max)(int(std::log10(std::abs(n))) - (std::max)(m, 0) + 1, 0)));
 		}
 
 		explicit extension(std::string_view path)

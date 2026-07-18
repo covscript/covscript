@@ -208,12 +208,7 @@ namespace cs {
 			win32_fiber() = delete;
 			// Native Function
 			win32_fiber(std::function<var()> f)
-				: cs_stack(0), cs_context(nullptr),
-				  func(std::move(f)),
-				  eptr(nullptr),
-				  state(fiber_state::ready),
-				  ret_val(null_pointer),
-				  stack_size(COVSCRIPT_FIBER_STACK_LIMIT) {}
+				: cs_stack(0), cs_context(nullptr), func(std::move(f)), eptr(nullptr), state(fiber_state::ready), ret_val(null_pointer), stack_size(COVSCRIPT_FIBER_STACK_LIMIT) {}
 
 			// CovScript Function
 			win32_fiber(const context_t &cxt, std::function<var()> f)
@@ -302,7 +297,8 @@ namespace cs {
 				if (now < fi->wake_up_time) {
 					fi->busy_skip_count++;
 					auto remain_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-					                     fi->wake_up_time - now).count();
+					                     fi->wake_up_time - now)
+					                 .count();
 					auto wait_time = static_cast<std::size_t>(
 					                     fi->busy_skip_count * remain_ms * current_process->fiber_busy_wait_coef);
 					if (wait_time > static_cast<std::size_t>(remain_ms))
