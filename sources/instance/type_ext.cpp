@@ -1363,28 +1363,9 @@ namespace cs_impl {
 
 			var operator()()
 			{
-				try {
-					return func.call(args);
-				}
-				catch (...) {
-					std::lock_guard<std::mutex> lock(current_process->eptr_mutex);
-					current_process->eptr = std::current_exception();
-					return null_pointer;
-				}
+				return func.call(args);
 			}
 		};
-
-		void check_exception()
-		{
-			std::exception_ptr e = nullptr;
-			{
-				std::lock_guard<std::mutex> lock(current_process->eptr_mutex);
-				if (current_process->eptr != nullptr)
-					std::swap(current_process->eptr, e);
-			}
-			if (e != nullptr)
-				std::rethrow_exception(e);
-		}
 
 		var await_impl(const callable &fn, vector args)
 		{
@@ -1392,9 +1373,7 @@ namespace cs_impl {
 				auto future = std::async(std::launch::async, async_callable(fn, std::move(args)));
 				while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
 					fiber::sleep_for(current_process->fiber_busy_wait_min);
-				var ret = future.get();
-				check_exception();
-				return std::move(ret);
+				return future.get();
 			}
 			else
 				return fn.call(args);
@@ -1429,20 +1408,44 @@ namespace cs_impl {
 
 			bool wait_for(std::size_t ms) override
 			{
-				return future.wait_for(std::chrono::milliseconds(ms)) == std::future_status::ready;
+				bool ready = false;
+				if (fiber::within()) {
+					std::chrono::steady_clock::time_point end_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(ms);
+					while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout) {
+						auto remain_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+						                     end_time - std::chrono::steady_clock::now())
+						                 .count();
+						if (remain_ms <= 0)
+							break;
+						auto wait_time = static_cast<std::size_t>(remain_ms * current_process->fiber_busy_wait_coef);
+						if (wait_time < current_process->fiber_busy_wait_min)
+							wait_time = current_process->fiber_busy_wait_min;
+						if (wait_time > static_cast<std::size_t>(remain_ms))
+							wait_time = static_cast<std::size_t>(remain_ms);
+						fiber::sleep_for(wait_time);
+					}
+					ready = future.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready;
+				}
+				else
+					ready = future.wait_for(std::chrono::milliseconds(ms)) == std::future_status::ready;
+				return ready;
 			}
 
 			void wait() override
 			{
-				future.wait();
-				check_exception();
+				if (fiber::within()) {
+					while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
+						fiber::sleep_for(current_process->fiber_busy_wait_min);
+				}
+				else {
+					future.wait();
+				}
 			}
 
 			var get() override
 			{
-				var result = future.get();
-				check_exception();
-				return std::move(result);
+				wait();
+				return future.get();
 			}
 		};
 
@@ -1647,6 +1650,11 @@ namespace cs_impl {
 			return current_process->fiber_stack.top();
 		}
 
+		void fiber_resume(const fiber_t &fiber)
+		{
+			fiber::resume(fiber, fiber::schedule_policy::normal);
+		}
+
 		void init()
 		{
 			(*fiber_ext)
@@ -1660,7 +1668,7 @@ namespace cs_impl {
 			.add_var("within", make_cni(fiber::within))
 			.add_var("set_schedule_policy", make_cni(set_schedule_policy))
 			.add_var("current", make_cni(fiber_current))
-			.add_var("resume", make_cni(fiber::resume))
+			.add_var("resume", make_cni(fiber_resume))
 			.add_var("yield", make_cni(fiber::yield));
 		}
 	} // namespace fiber_cs_ext

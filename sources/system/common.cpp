@@ -31,6 +31,17 @@
 namespace cs::fiber {
 	class fiber_future final : public future_type {
 		fiber_t mFiber;
+		std::exception_ptr mException;
+
+		void resume_fiber()
+		{
+			try {
+				resume(mFiber, schedule_policy::no_backpressure);
+			}
+			catch (...) {
+				mException = std::current_exception();
+			}
+		}
 
 	public:
 		fiber_future(fiber_t fiber)
@@ -43,8 +54,8 @@ namespace cs::fiber {
 				auto now = std::chrono::steady_clock::now();
 				if (now > end_time)
 					break;
-				resume(mFiber);
-				if (mFiber->get_state() == fiber_state::finished)
+				resume_fiber();
+				if (mFiber->get_state() == fiber_state::finished || mException != nullptr)
 					break;
 				auto remain_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
 				                     end_time - std::chrono::steady_clock::now())
@@ -52,10 +63,10 @@ namespace cs::fiber {
 				if (remain_ms <= 0)
 					break;
 				auto wait_time = static_cast<std::size_t>(remain_ms * current_process->fiber_busy_wait_coef);
-				if (wait_time > static_cast<std::size_t>(remain_ms))
-					wait_time = static_cast<std::size_t>(remain_ms);
 				if (wait_time < current_process->fiber_busy_wait_min)
 					wait_time = current_process->fiber_busy_wait_min;
+				if (wait_time > static_cast<std::size_t>(remain_ms))
+					wait_time = static_cast<std::size_t>(remain_ms);
 				if (within())
 					fiber::sleep_for(wait_time);
 				else
@@ -67,13 +78,17 @@ namespace cs::fiber {
 		void wait() override
 		{
 			while (mFiber->get_state() != fiber_state::finished) {
-				resume(mFiber);
-				if (mFiber->get_state() == fiber_state::finished)
+				resume_fiber();
+				if (mException != nullptr)
 					break;
-				if (within())
-					fiber::sleep_for(current_process->fiber_busy_wait_min);
-				else
-					std::this_thread::sleep_for(std::chrono::milliseconds(current_process->fiber_busy_wait_min));
+				// Only back off if the fiber is actively sleeping; a suspended
+				// (yielded) fiber can be resumed again immediately.
+				if (mFiber->get_state() == fiber_state::sleeping) {
+					if (within())
+						fiber::sleep_for(current_process->fiber_busy_wait_min);
+					else
+						std::this_thread::sleep_for(std::chrono::milliseconds(current_process->fiber_busy_wait_min));
+				}
 			}
 		}
 
@@ -81,6 +96,8 @@ namespace cs::fiber {
 		{
 			if (mFiber->get_state() != fiber_state::finished)
 				wait();
+			if (mException)
+				std::rethrow_exception(mException);
 			return mFiber->return_value();
 		}
 	};

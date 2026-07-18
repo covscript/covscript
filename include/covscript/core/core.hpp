@@ -338,6 +338,11 @@ namespace cs {
 	};
 
 	namespace fiber {
+		enum class schedule_policy {
+			normal,
+			no_backpressure,
+		};
+
 		inline fiber_type const *current()
 		{
 			return cs::current_process->fiber_stack.empty() ? nullptr : cs::current_process->fiber_stack.top().get();
@@ -354,7 +359,7 @@ namespace cs {
 
 		future_t get_future(const fiber_t &);
 
-		void resume(const fiber_t &);
+		void resume(const fiber_t &, schedule_policy = schedule_policy::normal);
 
 		void sleep_for(std::size_t);
 
