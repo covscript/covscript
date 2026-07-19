@@ -39,14 +39,16 @@ This project is an officially maintained Covariant Script interpreter.
     + Support compile-time optimization
     + Exportable compilation results
 + High-performance runtime environment
-    + Stackful asymmetric coroutine
+    + [Stackful asymmetric coroutine](docs/Asynchronous.md)
     + Hotspot optimization algorithm
     + Efficient memory management system
     + Reference count garbage collection system
 
 ## Documents ##
 
-Please visit [Covariant Script Organization README](https://github.com/covscript/README)
+- [Asynchronous Mechanism](docs/Asynchronous.md) — Fiber coroutines and Future API
+- [System Environment](docs/System_Environment.md) — Environment variables and configuration
+- [Covariant Script Organization README](https://github.com/covscript/README) — Complete documentation index
 
 ## Codespace ##
 
@@ -138,6 +140,8 @@ Explore these official projects to enhance your Covariant Script experience:
 - **[VSCode Extension](https://github.com/covscript/covscript-vscode)** - Official VSCode extension with syntax highlighting, code completion, and debugging support
 - **[Package Manager (cspkg)](https://github.com/covscript/cspkg)** - Official package manager for easy dependency management and package distribution
 - **[Examples](https://github.com/covscript/covscript-example)** - Collection of example programs and use cases
+- **[Network Extension](https://github.com/covscript/covscript-network)** - Async networking (TCP/UDP/TLS/HTTP) with Fiber support
+- **[Process Extension](https://github.com/covscript/covscript-process)** - Async process management and file I/O with Fiber support
 
 ## Tools & Resources ##
 

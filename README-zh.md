@@ -39,7 +39,7 @@
     + 支持编译期优化
     + 可导出编译结果
 + 高性能运行时环境
-    + 堆栈式非对称协程
+    + [堆栈式非对称协程](docs/Asynchronous-zh.md)
     + 热点分析优化算法
     + 高效的内存管理系统
     + 引用计数垃圾回收器
@@ -50,7 +50,9 @@
 
 ## 文档 ##
 
-请访问 [Covariant Script OSC README](https://github.com/covscript/README)
+- [异步机制](docs/Asynchronous-zh.md) — Fiber 协程与 Future API
+- [系统环境](docs/System_Environment-zh.md) — 环境变量与配置
+- [Covariant Script OSC README](https://github.com/covscript/README) — 完整文档索引
 
 ## Codespace ##
 
@@ -159,6 +161,8 @@
 - **[官方手册](https://github.com/covscript/handbook)** - 完整的入门指南、教程和最佳实践文档
 - **[VSCode 扩展](https://github.com/covscript/covscript-vscode)** - 官方 VSCode 扩展，提供语法高亮、代码补全和调试支持
 - **[包管理器 (cspkg)](https://github.com/covscript/cspkg)** - 官方包管理系统，便于依赖管理和包分发
+- **[Network 扩展](https://github.com/covscript/covscript-network)** - 异步网络通讯（TCP/UDP/TLS/HTTP），支持 Fiber 协同
+- **[Process 扩展](https://github.com/covscript/covscript-process)** - 异步进程管理与文件 I/O，支持 Fiber 协同
 - **[示例项目](https://github.com/covscript/covscript-example)** - 精选示例程序和常见用法
 
 ## 开发工具 ##
