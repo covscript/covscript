@@ -1357,7 +1357,7 @@ namespace cs_impl {
 				: func(fn), args(std::move(data))
 			{
 				if (!is_native_callable(fn))
-					throw lang_error("This object cannot be invoked in parallel");
+					throw lang_error("Async operation requires a native function");
 				detach_args();
 			}
 
@@ -1375,8 +1375,10 @@ namespace cs_impl {
 					fiber::sleep_for(current_process->fiber_busy_wait_min);
 				return future.get();
 			}
-			else
+			else if (is_native_callable(fn))
 				return fn.call(args);
+			else
+				throw lang_error("Async operation requires a native function");
 		}
 
 		var await(vector &args)
@@ -1398,11 +1400,11 @@ namespace cs_impl {
 		}
 
 		class async_future final : public future_type {
-			std::future<var> future;
+			std::shared_future<var> future;
 
 		public:
 			async_future(const callable &fn, vector args)
-				: future(std::async(std::launch::async, async_callable(fn, std::move(args))))
+				: future(std::async(std::launch::async, async_callable(fn, std::move(args))).share())
 			{
 			}
 
