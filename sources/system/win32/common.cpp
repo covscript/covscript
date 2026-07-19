@@ -171,7 +171,7 @@ namespace cs_impl {
 namespace cs {
 	namespace fiber {
 		class win32_fiber : public fiber_type {
-			friend void cs::fiber::resume(const fiber_t &);
+			friend void cs::fiber::resume(const fiber_t &, schedule_policy);
 			friend void cs::fiber::sleep_for(std::size_t);
 			friend void cs::fiber::yield();
 
@@ -208,12 +208,7 @@ namespace cs {
 			win32_fiber() = delete;
 			// Native Function
 			win32_fiber(std::function<var()> f)
-				: cs_stack(0), cs_context(nullptr),
-				  func(std::move(f)),
-				  eptr(nullptr),
-				  state(fiber_state::ready),
-				  ret_val(null_pointer),
-				  stack_size(COVSCRIPT_FIBER_STACK_LIMIT) {}
+				: cs_stack(0), cs_context(nullptr), func(std::move(f)), eptr(nullptr), state(fiber_state::ready), ret_val(null_pointer), stack_size(COVSCRIPT_FIBER_STACK_LIMIT) {}
 
 			// CovScript Function
 			win32_fiber(const context_t &cxt, std::function<var()> f)
@@ -284,7 +279,7 @@ namespace cs {
 			}
 		};
 
-		void resume(const fiber_t &fi_p)
+		void resume(const fiber_t &fi_p, schedule_policy policy)
 		{
 			static global_ctx_holder global_ctx;
 			win32_fiber *fi = static_cast<win32_fiber *>(fi_p.get());
@@ -300,9 +295,12 @@ namespace cs {
 			if (fi->state == fiber_state::sleeping) {
 				auto now = std::chrono::steady_clock::now();
 				if (now < fi->wake_up_time) {
+					if (policy == schedule_policy::no_backpressure)
+						return;
 					fi->busy_skip_count++;
 					auto remain_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-					                     fi->wake_up_time - now).count();
+					                     fi->wake_up_time - now)
+					                 .count();
 					auto wait_time = static_cast<std::size_t>(
 					                     fi->busy_skip_count * remain_ms * current_process->fiber_busy_wait_coef);
 					if (wait_time > static_cast<std::size_t>(remain_ms))

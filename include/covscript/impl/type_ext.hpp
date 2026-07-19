@@ -421,7 +421,8 @@ namespace cs_impl {
 
 		path_info() = delete;
 
-		path_info(const std::string &n, file_type t) : name(n), type(t) {}
+		path_info(const std::string &n, file_type t)
+			: name(n), type(t) {}
 	};
 
 	void init_extensions();
@@ -441,6 +442,7 @@ namespace cs_impl {
 	extern cs::namespace_t hash_map_ext;
 	extern cs::namespace_t pair_ext;
 	extern cs::namespace_t time_ext;
+	extern cs::namespace_t future_ext;
 	extern cs::namespace_t fiber_ext;
 	extern cs::namespace_t context_ext;
 	extern cs::namespace_t runtime_ext;
@@ -824,6 +826,12 @@ namespace cs_impl {
 #endif
 
 	template <>
+	constexpr const char *get_name_of_type<cs::future_t>()
+	{
+		return "cs::future";
+	}
+
+	template <>
 	constexpr const char *get_name_of_type<cs::fiber_t>()
 	{
 		return "cs::fiber";
@@ -931,6 +939,12 @@ namespace cs_impl {
 	cs::namespace_t &get_ext<std::tm>()
 	{
 		return time_ext;
+	}
+
+	template <>
+	cs::namespace_t &get_ext<cs::future_t>()
+	{
+		return future_ext;
 	}
 
 	template <>

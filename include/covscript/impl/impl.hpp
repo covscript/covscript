@@ -56,13 +56,17 @@ namespace cs {
 		// Constructor and destructor
 		instance_type() = delete;
 
-		explicit instance_type(context_t c) : context(std::move(c)), runtime_type(fiber_sp), fiber_stack(fiber_sp) {}
+		explicit instance_type(context_t c)
+			: context(std::move(c)), runtime_type(fiber_sp), fiber_stack(fiber_sp) {}
 
-		instance_type(context_t c, stack_pointer &fsp) : context(std::move(c)), runtime_type(fsp), fiber_stack(fsp) {}
+		instance_type(context_t c, stack_pointer &fsp)
+			: context(std::move(c)), runtime_type(fsp), fiber_stack(fsp) {}
 
-		instance_type(context_t c, std::size_t stack_size) : context(std::move(c)), runtime_type(fiber_sp, stack_size), fiber_stack(fiber_sp) {}
+		instance_type(context_t c, std::size_t stack_size)
+			: context(std::move(c)), runtime_type(fiber_sp, stack_size), fiber_stack(fiber_sp) {}
 
-		instance_type(context_t c, stack_pointer &fsp, std::size_t stack_size) : context(std::move(c)), runtime_type(fsp, stack_size), fiber_stack(fsp) {}
+		instance_type(context_t c, stack_pointer &fsp, std::size_t stack_size)
+			: context(std::move(c)), runtime_type(fsp, stack_size), fiber_stack(fsp) {}
 
 		instance_type(const instance_type &) = delete;
 
@@ -163,7 +167,8 @@ namespace cs {
 	public:
 		scope_guard() = delete;
 
-		explicit scope_guard(const context_t &c) : context(c)
+		explicit scope_guard(const context_t &c)
+			: context(c)
 		{
 			context->instance->storage.add_domain();
 		}

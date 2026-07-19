@@ -36,13 +36,15 @@ namespace cs {
 		set_t<std::string_view> buildin_symbols;
 
 	public:
-		explicit domain_manager(const stack_pointer &fiber_sp) : fiber_stack(fiber_sp)
+		explicit domain_manager(const stack_pointer &fiber_sp)
+			: fiber_stack(fiber_sp)
 		{
 			m_set.push();
 			m_data.push();
 		}
 
-		domain_manager(const stack_pointer &fiber_sp, std::size_t size) : fiber_stack(fiber_sp)
+		domain_manager(const stack_pointer &fiber_sp, std::size_t size)
+			: fiber_stack(fiber_sp)
 		{
 			m_set.push();
 			m_data.resize(size);
@@ -361,9 +363,11 @@ namespace cs {
 	public:
 		domain_manager storage;
 
-		explicit runtime_type(const stack_pointer &fiber_sp) : storage(fiber_sp) {}
+		explicit runtime_type(const stack_pointer &fiber_sp)
+			: storage(fiber_sp) {}
 
-		runtime_type(const stack_pointer &fiber_sp, std::size_t size) : storage(fiber_sp, size) {}
+		runtime_type(const stack_pointer &fiber_sp, std::size_t size)
+			: storage(fiber_sp, size) {}
 
 		void add_string_literal(const std::string &literal, const callable &func)
 		{

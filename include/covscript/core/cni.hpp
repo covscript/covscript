@@ -440,7 +440,8 @@ namespace cs_impl {
 
 		cni_helper(const cni_helper &) = default;
 
-		explicit cni_helper(const std::function<void(_Target_ArgsT...)> &func) : mFunc(func) {}
+		explicit cni_helper(const std::function<void(_Target_ArgsT...)> &func)
+			: mFunc(func) {}
 
 		std::size_t argument_count() const noexcept
 		{
@@ -475,7 +476,8 @@ namespace cs_impl {
 
 		cni_helper(const cni_helper &) = default;
 
-		explicit cni_helper(const std::function<_Target_RetT(_Target_ArgsT...)> &func) : mFunc(func) {}
+		explicit cni_helper(const std::function<_Target_RetT(_Target_ArgsT...)> &func)
+			: mFunc(func) {}
 
 		std::size_t argument_count() const noexcept
 		{
@@ -518,7 +520,8 @@ namespace cs_impl {
 
 		cni_holder(const cni_holder &) = default;
 
-		explicit cni_holder(const T &func) : mCni(func) {}
+		explicit cni_holder(const T &func)
+			: mCni(func) {}
 
 		~cni_holder() override = default;
 
@@ -608,19 +611,22 @@ namespace cs_impl {
 	public:
 		cni() = delete;
 
-		cni(const cni &c) : mCni(c.mCni->clone()) {}
+		cni(const cni &c)
+			: mCni(c.mCni->clone()) {}
 
 		template <typename T>
-		explicit cni(T &&val) : mCni(
-			    construct_helper<typename cni_modify<typename std::remove_reference<T>::type>::type>::construct(
-			        std::forward<T>(val)))
+		explicit cni(T &&val)
+			: mCni(
+			      construct_helper<typename cni_modify<typename std::remove_reference<T>::type>::type>::construct(
+			          std::forward<T>(val)))
 		{
 		}
 
 		template <typename T, typename X>
-		cni(T &&val, cni_type<X>) : mCni(
-			    new cni_holder<typename cni_modify<typename std::remove_reference<T>::type>::type, typename cni_modify<X>::type>(
-			        std::forward<T>(val)))
+		cni(T &&val, cni_type<X>)
+			: mCni(
+			      new cni_holder<typename cni_modify<typename std::remove_reference<T>::type>::type, typename cni_modify<X>::type>(
+			          std::forward<T>(val)))
 		{
 			// Analysis the function
 			using target_function_type = typename cov::function_parser<typename cni_modify<typename std::remove_reference<T>::type>::type>::type::common_type;

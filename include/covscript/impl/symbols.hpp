@@ -159,7 +159,8 @@ namespace cs {
 		std::map<Key, T> mDat;
 
 	public:
-		mapping(std::initializer_list<std::pair<const Key, T>> l) : mDat(l) {}
+		mapping(std::initializer_list<std::pair<const Key, T>> l)
+			: mDat(l) {}
 
 		bool exist(const Key &k) const
 		{
@@ -209,7 +210,8 @@ namespace cs {
 
 		token_base(const token_base &) = default;
 
-		explicit token_base(std::size_t line) : line_num(line) {}
+		explicit token_base(std::size_t line)
+			: line_num(line) {}
 
 		virtual ~token_base() = default;
 
@@ -231,7 +233,8 @@ namespace cs {
 	public:
 		token_endline() = default;
 
-		explicit token_endline(std::size_t line) : token_base(line) {}
+		explicit token_endline(std::size_t line)
+			: token_base(line) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -251,7 +254,8 @@ namespace cs {
 	public:
 		token_action() = delete;
 
-		explicit token_action(action_types t) : mType(t) {}
+		explicit token_action(action_types t)
+			: mType(t) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -276,13 +280,15 @@ namespace cs {
 	public:
 		token_signal() = delete;
 
-		explicit token_signal(signal_types t) : mType(t)
+		explicit token_signal(signal_types t)
+			: mType(t)
 		{
 			if (t == signal_types::error_)
 				throw compile_error("Unknown signal.");
 		}
 
-		token_signal(signal_types t, std::size_t line) : token_base(line), mType(t) {}
+		token_signal(signal_types t, std::size_t line)
+			: token_base(line), mType(t) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -303,7 +309,8 @@ namespace cs {
 	public:
 		token_id() = delete;
 
-		explicit token_id(const std::string &id) : mId(id) {}
+		explicit token_id(const std::string &id)
+			: mId(id) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -328,7 +335,8 @@ namespace cs {
 	public:
 		token_vargs() = delete;
 
-		explicit token_vargs(std::string id) : mId(std::move(id)) {}
+		explicit token_vargs(std::string id)
+			: mId(std::move(id)) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -353,7 +361,8 @@ namespace cs {
 	public:
 		token_expand() = delete;
 
-		explicit token_expand(tree_type<token_base *> tree) : mTree(std::move(tree)) {}
+		explicit token_expand(tree_type<token_base *> tree)
+			: mTree(std::move(tree)) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -375,7 +384,8 @@ namespace cs {
 	public:
 		token_value() = delete;
 
-		explicit token_value(var val) : mVal(std::move(val)) {}
+		explicit token_value(var val)
+			: mVal(std::move(val)) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -398,7 +408,8 @@ namespace cs {
 	public:
 		token_literal() = delete;
 
-		token_literal(std::string data, std::string literal) : m_data(std::move(data)), m_literal(std::move(literal)) {}
+		token_literal(std::string data, std::string literal)
+			: m_data(std::move(data)), m_literal(std::move(literal)) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -428,7 +439,8 @@ namespace cs {
 	public:
 		token_sblist() = delete;
 
-		explicit token_sblist(std::deque<std::deque<token_base *>> list) : mList(std::move(list)) {}
+		explicit token_sblist(std::deque<std::deque<token_base *>> list)
+			: mList(std::move(list)) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -447,14 +459,14 @@ namespace cs {
 		}
 	};
 
-	class token_mblist final :
-		public token_base {
+	class token_mblist final : public token_base {
 		std::deque<std::deque<token_base *>> mList;
 
 	public:
 		token_mblist() = delete;
 
-		explicit token_mblist(std::deque<std::deque<token_base *>> list) : mList(std::move(list)) {}
+		explicit token_mblist(std::deque<std::deque<token_base *>> list)
+			: mList(std::move(list)) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -479,7 +491,8 @@ namespace cs {
 	public:
 		token_lblist() = delete;
 
-		explicit token_lblist(std::deque<std::deque<token_base *>> list) : mList(std::move(list)) {}
+		explicit token_lblist(std::deque<std::deque<token_base *>> list)
+			: mList(std::move(list)) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -504,7 +517,8 @@ namespace cs {
 	public:
 		token_expr() = delete;
 
-		explicit token_expr(tree_type<token_base *> tree) : mTree(std::move(tree)) {}
+		explicit token_expr(tree_type<token_base *> tree)
+			: mTree(std::move(tree)) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -527,7 +541,8 @@ namespace cs {
 
 		explicit token_arglist(std::deque<tree_type<token_base *>>
 
-		                       tlist) :
+		                       tlist)
+			:
 
 			mTreeList(std::move(tlist))
 		{
@@ -554,7 +569,8 @@ namespace cs {
 
 		explicit token_array(std::deque<tree_type<token_base *>>
 
-		                     tlist) :
+		                     tlist)
+			:
 
 			mTreeList(std::move(tlist))
 		{
@@ -581,7 +597,8 @@ namespace cs {
 
 		explicit token_parallel(std::deque<tree_type<token_base *>>
 
-		                        tlist) :
+		                        tlist)
+			:
 
 			mTreeList(std::move(tlist))
 		{
@@ -657,8 +674,9 @@ namespace cs {
 
 		statement_base(const statement_base &) = default;
 
-		statement_base(context_t c, token_base *eptr) : context(std::move(c)),
-			line_num(static_cast<token_endline *>(eptr)->get_line_num()) {}
+		statement_base(context_t c, token_base *eptr)
+			: context(std::move(c)),
+			  line_num(static_cast<token_endline *>(eptr)->get_line_num()) {}
 
 		virtual ~statement_base() = default;
 

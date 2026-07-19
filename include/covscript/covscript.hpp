@@ -71,7 +71,8 @@ namespace cs_function_invoker_impl {
 
 		function_invoker &operator=(const function_invoker &) = default;
 
-		explicit function_invoker(cs::var func) : m_func(std::move(func)) {}
+		explicit function_invoker(cs::var func)
+			: m_func(std::move(func)) {}
 
 		void assign(const cs::var &func)
 		{
@@ -115,7 +116,8 @@ namespace cs {
 
 		raii_collector(raii_collector &&) noexcept = delete;
 
-		explicit raii_collector(context_t cxt) : context(std::move(cxt)) {}
+		explicit raii_collector(context_t cxt)
+			: context(std::move(cxt)) {}
 
 		~raii_collector()
 		{
@@ -132,13 +134,16 @@ namespace cs {
 		context_t context;
 
 		// Bootstrap from string initializer list
-		bootstrap(std::initializer_list<std::string> l) : context(create_context({l.begin(), l.end()})) {}
+		bootstrap(std::initializer_list<std::string> l)
+			: context(create_context({l.begin(), l.end()})) {}
 
 		// Classic bootstrap from command line
-		bootstrap(int argc, char *argv[]) : context(create_context(parse_cmd_args(argc, argv))) {}
+		bootstrap(int argc, char *argv[])
+			: context(create_context(parse_cmd_args(argc, argv))) {}
 
 		// Zero initialization bootstrap
-		bootstrap() : context(create_context({"<BOOTSTRAP_ENV>"})) {}
+		bootstrap()
+			: context(create_context({"<BOOTSTRAP_ENV>"})) {}
 
 		~bootstrap()
 		{

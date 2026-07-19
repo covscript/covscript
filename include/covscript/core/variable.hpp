@@ -299,7 +299,8 @@ namespace cs_impl {
 			std::intptr_t _int;
 			void *_ptr;
 
-			constexpr result() : _ptr(nullptr) {}
+			constexpr result()
+				: _ptr(nullptr) {}
 
 			static COVSCRIPT_ALWAYS_INLINE constexpr result from_ptr(void *p) noexcept {
 				result r;
@@ -396,7 +397,7 @@ namespace cs_impl {
 	extern volatile std::size_t op_perf[40];
 #endif
 
-	constexpr std::size_t aligned_element_size = (std::max) (alignof(std::max_align_t), sizeof(void *));
+	constexpr std::size_t aligned_element_size = (std::max)(alignof(std::max_align_t), sizeof(void *));
 
 	template <std::size_t align_size,
 	          template <typename> class allocator_t = default_allocator>
@@ -622,7 +623,8 @@ namespace cs_impl {
 			aligned_storage_t buffer;
 			void *ptr;
 
-			store_impl() : ptr(nullptr) {}
+			store_impl()
+				: ptr(nullptr) {}
 		} m_store;
 
 		template <typename T>
@@ -805,12 +807,14 @@ namespace cs_impl {
 			proxy() = default;
 
 			template <typename T>
-			proxy(std::uint32_t rc, T &&d) : refcount(rc), data(std::forward<T>(d))
+			proxy(std::uint32_t rc, T &&d)
+				: refcount(rc), data(std::forward<T>(d))
 			{
 			}
 
 			template <typename T>
-			proxy(std::uint8_t pl, std::uint32_t rc, T &&d) : protect_level(pl), refcount(rc), data(std::forward<T>(d))
+			proxy(std::uint8_t pl, std::uint32_t rc, T &&d)
+				: protect_level(pl), refcount(rc), data(std::forward<T>(d))
 			{
 			}
 		};
@@ -849,7 +853,8 @@ namespace cs_impl {
 			}
 		}
 
-		any(proxy *dat) : mDat(dat) {}
+		any(proxy *dat)
+			: mDat(dat) {}
 
 	public:
 		void swap(any &obj, bool raw = false)
@@ -942,7 +947,8 @@ namespace cs_impl {
 			mDat->data.construct_store<cs_impl::var_storage_t<T>>(dat);
 		}
 
-		any(const any &v) : mDat(v.duplicate()) {}
+		any(const any &v)
+			: mDat(v.duplicate()) {}
 
 		any(any &&v) noexcept
 		{
