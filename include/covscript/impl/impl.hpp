@@ -162,20 +162,21 @@ namespace cs {
 
 // Guarder
 	class scope_guard final {
-		const context_t &context;
+		context_type *context;
 
 	public:
 		scope_guard() = delete;
 
 		explicit scope_guard(const context_t &c)
-			: context(c)
+			: context(c.get())
 		{
 			context->instance->storage.add_domain();
 		}
 
 		~scope_guard()
 		{
-			context->instance->storage.remove_domain();
+			if (context != nullptr)
+				context->instance->storage.remove_domain();
 		}
 
 		const domain_type &get() const
@@ -191,6 +192,17 @@ namespace cs {
 		void reset() const
 		{
 			context->instance->storage.clear_domain();
+		}
+
+		var &return_fcall()
+		{
+			// Clean up the current domain before returning the top of the stack
+			context->instance->storage.remove_domain();
+			context = nullptr;
+			// Return the top of the stack and mark it as movable
+			var &ret = current_process->stack.top();
+			ret.try_move();
+			return ret;
 		}
 	};
 
