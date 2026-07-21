@@ -56,10 +56,10 @@ namespace cs {
 			}
 			if (_this->mContext->instance->return_fcall) {
 				_this->mContext->instance->return_fcall = false;
-				return fcall.get();
+				return scope.return_fcall();
 			}
 		}
-		return fcall.get();
+		return scope.return_fcall();
 	}
 
 	var function::call_vv(const function *_this, vector &args)
@@ -97,10 +97,10 @@ namespace cs {
 			}
 			if (_this->mContext->instance->return_fcall) {
 				_this->mContext->instance->return_fcall = false;
-				return fcall.get();
+				return scope.return_fcall();
 			}
 		}
-		return fcall.get();
+		return scope.return_fcall();
 	}
 
 	var function::call_rl(const function *_this, vector &args)
