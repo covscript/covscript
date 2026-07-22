@@ -1800,10 +1800,12 @@ namespace cs_impl {
 		{
 			if (func.is_type_of<object_method>()) {
 				const callable::function_type &target = func.const_val<object_method>().callable.const_val<callable>().get_raw_data();
+				std::size_t count = 0;
 				if (target.target_type() == typeid(function_ptr))
-					return target.target<function_ptr>()->fptr->argument_count() - 1;
+					count = target.target<function_ptr>()->fptr->argument_count();
 				else
-					return target.target<cni>()->argument_count() - 1;
+					count = target.target<cni>()->argument_count();
+				return count > 0 ? count - 1 : 0;
 			}
 			else if (func.is_type_of<callable>()) {
 				const callable::function_type &target = func.const_val<callable>().get_raw_data();

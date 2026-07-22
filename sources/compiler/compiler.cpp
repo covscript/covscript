@@ -787,14 +787,15 @@ namespace cs {
 						throw compile_error("Invalid lambda expression: unexpected element in the argument list; expected an identifier or a variadic parameter '...<id>'");
 				}
 				bool find_self_ref = find_id_ref(it.right(), "self");
-				if (!is_vargs && find_self_ref) {
-					std::vector<std::string> new_args{"self"};
-					new_args.reserve(args.size());
+				if (find_self_ref) {
+					std::vector<std::string> new_args;
+					new_args.reserve(args.size() + 1);
+					new_args.emplace_back("self");
 					for (auto &name : args) {
 						if (name != "self")
 							new_args.emplace_back(std::move(name));
 						else
-							throw runtime_error("Cannot redefine the implicit 'self' argument of a lambda");
+							throw compile_error("Cannot redefine the implicit 'self' argument of a lambda");
 					}
 					std::swap(new_args, args);
 				}
@@ -1085,8 +1086,9 @@ namespace cs {
 						token_base *oldt = it.data();
 						try {
 							const auto &om = a.const_val<object_method>();
-							vector args{om.object};
-							args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size());
+							vector args;
+							args.reserve(static_cast<token_arglist *>(rptr)->get_arglist().size() + 1);
+							args.push_back(om.object);
 							for (auto &tree : static_cast<token_arglist *>(rptr)->get_arglist()) {
 								ptr = tree.root().data();
 								if (ptr != nullptr && ptr->get_type() == token_types::expand) {

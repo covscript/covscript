@@ -449,8 +449,9 @@ namespace cs {
 		{
 			mIsMemFn = is_mem_fn;
 			if (!mIsVargs) {
-				std::vector<std::string> args{std::string(reserve)};
-				args.reserve(mArgs.size());
+				std::vector<std::string> args;
+				args.reserve(mArgs.size() + 1);
+				args.emplace_back(reserve);
 				for (auto &name : mArgs) {
 					if (name != reserve)
 						args.emplace_back(std::move(name));
@@ -466,7 +467,7 @@ namespace cs {
 			prefix = mDecl.substr(0, lpos);
 			suffix = mDecl.substr(rpos);
 			if (mArgs.size() > 1 || mIsVargs)
-				mDecl = prefix + "this" + (mIsVargs ? ", ..." : ", ") + mDecl.substr(lpos, rpos - lpos) + suffix;
+				mDecl = prefix + "this, " + mDecl.substr(lpos, rpos - lpos) + suffix;
 			else
 				mDecl = prefix + "this" + suffix;
 #endif

@@ -77,13 +77,19 @@ namespace cs {
 			var arg_list = var::make<cs::array>();
 			auto &arr = arg_list.val<cs::array>();
 			std::size_t i = 0;
-			if (_this->mIsMemFn)
+			if (_this->mIsMemFn) {
+				if (args.empty())
+					throw runtime_error("Wrong number of arguments: expected at least 1 for member function, got 0");
 				_this->mContext->instance->storage.add_var_no_return("this", args[i++]);
-			else if (_this->mIsLambda)
+			}
+			else if (_this->mIsLambda && _this->mArgs.size() > 1) {
+				if (args.empty())
+					throw runtime_error("Wrong number of arguments: expected at least 1 for lambda with 'self', got 0");
 				_this->mContext->instance->storage.add_var_no_return("self", args[i++]);
+			}
 			for (; i < args.size(); ++i)
 				arr.push_back(args[i]);
-			_this->mContext->instance->storage.add_var_no_return(_this->mArgs.front().data(), arg_list);
+			_this->mContext->instance->storage.add_var_no_return(_this->mArgs.back().data(), arg_list);
 		}
 		for (auto &ptr : _this->mBody) {
 			try {
