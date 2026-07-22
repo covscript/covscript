@@ -381,7 +381,7 @@ namespace cs {
 	{
 		vector args;
 		token_base *ptr = nullptr;
-		args.reserve(static_cast<token_arglist *>(b)->get_arglist().size());
+		args.reserve(static_cast<token_arglist *>(b)->get_arglist().size() + 1);
 		a.prep_call(args);
 		for (auto &tree : static_cast<token_arglist *>(b)->get_arglist()) {
 			ptr = tree.root().data();
