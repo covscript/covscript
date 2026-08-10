@@ -55,12 +55,21 @@ namespace cs {
 		else {
 			// is package file
 			context_t rt = create_subcontext(context);
-			context_swap_guard guard(*rt->compiler, rt);
-			rt->instance->compile(path);
-			rt->instance->interpret();
-			namespace_t module = std::make_shared<name_space>(*rt->instance->storage.get_namespace());
+			namespace_t module = std::make_shared<name_space>();
 			context->compiler->modules.emplace(path, module);
-			return module;
+			try {
+				{
+					context_swap_guard guard(*rt->compiler, rt);
+					rt->instance->compile(path);
+					rt->instance->interpret();
+				}
+				*module = *rt->instance->storage.get_namespace();
+				return module;
+			}
+			catch (...) {
+				context->compiler->modules.erase(path);
+				throw;
+			}
 		}
 	}
 
@@ -87,18 +96,25 @@ namespace cs {
 			if (std::ifstream(package_path + ".csp")) {
 				context_t rt = create_subcontext(context);
 				rt->compiler->import_csym(package_path + ".csp", package_path + ".csym");
-				{
-					context_swap_guard guard(*rt->compiler, rt);
-					rt->instance->compile(package_path + ".csp");
-					rt->instance->interpret();
-				}
-				if (rt->package_name.empty())
-					throw runtime_error("The imported file is not a package (it has no 'package' declaration)");
-				if (rt->package_name != name)
-					throw runtime_error("The package name declared in the file does not match the file name");
-				namespace_t module = std::make_shared<name_space>(*rt->instance->storage.get_namespace());
+				namespace_t module = std::make_shared<name_space>();
 				context->compiler->modules.emplace(package_path, module);
-				return module;
+				try {
+					{
+						context_swap_guard guard(*rt->compiler, rt);
+						rt->instance->compile(package_path + ".csp");
+						rt->instance->interpret();
+					}
+					if (rt->package_name.empty())
+						throw runtime_error("The imported file is not a package (it has no 'package' declaration)");
+					if (rt->package_name != name)
+						throw runtime_error("The package name declared in the file does not match the file name");
+					*module = *rt->instance->storage.get_namespace();
+					return module;
+				}
+				catch (...) {
+					context->compiler->modules.erase(package_path);
+					throw;
+				}
 			}
 			else if (std::ifstream(package_path + ".cse")) {
 				try {

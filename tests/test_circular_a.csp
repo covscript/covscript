@@ -1,0 +1,7 @@
+package test_circular_a
+import test_circular_b
+system.out.println("test_circular_a loaded")
+function func_a()
+    system.out.println("func_a, calling test_circular_b.func_b")
+    test_circular_b.func_b()
+end
