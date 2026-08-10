@@ -605,7 +605,7 @@ namespace cs_impl {
 		if (stut.get_domain().exist("to_string")) {
 			cs::var func = stut.get_domain().get_var("to_string");
 			if (func.is_type_of<cs::callable>())
-				return cs::invoke(func, cs::var::make<cs::structure>(&stut)).to_string();
+				return cs::invoke(func, cs::var::make<cs::structure>(&stut)).to_string().extract();
 		}
 		return "[cs::structure_" + stut.type_name() + "]";
 	}
