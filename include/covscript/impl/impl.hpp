@@ -221,8 +221,6 @@ namespace cs {
 
 		explicit fcall_guard(const std::string &decl)
 		{
-			if (current_process->stack.size() >= current_process->stack_size)
-				throw lang_error("Stack overflow: too many nested function calls");
 			current_process->stack.push(null_pointer);
 			current_process->stack_backtrace.push(decl);
 		}
@@ -236,8 +234,6 @@ namespace cs {
 
 		fcall_guard()
 		{
-			if (current_process->stack.size() >= current_process->stack_size)
-				throw lang_error("Stack overflow: too many nested function calls");
 			current_process->stack.push(null_pointer);
 		}
 
