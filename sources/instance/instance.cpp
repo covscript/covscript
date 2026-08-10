@@ -44,19 +44,20 @@ namespace cs {
 
 	namespace_t instance_type::source_import(const std::string &path)
 	{
-		if (context->compiler->modules.count(path) > 0)
-			return context->compiler->modules[path];
+		const std::string &module_key = cs_impl::file_system::normalize_path(path);
+		if (context->compiler->modules.count(module_key) > 0)
+			return context->compiler->modules[module_key];
 		if (cs_impl::file_system::is_exe(path)) {
 			// is extension file
 			namespace_t module = std::make_shared<extension>(path);
-			context->compiler->modules.emplace(path, module);
+			context->compiler->modules.emplace(module_key, module);
 			return module;
 		}
 		else {
 			// is package file
 			context_t rt = create_subcontext(context);
 			namespace_t module = std::make_shared<name_space>();
-			context->compiler->modules.emplace(path, module);
+			context->compiler->modules.emplace(module_key, module);
 			try {
 				{
 					context_swap_guard guard(*rt->compiler, rt);
@@ -67,7 +68,7 @@ namespace cs {
 				return module;
 			}
 			catch (...) {
-				context->compiler->modules.erase(path);
+				context->compiler->modules.erase(module_key);
 				throw;
 			}
 		}
@@ -91,13 +92,14 @@ namespace cs {
 		std::exception_ptr eptr = nullptr;
 		for (auto &it : collection) {
 			std::string package_path = it + path_separator + name;
-			if (context->compiler->modules.count(package_path) > 0)
-				return context->compiler->modules[package_path];
+			const std::string &module_key = cs_impl::file_system::normalize_path(package_path);
+			if (context->compiler->modules.count(module_key) > 0)
+				return context->compiler->modules[module_key];
 			if (std::ifstream(package_path + ".csp")) {
 				context_t rt = create_subcontext(context);
 				rt->compiler->import_csym(package_path + ".csp", package_path + ".csym");
 				namespace_t module = std::make_shared<name_space>();
-				context->compiler->modules.emplace(package_path, module);
+				context->compiler->modules.emplace(module_key, module);
 				try {
 					{
 						context_swap_guard guard(*rt->compiler, rt);
@@ -112,14 +114,14 @@ namespace cs {
 					return module;
 				}
 				catch (...) {
-					context->compiler->modules.erase(package_path);
+					context->compiler->modules.erase(module_key);
 					throw;
 				}
 			}
 			else if (std::ifstream(package_path + ".cse")) {
 				try {
 					namespace_t module = std::make_shared<extension>(package_path + ".cse");
-					context->compiler->modules.emplace(package_path, module);
+					context->compiler->modules.emplace(module_key, module);
 					return module;
 				}
 				catch (...) {

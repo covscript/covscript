@@ -100,6 +100,8 @@ namespace cs_impl {
 
 		bool is_absolute_path(const std::string &);
 
+		std::string normalize_path(const std::string &);
+
 // Files
 		bool chmod_r(const std::string &, const std::string &);
 

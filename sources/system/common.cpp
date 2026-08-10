@@ -216,6 +216,15 @@ namespace cs_impl {
 			return std::filesystem::path(path).is_absolute();
 		}
 
+		std::string normalize_path(const std::string &path)
+		{
+			std::error_code ec;
+			std::filesystem::path p = std::filesystem::absolute(path, ec);
+			if (ec)
+				p = std::filesystem::path(path);
+			return p.lexically_normal().generic_string();
+		}
+
 		bool chmod_r(const std::string &path_input, const std::string &mode)
 		{
 			auto dirs = cs_system_impl::split(path_input, {'/', '\\'});
