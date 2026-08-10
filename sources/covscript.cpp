@@ -27,6 +27,8 @@
 #include <covscript/impl/system.hpp>
 #include <covscript/covscript.hpp>
 
+#include <filesystem>
+
 #ifdef COVSCRIPT_PLATFORM_WIN32
 
 #include <shlobj.h>
@@ -308,23 +310,14 @@ namespace cs {
 		if (script.empty()) {
 			return;
 		}
-
-		if (cs_impl::file_system::is_absolute_path(script)) {
-			// If it's absolute path
-			auto pos = script.find_last_of(cs::path_separator);
-
-			// in case of: /main.csc
-			if (pos > 0) {
-				context->import_path = script.substr(0, pos) + cs::path_delimiter + context->import_path;
-			}
-			else {
-				context->import_path = std::to_string(cs::path_separator) + cs::path_delimiter + context->import_path;
-			}
-		}
-		else {
-			// If it's relative path
-			prepend_import_path(cs_impl::file_system::get_current_dir() + cs::path_separator + script, context);
-		}
+		std::error_code ec;
+		std::filesystem::path p = std::filesystem::absolute(script, ec);
+		if (ec)
+			return;
+		std::filesystem::path dir = p.lexically_normal().parent_path();
+		if (dir.empty())
+			return;
+		context->import_path = dir.string() + cs::path_delimiter + context->import_path;
 	}
 
 	array parse_cmd_args(int argc, char *argv[])
