@@ -777,10 +777,10 @@ namespace cs {
 	void statement_foreach::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
-		// Iterate a snapshot so that structural modifications made by the loop
-		// body (push/pop/reassign on the same variable) do not invalidate the
-		// iterators of the container being visited.
-		var obj = copy(context->instance->parse_expr(this->mObj.root()));
+		// Iterate the container in place (no snapshot copy): a deep copy per
+		// foreach is too expensive on the hot path. Users who mutate the
+		// container from the loop body must clone it explicitly.
+		const var &obj = context->instance->parse_expr(this->mObj.root());
 		if (obj.is_type_of<string>())
 			foreach_helper<string, char>(context, this->mIt, obj, this->mBlock);
 		else if (obj.is_type_of<list>())
