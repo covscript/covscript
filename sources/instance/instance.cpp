@@ -151,12 +151,21 @@ namespace cs {
 		for (int ch = in.get(); in; ch = in.get())
 			buff.push_back(ch);
 		std::deque<std::deque<token_base *>> ast;
-		// Compile
-		context->compiler->clear_metadata();
+		// Compile. The constant pool is scoped to this translation unit: a nested
+		// compile (module import during code generation) must not wipe the
+		// constants accumulated by the enclosing compilation.
+		std::size_t pool_base = context->compiler->save_pool();
 		context->compiler->loop_depth = 0;
-		context->compiler->build_ast(buff, ast);
-		context->compiler->code_gen(ast, statements);
-		context->compiler->utilize_metadata();
+		try {
+			context->compiler->build_ast(buff, ast);
+			context->compiler->code_gen(ast, statements);
+			context->compiler->utilize_metadata();
+		}
+		catch (...) {
+			context->compiler->restore_pool(pool_base);
+			throw;
+		}
+		context->compiler->restore_pool(pool_base);
 	}
 
 	void instance_type::interpret()

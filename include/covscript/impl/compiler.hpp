@@ -293,6 +293,16 @@ namespace cs {
 			constant_pool.clear();
 		}
 
+		std::size_t save_pool()
+		{
+			return constant_pool.size();
+		}
+
+		void restore_pool(std::size_t base)
+		{
+			constant_pool.resize(base);
+		}
+
 		void utilize_metadata()
 		{
 			for (auto &it : constant_pool)
