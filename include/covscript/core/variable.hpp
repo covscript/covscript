@@ -643,8 +643,11 @@ namespace cs_impl {
 		inline void construct_store(ArgsT &&...args)
 		{
 			destroy_store();
-			m_dispatcher = &dispatcher_class<T>::dispatcher;
+			// Commit the dispatcher only after the value is successfully
+			// constructed, so a throwing constructor never leaves a var whose
+			// dispatcher points at uninitialized storage.
 			dispatcher_class<T>::construct(this, std::forward<ArgsT>(args)...);
+			m_dispatcher = &dispatcher_class<T>::dispatcher;
 		}
 
 		inline void destroy_store()

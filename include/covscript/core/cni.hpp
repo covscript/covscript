@@ -63,6 +63,8 @@ namespace cov {
 	template <typename _rT, typename... Args>
 	class function_index<_rT (*)(Args...)> {
 	public:
+		using return_type = _rT;
+
 		typedef _rT (*type)(Args...);
 
 		typedef _rT (*common_type)(Args...);
@@ -71,6 +73,8 @@ namespace cov {
 	template <typename _Tp, typename _rT, typename... Args>
 	class function_index<_rT (_Tp::*)(Args...)> {
 	public:
+		using return_type = _rT;
+
 		typedef _rT (_Tp::*type)(Args...);
 
 		typedef _rT (*common_type)(_Tp &, Args...);
@@ -79,6 +83,8 @@ namespace cov {
 	template <typename _Tp, typename _rT, typename... Args>
 	class function_index<_rT (_Tp::*)(Args...) const> {
 	public:
+		using return_type = _rT;
+
 		typedef _rT (_Tp::*type)(Args...) const;
 
 		typedef _rT (*common_type)(const _Tp &, Args...);
@@ -87,6 +93,8 @@ namespace cov {
 	template <typename _Tp, typename _rT, typename... Args>
 	class function_index<_rT (_Tp::*)(Args...) noexcept> {
 	public:
+		using return_type = _rT;
+
 		typedef _rT (_Tp::*type)(Args...) noexcept;
 
 		typedef _rT (*common_type)(_Tp &, Args...);
@@ -95,6 +103,8 @@ namespace cov {
 	template <typename _Tp, typename _rT, typename... Args>
 	class function_index<_rT (_Tp::*)(Args...) const noexcept> {
 	public:
+		using return_type = _rT;
+
 		typedef _rT (_Tp::*type)(Args...) const noexcept;
 
 		typedef _rT (*common_type)(const _Tp &, Args...);
@@ -103,6 +113,8 @@ namespace cov {
 	template <typename _Tp, typename _rT, typename... _ArgsT>
 	class executor_index<_rT (_Tp::*)(_ArgsT...)> {
 	public:
+		using return_type = _rT;
+
 		typedef _rT (_Tp::*type)(_ArgsT...);
 
 		typedef _rT (*common_type)(_ArgsT...);
@@ -111,6 +123,8 @@ namespace cov {
 	template <typename _Tp, typename _rT, typename... _ArgsT>
 	class executor_index<_rT (_Tp::*)(_ArgsT...) const> {
 	public:
+		using return_type = _rT;
+
 		typedef _rT (_Tp::*type)(_ArgsT...) const;
 
 		typedef _rT (*common_type)(_ArgsT...);
@@ -119,6 +133,8 @@ namespace cov {
 	template <typename _Tp, typename _rT, typename... _ArgsT>
 	class executor_index<_rT (_Tp::*)(_ArgsT...) noexcept> {
 	public:
+		using return_type = _rT;
+
 		typedef _rT (_Tp::*type)(_ArgsT...) noexcept;
 
 		typedef _rT (*common_type)(_ArgsT...);
@@ -127,6 +143,8 @@ namespace cov {
 	template <typename _Tp, typename _rT, typename... _ArgsT>
 	class executor_index<_rT (_Tp::*)(_ArgsT...) const noexcept> {
 	public:
+		using return_type = _rT;
+
 		typedef _rT (_Tp::*type)(_ArgsT...) const noexcept;
 
 		typedef _rT (*common_type)(_ArgsT...);

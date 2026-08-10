@@ -275,7 +275,7 @@ void covscript_main(int args_size, char *args[])
 #endif
 		}
 		catch (const cs::exception &ce) {
-			if (std::strstr(ce.what(), "CS_EXIT") == nullptr) {
+			if (std::strcmp(ce.what(), "CS_EXIT") != 0) {
 				if (context->compiler->csyms.count(ce.file()) > 0) {
 					cs::exception ne(ce);
 					ne.relocate_to_csym(context->compiler->csyms[ce.file()]);
@@ -345,12 +345,12 @@ void covscript_main(int args_size, char *args[])
 				repl.exec(line);
 			}
 			catch (const std::exception &e) {
-				if (std::strstr(e.what(), "CS_SIGINT") != nullptr) {
+				if (std::strcmp(e.what(), "CS_SIGINT") == 0) {
 					cs::process_context::cleanup_context();
 					repl.reset_status();
 					activate_sigint_handler();
 				}
-				else if (std::strstr(e.what(), "CS_EXIT") == nullptr) {
+				else if (std::strcmp(e.what(), "CS_EXIT") != 0) {
 					if (!log_path.empty()) {
 						if (!log_stream.is_open())
 							log_stream.open(::log_path);
