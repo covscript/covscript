@@ -1059,8 +1059,15 @@ namespace cs {
 
 		~structure()
 		{
-			if (!m_shadow && m_data->exist("finalize"))
-				invoke(m_data->get_var("finalize"), var::make<structure>(this));
+			if (!m_shadow && m_data->exist("finalize")) {
+				try {
+					invoke(m_data->get_var("finalize"), var::make<structure>(this));
+				}
+				catch (...) {
+					// finalize runs inside an implicitly noexcept destructor;
+					// swallowing prevents std::terminate on script errors
+				}
+			}
 		}
 
 		structure &operator=(structure &&s) noexcept
