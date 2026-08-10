@@ -192,6 +192,7 @@ namespace cs {
 	void method_constant::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		context->compiler->force_fold(tree);
 		context->instance->check_define_var(tree.root(), false, true);
 		context->instance->parse_define_var(tree.root(), true);
 	}
