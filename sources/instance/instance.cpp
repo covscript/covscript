@@ -453,7 +453,7 @@ namespace cs {
 		try {
 			std::deque<std::deque<token_base *>> ast;
 			context->compiler->clear_metadata();
-			context->compiler->build_line(buff, ast, 1, encoding);
+			context->compiler->build_line(buff, ast, line_num, encoding);
 			for (auto &line : ast)
 				interpret(code, line);
 		}
@@ -556,6 +556,8 @@ namespace cs {
 		}
 		if (multi_line) {
 			context->file_buff.emplace_back();
+			if (!line_buff.empty())
+				line_buff.append("\n");
 			line_buff.append(code);
 		}
 		else {

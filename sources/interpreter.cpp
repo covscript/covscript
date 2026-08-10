@@ -38,11 +38,11 @@ bool ctrlhandler(DWORD fdwctrltype)
 		std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
 		cs::current_process->raise_sigint();
 		return true;
-	case CTRL_BREAK_EVENT: {
-		int code = 0;
-		cs::process_context::on_process_exit_default_handler(&code);
+	case CTRL_BREAK_EVENT:
+		// Cooperative exit via the main loop; never run cleanup on the
+		// console-control thread.
+		cs::current_process->raise_sigint();
 		return true;
-	}
 	default:
 		return false;
 	}
@@ -60,7 +60,9 @@ void activate_sigint_handler()
 
 void signal_handler(int sig)
 {
-	std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
+	// Only async-signal-safe operations are allowed in a signal handler.
+	static const char msg[] = "Keyboard Interrupt (Ctrl+C Received)\n";
+	::write(STDERR_FILENO, msg, sizeof(msg) - 1);
 	cs::current_process->raise_sigint();
 }
 
