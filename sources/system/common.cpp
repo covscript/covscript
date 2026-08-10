@@ -219,10 +219,14 @@ namespace cs_impl {
 		std::string normalize_path(const std::string &path)
 		{
 			std::error_code ec;
-			std::filesystem::path p = std::filesystem::absolute(path, ec);
-			if (ec)
-				p = std::filesystem::path(path);
-			return p.lexically_normal().generic_string();
+			std::filesystem::path p = std::filesystem::weakly_canonical(path, ec);
+			if (ec) {
+				p = std::filesystem::absolute(path, ec);
+				if (ec)
+					p = std::filesystem::path(path);
+				p = p.lexically_normal();
+			}
+			return p.generic_string();
 		}
 
 		bool chmod_r(const std::string &path_input, const std::string &mode)
