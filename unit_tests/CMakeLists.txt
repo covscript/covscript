@@ -8,6 +8,7 @@ set(UNIT_TEST_SOURCES
     test_trim_expr.cpp
     test_translate.cpp
     test_fiber.cpp
+    test_variable.cpp
 )
 
 add_executable(cs_unit_tests ${UNIT_TEST_SOURCES})

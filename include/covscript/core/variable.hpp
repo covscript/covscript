@@ -520,9 +520,10 @@ namespace cs_impl {
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_move(void *lhs, void *rhs) noexcept
 			{
 				static_assert(std::is_move_constructible<T>::value, "CovScript requires type supports move constructor.");
-				T *nptr = get_allocator().allocate(1);
-				::new (nptr) T(std::move(*static_cast<T *>(lhs)));
-				static_cast<basic_var *>(rhs)->m_store.ptr = nptr;
+				// Transfer the heap block to the destination; move_store
+				// nulls the source dispatcher, so the block has exactly one
+				// owner and no deep copy or leak occurs.
+				static_cast<basic_var *>(rhs)->m_store.ptr = static_cast<T *>(lhs);
 				return operators::result();
 			}
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_swap(void *lhs, void *rhs) noexcept
@@ -660,11 +661,20 @@ namespace cs_impl {
 
 		inline void copy_store(const basic_var &other)
 		{
-			destroy_store();
-			if (other.m_dispatcher != nullptr) {
-				other.m_dispatcher(operators::type::copy, &other, this);
-				m_dispatcher = other.m_dispatcher;
+			if (other.m_dispatcher == nullptr) {
+				destroy_store();
+				return;
 			}
+			// Build the copy in a scratch var first so a throwing copy
+			// leaves *this untouched (strong exception guarantee). The
+			// commit then moves the scratch value into *this, which for
+			// heap types transfers the block and for SVO types moves into
+			// the in-place buffer, so SSO containers stay valid.
+			basic_var tmp;
+			other.m_dispatcher(operators::type::copy, &other, &tmp);
+			tmp.m_dispatcher = other.m_dispatcher;
+			destroy_store();
+			move_store(tmp);
 		}
 
 		inline void move_store(basic_var &other)
