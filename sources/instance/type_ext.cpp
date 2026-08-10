@@ -1333,8 +1333,7 @@ namespace cs_impl {
 
 		bool is_native_callable(const callable &func)
 		{
-			const auto &target_type = func.get_raw_data().target_type();
-			return target_type != typeid(function_ptr) && target_type != typeid(function);
+			return func.get_raw_data().target_type() != typeid(function_ptr);
 		}
 
 		class async_callable final {
@@ -1543,16 +1542,12 @@ namespace cs_impl {
 			vector args;
 
 		public:
-			fiber_function(const callable &fn, vector data)
-				: owner(fn), args(std::move(data))
-			{
-				const callable::function_type &impl = owner.get_raw_data();
-				if (impl.target_type() == typeid(function_ptr))
-					func = impl.target<function_ptr>()->fptr;
-				else
-					func = impl.target<function>();
-				context = func->get_context();
-			}
+		fiber_function(const callable &fn, vector data)
+			: owner(fn), args(std::move(data))
+		{
+			func = owner.get_raw_data().target<function_ptr>()->fptr;
+			context = func->get_context();
+		}
 
 			var operator()()
 			{
@@ -1603,13 +1598,9 @@ namespace cs_impl {
 			const var &func = args.front();
 			auto build = [&](const callable &fn, vector data) -> fiber_t {
 				const callable::function_type &impl = fn.get_raw_data();
-				function const *fptr = nullptr;
-				if (impl.target_type() == typeid(function_ptr))
-					fptr = impl.target<function_ptr>()->fptr;
-				else if (impl.target_type() == typeid(function))
-					fptr = impl.target<function>();
-				else
+				if (impl.target_type() != typeid(function_ptr))
 					return fiber::create_native(fiber_native_function(impl, std::move(data)));
+				function const *fptr = impl.target<function_ptr>()->fptr;
 				return fiber::create(fptr->get_context(), fiber_function(fn, std::move(data)));
 			};
 			if (func.is_type_of<callable>())

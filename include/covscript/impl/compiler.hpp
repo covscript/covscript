@@ -246,6 +246,11 @@ namespace cs {
 	public:
 		map_t<string, namespace_t> modules;
 		map_t<string, csym_info> csyms;
+		// Script function objects created by this compiler (lambda functions).
+		// Owned by the compiler so their addresses are stable and they live as
+		// long as the compiler does; all script functions are exposed uniformly
+		// as function_ptr targets.
+		std::vector<std::unique_ptr<function>> function_pool;
 		// Loop nesting depth of the current translation unit; used to reject
 		// 'break'/'continue' outside any loop at compile time.
 		std::size_t loop_depth = 0;

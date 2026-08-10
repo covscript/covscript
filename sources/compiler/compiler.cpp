@@ -812,18 +812,20 @@ namespace cs {
 				}
 				else
 					decl += ")";
-				function func(context, decl, ret, args, std::deque<statement_base *> {ret}, is_vargs, true);
+				function *fn = new function(context, decl, ret, args, std::deque<statement_base *> {ret}, is_vargs,
+				                            true);
 #else
-				function func(context, args, std::deque<statement_base *> {ret}, is_vargs, true);
+				function *fn = new function(context, args, std::deque<statement_base *> {ret}, is_vargs, true);
 #endif
+				function_pool.emplace_back(fn);
 				if (find_self_ref) {
-					var lambda = var::make<object_method>(var(), var::make_protect<callable>(func));
+					var lambda = var::make<object_method>(var(), var::make_protect<callable>(function_ptr{fn}));
 					lambda.val<object_method>().object = lambda;
 					lambda.mark_protect();
 					it.data() = new_value(lambda);
 				}
 				else
-					it.data() = new_value(var::make_protect<callable>(func));
+					it.data() = new_value(var::make_protect<callable>(function_ptr{fn}));
 				return;
 			}
 
