@@ -1402,6 +1402,31 @@ namespace cs {
 	void translator_type::translate(const context_t &context, const std::deque<std::deque<token_base *>> &lines,
 	                                std::deque<statement_base *> &statements, bool raw)
 	{
+		auto is_loop_block = [](const method_base *m) {
+			switch (m->get_target_type()) {
+			case statement_types::while_:
+			case statement_types::loop_:
+			case statement_types::for_:
+			case statement_types::foreach_:
+				return true;
+			default:
+				return false;
+			}
+		};
+		// Release a loop-depth increment when a loop block finishes compiling,
+		// whether it succeeds or throws (so a failed REPL line does not leave
+		// the shared compiler's loop depth elevated).
+		struct loop_depth_release {
+			std::size_t &ref;
+			bool active;
+			explicit loop_depth_release(std::size_t &r, bool a) noexcept
+				: ref(r), active(a) {}
+			~loop_depth_release()
+			{
+				if (active)
+					--ref;
+			}
+		};
 		std::size_t method_line_num = 0, line_num = 0;
 		std::deque<std::deque<token_base *>> tmp;
 		stack_type<method_base *> methods;
@@ -1438,6 +1463,8 @@ namespace cs {
 						}
 						if (methods.empty()) {
 							line_num = method_line_num;
+							loop_depth_release release(context->compiler->loop_depth,
+							                           is_loop_block(expected_method));
 							if (m->get_target_type() == statement_types::end_)
 								sptr = static_cast<method_end *>(m)->translate_end(expected_method, context, tmp,
 								        line);
@@ -1468,6 +1495,8 @@ namespace cs {
 					if (methods.empty())
 						method_line_num = static_cast<token_endline *>(line.back())->get_line_num();
 					methods.push(m);
+					if (is_loop_block(m))
+						++context->compiler->loop_depth;
 					if (raw) {
 						context->instance->storage.add_domain();
 						context->instance->storage.add_set();

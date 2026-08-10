@@ -484,12 +484,16 @@ namespace cs {
 
 	statement_base *method_break::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
+		if (context->compiler->loop_depth == 0)
+			throw compile_error("Invalid 'break' statement: not inside any loop");
 		return new statement_break(context, raw.front().back());
 	}
 
 	statement_base *
 	method_continue::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
+		if (context->compiler->loop_depth == 0)
+			throw compile_error("Invalid 'continue' statement: not inside any loop");
 		return new statement_continue(context, raw.front().back());
 	}
 
@@ -550,7 +554,10 @@ namespace cs {
 			}
 		}
 		std::deque<statement_base *> body;
-		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
+		{
+			value_guard<std::size_t> fn_guard(context->compiler->loop_depth, 0);
+			context->compiler->translate({raw.begin() + 1, raw.end()}, body);
+		}
 #ifdef CS_DEBUGGER
 		std::string decl = "function " + name + "(";
 		if (args.size() != 0) {

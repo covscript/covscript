@@ -153,6 +153,7 @@ namespace cs {
 		std::deque<std::deque<token_base *>> ast;
 		// Compile
 		context->compiler->clear_metadata();
+		context->compiler->loop_depth = 0;
 		context->compiler->build_ast(buff, ast);
 		context->compiler->code_gen(ast, statements);
 		context->compiler->utilize_metadata();

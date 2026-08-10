@@ -246,6 +246,18 @@ namespace cs {
 	public:
 		map_t<string, namespace_t> modules;
 		map_t<string, csym_info> csyms;
+		// Loop nesting depth of the current translation unit; used to reject
+		// 'break'/'continue' outside any loop at compile time.
+		std::size_t loop_depth = 0;
+
+		// Fold a tree unconditionally, regardless of optimizer settings. Used to
+		// evaluate 'constant' initializers so their value is fixed at compile time
+		// even when --no-optimize is active.
+		void force_fold(tree_type<token_base *> &tree)
+		{
+			trim_expr(tree, tree.root(), trim_type::normal);
+			opt_expr(tree, tree.root(), optm_type::normal);
+		}
 
 		void try_fix_this_deduction(tree_type<token_base *>::iterator);
 

@@ -151,6 +151,7 @@ namespace cs {
 			line_buff.clear();
 			cmd_buff.clear();
 			context->compiler->utilize_metadata();
+			context->compiler->loop_depth = 0;
 			context->instance->storage.clear_set();
 		}
 
