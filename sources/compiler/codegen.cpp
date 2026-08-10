@@ -345,6 +345,7 @@ namespace cs {
 	statement_base *method_case::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		context->compiler->force_fold(tree);
 		token_base *root = tree.root().usable() ? tree.root().data() : nullptr;
 		if (root == nullptr || root->get_type() != token_types::value) {
 			std::size_t line_num = static_cast<token_endline *>(raw.front().back())->get_line_num();
