@@ -153,7 +153,7 @@ namespace cs {
 		else if (a.is_type_of<type_t>())
 			return a.const_val<type_t>().get_var(id);
 		else if (a.is_type_of<structure>()) {
-			var &val = a.val<structure>().get_var(id);
+			const var &val = a.const_val<structure>().get_var(id);
 			if (val.is_type_of<callable>() && val.const_val<callable>().is_member_fn())
 				return var::make_protect<object_method>(a, val);
 			else

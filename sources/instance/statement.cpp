@@ -725,15 +725,17 @@ namespace cs {
 	void struct_foreach_helper(const context_t &context, const var_id &iterator, const var &obj,
 	                           std::deque<statement_base *> &body)
 	{
-		var const *fptr = obj.val<structure>().get_domain().get_var_opt("next");
-		if (fptr == nullptr)
-			throw lang_error("The struct does not support iteration. Expect a 'next' method to be defined");
 		if (context->instance->break_block)
 			context->instance->break_block = false;
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
 		scope_guard scope(context);
 		while (true) {
+			// Re-fetch the 'next' method every iteration: the loop body or the
+			// method itself may grow the struct domain and invalidate the pointer.
+			var const *fptr = obj.val<structure>().get_domain().get_var_opt("next");
+			if (fptr == nullptr)
+				throw lang_error("The struct does not support iteration. Expect a 'next' method to be defined");
 			current_process->poll_event();
 			vector args;
 			// Patch for struct member function call, since the first argument of a struct member function is the struct itself
@@ -775,7 +777,10 @@ namespace cs {
 	void statement_foreach::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
-		const var &obj = context->instance->parse_expr(this->mObj.root());
+		// Iterate a snapshot so that structural modifications made by the loop
+		// body (push/pop/reassign on the same variable) do not invalidate the
+		// iterators of the container being visited.
+		var obj = copy(context->instance->parse_expr(this->mObj.root()));
 		if (obj.is_type_of<string>())
 			foreach_helper<string, char>(context, this->mIt, obj, this->mBlock);
 		else if (obj.is_type_of<list>())
