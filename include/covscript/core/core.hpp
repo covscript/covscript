@@ -1167,7 +1167,6 @@ namespace cs {
 // Namespace and extensions
 	class name_space {
 		domain_type *m_data = nullptr;
-		bool is_ref = false;
 
 	public:
 		name_space()
@@ -1182,13 +1181,9 @@ namespace cs {
 		explicit name_space(domain_type dat)
 			: m_data(new domain_type(std::move(dat))) {}
 
-		explicit name_space(domain_type *dat)
-			: m_data(dat), is_ref(true) {}
-
 		virtual ~name_space()
 		{
-			if (!is_ref)
-				delete m_data;
+			delete m_data;
 		}
 		template <typename T>
 		name_space &add_var(T &&id, const var &var)
