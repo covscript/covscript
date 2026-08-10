@@ -1289,9 +1289,12 @@ namespace cs {
 
 		void collect()
 		{
-			for (auto &ptr : table)
-				::operator delete(ptr);
+			// Swap the table out first: delete runs each object's destructor and
+			// its class operator delete, which calls gc.remove(ptr).
+			auto table_swap = std::move(table);
 			table.clear();
+			for (auto *ptr : table_swap)
+				delete ptr;
 		}
 
 		void add(void *ptr)

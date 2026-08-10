@@ -637,12 +637,13 @@ namespace cs {
 			context->compiler->modules.clear();
 			context->compiler->csyms.clear();
 			context->compiler->swap_context(nullptr);
-			context->instance->context = nullptr;
-			context->compiler = nullptr;
-			context->instance = nullptr;
-			context = nullptr;
 		}
-		collect_garbage();
+		// The statement/token/method pools are intentionally NOT collected here:
+		// script functions (function_ptr) reference statement members, so freeing
+		// them while another live context or an external caller still holds a
+		// callable would be use-after-free. The context's instance and compiler
+		// are also kept so that retained functions remain callable; the context,
+		// instance and pools are released at process exit.
 	}
 
 	cs::var eval(const context_t &context, const std::string &expr)
