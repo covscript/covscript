@@ -1,0 +1,7 @@
+package test_fd_b
+import test_fd_c
+system.out.println("test_fd_b loaded")
+function from_b()
+    system.out.println("from_b")
+    test_fd_c.from_c()
+end

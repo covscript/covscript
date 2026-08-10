@@ -1,0 +1,8 @@
+package test_fd_c
+system.out.println("test_fd_c loaded")
+function from_c()
+    var localv = "c-local"
+    system.out.println("from_c, local=" + localv)
+    fiber.yield()
+    system.out.println("from_c resumed")
+end
