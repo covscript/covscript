@@ -823,7 +823,7 @@ namespace cs_impl {
 
 		static inline allocator_t &get_allocator()
 		{
-			static allocator_t allocator;
+			static thread_local allocator_t allocator;
 			return allocator;
 		}
 

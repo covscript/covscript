@@ -1333,7 +1333,8 @@ namespace cs_impl {
 
 		bool is_native_callable(const callable &func)
 		{
-			return func.get_raw_data().target_type() != typeid(function_ptr);
+			const auto &target_type = func.get_raw_data().target_type();
+			return target_type != typeid(function_ptr) && target_type != typeid(function);
 		}
 
 		class async_callable final {
@@ -1536,13 +1537,22 @@ namespace cs_impl {
 		}
 
 		class fiber_function final {
-			const context_t &context;
-			function const *func;
+			callable owner;
+			function const *func = nullptr;
+			context_t context;
 			vector args;
 
 		public:
-			fiber_function(function const *fn, vector data)
-				: context(fn->get_context()), func(fn), args(std::move(data)) {}
+			fiber_function(const callable &fn, vector data)
+				: owner(fn), args(std::move(data))
+			{
+				const callable::function_type &impl = owner.get_raw_data();
+				if (impl.target_type() == typeid(function_ptr))
+					func = impl.target<function_ptr>()->fptr;
+				else
+					func = impl.target<function>();
+				context = func->get_context();
+			}
 
 			var operator()()
 			{
@@ -1591,26 +1601,24 @@ namespace cs_impl {
 			if (args.empty())
 				throw lang_error("Invalid call to 'fiber.create': expected 'fiber.create(function, arguments...)'");
 			const var &func = args.front();
-			if (func.is_type_of<callable>()) {
-				const callable::function_type &impl_f = func.const_val<callable>().get_raw_data();
-				if (impl_f.target_type() == typeid(function_ptr)) {
-					function const *fptr = impl_f.target<function_ptr>()->fptr;
-					return fiber::create(fptr->get_context(), fiber_function(fptr, vector(args.begin() + 1, args.end())));
-				}
+			auto build = [&](const callable &fn, vector data) -> fiber_t {
+				const callable::function_type &impl = fn.get_raw_data();
+				function const *fptr = nullptr;
+				if (impl.target_type() == typeid(function_ptr))
+					fptr = impl.target<function_ptr>()->fptr;
+				else if (impl.target_type() == typeid(function))
+					fptr = impl.target<function>();
 				else
-					return fiber::create_native(fiber_native_function(impl_f, vector(args.begin() + 1, args.end())));
-			}
+					return fiber::create_native(fiber_native_function(impl, std::move(data)));
+				return fiber::create(fptr->get_context(), fiber_function(fn, std::move(data)));
+			};
+			if (func.is_type_of<callable>())
+				return build(func.const_val<callable>(), vector(args.begin() + 1, args.end()));
 			else if (func.is_type_of<object_method>()) {
 				const auto &om = func.const_val<object_method>();
-				const callable::function_type &impl_f = om.callable.const_val<callable>().get_raw_data();
 				vector argument{om.object};
 				argument.insert(argument.end(), args.begin() + 1, args.end());
-				if (impl_f.target_type() == typeid(function_ptr)) {
-					function const *fptr = impl_f.target<function_ptr>()->fptr;
-					return fiber::create(fptr->get_context(), fiber_function(fptr, std::move(argument)));
-				}
-				else
-					return fiber::create_native(fiber_native_function(impl_f, argument));
+				return build(om.callable.const_val<callable>(), std::move(argument));
 			}
 			else
 				throw lang_error("Invalid call to 'fiber.create', the first argument must be a callable object");
