@@ -60,7 +60,12 @@
 #endif
 // Configs
 #ifndef COVSCRIPT_STACK_PRESERVE
-#define COVSCRIPT_STACK_PRESERVE 64
+// Default size of the runtime value stack, which also caps nested function
+// calls (fcall_guard). 64 was too small: legitimate recursion of depth ~100
+// already failed. Keep it comfortably below the host C++ stack's crash point
+// (~1500-1800 frames on a 1 MiB stack); 512 leaves room for debug/CS_DEBUGGER
+// builds whose frames are larger. Override per-process with --stack-resize.
+#define COVSCRIPT_STACK_PRESERVE 512
 #endif
 #ifndef COVSCRIPT_FIBER_STACK_LIMIT
 #define COVSCRIPT_FIBER_STACK_LIMIT (1024 * 1024)
