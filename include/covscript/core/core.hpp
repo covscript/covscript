@@ -694,6 +694,9 @@ namespace cs {
 			m_reflect.clear();
 			m_slot.clear();
 			optimize = false;
+			// Invalidate every cached var_id so the fast path re-resolves by name
+			// after the layout changes.
+			m_ref = std::make_shared<domain_ref>(this);
 		}
 
 		inline void next() noexcept
@@ -867,7 +870,7 @@ namespace cs {
 				return nullptr;
 		}
 
-		var &get_var_no_check(const var_id &id) noexcept
+		var &get_var_no_check(const var_id &id)
 		{
 			if (id.m_ref != m_ref) {
 				id.m_slot_id = m_reflect.at(id.m_id);
@@ -876,7 +879,7 @@ namespace cs {
 			return m_slot[id.m_slot_id];
 		}
 
-		const var &get_var_no_check(const var_id &id) const noexcept
+		const var &get_var_no_check(const var_id &id) const
 		{
 			if (id.m_ref != m_ref) {
 				id.m_slot_id = m_reflect.at(id.m_id);
@@ -885,7 +888,7 @@ namespace cs {
 			return m_slot[id.m_slot_id];
 		}
 
-		var &get_var_no_check(const var_id &id, std::size_t domain_id) noexcept
+		var &get_var_no_check(const var_id &id, std::size_t domain_id)
 		{
 			id.m_domain_id = domain_id;
 			if (id.m_ref != m_ref) {
