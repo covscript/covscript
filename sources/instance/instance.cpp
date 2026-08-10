@@ -58,13 +58,13 @@ namespace cs {
 			rt->compiler->swap_context(rt);
 			try {
 				rt->instance->compile(path);
+				rt->instance->interpret();
 			}
 			catch (...) {
 				context->compiler->swap_context(context);
 				throw;
 			}
 			context->compiler->swap_context(context);
-			rt->instance->interpret();
 			namespace_t module = std::make_shared<name_space>(*rt->instance->storage.get_namespace());
 			context->compiler->modules.emplace(path, module);
 			return module;
@@ -97,13 +97,13 @@ namespace cs {
 				rt->compiler->swap_context(rt);
 				try {
 					rt->instance->compile(package_path + ".csp");
+					rt->instance->interpret();
 				}
 				catch (...) {
 					context->compiler->swap_context(context);
 					throw;
 				}
 				context->compiler->swap_context(context);
-				rt->instance->interpret();
 				if (rt->package_name.empty())
 					throw runtime_error("The imported file is not a package (it has no 'package' declaration)");
 				if (rt->package_name != name)
