@@ -724,7 +724,7 @@ namespace cs_impl {
 
 		basic_var(basic_var &&v) noexcept
 		{
-			move_store(std::move(v));
+			move_store(v);
 		}
 
 		~basic_var()
@@ -741,12 +741,8 @@ namespace cs_impl {
 
 		basic_var &operator=(basic_var &&obj) noexcept
 		{
-			if (&obj != this) {
-				destroy_store();
-				m_dispatcher = obj.m_dispatcher;
-				m_store = obj.m_store;
-				obj.m_dispatcher = nullptr;
-			}
+			if (&obj != this)
+				move_store(obj);
 			return *this;
 		}
 

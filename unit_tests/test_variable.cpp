@@ -109,3 +109,21 @@ TEST(variable_copy_store_heap_strong_guarantee)
 	EXPECT_THROW(target.assign(source, true), std::exception);
 	EXPECT_TRUE(target.const_val<BigThrowOnCopy>().value == 1);
 }
+
+TEST(variable_move_assign_sso_string)
+{
+	// The rvalue assignment must move-construct into the SVO buffer, not
+	// bitwise-copy it, or SSO strings keep a self-pointer into the source.
+	using bv_t = cs_impl::basic_var<CS_VAR_SVO_ALIGN>;
+	bv_t target = bv_t::make<std::string>("old");
+	bv_t source = bv_t::make<std::string>("new");
+	target = std::move(source);
+	EXPECT_TRUE(target.is_type_of<std::string>());
+	EXPECT_TRUE(std::string(target.to_string()) == "new");
+	bv_t long_target = bv_t::make<std::string>("a");
+	bv_t long_source = bv_t::make<std::string>(
+	    "0123456789012345678901234567890123456789");
+	long_target = std::move(long_source);
+	EXPECT_TRUE(std::string(long_target.to_string()) ==
+	            "0123456789012345678901234567890123456789");
+}
