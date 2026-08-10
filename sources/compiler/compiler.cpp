@@ -755,9 +755,10 @@ namespace cs {
 				return;
 			}
 			case signal_types::lambda_: {
-				inside_lambda = true;
-				trim_expr(tree, it.left(), do_trim);
-				inside_lambda = false;
+				{
+					value_guard<bool> guard(inside_lambda, true);
+					trim_expr(tree, it.left(), do_trim);
+				}
 				token_base *lptr = it.left().data();
 				trim_expr(tree, it.right(), trim_type::no_this_deduce);
 				token_base *rptr = it.right().data();

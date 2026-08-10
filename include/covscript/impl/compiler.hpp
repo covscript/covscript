@@ -27,6 +27,27 @@
 #include <covscript/impl/symbols.hpp>
 
 namespace cs {
+	// Set a flag temporarily and restore its previous value on scope exit
+	template <typename T>
+	class value_guard final {
+		T &ref;
+		T previous;
+
+	public:
+		value_guard() = delete;
+
+		value_guard(T &ref, T value)
+			: ref(ref), previous(ref)
+		{
+			ref = std::move(value);
+		}
+
+		~value_guard()
+		{
+			ref = std::move(previous);
+		}
+	};
+
 	class translator_type final {
 		using data_type = std::pair<std::deque<token_base *>, method_base *>;
 

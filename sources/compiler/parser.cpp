@@ -119,16 +119,14 @@ namespace cs {
 					kill_brackets(list, line_num);
 				if (expected_fcall) {
 					std::deque<tree_type<token_base *>> tlist;
-					if (expected_fdef) {
+					value_guard<bool> guard(no_optimize, expected_fdef);
+					if (expected_fdef)
 						expected_fdef = false;
-						no_optimize = true;
-					}
 					for (auto &list : static_cast<token_sblist *>(ptr)->get_list()) {
 						tree_type<token_base *> tree;
 						gen_tree(tree, list);
 						tlist.push_back(tree);
 					}
-					no_optimize = false;
 					if (!expected_lambda)
 						tokens.push_back(new token_signal(signal_types::fcall_));
 					tokens.push_back(new token_arglist(tlist));

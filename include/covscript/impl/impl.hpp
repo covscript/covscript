@@ -242,5 +242,22 @@ namespace cs {
 		}
 	};
 
+	// Temporarily swap the shared compiler's context and restore it on scope exit
+	class context_swap_guard final {
+		compiler_type *compiler;
+		context_t restore;
+
+	public:
+		context_swap_guard() = delete;
+
+		context_swap_guard(compiler_type &comp, context_t target)
+			: compiler(&comp), restore(comp.swap_context(std::move(target))) {}
+
+		~context_swap_guard()
+		{
+			compiler->swap_context(restore);
+		}
+	};
+
 	std::string get_sdk_path();
 } // namespace cs
