@@ -325,6 +325,10 @@ void covscript_main(int args_size, char *args[])
 					std::getline(std::cin, line);
 					if (std::cin)
 						break;
+					if (std::cin.eof()) {
+						int code = 0;
+						cs::process_context::on_process_exit_default_handler(&code);
+					}
 				}
 #else
 				if (!std::cin) {
