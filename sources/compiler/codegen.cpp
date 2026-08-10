@@ -30,8 +30,10 @@ namespace cs {
 	method_expression::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().front())->get_tree();
-		if (context->compiler->fold_expr && tree.root().usable() &&
-		        tree.root().data()->get_type() == token_types::value)
+		token_base *root = tree.root().usable() ? tree.root().data() : nullptr;
+		if (root == nullptr)
+			throw compile_error("Invalid expression statement: the expression is empty");
+		if (context->compiler->fold_expr && root->get_type() == token_types::value)
 			return nullptr;
 		else
 			return new statement_expression(tree, context, raw.front().back());
@@ -126,12 +128,12 @@ namespace cs {
 	{
 		if (!context->package_name.empty())
 			throw compile_error("Invalid 'package' declaration: this file already declared its package name as '" + context->package_name + "'");
-		context->package_name = static_cast<token_id *>(static_cast<token_expr *>(raw.front().at(
-		                            1))
-		                        ->get_tree()
-		                        .root()
-		                        .data())
-		                        ->get_id();
+		token_base *root = static_cast<token_expr *>(raw.front().at(1))->get_tree().root().usable()
+		                       ? static_cast<token_expr *>(raw.front().at(1))->get_tree().root().data()
+		                       : nullptr;
+		if (root == nullptr || root->get_type() != token_types::id)
+			throw compile_error("Invalid 'package' declaration: expected a package name");
+		context->package_name = static_cast<token_id *>(root)->get_id();
 		return nullptr;
 	}
 
@@ -336,14 +338,15 @@ namespace cs {
 	statement_base *method_case::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
-		if (tree.root().data()->get_type() != token_types::value) {
+		token_base *root = tree.root().usable() ? tree.root().data() : nullptr;
+		if (root == nullptr || root->get_type() != token_types::value) {
 			std::size_t line_num = static_cast<token_endline *>(raw.front().back())->get_line_num();
 			const char *what = "A 'case' label must be a constant value";
 			throw exception(line_num, context->file_path, context->get_file_line(line_num), what);
 		}
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		return new statement_case(static_cast<token_value *>(tree.root().data())->get_value(), body, context,
+		return new statement_case(static_cast<token_value *>(root)->get_value(), body, context,
 		                          raw.front().back());
 	}
 

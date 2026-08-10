@@ -1453,7 +1453,10 @@ namespace cs {
 			if (!it.usable())
 				throw runtime_error("Tree node is empty");
 			tree_node *reserve = it.mData->left;
+			if (reserve == nullptr)
+				throw runtime_error("Tree node is empty");
 			tree_node *root = it.mData->root;
+			bool is_root = it.mData == mRoot;
 			it.mData->left = nullptr;
 			reserve->root = root;
 			if (root != nullptr) {
@@ -1463,7 +1466,7 @@ namespace cs {
 					root->right = reserve;
 			}
 			destroy(it.mData);
-			if (it.mData == mRoot)
+			if (is_root)
 				mRoot = reserve;
 			return reserve;
 		}
@@ -1473,7 +1476,10 @@ namespace cs {
 			if (!it.usable())
 				throw runtime_error("Tree node is empty");
 			tree_node *reserve = it.mData->right;
+			if (reserve == nullptr)
+				throw runtime_error("Tree node is empty");
 			tree_node *root = it.mData->root;
+			bool is_root = it.mData == mRoot;
 			it.mData->right = nullptr;
 			reserve->root = root;
 			if (root != nullptr) {
@@ -1483,7 +1489,7 @@ namespace cs {
 					root->right = reserve;
 			}
 			destroy(it.mData);
-			if (it.mData == mRoot)
+			if (is_root)
 				mRoot = reserve;
 			return reserve;
 		}

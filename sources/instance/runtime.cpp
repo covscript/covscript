@@ -274,8 +274,11 @@ namespace cs {
 		if (pl.size() != arr.size())
 			throw runtime_error("Structured binding mismatch: the number of variables does not match the number of array elements");
 		for (std::size_t i = 0; i < pl.size(); ++i) {
-			if (pl[i].root().data()->get_type() == token_types::parallel)
-				parse_bind(pl[i].root().data(), arr[i]);
+			token_base *elem = pl[i].root().usable() ? pl[i].root().data() : nullptr;
+			if (elem == nullptr)
+				throw runtime_error("Invalid structured binding: empty binding target");
+			if (elem->get_type() == token_types::parallel)
+				parse_bind(elem, arr[i]);
 			else
 				parse_asi(parse_expr(pl[i].root()), arr[i]);
 		}
