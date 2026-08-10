@@ -81,6 +81,11 @@ namespace cs {
 					tokens.push_back(ptr);
 					tokens.push_back(new token_signal(signal_types::varchk_));
 					continue;
+				case action_types::link_:
+					insert_varchk = true;
+					tokens.push_back(ptr);
+					tokens.push_back(new token_signal(signal_types::varchk_));
+					continue;
 				case action_types::for_:
 					tokens.push_back(ptr);
 					tokens.push_back(new token_signal(signal_types::varprt_));
