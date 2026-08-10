@@ -1158,6 +1158,23 @@ namespace cs {
 			}
 		}
 		}
+		// Write-semantics operators must not be constant-folded: folding executes
+		// parse_expr at compile time, which writes through shared values and may
+		// swallow the statement entirely (constant c=5; c++ silently becomes 6).
+		switch (static_cast<token_signal *>(it.data())->get_signal()) {
+		case signal_types::inc_:
+		case signal_types::dec_:
+		case signal_types::addasi_:
+		case signal_types::subasi_:
+		case signal_types::mulasi_:
+		case signal_types::divasi_:
+		case signal_types::modasi_:
+		case signal_types::powasi_:
+		case signal_types::lnkasi_:
+			return;
+		default:
+			break;
+		}
 		opt_expr(tree, it.left(), do_optm);
 		opt_expr(tree, it.right(), do_optm);
 		if (optimizable(it.left()) && optimizable(it.right())) {
