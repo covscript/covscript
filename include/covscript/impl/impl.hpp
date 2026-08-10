@@ -144,6 +144,9 @@ namespace cs {
 
 		void reset_status()
 		{
+			// Each open block pushed a domain/set pair; pop them so a failed
+			// REPL line does not leave the storage stacks permanently misaligned.
+			std::size_t depth = methods.size();
 			tmp.clear();
 			while (!methods.empty())
 				methods.pop_no_return();
@@ -152,6 +155,10 @@ namespace cs {
 			cmd_buff.clear();
 			context->compiler->utilize_metadata();
 			context->compiler->loop_depth = 0;
+			while (depth-- > 0) {
+				context->instance->storage.remove_set();
+				context->instance->storage.remove_domain();
+			}
 			context->instance->storage.clear_set();
 		}
 

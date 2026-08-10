@@ -68,6 +68,8 @@ namespace cs {
 	statement_base *
 	method_import::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
+		if (mResult.empty())
+			throw compile_error("Invalid 'import' statement: missing preprocessing result");
 		statement_base *ptr = mResult.front();
 		mResult.pop_front();
 		return ptr;
@@ -118,6 +120,8 @@ namespace cs {
 	statement_base *
 	method_import_as::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
+		if (mResult.empty())
+			throw compile_error("Invalid 'import' statement: missing preprocessing result");
 		statement_base *ptr = mResult.front();
 		mResult.pop_front();
 		return ptr;
@@ -162,6 +166,8 @@ namespace cs {
 	statement_base *
 	method_involve::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
+		if (mResult.empty())
+			throw compile_error("Invalid 'using' statement: missing preprocessing result");
 		statement_base *ptr = mResult.front();
 		mResult.pop_front();
 		return ptr;
