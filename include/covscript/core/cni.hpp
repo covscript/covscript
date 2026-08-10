@@ -278,7 +278,11 @@ namespace cs_impl {
 		{
 			using decayed_target_t = decay_t<_TargetT>;
 			val.assign(any::make<decayed_target_t>(_ConvertorT::convert(convert_helper<_SourceT>::get_val(val))));
-			val.mark_constant();
+			// Only a const reference may be frozen afterwards; a non-const
+			// reference must stay writable while handed to the CNI, or
+			// val<T&>() would reject it as a constant.
+			if constexpr (std::is_const<typename std::remove_reference<_TargetT>::type>::value)
+				val.mark_constant();
 			return convert_helper<_TargetT>::get_val(val);
 		}
 	};
