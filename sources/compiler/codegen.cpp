@@ -133,8 +133,8 @@ namespace cs {
 		if (!context->package_name.empty())
 			throw compile_error("Invalid 'package' declaration: this file already declared its package name as '" + context->package_name + "'");
 		token_base *root = static_cast<token_expr *>(raw.front().at(1))->get_tree().root().usable()
-		                       ? static_cast<token_expr *>(raw.front().at(1))->get_tree().root().data()
-		                       : nullptr;
+		                   ? static_cast<token_expr *>(raw.front().at(1))->get_tree().root().data()
+		                   : nullptr;
 		if (root == nullptr || root->get_type() != token_types::id)
 			throw compile_error("Invalid 'package' declaration: expected a package name");
 		context->package_name = static_cast<token_id *>(root)->get_id();

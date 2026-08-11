@@ -224,7 +224,8 @@ namespace cs {
 			virtual ~win32_fiber()
 			{
 				if (state == fiber_state::running || state == fiber_state::suspended || state == fiber_state::sleeping) {
-					std::fprintf(stderr, "[fiber] warning: destroying an unfinished fiber (state=%d); "
+					std::fprintf(stderr,
+					             "[fiber] warning: destroying an unfinished fiber (state=%d); "
 					             "its suspended stack frames are not unwound and resources will leak\n",
 					             static_cast<int>(state));
 					assert(false && "Destroying an unfinished fiber");

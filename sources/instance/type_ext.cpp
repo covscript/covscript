@@ -1542,12 +1542,12 @@ namespace cs_impl {
 			vector args;
 
 		public:
-		fiber_function(const callable &fn, vector data)
-			: owner(fn), args(std::move(data))
-		{
-			func = owner.get_raw_data().target<function_ptr>()->fptr;
-			context = func->get_context();
-		}
+			fiber_function(const callable &fn, vector data)
+				: owner(fn), args(std::move(data))
+			{
+				func = owner.get_raw_data().target<function_ptr>()->fptr;
+				context = func->get_context();
+			}
 
 			var operator()()
 			{

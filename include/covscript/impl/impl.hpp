@@ -250,7 +250,7 @@ namespace cs {
 		}
 	};
 
-	// Temporarily swap the shared compiler's context and restore it on scope exit
+// Temporarily swap the shared compiler's context and restore it on scope exit
 	class context_swap_guard final {
 		compiler_type *compiler;
 		context_t restore;

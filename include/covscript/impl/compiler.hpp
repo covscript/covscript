@@ -27,7 +27,7 @@
 #include <covscript/impl/symbols.hpp>
 
 namespace cs {
-	// Set a flag temporarily and restore its previous value on scope exit
+// Set a flag temporarily and restore its previous value on scope exit
 	template <typename T>
 	class value_guard final {
 		T &ref;
