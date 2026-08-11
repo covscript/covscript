@@ -575,9 +575,9 @@ namespace cs {
 
 	static const pointer null_pointer = {};
 
-	// Per-struct type identity node. Allocated from a process-lifetime pool
-	// (never freed), so its address is a stable, unique identity for the type.
-	// It carries the materialized transitive ancestor set so is_a stays O(1).
+// Per-struct type identity node. Allocated from a process-lifetime pool
+// (never freed), so its address is a stable, unique identity for the type.
+// It carries the materialized transitive ancestor set so is_a stays O(1).
 	struct type_node final {
 		std::string name;
 		const type_node *parent = nullptr;

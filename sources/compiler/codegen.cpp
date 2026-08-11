@@ -231,13 +231,13 @@ namespace cs {
 		if (root == nullptr || root->get_type() != token_types::id) {
 			std::size_t line_num = static_cast<token_endline *>(raw.front().back())->get_line_num();
 			const char *what = root != nullptr && root->get_type() == token_types::value
-			                       ? "Invalid 'namespace' declaration: the namespace name is already defined"
-			                       : "Invalid 'namespace' declaration: expected a namespace name";
+			                   ? "Invalid 'namespace' declaration: the namespace name is already defined"
+			                   : "Invalid 'namespace' declaration: expected a namespace name";
 			throw exception(line_num, context->file_path, context->get_file_line(line_num), what);
 		}
 		const var_id &name = static_cast<token_id *>(root)->get_id();
 		context->instance->storage.add_var_no_return("__PRAGMA_CS_NAMESPACE_DEFINITION__",
-		                                               var::make<const var_id *>(&name));
+		        var::make<const var_id *>(&name));
 	}
 
 	statement_base *
