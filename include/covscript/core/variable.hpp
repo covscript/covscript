@@ -915,7 +915,13 @@ namespace cs_impl {
 		{
 			proxy *dat = get_allocator().alloc();
 			dat->protect_level = 0;
-			dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			try {
+				dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			}
+			catch (...) {
+				get_allocator().free(dat);
+				throw;
+			}
 			return any(dat);
 		}
 
@@ -924,7 +930,13 @@ namespace cs_impl {
 		{
 			proxy *dat = get_allocator().alloc();
 			dat->protect_level = 1;
-			dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			try {
+				dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			}
+			catch (...) {
+				get_allocator().free(dat);
+				throw;
+			}
 			return any(dat);
 		}
 
@@ -933,7 +945,13 @@ namespace cs_impl {
 		{
 			proxy *dat = get_allocator().alloc();
 			dat->protect_level = 2;
-			dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			try {
+				dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			}
+			catch (...) {
+				get_allocator().free(dat);
+				throw;
+			}
 			return any(dat);
 		}
 
@@ -942,7 +960,13 @@ namespace cs_impl {
 		{
 			proxy *dat = get_allocator().alloc();
 			dat->protect_level = 3;
-			dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			try {
+				dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			}
+			catch (...) {
+				get_allocator().free(dat);
+				throw;
+			}
 			return any(dat);
 		}
 
@@ -953,7 +977,14 @@ namespace cs_impl {
 		{
 			mDat = get_allocator().alloc();
 			mDat->protect_level = 0;
-			mDat->data.construct_store<cs_impl::var_storage_t<T>>(dat);
+			try {
+				mDat->data.construct_store<cs_impl::var_storage_t<T>>(dat);
+			}
+			catch (...) {
+				get_allocator().free(mDat);
+				mDat = nullptr;
+				throw;
+			}
 		}
 
 		any(const any &v)

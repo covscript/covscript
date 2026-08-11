@@ -54,6 +54,15 @@ struct BigCopy {
 static_assert(sizeof(BigCopy) > CS_VAR_SVO_ALIGN - 16,
               "BigCopy must use the heap storage path");
 
+// A type whose construction throws: make/make_protect must release the
+// allocated proxy instead of leaking it when construct_store throws.
+struct ThrowOnConstruct {
+	ThrowOnConstruct()
+	{
+		throw std::runtime_error("ctor boom");
+	}
+};
+
 } // namespace
 
 TEST(variable_copy_store_normal_svo)
@@ -126,4 +135,15 @@ TEST(variable_move_assign_sso_string)
 	long_target = std::move(long_source);
 	EXPECT_TRUE(std::string(long_target.to_string()) ==
 	            "0123456789012345678901234567890123456789");
+}
+
+TEST(variable_make_ctor_throw_no_leak)
+{
+	// construct_store throws inside any::make; the proxy must be returned to
+	// the pool rather than leaked, and the exception must propagate cleanly.
+	EXPECT_THROW(cs::var::make<ThrowOnConstruct>(), std::exception);
+	EXPECT_THROW(cs::var::make_protect<ThrowOnConstruct>(), std::exception);
+	EXPECT_THROW(cs::var::make_constant<ThrowOnConstruct>(), std::exception);
+	EXPECT_THROW(cs::var::make_single<ThrowOnConstruct>(), std::exception);
+	EXPECT_THROW(cs::var(ThrowOnConstruct{}), std::exception);
 }

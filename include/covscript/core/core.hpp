@@ -1148,12 +1148,6 @@ namespace cs {
 
 		~struct_builder() = default;
 
-		static void reset_counter()
-		{
-			mParentMap.clear();
-			mCount = 0;
-		}
-
 		const type_id &get_id() const
 		{
 			return mTypeId;

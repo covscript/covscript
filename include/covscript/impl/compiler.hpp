@@ -271,8 +271,12 @@ namespace cs {
 		explicit compiler_type(context_t c)
 			: context(std::move(c))
 		{
-			type_id::inherit_map.clear();
-			struct_builder::reset_counter();
+			// The type-hash counter and the inheritance map are intentionally NOT
+			// reset here. Script functions and structs are retained for the whole
+			// process (global GC), so a new compiler in the same process must keep
+			// assigning monotonically increasing type hashes and preserve the
+			// is-a relationships, or retained structs would collide with fresh
+			// ones and lose their inheritance.
 		}
 
 		compiler_type(const compiler_type &) = delete;
