@@ -502,3 +502,176 @@ TEST(negative_zero_hash_consistent)
 	               "system.out.println(m[0])\n"),
 	    "zero\nzero");
 }
+
+// =============================================================================
+// C6: script fibers must have isolated value stacks. Two fibers that yield
+// mid-function-call and then return must not cross-contaminate return slots.
+// =============================================================================
+
+TEST(script_fiber_value_stack_isolation)
+{
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "function fa()\n"
+	               "\tfiber.yield()\n"
+	               "\treturn 111\n"
+	               "end\n"
+	               "function fb()\n"
+	               "\tfiber.yield()\n"
+	               "\treturn 222\n"
+	               "end\n"
+	               "var f1 = fiber.create(fa)\n"
+	               "var f2 = fiber.create(fb)\n"
+	               "f1.resume()\n"
+	               "f2.resume()\n"
+	               "f1.resume()\n"
+	               "f2.resume()\n"
+	               "system.out.println(f1.return_value() + f2.return_value())\n"),
+	    "333");
+}
+
+// =============================================================================
+// M2: two import/using statements in one block must not clobber each other's
+// preprocessing results (shared-method mResult bug).
+// =============================================================================
+
+TEST(multi_using_in_one_block)
+{
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "block\n"
+	               "\tusing system\n"
+	               "\tusing runtime\n"
+	               "\tsystem.out.println(\"m2-ok\")\n"
+	               "end\n"),
+	    "m2-ok");
+}
+
+// =============================================================================
+// M14: local_time/utc_time with an out-of-range timestamp must throw instead of
+// dereferencing the nullptr returned by localtime/gmtime.
+// =============================================================================
+
+TEST(time_conversion_out_of_range_throws)
+{
+	EXPECT_CONTAINS(run_script_expect_throw("using system\nruntime.local_time(9223372036854775807)\n"),
+	                "localtime failed");
+	EXPECT_CONTAINS(run_script_expect_throw("using system\nruntime.utc_time(9223372036854775807)\n"),
+	                "gmtime failed");
+}
+
+// =============================================================================
+// M10: invalid permission mode strings must throw instead of silently mapping
+// to mode 0 (which would strip all permissions).
+// =============================================================================
+
+TEST(chmod_invalid_mode_rejected)
+{
+	EXPECT_CONTAINS(
+	    run_script_expect_throw("using system\nsystem.path.chmod(\"no_such_file\", \"garbage\")\n"),
+	    "Invalid permission mode");
+	EXPECT_CONTAINS(
+	    run_script_expect_throw("using system\nsystem.path.chmod(\"no_such_file\", \"888\")\n"),
+	    "Invalid permission mode");
+}
+
+// =============================================================================
+// M12: ctype functions must accept non-ASCII bytes (negative char on signed-char
+// platforms) without UB; ASCII case conversion still applies.
+// =============================================================================
+
+TEST(ctype_non_ascii_case_conversion)
+{
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "system.out.println(\"Hello中文WORLD\".to_lower())\n"),
+	    "hello");
+}
+
+// =============================================================================
+// L2: parse_number must reject trailing garbage and keep 1e3 as a float 1000.
+// =============================================================================
+
+TEST(parse_number_rejects_partial_and_exponent)
+{
+	EXPECT_CONTAINS(run_script_expect_throw("using system\n\"123abc\".to_number()\n"),
+	                "Invalid numeric literal");
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "system.out.println(to_integer(\"1e3\".to_number()))\n"),
+	    "1000");
+}
+
+// =============================================================================
+// L14: string multiplication overflow and zero must be handled cleanly.
+// =============================================================================
+
+TEST(string_mult_zero_and_overflow)
+{
+	EXPECT_CONTAINS(run_script("using system\nvar s = \"a\" * 0\nsystem.out.println(s.size)\n"), "0");
+	EXPECT_CONTAINS(
+	    run_script_expect_throw("using system\nvar s = \"aaa\" * 9223372036854775807\n"),
+	    "too large");
+}
+
+// =============================================================================
+// M1: expression optimization must handle function-call argument lists (non-signal
+// nodes) without UB, and fold constants correctly.
+// =============================================================================
+
+TEST(expression_optimization_non_signal_nodes)
+{
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "function g(a, b)\n"
+	               "\treturn a + b\n"
+	               "end\n"
+	               "system.out.println(g(1, 2) + 3)\n"),
+	    "6");
+	EXPECT_CONTAINS(run_script("using system\nsystem.out.println({1, 2, 3}[1])\n"), "2");
+}
+
+// =============================================================================
+// C4: loading a nonexistent/broken extension must fail cleanly, not crash.
+// =============================================================================
+
+TEST(extension_load_failure_clean)
+{
+	EXPECT_THROW(cs::extension("zzz_no_such_extension_file.dll"), cs::runtime_error);
+}
+
+// =============================================================================
+// M6: csym line relocation must reject line 0 (was an underflow) and accept the
+// last line (was rejected by the old >= check).
+// =============================================================================
+
+TEST(csym_relocation_bounds)
+{
+	cs::csym_info info;
+	info.file = "test.csp";
+	info.map = {3};
+	info.codes = {"c1", "c2", "c3", "c4"};
+	EXPECT_THROW(cs::exception(0, "f", "c", "m").relocate_to_csym(info), cs::fatal_error);
+	cs::exception ok(1, "f", "c", "m");
+	ok.relocate_to_csym(info);
+}
+
+// =============================================================================
+// M15: inserting above a tree root must reparent the old root's parent pointer;
+// inserting into an empty tree must not dereference a null old root.
+// =============================================================================
+
+TEST(tree_type_root_reparenting)
+{
+	cs::tree_type<int> t;
+	auto a = t.insert_root_left(t.root(), 10);
+	EXPECT_TRUE(a.usable());
+	EXPECT_TRUE(t.root().usable());
+	EXPECT_TRUE(t.root().data() == 10);
+	auto b = t.insert_root_left(t.root(), 20);
+	EXPECT_TRUE(t.root().data() == 20);
+	EXPECT_TRUE(t.root().left().usable());
+	EXPECT_TRUE(t.root().left().data() == 10);
+	EXPECT_TRUE(t.root().left().root().usable());
+	EXPECT_TRUE(t.root().left().root().data() == 20);
+}
