@@ -563,32 +563,38 @@ namespace cs {
 
 	static const pointer null_pointer = {};
 
+	// Per-struct type identity node. Allocated from a process-lifetime pool
+	// (never freed), so its address is a stable, unique identity for the type.
+	// It carries the materialized transitive ancestor set so is_a stays O(1).
+	struct type_node final {
+		std::string name;
+		const type_node *parent = nullptr;
+		set_t<const type_node *> ancestors;
+	};
+
+	type_node *alloc_type_node();
+
 	struct type_id final {
-		static map_t<std::size_t, set_t<std::size_t>> inherit_map;
 		std::type_index type_idx;
-		std::size_t type_hash;
+		const type_node *node = nullptr;
 
 		type_id() = delete;
 
-		type_id(const std::type_index &id, std::size_t hash = 0)
-			: type_idx(id), type_hash(hash) {}
+		type_id(const std::type_index &id, const type_node *n = nullptr)
+			: type_idx(id), node(n) {}
 
 		inline bool is_a(const type_id &id) const
 		{
-			if (&id == this)
-				return true;
-			if (type_hash && id.type_hash)
-				return inherit_map.count(id.type_hash) > 0 && inherit_map[id.type_hash].count(type_hash) > 0;
+			if (node && id.node)
+				return node == id.node || node->ancestors.count(id.node) > 0;
 			else
 				return type_idx == id.type_idx;
 		}
 
 		inline bool compare(const type_id &id) const
 		{
-			if (&id == this)
-				return true;
-			if (type_hash)
-				return type_hash == id.type_hash;
+			if (node && id.node)
+				return node == id.node;
 			else
 				return type_idx == id.type_idx;
 		}
@@ -1125,9 +1131,8 @@ namespace cs {
 	};
 
 	class struct_builder final {
-		static map_t<std::size_t, std::size_t> mParentMap;
-		static std::size_t mCount;
 		context_t mContext;
+		type_node *mNode;
 		type_id mTypeId;
 		std::string mName;
 		tree_type<token_base *> mParent;
@@ -1139,10 +1144,14 @@ namespace cs {
 		struct_builder(context_t c, std::string name, tree_type<token_base *> parent,
 		               std::deque<statement_base *> method)
 			: mContext(std::move(c)),
-			  mTypeId(typeid(structure), ++mCount),
+			  mNode(alloc_type_node()),
+			  mTypeId(typeid(structure), mNode),
 			  mName(std::move(name)),
 			  mParent(std::move(parent)),
-			  mMethod(std::move(method)) {}
+			  mMethod(std::move(method))
+		{
+			mNode->name = mName;
+		}
 
 		struct_builder(const struct_builder &) = default;
 

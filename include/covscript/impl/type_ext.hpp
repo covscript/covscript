@@ -580,8 +580,8 @@ namespace cs_impl {
 	template <>
 	cs::string_borrower to_string<cs::type_id>(const cs::type_id &id)
 	{
-		if (id.type_hash != 0)
-			return cxx_demangle(id.type_idx.name()) + "_" + to_string(id.type_hash);
+		if (id.node != nullptr)
+			return id.node->name;
 		else
 			return cxx_demangle(id.type_idx.name());
 	}
@@ -643,7 +643,7 @@ namespace cs_impl {
 	template <>
 	std::size_t hash<cs::type_id>(const cs::type_id &id)
 	{
-		if (id.type_hash == 0)
+		if (id.node == nullptr)
 			return id.type_idx.hash_code();
 		else
 			throw cs::runtime_error("Does not support the specified type of hash operation");

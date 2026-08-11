@@ -172,10 +172,15 @@ namespace cs {
 	process_context this_process;
 	process_context *current_process = &this_process;
 
-	map_t<std::size_t, set_t<std::size_t>> type_id::inherit_map;
-
-	map_t<std::size_t, std::size_t> struct_builder::mParentMap;
-	std::size_t struct_builder::mCount = 0;
+	type_node *alloc_type_node()
+	{
+		// A process-lifetime pool: std::deque keeps references to existing
+		// elements stable across push_back and nothing is ever removed, so every
+		// node address is unique and never reused.
+		static std::deque<type_node> pool;
+		pool.emplace_back();
+		return &pool.back();
+	}
 
 	void copy_no_return(var &val)
 	{

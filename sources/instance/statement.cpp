@@ -166,19 +166,12 @@ namespace cs {
 				const auto &t = builder.const_val<type_t>();
 				if (mTypeId == t.id)
 					throw runtime_error("A struct cannot inherit from itself");
-				if (t.id.type_hash) {
-					for (std::size_t it = t.id.type_hash;;) {
-						type_id::inherit_map[it].insert(mTypeId.type_hash);
-						auto map_it = mParentMap.find(it);
-						if (map_it != mParentMap.end())
-							it = map_it->second;
-						else
-							break;
-					}
-					mParentMap[mTypeId.type_hash] = t.id.type_hash;
-				}
-				else
+				const type_node *parent_node = t.id.node;
+				if (parent_node == nullptr)
 					throw runtime_error("The parent of a struct must itself be a struct");
+				mNode->parent = parent_node;
+				mNode->ancestors = parent_node->ancestors;
+				mNode->ancestors.insert(parent_node);
 			}
 			else
 				throw runtime_error("The parent of a struct must be a type");
