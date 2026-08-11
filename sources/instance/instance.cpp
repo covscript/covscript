@@ -155,7 +155,10 @@ namespace cs {
 		// compile (module import during code generation) must not wipe the
 		// constants accumulated by the enclosing compilation.
 		std::size_t pool_base = context->compiler->save_pool();
-		context->compiler->loop_depth = 0;
+		// Start the translation unit with a clean loop depth, but restore the
+		// enclosing value afterwards: a compile-time nested import shares this
+		// compiler and must not reset the depth of the unit it is compiling for.
+		value_guard<std::size_t> loop_guard(context->compiler->loop_depth, 0);
 		try {
 			context->compiler->build_ast(buff, ast);
 			context->compiler->code_gen(ast, statements);
@@ -377,9 +380,13 @@ namespace cs {
 						context->instance->storage.remove_set();
 						domain_type domain = std::move(context->instance->storage.get_domain());
 						context->instance->storage.remove_domain();
-						methods.top()->postprocess(context, domain);
+						// Pop before postprocess: if postprocess throws (e.g. a
+						// namespace-name conflict), the method must no longer count
+						// as owning a domain/set pair, or reset_status would pop the
+						// already-removed pair again and corrupt the storage stacks.
 						expected_method = methods.top();
 						methods.pop();
+						expected_method->postprocess(context, domain);
 					}
 					if (methods.empty()) {
 						if (m->get_target_type() == statement_types::end_)

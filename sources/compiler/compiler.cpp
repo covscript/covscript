@@ -1432,20 +1432,6 @@ namespace cs {
 				return false;
 			}
 		};
-		// Release a loop-depth increment when a loop block finishes compiling,
-		// whether it succeeds or throws (so a failed REPL line does not leave
-		// the shared compiler's loop depth elevated).
-		struct loop_depth_release {
-			std::size_t &ref;
-			bool active;
-			explicit loop_depth_release(std::size_t &r, bool a) noexcept
-				: ref(r), active(a) {}
-			~loop_depth_release()
-			{
-				if (active)
-					--ref;
-			}
-		};
 		std::size_t method_line_num = 0, line_num = 0;
 		std::deque<std::deque<token_base *>> tmp;
 		stack_type<method_base *> methods;
@@ -1482,16 +1468,24 @@ namespace cs {
 						}
 						if (methods.empty()) {
 							line_num = method_line_num;
-							loop_depth_release release(context->compiler->loop_depth,
-							                           is_loop_block(expected_method));
 							if (m->get_target_type() == statement_types::end_)
 								sptr = static_cast<method_end *>(m)->translate_end(expected_method, context, tmp,
 								        line);
 							else
 								sptr = expected_method->translate(context, tmp);
+							// The block (with its body) is fully translated, so a
+							// loop no longer encloses anything: release its depth.
+							if (expected_method != nullptr && is_loop_block(expected_method))
+								--context->compiler->loop_depth;
 							tmp.clear();
 						}
 						else {
+							// A block closes while an enclosing method is still on
+							// the stack; its body is deferred and re-translated
+							// later, so release its depth now to keep the outer
+							// scan balanced instead of leaking it.
+							if (m->get_target_type() == statement_types::end_ && is_loop_block(expected_method))
+								--context->compiler->loop_depth;
 							if (raw)
 								m->preprocess(context, {line});
 							tmp.push_back(line);

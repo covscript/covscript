@@ -41,6 +41,9 @@ namespace cs {
 
 	void method_import::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
+		// Discard any stale result from a previously failed translation so the
+		// front of the queue always belongs to the statement being compiled.
+		mResult.clear();
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
@@ -103,6 +106,8 @@ namespace cs {
 
 	void method_import_as::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
+		// Discard any stale result from a previously failed translation.
+		mResult.clear();
 		tree_type<token_base *> &tree_package = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		tree_type<token_base *> &tree_alias = static_cast<token_expr *>(raw.front().at(3))->get_tree();
 		if (tree_package.root().data() == nullptr || tree_alias.root().data() == nullptr)
@@ -143,6 +148,8 @@ namespace cs {
 
 	void method_involve::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
+		// Discard any stale result from a previously failed translation.
+		mResult.clear();
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_value *vptr = dynamic_cast<token_value *>(tree.root().data());
 		if (vptr != nullptr) {
@@ -219,13 +226,18 @@ namespace cs {
 
 	void method_namespace::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		const var_id &name = static_cast<token_id *>(static_cast<token_expr *>(raw.front().at(
-		                         1))
-		                     ->get_tree()
-		                     .root()
-		                     .data())
-		                     ->get_id();
-		context->instance->storage.add_var_no_return("__PRAGMA_CS_NAMESPACE_DEFINITION__", var::make<const var_id *>(&name));
+		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
+		token_base *root = tree.root().usable() ? tree.root().data() : nullptr;
+		if (root == nullptr || root->get_type() != token_types::id) {
+			std::size_t line_num = static_cast<token_endline *>(raw.front().back())->get_line_num();
+			const char *what = root != nullptr && root->get_type() == token_types::value
+			                       ? "Invalid 'namespace' declaration: the namespace name is already defined"
+			                       : "Invalid 'namespace' declaration: expected a namespace name";
+			throw exception(line_num, context->file_path, context->get_file_line(line_num), what);
+		}
+		const var_id &name = static_cast<token_id *>(root)->get_id();
+		context->instance->storage.add_var_no_return("__PRAGMA_CS_NAMESPACE_DEFINITION__",
+		                                               var::make<const var_id *>(&name));
 	}
 
 	statement_base *
