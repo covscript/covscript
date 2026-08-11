@@ -86,6 +86,13 @@ namespace cs {
 			return mFile;
 		}
 
+		// The bare error message (no "File ..., line ...:" wrapper and no
+		// category prefix), used to recognize typed sentinels such as CS_EXIT.
+		const std::string &message() const noexcept
+		{
+			return mWhat;
+		}
+
 		void relocate_to_csym(const csym_info &);
 
 		const char *what() const noexcept override

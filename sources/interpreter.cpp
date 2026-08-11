@@ -40,8 +40,9 @@ bool ctrlhandler(DWORD fdwctrltype)
 		return true;
 	case CTRL_BREAK_EVENT:
 		// Cooperative exit via the main loop; never run cleanup on the
-		// console-control thread.
-		cs::current_process->raise_sigint();
+		// console-control thread. Distinct from Ctrl+C: this requests an exit
+		// (dispatched through on_process_exit), not a SIGINT reset.
+		cs::current_process->raise_exit();
 		return true;
 	default:
 		return false;
@@ -169,6 +170,21 @@ int covscript_args(int args_size, char *args[])
 	return index;
 }
 
+// Extract the bare message from an exception (no "File ..., line ...:" wrapper
+// and no category prefix) so cooperative-exit/signal sentinels (CS_EXIT,
+// CS_SIGINT) can be recognized regardless of whether they were wrapped into a
+// cs::exception by the runtime or thrown directly.
+static std::string raw_error_message(const std::exception &e)
+{
+	if (const auto *ce = dynamic_cast<const cs::exception *>(&e))
+		return ce->message();
+	if (const auto *le = dynamic_cast<const cs::lang_error *>(&e))
+		return le->what();
+	if (const auto *fe = dynamic_cast<const cs::fatal_error *>(&e))
+		return fe->message();
+	return e.what();
+}
+
 void covscript_main(int args_size, char *args[])
 {
 	int index = covscript_args(args_size, args);
@@ -275,7 +291,7 @@ void covscript_main(int args_size, char *args[])
 #endif
 		}
 		catch (const cs::exception &ce) {
-			if (std::strcmp(ce.what(), "CS_EXIT") != 0) {
+			if (raw_error_message(ce) != "CS_EXIT") {
 				if (context->compiler->csyms.count(ce.file()) > 0) {
 					cs::exception ne(ce);
 					ne.relocate_to_csym(context->compiler->csyms[ce.file()]);
@@ -345,12 +361,13 @@ void covscript_main(int args_size, char *args[])
 				repl.exec(line);
 			}
 			catch (const std::exception &e) {
-				if (std::strcmp(e.what(), "CS_SIGINT") == 0) {
+				std::string raw = raw_error_message(e);
+				if (raw == "CS_SIGINT") {
 					cs::process_context::cleanup_context();
 					repl.reset_status();
 					activate_sigint_handler();
 				}
-				else if (std::strcmp(e.what(), "CS_EXIT") != 0) {
+				else if (raw != "CS_EXIT") {
 					if (!log_path.empty()) {
 						if (!log_stream.is_open())
 							log_stream.open(::log_path);

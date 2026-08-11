@@ -149,7 +149,11 @@ namespace cs {
 	bool process_context::on_process_exit_default_handler(void *code)
 	{
 		cleanup_context();
-		collect_garbage();
+		// The statement/token/method pools are intentionally NOT collected here:
+		// script functions (function_ptr) reference statement members, and a live
+		// context may still hold callables, so freeing them would be use-after-free
+		// (same rationale as the global-GC change in bootstrap). std::exit reclaims
+		// everything, and finalize/destructors are not run on this path anyway.
 		std::exit(*static_cast<int *>(code));
 		return true;
 	}

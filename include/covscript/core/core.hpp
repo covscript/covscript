@@ -114,6 +114,7 @@ namespace cs {
 // Process Context
 	class process_context final {
 		std::atomic<bool> is_sigint_raised{};
+		std::atomic<bool> is_exit_requested{};
 
 	public:
 		// Version
@@ -169,15 +170,26 @@ namespace cs {
 
 		inline void poll_event()
 		{
-			if (is_sigint_raised) {
-				is_sigint_raised = false;
+			if (is_sigint_raised.exchange(false)) {
 				on_process_sigint.touch(nullptr);
+			}
+			// A cooperative exit request (e.g. Ctrl+Break) is dispatched through
+			// on_process_exit so it runs on the main thread, distinct from the
+			// SIGINT reset/continue handling.
+			if (is_exit_requested.exchange(false)) {
+				int code = 0;
+				on_process_exit.touch(&code);
 			}
 		}
 
 		inline void raise_sigint()
 		{
 			is_sigint_raised = true;
+		}
+
+		inline void raise_exit()
+		{
+			is_exit_requested = true;
 		}
 
 		// Exception Handling
