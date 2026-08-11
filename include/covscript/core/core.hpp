@@ -112,13 +112,21 @@
 
 namespace cs {
 // Per-execution-path fiber state (the fiber chain and its schedule tunables).
-// Shared through process_context::fiber_cxt: forks inherit the pointer, keeping
-// the cooperative single-threaded fiber chain a single process-wide stack.
+// Reach it through process_context::fiber_cxt (i.e. `current_process->fiber_cxt`):
+// the default comes from fiber_context::current() (thread-local) and forks inherit
+// the pointer, keeping the cooperative single-threaded fiber chain a single
+// process-wide stack.
 	class fiber_context final {
 	public:
 		stack_type<fiber_t> stack; // fiber chain (was process_context::fiber_stack)
 		double busy_wait_coef = COVSCRIPT_FIBER_BUSY_WAIT_COEF;
 		std::size_t busy_wait_min = COVSCRIPT_FIBER_BUSY_WAIT_MIN;
+
+		static fiber_context *current()
+		{
+			thread_local fiber_context cxt;
+			return &cxt;
+		}
 	};
 
 // Process Context
@@ -144,10 +152,23 @@ namespace cs {
 		stack_type<std::string> stack_backtrace;
 #endif
 
-		// Points to the fiber_context of the current execution path; this_process
-		// owns one and forks inherit this pointer (shared fiber chain).
-		fiber_context fiber_cxt_storage;
-		fiber_context *fiber_cxt = &fiber_cxt_storage;
+		// Points to the fiber_context of the current execution path. The default
+		// (and the initial state of this_process) comes from fiber_context::current()
+		// (thread-local); forks inherit the pointer so the fiber chain stays shared.
+		// Const pointer: the binding is fixed after construction; the pointee stays
+		// mutable (the fiber chain grows and busy_wait is runtime-tunable).
+		//
+		// Access convention: reach the fiber chain and schedule tunables through
+		// fiber_cxt, i.e. `current_process->fiber_cxt->stack` / `->busy_wait_coef` /
+		// `->busy_wait_min`. The fiber_stack/fiber_busy_wait_* members below are
+		// only transitional compatibility aliases for legacy callers and will be
+		// removed starting from 3.5.3.
+		fiber_context *const fiber_cxt;
+
+		// Transitional compatibility aliases into fiber_cxt; DEPRECATED, removed in 3.5.3.
+		stack_type<fiber_t> &fiber_stack;
+		double &fiber_busy_wait_coef;
+		std::size_t &fiber_busy_wait_min;
 
 		// Stack Resize must before any context instance start
 		void resize_stack(std::size_t size)
@@ -220,13 +241,16 @@ namespace cs {
 		cs_exception_handler cs_eh_callback = &cs_defalt_exception_handler;
 
 		process_context()
-			: on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
+			: fiber_cxt(fiber_context::current()), fiber_stack(fiber_cxt->stack), fiber_busy_wait_coef(fiber_cxt->busy_wait_coef), fiber_busy_wait_min(fiber_cxt->busy_wait_min),
+			on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
 		{
 			is_sigint_raised = false;
 		}
 
-		explicit process_context(std::size_t ss)
-			: on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
+		explicit process_context(std::size_t ss, fiber_context *cxt)
+			: fiber_cxt(cxt), fiber_stack(fiber_cxt->stack), fiber_busy_wait_coef(fiber_cxt->busy_wait_coef), fiber_busy_wait_min(fiber_cxt->busy_wait_min),
+			on_process_exit(&on_process_exit_default_handler),
+			on_process_sigint(&on_process_exit_default_handler)
 		{
 			resize_stack(ss);
 			is_sigint_raised = false;

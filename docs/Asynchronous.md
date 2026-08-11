@@ -241,9 +241,9 @@ When the built-in policies are insufficient, the backoff coefficient and minimum
 
 ```cpp
 // Backoff coefficient (progressive multiplier)
-cs::current_process->fiber_busy_wait_coef = 0.01;
+cs::current_process->fiber_cxt->busy_wait_coef = 0.01;
 // Minimum sleep time (milliseconds)
-cs::current_process->fiber_busy_wait_min = 10;
+cs::current_process->fiber_cxt->busy_wait_min = 10;
 ```
 
 CovScript code should use `fiber.set_schedule_policy()` to pick a preset; C++ code can tune freely.

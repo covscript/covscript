@@ -160,11 +160,11 @@ namespace cs {
 
 	std::unique_ptr<process_context> process_context::fork()
 	{
-		std::unique_ptr<process_context> new_process(new process_context(current_process->child_stack_size()));
+		// Inherit the parent's fiber_cxt: share the same fiber chain.
+		std::unique_ptr<process_context> new_process(
+		    new process_context(current_process->child_stack_size(), current_process->fiber_cxt));
 		new_process->output_precision = current_process->output_precision;
 		new_process->import_path = current_process->import_path;
-		// Inherit the parent's fiber_cxt directly: share the same fiber chain.
-		new_process->fiber_cxt = current_process->fiber_cxt;
 		process_context *curr = current_process;
 		new_process->on_process_exit.add_listener([curr](void *data) -> bool
 		{ return curr->on_process_exit.touch(data); });
