@@ -253,8 +253,7 @@ namespace cs_impl {
 		}
 
 // NOTE: next_n/prev_n advance a bare deque iterator without the owning
-// container, so a negative offset that crosses begin() cannot be range
-// checked here (UB). Known limitation; use with offsets within the array.
+// container, so crossing begin() with a negative offset is UB here.
 		array::iterator next_n(array::iterator &it, const numeric &offset)
 		{
 			return it += offset.as_integer();

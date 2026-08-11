@@ -33,8 +33,7 @@
 #include <unistd.h>
 #endif
 
-// Whether stdin is an interactive terminal. Redirected/piped input must not
-// busy-wait on kbhit() (it never fires) in the "press any key" paths.
+// Non-interactive (piped/redirected) input must not busy-wait on kbhit().
 static bool stdin_is_tty()
 {
 #ifdef COVSCRIPT_PLATFORM_WIN32

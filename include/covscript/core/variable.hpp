@@ -722,8 +722,7 @@ namespace cs_impl {
 
 		inline void swap(basic_var &other) noexcept
 		{
-			// An empty dispatcher has no value to exchange: fall back to moving so
-			// a null function pointer is never called.
+			// An empty var has no value to swap: fall back to moving.
 			if (m_dispatcher == nullptr) {
 				move_store(other);
 				return;

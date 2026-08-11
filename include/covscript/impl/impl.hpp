@@ -124,9 +124,8 @@ namespace cs {
 		bool multi_line = false;
 		string line_buff;
 		string cmd_buff;
-		// Import/using result FIFO base recorded at the start of the current
-		// top-level statement; reset_status truncates the compiler queue back to
-		// it so a failed line cannot leak stale results into the next statement.
+		// Import/using FIFO base at the start of the current top-level statement;
+		// reset_status truncates back to it so a failed line cannot leak results.
 		std::size_t import_base = 0;
 
 		void interpret(const string &, std::deque<token_base *> &);

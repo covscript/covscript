@@ -250,16 +250,11 @@ namespace cs {
 		// 'break'/'continue' outside any loop at compile time.
 		std::size_t loop_depth = 0;
 
-		// FIFO of import/using preprocessing results for the current translation
-		// unit. method_import/import_as/involve are shared singletons, so results
-		// must not be stored on the method objects (multiple statements in one
-		// block would overwrite each other). Scoped to the translation unit by
-		// instance_type::compile / the REPL statement boundary.
+		// FIFO of import/using preprocessing results (methods are shared singletons,
+		// so per-method storage would clobber on multiple imports per block).
 		std::deque<statement_base *> import_results;
 
-		// Whether a block-opening method introduces a loop ('break'/'continue'
-		// are only legal inside one). Used by both the main translation path and
-		// the REPL to keep loop_depth balanced.
+		// Whether a block opens a loop (break/continue only legal inside one).
 		static bool is_loop_block(const method_base *m)
 		{
 			switch (m->get_target_type()) {

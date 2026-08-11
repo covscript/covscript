@@ -147,8 +147,8 @@ namespace cs {
 
 		bool exist_record(std::string_view name)
 		{
-			// The set stack may be empty (e.g. the debugger building an expression
-			// after the script finished); no records exist in that case.
+			// The set stack can be empty (e.g. debugger expressions after the
+			// script finished); no records exist then.
 			if (m_set.empty())
 				return false;
 			return m_set.top().count(name) > 0;

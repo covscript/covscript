@@ -37,9 +37,7 @@
 #include <unistd.h>
 #endif
 
-// Whether stdin is an interactive terminal. Redirected/piped input must not
-// busy-wait on kbhit() (it never fires) in the "press any key" / quit-confirm
-// paths.
+// Non-interactive (piped/redirected) input must not busy-wait on kbhit().
 static bool stdin_is_tty()
 {
 #ifdef COVSCRIPT_PLATFORM_WIN32
@@ -49,9 +47,7 @@ static bool stdin_is_tty()
 #endif
 }
 
-// Extract the bare message from an exception (no "File ..., line ...:" wrapper
-// and no category prefix) so cooperative-exit/signal sentinels can be matched
-// exactly instead of via fragile substring search.
+// Bare exception message (no file/line wrapper or prefix) for exact sentinel match.
 static std::string bare_error_message(const std::exception &e)
 {
 	if (const auto *ce = dynamic_cast<const cs::exception *>(&e))
@@ -61,9 +57,8 @@ static std::string bare_error_message(const std::exception &e)
 	return e.what();
 }
 
-// collect_garbage(context) swaps the compiler's context to nullptr. Commands
-// that build/evaluate expressions afterwards must re-bind it, or trim_expr's
-// this->context is a null pointer.
+// collect_garbage() nulls the compiler context; re-bind before building
+// expressions, or trim_expr dereferences a null pointer.
 extern cs::context_t context;
 static void ensure_compiler_context()
 {
@@ -246,7 +241,7 @@ public:
 			const cs::callable::function_type &target = function.const_val<cs::callable>().get_raw_data();
 			if (target.target_type() != typeid(cs::function_ptr) || target.target<cs::function_ptr>() == nullptr ||
 			        target.target<cs::function_ptr>()->fptr == nullptr)
-				return; // Bound to a non-script/empty target: stay pending, no dangling dereference
+				return; // Non-script/empty target: stay pending, no dangling dereference
 			target.target<cs::function_ptr>()->fptr->set_debugger_state(true);
 			auto key = m_pending.find(name);
 			if (key->second.second) {
@@ -335,9 +330,7 @@ public:
 	template <typename T>
 	void add_func(const std::string &name, const std::string &shortcut, T &&func)
 	{
-		// The same callable is stored under two keys: copy it once so the same
-		// argument is never forwarded twice (an rvalue would be constructed from
-		// a moved-from object on the second emplace).
+		// Copy once for two keys: forwarding twice would move from a moved-from arg.
 		auto value = std::forward<T>(func);
 		m_map.emplace(name, value);
 		m_map.emplace(shortcut, value);

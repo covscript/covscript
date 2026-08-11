@@ -267,8 +267,7 @@ namespace cs_impl {
 		bool copy(const std::string &source, const std::string &dest)
 		{
 			std::error_code ec;
-			// copy_file ignores the recursive option, so directory copies always
-			// fail; dispatch on the source type.
+			// copy_file ignores the recursive option; dispatch on the source type.
 			if (std::filesystem::is_directory(source))
 				std::filesystem::copy(source, dest,
 				                      std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing, ec);
@@ -277,8 +276,7 @@ namespace cs_impl {
 			return !ec;
 		}
 
-// Note: remove is recursive (equivalent to remove_all) and deletes a
-// whole directory tree; returns false for a nonexistent path.
+// Note: remove is recursive and deletes a whole tree; false for nonexistent paths.
 		bool remove(const std::string &path)
 		{
 			std::error_code ec;

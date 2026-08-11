@@ -318,10 +318,10 @@ namespace cs {
 			stack_type<domain_type> cs_stack;
 			context_t cs_context;
 
-			// Each non-native fiber owns a forked process_context (its own value
-			// stack); native fibers keep null and reuse the current execution path.
+			// Non-native fibers fork their own process_context (own value stack);
+			// native fibers keep null and reuse the current execution path.
 			std::unique_ptr<process_context> process;
-			// The "caller process" used to restore current_process (captured at resume()).
+			// Caller process, captured at resume(), restored via cs_swap_out().
 			process_context *resumer_process = nullptr;
 
 			std::function<var()> func;
@@ -345,9 +345,7 @@ namespace cs {
 					fi->eptr = std::current_exception();
 				}
 				fi->state = fiber_state::finished;
-				// current_process is restored by resume() through
-				// cs_swap_out/top->cs_swap_in (yield/sleep/finish always switch back
-				// to the caller and resume() does the cleanup).
+				// current_process is restored by resume() after swapcontext returns.
 				cs_fiber_swapcontext(&fi->ctx, fi->prev_ctx);
 				// This should never execute
 				std::abort();
@@ -391,8 +389,7 @@ namespace cs {
 
 			void cs_swap_out()
 			{
-				// Restore the caller process; resume() calls this to finish up
-				// after the swapcontext returns.
+				// Restore the caller process after resume()'s swapcontext returns.
 				if (resumer_process != nullptr)
 					current_process = resumer_process;
 				if (cs_context)
@@ -470,11 +467,9 @@ namespace cs {
 				}
 				fi->busy_skip_count = 0;
 			}
-			// Always (re)bind the return context to the current caller before resuming.
-			// A fiber may be resumed from a different caller than the one that started
-			// it (fibers are first-class objects), so binding prev_ctx only once on
-			// creation would make yield/finish jump back to a stale - possibly already
-			// destroyed - context.
+			// Re-bind prev_ctx every resume: the caller may differ from the one that
+			// started the fiber, so binding once at creation could jump back to a
+			// stale (possibly destroyed) context.
 			if (!current_process->fiber_cxt->stack.empty())
 				fi->prev_ctx = &static_cast<unix_fiber *>(current_process->fiber_cxt->stack.top().get())->ctx;
 			else

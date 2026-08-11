@@ -27,11 +27,8 @@
 #include <limits>
 
 namespace cs {
-// Process-lifetime pool for lambda `function` objects. Lambda callables are
-// exposed as `function_ptr{&fn}` stored in process-immortal vars (global GC),
-// so the function must outlive the compiler that created it (a compiler may
-// be released while a lambda var is still referenced). Never shrinks, matching
-// the global-GC trade-off.
+// Process-lifetime pool for lambda `function` objects so lambdas outlive the
+// compiler that created them (never shrinks, matching the global-GC trade-off).
 	static std::vector<std::unique_ptr<function>> &lambda_pool()
 	{
 		static std::vector<std::unique_ptr<function>> pool;
@@ -886,9 +883,8 @@ namespace cs {
 			return;
 		switch (token->get_type()) {
 		default:
-			// value/arglist/vargs/endline/action etc. are not expression nodes and
-			// need no optimization; return early to avoid the static_cast below
-			// being applied to a non-signal node (UB).
+			// Non-expression nodes need no optimization; return to avoid a
+			// static_cast on a non-signal node below (UB).
 			return;
 		case token_types::id: {
 			var value = context->instance->storage.get_var_optimizable(static_cast<token_id *>(token)->get_id());
@@ -1476,17 +1472,13 @@ namespace cs {
 								        line);
 							else
 								sptr = expected_method->translate(context, tmp);
-							// The block (with its body) is fully translated, so a
-							// loop no longer encloses anything: release its depth.
+							// Loop closed: release its depth.
 							if (expected_method != nullptr && compiler_type::is_loop_block(expected_method))
 								--context->compiler->loop_depth;
 							tmp.clear();
 						}
 						else {
-							// A block closes while an enclosing method is still on
-							// the stack; its body is deferred and re-translated
-							// later, so release its depth now to keep the outer
-							// scan balanced instead of leaking it.
+							// Deferred block: release its depth to keep the scan balanced.
 							if (m->get_target_type() == statement_types::end_ && compiler_type::is_loop_block(expected_method))
 								--context->compiler->loop_depth;
 							if (raw)

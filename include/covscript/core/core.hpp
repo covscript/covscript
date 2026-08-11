@@ -111,11 +111,8 @@
 #include <covscript/core/version.hpp>
 
 namespace cs {
-// Per-execution-path fiber state (the fiber chain and its schedule tunables).
-// Reach it through process_context::fiber_cxt (i.e. `current_process->fiber_cxt`):
-// the default comes from fiber_context::current() (thread-local) and forks inherit
-// the pointer, keeping the cooperative single-threaded fiber chain a single
-// process-wide stack.
+// Per-execution-path fiber state (chain + schedule tunables), shared through
+// process_context::fiber_cxt (thread-local default; forks inherit the pointer).
 	class fiber_context final {
 	public:
 		stack_type<fiber_t> stack; // fiber chain (was process_context::fiber_stack)
@@ -152,17 +149,10 @@ namespace cs {
 		stack_type<std::string> stack_backtrace;
 #endif
 
-		// Points to the fiber_context of the current execution path. The default
-		// (and the initial state of this_process) comes from fiber_context::current()
-		// (thread-local); forks inherit the pointer so the fiber chain stays shared.
-		// Const pointer: the binding is fixed after construction; the pointee stays
-		// mutable (the fiber chain grows and busy_wait is runtime-tunable).
-		//
-		// Access convention: reach the fiber chain and schedule tunables through
-		// fiber_cxt, i.e. `current_process->fiber_cxt->stack` / `->busy_wait_coef` /
-		// `->busy_wait_min`. The fiber_stack/fiber_busy_wait_* members below are
-		// only transitional compatibility aliases for legacy callers and will be
-		// removed starting from 3.5.3.
+		// Shared fiber chain for this execution path (thread-local default; forks
+		// inherit the pointer). Access via `current_process->fiber_cxt->stack` etc.
+		// The fiber_stack/fiber_busy_wait_* members below are transitional aliases,
+		// removed in 3.5.3.
 		fiber_context *const fiber_cxt;
 
 		// Transitional compatibility aliases into fiber_cxt; DEPRECATED, removed in 3.5.3.
@@ -1009,9 +999,7 @@ namespace cs {
 
 		bool operator!=(const range_iterator &it) const
 		{
-			// The range-for "keep iterating" condition; must depend on the step
-			// direction. Ascending keeps going while index < end (stops past the
-			// end); descending keeps going while index > end.
+			// Iterate while index is on the step's side of end (asc: <, desc: >).
 			if (m_step > 0)
 				return m_index < it.m_index;
 			if (m_step < 0)

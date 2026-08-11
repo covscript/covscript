@@ -652,17 +652,14 @@ namespace cs_impl {
 	template <>
 	std::size_t hash<cs::numeric>(const cs::numeric &num)
 	{
-		// Integers hash exactly: converting large int64 values through a float
-		// (long double == double on some platforms) collapses distinct keys.
+		// Hash integers exactly so large keys don't collapse through float.
 		if (num.is_integer())
 			return hash(num.as_integer());
-		// An integral float within int64 range must hash like the equal integer
-		// (numeric::operator== is exact now), so 1.0 and 1 land in one bucket;
-		// this also normalizes -0.0 to +0.0 (both compare equal to integer 0).
+		// Integral floats hash like the equal integer (keeps 1 == 1.0 and -0.0 == 0).
 		cs::numeric_float f = num.as_float();
 		if (f == std::trunc(f)) {
 			const cs::numeric_float lo = static_cast<cs::numeric_float>((std::numeric_limits<cs::numeric_integer>::min)());
-			if (f >= lo && f < -lo) // [-2^63, 2^63); -lo == 2^63, exact in both double and long double
+			if (f >= lo && f < -lo) // [-2^63, 2^63), exact in double and long double
 				return hash(static_cast<cs::numeric_integer>(f));
 		}
 		return hash(f);
