@@ -601,8 +601,8 @@ void covscript_main(int args_size, char *args[])
 					std::cout
 					        << "An interpreter instance is running, do you really want to quit?\nPress (y) to confirm or press any other key to cancel."
 					        << std::endl;
-				while (!cs_impl::conio::kbhit());
-				if (std::tolower(static_cast<unsigned char>(cs_impl::conio::getch())) != 'y')
+					while (!cs_impl::conio::kbhit());
+					if (std::tolower(static_cast<unsigned char>(cs_impl::conio::getch())) != 'y')
 						return true;
 				}
 				quit_sig = true;
