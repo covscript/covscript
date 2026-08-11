@@ -334,6 +334,38 @@ namespace cs {
 			return lhs << 1 | rhs;
 		}
 
+		// Exact integer-vs-float ordering, portable across long-double widths
+		// (80-bit x87 vs 64-bit double). Returns -1 (i < f), 0 (i == f), 1 (i > f),
+		// or 2 when f is unordered (NaN). The naive long-double promotion collapses
+		// distinct large integers on platforms where long double == double, so the
+		// float is range-checked against int64 before casting.
+		static inline int compare_int_float(numeric_integer i, numeric_float f) noexcept
+		{
+			if (f != f)
+				return 2; // NaN: unordered
+			const numeric_float lo = static_cast<numeric_float>((std::numeric_limits<numeric_integer>::min)());
+			const numeric_float hi = -lo; // 2^63, exactly representable in both double and long double
+			if (f >= hi)
+				return -1; // f >= 2^63 > any i
+			if (f < lo)
+				return 1;                                         // f < -2^63 <= any i
+			numeric_integer fi = static_cast<numeric_integer>(f); // in range: well-defined cast
+			if (i != fi)
+				return i < fi ? -1 : 1;
+			numeric_float frac = f - static_cast<numeric_float>(fi); // exact (Sterbenz)
+			if (frac > 0)
+				return -1;
+			if (frac < 0)
+				return 1;
+			return 0;
+		}
+
+		static inline int compare_float_int(numeric_float f, numeric_integer i) noexcept
+		{
+			int c = compare_int_float(i, f);
+			return c == 2 ? 2 : -c;
+		}
+
 		static inline numeric int_pow(numeric_integer base, numeric_integer exp)
 		{
 			if (exp == 0) // base^0
@@ -360,10 +392,16 @@ namespace cs {
 			};
 			// Sign-aware signed-multiplication overflow check (handles negative bases)
 			auto would_overflow = [](numeric_integer a, numeric_integer b) {
+				// Cheap short-circuits first so typical small powers do no divisions.
+				// Note: -1 is NOT safe here because (-1) * INT_MIN overflows.
+				if (a == 0 || b == 0 || a == 1 || b == 1)
+					return false;
+				// |a|,|b| <= 2^30 => |a*b| <= 2^60, safely inside int64.
+				constexpr numeric_integer T = 1LL << 30;
+				if (a >= -T && a <= T && b >= -T && b <= T)
+					return false;
 				constexpr numeric_integer mx = (std::numeric_limits<numeric_integer>::max)();
 				constexpr numeric_integer mn = (std::numeric_limits<numeric_integer>::min)();
-				if (a == 0 || b == 0)
-					return false;
 				if (a > 0)
 					return b > 0 ? a > mx / b : b < mn / a;
 				return b > 0 ? a < mn / b : a < mx / b;
@@ -500,6 +538,10 @@ namespace cs {
 			case 0b11:
 				if (rhs.data._int == 0)
 					throw lang_error("Integer division by zero");
+				// INT_MIN / -1 overflows int64 (mathematical result 2^63 is not
+				// representable); std::lldiv is UB for this case. Return as float.
+				if (data._int == (std::numeric_limits<numeric_integer>::min)() && rhs.data._int == -1)
+					return static_cast<numeric_float>(data._int) / rhs.data._int;
 				std::lldiv_t divres = std::lldiv(data._int, rhs.data._int);
 				if (divres.rem == 0)
 					return divres.quot;
@@ -530,6 +572,9 @@ namespace cs {
 			case 0b11:
 				if (rhs.data._int == 0)
 					throw lang_error("Integer modulo by zero");
+				// INT_MIN % -1 is undefined behavior in C++; the remainder is 0.
+				if (data._int == (std::numeric_limits<numeric_integer>::min)() && rhs.data._int == -1)
+					return 0;
 				return data._int % rhs.data._int;
 			}
 		}
@@ -599,9 +644,9 @@ namespace cs {
 			case 0b00:
 				return data._num < rhs.data._num;
 			case 0b01:
-				return data._num < rhs.data._int;
+				return compare_float_int(data._num, rhs.data._int) < 0;
 			case 0b10:
-				return data._int < rhs.data._num;
+				return compare_int_float(data._int, rhs.data._num) < 0;
 			case 0b11:
 				return data._int < rhs.data._int;
 			}
@@ -623,9 +668,9 @@ namespace cs {
 			case 0b00:
 				return data._num <= rhs.data._num;
 			case 0b01:
-				return data._num <= rhs.data._int;
+				return compare_float_int(data._num, rhs.data._int) <= 0;
 			case 0b10:
-				return data._int <= rhs.data._num;
+				return compare_int_float(data._int, rhs.data._num) <= 0;
 			case 0b11:
 				return data._int <= rhs.data._int;
 			}
@@ -647,9 +692,9 @@ namespace cs {
 			case 0b00:
 				return data._num > rhs.data._num;
 			case 0b01:
-				return data._num > rhs.data._int;
+				return compare_float_int(data._num, rhs.data._int) > 0;
 			case 0b10:
-				return data._int > rhs.data._num;
+				return compare_int_float(data._int, rhs.data._num) > 0;
 			case 0b11:
 				return data._int > rhs.data._int;
 			}
@@ -671,9 +716,9 @@ namespace cs {
 			case 0b00:
 				return data._num >= rhs.data._num;
 			case 0b01:
-				return data._num >= rhs.data._int;
+				return compare_float_int(data._num, rhs.data._int) >= 0;
 			case 0b10:
-				return data._int >= rhs.data._num;
+				return compare_int_float(data._int, rhs.data._num) >= 0;
 			case 0b11:
 				return data._int >= rhs.data._int;
 			}
@@ -695,9 +740,9 @@ namespace cs {
 			case 0b00:
 				return data._num == rhs.data._num;
 			case 0b01:
-				return data._num == rhs.data._int;
+				return compare_float_int(data._num, rhs.data._int) == 0;
 			case 0b10:
-				return data._int == rhs.data._num;
+				return compare_int_float(data._int, rhs.data._num) == 0;
 			case 0b11:
 				return data._int == rhs.data._int;
 			}
@@ -719,9 +764,9 @@ namespace cs {
 			case 0b00:
 				return data._num != rhs.data._num;
 			case 0b01:
-				return data._num != rhs.data._int;
+				return compare_float_int(data._num, rhs.data._int) != 0;
 			case 0b10:
-				return data._int != rhs.data._num;
+				return compare_int_float(data._int, rhs.data._num) != 0;
 			case 0b11:
 				return data._int != rhs.data._int;
 			}

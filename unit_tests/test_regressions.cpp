@@ -427,3 +427,78 @@ TEST(link_assignment_to_constant_rejected)
 	    run_script_expect_throw("using system\nconstant c = 5\nc := 10\nsystem.out.println(c)\n"),
 	    "The variable has been protected");
 }
+
+// =============================================================================
+// Numeric: INT_MIN % -1 is UB in C++; the remainder is 0.
+// =============================================================================
+
+TEST(int_min_mod_minus_one_zero)
+{
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "var x = -9223372036854775807 - 1\n"
+	               "system.out.println(x % (-1))\n"),
+	    "0");
+}
+
+// =============================================================================
+// Numeric: INT_MIN / -1 overflows int64 (result 2^63 not representable); must
+// return the mathematically correct value as a float, not wrap to INT_MIN.
+// =============================================================================
+
+TEST(int_min_div_minus_one_returns_float)
+{
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "var x = -9223372036854775807 - 1\n"
+	               "system.out.println(x / (-1))\n"),
+	    "9.22337");
+}
+
+// =============================================================================
+// Numeric: large integer hash_map keys must not collapse. Distinct int64 keys
+// (2^53+1 vs 2^53) compare unequal, so they must land in distinct buckets even
+// though converting them through a double would round them together.
+// =============================================================================
+
+TEST(large_integer_hash_keys_stay_distinct)
+{
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "var m = new hash_map\n"
+	               "m[9007199254740993] = \"big\"\n"
+	               "m[9007199254740992] = \"small\"\n"
+	               "system.out.println(m[9007199254740993])\n"),
+	    "big");
+}
+
+// =============================================================================
+// Numeric: exact int-float ordering. 2^53+1 is representable as an integer but
+// not as a double; it must still compare unequal/greater than the double 2^53.
+// =============================================================================
+
+TEST(exact_int_float_ordering)
+{
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "var big = 9007199254740993\n"
+	               "system.out.println(big == 9007199254740992.0)\n"
+	               "system.out.println(big > 9007199254740992.0)\n"),
+	    "false\ntrue");
+}
+
+// =============================================================================
+// Numeric: -0.0 and +0.0 (and integer 0) compare equal and must hash alike, so
+// a hash_map key stored under one form is found under the others.
+// =============================================================================
+
+TEST(negative_zero_hash_consistent)
+{
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "var m = new hash_map\n"
+	               "m[-0.0] = \"zero\"\n"
+	               "system.out.println(m[0.0])\n"
+	               "system.out.println(m[0])\n"),
+	    "zero\nzero");
+}
