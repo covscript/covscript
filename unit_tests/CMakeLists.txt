@@ -10,6 +10,7 @@ set(UNIT_TEST_SOURCES
     test_fiber.cpp
     test_variable.cpp
     test_cni.cpp
+    test_regressions.cpp
 )
 
 add_executable(cs_unit_tests ${UNIT_TEST_SOURCES})
