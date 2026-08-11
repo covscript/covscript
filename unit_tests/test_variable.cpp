@@ -63,6 +63,43 @@ struct ThrowOnConstruct {
 	}
 };
 
+// SVO type that counts live instances, to verify the moved-from object of a
+// move (whose source dispatcher is nulled by move_store) is still destroyed.
+struct CountedSVO {
+	static inline int live = 0;
+	CountedSVO()
+	{
+		++live;
+	}
+	CountedSVO(const CountedSVO &)
+	{
+		++live;
+	}
+	CountedSVO(CountedSVO &&) noexcept
+	{
+		++live;
+	}
+	CountedSVO &operator=(const CountedSVO &) = default;
+	CountedSVO &operator=(CountedSVO &&) noexcept = default;
+	~CountedSVO()
+	{
+		--live;
+	}
+};
+
+// Heap-stored type whose construction throws: the block allocated before the
+// placement construction must be deallocated, not leaked.
+struct BigThrowOnConstruct {
+	char pad[64];
+	BigThrowOnConstruct()
+	{
+		throw std::runtime_error("ctor boom");
+	}
+};
+
+static_assert(sizeof(BigThrowOnConstruct) > CS_VAR_SVO_ALIGN - 16,
+              "BigThrowOnConstruct must use the heap storage path");
+
 } // namespace
 
 TEST(variable_copy_store_normal_svo)
@@ -146,4 +183,29 @@ TEST(variable_make_ctor_throw_no_leak)
 	EXPECT_THROW(cs::var::make_constant<ThrowOnConstruct>(), std::exception);
 	EXPECT_THROW(cs::var::make_single<ThrowOnConstruct>(), std::exception);
 	EXPECT_THROW(cs::var(ThrowOnConstruct{}), std::exception);
+}
+
+TEST(variable_svo_move_destroys_moved_from)
+{
+	using bv_t = cs_impl::basic_var<CS_VAR_SVO_ALIGN>;
+	bv_t target = bv_t::make<CountedSVO>();
+	bv_t source = bv_t::make<CountedSVO>();
+	EXPECT_TRUE(CountedSVO::live == 2);
+	target = std::move(source);
+	// The destination was move-constructed (live+1) and the source's moved-from
+	// object must have been destroyed (live-1); the old destination value was
+	// destroyed too, so exactly one live instance remains.
+	EXPECT_TRUE(CountedSVO::live == 1);
+	bv_t moved = std::move(target);
+	EXPECT_TRUE(CountedSVO::live == 1);
+}
+
+TEST(variable_heap_make_ctor_throw_no_leak)
+{
+	// A throwing constructor for a heap-stored type must release the block that
+	// was allocated before placement construction, and the proxy must be freed.
+	EXPECT_THROW(cs::var::make<BigThrowOnConstruct>(), std::exception);
+	EXPECT_THROW(cs::var::make_protect<BigThrowOnConstruct>(), std::exception);
+	using bv_t = cs_impl::basic_var<CS_VAR_SVO_ALIGN>;
+	EXPECT_THROW(bv_t::make<BigThrowOnConstruct>(), std::exception);
 }

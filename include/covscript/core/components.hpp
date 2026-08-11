@@ -950,7 +950,7 @@ namespace cs_impl {
 
 		static inline allocator_type &get_allocator()
 		{
-			static allocator_type allocator;
+			static thread_local allocator_type allocator;
 			return allocator;
 		}
 

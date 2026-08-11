@@ -421,7 +421,12 @@ namespace cs_impl {
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_move(void *lhs, void *rhs) noexcept
 			{
 				static_assert(std::is_move_constructible<T>::value, "CovScript requires type supports move constructor.");
-				::new (&static_cast<basic_var *>(rhs)->m_store.buffer) T(std::move(*static_cast<T *>(lhs)));
+				T *src = static_cast<T *>(lhs);
+				::new (&static_cast<basic_var *>(rhs)->m_store.buffer) T(std::move(*src));
+				// End the moved-from source's lifetime: move_store nulls the
+				// source dispatcher, so without this its destructor would never
+				// run for SVO values.
+				src->~T();
 				return operators::result();
 			}
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_swap(void *lhs, void *rhs) noexcept
@@ -506,7 +511,9 @@ namespace cs_impl {
 		struct var_op_heap_dispatcher {
 			static allocator_t<T> &get_allocator()
 			{
-				static allocator_t<T> allocator;
+				// Thread-local like the proxy pool: async worker threads allocate
+				// and free heap-stored values independently of the main thread.
+				static thread_local allocator_t<T> allocator;
 				return allocator;
 			}
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_copy(void *lhs, void *rhs)
@@ -542,7 +549,15 @@ namespace cs_impl {
 			static COVSCRIPT_ALWAYS_INLINE void construct(basic_var *val, ArgsT &&...args)
 			{
 				T *ptr = get_allocator().allocate(1);
-				::new (ptr) T(std::forward<ArgsT>(args)...);
+				try {
+					::new (ptr) T(std::forward<ArgsT>(args)...);
+				}
+				catch (...) {
+					// construct_store leaves the dispatcher null on a throwing
+					// constructor, so the block would never be released.
+					get_allocator().deallocate(ptr, 1);
+					throw;
+				}
 				val->m_store.ptr = ptr;
 			}
 			static inline operators::result dispatcher(operators::type op, const basic_var *lhs, void *rhs)
