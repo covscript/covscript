@@ -468,67 +468,67 @@ namespace cs_impl {
 
 		bool isalnum(char c)
 		{
-			return std::isalnum(c);
+			return std::isalnum(static_cast<unsigned char>(c));
 		}
 
 		bool isalpha(char c)
 		{
-			return std::isalpha(c);
+			return std::isalpha(static_cast<unsigned char>(c));
 		}
 
 		bool islower(char c)
 		{
-			return std::islower(c);
+			return std::islower(static_cast<unsigned char>(c));
 		}
 
 		bool isupper(char c)
 		{
-			return std::isupper(c);
+			return std::isupper(static_cast<unsigned char>(c));
 		}
 
 		bool isdigit(char c)
 		{
-			return std::isdigit(c);
+			return std::isdigit(static_cast<unsigned char>(c));
 		}
 
 		bool iscntrl(char c)
 		{
-			return std::iscntrl(c);
+			return std::iscntrl(static_cast<unsigned char>(c));
 		}
 
 		bool isgraph(char c)
 		{
-			return std::isgraph(c);
+			return std::isgraph(static_cast<unsigned char>(c));
 		}
 
 		bool isspace(char c)
 		{
-			return std::isspace(c);
+			return std::isspace(static_cast<unsigned char>(c));
 		}
 
 		bool isblank(char c)
 		{
-			return std::isblank(c);
+			return std::isblank(static_cast<unsigned char>(c));
 		}
 
 		bool isprint(char c)
 		{
-			return std::isprint(c);
+			return std::isprint(static_cast<unsigned char>(c));
 		}
 
 		bool ispunct(char c)
 		{
-			return std::ispunct(c);
+			return std::ispunct(static_cast<unsigned char>(c));
 		}
 
 		char tolower(char c)
 		{
-			return std::tolower(c);
+			return std::tolower(static_cast<unsigned char>(c));
 		}
 
 		char toupper(char c)
 		{
-			return std::toupper(c);
+			return std::toupper(static_cast<unsigned char>(c));
 		}
 
 		numeric to_ascii(char c)
@@ -1992,7 +1992,7 @@ namespace cs_impl {
 		{
 			string s;
 			for (auto &ch : str)
-				s.push_back(std::tolower(ch));
+				s.push_back(std::tolower(static_cast<unsigned char>(ch)));
 			return std::move(s);
 		}
 
@@ -2000,7 +2000,7 @@ namespace cs_impl {
 		{
 			string s;
 			for (auto &ch : str)
-				s.push_back(std::toupper(ch));
+				s.push_back(std::toupper(static_cast<unsigned char>(ch)));
 			return std::move(s);
 		}
 
@@ -2037,9 +2037,9 @@ namespace cs_impl {
 				return "";
 			std::size_t beg = 0;
 			std::size_t end = str.size() - 1;
-			while (beg <= end && (std::isspace(str[beg]) || std::iscntrl(str[beg])))
+			while (beg <= end && (std::isspace(static_cast<unsigned char>(str[beg])) || std::iscntrl(static_cast<unsigned char>(str[beg]))))
 				++beg;
-			while (end >= beg && (std::isspace(str[end]) || std::iscntrl(str[end])))
+			while (end >= beg && (std::isspace(static_cast<unsigned char>(str[end])) || std::iscntrl(static_cast<unsigned char>(str[end]))))
 				--end;
 			return str.substr(beg, end - beg + 1);
 		}

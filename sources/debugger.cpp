@@ -404,12 +404,12 @@ bool covscript_debugger()
 #endif
 	std::size_t posit = 0;
 	for (; posit < cmd.size(); ++posit)
-		if (std::isspace(cmd[posit]))
+		if (std::isspace(static_cast<unsigned char>(cmd[posit])))
 			break;
 		else
 			func.push_back(cmd[posit]);
 	for (; posit < cmd.size(); ++posit)
-		if (!std::isspace(cmd[posit]))
+		if (!std::isspace(static_cast<unsigned char>(cmd[posit])))
 			break;
 	for (; posit < cmd.size(); ++posit)
 		args.push_back(cmd[posit]);
@@ -520,7 +520,7 @@ cs::array split(const std::string &str)
 	cs::array arr{path};
 	std::string buf;
 	for (auto &ch : str) {
-		if (std::isspace(ch)) {
+		if (std::isspace(static_cast<unsigned char>(ch))) {
 			if (!buf.empty()) {
 				arr.emplace_back(buf);
 				buf.clear();
@@ -601,8 +601,8 @@ void covscript_main(int args_size, char *args[])
 					std::cout
 					        << "An interpreter instance is running, do you really want to quit?\nPress (y) to confirm or press any other key to cancel."
 					        << std::endl;
-					while (!cs_impl::conio::kbhit());
-					if (std::tolower(cs_impl::conio::getch()) != 'y')
+				while (!cs_impl::conio::kbhit());
+				if (std::tolower(static_cast<unsigned char>(cs_impl::conio::getch())) != 'y')
 						return true;
 				}
 				quit_sig = true;
@@ -652,7 +652,7 @@ void covscript_main(int args_size, char *args[])
 			bool is_line = true;
 			for (auto &ch: cmd)
 			{
-				if (!std::isspace(ch) && !std::isdigit(ch)) {
+				if (!std::isspace(static_cast<unsigned char>(ch)) && !std::isdigit(static_cast<unsigned char>(ch))) {
 					is_line = false;
 					break;
 				}

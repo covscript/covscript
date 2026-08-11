@@ -501,7 +501,7 @@ namespace cs {
 		int mode = 0;
 		for (auto &ch : code) {
 			if (mode == 0) {
-				if (!std::isspace(ch)) {
+				if (!std::isspace(static_cast<unsigned char>(ch))) {
 					switch (ch) {
 					case '#':
 						context->file_buff.emplace_back();
@@ -515,7 +515,7 @@ namespace cs {
 				}
 			}
 			else if (mode == 1) {
-				if (!std::isspace(ch))
+				if (!std::isspace(static_cast<unsigned char>(ch)))
 					cmd_buff.push_back(ch);
 			}
 			else

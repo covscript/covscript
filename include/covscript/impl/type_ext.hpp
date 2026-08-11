@@ -633,7 +633,7 @@ namespace cs_impl {
 	std::intptr_t to_integer<std::string>(const std::string &str)
 	{
 		for (auto &ch : str) {
-			if (!std::isdigit(ch))
+			if (!std::isdigit(static_cast<unsigned char>(ch)))
 				throw cs::runtime_error("Wrong literal format.");
 		}
 		return std::stol(str);

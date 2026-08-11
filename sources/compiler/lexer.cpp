@@ -467,11 +467,11 @@ namespace cs {
 				if (is_annotation)
 					continue;
 				if (is_command) {
-					if (!std::isspace(ch))
+					if (!std::isspace(static_cast<unsigned char>(ch)))
 						command.push_back(ch);
 					continue;
 				}
-				if (empty_line && !std::isspace(ch)) {
+				if (empty_line && !std::isspace(static_cast<unsigned char>(ch))) {
 					switch (ch) {
 					case '#':
 						is_annotation = true;
