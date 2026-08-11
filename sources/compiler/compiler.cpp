@@ -27,11 +27,11 @@
 #include <limits>
 
 namespace cs {
-	// Process-lifetime pool for lambda `function` objects. Lambda callables are
-	// exposed as `function_ptr{&fn}` stored in process-immortal vars (global GC),
-	// so the function must outlive the compiler that created it (a compiler may
-	// be released while a lambda var is still referenced). Never shrinks, matching
-	// the global-GC trade-off.
+// Process-lifetime pool for lambda `function` objects. Lambda callables are
+// exposed as `function_ptr{&fn}` stored in process-immortal vars (global GC),
+// so the function must outlive the compiler that created it (a compiler may
+// be released while a lambda var is still referenced). Never shrinks, matching
+// the global-GC trade-off.
 	static std::vector<std::unique_ptr<function>> &lambda_pool()
 	{
 		static std::vector<std::unique_ptr<function>> pool;

@@ -427,7 +427,7 @@ namespace cs_impl {
 
 	void init_extensions();
 
-// Namespace declarations
+	// Namespace declarations
 	extern cs::namespace_t member_visitor_ext;
 	extern cs::namespace_t except_ext;
 	extern cs::namespace_t array_ext;
@@ -460,7 +460,7 @@ namespace cs_impl {
 	extern cs::namespace_t path_type_ext;
 	extern cs::namespace_t path_info_ext;
 
-// Detach
+	// Detach
 	template <>
 	void detach<cs::pair>(cs::pair &val)
 	{
@@ -489,7 +489,7 @@ namespace cs_impl {
 			cs::copy_no_return(it.second);
 	}
 
-// To String
+	// To String
 	template <>
 	cs::string_borrower to_string<cs::numeric>(const cs::numeric &val)
 	{
@@ -622,7 +622,7 @@ namespace cs_impl {
 		return std::asctime(&t);
 	}
 
-// To Integer
+	// To Integer
 	template <>
 	std::intptr_t to_integer<cs::numeric>(const cs::numeric &num)
 	{
@@ -639,7 +639,7 @@ namespace cs_impl {
 		return std::stol(str);
 	}
 
-// Hash
+	// Hash
 	template <>
 	std::size_t hash<cs::type_id>(const cs::type_id &id)
 	{
@@ -664,7 +664,7 @@ namespace cs_impl {
 		return cs::invoke(obj.get_var("hash"), cs::var::make<cs::structure>(&obj)).const_val<cs::numeric>().as_integer();
 	}
 
-// Type name
+	// Type name
 	template <>
 	constexpr const char *get_name_of_type<cs::context_t>()
 	{
@@ -849,7 +849,7 @@ namespace cs_impl {
 		return "cs::system::path_info";
 	}
 
-// Type Extensions
+	// Type Extensions
 
 	template <>
 	cs::namespace_t &get_ext<cs::member_visitor>()
@@ -973,7 +973,7 @@ namespace cs_impl {
 } // namespace cs_impl
 
 namespace cs {
-// Operator +
+	// Operator +
 	template <>
 	var operators::add<cs::numeric>(const cs::numeric &lhs, const var &rhs)
 	{
@@ -1013,7 +1013,7 @@ namespace cs {
 		return invoke(lhs.get_var("op_add"), var::make<cs::structure>(&lhs), rhs);
 	}
 
-// Operator -
+	// Operator -
 	template <>
 	var operators::sub<cs::numeric>(const cs::numeric &lhs, const var &rhs)
 	{
@@ -1026,7 +1026,7 @@ namespace cs {
 		return invoke(lhs.get_var("op_sub"), var::make<cs::structure>(&lhs), rhs);
 	}
 
-// Operator *
+	// Operator *
 	template <>
 	var operators::mul<cs::numeric>(const cs::numeric &lhs, const var &rhs)
 	{
@@ -1075,7 +1075,7 @@ namespace cs {
 		return invoke(lhs.get_var("op_mul"), var::make<cs::structure>(&lhs), rhs);
 	}
 
-// Operator /
+	// Operator /
 	template <>
 	var operators::div<cs::numeric>(const cs::numeric &lhs, const var &rhs)
 	{
@@ -1088,7 +1088,7 @@ namespace cs {
 		return invoke(lhs.get_var("op_div"), var::make<cs::structure>(&lhs), rhs);
 	}
 
-// Operator %
+	// Operator %
 	template <>
 	var operators::mod<cs::numeric>(const cs::numeric &lhs, const var &rhs)
 	{
@@ -1101,7 +1101,7 @@ namespace cs {
 		return invoke(lhs.get_var("op_mod"), var::make<cs::structure>(&lhs), rhs);
 	}
 
-// Operator ^
+	// Operator ^
 	template <>
 	var operators::pow<cs::numeric>(const cs::numeric &lhs, const var &rhs)
 	{
@@ -1114,7 +1114,7 @@ namespace cs {
 		return invoke(lhs.get_var("op_pow"), var::make<cs::structure>(&lhs), rhs);
 	}
 
-// Operator -val
+	// Operator -val
 	template <>
 	var operators::minus<cs::numeric>(const cs::numeric &lhs)
 	{
@@ -1124,7 +1124,7 @@ namespace cs {
 			return cs::numeric(-lhs.as_integer());
 	}
 
-// Operator *val
+	// Operator *val
 	template <>
 	var &operators::escape<cs::pointer>(cs::pointer &ptr)
 	{
@@ -1146,7 +1146,7 @@ namespace cs {
 		return *it;
 	}
 
-// Operator ++
+	// Operator ++
 	template <>
 	void operators::selfinc<cs::numeric>(cs::numeric &lhs)
 	{
@@ -1171,7 +1171,7 @@ namespace cs {
 		invoke(lhs.get_var("op_inc"), var::make<cs::structure>(&lhs));
 	}
 
-// Operator --
+	// Operator --
 	template <>
 	void operators::selfdec<cs::numeric>(cs::numeric &lhs)
 	{
@@ -1196,7 +1196,7 @@ namespace cs {
 		invoke(lhs.get_var("op_dec"), var::make<cs::structure>(&lhs));
 	}
 
-// Operator >
+	// Operator >
 	template <>
 	bool operators::abocmp<cs::numeric>(const cs::numeric &lhs, const cs::numeric &rhs)
 	{
@@ -1218,7 +1218,7 @@ namespace cs {
 			return false;
 	}
 
-// Operator >
+	// Operator >
 	template <>
 	bool operators::undcmp<cs::numeric>(const cs::numeric &lhs, const cs::numeric &rhs)
 	{
@@ -1240,7 +1240,7 @@ namespace cs {
 			return false;
 	}
 
-// Operator >=
+	// Operator >=
 	template <>
 	bool operators::aeqcmp<cs::numeric>(const cs::numeric &lhs, const cs::numeric &rhs)
 	{
@@ -1262,7 +1262,7 @@ namespace cs {
 			return false;
 	}
 
-// Operator >=
+	// Operator >=
 	template <>
 	bool operators::ueqcmp<cs::numeric>(const cs::numeric &lhs, const cs::numeric &rhs)
 	{
@@ -1284,7 +1284,7 @@ namespace cs {
 			return false;
 	}
 
-// Operator []
+	// Operator []
 	template <>
 	var &operators::index_ref<cs::string>(cs::string &str, const var &idx)
 	{
@@ -1358,7 +1358,7 @@ namespace cs {
 		return invoke(lhs.get_var("op_index"), var::make<cs::structure>(&lhs), idx);
 	}
 
-// Operator .
+	// Operator .
 	template <>
 	var &operators::access_ref<cs::hash_map>(cs::hash_map &map, const string &key)
 	{
@@ -1368,7 +1368,7 @@ namespace cs {
 		return it->second;
 	}
 
-// Operator ()
+	// Operator ()
 	template <>
 	var operators::fcall<cs::callable>(const cs::callable &fn, cs::vector &args)
 	{

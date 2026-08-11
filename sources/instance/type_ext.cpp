@@ -252,9 +252,9 @@ namespace cs_impl {
 			return it++;
 		}
 
-		// NOTE: next_n/prev_n advance a bare deque iterator without the owning
-		// container, so a negative offset that crosses begin() cannot be range
-		// checked here (UB). Known limitation; use with offsets within the array.
+// NOTE: next_n/prev_n advance a bare deque iterator without the owning
+// container, so a negative offset that crosses begin() cannot be range
+// checked here (UB). Known limitation; use with offsets within the array.
 		array::iterator next_n(array::iterator &it, const numeric &offset)
 		{
 			return it += offset.as_integer();
@@ -798,17 +798,13 @@ namespace cs_impl {
 		void init()
 		{
 			(*charbuff_ext)
-			.add_var("get_istream", make_cni([](char_buff &buff) -> cs::istream
-			{
+			.add_var("get_istream", make_cni([](char_buff &buff) -> cs::istream {
 				// Keep the host alive so the borrowed stream never dangles
 				auto keep = buff;
-				return std::shared_ptr<std::istream>(buff.get(), [keep](std::istream *) {});
-			}))
-			.add_var("get_ostream", make_cni([](char_buff &buff) -> cs::ostream
-			{
+				return std::shared_ptr<std::istream>(buff.get(), [keep](std::istream *) {}); }))
+			.add_var("get_ostream", make_cni([](char_buff &buff) -> cs::ostream {
 				auto keep = buff;
-				return std::shared_ptr<std::ostream>(buff.get(), [keep](std::ostream *) {});
-			}))
+				return std::shared_ptr<std::ostream>(buff.get(), [keep](std::ostream *) {}); }))
 			.add_var("get_string", make_cni([](char_buff &buff) -> string
 			{ return std::move(buff->str()); }));
 		}

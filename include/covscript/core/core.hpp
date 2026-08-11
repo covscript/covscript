@@ -241,16 +241,13 @@ namespace cs {
 		cs_exception_handler cs_eh_callback = &cs_defalt_exception_handler;
 
 		process_context()
-			: fiber_cxt(fiber_context::current()), fiber_stack(fiber_cxt->stack), fiber_busy_wait_coef(fiber_cxt->busy_wait_coef), fiber_busy_wait_min(fiber_cxt->busy_wait_min),
-			on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
+			: fiber_cxt(fiber_context::current()), fiber_stack(fiber_cxt->stack), fiber_busy_wait_coef(fiber_cxt->busy_wait_coef), fiber_busy_wait_min(fiber_cxt->busy_wait_min), on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
 		{
 			is_sigint_raised = false;
 		}
 
 		explicit process_context(std::size_t ss, fiber_context *cxt)
-			: fiber_cxt(cxt), fiber_stack(fiber_cxt->stack), fiber_busy_wait_coef(fiber_cxt->busy_wait_coef), fiber_busy_wait_min(fiber_cxt->busy_wait_min),
-			on_process_exit(&on_process_exit_default_handler),
-			on_process_sigint(&on_process_exit_default_handler)
+			: fiber_cxt(cxt), fiber_stack(fiber_cxt->stack), fiber_busy_wait_coef(fiber_cxt->busy_wait_coef), fiber_busy_wait_min(fiber_cxt->busy_wait_min), on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
 		{
 			resize_stack(ss);
 			is_sigint_raised = false;
@@ -392,7 +389,7 @@ namespace cs {
 		inline fiber_type const *current()
 		{
 			return cs::current_process->fiber_cxt->stack.empty() ? nullptr
-			                                                     : cs::current_process->fiber_cxt->stack.top().get();
+			       : cs::current_process->fiber_cxt->stack.top().get();
 		}
 
 		inline bool within()

@@ -348,14 +348,16 @@ namespace cs {
 				return 0;
 			}
 			if (exp < 0) // Negative exponent always yields a float; std::pow has no loop and no integer overflow
-				return std::pow((numeric_float)base, (numeric_float)exp);
+				return std::pow((numeric_float) base, (numeric_float) exp);
 			if (base == 1)
 				return 1;
 			if (base == -1)
 				return (exp & 1) ? -1 : 1;
 			const numeric_integer base0 = base;
 			const numeric_integer exp0 = exp;
-			auto fallback = [&]() { return std::pow((numeric_float)base0, (numeric_float)exp0); };
+			auto fallback = [&]() {
+				return std::pow((numeric_float) base0, (numeric_float) exp0);
+			};
 			// Sign-aware signed-multiplication overflow check (handles negative bases)
 			auto would_overflow = [](numeric_integer a, numeric_integer b) {
 				constexpr numeric_integer mx = (std::numeric_limits<numeric_integer>::max)();
@@ -374,7 +376,8 @@ namespace cs {
 					result *= base;
 				}
 				exp >>= 1;
-				if (exp > 0) { // Square only while still needed, avoiding a final useless overflowing square
+				if (exp > 0) {
+					// Square only while still needed, avoiding a final useless overflowing square
 					if (would_overflow(base, base))
 						return fallback();
 					base *= base;

@@ -277,8 +277,8 @@ namespace cs_impl {
 			return !ec;
 		}
 
-		// Note: remove is recursive (equivalent to remove_all) and deletes a
-		// whole directory tree; returns false for a nonexistent path.
+// Note: remove is recursive (equivalent to remove_all) and deletes a
+// whole directory tree; returns false for a nonexistent path.
 		bool remove(const std::string &path)
 		{
 			std::error_code ec;
