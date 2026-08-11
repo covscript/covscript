@@ -520,7 +520,14 @@ namespace cs_impl {
 			{
 				static_assert(std::is_copy_constructible<T>::value, "CovScript requires type supports copy constructor.");
 				T *nptr = get_allocator().allocate(1);
-				::new (nptr) T(*static_cast<const T *>(lhs));
+				try {
+					::new (nptr) T(*static_cast<const T *>(lhs));
+				}
+				catch (...) {
+					// Release the block when the copy constructor throws (mirrors construct)
+					get_allocator().deallocate(nptr, 1);
+					throw;
+				}
 				static_cast<basic_var *>(rhs)->m_store.ptr = nptr;
 				return operators::result();
 			}
@@ -715,6 +722,16 @@ namespace cs_impl {
 
 		inline void swap(basic_var &other) noexcept
 		{
+			// An empty dispatcher has no value to exchange: fall back to moving so
+			// a null function pointer is never called.
+			if (m_dispatcher == nullptr) {
+				move_store(other);
+				return;
+			}
+			if (other.m_dispatcher == nullptr) {
+				other.move_store(*this);
+				return;
+			}
 			if (m_dispatcher != other.m_dispatcher && type() != other.type()) {
 				basic_var tmp;
 				tmp.move_store(*this);

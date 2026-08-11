@@ -124,6 +124,10 @@ namespace cs {
 		bool multi_line = false;
 		string line_buff;
 		string cmd_buff;
+		// Import/using result FIFO base recorded at the start of the current
+		// top-level statement; reset_status truncates the compiler queue back to
+		// it so a failed line cannot leak stale results into the next statement.
+		std::size_t import_base = 0;
 
 		void interpret(const string &, std::deque<token_base *> &);
 
@@ -155,6 +159,7 @@ namespace cs {
 			cmd_buff.clear();
 			context->compiler->utilize_metadata();
 			context->compiler->loop_depth = 0;
+			context->compiler->import_results.resize(import_base);
 			while (depth-- > 0) {
 				context->instance->storage.remove_set();
 				context->instance->storage.remove_domain();

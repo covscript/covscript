@@ -338,30 +338,49 @@ namespace cs {
 		{
 			if (exp == 0) // base^0
 				return 1;
-			if (base == 0 && exp < 0) {
-				// 0^negative
-				errno = EDOM;
-				feraiseexcept(FE_DIVBYZERO);
-				return std::numeric_limits<numeric_float>::infinity();
+			if (base == 0) {
+				if (exp < 0) {
+					// 0^negative
+					errno = EDOM;
+					feraiseexcept(FE_DIVBYZERO);
+					return std::numeric_limits<numeric_float>::infinity();
+				}
+				return 0;
 			}
-			bool neg = false;
-			if (exp < 0) {
-				// negative exponent
-				neg = true;
-				if (exp == (std::numeric_limits<numeric_integer>::min)())
-					return numeric_float(1.0) / (int_pow(base, exp + 1).as_float() * base);
-				exp = -exp;
-			}
+			if (exp < 0) // Negative exponent always yields a float; std::pow has no loop and no integer overflow
+				return std::pow((numeric_float)base, (numeric_float)exp);
+			if (base == 1)
+				return 1;
+			if (base == -1)
+				return (exp & 1) ? -1 : 1;
+			const numeric_integer base0 = base;
+			const numeric_integer exp0 = exp;
+			auto fallback = [&]() { return std::pow((numeric_float)base0, (numeric_float)exp0); };
+			// Sign-aware signed-multiplication overflow check (handles negative bases)
+			auto would_overflow = [](numeric_integer a, numeric_integer b) {
+				constexpr numeric_integer mx = (std::numeric_limits<numeric_integer>::max)();
+				constexpr numeric_integer mn = (std::numeric_limits<numeric_integer>::min)();
+				if (a == 0 || b == 0)
+					return false;
+				if (a > 0)
+					return b > 0 ? a > mx / b : b < mn / a;
+				return b > 0 ? a < mn / b : a < mx / b;
+			};
 			numeric_integer result = 1;
 			while (exp > 0) {
-				if (exp & 1) result *= base;
-				base *= base;
+				if (exp & 1) {
+					if (would_overflow(result, base))
+						return fallback();
+					result *= base;
+				}
 				exp >>= 1;
+				if (exp > 0) { // Square only while still needed, avoiding a final useless overflowing square
+					if (would_overflow(base, base))
+						return fallback();
+					base *= base;
+				}
 			}
-			if (neg) // return float if negative exponent
-				return numeric_float(1.0) / result;
-			else
-				return result;
+			return result;
 		}
 
 	public:
@@ -476,6 +495,8 @@ namespace cs {
 			case 0b10:
 				return data._int / rhs.data._num;
 			case 0b11:
+				if (rhs.data._int == 0)
+					throw lang_error("Integer division by zero");
 				std::lldiv_t divres = std::lldiv(data._int, rhs.data._int);
 				if (divres.rem == 0)
 					return divres.quot;
@@ -504,6 +525,8 @@ namespace cs {
 			case 0b10:
 				return std::fmod(data._int, rhs.data._num);
 			case 0b11:
+				if (rhs.data._int == 0)
+					throw lang_error("Integer modulo by zero");
 				return data._int % rhs.data._int;
 			}
 		}
@@ -1277,6 +1300,8 @@ namespace cs {
 		{
 			if (it.mData == mRoot) {
 				mRoot = new tree_node(nullptr, mRoot, nullptr, data);
+				if (it.mData != nullptr) // No old root to reparent on the first insert into an empty tree
+					it.mData->root = mRoot;
 				return mRoot;
 			}
 			if (!it.usable())
@@ -1294,6 +1319,8 @@ namespace cs {
 		{
 			if (it.mData == mRoot) {
 				mRoot = new tree_node(nullptr, nullptr, mRoot, data);
+				if (it.mData != nullptr) // No old root to reparent on the first insert into an empty tree
+					it.mData->root = mRoot;
 				return mRoot;
 			}
 			if (!it.usable())
@@ -1356,6 +1383,8 @@ namespace cs {
 		{
 			if (it.mData == mRoot) {
 				mRoot = new tree_node(nullptr, mRoot, nullptr, std::forward<Args>(args)...);
+				if (it.mData != nullptr) // No old root to reparent on the first insert into an empty tree
+					it.mData->root = mRoot;
 				return mRoot;
 			}
 			if (!it.usable())
@@ -1374,6 +1403,8 @@ namespace cs {
 		{
 			if (it.mData == mRoot) {
 				mRoot = new tree_node(nullptr, nullptr, mRoot, std::forward<Args>(args)...);
+				if (it.mData != nullptr) // No old root to reparent on the first insert into an empty tree
+					it.mData->root = mRoot;
 				return mRoot;
 			}
 			if (!it.usable())

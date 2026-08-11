@@ -27,6 +27,17 @@
 #include <limits>
 
 namespace cs {
+	// Process-lifetime pool for lambda `function` objects. Lambda callables are
+	// exposed as `function_ptr{&fn}` stored in process-immortal vars (global GC),
+	// so the function must outlive the compiler that created it (a compiler may
+	// be released while a lambda var is still referenced). Never shrinks, matching
+	// the global-GC trade-off.
+	static std::vector<std::unique_ptr<function>> &lambda_pool()
+	{
+		static std::vector<std::unique_ptr<function>> pool;
+		return pool;
+	}
+
 	const map_t<char, char> token_value::escape_char = {
 		{'\'', '\''},
 		{'\"', '\"'},
@@ -817,7 +828,7 @@ namespace cs {
 #else
 				function *fn = new function(context, args, std::deque<statement_base *> {ret}, is_vargs, true);
 #endif
-				function_pool.emplace_back(fn);
+				lambda_pool().emplace_back(fn);
 				if (find_self_ref) {
 					var lambda = var::make<object_method>(var(), var::make_protect<callable>(function_ptr{fn}));
 					lambda.val<object_method>().object = lambda;
@@ -875,7 +886,10 @@ namespace cs {
 			return;
 		switch (token->get_type()) {
 		default:
-			break;
+			// value/arglist/vargs/endline/action etc. are not expression nodes and
+			// need no optimization; return early to avoid the static_cast below
+			// being applied to a non-signal node (UB).
+			return;
 		case token_types::id: {
 			var value = context->instance->storage.get_var_optimizable(static_cast<token_id *>(token)->get_id());
 			if (value.usable() && value.is_protect()) {
@@ -1421,17 +1435,6 @@ namespace cs {
 	void translator_type::translate(const context_t &context, const std::deque<std::deque<token_base *>> &lines,
 	                                std::deque<statement_base *> &statements, bool raw)
 	{
-		auto is_loop_block = [](const method_base *m) {
-			switch (m->get_target_type()) {
-			case statement_types::while_:
-			case statement_types::loop_:
-			case statement_types::for_:
-			case statement_types::foreach_:
-				return true;
-			default:
-				return false;
-			}
-		};
 		std::size_t method_line_num = 0, line_num = 0;
 		std::deque<std::deque<token_base *>> tmp;
 		stack_type<method_base *> methods;
@@ -1475,7 +1478,7 @@ namespace cs {
 								sptr = expected_method->translate(context, tmp);
 							// The block (with its body) is fully translated, so a
 							// loop no longer encloses anything: release its depth.
-							if (expected_method != nullptr && is_loop_block(expected_method))
+							if (expected_method != nullptr && compiler_type::is_loop_block(expected_method))
 								--context->compiler->loop_depth;
 							tmp.clear();
 						}
@@ -1484,7 +1487,7 @@ namespace cs {
 							// the stack; its body is deferred and re-translated
 							// later, so release its depth now to keep the outer
 							// scan balanced instead of leaking it.
-							if (m->get_target_type() == statement_types::end_ && is_loop_block(expected_method))
+							if (m->get_target_type() == statement_types::end_ && compiler_type::is_loop_block(expected_method))
 								--context->compiler->loop_depth;
 							if (raw)
 								m->preprocess(context, {line});
@@ -1508,7 +1511,7 @@ namespace cs {
 					if (methods.empty())
 						method_line_num = static_cast<token_endline *>(line.back())->get_line_num();
 					methods.push(m);
-					if (is_loop_block(m))
+					if (compiler_type::is_loop_block(m))
 						++context->compiler->loop_depth;
 					if (raw) {
 						context->instance->storage.add_domain();

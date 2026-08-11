@@ -246,14 +246,32 @@ namespace cs {
 	public:
 		map_t<string, namespace_t> modules;
 		map_t<string, csym_info> csyms;
-		// Script function objects created by this compiler (lambda functions).
-		// Owned by the compiler so their addresses are stable and they live as
-		// long as the compiler does; all script functions are exposed uniformly
-		// as function_ptr targets.
-		std::vector<std::unique_ptr<function>> function_pool;
 		// Loop nesting depth of the current translation unit; used to reject
 		// 'break'/'continue' outside any loop at compile time.
 		std::size_t loop_depth = 0;
+
+		// FIFO of import/using preprocessing results for the current translation
+		// unit. method_import/import_as/involve are shared singletons, so results
+		// must not be stored on the method objects (multiple statements in one
+		// block would overwrite each other). Scoped to the translation unit by
+		// instance_type::compile / the REPL statement boundary.
+		std::deque<statement_base *> import_results;
+
+		// Whether a block-opening method introduces a loop ('break'/'continue'
+		// are only legal inside one). Used by both the main translation path and
+		// the REPL to keep loop_depth balanced.
+		static bool is_loop_block(const method_base *m)
+		{
+			switch (m->get_target_type()) {
+			case statement_types::while_:
+			case statement_types::loop_:
+			case statement_types::for_:
+			case statement_types::foreach_:
+				return true;
+			default:
+				return false;
+			}
+		}
 
 		// Fold a tree unconditionally, regardless of optimizer settings. Used to
 		// evaluate 'constant' initializers so their value is fixed at compile time

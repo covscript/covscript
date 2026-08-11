@@ -111,6 +111,16 @@
 #include <covscript/core/version.hpp>
 
 namespace cs {
+// Per-execution-path fiber state (the fiber chain and its schedule tunables).
+// Shared through process_context::fiber_cxt: forks inherit the pointer, keeping
+// the cooperative single-threaded fiber chain a single process-wide stack.
+	class fiber_context final {
+	public:
+		stack_type<fiber_t> stack; // fiber chain (was process_context::fiber_stack)
+		double busy_wait_coef = COVSCRIPT_FIBER_BUSY_WAIT_COEF;
+		std::size_t busy_wait_min = COVSCRIPT_FIBER_BUSY_WAIT_MIN;
+	};
+
 // Process Context
 	class process_context final {
 		std::atomic<bool> is_sigint_raised{};
@@ -133,18 +143,18 @@ namespace cs {
 #ifdef CS_DEBUGGER
 		stack_type<std::string> stack_backtrace;
 #endif
-		stack_type<fiber_t> fiber_stack;
 
-		// Fiber busy-wait backpressure parameters (runtime tunable via CNI or fiber.set_schedule_policy)
-		double fiber_busy_wait_coef = COVSCRIPT_FIBER_BUSY_WAIT_COEF;
-		std::size_t fiber_busy_wait_min = COVSCRIPT_FIBER_BUSY_WAIT_MIN;
+		// Points to the fiber_context of the current execution path; this_process
+		// owns one and forks inherit this pointer (shared fiber chain).
+		fiber_context fiber_cxt_storage;
+		fiber_context *fiber_cxt = &fiber_cxt_storage;
 
 		// Stack Resize must before any context instance start
 		void resize_stack(std::size_t size)
 		{
 			stack_size = size;
 			stack.resize(size);
-			fiber_stack.resize(child_stack_size());
+			fiber_cxt->stack.resize(child_stack_size());
 #ifdef CS_DEBUGGER
 			stack_backtrace.resize(size);
 #endif
@@ -357,12 +367,13 @@ namespace cs {
 
 		inline fiber_type const *current()
 		{
-			return cs::current_process->fiber_stack.empty() ? nullptr : cs::current_process->fiber_stack.top().get();
+			return cs::current_process->fiber_cxt->stack.empty() ? nullptr
+			                                                     : cs::current_process->fiber_cxt->stack.top().get();
 		}
 
 		inline bool within()
 		{
-			return !cs::current_process->fiber_stack.empty();
+			return !cs::current_process->fiber_cxt->stack.empty();
 		}
 
 		fiber_t create(const context_t &, std::function<var()>);
@@ -977,7 +988,14 @@ namespace cs {
 
 		bool operator!=(const range_iterator &it) const
 		{
-			return m_index < it.m_index;
+			// The range-for "keep iterating" condition; must depend on the step
+			// direction. Ascending keeps going while index < end (stops past the
+			// end); descending keeps going while index > end.
+			if (m_step > 0)
+				return m_index < it.m_index;
+			if (m_step < 0)
+				return m_index > it.m_index;
+			return false; // Step 0 is already rejected at range() construction
 		}
 
 		range_iterator &operator++()
@@ -1351,16 +1369,26 @@ namespace cs {
 		explicit extension(std::string_view path)
 		{
 			mHandle = dll::open(path);
-			dll::compatible_check_t dll_check = reinterpret_cast<dll::compatible_check_t>(dll::find_symbol(mHandle, dll::compatible_check));
-			if (dll_check == nullptr || truncate(dll_check(), 4) != truncate(COVSCRIPT_ABI_VERSION, 4))
-				throw runtime_error("Incompatible Extension. (Target ABI: " + std::to_string(dll_check()) +
-				                    ", Current ABI: " + std::to_string(COVSCRIPT_ABI_VERSION) + ")");
-			dll::main_entrance_t dll_main = reinterpret_cast<dll::main_entrance_t>(dll::find_symbol(mHandle, dll::main_entrance));
-			if (dll_main != nullptr) {
+			try {
+				dll::compatible_check_t dll_check =
+				    reinterpret_cast<dll::compatible_check_t>(dll::find_symbol(mHandle, dll::compatible_check));
+				if (dll_check == nullptr)
+					throw runtime_error("Incompatible Extension. (Missing ABI check symbol)");
+				int target_abi = dll_check(); // Only call after the null check
+				if (truncate(target_abi, 4) != truncate(COVSCRIPT_ABI_VERSION, 4))
+					throw runtime_error("Incompatible Extension. (Target ABI: " + std::to_string(target_abi) +
+					                    ", Current ABI: " + std::to_string(COVSCRIPT_ABI_VERSION) + ")");
+				dll::main_entrance_t dll_main =
+				    reinterpret_cast<dll::main_entrance_t>(dll::find_symbol(mHandle, dll::main_entrance));
+				if (dll_main == nullptr)
+					throw runtime_error("Broken Extension.");
 				dll_main(this, current_process);
 			}
-			else
-				throw runtime_error("Broken Extension.");
+			catch (...) {
+				dll::close(mHandle); // Release the handle on every failure path
+				mHandle = nullptr;
+				throw;
+			}
 		}
 	};
 

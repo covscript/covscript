@@ -159,6 +159,10 @@ namespace cs {
 		// enclosing value afterwards: a compile-time nested import shares this
 		// compiler and must not reset the depth of the unit it is compiling for.
 		value_guard<std::size_t> loop_guard(context->compiler->loop_depth, 0);
+		// Scope the import/using result FIFO to this translation unit: nested
+		// compiles consume their own entries and truncate back to the base, so
+		// the enclosing unit's pending results survive.
+		std::size_t import_base = context->compiler->import_results.size();
 		try {
 			context->compiler->build_ast(buff, ast);
 			context->compiler->code_gen(ast, statements);
@@ -166,9 +170,11 @@ namespace cs {
 		}
 		catch (...) {
 			context->compiler->restore_pool(pool_base);
+			context->compiler->import_results.resize(import_base);
 			throw;
 		}
 		context->compiler->restore_pool(pool_base);
+		context->compiler->import_results.resize(import_base);
 	}
 
 	void instance_type::interpret()
@@ -342,7 +348,7 @@ namespace cs {
 		if (it.data()->get_type() == token_types::parallel) {
 			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
 			for (auto &t : parallel_list)
-				parse_using(t.root());
+				parse_using(t.root(), override);
 		}
 		else {
 			var ns = context->instance->parse_expr(it, true);
@@ -367,6 +373,10 @@ namespace cs {
 	void repl::interpret(const string &code, std::deque<token_base *> &line)
 	{
 		statement_base *sptr = nullptr;
+		// A new top-level statement starts when no block is open; record the
+		// import/using FIFO base so reset_status can truncate stale results.
+		if (methods.empty())
+			import_base = context->compiler->import_results.size();
 		try {
 			method_base *m = context->compiler->match_method(line);
 			switch (m->get_type()) {
@@ -394,9 +404,20 @@ namespace cs {
 							        line);
 						else
 							sptr = expected_method->translate(context, tmp);
+						// The block (with its body) is fully translated, so a loop
+						// no longer encloses anything: release its depth. Must be
+						// after translate_end/translate: the body is re-translated
+						// and break/continue still need loop_depth > 0 then.
+						if (expected_method != nullptr && compiler_type::is_loop_block(expected_method))
+							--context->compiler->loop_depth;
 						tmp.clear();
 					}
 					else {
+						// A block closes while an enclosing method is still on the
+						// stack; its body is deferred and re-translated later, so
+						// release its depth now to keep the scan balanced.
+						if (m->get_target_type() == statement_types::end_ && compiler_type::is_loop_block(expected_method))
+							--context->compiler->loop_depth;
 						m->preprocess(context, {line});
 						tmp.push_back(line);
 					}
@@ -415,6 +436,8 @@ namespace cs {
 				methods.push(m);
 				context->instance->storage.add_domain();
 				context->instance->storage.add_set();
+				if (compiler_type::is_loop_block(m))
+					++context->compiler->loop_depth;
 				methods.top()->preprocess(context, {line});
 				tmp.push_back(line);
 			}

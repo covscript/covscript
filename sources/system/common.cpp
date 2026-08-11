@@ -62,9 +62,9 @@ namespace cs::fiber {
 				                 .count();
 				if (remain_ms <= 0)
 					break;
-				auto wait_time = static_cast<std::size_t>(remain_ms * current_process->fiber_busy_wait_coef);
-				if (wait_time < current_process->fiber_busy_wait_min)
-					wait_time = current_process->fiber_busy_wait_min;
+				auto wait_time = static_cast<std::size_t>(remain_ms * current_process->fiber_cxt->busy_wait_coef);
+				if (wait_time < current_process->fiber_cxt->busy_wait_min)
+					wait_time = current_process->fiber_cxt->busy_wait_min;
 				if (wait_time > static_cast<std::size_t>(remain_ms))
 					wait_time = static_cast<std::size_t>(remain_ms);
 				if (within())
@@ -85,9 +85,9 @@ namespace cs::fiber {
 				// (yielded) fiber can be resumed again immediately.
 				if (mFiber->get_state() == fiber_state::sleeping) {
 					if (within())
-						fiber::sleep_for(current_process->fiber_busy_wait_min);
+						fiber::sleep_for(current_process->fiber_cxt->busy_wait_min);
 					else
-						std::this_thread::sleep_for(std::chrono::milliseconds(current_process->fiber_busy_wait_min));
+						std::this_thread::sleep_for(std::chrono::milliseconds(current_process->fiber_cxt->busy_wait_min));
 				}
 			}
 		}
@@ -151,21 +151,25 @@ namespace cs_system_impl {
 
 	unsigned int parse_mode(const std::string &modeString)
 	{
+		if (modeString.empty())
+			throw cs::lang_error("Invalid permission mode: empty string");
 		const char *perm = modeString.c_str();
 		unsigned int mode = 0;
 
-		if (std::isdigit(perm[0])) {
+		if (std::isdigit(static_cast<unsigned char>(perm[0]))) {
 			const char *p = perm;
 			while (*p) {
+				if (*p < '0' || *p > '7')
+					throw cs::lang_error("Invalid permission mode: expected octal digits 0-7");
 				mode = mode * 8 + *p++ - '0';
 			}
 		}
 		else {
-			if (modeString.size() == 9) {
-				mode = (((perm[0] == 'r') * 4 | (perm[1] == 'w') * 2 | (perm[2] == 'x')) << 6) |
-				       (((perm[3] == 'r') * 4 | (perm[4] == 'w') * 2 | (perm[5] == 'x')) << 3) |
-				       (((perm[6] == 'r') * 4 | (perm[7] == 'w') * 2 | (perm[8] == 'x')));
-			}
+			if (modeString.size() != 9)
+				throw cs::lang_error("Invalid permission mode: expected 3 groups of 'rwx'");
+			mode = (((perm[0] == 'r') * 4 | (perm[1] == 'w') * 2 | (perm[2] == 'x')) << 6) |
+			       (((perm[3] == 'r') * 4 | (perm[4] == 'w') * 2 | (perm[5] == 'x')) << 3) |
+			       (((perm[6] == 'r') * 4 | (perm[7] == 'w') * 2 | (perm[8] == 'x')));
 		}
 		return mode;
 	}
@@ -233,12 +237,15 @@ namespace cs_impl {
 		{
 			auto dirs = cs_system_impl::split(path_input, {'/', '\\'});
 			std::string path;
-			if (path_input.size() > 0 && (path_input[0] == '/' || path_input[0] == '\\'))
+			bool absolute = path_input.size() > 0 && (path_input[0] == '/' || path_input[0] == '\\');
+			if (absolute)
 				path = cs::path_separator;
 			for (auto &dir : dirs) {
+				if (dir.empty())
+					continue; // Skip the empty component left by a leading separator
 				path += dir + cs::path_separator;
-				// DO NOT SKIP when dir is a directory
-				// directory has permissions too
+				if (path.size() == 1 && path[0] == cs::path_separator) // Never chmod the filesystem root
+					continue;
 				if (!cs_system_impl::chmod_impl(path, cs_system_impl::parse_mode(mode)))
 					return false;
 			}
@@ -260,11 +267,18 @@ namespace cs_impl {
 		bool copy(const std::string &source, const std::string &dest)
 		{
 			std::error_code ec;
-			std::filesystem::copy_file(source, dest,
-			                           std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing, ec);
+			// copy_file ignores the recursive option, so directory copies always
+			// fail; dispatch on the source type.
+			if (std::filesystem::is_directory(source))
+				std::filesystem::copy(source, dest,
+				                      std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing, ec);
+			else
+				std::filesystem::copy_file(source, dest, std::filesystem::copy_options::overwrite_existing, ec);
 			return !ec;
 		}
 
+		// Note: remove is recursive (equivalent to remove_all) and deletes a
+		// whole directory tree; returns false for a nonexistent path.
 		bool remove(const std::string &path)
 		{
 			std::error_code ec;

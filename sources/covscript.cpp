@@ -123,7 +123,7 @@ namespace cs_impl {
 namespace cs {
 	void exception::relocate_to_csym(const csym_info &csym)
 	{
-		if (mLine >= csym.map.size())
+		if (mLine == 0 || mLine > csym.map.size())
 			throw fatal_error("Invalid line number when relocating symbols in cSYM file");
 		std::size_t relocated_line = csym.map[mLine - 1];
 		if (relocated_line >= csym.codes.size())
@@ -163,6 +163,8 @@ namespace cs {
 		std::unique_ptr<process_context> new_process(new process_context(current_process->child_stack_size()));
 		new_process->output_precision = current_process->output_precision;
 		new_process->import_path = current_process->import_path;
+		// Inherit the parent's fiber_cxt directly: share the same fiber chain.
+		new_process->fiber_cxt = current_process->fiber_cxt;
 		process_context *curr = current_process;
 		new_process->on_process_exit.add_listener([curr](void *data) -> bool
 		{ return curr->on_process_exit.touch(data); });
@@ -234,12 +236,24 @@ namespace cs {
 	numeric parse_number(const std::string &str)
 	{
 		try {
-			if (str.find('.') != std::string::npos)
-				return std::stold(str);
-			else
-				return std::stoll(str);
+			std::size_t pos = 0;
+			if (str.find_first_of(".eE") != std::string::npos) {
+				numeric_float val = std::stold(str, &pos);
+				if (pos != str.size())
+					throw lang_error("Invalid numeric literal: cannot parse the given string as a number");
+				return val;
+			}
+			else {
+				numeric_integer val = std::stoll(str, &pos);
+				if (pos != str.size())
+					throw lang_error("Invalid numeric literal: cannot parse the given string as a number");
+				return val;
+			}
 		}
-		catch (const std::exception &e) {
+		catch (const lang_error &e) {
+			throw;
+		}
+		catch (const std::exception &) {
 			throw lang_error("Invalid numeric literal: cannot parse the given string as a number");
 		}
 	}
@@ -273,8 +287,9 @@ namespace cs {
 #else
 		const char *sdk_path = std::getenv("COVSCRIPT_HOME");
 		if (sdk_path == nullptr) {
-			CHAR path[MAX_PATH];
-			SHGetFolderPathA(nullptr, CSIDL_PERSONAL, nullptr, SHGFP_TYPE_CURRENT, path);
+			CHAR path[MAX_PATH] = {0};
+			if (SHGetFolderPathA(nullptr, CSIDL_PERSONAL, nullptr, SHGFP_TYPE_CURRENT, path) != S_OK)
+				throw cs::fatal_error("Cannot locate the CovScript SDK directory: set COVSCRIPT_HOME");
 			return process_path(std::string(path) + "\\CovScript");
 		}
 		else
@@ -292,6 +307,8 @@ namespace cs {
 		const char *sdk_path = std::getenv("COVSCRIPT_HOME");
 		if (sdk_path == nullptr) {
 			struct passwd *pw = getpwuid(getuid());
+			if (pw == nullptr || pw->pw_dir == nullptr)
+				throw cs::fatal_error("Cannot locate the CovScript SDK directory: set COVSCRIPT_HOME");
 			return process_path(std::string(pw->pw_dir) + "/.covscript");
 		}
 		else
@@ -350,6 +367,8 @@ namespace cs {
 			return var::make_constant<range_type>(args[0].const_val<numeric>(), args[1].const_val<numeric>(), 1);
 		case 3:
 			cs_impl::check_args<numeric, numeric, numeric>(args);
+			if (args[2].const_val<numeric>() == 0)
+				throw cs::runtime_error("Range step cannot be zero");
 			return var::make_constant<range_type>(args[0].const_val<numeric>(), args[1].const_val<numeric>(),
 			                                      args[2].const_val<numeric>());
 		default:

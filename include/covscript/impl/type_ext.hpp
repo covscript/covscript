@@ -652,10 +652,10 @@ namespace cs_impl {
 	template <>
 	std::size_t hash<cs::numeric>(const cs::numeric &num)
 	{
-		if (num.is_integer())
-			return hash(num.as_integer());
-		else
-			return hash(num.as_float());
+		// Canonicalize the hash through long double: numeric::operator== compares
+		// integers by promoting to float (1 == 1.0), so the hash must agree or
+		// equal int/float keys would land in different hash_map buckets.
+		return hash(num.as_float());
 	}
 
 	template <>
@@ -1036,12 +1036,16 @@ namespace cs {
 	template <>
 	var operators::mul<cs::string>(const cs::string &lhs, const var &rhs)
 	{
-		var str = var::make<cs::string>();
-		cs::string &lhs_ref = str.val<cs::string>();
 		cs::numeric_integer times = rhs.const_val<cs::numeric>().as_integer();
 		if (times < 0)
 			throw cs::lang_error("A string cannot be multiplied by a negative number");
-		lhs_ref.reserve(lhs.size() * times);
+		if (times == 0 || lhs.empty())
+			return var::make<cs::string>(); // Empty result; skip the empty-string/huge-times spin
+		if (lhs.size() > (std::numeric_limits<std::size_t>::max)() / static_cast<std::size_t>(times))
+			throw cs::lang_error("The string multiplication result is too large");
+		var str = var::make<cs::string>();
+		cs::string &lhs_ref = str.val<cs::string>();
+		lhs_ref.reserve(lhs.size() * static_cast<std::size_t>(times));
 		while (times-- > 0)
 			lhs_ref.append(lhs);
 		return str;
@@ -1050,11 +1054,15 @@ namespace cs {
 	template <>
 	var operators::mul<cs::array>(const cs::array &lhs, const var &rhs)
 	{
-		var arr = var::make<cs::array>();
-		cs::array &lhs_ref = arr.val<cs::array>();
 		cs::numeric_integer times = rhs.const_val<cs::numeric>().as_integer();
 		if (times < 0)
 			throw cs::lang_error("An array cannot be multiplied by a negative number");
+		if (times == 0 || lhs.empty())
+			return var::make<cs::array>(); // Empty result; skip the empty-array/huge-times spin
+		if (lhs.size() > (std::numeric_limits<std::size_t>::max)() / static_cast<std::size_t>(times))
+			throw cs::lang_error("The array multiplication result is too large");
+		var arr = var::make<cs::array>();
+		cs::array &lhs_ref = arr.val<cs::array>();
 		while (times-- > 0)
 			lhs_ref.insert(lhs_ref.end(), lhs.begin(), lhs.end());
 		detach(lhs_ref);
@@ -1296,11 +1304,19 @@ namespace cs {
 	var &operators::index_ref<cs::array>(cs::array &arr, const var &pos)
 	{
 		cs::numeric_integer idx = pos.const_val<cs::numeric>().as_integer();
-		if (idx < 0)
-			idx = arr.size() + idx;
-		while (idx >= arr.size())
+		if (idx < 0) {
+			// Negative indices count from the end; if still before the start,
+			// prepend zeros so the slot exists (auto-growth semantics).
+			idx += static_cast<cs::numeric_integer>(arr.size());
+			if (idx < 0) {
+				std::size_t pad = static_cast<std::size_t>(-(idx + 1)) + 1; // idx < 0 so idx+1 <= 0: no overflow
+				arr.insert(arr.begin(), pad, var::make<numeric>(0));
+				idx = 0;
+			}
+		}
+		while (idx >= static_cast<cs::numeric_integer>(arr.size()))
 			arr.emplace_back(var::make<numeric>(0));
-		return arr[idx];
+		return arr[static_cast<std::size_t>(idx)];
 	}
 
 	template <>

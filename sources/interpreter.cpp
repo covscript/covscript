@@ -28,6 +28,23 @@
 #include <iostream>
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
+
+// Whether stdin is an interactive terminal. Redirected/piped input must not
+// busy-wait on kbhit() (it never fires) in the "press any key" paths.
+static bool stdin_is_tty()
+{
+#ifdef COVSCRIPT_PLATFORM_WIN32
+	return ::_isatty(::_fileno(stdin)) != 0;
+#else
+	return ::isatty(::fileno(stdin)) != 0;
+#endif
+}
+
+#ifdef COVSCRIPT_PLATFORM_WIN32
 
 #include <windows.h>
 
@@ -165,7 +182,7 @@ int covscript_args(int args_size, char *args[])
 		else
 			break;
 	}
-	if (expect_csym == 1 || expect_log_path == 1 || expect_import_path == 1 || expect_import_path == 1)
+	if (expect_csym == 1 || expect_log_path == 1 || expect_import_path == 1 || expect_stack_resize == 1)
 		throw cs::fatal_error("argument syntax error.");
 	return index;
 }
@@ -440,7 +457,7 @@ int main(int args_size, char *args[])
 		std::cerr << "Uncaught exception: Unknown exception" << std::endl;
 		errorcode = -1;
 	}
-	if (wait_before_exit) {
+	if (wait_before_exit && stdin_is_tty()) {
 		std::cerr << "\nProcess finished with exit code " << errorcode << std::endl;
 		std::cerr << "\nPress any key to exit..." << std::endl;
 		while (!cs_impl::conio::kbhit());

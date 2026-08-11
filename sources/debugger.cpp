@@ -32,6 +32,44 @@
 #include <chrono>
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
+#include <io.h>
+#endif
+
+// Whether stdin is an interactive terminal. Redirected/piped input must not
+// busy-wait on kbhit() (it never fires) in the "press any key" / quit-confirm
+// paths.
+static bool stdin_is_tty()
+{
+#ifdef COVSCRIPT_PLATFORM_WIN32
+	return ::_isatty(::_fileno(stdin)) != 0;
+#else
+	return ::isatty(::fileno(stdin)) != 0;
+#endif
+}
+
+// Extract the bare message from an exception (no "File ..., line ...:" wrapper
+// and no category prefix) so cooperative-exit/signal sentinels can be matched
+// exactly instead of via fragile substring search.
+static std::string bare_error_message(const std::exception &e)
+{
+	if (const auto *ce = dynamic_cast<const cs::exception *>(&e))
+		return ce->message();
+	if (const auto *fe = dynamic_cast<const cs::fatal_error *>(&e))
+		return fe->message();
+	return e.what();
+}
+
+// collect_garbage(context) swaps the compiler's context to nullptr. Commands
+// that build/evaluate expressions afterwards must re-bind it, or trim_expr's
+// this->context is a null pointer.
+extern cs::context_t context;
+static void ensure_compiler_context()
+{
+	if (context.get() != nullptr)
+		context->compiler->swap_context(context);
+}
+
+#ifdef COVSCRIPT_PLATFORM_WIN32
 
 #include <windows.h>
 
@@ -42,11 +80,11 @@ bool ctrlhandler(DWORD fdwctrltype)
 		std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
 		cs::current_process->raise_sigint();
 		return true;
-	case CTRL_BREAK_EVENT: {
-		int code = 0;
-		cs::process_context::on_process_exit_default_handler(&code);
+	case CTRL_BREAK_EVENT:
+		// Cooperative exit via the main loop; never run cleanup on the
+		// console-control thread (mirrors interpreter.cpp).
+		cs::current_process->raise_exit();
 		return true;
-	}
 	default:
 		return false;
 	}
@@ -64,7 +102,9 @@ void activate_sigint_handler()
 
 void signal_handler(int sig)
 {
-	std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
+	// Only async-signal-safe operations are allowed in a signal handler.
+	static const char msg[] = "Keyboard Interrupt (Ctrl+C Received)\n";
+	::write(STDERR_FILENO, msg, sizeof(msg) - 1);
 	cs::current_process->raise_sigint();
 }
 
@@ -147,7 +187,7 @@ int covscript_args(int args_size, char *args[])
 		else
 			break;
 	}
-	if (expect_csym == 1 || expect_log_path == 1 || expect_import_path == 1 || expect_import_path == 1)
+	if (expect_csym == 1 || expect_log_path == 1 || expect_import_path == 1 || expect_stack_resize == 1)
 		throw cs::fatal_error("argument syntax error.");
 	return index;
 }
@@ -202,6 +242,9 @@ public:
 	{
 		if (m_pending.count(name) > 0) {
 			const cs::callable::function_type &target = function.const_val<cs::callable>().get_raw_data();
+			if (target.target_type() != typeid(cs::function_ptr) || target.target<cs::function_ptr>() == nullptr ||
+			        target.target<cs::function_ptr>()->fptr == nullptr)
+				return; // Bound to a non-script/empty target: stay pending, no dangling dereference
 			target.target<cs::function_ptr>()->fptr->set_debugger_state(true);
 			auto key = m_pending.find(name);
 			if (key->second.second) {
@@ -265,6 +308,12 @@ public:
 			it.second.second = true;
 			for (auto &b : m_breakpoints) {
 				if (b.id == it.second.first) {
+					// Clear the function's step state before reverting to pending
+					if (b.data.index() == 2) {
+						auto *fptr = std::get<cs::var>(b.data).const_val<cs::callable>().get_raw_data().target<cs::function_ptr>();
+						if (fptr != nullptr && fptr->fptr != nullptr)
+							fptr->fptr->set_debugger_state(false);
+					}
 					b.data.emplace<std::string>(it.first);
 					break;
 				}
@@ -284,8 +333,12 @@ public:
 	template <typename T>
 	void add_func(const std::string &name, const std::string &shortcut, T &&func)
 	{
-		m_map.emplace(name, std::forward<T>(func));
-		m_map.emplace(shortcut, std::forward<T>(func));
+		// The same callable is stored under two keys: copy it once so the same
+		// argument is never forwarded twice (an rvalue would be constructed from
+		// a moved-from object on the second emplace).
+		auto value = std::forward<T>(func);
+		m_map.emplace(name, value);
+		m_map.emplace(shortcut, value);
 	}
 
 	bool exist(const std::string &name)
@@ -340,6 +393,10 @@ bool covscript_debugger()
 		std::getline(std::cin, cmd);
 		if (std::cin)
 			break;
+		if (std::cin.eof()) {
+			int code = 0;
+			cs::process_context::on_process_exit_default_handler(&code);
+		}
 	}
 #else
 	if (!std::cin) {
@@ -384,8 +441,16 @@ bool covscript_debugger()
 				std::cerr << e.what() << std::endl;
 				return true;
 			}
-			else
-				throw;
+			else {
+				// A command failed while an instance is running (e.g. a bad
+				// breakpoint expression): print and continue the session, but let
+				// the control-flow sentinels propagate to the outer loop.
+				const std::string msg = bare_error_message(e);
+				if (msg == "CS_SIGINT" || msg == "CS_DEBUGGER_EXIT")
+					throw;
+				std::cerr << e.what() << std::endl;
+				return true;
+			}
 		}
 	}
 }
@@ -397,7 +462,7 @@ void cs_debugger_step_callback(cs::statement_base *stmt)
 	if (context->compiler->csyms.count(path) > 0) {
 		cs::csym_info &csym = context->compiler->csyms[path];
 		std::size_t current_line = stmt->get_line_num();
-		if (current_line >= csym.map.size())
+		if (current_line == 0 || current_line > csym.map.size())
 			return;
 		std::size_t actual_line = csym.map[current_line - 1];
 		if (actual_line >= csym.codes.size() || actual_line == 0)
@@ -442,7 +507,7 @@ void cs_debugger_func_callback(const std::string &decl, cs::statement_base *stmt
 	if (context->compiler->csyms.count(stmt->get_file_path()) > 0) {
 		cs::csym_info &csym = context->compiler->csyms[stmt->get_file_path()];
 		std::size_t current_line = stmt->get_line_num();
-		if (current_line >= csym.map.size())
+		if (current_line == 0 || current_line > csym.map.size())
 			return;
 		std::size_t actual_line = csym.map[current_line - 1];
 		if (actual_line >= csym.codes.size() || actual_line == 0)
@@ -535,20 +600,20 @@ void covscript_main(int args_size, char *args[])
 		func_map.add_func("quit", "q", [](const std::string &cmd) -> bool {
 			if (context.get() != nullptr)
 			{
-				std::cout
-				        << "An interpreter instance is running, do you really want to quit?\nPress (y) to confirm or press any other key to cancel."
-				        << std::endl;
-				while (!cs_impl::conio::kbhit());
-				switch (std::tolower(cs_impl::conio::getch())) {
-				case 'y': {
-					quit_sig = true;
-					int code = 0;
-					cs::current_process->on_process_exit.touch(&code);
-					return false;
+				// Non-interactive input (pipe/redirection) cannot press a key;
+				// skip the confirmation.
+				if (stdin_is_tty()) {
+					std::cout
+					        << "An interpreter instance is running, do you really want to quit?\nPress (y) to confirm or press any other key to cancel."
+					        << std::endl;
+					while (!cs_impl::conio::kbhit());
+					if (std::tolower(cs_impl::conio::getch()) != 'y')
+						return true;
 				}
-				default:
-					return true;
-				}
+				quit_sig = true;
+				int code = 0;
+				cs::current_process->on_process_exit.touch(&code);
+				return false;
 			}
 			return false; });
 		func_map.add_func("help", "h", [](const std::string &cmd) -> bool {
@@ -615,6 +680,7 @@ void covscript_main(int args_size, char *args[])
 					cs::expression_t tree;
 					for (auto &ch: cmd)
 						buff.push_back(ch);
+					ensure_compiler_context();
 					context->compiler->build_expr(buff, tree);
 					id = breakpoints.add_func(context->instance->parse_expr(tree.root()));
 				}
@@ -682,11 +748,12 @@ void covscript_main(int args_size, char *args[])
 			}
 			catch (const std::exception &e)
 			{
-				if (std::strstr(e.what(), "CS_SIGINT") != nullptr) {
+				const std::string msg = bare_error_message(e);
+				if (msg == "CS_SIGINT") {
 					cs::process_context::cleanup_context();
 					activate_sigint_handler();
 				}
-				else if (std::strstr(e.what(), "CS_DEBUGGER_EXIT") == nullptr) {
+				else if (msg != "CS_DEBUGGER_EXIT") {
 					cs::collect_garbage(context);
 					std::cerr
 					        << "\nFatal Error: An exception was detected, the interpreter instance will terminate immediately."
@@ -727,13 +794,14 @@ void covscript_main(int args_size, char *args[])
 				cs::expression_t tree;
 				for (auto &ch: cmd)
 					buff.push_back(ch);
+				ensure_compiler_context();
 				context->compiler->build_expr(buff, tree);
 				std::cout << context->instance->parse_expr(tree.root()) << std::endl;
 			}
 			catch (std::exception &e)
 			{
-				if (std::strstr(e.what(), "CS_SIGINT") != nullptr ||
-				        std::strstr(e.what(), "CS_DEBUGGER_EXIT") != nullptr)
+				const std::string msg = bare_error_message(e);
+				if (msg == "CS_SIGINT" || msg == "CS_DEBUGGER_EXIT")
 					throw;
 				std::cout << "Evaluation Failed: " << e.what() << std::endl;
 			}
@@ -744,7 +812,7 @@ void covscript_main(int args_size, char *args[])
 				result = covscript_debugger();
 			}
 			catch (const std::exception &e) {
-				if (std::strstr(e.what(), "CS_SIGINT") != nullptr) {
+				if (bare_error_message(e) == "CS_SIGINT") {
 					cs::process_context::cleanup_context();
 					cs::collect_garbage(context);
 					reset_status();
@@ -810,7 +878,7 @@ int main(int args_size, char *args[])
 		std::cerr << "Uncaught exception: Unknown exception" << std::endl;
 		errorcode = -1;
 	}
-	if (wait_before_exit) {
+	if (wait_before_exit && stdin_is_tty()) {
 		std::cerr << "\nProcess finished with exit code " << errorcode << std::endl;
 		std::cerr << "\nPress any key to exit..." << std::endl;
 		while (!cs_impl::conio::kbhit());

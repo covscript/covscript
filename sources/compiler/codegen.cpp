@@ -41,9 +41,6 @@ namespace cs {
 
 	void method_import::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		// Discard any stale result from a previously failed translation so the
-		// front of the queue always belongs to the statement being compiled.
-		mResult.clear();
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
@@ -65,16 +62,16 @@ namespace cs {
 		}
 		else
 			process(tree);
-		mResult.emplace_back(new statement_import(var_list, context, raw.front().back()));
+		context->compiler->import_results.emplace_back(new statement_import(var_list, context, raw.front().back()));
 	}
 
 	statement_base *
 	method_import::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		if (mResult.empty())
+		if (context->compiler->import_results.empty())
 			throw compile_error("Invalid 'import' statement: missing preprocessing result");
-		statement_base *ptr = mResult.front();
-		mResult.pop_front();
+		statement_base *ptr = context->compiler->import_results.front();
+		context->compiler->import_results.pop_front();
 		return ptr;
 	}
 
@@ -106,8 +103,6 @@ namespace cs {
 
 	void method_import_as::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		// Discard any stale result from a previously failed translation.
-		mResult.clear();
 		tree_type<token_base *> &tree_package = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		tree_type<token_base *> &tree_alias = static_cast<token_expr *>(raw.front().at(3))->get_tree();
 		if (tree_package.root().data() == nullptr || tree_alias.root().data() == nullptr)
@@ -119,16 +114,16 @@ namespace cs {
 		var ext = get_namespace(context, tree_package.root());
 		context->compiler->add_constant(ext);
 		context->instance->storage.add_var_no_return(alias_name, ext);
-		mResult.emplace_back(new statement_import({{alias_name, ext}}, context, raw.front().back()));
+		context->compiler->import_results.emplace_back(new statement_import({{alias_name, ext}}, context, raw.front().back()));
 	}
 
 	statement_base *
 	method_import_as::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		if (mResult.empty())
+		if (context->compiler->import_results.empty())
 			throw compile_error("Invalid 'import' statement: missing preprocessing result");
-		statement_base *ptr = mResult.front();
-		mResult.pop_front();
+		statement_base *ptr = context->compiler->import_results.front();
+		context->compiler->import_results.pop_front();
 		return ptr;
 	}
 
@@ -148,8 +143,6 @@ namespace cs {
 
 	void method_involve::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		// Discard any stale result from a previously failed translation.
-		mResult.clear();
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_value *vptr = dynamic_cast<token_value *>(tree.root().data());
 		if (vptr != nullptr) {
@@ -164,19 +157,19 @@ namespace cs {
 			}
 			else
 				throw compile_error("Invalid 'using' statement: the target must be a namespace");
-			mResult.emplace_back(new statement_involve(tree, true, context, raw.front().back()));
+			context->compiler->import_results.emplace_back(new statement_involve(tree, true, context, raw.front().back()));
 		}
 		else
-			mResult.emplace_back(new statement_involve(tree, false, context, raw.front().back()));
+			context->compiler->import_results.emplace_back(new statement_involve(tree, false, context, raw.front().back()));
 	}
 
 	statement_base *
 	method_involve::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		if (mResult.empty())
+		if (context->compiler->import_results.empty())
 			throw compile_error("Invalid 'using' statement: missing preprocessing result");
-		statement_base *ptr = mResult.front();
-		mResult.pop_front();
+		statement_base *ptr = context->compiler->import_results.front();
+		context->compiler->import_results.pop_front();
 		return ptr;
 	}
 

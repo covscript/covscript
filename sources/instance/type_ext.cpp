@@ -117,7 +117,7 @@ namespace cov {
 	std::chrono::time_point<std::chrono::high_resolution_clock> timer::m_timer(std::chrono::high_resolution_clock::now());
 
 	namespace random {
-		static std::random_device random_engine;
+		static thread_local std::random_device random_engine;
 		template <typename T, bool is_integral>
 		struct random_traits;
 
@@ -252,6 +252,9 @@ namespace cs_impl {
 			return it++;
 		}
 
+		// NOTE: next_n/prev_n advance a bare deque iterator without the owning
+		// container, so a negative offset that crosses begin() cannot be range
+		// checked here (UB). Known limitation; use with offsets within the array.
 		array::iterator next_n(array::iterator &it, const numeric &offset)
 		{
 			return it += offset.as_integer();
@@ -649,7 +652,7 @@ namespace cs_impl {
 			(*hash_set_ext)
 			.add_var("empty", make_cni(empty, true))
 			.add_var("size", make_cni(size, callable::types::member_visitor))
-			.add_var("clear", make_cni(empty, true))
+			.add_var("clear", make_cni(clear, true))
 			.add_var("insert", make_cni(insert, true))
 			.add_var("erase", make_cni(erase, true))
 			.add_var("exist", make_cni(exist, true))
@@ -796,9 +799,16 @@ namespace cs_impl {
 		{
 			(*charbuff_ext)
 			.add_var("get_istream", make_cni([](char_buff &buff) -> cs::istream
-			{ return std::shared_ptr<std::istream>(buff.get(), [](std::istream *) {}); }))
+			{
+				// Keep the host alive so the borrowed stream never dangles
+				auto keep = buff;
+				return std::shared_ptr<std::istream>(buff.get(), [keep](std::istream *) {});
+			}))
 			.add_var("get_ostream", make_cni([](char_buff &buff) -> cs::ostream
-			{ return std::shared_ptr<std::ostream>(buff.get(), [](std::ostream *) {}); }))
+			{
+				auto keep = buff;
+				return std::shared_ptr<std::ostream>(buff.get(), [keep](std::ostream *) {});
+			}))
 			.add_var("get_string", make_cni([](char_buff &buff) -> string
 			{ return std::move(buff->str()); }));
 		}
@@ -818,7 +828,6 @@ namespace cs_impl {
 			catch (...) {
 				return str;
 			}
-			return str;
 		}
 
 // Input Stream
@@ -1372,7 +1381,7 @@ namespace cs_impl {
 			if (fiber::within()) {
 				auto future = std::async(std::launch::async, async_callable(fn, std::move(args)));
 				while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
-					fiber::sleep_for(current_process->fiber_busy_wait_min);
+					fiber::sleep_for(current_process->fiber_cxt->busy_wait_min);
 				return future.get();
 			}
 			else if (is_native_callable(fn))
@@ -1419,9 +1428,9 @@ namespace cs_impl {
 						                 .count();
 						if (remain_ms <= 0)
 							break;
-						auto wait_time = static_cast<std::size_t>(remain_ms * current_process->fiber_busy_wait_coef);
-						if (wait_time < current_process->fiber_busy_wait_min)
-							wait_time = current_process->fiber_busy_wait_min;
+						auto wait_time = static_cast<std::size_t>(remain_ms * current_process->fiber_cxt->busy_wait_coef);
+						if (wait_time < current_process->fiber_cxt->busy_wait_min)
+							wait_time = current_process->fiber_cxt->busy_wait_min;
 						if (wait_time > static_cast<std::size_t>(remain_ms))
 							wait_time = static_cast<std::size_t>(remain_ms);
 						fiber::sleep_for(wait_time);
@@ -1437,7 +1446,7 @@ namespace cs_impl {
 			{
 				if (fiber::within()) {
 					while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
-						fiber::sleep_for(current_process->fiber_busy_wait_min);
+						fiber::sleep_for(current_process->fiber_cxt->busy_wait_min);
 				}
 				else {
 					future.wait();
@@ -1516,20 +1525,20 @@ namespace cs_impl {
 		void set_schedule_policy(const string &policy)
 		{
 			if (policy == "balanced") {
-				current_process->fiber_busy_wait_coef = 0.01;
-				current_process->fiber_busy_wait_min = 10;
+				current_process->fiber_cxt->busy_wait_coef = 0.01;
+				current_process->fiber_cxt->busy_wait_min = 10;
 			}
 			else if (policy == "responsive") {
-				current_process->fiber_busy_wait_coef = 0.003;
-				current_process->fiber_busy_wait_min = 3;
+				current_process->fiber_cxt->busy_wait_coef = 0.003;
+				current_process->fiber_cxt->busy_wait_min = 3;
 			}
 			else if (policy == "efficient") {
-				current_process->fiber_busy_wait_coef = 0.05;
-				current_process->fiber_busy_wait_min = 50;
+				current_process->fiber_cxt->busy_wait_coef = 0.05;
+				current_process->fiber_cxt->busy_wait_min = 50;
 			}
 			else if (policy == "throughput") {
-				current_process->fiber_busy_wait_coef = 0.02;
-				current_process->fiber_busy_wait_min = 20;
+				current_process->fiber_cxt->busy_wait_coef = 0.02;
+				current_process->fiber_cxt->busy_wait_min = 20;
 			}
 			else
 				throw lang_error("Unknown schedule policy: " + policy);
@@ -1646,9 +1655,9 @@ namespace cs_impl {
 
 		var fiber_current()
 		{
-			if (current_process->fiber_stack.empty())
+			if (current_process->fiber_cxt->stack.empty())
 				return null_pointer;
-			return current_process->fiber_stack.top();
+			return current_process->fiber_cxt->stack.top();
 		}
 
 		void fiber_resume(const fiber_t &fiber)
@@ -1700,14 +1709,18 @@ namespace cs_impl {
 			switch (args.size()) {
 			case 0:
 				t = std::time(nullptr);
-				return var::make<std::tm>(*std::localtime(&t));
+				break;
 			case 1:
 				t = args[0].const_val<numeric>().as_integer();
-				return var::make<std::tm>(*std::localtime(&t));
+				break;
 			default:
 				throw runtime_error(
 				    "Wrong number of arguments: expected 0 or 1, got " + std::to_string(args.size()));
 			}
+			std::tm *lt = std::localtime(&t);
+			if (lt == nullptr)
+				throw lang_error("localtime failed: timestamp is out of the supported range");
+			return var::make<std::tm>(*lt);
 		}
 
 		var utc_time(vector &args)
@@ -1716,14 +1729,18 @@ namespace cs_impl {
 			switch (args.size()) {
 			case 0:
 				t = std::time(nullptr);
-				return var::make<std::tm>(*std::gmtime(&t));
+				break;
 			case 1:
 				t = args[0].const_val<numeric>().as_integer();
-				return var::make<std::tm>(*std::gmtime(&t));
+				break;
 			default:
 				throw runtime_error(
 				    "Wrong number of arguments: expected 0 or 1, got " + std::to_string(args.size()));
 			}
+			std::tm *gt = std::gmtime(&t);
+			if (gt == nullptr)
+				throw lang_error("gmtime failed: timestamp is out of the supported range");
+			return var::make<std::tm>(*gt);
 		}
 
 		void delay(const numeric &time)

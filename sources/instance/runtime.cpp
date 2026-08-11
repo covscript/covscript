@@ -242,6 +242,10 @@ namespace cs {
 
 	var runtime_type::parse_lnkasi(var &a, const var &b)
 	{
+		// Keep the link (alias/shared-proxy) semantics; only refuse to overwrite
+		// a protected/constant target.
+		if (a.is_protect())
+			throw runtime_error("The variable has been protected");
 		a = b;
 		return a;
 	}

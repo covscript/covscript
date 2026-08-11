@@ -280,3 +280,150 @@ TEST(system_exit_dispatches_code)
 	run_script("using system\nsystem.exit(3)\n");
 	EXPECT_TRUE(captured == 3);
 }
+
+// =============================================================================
+// C1: negative array index keeps auto-growth semantics but must not loop forever
+// or read out of bounds (the old unsigned-mixed comparison did).
+// a[-4] on a 3-element array prepends one zero and writes index 0.
+// =============================================================================
+
+TEST(negative_array_index_auto_grow)
+{
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "var a = {}\n"
+	               "a.push_back(1)\n"
+	               "a.push_back(2)\n"
+	               "a.push_back(3)\n"
+	               "a[-4] = 5\n"
+	               "foreach x in a\n"
+	               "\tsystem.out.print(to_string(x))\n"
+	               "end\n"),
+	    "5123");
+}
+
+TEST(negative_array_index_in_range_unchanged)
+{
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "var a = {}\n"
+	               "a.push_back(1)\n"
+	               "a.push_back(2)\n"
+	               "a.push_back(3)\n"
+	               "a[-1] = 9\n"
+	               "foreach x in a\n"
+	               "\tsystem.out.print(to_string(x))\n"
+	               "end\n"),
+	    "129");
+}
+
+// =============================================================================
+// C2: integer division/modulo by zero must throw a catchable lang_error instead
+// of crashing the process with SIGFPE.
+// =============================================================================
+
+TEST(integer_division_by_zero_catchable)
+{
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "try\n"
+	               "\tsystem.out.println(1 / 0)\n"
+	               "catch (e)\n"
+	               "\tsystem.out.println(\"caught\")\n"
+	               "end\n"),
+	    "caught");
+}
+
+TEST(integer_modulo_by_zero_catchable)
+{
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "try\n"
+	               "\tsystem.out.println(1 % 0)\n"
+	               "catch (e)\n"
+	               "\tsystem.out.println(\"caught\")\n"
+	               "end\n"),
+	    "caught");
+}
+
+// =============================================================================
+// C3: hash_set.clear must actually clear (was registered as `empty`).
+// =============================================================================
+
+TEST(hash_set_clear_works)
+{
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "var s = new hash_set\n"
+	               "s.insert(1)\n"
+	               "s.clear()\n"
+	               "system.out.println(s.size)\n"),
+	    "0");
+}
+
+// =============================================================================
+// M3: int_pow must not overflow-UB or hang on large/negative exponents; it
+// falls back to a float result.
+// =============================================================================
+
+TEST(int_pow_large_exponent_no_overflow)
+{
+	// 2^63 overflows long long; must fall back to float, not wrap to LLONG_MIN.
+	EXPECT_CONTAINS(run_script("using system\nsystem.out.println(2 ^ 63)\n"), "9.22337");
+}
+
+TEST(int_pow_negative_exponent_no_hang)
+{
+	// Negative exponent previously looped ~|exp| times; now computed via std::pow.
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "var e = 0 - 1000000000\n"
+	               "system.out.println(2 ^ e)\n"),
+	    "0");
+}
+
+// =============================================================================
+// M4: range with a negative step must iterate downward; step 0 must be rejected.
+// =============================================================================
+
+TEST(range_negative_step_descends)
+{
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "foreach i in range(5, 0, -1)\n"
+	               "\tsystem.out.print(to_string(i))\n"
+	               "end\n"),
+	    "54321");
+}
+
+TEST(range_zero_step_rejected)
+{
+	EXPECT_CONTAINS(run_script_expect_throw("using system\nforeach i in range(0, 5, 0)\nend\n"),
+	                "Range step cannot be zero");
+}
+
+// =============================================================================
+// M5: numeric hash must be consistent for equal int/float values (1 == 1.0), so
+// a hash_map keyed with 1 can be found via 1.0.
+// =============================================================================
+
+TEST(numeric_hash_int_float_consistent)
+{
+	EXPECT_CONTAINS(
+	    run_script("using system\n"
+	               "var m = new hash_map\n"
+	               "m[1] = \"x\"\n"
+	               "system.out.println(m[1.0])\n"),
+	    "x");
+}
+
+// =============================================================================
+// M7: link assignment (:=) must not silently replace a protected/constant slot.
+// =============================================================================
+
+TEST(link_assignment_to_constant_rejected)
+{
+	EXPECT_CONTAINS(
+	    run_script_expect_throw("using system\nconstant c = 5\nc := 10\nsystem.out.println(c)\n"),
+	    "The variable has been protected");
+}
