@@ -1,5 +1,6 @@
 #include <covscript/covscript.hpp>
 #include "test_helpers.hpp"
+#include <limits>
 #include <sstream>
 
 // =============================================================================
@@ -282,6 +283,162 @@ TEST(system_exit_dispatches_code)
 }
 
 // =============================================================================
+// system.exit from inside a fiber must still reach the on_process_exit handler
+// (the exit code is forwarded through the fiber's forked process up to the
+// main process). The CNI boundary must not convert the located cs::exception
+// sentinel into a forward_exception that embeds the "File ..., line ..."
+// wrapper, or CS_EXIT/CS_SIGINT can never be recognized again.
+// =============================================================================
+
+TEST(system_exit_from_fiber_dispatches_code)
+{
+	// Mirror the interpreter's exit listener: record the code on the main
+	// process (main() reads current_process->exit_code after covscript_main
+	// returns) and throw the CS_EXIT sentinel. The exit code must survive a
+	// fiber boundary; writing it to the fiber's forked process would lose it.
+	static cs::process_context *main_process = cs::current_process;
+	static int captured = -1;
+	cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
+		main_process->exit_code = *static_cast<int *>(code);
+		captured = *static_cast<int *>(code);
+		throw cs::fatal_error("CS_EXIT");
+		return true;
+	});
+	main_process->exit_code = -1;
+	captured = -1;
+	try {
+		run_script("using system\n"
+		           "function f()\n"
+		           "\tsystem.exit(7)\n"
+		           "end\n"
+		           "fiber.create(f).resume()\n");
+	}
+	catch (const cs::exception &) {
+		// The CS_EXIT sentinel escapes the fiber (checked by the next test).
+	}
+	EXPECT_TRUE(captured == 7);
+	EXPECT_TRUE(main_process->exit_code == 7);
+}
+
+TEST(fiber_exit_sentinel_keeps_bare_message)
+{
+	// Mirror the interpreter: the exit listener throws the CS_EXIT sentinel.
+	// The fiber resumes the exception across the CNI boundary; it must come
+	// back as a located cs::exception whose bare message is exactly CS_EXIT
+	// (not a nested "File ..., line ...: CS_EXIT" text).
+	cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
+		throw cs::fatal_error("CS_EXIT");
+		return true;
+	});
+	try {
+		run_script("using system\n"
+		           "function f()\n"
+		           "\tsystem.exit(7)\n"
+		           "end\n"
+		           "fiber.create(f).resume()\n");
+	}
+	catch (const cs::exception &e) {
+		EXPECT_TRUE(e.message() == "CS_EXIT");
+		return;
+	}
+	catch (const cs::fatal_error &e) {
+		EXPECT_TRUE(e.message() == "CS_EXIT");
+		return;
+	}
+	throw cs_test::test_failure("expected the CS_EXIT sentinel to escape the fiber");
+}
+
+TEST(grandchild_fiber_exit_after_parent_destroyed)
+{
+	// A fiber A creates fiber B, then A is destroyed (its forked process dies).
+	// B must still be able to dispatch exit through the root process: the fork
+	// forwarding listener must not capture A's now-dangling process pointer.
+	static int captured = -1;
+	cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
+		captured = *static_cast<int *>(code);
+		return true;
+	});
+
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<GRANDCHILD>"));
+	auto ctx = cs::create_context(args);
+	std::istringstream src(
+	    "using system\n"
+	    "function inner()\n"
+	    "\tfiber.yield()\n"
+	    "\tsystem.exit(42)\n"
+	    "end\n"
+	    "function outer()\n"
+	    "\tvar b = fiber.create(inner)\n"
+	    "\treturn b\n"
+	    "end\n"
+	    "var a = fiber.create(outer)\n");
+	ctx->instance->compile(src);
+	ctx->instance->interpret();
+
+	cs::fiber_t a = ctx->instance->storage.get_var("a").const_val<cs::fiber_t>();
+	cs::fiber::resume(a, cs::fiber::schedule_policy::normal);
+	cs::fiber_t b = a->return_value().const_val<cs::fiber_t>();
+	ctx->instance->storage.get_var("a") = cs::null_pointer; // drop the script reference
+	a.reset(); // destroy A; its forked process is kept alive by B's generation chain
+
+	captured = -1;
+	cs::fiber::resume(b, cs::fiber::schedule_policy::normal);
+	cs::fiber::resume(b, cs::fiber::schedule_policy::normal); // inner calls exit(42)
+	EXPECT_TRUE(captured == 42);
+}
+
+TEST(fiber_exit_forwards_through_live_parent)
+{
+	// The generation chain must keep the parent fiber's process alive and
+	// forward exit through it, so a listener registered on the parent process
+	// fires when a child fiber exits (not flattened to the root).
+	static int captured = -1;
+	static bool parent_listener_fired = false;
+	cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
+		captured = *static_cast<int *>(code);
+		return true; // swallow
+	});
+
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<CHAIN>"));
+	auto ctx = cs::create_context(args);
+	std::istringstream src(
+	    "using system\n"
+	    "function inner()\n"
+	    "\tfiber.yield()\n"
+	    "\tsystem.exit(42)\n"
+	    "end\n"
+	    "function outer()\n"
+	    "\tvar b = fiber.create(inner)\n"
+	    "\tfiber.yield()\n"
+	    "\treturn b\n"
+	    "end\n"
+	    "var a = fiber.create(outer)\n");
+	ctx->instance->compile(src);
+	ctx->instance->interpret();
+
+	cs::fiber_t a = ctx->instance->storage.get_var("a").const_val<cs::fiber_t>();
+	EXPECT_TRUE(a->get_process() != nullptr);
+	a->get_process()->on_process_exit.add_listener([](void *) -> bool {
+		parent_listener_fired = true;
+		return false; // do not swallow: keep forwarding up the chain
+	});
+
+	cs::fiber::resume(a, cs::fiber::schedule_policy::normal); // outer creates b, yields
+	cs::fiber::resume(a, cs::fiber::schedule_policy::normal); // outer returns b
+	cs::fiber_t b = a->return_value().const_val<cs::fiber_t>();
+	// Keep `a` (and hence its process) alive while `b` runs.
+
+	captured = -1;
+	parent_listener_fired = false;
+	cs::fiber::resume(b, cs::fiber::schedule_policy::normal); // inner yields
+	cs::fiber::resume(b, cs::fiber::schedule_policy::normal); // inner calls exit(42)
+	EXPECT_TRUE(parent_listener_fired);
+	EXPECT_TRUE(captured == 42);
+}
+
+// =============================================================================
 // C1: negative array index keeps auto-growth semantics but must not loop forever
 // or read out of bounds (the old unsigned-mixed comparison did).
 // a[-4] on a 3-element array prepends one zero and writes index 0.
@@ -485,6 +642,35 @@ TEST(exact_int_float_ordering)
 	               "system.out.println(big == 9007199254740992.0)\n"
 	               "system.out.println(big > 9007199254740992.0)\n"),
 	    "false\ntrue");
+}
+
+// =============================================================================
+// Numeric: NaN is unordered. int-vs-NaN must behave like the IEEE float-vs-float
+// path (all ordering/equality false, inequality true), not report `>`/`>=`.
+// =============================================================================
+
+TEST(numeric_nan_comparisons_unordered)
+{
+	using cs::numeric;
+	numeric nan(std::numeric_limits<cs::numeric_float>::quiet_NaN());
+	numeric one(1);
+	// int <-> NaN, NaN on either side
+	EXPECT_TRUE(!(one > nan));
+	EXPECT_TRUE(!(one >= nan));
+	EXPECT_TRUE(!(one < nan));
+	EXPECT_TRUE(!(one <= nan));
+	EXPECT_TRUE(!(one == nan));
+	EXPECT_TRUE(one != nan);
+	EXPECT_TRUE(!(nan > one));
+	EXPECT_TRUE(!(nan >= one));
+	EXPECT_TRUE(!(nan < one));
+	EXPECT_TRUE(!(nan <= one));
+	EXPECT_TRUE(!(nan == one));
+	EXPECT_TRUE(nan != one);
+	// float-vs-float reference (IEEE)
+	EXPECT_TRUE(!(nan > numeric(1.0)));
+	EXPECT_TRUE(!(nan >= numeric(1.0)));
+	EXPECT_TRUE(nan != numeric(1.0));
 }
 
 // =============================================================================

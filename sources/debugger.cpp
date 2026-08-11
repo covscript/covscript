@@ -584,8 +584,9 @@ void covscript_main(int args_size, char *args[])
 			          "Please visit <http://covscript.org.cn/> for more information."
 			          << std::endl;
 		}
-		cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
-			cs::current_process->exit_code = *static_cast<int *>(code);
+		cs::current_process->on_process_exit.add_listener([main_process = cs::current_process](void *code) -> bool {
+			// Record the code on the process main() reads it from (see interpreter.cpp).
+			main_process->exit_code = *static_cast<int *>(code);
 			throw cs::fatal_error("CS_DEBUGGER_EXIT"); });
 		cs::current_process->on_process_sigint.add_listener([](void *) -> bool
 		{ throw cs::fatal_error("CS_SIGINT"); });

@@ -158,21 +158,42 @@ namespace cs {
 		return true;
 	}
 
-	std::unique_ptr<process_context> process_context::fork()
+	std::shared_ptr<process_context> process_context::current_owner()
+	{
+		// The process that owns the current execution: the nearest script fiber's
+		// process on the fiber chain (a native fiber has no process of its own and
+		// runs under its caller's), or null when the owner is the root.
+		for (auto &f : current_process->fiber_cxt->stack)
+			if (auto p = f->get_process())
+				return p;
+		return nullptr;
+	}
+
+	std::shared_ptr<process_context> process_context::fork(const std::shared_ptr<process_context> &parent)
 	{
 		// Inherit the parent's fiber_cxt: share the same fiber chain.
-		std::unique_ptr<process_context> new_process(
-		    new process_context(current_process->child_stack_size(), current_process->fiber_cxt));
+		std::shared_ptr<process_context> new_process(
+		    std::make_shared<process_context>(current_process->child_stack_size(), current_process->fiber_cxt));
 		new_process->output_precision = current_process->output_precision;
 		new_process->import_path = current_process->import_path;
-		process_context *curr = current_process;
-		new_process->on_process_exit.add_listener([curr](void *data) -> bool
-		{ return curr->on_process_exit.touch(data); });
-		new_process->on_process_sigint.add_listener([curr](void *data) -> bool
-		{ return curr->on_process_sigint.touch(data); });
+		// Generation chain: hold the parent strongly so the forwarders below can
+		// always reach it (keep-alive). A null parent means the parent is the root
+		// process, which lives for the whole program.
+		new_process->m_parent = parent;
+		std::shared_ptr<process_context> parent_ref = new_process->m_parent;
+		new_process->on_process_exit.add_listener([parent_ref](void *data) -> bool {
+			if (parent_ref)
+				return parent_ref->on_process_exit.touch(data);
+			return this_process.on_process_exit.touch(data);
+		});
+		new_process->on_process_sigint.add_listener([parent_ref](void *data) -> bool {
+			if (parent_ref)
+				return parent_ref->on_process_sigint.touch(data);
+			return this_process.on_process_sigint.touch(data);
+		});
 		new_process->std_eh_callback = current_process->std_eh_callback;
 		new_process->cs_eh_callback = current_process->cs_eh_callback;
-		return std::move(new_process);
+		return new_process;
 	}
 
 	process_context this_process;

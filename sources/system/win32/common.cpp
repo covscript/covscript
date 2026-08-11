@@ -181,7 +181,7 @@ namespace cs {
 
 			// Non-native fibers fork their own process_context (own value stack);
 			// native fibers keep null and reuse the current execution path.
-			std::unique_ptr<process_context> process;
+			std::shared_ptr<process_context> process;
 			// Caller process, captured at resume(), restored via cs_swap_out().
 			process_context *resumer_process = nullptr;
 
@@ -222,7 +222,7 @@ namespace cs {
 			win32_fiber(const context_t &cxt, std::function<var()> f)
 				: cs_stack(current_process->child_stack_size()),
 				  cs_context(cxt),
-				  process(current_process->fork()),
+				  process(process_context::fork(process_context::current_owner())),
 				  func(std::move(f)),
 				  eptr(nullptr),
 				  state(fiber_state::ready),
@@ -273,6 +273,11 @@ namespace cs {
 					return ret_val;
 				else
 					throw lang_error("The fiber has not completed yet");
+			}
+
+			const std::shared_ptr<process_context> &get_process() const noexcept override
+			{
+				return process;
 			}
 		};
 
@@ -363,10 +368,12 @@ namespace cs {
 				current_process->fiber_cxt->stack.pop();
 			else
 				throw internal_error("Fiber stack corrupted.");
+			// Restore the caller process first: a script fiber resumed from a
+			// native fiber (which has no private process) must still come back to
+			// the native caller's process, not stay on the resumed fiber's.
+			fi->cs_swap_out();
 			if (!current_process->fiber_cxt->stack.empty())
 				static_cast<win32_fiber *>(current_process->fiber_cxt->stack.top().get())->cs_swap_in();
-			else
-				fi->cs_swap_out();
 			if (fi->eptr != nullptr) {
 				std::exception_ptr e = nullptr;
 				std::swap(fi->eptr, e);

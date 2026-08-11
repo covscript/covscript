@@ -130,6 +130,10 @@ namespace cs {
 	class process_context final {
 		std::atomic<bool> is_sigint_raised{};
 		std::atomic<bool> is_exit_requested{};
+		// Generation chain: strong reference to the process that forked this one,
+		// keeping it alive for as long as this process lives. Null means the
+		// parent is the root process (this_process).
+		std::shared_ptr<process_context> m_parent;
 
 	public:
 		// Version
@@ -243,7 +247,14 @@ namespace cs {
 			is_sigint_raised = false;
 		}
 
-		std::unique_ptr<process_context> fork();
+		// Fork a child process for a fiber. `parent` is the owning process of the
+		// current execution (see current_owner()); null means the parent is the
+		// root process.
+		static std::shared_ptr<process_context> fork(const std::shared_ptr<process_context> &parent);
+
+		// The process that owns the current execution: the nearest script fiber's
+		// process on the fiber chain, or null when the owner is the root.
+		static std::shared_ptr<process_context> current_owner();
 	};
 
 	extern process_context this_process;
@@ -368,6 +379,9 @@ namespace cs {
 		virtual fiber_state get_state() const = 0;
 
 		virtual var return_value() const = 0;
+
+		// The process_context this fiber runs on, or null for native fibers.
+		virtual const std::shared_ptr<process_context> &get_process() const noexcept = 0;
 	};
 
 	namespace fiber {

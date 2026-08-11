@@ -311,6 +311,7 @@ namespace cs {
 // for unknown types falls back to what() directly (no prefix to strip).
 	inline std::string exception_message(const std::exception &e)
 	{
+		if (const auto *p = dynamic_cast<const exception *>(&e)) return p->message();
 		if (const auto *p = dynamic_cast<const runtime_error *>(&e)) return p->message();
 		if (const auto *p = dynamic_cast<const compile_error *>(&e)) return p->message();
 		if (const auto *p = dynamic_cast<const internal_error *>(&e)) return p->message();
@@ -361,6 +362,19 @@ namespace cs {
 		{
 			int c = compare_int_float(i, f);
 			return c == 2 ? 2 : -c;
+		}
+
+		// Ordering tests for a compare_* result. The NaN sentinel (2) must not
+		// satisfy `> 0` / `>= 0`, or a NaN operand would compare greater than /
+		// greater-or-equal to every integer.
+		static inline bool compare_greater(int c) noexcept
+		{
+			return c == 1;
+		}
+
+		static inline bool compare_greater_equal(int c) noexcept
+		{
+			return c == 0 || c == 1;
 		}
 
 		static inline numeric int_pow(numeric_integer base, numeric_integer exp)
@@ -688,9 +702,9 @@ namespace cs {
 			case 0b00:
 				return data._num > rhs.data._num;
 			case 0b01:
-				return compare_float_int(data._num, rhs.data._int) > 0;
+				return compare_greater(compare_float_int(data._num, rhs.data._int));
 			case 0b10:
-				return compare_int_float(data._int, rhs.data._num) > 0;
+				return compare_greater(compare_int_float(data._int, rhs.data._num));
 			case 0b11:
 				return data._int > rhs.data._int;
 			}
@@ -712,9 +726,9 @@ namespace cs {
 			case 0b00:
 				return data._num >= rhs.data._num;
 			case 0b01:
-				return compare_float_int(data._num, rhs.data._int) >= 0;
+				return compare_greater_equal(compare_float_int(data._num, rhs.data._int));
 			case 0b10:
-				return compare_int_float(data._int, rhs.data._num) >= 0;
+				return compare_greater_equal(compare_int_float(data._int, rhs.data._num));
 			case 0b11:
 				return data._int >= rhs.data._int;
 			}

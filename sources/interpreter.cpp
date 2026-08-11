@@ -264,8 +264,11 @@ void covscript_main(int args_size, char *args[])
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::context_t context = cs::create_context(arg);
 		cs::raii_collector context_gc(context);
-		cs::current_process->on_process_exit.add_listener([&context](void *code) -> bool {
-			cs::current_process->exit_code = *static_cast<int *>(code);
+		cs::current_process->on_process_exit.add_listener([&context, main_process = cs::current_process](void *code) -> bool {
+			// Record the code on the process main() reads it from. Inside a fiber
+			// current_process is the fiber's forked process, so writing to it here
+			// would lose the exit code.
+			main_process->exit_code = *static_cast<int *>(code);
 			throw cs::fatal_error("CS_EXIT");
 			return true; });
 		context->compiler->disable_optimizer = no_optimize;
@@ -335,8 +338,9 @@ void covscript_main(int args_size, char *args[])
 		cs::context_t context = cs::create_context(arg);
 		cs::raii_collector context_gc(context);
 		activate_sigint_handler();
-		cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
-			cs::current_process->exit_code = *static_cast<int *>(code);
+		cs::current_process->on_process_exit.add_listener([main_process = cs::current_process](void *code) -> bool {
+			// Record the code on the process main() reads it from (see above).
+			main_process->exit_code = *static_cast<int *>(code);
 			throw cs::fatal_error("CS_EXIT"); });
 		cs::current_process->on_process_sigint.add_listener([](void *) -> bool
 		{ throw cs::fatal_error("CS_SIGINT"); });
