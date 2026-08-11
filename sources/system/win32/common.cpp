@@ -228,8 +228,10 @@ namespace cs {
 					             "its suspended stack frames are not unwound and resources will leak\n",
 					             static_cast<int>(state));
 					assert(false && "Destroying an unfinished fiber");
-					return;
 				}
+				// Always release the fiber stack, even when the assertion above
+				// is compiled out: skipping DeleteFiber would leak the whole
+				// stack on every abandoned suspended fiber.
 				if (ctx != nullptr)
 					DeleteFiber(ctx);
 			}
