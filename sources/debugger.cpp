@@ -33,6 +33,8 @@
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
 #include <io.h>
+#else
+#include <unistd.h>
 #endif
 
 // Whether stdin is an interactive terminal. Redirected/piped input must not
