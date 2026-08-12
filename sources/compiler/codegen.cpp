@@ -25,7 +25,8 @@
  */
 #include <covscript/impl/codegen.hpp>
 
-namespace cs {
+namespace cs
+{
 	statement_base *
 	method_expression::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
@@ -45,7 +46,8 @@ namespace cs {
 		if (tree.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		std::vector<std::pair<std::string, var>> var_list;
-		auto process = [&context, &var_list](tree_type<token_base *> &t) {
+		auto process = [&context, &var_list](tree_type<token_base *> &t)
+		{
 			token_base *token = t.root().data();
 			if (token == nullptr || token->get_type() != token_types::id)
 				throw compile_error("Invalid 'import' statement: expected a package name");
@@ -55,7 +57,8 @@ namespace cs {
 			context->instance->storage.add_var_no_return(package_name, ext);
 			var_list.emplace_back(package_name, ext);
 		};
-		if (tree.root().data()->get_type() == token_types::parallel) {
+		if (tree.root().data()->get_type() == token_types::parallel)
+		{
 			auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
 			for (auto &t : parallel_list)
 				process(t);
@@ -80,12 +83,14 @@ namespace cs {
 		token_base *token = it.data();
 		if (token == nullptr)
 			return var();
-		if (token->get_type() == token_types::id) {
+		if (token->get_type() == token_types::id)
+		{
 			const var_id &package_name = static_cast<token_id *>(token)->get_id();
 			return make_namespace(context->instance->import(current_process->import_path, package_name));
 		}
 		else if (token->get_type() == token_types::signal &&
-		         static_cast<token_signal *>(token)->get_signal() == signal_types::dot_) {
+		         static_cast<token_signal *>(token)->get_signal() == signal_types::dot_)
+		{
 			const var &ext = get_namespace(context, it.left());
 			token_base *id = it.right().data();
 			if (id == nullptr || id->get_type() != token_types::id)
@@ -133,8 +138,8 @@ namespace cs {
 		if (!context->package_name.empty())
 			throw compile_error("Invalid 'package' declaration: this file already declared its package name as '" + context->package_name + "'");
 		token_base *root = static_cast<token_expr *>(raw.front().at(1))->get_tree().root().usable()
-		                   ? static_cast<token_expr *>(raw.front().at(1))->get_tree().root().data()
-		                   : nullptr;
+		                       ? static_cast<token_expr *>(raw.front().at(1))->get_tree().root().data()
+		                       : nullptr;
 		if (root == nullptr || root->get_type() != token_types::id)
 			throw compile_error("Invalid 'package' declaration: expected a package name");
 		context->package_name = static_cast<token_id *>(root)->get_id();
@@ -145,11 +150,14 @@ namespace cs {
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_value *vptr = dynamic_cast<token_value *>(tree.root().data());
-		if (vptr != nullptr) {
+		if (vptr != nullptr)
+		{
 			var ns = vptr->get_value();
-			if (ns.is_type_of<namespace_t>()) {
+			if (ns.is_type_of<namespace_t>())
+			{
 				auto &domain = ns.const_val<namespace_t>()->get_domain();
-				for (auto &it : domain) {
+				for (auto &it : domain)
+				{
 					if (domain.get_var_by_id(it.second).is_protect())
 						context->instance->storage.add_record(it.first);
 				}
@@ -221,16 +229,17 @@ namespace cs {
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_base *root = tree.root().usable() ? tree.root().data() : nullptr;
-		if (root == nullptr || root->get_type() != token_types::id) {
+		if (root == nullptr || root->get_type() != token_types::id)
+		{
 			std::size_t line_num = static_cast<token_endline *>(raw.front().back())->get_line_num();
 			const char *what = root != nullptr && root->get_type() == token_types::value
-			                   ? "Invalid 'namespace' declaration: the namespace name is already defined"
-			                   : "Invalid 'namespace' declaration: expected a namespace name";
+			                       ? "Invalid 'namespace' declaration: the namespace name is already defined"
+			                       : "Invalid 'namespace' declaration: expected a namespace name";
 			throw exception(line_num, context->file_path, context->get_file_line(line_num), what);
 		}
 		const var_id &name = static_cast<token_id *>(root)->get_id();
 		context->instance->storage.add_var_no_return("__PRAGMA_CS_NAMESPACE_DEFINITION__",
-		        var::make<const var_id *>(&name));
+		                                             var::make<const var_id *>(&name));
 	}
 
 	statement_base *
@@ -240,8 +249,8 @@ namespace cs {
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		for (auto &ptr : body)
 			if (ptr->get_type() != statement_types::import_ && ptr->get_type() != statement_types::involve_ &&
-			        ptr->get_type() != statement_types::var_ && ptr->get_type() != statement_types::function_ &&
-			        ptr->get_type() != statement_types::namespace_ && ptr->get_type() != statement_types::struct_)
+			    ptr->get_type() != statement_types::var_ && ptr->get_type() != statement_types::function_ &&
+			    ptr->get_type() != statement_types::namespace_ && ptr->get_type() != statement_types::struct_)
 				throw compile_error("Invalid 'namespace' body: only 'import', 'using', variable declarations, function definitions, 'namespace' definitions, and 'struct' definitions are allowed");
 		return new statement_namespace(static_cast<token_expr *>(raw.front().at(1))->get_tree().root().data(), body,
 		                               context, raw.front().back());
@@ -250,7 +259,7 @@ namespace cs {
 	void method_namespace::postprocess(const context_t &context, const domain_type &domain)
 	{
 		context->instance->storage.add_var_no_return(*domain.get_var("__PRAGMA_CS_NAMESPACE_DEFINITION__").const_val<const var_id *>(),
-		        make_namespace(make_shared_namespace<name_space>(domain)));
+		                                             make_namespace(make_shared_namespace<name_space>(domain)));
 	}
 
 	statement_base *method_if::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
@@ -258,8 +267,10 @@ namespace cs {
 		bool have_else = false;
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		for (auto &ptr : body) {
-			if (ptr->get_type() == statement_types::else_) {
+		for (auto &ptr : body)
+		{
+			if (ptr->get_type() == statement_types::else_)
+			{
 				if (!have_else)
 					have_else = true;
 				else
@@ -268,12 +279,15 @@ namespace cs {
 		}
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_base *ptr = tree.root().data();
-		if (have_else) {
+		if (have_else)
+		{
 			std::deque<statement_base *> body_true;
 			std::deque<statement_base *> body_false;
 			bool now_place = true;
-			for (auto &ptr : body) {
-				if (ptr->get_type() == statement_types::else_) {
+			for (auto &ptr : body)
+			{
+				if (ptr->get_type() == statement_types::else_)
+				{
 					now_place = false;
 					continue;
 				}
@@ -282,7 +296,8 @@ namespace cs {
 				else
 					body_false.push_back(ptr);
 			}
-			if (ptr != nullptr && ptr->get_type() == token_types::value) {
+			if (ptr != nullptr && ptr->get_type() == token_types::value)
+			{
 				if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
 					return new statement_block(body_true, context, raw.front().back());
 				else
@@ -291,7 +306,8 @@ namespace cs {
 			else
 				return new statement_ifelse(tree, body_true, body_false, context, raw.front().back());
 		}
-		else if (ptr != nullptr && ptr->get_type() == token_types::value) {
+		else if (ptr != nullptr && ptr->get_type() == token_types::value)
+		{
 			if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
 				return new statement_block(body, context, raw.front().back());
 			else
@@ -319,15 +335,19 @@ namespace cs {
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		statement_block *dptr = nullptr;
 		map_t<var, statement_block *> cases;
-		for (auto &it : body) {
-			try {
-				if (it->get_type() == statement_types::case_) {
+		for (auto &it : body)
+		{
+			try
+			{
+				if (it->get_type() == statement_types::case_)
+				{
 					auto *scptr = static_cast<statement_case *>(it);
 					if (cases.count(scptr->get_tag()) > 0)
 						throw compile_error("Duplicate 'case' label in 'switch' statement");
 					cases.emplace(scptr->get_tag(), scptr->get_block());
 				}
-				else if (it->get_type() == statement_types::default_) {
+				else if (it->get_type() == statement_types::default_)
+				{
 					auto *sdptr = static_cast<statement_default *>(it);
 					if (dptr != nullptr)
 						throw compile_error("A 'switch' statement can only have one 'default' case");
@@ -336,10 +356,12 @@ namespace cs {
 				else
 					throw compile_error("Only 'case' and 'default' clauses are allowed inside a 'switch' statement");
 			}
-			catch (const cs::exception &) {
+			catch (const cs::exception &)
+			{
 				throw;
 			}
-			catch (const std::exception &e) {
+			catch (const std::exception &e)
+			{
 				throw exception(it->get_line_num(), it->get_file_path(), it->get_raw_code(), exception_message(e));
 			}
 		}
@@ -352,7 +374,8 @@ namespace cs {
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		context->compiler->force_fold(tree);
 		token_base *root = tree.root().usable() ? tree.root().data() : nullptr;
-		if (root == nullptr || root->get_type() != token_types::value) {
+		if (root == nullptr || root->get_type() != token_types::value)
+		{
 			std::size_t line_num = static_cast<token_endline *>(raw.front().back())->get_line_num();
 			const char *what = "A 'case' label must be a constant value";
 			throw exception(line_num, context->file_path, context->get_file_line(line_num), what);
@@ -377,7 +400,8 @@ namespace cs {
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_base *ptr = tree.root().data();
-		if (ptr != nullptr && ptr->get_type() == token_types::value) {
+		if (ptr != nullptr && ptr->get_type() == token_types::value)
+		{
 			if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
 				return new statement_loop(body, context, raw.front().back());
 			else
@@ -389,12 +413,12 @@ namespace cs {
 	}
 
 	statement_base *method_until::translate_end(method_base *method, const context_t &context,
-	        std::deque<std::deque<token_base *>> &raw,
-	        std::deque<token_base *> &code)
+	                                            std::deque<std::deque<token_base *>> &raw,
+	                                            std::deque<token_base *> &code)
 	{
 		if (method != nullptr && method->get_target_type() == statement_types::loop_)
 			return static_cast<method_loop *>(method)->translate(context, raw,
-			        static_cast<token_expr *>(code.at(1))->get_tree());
+			                                                     static_cast<token_expr *>(code.at(1))->get_tree());
 		else
 			throw compile_error("The 'until' clause can only be used to close a 'loop' block");
 	}
@@ -412,7 +436,8 @@ namespace cs {
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		token_base *ptr = cond.root().data();
-		if (ptr != nullptr && ptr->get_type() == token_types::value) {
+		if (ptr != nullptr && ptr->get_type() == token_types::value)
+		{
 			if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
 				return new statement_block(body, context, raw.front().back());
 			else
@@ -492,7 +517,7 @@ namespace cs {
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		return new statement_foreach(it, static_cast<token_expr *>(raw.front().at(3))->get_tree(), {new statement_expression(static_cast<token_expr *>(raw.front().at(5))->get_tree(), context, raw.front().back())}, context,
-		raw.front().back());
+		                             raw.front().back());
 	}
 
 	statement_base *method_break::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
@@ -516,7 +541,7 @@ namespace cs {
 		if (t.root().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
 		if (t.root().data()->get_type() != token_types::signal ||
-		        static_cast<token_signal *>(t.root().data())->get_signal() != signal_types::fcall_)
+		    static_cast<token_signal *>(t.root().data())->get_signal() != signal_types::fcall_)
 			throw compile_error("Invalid function definition: expected 'function <name>(<arguments>)'");
 		if (t.root().left().data() == nullptr)
 			throw internal_error("Null pointer accessed.");
@@ -527,11 +552,13 @@ namespace cs {
 		if (t.root().right().data()->get_type() != token_types::arglist)
 			throw compile_error("Invalid function definition: expected an argument list");
 		std::vector<std::string> args;
-		for (auto &it : static_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
+		for (auto &it : static_cast<token_arglist *>(t.root().right().data())->get_arglist())
+		{
 			if (it.root().data() == nullptr)
 				throw internal_error("Null pointer accessed.");
 			context->compiler->try_fix_this_deduction(it.root());
-			if (it.root().data()->get_type() == token_types::id) {
+			if (it.root().data()->get_type() == token_types::id)
+			{
 				const std::string &str = static_cast<token_id *>(it.root().data())->get_id();
 				for (auto &it : args)
 					if (it == str)
@@ -539,7 +566,8 @@ namespace cs {
 				context->instance->storage.add_record(str);
 				args.push_back(str);
 			}
-			else if (it.root().data()->get_type() == token_types::vargs) {
+			else if (it.root().data()->get_type() == token_types::vargs)
+			{
 				const std::string &str = static_cast<token_vargs *>(it.root().data())->get_id();
 				if (!args.empty())
 					throw compile_error("Invalid function definition: a variadic parameter '...<id>' must be the only parameter in the argument list");
@@ -558,10 +586,12 @@ namespace cs {
 		std::string name = static_cast<token_id *>(t.root().left().data())->get_id();
 		std::vector<std::string> args;
 		bool is_vargs = false;
-		for (auto &it : static_cast<token_arglist *>(t.root().right().data())->get_arglist()) {
+		for (auto &it : static_cast<token_arglist *>(t.root().right().data())->get_arglist())
+		{
 			if (it.root().data()->get_type() == token_types::id)
 				args.push_back(static_cast<token_id *>(it.root().data())->get_id());
-			else if (it.root().data()->get_type() == token_types::vargs) {
+			else if (it.root().data()->get_type() == token_types::vargs)
+			{
 				args.push_back(static_cast<token_vargs *>(it.root().data())->get_id());
 				is_vargs = true;
 			}
@@ -573,7 +603,8 @@ namespace cs {
 		}
 #ifdef CS_DEBUGGER
 		std::string decl = "function " + name + "(";
-		if (args.size() != 0) {
+		if (args.size() != 0)
+		{
 			for (auto &it : args)
 				decl += it + ", ";
 			decl.pop_back();
@@ -620,22 +651,27 @@ namespace cs {
 		std::string name = static_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		for (auto &ptr : body) {
-			try {
-				switch (ptr->get_type()) {
-				default:
-					throw compile_error("Invalid 'struct' body: only variable and function definitions are allowed");
-				case statement_types::var_:
-					break;
-				case statement_types::function_:
-					static_cast<statement_function *>(ptr)->set_mem_fn();
-					break;
+		for (auto &ptr : body)
+		{
+			try
+			{
+				switch (ptr->get_type())
+				{
+					default:
+						throw compile_error("Invalid 'struct' body: only variable and function definitions are allowed");
+					case statement_types::var_:
+						break;
+					case statement_types::function_:
+						static_cast<statement_function *>(ptr)->set_mem_fn();
+						break;
 				}
 			}
-			catch (const cs::exception &) {
+			catch (const cs::exception &)
+			{
 				throw;
 			}
-			catch (const std::exception &e) {
+			catch (const std::exception &e)
+			{
 				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 		}
@@ -653,8 +689,10 @@ namespace cs {
 		std::string name;
 		std::deque<statement_base *> tbody, cbody;
 		bool founded = false;
-		for (auto &ptr : body) {
-			if (ptr->get_type() == statement_types::catch_) {
+		for (auto &ptr : body)
+		{
+			if (ptr->get_type() == statement_types::catch_)
+			{
 				name = static_cast<statement_catch *>(ptr)->get_name();
 				founded = true;
 				continue;

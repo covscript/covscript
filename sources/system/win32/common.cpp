@@ -58,7 +58,8 @@ std::string wstring_to_utf8(std::wstring_view wide)
 	return out;
 }
 
-namespace cs_system_impl {
+namespace cs_system_impl
+{
 	bool chmod_impl(const std::string &path, unsigned int mode)
 	{
 		static constexpr unsigned int MS_MODE_MASK = 0x0000ffff;
@@ -73,8 +74,10 @@ namespace cs_system_impl {
 
 HANDLE StdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 
-namespace cs_impl {
-	namespace conio {
+namespace cs_impl
+{
+	namespace conio
+	{
 		int terminal_width()
 		{
 			CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -138,7 +141,8 @@ namespace cs_impl {
 		}
 	} // namespace conio
 
-	namespace file_system {
+	namespace file_system
+	{
 		bool is_exe(const std::string &path)
 		{
 			return can_execute(path);
@@ -169,9 +173,12 @@ namespace cs_impl {
 	} // namespace file_system
 } // namespace cs_impl
 
-namespace cs {
-	namespace fiber {
-		class win32_fiber : public fiber_type {
+namespace cs
+{
+	namespace fiber
+	{
+		class win32_fiber : public fiber_type
+		{
 			friend void cs::fiber::resume(const fiber_t &, schedule_policy);
 			friend void cs::fiber::sleep_for(std::size_t);
 			friend void cs::fiber::yield();
@@ -197,12 +204,14 @@ namespace cs {
 			static void __stdcall entry(LPVOID lpParameter) noexcept
 			{
 				win32_fiber *fi = static_cast<win32_fiber *>(lpParameter);
-				try {
+				try
+				{
 					fi->state = fiber_state::running;
 					var ret = fi->func();
 					fi->ret_val.swap(ret);
 				}
-				catch (...) {
+				catch (...)
+				{
 					fi->eptr = std::current_exception();
 				}
 				fi->state = fiber_state::finished;
@@ -212,26 +221,27 @@ namespace cs {
 				std::abort();
 			}
 
-		public:
+		   public:
 			win32_fiber() = delete;
 			// Native Function
 			win32_fiber(std::function<var()> f)
-				: cs_stack(0), cs_context(nullptr), process(nullptr), func(std::move(f)), eptr(nullptr), state(fiber_state::ready), ret_val(null_pointer), stack_size(COVSCRIPT_FIBER_STACK_LIMIT) {}
+			    : cs_stack(0), cs_context(nullptr), process(nullptr), func(std::move(f)), eptr(nullptr), state(fiber_state::ready), ret_val(null_pointer), stack_size(COVSCRIPT_FIBER_STACK_LIMIT) {}
 
 			// CovScript Function
 			win32_fiber(const context_t &cxt, std::function<var()> f)
-				: cs_stack(current_process->child_stack_size()),
-				  cs_context(cxt),
-				  process(process_context::fork(process_context::current_owner())),
-				  func(std::move(f)),
-				  eptr(nullptr),
-				  state(fiber_state::ready),
-				  ret_val(null_pointer),
-				  stack_size(COVSCRIPT_FIBER_STACK_LIMIT) {}
+			    : cs_stack(current_process->child_stack_size()),
+			      cs_context(cxt),
+			      process(process_context::fork(process_context::current_owner())),
+			      func(std::move(f)),
+			      eptr(nullptr),
+			      state(fiber_state::ready),
+			      ret_val(null_pointer),
+			      stack_size(COVSCRIPT_FIBER_STACK_LIMIT) {}
 
 			virtual ~win32_fiber()
 			{
-				if (state == fiber_state::running || state == fiber_state::suspended || state == fiber_state::sleeping) {
+				if (state == fiber_state::running || state == fiber_state::suspended || state == fiber_state::sleeping)
+				{
 					std::fprintf(stderr,
 					             "[fiber] warning: destroying an unfinished fiber (state=%d); "
 					             "its suspended stack frames are not unwound and resources will leak\n",
@@ -291,7 +301,8 @@ namespace cs {
 			return std::make_shared<win32_fiber>(std::move(f));
 		}
 
-		struct global_ctx_holder {
+		struct global_ctx_holder
+		{
 			LPVOID ctx = nullptr;
 
 			global_ctx_holder()
@@ -316,32 +327,37 @@ namespace cs {
 				throw internal_error("Resuming a corrupted fiber.");
 			if (fi->state == fiber_state::running || fi->state == fiber_state::finished)
 				throw lang_error("A fiber cannot be resumed while it is already running or after it has finished");
-			if (fi->state == fiber_state::ready) {
+			if (fi->state == fiber_state::ready)
+			{
 				fi->ctx = CreateFiber(fi->stack_size, win32_fiber::entry, fi);
 				if (fi->ctx == nullptr)
 					throw lang_error("Failed to create the fiber");
 			}
-			if (fi->state == fiber_state::sleeping) {
+			if (fi->state == fiber_state::sleeping)
+			{
 				auto now = std::chrono::steady_clock::now();
-				if (now < fi->wake_up_time) {
+				if (now < fi->wake_up_time)
+				{
 					if (policy == schedule_policy::no_backpressure)
 						return;
 					fi->busy_skip_count++;
 					auto remain_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
 					                     fi->wake_up_time - now)
-					                 .count();
+					                     .count();
 					auto wait_time = static_cast<std::size_t>(
-					                     fi->busy_skip_count * remain_ms * current_process->fiber_cxt->busy_wait_coef);
+					    fi->busy_skip_count * remain_ms * current_process->fiber_cxt->busy_wait_coef);
 					if (wait_time > static_cast<std::size_t>(remain_ms))
 						wait_time = static_cast<std::size_t>(remain_ms);
-					if (wait_time >= current_process->fiber_cxt->busy_wait_min) {
+					if (wait_time >= current_process->fiber_cxt->busy_wait_min)
+					{
 						if (!current_process->fiber_cxt->stack.empty())
 							sleep_for(wait_time);
 						else
 							std::this_thread::sleep_for(std::chrono::milliseconds(wait_time));
 						fi->busy_skip_count = 0;
 					}
-					else if (wait_time == static_cast<std::size_t>(remain_ms) && remain_ms > 0) {
+					else if (wait_time == static_cast<std::size_t>(remain_ms) && remain_ms > 0)
+					{
 						if (!current_process->fiber_cxt->stack.empty())
 							sleep_for(static_cast<std::size_t>(remain_ms));
 						else
@@ -372,7 +388,8 @@ namespace cs {
 			fi->cs_swap_out();
 			if (!current_process->fiber_cxt->stack.empty())
 				static_cast<win32_fiber *>(current_process->fiber_cxt->stack.top().get())->cs_swap_in();
-			if (fi->eptr != nullptr) {
+			if (fi->eptr != nullptr)
+			{
 				std::exception_ptr e = nullptr;
 				std::swap(fi->eptr, e);
 				std::rethrow_exception(e);
@@ -400,12 +417,14 @@ namespace cs {
 		}
 	} // namespace fiber
 
-	namespace dll {
+	namespace dll
+	{
 		void *open(std::string_view path)
 		{
 			std::wstring wpath = utf8_to_wstring(path);
 			void *sym = ::LoadLibraryW(wpath.c_str());
-			if (sym == nullptr) {
+			if (sym == nullptr)
+			{
 				static WCHAR szBuf[256];
 				::FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, ::GetLastError(),
 				                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), szBuf, sizeof(szBuf) / sizeof(WCHAR), nullptr);

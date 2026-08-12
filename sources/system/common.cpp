@@ -28,29 +28,34 @@
 #include <filesystem>
 #include <fcntl.h>
 
-namespace cs::fiber {
-	class fiber_future final : public future_type {
+namespace cs::fiber
+{
+	class fiber_future final : public future_type
+	{
 		fiber_t mFiber;
 		std::exception_ptr mException;
 
 		void resume_fiber()
 		{
-			try {
+			try
+			{
 				resume(mFiber, schedule_policy::no_backpressure);
 			}
-			catch (...) {
+			catch (...)
+			{
 				mException = std::current_exception();
 			}
 		}
 
-	public:
+	   public:
 		fiber_future(fiber_t fiber)
-			: mFiber(std::move(fiber)) {}
+		    : mFiber(std::move(fiber)) {}
 
 		bool wait_for(std::size_t ms) override
 		{
 			std::chrono::steady_clock::time_point end_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(ms);
-			while (mFiber->get_state() != fiber_state::finished) {
+			while (mFiber->get_state() != fiber_state::finished)
+			{
 				auto now = std::chrono::steady_clock::now();
 				if (now > end_time)
 					break;
@@ -59,7 +64,7 @@ namespace cs::fiber {
 					break;
 				auto remain_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
 				                     end_time - std::chrono::steady_clock::now())
-				                 .count();
+				                     .count();
 				if (remain_ms <= 0)
 					break;
 				auto wait_time = static_cast<std::size_t>(remain_ms * current_process->fiber_cxt->busy_wait_coef);
@@ -77,13 +82,15 @@ namespace cs::fiber {
 
 		void wait() override
 		{
-			while (mFiber->get_state() != fiber_state::finished) {
+			while (mFiber->get_state() != fiber_state::finished)
+			{
 				resume_fiber();
 				if (mException != nullptr)
 					break;
 				// Only back off if the fiber is actively sleeping; a suspended
 				// (yielded) fiber can be resumed again immediately.
-				if (mFiber->get_state() == fiber_state::sleeping) {
+				if (mFiber->get_state() == fiber_state::sleeping)
+				{
 					if (within())
 						fiber::sleep_for(current_process->fiber_cxt->busy_wait_min);
 					else
@@ -108,7 +115,8 @@ namespace cs::fiber {
 	}
 } // namespace cs::fiber
 
-namespace cs_system_impl {
+namespace cs_system_impl
+{
 	bool mkdir_impl(const std::string &, unsigned int);
 
 	bool chmod_impl(const std::string &, unsigned int);
@@ -127,14 +135,18 @@ namespace cs_system_impl {
 
 #endif
 
-namespace cs_system_impl {
+namespace cs_system_impl
+{
 	std::vector<std::string> split(const std::string &str, const cs::set_t<char> &set)
 	{
 		std::vector<std::string> results;
 		std::string buff;
-		for (auto ch : str) {
-			if (set.count(ch) > 0) {
-				if (!buff.empty()) {
+		for (auto ch : str)
+		{
+			if (set.count(ch) > 0)
+			{
+				if (!buff.empty())
+				{
 					results.emplace_back(buff);
 					buff.clear();
 				}
@@ -142,7 +154,8 @@ namespace cs_system_impl {
 			else
 				buff.push_back(ch);
 		}
-		if (!buff.empty()) {
+		if (!buff.empty())
+		{
 			results.emplace_back(buff);
 			buff.clear();
 		}
@@ -156,15 +169,18 @@ namespace cs_system_impl {
 		const char *perm = modeString.c_str();
 		unsigned int mode = 0;
 
-		if (std::isdigit(static_cast<unsigned char>(perm[0]))) {
+		if (std::isdigit(static_cast<unsigned char>(perm[0])))
+		{
 			const char *p = perm;
-			while (*p) {
+			while (*p)
+			{
 				if (*p < '0' || *p > '7')
 					throw cs::lang_error("Invalid permission mode: expected octal digits 0-7");
 				mode = mode * 8 + *p++ - '0';
 			}
 		}
-		else {
+		else
+		{
 			if (modeString.size() != 9)
 				throw cs::lang_error("Invalid permission mode: expected 3 groups of 'rwx'");
 			mode = (((perm[0] == 'r') * 4 | (perm[1] == 'w') * 2 | (perm[2] == 'x')) << 6) |
@@ -179,7 +195,8 @@ namespace cs_system_impl {
 		std::string path;
 		if (absolute_path)
 			path = cs::path_separator;
-		for (const auto &dir : dirs) {
+		for (const auto &dir : dirs)
+		{
 			path += dir + cs::path_separator;
 			if (std::filesystem::is_directory(path))
 				continue;
@@ -198,8 +215,10 @@ constexpr char path_separator_reversed = '\\';
 constexpr char path_delimiter_reversed = ';';
 #endif
 
-namespace cs_impl {
-	namespace file_system {
+namespace cs_impl
+{
+	namespace file_system
+	{
 		bool exist(const std::string &path)
 		{
 			return std::filesystem::exists(path);
@@ -224,7 +243,8 @@ namespace cs_impl {
 		{
 			std::error_code ec;
 			std::filesystem::path p = std::filesystem::weakly_canonical(path, ec);
-			if (ec) {
+			if (ec)
+			{
 				p = std::filesystem::absolute(path, ec);
 				if (ec)
 					p = std::filesystem::path(path);
@@ -240,7 +260,8 @@ namespace cs_impl {
 			bool absolute = path_input.size() > 0 && (path_input[0] == '/' || path_input[0] == '\\');
 			if (absolute)
 				path = cs::path_separator;
-			for (auto &dir : dirs) {
+			for (auto &dir : dirs)
+			{
 				if (dir.empty())
 					continue; // Skip the empty component left by a leading separator
 				path += dir + cs::path_separator;
@@ -276,7 +297,7 @@ namespace cs_impl {
 			return !ec;
 		}
 
-// Note: remove is recursive and deletes a whole tree; false for nonexistent paths.
+		// Note: remove is recursive and deletes a whole tree; false for nonexistent paths.
 		bool remove(const std::string &path)
 		{
 			std::error_code ec;

@@ -29,11 +29,13 @@
 #include <cfenv>
 #include <string_view>
 
-namespace cs {
+namespace cs
+{
 	struct csym_info;
 
-// Exceptions
-	class exception final : public std::exception {
+	// Exceptions
+	class exception final : public std::exception
+	{
 		std::size_t mLine = 0;
 		std::string mFile, mCode, mWhat, mStr;
 
@@ -52,9 +54,10 @@ namespace cs {
 		static std::string strip_prefix(std::string what) noexcept
 		{
 			for (std::string_view prefix : {
-			            "Runtime Error: ", "Compile Error: ", "Internal Error: ", "Fatal Error: "
-			        }) {
-				if (what.size() >= prefix.size() && what.compare(0, prefix.size(), prefix.data(), prefix.size()) == 0) {
+			         "Runtime Error: ", "Compile Error: ", "Internal Error: ", "Fatal Error: "})
+			{
+				if (what.size() >= prefix.size() && what.compare(0, prefix.size(), prefix.data(), prefix.size()) == 0)
+				{
 					what.erase(0, prefix.size());
 					break;
 				}
@@ -62,11 +65,11 @@ namespace cs {
 			return what;
 		}
 
-	public:
+	   public:
 		exception() = delete;
 
 		exception(std::size_t line, std::string file, std::string code, std::string what) noexcept
-			: mLine(line), mFile(std::move(file)), mCode(std::move(code)), mWhat(strip_prefix(std::move(what)))
+		    : mLine(line), mFile(std::move(file)), mCode(std::move(code)), mWhat(strip_prefix(std::move(what)))
 		{
 			mStr = compose_what(mFile, mLine, mCode, mWhat);
 		}
@@ -101,15 +104,16 @@ namespace cs {
 		}
 	};
 
-	class compile_error final : public std::exception {
+	class compile_error final : public std::exception
+	{
 		std::string mMsg;
 		std::string mWhat = "Compile Error";
 
-	public:
+	   public:
 		compile_error() = default;
 
 		explicit compile_error(std::string str) noexcept
-			: mMsg(std::move(str)), mWhat("Compile Error: " + mMsg) {}
+		    : mMsg(std::move(str)), mWhat("Compile Error: " + mMsg) {}
 
 		compile_error(const compile_error &) = default;
 
@@ -132,15 +136,16 @@ namespace cs {
 		}
 	};
 
-	class runtime_error final : public std::exception {
+	class runtime_error final : public std::exception
+	{
 		std::string mMsg;
 		std::string mWhat = "Runtime Error";
 
-	public:
+	   public:
 		runtime_error() = default;
 
 		explicit runtime_error(std::string str) noexcept
-			: mMsg(std::move(str)), mWhat("Runtime Error: " + mMsg) {}
+		    : mMsg(std::move(str)), mWhat("Runtime Error: " + mMsg) {}
 
 		runtime_error(const runtime_error &) = default;
 
@@ -163,15 +168,16 @@ namespace cs {
 		}
 	};
 
-	class internal_error final : public std::exception {
+	class internal_error final : public std::exception
+	{
 		std::string mMsg;
 		std::string mWhat = "Internal Error";
 
-	public:
+	   public:
 		internal_error() = default;
 
 		explicit internal_error(std::string str) noexcept
-			: mMsg(std::move(str)), mWhat("Internal Error: " + mMsg) {}
+		    : mMsg(std::move(str)), mWhat("Internal Error: " + mMsg) {}
 
 		internal_error(const internal_error &) = default;
 
@@ -194,17 +200,18 @@ namespace cs {
 		}
 	};
 
-	class lang_error final {
+	class lang_error final
+	{
 		std::string mWhat;
 		bool mHasLoc = false;
 		std::size_t mLine = 0;
 		std::string mFile, mCode;
 
-	public:
+	   public:
 		lang_error() = default;
 
 		explicit lang_error(std::string str) noexcept
-			: mWhat(std::move(str)) {}
+		    : mWhat(std::move(str)) {}
 
 		lang_error(const lang_error &) = default;
 
@@ -250,15 +257,16 @@ namespace cs {
 		}
 	};
 
-	class fatal_error final : public std::exception {
+	class fatal_error final : public std::exception
+	{
 		std::string mMsg;
 		std::string mWhat = "Fatal Error";
 
-	public:
+	   public:
 		fatal_error() = default;
 
 		explicit fatal_error(std::string str) noexcept
-			: mMsg(std::move(str)), mWhat("Fatal Error: " + mMsg) {}
+		    : mMsg(std::move(str)), mWhat("Fatal Error: " + mMsg) {}
 
 		fatal_error(const fatal_error &) = default;
 
@@ -281,14 +289,15 @@ namespace cs {
 		}
 	};
 
-	class forward_exception final : public std::exception {
+	class forward_exception final : public std::exception
+	{
 		std::string mWhat;
 
-	public:
+	   public:
 		forward_exception() = delete;
 
 		explicit forward_exception(const char *str) noexcept
-			: mWhat(str) {}
+		    : mWhat(str) {}
 
 		forward_exception(const forward_exception &) = default;
 
@@ -306,9 +315,9 @@ namespace cs {
 		}
 	};
 
-// Extracts the raw error message from a std::exception without category prefix.
-// For known CovScript error types, avoids the allocate-then-strip-prefix round trip;
-// for unknown types falls back to what() directly (no prefix to strip).
+	// Extracts the raw error message from a std::exception without category prefix.
+	// For known CovScript error types, avoids the allocate-then-strip-prefix round trip;
+	// for unknown types falls back to what() directly (no prefix to strip).
 	inline std::string exception_message(const std::exception &e)
 	{
 		if (const auto *p = dynamic_cast<const exception *>(&e)) return p->message();
@@ -319,12 +328,14 @@ namespace cs {
 		return e.what();
 	}
 
-// Numeric
+	// Numeric
 	using numeric_float = long double;
 	using numeric_integer = long long int;
 
-	class numeric final {
-		union {
+	class numeric final
+	{
+		union
+		{
 			numeric_float _num;
 			numeric_integer _int;
 		} data;
@@ -379,8 +390,10 @@ namespace cs {
 		{
 			if (exp == 0) // base^0
 				return 1;
-			if (base == 0) {
-				if (exp < 0) {
+			if (base == 0)
+			{
+				if (exp < 0)
+				{
 					// 0^negative
 					errno = EDOM;
 					feraiseexcept(FE_DIVBYZERO);
@@ -396,11 +409,13 @@ namespace cs {
 				return (exp & 1) ? -1 : 1;
 			const numeric_integer base0 = base;
 			const numeric_integer exp0 = exp;
-			auto fallback = [&]() {
+			auto fallback = [&]()
+			{
 				return std::pow((numeric_float) base0, (numeric_float) exp0);
 			};
 			// Sign-aware overflow check for a*b (handles negative bases)
-			auto would_overflow = [](numeric_integer a, numeric_integer b) {
+			auto would_overflow = [](numeric_integer a, numeric_integer b)
+			{
 				// Fast path for small operands: no divisions.
 				// -1 is excluded on purpose: (-1) * INT_MIN overflows.
 				if (a == 0 || b == 0 || a == 1 || b == 1)
@@ -416,14 +431,17 @@ namespace cs {
 				return b > 0 ? a < mn / b : a < mx / b;
 			};
 			numeric_integer result = 1;
-			while (exp > 0) {
-				if (exp & 1) {
+			while (exp > 0)
+			{
+				if (exp & 1)
+				{
 					if (would_overflow(result, base))
 						return fallback();
 					result *= base;
 				}
 				exp >>= 1;
-				if (exp > 0) {
+				if (exp > 0)
+				{
 					// Skip the final square that would go unused
 					if (would_overflow(base, base))
 						return fallback();
@@ -433,7 +451,7 @@ namespace cs {
 			return result;
 		}
 
-	public:
+	   public:
 		numeric()
 		{
 			data._int = 0;
@@ -442,11 +460,13 @@ namespace cs {
 		template <typename T, typename = std::enable_if_t<!std::is_same<std::decay_t<T>, numeric>::value>>
 		numeric(T &&dat)
 		{
-			if (std::is_floating_point<std::decay_t<T>>::value) {
+			if (std::is_floating_point<std::decay_t<T>>::value)
+			{
 				type = 0;
 				data._num = static_cast<numeric_float>(dat);
 			}
-			else if (std::is_integral<std::decay_t<T>>::value) {
+			else if (std::is_integral<std::decay_t<T>>::value)
+			{
 				type = 1;
 				data._int = static_cast<numeric_integer>(dat);
 			}
@@ -455,25 +475,26 @@ namespace cs {
 		}
 
 		numeric(const numeric &rhs)
-			: data(rhs.data), type(rhs.type) {}
+		    : data(rhs.data), type(rhs.type) {}
 
 		numeric(numeric &&rhs) noexcept
-			: data(rhs.data), type(rhs.type) {}
+		    : data(rhs.data), type(rhs.type) {}
 
 		~numeric() = default;
 
 		numeric operator+(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type)) {
-			default:
-			case 0b00:
-				return data._num + rhs.data._num;
-			case 0b01:
-				return data._num + rhs.data._int;
-			case 0b10:
-				return data._int + rhs.data._num;
-			case 0b11:
-				return data._int + rhs.data._int;
+			switch (get_composite_type(type, rhs.type))
+			{
+				default:
+				case 0b00:
+					return data._num + rhs.data._num;
+				case 0b01:
+					return data._num + rhs.data._int;
+				case 0b10:
+					return data._int + rhs.data._num;
+				case 0b11:
+					return data._int + rhs.data._int;
 			}
 		}
 
@@ -488,16 +509,17 @@ namespace cs {
 
 		numeric operator-(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type)) {
-			default:
-			case 0b00:
-				return data._num - rhs.data._num;
-			case 0b01:
-				return data._num - rhs.data._int;
-			case 0b10:
-				return data._int - rhs.data._num;
-			case 0b11:
-				return data._int - rhs.data._int;
+			switch (get_composite_type(type, rhs.type))
+			{
+				default:
+				case 0b00:
+					return data._num - rhs.data._num;
+				case 0b01:
+					return data._num - rhs.data._int;
+				case 0b10:
+					return data._int - rhs.data._num;
+				case 0b11:
+					return data._int - rhs.data._int;
 			}
 		}
 
@@ -512,16 +534,17 @@ namespace cs {
 
 		numeric operator*(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type)) {
-			default:
-			case 0b00:
-				return data._num * rhs.data._num;
-			case 0b01:
-				return data._num * rhs.data._int;
-			case 0b10:
-				return data._int * rhs.data._num;
-			case 0b11:
-				return data._int * rhs.data._int;
+			switch (get_composite_type(type, rhs.type))
+			{
+				default:
+				case 0b00:
+					return data._num * rhs.data._num;
+				case 0b01:
+					return data._num * rhs.data._int;
+				case 0b10:
+					return data._int * rhs.data._num;
+				case 0b11:
+					return data._int * rhs.data._int;
 			}
 		}
 
@@ -536,25 +559,26 @@ namespace cs {
 
 		numeric operator/(const numeric &rhs) const
 		{
-			switch (get_composite_type(type, rhs.type)) {
-			default:
-			case 0b00:
-				return data._num / rhs.data._num;
-			case 0b01:
-				return data._num / rhs.data._int;
-			case 0b10:
-				return data._int / rhs.data._num;
-			case 0b11:
-				if (rhs.data._int == 0)
-					throw lang_error("Integer division by zero");
-				// INT_MIN / -1 overflows int64 and lldiv is UB here; return as float.
-				if (data._int == (std::numeric_limits<numeric_integer>::min)() && rhs.data._int == -1)
-					return static_cast<numeric_float>(data._int) / rhs.data._int;
-				std::lldiv_t divres = std::lldiv(data._int, rhs.data._int);
-				if (divres.rem == 0)
-					return divres.quot;
-				else
-					return static_cast<numeric_float>(data._int) / rhs.data._int;
+			switch (get_composite_type(type, rhs.type))
+			{
+				default:
+				case 0b00:
+					return data._num / rhs.data._num;
+				case 0b01:
+					return data._num / rhs.data._int;
+				case 0b10:
+					return data._int / rhs.data._num;
+				case 0b11:
+					if (rhs.data._int == 0)
+						throw lang_error("Integer division by zero");
+					// INT_MIN / -1 overflows int64 and lldiv is UB here; return as float.
+					if (data._int == (std::numeric_limits<numeric_integer>::min)() && rhs.data._int == -1)
+						return static_cast<numeric_float>(data._int) / rhs.data._int;
+					std::lldiv_t divres = std::lldiv(data._int, rhs.data._int);
+					if (divres.rem == 0)
+						return divres.quot;
+					else
+						return static_cast<numeric_float>(data._int) / rhs.data._int;
 			}
 		}
 
@@ -569,21 +593,22 @@ namespace cs {
 
 		numeric operator%(const numeric &rhs) const
 		{
-			switch (get_composite_type(type, rhs.type)) {
-			default:
-			case 0b00:
-				return std::fmod(data._num, rhs.data._num);
-			case 0b01:
-				return std::fmod(data._num, rhs.data._int);
-			case 0b10:
-				return std::fmod(data._int, rhs.data._num);
-			case 0b11:
-				if (rhs.data._int == 0)
-					throw lang_error("Integer modulo by zero");
-				// INT_MIN % -1 is UB in C++; the remainder is 0.
-				if (data._int == (std::numeric_limits<numeric_integer>::min)() && rhs.data._int == -1)
-					return 0;
-				return data._int % rhs.data._int;
+			switch (get_composite_type(type, rhs.type))
+			{
+				default:
+				case 0b00:
+					return std::fmod(data._num, rhs.data._num);
+				case 0b01:
+					return std::fmod(data._num, rhs.data._int);
+				case 0b10:
+					return std::fmod(data._int, rhs.data._num);
+				case 0b11:
+					if (rhs.data._int == 0)
+						throw lang_error("Integer modulo by zero");
+					// INT_MIN % -1 is UB in C++; the remainder is 0.
+					if (data._int == (std::numeric_limits<numeric_integer>::min)() && rhs.data._int == -1)
+						return 0;
+					return data._int % rhs.data._int;
 			}
 		}
 
@@ -598,16 +623,17 @@ namespace cs {
 
 		numeric operator^(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type)) {
-			default:
-			case 0b00:
-				return std::pow(data._num, rhs.data._num);
-			case 0b01:
-				return std::pow(data._num, rhs.data._int);
-			case 0b10:
-				return std::pow(data._int, rhs.data._num);
-			case 0b11:
-				return int_pow(data._int, rhs.data._int);
+			switch (get_composite_type(type, rhs.type))
+			{
+				default:
+				case 0b00:
+					return std::pow(data._num, rhs.data._num);
+				case 0b01:
+					return std::pow(data._num, rhs.data._int);
+				case 0b10:
+					return std::pow(data._int, rhs.data._num);
+				case 0b11:
+					return int_pow(data._int, rhs.data._int);
 			}
 		}
 
@@ -622,7 +648,8 @@ namespace cs {
 
 		numeric &operator=(const numeric &num)
 		{
-			if (this != &num) {
+			if (this != &num)
+			{
 				data = num.data;
 				type = num.type;
 			}
@@ -632,11 +659,13 @@ namespace cs {
 		template <typename T, typename = std::enable_if_t<!std::is_same<std::decay_t<T>, numeric>::value>>
 		numeric &operator=(T &&dat)
 		{
-			if (std::is_floating_point<std::decay_t<T>>::value) {
+			if (std::is_floating_point<std::decay_t<T>>::value)
+			{
 				type = 0;
 				data._num = static_cast<numeric_float>(dat);
 			}
-			else if (std::is_integral<std::decay_t<T>>::value) {
+			else if (std::is_integral<std::decay_t<T>>::value)
+			{
 				type = 1;
 				data._int = static_cast<numeric_integer>(dat);
 			}
@@ -647,16 +676,17 @@ namespace cs {
 
 		bool operator<(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type)) {
-			default:
-			case 0b00:
-				return data._num < rhs.data._num;
-			case 0b01:
-				return compare_float_int(data._num, rhs.data._int) < 0;
-			case 0b10:
-				return compare_int_float(data._int, rhs.data._num) < 0;
-			case 0b11:
-				return data._int < rhs.data._int;
+			switch (get_composite_type(type, rhs.type))
+			{
+				default:
+				case 0b00:
+					return data._num < rhs.data._num;
+				case 0b01:
+					return compare_float_int(data._num, rhs.data._int) < 0;
+				case 0b10:
+					return compare_int_float(data._int, rhs.data._num) < 0;
+				case 0b11:
+					return data._int < rhs.data._int;
 			}
 		}
 
@@ -671,16 +701,17 @@ namespace cs {
 
 		bool operator<=(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type)) {
-			default:
-			case 0b00:
-				return data._num <= rhs.data._num;
-			case 0b01:
-				return compare_float_int(data._num, rhs.data._int) <= 0;
-			case 0b10:
-				return compare_int_float(data._int, rhs.data._num) <= 0;
-			case 0b11:
-				return data._int <= rhs.data._int;
+			switch (get_composite_type(type, rhs.type))
+			{
+				default:
+				case 0b00:
+					return data._num <= rhs.data._num;
+				case 0b01:
+					return compare_float_int(data._num, rhs.data._int) <= 0;
+				case 0b10:
+					return compare_int_float(data._int, rhs.data._num) <= 0;
+				case 0b11:
+					return data._int <= rhs.data._int;
 			}
 		}
 
@@ -695,16 +726,17 @@ namespace cs {
 
 		bool operator>(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type)) {
-			default:
-			case 0b00:
-				return data._num > rhs.data._num;
-			case 0b01:
-				return compare_greater(compare_float_int(data._num, rhs.data._int));
-			case 0b10:
-				return compare_greater(compare_int_float(data._int, rhs.data._num));
-			case 0b11:
-				return data._int > rhs.data._int;
+			switch (get_composite_type(type, rhs.type))
+			{
+				default:
+				case 0b00:
+					return data._num > rhs.data._num;
+				case 0b01:
+					return compare_greater(compare_float_int(data._num, rhs.data._int));
+				case 0b10:
+					return compare_greater(compare_int_float(data._int, rhs.data._num));
+				case 0b11:
+					return data._int > rhs.data._int;
 			}
 		}
 
@@ -719,16 +751,17 @@ namespace cs {
 
 		bool operator>=(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type)) {
-			default:
-			case 0b00:
-				return data._num >= rhs.data._num;
-			case 0b01:
-				return compare_greater_equal(compare_float_int(data._num, rhs.data._int));
-			case 0b10:
-				return compare_greater_equal(compare_int_float(data._int, rhs.data._num));
-			case 0b11:
-				return data._int >= rhs.data._int;
+			switch (get_composite_type(type, rhs.type))
+			{
+				default:
+				case 0b00:
+					return data._num >= rhs.data._num;
+				case 0b01:
+					return compare_greater_equal(compare_float_int(data._num, rhs.data._int));
+				case 0b10:
+					return compare_greater_equal(compare_int_float(data._int, rhs.data._num));
+				case 0b11:
+					return data._int >= rhs.data._int;
 			}
 		}
 
@@ -743,16 +776,17 @@ namespace cs {
 
 		bool operator==(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type)) {
-			default:
-			case 0b00:
-				return data._num == rhs.data._num;
-			case 0b01:
-				return compare_float_int(data._num, rhs.data._int) == 0;
-			case 0b10:
-				return compare_int_float(data._int, rhs.data._num) == 0;
-			case 0b11:
-				return data._int == rhs.data._int;
+			switch (get_composite_type(type, rhs.type))
+			{
+				default:
+				case 0b00:
+					return data._num == rhs.data._num;
+				case 0b01:
+					return compare_float_int(data._num, rhs.data._int) == 0;
+				case 0b10:
+					return compare_int_float(data._int, rhs.data._num) == 0;
+				case 0b11:
+					return data._int == rhs.data._int;
 			}
 		}
 
@@ -767,16 +801,17 @@ namespace cs {
 
 		bool operator!=(const numeric &rhs) const noexcept
 		{
-			switch (get_composite_type(type, rhs.type)) {
-			default:
-			case 0b00:
-				return data._num != rhs.data._num;
-			case 0b01:
-				return compare_float_int(data._num, rhs.data._int) != 0;
-			case 0b10:
-				return compare_int_float(data._int, rhs.data._num) != 0;
-			case 0b11:
-				return data._int != rhs.data._int;
+			switch (get_composite_type(type, rhs.type))
+			{
+				default:
+				case 0b00:
+					return data._num != rhs.data._num;
+				case 0b01:
+					return compare_float_int(data._num, rhs.data._int) != 0;
+				case 0b10:
+					return compare_int_float(data._int, rhs.data._num) != 0;
+				case 0b11:
+					return data._int != rhs.data._int;
 			}
 		}
 
@@ -858,12 +893,13 @@ namespace cs {
 		}
 	};
 
-// Static Stack
+	// Static Stack
 	template <typename T>
-	class stack_type final {
+	class stack_type final
+	{
 		mutable std::vector<T> m_impl;
 
-	public:
+	   public:
 		using iterator = typename std::vector<T>::reverse_iterator;
 
 		void resize(std::size_t size)
@@ -949,14 +985,15 @@ namespace cs {
 		}
 	};
 
-// Buffer Pool
+	// Buffer Pool
 	template <typename T, std::size_t blck_size, template <typename> class allocator_t = std::allocator>
-	class allocator_type final {
+	class allocator_type final
+	{
 		T *mPool[blck_size];
 		allocator_t<T> mAlloc;
 		std::size_t mOffset = 0;
 
-	public:
+	   public:
 		allocator_type()
 		{
 			while (mOffset < blck_size / 2)
@@ -1014,16 +1051,18 @@ namespace cs {
 #define CS_ALLOCATOR_BUFFER_MAX 64
 #endif
 
-namespace cs_impl {
+namespace cs_impl
+{
 	template <typename T>
 	using default_allocator_provider = std::allocator<T>;
 	template <typename T>
 	using default_allocator = cs::allocator_type<T, CS_ALLOCATOR_BUFFER_MAX, default_allocator_provider>;
 
-// String borrower
+	// String borrower
 	template <typename CharT,
 	          template <typename> class allocator_t = default_allocator>
-	class basic_string_borrower final {
+	class basic_string_borrower final
+	{
 		using stl_string = std::basic_string<CharT>;
 		using allocator_type = allocator_t<stl_string>;
 
@@ -1038,7 +1077,8 @@ namespace cs_impl {
 
 		void destroy()
 		{
-			if (m_own && m_data) {
+			if (m_own && m_data)
+			{
 				stl_string *p = static_cast<stl_string *>(m_data);
 				p->~basic_string();
 				get_allocator().deallocate(p, 1);
@@ -1047,17 +1087,17 @@ namespace cs_impl {
 			m_own = false;
 		}
 
-	public:
+	   public:
 		basic_string_borrower() noexcept = default;
 
 		basic_string_borrower(const CharT *str) noexcept
-			: m_data(const_cast<CharT *>(str)), m_own(false) {}
+		    : m_data(const_cast<CharT *>(str)), m_own(false) {}
 
 		basic_string_borrower(const stl_string &str) noexcept
-			: m_data(const_cast<CharT *>(str.data())), m_own(false) {}
+		    : m_data(const_cast<CharT *>(str.data())), m_own(false) {}
 
 		basic_string_borrower(stl_string &&str)
-			: m_own(true)
+		    : m_own(true)
 		{
 			stl_string *p = get_allocator().allocate(1);
 			::new (p) stl_string(std::move(str));
@@ -1065,9 +1105,10 @@ namespace cs_impl {
 		}
 
 		basic_string_borrower(const basic_string_borrower &other)
-			: m_own(other.m_own)
+		    : m_own(other.m_own)
 		{
-			if (other.m_own) {
+			if (other.m_own)
+			{
 				stl_string *p = get_allocator().allocate(1);
 				::new (p) stl_string(*static_cast<const stl_string *>(other.m_data));
 				m_data = p;
@@ -1077,7 +1118,7 @@ namespace cs_impl {
 		}
 
 		basic_string_borrower(basic_string_borrower &&other) noexcept
-			: m_data(other.m_data), m_own(other.m_own)
+		    : m_data(other.m_data), m_own(other.m_own)
 		{
 			other.m_data = nullptr;
 			other.m_own = false;
@@ -1085,10 +1126,12 @@ namespace cs_impl {
 
 		basic_string_borrower &operator=(const basic_string_borrower &other)
 		{
-			if (this != &other) {
+			if (this != &other)
+			{
 				destroy();
 				m_own = other.m_own;
-				if (other.m_own) {
+				if (other.m_own)
+				{
 					stl_string *p = get_allocator().allocate(1);
 					::new (p) stl_string(*static_cast<const stl_string *>(other.m_data));
 					m_data = p;
@@ -1101,7 +1144,8 @@ namespace cs_impl {
 
 		basic_string_borrower &operator=(basic_string_borrower &&other) noexcept
 		{
-			if (this != &other) {
+			if (this != &other)
+			{
 				destroy();
 				m_data = other.m_data;
 				m_own = other.m_own;
@@ -1141,7 +1185,8 @@ namespace cs_impl {
 			return usable();
 		}
 
-		stl_string extract() && {
+		stl_string extract() &&
+		{
 			if (m_own)
 			{
 				stl_string str = std::move(*static_cast<stl_string *>(m_data));
@@ -1162,13 +1207,16 @@ namespace cs_impl {
 	};
 } // namespace cs_impl
 
-namespace cs {
+namespace cs
+{
 	using string_borrower = cs_impl::basic_string_borrower<char>;
 
-// Binary Tree
+	// Binary Tree
 	template <typename T>
-	class tree_type final {
-		struct tree_node final {
+	class tree_type final
+	{
+		struct tree_node final
+		{
 			tree_node *root = nullptr;
 			tree_node *left = nullptr;
 			tree_node *right = nullptr;
@@ -1181,11 +1229,11 @@ namespace cs {
 			tree_node(tree_node &&) noexcept = default;
 
 			tree_node(tree_node *a, tree_node *b, tree_node *c, const T &dat)
-				: root(a), left(b), right(c), data(dat) {}
+			    : root(a), left(b), right(c), data(dat) {}
 
 			template <typename... Args_T>
 			tree_node(tree_node *a, tree_node *b, tree_node *c, Args_T &&...args)
-				: root(a), left(b), right(c), data(std::forward<Args_T>(args)...)
+			    : root(a), left(b), right(c), data(std::forward<Args_T>(args)...)
 			{
 			}
 
@@ -1203,7 +1251,8 @@ namespace cs {
 
 		static void destroy(tree_node *raw)
 		{
-			if (raw != nullptr) {
+			if (raw != nullptr)
+			{
 				destroy(raw->left);
 				destroy(raw->right);
 				delete raw;
@@ -1212,16 +1261,17 @@ namespace cs {
 
 		tree_node *mRoot = nullptr;
 
-	public:
-		class iterator final {
+	   public:
+		class iterator final
+		{
 			friend class tree_type;
 
 			tree_node *mData = nullptr;
 
 			iterator(tree_node *ptr)
-				: mData(ptr) {}
+			    : mData(ptr) {}
 
-		public:
+		   public:
 			iterator() = default;
 
 			iterator(const iterator &) = default;
@@ -1292,13 +1342,13 @@ namespace cs {
 		tree_type() = default;
 
 		explicit tree_type(iterator it)
-			: mRoot(copy(it.mData)) {}
+		    : mRoot(copy(it.mData)) {}
 
 		tree_type(const tree_type &t)
-			: mRoot(copy(t.mRoot)) {}
+		    : mRoot(copy(t.mRoot)) {}
 
 		tree_type(tree_type &&t) noexcept
-			: mRoot(nullptr)
+		    : mRoot(nullptr)
 		{
 			swap(t);
 		}
@@ -1310,7 +1360,8 @@ namespace cs {
 
 		tree_type &operator=(const tree_type &t)
 		{
-			if (&t != this) {
+			if (&t != this)
+			{
 				destroy(this->mRoot);
 				this->mRoot = copy(t.mRoot);
 			}
@@ -1325,7 +1376,8 @@ namespace cs {
 
 		void assign(const tree_type &t)
 		{
-			if (&t != this) {
+			if (&t != this)
+			{
 				destroy(this->mRoot);
 				this->mRoot = copy(t.mRoot);
 			}
@@ -1354,7 +1406,8 @@ namespace cs {
 
 		iterator insert_root_left(iterator it, const T &data)
 		{
-			if (it.mData == mRoot) {
+			if (it.mData == mRoot)
+			{
 				mRoot = new tree_node(nullptr, mRoot, nullptr, data);
 				if (it.mData != nullptr) // No old root to reparent on the first insert into an empty tree
 					it.mData->root = mRoot;
@@ -1373,7 +1426,8 @@ namespace cs {
 
 		iterator insert_root_right(iterator it, const T &data)
 		{
-			if (it.mData == mRoot) {
+			if (it.mData == mRoot)
+			{
 				mRoot = new tree_node(nullptr, nullptr, mRoot, data);
 				if (it.mData != nullptr) // No old root to reparent on the first insert into an empty tree
 					it.mData->root = mRoot;
@@ -1437,7 +1491,8 @@ namespace cs {
 		template <typename... Args>
 		iterator emplace_root_left(iterator it, Args &&...args)
 		{
-			if (it.mData == mRoot) {
+			if (it.mData == mRoot)
+			{
 				mRoot = new tree_node(nullptr, mRoot, nullptr, std::forward<Args>(args)...);
 				if (it.mData != nullptr) // No old root to reparent on the first insert into an empty tree
 					it.mData->root = mRoot;
@@ -1457,7 +1512,8 @@ namespace cs {
 		template <typename... Args>
 		iterator emplace_root_right(iterator it, Args &&...args)
 		{
-			if (it.mData == mRoot) {
+			if (it.mData == mRoot)
+			{
 				mRoot = new tree_node(nullptr, nullptr, mRoot, std::forward<Args>(args)...);
 				if (it.mData != nullptr) // No old root to reparent on the first insert into an empty tree
 					it.mData->root = mRoot;
@@ -1526,13 +1582,15 @@ namespace cs {
 		{
 			if (!it.usable())
 				throw runtime_error("Tree node is empty");
-			if (it.mData == mRoot) {
+			if (it.mData == mRoot)
+			{
 				destroy(mRoot);
 				mRoot = nullptr;
 				return nullptr;
 			}
 			tree_node *root = it.mData->root;
-			if (root != nullptr) {
+			if (root != nullptr)
+			{
 				if (it.mData == root->left)
 					root->left = nullptr;
 				else
@@ -1553,7 +1611,8 @@ namespace cs {
 			bool is_root = it.mData == mRoot;
 			it.mData->left = nullptr;
 			reserve->root = root;
-			if (root != nullptr) {
+			if (root != nullptr)
+			{
 				if (it.mData == root->left)
 					root->left = reserve;
 				else
@@ -1576,7 +1635,8 @@ namespace cs {
 			bool is_root = it.mData == mRoot;
 			it.mData->right = nullptr;
 			reserve->root = root;
-			if (root != nullptr) {
+			if (root != nullptr)
+			{
 				if (it.mData == root->left)
 					root->left = reserve;
 				else
@@ -1620,14 +1680,15 @@ namespace cs {
 		}
 	};
 
-	class event_type final {
-	public:
+	class event_type final
+	{
+	   public:
 		using listener_type = std::function<bool(void *)>;
 
-	private:
+	   private:
 		std::forward_list<listener_type> m_listener;
 
-	public:
+	   public:
 		event_type() = delete;
 
 		event_type(const event_type &) = delete;
@@ -1651,9 +1712,11 @@ namespace cs {
 		}
 	};
 
-	namespace codecvt {
-		class charset {
-		public:
+	namespace codecvt
+	{
+		class charset
+		{
+		   public:
 			virtual ~charset() = default;
 
 			virtual std::u32string local2wide(const std::deque<char> &) = 0;
@@ -1665,8 +1728,9 @@ namespace cs {
 			virtual bool is_identifier(char32_t) = 0;
 		};
 
-		class ascii final : public charset {
-		public:
+		class ascii final : public charset
+		{
+		   public:
 			std::u32string local2wide(const std::deque<char> &local) override
 			{
 				return std::u32string(local.begin(), local.end());
@@ -1688,8 +1752,9 @@ namespace cs {
 			}
 		};
 
-		class utf8 final : public charset {
-		public:
+		class utf8 final : public charset
+		{
+		   public:
 			std::u32string local2wide(const std::deque<char> &local) override;
 
 			std::u32string local2wide(std::string_view local) override;
@@ -1699,8 +1764,9 @@ namespace cs {
 			bool is_identifier(char32_t ch) override;
 		};
 
-		class gbk final : public charset {
-		public:
+		class gbk final : public charset
+		{
+		   public:
 			std::u32string local2wide(const std::deque<char> &local) override;
 
 			std::u32string local2wide(std::string_view local) override;

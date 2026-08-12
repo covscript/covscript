@@ -110,11 +110,13 @@
 #include <covscript/core/variable.hpp>
 #include <covscript/core/version.hpp>
 
-namespace cs {
-// Per-execution-path fiber state (chain + schedule tunables), shared through
-// process_context::fiber_cxt (thread-local default; forks inherit the pointer).
-	class fiber_context final {
-	public:
+namespace cs
+{
+	// Per-execution-path fiber state (chain + schedule tunables), shared through
+	// process_context::fiber_cxt (thread-local default; forks inherit the pointer).
+	class fiber_context final
+	{
+	   public:
 		stack_type<fiber_t> stack; // fiber chain (was process_context::fiber_stack)
 		double busy_wait_coef = COVSCRIPT_FIBER_BUSY_WAIT_COEF;
 		std::size_t busy_wait_min = COVSCRIPT_FIBER_BUSY_WAIT_MIN;
@@ -126,14 +128,15 @@ namespace cs {
 		}
 	};
 
-// Process Context
-	class process_context final {
+	// Process Context
+	class process_context final
+	{
 		std::atomic<bool> is_sigint_raised{};
 		std::atomic<bool> is_exit_requested{};
 		// Generation chain (keep-alive); null means the parent is the root.
 		std::shared_ptr<process_context> m_parent;
 
-	public:
+	   public:
 		// Version
 		const std::string version = COVSCRIPT_VERSION_STR;
 		const numeric std_version = COVSCRIPT_STD_VERSION;
@@ -193,13 +196,15 @@ namespace cs {
 
 		inline void poll_event()
 		{
-			if (is_sigint_raised.exchange(false)) {
+			if (is_sigint_raised.exchange(false))
+			{
 				on_process_sigint.touch(nullptr);
 			}
 			// A cooperative exit request (e.g. Ctrl+Break) is dispatched through
 			// on_process_exit so it runs on the main thread, distinct from the
 			// SIGINT reset/continue handling.
-			if (is_exit_requested.exchange(false)) {
+			if (is_exit_requested.exchange(false))
+			{
 				int code = 0;
 				on_process_exit.touch(&code);
 			}
@@ -233,13 +238,13 @@ namespace cs {
 		cs_exception_handler cs_eh_callback = &cs_defalt_exception_handler;
 
 		process_context()
-			: fiber_cxt(fiber_context::current()), fiber_stack(fiber_cxt->stack), fiber_busy_wait_coef(fiber_cxt->busy_wait_coef), fiber_busy_wait_min(fiber_cxt->busy_wait_min), on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
+		    : fiber_cxt(fiber_context::current()), fiber_stack(fiber_cxt->stack), fiber_busy_wait_coef(fiber_cxt->busy_wait_coef), fiber_busy_wait_min(fiber_cxt->busy_wait_min), on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
 		{
 			is_sigint_raised = false;
 		}
 
 		explicit process_context(std::size_t ss, fiber_context *cxt)
-			: fiber_cxt(cxt), fiber_stack(fiber_cxt->stack), fiber_busy_wait_coef(fiber_cxt->busy_wait_coef), fiber_busy_wait_min(fiber_cxt->busy_wait_min), on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
+		    : fiber_cxt(cxt), fiber_stack(fiber_cxt->stack), fiber_busy_wait_coef(fiber_cxt->busy_wait_coef), fiber_busy_wait_min(fiber_cxt->busy_wait_min), on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
 		{
 			resize_stack(ss);
 			is_sigint_raised = false;
@@ -255,9 +260,10 @@ namespace cs {
 	extern process_context this_process;
 	extern process_context *current_process;
 
-// Context
-	class context_type final {
-	public:
+	// Context
+	class context_type final
+	{
+	   public:
 		compiler_t compiler = nullptr;
 		instance_t instance = nullptr;
 		std::deque<string> file_buff;
@@ -282,11 +288,13 @@ namespace cs {
 		}
 	};
 
-// Callable and Function
-	class callable final {
-	public:
+	// Callable and Function
+	class callable final
+	{
+	   public:
 		using function_type = std::function<var(vector &)>;
-		enum class types {
+		enum class types
+		{
 			normal,
 			request_fold,
 			member_fn,
@@ -294,17 +302,17 @@ namespace cs {
 			force_regular
 		};
 
-	private:
+	   private:
 		function_type mFunc;
 		types mType = types::normal;
 
-	public:
+	   public:
 		callable() = delete;
 
 		callable(const callable &) = default;
 
 		explicit callable(function_type func, types type = types::normal)
-			: mFunc(std::move(func)), mType(type) {}
+		    : mFunc(std::move(func)), mType(type) {}
 
 		bool is_request_fold() const
 		{
@@ -332,11 +340,12 @@ namespace cs {
 		}
 	};
 
-	class future_type {
-	protected:
+	class future_type
+	{
+	   protected:
 		future_type() = default;
 
-	public:
+	   public:
 		future_type(const future_type &) = delete;
 		future_type &operator=(const future_type &) = delete;
 
@@ -349,7 +358,8 @@ namespace cs {
 		virtual var get() = 0;
 	};
 
-	enum class fiber_state {
+	enum class fiber_state
+	{
 		ready,
 		running,
 		suspended,
@@ -357,15 +367,16 @@ namespace cs {
 		finished
 	};
 
-	class fiber_type {
-	public:
+	class fiber_type
+	{
+	   public:
 		std::chrono::steady_clock::time_point wake_up_time{};
 		std::size_t busy_skip_count = 0;
 
-	protected:
+	   protected:
 		fiber_type() = default;
 
-	public:
+	   public:
 		fiber_type(const fiber_type &) = delete;
 		fiber_type &operator=(const fiber_type &) = delete;
 
@@ -379,8 +390,10 @@ namespace cs {
 		virtual const std::shared_ptr<process_context> &get_process() const noexcept = 0;
 	};
 
-	namespace fiber {
-		enum class schedule_policy {
+	namespace fiber
+	{
+		enum class schedule_policy
+		{
 			normal,
 			no_backpressure,
 		};
@@ -388,7 +401,7 @@ namespace cs {
 		inline fiber_type const *current()
 		{
 			return cs::current_process->fiber_cxt->stack.empty() ? nullptr
-			       : cs::current_process->fiber_cxt->stack.top().get();
+			                                                     : cs::current_process->fiber_cxt->stack.top().get();
 		}
 
 		inline bool within()
@@ -409,7 +422,8 @@ namespace cs {
 		void yield();
 	} // namespace fiber
 
-	class function final {
+	class function final
+	{
 		context_t mContext;
 #ifdef CS_DEBUGGER
 		// Debug Information
@@ -435,7 +449,8 @@ namespace cs {
 
 		inline void init_call_ptr() noexcept
 		{
-			if (!mIsVargs) {
+			if (!mIsVargs)
+			{
 				if (mIsLambda)
 					call_ptr = mArgs.empty() ? &call_el : &call_rl;
 				else
@@ -445,21 +460,21 @@ namespace cs {
 				call_ptr = &call_vv;
 		}
 
-	public:
+	   public:
 		function() = delete;
 
 		function(const function &) = default;
 
 #ifdef CS_DEBUGGER
 		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
-			: mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
+		    : mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
 		{
 			init_call_ptr();
 		}
 #else
 
 		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
-			: mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
+		    : mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
 		{
 			init_call_ptr();
 		}
@@ -491,11 +506,13 @@ namespace cs {
 		void add_reserve_var(std::string_view reserve, bool is_mem_fn = false)
 		{
 			mIsMemFn = is_mem_fn;
-			if (!mIsVargs) {
+			if (!mIsVargs)
+			{
 				std::vector<std::string> args;
 				args.reserve(mArgs.size() + 1);
 				args.emplace_back(reserve);
-				for (auto &name : mArgs) {
+				for (auto &name : mArgs)
+				{
 					if (name != reserve)
 						args.emplace_back(std::move(name));
 					else
@@ -539,7 +556,8 @@ namespace cs {
 #endif
 	};
 
-	struct function_ptr final {
+	struct function_ptr final
+	{
 		function *fptr = nullptr;
 		var operator()(vector &args) const
 		{
@@ -547,7 +565,8 @@ namespace cs {
 		}
 	};
 
-	struct object_method final {
+	struct object_method final
+	{
 		var object;
 		var callable;
 		bool is_request_fold = false;
@@ -555,32 +574,34 @@ namespace cs {
 		object_method() = delete;
 
 		object_method(var obj, var func, bool request_fold = false)
-			: object(std::move(obj)), callable(std::move(func)), is_request_fold(request_fold) {}
+		    : object(std::move(obj)), callable(std::move(func)), is_request_fold(request_fold) {}
 
 		~object_method() = default;
 	};
 
-// Copy
+	// Copy
 	void copy_no_return(var &);
 
 	var copy(var);
 
-// Move Semantics
+	// Move Semantics
 	var lvalue(const var &);
 
 	var rvalue(const var &);
 
 	var try_move(const var &);
 
-// Invoke
+	// Invoke
 	template <typename... ArgsT>
 	static var invoke(const var &func, ArgsT &&..._args)
 	{
-		if (func.is_type_of<callable>()) {
+		if (func.is_type_of<callable>())
+		{
 			vector args{std::forward<ArgsT>(_args)...};
 			return func.const_val<callable>().call(args);
 		}
-		else if (func.is_type_of<object_method>()) {
+		else if (func.is_type_of<object_method>())
+		{
 			const auto &om = func.const_val<object_method>();
 			vector args{om.object, std::forward<ArgsT>(_args)...};
 			return om.callable.const_val<callable>().call(args);
@@ -589,14 +610,15 @@ namespace cs {
 			throw runtime_error("Invoke non-callable object.");
 	}
 
-// Type and struct
-	struct pointer final {
+	// Type and struct
+	struct pointer final
+	{
 		var data;
 
 		pointer() = default;
 
 		explicit pointer(var v)
-			: data(std::move(v)) {}
+		    : data(std::move(v)) {}
 
 		bool operator==(const pointer &ptr) const
 		{
@@ -606,10 +628,11 @@ namespace cs {
 
 	static const pointer null_pointer = {};
 
-// Per-struct type identity node. Allocated from a process-lifetime pool
-// (never freed), so its address is a stable, unique identity for the type.
-// It carries the materialized transitive ancestor set so is_a stays O(1).
-	struct type_node final {
+	// Per-struct type identity node. Allocated from a process-lifetime pool
+	// (never freed), so its address is a stable, unique identity for the type.
+	// It carries the materialized transitive ancestor set so is_a stays O(1).
+	struct type_node final
+	{
 		std::string name;
 		const type_node *parent = nullptr;
 		set_t<const type_node *> ancestors;
@@ -617,14 +640,15 @@ namespace cs {
 
 	type_node *alloc_type_node();
 
-	struct type_id final {
+	struct type_id final
+	{
 		std::type_index type_idx;
 		const type_node *node = nullptr;
 
 		type_id() = delete;
 
 		type_id(const std::type_index &id, const type_node *n = nullptr)
-			: type_idx(id), node(n) {}
+		    : type_idx(id), node(n) {}
 
 		inline bool is_a(const type_id &id) const
 		{
@@ -653,14 +677,16 @@ namespace cs {
 		}
 	};
 
-	struct domain_ref final {
+	struct domain_ref final
+	{
 		domain_type *domain = nullptr;
 
 		domain_ref(domain_type *ptr)
-			: domain(ptr) {}
+		    : domain(ptr) {}
 	};
 
-	class var_id final {
+	class var_id final
+	{
 		friend class domain_type;
 
 		friend class domain_manager;
@@ -669,11 +695,11 @@ namespace cs {
 		mutable std::shared_ptr<domain_ref> m_ref;
 		std::string m_id;
 
-	public:
+	   public:
 		var_id() = delete;
 
 		explicit var_id(std::string_view name)
-			: m_id(name) {}
+		    : m_id(name) {}
 
 		var_id(const var_id &) = default;
 
@@ -704,7 +730,8 @@ namespace cs {
 		}
 	};
 
-	class domain_type final {
+	class domain_type final
+	{
 		map_t<std::string_view, std::size_t> m_reflect;
 		std::shared_ptr<domain_ref> m_ref;
 		std::vector<var> m_slot;
@@ -719,15 +746,15 @@ namespace cs {
 				throw runtime_error("Use of undefined variable \"" + std::string(name) + "\".");
 		}
 
-	public:
+	   public:
 		domain_type()
-			: m_ref(std::make_shared<domain_ref>(this)) {}
+		    : m_ref(std::make_shared<domain_ref>(this)) {}
 
 		domain_type(const domain_type &domain)
-			: m_reflect(domain.m_reflect), m_ref(std::make_shared<domain_ref>(this)), m_slot(domain.m_slot) {}
+		    : m_reflect(domain.m_reflect), m_ref(std::make_shared<domain_ref>(this)), m_slot(domain.m_slot) {}
 
 		domain_type(domain_type &&domain) noexcept
-			: m_ref(std::make_shared<domain_ref>(this))
+		    : m_ref(std::make_shared<domain_ref>(this))
 		{
 			std::swap(m_reflect, domain.m_reflect);
 			std::swap(m_slot, domain.m_slot);
@@ -771,7 +798,8 @@ namespace cs {
 		domain_type &add_var(const char *name, const var &val)
 		{
 			auto it = m_reflect.find(name);
-			if (it == m_reflect.end()) {
+			if (it == m_reflect.end())
+			{
 				m_slot.push_back(val);
 				m_reflect.emplace(name, m_slot.size() - 1);
 			}
@@ -783,14 +811,17 @@ namespace cs {
 		domain_type &add_var(const var_id &id, const var &val)
 		{
 			auto it = m_reflect.find(id.m_id);
-			if (it == m_reflect.end()) {
+			if (it == m_reflect.end())
+			{
 				m_slot.push_back(val);
 				m_reflect.emplace(id.m_id, m_slot.size() - 1);
 				id.m_slot_id = m_slot.size() - 1;
 				id.m_ref = m_ref;
 			}
-			else {
-				if (id.m_ref != m_ref) {
+			else
+			{
+				if (id.m_ref != m_ref)
+				{
 					id.m_slot_id = it->second;
 					id.m_ref = m_ref;
 				}
@@ -802,19 +833,23 @@ namespace cs {
 		bool add_var_optimal(const char *name, const var &val, bool override = false)
 		{
 			auto it = m_reflect.find(name);
-			if (it != m_reflect.end()) {
-				if (optimize) {
+			if (it != m_reflect.end())
+			{
+				if (optimize)
+				{
 					m_slot[it->second] = val;
 					return true;
 				}
-				else if (override) {
+				else if (override)
+				{
 					m_slot[it->second] = val;
 					return true;
 				}
 				else
 					return false;
 			}
-			else {
+			else
+			{
 				m_slot.push_back(val);
 				m_reflect.emplace(name, m_slot.size() - 1);
 				return true;
@@ -823,19 +858,23 @@ namespace cs {
 
 		bool add_var_optimal(const var_id &id, const var &val, bool override = false)
 		{
-			if (id.m_ref == m_ref) {
-				if (optimize) {
+			if (id.m_ref == m_ref)
+			{
+				if (optimize)
+				{
 					m_slot[id.m_slot_id] = val;
 					return true;
 				}
-				else if (override) {
+				else if (override)
+				{
 					add_var(id, val);
 					return true;
 				}
 				else
 					return false;
 			}
-			else {
+			else
+			{
 				add_var(id, val);
 				return true;
 			}
@@ -843,7 +882,8 @@ namespace cs {
 
 		var &get_var(const var_id &id)
 		{
-			if (id.m_ref != m_ref) {
+			if (id.m_ref != m_ref)
+			{
 				id.m_slot_id = get_slot_id(id.m_id);
 				id.m_ref = m_ref;
 			}
@@ -852,7 +892,8 @@ namespace cs {
 
 		const var &get_var(const var_id &id) const
 		{
-			if (id.m_ref != m_ref) {
+			if (id.m_ref != m_ref)
+			{
 				id.m_slot_id = get_slot_id(id.m_id);
 				id.m_ref = m_ref;
 			}
@@ -879,7 +920,8 @@ namespace cs {
 
 		var *get_var_opt(const var_id &id)
 		{
-			if (id.m_ref != m_ref) {
+			if (id.m_ref != m_ref)
+			{
 				auto it = m_reflect.find(id.m_id);
 				if (it == m_reflect.end())
 					return nullptr;
@@ -891,7 +933,8 @@ namespace cs {
 
 		const var *get_var_opt(const var_id &id) const
 		{
-			if (id.m_ref != m_ref) {
+			if (id.m_ref != m_ref)
+			{
 				auto it = m_reflect.find(id.m_id);
 				if (it == m_reflect.end())
 					return nullptr;
@@ -921,7 +964,8 @@ namespace cs {
 
 		var &get_var_no_check(const var_id &id)
 		{
-			if (id.m_ref != m_ref) {
+			if (id.m_ref != m_ref)
+			{
 				id.m_slot_id = m_reflect.at(id.m_id);
 				id.m_ref = m_ref;
 			}
@@ -930,7 +974,8 @@ namespace cs {
 
 		const var &get_var_no_check(const var_id &id) const
 		{
-			if (id.m_ref != m_ref) {
+			if (id.m_ref != m_ref)
+			{
 				id.m_slot_id = m_reflect.at(id.m_id);
 				id.m_ref = m_ref;
 			}
@@ -940,7 +985,8 @@ namespace cs {
 		var &get_var_no_check(const var_id &id, std::size_t domain_id)
 		{
 			id.m_domain_id = domain_id;
-			if (id.m_ref != m_ref) {
+			if (id.m_ref != m_ref)
+			{
 				id.m_slot_id = m_reflect.at(id.m_id);
 				id.m_ref = m_ref;
 			}
@@ -969,7 +1015,8 @@ namespace cs {
 		}
 	};
 
-	struct type_t final {
+	struct type_t final
+	{
 		std::function<var()> constructor;
 		namespace_t extensions;
 		type_id id;
@@ -977,23 +1024,24 @@ namespace cs {
 		type_t() = delete;
 
 		type_t(std::function<var()> c, const type_id &i)
-			: constructor(std::move(c)), id(i) {}
+		    : constructor(std::move(c)), id(i) {}
 
 		type_t(std::function<var()> c, const type_id &i, namespace_t ext)
-			: constructor(std::move(c)), id(i), extensions(std::move(ext)) {}
+		    : constructor(std::move(c)), id(i), extensions(std::move(ext)) {}
 
 		template <typename T>
 		var &get_var(T &&) const;
 	};
 
-	class range_iterator final {
+	class range_iterator final
+	{
 		numeric m_step, m_index;
 
-	public:
+	   public:
 		range_iterator() = delete;
 
 		explicit range_iterator(numeric step, numeric index)
-			: m_step(std::move(step)), m_index(std::move(index)) {}
+		    : m_step(std::move(step)), m_index(std::move(index)) {}
 
 		range_iterator(const range_iterator &) = default;
 
@@ -1028,14 +1076,15 @@ namespace cs {
 		}
 	};
 
-	class range_type final {
+	class range_type final
+	{
 		numeric m_start, m_stop, m_step;
 
-	public:
+	   public:
 		range_type() = delete;
 
 		range_type(numeric start, numeric stop, numeric step)
-			: m_start(std::move(start)), m_stop(std::move(stop)), m_step(std::move(step)) {}
+		    : m_start(std::move(start)), m_stop(std::move(stop)), m_step(std::move(step)) {}
 
 		range_type(const range_type &) = default;
 
@@ -1059,26 +1108,27 @@ namespace cs {
 		}
 	};
 
-	class structure final {
+	class structure final
+	{
 		bool m_shadow = false;
 		std::string m_name;
 		domain_t m_data;
 		type_id m_id;
 
-	public:
+	   public:
 		structure() = delete;
 
 		structure(const type_id &id, std::string name, const domain_type &data)
-			: m_id(id),
-			  m_name(std::move(name)),
-			  m_data(std::make_shared<domain_type>(data))
+		    : m_id(id),
+		      m_name(std::move(name)),
+		      m_data(std::make_shared<domain_type>(data))
 		{
 			if (m_data->exist("initialize"))
 				invoke(m_data->get_var("initialize"), var::make<structure>(this));
 		}
 
 		structure(structure &&s) noexcept
-			: m_shadow(s.m_shadow), m_data(nullptr), m_id(typeid(void))
+		    : m_shadow(s.m_shadow), m_data(nullptr), m_id(typeid(void))
 		{
 			s.m_shadow = true;
 			std::swap(m_name, s.m_name);
@@ -1087,15 +1137,17 @@ namespace cs {
 		}
 
 		structure(const structure &s)
-			: m_id(s.m_id), m_name(s.m_name), m_data(std::make_shared<domain_type>())
+		    : m_id(s.m_id), m_name(s.m_name), m_data(std::make_shared<domain_type>())
 		{
-			if (s.m_data->exist("parent")) {
+			if (s.m_data->exist("parent"))
+			{
 				var &_p = s.m_data->get_var("parent");
 				auto &_parent = _p.val<structure>();
 				var p = copy(_p);
 				auto &parent = p.val<structure>();
 				m_data->add_var("parent", p);
-				for (auto &it : *parent.m_data) {
+				for (auto &it : *parent.m_data)
+				{
 					// Handle overriding
 					const var &v = s.m_data->get_var(it.first);
 					if (!_parent.m_data->get_var(it.first).is_same(v))
@@ -1112,15 +1164,18 @@ namespace cs {
 		}
 
 		explicit structure(const structure *s)
-			: m_shadow(true), m_id(s->m_id), m_name(s->m_name), m_data(s->m_data) {}
+		    : m_shadow(true), m_id(s->m_id), m_name(s->m_name), m_data(s->m_data) {}
 
 		~structure()
 		{
-			if (!m_shadow && m_data->exist("finalize")) {
-				try {
+			if (!m_shadow && m_data->exist("finalize"))
+			{
+				try
+				{
 					invoke(m_data->get_var("finalize"), var::make<structure>(this));
 				}
-				catch (...) {
+				catch (...)
+				{
 					// finalize runs inside an implicitly noexcept destructor;
 					// swallowing prevents std::terminate on script errors
 				}
@@ -1143,8 +1198,9 @@ namespace cs {
 			if (!m_shadow && m_data->exist("equal"))
 				return invoke(m_data->get_var("equal"), var::make<structure>(this),
 				              var::make<structure>(&s))
-				       .const_val<bool>();
-			else {
+				    .const_val<bool>();
+			else
+			{
 				for (auto &it : *m_data)
 					if (it.first != "parent" && s.m_data->get_var(it.first) != m_data->get_var_by_id(it.second))
 						return false;
@@ -1178,7 +1234,8 @@ namespace cs {
 		}
 	};
 
-	class struct_builder final {
+	class struct_builder final
+	{
 		context_t mContext;
 		type_node *mNode;
 		type_id mTypeId;
@@ -1186,17 +1243,17 @@ namespace cs {
 		tree_type<token_base *> mParent;
 		std::deque<statement_base *> mMethod;
 
-	public:
+	   public:
 		struct_builder() = delete;
 
 		struct_builder(context_t c, std::string name, tree_type<token_base *> parent,
 		               std::deque<statement_base *> method)
-			: mContext(std::move(c)),
-			  mNode(alloc_type_node()),
-			  mTypeId(typeid(structure), mNode),
-			  mName(std::move(name)),
-			  mParent(std::move(parent)),
-			  mMethod(std::move(method))
+		    : mContext(std::move(c)),
+		      mNode(alloc_type_node()),
+		      mTypeId(typeid(structure), mNode),
+		      mName(std::move(name)),
+		      mParent(std::move(parent)),
+		      mMethod(std::move(method))
 		{
 			mNode->name = mName;
 		}
@@ -1215,22 +1272,23 @@ namespace cs {
 		var operator()();
 	};
 
-// Namespace and extensions
-	class name_space {
+	// Namespace and extensions
+	class name_space
+	{
 		domain_type *m_data = nullptr;
 
-	public:
+	   public:
 		name_space()
-			: m_data(new domain_type) {}
+		    : m_data(new domain_type) {}
 
 		name_space(const name_space &ns)
-			: m_data(new domain_type)
+		    : m_data(new domain_type)
 		{
 			copy_namespace(ns);
 		}
 
 		explicit name_space(domain_type dat)
-			: m_data(new domain_type(std::move(dat))) {}
+		    : m_data(new domain_type(std::move(dat))) {}
 
 		virtual ~name_space()
 		{
@@ -1301,7 +1359,8 @@ namespace cs {
 
 		name_space &operator=(const name_space &ns)
 		{
-			if (&ns != this) {
+			if (&ns != this)
+			{
 				m_data->clear();
 				copy_namespace(ns);
 			}
@@ -1318,12 +1377,13 @@ namespace cs {
 			throw runtime_error("Type doesn't have extension field.");
 	}
 
-// Internal Garbage Collection
+	// Internal Garbage Collection
 	template <typename T>
-	class garbage_collector final {
+	class garbage_collector final
+	{
 		set_t<T *> table;
 
-	public:
+	   public:
 		garbage_collector() = default;
 
 		garbage_collector(const garbage_collector &) = delete;
@@ -1354,7 +1414,8 @@ namespace cs {
 		}
 	};
 
-	namespace dll {
+	namespace dll
+	{
 		constexpr char compatible_check[] = "__CS_ABI_COMPATIBLE__";
 		constexpr char main_entrance[] = "__CS_EXTENSION_MAIN__";
 
@@ -1369,10 +1430,11 @@ namespace cs {
 		void close(void *);
 	} // namespace dll
 
-	class extension final : public name_space {
+	class extension final : public name_space
+	{
 		void *mHandle;
 
-	public:
+	   public:
 		extension() = delete;
 
 		extension(const extension &) = delete;
@@ -1381,13 +1443,14 @@ namespace cs {
 
 		static inline int truncate(int n, int m)
 		{
-			return n == 0 ? 0 : n / int(std::pow(10, (std::max)(int(std::log10(std::abs(n))) - (std::max)(m, 0) + 1, 0)));
+			return n == 0 ? 0 : n / int(std::pow(10, (std::max) (int(std::log10(std::abs(n))) - (std::max) (m, 0) + 1, 0)));
 		}
 
 		explicit extension(std::string_view path)
 		{
 			mHandle = dll::open(path);
-			try {
+			try
+			{
 				dll::compatible_check_t dll_check =
 				    reinterpret_cast<dll::compatible_check_t>(dll::find_symbol(mHandle, dll::compatible_check));
 				if (dll_check == nullptr)
@@ -1402,7 +1465,8 @@ namespace cs {
 					throw runtime_error("Broken Extension.");
 				dll_main(this, current_process);
 			}
-			catch (...) {
+			catch (...)
+			{
 				dll::close(mHandle); // Release the handle on every failure path
 				mHandle = nullptr;
 				throw;
@@ -1418,6 +1482,6 @@ namespace cs {
 		return std::make_shared<T>(std::forward<ArgsT>(args)...);
 	}
 
-// Literal format
+	// Literal format
 	numeric parse_number(const std::string &);
 } // namespace cs

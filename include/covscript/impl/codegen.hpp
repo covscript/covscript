@@ -26,9 +26,11 @@
  */
 #include <covscript/impl/statement.hpp>
 
-namespace cs {
-	class method_expression final : public method_base {
-	public:
+namespace cs
+{
+	class method_expression final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -44,8 +46,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_import final : public method_base {
-	public:
+	class method_import final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -63,8 +66,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_import_as final : public method_base {
-	public:
+	class method_import_as final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -84,8 +88,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_package final : public method_base {
-	public:
+	class method_package final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -101,8 +106,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_involve final : public method_base {
-	public:
+	class method_involve final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -120,8 +126,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_var final : public method_base {
-	public:
+	class method_var final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -139,8 +146,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_link final : public method_base {
-	public:
+	class method_link final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -158,8 +166,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_constant final : public method_base {
-	public:
+	class method_constant final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -177,8 +186,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_block final : public method_base {
-	public:
+	class method_block final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -194,8 +204,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_namespace final : public method_base {
-	public:
+	class method_namespace final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -215,8 +226,9 @@ namespace cs {
 		void postprocess(const context_t &, const domain_type &) override;
 	};
 
-	class method_if final : public method_base {
-	public:
+	class method_if final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -232,8 +244,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_else final : public method_base {
-	public:
+	class method_else final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -251,8 +264,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_switch final : public method_base {
-	public:
+	class method_switch final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -268,8 +282,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_case final : public method_base {
-	public:
+	class method_case final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -285,8 +300,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_default final : public method_base {
-	public:
+	class method_default final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -302,8 +318,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_while final : public method_base {
-	public:
+	class method_while final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -319,16 +336,18 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_until final : public method_end {
-	public:
+	class method_until final : public method_end
+	{
+	   public:
 		using method_end::method_end;
 
 		statement_base *translate_end(method_base *, const context_t &, std::deque<std::deque<token_base *>> &,
 		                              std::deque<token_base *> &) override;
 	};
 
-	class method_loop final : public method_base {
-	public:
+	class method_loop final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -347,8 +366,9 @@ namespace cs {
 		translate(const context_t &, const std::deque<std::deque<token_base *>> &, const tree_type<token_base *> &);
 	};
 
-	class method_for final : public method_base {
-	public:
+	class method_for final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -366,8 +386,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_for_do final : public method_base {
-	public:
+	class method_for_do final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -383,8 +404,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_foreach final : public method_base {
-	public:
+	class method_foreach final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -402,8 +424,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_foreach_do final : public method_base {
-	public:
+	class method_foreach_do final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -419,8 +442,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_break final : public method_base {
-	public:
+	class method_break final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -436,8 +460,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_continue final : public method_base {
-	public:
+	class method_continue final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -453,8 +478,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_function final : public method_base {
-	public:
+	class method_function final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -472,8 +498,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_return final : public method_base {
-	public:
+	class method_return final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -489,8 +516,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_return_no_value final : public method_base {
-	public:
+	class method_return_no_value final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -506,8 +534,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_struct : public method_base {
-	public:
+	class method_struct : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -525,8 +554,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_try final : public method_base {
-	public:
+	class method_try final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -542,8 +572,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_catch final : public method_base {
-	public:
+	class method_catch final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override
@@ -559,8 +590,9 @@ namespace cs {
 		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override;
 	};
 
-	class method_throw final : public method_base {
-	public:
+	class method_throw final : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override

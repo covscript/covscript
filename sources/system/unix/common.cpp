@@ -54,7 +54,8 @@
 #define COVLIBDLL_DLOPEN_ARGUMENTS (RTLD_LAZY)
 #endif
 
-namespace cs_system_impl {
+namespace cs_system_impl
+{
 	bool chmod_impl(const std::string &path, unsigned int mode)
 	{
 		return ::chmod(path.c_str(), mode) == 0;
@@ -90,8 +91,10 @@ void terminal_echo(int yn)
 	tcsetattr(0, TCSANOW, &newt);
 }
 
-namespace cs_impl {
-	namespace conio {
+namespace cs_impl
+{
+	namespace conio
+	{
 		int terminal_width()
 		{
 			struct winsize size;
@@ -163,7 +166,8 @@ namespace cs_impl {
 		}
 	} // namespace conio
 
-	namespace file_system {
+	namespace file_system
+	{
 		bool is_exe(const std::string &path)
 		{
 			int fd = open(path.c_str(), O_RDONLY);
@@ -236,9 +240,12 @@ extern "C"
 
 #endif
 
-namespace cs {
-	namespace fiber {
-		class unix_fiber_stack {
+namespace cs
+{
+	namespace fiber
+	{
+		class unix_fiber_stack
+		{
 			static inline uintptr_t align_up(uintptr_t ptr, size_t align)
 			{
 				return (ptr + align - 1) & ~(align - 1);
@@ -249,7 +256,7 @@ namespace cs {
 			void *sp = nullptr;
 			size_t usable_size = 0;
 
-		public:
+		   public:
 			unix_fiber_stack() = delete;
 			unix_fiber_stack(const unix_fiber_stack &) = delete;
 			unix_fiber_stack(unix_fiber_stack &&) noexcept = delete;
@@ -273,7 +280,8 @@ namespace cs {
 					throw std::runtime_error(std::string("mmap failed: ") + std::strerror(errno));
 
 				if (mprotect(addr, pagesize, PROT_NONE) != 0 ||
-				        mprotect((char *) addr + pagesize + rounded, pagesize, PROT_NONE) != 0) {
+				    mprotect((char *) addr + pagesize + rounded, pagesize, PROT_NONE) != 0)
+				{
 					munmap(addr, total);
 					throw std::runtime_error(std::string("mprotect failed: ") + std::strerror(errno));
 				}
@@ -310,7 +318,8 @@ namespace cs {
 			}
 		};
 
-		class unix_fiber : public fiber_type {
+		class unix_fiber : public fiber_type
+		{
 			friend void cs::fiber::resume(const fiber_t &, schedule_policy);
 			friend void cs::fiber::sleep_for(std::size_t);
 			friend void cs::fiber::yield();
@@ -336,12 +345,14 @@ namespace cs {
 			static void entry() noexcept
 			{
 				unix_fiber *fi = static_cast<unix_fiber *>(current_process->fiber_cxt->stack.top().get());
-				try {
+				try
+				{
 					fi->state = fiber_state::running;
 					var ret = fi->func();
 					fi->ret_val.swap(ret);
 				}
-				catch (...) {
+				catch (...)
+				{
 					fi->eptr = std::current_exception();
 				}
 				fi->state = fiber_state::finished;
@@ -351,26 +362,27 @@ namespace cs {
 				std::abort();
 			}
 
-		public:
+		   public:
 			unix_fiber() = delete;
 			// Native Function
 			unix_fiber(std::function<var()> f)
-				: cs_stack(0), cs_context(nullptr), process(nullptr), func(std::move(f)), eptr(nullptr), state(fiber_state::ready), ret_val(null_pointer), stack(COVSCRIPT_FIBER_STACK_LIMIT) {}
+			    : cs_stack(0), cs_context(nullptr), process(nullptr), func(std::move(f)), eptr(nullptr), state(fiber_state::ready), ret_val(null_pointer), stack(COVSCRIPT_FIBER_STACK_LIMIT) {}
 
 			// CovScript Function
 			unix_fiber(const context_t &cxt, std::function<var()> f)
-				: cs_stack(current_process->child_stack_size()),
-				  cs_context(cxt),
-				  process(process_context::fork(process_context::current_owner())),
-				  func(std::move(f)),
-				  eptr(nullptr),
-				  state(fiber_state::ready),
-				  ret_val(null_pointer),
-				  stack(COVSCRIPT_FIBER_STACK_LIMIT) {}
+			    : cs_stack(current_process->child_stack_size()),
+			      cs_context(cxt),
+			      process(process_context::fork(process_context::current_owner())),
+			      func(std::move(f)),
+			      eptr(nullptr),
+			      state(fiber_state::ready),
+			      ret_val(null_pointer),
+			      stack(COVSCRIPT_FIBER_STACK_LIMIT) {}
 
 			virtual ~unix_fiber()
 			{
-				if (state == fiber_state::running || state == fiber_state::suspended || state == fiber_state::sleeping) {
+				if (state == fiber_state::running || state == fiber_state::suspended || state == fiber_state::sleeping)
+				{
 					std::fprintf(stderr,
 					             "[fiber] warning: destroying an unfinished fiber (state=%d); "
 					             "its suspended stack frames are not unwound and resources will leak\n",
@@ -433,7 +445,8 @@ namespace cs {
 				throw internal_error("Resuming a corrupted fiber.");
 			if (fi->state == fiber_state::running || fi->state == fiber_state::finished)
 				throw lang_error("A fiber cannot be resumed while it is already running or after it has finished");
-			if (fi->state == fiber_state::ready) {
+			if (fi->state == fiber_state::ready)
+			{
 				memset(&fi->ctx, 0, sizeof(fi->ctx));
 				cs_fiber_getcontext(&fi->ctx);
 				fi->ctx.uc_stack.ss_sp = fi->stack.get_sp();
@@ -441,27 +454,31 @@ namespace cs {
 				fi->ctx.uc_link = nullptr;
 				cs_fiber_makecontext(&fi->ctx, reinterpret_cast<void (*)()>(unix_fiber::entry), 0);
 			}
-			if (fi->state == fiber_state::sleeping) {
+			if (fi->state == fiber_state::sleeping)
+			{
 				auto now = std::chrono::steady_clock::now();
-				if (now < fi->wake_up_time) {
+				if (now < fi->wake_up_time)
+				{
 					if (policy == schedule_policy::no_backpressure)
 						return;
 					fi->busy_skip_count++;
 					auto remain_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
 					                     fi->wake_up_time - now)
-					                 .count();
+					                     .count();
 					auto wait_time = static_cast<std::size_t>(
-					                     fi->busy_skip_count * remain_ms * current_process->fiber_cxt->busy_wait_coef);
+					    fi->busy_skip_count * remain_ms * current_process->fiber_cxt->busy_wait_coef);
 					if (wait_time > static_cast<std::size_t>(remain_ms))
 						wait_time = static_cast<std::size_t>(remain_ms);
-					if (wait_time >= current_process->fiber_cxt->busy_wait_min) {
+					if (wait_time >= current_process->fiber_cxt->busy_wait_min)
+					{
 						if (!current_process->fiber_cxt->stack.empty())
 							sleep_for(wait_time);
 						else
 							std::this_thread::sleep_for(std::chrono::milliseconds(wait_time));
 						fi->busy_skip_count = 0;
 					}
-					else if (wait_time == static_cast<std::size_t>(remain_ms) && remain_ms > 0) {
+					else if (wait_time == static_cast<std::size_t>(remain_ms) && remain_ms > 0)
+					{
 						if (!current_process->fiber_cxt->stack.empty())
 							sleep_for(static_cast<std::size_t>(remain_ms));
 						else
@@ -492,7 +509,8 @@ namespace cs {
 			fi->cs_swap_out();
 			if (!current_process->fiber_cxt->stack.empty())
 				static_cast<unix_fiber *>(current_process->fiber_cxt->stack.top().get())->cs_swap_in();
-			if (fi->eptr != nullptr) {
+			if (fi->eptr != nullptr)
+			{
 				std::exception_ptr e = nullptr;
 				std::swap(fi->eptr, e);
 				std::rethrow_exception(e);
@@ -520,7 +538,8 @@ namespace cs {
 		}
 	} // namespace fiber
 
-	namespace dll {
+	namespace dll
+	{
 		void *open(std::string_view path)
 		{
 			::dlerror();

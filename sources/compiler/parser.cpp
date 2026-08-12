@@ -25,9 +25,10 @@
  */
 #include <covscript/impl/compiler.hpp>
 
-namespace cs {
+namespace cs
+{
 	void compiler_type::kill_brackets(std::deque<token_base *> &tokens, std::size_t
-	                                  line_num)
+	                                                                        line_num)
 	{
 		std::deque<token_base *> oldt;
 		std::swap(tokens, oldt);
@@ -37,186 +38,206 @@ namespace cs {
 		bool expected_fdef = false;
 		bool expected_fcall = false;
 		bool expected_lambda = false;
-		for (auto oldt_it = oldt.begin(); oldt_it != oldt.end(); ++oldt_it) {
+		for (auto oldt_it = oldt.begin(); oldt_it != oldt.end(); ++oldt_it)
+		{
 			token_base *ptr = *oldt_it;
-			switch (ptr->get_type()) {
-			default:
-				break;
-			case token_types::action:
-				expected_fcall = false;
-				switch (static_cast<token_action *>(ptr)->get_action()) {
+			switch (ptr->get_type())
+			{
 				default:
 					break;
-				case action_types::import_: {
-					// Look Ahead
-					bool found_as = false;
-					for (auto it = oldt_it + 1; it != oldt.end(); ++it) {
-						token_base *token = *it;
-						if (token->get_type() == token_types::endline)
+				case token_types::action:
+					expected_fcall = false;
+					switch (static_cast<token_action *>(ptr)->get_action())
+					{
+						default:
 							break;
-						if (token->get_type() == token_types::action &&
-						        static_cast<token_action *>(token)->get_action() == action_types::as_) {
-							found_as = true;
-							break;
+						case action_types::import_:
+						{
+							// Look Ahead
+							bool found_as = false;
+							for (auto it = oldt_it + 1; it != oldt.end(); ++it)
+							{
+								token_base *token = *it;
+								if (token->get_type() == token_types::endline)
+									break;
+								if (token->get_type() == token_types::action &&
+								    static_cast<token_action *>(token)->get_action() == action_types::as_)
+								{
+									found_as = true;
+									break;
+								}
+							}
+							tokens.push_back(ptr);
+							if (!found_as)
+							{
+								insert_vardef = true;
+								tokens.push_back(new token_signal(signal_types::vardef_));
+							}
+							continue;
 						}
+						case action_types::as_:
+							tokens.push_back(ptr);
+							tokens.push_back(new token_signal(signal_types::vardef_));
+							continue;
+						case action_types::var_:
+							insert_varchk = true;
+							tokens.push_back(ptr);
+							tokens.push_back(new token_signal(signal_types::varchk_));
+							continue;
+						case action_types::constant_:
+							insert_varchk = true;
+							tokens.push_back(ptr);
+							tokens.push_back(new token_signal(signal_types::varchk_));
+							continue;
+						case action_types::link_:
+							insert_varchk = true;
+							tokens.push_back(ptr);
+							tokens.push_back(new token_signal(signal_types::varchk_));
+							continue;
+						case action_types::for_:
+							tokens.push_back(ptr);
+							tokens.push_back(new token_signal(signal_types::varprt_));
+							continue;
+						case action_types::foreach_:
+							tokens.push_back(ptr);
+							tokens.push_back(new token_signal(signal_types::varprt_));
+							continue;
+						case action_types::struct_:
+							tokens.push_back(ptr);
+							tokens.push_back(new token_signal(signal_types::vardef_));
+							continue;
+						case action_types::function_:
+							tokens.push_back(ptr);
+							tokens.push_back(new token_signal(signal_types::vardef_));
+							expected_fdef = true;
+							continue;
+						case action_types::namespace_:
+							tokens.push_back(ptr);
+							tokens.push_back(new token_signal(signal_types::vardef_));
+							continue;
+						case action_types::catch_:
+							tokens.push_back(ptr);
+							tokens.push_back(new token_signal(signal_types::vardef_));
+							continue;
 					}
-					tokens.push_back(ptr);
-					if (!found_as) {
-						insert_vardef = true;
-						tokens.push_back(new token_signal(signal_types::vardef_));
+					break;
+				case token_types::id:
+					expected_fcall = true;
+					break;
+				case token_types::value:
+					expected_fcall = false;
+					break;
+				case token_types::sblist:
+				{
+					for (auto &list : static_cast<token_sblist *>(ptr)->get_list())
+						kill_brackets(list, line_num);
+					if (expected_fcall)
+					{
+						std::deque<tree_type<token_base *>> tlist;
+						value_guard<bool> guard(no_optimize, expected_fdef);
+						if (expected_fdef)
+							expected_fdef = false;
+						for (auto &list : static_cast<token_sblist *>(ptr)->get_list())
+						{
+							tree_type<token_base *> tree;
+							gen_tree(tree, list);
+							tlist.push_back(tree);
+						}
+						if (!expected_lambda)
+							tokens.push_back(new token_signal(signal_types::fcall_));
+						tokens.push_back(new token_arglist(tlist));
+						continue;
 					}
+					else
+					{
+						expected_fcall = true;
+						break;
+					}
+				}
+				case token_types::mblist:
+				{
+					auto *mbl = static_cast<token_mblist *>(ptr);
+					if (mbl->get_list().size() != 1)
+						throw compile_error("Invalid index expression: expected exactly one element inside '[...]'");
+					kill_brackets(mbl->get_list().front(), line_num);
+					tree_type<token_base *> tree;
+					gen_tree(tree, mbl->get_list().front());
+					tokens.push_back(new token_signal(signal_types::access_));
+					tokens.push_back(new token_expr(tree));
+					expected_fcall = true;
 					continue;
 				}
-				case action_types::as_:
-					tokens.push_back(ptr);
-					tokens.push_back(new token_signal(signal_types::vardef_));
-					continue;
-				case action_types::var_:
-					insert_varchk = true;
-					tokens.push_back(ptr);
-					tokens.push_back(new token_signal(signal_types::varchk_));
-					continue;
-				case action_types::constant_:
-					insert_varchk = true;
-					tokens.push_back(ptr);
-					tokens.push_back(new token_signal(signal_types::varchk_));
-					continue;
-				case action_types::link_:
-					insert_varchk = true;
-					tokens.push_back(ptr);
-					tokens.push_back(new token_signal(signal_types::varchk_));
-					continue;
-				case action_types::for_:
-					tokens.push_back(ptr);
-					tokens.push_back(new token_signal(signal_types::varprt_));
-					continue;
-				case action_types::foreach_:
-					tokens.push_back(ptr);
-					tokens.push_back(new token_signal(signal_types::varprt_));
-					continue;
-				case action_types::struct_:
-					tokens.push_back(ptr);
-					tokens.push_back(new token_signal(signal_types::vardef_));
-					continue;
-				case action_types::function_:
-					tokens.push_back(ptr);
-					tokens.push_back(new token_signal(signal_types::vardef_));
-					expected_fdef = true;
-					continue;
-				case action_types::namespace_:
-					tokens.push_back(ptr);
-					tokens.push_back(new token_signal(signal_types::vardef_));
-					continue;
-				case action_types::catch_:
-					tokens.push_back(ptr);
-					tokens.push_back(new token_signal(signal_types::vardef_));
-					continue;
-				}
-				break;
-			case token_types::id:
-				expected_fcall = true;
-				break;
-			case token_types::value:
-				expected_fcall = false;
-				break;
-			case token_types::sblist: {
-				for (auto &list : static_cast<token_sblist *>(ptr)->get_list())
-					kill_brackets(list, line_num);
-				if (expected_fcall) {
+				case token_types::lblist:
+				{
+					for (auto &list : static_cast<token_lblist *>(ptr)->get_list())
+						kill_brackets(list, line_num);
 					std::deque<tree_type<token_base *>> tlist;
-					value_guard<bool> guard(no_optimize, expected_fdef);
-					if (expected_fdef)
-						expected_fdef = false;
-					for (auto &list : static_cast<token_sblist *>(ptr)->get_list()) {
+					for (auto &list : static_cast<token_lblist *>(ptr)->get_list())
+					{
 						tree_type<token_base *> tree;
 						gen_tree(tree, list);
 						tlist.push_back(tree);
 					}
-					if (!expected_lambda)
-						tokens.push_back(new token_signal(signal_types::fcall_));
-					tokens.push_back(new token_arglist(tlist));
-					continue;
-				}
-				else {
-					expected_fcall = true;
-					break;
-				}
-			}
-			case token_types::mblist: {
-				auto *mbl = static_cast<token_mblist *>(ptr);
-				if (mbl->get_list().size() != 1)
-					throw compile_error("Invalid index expression: expected exactly one element inside '[...]'");
-				kill_brackets(mbl->get_list().front(), line_num);
-				tree_type<token_base *> tree;
-				gen_tree(tree, mbl->get_list().front());
-				tokens.push_back(new token_signal(signal_types::access_));
-				tokens.push_back(new token_expr(tree));
-				expected_fcall = true;
-				continue;
-			}
-			case token_types::lblist: {
-				for (auto &list : static_cast<token_lblist *>(ptr)->get_list())
-					kill_brackets(list, line_num);
-				std::deque<tree_type<token_base *>> tlist;
-				for (auto &list : static_cast<token_lblist *>(ptr)->get_list()) {
-					tree_type<token_base *> tree;
-					gen_tree(tree, list);
-					tlist.push_back(tree);
-				}
-				tokens.push_back(new token_array(tlist));
-				expected_fcall = false;
-				continue;
-			}
-			case token_types::signal: {
-				switch (static_cast<token_signal *>(ptr)->get_signal()) {
-				default:
-					break;
-				case signal_types::com_:
-					if (insert_vardef) {
-						tokens.push_back(ptr);
-						tokens.push_back(new token_signal(signal_types::vardef_));
-						continue;
-					}
-					else if (insert_varchk) {
-						tokens.push_back(ptr);
-						tokens.push_back(new token_signal(signal_types::varchk_));
-						continue;
-					}
-					else
-						break;
-				case signal_types::arrow_:
-					if (expected_lambda) {
-						tokens.push_back(new token_signal(signal_types::lambda_, line_num));
-						expected_lambda = false;
-						expected_fcall = false;
-						continue;
-					}
-					else
-						break;
-				case signal_types::esb_:
-					if (expected_fcall) {
-						if (!expected_lambda)
-							tokens.push_back(new token_signal(signal_types::fcall_));
-						tokens.push_back(new token_arglist());
-					}
-					else
-						throw compile_error("Standalone empty parentheses '()' are not allowed here");
-					expected_fcall = false;
-					continue;
-				case signal_types::emb_:
-					expected_fcall = true;
-					expected_lambda = true;
-					tokens.push_back(ptr);
-					continue;
-				case signal_types::elb_:
-					tokens.push_back(new token_array());
+					tokens.push_back(new token_array(tlist));
 					expected_fcall = false;
 					continue;
 				}
-				expected_lambda = false;
-				expected_fcall = false;
-				break;
-			}
+				case token_types::signal:
+				{
+					switch (static_cast<token_signal *>(ptr)->get_signal())
+					{
+						default:
+							break;
+						case signal_types::com_:
+							if (insert_vardef)
+							{
+								tokens.push_back(ptr);
+								tokens.push_back(new token_signal(signal_types::vardef_));
+								continue;
+							}
+							else if (insert_varchk)
+							{
+								tokens.push_back(ptr);
+								tokens.push_back(new token_signal(signal_types::varchk_));
+								continue;
+							}
+							else
+								break;
+						case signal_types::arrow_:
+							if (expected_lambda)
+							{
+								tokens.push_back(new token_signal(signal_types::lambda_, line_num));
+								expected_lambda = false;
+								expected_fcall = false;
+								continue;
+							}
+							else
+								break;
+						case signal_types::esb_:
+							if (expected_fcall)
+							{
+								if (!expected_lambda)
+									tokens.push_back(new token_signal(signal_types::fcall_));
+								tokens.push_back(new token_arglist());
+							}
+							else
+								throw compile_error("Standalone empty parentheses '()' are not allowed here");
+							expected_fcall = false;
+							continue;
+						case signal_types::emb_:
+							expected_fcall = true;
+							expected_lambda = true;
+							tokens.push_back(ptr);
+							continue;
+						case signal_types::elb_:
+							tokens.push_back(new token_array());
+							expected_fcall = false;
+							continue;
+					}
+					expected_lambda = false;
+					expected_fcall = false;
+					break;
+				}
 			}
 			tokens.push_back(ptr);
 		}
@@ -226,16 +247,19 @@ namespace cs {
 	                                std::deque<token_base *> &objects)
 	{
 		bool request_signal = false;
-		for (auto &ptr : raw) {
+		for (auto &ptr : raw)
+		{
 			if (ptr->get_type() == token_types::action)
 				throw compile_error("Invalid expression: a keyword cannot appear as a value in an expression");
-			if (ptr->get_type() == token_types::signal) {
+			if (ptr->get_type() == token_types::signal)
+			{
 				if (!request_signal)
 					objects.push_back(nullptr);
 				signals.push_back(ptr);
 				request_signal = false;
 			}
-			else {
+			else
+			{
 				objects.push_back(ptr);
 				request_signal = true;
 			}
@@ -249,11 +273,14 @@ namespace cs {
 	{
 		if (objects.empty() || signals.empty() || objects.size() != signals.size() + 1)
 			throw compile_error("Invalid expression syntax while building the expression tree");
-		for (auto &obj : objects) {
-			if (obj != nullptr && obj->get_type() == token_types::sblist) {
+		for (auto &obj : objects)
+		{
+			if (obj != nullptr && obj->get_type() == token_types::sblist)
+			{
 				auto *sbl = static_cast<token_sblist *>(obj);
 				std::deque<token_base *> tokens;
-				for (auto &list : sbl->get_list()) {
+				for (auto &list : sbl->get_list())
+				{
 					for (auto &it : list)
 						tokens.push_back(it);
 					tokens.push_back(new token_signal(signal_types::com_));
@@ -268,21 +295,26 @@ namespace cs {
 		tree.emplace_root_left(tree.root(), signals.front());
 		tree.emplace_left_left(tree.root(), objects.front());
 		tree_type<token_base *>::iterator rightmost = tree.root();
-		for (std::size_t i = 1; i < signals.size(); ++i) {
+		for (std::size_t i = 1; i < signals.size(); ++i)
+		{
 			rightmost = tree.emplace_right_right(rightmost, objects.at(i));
-			for (tree_type<token_base *>::iterator it = tree.root(); it.usable(); it = it.right()) {
-				if (!it.right().usable()) {
+			for (tree_type<token_base *>::iterator it = tree.root(); it.usable(); it = it.right())
+			{
+				if (!it.right().usable())
+				{
 					rightmost = tree.emplace_root_left(it, signals.at(i));
 					break;
 				}
-				if (get_signal_level(it.data()) == get_signal_level(signals.at(i))) {
+				if (get_signal_level(it.data()) == get_signal_level(signals.at(i)))
+				{
 					if (is_left_associative(it.data()))
 						rightmost = tree.emplace_right_left(it, signals.at(i));
 					else
 						rightmost = tree.emplace_root_left(it, signals.at(i));
 					break;
 				}
-				if (get_signal_level(it.data()) > get_signal_level(signals.at(i))) {
+				if (get_signal_level(it.data()) > get_signal_level(signals.at(i)))
+				{
 					rightmost = tree.emplace_root_left(it, signals.at(i));
 					break;
 				}
@@ -294,12 +326,15 @@ namespace cs {
 	void compiler_type::gen_tree(tree_type<token_base *> &tree, std::deque<token_base *> &raw)
 	{
 		tree.clear();
-		if (raw.size() == 1) {
+		if (raw.size() == 1)
+		{
 			token_base *obj = raw.front();
-			if (obj != nullptr && obj->get_type() == token_types::sblist) {
+			if (obj != nullptr && obj->get_type() == token_types::sblist)
+			{
 				auto *sbl = static_cast<token_sblist *>(obj);
 				std::deque<token_base *> tokens;
-				for (auto &list : sbl->get_list()) {
+				for (auto &list : sbl->get_list())
+				{
 					for (auto &it : list)
 						tokens.push_back(it);
 					tokens.push_back(new token_signal(signal_types::com_));
@@ -311,7 +346,8 @@ namespace cs {
 			}
 			tree.emplace_root_left(tree.root(), obj);
 		}
-		else {
+		else
+		{
 			std::deque<token_base *> signals, objects;
 			split_token(raw, signals, objects);
 			build_tree(tree, signals, objects);
@@ -324,9 +360,12 @@ namespace cs {
 		std::deque<token_base *> oldt, expr;
 		std::swap(tokens, oldt);
 		tokens.clear();
-		for (auto &ptr : oldt) {
-			if (ptr->get_type() == token_types::action || ptr->get_type() == token_types::endline) {
-				if (!expr.empty()) {
+		for (auto &ptr : oldt)
+		{
+			if (ptr->get_type() == token_types::action || ptr->get_type() == token_types::endline)
+			{
+				if (!expr.empty())
+				{
 					tree_type<token_base *> tree;
 					gen_tree(tree, expr);
 					tokens.push_back(new token_expr(tree));

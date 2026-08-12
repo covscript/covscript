@@ -53,7 +53,8 @@
 #include <windows.h>
 #include <Dbghelp.h>
 #pragma comment(lib, "DbgHelp")
-namespace cs_impl {
+namespace cs_impl
+{
 	std::string cxx_demangle(const char *name)
 	{
 		char buffer[1024];
@@ -68,7 +69,8 @@ namespace cs_impl {
 
 #include <cxxabi.h>
 
-namespace cs_impl {
+namespace cs_impl
+{
 	std::string cxx_demangle(const char *name)
 	{
 		char buffer[1024] = {0};
@@ -83,7 +85,8 @@ namespace cs_impl {
 } // namespace cs_impl
 #endif
 
-namespace cs_impl {
+namespace cs_impl
+{
 #ifdef CS_ENABLE_PROFILING
 	volatile std::size_t op_perf[40];
 #endif
@@ -120,7 +123,8 @@ namespace cs_impl {
 	cs::namespace_t path_info_ext = cs::make_shared_namespace<cs::name_space>();
 } // namespace cs_impl
 
-namespace cs {
+namespace cs
+{
 	void exception::relocate_to_csym(const csym_info &csym)
 	{
 		if (mLine == 0 || mLine > csym.map.size())
@@ -128,7 +132,8 @@ namespace cs {
 		std::size_t relocated_line = csym.map[mLine - 1];
 		if (relocated_line >= csym.codes.size())
 			throw fatal_error("Malformed cSYM file: relocated line number is out of range");
-		if (relocated_line > 0) {
+		if (relocated_line > 0)
+		{
 			const std::string &relocated_code = csym.codes[relocated_line - 1];
 			mStr = compose_what(csym.file, relocated_line, relocated_code, mWhat);
 		}
@@ -178,12 +183,14 @@ namespace cs {
 		// Generation chain: keep the parent alive so the forwarders below can reach it.
 		new_process->m_parent = parent;
 		std::shared_ptr<process_context> parent_ref = new_process->m_parent;
-		new_process->on_process_exit.add_listener([parent_ref](void *data) -> bool {
+		new_process->on_process_exit.add_listener([parent_ref](void *data) -> bool
+		{
 			if (parent_ref)
 				return parent_ref->on_process_exit.touch(data);
 			return this_process.on_process_exit.touch(data);
 		});
-		new_process->on_process_sigint.add_listener([parent_ref](void *data) -> bool {
+		new_process->on_process_sigint.add_listener([parent_ref](void *data) -> bool
+		{
 			if (parent_ref)
 				return parent_ref->on_process_sigint.touch(data);
 			return this_process.on_process_sigint.touch(data);
@@ -208,7 +215,8 @@ namespace cs {
 
 	void copy_no_return(var &val)
 	{
-		if (!val.is_rvalue()) {
+		if (!val.is_rvalue())
+		{
 			val.clone();
 			val.detach();
 		}
@@ -218,7 +226,8 @@ namespace cs {
 
 	var copy(var val)
 	{
-		if (!val.is_rvalue()) {
+		if (!val.is_rvalue())
+		{
 			val.clone();
 			val.detach();
 		}
@@ -253,25 +262,30 @@ namespace cs {
 
 	numeric parse_number(const std::string &str)
 	{
-		try {
+		try
+		{
 			std::size_t pos = 0;
-			if (str.find_first_of(".eE") != std::string::npos) {
+			if (str.find_first_of(".eE") != std::string::npos)
+			{
 				numeric_float val = std::stold(str, &pos);
 				if (pos != str.size())
 					throw lang_error("Invalid numeric literal: cannot parse the given string as a number");
 				return val;
 			}
-			else {
+			else
+			{
 				numeric_integer val = std::stoll(str, &pos);
 				if (pos != str.size())
 					throw lang_error("Invalid numeric literal: cannot parse the given string as a number");
 				return val;
 			}
 		}
-		catch (const lang_error &e) {
+		catch (const lang_error &e)
+		{
 			throw;
 		}
-		catch (const std::exception &) {
+		catch (const std::exception &)
+		{
 			throw lang_error("Invalid numeric literal: cannot parse the given string as a number");
 		}
 	}
@@ -286,7 +300,8 @@ namespace cs {
 	{
 		auto pos0 = raw.find('\"');
 		auto pos1 = raw.rfind('\"');
-		if (pos0 != std::string::npos) {
+		if (pos0 != std::string::npos)
+		{
 			if (pos0 == pos1)
 				throw cs::fatal_error("argument syntax error.");
 			else
@@ -304,7 +319,8 @@ namespace cs {
 		return COVSCRIPT_HOME;
 #else
 		const char *sdk_path = std::getenv("COVSCRIPT_HOME");
-		if (sdk_path == nullptr) {
+		if (sdk_path == nullptr)
+		{
 			CHAR path[MAX_PATH] = {0};
 			if (SHGetFolderPathA(nullptr, CSIDL_PERSONAL, nullptr, SHGFP_TYPE_CURRENT, path) != S_OK)
 				throw cs::fatal_error("Cannot locate the CovScript SDK directory: set COVSCRIPT_HOME");
@@ -323,7 +339,8 @@ namespace cs {
 		return COVSCRIPT_HOME;
 #else
 		const char *sdk_path = std::getenv("COVSCRIPT_HOME");
-		if (sdk_path == nullptr) {
+		if (sdk_path == nullptr)
+		{
 			struct passwd *pw = getpwuid(getuid());
 			if (pw == nullptr || pw->pw_dir == nullptr)
 				throw cs::fatal_error("Cannot locate the CovScript SDK directory: set COVSCRIPT_HOME");
@@ -351,7 +368,8 @@ namespace cs {
 
 	void prepend_import_path(const std::string &script, cs::process_context *context)
 	{
-		if (script.empty()) {
+		if (script.empty())
+		{
 			return;
 		}
 		std::error_code ec;
@@ -372,26 +390,27 @@ namespace cs {
 		return std::move(arg);
 	}
 
-// Internal Functions
+	// Internal Functions
 
 	var range(vector &args)
 	{
-		switch (args.size()) {
-		case 1:
-			cs_impl::check_args<numeric>(args);
-			return var::make_constant<range_type>(0, args[0].const_val<numeric>(), 1);
-		case 2:
-			cs_impl::check_args<numeric, numeric>(args);
-			return var::make_constant<range_type>(args[0].const_val<numeric>(), args[1].const_val<numeric>(), 1);
-		case 3:
-			cs_impl::check_args<numeric, numeric, numeric>(args);
-			if (args[2].const_val<numeric>() == 0)
-				throw cs::runtime_error("Range step cannot be zero");
-			return var::make_constant<range_type>(args[0].const_val<numeric>(), args[1].const_val<numeric>(),
-			                                      args[2].const_val<numeric>());
-		default:
-			throw cs::runtime_error(
-			    "Wrong size of the arguments. Expected 1, 2 or 3, provided " + std::to_string(args.size()));
+		switch (args.size())
+		{
+			case 1:
+				cs_impl::check_args<numeric>(args);
+				return var::make_constant<range_type>(0, args[0].const_val<numeric>(), 1);
+			case 2:
+				cs_impl::check_args<numeric, numeric>(args);
+				return var::make_constant<range_type>(args[0].const_val<numeric>(), args[1].const_val<numeric>(), 1);
+			case 3:
+				cs_impl::check_args<numeric, numeric, numeric>(args);
+				if (args[2].const_val<numeric>() == 0)
+					throw cs::runtime_error("Range step cannot be zero");
+				return var::make_constant<range_type>(args[0].const_val<numeric>(), args[1].const_val<numeric>(),
+				                                      args[2].const_val<numeric>());
+			default:
+				throw cs::runtime_error(
+				    "Wrong size of the arguments. Expected 1, 2 or 3, provided " + std::to_string(args.size()));
 		}
 	}
 
@@ -442,168 +461,168 @@ namespace cs {
 		context->cmd_args = cs::var::make_constant<cs::array>(args);
 		// Init Grammars
 		(*context->compiler)
-		// Expression Grammar
-		.add_method({new token_expr(tree_type<token_base *>()), new token_endline(0)}, new method_expression)
-		// Import Grammar
-		.add_method({new token_action(action_types::import_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_import)
-		.add_method({new token_action(action_types::import_), new token_expr(tree_type<token_base *>()),
-			            new token_action(action_types::as_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_import_as)
-		// Package Grammar
-		.add_method({new token_action(action_types::package_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_package)
-		// Involve Grammar
-		.add_method({new token_action(action_types::using_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_involve)
-		// Var Grammar
-		.add_method({new token_action(action_types::var_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_var)
-		.add_method({new token_action(action_types::link_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_link)
-		.add_method({new token_action(action_types::constant_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_constant)
-		// End Grammar
-		.add_method({new token_action(action_types::endblock_), new token_endline(0)}, new method_end)
-		// Block Grammar
-		.add_method({new token_action(action_types::block_), new token_endline(0)}, new method_block)
-		// Namespace Grammar
-		.add_method({new token_action(action_types::namespace_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_namespace)
-		// If Grammar
-		.add_method({new token_action(action_types::if_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_if)
-		// Else Grammar
-		.add_method({new token_action(action_types::else_), new token_endline(0)}, new method_else)
-		// Switch Grammar
-		.add_method({new token_action(action_types::switch_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_switch)
-		// Case Grammar
-		.add_method({new token_action(action_types::case_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_case)
-		// Default Grammar
-		.add_method({new token_action(action_types::default_), new token_endline(0)},
-		new method_default)
-		// While Grammar
-		.add_method({new token_action(action_types::while_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_while)
-		// Until Grammar
-		.add_method({new token_action(action_types::until_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_until)
-		// Loop Grammar
-		.add_method({new token_action(action_types::loop_), new token_endline(0)}, new method_loop)
-		// For Grammar
-		.add_method({new token_action(action_types::for_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_for)
-		.add_method({new token_action(action_types::for_), new token_expr(tree_type<token_base *>()),
-			            new token_action(action_types::do_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_for_do)
-		.add_method({new token_action(action_types::foreach_), new token_expr(tree_type<token_base *>()),
-			            new token_action(action_types::in_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_foreach)
-		.add_method({new token_action(action_types::foreach_), new token_expr(tree_type<token_base *>()),
-			            new token_action(action_types::in_), new token_expr(tree_type<token_base *>()),
-			            new token_action(action_types::do_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_foreach_do)
-		// Break Grammar
-		.add_method({new token_action(action_types::break_), new token_endline(0)}, new method_break)
-		// Continue Grammar
-		.add_method({new token_action(action_types::continue_), new token_endline(0)},
-		new method_continue)
-		// Function Grammar
-		.add_method({new token_action(action_types::function_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_function)
-		.add_method({new token_action(action_types::function_), new token_expr(tree_type<token_base *>()),
-			            new token_action(action_types::override_), new token_endline(0)},
-		new method_function)
-		// Return Grammar
-		.add_method({new token_action(action_types::return_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_return)
-		.add_method({new token_action(action_types::return_), new token_endline(0)},
-		new method_return_no_value)
-		// Struct Grammar
-		.add_method({new token_action(action_types::struct_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_struct)
-		.add_method({new token_action(action_types::struct_), new token_expr(tree_type<token_base *>()),
-			            new token_action(action_types::extends_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_struct)
-		// Try Grammar
-		.add_method({new token_action(action_types::try_), new token_endline(0)}, new method_try)
-		// Catch Grammar
-		.add_method({new token_action(action_types::catch_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_catch)
-		// Throw Grammar
-		.add_method({new token_action(action_types::throw_), new token_expr(tree_type<token_base *>()),
-			            new token_endline(0)},
-		new method_throw);
+		    // Expression Grammar
+		    .add_method({new token_expr(tree_type<token_base *>()), new token_endline(0)}, new method_expression)
+		    // Import Grammar
+		    .add_method({new token_action(action_types::import_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_import)
+		    .add_method({new token_action(action_types::import_), new token_expr(tree_type<token_base *>()),
+		                 new token_action(action_types::as_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_import_as)
+		    // Package Grammar
+		    .add_method({new token_action(action_types::package_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_package)
+		    // Involve Grammar
+		    .add_method({new token_action(action_types::using_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_involve)
+		    // Var Grammar
+		    .add_method({new token_action(action_types::var_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_var)
+		    .add_method({new token_action(action_types::link_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_link)
+		    .add_method({new token_action(action_types::constant_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_constant)
+		    // End Grammar
+		    .add_method({new token_action(action_types::endblock_), new token_endline(0)}, new method_end)
+		    // Block Grammar
+		    .add_method({new token_action(action_types::block_), new token_endline(0)}, new method_block)
+		    // Namespace Grammar
+		    .add_method({new token_action(action_types::namespace_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_namespace)
+		    // If Grammar
+		    .add_method({new token_action(action_types::if_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_if)
+		    // Else Grammar
+		    .add_method({new token_action(action_types::else_), new token_endline(0)}, new method_else)
+		    // Switch Grammar
+		    .add_method({new token_action(action_types::switch_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_switch)
+		    // Case Grammar
+		    .add_method({new token_action(action_types::case_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_case)
+		    // Default Grammar
+		    .add_method({new token_action(action_types::default_), new token_endline(0)},
+		                new method_default)
+		    // While Grammar
+		    .add_method({new token_action(action_types::while_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_while)
+		    // Until Grammar
+		    .add_method({new token_action(action_types::until_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_until)
+		    // Loop Grammar
+		    .add_method({new token_action(action_types::loop_), new token_endline(0)}, new method_loop)
+		    // For Grammar
+		    .add_method({new token_action(action_types::for_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_for)
+		    .add_method({new token_action(action_types::for_), new token_expr(tree_type<token_base *>()),
+		                 new token_action(action_types::do_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_for_do)
+		    .add_method({new token_action(action_types::foreach_), new token_expr(tree_type<token_base *>()),
+		                 new token_action(action_types::in_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_foreach)
+		    .add_method({new token_action(action_types::foreach_), new token_expr(tree_type<token_base *>()),
+		                 new token_action(action_types::in_), new token_expr(tree_type<token_base *>()),
+		                 new token_action(action_types::do_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_foreach_do)
+		    // Break Grammar
+		    .add_method({new token_action(action_types::break_), new token_endline(0)}, new method_break)
+		    // Continue Grammar
+		    .add_method({new token_action(action_types::continue_), new token_endline(0)},
+		                new method_continue)
+		    // Function Grammar
+		    .add_method({new token_action(action_types::function_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_function)
+		    .add_method({new token_action(action_types::function_), new token_expr(tree_type<token_base *>()),
+		                 new token_action(action_types::override_), new token_endline(0)},
+		                new method_function)
+		    // Return Grammar
+		    .add_method({new token_action(action_types::return_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_return)
+		    .add_method({new token_action(action_types::return_), new token_endline(0)},
+		                new method_return_no_value)
+		    // Struct Grammar
+		    .add_method({new token_action(action_types::struct_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_struct)
+		    .add_method({new token_action(action_types::struct_), new token_expr(tree_type<token_base *>()),
+		                 new token_action(action_types::extends_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_struct)
+		    // Try Grammar
+		    .add_method({new token_action(action_types::try_), new token_endline(0)}, new method_try)
+		    // Catch Grammar
+		    .add_method({new token_action(action_types::catch_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_catch)
+		    // Throw Grammar
+		    .add_method({new token_action(action_types::throw_), new token_expr(tree_type<token_base *>()),
+		                 new token_endline(0)},
+		                new method_throw);
 		// Init Runtime
 		context->instance->storage
-		// Internal Types
-		.add_buildin_type("char", []() -> var
+		    // Internal Types
+		    .add_buildin_type("char", []() -> var
 		{ return var::make<char>('\0'); }, typeid(char), cs_impl::char_ext)
-		.add_buildin_type("number", []() -> var
+		    .add_buildin_type("number", []() -> var
 		{ return var::make<numeric>(0); }, typeid(numeric), cs_impl::number_ext)
-		.add_buildin_type("integer", []() -> var
+		    .add_buildin_type("integer", []() -> var
 		{ return var::make<numeric>(0); }, typeid(numeric))
-		.add_buildin_type("float", []() -> var
+		    .add_buildin_type("float", []() -> var
 		{ return var::make<numeric>(0.0); }, typeid(numeric))
-		.add_buildin_type("boolean", []() -> var
+		    .add_buildin_type("boolean", []() -> var
 		{ return var::make<boolean>(true); }, typeid(boolean))
-		.add_buildin_type("pointer", []() -> var
+		    .add_buildin_type("pointer", []() -> var
 		{ return var::make<pointer>(null_pointer); }, typeid(pointer))
-		.add_buildin_type("string", []() -> var
+		    .add_buildin_type("string", []() -> var
 		{ return var::make<string>(); }, typeid(string), cs_impl::string_ext)
-		.add_buildin_type("list", []() -> var
+		    .add_buildin_type("list", []() -> var
 		{ return var::make<list>(); }, typeid(list), cs_impl::list_ext)
-		.add_buildin_type("array", []() -> var
+		    .add_buildin_type("array", []() -> var
 		{ return var::make<array>(); }, typeid(array), cs_impl::array_ext)
-		.add_buildin_type("pair", []() -> var
+		    .add_buildin_type("pair", []() -> var
 		{ return var::make<pair>(numeric(0), numeric(0)); }, typeid(pair), cs_impl::pair_ext)
-		.add_buildin_type("hash_set", []() -> var
+		    .add_buildin_type("hash_set", []() -> var
 		{ return var::make<hash_set>(); }, typeid(hash_set), cs_impl::hash_set_ext)
-		.add_buildin_type("hash_map", []() -> var
+		    .add_buildin_type("hash_map", []() -> var
 		{ return var::make<hash_map>(); }, typeid(hash_map), cs_impl::hash_map_ext)
-		// Context
-		.add_buildin_var("context", var::make_constant<context_t>(context))
-		// Add Internal Functions to storage
-		.add_buildin_var("range", var::make_protect<callable>(range, callable::types::request_fold))
-		.add_buildin_var("to_integer", make_cni(to_integer, true))
-		.add_buildin_var("to_string", make_cni(to_string, true))
-		.add_buildin_var("type", make_cni(type, true))
-		.add_buildin_var("clone", make_cni(clone))
-		.add_buildin_var("move", make_cni(move))
-		.add_buildin_var("swap", make_cni(swap, true))
-		.add_buildin_var("is_a", make_cni(is_a, true))
-		// Add extensions to storage
-		.add_buildin_var("exception", make_namespace(cs_impl::except_ext))
-		.add_buildin_var("iostream", make_namespace(cs_impl::iostream_ext))
-		.add_buildin_var("system", make_namespace(cs_impl::system_ext))
-		.add_buildin_var("future", make_namespace(cs_impl::future_ext))
-		.add_buildin_var("fiber", make_namespace(cs_impl::fiber_ext))
-		.add_buildin_var("runtime", make_namespace(cs_impl::runtime_ext))
-		.add_buildin_var("math", make_namespace(cs_impl::math_ext));
+		    // Context
+		    .add_buildin_var("context", var::make_constant<context_t>(context))
+		    // Add Internal Functions to storage
+		    .add_buildin_var("range", var::make_protect<callable>(range, callable::types::request_fold))
+		    .add_buildin_var("to_integer", make_cni(to_integer, true))
+		    .add_buildin_var("to_string", make_cni(to_string, true))
+		    .add_buildin_var("type", make_cni(type, true))
+		    .add_buildin_var("clone", make_cni(clone))
+		    .add_buildin_var("move", make_cni(move))
+		    .add_buildin_var("swap", make_cni(swap, true))
+		    .add_buildin_var("is_a", make_cni(is_a, true))
+		    // Add extensions to storage
+		    .add_buildin_var("exception", make_namespace(cs_impl::except_ext))
+		    .add_buildin_var("iostream", make_namespace(cs_impl::iostream_ext))
+		    .add_buildin_var("system", make_namespace(cs_impl::system_ext))
+		    .add_buildin_var("future", make_namespace(cs_impl::future_ext))
+		    .add_buildin_var("fiber", make_namespace(cs_impl::fiber_ext))
+		    .add_buildin_var("runtime", make_namespace(cs_impl::runtime_ext))
+		    .add_buildin_var("math", make_namespace(cs_impl::math_ext));
 		return context;
 	}
 
@@ -616,50 +635,50 @@ namespace cs {
 		context->cmd_args = cxt->cmd_args;
 		// Init Runtime
 		context->instance->storage
-		// Internal Types
-		.add_buildin_type("char", []() -> var
+		    // Internal Types
+		    .add_buildin_type("char", []() -> var
 		{ return var::make<char>('\0'); }, typeid(char), cs_impl::char_ext)
-		.add_buildin_type("number", []() -> var
+		    .add_buildin_type("number", []() -> var
 		{ return var::make<numeric>(0); }, typeid(numeric))
-		.add_buildin_type("integer", []() -> var
+		    .add_buildin_type("integer", []() -> var
 		{ return var::make<numeric>(0); }, typeid(numeric))
-		.add_buildin_type("float", []() -> var
+		    .add_buildin_type("float", []() -> var
 		{ return var::make<numeric>(0.0); }, typeid(numeric))
-		.add_buildin_type("boolean", []() -> var
+		    .add_buildin_type("boolean", []() -> var
 		{ return var::make<boolean>(true); }, typeid(boolean))
-		.add_buildin_type("pointer", []() -> var
+		    .add_buildin_type("pointer", []() -> var
 		{ return var::make<pointer>(null_pointer); }, typeid(pointer))
-		.add_buildin_type("string", []() -> var
+		    .add_buildin_type("string", []() -> var
 		{ return var::make<string>(); }, typeid(string), cs_impl::string_ext)
-		.add_buildin_type("list", []() -> var
+		    .add_buildin_type("list", []() -> var
 		{ return var::make<list>(); }, typeid(list), cs_impl::list_ext)
-		.add_buildin_type("array", []() -> var
+		    .add_buildin_type("array", []() -> var
 		{ return var::make<array>(); }, typeid(array), cs_impl::array_ext)
-		.add_buildin_type("pair", []() -> var
+		    .add_buildin_type("pair", []() -> var
 		{ return var::make<pair>(numeric(0), numeric(0)); }, typeid(pair), cs_impl::pair_ext)
-		.add_buildin_type("hash_set", []() -> var
+		    .add_buildin_type("hash_set", []() -> var
 		{ return var::make<hash_set>(); }, typeid(hash_set), cs_impl::hash_set_ext)
-		.add_buildin_type("hash_map", []() -> var
+		    .add_buildin_type("hash_map", []() -> var
 		{ return var::make<hash_map>(); }, typeid(hash_map), cs_impl::hash_map_ext)
-		// Context
-		.add_buildin_var("context", var::make_constant<context_t>(context))
-		// Add Internal Functions to storage
-		.add_buildin_var("range", var::make_protect<callable>(range, callable::types::request_fold))
-		.add_buildin_var("to_integer", make_cni(to_integer, true))
-		.add_buildin_var("to_string", make_cni(to_string, true))
-		.add_buildin_var("type", make_cni(type, true))
-		.add_buildin_var("clone", make_cni(clone))
-		.add_buildin_var("move", make_cni(move))
-		.add_buildin_var("swap", make_cni(swap, true))
-		.add_buildin_var("is_a", make_cni(is_a, true))
-		// Add extensions to storage
-		.add_buildin_var("exception", make_namespace(cs_impl::except_ext))
-		.add_buildin_var("iostream", make_namespace(cs_impl::iostream_ext))
-		.add_buildin_var("system", make_namespace(cs_impl::system_ext))
-		.add_buildin_var("future", make_namespace(cs_impl::future_ext))
-		.add_buildin_var("fiber", make_namespace(cs_impl::fiber_ext))
-		.add_buildin_var("runtime", make_namespace(cs_impl::runtime_ext))
-		.add_buildin_var("math", make_namespace(cs_impl::math_ext));
+		    // Context
+		    .add_buildin_var("context", var::make_constant<context_t>(context))
+		    // Add Internal Functions to storage
+		    .add_buildin_var("range", var::make_protect<callable>(range, callable::types::request_fold))
+		    .add_buildin_var("to_integer", make_cni(to_integer, true))
+		    .add_buildin_var("to_string", make_cni(to_string, true))
+		    .add_buildin_var("type", make_cni(type, true))
+		    .add_buildin_var("clone", make_cni(clone))
+		    .add_buildin_var("move", make_cni(move))
+		    .add_buildin_var("swap", make_cni(swap, true))
+		    .add_buildin_var("is_a", make_cni(is_a, true))
+		    // Add extensions to storage
+		    .add_buildin_var("exception", make_namespace(cs_impl::except_ext))
+		    .add_buildin_var("iostream", make_namespace(cs_impl::iostream_ext))
+		    .add_buildin_var("system", make_namespace(cs_impl::system_ext))
+		    .add_buildin_var("future", make_namespace(cs_impl::future_ext))
+		    .add_buildin_var("fiber", make_namespace(cs_impl::fiber_ext))
+		    .add_buildin_var("runtime", make_namespace(cs_impl::runtime_ext))
+		    .add_buildin_var("math", make_namespace(cs_impl::math_ext));
 		return context;
 	}
 
@@ -678,7 +697,8 @@ namespace cs {
 		while (!current_process->stack_backtrace.empty())
 			current_process->stack_backtrace.pop_no_return();
 #endif
-		if (context) {
+		if (context)
+		{
 			context->instance->storage.clear_all_data();
 			context->compiler->modules.clear();
 			context->compiler->csyms.clear();

@@ -26,18 +26,20 @@
  */
 #include <covscript/impl/symbols.hpp>
 
-namespace cs {
-// Set a flag temporarily and restore its previous value on scope exit
+namespace cs
+{
+	// Set a flag temporarily and restore its previous value on scope exit
 	template <typename T>
-	class value_guard final {
+	class value_guard final
+	{
 		T &ref;
 		T previous;
 
-	public:
+	   public:
 		value_guard() = delete;
 
 		value_guard(T &ref, T value)
-			: ref(ref), previous(ref)
+		    : ref(ref), previous(ref)
 		{
 			ref = std::move(value);
 		}
@@ -48,7 +50,8 @@ namespace cs {
 		}
 	};
 
-	class translator_type final {
+	class translator_type final
+	{
 		using data_type = std::pair<std::deque<token_base *>, method_base *>;
 
 		static bool compare(const token_base *a, const token_base *b)
@@ -60,12 +63,12 @@ namespace cs {
 			if (a->get_type() != b->get_type())
 				return false;
 			return a->get_type() != token_types::action || static_cast<const token_action *>(a)->get_action() ==
-			       static_cast<const token_action *>(b)->get_action();
+			                                                   static_cast<const token_action *>(b)->get_action();
 		}
 
 		std::list<std::shared_ptr<data_type>> m_data;
 
-	public:
+	   public:
 		translator_type() = default;
 
 		translator_type(const translator_type &) = delete;
@@ -86,11 +89,14 @@ namespace cs {
 			for (auto &it : m_data)
 				if (cs::translator_type::compare(it->first.front(), raw.front()))
 					stack.push_back(it);
-			stack.remove_if([&](const std::shared_ptr<data_type> &dat) {
+			stack.remove_if([&](const std::shared_ptr<data_type> &dat)
+			{
 				return dat->first.size() != raw.size();
 			});
-			stack.remove_if([&](const std::shared_ptr<data_type> &dat) {
-				for (std::size_t i = 1; i < raw.size() - 1; ++i) {
+			stack.remove_if([&](const std::shared_ptr<data_type> &dat)
+			{
+				for (std::size_t i = 1; i < raw.size() - 1; ++i)
+				{
 					if (!compare(raw.at(i), dat->first.at(i)))
 						return true;
 				}
@@ -109,24 +115,27 @@ namespace cs {
 		               bool);
 	};
 
-	enum class charset {
+	enum class charset
+	{
 		ascii,
 		utf8,
 		gbk
 	};
 
-	struct csym_info {
+	struct csym_info
+	{
 		std::string file;
 		std::vector<std::size_t> map;
 		std::vector<std::string> codes;
 	};
 
-	class compiler_type final {
+	class compiler_type final
+	{
 #ifdef CS_UNIT_TEST
 		friend struct compiler_test_accessor;
 #endif
 
-	public:
+	   public:
 		// Symbol Table
 		static const mapping<std::string, signal_types> signal_map;
 		static const mapping<std::string, action_types> action_map;
@@ -142,7 +151,7 @@ namespace cs {
 			return signals.count(ch) > 0;
 		}
 
-	private:
+	   private:
 		// Constants Pool
 		std::vector<var> constant_pool;
 		// Status
@@ -204,23 +213,26 @@ namespace cs {
 			token_base *token = it.data();
 			if (token == nullptr)
 				return true;
-			switch (token->get_type()) {
-			default:
-				break;
-			case token_types::value:
-				return true;
-				break;
+			switch (token->get_type())
+			{
+				default:
+					break;
+				case token_types::value:
+					return true;
+					break;
 			}
 			return false;
 		}
 
-		enum class trim_type {
+		enum class trim_type
+		{
 			normal,
 			no_expr_fold,
 			no_this_deduce
 		};
 
-		enum class optm_type {
+		enum class optm_type
+		{
 			normal,
 			enable_namespace_optm
 		};
@@ -243,7 +255,7 @@ namespace cs {
 
 		void opt_expr(tree_type<token_base *> &, tree_type<token_base *>::iterator, optm_type);
 
-	public:
+	   public:
 		map_t<string, namespace_t> modules;
 		map_t<string, csym_info> csyms;
 		// Loop nesting depth of the current translation unit; used to reject
@@ -257,14 +269,15 @@ namespace cs {
 		// Whether a block opens a loop (break/continue only legal inside one).
 		static bool is_loop_block(const method_base *m)
 		{
-			switch (m->get_target_type()) {
-			case statement_types::while_:
-			case statement_types::loop_:
-			case statement_types::for_:
-			case statement_types::foreach_:
-				return true;
-			default:
-				return false;
+			switch (m->get_target_type())
+			{
+				case statement_types::while_:
+				case statement_types::loop_:
+				case statement_types::for_:
+				case statement_types::foreach_:
+					return true;
+				default:
+					return false;
 			}
 		}
 
@@ -282,7 +295,7 @@ namespace cs {
 		compiler_type() = delete;
 
 		explicit compiler_type(context_t c)
-			: context(std::move(c))
+		    : context(std::move(c))
 		{
 			// The type-hash counter and the inheritance map are intentionally NOT
 			// reset here. Script functions and structs are retained for the whole
@@ -333,7 +346,8 @@ namespace cs {
 
 		void add_constant(const var &val)
 		{
-			if (!val.is_protect()) {
+			if (!val.is_protect())
+			{
 				constant_pool.push_back(val);
 				constant_pool.back().mark_protect();
 			}

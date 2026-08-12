@@ -27,7 +27,8 @@
 #include <climits>
 #include <utf8.h>
 
-namespace codecvt_gbk {
+namespace codecvt_gbk
+{
 	static inline char32_t set_zero(char32_t ch)
 	{
 		return ch & 0x0000ffff;
@@ -42,15 +43,18 @@ namespace codecvt_gbk {
 		std::u32string wide;
 		uint32_t head = 0;
 		bool read_next = true;
-		for (auto it = local.begin(); it != local.end();) {
-			if (read_next) {
+		for (auto it = local.begin(); it != local.end();)
+		{
+			if (read_next)
+			{
 				head = *(it++);
 				if (head & u8_blck_begin)
 					read_next = false;
 				else
 					wide.push_back(set_zero(head));
 			}
-			else {
+			else
+			{
 				std::uint8_t tail = *(it++);
 				wide.push_back(set_zero(head << 8 | tail));
 				read_next = true;
@@ -62,8 +66,10 @@ namespace codecvt_gbk {
 	}
 } // namespace codecvt_gbk
 
-namespace cs {
-	namespace codecvt {
+namespace cs
+{
+	namespace codecvt
+	{
 		std::u32string utf8::local2wide(const std::deque<char> &local)
 		{
 			std::u32string ustr;
@@ -111,7 +117,8 @@ namespace cs {
 		std::string gbk::wide2local(const std::u32string &wide)
 		{
 			std::string local;
-			for (auto &ch : wide) {
+			for (auto &ch : wide)
+			{
 				if (ch & codecvt_gbk::u32_blck_begin)
 					local.push_back(ch >> 8);
 				local.push_back(ch);
@@ -142,16 +149,17 @@ namespace cs {
 		if (raw_buff.empty())
 			throw compile_error("Received an empty character buffer");
 		std::unique_ptr<codecvt::charset> cvt = nullptr;
-		switch (encoding) {
-		case charset::ascii:
-			cvt = std::make_unique<codecvt::ascii>();
-			break;
-		case charset::utf8:
-			cvt = std::make_unique<codecvt::utf8>();
-			break;
-		case charset::gbk:
-			cvt = std::make_unique<codecvt::gbk>();
-			break;
+		switch (encoding)
+		{
+			case charset::ascii:
+				cvt = std::make_unique<codecvt::ascii>();
+				break;
+			case charset::utf8:
+				cvt = std::make_unique<codecvt::utf8>();
+				break;
+			case charset::gbk:
+				cvt = std::make_unique<codecvt::gbk>();
+				break;
 		}
 		std::u32string buff = cvt->local2wide(raw_buff);
 		std::u32string tmp;
@@ -159,16 +167,21 @@ namespace cs {
 		bool inside_char = false;
 		bool inside_str = false;
 		bool escape = false;
-		for (auto it = buff.begin(); it != buff.end();) {
-			if (inside_char) {
-				if (escape) {
+		for (auto it = buff.begin(); it != buff.end();)
+		{
+			if (inside_char)
+			{
+				if (escape)
+				{
 					tmp += escape_map.match(*it);
 					escape = false;
 				}
-				else if (*it == '\\') {
+				else if (*it == '\\')
+				{
 					escape = true;
 				}
-				else if (*it == '\'') {
+				else if (*it == '\'')
+				{
 					if (tmp.empty())
 						throw compile_error("Empty character literal: '' is not allowed, a character literal must contain exactly one character");
 					if (tmp.size() > 1)
@@ -179,25 +192,31 @@ namespace cs {
 					tmp.clear();
 					inside_char = false;
 				}
-				else {
+				else
+				{
 					tmp += *it;
 				}
 				++it;
 				continue;
 			}
-			if (inside_str) {
-				if (escape) {
+			if (inside_str)
+			{
+				if (escape)
+				{
 					tmp += escape_map.match(*it);
 					escape = false;
 				}
-				else if (*it == '\\') {
+				else if (*it == '\\')
+				{
 					escape = true;
 				}
-				else if (*it == '"') {
+				else if (*it == '"')
+				{
 					inside_str = false;
 					auto next = it;
 					++next;
-					if (next != buff.end() && !issignal(*next) && cvt->is_identifier(*next)) {
+					if (next != buff.end() && !issignal(*next) && cvt->is_identifier(*next))
+					{
 						tokens.push_back(new token_literal(cvt->wide2local(tmp), ""));
 						type = token_types::literal;
 					}
@@ -205,7 +224,8 @@ namespace cs {
 						tokens.push_back(new_value(cvt->wide2local(tmp)));
 					tmp.clear();
 				}
-				else {
+				else
+				{
 					tmp += *it;
 				}
 				++it;
@@ -213,102 +233,118 @@ namespace cs {
 			}
 			if (*it == '#')
 				break;
-			switch (type) {
-			default:
-				break;
-			case token_types::null:
-				if (*it == '\"') {
-					inside_str = true;
-					++it;
-					continue;
-				}
-				if (*it == '\'') {
-					inside_char = true;
-					++it;
-					continue;
-				}
-				if (std::iswspace(*it)) {
-					++it;
-					continue;
-				}
-				if (issignal(*it)) {
-					type = token_types::signal;
-					continue;
-				}
-				if (std::iswdigit(*it)) {
-					type = token_types::value;
-					continue;
-				}
-				if (!issignal(*it) && cvt->is_identifier(*it)) {
-					type = token_types::id;
-					continue;
-				}
-				throw compile_error(std::string("Unknown character: " + cvt->wide2local(std::u32string(1, *it))));
-				break;
-			case token_types::id:
-				if (!issignal(*it) && cvt->is_identifier(*it)) {
-					tmp += *it;
-					++it;
-					continue;
-				}
-				type = token_types::null;
-				{
-					auto local_tmp = cvt->wide2local(tmp);
-					auto reserved = reserved_map.find(local_tmp);
-					if (reserved != nullptr) {
-						tokens.push_back((*reserved)());
-						tmp.clear();
-						break;
+			switch (type)
+			{
+				default:
+					break;
+				case token_types::null:
+					if (*it == '\"')
+					{
+						inside_str = true;
+						++it;
+						continue;
 					}
-					tokens.push_back(new token_id(local_tmp));
+					if (*it == '\'')
+					{
+						inside_char = true;
+						++it;
+						continue;
+					}
+					if (std::iswspace(*it))
+					{
+						++it;
+						continue;
+					}
+					if (issignal(*it))
+					{
+						type = token_types::signal;
+						continue;
+					}
+					if (std::iswdigit(*it))
+					{
+						type = token_types::value;
+						continue;
+					}
+					if (!issignal(*it) && cvt->is_identifier(*it))
+					{
+						type = token_types::id;
+						continue;
+					}
+					throw compile_error(std::string("Unknown character: " + cvt->wide2local(std::u32string(1, *it))));
+					break;
+				case token_types::id:
+					if (!issignal(*it) && cvt->is_identifier(*it))
+					{
+						tmp += *it;
+						++it;
+						continue;
+					}
+					type = token_types::null;
+					{
+						auto local_tmp = cvt->wide2local(tmp);
+						auto reserved = reserved_map.find(local_tmp);
+						if (reserved != nullptr)
+						{
+							tokens.push_back((*reserved)());
+							tmp.clear();
+							break;
+						}
+						tokens.push_back(new token_id(local_tmp));
+						tmp.clear();
+					}
+					break;
+				case token_types::literal:
+					if (!issignal(*it) && cvt->is_identifier(*it))
+					{
+						tmp += *it;
+						++it;
+						continue;
+					}
+					type = token_types::null;
+					static_cast<token_literal *>(tokens.back())->m_literal = cvt->wide2local(tmp);
 					tmp.clear();
-				}
-				break;
-			case token_types::literal:
-				if (!issignal(*it) && cvt->is_identifier(*it)) {
-					tmp += *it;
-					++it;
-					continue;
-				}
-				type = token_types::null;
-				static_cast<token_literal *>(tokens.back())->m_literal = cvt->wide2local(tmp);
-				tmp.clear();
-				break;
-			case token_types::signal: {
-				if (issignal(*it)) {
-					tmp += *it;
-					++it;
-					continue;
-				}
-				type = token_types::null;
-				std::u32string sig;
-				for (auto &ch : tmp) {
-					auto next_sig = cvt->wide2local(sig + ch);
-					if (signal_map.find(next_sig) == nullptr) {
+					break;
+				case token_types::signal:
+				{
+					if (issignal(*it))
+					{
+						tmp += *it;
+						++it;
+						continue;
+					}
+					type = token_types::null;
+					std::u32string sig;
+					for (auto &ch : tmp)
+					{
+						auto next_sig = cvt->wide2local(sig + ch);
+						if (signal_map.find(next_sig) == nullptr)
+						{
+							auto local_sig = cvt->wide2local(sig);
+							tokens.push_back(new token_signal(signal_map.match(local_sig)));
+							sig = ch;
+						}
+						else
+							sig += ch;
+					}
+					if (!sig.empty())
+					{
 						auto local_sig = cvt->wide2local(sig);
 						tokens.push_back(new token_signal(signal_map.match(local_sig)));
-						sig = ch;
 					}
-					else
-						sig += ch;
+					tmp.clear();
+					break;
 				}
-				if (!sig.empty()) {
-					auto local_sig = cvt->wide2local(sig);
-					tokens.push_back(new token_signal(signal_map.match(local_sig)));
-				}
-				tmp.clear();
-				break;
-			}
-			case token_types::value:
-				if (std::iswdigit(*it) || *it == '.') {
-					tmp += *it;
-					++it;
-					continue;
-				}
-				type = token_types::null;
-				tokens.push_back(new_value(parse_number(cvt->wide2local(tmp))));
-				tmp.clear();
-				break;
+				case token_types::value:
+					if (std::iswdigit(*it) || *it == '.')
+					{
+						tmp += *it;
+						++it;
+						continue;
+					}
+					type = token_types::null;
+					tokens.push_back(new_value(parse_number(cvt->wide2local(tmp))));
+					tmp.clear();
+					break;
 			}
 		}
 		if (inside_char)
@@ -317,49 +353,57 @@ namespace cs {
 			throw compile_error("Unterminated string literal: missing closing \"");
 		if (tmp.empty())
 			return;
-		switch (type) {
-		default:
-			break;
-		case token_types::id: {
-			auto local_tmp = cvt->wide2local(tmp);
-			auto reserved = reserved_map.find(local_tmp);
-			if (reserved != nullptr) {
-				tokens.push_back((*reserved)());
-				tmp.clear();
+		switch (type)
+		{
+			default:
 				break;
+			case token_types::id:
+			{
+				auto local_tmp = cvt->wide2local(tmp);
+				auto reserved = reserved_map.find(local_tmp);
+				if (reserved != nullptr)
+				{
+					tokens.push_back((*reserved)());
+					tmp.clear();
+					break;
+				}
+				tokens.push_back(new token_id(local_tmp));
+				tmp.clear();
 			}
-			tokens.push_back(new token_id(local_tmp));
-			tmp.clear();
-		}
-		break;
-		case token_types::literal:
-			static_cast<token_literal *>(tokens.back())->m_literal = cvt->wide2local(tmp);
 			break;
-		case token_types::signal: {
-			std::u32string sig;
-			for (auto &ch : tmp) {
-				auto next_sig = cvt->wide2local(sig + ch);
-				if (signal_map.find(next_sig) == nullptr) {
+			case token_types::literal:
+				static_cast<token_literal *>(tokens.back())->m_literal = cvt->wide2local(tmp);
+				break;
+			case token_types::signal:
+			{
+				std::u32string sig;
+				for (auto &ch : tmp)
+				{
+					auto next_sig = cvt->wide2local(sig + ch);
+					if (signal_map.find(next_sig) == nullptr)
+					{
+						auto local_sig = cvt->wide2local(sig);
+						tokens.push_back(new token_signal(signal_map.match(local_sig)));
+						sig = ch;
+					}
+					else
+						sig += ch;
+				}
+				if (!sig.empty())
+				{
 					auto local_sig = cvt->wide2local(sig);
 					tokens.push_back(new token_signal(signal_map.match(local_sig)));
-					sig = ch;
 				}
-				else
-					sig += ch;
+				break;
 			}
-			if (!sig.empty()) {
-				auto local_sig = cvt->wide2local(sig);
-				tokens.push_back(new token_signal(signal_map.match(local_sig)));
-			}
-			break;
-		}
-		case token_types::value:
-			tokens.push_back(new_value(parse_number(cvt->wide2local(tmp))));
-			break;
+			case token_types::value:
+				tokens.push_back(new_value(parse_number(cvt->wide2local(tmp))));
+				break;
 		}
 	}
 
-	class compiler_type::preprocessor final {
+	class compiler_type::preprocessor final
+	{
 		std::size_t last_line_num = 1, line_num = 1;
 		bool is_annotation = false;
 		bool is_command = false;
@@ -380,27 +424,33 @@ namespace cs {
 		void process_endline(const context_t &context, compiler_type &compiler, std::deque<token_base *> &tokens,
 		                     charset &encoding)
 		{
-			if (is_annotation) {
+			if (is_annotation)
+			{
 				is_annotation = false;
 				new_empty_line(context);
 				return;
 			}
-			if (is_command) {
+			if (is_command)
+			{
 				is_command = false;
 				if (command == "begin" && !multi_line)
 					multi_line = true;
-				else if (command == "end" && multi_line) {
+				else if (command == "end" && multi_line)
+				{
 					tokens.push_back(new token_endline(last_line_num));
 					multi_line = false;
 				}
-				else {
+				else
+				{
 					auto pos = command.find(':');
 					std::string arg;
-					if (pos != std::string::npos) {
+					if (pos != std::string::npos)
+					{
 						arg = command.substr(pos + 1);
 						command = command.substr(0, pos);
 					}
-					if (command == "charset") {
+					if (command == "charset")
+					{
 						if (arg == "ascii")
 							encoding = charset::ascii;
 						else if (arg == "utf8")
@@ -411,7 +461,8 @@ namespace cs {
 							throw exception(line_num, context->file_path, "@" + command + ": " + arg,
 							                "Unavailable encoding.");
 					}
-					else if (command == "require") {
+					else if (command == "require")
+					{
 						std::string version_str = CS_GET_VERSION_STR(COVSCRIPT_STD_VERSION);
 						if (arg > version_str)
 							throw exception(line_num, context->file_path, "@" + command + ": " + arg,
@@ -423,21 +474,27 @@ namespace cs {
 				}
 				command.clear();
 			}
-			if (empty_buff) {
+			if (empty_buff)
+			{
 				new_empty_line(context);
 				return;
 			}
-			try {
+			try
+			{
 				compiler.process_char_buff(buff, tokens, encoding);
 			}
-			catch (const cs::exception &) {
+			catch (const cs::exception &)
+			{
 				throw;
 			}
-			catch (const std::exception &e) {
+			catch (const std::exception &e)
+			{
 				throw exception(line_num, context->file_path, line, exception_message(e));
 			}
-			for (auto it = tokens.rbegin(); it != tokens.rend(); ++it) {
-				if (*it != nullptr) {
+			for (auto it = tokens.rbegin(); it != tokens.rend(); ++it)
+			{
+				if (*it != nullptr)
+				{
 					token_base *ptr = *it;
 					if (ptr->get_type() == token_types::endline)
 						break;
@@ -455,37 +512,43 @@ namespace cs {
 			empty_line = true;
 		}
 
-	public:
+	   public:
 		explicit preprocessor(const context_t &context, compiler_type &compiler, const std::deque<char> &char_buff,
 		                      std::deque<token_base *> &tokens, charset encoding)
 		{
-			for (auto &ch : char_buff) {
-				if (ch == '\n') {
+			for (auto &ch : char_buff)
+			{
+				if (ch == '\n')
+				{
 					process_endline(context, compiler, tokens, encoding);
 					continue;
 				}
 				if (is_annotation)
 					continue;
-				if (is_command) {
+				if (is_command)
+				{
 					if (!std::isspace(static_cast<unsigned char>(ch)))
 						command.push_back(ch);
 					continue;
 				}
-				if (empty_line && !std::isspace(static_cast<unsigned char>(ch))) {
-					switch (ch) {
-					case '#':
-						is_annotation = true;
-						continue;
-					case '@':
-						is_command = true;
-						continue;
-					default:
-						empty_buff = false;
-						empty_line = false;
-						break;
+				if (empty_line && !std::isspace(static_cast<unsigned char>(ch)))
+				{
+					switch (ch)
+					{
+						case '#':
+							is_annotation = true;
+							continue;
+						case '@':
+							is_command = true;
+							continue;
+						default:
+							empty_buff = false;
+							empty_line = false;
+							break;
 					}
 				}
-				if (!empty_buff) {
+				if (!empty_buff)
+				{
 					buff.push_back(ch);
 					line.push_back(ch);
 				}
@@ -502,12 +565,15 @@ namespace cs {
 		std::deque<token_base *> oldt, expr;
 		std::swap(tokens, oldt);
 		tokens.clear();
-		for (auto &ptr : oldt) {
+		for (auto &ptr : oldt)
+		{
 			if (ptr->get_type() == token_types::signal &&
-			        static_cast<token_signal *>(ptr)->get_signal() == signal_types::endline_)
+			    static_cast<token_signal *>(ptr)->get_signal() == signal_types::endline_)
 				ptr = new token_endline(ptr->get_line_num());
-			if (ptr->get_type() == token_types::action || ptr->get_type() == token_types::endline) {
-				if (!expr.empty()) {
+			if (ptr->get_type() == token_types::action || ptr->get_type() == token_types::endline)
+			{
+				if (!expr.empty())
+				{
 					translator.match_grammar(context, expr);
 					for (auto &it : expr)
 						tokens.push_back(it);
@@ -519,9 +585,11 @@ namespace cs {
 				expr.push_back(ptr);
 		}
 		std::deque<token_base *> tmp;
-		for (auto &ptr : tokens) {
+		for (auto &ptr : tokens)
+		{
 			tmp.push_back(ptr);
-			if (ptr != nullptr && ptr->get_type() == token_types::endline) {
+			if (ptr != nullptr && ptr->get_type() == token_types::endline)
+			{
 				if (tmp.size() > 1)
 					ast.push_back(tmp);
 				tmp.clear();
@@ -532,7 +600,7 @@ namespace cs {
 	}
 
 	void compiler_type::translate_into_tokens(const std::deque<char> &char_buff, std::deque<token_base *> &tokens,
-	        charset encoding)
+	                                          charset encoding)
 	{
 		preprocessor(context, *this, char_buff, tokens, encoding);
 	}
@@ -546,81 +614,90 @@ namespace cs {
 		tokens.clear();
 		std::deque<int> blist_stack;
 		bool empty_bracket = false;
-		auto insert_bracket = [&]() {
-			switch (blist_stack.front()) {
-			case 1:
-				tokens.push_back(new token_signal(signal_types::slb_));
-				break;
-			case 2:
-				tokens.push_back(new token_signal(signal_types::mlb_));
-				break;
-			case 3:
-				tokens.push_back(new token_signal(signal_types::llb_));
-				break;
+		auto insert_bracket = [&]()
+		{
+			switch (blist_stack.front())
+			{
+				case 1:
+					tokens.push_back(new token_signal(signal_types::slb_));
+					break;
+				case 2:
+					tokens.push_back(new token_signal(signal_types::mlb_));
+					break;
+				case 3:
+					tokens.push_back(new token_signal(signal_types::llb_));
+					break;
 			}
 		};
-		for (auto &ptr : oldt) {
-			if (ptr->get_type() == token_types::signal) {
-				switch (static_cast<token_signal *>(ptr)->get_signal()) {
-				default:
-					break;
-				case signal_types::slb_:
-					if (empty_bracket)
-						insert_bracket();
-					blist_stack.push_front(1);
-					empty_bracket = true;
-					continue;
-				case signal_types::mlb_:
-					if (empty_bracket)
-						insert_bracket();
-					blist_stack.push_front(2);
-					empty_bracket = true;
-					continue;
-				case signal_types::llb_:
-					if (empty_bracket)
-						insert_bracket();
-					blist_stack.push_front(3);
-					empty_bracket = true;
-					continue;
-				case signal_types::srb_:
-					if (blist_stack.empty())
-						throw compile_error("Unexpected closing bracket: no opening bracket to match");
-					if (blist_stack.front() != 1)
-						throw compile_error("Bracket type mismatch: ')' does not match the innermost opening bracket");
-					blist_stack.pop_front();
-					if (empty_bracket) {
-						empty_bracket = false;
-						tokens.push_back(new token_signal(signal_types::esb_));
+		for (auto &ptr : oldt)
+		{
+			if (ptr->get_type() == token_types::signal)
+			{
+				switch (static_cast<token_signal *>(ptr)->get_signal())
+				{
+					default:
+						break;
+					case signal_types::slb_:
+						if (empty_bracket)
+							insert_bracket();
+						blist_stack.push_front(1);
+						empty_bracket = true;
 						continue;
-					}
-					break;
-				case signal_types::mrb_:
-					if (blist_stack.empty())
-						throw compile_error("Unexpected closing bracket: no opening bracket to match");
-					if (blist_stack.front() != 2)
-						throw compile_error("Bracket type mismatch: ']' does not match the innermost opening bracket");
-					blist_stack.pop_front();
-					if (empty_bracket) {
-						empty_bracket = false;
-						tokens.push_back(new token_signal(signal_types::emb_));
+					case signal_types::mlb_:
+						if (empty_bracket)
+							insert_bracket();
+						blist_stack.push_front(2);
+						empty_bracket = true;
 						continue;
-					}
-					break;
-				case signal_types::lrb_:
-					if (blist_stack.empty())
-						throw compile_error("Unexpected closing bracket: no opening bracket to match");
-					if (blist_stack.front() != 3)
-						throw compile_error("Bracket type mismatch: '}' does not match the innermost opening bracket");
-					blist_stack.pop_front();
-					if (empty_bracket) {
-						empty_bracket = false;
-						tokens.push_back(new token_signal(signal_types::elb_));
+					case signal_types::llb_:
+						if (empty_bracket)
+							insert_bracket();
+						blist_stack.push_front(3);
+						empty_bracket = true;
 						continue;
-					}
-					break;
+					case signal_types::srb_:
+						if (blist_stack.empty())
+							throw compile_error("Unexpected closing bracket: no opening bracket to match");
+						if (blist_stack.front() != 1)
+							throw compile_error("Bracket type mismatch: ')' does not match the innermost opening bracket");
+						blist_stack.pop_front();
+						if (empty_bracket)
+						{
+							empty_bracket = false;
+							tokens.push_back(new token_signal(signal_types::esb_));
+							continue;
+						}
+						break;
+					case signal_types::mrb_:
+						if (blist_stack.empty())
+							throw compile_error("Unexpected closing bracket: no opening bracket to match");
+						if (blist_stack.front() != 2)
+							throw compile_error("Bracket type mismatch: ']' does not match the innermost opening bracket");
+						blist_stack.pop_front();
+						if (empty_bracket)
+						{
+							empty_bracket = false;
+							tokens.push_back(new token_signal(signal_types::emb_));
+							continue;
+						}
+						break;
+					case signal_types::lrb_:
+						if (blist_stack.empty())
+							throw compile_error("Unexpected closing bracket: no opening bracket to match");
+						if (blist_stack.front() != 3)
+							throw compile_error("Bracket type mismatch: '}' does not match the innermost opening bracket");
+						blist_stack.pop_front();
+						if (empty_bracket)
+						{
+							empty_bracket = false;
+							tokens.push_back(new token_signal(signal_types::elb_));
+							continue;
+						}
+						break;
 				}
 			}
-			if (empty_bracket && !blist_stack.empty()) {
+			if (empty_bracket && !blist_stack.empty())
+			{
 				empty_bracket = false;
 				insert_bracket();
 			}
@@ -641,79 +718,86 @@ namespace cs {
 		std::deque<std::deque<token_base *>> blist;
 		std::deque<token_base *> btokens;
 		std::deque<int> blist_stack;
-		for (auto &ptr : oldt) {
-			if (ptr->get_type() == token_types::signal) {
-				switch (static_cast<token_signal *>(ptr)->get_signal()) {
-				default:
-					break;
-				case signal_types::slb_:
-					blist_stack.push_front(1);
-					if (blist_stack.size() == 1)
-						continue;
-					break;
-				case signal_types::mlb_:
-					blist_stack.push_front(2);
-					if (blist_stack.size() == 1)
-						continue;
-					break;
-				case signal_types::llb_:
-					blist_stack.push_front(3);
-					if (blist_stack.size() == 1)
-						continue;
-					break;
-				case signal_types::srb_:
-					if (blist_stack.empty())
-						throw compile_error("Unexpected closing bracket: no opening bracket to match");
-					if (blist_stack.front() != 1)
-						throw compile_error("Bracket type mismatch: ')' does not match the innermost opening bracket");
-					blist_stack.pop_front();
-					if (blist_stack.empty()) {
-						process_brackets(btokens);
-						blist.push_back(btokens);
-						tokens.push_back(new token_sblist(blist));
-						blist.clear();
-						btokens.clear();
-						continue;
-					}
-					break;
-				case signal_types::mrb_:
-					if (blist_stack.empty())
-						throw compile_error("Unexpected closing bracket: no opening bracket to match");
-					if (blist_stack.front() != 2)
-						throw compile_error("Bracket type mismatch: ']' does not match the innermost opening bracket");
-					blist_stack.pop_front();
-					if (blist_stack.empty()) {
-						process_brackets(btokens);
-						blist.push_back(btokens);
-						tokens.push_back(new token_mblist(blist));
-						blist.clear();
-						btokens.clear();
-						continue;
-					}
-					break;
-				case signal_types::lrb_:
-					if (blist_stack.empty())
-						throw compile_error("Unexpected closing bracket: no opening bracket to match");
-					if (blist_stack.front() != 3)
-						throw compile_error("Bracket type mismatch: '}' does not match the innermost opening bracket");
-					blist_stack.pop_front();
-					if (blist_stack.empty()) {
-						process_brackets(btokens);
-						blist.push_back(btokens);
-						tokens.push_back(new token_lblist(blist));
-						blist.clear();
-						btokens.clear();
-						continue;
-					}
-					break;
-				case signal_types::com_:
-					if (blist_stack.size() == 1) {
-						process_brackets(btokens);
-						blist.push_back(btokens);
-						btokens.clear();
-						continue;
-					}
-					break;
+		for (auto &ptr : oldt)
+		{
+			if (ptr->get_type() == token_types::signal)
+			{
+				switch (static_cast<token_signal *>(ptr)->get_signal())
+				{
+					default:
+						break;
+					case signal_types::slb_:
+						blist_stack.push_front(1);
+						if (blist_stack.size() == 1)
+							continue;
+						break;
+					case signal_types::mlb_:
+						blist_stack.push_front(2);
+						if (blist_stack.size() == 1)
+							continue;
+						break;
+					case signal_types::llb_:
+						blist_stack.push_front(3);
+						if (blist_stack.size() == 1)
+							continue;
+						break;
+					case signal_types::srb_:
+						if (blist_stack.empty())
+							throw compile_error("Unexpected closing bracket: no opening bracket to match");
+						if (blist_stack.front() != 1)
+							throw compile_error("Bracket type mismatch: ')' does not match the innermost opening bracket");
+						blist_stack.pop_front();
+						if (blist_stack.empty())
+						{
+							process_brackets(btokens);
+							blist.push_back(btokens);
+							tokens.push_back(new token_sblist(blist));
+							blist.clear();
+							btokens.clear();
+							continue;
+						}
+						break;
+					case signal_types::mrb_:
+						if (blist_stack.empty())
+							throw compile_error("Unexpected closing bracket: no opening bracket to match");
+						if (blist_stack.front() != 2)
+							throw compile_error("Bracket type mismatch: ']' does not match the innermost opening bracket");
+						blist_stack.pop_front();
+						if (blist_stack.empty())
+						{
+							process_brackets(btokens);
+							blist.push_back(btokens);
+							tokens.push_back(new token_mblist(blist));
+							blist.clear();
+							btokens.clear();
+							continue;
+						}
+						break;
+					case signal_types::lrb_:
+						if (blist_stack.empty())
+							throw compile_error("Unexpected closing bracket: no opening bracket to match");
+						if (blist_stack.front() != 3)
+							throw compile_error("Bracket type mismatch: '}' does not match the innermost opening bracket");
+						blist_stack.pop_front();
+						if (blist_stack.empty())
+						{
+							process_brackets(btokens);
+							blist.push_back(btokens);
+							tokens.push_back(new token_lblist(blist));
+							blist.clear();
+							btokens.clear();
+							continue;
+						}
+						break;
+					case signal_types::com_:
+						if (blist_stack.size() == 1)
+						{
+							process_brackets(btokens);
+							blist.push_back(btokens);
+							btokens.clear();
+							continue;
+						}
+						break;
 				}
 			}
 			if (blist_stack.empty())
