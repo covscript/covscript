@@ -277,12 +277,8 @@ TEST(fiber_many_short_sleeps)
 }
 
 // =============================================================================
-// A script fiber resumed from a native fiber must restore the caller's
-// process_context before rebinding the remaining caller fiber. The native
-// fiber has no private process, so cs_swap_in is a no-op for current_process;
-// without cs_swap_out first, current_process stays on the script fiber's
-// forked process and every subsequent use (return stack, poll_event, ...) is
-// corrupt.
+// A script fiber resumed from a native fiber must restore current_process
+// (the native caller has no private process to rebind).
 // =============================================================================
 TEST(native_fiber_resumes_script_fiber_restores_process)
 {

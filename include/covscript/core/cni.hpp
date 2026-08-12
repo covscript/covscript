@@ -685,10 +685,7 @@ namespace cs_impl {
 				cs::current_process->cs_eh_callback(e);
 			}
 			catch (const cs::exception &) {
-				// Already a located (file/line) error: rethrow unchanged so the
-				// bare message survives. Converting it to forward_exception(e.what())
-				// would embed the "File ..., line ..." wrapper and break sentinel
-				// detection (CS_EXIT/CS_SIGINT) on the second wrap.
+				// Already located: rethrow to keep the bare message (CS_EXIT/CS_SIGINT).
 				throw;
 			}
 			catch (const std::exception &e) {

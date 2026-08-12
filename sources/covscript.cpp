@@ -160,9 +160,7 @@ namespace cs {
 
 	std::shared_ptr<process_context> process_context::current_owner()
 	{
-		// The process that owns the current execution: the nearest script fiber's
-		// process on the fiber chain (a native fiber has no process of its own and
-		// runs under its caller's), or null when the owner is the root.
+		// Nearest script fiber's process on the chain; null when the owner is the root.
 		for (auto &f : current_process->fiber_cxt->stack)
 			if (auto p = f->get_process())
 				return p;
@@ -171,16 +169,13 @@ namespace cs {
 
 	std::shared_ptr<process_context> process_context::fork(const std::shared_ptr<process_context> &parent)
 	{
-		// Inherit the parent's fiber_cxt: share the same fiber chain. A null
-		// parent means the parent is the root process.
+		// Share the parent's fiber chain; a null parent means the parent is the root.
 		process_context *src = parent ? parent.get() : current_process;
 		std::shared_ptr<process_context> new_process(
 		    std::make_shared<process_context>(src->child_stack_size(), src->fiber_cxt));
 		new_process->output_precision = src->output_precision;
 		new_process->import_path = src->import_path;
-		// Generation chain: hold the parent strongly so the forwarders below can
-		// always reach it (keep-alive). A null parent means the parent is the root
-		// process, which lives for the whole program.
+		// Generation chain: keep the parent alive so the forwarders below can reach it.
 		new_process->m_parent = parent;
 		std::shared_ptr<process_context> parent_ref = new_process->m_parent;
 		new_process->on_process_exit.add_listener([parent_ref](void *data) -> bool {

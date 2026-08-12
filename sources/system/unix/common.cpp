@@ -488,9 +488,7 @@ namespace cs {
 				current_process->fiber_cxt->stack.pop();
 			else
 				throw internal_error("Fiber stack corrupted.");
-			// Restore the caller process first: a script fiber resumed from a
-			// native fiber (which has no private process) must still come back to
-			// the native caller's process, not stay on the resumed fiber's.
+			// Restore the caller process before rebinding the remaining caller fiber.
 			fi->cs_swap_out();
 			if (!current_process->fiber_cxt->stack.empty())
 				static_cast<unix_fiber *>(current_process->fiber_cxt->stack.top().get())->cs_swap_in();

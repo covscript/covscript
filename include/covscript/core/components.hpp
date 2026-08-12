@@ -364,9 +364,7 @@ namespace cs {
 			return c == 2 ? 2 : -c;
 		}
 
-		// Ordering tests for a compare_* result. The NaN sentinel (2) must not
-		// satisfy `> 0` / `>= 0`, or a NaN operand would compare greater than /
-		// greater-or-equal to every integer.
+		// Ordering tests for a compare_* result; NaN (2) is unordered.
 		static inline bool compare_greater(int c) noexcept
 		{
 			return c == 1;

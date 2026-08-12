@@ -283,19 +283,12 @@ TEST(system_exit_dispatches_code)
 }
 
 // =============================================================================
-// system.exit from inside a fiber must still reach the on_process_exit handler
-// (the exit code is forwarded through the fiber's forked process up to the
-// main process). The CNI boundary must not convert the located cs::exception
-// sentinel into a forward_exception that embeds the "File ..., line ..."
-// wrapper, or CS_EXIT/CS_SIGINT can never be recognized again.
+// system.exit from a fiber must reach the main on_process_exit handler.
 // =============================================================================
 
 TEST(system_exit_from_fiber_dispatches_code)
 {
-	// Mirror the interpreter's exit listener: record the code on the main
-	// process (main() reads current_process->exit_code after covscript_main
-	// returns) and throw the CS_EXIT sentinel. The exit code must survive a
-	// fiber boundary; writing it to the fiber's forked process would lose it.
+	// Mirror the interpreter: record the code on the main process, throw CS_EXIT.
 	static cs::process_context *main_process = cs::current_process;
 	static int captured = -1;
 	cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
@@ -314,7 +307,7 @@ TEST(system_exit_from_fiber_dispatches_code)
 		           "fiber.create(f).resume()\n");
 	}
 	catch (const cs::exception &) {
-		// The CS_EXIT sentinel escapes the fiber (checked by the next test).
+		// CS_EXIT sentinel escaped the fiber (checked by the next test).
 	}
 	EXPECT_TRUE(captured == 7);
 	EXPECT_TRUE(main_process->exit_code == 7);
@@ -322,10 +315,8 @@ TEST(system_exit_from_fiber_dispatches_code)
 
 TEST(fiber_exit_sentinel_keeps_bare_message)
 {
-	// Mirror the interpreter: the exit listener throws the CS_EXIT sentinel.
-	// The fiber resumes the exception across the CNI boundary; it must come
-	// back as a located cs::exception whose bare message is exactly CS_EXIT
-	// (not a nested "File ..., line ...: CS_EXIT" text).
+	// The CS_EXIT sentinel must escape the fiber as a located cs::exception
+	// whose bare message is exactly "CS_EXIT".
 	cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
 		throw cs::fatal_error("CS_EXIT");
 		return true;
@@ -350,9 +341,7 @@ TEST(fiber_exit_sentinel_keeps_bare_message)
 
 TEST(grandchild_fiber_exit_after_parent_destroyed)
 {
-	// A fiber A creates fiber B, then A is destroyed (its forked process dies).
-	// B must still be able to dispatch exit through the root process: the fork
-	// forwarding listener must not capture A's now-dangling process pointer.
+	// B must still reach the root handler after A's fiber is destroyed.
 	static int captured = -1;
 	cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
 		captured = *static_cast<int *>(code);
@@ -390,9 +379,7 @@ TEST(grandchild_fiber_exit_after_parent_destroyed)
 
 TEST(fiber_exit_forwards_through_live_parent)
 {
-	// The generation chain must keep the parent fiber's process alive and
-	// forward exit through it, so a listener registered on the parent process
-	// fires when a child fiber exits (not flattened to the root).
+	// A listener on the live parent's process must fire when the child exits.
 	static int captured = -1;
 	static bool parent_listener_fired = false;
 	cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
@@ -422,13 +409,13 @@ TEST(fiber_exit_forwards_through_live_parent)
 	EXPECT_TRUE(a->get_process() != nullptr);
 	a->get_process()->on_process_exit.add_listener([](void *) -> bool {
 		parent_listener_fired = true;
-		return false; // do not swallow: keep forwarding up the chain
+		return false; // keep forwarding
 	});
 
 	cs::fiber::resume(a, cs::fiber::schedule_policy::normal); // outer creates b, yields
 	cs::fiber::resume(a, cs::fiber::schedule_policy::normal); // outer returns b
 	cs::fiber_t b = a->return_value().const_val<cs::fiber_t>();
-	// Keep `a` (and hence its process) alive while `b` runs.
+	// Keep `a` alive so its process outlives `b`'s run.
 
 	captured = -1;
 	parent_listener_fired = false;
@@ -645,8 +632,7 @@ TEST(exact_int_float_ordering)
 }
 
 // =============================================================================
-// Numeric: NaN is unordered. int-vs-NaN must behave like the IEEE float-vs-float
-// path (all ordering/equality false, inequality true), not report `>`/`>=`.
+// NaN is unordered: int-vs-NaN must match the IEEE float-vs-float path.
 // =============================================================================
 
 TEST(numeric_nan_comparisons_unordered)
@@ -654,7 +640,6 @@ TEST(numeric_nan_comparisons_unordered)
 	using cs::numeric;
 	numeric nan(std::numeric_limits<cs::numeric_float>::quiet_NaN());
 	numeric one(1);
-	// int <-> NaN, NaN on either side
 	EXPECT_TRUE(!(one > nan));
 	EXPECT_TRUE(!(one >= nan));
 	EXPECT_TRUE(!(one < nan));
@@ -667,8 +652,7 @@ TEST(numeric_nan_comparisons_unordered)
 	EXPECT_TRUE(!(nan <= one));
 	EXPECT_TRUE(!(nan == one));
 	EXPECT_TRUE(nan != one);
-	// float-vs-float reference (IEEE)
-	EXPECT_TRUE(!(nan > numeric(1.0)));
+	EXPECT_TRUE(!(nan > numeric(1.0))); // float-vs-float reference
 	EXPECT_TRUE(!(nan >= numeric(1.0)));
 	EXPECT_TRUE(nan != numeric(1.0));
 }

@@ -265,9 +265,7 @@ void covscript_main(int args_size, char *args[])
 		cs::context_t context = cs::create_context(arg);
 		cs::raii_collector context_gc(context);
 		cs::current_process->on_process_exit.add_listener([&context, main_process = cs::current_process](void *code) -> bool {
-			// Record the code on the process main() reads it from. Inside a fiber
-			// current_process is the fiber's forked process, so writing to it here
-			// would lose the exit code.
+			// Write to the process main() reads it from (a fiber's process would lose it).
 			main_process->exit_code = *static_cast<int *>(code);
 			throw cs::fatal_error("CS_EXIT");
 			return true; });
@@ -339,7 +337,7 @@ void covscript_main(int args_size, char *args[])
 		cs::raii_collector context_gc(context);
 		activate_sigint_handler();
 		cs::current_process->on_process_exit.add_listener([main_process = cs::current_process](void *code) -> bool {
-			// Record the code on the process main() reads it from (see above).
+			// Write to the process main() reads it from (a fiber's process would lose it).
 			main_process->exit_code = *static_cast<int *>(code);
 			throw cs::fatal_error("CS_EXIT"); });
 		cs::current_process->on_process_sigint.add_listener([](void *) -> bool
