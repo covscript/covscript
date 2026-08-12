@@ -414,9 +414,7 @@ namespace cs
 		vector args;
 		token_base *ptr = nullptr;
 		a.prep_call(args);
-		// Only reserve after prep_call: the receiver may not be pushed (e.g. a
-		// plain function with no arguments), in which case reserving an extra
-		// slot would force a heap allocation on every call.
+		// Reserve after prep_call so zero-argument calls don't allocate.
 		args.reserve(args.size() + static_cast<token_arglist *>(b)->get_arglist().size());
 		for (auto &tree : static_cast<token_arglist *>(b)->get_arglist())
 		{

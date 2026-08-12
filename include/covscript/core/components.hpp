@@ -985,8 +985,8 @@ namespace cs
 		}
 	};
 
-	// Count of active worker threads. Pooled allocators only touch their shared
-	// cache while this is zero; otherwise they fall back to the system allocator.
+	// Number of active worker threads. The pool cache is only used when no
+	// worker threads are active.
 	class thread_count final
 	{
 		std::atomic<std::size_t> m_count{0};
@@ -1018,8 +1018,7 @@ namespace cs
 		}
 	};
 
-	// RAII guard: any thread that may create or destroy cs::var objects (e.g.
-	// an async worker) must hold one, or it races the single-threaded cache.
+	// RAII guard for worker threads; increments the worker count on construction.
 	struct thread_guard final
 	{
 		thread_guard()

@@ -1380,9 +1380,7 @@ namespace cs_impl
 
 		class async_callable final
 		{
-			// Keeps the worker-thread count elevated for the whole object
-			// lifetime (shared by copies; declared first so it dies last),
-			// covering the return value and the argument teardown.
+			// Keep the worker count elevated for the whole object lifetime.
 			std::shared_ptr<thread_guard> m_guard;
 			callable func;
 			vector args;
