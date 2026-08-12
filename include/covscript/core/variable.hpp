@@ -877,12 +877,15 @@ namespace cs_impl
 #endif
 #endif
 
+	class any_borrower;
+
 	class any final
 	{
 		template <typename T>
 		friend class operators::handler;
 		template <std::size_t align_size, template <typename> class allocator_t>
 		friend class basic_var;
+		friend class any_borrower;
 
 		struct proxy
 		{
@@ -992,6 +995,12 @@ namespace cs_impl
 		bool usable() const noexcept
 		{
 			return mDat != nullptr;
+		}
+
+		// Raw proxy address, for detecting a self-referencing object_method in cs::copy.
+		const void *proxy_address() const noexcept
+		{
+			return mDat;
 		}
 
 		template <typename T, typename... ArgsT>
@@ -1511,6 +1520,16 @@ namespace cs_impl
 			else
 				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::fcall, &mDat->data, &args)._ptr);
 		}
+
+#ifdef CS_UNIT_TEST
+		// Test-only: number of owning references to the shared proxy (0 when
+		// the value is unset). Used to prove a self-referential value no longer
+		// keeps itself alive.
+		std::uint32_t debug_refcount() const noexcept
+		{
+			return mDat != nullptr ? mDat->refcount : 0;
+		}
+#endif
 	};
 
 	template <>
@@ -1538,6 +1557,116 @@ namespace cs_impl
 	struct var_storage<std::type_info>
 	{
 		using type = std::type_index;
+	};
+
+	// A non-owning view of a var value (mirrors basic_string_borrower). A
+	// any_borrower either OWNS a proxy (counting toward its refcount) or merely
+	// BORROWS one (no refcount change). It is a friend of any so it can reach
+	// the proxy/refcount directly without bloating every var with a flag.
+	// Copies of a borrower stay borrowers; materializing to a var (operator any)
+	// transfers to an owning reference and requires the proxy to be alive.
+	class any_borrower final
+	{
+		any::proxy *m_proxy = nullptr;
+		bool m_own = false;
+
+		void release() noexcept
+		{
+			if (m_own && m_proxy != nullptr)
+			{
+				if (--m_proxy->refcount == 0)
+				{
+					any::get_allocator().free(m_proxy);
+					m_proxy = nullptr;
+				}
+			}
+			m_proxy = nullptr;
+			m_own = false;
+		}
+
+	   public:
+		any_borrower() noexcept = default;
+
+		any_borrower(const any &v) noexcept
+		    : m_proxy(v.mDat), m_own(v.mDat != nullptr)
+		{
+			if (m_own)
+				++m_proxy->refcount;
+		}
+
+		any_borrower(const any_borrower &other) noexcept
+		    : m_proxy(other.m_proxy), m_own(other.m_own)
+		{
+			if (m_own && m_proxy != nullptr)
+				++m_proxy->refcount;
+		}
+
+		any_borrower(any_borrower &&other) noexcept
+		    : m_proxy(other.m_proxy), m_own(other.m_own)
+		{
+			other.m_proxy = nullptr;
+			other.m_own = false;
+		}
+
+		any_borrower &operator=(const any_borrower &other) noexcept
+		{
+			if (this != &other)
+			{
+				release();
+				m_proxy = other.m_proxy;
+				m_own = other.m_own;
+				if (m_own && m_proxy != nullptr)
+					++m_proxy->refcount;
+			}
+			return *this;
+		}
+
+		any_borrower &operator=(any_borrower &&other) noexcept
+		{
+			if (this != &other)
+			{
+				release();
+				m_proxy = other.m_proxy;
+				m_own = other.m_own;
+				other.m_proxy = nullptr;
+				other.m_own = false;
+			}
+			return *this;
+		}
+
+		~any_borrower()
+		{
+			release();
+		}
+
+		// Non-owning view of a var; the var must outlive the borrower.
+		static any_borrower borrow(const any &v) noexcept
+		{
+			any_borrower b;
+			b.m_proxy = v.mDat;
+			b.m_own = false;
+			return b;
+		}
+
+		bool usable() const noexcept
+		{
+			return m_proxy != nullptr;
+		}
+
+		// Whether this borrower points at a specific proxy (self-referencing lambda's `self`).
+		bool points_to(const void *proxy) const noexcept
+		{
+			return m_proxy == proxy;
+		}
+
+		// Materialize to an owning var. The borrowed proxy must still be alive.
+		operator any() const
+		{
+			if (m_proxy == nullptr)
+				return any();
+			++m_proxy->refcount;
+			return any(m_proxy);
+		}
 	};
 } // namespace cs_impl
 

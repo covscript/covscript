@@ -313,9 +313,10 @@ TEST(system_exit_dispatches_code)
 TEST(system_exit_from_fiber_dispatches_code)
 {
 	// Mirror the interpreter: record the code on the context's process, throw CS_EXIT.
-	static cs::process_context *main_process = nullptr;
 	static int captured = -1;
+	static int main_exit_code = -1;
 	captured = -1;
+	main_exit_code = -1;
 	try {
 		run_script("using system\n"
 		           "function f()\n"
@@ -323,10 +324,9 @@ TEST(system_exit_from_fiber_dispatches_code)
 		           "end\n"
 		           "fiber.create(f).resume()\n",
 		           [](const cs::context_t &ctx) {
-			           main_process = ctx->process.get();
-			           main_process->exit_code = -1;
+			           ctx->process->exit_code = -1;
 			           ctx->process->on_process_exit.add_listener([](void *code) -> bool {
-				           main_process->exit_code = *static_cast<int *>(code);
+				           main_exit_code = *static_cast<int *>(code);
 				           captured = *static_cast<int *>(code);
 				           throw cs::fatal_error("CS_EXIT");
 				           return true;
@@ -337,7 +337,7 @@ TEST(system_exit_from_fiber_dispatches_code)
 		// CS_EXIT sentinel escaped the fiber (checked by the next test).
 	}
 	EXPECT_TRUE(captured == 7);
-	EXPECT_TRUE(main_process != nullptr && main_process->exit_code == 7);
+	EXPECT_TRUE(main_exit_code == 7);
 }
 
 TEST(fiber_exit_sentinel_keeps_bare_message)
@@ -939,6 +939,278 @@ TEST(gc_escaped_function_survives_program_release)
 }
 
 // =============================================================================
+// GC: a recursive lambda's implicit `self` is a non-owning borrow.
+// =============================================================================
+
+TEST(self_referencing_lambda_does_not_own_itself)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<UNIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	run_script_on(ctx, "var f = [](n)->n>1?self(n-1)*n:1\n");
+	// `f`'s proxy has one owning reference (the domain); `self` is a borrow, so
+	// no reference cycle forms.
+	EXPECT_TRUE(ctx->instance->storage.get_var("f").debug_refcount() == 1);
+	// Recursion resolves `self` correctly.
+	EXPECT_CONTAINS(run_script("using system\nvar g = [](n)->n>1?self(n-1)*n:1\nsystem.out.println(g(5))\n"), "120");
+}
+
+// =============================================================================
+// GC: a lambda's value lives in the runtime's store, not in a token, so its
+// arena is reclaimed when the context (and with it the store) is gone.
+// =============================================================================
+
+TEST(lambda_arena_reclaimed_after_context_release)
+{
+	std::weak_ptr<cs::compile_unit> wunit;
+	{
+		cs::array args;
+		args.push_back(cs::var::make<cs::string>("<LAMBDA_ARENA>"));
+		auto ctx = cs::create_context(args);
+		{
+			std::istringstream in("var f = [](x)->x+1\nf(2)\n");
+			ctx->instance->compile(in);
+			ctx->instance->interpret();
+		}
+		wunit = ctx->instance->get_current_unit();
+	}
+	EXPECT_TRUE(wunit.expired());
+}
+
+// =============================================================================
+// GC: a lambda nested in a function body is likewise store-owned; its arena is
+// reclaimed at teardown.
+// =============================================================================
+
+TEST(nested_lambda_arena_reclaimed_after_context_release)
+{
+	std::weak_ptr<cs::compile_unit> wunit;
+	{
+		cs::array args;
+		args.push_back(cs::var::make<cs::string>("<NESTED_LAMBDA_ARENA>"));
+		auto ctx = cs::create_context(args);
+		{
+			std::istringstream in("function outer()\n    return [](x)->x+1\nend\nouter()\n");
+			ctx->instance->compile(in);
+			ctx->instance->interpret();
+		}
+		wunit = ctx->instance->get_current_unit();
+	}
+	EXPECT_TRUE(wunit.expired());
+}
+
+// =============================================================================
+// A nested lambda survives release_statements(): its store-owned function keeps
+// the escaped outer function's body readable at call time.
+// =============================================================================
+
+TEST(nested_lambda_survives_program_release)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<NESTED_LAMBDA_ESCAPE>"));
+	auto ctx = cs::create_context(args);
+	{
+		std::istringstream in("function make()\n    return [](x)->x+1\nend\nvar f = make\n");
+		ctx->instance->compile(in);
+		ctx->instance->interpret();
+	}
+	// Grab the outer function before releasing the program (it escapes).
+	cs::var make_var = ctx->instance->storage.get_var("f");
+	ctx->instance->release_statements();
+	cs::vector no_args;
+	cs::var inner = make_var.const_val<cs::callable>().call(no_args);
+	cs::vector one;
+	one.push_back(cs::var::make<cs::numeric>(41));
+	cs::var ret = inner.const_val<cs::callable>().call(one);
+	EXPECT_TRUE(ret.const_val<cs::numeric>() == 42);
+}
+
+// =============================================================================
+// A recompile retires the old arena, but a store-owned domain function's m_unit
+// keeps it alive until teardown releases the store.
+// =============================================================================
+
+TEST(retired_nested_lambda_arena_reclaimed_at_teardown)
+{
+	std::weak_ptr<cs::compile_unit> wold;
+	{
+		cs::array args;
+		args.push_back(cs::var::make<cs::string>("<RETIRED_NESTED_LAMBDA>"));
+		auto ctx = cs::create_context(args);
+		{
+			std::istringstream in("function make()\n    return [](x)->x+1\nend\nvar f = make\n");
+			ctx->instance->compile(in);
+			ctx->instance->interpret();
+		}
+		wold = ctx->instance->get_current_unit();
+		// Recompile: the old arena is no longer the current unit but is still
+		// pinned by the domain function's m_unit.
+		{
+			std::istringstream in("var x = 1\n");
+			ctx->instance->compile(in);
+		}
+		EXPECT_TRUE(!wold.expired());
+	}
+	EXPECT_TRUE(wold.expired());
+}
+
+// =============================================================================
+// A plain program's arena is reclaimed immediately on release_statements().
+// =============================================================================
+
+TEST(plain_arena_reclaimed_on_release)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<PLAIN_ARENA>"));
+	auto ctx = cs::create_context(args);
+	std::weak_ptr<cs::compile_unit> wunit;
+	{
+		std::istringstream in("var p = 1\nvar q = 2\np + q\n");
+		ctx->instance->compile(in);
+		wunit = ctx->instance->get_current_unit();
+	}
+	ctx->instance->release_statements();
+	EXPECT_TRUE(wunit.expired());
+}
+
+// =============================================================================
+// REPL: a nested lambda defined in one statement keeps working in later
+// statements (its store-owned function pins the statement arena).
+// =============================================================================
+
+TEST(repl_nested_lambda_survives_across_statements)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<REPL_NESTED>"));
+	auto ctx = cs::create_context(args);
+	std::ostringstream captured;
+	auto *old = std::cout.rdbuf(captured.rdbuf());
+	try
+	{
+		cs::repl r(ctx);
+		r.exec("function make()");
+		r.exec("    return [](x)->x+1");
+		r.exec("end");
+		r.exec("var f = make");
+		r.exec("var g = f()");
+		r.exec("system.out.println(g(41))");
+	}
+	catch (...)
+	{
+		std::cout.rdbuf(old);
+		throw;
+	}
+	std::cout.rdbuf(old);
+	EXPECT_CONTAINS(captured.str(), "42");
+}
+
+// =============================================================================
+// A lambda's value lives in the runtime's function store and stays callable
+// through both the store and the domain variable.
+// =============================================================================
+
+TEST(lambda_function_owned_by_store)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<STORE>"));
+	auto ctx = cs::create_context(args);
+	run_script_on(ctx, "var f = [](x)->x+1\n");
+	cs::var f = ctx->instance->storage.get_var("f");
+	cs::vector a;
+	a.push_back(cs::var::make<cs::numeric>(41));
+	cs::var r = f.const_val<cs::callable>().call(a);
+	EXPECT_TRUE(r.const_val<cs::numeric>() == 42);
+	cs::vector b;
+	b.push_back(cs::var::make<cs::numeric>(1));
+	cs::var r2 = ctx->instance->functions.get(0).const_val<cs::callable>().call(b);
+	EXPECT_TRUE(r2.const_val<cs::numeric>() == 2);
+}
+
+// =============================================================================
+// A lambda built via cs::eval's temporary arena must stay callable.
+// =============================================================================
+
+TEST(eval_lambda_returns_callable)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<EVAL_NESTED>"));
+	auto ctx = cs::create_context(args);
+	cs::var f = cs::eval(ctx, "[](x)->x+1");
+	cs::vector a;
+	a.push_back(cs::var::make<cs::numeric>(41));
+	cs::var r = f.const_val<cs::callable>().call(a);
+	EXPECT_TRUE(r.const_val<cs::numeric>() == 42);
+}
+
+// =============================================================================
+// A deep copy of a recursive lambda rebinds `self` to the copy's own proxy, so
+// it stays callable after the original is released.
+// =============================================================================
+
+TEST(clone_recursive_lambda_rebinds_self)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<CLONE_SELF>"));
+	auto ctx = cs::create_context(args);
+	run_script_on(ctx, "var f = [](n)->n>1?self(n-1)*n:1\n");
+	cs::var f = ctx->instance->storage.get_var("f");
+	cs::var f2 = cs::copy(f);
+	f = cs::var();
+	cs::var r = cs::invoke(f2, cs::var::make<cs::numeric>(5));
+	EXPECT_TRUE(r.const_val<cs::numeric>() == 120);
+}
+
+// =============================================================================
+// Resuming an escaped script fiber after its context is destroyed is rejected
+// (weak context handle) instead of dereferencing a dangling pointer.
+// =============================================================================
+
+TEST(fiber_resume_rejected_after_context_release)
+{
+	std::exception_ptr eptr;
+	cs::fiber_t f;
+	{
+		cs::array args;
+		args.push_back(cs::var::make<cs::string>("<FIBER_CTX>"));
+		auto ctx = cs::create_context(args);
+		cs::process_run_scope scope(ctx);
+		f = cs::fiber::create(ctx.get(), []() -> cs::var { return cs::var(); });
+	}
+	try
+	{
+		cs::fiber::resume(f);
+	}
+	catch (const cs::lang_error &)
+	{
+		eptr = std::current_exception();
+	}
+	EXPECT_TRUE(eptr != nullptr);
+}
+
+// =============================================================================
+// Escaped objects require their defining context to stay alive (the type_node
+// lives in the process, member names live in the token arena). A structure
+// escaped from its scope is fully usable while the context is held.
+// =============================================================================
+
+TEST(escaped_structure_usable_while_context_alive)
+{
+	cs::var escaped;
+	cs::context_t ctx;
+	{
+		cs::array args;
+		args.push_back(cs::var::make<cs::string>("<UNIT_TEST>"));
+		ctx = cs::create_context(args);
+		run_script_on(ctx, "class foo\n    var x = 42\nend\nvar a = new foo\n");
+		escaped = ctx->instance->storage.get_var("a");
+	}
+	// The context is still held, so the type identity node and members are valid.
+	EXPECT_TRUE(escaped.val<cs::structure>().get_id().node != nullptr);
+	EXPECT_TRUE(escaped.val<cs::structure>().get_id().node->name == "foo");
+	EXPECT_TRUE(escaped.val<cs::structure>().get_var("x").const_val<cs::numeric>() == 42);
+}
+
+// =============================================================================
 // Process ownership: every context owns its own process; a second independent
 // instance cannot start while one is active on the same thread.
 // =============================================================================
@@ -963,9 +1235,31 @@ TEST(second_independent_instance_rejected_while_one_active)
 }
 
 // =============================================================================
-// Module import creates a subcontext that shares the parent's process, so the
-// nested compile/interpret must not trip the exclusivity check.
+// Ownership refactor: releasing the last external reference to a context must
+// reclaim the context, instance, process and compiler (no back-reference cycle
+// keeps them alive).
 // =============================================================================
+
+TEST(context_reclaimed_on_release)
+{
+	std::weak_ptr<cs::context_type> wctx;
+	std::weak_ptr<cs::instance_type> winst;
+	std::weak_ptr<cs::process_context> wproc;
+	std::weak_ptr<cs::compiler_type> wcomp;
+	{
+		cs::array args;
+		args.push_back(cs::var::make<cs::string>("<RECLAIM>"));
+		auto ctx = cs::create_context(args);
+		wctx = ctx;
+		winst = ctx->instance;
+		wproc = ctx->process;
+		wcomp = ctx->compiler;
+	}
+	EXPECT_TRUE(wctx.expired());
+	EXPECT_TRUE(winst.expired());
+	EXPECT_TRUE(wproc.expired());
+	EXPECT_TRUE(wcomp.expired());
+}
 
 TEST(module_import_nests_on_same_process)
 {
@@ -985,6 +1279,36 @@ TEST(module_import_nests_on_same_process)
 	std::istringstream in("using system\nimport nestmod\n");
 	ctx->instance->compile(in);
 	ctx->instance->interpret();
+	std::filesystem::remove_all(dir);
+}
+
+// =============================================================================
+// Module ownership: a module's subcontext is owned by the importing context's
+// subcontext pool, and module functions reference it non-owningly, so the
+// module namespace does not form an ownership cycle back to the subcontext.
+// =============================================================================
+
+TEST(module_subcontext_owned_by_pool)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<MODULE_POOL>"));
+	auto ctx = cs::create_context(args);
+	cs::process_run_scope scope(ctx);
+	auto dir = std::filesystem::temp_directory_path() / "cs_module_pool";
+	std::filesystem::create_directories(dir);
+	{
+		std::ofstream f(dir / "poolmod.csp");
+		f << "package poolmod\nfunction add(a, b)\n    return a + b\nend\n";
+	}
+	ctx->process->import_path += cs::path_delimiter + dir.string();
+	std::istringstream in("using system\nimport poolmod\n");
+	ctx->instance->compile(in);
+	ctx->instance->interpret();
+	// The imported module's subcontext is pinned in the pool (its sole external
+	// owner; module functions reference it non-owningly). Note the subcontext's
+	// own "context" builtin still self-references it — that C3 cycle is part of
+	// the broader ownership refactor, not the module cycle fixed here.
+	EXPECT_TRUE(ctx->subcontexts.size() == 1);
 	std::filesystem::remove_all(dir);
 }
 

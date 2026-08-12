@@ -688,6 +688,12 @@ namespace cs_impl
 	}
 
 	template <>
+	constexpr const char *get_name_of_type<cs::context_type *>()
+	{
+		return "cs::context";
+	}
+
+	template <>
 	constexpr const char *get_name_of_type<cs::var>()
 	{
 		return "cs::var";
@@ -971,6 +977,12 @@ namespace cs_impl
 
 	template <>
 	cs::namespace_t &get_ext<cs::context_t>()
+	{
+		return context_ext;
+	}
+
+	template <>
+	cs::namespace_t &get_ext<cs::context_type *>()
 	{
 		return context_ext;
 	}

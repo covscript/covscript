@@ -29,3 +29,40 @@ TEST(cni_const_ref_conversion)
 	EXPECT_NO_THROW(fn.const_val<cs::callable>().call(args));
 	EXPECT_TRUE(seen == 7.0);
 }
+
+// =============================================================================
+// cni must satisfy the Rule of Five: it owns a heap holder via a raw pointer,
+// so the implicit shallow copy/move assignment would double-free on assignment
+// or swap. Copying, moving and swapping two native functions must keep both
+// holders distinct and functional.
+// =============================================================================
+
+TEST(cni_rule_of_five_copy_move_swap)
+{
+	cs::cni add1([](double x) -> double { return x + 1; });
+	cs::cni mul2([](double x) -> double { return x * 2; });
+
+	auto call = [](const cs::cni &fn, double x) -> cs::numeric
+	{
+		cs::vector args{cs::var::make<cs::numeric>(x)};
+		return fn(args).const_val<cs::numeric>();
+	};
+
+	// Copy assignment deep-clones (must not alias the source holder).
+	cs::cni c = add1;
+	c = mul2;
+	EXPECT_TRUE(call(c, 10) == 20); // c: mul2 (copy-assigned)
+
+	// Move construction and move assignment.
+	cs::cni d(std::move(c));
+	cs::cni e([](double x) -> double { return x - 1; });
+	e = std::move(d);
+	EXPECT_TRUE(call(e, 10) == 20); // e: mul2 (moved through d)
+
+	// Swap exercises move construction + move assignment on the holders.
+	cs::cni f = add1;
+	cs::cni g = mul2;
+	std::swap(f, g);
+	EXPECT_TRUE(call(f, 10) == 20); // f: mul2 after swap
+	EXPECT_TRUE(call(g, 10) == 11); // g: add1 after swap
+}

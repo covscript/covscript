@@ -28,17 +28,17 @@
 
 namespace cs
 {
-	context_t create_context(const array &);
+	context_t create_context(const array &, std::size_t stack_size = 0);
 
-	context_t create_subcontext(const context_t &);
+	context_t create_subcontext(context_type *);
 
 	class instance_type final : public runtime_type
 	{
 		friend class repl;
 
-		friend context_t cs::create_context(const array &);
+		friend context_t cs::create_context(const array &, std::size_t stack_size);
 
-		friend context_t cs::create_subcontext(const context_t &);
+		friend context_t cs::create_subcontext(context_type *);
 
 		// Statements
 		std::deque<statement_base *> statements;
@@ -50,28 +50,35 @@ namespace cs
 		stack_pointer fiber_sp = nullptr;
 		stack_pointer &fiber_stack;
 
+		// Drop the arena reference (lambdas live in the runtime's store, not in
+		// tokens, so there is no arena <-> function cycle to break).
+		void release_unit()
+		{
+			m_unit.reset();
+		}
+
 	   public:
 		// Status
 		bool return_fcall = false;
 		bool break_block = false;
 		bool continue_block = false;
 		// Context
-		context_t context;
+		context_type *context;
 
 		// Constructor and destructor
 		instance_type() = delete;
 
-		explicit instance_type(context_t c)
-		    : context(std::move(c)), runtime_type(fiber_sp), fiber_stack(fiber_sp) {}
+		explicit instance_type(context_type *c)
+		    : context(c), runtime_type(fiber_sp), fiber_stack(fiber_sp) {}
 
-		instance_type(context_t c, stack_pointer &fsp)
-		    : context(std::move(c)), runtime_type(fsp), fiber_stack(fsp) {}
+		instance_type(context_type *c, stack_pointer &fsp)
+		    : context(c), runtime_type(fsp), fiber_stack(fsp) {}
 
-		instance_type(context_t c, std::size_t stack_size)
-		    : context(std::move(c)), runtime_type(fiber_sp, stack_size), fiber_stack(fiber_sp) {}
+		instance_type(context_type *c, std::size_t stack_size)
+		    : context(c), runtime_type(fiber_sp, stack_size), fiber_stack(fiber_sp) {}
 
-		instance_type(context_t c, stack_pointer &fsp, std::size_t stack_size)
-		    : context(std::move(c)), runtime_type(fsp, stack_size), fiber_stack(fsp) {}
+		instance_type(context_type *c, stack_pointer &fsp, std::size_t stack_size)
+		    : context(c), runtime_type(fsp, stack_size), fiber_stack(fsp) {}
 
 		instance_type(const instance_type &) = delete;
 
@@ -80,8 +87,8 @@ namespace cs
 		~instance_type()
 		{
 			statement_base::delete_children(statements);
-			if (context && context->current_unit == m_unit)
-				context->current_unit = nullptr;
+			// current_unit is already destroyed here (it dies before the instance
+			// during teardown); release_statements() handles the recompile path.
 			m_unit.reset();
 		}
 
@@ -91,7 +98,7 @@ namespace cs
 			statement_base::delete_children(statements);
 			if (context && context->current_unit == m_unit)
 				context->current_unit = nullptr;
-			m_unit.reset();
+			release_unit();
 		}
 
 		// The token arena of the current program (tests / embedders).
@@ -117,6 +124,10 @@ namespace cs
 		void check_declar_var(tree_type<token_base *>::iterator, bool = false);
 
 		void check_define_var(tree_type<token_base *>::iterator, bool = false, bool = false);
+
+		// A constant's RHS is usually folded to a token_value; a lambda or a
+		// callable-containing value is left un-folded and evaluated at runtime.
+		var fold_constant(tree_type<token_base *>::iterator, bool constant);
 
 		void parse_define_var(tree_type<token_base *>::iterator, bool = false, bool = false);
 
@@ -160,6 +171,13 @@ namespace cs
 		// Token arena of the current top-level statement (spans multi-line blocks).
 		std::shared_ptr<compile_unit> m_unit;
 
+		// Drop the current statement's arena (lambdas live in the runtime's
+		// store, so there is no arena <-> function cycle to break).
+		void release_unit()
+		{
+			m_unit.reset();
+		}
+
 		void interpret(const string &, std::deque<token_base *> &);
 
 		void run(const string &);
@@ -177,6 +195,10 @@ namespace cs
 
 		~repl()
 		{
+			// Run global finalizers while the session (process) is still active,
+			// not during context teardown when the process is already dying.
+			context->instance->storage.clear_global();
+			m_unit.reset();
 			context->current_unit = nullptr;
 		}
 
@@ -195,10 +217,10 @@ namespace cs
 			cmd_buff.clear();
 			context->compiler->utilize_metadata();
 			context->compiler->loop_depth = 0;
-			context->compiler->import_results.resize(import_base);
+			context->compiler->clear_import_results(import_base);
 			// Drop the current statement's token arena.
 			context->current_unit = nullptr;
-			m_unit.reset();
+			release_unit();
 			while (depth-- > 0)
 			{
 				context->instance->storage.remove_set();
@@ -223,6 +245,12 @@ namespace cs
 
 		explicit scope_guard(const context_t &c)
 		    : context(c.get())
+		{
+			context->instance->storage.add_domain();
+		}
+
+		explicit scope_guard(context_type *c)
+		    : context(c)
 		{
 			context->instance->storage.add_domain();
 		}
@@ -301,13 +329,13 @@ namespace cs
 	class context_swap_guard final
 	{
 		compiler_type *compiler;
-		context_t restore;
+		context_type *restore;
 
 	   public:
 		context_swap_guard() = delete;
 
-		context_swap_guard(compiler_type &comp, context_t target)
-		    : compiler(&comp), restore(comp.swap_context(std::move(target))) {}
+		context_swap_guard(compiler_type &comp, context_type *target)
+		    : compiler(&comp), restore(comp.swap_context(target)) {}
 
 		~context_swap_guard()
 		{

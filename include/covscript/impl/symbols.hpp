@@ -38,6 +38,7 @@ namespace cs
 		vargs,
 		expand,
 		value,
+		lambda,
 		literal,
 		sblist,
 		mblist,
@@ -199,8 +200,7 @@ namespace cs
 		std::size_t line_num = 1;
 
 	   public:
-		// Tokens are owned by a compile unit's arena (or a grammar template);
-		// the legacy global GC table is removed.
+		// Tokens are owned by a compile unit's arena (or a grammar template).
 		token_base() = default;
 
 		token_base(const token_base &) = default;
@@ -225,12 +225,10 @@ namespace cs
 	};
 
 	// A single compilation's token arena. Tokens are shared across tree nodes
-	// (tree_type copies are shallow), so they cannot be owned per-node; instead
-	// every token created while this unit is current is bumped into the arena and
-	// destroyed together when the unit dies. Functions created in the unit hold a
-	// shared_ptr<compile_unit> so the arena outlives the compile scope while any
-	// function is still referenced.
-	class compile_unit final : public std::enable_shared_from_this<compile_unit>
+	// (tree_type copies are shallow), so they can't be owned per-node; every
+	// token created while this unit is current is freed together when it dies.
+	// Functions hold a shared_ptr to the unit so the arena outlives the compile.
+	class compile_unit final
 	{
 		memory_arena arena;
 		std::vector<token_base *> tokens;
@@ -276,7 +274,7 @@ namespace cs
 	{
 		std::shared_ptr<compile_unit> m_unit;
 		std::shared_ptr<compile_unit> m_saved;
-		context_t m_context;
+		context_type *m_context;
 
 	   public:
 		compile_unit_guard() = delete;
@@ -285,7 +283,7 @@ namespace cs
 
 		compile_unit_guard &operator=(const compile_unit_guard &) = delete;
 
-		explicit compile_unit_guard(const context_t &c)
+		explicit compile_unit_guard(context_type *c)
 		    : m_unit(std::make_shared<compile_unit>()), m_saved(c->current_unit), m_context(c)
 		{
 			m_context->current_unit = m_unit;
@@ -478,6 +476,35 @@ namespace cs
 		}
 
 		bool dump(std::ostream &) const override;
+	};
+
+	// A lambda expression compiled to an index into the runtime's function_store;
+	// the token does not own the lambda value, so no arena <-> function cycle.
+	class token_lambda final : public token_base
+	{
+		std::size_t m_index;
+
+	   public:
+		token_lambda() = delete;
+
+		explicit token_lambda(std::size_t index)
+		    : m_index(index) {}
+
+		token_types get_type() const noexcept override
+		{
+			return token_types::lambda;
+		}
+
+		std::size_t get_index() const noexcept
+		{
+			return m_index;
+		}
+
+		bool dump(std::ostream &o) const override
+		{
+			o << "< Lambda #" << m_index << " >";
+			return true;
+		}
 	};
 
 	class token_literal final : public token_base
@@ -741,20 +768,23 @@ namespace cs
 	class statement_base
 	{
 	   protected:
-		context_t context;
+		// Non-owning back-reference to the compiling context. Statements are owned
+		// by the instance (which is owned by the context), so the context outlives
+		// every statement.
+		context_type *context = nullptr;
 		std::size_t line_num = 1;
 
 	   public:
 		// Statements are owned by the statement tree (parents delete children
-		// recursively); the legacy global GC table is removed.
+		// recursively).
 		statement_base() = default;
 
 		statement_base(const statement_base &) = delete;
 
 		statement_base &operator=(const statement_base &) = delete;
 
-		statement_base(context_t c, token_base *eptr)
-		    : context(std::move(c)),
+		statement_base(context_type *c, token_base *eptr)
+		    : context(c),
 		      line_num(static_cast<token_endline *>(eptr)->get_line_num()) {}
 
 		virtual ~statement_base() = default;
@@ -827,8 +857,7 @@ namespace cs
 	class method_base
 	{
 	   public:
-		// Methods are owned by the compiler's translator (unique_ptr); the legacy
-		// global GC table is removed.
+		// Methods are owned by the compiler's translator (unique_ptr).
 		method_base() = default;
 
 		method_base(const method_base &) = default;
@@ -839,11 +868,11 @@ namespace cs
 
 		virtual statement_types get_target_type() const noexcept = 0;
 
-		virtual void preprocess(const context_t &, const std::deque<std::deque<token_base *>> &) {}
+		virtual void preprocess(context_type *, const std::deque<std::deque<token_base *>> &) {}
 
-		virtual statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) = 0;
+		virtual statement_base *translate(context_type *, const std::deque<std::deque<token_base *>> &) = 0;
 
-		virtual void postprocess(const context_t &, const domain_type &) {}
+		virtual void postprocess(context_type *, const domain_type &) {}
 	};
 
 	class method_end : public method_base
@@ -862,13 +891,13 @@ namespace cs
 		}
 
 		virtual statement_base *
-		translate_end(method_base *method, const context_t &context, std::deque<std::deque<token_base *>> &raw,
+		translate_end(method_base *method, context_type *context, std::deque<std::deque<token_base *>> &raw,
 		              std::deque<token_base *> &code)
 		{
 			return method->translate(context, raw);
 		}
 
-		statement_base *translate(const context_t &, const std::deque<std::deque<token_base *>> &) override
+		statement_base *translate(context_type *, const std::deque<std::deque<token_base *>> &) override
 		{
 			return nullptr;
 		}

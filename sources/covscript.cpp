@@ -174,6 +174,19 @@ namespace cs
 		return nullptr;
 	}
 
+	bool process_context::is_related(const process_context *other) const noexcept
+	{
+		if (other == nullptr)
+			return false;
+		for (const process_context *p = this; p != nullptr; p = p->m_parent.get())
+			if (p == other)
+				return true;
+		for (const process_context *p = other; p != nullptr; p = p->m_parent.get())
+			if (p == this)
+				return true;
+		return false;
+	}
+
 	std::shared_ptr<process_context> process_context::fork(const std::shared_ptr<process_context> &parent)
 	{
 		// Share the parent's fiber chain; a null parent means the parent is the root.
@@ -184,8 +197,9 @@ namespace cs
 		    std::make_shared<process_context>(src->child_stack_size(), src->fiber_cxt));
 		new_process->output_precision = src->output_precision;
 		new_process->import_path = src->import_path;
-		// Keep the parent alive so the forwarders below can reach it.
-		new_process->m_parent = parent;
+		// Keep the parent (or the fork source without a fiber chain) alive so
+		// the forwarders below can reach it and is_related() can trace it back.
+		new_process->m_parent = parent ? parent : src->shared_from_this();
 		std::shared_ptr<process_context> parent_ref = new_process->m_parent;
 		// Root for event forwarding when there is no parent fiber.
 		std::shared_ptr<process_context> root_ref = parent_ref ? nullptr : src->shared_from_this();
@@ -214,14 +228,22 @@ namespace cs
 
 	signal_control global_signals;
 
-	type_node *alloc_type_node()
+	type_node *alloc_type_node(process_context *p)
 	{
-		// A process-lifetime pool: std::deque keeps references to existing
+		// The pool is per-process: std::deque keeps references to existing
 		// elements stable across push_back and nothing is ever removed, so every
-		// node address is unique and never reused.
-		static std::deque<type_node> pool;
-		pool.emplace_back();
-		return &pool.back();
+		// node address is a unique, never-reused identity for as long as the
+		// process lives; the whole pool is freed when the process dies. A null
+		// process (a context with no process attached, not expected in practice)
+		// falls back to a program-lifetime pool rather than crashing.
+		if (p != nullptr)
+		{
+			p->type_nodes.emplace_back();
+			return &p->type_nodes.back();
+		}
+		static std::deque<type_node> fallback_pool;
+		fallback_pool.emplace_back();
+		return &fallback_pool.back();
 	}
 
 	void copy_no_return(var &val)
@@ -239,7 +261,16 @@ namespace cs
 	{
 		if (!val.is_rvalue())
 		{
+			// Deep clone: rebind a self-referencing lambda's `self` borrow to the
+			// clone's own proxy, or it would dangle once the original is released.
+			const void *old_proxy = val.proxy_address();
 			val.clone();
+			if (val.is_type_of<object_method>())
+			{
+				auto &om = val.val<object_method>();
+				if (om.object.points_to(old_proxy))
+					om.object = var_borrower::borrow(val);
+			}
 			val.detach();
 		}
 		else
@@ -457,19 +488,21 @@ namespace cs
 		return a.is_a(b);
 	}
 
-	context_t create_context(const array &args)
+	context_t create_context(const array &args, std::size_t stack_size)
 	{
 		context_t context = std::make_shared<context_type>();
-		// Each context owns its own process, sized from the active one if any.
-		context->process = std::make_shared<process_context>(
-		    current_process ? current_process->stack_size : COVSCRIPT_STACK_PRESERVE, fiber_context::current());
+		// Each context owns its own process, sized from the requested size, the
+		// active process, or the default.
+		std::size_t ss = stack_size ? stack_size
+		                            : (current_process ? current_process->stack_size : COVSCRIPT_STACK_PRESERVE);
+		context->process = std::make_shared<process_context>(ss, fiber_context::current());
 		{
 			// Extensions read current_process at load time.
 			process_run_scope scope(context);
 			cs_impl::init_extensions();
 		}
-		context->compiler = std::make_shared<compiler_type>(context);
-		context->instance = std::make_shared<instance_type>(context, context->process->stack_size);
+		context->compiler = std::make_shared<compiler_type>(context.get());
+		context->instance = std::make_shared<instance_type>(context.get(), context->process->stack_size);
 		context->cmd_args = cs::var::make_constant<cs::array>(args);
 		// Default token arena: tokens produced outside an explicit compile unit
 		// (one-off build_expr, tests) live for the context's lifetime. Compiles
@@ -621,7 +654,7 @@ namespace cs
 		    .add_buildin_type("hash_map", []() -> var
 		{ return var::make<hash_map>(); }, typeid(hash_map), cs_impl::hash_map_ext)
 		    // Context
-		    .add_buildin_var("context", var::make_constant<context_t>(context))
+		    .add_buildin_var("context", var::make_constant<context_type *>(context.get()))
 		    // Add Internal Functions to storage
 		    .add_buildin_var("range", var::make_protect<callable>(range, callable::types::request_fold))
 		    .add_buildin_var("to_integer", make_cni(to_integer, true))
@@ -642,7 +675,7 @@ namespace cs
 		return context;
 	}
 
-	context_t create_subcontext(const context_t &cxt)
+	context_t create_subcontext(context_type *cxt)
 	{
 		context_t context = std::make_shared<context_type>();
 		// A subcontext (module import) shares the parent's process.
@@ -651,7 +684,7 @@ namespace cs
 			process_run_scope scope(context); // transparent: same process
 			cs_impl::init_extensions();
 		}
-		context->instance = std::make_shared<instance_type>(context, cxt->instance->fiber_stack,
+		context->instance = std::make_shared<instance_type>(context.get(), cxt->instance->fiber_stack,
 		                                                    context->process ? context->process->stack_size : COVSCRIPT_STACK_PRESERVE);
 		context->compiler = cxt->compiler;
 		context->cmd_args = cxt->cmd_args;
@@ -684,7 +717,7 @@ namespace cs
 		    .add_buildin_type("hash_map", []() -> var
 		{ return var::make<hash_map>(); }, typeid(hash_map), cs_impl::hash_map_ext)
 		    // Context
-		    .add_buildin_var("context", var::make_constant<context_t>(context))
+		    .add_buildin_var("context", var::make_constant<context_type *>(context.get()))
 		    // Add Internal Functions to storage
 		    .add_buildin_var("range", var::make_protect<callable>(range, callable::types::request_fold))
 		    .add_buildin_var("to_integer", make_cni(to_integer, true))
@@ -708,6 +741,10 @@ namespace cs
 	cs::var eval(const context_t &context, const std::string &expr)
 	{
 		process_run_scope scope(context);
+		// Build into a fresh arena so repeated eval() calls don't accumulate
+		// tokens for the context's whole lifetime (a returned lambda keeps the
+		// arena alive via its function in the runtime's store).
+		compile_unit_guard guard(context.get());
 		tree_type<cs::token_base *> tree;
 		std::deque<char> buff;
 		for (auto &ch : expr)

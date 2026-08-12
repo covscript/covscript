@@ -126,9 +126,9 @@ namespace cs
 			return stack.front()->method.get();
 		}
 
-		void match_grammar(const context_t &, std::deque<token_base *> &);
+		void match_grammar(context_type *, std::deque<token_base *> &);
 
-		void translate(const context_t &, const std::deque<std::deque<token_base *>> &, std::deque<statement_base *> &,
+		void translate(context_type *, const std::deque<std::deque<token_base *>> &, std::deque<statement_base *> &,
 		               bool);
 	};
 
@@ -175,7 +175,7 @@ namespace cs
 		bool inside_lambda = false;
 		bool no_optimize = false;
 		// Context
-		context_t context;
+		context_type *context;
 		// Translator
 		translator_type translator;
 
@@ -283,6 +283,18 @@ namespace cs
 		// so per-method storage would clobber on multiple imports per block).
 		std::deque<statement_base *> import_results;
 
+		// Truncate the import FIFO back to `base`, deleting any preprocessing
+		// results produced but never consumed into a statement tree (a compile
+		// aborted between preprocess and translate).
+		void clear_import_results(std::size_t base)
+		{
+			while (import_results.size() > base)
+			{
+				delete import_results.back();
+				import_results.pop_back();
+			}
+		}
+
 		// Whether a block opens a loop (break/continue only legal inside one).
 		static bool is_loop_block(const method_base *m)
 		{
@@ -311,15 +323,15 @@ namespace cs
 
 		compiler_type() = delete;
 
-		explicit compiler_type(context_t c)
-		    : context(std::move(c))
+		explicit compiler_type(context_type *c)
+		    : context(c)
 		{
 			// The type-hash counter and the inheritance map are intentionally NOT
-			// reset here. Script functions and structs are retained for the whole
-			// process (global GC), so a new compiler in the same process must keep
-			// assigning monotonically increasing type hashes and preserve the
-			// is-a relationships, or retained structs would collide with fresh
-			// ones and lose their inheritance.
+			// reset here. Retained functions and structs in a live process keep
+			// referencing these, so a new compiler must keep assigning
+			// monotonically increasing type hashes and preserve the is-a
+			// relationships, or retained structs would collide with fresh ones
+			// and lose their inheritance.
 		}
 
 		compiler_type(const compiler_type &) = delete;
@@ -331,7 +343,7 @@ namespace cs
 		bool fold_expr = true;
 
 		// Context
-		context_t swap_context(context_t cxt)
+		context_type *swap_context(context_type *cxt)
 		{
 			std::swap(context, cxt);
 			return cxt;
@@ -377,8 +389,8 @@ namespace cs
 		}
 
 		// Allocate a token into the current compile unit's arena. Throws if no
-		// compile is in progress: every token created during compilation must be
-		// owned by a unit so the arena can reclaim it (no global GC fallback).
+		// compile is in progress: every token must be owned by a unit so the
+		// arena can reclaim it.
 		template <typename T, typename... A>
 		T *make_token(A &&...a)
 		{

@@ -144,6 +144,8 @@ namespace cs_impl
 {
 	class any;
 
+	class any_borrower;
+
 	class cni;
 } // namespace cs_impl
 namespace cs
@@ -182,6 +184,7 @@ namespace cs
 	using set_t = std::unordered_set<_Tp>;
 #endif
 	using var = cs_impl::any;
+	using var_borrower = cs_impl::any_borrower;
 	using boolean = bool;
 	using string = std::string;
 	using list = std::list<var>;

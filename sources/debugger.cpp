@@ -719,7 +719,7 @@ void covscript_main(int args_size, char *args[])
 					cs::expression_t tree;
 					for (auto &ch: cmd)
 						buff.push_back(ch);
-					cs::compile_unit_guard guard(context);
+					cs::compile_unit_guard guard(context.get());
 					context->compiler->build_expr(buff, tree);
 					id = breakpoints.add_func(context->instance->parse_expr(tree.root()));
 				}
@@ -775,15 +775,13 @@ void covscript_main(int args_size, char *args[])
 			std::size_t start_time = 0;
 			try
 			{
-				context = cs::create_context(split(cmd));
+				context = cs::create_context(split(cmd), stack_resized ? stack_size : 0);
 				// current_process stays bound while the context is alive (commands between runs use it).
 				session_scope = std::make_unique<cs::process_run_scope>(context);
 				context->process->import_path = import_path;
-				if (stack_resized)
-					context->process->resize_stack(stack_size);
 				cs::prepend_import_path(path, context->process.get());
 				cs::current_process->exit_code = 0;
-				context->process->on_process_exit.add_listener([main_process = context->process](void *code) -> bool
+				context->process->on_process_exit.add_listener([main_process = context->process.get()](void *code) -> bool
 				{
 					// Write to the process main() reads it from (a fiber's process would lose it).
 					main_process->exit_code = *static_cast<int *>(code);
@@ -804,7 +802,16 @@ void covscript_main(int args_size, char *args[])
 				std::cout << "The compiler has exited normally, up to " << time() - start_time << "ms." << std::endl;
 				std::cout << "Launching new interpreter instance..." << std::endl;
 				start_time = time();
-				context->instance->interpret();
+				try
+				{
+					context->instance->interpret();
+				}
+				catch (...)
+				{
+					context->instance->storage.clear_global();
+					throw;
+				}
+				context->instance->storage.clear_global();
 			}
 			catch (const std::exception &e)
 			{
@@ -814,7 +821,6 @@ void covscript_main(int args_size, char *args[])
 					activate_sigint_handler();
 				}
 				else if (msg != "CS_DEBUGGER_EXIT") {
-	
 					std::cerr
 					        << "\nFatal Error: An exception was detected, the interpreter instance will terminate immediately."
 					        << std::endl;
@@ -827,7 +833,6 @@ void covscript_main(int args_size, char *args[])
 			}
 			catch (...)
 			{
-
 				std::cerr
 				        << "\nFatal Error: An exception was detected, the interpreter instance will terminate immediately."
 				        << std::endl;
@@ -854,7 +859,7 @@ void covscript_main(int args_size, char *args[])
 				cs::expression_t tree;
 				for (auto &ch: cmd)
 					buff.push_back(ch);
-				cs::compile_unit_guard guard(context);
+				cs::compile_unit_guard guard(context.get());
 				context->compiler->build_expr(buff, tree);
 				std::cout << context->instance->parse_expr(tree.root()) << std::endl;
 			}

@@ -318,6 +318,14 @@ namespace cs
 			}
 		};
 
+		// Script fibers fork their own process, so they need an active one.
+		inline std::size_t script_stack_size()
+		{
+			if (current_process == nullptr)
+				throw lang_error("Cannot create a script fiber without an active process");
+			return current_process->child_stack_size();
+		}
+
 		class unix_fiber : public fiber_type
 		{
 			friend void cs::fiber::resume(const fiber_t &, schedule_policy);
@@ -325,7 +333,8 @@ namespace cs
 			friend void cs::fiber::yield();
 
 			stack_type<domain_type> cs_stack;
-			context_t cs_context;
+			// Weak so an escaped fiber can't dangle its context after teardown.
+			std::weak_ptr<context_type> cs_context;
 
 			// Non-native fibers fork their own process_context (own value stack);
 			// native fibers keep null and reuse the current execution path.
@@ -366,12 +375,12 @@ namespace cs
 			unix_fiber() = delete;
 			// Native Function
 			unix_fiber(std::function<var()> f)
-			    : cs_stack(0), cs_context(nullptr), process(nullptr), func(std::move(f)), eptr(nullptr), state(fiber_state::ready), ret_val(null_pointer), stack(COVSCRIPT_FIBER_STACK_LIMIT) {}
+			    : cs_stack(0), cs_context(), process(nullptr), func(std::move(f)), eptr(nullptr), state(fiber_state::ready), ret_val(null_pointer), stack(COVSCRIPT_FIBER_STACK_LIMIT) {}
 
 			// CovScript Function
-			unix_fiber(const context_t &cxt, std::function<var()> f)
-			    : cs_stack(current_process->child_stack_size()),
-			      cs_context(cxt),
+			unix_fiber(context_type *cxt, std::function<var()> f)
+			    : cs_stack(script_stack_size()),
+			      cs_context(cxt->weak_from_this()),
 			      process(process_context::fork(process_context::current_owner())),
 			      func(std::move(f)),
 			      eptr(nullptr),
@@ -395,20 +404,18 @@ namespace cs
 			{
 				if (process)
 					current_process = process.get();
-				if (cs_context)
-					cs_context->instance->swap_context(&cs_stack);
+				if (auto c = cs_context.lock())
+					c->instance->swap_context(&cs_stack);
 			}
 
 			void cs_swap_out()
 			{
-				// Restore the caller process; a script fiber resumed without a
-				// session falls back to its own context's process.
-				if (resumer_process != nullptr)
-					current_process = resumer_process;
-				else if (cs_context && cs_context->process)
-					current_process = cs_context->process.get();
-				if (cs_context)
-					cs_context->instance->swap_context(nullptr);
+				// Restore the caller's process unconditionally (it may be null
+				// when the fiber was resumed outside a session); otherwise a
+				// null resumer leaves the fiber's own process installed.
+				current_process = resumer_process;
+				if (auto c = cs_context.lock())
+					c->instance->swap_context(nullptr);
 			}
 
 			fiber_state get_state() const override
@@ -430,7 +437,7 @@ namespace cs
 			}
 		};
 
-		fiber_t create(const context_t &cxt, std::function<var()> f)
+		fiber_t create(context_type *cxt, std::function<var()> f)
 		{
 			return std::make_shared<unix_fiber>(cxt, std::move(f));
 		}
@@ -448,6 +455,8 @@ namespace cs
 				throw internal_error("Resuming a corrupted fiber.");
 			if (fi->state == fiber_state::running || fi->state == fiber_state::finished)
 				throw lang_error("A fiber cannot be resumed while it is already running or after it has finished");
+			if (fi->process != nullptr && fi->cs_context.expired())
+				throw lang_error("The fiber's defining context has been destroyed");
 			if (fi->state == fiber_state::ready)
 			{
 				memset(&fi->ctx, 0, sizeof(fi->ctx));

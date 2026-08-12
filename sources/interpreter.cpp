@@ -280,15 +280,13 @@ void covscript_main(int args_size, char *args[])
 		cs::array arg;
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
-		cs::context_t context = cs::create_context(arg);
+		cs::context_t context = cs::create_context(arg, stack_resized ? stack_size : 0);
 		// current_process is this context's process for the rest of the run.
 		cs::process_run_scope session(context);
 		context->process->import_path = import_path;
-		if (stack_resized)
-			context->process->resize_stack(stack_size);
 		if (path != "STDIN")
 			cs::prepend_import_path(path, context->process.get());
-		context->process->on_process_exit.add_listener([main_process = context->process](void *code) -> bool
+		context->process->on_process_exit.add_listener([main_process = context->process.get()](void *code) -> bool
 		{
 			// Write to the process main() reads it from (a fiber's process would lose it).
 			main_process->exit_code = *static_cast<int *>(code);
@@ -332,7 +330,21 @@ void covscript_main(int args_size, char *args[])
 				}
 			}
 			if (!compile_only)
-				context->instance->interpret();
+			{
+				// Run finalizers on both success and failure while the process
+				// is still active; a thrown exception must not skip clear_global
+				// (it would otherwise run during teardown, use-after-free).
+				try
+				{
+					context->instance->interpret();
+				}
+				catch (...)
+				{
+					context->instance->storage.clear_global();
+					throw;
+				}
+				context->instance->storage.clear_global();
+			}
 #ifdef CS_ENABLE_PROFILING
 			std::cout << "Perf Result:" << std::endl;
 			for (std::size_t i = 0; i < 40; ++i)
@@ -372,21 +384,19 @@ void covscript_main(int args_size, char *args[])
 		    arg{cs::var::make_constant<cs::string>("<REPL_ENV>")};
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
-		cs::context_t context = cs::create_context(arg);
+		cs::context_t context = cs::create_context(arg, stack_resized ? stack_size : 0);
 		// The REPL session is one active instance.
 		cs::process_run_scope session(context);
 		context->process->import_path = import_path;
-		if (stack_resized)
-			context->process->resize_stack(stack_size);
 		activate_sigint_handler();
-		cs::current_process->on_process_exit.add_listener([main_process = cs::current_process](void *code) -> bool
+		context->process->on_process_exit.add_listener([main_process = context->process.get()](void *code) -> bool
 		{
 			// Write to the process main() reads it from (a fiber's process would lose it).
 			main_process->exit_code = *static_cast<int *>(code);
 			throw cs::fatal_error("CS_EXIT"); });
-		cs::current_process->on_process_sigint.add_listener([](void *) -> bool
+		context->process->on_process_sigint.add_listener([](void *) -> bool
 		{ throw cs::fatal_error("CS_SIGINT"); });
-		cs::current_process->on_process_sigint.add_listener([](void *) -> bool
+		context->process->on_process_sigint.add_listener([](void *) -> bool
 		{
 			std::cin.clear();
 			return false; });
@@ -410,17 +420,13 @@ void covscript_main(int args_size, char *args[])
 					if (std::cin)
 						break;
 					if (std::cin.eof())
-					{
-						int code = 0;
-						cs::process_context::on_process_exit_default_handler(&code);
-					}
+						// Break out for a clean shutdown (run finalizers) rather
+						// than std::exit, which would skip the repl destructor.
+						throw cs::fatal_error("CS_EXIT");
 				}
 #else
 				if (!std::cin)
-				{
-					int code = 0;
-					cs::process_context::on_process_exit_default_handler(&code);
-				}
+					throw cs::fatal_error("CS_EXIT");
 				if (!silent)
 					std::cout << std::string(repl.get_level() * 2, '.') << "> " << std::flush;
 				std::getline(std::cin, line);

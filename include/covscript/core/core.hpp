@@ -96,6 +96,7 @@
 #include <atomic>
 #include <chrono>
 #include <thread>
+#include <mutex>
 #include <cctype>
 #include <string>
 #include <vector>
@@ -159,6 +160,18 @@ namespace cs
 
 	extern signal_control global_signals;
 
+	// Per-struct type identity node. Allocated from the current process's
+	// type-node pool, which lives exactly as long as the process, so its address
+	// is a stable, unique identity for the type within that process (a forked
+	// child keeps the parent alive, so cross-process references stay valid).
+	// It carries the materialized transitive ancestor set so is_a stays O(1).
+	struct type_node final
+	{
+		std::string name;
+		const type_node *parent = nullptr;
+		set_t<const type_node *> ancestors;
+	};
+
 	// Process Context
 	class process_context final : public std::enable_shared_from_this<process_context>
 	{
@@ -175,6 +188,9 @@ namespace cs
 		int exit_code = 0;
 		// Import Path
 		std::string import_path = ".";
+		// Type identity nodes of structs defined while this process is active.
+		// Only ever appended; freed when the process dies.
+		std::deque<type_node> type_nodes;
 		// Stack
 		std::size_t stack_size = COVSCRIPT_STACK_PRESERVE;
 
@@ -184,15 +200,8 @@ namespace cs
 #endif
 
 		// Shared fiber chain for this execution path (thread-local default; forks
-		// inherit the pointer). Access via `current_process->fiber_cxt->stack` etc.
-		// The fiber_stack/fiber_busy_wait_* members below are transitional aliases,
-		// removed in 3.5.3.
+		// inherit the pointer). Access via `fiber_context::current()->stack`.
 		fiber_context *const fiber_cxt;
-
-		// Transitional compatibility aliases into fiber_cxt; DEPRECATED, removed in 3.5.3.
-		stack_type<fiber_t> &fiber_stack;
-		double &fiber_busy_wait_coef;
-		std::size_t &fiber_busy_wait_min;
 
 		// Stack Resize must before any context instance start
 		void resize_stack(std::size_t size)
@@ -254,12 +263,12 @@ namespace cs
 		cs_exception_handler cs_eh_callback = &cs_defalt_exception_handler;
 
 		process_context()
-		    : fiber_cxt(fiber_context::current()), fiber_stack(fiber_cxt->stack), fiber_busy_wait_coef(fiber_cxt->busy_wait_coef), fiber_busy_wait_min(fiber_cxt->busy_wait_min), on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
+		    : fiber_cxt(fiber_context::current()), on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
 		{
 		}
 
 		explicit process_context(std::size_t ss, fiber_context *cxt)
-		    : fiber_cxt(cxt), fiber_stack(fiber_cxt->stack), fiber_busy_wait_coef(fiber_cxt->busy_wait_coef), fiber_busy_wait_min(fiber_cxt->busy_wait_min), on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
+		    : fiber_cxt(cxt), on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
 		{
 			resize_stack(ss);
 		}
@@ -269,14 +278,25 @@ namespace cs
 
 		// Owning process of the current execution, or null for the root.
 		static std::shared_ptr<process_context> current_owner();
+
+		// Whether this process is `other`, or an ancestor/descendant of it (same
+		// forked family), so a fiber's process relates to its owner.
+		bool is_related(const process_context *other) const noexcept;
 	};
 
 	extern thread_local process_context *current_process;
 
 	// Context
-	class context_type final
+	class context_type final : public std::enable_shared_from_this<context_type>
 	{
 	   public:
+		// Subcontexts created by module imports. Module functions/structs copied
+		// into a module namespace reference their defining subcontext via a
+		// non-owning back-pointer; this pool is the subcontext's owner, keeping it
+		// alive as long as this context lives and breaking what would otherwise be
+		// an ownership cycle through the module namespace. Declared first so it is
+		// destroyed last (subcontexts outlive the instance that references them).
+		std::vector<context_t> subcontexts;
 		compiler_t compiler = nullptr;
 		instance_t instance = nullptr;
 		std::deque<string> file_buff;
@@ -310,21 +330,25 @@ namespace cs
 		}
 	};
 
-	// Installs a context's process as current_process for a run/session. Nested
-	// execution on the same process is transparent; a different active process is
-	// rejected so a thread never has two instances running.
+	// Installs a context's process as current_process. Same-process nesting is
+	// transparent; an unrelated active process is rejected.
 	class process_run_scope
 	{
 		process_context *m_prev_process = nullptr;
 
 	   public:
 		explicit process_run_scope(const context_t &c)
+		    : process_run_scope(c.get()) {}
+
+		explicit process_run_scope(context_type *c)
 		    : m_prev_process(current_process)
 		{
+			if (c == nullptr)
+				throw fatal_error("the context is null");
 			process_context *p = c->process.get();
 			if (p == nullptr)
 				throw fatal_error("the context has no process attached");
-			if (current_process != nullptr && current_process != p)
+			if (current_process != nullptr && current_process != p && !current_process->is_related(p))
 				throw fatal_error("another Covscript instance is already running on this thread");
 			current_process = p;
 		}
@@ -336,13 +360,15 @@ namespace cs
 	};
 
 	// Ensures current_process is non-null, activating the given process only when
-	// idle; a fiber keeps its own process.
+	// idle; a fiber keeps its own process. Rejects an unrelated active process.
 	class process_activation
 	{
 		bool m_activated = false;
 
 	   public:
 		explicit process_activation(const context_t &c) : process_activation(c ? c->process.get() : nullptr) {}
+
+		explicit process_activation(context_type *c) : process_activation(c ? c->process.get() : nullptr) {}
 
 		explicit process_activation(process_context *p)
 		{
@@ -351,6 +377,9 @@ namespace cs
 				m_activated = true;
 				current_process = p;
 			}
+			else if (p != nullptr && current_process != nullptr && current_process != p &&
+			         !current_process->is_related(p))
+				throw fatal_error("another Covscript instance is already running on this thread");
 		}
 
 		~process_activation()
@@ -481,7 +510,7 @@ namespace cs
 			return !cs::fiber_context::current()->stack.empty();
 		}
 
-		fiber_t create(const context_t &, std::function<var()>);
+		fiber_t create(context_type *, std::function<var()>);
 
 		fiber_t create_native(std::function<var()>);
 
@@ -496,7 +525,10 @@ namespace cs
 
 	class function final
 	{
-		context_t mContext;
+		// Non-owning back-reference to the defining context (or module subcontext,
+		// kept alive by its owner's subcontext pool). The caller must keep the
+		// context alive while calling an escaped function.
+		context_type *mContext;
 #ifdef CS_DEBUGGER
 		// Debug Information
 		mutable bool mMatch = false;
@@ -543,15 +575,15 @@ namespace cs
 		function &operator=(const function &) = delete;
 
 #ifdef CS_DEBUGGER
-		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
-		    : mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)), m_unit(mContext->current_unit)
+		function(context_type *c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
+		    : mContext(c), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)), m_unit(mContext->current_unit)
 		{
 			init_call_ptr();
 		}
 #else
 
-		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
-		    : mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)), m_unit(mContext->current_unit)
+		function(context_type *c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
+		    : mContext(c), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)), m_unit(mContext->current_unit)
 		{
 			init_call_ptr();
 		}
@@ -578,7 +610,7 @@ namespace cs
 			return call_ptr(this, args);
 		}
 
-		const context_t &get_context() const
+		context_type *get_context() const
 		{
 			return mContext;
 		}
@@ -662,16 +694,21 @@ namespace cs
 
 	struct object_method final
 	{
-		var object;
+		var_borrower object;
 		var callable;
 		bool is_request_fold = false;
 
 		object_method() = delete;
 
-		object_method(var obj, var func, bool request_fold = false)
+		object_method(var_borrower obj, var func, bool request_fold = false)
 		    : object(std::move(obj)), callable(std::move(func)), is_request_fold(request_fold) {}
 
 		~object_method() = default;
+		// Note: for a self-referencing lambda the borrow points at the proxy that
+		// holds this object_method, so it stays valid for the lifetime of the
+		// original. A deep clone (var::clone/copy) copies that borrow verbatim, so
+		// the copy's `self` still refers to the original proxy: the original must
+		// outlive the copy.
 	};
 
 	// Copy
@@ -723,17 +760,7 @@ namespace cs
 
 	static const pointer null_pointer = {};
 
-	// Per-struct type identity node. Allocated from a process-lifetime pool
-	// (never freed), so its address is a stable, unique identity for the type.
-	// It carries the materialized transitive ancestor set so is_a stays O(1).
-	struct type_node final
-	{
-		std::string name;
-		const type_node *parent = nullptr;
-		set_t<const type_node *> ancestors;
-	};
-
-	type_node *alloc_type_node();
+	type_node *alloc_type_node(process_context *p);
 
 	struct type_id final
 	{
@@ -827,14 +854,27 @@ namespace cs
 
 	class domain_type final
 	{
-		map_t<std::string_view, std::size_t> m_reflect;
+		// Owning keys, so a domain survives recompilation (the arena and
+		// statements that owned the original names are released).
+		map_t<std::string, std::size_t> m_reflect;
 		std::shared_ptr<domain_ref> m_ref;
 		std::vector<var> m_slot;
 		bool optimize = false;
 
+		// phmap keys std::string with a transparent hash (zero-copy string_view
+		// lookup); std::unordered_map needs a materialized std::string.
+		inline auto reflect_find(std::string_view name) const
+		{
+#ifdef CS_COMPATIBILITY_MODE
+			return m_reflect.find(std::string(name));
+#else
+			return m_reflect.find(name);
+#endif
+		}
+
 		inline std::size_t get_slot_id(std::string_view name) const
 		{
-			auto it = m_reflect.find(name);
+			auto it = reflect_find(name);
 			if (it != m_reflect.end())
 				return it->second;
 			else
@@ -882,7 +922,7 @@ namespace cs
 
 		inline bool exist(std::string_view name) const noexcept
 		{
-			return m_reflect.find(name) != m_reflect.end();
+			return reflect_find(name) != m_reflect.end();
 		}
 
 		inline bool exist(const var_id &id) const noexcept
@@ -892,7 +932,7 @@ namespace cs
 
 		domain_type &add_var(const char *name, const var &val)
 		{
-			auto it = m_reflect.find(name);
+			auto it = reflect_find(name);
 			if (it == m_reflect.end())
 			{
 				m_slot.push_back(val);
@@ -927,7 +967,7 @@ namespace cs
 
 		bool add_var_optimal(const char *name, const var &val, bool override = false)
 		{
-			auto it = m_reflect.find(name);
+			auto it = reflect_find(name);
 			if (it != m_reflect.end())
 			{
 				if (optimize)
@@ -997,7 +1037,7 @@ namespace cs
 
 		var &get_var(std::string_view name)
 		{
-			auto it = m_reflect.find(name);
+			auto it = reflect_find(name);
 			if (it != m_reflect.end())
 				return m_slot[it->second];
 			else
@@ -1006,7 +1046,7 @@ namespace cs
 
 		const var &get_var(std::string_view name) const
 		{
-			auto it = m_reflect.find(name);
+			auto it = reflect_find(name);
 			if (it != m_reflect.end())
 				return m_slot[it->second];
 			else
@@ -1041,7 +1081,7 @@ namespace cs
 
 		var *get_var_opt(std::string_view name)
 		{
-			auto it = m_reflect.find(name);
+			auto it = reflect_find(name);
 			if (it != m_reflect.end())
 				return &m_slot[it->second];
 			else
@@ -1050,7 +1090,7 @@ namespace cs
 
 		const var *get_var_opt(std::string_view name) const
 		{
-			auto it = m_reflect.find(name);
+			auto it = reflect_find(name);
 			if (it != m_reflect.end())
 				return &m_slot[it->second];
 			else
@@ -1205,6 +1245,9 @@ namespace cs
 
 	class structure final
 	{
+		// An escaped structure requires its defining context to stay alive: the
+		// type_node lives in the process and the member names live in the token
+		// arena, both owned by the context (like function::mContext).
 		bool m_shadow = false;
 		std::string m_name;
 		domain_t m_data;
@@ -1331,7 +1374,9 @@ namespace cs
 
 	class struct_builder final
 	{
-		context_t mContext;
+		// Non-owning back-reference to the defining context (or module subcontext,
+		// kept alive by its owner's subcontext pool).
+		context_type *mContext;
 		type_node *mNode;
 		type_id mTypeId;
 		std::string mName;
@@ -1339,18 +1384,23 @@ namespace cs
 		// Shared so type_t's std::function can copy the builder while the method
 		// statements are deleted exactly once (by the last surviving copy).
 		std::shared_ptr<std::deque<statement_base *>> mMethod;
+		// Keeps the token arena holding the member definitions alive, so a
+		// previously defined struct can still be constructed after recompilation
+		// (mirrors function::m_unit).
+		std::shared_ptr<compile_unit> m_unit;
 
 	   public:
 		struct_builder() = delete;
 
-		struct_builder(context_t c, std::string name, tree_type<token_base *> parent,
+		struct_builder(context_type *c, std::string name, tree_type<token_base *> parent,
 		               std::deque<statement_base *> method)
-		    : mContext(std::move(c)),
-		      mNode(alloc_type_node()),
+		    : mContext(c),
+		      mNode(alloc_type_node(mContext->process.get())),
 		      mTypeId(typeid(structure), mNode),
 		      mName(std::move(name)),
 		      mParent(std::move(parent)),
-		      mMethod(std::make_shared<std::deque<statement_base *>>(std::move(method)))
+		      mMethod(std::make_shared<std::deque<statement_base *>>(std::move(method))),
+		      m_unit(mContext->current_unit)
 		{
 			mNode->name = mName;
 		}
@@ -1485,9 +1535,10 @@ namespace cs
 	}
 
 	// Bump allocator: allocations never free individually; the whole arena is
-	// released at once. Each chunk's base is max-aligned, and offsets are aligned
-	// per allocation, so objects with strict alignment (e.g. var in token_value)
-	// are placed correctly.
+	// released at once. Each chunk's base is aligned to the default new
+	// alignment (16 on common platforms, sufficient for the token types), and
+	// offsets are aligned per allocation, so objects with strict alignment
+	// (e.g. var in token_value) are placed correctly.
 	class memory_arena final
 	{
 		struct chunk
@@ -1508,12 +1559,12 @@ namespace cs
 
 		void *allocate(std::size_t size, std::size_t align)
 		{
-			if (chunks.empty())
-				push_chunk();
-			std::size_t aligned = (chunks.back().used + align - 1) & ~(align - 1);
-			if (aligned + size > chunks.back().size)
+			std::size_t aligned = chunks.empty() ? 0 : (chunks.back().used + align - 1) & ~(align - 1);
+			if (chunks.empty() || aligned + size > chunks.back().size)
 			{
-				push_chunk();
+				// Oversized allocations get a chunk of their own rather than
+				// overflowing a fixed-capacity chunk.
+				push_chunk(size > chunk_capacity ? size : chunk_capacity);
 				aligned = 0;
 			}
 			void *ptr = chunks.back().data.get() + aligned;
@@ -1528,9 +1579,9 @@ namespace cs
 		}
 
 	   private:
-		void push_chunk()
+		void push_chunk(std::size_t size)
 		{
-			chunks.push_back({std::make_unique<std::byte[]>(chunk_capacity), chunk_capacity, 0});
+			chunks.push_back({std::make_unique<std::byte[]>(size), size, 0});
 		}
 	};
 

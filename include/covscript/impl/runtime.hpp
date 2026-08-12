@@ -30,6 +30,27 @@ namespace cs
 {
 	using stack_pointer = stack_type<domain_type> *;
 
+	// Owns every compiled lambda value; lambda tokens carry only an index into
+	// it, so no token owns a function and no arena <-> function cycle can form.
+	// Storing the full value keeps a self-referencing lambda's borrowed `self`
+	// proxy alive.
+	class function_store final
+	{
+		std::vector<var> m_lambdas;
+
+	   public:
+		std::size_t add(const var &val)
+		{
+			m_lambdas.push_back(val);
+			return m_lambdas.size() - 1;
+		}
+
+		var get(std::size_t index) const
+		{
+			return m_lambdas.at(index);
+		}
+	};
+
 	class domain_manager
 	{
 		const stack_pointer &fiber_stack;
@@ -86,6 +107,14 @@ namespace cs
 		domain_type &get_global() const
 		{
 			return m_data.bottom();
+		}
+
+		// Release global variables (running their finalizers) while the runtime
+		// is still usable. Called after a program run so structures finalize
+		// before context teardown, when the process/instance are already dying.
+		void clear_global()
+		{
+			m_data.bottom().clear();
 		}
 
 		namespace_t get_namespace() const
@@ -378,6 +407,8 @@ namespace cs
 
 	   public:
 		domain_manager storage;
+
+		function_store functions;
 
 		explicit runtime_type(const stack_pointer &fiber_sp)
 		    : storage(fiber_sp) {}

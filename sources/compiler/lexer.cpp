@@ -414,14 +414,14 @@ namespace cs
 		std::string command;
 		std::string line;
 
-		void new_empty_line(const context_t &context)
+		void new_empty_line(context_type *context)
 		{
 			context->file_buff.emplace_back();
 			empty_line = true;
 			++line_num;
 		}
 
-		void process_endline(const context_t &context, compiler_type &compiler, std::deque<token_base *> &tokens,
+		void process_endline(context_type *context, compiler_type &compiler, std::deque<token_base *> &tokens,
 		                     charset &encoding)
 		{
 			if (is_annotation)
@@ -513,7 +513,7 @@ namespace cs
 		}
 
 	   public:
-		explicit preprocessor(const context_t &context, compiler_type &compiler, const std::deque<char> &char_buff,
+		explicit preprocessor(context_type *context, compiler_type &compiler, const std::deque<char> &char_buff,
 		                      std::deque<token_base *> &tokens, charset encoding)
 		{
 			for (auto &ch : char_buff)

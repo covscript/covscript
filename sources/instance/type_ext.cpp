@@ -1378,10 +1378,17 @@ namespace cs_impl
 			return func.get_raw_data().target_type() != typeid(function_ptr);
 		}
 
+		// The process active at creation; an async task carries it so script code
+		// on its worker thread has a valid current_process.
+		static std::shared_ptr<process_context> current_process_ref()
+		{
+			return current_process ? current_process->shared_from_this() : nullptr;
+		}
+
 		class async_callable final
 		{
 			// Keep the worker count elevated for the whole object lifetime.
-			std::shared_ptr<thread_guard> m_guard;
+			std::shared_ptr<thread_guard> guard;
 			callable func;
 			vector args;
 			// The process this task belongs to, captured at creation; installed on
@@ -1409,7 +1416,7 @@ namespace cs_impl
 				if (!is_native_callable(fn))
 					throw lang_error("Async operation requires a native function");
 				detach_args();
-				m_guard = std::make_shared<thread_guard>();
+				guard = std::make_shared<thread_guard>();
 			}
 
 			var operator()()
@@ -1424,7 +1431,7 @@ namespace cs_impl
 		{
 			if (fiber::within())
 			{
-				auto proc = current_process ? current_process->shared_from_this() : nullptr;
+				auto proc = current_process_ref();
 				auto future = std::async(std::launch::async, async_callable(fn, std::move(args), std::move(proc)));
 				while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
 					fiber::sleep_for(fiber_context::current()->busy_wait_min);
@@ -1529,7 +1536,7 @@ namespace cs_impl
 				const callable &fn = func.const_val<callable>();
 				if (!is_native_callable(fn))
 					throw lang_error("Async future can only be created from native functions");
-				auto proc = current_process ? current_process->shared_from_this() : nullptr;
+				auto proc = current_process_ref();
 				return static_cast<future_t>(std::make_shared<async_future>(fn, vector(args.begin() + 1, args.end()), std::move(proc)));
 			}
 			else if (func.is_type_of<object_method>())
@@ -1540,7 +1547,7 @@ namespace cs_impl
 				const callable &fn = om.callable.const_val<callable>();
 				if (!is_native_callable(fn))
 					throw lang_error("Async future can only be created from native functions");
-				auto proc = current_process ? current_process->shared_from_this() : nullptr;
+				auto proc = current_process_ref();
 				return static_cast<future_t>(std::make_shared<async_future>(fn, std::move(argument), std::move(proc)));
 			}
 			else
@@ -1612,7 +1619,7 @@ namespace cs_impl
 		{
 			callable owner;
 			function const *func = nullptr;
-			context_t context;
+			context_type *context;
 			vector args;
 
 		   public:
@@ -1848,7 +1855,7 @@ namespace cs_impl
 			return val.hash();
 		}
 
-		var build(const context_t &context, const string &expr)
+		var build(context_type *context, const string &expr)
 		{
 			std::deque<char> buff;
 			expression_t tree;
@@ -1859,20 +1866,20 @@ namespace cs_impl
 			compile_unit_guard guard(context);
 			context->compiler->build_expr(buff, tree);
 			tree.attach_arena(guard.unit());
-			return var::make<expression_t>(tree);
+			return var::make<expression_t>(std::move(tree));
 		}
 
-		var solve(const context_t &context, expression_t &tree)
+		var solve(context_type *context, expression_t &tree)
 		{
 			return context->instance->parse_expr(tree.root());
 		}
 
-		var cmd_args(const context_t &context)
+		var cmd_args(context_type *context)
 		{
 			return context->cmd_args;
 		}
 
-		var import(const context_t &context, const string &dir, const string &name)
+		var import(context_type *context, const string &dir, const string &name)
 		{
 			try
 			{
@@ -1884,7 +1891,7 @@ namespace cs_impl
 			}
 		}
 
-		var source_import(const context_t &context, const string &path)
+		var source_import(context_type *context, const string &path)
 		{
 			try
 			{
@@ -1920,17 +1927,17 @@ namespace cs_impl
 				throw lang_error("The target value is not a function");
 		}
 
-		void add_string_literal(const context_t &context, const std::string &literal, const callable &func)
+		void add_string_literal(context_type *context, const std::string &literal, const callable &func)
 		{
 			context->instance->add_string_literal(literal, func);
 		}
 
-		void link_var(const context_t &context, const string &a, const var &b)
+		void link_var(context_type *context, const string &a, const var &b)
 		{
 			context->instance->storage.get_var(a) = b;
 		}
 
-		void unlink_var(const context_t &context, const string &a)
+		void unlink_var(context_type *context, const string &a)
 		{
 			var &_a = context->instance->storage.get_var(a);
 			_a = copy(_a);

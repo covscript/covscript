@@ -688,6 +688,12 @@ namespace cs_impl
 		cni(const cni &c)
 		    : mCni(c.mCni->clone()) {}
 
+		cni(cni &&c) noexcept
+		    : mCni(c.mCni)
+		{
+			c.mCni = nullptr;
+		}
+
 		template <typename T>
 		explicit cni(T &&val)
 		    : mCni(
@@ -721,6 +727,33 @@ namespace cs_impl
 		~cni()
 		{
 			delete mCni;
+		}
+
+		void swap(cni &other) noexcept
+		{
+			std::swap(mCni, other.mCni);
+		}
+
+		cni &operator=(const cni &c)
+		{
+			if (this != &c)
+			{
+				// Clone first so a throwing copy leaves *this unchanged.
+				cni tmp(c);
+				swap(tmp);
+			}
+			return *this;
+		}
+
+		cni &operator=(cni &&c) noexcept
+		{
+			if (this != &c)
+			{
+				delete mCni;
+				mCni = c.mCni;
+				c.mCni = nullptr;
+			}
+			return *this;
 		}
 
 		std::size_t argument_count() const noexcept

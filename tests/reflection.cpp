@@ -1,11 +1,11 @@
 #include <covscript/dll.hpp>
 #include <covscript/cni.hpp>
 
+// Mirror of cs_impl::any::proxy layout (variable.hpp): the fields must match
+// exactly for the reinterpret_cast below to reach protect_level.
 struct reflect_proxy {
-    bool is_rvalue = false;
-    short protect_level = 0;
-    std::size_t refcount = 1;
-    void *data = nullptr;
+    std::uint32_t refcount = 1;
+    std::int8_t protect_level = 0;
 };
 
 struct reflect_any {

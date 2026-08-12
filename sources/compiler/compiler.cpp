@@ -25,6 +25,7 @@
  */
 #include <covscript/impl/codegen.hpp>
 #include <limits>
+#include <set>
 
 namespace cs
 {
@@ -40,6 +41,85 @@ namespace cs
 	    {'\r', 'r'},
 	    {'\t', 't'},
 	    {'\v', 'v'}};
+
+	// Whether a value contains a script function; the optimizer must not fold it
+	// into a token_value (which would recreate the arena <-> function cycle).
+	static bool contains_callable(const var &v, std::set<const void *> &visited);
+
+	static bool owns_function(const callable &c)
+	{
+		return c.get_raw_data().target<function_ptr>() != nullptr;
+	}
+
+	template <typename Container>
+	bool contains_callable_in(const Container &c, std::set<const void *> &visited)
+	{
+		for (const auto &e : c)
+			if (contains_callable(e, visited))
+				return true;
+		return false;
+	}
+
+	static bool contains_callable(const var &v, std::set<const void *> &visited)
+	{
+		if (!v.usable())
+			return false;
+		if (v.is_type_of<callable>())
+			return owns_function(v.const_val<callable>());
+		if (v.is_type_of<object_method>())
+		{
+			const auto &om = v.const_val<object_method>();
+			if (!visited.insert(static_cast<const void *>(&om)).second)
+				return false;
+			if (contains_callable(om.callable, visited))
+				return true;
+			return contains_callable(static_cast<var>(om.object), visited);
+		}
+		if (v.is_type_of<array>())
+			return contains_callable_in(v.const_val<array>(), visited);
+		if (v.is_type_of<list>())
+			return contains_callable_in(v.const_val<list>(), visited);
+		if (v.is_type_of<pair>())
+		{
+			const auto &p = v.const_val<pair>();
+			return contains_callable(p.first, visited) || contains_callable(p.second, visited);
+		}
+		if (v.is_type_of<hash_set>())
+			return contains_callable_in(v.const_val<hash_set>(), visited);
+		if (v.is_type_of<hash_map>())
+		{
+			for (const auto &kv : v.const_val<hash_map>())
+				if (contains_callable(kv.first, visited) || contains_callable(kv.second, visited))
+					return true;
+		}
+		if (v.is_type_of<structure>())
+		{
+			const auto &s = v.const_val<structure>();
+			if (!visited.insert(static_cast<const void *>(&s)).second)
+				return false;
+			const auto &domain = s.get_domain();
+			for (const auto &it : domain)
+				if (contains_callable(domain.get_var_by_id(it.second), visited))
+					return true;
+		}
+		if (v.is_type_of<namespace_t>())
+		{
+			const auto &ns = v.const_val<namespace_t>();
+			if (!visited.insert(static_cast<const void *>(ns.get())).second)
+				return false;
+			const auto &domain = ns->get_domain();
+			for (const auto &it : domain)
+				if (contains_callable(domain.get_var_by_id(it.second), visited))
+					return true;
+		}
+		return false;
+	}
+
+	static bool contains_callable(const var &v)
+	{
+		std::set<const void *> visited;
+		return contains_callable(v, visited);
+	}
 
 	bool token_value::dump(std::ostream &o) const
 	{
@@ -833,17 +913,19 @@ namespace cs
 						                                                          std::deque<statement_base *>{ret},
 						                                                          is_vargs, true);
 #endif
-						// The lambda is owned by the callable var created below; no
-						// immortal pool.
+						// The lambda value lives in the runtime's function store; the
+						// token only carries an index (no token -> function cycle).
+						std::size_t index;
 						if (find_self_ref)
 						{
 							var lambda = var::make<object_method>(var(), var::make_protect<callable>(function_ptr{fn.get(), fn}));
-							lambda.val<object_method>().object = lambda;
+							lambda.val<object_method>().object = var_borrower::borrow(lambda);
 							lambda.mark_protect();
-							it.data() = new_value(lambda);
+							index = context->instance->functions.add(lambda);
 						}
 						else
-							it.data() = new_value(var::make_protect<callable>(function_ptr{fn.get(), fn}));
+							index = context->instance->functions.add(var::make_protect<callable>(function_ptr{fn.get(), fn}));
+						it.data() = make_token<token_lambda>(index);
 						return;
 					}
 
@@ -904,7 +986,10 @@ namespace cs
 				{
 					if (do_optm == optm_type::enable_namespace_optm || !value.is_type_of<namespace_t>() ||
 					    !value.const_val<namespace_t>()->get_domain().exist("__PRAGMA_CS_NAMESPACE_DEFINITION__"))
-						it.data() = new_value(value);
+					{
+						if (!contains_callable(value))
+							it.data() = new_value(value);
+					}
 				}
 				return;
 			}
@@ -914,7 +999,9 @@ namespace cs
 				token_base *oldt = it.data();
 				try
 				{
-					it.data() = new_value(context->instance->get_string_literal(ptr->get_data(), ptr->get_literal()));
+					var val = context->instance->get_string_literal(ptr->get_data(), ptr->get_literal());
+					if (!contains_callable(val))
+						it.data() = new_value(val);
 				}
 				catch (...)
 				{
@@ -968,7 +1055,9 @@ namespace cs
 					}
 					for (auto &it : arr)
 						add_constant(it);
-					it.data() = new_value(var::make<array>(std::move(arr)));
+					var folded = var::make<array>(std::move(arr));
+					if (!contains_callable(folded))
+						it.data() = new_value(folded);
 				}
 				catch (...)
 				{
@@ -1062,7 +1151,7 @@ namespace cs
 							try
 							{
 								const var &v = context->instance->parse_dot(a, rptr);
-								if (v.is_protect())
+								if (v.is_protect() && !contains_callable(v))
 									it.data() = new_value(v);
 							}
 							catch (...)
@@ -1120,7 +1209,9 @@ namespace cs
 										else
 											args.push_back(lvalue(context->instance->parse_expr(tree.root())));
 									}
-									it.data() = new_value(a.const_val<callable>().call(args));
+									var call_result = a.const_val<callable>().call(args);
+									if (!contains_callable(call_result))
+										it.data() = new_value(call_result);
 								}
 								catch (...)
 								{
@@ -1166,7 +1257,9 @@ namespace cs
 										else
 											args.push_back(lvalue(context->instance->parse_expr(tree.root())));
 									}
-									it.data() = new_value(om.callable.const_val<callable>().call(args));
+									var call_result = om.callable.const_val<callable>().call(args);
+									if (!contains_callable(call_result))
+										it.data() = new_value(call_result);
 								}
 								catch (...)
 								{
@@ -1248,10 +1341,18 @@ namespace cs
 			token_base *oldt = it.data();
 			try
 			{
-				token_value *token = new_value(context->instance->parse_expr(it));
-				tree.erase_left(it);
-				tree.erase_right(it);
-				it.data() = token;
+				var folded = context->instance->parse_expr(it);
+				if (contains_callable(folded))
+				{
+					it.data() = oldt;
+				}
+				else
+				{
+					token_value *token = new_value(folded);
+					tree.erase_left(it);
+					tree.erase_right(it);
+					it.data() = token;
+				}
 			}
 			catch (...)
 			{
@@ -1402,7 +1503,7 @@ namespace cs
 		stream << " >";
 	}
 
-	void translator_type::match_grammar(const context_t &context, std::deque<token_base *> &raw)
+	void translator_type::match_grammar(context_type *context, std::deque<token_base *> &raw)
 	{
 		for (auto &dat : m_data)
 		{
@@ -1520,7 +1621,7 @@ namespace cs
 		}
 	}
 
-	void translator_type::translate(const context_t &context, const std::deque<std::deque<token_base *>> &lines,
+	void translator_type::translate(context_type *context, const std::deque<std::deque<token_base *>> &lines,
 	                                std::deque<statement_base *> &statements, bool raw)
 	{
 		std::size_t method_line_num = 0, line_num = 0;

@@ -86,6 +86,8 @@ namespace cs
 
 	var function::call_vv(const function *_this, vector &args)
 	{
+		// Ensure an active process for a bare native call (a fiber keeps its own).
+		process_activation activation(_this->mContext);
 		current_process->poll_event();
 		scope_guard scope(_this->mContext);
 #ifdef CS_DEBUGGER
@@ -140,6 +142,8 @@ namespace cs
 
 	var function::call_rl(const function *_this, vector &args)
 	{
+		// Ensure an active process for a bare native call (a fiber keeps its own).
+		process_activation activation(_this->mContext);
 		current_process->poll_event();
 		if (args.size() != _this->mArgs.size())
 			throw runtime_error(
@@ -170,6 +174,8 @@ namespace cs
 
 	var function::call_el(const function *_this, vector &args)
 	{
+		// Ensure an active process for a bare native call (a fiber keeps its own).
+		process_activation activation(_this->mContext);
 		current_process->poll_event();
 		if (!args.empty())
 			throw runtime_error("Wrong number of arguments: expected none, got " + std::to_string(args.size()));
@@ -776,7 +782,7 @@ namespace cs
 	}
 
 	template <typename T, typename X>
-	void foreach_helper(const context_t &context, const var_id &iterator, const var &obj,
+	void foreach_helper(context_type *context, const var_id &iterator, const var &obj,
 	                    std::deque<statement_base *> &body)
 	{
 		if (obj.const_val<T>().empty())
@@ -823,7 +829,7 @@ namespace cs
 		}
 	}
 
-	void struct_foreach_helper(const context_t &context, const var_id &iterator, const var &obj,
+	void struct_foreach_helper(context_type *context, const var_id &iterator, const var &obj,
 	                           std::deque<statement_base *> &body)
 	{
 		if (context->instance->break_block)

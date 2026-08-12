@@ -64,11 +64,13 @@ namespace cs
 			try
 			{
 				{
-					context_swap_guard guard(*rt->compiler, rt);
+					context_swap_guard guard(*rt->compiler, rt.get());
 					rt->instance->compile(path);
 					rt->instance->interpret();
 				}
 				*module = *rt->instance->storage.get_namespace();
+				// The context now owns the subcontext (breaking the module cycle).
+				context->subcontexts.push_back(rt);
 				return module;
 			}
 			catch (...)
@@ -112,7 +114,7 @@ namespace cs
 				try
 				{
 					{
-						context_swap_guard guard(*rt->compiler, rt);
+						context_swap_guard guard(*rt->compiler, rt.get());
 						rt->instance->compile(package_path + ".csp");
 						rt->instance->interpret();
 					}
@@ -121,6 +123,8 @@ namespace cs
 					if (rt->package_name != name)
 						throw runtime_error("The package name declared in the file does not match the file name");
 					*module = *rt->instance->storage.get_namespace();
+					// The context now owns the subcontext (breaking the module cycle).
+					context->subcontexts.push_back(rt);
 					return module;
 				}
 				catch (...)
@@ -191,25 +195,38 @@ namespace cs
 		catch (...)
 		{
 			context->compiler->restore_pool(pool_base);
-			context->compiler->import_results.resize(import_base);
+			context->compiler->clear_import_results(import_base);
 			context->current_unit = saved_unit;
+			// The compilation failed partway through; free any statements that
+			// were already generated so a half-compiled program cannot linger or
+			// be run, and so the token arena can be released promptly.
+			statement_base::delete_children(statements);
+			release_unit();
 			throw;
 		}
 		context->compiler->restore_pool(pool_base);
-		context->compiler->import_results.resize(import_base);
+		context->compiler->clear_import_results(import_base);
 		context->current_unit = saved_unit;
 	}
+
+	// Interpret nesting depth on this thread. Only the outermost run clears the
+	// value stack; a nested interpret (a subcontext import during expression
+	// evaluation) shares the parent's process and must keep its operands.
+	static thread_local std::size_t interpret_depth = 0;
 
 	void instance_type::interpret()
 	{
 		process_run_scope scope(context);
-		// Start each run with a clean value stack.
-		while (!current_process->stack.empty())
-			current_process->stack.pop_no_return();
+		if (interpret_depth == 0)
+		{
+			while (!current_process->stack.empty())
+				current_process->stack.pop_no_return();
 #ifdef CS_DEBUGGER
-		while (!current_process->stack_backtrace.empty())
-			current_process->stack_backtrace.pop_no_return();
+			while (!current_process->stack_backtrace.empty())
+				current_process->stack_backtrace.pop_no_return();
 #endif
+		}
+		value_guard<std::size_t> depth_guard(interpret_depth, interpret_depth + 1);
 		// Run the instruction
 		for (auto &ptr : statements)
 		{
@@ -273,6 +290,12 @@ namespace cs
 		}
 	}
 
+	// A constant's RHS must be a folded token_value or a lambda (token_lambda).
+	static bool is_constant_rhs(token_base *rhs)
+	{
+		return rhs != nullptr && (rhs->get_type() == token_types::value || rhs->get_type() == token_types::lambda);
+	}
+
 	void instance_type::check_define_var(tree_type<token_base *>::iterator it, bool regist, bool constant)
 	{
 		if (it.data() == nullptr)
@@ -298,7 +321,7 @@ namespace cs
 					token_base *right = it.right().data();
 					if (left == nullptr || right == nullptr || left->get_type() != token_types::id)
 						throw runtime_error("Invalid variable definition: the left-hand side must be an identifier");
-					if (constant && right->get_type() != token_types::value)
+					if (constant && !is_constant_rhs(right))
 						throw runtime_error("A constant must be initialized with a constant value");
 					if (regist)
 						storage.add_record(static_cast<token_id *>(left)->get_id().get_id());
@@ -307,7 +330,7 @@ namespace cs
 				case signal_types::bind_:
 				{
 					token_base *right = it.right().data();
-					if (constant && (right == nullptr || right->get_type() != token_types::value))
+					if (constant && !is_constant_rhs(right))
 						throw runtime_error("A constant structured binding must be initialized with a constant value");
 					check_define_structured_binding(it.left(), regist);
 					break;
@@ -316,6 +339,14 @@ namespace cs
 					throw runtime_error("Invalid variable definition: expected '<id> = <value>' or a structured binding");
 			}
 		}
+	}
+
+	var instance_type::fold_constant(tree_type<token_base *>::iterator rhs, bool constant)
+	{
+		token_base *ptr = rhs.data();
+		return constant && ptr != nullptr && ptr->get_type() == token_types::value
+		           ? static_cast<token_value *>(ptr)->get_value()
+		           : parse_expr(rhs);
 	}
 
 	void instance_type::parse_define_var(tree_type<token_base *>::iterator it, bool constant, bool link)
@@ -333,7 +364,7 @@ namespace cs
 			{
 				case signal_types::asi_:
 				{
-					const var &val = constant ? static_cast<token_value *>(it.right().data())->get_value() : parse_expr(it.right());
+					var val = fold_constant(it.right(), constant);
 					storage.add_var_no_return(static_cast<token_id *>(it.left().data())->get_id(),
 					                          constant || link ? val : copy(val),
 					                          constant);
@@ -391,7 +422,7 @@ namespace cs
 					                          constant || link ? arr[i] : copy(arr[i]), constant);
 			}
 		};
-		const var &val = constant ? static_cast<token_value *>(it.right().data())->get_value() : parse_expr(it.right());
+		var val = fold_constant(it.right(), constant);
 		process(it.left(), val);
 	}
 
@@ -452,15 +483,15 @@ namespace cs
 							// already-removed pair again and corrupt the storage stacks.
 							expected_method = methods.top();
 							methods.pop();
-							expected_method->postprocess(context, domain);
+							expected_method->postprocess(context.get(), domain);
 						}
 						if (methods.empty())
 						{
 							if (m->get_target_type() == statement_types::end_)
-								sptr = static_cast<method_end *>(m)->translate_end(expected_method, context, tmp,
+								sptr = static_cast<method_end *>(m)->translate_end(expected_method, context.get(), tmp,
 								                                                   line);
 							else
-								sptr = expected_method->translate(context, tmp);
+								sptr = expected_method->translate(context.get(), tmp);
 							// Loop closed: release depth after translation (break/continue
 							// in the body still need loop_depth > 0 while it re-translates).
 							if (expected_method != nullptr && compiler_type::is_loop_block(expected_method))
@@ -472,7 +503,7 @@ namespace cs
 							// Deferred block: release its depth now to keep the scan balanced.
 							if (m->get_target_type() == statement_types::end_ && compiler_type::is_loop_block(expected_method))
 								--context->compiler->loop_depth;
-							m->preprocess(context, {line});
+							m->preprocess(context.get(), {line});
 							tmp.push_back(line);
 						}
 					}
@@ -482,8 +513,8 @@ namespace cs
 							throw runtime_error("Unexpected 'end': there is no open block to close");
 						else
 						{
-							m->preprocess(context, {line});
-							sptr = m->translate(context, {line});
+							m->preprocess(context.get(), {line});
+							sptr = m->translate(context.get(), {line});
 						}
 					}
 				}
@@ -495,12 +526,12 @@ namespace cs
 					context->instance->storage.add_set();
 					if (compiler_type::is_loop_block(m))
 						++context->compiler->loop_depth;
-					methods.top()->preprocess(context, {line});
+					methods.top()->preprocess(context.get(), {line});
 					tmp.push_back(line);
 				}
 				break;
 				case method_types::jit_command:
-					m->translate(context, {line});
+					m->translate(context.get(), {line});
 					break;
 			}
 			if (sptr != nullptr)
@@ -511,12 +542,12 @@ namespace cs
 				// throw after this point cannot double-free the statement.
 				sptr = nullptr;
 			}
-			// The top-level statement is complete: release its token arena (any
-			// escaped function keeps it alive via its own unit reference).
+			// The top-level statement is complete: release its token arena (a
+			// function retained in the store keeps it alive via its m_unit).
 			if (methods.empty())
 			{
 				context->current_unit = nullptr;
-				m_unit.reset();
+				release_unit();
 			}
 		}
 		catch (const lang_error &le)
