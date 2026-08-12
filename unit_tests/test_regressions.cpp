@@ -845,3 +845,61 @@ TEST(tree_type_root_reparenting)
 	EXPECT_TRUE(t.root().left().root().usable());
 	EXPECT_TRUE(t.root().left().root().data() == 20);
 }
+
+// =============================================================================
+// GC: compiling a program allocates tokens into the instance's arena; releasing
+// the program (next compile or instance teardown) frees them.
+// =============================================================================
+
+TEST(gc_program_arena_reclaimed_on_release)
+{
+	auto ctx = make_context();
+	// First compile allocates tokens into the instance's arena.
+	{
+		std::istringstream in("var a = 1\nvar b = 2\na + b\n");
+		ctx->instance->compile(in);
+	}
+	auto first = ctx->instance->get_current_unit();
+	std::weak_ptr<cs::compile_unit> wfirst = first;
+	EXPECT_TRUE(first != nullptr);
+	EXPECT_TRUE(first->token_count() > 0);
+	// Releasing the program drops the instance's reference; once the test's own
+	// reference goes away the arena (and its tokens) is freed.
+	ctx->instance->release_statements();
+	first.reset();
+	EXPECT_TRUE(wfirst.expired());
+	// A fresh compile allocates a fresh arena.
+	std::istringstream in("var c = 3\nc\n");
+	ctx->instance->compile(in);
+	auto second = ctx->instance->get_current_unit();
+	EXPECT_TRUE(second != nullptr);
+	EXPECT_TRUE(second != wfirst.lock());
+	EXPECT_TRUE(second->token_count() > 0);
+}
+
+// =============================================================================
+// GC: a function stored in a variable must remain callable after the compiled
+// program is released (the function owns its body statements and token arena).
+// =============================================================================
+
+TEST(gc_escaped_function_survives_program_release)
+{
+	// Use a fresh context so the function does not pollute the shared test context.
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<UNIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	{
+		std::istringstream in("function f()\n    return 42\nend\n");
+		ctx->instance->compile(in);
+		ctx->instance->interpret();
+	}
+	// Grab the callable into an external var (simulates a retained callable).
+	cs::var escaped = ctx->instance->storage.get_var("f");
+	EXPECT_TRUE(escaped.usable());
+	// Release the compiled program: the statement_function node is freed, but
+	// the function (and its body/arena) survive via the callable's owner.
+	ctx->instance->release_statements();
+	cs::vector args2;
+	cs::var ret = escaped.val<cs::callable>().call(args2);
+	EXPECT_TRUE(ret.const_val<cs::numeric>() == 42);
+}

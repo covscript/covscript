@@ -260,6 +260,8 @@ namespace cs
 	extern process_context this_process;
 	extern process_context *current_process;
 
+	class compile_unit;
+
 	// Context
 	class context_type final
 	{
@@ -270,6 +272,12 @@ namespace cs
 		string file_path = "<Unknown>";
 		string package_name;
 		var cmd_args;
+
+		// The compile unit whose token arena is being filled by the current
+		// compilation. Set for the duration of a compile (instance compile, REPL
+		// statement, build_expr); functions created in the unit hold a reference
+		// so the arena outlives the compile scope while the function is retained.
+		std::shared_ptr<compile_unit> current_unit;
 
 		context_type() = default;
 
@@ -436,6 +444,9 @@ namespace cs
 		bool mIsLambda = false;
 		std::vector<std::string> mArgs;
 		std::deque<statement_base *> mBody;
+		// Keeps the token arena of the compiling unit alive while this function
+		// (possibly escaped from the compile scope) is referenced.
+		std::shared_ptr<compile_unit> m_unit;
 
 		static var call_rr(const function *, vector &);
 
@@ -463,25 +474,35 @@ namespace cs
 	   public:
 		function() = delete;
 
-		function(const function &) = default;
+		function(const function &) = delete;
+
+		function &operator=(const function &) = delete;
 
 #ifdef CS_DEBUGGER
 		function(context_t c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
-		    : mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
+		    : mContext(std::move(c)), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)), m_unit(mContext->current_unit)
 		{
 			init_call_ptr();
 		}
 #else
 
 		function(context_t c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
-		    : mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body))
+		    : mContext(std::move(c)), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)), m_unit(mContext->current_unit)
 		{
 			init_call_ptr();
 		}
 
 #endif
 
-		~function() = default;
+		// Owns the function body; deletes the statements recursively. Defined in
+		// statement.cpp where statement_base is complete.
+		~function();
+
+		// The function body statements, owned by this function.
+		const std::deque<statement_base *> &get_body() const
+		{
+			return mBody;
+		}
 
 		var call(vector &args) const
 		{
@@ -559,6 +580,16 @@ namespace cs
 	struct function_ptr final
 	{
 		function *fptr = nullptr;
+		// Keeps the function (and its body statements/context) alive for as long
+		// as any callable references it; the statement that defined it may be
+		// freed independently.
+		std::shared_ptr<function> owner;
+
+		function_ptr() = default;
+
+		function_ptr(function *f, std::shared_ptr<function> owner_ref)
+		    : fptr(f), owner(std::move(owner_ref)) {}
+
 		var operator()(vector &args) const
 		{
 			return fptr->call(args);
@@ -1241,7 +1272,9 @@ namespace cs
 		type_id mTypeId;
 		std::string mName;
 		tree_type<token_base *> mParent;
-		std::deque<statement_base *> mMethod;
+		// Shared so type_t's std::function can copy the builder while the method
+		// statements are deleted exactly once (by the last surviving copy).
+		std::shared_ptr<std::deque<statement_base *>> mMethod;
 
 	   public:
 		struct_builder() = delete;
@@ -1253,14 +1286,24 @@ namespace cs
 		      mTypeId(typeid(structure), mNode),
 		      mName(std::move(name)),
 		      mParent(std::move(parent)),
-		      mMethod(std::move(method))
+		      mMethod(std::make_shared<std::deque<statement_base *>>(std::move(method)))
 		{
 			mNode->name = mName;
 		}
 
 		struct_builder(const struct_builder &) = default;
 
-		~struct_builder() = default;
+		struct_builder &operator=(const struct_builder &) = default;
+
+		// Owns the method bodies; deletes them when the last copy dies (defined
+		// in statement.cpp where statement_base is complete).
+		~struct_builder();
+
+		// The method body statements, owned by this builder.
+		const std::deque<statement_base *> &get_methods() const
+		{
+			return *mMethod;
+		}
 
 		const type_id &get_id() const
 		{
@@ -1377,45 +1420,56 @@ namespace cs
 			throw runtime_error("Type doesn't have extension field.");
 	}
 
-	// Internal Garbage Collection
-	template <typename T>
-	class garbage_collector final
+	// Bump allocator: allocations never free individually; the whole arena is
+	// released at once. Each chunk's base is max-aligned, and offsets are aligned
+	// per allocation, so objects with strict alignment (e.g. var in token_value)
+	// are placed correctly.
+	class memory_arena final
 	{
-		set_t<T *> table;
+		struct chunk
+		{
+			std::unique_ptr<std::byte[]> data;
+			std::size_t size;
+			std::size_t used = 0;
+		};
+		std::vector<chunk> chunks;
+		static constexpr std::size_t chunk_capacity = 64 * 1024;
 
 	   public:
-		garbage_collector() = default;
+		memory_arena() = default;
 
-		garbage_collector(const garbage_collector &) = delete;
+		memory_arena(const memory_arena &) = delete;
 
-		~garbage_collector()
+		memory_arena &operator=(const memory_arena &) = delete;
+
+		void *allocate(std::size_t size, std::size_t align)
 		{
-			collect();
+			if (chunks.empty())
+				push_chunk();
+			std::size_t aligned = (chunks.back().used + align - 1) & ~(align - 1);
+			if (aligned + size > chunks.back().size) {
+				push_chunk();
+				aligned = 0;
+			}
+			void *ptr = chunks.back().data.get() + aligned;
+			chunks.back().used = aligned + size;
+			return ptr;
 		}
 
-		void collect()
+		template <typename T, typename... A>
+		T *construct(A &&...a)
 		{
-			// Swap the table out first: delete runs each object's destructor and
-			// its class operator delete, which calls gc.remove(ptr).
-			auto table_swap = std::move(table);
-			table.clear();
-			for (auto *ptr : table_swap)
-				delete ptr;
+			return ::new (allocate(sizeof(T), alignof(T))) T(std::forward<A>(a)...);
 		}
 
-		void add(void *ptr)
+	   private:
+		void push_chunk()
 		{
-			table.emplace(static_cast<T *>(ptr));
-		}
-
-		void remove(void *ptr)
-		{
-			table.erase(static_cast<T *>(ptr));
+			chunks.push_back({std::make_unique<std::byte[]>(chunk_capacity), chunk_capacity, 0});
 		}
 	};
 
-	namespace dll
-	{
+	namespace dll {
 		constexpr char compatible_check[] = "__CS_ABI_COMPATIBLE__";
 		constexpr char main_entrance[] = "__CS_EXTENSION_MAIN__";
 

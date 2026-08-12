@@ -57,14 +57,7 @@ static std::string bare_error_message(const std::exception &e)
 	return e.what();
 }
 
-// collect_garbage() nulls the compiler context; re-bind before building
-// expressions, or trim_expr dereferences a null pointer.
 extern cs::context_t context;
-static void ensure_compiler_context()
-{
-	if (context.get() != nullptr)
-		context->compiler->swap_context(context);
-}
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
 
@@ -731,7 +724,7 @@ void covscript_main(int args_size, char *args[])
 					cs::expression_t tree;
 					for (auto &ch: cmd)
 						buff.push_back(ch);
-					ensure_compiler_context();
+					cs::compile_unit_guard guard(context);
 					context->compiler->build_expr(buff, tree);
 					id = breakpoints.add_func(context->instance->parse_expr(tree.root()));
 				}
@@ -809,7 +802,7 @@ void covscript_main(int args_size, char *args[])
 					activate_sigint_handler();
 				}
 				else if (msg != "CS_DEBUGGER_EXIT") {
-					cs::collect_garbage(context);
+	
 					std::cerr
 					        << "\nFatal Error: An exception was detected, the interpreter instance will terminate immediately."
 					        << std::endl;
@@ -822,7 +815,7 @@ void covscript_main(int args_size, char *args[])
 			}
 			catch (...)
 			{
-				cs::collect_garbage(context);
+
 				std::cerr
 				        << "\nFatal Error: An exception was detected, the interpreter instance will terminate immediately."
 				        << std::endl;
@@ -831,7 +824,6 @@ void covscript_main(int args_size, char *args[])
 				reset_status();
 				throw;
 			}
-			cs::collect_garbage(context);
 			std::cout << "\nThe interpreter instance has exited normally with exit code "
 			          << cs::current_process->exit_code << ", up to " << time() - start_time << "ms."
 			          << std::endl;
@@ -850,7 +842,7 @@ void covscript_main(int args_size, char *args[])
 				cs::expression_t tree;
 				for (auto &ch: cmd)
 					buff.push_back(ch);
-				ensure_compiler_context();
+				cs::compile_unit_guard guard(context);
 				context->compiler->build_expr(buff, tree);
 				std::cout << context->instance->parse_expr(tree.root()) << std::endl;
 			}
@@ -874,7 +866,7 @@ void covscript_main(int args_size, char *args[])
 				if (bare_error_message(e) == "CS_SIGINT")
 				{
 					cs::process_context::cleanup_context();
-					cs::collect_garbage(context);
+	
 					reset_status();
 					activate_sigint_handler();
 				}

@@ -276,7 +276,6 @@ void covscript_main(int args_size, char *args[])
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::context_t context = cs::create_context(arg);
-		cs::raii_collector context_gc(context);
 		cs::current_process->on_process_exit.add_listener([&context, main_process = cs::current_process](void *code) -> bool
 		{
 			// Write to the process main() reads it from (a fiber's process would lose it).
@@ -360,7 +359,6 @@ void covscript_main(int args_size, char *args[])
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::context_t context = cs::create_context(arg);
-		cs::raii_collector context_gc(context);
 		activate_sigint_handler();
 		cs::current_process->on_process_exit.add_listener([main_process = cs::current_process](void *code) -> bool
 		{

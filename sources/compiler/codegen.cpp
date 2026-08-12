@@ -289,6 +289,8 @@ namespace cs
 				if (ptr->get_type() == statement_types::else_)
 				{
 					now_place = false;
+					// The marker is consumed here and is not part of either branch.
+					delete ptr;
 					continue;
 				}
 				if (now_place)
@@ -299,9 +301,15 @@ namespace cs
 			if (ptr != nullptr && ptr->get_type() == token_types::value)
 			{
 				if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
+				{
+					statement_base::delete_children(body_false);
 					return new statement_block(body_true, context, raw.front().back());
+				}
 				else
+				{
+					statement_base::delete_children(body_true);
 					return new statement_block(body_false, context, raw.front().back());
+				}
 			}
 			else
 				return new statement_ifelse(tree, body_true, body_false, context, raw.front().back());
@@ -311,7 +319,10 @@ namespace cs
 			if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
 				return new statement_block(body, context, raw.front().back());
 			else
+			{
+				statement_base::delete_children(body);
 				return nullptr;
+			}
 		}
 		else
 			return new statement_if(tree, body, context, raw.front().back());
@@ -345,6 +356,7 @@ namespace cs
 					if (cases.count(scptr->get_tag()) > 0)
 						throw compile_error("Duplicate 'case' label in 'switch' statement");
 					cases.emplace(scptr->get_tag(), scptr->get_block());
+					delete it; // wrapper consumed; its block is now owned by the switch
 				}
 				else if (it->get_type() == statement_types::default_)
 				{
@@ -352,6 +364,7 @@ namespace cs
 					if (dptr != nullptr)
 						throw compile_error("A 'switch' statement can only have one 'default' case");
 					dptr = sdptr->get_block();
+					delete it; // wrapper consumed; its block is now owned by the switch
 				}
 				else
 					throw compile_error("Only 'case' and 'default' clauses are allowed inside a 'switch' statement");
@@ -405,7 +418,10 @@ namespace cs
 			if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
 				return new statement_loop(body, context, raw.front().back());
 			else
+			{
+				statement_base::delete_children(body);
 				return nullptr;
+			}
 		}
 		else
 			return new statement_while(static_cast<token_expr *>(raw.front().at(1))->get_tree(), body, context,
@@ -631,7 +647,7 @@ namespace cs
 	method_return_no_value::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> tree;
-		tree.emplace_root_left(tree.root(), new token_value(null_pointer));
+		tree.emplace_root_left(tree.root(), context->compiler->make_token<token_value>(null_pointer));
 		return new statement_return(tree, context, raw.front().back());
 	}
 
@@ -695,6 +711,7 @@ namespace cs
 			{
 				name = static_cast<statement_catch *>(ptr)->get_name();
 				founded = true;
+				delete ptr; // marker consumed; not part of either body
 				continue;
 			}
 			if (founded)

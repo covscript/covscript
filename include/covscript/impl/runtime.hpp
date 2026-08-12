@@ -57,17 +57,6 @@ namespace cs
 
 		~domain_manager() = default;
 
-		void clear_all_data()
-		{
-			while (!m_set.empty())
-				m_set.pop_no_return();
-			while (!m_data.empty())
-			{
-				m_data.top().clear();
-				m_data.pop_no_return();
-			}
-		}
-
 		bool is_initial() const
 		{
 			return m_data.size() == 1;

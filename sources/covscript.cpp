@@ -290,12 +290,6 @@ namespace cs
 		}
 	}
 
-	garbage_collector<token_base> token_base::gc;
-
-	garbage_collector<statement_base> statement_base::gc;
-
-	garbage_collector<method_base> method_base::gc;
-
 	std::string process_path(const std::string &raw)
 	{
 		auto pos0 = raw.find('\"');
@@ -452,13 +446,17 @@ namespace cs
 		return a.is_a(b);
 	}
 
-	context_t create_context(const array &args)
+		context_t create_context(const array &args)
 	{
 		cs_impl::init_extensions();
 		context_t context = std::make_shared<context_type>();
 		context->compiler = std::make_shared<compiler_type>(context);
 		context->instance = std::make_shared<instance_type>(context, current_process->stack_size);
 		context->cmd_args = cs::var::make_constant<cs::array>(args);
+		// Default token arena: tokens produced outside an explicit compile unit
+		// (one-off build_expr, tests) live for the context's lifetime. Compiles
+		// and REPL statements replace it with their own per-unit arenas.
+		context->current_unit = std::make_shared<compile_unit>();
 		// Init Grammars
 		(*context->compiler)
 		    // Expression Grammar
@@ -633,6 +631,7 @@ namespace cs
 		context->instance = std::make_shared<instance_type>(context, cxt->instance->fiber_stack, current_process->stack_size);
 		context->compiler = cxt->compiler;
 		context->cmd_args = cxt->cmd_args;
+		context->current_unit = std::make_shared<compile_unit>();
 		// Init Runtime
 		context->instance->storage
 		    // Internal Types
@@ -680,36 +679,6 @@ namespace cs
 		    .add_buildin_var("runtime", make_namespace(cs_impl::runtime_ext))
 		    .add_buildin_var("math", make_namespace(cs_impl::math_ext));
 		return context;
-	}
-
-	void collect_garbage()
-	{
-		statement_base::gc.collect();
-		method_base::gc.collect();
-		token_base::gc.collect();
-	}
-
-	void collect_garbage(context_t &context)
-	{
-		while (!current_process->stack.empty())
-			current_process->stack.pop_no_return();
-#ifdef CS_DEBUGGER
-		while (!current_process->stack_backtrace.empty())
-			current_process->stack_backtrace.pop_no_return();
-#endif
-		if (context)
-		{
-			context->instance->storage.clear_all_data();
-			context->compiler->modules.clear();
-			context->compiler->csyms.clear();
-			context->compiler->swap_context(nullptr);
-		}
-		// The statement/token/method pools are intentionally NOT collected here:
-		// script functions (function_ptr) reference statement members, so freeing
-		// them while another live context or an external caller still holds a
-		// callable would be use-after-free. The context's instance and compiler
-		// are also kept so that retained functions remain callable; the context,
-		// instance and pools are released at process exit.
 	}
 
 	cs::var eval(const context_t &context, const std::string &expr)

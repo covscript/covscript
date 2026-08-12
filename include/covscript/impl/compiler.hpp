@@ -52,7 +52,24 @@ namespace cs
 
 	class translator_type final
 	{
-		using data_type = std::pair<std::deque<token_base *>, method_base *>;
+		struct data_type
+		{
+			// Grammar template tokens and the method, both owned by this entry;
+			// deleted when the compiler dies.
+			std::deque<token_base *> grammar;
+			std::unique_ptr<method_base> method;
+
+			data_type(std::deque<token_base *> g, method_base *m)
+			    : grammar(std::move(g)), method(m)
+			{
+			}
+
+			~data_type()
+			{
+				for (auto *t : grammar)
+					delete t;
+			}
+		};
 
 		static bool compare(const token_base *a, const token_base *b)
 		{
@@ -75,9 +92,9 @@ namespace cs
 
 		~translator_type() = default;
 
-		translator_type &add_method(const std::deque<token_base *> &grammar, method_base *method)
+		translator_type &add_method(std::deque<token_base *> grammar, method_base *method)
 		{
-			m_data.emplace_back(std::make_shared<data_type>(grammar, method));
+			m_data.emplace_back(std::make_shared<data_type>(std::move(grammar), method));
 			return *this;
 		}
 
@@ -87,17 +104,17 @@ namespace cs
 				throw compile_error("Empty input when matching grammar.");
 			std::list<std::shared_ptr<data_type>> stack;
 			for (auto &it : m_data)
-				if (cs::translator_type::compare(it->first.front(), raw.front()))
+				if (cs::translator_type::compare(it->grammar.front(), raw.front()))
 					stack.push_back(it);
 			stack.remove_if([&](const std::shared_ptr<data_type> &dat)
 			{
-				return dat->first.size() != raw.size();
+				return dat->grammar.size() != raw.size();
 			});
 			stack.remove_if([&](const std::shared_ptr<data_type> &dat)
 			{
 				for (std::size_t i = 1; i < raw.size() - 1; ++i)
 				{
-					if (!compare(raw.at(i), dat->first.at(i)))
+					if (!compare(raw.at(i), dat->grammar.at(i)))
 						return true;
 				}
 				return false;
@@ -106,7 +123,7 @@ namespace cs
 				throw compile_error("Unknown grammar.");
 			if (stack.size() > 1)
 				throw compile_error("Ambiguous grammar.");
-			return stack.front()->second;
+			return stack.front()->method.get();
 		}
 
 		void match_grammar(const context_t &, std::deque<token_base *> &);
@@ -139,7 +156,7 @@ namespace cs
 		// Symbol Table
 		static const mapping<std::string, signal_types> signal_map;
 		static const mapping<std::string, action_types> action_map;
-		static const mapping<std::string, std::function<token_base *()>> reserved_map;
+		static const mapping<std::string, std::function<token_base *(compiler_type *)>> reserved_map;
 		static const mapping<char32_t, char32_t> escape_map;
 		static const set_t<char32_t> signals;
 		static const mapping<signal_types, int> signal_level_map;
@@ -356,7 +373,18 @@ namespace cs
 		token_value *new_value(const var &val)
 		{
 			add_constant(val);
-			return new token_value(val);
+			return make_token<token_value>(val);
+		}
+
+		// Allocate a token into the current compile unit's arena. Throws if no
+		// compile is in progress: every token created during compilation must be
+		// owned by a unit so the arena can reclaim it (no global GC fallback).
+		template <typename T, typename... A>
+		T *make_token(A &&...a)
+		{
+			if (context == nullptr || context->current_unit == nullptr)
+				throw internal_error("make_token called outside a compile unit");
+			return context->current_unit->make_token<T>(std::forward<A>(a)...);
 		}
 
 		// Wrapped Method
@@ -382,7 +410,7 @@ namespace cs
 		{
 			std::deque<token_base *> tokens;
 			process_char_buff(buff, tokens, encoding);
-			tokens.push_back(new token_endline(line_num));
+			tokens.push_back(make_token<token_endline>(line_num));
 			process_token_buff(tokens, ast);
 			for (auto &line : ast)
 				process_line(line);
@@ -396,9 +424,9 @@ namespace cs
 			process_token_buff(tokens, ast);
 		}
 
-		compiler_type &add_method(const std::deque<token_base *> &grammar, method_base *method)
+		compiler_type &add_method(std::deque<token_base *> grammar, method_base *method)
 		{
-			translator.add_method(grammar, method);
+			translator.add_method(std::move(grammar), method);
 			return *this;
 		}
 

@@ -160,6 +160,14 @@ namespace cs
 
 	void instance_type::compile(std::istream &in)
 	{
+		// Replace the previous program: owning statements and their token arena
+		// are freed here.
+		release_statements();
+		// Create the token arena for this compilation; all tokens produced by the
+		// lexer/parser/codegen are allocated into it.
+		m_unit = std::make_shared<compile_unit>();
+		std::shared_ptr<compile_unit> saved_unit = context->current_unit;
+		context->current_unit = m_unit;
 		// Read from file
 		std::deque<char> buff;
 		for (int ch = in.get(); in; ch = in.get())
@@ -182,14 +190,25 @@ namespace cs
 		{
 			context->compiler->restore_pool(pool_base);
 			context->compiler->import_results.resize(import_base);
+			context->current_unit = saved_unit;
 			throw;
 		}
 		context->compiler->restore_pool(pool_base);
 		context->compiler->import_results.resize(import_base);
+		context->current_unit = saved_unit;
 	}
 
 	void instance_type::interpret()
 	{
+		// Defensive reset: an interrupted previous run may have left the function
+		// value stack unbalanced (normally RAII keeps it balanced). Start each
+		// program execution with a clean stack.
+		while (!current_process->stack.empty())
+			current_process->stack.pop_no_return();
+#ifdef CS_DEBUGGER
+		while (!current_process->stack_backtrace.empty())
+			current_process->stack_backtrace.pop_no_return();
+#endif
 		// Run the instruction
 		for (auto &ptr : statements)
 		{
@@ -408,10 +427,6 @@ namespace cs
 	void repl::interpret(const string &code, std::deque<token_base *> &line)
 	{
 		statement_base *sptr = nullptr;
-		// Record the FIFO base at each new top-level statement so reset_status
-		// can drop stale results on failure.
-		if (methods.empty())
-			import_base = context->compiler->import_results.size();
 		try
 		{
 			method_base *m = context->compiler->match_method(line);
@@ -488,10 +503,21 @@ namespace cs
 					break;
 			}
 			if (sptr != nullptr)
+			{
 				echo ? sptr->repl_run() : sptr->run();
+				delete sptr;
+			}
+			// The top-level statement is complete: release its token arena (any
+			// escaped function keeps it alive via its own unit reference).
+			if (methods.empty())
+			{
+				context->current_unit = nullptr;
+				m_unit.reset();
+			}
 		}
 		catch (const lang_error &le)
 		{
+			delete sptr;
 			reset_status();
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
@@ -501,6 +527,7 @@ namespace cs
 		}
 		catch (const cs::exception &)
 		{
+			delete sptr;
 			reset_status();
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
@@ -508,6 +535,7 @@ namespace cs
 		}
 		catch (const std::exception &e)
 		{
+			delete sptr;
 			reset_status();
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
@@ -524,6 +552,19 @@ namespace cs
 		std::deque<char> buff;
 		for (auto &ch : code)
 			buff.push_back(ch);
+		// A new top-level statement starts when no block is open: record the
+		// import FIFO base and start a fresh token arena covering the whole
+		// statement (including multi-line blocks).
+		if (methods.empty())
+		{
+			import_base = context->compiler->import_results.size();
+			m_unit = std::make_shared<compile_unit>();
+			context->current_unit = m_unit;
+			// Defensive reset of the function value stack at each top-level
+			// statement (normally balanced by RAII).
+			while (!current_process->stack.empty())
+				current_process->stack.pop_no_return();
+		}
 		try
 		{
 			std::deque<std::deque<token_base *>> ast;

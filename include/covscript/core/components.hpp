@@ -33,6 +33,8 @@ namespace cs
 {
 	struct csym_info;
 
+	class compile_unit;
+
 	// Exceptions
 	class exception final : public std::exception
 	{
@@ -1308,6 +1310,11 @@ namespace cs
 		}
 
 		tree_node *mRoot = nullptr;
+		// Optional token arena for trees whose tokens must outlive the compile
+		// scope (e.g. runtime.build() expressions). Shared on copy like the tokens
+		// themselves; null for trees owned by statements/functions (their unit is
+		// held by the instance or the function).
+		std::shared_ptr<compile_unit> m_arena;
 
 	   public:
 		class iterator final
@@ -1378,6 +1385,7 @@ namespace cs
 			tree_node *ptr = this->mRoot;
 			this->mRoot = t.mRoot;
 			t.mRoot = ptr;
+			this->m_arena.swap(t.m_arena);
 		}
 
 		void swap(tree_type &&t) noexcept
@@ -1385,6 +1393,7 @@ namespace cs
 			tree_node *ptr = this->mRoot;
 			this->mRoot = t.mRoot;
 			t.mRoot = ptr;
+			this->m_arena.swap(t.m_arena);
 		}
 
 		tree_type() = default;
@@ -1393,7 +1402,7 @@ namespace cs
 		    : mRoot(copy(it.mData)) {}
 
 		tree_type(const tree_type &t)
-		    : mRoot(copy(t.mRoot)) {}
+		    : mRoot(copy(t.mRoot)), m_arena(t.m_arena) {}
 
 		tree_type(tree_type &&t) noexcept
 		    : mRoot(nullptr)
@@ -1412,6 +1421,7 @@ namespace cs
 			{
 				destroy(this->mRoot);
 				this->mRoot = copy(t.mRoot);
+				this->m_arena = t.m_arena;
 			}
 			return *this;
 		}
@@ -1428,7 +1438,14 @@ namespace cs
 			{
 				destroy(this->mRoot);
 				this->mRoot = copy(t.mRoot);
+				this->m_arena = t.m_arena;
 			}
+		}
+
+		// Attach the token arena that owns this tree's tokens.
+		void attach_arena(std::shared_ptr<compile_unit> arena)
+		{
+			m_arena = std::move(arena);
 		}
 
 		bool empty() const noexcept

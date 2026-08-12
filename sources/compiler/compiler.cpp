@@ -28,14 +28,6 @@
 
 namespace cs
 {
-	// Process-lifetime pool for lambda `function` objects so lambdas outlive the
-	// compiler that created them (never shrinks, matching the global-GC trade-off).
-	static std::vector<std::unique_ptr<function>> &lambda_pool()
-	{
-		static std::vector<std::unique_ptr<function>> pool;
-		return pool;
-	}
-
 	const map_t<char, char> token_value::escape_char = {
 	    {'\'', '\''},
 	    {'\"', '\"'},
@@ -394,33 +386,33 @@ namespace cs
 	    {"catch", action_types::catch_},
 	    {"throw", action_types::throw_}};
 
-	const mapping<std::string, std::function<token_base *()>> compiler_type::reserved_map = {
-	    {"and", []() -> token_base *
-	{ return new token_signal(signal_types::and_); }},
-	    {"or", []() -> token_base *
-	{ return new token_signal(signal_types::or_); }},
-	    {"not", []() -> token_base *
-	{ return new token_signal(signal_types::not_); }},
-	    {"typeid", []() -> token_base *
-	{ return new token_signal(signal_types::typeid_); }},
-	    {"new", []() -> token_base *
-	{ return new token_signal(signal_types::new_); }},
-	    {"gcnew", []() -> token_base *
-	{ return new token_signal(signal_types::gcnew_); }},
-	    {"local", []() -> token_base *
+	const mapping<std::string, std::function<token_base *(compiler_type *)>> compiler_type::reserved_map = {
+	    {"and", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_signal>(signal_types::and_); }},
+	    {"or", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_signal>(signal_types::or_); }},
+	    {"not", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_signal>(signal_types::not_); }},
+	    {"typeid", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_signal>(signal_types::typeid_); }},
+	    {"new", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_signal>(signal_types::new_); }},
+	    {"gcnew", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_signal>(signal_types::gcnew_); }},
+	    {"local", [](compiler_type *self) -> token_base *
 	{
-		return new token_value(var::make_constant<constant_values>(constant_values::local_namepace));
+		return self->make_token<token_value>(var::make_constant<constant_values>(constant_values::local_namepace));
 	}},
-	    {"global", []() -> token_base *
+	    {"global", [](compiler_type *self) -> token_base *
 	{
-		return new token_value(var::make_constant<constant_values>(constant_values::global_namespace));
+		return self->make_token<token_value>(var::make_constant<constant_values>(constant_values::global_namespace));
 	}},
-	    {"null", []() -> token_base *
-	{ return new token_value(null_pointer); }},
-	    {"true", []() -> token_base *
-	{ return new token_value(var::make_constant<bool>(true)); }},
-	    {"false", []() -> token_base *
-	{ return new token_value(var::make_constant<bool>(false)); }}};
+	    {"null", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_value>(null_pointer); }},
+	    {"true", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_value>(var::make_constant<bool>(true)); }},
+	    {"false", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_value>(var::make_constant<bool>(false)); }}};
 
 	const mapping<char32_t, char32_t> compiler_type::escape_map = {
 	    {'a', '\a'},
@@ -539,9 +531,9 @@ namespace cs
 					if (!context->instance->storage.exist_record(id) &&
 					    context->instance->storage.exist_record_in_struct(id))
 					{
-						it.data() = new token_signal(signal_types::dot_);
+						it.data() = make_token<token_signal>(signal_types::dot_);
 						tree.emplace_left_left(it, token);
-						tree.emplace_left_left(it, new token_id("this"));
+						tree.emplace_left_left(it, make_token<token_id>("this"));
 						tree.emplace_right_right(it, token);
 					}
 				}
@@ -594,7 +586,7 @@ namespace cs
 						{
 							if (it.right().data() == nullptr)
 								throw compile_error("Invalid unary '-' expression. Operand must be non-empty.");
-							it.data() = new token_signal(signal_types::minus_);
+							it.data() = make_token<token_signal>(signal_types::minus_);
 						}
 						else
 						{
@@ -607,7 +599,7 @@ namespace cs
 						{
 							if (it.right().data() == nullptr)
 								throw compile_error("Invalid unary '*' (dereference) expression. Operand must be non-empty.");
-							it.data() = new token_signal(signal_types::escape_);
+							it.data() = make_token<token_signal>(signal_types::escape_);
 						}
 						else
 						{
@@ -634,7 +626,7 @@ namespace cs
 						if (it.left().data() == nullptr)
 							throw compile_error("Invalid '=' expression. Left-hand side must be non-empty after expression trimming.");
 						if (it.left().data()->get_type() == token_types::parallel)
-							it.data() = new token_signal(signal_types::bind_);
+							it.data() = make_token<token_signal>(signal_types::bind_);
 						trim_expr(tree, it.right(), do_trim);
 						return;
 					case signal_types::com_:
@@ -651,9 +643,9 @@ namespace cs
 							if (lptr != nullptr && lptr->get_type() == token_types::parallel)
 								parallel_list = static_cast<token_parallel *>(lptr);
 							else if (lptr != nullptr)
-								parallel_list = new token_parallel({tree_type<token_base *>(it.left())});
+								parallel_list = make_token<token_parallel>(std::deque<tree_type<token_base *>>{tree_type<token_base *>(it.left())});
 							else
-								parallel_list = new token_parallel();
+								parallel_list = make_token<token_parallel>();
 							if (rptr != nullptr && rptr->get_type() == token_types::parallel)
 								for (auto &tree : static_cast<token_parallel *>(rptr)->get_parallel())
 									parallel_list->get_parallel().push_back(tree);
@@ -745,14 +737,14 @@ namespace cs
 							token_base *rptr = it.right().data();
 							if (rptr == nullptr || rptr->get_type() != token_types::id)
 								throw compile_error("Invalid variadic argument declaration. Right-hand side of '...' must be an identifier.");
-							it.data() = new token_vargs(static_cast<token_id *>(rptr)->get_id());
+							it.data() = make_token<token_vargs>(static_cast<token_id *>(rptr)->get_id());
 						}
 						else
 						{
 							if (it.right().data() != nullptr)
 								throw compile_error("Invalid variadic argument expansion. Right-hand side of '...' must be empty.");
 							trim_expr(tree, it.left(), do_trim);
-							it.data() = new token_expand(tree_type<token_base *>(it.left()));
+							it.data() = make_token<token_expand>(tree_type<token_base *>(it.left()));
 						}
 						return;
 					}
@@ -821,7 +813,7 @@ namespace cs
 							std::swap(new_args, args);
 						}
 						statement_base *ret = new statement_return(tree_type<token_base *>(it.right()), context,
-						                                           new token_endline(token->get_line_num()));
+						                                           make_token<token_endline>(token->get_line_num()));
 #ifdef CS_DEBUGGER
 						std::string decl = "function [lambda](";
 						if (args.size() != 0)
@@ -833,21 +825,25 @@ namespace cs
 						}
 						else
 							decl += ")";
-						function *fn = new function(context, decl, ret, args, std::deque<statement_base *>{ret}, is_vargs,
-						                            true);
+						std::shared_ptr<function> fn = std::make_shared<function>(context, decl, ret, args,
+						                                                          std::deque<statement_base *>{ret}, is_vargs,
+						                                                          true);
 #else
-						function *fn = new function(context, args, std::deque<statement_base *>{ret}, is_vargs, true);
+						std::shared_ptr<function> fn = std::make_shared<function>(context, args,
+						                                                          std::deque<statement_base *>{ret},
+						                                                          is_vargs, true);
 #endif
-						lambda_pool().emplace_back(fn);
+						// The lambda is owned by the callable var created below; no
+						// immortal pool.
 						if (find_self_ref)
 						{
-							var lambda = var::make<object_method>(var(), var::make_protect<callable>(function_ptr{fn}));
+							var lambda = var::make<object_method>(var(), var::make_protect<callable>(function_ptr{fn.get(), fn}));
 							lambda.val<object_method>().object = lambda;
 							lambda.mark_protect();
 							it.data() = new_value(lambda);
 						}
 						else
-							it.data() = new_value(var::make_protect<callable>(function_ptr{fn}));
+							it.data() = new_value(var::make_protect<callable>(function_ptr{fn.get(), fn}));
 						return;
 					}
 
@@ -1414,7 +1410,7 @@ namespace cs
 			{
 				bool failed = false, skip_useless = false;
 				std::size_t i = 0;
-				for (auto &it : dat->first)
+				for (auto &it : dat->grammar)
 				{
 					switch (it->get_type())
 					{
@@ -1479,7 +1475,7 @@ namespace cs
 			{
 				bool skip_useless = false;
 				std::size_t i = 0;
-				for (auto &it : dat->first)
+				for (auto &it : dat->grammar)
 				{
 					switch (it->get_type())
 					{

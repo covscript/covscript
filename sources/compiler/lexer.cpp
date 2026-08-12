@@ -217,7 +217,7 @@ namespace cs
 					++next;
 					if (next != buff.end() && !issignal(*next) && cvt->is_identifier(*next))
 					{
-						tokens.push_back(new token_literal(cvt->wide2local(tmp), ""));
+						tokens.push_back(make_token<token_literal>(cvt->wide2local(tmp), ""));
 						type = token_types::literal;
 					}
 					else
@@ -285,11 +285,11 @@ namespace cs
 						auto reserved = reserved_map.find(local_tmp);
 						if (reserved != nullptr)
 						{
-							tokens.push_back((*reserved)());
+							tokens.push_back((*reserved)(this));
 							tmp.clear();
 							break;
 						}
-						tokens.push_back(new token_id(local_tmp));
+						tokens.push_back(make_token<token_id>(local_tmp));
 						tmp.clear();
 					}
 					break;
@@ -320,7 +320,7 @@ namespace cs
 						if (signal_map.find(next_sig) == nullptr)
 						{
 							auto local_sig = cvt->wide2local(sig);
-							tokens.push_back(new token_signal(signal_map.match(local_sig)));
+							tokens.push_back(make_token<token_signal>(signal_map.match(local_sig)));
 							sig = ch;
 						}
 						else
@@ -329,7 +329,7 @@ namespace cs
 					if (!sig.empty())
 					{
 						auto local_sig = cvt->wide2local(sig);
-						tokens.push_back(new token_signal(signal_map.match(local_sig)));
+						tokens.push_back(make_token<token_signal>(signal_map.match(local_sig)));
 					}
 					tmp.clear();
 					break;
@@ -363,11 +363,11 @@ namespace cs
 				auto reserved = reserved_map.find(local_tmp);
 				if (reserved != nullptr)
 				{
-					tokens.push_back((*reserved)());
+					tokens.push_back((*reserved)(this));
 					tmp.clear();
 					break;
 				}
-				tokens.push_back(new token_id(local_tmp));
+				tokens.push_back(make_token<token_id>(local_tmp));
 				tmp.clear();
 			}
 			break;
@@ -383,7 +383,7 @@ namespace cs
 					if (signal_map.find(next_sig) == nullptr)
 					{
 						auto local_sig = cvt->wide2local(sig);
-						tokens.push_back(new token_signal(signal_map.match(local_sig)));
+						tokens.push_back(make_token<token_signal>(signal_map.match(local_sig)));
 						sig = ch;
 					}
 					else
@@ -392,7 +392,7 @@ namespace cs
 				if (!sig.empty())
 				{
 					auto local_sig = cvt->wide2local(sig);
-					tokens.push_back(new token_signal(signal_map.match(local_sig)));
+					tokens.push_back(make_token<token_signal>(signal_map.match(local_sig)));
 				}
 				break;
 			}
@@ -437,7 +437,7 @@ namespace cs
 					multi_line = true;
 				else if (command == "end" && multi_line)
 				{
-					tokens.push_back(new token_endline(last_line_num));
+					tokens.push_back(compiler.make_token<token_endline>(last_line_num));
 					multi_line = false;
 				}
 				else
@@ -503,7 +503,7 @@ namespace cs
 				}
 			}
 			if (!multi_line)
-				tokens.push_back(new token_endline(line_num));
+				tokens.push_back(compiler.make_token<token_endline>(line_num));
 			context->file_buff.emplace_back(line);
 			last_line_num = line_num++;
 			buff.clear();
@@ -569,7 +569,7 @@ namespace cs
 		{
 			if (ptr->get_type() == token_types::signal &&
 			    static_cast<token_signal *>(ptr)->get_signal() == signal_types::endline_)
-				ptr = new token_endline(ptr->get_line_num());
+				ptr = make_token<token_endline>(ptr->get_line_num());
 			if (ptr->get_type() == token_types::action || ptr->get_type() == token_types::endline)
 			{
 				if (!expr.empty())
@@ -619,13 +619,13 @@ namespace cs
 			switch (blist_stack.front())
 			{
 				case 1:
-					tokens.push_back(new token_signal(signal_types::slb_));
+					tokens.push_back(make_token<token_signal>(signal_types::slb_));
 					break;
 				case 2:
-					tokens.push_back(new token_signal(signal_types::mlb_));
+					tokens.push_back(make_token<token_signal>(signal_types::mlb_));
 					break;
 				case 3:
-					tokens.push_back(new token_signal(signal_types::llb_));
+					tokens.push_back(make_token<token_signal>(signal_types::llb_));
 					break;
 			}
 		};
@@ -664,7 +664,7 @@ namespace cs
 						if (empty_bracket)
 						{
 							empty_bracket = false;
-							tokens.push_back(new token_signal(signal_types::esb_));
+							tokens.push_back(make_token<token_signal>(signal_types::esb_));
 							continue;
 						}
 						break;
@@ -677,7 +677,7 @@ namespace cs
 						if (empty_bracket)
 						{
 							empty_bracket = false;
-							tokens.push_back(new token_signal(signal_types::emb_));
+							tokens.push_back(make_token<token_signal>(signal_types::emb_));
 							continue;
 						}
 						break;
@@ -690,7 +690,7 @@ namespace cs
 						if (empty_bracket)
 						{
 							empty_bracket = false;
-							tokens.push_back(new token_signal(signal_types::elb_));
+							tokens.push_back(make_token<token_signal>(signal_types::elb_));
 							continue;
 						}
 						break;
@@ -751,7 +751,7 @@ namespace cs
 						{
 							process_brackets(btokens);
 							blist.push_back(btokens);
-							tokens.push_back(new token_sblist(blist));
+							tokens.push_back(make_token<token_sblist>(blist));
 							blist.clear();
 							btokens.clear();
 							continue;
@@ -767,7 +767,7 @@ namespace cs
 						{
 							process_brackets(btokens);
 							blist.push_back(btokens);
-							tokens.push_back(new token_mblist(blist));
+							tokens.push_back(make_token<token_mblist>(blist));
 							blist.clear();
 							btokens.clear();
 							continue;
@@ -783,7 +783,7 @@ namespace cs
 						{
 							process_brackets(btokens);
 							blist.push_back(btokens);
-							tokens.push_back(new token_lblist(blist));
+							tokens.push_back(make_token<token_lblist>(blist));
 							blist.clear();
 							btokens.clear();
 							continue;

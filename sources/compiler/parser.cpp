@@ -71,53 +71,53 @@ namespace cs
 							if (!found_as)
 							{
 								insert_vardef = true;
-								tokens.push_back(new token_signal(signal_types::vardef_));
+								tokens.push_back(make_token<token_signal>(signal_types::vardef_));
 							}
 							continue;
 						}
 						case action_types::as_:
 							tokens.push_back(ptr);
-							tokens.push_back(new token_signal(signal_types::vardef_));
+							tokens.push_back(make_token<token_signal>(signal_types::vardef_));
 							continue;
 						case action_types::var_:
 							insert_varchk = true;
 							tokens.push_back(ptr);
-							tokens.push_back(new token_signal(signal_types::varchk_));
+							tokens.push_back(make_token<token_signal>(signal_types::varchk_));
 							continue;
 						case action_types::constant_:
 							insert_varchk = true;
 							tokens.push_back(ptr);
-							tokens.push_back(new token_signal(signal_types::varchk_));
+							tokens.push_back(make_token<token_signal>(signal_types::varchk_));
 							continue;
 						case action_types::link_:
 							insert_varchk = true;
 							tokens.push_back(ptr);
-							tokens.push_back(new token_signal(signal_types::varchk_));
+							tokens.push_back(make_token<token_signal>(signal_types::varchk_));
 							continue;
 						case action_types::for_:
 							tokens.push_back(ptr);
-							tokens.push_back(new token_signal(signal_types::varprt_));
+							tokens.push_back(make_token<token_signal>(signal_types::varprt_));
 							continue;
 						case action_types::foreach_:
 							tokens.push_back(ptr);
-							tokens.push_back(new token_signal(signal_types::varprt_));
+							tokens.push_back(make_token<token_signal>(signal_types::varprt_));
 							continue;
 						case action_types::struct_:
 							tokens.push_back(ptr);
-							tokens.push_back(new token_signal(signal_types::vardef_));
+							tokens.push_back(make_token<token_signal>(signal_types::vardef_));
 							continue;
 						case action_types::function_:
 							tokens.push_back(ptr);
-							tokens.push_back(new token_signal(signal_types::vardef_));
+							tokens.push_back(make_token<token_signal>(signal_types::vardef_));
 							expected_fdef = true;
 							continue;
 						case action_types::namespace_:
 							tokens.push_back(ptr);
-							tokens.push_back(new token_signal(signal_types::vardef_));
+							tokens.push_back(make_token<token_signal>(signal_types::vardef_));
 							continue;
 						case action_types::catch_:
 							tokens.push_back(ptr);
-							tokens.push_back(new token_signal(signal_types::vardef_));
+							tokens.push_back(make_token<token_signal>(signal_types::vardef_));
 							continue;
 					}
 					break;
@@ -144,8 +144,8 @@ namespace cs
 							tlist.push_back(tree);
 						}
 						if (!expected_lambda)
-							tokens.push_back(new token_signal(signal_types::fcall_));
-						tokens.push_back(new token_arglist(tlist));
+							tokens.push_back(make_token<token_signal>(signal_types::fcall_));
+						tokens.push_back(make_token<token_arglist>(tlist));
 						continue;
 					}
 					else
@@ -162,8 +162,8 @@ namespace cs
 					kill_brackets(mbl->get_list().front(), line_num);
 					tree_type<token_base *> tree;
 					gen_tree(tree, mbl->get_list().front());
-					tokens.push_back(new token_signal(signal_types::access_));
-					tokens.push_back(new token_expr(tree));
+					tokens.push_back(make_token<token_signal>(signal_types::access_));
+					tokens.push_back(make_token<token_expr>(tree));
 					expected_fcall = true;
 					continue;
 				}
@@ -178,7 +178,7 @@ namespace cs
 						gen_tree(tree, list);
 						tlist.push_back(tree);
 					}
-					tokens.push_back(new token_array(tlist));
+					tokens.push_back(make_token<token_array>(tlist));
 					expected_fcall = false;
 					continue;
 				}
@@ -192,13 +192,13 @@ namespace cs
 							if (insert_vardef)
 							{
 								tokens.push_back(ptr);
-								tokens.push_back(new token_signal(signal_types::vardef_));
+								tokens.push_back(make_token<token_signal>(signal_types::vardef_));
 								continue;
 							}
 							else if (insert_varchk)
 							{
 								tokens.push_back(ptr);
-								tokens.push_back(new token_signal(signal_types::varchk_));
+								tokens.push_back(make_token<token_signal>(signal_types::varchk_));
 								continue;
 							}
 							else
@@ -206,7 +206,7 @@ namespace cs
 						case signal_types::arrow_:
 							if (expected_lambda)
 							{
-								tokens.push_back(new token_signal(signal_types::lambda_, line_num));
+								tokens.push_back(make_token<token_signal>(signal_types::lambda_, line_num));
 								expected_lambda = false;
 								expected_fcall = false;
 								continue;
@@ -217,8 +217,8 @@ namespace cs
 							if (expected_fcall)
 							{
 								if (!expected_lambda)
-									tokens.push_back(new token_signal(signal_types::fcall_));
-								tokens.push_back(new token_arglist());
+									tokens.push_back(make_token<token_signal>(signal_types::fcall_));
+								tokens.push_back(make_token<token_arglist>());
 							}
 							else
 								throw compile_error("Standalone empty parentheses '()' are not allowed here");
@@ -230,7 +230,7 @@ namespace cs
 							tokens.push_back(ptr);
 							continue;
 						case signal_types::elb_:
-							tokens.push_back(new token_array());
+							tokens.push_back(make_token<token_array>());
 							expected_fcall = false;
 							continue;
 					}
@@ -283,12 +283,12 @@ namespace cs
 				{
 					for (auto &it : list)
 						tokens.push_back(it);
-					tokens.push_back(new token_signal(signal_types::com_));
+					tokens.push_back(make_token<token_signal>(signal_types::com_));
 				}
 				tokens.pop_back();
 				tree_type<token_base *> t;
 				gen_tree(t, tokens);
-				obj = new token_expr(t);
+				obj = make_token<token_expr>(t);
 			}
 		}
 		tree.clear();
@@ -337,12 +337,12 @@ namespace cs
 				{
 					for (auto &it : list)
 						tokens.push_back(it);
-					tokens.push_back(new token_signal(signal_types::com_));
+					tokens.push_back(make_token<token_signal>(signal_types::com_));
 				}
 				tokens.pop_back();
 				tree_type<token_base *> t;
 				gen_tree(t, tokens);
-				obj = new token_expr(t);
+				obj = make_token<token_expr>(t);
 			}
 			tree.emplace_root_left(tree.root(), obj);
 		}
@@ -368,7 +368,7 @@ namespace cs
 				{
 					tree_type<token_base *> tree;
 					gen_tree(tree, expr);
-					tokens.push_back(new token_expr(tree));
+					tokens.push_back(make_token<token_expr>(tree));
 					expr.clear();
 				}
 				tokens.push_back(ptr);

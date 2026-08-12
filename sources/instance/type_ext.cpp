@@ -1846,7 +1846,11 @@ namespace cs_impl
 			expression_t tree;
 			for (auto &ch : expr)
 				buff.push_back(ch);
+			// Build into a fresh token arena; the returned expression keeps it
+			// alive so the tree's tokens stay valid for as long as the var exists.
+			compile_unit_guard guard(context);
 			context->compiler->build_expr(buff, tree);
+			tree.attach_arena(guard.unit());
 			return var::make<expression_t>(tree);
 		}
 

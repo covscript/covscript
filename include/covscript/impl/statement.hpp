@@ -187,6 +187,11 @@ namespace cs
 		                     ptr),
 		      mBlock(std::move(block)) {}
 
+		~statement_block()
+		{
+			delete_children(mBlock);
+		}
+
 		statement_types get_type() const noexcept override
 		{
 			return statement_types::block_;
@@ -213,6 +218,11 @@ namespace cs
 		statement_namespace(token_base *tbp, std::deque<statement_base *> block, context_t c, token_base *ptr)
 		    : statement_base(std::move(c), ptr), mName(static_cast<token_id *>(tbp)->get_id()), mBlock(std::move(block)) {}
 
+		~statement_namespace()
+		{
+			delete_children(mBlock);
+		}
+
 		statement_types get_type() const noexcept override
 		{
 			return statement_types::namespace_;
@@ -234,6 +244,11 @@ namespace cs
 		statement_if(tree_type<token_base *> tree, std::deque<statement_base *> block, context_t c,
 		             token_base *ptr)
 		    : statement_base(std::move(c), ptr), mTree(std::move(tree)), mBlock(std::move(block)) {}
+
+		~statement_if()
+		{
+			delete_children(mBlock);
+		}
 
 		statement_types get_type() const noexcept override
 		{
@@ -262,6 +277,12 @@ namespace cs
 		      mBlock(std::move(btrue)),
 		      mElseBlock(std::move(
 		          bfalse)) {}
+
+		~statement_ifelse()
+		{
+			delete_children(mBlock);
+			delete_children(mElseBlock);
+		}
 
 		statement_types get_type() const noexcept override
 		{
@@ -309,6 +330,14 @@ namespace cs
 		      mTree(std::move(tree)),
 		      mDefault(dptr),
 		      mCases(std::move(cases)) {}
+
+		~statement_switch()
+		{
+			if (mDefault != nullptr)
+				delete mDefault;
+			for (auto &kv : mCases)
+				delete kv.second;
+		}
 
 		statement_types get_type() const noexcept override
 		{
@@ -404,6 +433,11 @@ namespace cs
 		                token_base *ptr)
 		    : statement_base(std::move(c), ptr), mTree(std::move(tree)), mBlock(std::move(b)) {}
 
+		~statement_while()
+		{
+			delete_children(mBlock);
+		}
+
 		statement_types get_type() const noexcept override
 		{
 			return statement_types::while_;
@@ -456,6 +490,11 @@ namespace cs
 		statement_loop(std::deque<statement_base *> b, context_t c, token_base *ptr)
 		    : statement_base(std::move(c), ptr), mBlock(std::move(b)) {}
 
+		~statement_loop()
+		{
+			delete_children(mBlock);
+		}
+
 		statement_types get_type() const noexcept override
 		{
 			return statement_types::loop_;
@@ -476,6 +515,11 @@ namespace cs
 
 		statement_loop_until(tree_type<token_base *> expr, std::deque<statement_base *> b, context_t c, token_base *ptr)
 		    : statement_base(std::move(c), ptr), mExpr(std::move(expr)), mBlock(std::move(b)) {}
+
+		~statement_loop_until()
+		{
+			delete_children(mBlock);
+		}
 
 		statement_types get_type() const noexcept override
 		{
@@ -501,6 +545,11 @@ namespace cs
 		      mParallel(std::move(parallel_list)),
 		      mBlock(std::move(block)) {}
 
+		~statement_for()
+		{
+			delete_children(mBlock);
+		}
+
 		statement_types get_type() const noexcept override
 		{
 			return statement_types::for_;
@@ -524,6 +573,11 @@ namespace cs
 		                  token_base *ptr)
 		    : statement_base(std::move(c), ptr), mIt(std::move(it)), mObj(std::move(tree)), mBlock(std::move(b)) {}
 
+		~statement_foreach()
+		{
+			delete_children(mBlock);
+		}
+
 		statement_types get_type() const noexcept override
 		{
 			return statement_types::foreach_;
@@ -539,7 +593,6 @@ namespace cs
 		std::string mName;
 		struct_builder mBuilder;
 		tree_type<token_base *> mParent;
-		std::deque<statement_base *> mBlock;
 
 	   public:
 		statement_struct() = delete;
@@ -552,12 +605,16 @@ namespace cs
 		      mBuilder(c, name,
 		               tree,
 		               method),
-		      mParent(tree),
-		      mBlock(method) {}
+		      mParent(tree) {}
 
 		statement_types get_type() const noexcept override
 		{
 			return statement_types::struct_;
+		}
+
+		const std::deque<statement_base *> &get_methods() const
+		{
+			return mBuilder.get_methods();
 		}
 
 		void run_impl() override;
@@ -568,7 +625,7 @@ namespace cs
 	class statement_function final : public statement_base
 	{
 		std::string mName;
-		function mFunc;
+		std::shared_ptr<function> mFunc;
 		bool mOverride = false;
 		bool mIsMemFn = false;
 		// Debug Information
@@ -576,7 +633,6 @@ namespace cs
 		std::string mDecl;
 #endif
 		std::vector<std::string> mArgs;
-		std::deque<statement_base *> mBlock;
 
 	   public:
 		statement_function() = delete;
@@ -587,7 +643,7 @@ namespace cs
 		                   const std::deque<statement_base *> &body, bool is_override, bool is_vargs,
 		                   const context_t &c,
 		                   token_base *ptr)
-		    : statement_base(c, ptr), mName(std::move(name)), mFunc(c, decl, this, args, body, is_vargs), mOverride(is_override), mDecl(decl), mArgs(args), mBlock(body) {}
+		    : statement_base(c, ptr), mName(std::move(name)), mFunc(std::make_shared<function>(c, decl, this, args, body, is_vargs)), mOverride(is_override), mDecl(decl), mArgs(args) {}
 
 #else
 
@@ -595,7 +651,7 @@ namespace cs
 		                   const std::deque<statement_base *> &body, bool is_override, bool is_vargs,
 		                   const context_t &c,
 		                   token_base *ptr)
-		    : statement_base(c, ptr), mName(std::move(name)), mFunc(c, args, body, is_vargs), mOverride(is_override), mArgs(args), mBlock(body) {}
+		    : statement_base(c, ptr), mName(std::move(name)), mFunc(std::make_shared<function>(c, args, body, is_vargs)), mOverride(is_override), mArgs(args) {}
 
 #endif
 
@@ -606,13 +662,18 @@ namespace cs
 
 		void set_mem_fn()
 		{
-			mFunc.add_reserve_var("this", true);
+			mFunc->add_reserve_var("this", true);
 			mIsMemFn = true;
 		}
 
 		void run_impl() override;
 
 		void dump(std::ostream &) const override;
+
+		const std::deque<statement_base *> &get_body() const
+		{
+			return mFunc->get_body();
+		}
 
 #ifdef CS_DEBUGGER
 
@@ -667,6 +728,12 @@ namespace cs
 		      mTryBody(std::move(tbody)),
 		      mCatchBody(
 		          std::move(cbody)) {}
+
+		~statement_try()
+		{
+			delete_children(mTryBody);
+			delete_children(mCatchBody);
+		}
 
 		statement_types get_type() const noexcept override
 		{

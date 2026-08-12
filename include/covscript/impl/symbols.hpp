@@ -199,21 +199,8 @@ namespace cs
 		std::size_t line_num = 1;
 
 	   public:
-		static garbage_collector<token_base> gc;
-
-		static void *operator new(std::size_t size)
-		{
-			void *ptr = ::operator new(size);
-			gc.add(ptr);
-			return ptr;
-		}
-
-		static void operator delete(void *ptr)
-		{
-			gc.remove(ptr);
-			::operator delete(ptr);
-		}
-
+		// Tokens are owned by a compile unit's arena (or a grammar template);
+		// the legacy global GC table is removed.
 		token_base() = default;
 
 		token_base(const token_base &) = default;
@@ -234,6 +221,84 @@ namespace cs
 		{
 			o << "< BasicToken >";
 			return false;
+		}
+	};
+
+	// A single compilation's token arena. Tokens are shared across tree nodes
+	// (tree_type copies are shallow), so they cannot be owned per-node; instead
+	// every token created while this unit is current is bumped into the arena and
+	// destroyed together when the unit dies. Functions created in the unit hold a
+	// shared_ptr<compile_unit> so the arena outlives the compile scope while any
+	// function is still referenced.
+	class compile_unit final : public std::enable_shared_from_this<compile_unit>
+	{
+		memory_arena arena;
+		std::vector<token_base *> tokens;
+
+	   public:
+		compile_unit() = default;
+
+		compile_unit(const compile_unit &) = delete;
+
+		compile_unit &operator=(const compile_unit &) = delete;
+
+		~compile_unit()
+		{
+			release();
+		}
+
+		template <typename T, typename... A>
+		T *make_token(A &&...a)
+		{
+			T *ptr = arena.construct<T>(std::forward<A>(a)...);
+			tokens.push_back(ptr);
+			return ptr;
+		}
+
+		// Number of tokens still owned by this unit (for tests / diagnostics).
+		std::size_t token_count() const
+		{
+			return tokens.size();
+		}
+
+		void release()
+		{
+			for (auto *t : tokens)
+				t->~token_base();
+			tokens.clear();
+		}
+	};
+
+	// RAII: create a fresh token arena, make it the context's current unit for
+	// the scope, and restore the previous unit on exit. Used for one-off token
+	// production (build_expr) that runs within a single scope.
+	class compile_unit_guard final
+	{
+		std::shared_ptr<compile_unit> m_unit;
+		std::shared_ptr<compile_unit> m_saved;
+		context_t m_context;
+
+	   public:
+		compile_unit_guard() = delete;
+
+		compile_unit_guard(const compile_unit_guard &) = delete;
+
+		compile_unit_guard &operator=(const compile_unit_guard &) = delete;
+
+		explicit compile_unit_guard(const context_t &c)
+		    : m_unit(std::make_shared<compile_unit>()), m_saved(c->current_unit), m_context(c)
+		{
+			m_context->current_unit = m_unit;
+		}
+
+		~compile_unit_guard()
+		{
+			m_context->current_unit = m_saved;
+		}
+
+		const std::shared_ptr<compile_unit> &unit() const
+		{
+			return m_unit;
 		}
 	};
 
@@ -680,30 +745,28 @@ namespace cs
 		std::size_t line_num = 1;
 
 	   public:
-		static garbage_collector<statement_base> gc;
-
-		static void *operator new(std::size_t size)
-		{
-			void *ptr = ::operator new(size);
-			gc.add(ptr);
-			return ptr;
-		}
-
-		static void operator delete(void *ptr)
-		{
-			gc.remove(ptr);
-			::operator delete(ptr);
-		}
-
+		// Statements are owned by the statement tree (parents delete children
+		// recursively); the legacy global GC table is removed.
 		statement_base() = default;
 
-		statement_base(const statement_base &) = default;
+		statement_base(const statement_base &) = delete;
+
+		statement_base &operator=(const statement_base &) = delete;
 
 		statement_base(context_t c, token_base *eptr)
 		    : context(std::move(c)),
 		      line_num(static_cast<token_endline *>(eptr)->get_line_num()) {}
 
 		virtual ~statement_base() = default;
+
+		// Recursively delete child statements (owned by their parent; each statement
+		// in the tree has exactly one parent).
+		static void delete_children(std::deque<statement_base *> &children)
+		{
+			for (auto *ptr : children)
+				delete ptr;
+			children.clear();
+		}
 
 		std::size_t get_line_num() const noexcept
 		{
@@ -764,21 +827,8 @@ namespace cs
 	class method_base
 	{
 	   public:
-		static garbage_collector<method_base> gc;
-
-		static void *operator new(std::size_t size)
-		{
-			void *ptr = ::operator new(size);
-			gc.add(ptr);
-			return ptr;
-		}
-
-		static void operator delete(void *ptr)
-		{
-			gc.remove(ptr);
-			::operator delete(ptr);
-		}
-
+		// Methods are owned by the compiler's translator (unique_ptr); the legacy
+		// global GC table is removed.
 		method_base() = default;
 
 		method_base(const method_base &) = default;

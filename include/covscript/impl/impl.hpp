@@ -43,6 +43,9 @@ namespace cs
 		// Statements
 		std::deque<statement_base *> statements;
 
+		// Token arena for the current program; freed when the program is released.
+		std::shared_ptr<compile_unit> m_unit;
+
 		// Fiber Stack Pointer
 		stack_pointer fiber_sp = nullptr;
 		stack_pointer &fiber_stack;
@@ -72,7 +75,30 @@ namespace cs
 
 		instance_type(const instance_type &) = delete;
 
-		~instance_type() = default;
+		// The compiled program is owned by this instance: statements are freed
+		// when the instance dies or the next compile replaces them.
+		~instance_type()
+		{
+			statement_base::delete_children(statements);
+			if (context && context->current_unit == m_unit)
+				context->current_unit = nullptr;
+			m_unit.reset();
+		}
+
+		// Release the current program (used by compile() and instance teardown).
+		void release_statements()
+		{
+			statement_base::delete_children(statements);
+			if (context && context->current_unit == m_unit)
+				context->current_unit = nullptr;
+			m_unit.reset();
+		}
+
+		// The token arena of the current program (tests / embedders).
+		const std::shared_ptr<compile_unit> &get_current_unit() const
+		{
+			return m_unit;
+		}
 
 		// Wrapped Method
 		namespace_t import(const std::string &, const std::string &);
@@ -131,6 +157,8 @@ namespace cs
 		// Import/using FIFO base at the start of the current top-level statement;
 		// reset_status truncates back to it so a failed line cannot leak results.
 		std::size_t import_base = 0;
+		// Token arena of the current top-level statement (spans multi-line blocks).
+		std::shared_ptr<compile_unit> m_unit;
 
 		void interpret(const string &, std::deque<token_base *> &);
 
@@ -146,6 +174,11 @@ namespace cs
 		explicit repl(context_t);
 
 		repl(const repl &) = delete;
+
+		~repl()
+		{
+			context->current_unit = nullptr;
+		}
 
 		void exec(const string &);
 
@@ -163,6 +196,9 @@ namespace cs
 			context->compiler->utilize_metadata();
 			context->compiler->loop_depth = 0;
 			context->compiler->import_results.resize(import_base);
+			// Drop the current statement's token arena.
+			context->current_unit = nullptr;
+			m_unit.reset();
 			while (depth-- > 0)
 			{
 				context->instance->storage.remove_set();

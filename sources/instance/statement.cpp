@@ -28,6 +28,16 @@
 
 namespace cs
 {
+	function::~function()
+	{
+		statement_base::delete_children(mBody);
+	}
+
+	struct_builder::~struct_builder()
+	{
+		statement_base::delete_children(*mMethod);
+	}
+
 	var function::call_rr(const function *_this, vector &args)
 	{
 		current_process->poll_event();
@@ -223,7 +233,7 @@ namespace cs
 			else
 				throw runtime_error("The parent of a struct must be a type");
 		}
-		for (auto &ptr : this->mMethod)
+		for (auto &ptr : *this->mMethod)
 		{
 			try
 			{
@@ -919,7 +929,7 @@ namespace cs
 			compiler_type::dump_expr(mParent.root(), o);
 		}
 		o << " >\n";
-		for (auto &ptr : mBlock)
+		for (auto &ptr : this->get_methods())
 			ptr->dump(o);
 		o << "< EndStruct >\n";
 	}
@@ -929,11 +939,11 @@ namespace cs
 		CS_DEBUGGER_STEP(this);
 		if (this->mIsMemFn)
 			context->instance->storage.add_var_no_return(this->mName.data(),
-			                                             var::make_protect<callable>(function_ptr{&this->mFunc}, callable::types::member_fn),
+			                                             var::make_protect<callable>(function_ptr{this->mFunc.get(), this->mFunc}, callable::types::member_fn),
 			                                             mOverride);
 		else
 		{
-			var func = var::make_protect<callable>(function_ptr{&this->mFunc});
+			var func = var::make_protect<callable>(function_ptr{this->mFunc.get(), this->mFunc});
 #ifdef CS_DEBUGGER
 			if (context->instance->storage.is_initial())
 				cs_debugger_func_breakpoint(this->mName, func);
@@ -953,7 +963,7 @@ namespace cs
 		for (auto &name : mArgs)
 			o << "< ID = \"" << name << "\" >";
 		o << "} >\n< Body >\n";
-		for (auto &ptr : mBlock)
+		for (auto &ptr : this->get_body())
 			ptr->dump(o);
 		o << "< EndFunction >\n";
 	}
