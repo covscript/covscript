@@ -1079,7 +1079,7 @@ namespace cs
 
 		inline T *allocate(std::size_t n)
 		{
-			if (n == 1 && mOffset > 0)
+			if (n == 1 && mOffset > 0 && thread_count::instance().single_threaded())
 				return mPool[--mOffset];
 			else
 				return mAlloc.allocate(n);
@@ -1087,7 +1087,7 @@ namespace cs
 
 		inline void deallocate(T *ptr, std::size_t n)
 		{
-			if (n == 1 && mOffset < blck_size)
+			if (n == 1 && mOffset < blck_size && thread_count::instance().single_threaded())
 				mPool[mOffset++] = ptr;
 			else
 				mAlloc.deallocate(ptr, n);
