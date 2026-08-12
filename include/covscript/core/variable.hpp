@@ -907,9 +907,10 @@ namespace cs_impl
 
 		using allocator_t = cs::allocator_type<proxy, CS_ALLOCATOR_BUFFER_MAX * CS_VAR_ALLOC_MULTIPLIER, default_allocator_provider>;
 
+		// Shared pool; guarded by the worker-thread count in allocator_type.
 		static inline allocator_t &get_allocator()
 		{
-			static thread_local allocator_t allocator;
+			static allocator_t allocator;
 			return allocator;
 		}
 
