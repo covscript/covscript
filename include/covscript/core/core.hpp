@@ -196,19 +196,14 @@ namespace cs
 
 		inline void poll_event()
 		{
-			// Fast path: a plain relaxed load is cheap and never issues a locked
-			// read-modify-write. Only when a flag is actually set do we pay for the
-			// atomic exchange to clear it and dispatch the event.
-			if (is_sigint_raised.load(std::memory_order_relaxed) &&
-			    is_sigint_raised.exchange(false, std::memory_order_acquire))
+			if (is_sigint_raised.exchange(false))
 			{
 				on_process_sigint.touch(nullptr);
 			}
 			// A cooperative exit request (e.g. Ctrl+Break) is dispatched through
 			// on_process_exit so it runs on the main thread, distinct from the
 			// SIGINT reset/continue handling.
-			if (is_exit_requested.load(std::memory_order_relaxed) &&
-			    is_exit_requested.exchange(false, std::memory_order_acquire))
+			if (is_exit_requested.exchange(false))
 			{
 				int code = 0;
 				on_process_exit.touch(&code);

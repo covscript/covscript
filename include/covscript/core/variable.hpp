@@ -24,8 +24,6 @@
  * Github:  https://github.com/mikecovlee
  * Website: http://covscript.org.cn
  */
-#include <atomic>
-#include <cstdlib>
 #include <type_traits>
 
 namespace cs_impl
