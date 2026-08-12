@@ -35,3 +35,6 @@ DerivePointerAlignment: false
 IndentCaseLabels: true
 IndentGotoLabels: false
 NamespaceIndentation: All
+# Indent the lambda body relative to the lambda, not the enclosing call:
+# otherwise a lambda passed as a call argument loses its body indentation.
+LambdaBodyIndentation: OuterScope
