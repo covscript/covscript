@@ -1,0 +1,6 @@
+package test_self_import
+import test_self_import
+system.out.println("test_self_import loaded")
+function func_s()
+    system.out.println("func_s done")
+end

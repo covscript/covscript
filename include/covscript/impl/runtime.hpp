@@ -26,25 +26,27 @@
  */
 #include <covscript/impl/compiler.hpp>
 
-namespace cs {
+namespace cs
+{
 	using stack_pointer = stack_type<domain_type> *;
 
-	class domain_manager {
+	class domain_manager
+	{
 		const stack_pointer &fiber_stack;
 		stack_type<set_t<std::string_view>> m_set;
 		stack_type<domain_type> m_data;
 		set_t<std::string_view> buildin_symbols;
 
-	public:
+	   public:
 		explicit domain_manager(const stack_pointer &fiber_sp)
-			: fiber_stack(fiber_sp)
+		    : fiber_stack(fiber_sp)
 		{
 			m_set.push();
 			m_data.push();
 		}
 
 		domain_manager(const stack_pointer &fiber_sp, std::size_t size)
-			: fiber_stack(fiber_sp)
+		    : fiber_stack(fiber_sp)
 		{
 			m_set.push();
 			m_data.resize(size);
@@ -59,7 +61,8 @@ namespace cs {
 		{
 			while (!m_set.empty())
 				m_set.pop_no_return();
-			while (!m_data.empty()) {
+			while (!m_data.empty())
+			{
 				m_data.top().clear();
 				m_data.pop_no_return();
 			}
@@ -100,7 +103,8 @@ namespace cs {
 		{
 			namespace_t nm = std::make_shared<name_space>();
 			const domain_type &global = m_data.bottom();
-			for (auto &it : global) {
+			for (auto &it : global)
+			{
 				if (buildin_symbols.count(it.first) == 0)
 					nm->add_var(it.first.data(), global.get_var_by_id(it.second));
 			}
@@ -114,11 +118,13 @@ namespace cs {
 
 		void remove_domain()
 		{
-			if (fiber_stack != nullptr) {
+			if (fiber_stack != nullptr)
+			{
 				fiber_stack->top().clear();
 				fiber_stack->pop_no_return();
 			}
-			else {
+			else
+			{
 				m_data.top().clear();
 				m_data.pop_no_return();
 			}
@@ -147,12 +153,17 @@ namespace cs {
 
 		bool exist_record(std::string_view name)
 		{
+			// The set stack can be empty (e.g. debugger expressions after the
+			// script finished); no records exist then.
+			if (m_set.empty())
+				return false;
 			return m_set.top().count(name) > 0;
 		}
 
 		bool exist_record_in_struct(std::string_view name)
 		{
-			for (auto &set : m_set) {
+			for (auto &set : m_set)
+			{
 				if (set.count(name) > 0)
 					return set.count("__PRAGMA_CS_STRUCT_DEFINITION__") > 0;
 			}
@@ -161,14 +172,17 @@ namespace cs {
 
 		inline var &get_var(const std::string &name)
 		{
-			if (fiber_stack != nullptr) {
-				for (auto &domain : *fiber_stack) {
+			if (fiber_stack != nullptr)
+			{
+				for (auto &domain : *fiber_stack)
+				{
 					var *ptr = domain.get_var_opt(name);
 					if (ptr != nullptr)
 						return *ptr;
 				}
 			}
-			for (auto &domain : m_data) {
+			for (auto &domain : m_data)
+			{
 				var *ptr = domain.get_var_opt(name);
 				if (ptr != nullptr)
 					return *ptr;
@@ -178,7 +192,8 @@ namespace cs {
 
 		inline var &get_var(const var_id &id)
 		{
-			if (fiber_stack != nullptr) {
+			if (fiber_stack != nullptr)
+			{
 				if (id.m_domain_id < fiber_stack->size() && (*fiber_stack)[id.m_domain_id].consistence(id))
 					return (*fiber_stack)[id.m_domain_id].get_var_by_id(id.m_slot_id);
 				for (std::size_t i = 0, size = fiber_stack->size(); i < size; ++i)
@@ -211,10 +226,13 @@ namespace cs {
 		template <typename T>
 		var get_var_optimizable(T &&name)
 		{
-			if (m_data.size() == m_set.size()) {
-				for (std::size_t i = 0, size = m_data.size(); i < size; ++i) {
+			if (m_data.size() == m_set.size())
+			{
+				for (std::size_t i = 0, size = m_data.size(); i < size; ++i)
+				{
 					auto &current_set = m_set[i];
-					if (current_set.find((const std::string &) name) != current_set.end()) {
+					if (current_set.find((const std::string &) name) != current_set.end())
+					{
 						var *ptr = m_data[i].get_var_opt(name);
 						if (ptr != nullptr)
 							return *ptr;
@@ -245,11 +263,13 @@ namespace cs {
 		template <typename T>
 		domain_manager &add_var(T &&name, const var &val)
 		{
-			if (fiber_stack != nullptr) {
+			if (fiber_stack != nullptr)
+			{
 				if (!fiber_stack->top().add_var_optimal(name, val))
 					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 			}
-			else {
+			else
+			{
 				if (!m_data.top().add_var_optimal(name, val))
 					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 			}
@@ -259,11 +279,13 @@ namespace cs {
 		template <typename T>
 		domain_manager &add_var(T &&name, const var &val, bool is_override)
 		{
-			if (fiber_stack != nullptr) {
+			if (fiber_stack != nullptr)
+			{
 				if (!fiber_stack->top().add_var_optimal(name, val, is_override))
 					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 			}
-			else {
+			else
+			{
 				if (!m_data.top().add_var_optimal(name, val, is_override))
 					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 			}
@@ -273,11 +295,13 @@ namespace cs {
 		template <typename T>
 		void add_var_no_return(T &&name, const var &val)
 		{
-			if (fiber_stack != nullptr) {
+			if (fiber_stack != nullptr)
+			{
 				if (!fiber_stack->top().add_var_optimal(name, val))
 					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 			}
-			else {
+			else
+			{
 				if (!m_data.top().add_var_optimal(name, val))
 					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 			}
@@ -286,11 +310,13 @@ namespace cs {
 		template <typename T>
 		void add_var_no_return(T &&name, const var &val, bool is_override)
 		{
-			if (fiber_stack != nullptr) {
+			if (fiber_stack != nullptr)
+			{
 				if (!fiber_stack->top().add_var_optimal(name, val, is_override))
 					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 			}
-			else {
+			else
+			{
 				if (!m_data.top().add_var_optimal(name, val, is_override))
 					throw runtime_error("Target domain exist variable \"" + std::string(name) + "\".");
 			}
@@ -357,17 +383,18 @@ namespace cs {
 		}
 	};
 
-	class runtime_type {
+	class runtime_type
+	{
 		map_t<std::string, callable> literals;
 
-	public:
+	   public:
 		domain_manager storage;
 
 		explicit runtime_type(const stack_pointer &fiber_sp)
-			: storage(fiber_sp) {}
+		    : storage(fiber_sp) {}
 
 		runtime_type(const stack_pointer &fiber_sp, std::size_t size)
-			: storage(fiber_sp, size) {}
+		    : storage(fiber_sp, size) {}
 
 		void add_string_literal(const std::string &literal, const callable &func)
 		{
@@ -379,7 +406,8 @@ namespace cs {
 
 		var get_string_literal(const std::string &data, const std::string &literal)
 		{
-			if (literals.count(literal) > 0) {
+			if (literals.count(literal) > 0)
+			{
 				vector arg{data};
 				return literals.at(literal).call(arg);
 			}

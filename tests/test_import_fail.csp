@@ -1,0 +1,5 @@
+package test_import_fail
+throw 42
+function func_f()
+    system.out.println("func_f done")
+end

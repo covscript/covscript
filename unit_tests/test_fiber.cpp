@@ -8,6 +8,7 @@
 #include <covscript/covscript.hpp>
 #include "test_harness.hpp"
 #include <chrono>
+#include <sstream>
 #include <thread>
 
 // =============================================================================
@@ -274,3 +275,38 @@ TEST(fiber_many_short_sleeps)
 	}
 	EXPECT_TRUE(completed == N);
 }
+
+// =============================================================================
+// A script fiber resumed from a native fiber must restore current_process
+// (the native caller has no private process to rebind).
+// =============================================================================
+TEST(native_fiber_resumes_script_fiber_restores_process)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<FIBER_TEST>"));
+	auto ctx = cs::create_context(args);
+	cs::process_context *main_proc = cs::current_process;
+
+	std::istringstream src(
+	    "using system\n"
+	    "function f()\n"
+	    "\tfiber.yield()\n"
+	    "\treturn 42\n"
+	    "end\n"
+	    "var sf = fiber.create(f)\n");
+	ctx->instance->compile(src);
+	ctx->instance->interpret();
+	cs::fiber_t sf = ctx->instance->storage.get_var("sf").const_val<cs::fiber_t>();
+
+	cs::process_context *after = nullptr;
+	auto nf = cs::fiber::create_native([&]() -> cs::var {
+		cs::fiber::resume(sf, cs::fiber::schedule_policy::normal);
+		after = cs::current_process;
+		return {};
+	});
+	cs::fiber::resume(nf, cs::fiber::schedule_policy::normal);
+	EXPECT_TRUE(after == main_proc);
+	cs::fiber::resume(sf, cs::fiber::schedule_policy::normal);
+	EXPECT_TRUE(sf->get_state() == cs::fiber_state::finished);
+}
+

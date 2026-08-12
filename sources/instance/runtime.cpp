@@ -25,7 +25,8 @@
  */
 #include <covscript/impl/runtime.hpp>
 
-namespace cs {
+namespace cs
+{
 	var runtime_type::parse_add(const var &a, const var &b)
 	{
 		return a + b;
@@ -105,29 +106,34 @@ namespace cs {
 	var &runtime_type::parse_dot_lhs(const var &a, token_base *b)
 	{
 		const auto &id = static_cast<token_id *>(b)->get_id();
-		if (a.is_type_of<constant_values>()) {
-			switch (a.const_val<constant_values>()) {
-			case constant_values::global_namespace:
-				return storage.get_var_global(id);
-			case constant_values::local_namepace:
-				return storage.get_var_current(id);
-			default:
-				throw runtime_error("Unknown namespace scope specifier");
+		if (a.is_type_of<constant_values>())
+		{
+			switch (a.const_val<constant_values>())
+			{
+				case constant_values::global_namespace:
+					return storage.get_var_global(id);
+				case constant_values::local_namepace:
+					return storage.get_var_current(id);
+				default:
+					throw runtime_error("Unknown namespace scope specifier");
 			}
 		}
 		else if (a.is_type_of<namespace_t>())
 			return a.val<namespace_t>()->get_var(id);
 		else if (a.is_type_of<type_t>())
 			return a.const_val<type_t>().get_var(id);
-		else if (a.is_type_of<structure>()) {
+		else if (a.is_type_of<structure>())
+		{
 			var &val = a.val<structure>().get_var(id);
 			if (!val.is_type_of<callable>() || !val.const_val<callable>().is_member_fn())
 				return val;
 			else
 				throw runtime_error("Cannot use a member function as an lvalue");
 		}
-		else {
-			if (const auto ext = a.get_ext_opt()) {
+		else
+		{
+			if (const auto ext = a.get_ext_opt())
+			{
 				if (auto *val = ext->get_var_opt(id))
 					return *val;
 			}
@@ -138,41 +144,50 @@ namespace cs {
 	var runtime_type::parse_dot(const var &a, token_base *b)
 	{
 		const auto &id = static_cast<token_id *>(b)->get_id();
-		if (a.is_type_of<constant_values>()) {
-			switch (a.const_val<constant_values>()) {
-			case constant_values::global_namespace:
-				return storage.get_var_global(id);
-			case constant_values::local_namepace:
-				return storage.get_var_current(id);
-			default:
-				throw runtime_error("Unknown namespace scope specifier");
+		if (a.is_type_of<constant_values>())
+		{
+			switch (a.const_val<constant_values>())
+			{
+				case constant_values::global_namespace:
+					return storage.get_var_global(id);
+				case constant_values::local_namepace:
+					return storage.get_var_current(id);
+				default:
+					throw runtime_error("Unknown namespace scope specifier");
 			}
 		}
 		else if (a.is_type_of<namespace_t>())
 			return a.val<namespace_t>()->get_var(id);
 		else if (a.is_type_of<type_t>())
 			return a.const_val<type_t>().get_var(id);
-		else if (a.is_type_of<structure>()) {
-			var &val = a.val<structure>().get_var(id);
+		else if (a.is_type_of<structure>())
+		{
+			const var &val = a.const_val<structure>().get_var(id);
 			if (val.is_type_of<callable>() && val.const_val<callable>().is_member_fn())
 				return var::make_protect<object_method>(a, val);
 			else
 				return val;
 		}
-		else {
-			if (const auto ext = a.get_ext_opt()) {
-				if (auto *val = ext->get_var_opt(id)) {
-					if (val->is_type_of<callable>()) {
+		else
+		{
+			if (const auto ext = a.get_ext_opt())
+			{
+				if (auto *val = ext->get_var_opt(id))
+				{
+					if (val->is_type_of<callable>())
+					{
 						const callable &func = val->const_val<callable>();
-						switch (func.type()) {
-						case callable::types::member_visitor: {
-							vector args{a};
-							return func.call(args);
-						}
-						case callable::types::force_regular:
-							return *val;
-						default:
-							return var::make_protect<object_method>(a, *val, func.is_request_fold());
+						switch (func.type())
+						{
+							case callable::types::member_visitor:
+							{
+								vector args{a};
+								return func.call(args);
+							}
+							case callable::types::force_regular:
+								return *val;
+							default:
+								return var::make_protect<object_method>(a, *val, func.is_request_fold());
 						}
 					}
 					else
@@ -242,6 +257,10 @@ namespace cs {
 
 	var runtime_type::parse_lnkasi(var &a, const var &b)
 	{
+		// Keep the link (alias/shared-proxy) semantics; only refuse to overwrite
+		// a protected/constant target.
+		if (a.is_protect())
+			throw runtime_error("The variable has been protected");
 		a = b;
 		return a;
 	}
@@ -251,14 +270,16 @@ namespace cs {
 		token_base *token = a.data();
 		if (token->get_type() == token_types::id)
 			return parse_lnkasi(storage.get_var(static_cast<token_id *>(token)->get_id()), b);
-		else if (token->get_type() == token_types::signal) {
-			switch (static_cast<token_signal *>(token)->get_signal()) {
-			case signal_types::dot_:
-				return parse_lnkasi(parse_dot_lhs(parse_expr(a.left()), a.right().data()), b);
-			case signal_types::access_:
-				return parse_lnkasi(parse_access_lhs(parse_expr(a.left()), parse_expr(a.right())), b);
-			default:
-				throw runtime_error("Invalid left operand in link assignment expression");
+		else if (token->get_type() == token_types::signal)
+		{
+			switch (static_cast<token_signal *>(token)->get_signal())
+			{
+				case signal_types::dot_:
+					return parse_lnkasi(parse_dot_lhs(parse_expr(a.left()), a.right().data()), b);
+				case signal_types::access_:
+					return parse_lnkasi(parse_access_lhs(parse_expr(a.left()), parse_expr(a.right())), b);
+				default:
+					throw runtime_error("Invalid left operand in link assignment expression");
 			}
 		}
 		else
@@ -273,9 +294,13 @@ namespace cs {
 		auto &arr = b.const_val<array>();
 		if (pl.size() != arr.size())
 			throw runtime_error("Structured binding mismatch: the number of variables does not match the number of array elements");
-		for (std::size_t i = 0; i < pl.size(); ++i) {
-			if (pl[i].root().data()->get_type() == token_types::parallel)
-				parse_bind(pl[i].root().data(), arr[i]);
+		for (std::size_t i = 0; i < pl.size(); ++i)
+		{
+			token_base *elem = pl[i].root().usable() ? pl[i].root().data() : nullptr;
+			if (elem == nullptr)
+				throw runtime_error("Invalid structured binding: empty binding target");
+			if (elem->get_type() == token_types::parallel)
+				parse_bind(elem, arr[i]);
 			else
 				parse_asi(parse_expr(pl[i].root()), arr[i]);
 		}
@@ -284,7 +309,8 @@ namespace cs {
 
 	var runtime_type::parse_choice(const var &a, const tree_type<token_base *>::iterator &b)
 	{
-		if (a.is_type_of<boolean>()) {
+		if (a.is_type_of<boolean>())
+		{
 			if (a.const_val<boolean>())
 				return parse_expr(b.left());
 			else
@@ -332,18 +358,21 @@ namespace cs {
 
 	var runtime_type::parse_inc(const var &a, const var &b)
 	{
-		if (a.usable()) {
+		if (a.usable())
+		{
 			if (b.usable())
 				throw runtime_error("Invalid use of increment operator");
 			else if (a.is_type_of<numeric>())
 				return a.val<numeric>()++;
-			else {
+			else
+			{
 				var oldt = copy(a);
 				++a;
 				return oldt;
 			}
 		}
-		else {
+		else
+		{
 			if (!b.usable())
 				throw runtime_error("Invalid use of increment operator");
 			else
@@ -353,18 +382,21 @@ namespace cs {
 
 	var runtime_type::parse_dec(const var &a, const var &b)
 	{
-		if (a.usable()) {
+		if (a.usable())
+		{
 			if (b.usable())
 				throw runtime_error("Invalid use of decrement operator");
 			else if (a.is_type_of<numeric>())
 				return a.val<numeric>()--;
-			else {
+			else
+			{
 				var oldt = copy(a);
 				--a;
 				return oldt;
 			}
 		}
-		else {
+		else
+		{
 			if (!b.usable())
 				throw runtime_error("Invalid use of decrement operator");
 			else
@@ -383,9 +415,11 @@ namespace cs {
 		token_base *ptr = nullptr;
 		args.reserve(static_cast<token_arglist *>(b)->get_arglist().size() + 1);
 		a.prep_call(args);
-		for (auto &tree : static_cast<token_arglist *>(b)->get_arglist()) {
+		for (auto &tree : static_cast<token_arglist *>(b)->get_arglist())
+		{
 			ptr = tree.root().data();
-			if (ptr != nullptr && ptr->get_type() == token_types::expand) {
+			if (ptr != nullptr && ptr->get_type() == token_types::expand)
+			{
 				var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
 				const auto &arr = val.const_val<array>();
 				for (auto &it : arr)
@@ -414,172 +448,180 @@ namespace cs {
 		token_base *token = it.data();
 		if (token == nullptr)
 			return var();
-		switch (token->get_type()) {
-		default:
-			break;
-		case token_types::vargs:
-			throw runtime_error("Invalid variadic argument declaration");
-			break;
-		case token_types::expand:
-			throw runtime_error("Invalid argument expansion position");
-			break;
-		case token_types::id:
-			return storage.get_var(static_cast<token_id *>(token)->get_id());
-			break;
-		case token_types::literal: {
-			token_literal *ptr = static_cast<token_literal *>(token);
-			return get_string_literal(ptr->get_data(), ptr->get_literal());
-		}
-		case token_types::value:
-			return static_cast<token_value *>(token)->get_value();
-			break;
-		case token_types::expr:
-			return parse_expr(static_cast<token_expr *>(token)->get_tree().root());
-			break;
-		case token_types::array: {
-			array arr;
-			token_base *ptr = nullptr;
-			for (auto &tree : static_cast<token_array *>(token)->get_array()) {
-				ptr = tree.root().data();
-				if (ptr != nullptr && ptr->get_type() == token_types::expand) {
-					var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
-					const auto &child_arr = val.const_val<array>();
-					for (auto &it : child_arr)
-						arr.push_back(copy(it));
-				}
-				else
-					arr.push_back(copy(parse_expr(tree.root())));
-			}
-			return rvalue(var::make<array>(std::move(arr)));
-		}
-		case token_types::parallel: {
-			if (disable_parallel)
-				throw runtime_error("Parallel expression list is not allowed in this context");
-			var result;
-			for (auto &tree : static_cast<token_parallel *>(token)->get_parallel())
-				result = parse_expr(tree.root());
-			return result;
-		}
-		case token_types::signal: {
-			switch (static_cast<token_signal *>(token)->get_signal()) {
+		switch (token->get_type())
+		{
 			default:
 				break;
-			case signal_types::add_:
-				return rvalue(parse_add(parse_expr(it.left()), parse_expr(it.right())));
+			case token_types::vargs:
+				throw runtime_error("Invalid variadic argument declaration");
 				break;
-			case signal_types::addasi_:
-				return parse_addasi(parse_expr(it.left()), parse_expr(it.right()));
+			case token_types::expand:
+				throw runtime_error("Invalid argument expansion position");
 				break;
-			case signal_types::sub_:
-				return rvalue(parse_sub(parse_expr(it.left()), parse_expr(it.right())));
+			case token_types::id:
+				return storage.get_var(static_cast<token_id *>(token)->get_id());
 				break;
-			case signal_types::subasi_:
-				return parse_subasi(parse_expr(it.left()), parse_expr(it.right()));
-				break;
-			case signal_types::minus_:
-				return rvalue(parse_minus(parse_expr(it.right())));
-				break;
-			case signal_types::mul_:
-				return rvalue(parse_mul(parse_expr(it.left()), parse_expr(it.right())));
-				break;
-			case signal_types::mulasi_:
-				return parse_mulasi(parse_expr(it.left()), parse_expr(it.right()));
-				break;
-			case signal_types::escape_:
-				return parse_escape(parse_expr(it.right()));
-				break;
-			case signal_types::div_:
-				return rvalue(parse_div(parse_expr(it.left()), parse_expr(it.right())));
-				break;
-			case signal_types::divasi_:
-				return parse_divasi(parse_expr(it.left()), parse_expr(it.right()));
-				break;
-			case signal_types::mod_:
-				return rvalue(parse_mod(parse_expr(it.left()), parse_expr(it.right())));
-				break;
-			case signal_types::modasi_:
-				return parse_modasi(parse_expr(it.left()), parse_expr(it.right()));
-				break;
-			case signal_types::pow_:
-				return rvalue(parse_pow(parse_expr(it.left()), parse_expr(it.right())));
-				break;
-			case signal_types::powasi_:
-				return parse_powasi(parse_expr(it.left()), parse_expr(it.right()));
-				break;
-			case signal_types::dot_:
-				return parse_dot(parse_expr(it.left()), it.right().data());
-				break;
-			case signal_types::arrow_:
-				return parse_arrow(parse_expr(it.left()), it.right().data());
-				break;
-			case signal_types::typeid_:
-				return rvalue(parse_typeid(parse_expr(it.right())));
-				break;
-			case signal_types::new_:
-				return rvalue(parse_new(parse_expr(it.right())));
-				break;
-			case signal_types::gcnew_:
-				return rvalue(parse_gcnew(parse_expr(it.right())));
-				break;
-			case signal_types::und_:
-				return rvalue(parse_und(parse_expr(it.left()), parse_expr(it.right())));
-				break;
-			case signal_types::abo_:
-				return rvalue(parse_abo(parse_expr(it.left()), parse_expr(it.right())));
-				break;
-			case signal_types::asi_:
-				return parse_asi(parse_expr(it.left()), parse_expr(it.right()));
-				break;
-			case signal_types::lnkasi_:
-				return parse_lnkasi(it.left(), parse_expr(it.right()));
-				break;
-			case signal_types::bind_:
-				return parse_bind(it.left().data(), parse_expr(it.right()));
-				break;
-			case signal_types::choice_:
-				return parse_choice(parse_expr(it.left()), it.right());
-				break;
-			case signal_types::pair_:
-				return rvalue(parse_pair(parse_expr(it.left()), parse_expr(it.right())));
-				break;
-			case signal_types::equ_:
-				return rvalue(parse_equ(parse_expr(it.left()), parse_expr(it.right())));
-				break;
-			case signal_types::ueq_:
-				return rvalue(parse_ueq(parse_expr(it.left()), parse_expr(it.right())));
-				break;
-			case signal_types::aeq_:
-				return rvalue(parse_aeq(parse_expr(it.left()), parse_expr(it.right())));
-				break;
-			case signal_types::neq_:
-				return rvalue(parse_neq(parse_expr(it.left()), parse_expr(it.right())));
-				break;
-			case signal_types::and_:
-				return rvalue(parse_and(it.left(), it.right()));
-				break;
-			case signal_types::or_:
-				return rvalue(parse_or(it.left(), it.right()));
-				break;
-			case signal_types::not_:
-				return rvalue(parse_not(parse_expr(it.right())));
-				break;
-			case signal_types::inc_:
-				return parse_inc(parse_expr(it.left()), parse_expr(it.right()));
-				break;
-			case signal_types::dec_:
-				return parse_dec(parse_expr(it.left()), parse_expr(it.right()));
-				break;
-			case signal_types::addr_:
-				return rvalue(parse_addr(parse_expr(it.right())));
-				break;
-			case signal_types::fcall_:
-				return parse_fcall(parse_expr(it.left()), it.right().data());
-				break;
-			case signal_types::access_:
-				return parse_access(parse_expr(it.left()), parse_expr(it.right()));
-				break;
+			case token_types::literal:
+			{
+				token_literal *ptr = static_cast<token_literal *>(token);
+				return get_string_literal(ptr->get_data(), ptr->get_literal());
 			}
-		}
+			case token_types::value:
+				return static_cast<token_value *>(token)->get_value();
+				break;
+			case token_types::expr:
+				return parse_expr(static_cast<token_expr *>(token)->get_tree().root());
+				break;
+			case token_types::array:
+			{
+				array arr;
+				token_base *ptr = nullptr;
+				for (auto &tree : static_cast<token_array *>(token)->get_array())
+				{
+					ptr = tree.root().data();
+					if (ptr != nullptr && ptr->get_type() == token_types::expand)
+					{
+						var val = parse_expr(static_cast<token_expand *>(ptr)->get_tree().root());
+						const auto &child_arr = val.const_val<array>();
+						for (auto &it : child_arr)
+							arr.push_back(copy(it));
+					}
+					else
+						arr.push_back(copy(parse_expr(tree.root())));
+				}
+				return rvalue(var::make<array>(std::move(arr)));
+			}
+			case token_types::parallel:
+			{
+				if (disable_parallel)
+					throw runtime_error("Parallel expression list is not allowed in this context");
+				var result;
+				for (auto &tree : static_cast<token_parallel *>(token)->get_parallel())
+					result = parse_expr(tree.root());
+				return result;
+			}
+			case token_types::signal:
+			{
+				switch (static_cast<token_signal *>(token)->get_signal())
+				{
+					default:
+						break;
+					case signal_types::add_:
+						return rvalue(parse_add(parse_expr(it.left()), parse_expr(it.right())));
+						break;
+					case signal_types::addasi_:
+						return parse_addasi(parse_expr(it.left()), parse_expr(it.right()));
+						break;
+					case signal_types::sub_:
+						return rvalue(parse_sub(parse_expr(it.left()), parse_expr(it.right())));
+						break;
+					case signal_types::subasi_:
+						return parse_subasi(parse_expr(it.left()), parse_expr(it.right()));
+						break;
+					case signal_types::minus_:
+						return rvalue(parse_minus(parse_expr(it.right())));
+						break;
+					case signal_types::mul_:
+						return rvalue(parse_mul(parse_expr(it.left()), parse_expr(it.right())));
+						break;
+					case signal_types::mulasi_:
+						return parse_mulasi(parse_expr(it.left()), parse_expr(it.right()));
+						break;
+					case signal_types::escape_:
+						return parse_escape(parse_expr(it.right()));
+						break;
+					case signal_types::div_:
+						return rvalue(parse_div(parse_expr(it.left()), parse_expr(it.right())));
+						break;
+					case signal_types::divasi_:
+						return parse_divasi(parse_expr(it.left()), parse_expr(it.right()));
+						break;
+					case signal_types::mod_:
+						return rvalue(parse_mod(parse_expr(it.left()), parse_expr(it.right())));
+						break;
+					case signal_types::modasi_:
+						return parse_modasi(parse_expr(it.left()), parse_expr(it.right()));
+						break;
+					case signal_types::pow_:
+						return rvalue(parse_pow(parse_expr(it.left()), parse_expr(it.right())));
+						break;
+					case signal_types::powasi_:
+						return parse_powasi(parse_expr(it.left()), parse_expr(it.right()));
+						break;
+					case signal_types::dot_:
+						return parse_dot(parse_expr(it.left()), it.right().data());
+						break;
+					case signal_types::arrow_:
+						return parse_arrow(parse_expr(it.left()), it.right().data());
+						break;
+					case signal_types::typeid_:
+						return rvalue(parse_typeid(parse_expr(it.right())));
+						break;
+					case signal_types::new_:
+						return rvalue(parse_new(parse_expr(it.right())));
+						break;
+					case signal_types::gcnew_:
+						return rvalue(parse_gcnew(parse_expr(it.right())));
+						break;
+					case signal_types::und_:
+						return rvalue(parse_und(parse_expr(it.left()), parse_expr(it.right())));
+						break;
+					case signal_types::abo_:
+						return rvalue(parse_abo(parse_expr(it.left()), parse_expr(it.right())));
+						break;
+					case signal_types::asi_:
+						return parse_asi(parse_expr(it.left()), parse_expr(it.right()));
+						break;
+					case signal_types::lnkasi_:
+						return parse_lnkasi(it.left(), parse_expr(it.right()));
+						break;
+					case signal_types::bind_:
+						return parse_bind(it.left().data(), parse_expr(it.right()));
+						break;
+					case signal_types::choice_:
+						return parse_choice(parse_expr(it.left()), it.right());
+						break;
+					case signal_types::pair_:
+						return rvalue(parse_pair(parse_expr(it.left()), parse_expr(it.right())));
+						break;
+					case signal_types::equ_:
+						return rvalue(parse_equ(parse_expr(it.left()), parse_expr(it.right())));
+						break;
+					case signal_types::ueq_:
+						return rvalue(parse_ueq(parse_expr(it.left()), parse_expr(it.right())));
+						break;
+					case signal_types::aeq_:
+						return rvalue(parse_aeq(parse_expr(it.left()), parse_expr(it.right())));
+						break;
+					case signal_types::neq_:
+						return rvalue(parse_neq(parse_expr(it.left()), parse_expr(it.right())));
+						break;
+					case signal_types::and_:
+						return rvalue(parse_and(it.left(), it.right()));
+						break;
+					case signal_types::or_:
+						return rvalue(parse_or(it.left(), it.right()));
+						break;
+					case signal_types::not_:
+						return rvalue(parse_not(parse_expr(it.right())));
+						break;
+					case signal_types::inc_:
+						return parse_inc(parse_expr(it.left()), parse_expr(it.right()));
+						break;
+					case signal_types::dec_:
+						return parse_dec(parse_expr(it.left()), parse_expr(it.right()));
+						break;
+					case signal_types::addr_:
+						return rvalue(parse_addr(parse_expr(it.right())));
+						break;
+					case signal_types::fcall_:
+						return parse_fcall(parse_expr(it.left()), it.right().data());
+						break;
+					case signal_types::access_:
+						return parse_access(parse_expr(it.left()), parse_expr(it.right()));
+						break;
+				}
+			}
 		}
 		throw internal_error("Unrecognized expression");
 	}

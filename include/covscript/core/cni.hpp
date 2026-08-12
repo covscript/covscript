@@ -26,7 +26,8 @@
  */
 #include <utility>
 
-namespace cov {
+namespace cov
+{
 	template <typename>
 	class function_index;
 
@@ -40,7 +41,8 @@ namespace cov {
 	struct function_resolver;
 
 	template <typename _Tp>
-	class is_functional {
+	class is_functional
+	{
 		template <typename T, decltype(&T::operator()) X>
 		struct matcher;
 
@@ -56,100 +58,131 @@ namespace cov {
 			return true;
 		}
 
-	public:
+	   public:
 		static constexpr bool value = match<_Tp>(nullptr);
 	};
 
 	template <typename _rT, typename... Args>
-	class function_index<_rT (*)(Args...)> {
-	public:
+	class function_index<_rT (*)(Args...)>
+	{
+	   public:
+		using return_type = _rT;
+
 		typedef _rT (*type)(Args...);
 
 		typedef _rT (*common_type)(Args...);
 	};
 
 	template <typename _Tp, typename _rT, typename... Args>
-	class function_index<_rT (_Tp::*)(Args...)> {
-	public:
+	class function_index<_rT (_Tp::*)(Args...)>
+	{
+	   public:
+		using return_type = _rT;
+
 		typedef _rT (_Tp::*type)(Args...);
 
 		typedef _rT (*common_type)(_Tp &, Args...);
 	};
 
 	template <typename _Tp, typename _rT, typename... Args>
-	class function_index<_rT (_Tp::*)(Args...) const> {
-	public:
+	class function_index<_rT (_Tp::*)(Args...) const>
+	{
+	   public:
+		using return_type = _rT;
+
 		typedef _rT (_Tp::*type)(Args...) const;
 
 		typedef _rT (*common_type)(const _Tp &, Args...);
 	};
 
 	template <typename _Tp, typename _rT, typename... Args>
-	class function_index<_rT (_Tp::*)(Args...) noexcept> {
-	public:
+	class function_index<_rT (_Tp::*)(Args...) noexcept>
+	{
+	   public:
+		using return_type = _rT;
+
 		typedef _rT (_Tp::*type)(Args...) noexcept;
 
 		typedef _rT (*common_type)(_Tp &, Args...);
 	};
 
 	template <typename _Tp, typename _rT, typename... Args>
-	class function_index<_rT (_Tp::*)(Args...) const noexcept> {
-	public:
+	class function_index<_rT (_Tp::*)(Args...) const noexcept>
+	{
+	   public:
+		using return_type = _rT;
+
 		typedef _rT (_Tp::*type)(Args...) const noexcept;
 
 		typedef _rT (*common_type)(const _Tp &, Args...);
 	};
 
 	template <typename _Tp, typename _rT, typename... _ArgsT>
-	class executor_index<_rT (_Tp::*)(_ArgsT...)> {
-	public:
+	class executor_index<_rT (_Tp::*)(_ArgsT...)>
+	{
+	   public:
+		using return_type = _rT;
+
 		typedef _rT (_Tp::*type)(_ArgsT...);
 
 		typedef _rT (*common_type)(_ArgsT...);
 	};
 
 	template <typename _Tp, typename _rT, typename... _ArgsT>
-	class executor_index<_rT (_Tp::*)(_ArgsT...) const> {
-	public:
+	class executor_index<_rT (_Tp::*)(_ArgsT...) const>
+	{
+	   public:
+		using return_type = _rT;
+
 		typedef _rT (_Tp::*type)(_ArgsT...) const;
 
 		typedef _rT (*common_type)(_ArgsT...);
 	};
 
 	template <typename _Tp, typename _rT, typename... _ArgsT>
-	class executor_index<_rT (_Tp::*)(_ArgsT...) noexcept> {
-	public:
+	class executor_index<_rT (_Tp::*)(_ArgsT...) noexcept>
+	{
+	   public:
+		using return_type = _rT;
+
 		typedef _rT (_Tp::*type)(_ArgsT...) noexcept;
 
 		typedef _rT (*common_type)(_ArgsT...);
 	};
 
 	template <typename _Tp, typename _rT, typename... _ArgsT>
-	class executor_index<_rT (_Tp::*)(_ArgsT...) const noexcept> {
-	public:
+	class executor_index<_rT (_Tp::*)(_ArgsT...) const noexcept>
+	{
+	   public:
+		using return_type = _rT;
+
 		typedef _rT (_Tp::*type)(_ArgsT...) const noexcept;
 
 		typedef _rT (*common_type)(_ArgsT...);
 	};
 
 	template <typename _Tp>
-	struct function_resolver<true, _Tp> {
+	struct function_resolver<true, _Tp>
+	{
 		typedef executor_index<decltype(&_Tp::operator())> type;
 	};
 
 	template <typename _Tp>
-	struct function_resolver<false, _Tp> {
+	struct function_resolver<false, _Tp>
+	{
 		typedef function_index<_Tp> type;
 	};
 
 	template <typename _Tp>
-	struct function_parser {
+	struct function_parser
+	{
 		typedef typename function_resolver<is_functional<_Tp>::value, _Tp>::type type;
 	};
 } // namespace cov
 
-namespace cs_impl {
-// Utilities
+namespace cs_impl
+{
+	// Utilities
 	template <typename T>
 	using decay_t = typename std::decay<T>::type;
 
@@ -159,18 +192,21 @@ namespace cs_impl {
 	}
 
 	template <typename T>
-	struct cni_modify {
+	struct cni_modify
+	{
 		using type = T;
 	};
 
 	template <typename RetT, typename... ArgsT>
-	struct cni_modify<RetT(ArgsT...)> {
+	struct cni_modify<RetT(ArgsT...)>
+	{
 		using type = RetT (*)(ArgsT...);
 	};
 
 	template <typename T>
-	struct convert_helper {
-	private:
+	struct convert_helper
+	{
+	   private:
 		using Bare = typename std::remove_reference<T>::type;
 		static constexpr bool IsRef = std::is_reference<T>::value;
 		static constexpr bool IsConst = std::is_const<typename std::remove_reference<T>::type>::value;
@@ -178,7 +214,7 @@ namespace cs_impl {
 		static_assert(!std::is_rvalue_reference<T>::value,
 		              "convert to rvalue reference (T&&) is not allowed. Use T or T& / const T&.");
 
-	public:
+	   public:
 		static const Bare &get_val(any &v)
 		{
 			return v.const_val<Bare>();
@@ -186,7 +222,8 @@ namespace cs_impl {
 	};
 
 	template <typename T>
-	struct convert_helper<T &> {
+	struct convert_helper<T &>
+	{
 		using Bare = typename std::remove_reference<T>::type;
 		static Bare &get_val(any &v)
 		{
@@ -195,7 +232,8 @@ namespace cs_impl {
 	};
 
 	template <typename T>
-	struct convert_helper<const T &> {
+	struct convert_helper<const T &>
+	{
 		using Bare = typename std::remove_reference<T>::type;
 		static const Bare &get_val(any &v)
 		{
@@ -204,7 +242,8 @@ namespace cs_impl {
 	};
 
 	template <>
-	struct convert_helper<const any &> {
+	struct convert_helper<const any &>
+	{
 		static inline const any &get_val(const any &v) noexcept
 		{
 			return v;
@@ -212,7 +251,8 @@ namespace cs_impl {
 	};
 
 	template <>
-	struct convert_helper<any &> {
+	struct convert_helper<any &>
+	{
 		static inline any &get_val(any &v) noexcept
 		{
 			return v;
@@ -220,17 +260,20 @@ namespace cs_impl {
 	};
 
 	template <typename From, typename To, typename = void>
-	struct cni_convertible {
+	struct cni_convertible
+	{
 		static constexpr bool value = false;
 	};
 
 	template <typename From, typename To>
-	struct cni_convertible<From, To, void_t<decltype(type_convertor<From, To>::convert(std::declval<From>()))>> {
+	struct cni_convertible<From, To, void_t<decltype(type_convertor<From, To>::convert(std::declval<From>()))>>
+	{
 		static constexpr bool value = true;
 	};
 
 	template <>
-	struct cni_convertible<void, void, void> {
+	struct cni_convertible<void, void, void>
+	{
 		static constexpr bool value = true;
 	};
 
@@ -247,7 +290,8 @@ namespace cs_impl {
 	}
 
 	template <typename _SourceT, typename _TargetT, typename _ConvertorT, bool _Bindable>
-	struct cni_decayed_converter_impl {
+	struct cni_decayed_converter_impl
+	{
 		static _TargetT convert(any &val)
 		{
 			return _ConvertorT::convert(convert_helper<_SourceT>::get_val(val));
@@ -255,26 +299,34 @@ namespace cs_impl {
 	};
 
 	template <typename _SourceT, typename _TargetT, typename _ConvertorT>
-	struct cni_decayed_converter_impl<_SourceT, _TargetT, _ConvertorT, false> {
+	struct cni_decayed_converter_impl<_SourceT, _TargetT, _ConvertorT, false>
+	{
 		static _TargetT convert(any &val)
 		{
 			using decayed_target_t = decay_t<_TargetT>;
 			val.assign(any::make<decayed_target_t>(_ConvertorT::convert(convert_helper<_SourceT>::get_val(val))));
-			val.mark_constant();
+			// Only a const reference may be frozen afterwards; a non-const
+			// reference must stay writable while handed to the CNI, or
+			// val<T&>() would reject it as a constant.
+			if constexpr (std::is_const<typename std::remove_reference<_TargetT>::type>::value)
+				val.mark_constant();
 			return convert_helper<_TargetT>::get_val(val);
 		}
 	};
 
 	template <typename _SourceT, typename _TargetT>
-	class cni_decayed_convertor {
-	private:
+	class cni_decayed_convertor
+	{
+	   private:
 		template <typename _From, typename _To, typename = void>
-		struct is_specialized {
+		struct is_specialized
+		{
 			static constexpr bool value = true;
 		};
 
 		template <typename _From, typename _To>
-		struct is_specialized<_From, _To, void_t<typename type_convertor<_From, _To>::_not_specialized>> {
+		struct is_specialized<_From, _To, void_t<typename type_convertor<_From, _To>::_not_specialized>>
+		{
 			static constexpr bool value = false;
 		};
 
@@ -282,16 +334,17 @@ namespace cs_impl {
 		struct type_extractor;
 
 		template <template <typename, typename> class T, typename _From, typename _To>
-		struct type_extractor<T<_From, _To>> {
+		struct type_extractor<T<_From, _To>>
+		{
 			using source_type = _From;
 			using target_type = _To;
 		};
 
 		template <typename S, typename T>
 		using select_convertor = typename std::conditional<is_specialized<S, T>::value,
-		      type_convertor<S, T>, typename std::conditional<is_specialized<decay_t<S>, decay_t<T>>::value, type_convertor<decay_t<S>, decay_t<T>>, typename std::conditional<cni_convertible<S, T>::value, type_convertor<S, T>, void>::type>::type>::type;
+		                                                   type_convertor<S, T>, typename std::conditional<is_specialized<decay_t<S>, decay_t<T>>::value, type_convertor<decay_t<S>, decay_t<T>>, typename std::conditional<cni_convertible<S, T>::value, type_convertor<S, T>, void>::type>::type>::type;
 
-	public:
+	   public:
 		using convertor = select_convertor<_SourceT, _TargetT>;
 		static_assert(!std::is_same<convertor, void>::value, "No suitable type_convertor found.");
 
@@ -312,9 +365,10 @@ namespace cs_impl {
 		}
 	};
 
-// Dynamic argument check
+	// Dynamic argument check
 	template <typename T, int index>
-	struct check_args_helper {
+	struct check_args_helper
+	{
 		static char check(const any &val)
 		{
 			if (!val.is_type_of<T>())
@@ -326,7 +380,8 @@ namespace cs_impl {
 	};
 
 	template <int index>
-	struct check_args_helper<any, index> {
+	struct check_args_helper<any, index>
+	{
 		static char check(const any &)
 		{
 			return 0;
@@ -345,7 +400,7 @@ namespace cs_impl {
 	void check_args(const cs::vector &args)
 	{
 		if (sizeof...(ArgTypes) == args.size())
-			check_args_base<ArgTypes...>(args, std::make_index_sequence<sizeof...(ArgTypes)> {});
+			check_args_base<ArgTypes...>(args, std::make_index_sequence<sizeof...(ArgTypes)>{});
 		else
 			throw cs::runtime_error(
 			    "Wrong size of the arguments. Expected " + std::to_string(sizeof...(ArgTypes)) + ", provided " +
@@ -353,15 +408,19 @@ namespace cs_impl {
 	}
 
 	template <typename _TargetT, typename _SourceT, typename _CheckT, std::size_t index>
-	struct try_convert_and_check {
+	struct try_convert_and_check
+	{
 		using source_type = typename cni_decayed_convertor<_SourceT, _TargetT>::source_type;
 		static _TargetT convert(any &val)
 		{
-			if (val.is_type_of<source_type>()) {
-				try {
+			if (val.is_type_of<source_type>())
+			{
+				try
+				{
 					return cni_decayed_convertor<_SourceT, _TargetT>::convert_to_cpp(val);
 				}
-				catch (...) {
+				catch (...)
+				{
 					throw cs::runtime_error("Type Conversion Failed. At " + std::to_string(index + 1) + ". Expected " +
 					                        cxx_demangle(get_name_of_type<_TargetT>()) + ", provided " +
 					                        cxx_demangle(get_name_of_type<_SourceT>()));
@@ -378,7 +437,8 @@ namespace cs_impl {
 	};
 
 	template <typename _TargetT, typename _CheckT, std::size_t index>
-	struct try_convert_and_check<_TargetT, _TargetT, _CheckT, index> {
+	struct try_convert_and_check<_TargetT, _TargetT, _CheckT, index>
+	{
 		static _TargetT convert(any &val)
 		{
 			if (val.is_type_of<_TargetT>())
@@ -391,7 +451,8 @@ namespace cs_impl {
 	};
 
 	template <typename _TargetT, std::size_t index>
-	struct try_convert_and_check<_TargetT, _TargetT, any, index> {
+	struct try_convert_and_check<_TargetT, _TargetT, any, index>
+	{
 		static _TargetT convert(any &val)
 		{
 			return val;
@@ -401,7 +462,7 @@ namespace cs_impl {
 	template <typename _TargetT, typename _SourceT, std::size_t index>
 	using try_convert = try_convert_and_check<_TargetT, _SourceT, typename std::remove_const<typename std::remove_reference<_TargetT>::type>::type, index>;
 
-// Static argument check
+	// Static argument check
 	template <typename RetT, typename... ArgsT>
 	constexpr int count_args_size(RetT (*)(ArgsT...))
 	{
@@ -421,12 +482,13 @@ namespace cs_impl {
 		result_container(check_conversion_base<_Target_ArgsT, _Source_ArgsT>()...);
 	}
 
-// CNI Helper
+	// CNI Helper
 	template <typename _Target, typename _Source>
 	class cni_helper;
 
 	template <typename... _Target_ArgsT, typename... _Source_ArgsT>
-	class cni_helper<void (*)(_Target_ArgsT...), void (*)(_Source_ArgsT...)> {
+	class cni_helper<void (*)(_Target_ArgsT...), void (*)(_Source_ArgsT...)>
+	{
 		std::function<void(_Target_ArgsT...)> mFunc;
 
 		template <size_t... S>
@@ -435,13 +497,13 @@ namespace cs_impl {
 			mFunc(try_convert<_Target_ArgsT, _Source_ArgsT, S>::convert(args[S])...);
 		}
 
-	public:
+	   public:
 		cni_helper() = delete;
 
 		cni_helper(const cni_helper &) = default;
 
 		explicit cni_helper(const std::function<void(_Target_ArgsT...)> &func)
-			: mFunc(func) {}
+		    : mFunc(func) {}
 
 		std::size_t argument_count() const noexcept
 		{
@@ -455,29 +517,30 @@ namespace cs_impl {
 				    "Wrong size of the arguments. Expected " + std::to_string(sizeof...(_Target_ArgsT)) +
 				    ", provided " +
 				    std::to_string(args.size()));
-			_call(args, std::make_index_sequence<sizeof...(_Source_ArgsT)> {});
+			_call(args, std::make_index_sequence<sizeof...(_Source_ArgsT)>{});
 			return cs::null_pointer;
 		}
 	};
 
 	template <typename _Target_RetT, typename _Source_RetT, typename... _Target_ArgsT, typename... _Source_ArgsT>
-	class cni_helper<_Target_RetT (*)(_Target_ArgsT...), _Source_RetT (*)(_Source_ArgsT...)> {
+	class cni_helper<_Target_RetT (*)(_Target_ArgsT...), _Source_RetT (*)(_Source_ArgsT...)>
+	{
 		std::function<_Target_RetT(_Target_ArgsT...)> mFunc;
 
 		template <size_t... S>
 		any _call(cs::vector &args, const std::index_sequence<S...> &) const
 		{
 			return cni_decayed_convertor<_Target_RetT, _Source_RetT>::convert_to_cs(
-			           mFunc(try_convert<_Target_ArgsT, _Source_ArgsT, S>::convert(args[S])...));
+			    mFunc(try_convert<_Target_ArgsT, _Source_ArgsT, S>::convert(args[S])...));
 		}
 
-	public:
+	   public:
 		cni_helper() = delete;
 
 		cni_helper(const cni_helper &) = default;
 
 		explicit cni_helper(const std::function<_Target_RetT(_Target_ArgsT...)> &func)
-			: mFunc(func) {}
+		    : mFunc(func) {}
 
 		std::size_t argument_count() const noexcept
 		{
@@ -491,13 +554,14 @@ namespace cs_impl {
 				    "Wrong size of the arguments. Expected " + std::to_string(sizeof...(_Target_ArgsT)) +
 				    ", provided " +
 				    std::to_string(args.size()));
-			return _call(args, std::make_index_sequence<sizeof...(_Source_ArgsT)> {});
+			return _call(args, std::make_index_sequence<sizeof...(_Source_ArgsT)>{});
 		}
 	};
 
-// CNI Holder
-	class cni_holder_base {
-	public:
+	// CNI Holder
+	class cni_holder_base
+	{
+	   public:
 		cni_holder_base() = default;
 
 		cni_holder_base(const cni_holder_base &) = default;
@@ -512,16 +576,17 @@ namespace cs_impl {
 	};
 
 	template <typename T, typename X>
-	class cni_holder final : public cni_holder_base {
+	class cni_holder final : public cni_holder_base
+	{
 		cni_helper<typename cov::function_parser<T>::type::common_type, typename cov::function_parser<X>::type::common_type> mCni;
 
-	public:
+	   public:
 		cni_holder() = delete;
 
 		cni_holder(const cni_holder &) = default;
 
 		explicit cni_holder(const T &func)
-			: mCni(func) {}
+		    : mCni(func) {}
 
 		~cni_holder() override = default;
 
@@ -541,56 +606,65 @@ namespace cs_impl {
 		}
 	};
 
-// CNI Decayed Conversion
+	// CNI Decayed Conversion
 	template <typename _Target>
-	class cni_decayed_conversion_cs {
+	class cni_decayed_conversion_cs
+	{
 		template <typename T, typename = void>
-		struct is_specialized {
+		struct is_specialized
+		{
 			constexpr static bool value = true;
 		};
 
 		template <typename T>
-		struct is_specialized<T, void_t<typename type_conversion_cs<T>::_not_specialized>> {
+		struct is_specialized<T, void_t<typename type_conversion_cs<T>::_not_specialized>>
+		{
 			constexpr static bool value = false;
 		};
 
-	public:
+	   public:
 		using source_type = typename type_conversion_cs<
-		                    typename std::conditional<is_specialized<_Target>::value, _Target,
-		                    typename std::conditional<is_specialized<decay_t<_Target>>::value, decay_t<_Target>, _Target>::type>::type>::source_type;
+		    typename std::conditional<is_specialized<_Target>::value, _Target,
+		                              typename std::conditional<is_specialized<decay_t<_Target>>::value, decay_t<_Target>, _Target>::type>::type>::source_type;
 	};
 
 	template <typename _Source>
-	class cni_decayed_conversion_cpp {
+	class cni_decayed_conversion_cpp
+	{
 		template <typename T, typename = void>
-		struct is_specialized {
+		struct is_specialized
+		{
 			constexpr static bool value = true;
 		};
 
 		template <typename T>
-		struct is_specialized<T, void_t<typename type_conversion_cpp<T>::_not_specialized>> {
+		struct is_specialized<T, void_t<typename type_conversion_cpp<T>::_not_specialized>>
+		{
 			constexpr static bool value = false;
 		};
 
-	public:
+	   public:
 		using target_type = typename type_conversion_cpp<
-		                    typename std::conditional<is_specialized<_Source>::value, _Source,
-		                    typename std::conditional<is_specialized<decay_t<_Source>>::value, decay_t<_Source>, _Source>::type>::type>::target_type;
+		    typename std::conditional<is_specialized<_Source>::value, _Source,
+		                              typename std::conditional<is_specialized<decay_t<_Source>>::value, decay_t<_Source>, _Source>::type>::type>::target_type;
 	};
 
-// CNI Implementation
+	// CNI Implementation
 	template <typename T>
-	struct cni_type {
+	struct cni_type
+	{
 	};
 
-	class cni final {
+	class cni final
+	{
 		template <typename T>
-		struct construct_helper {
+		struct construct_helper
+		{
 			template <typename X, typename RetT, typename... ArgsT>
 			static cni_holder_base *_construct(X &&val, RetT (*target_function)(ArgsT...))
 			{
 				using source_function_type = typename cni_decayed_conversion_cpp<RetT>::target_type (*)(
-				                                 typename cni_decayed_conversion_cs<ArgsT>::source_type...);
+				    typename cni_decayed_conversion_cs<ArgsT>::source_type...);
 				// Return type
 				static_assert(cni_convertible<RetT, typename cni_decayed_conversion_cpp<RetT>::target_type>::value,
 				              "Invalid conversion.");
@@ -608,25 +682,25 @@ namespace cs_impl {
 
 		cni_holder_base *mCni = nullptr;
 
-	public:
+	   public:
 		cni() = delete;
 
 		cni(const cni &c)
-			: mCni(c.mCni->clone()) {}
+		    : mCni(c.mCni->clone()) {}
 
 		template <typename T>
 		explicit cni(T &&val)
-			: mCni(
-			      construct_helper<typename cni_modify<typename std::remove_reference<T>::type>::type>::construct(
-			          std::forward<T>(val)))
+		    : mCni(
+		          construct_helper<typename cni_modify<typename std::remove_reference<T>::type>::type>::construct(
+		              std::forward<T>(val)))
 		{
 		}
 
 		template <typename T, typename X>
 		cni(T &&val, cni_type<X>)
-			: mCni(
-			      new cni_holder<typename cni_modify<typename std::remove_reference<T>::type>::type, typename cni_modify<X>::type>(
-			          std::forward<T>(val)))
+		    : mCni(
+		          new cni_holder<typename cni_modify<typename std::remove_reference<T>::type>::type, typename cni_modify<X>::type>(
+		              std::forward<T>(val)))
 		{
 			// Analysis the function
 			using target_function_type = typename cov::function_parser<typename cni_modify<typename std::remove_reference<T>::type>::type>::type::common_type;
@@ -656,16 +730,25 @@ namespace cs_impl {
 
 		any operator()(cs::vector &args) const
 		{
-			try {
+			try
+			{
 				return cs::try_move(mCni->call(args));
 			}
-			catch (const cs::lang_error &e) {
+			catch (const cs::lang_error &e)
+			{
 				cs::current_process->cs_eh_callback(e);
 			}
-			catch (const std::exception &e) {
+			catch (const cs::exception &)
+			{
+				// Already located: rethrow to keep the bare message (CS_EXIT/CS_SIGINT).
+				throw;
+			}
+			catch (const std::exception &e)
+			{
 				cs::current_process->std_eh_callback(e);
 			}
-			catch (...) {
+			catch (...)
+			{
 				cs::current_process->std_eh_callback(cs::fatal_error("CNI:Unrecognized exception."));
 			}
 			return cs::null_pointer;
@@ -673,7 +756,8 @@ namespace cs_impl {
 	};
 
 	template <>
-	struct cni::construct_helper<const cni> {
+	struct cni::construct_helper<const cni>
+	{
 		static cni_holder_base *construct(const cni &c)
 		{
 			return c.mCni->clone();
@@ -681,27 +765,31 @@ namespace cs_impl {
 	};
 
 	template <>
-	struct cni::construct_helper<cni> {
+	struct cni::construct_helper<cni>
+	{
 		static cni_holder_base *construct(const cni &c)
 		{
 			return c.mCni->clone();
 		}
 	};
 
-	class member_visitor final {
+	class member_visitor final
+	{
 		std::function<any()> m_getter;
 		std::function<void(const any &)> m_setter;
 
-	public:
+	   public:
 		member_visitor() = delete;
 
 		template <typename _Class, typename _Member>
 		member_visitor(_Class &obj, _Member _Class::*mem_ptr)
 		{
-			m_getter = [&obj, mem_ptr]() -> any {
+			m_getter = [&obj, mem_ptr]() -> any
+			{
 				return any::make_constant<_Member>(obj.*mem_ptr);
 			};
-			m_setter = [&obj, mem_ptr](const any &val) {
+			m_setter = [&obj, mem_ptr](const any &val)
+			{
 				using source_type = typename cni_decayed_conversion_cs<_Member>::source_type;
 				obj.*mem_ptr = cni_decayed_convertor<source_type, _Member>::convertor::convert(val.const_val<source_type>());
 			};
@@ -710,10 +798,12 @@ namespace cs_impl {
 		template <typename _Class, typename _Member>
 		member_visitor(const _Class &obj, _Member _Class::*mem_ptr)
 		{
-			m_getter = [&obj, mem_ptr]() -> any {
+			m_getter = [&obj, mem_ptr]() -> any
+			{
 				return any::make_constant<_Member>(obj.*mem_ptr);
 			};
-			m_setter = [&obj, mem_ptr](const any &) {
+			m_setter = [&obj, mem_ptr](const any &)
+			{
 				throw cs::runtime_error("CNI Member Visitor: Can not change the value of constant object.");
 			};
 		}
@@ -730,7 +820,8 @@ namespace cs_impl {
 	};
 } // namespace cs_impl
 
-namespace cs {
+namespace cs
+{
 	using cs_impl::cni;
 	using cs_impl::cni_type;
 	using cs_impl::member_visitor;
@@ -804,10 +895,11 @@ namespace cs {
 	var make_member_visitor(_Member _Class::*member)
 	{
 		return var::make_protect<callable>(
-		cni([member](_Class &__this) {
+		    cni([member](_Class &__this)
+		{
 			return var::make_constant<cs::member_visitor>(__this, member);
 		}),
-		cs::callable::types::member_visitor);
+		    cs::callable::types::member_visitor);
 	}
 
 	/**
@@ -820,10 +912,11 @@ namespace cs {
 	var make_member_visitor(var _Class::*member)
 	{
 		return var::make_protect<callable>(
-		cni([member](const _Class &__this) {
+		    cni([member](const _Class &__this)
+		{
 			return __this.*member;
 		}),
-		cs::callable::types::member_visitor);
+		    cs::callable::types::member_visitor);
 	}
 
 	/**
@@ -837,10 +930,11 @@ namespace cs {
 	var make_const_member_visitor(_Member _Class::*member)
 	{
 		return var::make_protect<callable>(
-		cni([member](const _Class &__this) {
+		    cni([member](const _Class &__this)
+		{
 			return var::make_constant<cs::member_visitor>(__this, member);
 		}),
-		cs::callable::types::member_visitor);
+		    cs::callable::types::member_visitor);
 	}
 
 	/**
@@ -854,9 +948,10 @@ namespace cs {
 	var make_const_member_visitor(var _Class::*member)
 	{
 		return var::make_protect<callable>(
-		cni([member](const _Class &__this) {
+		    cni([member](const _Class &__this)
+		{
 			return __this.*member;
 		}),
-		cs::callable::types::member_visitor);
+		    cs::callable::types::member_visitor);
 	}
 } // namespace cs

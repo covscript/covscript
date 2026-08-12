@@ -26,12 +26,14 @@
  */
 #include <covscript/impl/runtime.hpp>
 
-namespace cs {
+namespace cs
+{
 	context_t create_context(const array &);
 
 	context_t create_subcontext(const context_t &);
 
-	class instance_type final : public runtime_type {
+	class instance_type final : public runtime_type
+	{
 		friend class repl;
 
 		friend context_t cs::create_context(const array &);
@@ -45,7 +47,7 @@ namespace cs {
 		stack_pointer fiber_sp = nullptr;
 		stack_pointer &fiber_stack;
 
-	public:
+	   public:
 		// Status
 		bool return_fcall = false;
 		bool break_block = false;
@@ -57,16 +59,16 @@ namespace cs {
 		instance_type() = delete;
 
 		explicit instance_type(context_t c)
-			: context(std::move(c)), runtime_type(fiber_sp), fiber_stack(fiber_sp) {}
+		    : context(std::move(c)), runtime_type(fiber_sp), fiber_stack(fiber_sp) {}
 
 		instance_type(context_t c, stack_pointer &fsp)
-			: context(std::move(c)), runtime_type(fsp), fiber_stack(fsp) {}
+		    : context(std::move(c)), runtime_type(fsp), fiber_stack(fsp) {}
 
 		instance_type(context_t c, std::size_t stack_size)
-			: context(std::move(c)), runtime_type(fiber_sp, stack_size), fiber_stack(fiber_sp) {}
+		    : context(std::move(c)), runtime_type(fiber_sp, stack_size), fiber_stack(fiber_sp) {}
 
 		instance_type(context_t c, stack_pointer &fsp, std::size_t stack_size)
-			: context(std::move(c)), runtime_type(fsp, stack_size), fiber_stack(fsp) {}
+		    : context(std::move(c)), runtime_type(fsp, stack_size), fiber_stack(fsp) {}
 
 		instance_type(const instance_type &) = delete;
 
@@ -107,7 +109,8 @@ namespace cs {
 
 		void clear_context()
 		{
-			if (fiber_stack != nullptr) {
+			if (fiber_stack != nullptr)
+			{
 				while (!fiber_stack->empty())
 					fiber_stack->pop_no_return();
 				fiber_stack = nullptr;
@@ -115,8 +118,9 @@ namespace cs {
 		}
 	};
 
-// Repl
-	class repl final {
+	// Repl
+	class repl final
+	{
 		std::deque<std::deque<token_base *>> tmp;
 		stack_type<method_base *> methods;
 		charset encoding = charset::utf8;
@@ -124,12 +128,15 @@ namespace cs {
 		bool multi_line = false;
 		string line_buff;
 		string cmd_buff;
+		// Import/using FIFO base at the start of the current top-level statement;
+		// reset_status truncates back to it so a failed line cannot leak results.
+		std::size_t import_base = 0;
 
 		void interpret(const string &, std::deque<token_base *> &);
 
 		void run(const string &);
 
-	public:
+	   public:
 		context_t context;
 
 		bool echo = true;
@@ -144,6 +151,9 @@ namespace cs {
 
 		void reset_status()
 		{
+			// Each open block pushed a domain/set pair; pop them so a failed
+			// REPL line does not leave the storage stacks permanently misaligned.
+			std::size_t depth = methods.size();
 			tmp.clear();
 			while (!methods.empty())
 				methods.pop_no_return();
@@ -151,6 +161,13 @@ namespace cs {
 			line_buff.clear();
 			cmd_buff.clear();
 			context->compiler->utilize_metadata();
+			context->compiler->loop_depth = 0;
+			context->compiler->import_results.resize(import_base);
+			while (depth-- > 0)
+			{
+				context->instance->storage.remove_set();
+				context->instance->storage.remove_domain();
+			}
 			context->instance->storage.clear_set();
 		}
 
@@ -160,15 +177,16 @@ namespace cs {
 		}
 	};
 
-// Guarder
-	class scope_guard final {
+	// Guarder
+	class scope_guard final
+	{
 		context_type *context;
 
-	public:
+	   public:
 		scope_guard() = delete;
 
 		explicit scope_guard(const context_t &c)
-			: context(c.get())
+		    : context(c.get())
 		{
 			context->instance->storage.add_domain();
 		}
@@ -206,8 +224,9 @@ namespace cs {
 		}
 	};
 
-	class fcall_guard final {
-	public:
+	class fcall_guard final
+	{
+	   public:
 #ifdef CS_DEBUGGER
 		fcall_guard() = delete;
 
@@ -239,6 +258,24 @@ namespace cs {
 		var &get() const
 		{
 			return current_process->stack.top();
+		}
+	};
+
+	// Temporarily swap the shared compiler's context and restore it on scope exit
+	class context_swap_guard final
+	{
+		compiler_type *compiler;
+		context_t restore;
+
+	   public:
+		context_swap_guard() = delete;
+
+		context_swap_guard(compiler_type &comp, context_t target)
+		    : compiler(&comp), restore(comp.swap_context(std::move(target))) {}
+
+		~context_swap_guard()
+		{
+			compiler->swap_context(restore);
 		}
 	};
 

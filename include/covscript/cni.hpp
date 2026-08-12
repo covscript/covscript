@@ -28,252 +28,293 @@
 
 // Define this macro to disable all standard type conversion
 #ifndef CNI_DISABLE_STD_CONVERSION
-namespace cs_impl {
-// Compatible Type Conversions
-// bool->cs::boolean
-// signed short int->cs::numeric
+namespace cs_impl
+{
+	// Compatible Type Conversions
+	// bool->cs::boolean
+	// signed short int->cs::numeric
 	template <>
-	struct type_conversion_cs<signed short int> {
+	struct type_conversion_cs<signed short int>
+	{
 		using source_type = cs::numeric;
 	};
 
 	template <>
-	struct type_conversion_cpp<signed short int> {
+	struct type_conversion_cpp<signed short int>
+	{
 		using target_type = cs::numeric;
 	};
 
 	template <>
-	struct type_convertor<cs::numeric, signed short int> {
+	struct type_convertor<cs::numeric, signed short int>
+	{
 		static signed short int convert(const cs::numeric &num)
 		{
 			return num.as_integer();
 		}
 	};
 
-// unsigned short int->cs::numeric
+	// unsigned short int->cs::numeric
 	template <>
-	struct type_conversion_cs<unsigned short int> {
+	struct type_conversion_cs<unsigned short int>
+	{
 		using source_type = cs::numeric;
 	};
 
 	template <>
-	struct type_conversion_cpp<unsigned short int> {
+	struct type_conversion_cpp<unsigned short int>
+	{
 		using target_type = cs::numeric;
 	};
 
 	template <>
-	struct type_convertor<cs::numeric, unsigned short int> {
+	struct type_convertor<cs::numeric, unsigned short int>
+	{
 		static unsigned short int convert(const cs::numeric &num)
 		{
 			return num.as_integer();
 		}
 	};
 
-// signed int->cs::numeric
+	// signed int->cs::numeric
 	template <>
-	struct type_conversion_cs<signed int> {
+	struct type_conversion_cs<signed int>
+	{
 		using source_type = cs::numeric;
 	};
 
 	template <>
-	struct type_conversion_cpp<signed int> {
+	struct type_conversion_cpp<signed int>
+	{
 		using target_type = cs::numeric;
 	};
 
 	template <>
-	struct type_convertor<cs::numeric, signed int> {
+	struct type_convertor<cs::numeric, signed int>
+	{
 		static signed int convert(const cs::numeric &num)
 		{
 			return num.as_integer();
 		}
 	};
 
-// unsigned int->cs::numeric
+	// unsigned int->cs::numeric
 	template <>
-	struct type_conversion_cs<unsigned int> {
+	struct type_conversion_cs<unsigned int>
+	{
 		using source_type = cs::numeric;
 	};
 
 	template <>
-	struct type_conversion_cpp<unsigned int> {
+	struct type_conversion_cpp<unsigned int>
+	{
 		using target_type = cs::numeric;
 	};
 
 	template <>
-	struct type_convertor<cs::numeric, unsigned int> {
+	struct type_convertor<cs::numeric, unsigned int>
+	{
 		static unsigned int convert(const cs::numeric &num)
 		{
 			return num.as_integer();
 		}
 	};
 
-// signed long int->cs::numeric
+	// signed long int->cs::numeric
 	template <>
-	struct type_conversion_cs<signed long int> {
+	struct type_conversion_cs<signed long int>
+	{
 		using source_type = cs::numeric;
 	};
 
 	template <>
-	struct type_conversion_cpp<signed long int> {
+	struct type_conversion_cpp<signed long int>
+	{
 		using target_type = cs::numeric;
 	};
 
 	template <>
-	struct type_convertor<cs::numeric, signed long int> {
+	struct type_convertor<cs::numeric, signed long int>
+	{
 		static signed long convert(const cs::numeric &num)
 		{
 			return num.as_integer();
 		}
 	};
 
-// unsigned long int->cs::numeric
+	// unsigned long int->cs::numeric
 	template <>
-	struct type_conversion_cs<unsigned long int> {
+	struct type_conversion_cs<unsigned long int>
+	{
 		using source_type = cs::numeric;
 	};
 
 	template <>
-	struct type_conversion_cpp<unsigned long int> {
+	struct type_conversion_cpp<unsigned long int>
+	{
 		using target_type = cs::numeric;
 	};
 
 	template <>
-	struct type_convertor<cs::numeric, unsigned long int> {
+	struct type_convertor<cs::numeric, unsigned long int>
+	{
 		static unsigned long int convert(const cs::numeric &num)
 		{
 			return num.as_integer();
 		}
 	};
 
-// signed long long int->cs::numeric
+	// signed long long int->cs::numeric
 	template <>
-	struct type_conversion_cs<signed long long int> {
+	struct type_conversion_cs<signed long long int>
+	{
 		using source_type = cs::numeric;
 	};
 
 	template <>
-	struct type_conversion_cpp<signed long long int> {
+	struct type_conversion_cpp<signed long long int>
+	{
 		using target_type = cs::numeric;
 	};
 
 	template <>
-	struct type_convertor<cs::numeric, signed long long int> {
+	struct type_convertor<cs::numeric, signed long long int>
+	{
 		static signed long long int convert(const cs::numeric &num)
 		{
 			return num.as_integer();
 		}
 	};
 
-// unsigned long long int->cs::numeric
+	// unsigned long long int->cs::numeric
 	template <>
-	struct type_conversion_cs<unsigned long long int> {
+	struct type_conversion_cs<unsigned long long int>
+	{
 		using source_type = cs::numeric;
 	};
 
 	template <>
-	struct type_conversion_cpp<unsigned long long int> {
+	struct type_conversion_cpp<unsigned long long int>
+	{
 		using target_type = cs::numeric;
 	};
 
 	template <>
-	struct type_convertor<cs::numeric, unsigned long long int> {
+	struct type_convertor<cs::numeric, unsigned long long int>
+	{
 		static unsigned long long int convert(const cs::numeric &num)
 		{
 			return num.as_integer();
 		}
 	};
 
-// signed char->cs::char
+	// signed char->cs::char
 	template <>
-	struct type_conversion_cs<signed char> {
+	struct type_conversion_cs<signed char>
+	{
 		using source_type = char;
 	};
 
 	template <>
-	struct type_conversion_cpp<signed char> {
+	struct type_conversion_cpp<signed char>
+	{
 		using target_type = char;
 	};
-// unsigned char->cs::char
+	// unsigned char->cs::char
 	template <>
-	struct type_conversion_cs<unsigned char> {
+	struct type_conversion_cs<unsigned char>
+	{
 		using source_type = char;
 	};
 
 	template <>
-	struct type_conversion_cpp<unsigned char> {
+	struct type_conversion_cpp<unsigned char>
+	{
 		using target_type = char;
 	};
-// float->cs::numeric
+	// float->cs::numeric
 	template <>
-	struct type_conversion_cs<float> {
+	struct type_conversion_cs<float>
+	{
 		using source_type = cs::numeric;
 	};
 
 	template <>
-	struct type_conversion_cpp<float> {
+	struct type_conversion_cpp<float>
+	{
 		using target_type = cs::numeric;
 	};
 
 	template <>
-	struct type_convertor<cs::numeric, float> {
+	struct type_convertor<cs::numeric, float>
+	{
 		static float convert(const cs::numeric &num)
 		{
 			return num.as_float();
 		}
 	};
 
-// double->cs::numeric
+	// double->cs::numeric
 	template <>
-	struct type_conversion_cs<double> {
+	struct type_conversion_cs<double>
+	{
 		using source_type = cs::numeric;
 	};
 
 	template <>
-	struct type_conversion_cpp<double> {
+	struct type_conversion_cpp<double>
+	{
 		using target_type = cs::numeric;
 	};
 
 	template <>
-	struct type_convertor<cs::numeric, double> {
+	struct type_convertor<cs::numeric, double>
+	{
 		static double convert(const cs::numeric &num)
 		{
 			return num.as_float();
 		}
 	};
 
-// long double->cs::numeric
+	// long double->cs::numeric
 	template <>
-	struct type_conversion_cs<long double> {
+	struct type_conversion_cs<long double>
+	{
 		using source_type = cs::numeric;
 	};
 
 	template <>
-	struct type_conversion_cpp<long double> {
+	struct type_conversion_cpp<long double>
+	{
 		using target_type = cs::numeric;
 	};
 
 	template <>
-	struct type_convertor<cs::numeric, long double> {
+	struct type_convertor<cs::numeric, long double>
+	{
 		static long double convert(const cs::numeric &num)
 		{
 			return num.as_float();
 		}
 	};
 
-// std::string->cs::string
-// const char*->cs::string
+	// std::string->cs::string
+	// const char*->cs::string
 	template <>
-	struct type_conversion_cs<const char *> {
+	struct type_conversion_cs<const char *>
+	{
 		using source_type = cs::string;
 	};
 
 	template <>
-	struct type_conversion_cpp<const char *> {
+	struct type_conversion_cpp<const char *>
+	{
 		using target_type = cs::string;
 	};
 
 	template <>
-	struct type_convertor<cs::string, const char *> {
+	struct type_convertor<cs::string, const char *>
+	{
 		static const char *convert(const cs::string &str)
 		{
 			return str.c_str();
@@ -282,7 +323,8 @@ namespace cs_impl {
 } // namespace cs_impl
 #endif
 
-namespace cs {
+namespace cs
+{
 	/**
 	 * CNI Convertor
 	 * Available in Standard 191201 or later
@@ -291,20 +333,23 @@ namespace cs {
 	 * 		 if you don't want any type conversion, please using constru-
 	 * 		 ctor of cs::var directly.
 	 */
-	namespace cni_convertor {
+	namespace cni_convertor
+	{
 		template <typename T>
 		auto to_covscript(T &&val)
 		{
 			using decay_t = typename std::decay<T>::type;
 			return cs_impl::type_convertor<decay_t, typename cs_impl::type_conversion_cpp<decay_t>::target_type>::convert(
-			           std::forward<T>(val));
+			    std::forward<T>(val));
 		}
 	} // namespace cni_convertor
 } // namespace cs
 
-namespace cni_namespace_impl {
-	class cni_register final {
-	public:
+namespace cni_namespace_impl
+{
+	class cni_register final
+	{
+	   public:
 		template <typename T>
 		cni_register(const cs::namespace_t &ns, const char *name, T &&val)
 		{

@@ -26,17 +26,19 @@
  */
 #include <type_traits>
 
-namespace cs_impl {
-// Name Demangle
+namespace cs_impl
+{
+	// Name Demangle
 	std::string cxx_demangle(const char *);
 
-// Type support auto-detection(SFINAE)
+	// Type support auto-detection(SFINAE)
 	template <typename...>
 	using void_t = void;
 
-// Compare
+	// Compare
 	template <typename _Tp>
-	class compare_helper {
+	class compare_helper
+	{
 		template <typename T, typename X = bool>
 		struct matcher;
 
@@ -52,7 +54,7 @@ namespace cs_impl {
 			return true;
 		}
 
-	public:
+	   public:
 		static constexpr bool value = match<_Tp>(nullptr);
 	};
 
@@ -60,7 +62,8 @@ namespace cs_impl {
 	struct compare_if;
 
 	template <typename T>
-	struct compare_if<T, true> {
+	struct compare_if<T, true>
+	{
 		static bool compare(const T &a, const T &b)
 		{
 			return a == b;
@@ -68,16 +71,18 @@ namespace cs_impl {
 	};
 
 	template <typename T>
-	struct compare_if<T, false> {
+	struct compare_if<T, false>
+	{
 		static bool compare(const T &a, const T &b)
 		{
 			return &a == &b;
 		}
 	};
 
-// To String
+	// To String
 	template <typename _Tp>
-	class to_string_helper {
+	class to_string_helper
+	{
 		template <typename T, typename X>
 		struct matcher;
 
@@ -93,7 +98,7 @@ namespace cs_impl {
 			return true;
 		}
 
-	public:
+	   public:
 		static constexpr bool value = match<_Tp>(nullptr);
 	};
 
@@ -101,19 +106,21 @@ namespace cs_impl {
 	struct to_string_if;
 
 	template <typename T>
-	struct to_string_if<T, true> {
+	struct to_string_if<T, true>
+	{
 		static std::string to_string(const T &val)
 		{
 			return std::to_string(val);
 		}
 	};
 
-// To Integer
+	// To Integer
 	template <typename, bool>
 	struct to_integer_if;
 
 	template <typename T>
-	struct to_integer_if<T, true> {
+	struct to_integer_if<T, true>
+	{
 		static std::intptr_t to_integer(const T &val)
 		{
 			return static_cast<std::intptr_t>(val);
@@ -121,26 +128,30 @@ namespace cs_impl {
 	};
 
 	template <typename T>
-	struct to_integer_if<T, false> {
+	struct to_integer_if<T, false>
+	{
 		static std::intptr_t to_integer(const T &)
 		{
 			throw cs::runtime_error("Does not support conversion of the specified type to integer");
 		}
 	};
 
-// Hash
+	// Hash
 	template <typename T, typename = void>
-	struct hash_helper {
+	struct hash_helper
+	{
 		static constexpr bool value = false;
 	};
 
 	template <typename T>
-	struct hash_helper<T, void_t<decltype(std::hash<T> {}(std::declval<T>()))>> {
+	struct hash_helper<T, void_t<decltype(std::hash<T>{}(std::declval<T>()))>>
+	{
 		static constexpr bool value = true;
 	};
 
 	template <typename T>
-	struct hash_gen_base {
+	struct hash_gen_base
+	{
 		static std::size_t base_code;
 	};
 
@@ -151,7 +162,8 @@ namespace cs_impl {
 	struct hash_if;
 
 	template <typename T, typename X>
-	struct hash_if<T, X, true> {
+	struct hash_if<T, X, true>
+	{
 		static std::size_t hash(const X &val)
 		{
 			static std::hash<T> gen;
@@ -160,7 +172,8 @@ namespace cs_impl {
 	};
 
 	template <typename T>
-	struct hash_if<T, T, true> {
+	struct hash_if<T, T, true>
+	{
 		static std::size_t hash(const T &val)
 		{
 			static std::hash<T> gen;
@@ -169,7 +182,8 @@ namespace cs_impl {
 	};
 
 	template <typename T, typename X>
-	struct hash_if<T, X, false> {
+	struct hash_if<T, X, false>
+	{
 		static std::size_t hash(const X &val)
 		{
 			throw cs::runtime_error("Does not support the specified type of hash operation");
@@ -180,12 +194,14 @@ namespace cs_impl {
 	struct hash_enum_resolver;
 
 	template <typename T>
-	struct hash_enum_resolver<T, true> {
+	struct hash_enum_resolver<T, true>
+	{
 		using type = hash_if<std::size_t, T, true>;
 	};
 
 	template <typename T>
-	struct hash_enum_resolver<T, false> {
+	struct hash_enum_resolver<T, false>
+	{
 		using type = hash_if<T, T, hash_helper<T>::value>;
 	};
 
@@ -232,7 +248,8 @@ namespace cs_impl {
 	}
 
 	template <typename T>
-	struct to_string_if<T, false> {
+	struct to_string_if<T, false>
+	{
 		static std::string to_string(const T &)
 		{
 			return "[" + cxx_demangle(get_name_of_type<T>()) + "]";
@@ -247,19 +264,22 @@ namespace cs_impl {
 	}
 
 	template <typename _Target>
-	struct type_conversion_cs {
+	struct type_conversion_cs
+	{
 		using source_type = _Target;
 		using _not_specialized = void;
 	};
 
 	template <typename _Source>
-	struct type_conversion_cpp {
+	struct type_conversion_cpp
+	{
 		using target_type = _Source;
 		using _not_specialized = void;
 	};
 
 	template <typename _From, typename _To>
-	struct type_convertor {
+	struct type_convertor
+	{
 		using _not_specialized = void;
 		template <typename T>
 		static inline _To convert(T &&val) noexcept
@@ -269,7 +289,8 @@ namespace cs_impl {
 	};
 
 	template <typename T>
-	struct type_convertor<T, T> {
+	struct type_convertor<T, T>
+	{
 		template <typename X>
 		static inline X &&convert(X &&val) noexcept
 		{
@@ -278,7 +299,8 @@ namespace cs_impl {
 	};
 
 	template <typename T>
-	struct type_convertor<T, void> {
+	struct type_convertor<T, void>
+	{
 		template <typename X>
 		static inline void convert(X &&) noexcept
 		{
@@ -286,41 +308,48 @@ namespace cs_impl {
 	};
 
 	template <typename T>
-	struct var_storage {
+	struct var_storage
+	{
 		using type = T;
 	};
 
 	template <typename T>
 	using var_storage_t = typename var_storage<std::decay_t<T>>::type;
 
-	namespace operators {
-		union result {
+	namespace operators
+	{
+		union result
+		{
 			std::uintptr_t _uint;
 			std::intptr_t _int;
 			void *_ptr;
 
 			constexpr result()
-				: _ptr(nullptr) {}
+			    : _ptr(nullptr) {}
 
-			static COVSCRIPT_ALWAYS_INLINE constexpr result from_ptr(void *p) noexcept {
+			static COVSCRIPT_ALWAYS_INLINE constexpr result from_ptr(void *p) noexcept
+			{
 				result r;
 				r._ptr = p;
 				return r;
 			}
 
-			static COVSCRIPT_ALWAYS_INLINE constexpr result from_int(std::intptr_t i) noexcept {
+			static COVSCRIPT_ALWAYS_INLINE constexpr result from_int(std::intptr_t i) noexcept
+			{
 				result r;
 				r._int = i;
 				return r;
 			}
 
-			static COVSCRIPT_ALWAYS_INLINE constexpr result from_uint(std::uintptr_t ui) noexcept {
+			static COVSCRIPT_ALWAYS_INLINE constexpr result from_uint(std::uintptr_t ui) noexcept
+			{
 				result r;
 				r._uint = ui;
 				return r;
 			}
 		};
-		enum class type : unsigned {
+		enum class type : unsigned
+		{
 			copy = 0,
 			move = 1,
 			swap = 2,
@@ -358,7 +387,8 @@ namespace cs_impl {
 			fcall = 34,      // func(args)
 		};
 		template <typename T>
-		struct handler {
+		struct handler
+		{
 			static COVSCRIPT_ALWAYS_INLINE result get(void *lhs, void *rhs);
 			static COVSCRIPT_ALWAYS_INLINE result type_id(void *lhs, void *rhs);
 			static inline result type_name(void *lhs, void *rhs);
@@ -397,11 +427,12 @@ namespace cs_impl {
 	extern volatile std::size_t op_perf[40];
 #endif
 
-	constexpr std::size_t aligned_element_size = (std::max)(alignof(std::max_align_t), sizeof(void *));
+	constexpr std::size_t aligned_element_size = (std::max) (alignof(std::max_align_t), sizeof(void *));
 
 	template <std::size_t align_size,
 	          template <typename> class allocator_t = default_allocator>
-	class basic_var final {
+	class basic_var final
+	{
 		friend class any;
 
 		static_assert(align_size % 8 == 0, "align_size must be a multiple of 8.");
@@ -411,7 +442,8 @@ namespace cs_impl {
 		using aligned_storage_t = std::aligned_storage_t<align_size - aligned_element_size, alignof(std::max_align_t)>;
 
 		template <typename T>
-		struct var_op_svo_dispatcher {
+		struct var_op_svo_dispatcher
+		{
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_copy(void *lhs, void *rhs)
 			{
 				static_assert(std::is_copy_constructible<T>::value, "CovScript requires type supports copy constructor.");
@@ -421,7 +453,12 @@ namespace cs_impl {
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_move(void *lhs, void *rhs) noexcept
 			{
 				static_assert(std::is_move_constructible<T>::value, "CovScript requires type supports move constructor.");
-				::new (&static_cast<basic_var *>(rhs)->m_store.buffer) T(std::move(*static_cast<T *>(lhs)));
+				T *src = static_cast<T *>(lhs);
+				::new (&static_cast<basic_var *>(rhs)->m_store.buffer) T(std::move(*src));
+				// End the moved-from source's lifetime: move_store nulls the
+				// source dispatcher, so without this its destructor would never
+				// run for SVO values.
+				src->~T();
 				return operators::result();
 			}
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_swap(void *lhs, void *rhs) noexcept
@@ -444,41 +481,41 @@ namespace cs_impl {
 				using handler_t = operators::result (*)(void *, void *);
 				using op_handler = operators::handler<T>;
 				static constexpr handler_t op_handlers[] = {
-					op_copy,
-					op_move,
-					op_swap,
-					op_destroy,
-					op_handler::get,
-					op_handler::type_id,
-					op_handler::type_name,
-					op_handler::to_integer,
-					op_handler::to_string,
-					op_handler::hash,
-					op_handler::detach,
-					op_handler::ext_ns,
-					op_handler::add,
-					op_handler::sub,
-					op_handler::mul,
-					op_handler::div,
-					op_handler::mod,
-					op_handler::pow,
-					op_handler::minus,
-					op_handler::escape,
-					op_handler::selfinc,
-					op_handler::selfdec,
-					op_handler::compare,
-					op_handler::abocmp,
-					op_handler::undcmp,
-					op_handler::aeqcmp,
-					op_handler::ueqcmp,
-					op_handler::index,
-					op_handler::cindex,
-					op_handler::index_ref,
-					op_handler::access,
-					op_handler::caccess,
-					op_handler::access_ref,
-					op_handler::prep_call,
-					op_handler::fcall,
+				    op_copy,
+				    op_move,
+				    op_swap,
+				    op_destroy,
+				    op_handler::get,
+				    op_handler::type_id,
+				    op_handler::type_name,
+				    op_handler::to_integer,
+				    op_handler::to_string,
+				    op_handler::hash,
+				    op_handler::detach,
+				    op_handler::ext_ns,
+				    op_handler::add,
+				    op_handler::sub,
+				    op_handler::mul,
+				    op_handler::div,
+				    op_handler::mod,
+				    op_handler::pow,
+				    op_handler::minus,
+				    op_handler::escape,
+				    op_handler::selfinc,
+				    op_handler::selfdec,
+				    op_handler::compare,
+				    op_handler::abocmp,
+				    op_handler::undcmp,
+				    op_handler::aeqcmp,
+				    op_handler::ueqcmp,
+				    op_handler::index,
+				    op_handler::cindex,
+				    op_handler::index_ref,
+				    op_handler::access,
+				    op_handler::caccess,
+				    op_handler::access_ref,
+				    op_handler::prep_call,
+				    op_handler::fcall,
 				};
 #ifdef CS_ENABLE_PROFILING
 				++op_perf[static_cast<unsigned>(op)];
@@ -503,26 +540,39 @@ namespace cs_impl {
 		};
 
 		template <typename T>
-		struct var_op_heap_dispatcher {
+		struct var_op_heap_dispatcher
+		{
 			static allocator_t<T> &get_allocator()
 			{
-				static allocator_t<T> allocator;
+				// Thread-local like the proxy pool: async worker threads allocate
+				// and free heap-stored values independently of the main thread.
+				static thread_local allocator_t<T> allocator;
 				return allocator;
 			}
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_copy(void *lhs, void *rhs)
 			{
 				static_assert(std::is_copy_constructible<T>::value, "CovScript requires type supports copy constructor.");
 				T *nptr = get_allocator().allocate(1);
-				::new (nptr) T(*static_cast<const T *>(lhs));
+				try
+				{
+					::new (nptr) T(*static_cast<const T *>(lhs));
+				}
+				catch (...)
+				{
+					// Release the block when the copy constructor throws (mirrors construct)
+					get_allocator().deallocate(nptr, 1);
+					throw;
+				}
 				static_cast<basic_var *>(rhs)->m_store.ptr = nptr;
 				return operators::result();
 			}
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_move(void *lhs, void *rhs) noexcept
 			{
 				static_assert(std::is_move_constructible<T>::value, "CovScript requires type supports move constructor.");
-				T *nptr = get_allocator().allocate(1);
-				::new (nptr) T(std::move(*static_cast<T *>(lhs)));
-				static_cast<basic_var *>(rhs)->m_store.ptr = nptr;
+				// Transfer the heap block to the destination; move_store
+				// nulls the source dispatcher, so the block has exactly one
+				// owner and no deep copy or leak occurs.
+				static_cast<basic_var *>(rhs)->m_store.ptr = static_cast<T *>(lhs);
 				return operators::result();
 			}
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_swap(void *lhs, void *rhs) noexcept
@@ -541,7 +591,17 @@ namespace cs_impl {
 			static COVSCRIPT_ALWAYS_INLINE void construct(basic_var *val, ArgsT &&...args)
 			{
 				T *ptr = get_allocator().allocate(1);
-				::new (ptr) T(std::forward<ArgsT>(args)...);
+				try
+				{
+					::new (ptr) T(std::forward<ArgsT>(args)...);
+				}
+				catch (...)
+				{
+					// construct_store leaves the dispatcher null on a throwing
+					// constructor, so the block would never be released.
+					get_allocator().deallocate(ptr, 1);
+					throw;
+				}
 				val->m_store.ptr = ptr;
 			}
 			static inline operators::result dispatcher(operators::type op, const basic_var *lhs, void *rhs)
@@ -549,41 +609,41 @@ namespace cs_impl {
 				using handler_t = operators::result (*)(void *, void *);
 				using op_handler = operators::handler<T>;
 				static constexpr handler_t op_handlers[] = {
-					op_copy,
-					op_move,
-					op_swap,
-					op_destroy,
-					op_handler::get,
-					op_handler::type_id,
-					op_handler::type_name,
-					op_handler::to_integer,
-					op_handler::to_string,
-					op_handler::hash,
-					op_handler::detach,
-					op_handler::ext_ns,
-					op_handler::add,
-					op_handler::sub,
-					op_handler::mul,
-					op_handler::div,
-					op_handler::mod,
-					op_handler::pow,
-					op_handler::minus,
-					op_handler::escape,
-					op_handler::selfinc,
-					op_handler::selfdec,
-					op_handler::compare,
-					op_handler::abocmp,
-					op_handler::undcmp,
-					op_handler::aeqcmp,
-					op_handler::ueqcmp,
-					op_handler::index,
-					op_handler::cindex,
-					op_handler::index_ref,
-					op_handler::access,
-					op_handler::caccess,
-					op_handler::access_ref,
-					op_handler::prep_call,
-					op_handler::fcall,
+				    op_copy,
+				    op_move,
+				    op_swap,
+				    op_destroy,
+				    op_handler::get,
+				    op_handler::type_id,
+				    op_handler::type_name,
+				    op_handler::to_integer,
+				    op_handler::to_string,
+				    op_handler::hash,
+				    op_handler::detach,
+				    op_handler::ext_ns,
+				    op_handler::add,
+				    op_handler::sub,
+				    op_handler::mul,
+				    op_handler::div,
+				    op_handler::mod,
+				    op_handler::pow,
+				    op_handler::minus,
+				    op_handler::escape,
+				    op_handler::selfinc,
+				    op_handler::selfdec,
+				    op_handler::compare,
+				    op_handler::abocmp,
+				    op_handler::undcmp,
+				    op_handler::aeqcmp,
+				    op_handler::ueqcmp,
+				    op_handler::index,
+				    op_handler::cindex,
+				    op_handler::index_ref,
+				    op_handler::access,
+				    op_handler::caccess,
+				    op_handler::access_ref,
+				    op_handler::prep_call,
+				    op_handler::fcall,
 				};
 #ifdef CS_ENABLE_PROFILING
 				++op_perf[static_cast<unsigned>(op)];
@@ -612,19 +672,20 @@ namespace cs_impl {
 #ifndef CS_DISABLE_VAR_SVO
 		template <typename T>
 		using dispatcher_class = std::conditional_t<(sizeof(T) > sizeof(aligned_storage_t)),
-		      var_op_heap_dispatcher<T>, var_op_svo_dispatcher<T>>;
+		                                            var_op_heap_dispatcher<T>, var_op_svo_dispatcher<T>>;
 #else
 		template <typename T>
 		using dispatcher_class = var_op_heap_dispatcher<T>;
 #endif
 
 		dispatcher_t m_dispatcher = nullptr;
-		union store_impl {
+		union store_impl
+		{
 			aligned_storage_t buffer;
 			void *ptr;
 
 			store_impl()
-				: ptr(nullptr) {}
+			    : ptr(nullptr) {}
 		} m_store;
 
 		template <typename T>
@@ -643,13 +704,17 @@ namespace cs_impl {
 		inline void construct_store(ArgsT &&...args)
 		{
 			destroy_store();
-			m_dispatcher = &dispatcher_class<T>::dispatcher;
+			// Commit the dispatcher only after the value is successfully
+			// constructed, so a throwing constructor never leaves a var whose
+			// dispatcher points at uninitialized storage.
 			dispatcher_class<T>::construct(this, std::forward<ArgsT>(args)...);
+			m_dispatcher = &dispatcher_class<T>::dispatcher;
 		}
 
 		inline void destroy_store()
 		{
-			if (m_dispatcher != nullptr) {
+			if (m_dispatcher != nullptr)
+			{
 				m_dispatcher(operators::type::destroy, this, nullptr);
 				m_dispatcher = nullptr;
 			}
@@ -657,17 +722,28 @@ namespace cs_impl {
 
 		inline void copy_store(const basic_var &other)
 		{
-			destroy_store();
-			if (other.m_dispatcher != nullptr) {
-				other.m_dispatcher(operators::type::copy, &other, this);
-				m_dispatcher = other.m_dispatcher;
+			if (other.m_dispatcher == nullptr)
+			{
+				destroy_store();
+				return;
 			}
+			// Build the copy in a scratch var first so a throwing copy
+			// leaves *this untouched (strong exception guarantee). The
+			// commit then moves the scratch value into *this, which for
+			// heap types transfers the block and for SVO types moves into
+			// the in-place buffer, so SSO containers stay valid.
+			basic_var tmp;
+			other.m_dispatcher(operators::type::copy, &other, &tmp);
+			tmp.m_dispatcher = other.m_dispatcher;
+			destroy_store();
+			move_store(tmp);
 		}
 
 		inline void move_store(basic_var &other)
 		{
 			destroy_store();
-			if (other.m_dispatcher != nullptr) {
+			if (other.m_dispatcher != nullptr)
+			{
 				other.m_dispatcher(operators::type::move, &other, this);
 				m_dispatcher = other.m_dispatcher;
 				other.m_dispatcher = nullptr;
@@ -676,7 +752,7 @@ namespace cs_impl {
 
 		basic_var() noexcept = default;
 
-	public:
+	   public:
 		template <typename T, typename store_t = cs_impl::var_storage_t<T>, typename... ArgsT>
 		static inline basic_var make(ArgsT &&...args)
 		{
@@ -687,7 +763,19 @@ namespace cs_impl {
 
 		inline void swap(basic_var &other) noexcept
 		{
-			if (m_dispatcher != other.m_dispatcher && type() != other.type()) {
+			// An empty var has no value to swap: fall back to moving.
+			if (m_dispatcher == nullptr)
+			{
+				move_store(other);
+				return;
+			}
+			if (other.m_dispatcher == nullptr)
+			{
+				other.move_store(*this);
+				return;
+			}
+			if (m_dispatcher != other.m_dispatcher && type() != other.type())
+			{
 				basic_var tmp;
 				tmp.move_store(*this);
 				move_store(other);
@@ -711,7 +799,7 @@ namespace cs_impl {
 
 		basic_var(basic_var &&v) noexcept
 		{
-			move_store(std::move(v));
+			move_store(v);
 		}
 
 		~basic_var()
@@ -728,12 +816,8 @@ namespace cs_impl {
 
 		basic_var &operator=(basic_var &&obj) noexcept
 		{
-			if (&obj != this) {
-				destroy_store();
-				m_dispatcher = obj.m_dispatcher;
-				m_store = obj.m_store;
-				obj.m_dispatcher = nullptr;
-			}
+			if (&obj != this)
+				move_store(obj);
 			return *this;
 		}
 
@@ -793,13 +877,15 @@ namespace cs_impl {
 #endif
 #endif
 
-	class any final {
+	class any final
+	{
 		template <typename T>
 		friend class operators::handler;
 		template <std::size_t align_size, template <typename> class allocator_t>
 		friend class basic_var;
 
-		struct proxy {
+		struct proxy
+		{
 			std::uint32_t refcount = 1;
 			std::int8_t protect_level = 0;
 			basic_var<CS_VAR_SVO_ALIGN> data;
@@ -808,13 +894,13 @@ namespace cs_impl {
 
 			template <typename T>
 			proxy(std::uint32_t rc, T &&d)
-				: refcount(rc), data(std::forward<T>(d))
+			    : refcount(rc), data(std::forward<T>(d))
 			{
 			}
 
 			template <typename T>
 			proxy(std::uint8_t pl, std::uint32_t rc, T &&d)
-				: protect_level(pl), refcount(rc), data(std::forward<T>(d))
+			    : protect_level(pl), refcount(rc), data(std::forward<T>(d))
 			{
 			}
 		};
@@ -823,7 +909,7 @@ namespace cs_impl {
 
 		static inline allocator_t &get_allocator()
 		{
-			static allocator_t allocator;
+			static thread_local allocator_t allocator;
 			return allocator;
 		}
 
@@ -837,7 +923,8 @@ namespace cs_impl {
 
 		proxy *duplicate() const noexcept
 		{
-			if (mDat != nullptr) {
+			if (mDat != nullptr)
+			{
 				++mDat->refcount;
 			}
 			return mDat;
@@ -845,8 +932,10 @@ namespace cs_impl {
 
 		void recycle() noexcept
 		{
-			if (mDat != nullptr) {
-				if (--mDat->refcount == 0) {
+			if (mDat != nullptr)
+			{
+				if (--mDat->refcount == 0)
+				{
 					get_allocator().free(mDat);
 					mDat = nullptr;
 				}
@@ -854,12 +943,13 @@ namespace cs_impl {
 		}
 
 		any(proxy *dat)
-			: mDat(dat) {}
+		    : mDat(dat) {}
 
-	public:
+	   public:
 		void swap(any &obj, bool raw = false)
 		{
-			if (this->mDat != nullptr && obj.mDat != nullptr && raw) {
+			if (this->mDat != nullptr && obj.mDat != nullptr && raw)
+			{
 				if (mDat->protect_level != 0 || obj.mDat->protect_level > 0)
 					throw cs::runtime_error("The variable has been protected");
 				this->mDat->data.swap(obj.mDat->data);
@@ -870,7 +960,8 @@ namespace cs_impl {
 
 		void swap(any &&obj, bool raw = false)
 		{
-			if (this->mDat != nullptr && obj.mDat != nullptr && raw) {
+			if (this->mDat != nullptr && obj.mDat != nullptr && raw)
+			{
 				if (mDat->protect_level != 0 || obj.mDat->protect_level > 0)
 					throw cs::runtime_error("The variable has been protected");
 				this->mDat->data.swap(obj.mDat->data);
@@ -881,7 +972,8 @@ namespace cs_impl {
 
 		void clone()
 		{
-			if (mDat != nullptr) {
+			if (mDat != nullptr)
+			{
 				if (mDat->protect_level > 2)
 					throw cs::runtime_error("Duplicate singleton objects are not allowed");
 				proxy *dat = get_allocator().alloc(1, mDat->data);
@@ -906,7 +998,15 @@ namespace cs_impl {
 		{
 			proxy *dat = get_allocator().alloc();
 			dat->protect_level = 0;
-			dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			try
+			{
+				dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			}
+			catch (...)
+			{
+				get_allocator().free(dat);
+				throw;
+			}
 			return any(dat);
 		}
 
@@ -915,7 +1015,15 @@ namespace cs_impl {
 		{
 			proxy *dat = get_allocator().alloc();
 			dat->protect_level = 1;
-			dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			try
+			{
+				dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			}
+			catch (...)
+			{
+				get_allocator().free(dat);
+				throw;
+			}
 			return any(dat);
 		}
 
@@ -924,7 +1032,15 @@ namespace cs_impl {
 		{
 			proxy *dat = get_allocator().alloc();
 			dat->protect_level = 2;
-			dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			try
+			{
+				dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			}
+			catch (...)
+			{
+				get_allocator().free(dat);
+				throw;
+			}
 			return any(dat);
 		}
 
@@ -933,7 +1049,15 @@ namespace cs_impl {
 		{
 			proxy *dat = get_allocator().alloc();
 			dat->protect_level = 3;
-			dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			try
+			{
+				dat->data.construct_store<cs_impl::var_storage_t<T>>(std::forward<ArgsT>(args)...);
+			}
+			catch (...)
+			{
+				get_allocator().free(dat);
+				throw;
+			}
 			return any(dat);
 		}
 
@@ -944,11 +1068,20 @@ namespace cs_impl {
 		{
 			mDat = get_allocator().alloc();
 			mDat->protect_level = 0;
-			mDat->data.construct_store<cs_impl::var_storage_t<T>>(dat);
+			try
+			{
+				mDat->data.construct_store<cs_impl::var_storage_t<T>>(dat);
+			}
+			catch (...)
+			{
+				get_allocator().free(mDat);
+				mDat = nullptr;
+				throw;
+			}
 		}
 
 		any(const any &v)
-			: mDat(v.duplicate()) {}
+		    : mDat(v.duplicate()) {}
 
 		any(any &&v) noexcept
 		{
@@ -994,7 +1127,8 @@ namespace cs_impl {
 
 		void detach() const
 		{
-			if (this->mDat != nullptr) {
+			if (this->mDat != nullptr)
+			{
 				if (this->mDat->protect_level > 2)
 					throw cs::runtime_error("Duplicate singleton objects are not allowed");
 				this->mDat->data.detach();
@@ -1058,7 +1192,8 @@ namespace cs_impl {
 
 		void mark_trivial() const
 		{
-			if (this->mDat != nullptr) {
+			if (this->mDat != nullptr)
+			{
 				if (this->mDat->protect_level > 0)
 					throw cs::runtime_error("Constant tagged objects can not be copied");
 				this->mDat->protect_level = 0;
@@ -1067,7 +1202,8 @@ namespace cs_impl {
 
 		void mark_protect() const
 		{
-			if (this->mDat != nullptr) {
+			if (this->mDat != nullptr)
+			{
 				if (this->mDat->protect_level > 1)
 					throw cs::runtime_error("Constant tagged objects can not be copied");
 				this->mDat->protect_level = 1;
@@ -1076,7 +1212,8 @@ namespace cs_impl {
 
 		void mark_constant() const
 		{
-			if (this->mDat != nullptr) {
+			if (this->mDat != nullptr)
+			{
 				if (this->mDat->protect_level > 2)
 					throw cs::runtime_error("Constant tagged objects can not be copied");
 				this->mDat->protect_level = 2;
@@ -1085,7 +1222,8 @@ namespace cs_impl {
 
 		void mark_single() const
 		{
-			if (this->mDat != nullptr) {
+			if (this->mDat != nullptr)
+			{
 				if (this->mDat->protect_level > 3)
 					throw cs::runtime_error("Constant tagged objects can not be copied");
 				this->mDat->protect_level = 3;
@@ -1094,7 +1232,8 @@ namespace cs_impl {
 
 		any &operator=(const any &var)
 		{
-			if (!is_same(var)) {
+			if (!is_same(var))
+			{
 				recycle();
 				mDat = var.duplicate();
 			}
@@ -1138,13 +1277,16 @@ namespace cs_impl {
 
 		void assign(const any &obj, bool raw = false)
 		{
-			if (&obj != this && obj.mDat != mDat) {
-				if (mDat != nullptr && obj.mDat != nullptr && raw) {
+			if (&obj != this && obj.mDat != mDat)
+			{
+				if (mDat != nullptr && obj.mDat != nullptr && raw)
+				{
 					if (mDat->protect_level != 0 || obj.mDat->protect_level > 0)
 						throw cs::runtime_error("The variable has been protected");
 					mDat->data.copy_store(obj.mDat->data);
 				}
-				else {
+				else
+				{
 					recycle();
 					if (obj.mDat != nullptr)
 						mDat = get_allocator().alloc(1, obj.mDat->data);
@@ -1157,12 +1299,14 @@ namespace cs_impl {
 		template <typename T>
 		void assign(const T &dat, bool raw = false)
 		{
-			if (mDat != nullptr && raw) {
+			if (mDat != nullptr && raw)
+			{
 				if (mDat->protect_level != 0)
 					throw cs::runtime_error("The variable has been protected");
 				mDat->data.construct_store<var_storage_t<T>>(dat);
 			}
-			else {
+			else
+			{
 				recycle();
 				mDat = get_allocator().alloc();
 				mDat->data.construct_store<var_storage_t<T>>(dat);
@@ -1261,7 +1405,7 @@ namespace cs_impl {
 		bool compare(const any &rhs) const
 		{
 			if (mDat != nullptr && rhs.mDat != nullptr &&
-			        (mDat->data.m_dispatcher == rhs.mDat->data.m_dispatcher || mDat->data.type() == rhs.mDat->data.type()))
+			    (mDat->data.m_dispatcher == rhs.mDat->data.m_dispatcher || mDat->data.type() == rhs.mDat->data.type()))
 				return mDat->data.m_dispatcher(operators::type::compare, &mDat->data, (void *) &rhs)._int;
 			else
 				return false;
@@ -1280,7 +1424,7 @@ namespace cs_impl {
 		bool operator>(const any &rhs) const
 		{
 			if (mDat != nullptr && rhs.mDat != nullptr &&
-			        (mDat->data.m_dispatcher == rhs.mDat->data.m_dispatcher || mDat->data.type() == rhs.mDat->data.type()))
+			    (mDat->data.m_dispatcher == rhs.mDat->data.m_dispatcher || mDat->data.type() == rhs.mDat->data.type()))
 				return mDat->data.m_dispatcher(operators::type::abocmp, &mDat->data, (void *) &rhs)._int;
 			else
 				return false;
@@ -1289,7 +1433,7 @@ namespace cs_impl {
 		bool operator<(const any &rhs) const
 		{
 			if (mDat != nullptr && rhs.mDat != nullptr &&
-			        (mDat->data.m_dispatcher == rhs.mDat->data.m_dispatcher || mDat->data.type() == rhs.mDat->data.type()))
+			    (mDat->data.m_dispatcher == rhs.mDat->data.m_dispatcher || mDat->data.type() == rhs.mDat->data.type()))
 				return mDat->data.m_dispatcher(operators::type::undcmp, &mDat->data, (void *) &rhs)._int;
 			else
 				return false;
@@ -1298,7 +1442,7 @@ namespace cs_impl {
 		bool operator>=(const any &rhs) const
 		{
 			if (mDat != nullptr && rhs.mDat != nullptr &&
-			        (mDat->data.m_dispatcher == rhs.mDat->data.m_dispatcher || mDat->data.type() == rhs.mDat->data.type()))
+			    (mDat->data.m_dispatcher == rhs.mDat->data.m_dispatcher || mDat->data.type() == rhs.mDat->data.type()))
 				return mDat->data.m_dispatcher(operators::type::aeqcmp, &mDat->data, (void *) &rhs)._int;
 			else
 				return false;
@@ -1307,7 +1451,7 @@ namespace cs_impl {
 		bool operator<=(const any &rhs) const
 		{
 			if (mDat != nullptr && rhs.mDat != nullptr &&
-			        (mDat->data.m_dispatcher == rhs.mDat->data.m_dispatcher || mDat->data.type() == rhs.mDat->data.type()))
+			    (mDat->data.m_dispatcher == rhs.mDat->data.m_dispatcher || mDat->data.type() == rhs.mDat->data.type()))
 				return mDat->data.m_dispatcher(operators::type::ueqcmp, &mDat->data, (void *) &rhs)._int;
 			else
 				return false;
@@ -1384,12 +1528,14 @@ namespace cs_impl {
 	}
 
 	template <>
-	struct var_storage<char *> {
+	struct var_storage<char *>
+	{
 		using type = std::string;
 	};
 
 	template <>
-	struct var_storage<std::type_info> {
+	struct var_storage<std::type_info>
+	{
 		using type = std::type_index;
 	};
 } // namespace cs_impl
@@ -1400,9 +1546,11 @@ static std::ostream &operator<<(std::ostream &out, const cs_impl::any &val)
 	return out;
 }
 
-namespace std {
+namespace std
+{
 	template <>
-	struct hash<cs_impl::any> {
+	struct hash<cs_impl::any>
+	{
 		std::size_t operator()(const cs_impl::any &val) const
 		{
 			return val.hash();

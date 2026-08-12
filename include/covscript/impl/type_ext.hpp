@@ -28,8 +28,10 @@
 #include <covscript/core/cni.hpp>
 #include <ctime>
 
-namespace cs {
-	namespace operators {
+namespace cs
+{
+	namespace operators
+	{
 		template <typename T>
 		static inline std::string unsupported_operator_message(const char *op)
 		{
@@ -403,8 +405,10 @@ cs_impl::operators::result cs_impl::operators::handler<T>::fcall(void *lhs, void
 	return result::from_ptr(pxy);
 }
 
-namespace cs_impl {
-	enum class file_type {
+namespace cs_impl
+{
+	enum class file_type
+	{
 		block,
 		character,
 		directory,
@@ -415,19 +419,20 @@ namespace cs_impl {
 		unknown,
 	};
 
-	struct path_info final {
+	struct path_info final
+	{
 		std::string name;
 		file_type type;
 
 		path_info() = delete;
 
 		path_info(const std::string &n, file_type t)
-			: name(n), type(t) {}
+		    : name(n), type(t) {}
 	};
 
 	void init_extensions();
 
-// Namespace declarations
+	// Namespace declarations
 	extern cs::namespace_t member_visitor_ext;
 	extern cs::namespace_t except_ext;
 	extern cs::namespace_t array_ext;
@@ -460,7 +465,7 @@ namespace cs_impl {
 	extern cs::namespace_t path_type_ext;
 	extern cs::namespace_t path_info_ext;
 
-// Detach
+	// Detach
 	template <>
 	void detach<cs::pair>(cs::pair &val)
 	{
@@ -489,11 +494,12 @@ namespace cs_impl {
 			cs::copy_no_return(it.second);
 	}
 
-// To String
+	// To String
 	template <>
 	cs::string_borrower to_string<cs::numeric>(const cs::numeric &val)
 	{
-		if (!val.is_integer()) {
+		if (!val.is_integer())
+		{
 			std::stringstream ss;
 			std::string str;
 			ss << std::setprecision(cs::current_process->output_precision) << val.as_float();
@@ -580,8 +586,8 @@ namespace cs_impl {
 	template <>
 	cs::string_borrower to_string<cs::type_id>(const cs::type_id &id)
 	{
-		if (id.type_hash != 0)
-			return cxx_demangle(id.type_idx.name()) + "_" + to_string(id.type_hash);
+		if (id.node != nullptr)
+			return id.node->name;
 		else
 			return cxx_demangle(id.type_idx.name());
 	}
@@ -602,10 +608,11 @@ namespace cs_impl {
 	template <>
 	cs::string_borrower to_string<cs::structure>(const cs::structure &stut)
 	{
-		if (stut.get_domain().exist("to_string")) {
+		if (stut.get_domain().exist("to_string"))
+		{
 			cs::var func = stut.get_domain().get_var("to_string");
 			if (func.is_type_of<cs::callable>())
-				return cs::invoke(func, cs::var::make<cs::structure>(&stut)).to_string();
+				return cs::invoke(func, cs::var::make<cs::structure>(&stut)).to_string().extract();
 		}
 		return "[cs::structure_" + stut.type_name() + "]";
 	}
@@ -622,7 +629,7 @@ namespace cs_impl {
 		return std::asctime(&t);
 	}
 
-// To Integer
+	// To Integer
 	template <>
 	std::intptr_t to_integer<cs::numeric>(const cs::numeric &num)
 	{
@@ -632,18 +639,19 @@ namespace cs_impl {
 	template <>
 	std::intptr_t to_integer<std::string>(const std::string &str)
 	{
-		for (auto &ch : str) {
-			if (!std::isdigit(ch))
+		for (auto &ch : str)
+		{
+			if (!std::isdigit(static_cast<unsigned char>(ch)))
 				throw cs::runtime_error("Wrong literal format.");
 		}
 		return std::stol(str);
 	}
 
-// Hash
+	// Hash
 	template <>
 	std::size_t hash<cs::type_id>(const cs::type_id &id)
 	{
-		if (id.type_hash == 0)
+		if (id.node == nullptr)
 			return id.type_idx.hash_code();
 		else
 			throw cs::runtime_error("Does not support the specified type of hash operation");
@@ -652,10 +660,18 @@ namespace cs_impl {
 	template <>
 	std::size_t hash<cs::numeric>(const cs::numeric &num)
 	{
+		// Hash integers exactly so large keys don't collapse through float.
 		if (num.is_integer())
 			return hash(num.as_integer());
-		else
-			return hash(num.as_float());
+		// Integral floats hash like the equal integer (keeps 1 == 1.0 and -0.0 == 0).
+		cs::numeric_float f = num.as_float();
+		if (f == std::trunc(f))
+		{
+			const cs::numeric_float lo = static_cast<cs::numeric_float>((std::numeric_limits<cs::numeric_integer>::min)());
+			if (f >= lo && f < -lo) // [-2^63, 2^63), exact in double and long double
+				return hash(static_cast<cs::numeric_integer>(f));
+		}
+		return hash(f);
 	}
 
 	template <>
@@ -664,7 +680,7 @@ namespace cs_impl {
 		return cs::invoke(obj.get_var("hash"), cs::var::make<cs::structure>(&obj)).const_val<cs::numeric>().as_integer();
 	}
 
-// Type name
+	// Type name
 	template <>
 	constexpr const char *get_name_of_type<cs::context_t>()
 	{
@@ -849,7 +865,7 @@ namespace cs_impl {
 		return "cs::system::path_info";
 	}
 
-// Type Extensions
+	// Type Extensions
 
 	template <>
 	cs::namespace_t &get_ext<cs::member_visitor>()
@@ -972,8 +988,9 @@ namespace cs_impl {
 	}
 } // namespace cs_impl
 
-namespace cs {
-// Operator +
+namespace cs
+{
+	// Operator +
 	template <>
 	var operators::add<cs::numeric>(const cs::numeric &lhs, const var &rhs)
 	{
@@ -997,7 +1014,8 @@ namespace cs {
 	{
 		var arr = var::make<cs::array>(lhs);
 		cs::array &lhs_ref = arr.val<cs::array>();
-		if (rhs.is_type_of<cs::array>()) {
+		if (rhs.is_type_of<cs::array>())
+		{
 			const cs::array &rhs_ref = rhs.const_val<cs::array>();
 			lhs_ref.insert(lhs_ref.end(), rhs_ref.begin(), rhs_ref.end());
 		}
@@ -1013,7 +1031,7 @@ namespace cs {
 		return invoke(lhs.get_var("op_add"), var::make<cs::structure>(&lhs), rhs);
 	}
 
-// Operator -
+	// Operator -
 	template <>
 	var operators::sub<cs::numeric>(const cs::numeric &lhs, const var &rhs)
 	{
@@ -1026,7 +1044,7 @@ namespace cs {
 		return invoke(lhs.get_var("op_sub"), var::make<cs::structure>(&lhs), rhs);
 	}
 
-// Operator *
+	// Operator *
 	template <>
 	var operators::mul<cs::numeric>(const cs::numeric &lhs, const var &rhs)
 	{
@@ -1036,12 +1054,16 @@ namespace cs {
 	template <>
 	var operators::mul<cs::string>(const cs::string &lhs, const var &rhs)
 	{
-		var str = var::make<cs::string>();
-		cs::string &lhs_ref = str.val<cs::string>();
 		cs::numeric_integer times = rhs.const_val<cs::numeric>().as_integer();
 		if (times < 0)
 			throw cs::lang_error("A string cannot be multiplied by a negative number");
-		lhs_ref.reserve(lhs.size() * times);
+		if (times == 0 || lhs.empty())
+			return var::make<cs::string>(); // Empty result; skip the empty-string/huge-times spin
+		if (lhs.size() > (std::numeric_limits<std::size_t>::max)() / static_cast<std::size_t>(times))
+			throw cs::lang_error("The string multiplication result is too large");
+		var str = var::make<cs::string>();
+		cs::string &lhs_ref = str.val<cs::string>();
+		lhs_ref.reserve(lhs.size() * static_cast<std::size_t>(times));
 		while (times-- > 0)
 			lhs_ref.append(lhs);
 		return str;
@@ -1050,11 +1072,15 @@ namespace cs {
 	template <>
 	var operators::mul<cs::array>(const cs::array &lhs, const var &rhs)
 	{
-		var arr = var::make<cs::array>();
-		cs::array &lhs_ref = arr.val<cs::array>();
 		cs::numeric_integer times = rhs.const_val<cs::numeric>().as_integer();
 		if (times < 0)
 			throw cs::lang_error("An array cannot be multiplied by a negative number");
+		if (times == 0 || lhs.empty())
+			return var::make<cs::array>(); // Empty result; skip the empty-array/huge-times spin
+		if (lhs.size() > (std::numeric_limits<std::size_t>::max)() / static_cast<std::size_t>(times))
+			throw cs::lang_error("The array multiplication result is too large");
+		var arr = var::make<cs::array>();
+		cs::array &lhs_ref = arr.val<cs::array>();
 		while (times-- > 0)
 			lhs_ref.insert(lhs_ref.end(), lhs.begin(), lhs.end());
 		detach(lhs_ref);
@@ -1067,7 +1093,7 @@ namespace cs {
 		return invoke(lhs.get_var("op_mul"), var::make<cs::structure>(&lhs), rhs);
 	}
 
-// Operator /
+	// Operator /
 	template <>
 	var operators::div<cs::numeric>(const cs::numeric &lhs, const var &rhs)
 	{
@@ -1080,7 +1106,7 @@ namespace cs {
 		return invoke(lhs.get_var("op_div"), var::make<cs::structure>(&lhs), rhs);
 	}
 
-// Operator %
+	// Operator %
 	template <>
 	var operators::mod<cs::numeric>(const cs::numeric &lhs, const var &rhs)
 	{
@@ -1093,7 +1119,7 @@ namespace cs {
 		return invoke(lhs.get_var("op_mod"), var::make<cs::structure>(&lhs), rhs);
 	}
 
-// Operator ^
+	// Operator ^
 	template <>
 	var operators::pow<cs::numeric>(const cs::numeric &lhs, const var &rhs)
 	{
@@ -1106,7 +1132,7 @@ namespace cs {
 		return invoke(lhs.get_var("op_pow"), var::make<cs::structure>(&lhs), rhs);
 	}
 
-// Operator -val
+	// Operator -val
 	template <>
 	var operators::minus<cs::numeric>(const cs::numeric &lhs)
 	{
@@ -1116,7 +1142,7 @@ namespace cs {
 			return cs::numeric(-lhs.as_integer());
 	}
 
-// Operator *val
+	// Operator *val
 	template <>
 	var &operators::escape<cs::pointer>(cs::pointer &ptr)
 	{
@@ -1138,7 +1164,7 @@ namespace cs {
 		return *it;
 	}
 
-// Operator ++
+	// Operator ++
 	template <>
 	void operators::selfinc<cs::numeric>(cs::numeric &lhs)
 	{
@@ -1163,7 +1189,7 @@ namespace cs {
 		invoke(lhs.get_var("op_inc"), var::make<cs::structure>(&lhs));
 	}
 
-// Operator --
+	// Operator --
 	template <>
 	void operators::selfdec<cs::numeric>(cs::numeric &lhs)
 	{
@@ -1188,7 +1214,7 @@ namespace cs {
 		invoke(lhs.get_var("op_dec"), var::make<cs::structure>(&lhs));
 	}
 
-// Operator >
+	// Operator >
 	template <>
 	bool operators::abocmp<cs::numeric>(const cs::numeric &lhs, const cs::numeric &rhs)
 	{
@@ -1210,7 +1236,7 @@ namespace cs {
 			return false;
 	}
 
-// Operator >
+	// Operator >
 	template <>
 	bool operators::undcmp<cs::numeric>(const cs::numeric &lhs, const cs::numeric &rhs)
 	{
@@ -1232,7 +1258,7 @@ namespace cs {
 			return false;
 	}
 
-// Operator >=
+	// Operator >=
 	template <>
 	bool operators::aeqcmp<cs::numeric>(const cs::numeric &lhs, const cs::numeric &rhs)
 	{
@@ -1254,7 +1280,7 @@ namespace cs {
 			return false;
 	}
 
-// Operator >=
+	// Operator >=
 	template <>
 	bool operators::ueqcmp<cs::numeric>(const cs::numeric &lhs, const cs::numeric &rhs)
 	{
@@ -1276,7 +1302,7 @@ namespace cs {
 			return false;
 	}
 
-// Operator []
+	// Operator []
 	template <>
 	var &operators::index_ref<cs::string>(cs::string &str, const var &idx)
 	{
@@ -1297,10 +1323,20 @@ namespace cs {
 	{
 		cs::numeric_integer idx = pos.const_val<cs::numeric>().as_integer();
 		if (idx < 0)
-			idx = arr.size() + idx;
-		while (idx >= arr.size())
+		{
+			// Negative indices count from the end; if still before the start,
+			// prepend zeros so the slot exists (auto-growth semantics).
+			idx += static_cast<cs::numeric_integer>(arr.size());
+			if (idx < 0)
+			{
+				std::size_t pad = static_cast<std::size_t>(-(idx + 1)) + 1; // idx < 0 so idx+1 <= 0: no overflow
+				arr.insert(arr.begin(), pad, var::make<numeric>(0));
+				idx = 0;
+			}
+		}
+		while (idx >= static_cast<cs::numeric_integer>(arr.size()))
 			arr.emplace_back(var::make<numeric>(0));
-		return arr[idx];
+		return arr[static_cast<std::size_t>(idx)];
 	}
 
 	template <>
@@ -1342,7 +1378,7 @@ namespace cs {
 		return invoke(lhs.get_var("op_index"), var::make<cs::structure>(&lhs), idx);
 	}
 
-// Operator .
+	// Operator .
 	template <>
 	var &operators::access_ref<cs::hash_map>(cs::hash_map &map, const string &key)
 	{
@@ -1352,7 +1388,7 @@ namespace cs {
 		return it->second;
 	}
 
-// Operator ()
+	// Operator ()
 	template <>
 	var operators::fcall<cs::callable>(const cs::callable &fn, cs::vector &args)
 	{

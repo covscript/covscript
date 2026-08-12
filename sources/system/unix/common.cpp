@@ -54,7 +54,8 @@
 #define COVLIBDLL_DLOPEN_ARGUMENTS (RTLD_LAZY)
 #endif
 
-namespace cs_system_impl {
+namespace cs_system_impl
+{
 	bool chmod_impl(const std::string &path, unsigned int mode)
 	{
 		return ::chmod(path.c_str(), mode) == 0;
@@ -90,8 +91,10 @@ void terminal_echo(int yn)
 	tcsetattr(0, TCSANOW, &newt);
 }
 
-namespace cs_impl {
-	namespace conio {
+namespace cs_impl
+{
+	namespace conio
+	{
 		int terminal_width()
 		{
 			struct winsize size;
@@ -163,7 +166,8 @@ namespace cs_impl {
 		}
 	} // namespace conio
 
-	namespace file_system {
+	namespace file_system
+	{
 		bool is_exe(const std::string &path)
 		{
 			int fd = open(path.c_str(), O_RDONLY);
@@ -236,9 +240,12 @@ extern "C"
 
 #endif
 
-namespace cs {
-	namespace fiber {
-		class unix_fiber_stack {
+namespace cs
+{
+	namespace fiber
+	{
+		class unix_fiber_stack
+		{
 			static inline uintptr_t align_up(uintptr_t ptr, size_t align)
 			{
 				return (ptr + align - 1) & ~(align - 1);
@@ -249,7 +256,7 @@ namespace cs {
 			void *sp = nullptr;
 			size_t usable_size = 0;
 
-		public:
+		   public:
 			unix_fiber_stack() = delete;
 			unix_fiber_stack(const unix_fiber_stack &) = delete;
 			unix_fiber_stack(unix_fiber_stack &&) noexcept = delete;
@@ -273,7 +280,8 @@ namespace cs {
 					throw std::runtime_error(std::string("mmap failed: ") + std::strerror(errno));
 
 				if (mprotect(addr, pagesize, PROT_NONE) != 0 ||
-				        mprotect((char *) addr + pagesize + rounded, pagesize, PROT_NONE) != 0) {
+				    mprotect((char *) addr + pagesize + rounded, pagesize, PROT_NONE) != 0)
+				{
 					munmap(addr, total);
 					throw std::runtime_error(std::string("mprotect failed: ") + std::strerror(errno));
 				}
@@ -310,13 +318,20 @@ namespace cs {
 			}
 		};
 
-		class unix_fiber : public fiber_type {
+		class unix_fiber : public fiber_type
+		{
 			friend void cs::fiber::resume(const fiber_t &, schedule_policy);
 			friend void cs::fiber::sleep_for(std::size_t);
 			friend void cs::fiber::yield();
 
 			stack_type<domain_type> cs_stack;
 			context_t cs_context;
+
+			// Non-native fibers fork their own process_context (own value stack);
+			// native fibers keep null and reuse the current execution path.
+			std::shared_ptr<process_context> process;
+			// Caller process, captured at resume(), restored via cs_swap_out().
+			process_context *resumer_process = nullptr;
 
 			std::function<var()> func;
 			std::exception_ptr eptr;
@@ -329,45 +344,66 @@ namespace cs {
 
 			static void entry() noexcept
 			{
-				unix_fiber *fi = static_cast<unix_fiber *>(current_process->fiber_stack.top().get());
-				try {
+				unix_fiber *fi = static_cast<unix_fiber *>(current_process->fiber_cxt->stack.top().get());
+				try
+				{
 					fi->state = fiber_state::running;
 					var ret = fi->func();
 					fi->ret_val.swap(ret);
 				}
-				catch (...) {
+				catch (...)
+				{
 					fi->eptr = std::current_exception();
 				}
 				fi->state = fiber_state::finished;
+				// current_process is restored by resume() after swapcontext returns.
 				cs_fiber_swapcontext(&fi->ctx, fi->prev_ctx);
 				// This should never execute
 				std::abort();
 			}
 
-		public:
+		   public:
 			unix_fiber() = delete;
 			// Native Function
 			unix_fiber(std::function<var()> f)
-				: cs_stack(0), cs_context(nullptr), func(std::move(f)), eptr(nullptr), state(fiber_state::ready), ret_val(null_pointer), stack(COVSCRIPT_FIBER_STACK_LIMIT) {}
+			    : cs_stack(0), cs_context(nullptr), process(nullptr), func(std::move(f)), eptr(nullptr), state(fiber_state::ready), ret_val(null_pointer), stack(COVSCRIPT_FIBER_STACK_LIMIT) {}
 
 			// CovScript Function
 			unix_fiber(const context_t &cxt, std::function<var()> f)
-				: cs_stack(current_process->child_stack_size()),
-				  cs_context(cxt),
-				  func(std::move(f)),
-				  eptr(nullptr),
-				  state(fiber_state::ready),
-				  ret_val(null_pointer),
-				  stack(COVSCRIPT_FIBER_STACK_LIMIT) {}
+			    : cs_stack(current_process->child_stack_size()),
+			      cs_context(cxt),
+			      process(process_context::fork(process_context::current_owner())),
+			      func(std::move(f)),
+			      eptr(nullptr),
+			      state(fiber_state::ready),
+			      ret_val(null_pointer),
+			      stack(COVSCRIPT_FIBER_STACK_LIMIT) {}
+
+			virtual ~unix_fiber()
+			{
+				if (state == fiber_state::running || state == fiber_state::suspended || state == fiber_state::sleeping)
+				{
+					std::fprintf(stderr,
+					             "[fiber] warning: destroying an unfinished fiber (state=%d); "
+					             "its suspended stack frames are not unwound and resources will leak\n",
+					             static_cast<int>(state));
+					assert(false && "Destroying an unfinished fiber");
+				}
+			}
 
 			void cs_swap_in()
 			{
+				if (process)
+					current_process = process.get();
 				if (cs_context)
 					cs_context->instance->swap_context(&cs_stack);
 			}
 
 			void cs_swap_out()
 			{
+				// Restore the caller process after resume()'s swapcontext returns.
+				if (resumer_process != nullptr)
+					current_process = resumer_process;
 				if (cs_context)
 					cs_context->instance->swap_context(nullptr);
 			}
@@ -383,6 +419,11 @@ namespace cs {
 					return ret_val;
 				else
 					throw lang_error("The fiber has not completed yet");
+			}
+
+			const std::shared_ptr<process_context> &get_process() const noexcept override
+			{
+				return process;
 			}
 		};
 
@@ -404,7 +445,8 @@ namespace cs {
 				throw internal_error("Resuming a corrupted fiber.");
 			if (fi->state == fiber_state::running || fi->state == fiber_state::finished)
 				throw lang_error("A fiber cannot be resumed while it is already running or after it has finished");
-			if (fi->state == fiber_state::ready) {
+			if (fi->state == fiber_state::ready)
+			{
 				memset(&fi->ctx, 0, sizeof(fi->ctx));
 				cs_fiber_getcontext(&fi->ctx);
 				fi->ctx.uc_stack.ss_sp = fi->stack.get_sp();
@@ -412,28 +454,32 @@ namespace cs {
 				fi->ctx.uc_link = nullptr;
 				cs_fiber_makecontext(&fi->ctx, reinterpret_cast<void (*)()>(unix_fiber::entry), 0);
 			}
-			if (fi->state == fiber_state::sleeping) {
+			if (fi->state == fiber_state::sleeping)
+			{
 				auto now = std::chrono::steady_clock::now();
-				if (now < fi->wake_up_time) {
+				if (now < fi->wake_up_time)
+				{
 					if (policy == schedule_policy::no_backpressure)
 						return;
 					fi->busy_skip_count++;
 					auto remain_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
 					                     fi->wake_up_time - now)
-					                 .count();
+					                     .count();
 					auto wait_time = static_cast<std::size_t>(
-					                     fi->busy_skip_count * remain_ms * current_process->fiber_busy_wait_coef);
+					    fi->busy_skip_count * remain_ms * current_process->fiber_cxt->busy_wait_coef);
 					if (wait_time > static_cast<std::size_t>(remain_ms))
 						wait_time = static_cast<std::size_t>(remain_ms);
-					if (wait_time >= current_process->fiber_busy_wait_min) {
-						if (!current_process->fiber_stack.empty())
+					if (wait_time >= current_process->fiber_cxt->busy_wait_min)
+					{
+						if (!current_process->fiber_cxt->stack.empty())
 							sleep_for(wait_time);
 						else
 							std::this_thread::sleep_for(std::chrono::milliseconds(wait_time));
 						fi->busy_skip_count = 0;
 					}
-					else if (wait_time == static_cast<std::size_t>(remain_ms) && remain_ms > 0) {
-						if (!current_process->fiber_stack.empty())
+					else if (wait_time == static_cast<std::size_t>(remain_ms) && remain_ms > 0)
+					{
+						if (!current_process->fiber_cxt->stack.empty())
 							sleep_for(static_cast<std::size_t>(remain_ms));
 						else
 							std::this_thread::sleep_for(std::chrono::milliseconds(remain_ms));
@@ -443,28 +489,28 @@ namespace cs {
 				}
 				fi->busy_skip_count = 0;
 			}
-			// Always (re)bind the return context to the current caller before resuming.
-			// A fiber may be resumed from a different caller than the one that started
-			// it (fibers are first-class objects), so binding prev_ctx only once on
-			// creation would make yield/finish jump back to a stale - possibly already
-			// destroyed - context.
-			if (!current_process->fiber_stack.empty())
-				fi->prev_ctx = &static_cast<unix_fiber *>(current_process->fiber_stack.top().get())->ctx;
+			// Re-bind prev_ctx every resume: the caller may differ from the one that
+			// started the fiber, so binding once at creation could jump back to a
+			// stale (possibly destroyed) context.
+			if (!current_process->fiber_cxt->stack.empty())
+				fi->prev_ctx = &static_cast<unix_fiber *>(current_process->fiber_cxt->stack.top().get())->ctx;
 			else
 				fi->prev_ctx = &global_ctx;
+			fi->resumer_process = current_process;
 			fi->state = fiber_state::running;
-			current_process->fiber_stack.push(fi_p);
+			current_process->fiber_cxt->stack.push(fi_p);
 			fi->cs_swap_in();
 			cs_fiber_swapcontext(fi->prev_ctx, &fi->ctx);
-			if (!current_process->fiber_stack.empty())
-				current_process->fiber_stack.pop();
+			if (!current_process->fiber_cxt->stack.empty())
+				current_process->fiber_cxt->stack.pop();
 			else
 				throw internal_error("Fiber stack corrupted.");
-			if (!current_process->fiber_stack.empty())
-				static_cast<unix_fiber *>(current_process->fiber_stack.top().get())->cs_swap_in();
-			else
-				fi->cs_swap_out();
-			if (fi->eptr != nullptr) {
+			// Restore the caller process before rebinding the remaining caller fiber.
+			fi->cs_swap_out();
+			if (!current_process->fiber_cxt->stack.empty())
+				static_cast<unix_fiber *>(current_process->fiber_cxt->stack.top().get())->cs_swap_in();
+			if (fi->eptr != nullptr)
+			{
 				std::exception_ptr e = nullptr;
 				std::swap(fi->eptr, e);
 				std::rethrow_exception(e);
@@ -473,18 +519,18 @@ namespace cs {
 
 		void yield()
 		{
-			if (current_process->fiber_stack.empty())
+			if (current_process->fiber_cxt->stack.empty())
 				throw lang_error("Cannot yield outside a fiber");
-			unix_fiber *fi = static_cast<unix_fiber *>(current_process->fiber_stack.top().get());
+			unix_fiber *fi = static_cast<unix_fiber *>(current_process->fiber_cxt->stack.top().get());
 			fi->state = fiber_state::suspended;
 			cs_fiber_swapcontext(&fi->ctx, fi->prev_ctx);
 		}
 
 		void sleep_for(std::size_t ms)
 		{
-			if (current_process->fiber_stack.empty())
+			if (current_process->fiber_cxt->stack.empty())
 				throw lang_error("Cannot yield outside a fiber");
-			unix_fiber *fi = static_cast<unix_fiber *>(current_process->fiber_stack.top().get());
+			unix_fiber *fi = static_cast<unix_fiber *>(current_process->fiber_cxt->stack.top().get());
 			fi->wake_up_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(ms);
 			fi->busy_skip_count = 0;
 			fi->state = fiber_state::sleeping;
@@ -492,7 +538,8 @@ namespace cs {
 		}
 	} // namespace fiber
 
-	namespace dll {
+	namespace dll
+	{
 		void *open(std::string_view path)
 		{
 			::dlerror();

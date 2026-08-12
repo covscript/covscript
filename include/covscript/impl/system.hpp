@@ -27,8 +27,10 @@
 
 #include <covscript/core/core.hpp>
 
-namespace cs_impl {
-	namespace platform {
+namespace cs_impl
+{
+	namespace platform
+	{
 		inline constexpr bool is_platform_win32()
 		{
 #ifdef COVSCRIPT_PLATFORM_WIN32
@@ -65,7 +67,8 @@ namespace cs_impl {
 #endif
 		}
 	} // namespace platform
-	namespace conio {
+	namespace conio
+	{
 		int terminal_width();
 
 		int terminal_height();
@@ -82,8 +85,9 @@ namespace cs_impl {
 
 		int kbhit();
 	} // namespace conio
-	namespace file_system {
-// Detection
+	namespace file_system
+	{
+		// Detection
 		bool exist(const std::string &);
 
 		bool is_file(const std::string &);
@@ -100,7 +104,9 @@ namespace cs_impl {
 
 		bool is_absolute_path(const std::string &);
 
-// Files
+		std::string normalize_path(const std::string &);
+
+		// Files
 		bool chmod_r(const std::string &, const std::string &);
 
 		bool chmod(const std::string &, const std::string &);
@@ -111,7 +117,7 @@ namespace cs_impl {
 
 		bool remove(const std::string &);
 
-// Directories
+		// Directories
 		bool mkdir_p(const std::string &);
 
 		bool mkdir(std::string);

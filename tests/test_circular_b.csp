@@ -1,0 +1,6 @@
+package test_circular_b
+import test_circular_a
+system.out.println("test_circular_b loaded")
+function func_b()
+    system.out.println("func_b done")
+end

@@ -140,10 +140,10 @@ namespace cs_test {
 	} while (0)
 
 // String contains check
-#define EXPECT_CONTAINS(str, substr)                                           \
+#define EXPECT_CONTAINS(text, substring)                                       \
 	do {                                                                       \
-		std::string _s(str);                                                   \
-		std::string _sub(substr);                                              \
+		std::string _s(text);                                                  \
+		std::string _sub(substring);                                           \
 		if (_s.find(_sub) == std::string::npos) {                              \
 			std::ostringstream oss;                                            \
 			oss << "EXPECT_CONTAINS failed: \"" << _s << "\""                  \

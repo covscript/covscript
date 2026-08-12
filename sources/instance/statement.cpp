@@ -26,7 +26,8 @@
 #include <covscript/impl/statement.hpp>
 #include <iostream>
 
-namespace cs {
+namespace cs
+{
 	var function::call_rr(const function *_this, vector &args)
 	{
 		current_process->poll_event();
@@ -44,17 +45,22 @@ namespace cs {
 #endif
 		for (std::size_t i = 0; i < args.size(); ++i)
 			_this->mContext->instance->storage.add_var_no_return(_this->mArgs[i].data(), args[i]);
-		for (auto &ptr : _this->mBody) {
-			try {
+		for (auto &ptr : _this->mBody)
+		{
+			try
+			{
 				ptr->run();
 			}
-			catch (const cs::exception &) {
+			catch (const cs::exception &)
+			{
 				throw;
 			}
-			catch (const std::exception &e) {
+			catch (const std::exception &e)
+			{
 				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
-			if (_this->mContext->instance->return_fcall) {
+			if (_this->mContext->instance->return_fcall)
+			{
 				_this->mContext->instance->return_fcall = false;
 				return scope.return_fcall();
 			}
@@ -77,12 +83,14 @@ namespace cs {
 			var arg_list = var::make<cs::array>();
 			auto &arr = arg_list.val<cs::array>();
 			std::size_t i = 0;
-			if (_this->mIsMemFn) {
+			if (_this->mIsMemFn)
+			{
 				if (args.empty())
 					throw runtime_error("Wrong number of arguments: expected at least 1 for member function, got 0");
 				_this->mContext->instance->storage.add_var_no_return("this", args[i++]);
 			}
-			else if (_this->mIsLambda && _this->mArgs.size() > 1) {
+			else if (_this->mIsLambda && _this->mArgs.size() > 1)
+			{
 				if (args.empty())
 					throw runtime_error("Wrong number of arguments: expected at least 1 for lambda with 'self', got 0");
 				_this->mContext->instance->storage.add_var_no_return("self", args[i++]);
@@ -91,17 +99,22 @@ namespace cs {
 				arr.push_back(args[i]);
 			_this->mContext->instance->storage.add_var_no_return(_this->mArgs.back().data(), arg_list);
 		}
-		for (auto &ptr : _this->mBody) {
-			try {
+		for (auto &ptr : _this->mBody)
+		{
+			try
+			{
 				ptr->run();
 			}
-			catch (const cs::exception &) {
+			catch (const cs::exception &)
+			{
 				throw;
 			}
-			catch (const std::exception &e) {
+			catch (const std::exception &e)
+			{
 				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
-			if (_this->mContext->instance->return_fcall) {
+			if (_this->mContext->instance->return_fcall)
+			{
 				_this->mContext->instance->return_fcall = false;
 				return scope.return_fcall();
 			}
@@ -124,13 +137,16 @@ namespace cs {
 #endif
 		for (std::size_t i = 0; i < args.size(); ++i)
 			_this->mContext->instance->storage.add_var_no_return(_this->mArgs[i].data(), args[i]);
-		try {
+		try
+		{
 			return _this->mContext->instance->parse_expr(static_cast<const statement_return *>(_this->mBody.front())->get_tree().root());
 		}
-		catch (const cs::exception &) {
+		catch (const cs::exception &)
+		{
 			throw;
 		}
-		catch (const std::exception &e) {
+		catch (const std::exception &e)
+		{
 			const statement_base *ptr = _this->mBody.front();
 			throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 		}
@@ -146,13 +162,16 @@ namespace cs {
 		if (_this->mMatch)
 			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
 #endif
-		try {
+		try
+		{
 			return _this->mContext->instance->parse_expr(static_cast<const statement_return *>(_this->mBody.front())->get_tree().root());
 		}
-		catch (const cs::exception &) {
+		catch (const cs::exception &)
+		{
 			throw;
 		}
-		catch (const std::exception &e) {
+		catch (const std::exception &e)
+		{
 			const statement_base *ptr = _this->mBody.front();
 			throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 		}
@@ -160,25 +179,20 @@ namespace cs {
 
 	void struct_builder::do_inherit()
 	{
-		if (mParent.root().usable()) {
+		if (mParent.root().usable())
+		{
 			var builder = mContext->instance->parse_expr(mParent.root());
-			if (builder.is_type_of<type_t>()) {
+			if (builder.is_type_of<type_t>())
+			{
 				const auto &t = builder.const_val<type_t>();
 				if (mTypeId == t.id)
 					throw runtime_error("A struct cannot inherit from itself");
-				if (t.id.type_hash) {
-					for (std::size_t it = t.id.type_hash;;) {
-						type_id::inherit_map[it].insert(mTypeId.type_hash);
-						auto map_it = mParentMap.find(it);
-						if (map_it != mParentMap.end())
-							it = map_it->second;
-						else
-							break;
-					}
-					mParentMap[mTypeId.type_hash] = t.id.type_hash;
-				}
-				else
+				const type_node *parent_node = t.id.node;
+				if (parent_node == nullptr)
 					throw runtime_error("The parent of a struct must itself be a struct");
+				mNode->parent = parent_node;
+				mNode->ancestors = parent_node->ancestors;
+				mNode->ancestors.insert(parent_node);
 			}
 			else
 				throw runtime_error("The parent of a struct must be a type");
@@ -188,14 +202,17 @@ namespace cs {
 	var struct_builder::operator()()
 	{
 		scope_guard scope(mContext);
-		if (mParent.root().usable()) {
+		if (mParent.root().usable())
+		{
 			var builder = mContext->instance->parse_expr(mParent.root());
-			if (builder.is_type_of<type_t>()) {
+			if (builder.is_type_of<type_t>())
+			{
 				const auto &t = builder.const_val<type_t>();
 				if (mTypeId == t.id)
 					throw runtime_error("A struct cannot inherit from itself");
 				var parent = t.constructor();
-				if (parent.is_type_of<structure>()) {
+				if (parent.is_type_of<structure>())
+				{
 					parent.mark_protect();
 					mContext->instance->storage.involve_domain(parent.const_val<structure>().get_domain());
 					mContext->instance->storage.add_var_no_return("parent", parent, true);
@@ -206,14 +223,18 @@ namespace cs {
 			else
 				throw runtime_error("The parent of a struct must be a type");
 		}
-		for (auto &ptr : this->mMethod) {
-			try {
+		for (auto &ptr : this->mMethod)
+		{
+			try
+			{
 				ptr->run();
 			}
-			catch (const cs::exception &) {
+			catch (const cs::exception &)
+			{
 				throw;
 			}
-			catch (const std::exception &e) {
+			catch (const std::exception &e)
+			{
 				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 		}
@@ -316,14 +337,18 @@ namespace cs {
 	{
 		CS_DEBUGGER_STEP(this);
 		scope_guard scope(context);
-		for (auto &ptr : mBlock) {
-			try {
+		for (auto &ptr : mBlock)
+		{
+			try
+			{
 				ptr->run();
 			}
-			catch (const cs::exception &) {
+			catch (const cs::exception &)
+			{
 				throw;
 			}
-			catch (const std::exception &e) {
+			catch (const std::exception &e)
+			{
 				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 			if (context->instance->return_fcall || context->instance->break_block || context->instance->continue_block)
@@ -343,24 +368,28 @@ namespace cs {
 	{
 		CS_DEBUGGER_STEP(this);
 		context->instance->storage.add_var_no_return(this->mName.data(),
-		make_namespace(make_shared_namespace<name_space>([this] {
+		                                             make_namespace(make_shared_namespace<name_space>([this]
+		{
 			scope_guard scope(context);
-			for (auto &ptr: mBlock)
+			for (auto &ptr : mBlock)
 			{
-				try {
+				try
+				{
 					ptr->run();
 				}
-				catch (const cs::exception &) {
+				catch (const cs::exception &)
+				{
 					throw;
 				}
-				catch (const std::exception &e) {
+				catch (const std::exception &e)
+				{
 					throw exception(ptr->get_line_num(), ptr->get_file_path(),
 					                ptr->get_raw_code(), exception_message(e));
 				}
 			}
 			return scope.get();
 		}())),
-		true);
+		                                             true);
 	}
 
 	void statement_namespace::dump(std::ostream &o) const
@@ -374,20 +403,25 @@ namespace cs {
 	void statement_if::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
-		if (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
+		if (context->instance->parse_expr(mTree.root()).const_val<boolean>())
+		{
 			scope_guard scope(context);
-			for (auto &ptr : mBlock) {
-				try {
+			for (auto &ptr : mBlock)
+			{
+				try
+				{
 					ptr->run();
 				}
-				catch (const cs::exception &) {
+				catch (const cs::exception &)
+				{
 					throw;
 				}
-				catch (const std::exception &e) {
+				catch (const std::exception &e)
+				{
 					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall || context->instance->break_block ||
-				        context->instance->continue_block)
+				    context->instance->continue_block)
 					break;
 			}
 		}
@@ -406,37 +440,47 @@ namespace cs {
 	void statement_ifelse::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
-		if (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
+		if (context->instance->parse_expr(mTree.root()).const_val<boolean>())
+		{
 			scope_guard scope(context);
-			for (auto &ptr : mBlock) {
-				try {
+			for (auto &ptr : mBlock)
+			{
+				try
+				{
 					ptr->run();
 				}
-				catch (const cs::exception &) {
+				catch (const cs::exception &)
+				{
 					throw;
 				}
-				catch (const std::exception &e) {
+				catch (const std::exception &e)
+				{
 					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall || context->instance->break_block ||
-				        context->instance->continue_block)
+				    context->instance->continue_block)
 					break;
 			}
 		}
-		else {
+		else
+		{
 			scope_guard scope(context);
-			for (auto &ptr : mElseBlock) {
-				try {
+			for (auto &ptr : mElseBlock)
+			{
+				try
+				{
 					ptr->run();
 				}
-				catch (const cs::exception &) {
+				catch (const cs::exception &)
+				{
 					throw;
 				}
-				catch (const std::exception &e) {
+				catch (const std::exception &e)
+				{
 					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 				if (context->instance->return_fcall || context->instance->break_block ||
-				        context->instance->continue_block)
+				    context->instance->continue_block)
 					break;
 			}
 		}
@@ -471,7 +515,8 @@ namespace cs {
 		o << "< BeginSwitch: Condition = ";
 		compiler_type::dump_expr(mTree.root(), o);
 		o << " >\n";
-		for (auto &it : mCases) {
+		for (auto &it : mCases)
+		{
 			o << "< BeginCase: Tag = \"";
 			o << it.first.to_string();
 			o << "\" >\n";
@@ -479,7 +524,8 @@ namespace cs {
 				ptr->dump(o);
 			o << "< EndCase >\n";
 		}
-		if (mDefault != nullptr) {
+		if (mDefault != nullptr)
+		{
 			o << "< BeginDefaultCase >\n";
 			for (auto &ptr : mDefault->get_block())
 				ptr->dump(o);
@@ -496,26 +542,34 @@ namespace cs {
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
 		scope_guard scope(context);
-		while (context->instance->parse_expr(mTree.root()).const_val<boolean>()) {
+		while (context->instance->parse_expr(mTree.root()).const_val<boolean>())
+		{
 			current_process->poll_event();
-			for (auto &ptr : mBlock) {
-				try {
+			for (auto &ptr : mBlock)
+			{
+				try
+				{
 					ptr->run();
 				}
-				catch (const cs::exception &) {
+				catch (const cs::exception &)
+				{
 					throw;
 				}
-				catch (const std::exception &e) {
+				catch (const std::exception &e)
+				{
 					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
-				if (context->instance->return_fcall) {
+				if (context->instance->return_fcall)
+				{
 					return;
 				}
-				if (context->instance->break_block) {
+				if (context->instance->break_block)
+				{
 					context->instance->break_block = false;
 					return;
 				}
-				if (context->instance->continue_block) {
+				if (context->instance->continue_block)
+				{
 					context->instance->continue_block = false;
 					break;
 				}
@@ -542,26 +596,34 @@ namespace cs {
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
 		scope_guard scope(context);
-		while (true) {
+		while (true)
+		{
 			current_process->poll_event();
-			for (auto &ptr : mBlock) {
-				try {
+			for (auto &ptr : mBlock)
+			{
+				try
+				{
 					ptr->run();
 				}
-				catch (const cs::exception &) {
+				catch (const cs::exception &)
+				{
 					throw;
 				}
-				catch (const std::exception &e) {
+				catch (const std::exception &e)
+				{
 					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
-				if (context->instance->return_fcall) {
+				if (context->instance->return_fcall)
+				{
 					return;
 				}
-				if (context->instance->break_block) {
+				if (context->instance->break_block)
+				{
 					context->instance->break_block = false;
 					return;
 				}
-				if (context->instance->continue_block) {
+				if (context->instance->continue_block)
+				{
 					context->instance->continue_block = false;
 					break;
 				}
@@ -586,33 +648,40 @@ namespace cs {
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
 		scope_guard scope(context);
-		do {
+		do
+		{
 			current_process->poll_event();
-			for (auto &ptr : mBlock) {
-				try {
+			for (auto &ptr : mBlock)
+			{
+				try
+				{
 					ptr->run();
 				}
-				catch (const cs::exception &) {
+				catch (const cs::exception &)
+				{
 					throw;
 				}
-				catch (const std::exception &e) {
+				catch (const std::exception &e)
+				{
 					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
-				if (context->instance->return_fcall) {
+				if (context->instance->return_fcall)
+				{
 					return;
 				}
-				if (context->instance->break_block) {
+				if (context->instance->break_block)
+				{
 					context->instance->break_block = false;
 					return;
 				}
-				if (context->instance->continue_block) {
+				if (context->instance->continue_block)
+				{
 					context->instance->continue_block = false;
 					break;
 				}
 			}
 			scope.clear();
-		}
-		while (!context->instance->parse_expr(mExpr.root()).const_val<boolean>());
+		} while (!context->instance->parse_expr(mExpr.root()).const_val<boolean>());
 	}
 
 	void statement_loop_until::dump(std::ostream &o) const
@@ -636,28 +705,36 @@ namespace cs {
 		scope_guard top_scope(context);
 		context->instance->parse_define_var(mParallel[0].root());
 		scope_guard scope(context);
-		while (true) {
+		while (true)
+		{
 			current_process->poll_event();
 			if (!context->instance->parse_expr(mParallel[1].root()).const_val<boolean>())
 				break;
-			for (auto &ptr : mBlock) {
-				try {
+			for (auto &ptr : mBlock)
+			{
+				try
+				{
 					ptr->run();
 				}
-				catch (const cs::exception &) {
+				catch (const cs::exception &)
+				{
 					throw;
 				}
-				catch (const std::exception &e) {
+				catch (const std::exception &e)
+				{
 					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
-				if (context->instance->return_fcall) {
+				if (context->instance->return_fcall)
+				{
 					return;
 				}
-				if (context->instance->break_block) {
+				if (context->instance->break_block)
+				{
 					context->instance->break_block = false;
 					return;
 				}
-				if (context->instance->continue_block) {
+				if (context->instance->continue_block)
+				{
 					context->instance->continue_block = false;
 					break;
 				}
@@ -693,27 +770,35 @@ namespace cs {
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
 		scope_guard scope(context);
-		for (const X &it : obj.const_val<T>()) {
+		for (const X &it : obj.const_val<T>())
+		{
 			current_process->poll_event();
 			context->instance->storage.add_var_no_return(iterator, it);
-			for (auto &ptr : body) {
-				try {
+			for (auto &ptr : body)
+			{
+				try
+				{
 					ptr->run();
 				}
-				catch (const cs::exception &) {
+				catch (const cs::exception &)
+				{
 					throw;
 				}
-				catch (const std::exception &e) {
+				catch (const std::exception &e)
+				{
 					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
-				if (context->instance->return_fcall) {
+				if (context->instance->return_fcall)
+				{
 					return;
 				}
-				if (context->instance->break_block) {
+				if (context->instance->break_block)
+				{
 					context->instance->break_block = false;
 					return;
 				}
-				if (context->instance->continue_block) {
+				if (context->instance->continue_block)
+				{
 					context->instance->continue_block = false;
 					break;
 				}
@@ -725,15 +810,18 @@ namespace cs {
 	void struct_foreach_helper(const context_t &context, const var_id &iterator, const var &obj,
 	                           std::deque<statement_base *> &body)
 	{
-		var const *fptr = obj.val<structure>().get_domain().get_var_opt("next");
-		if (fptr == nullptr)
-			throw lang_error("The struct does not support iteration. Expect a 'next' method to be defined");
 		if (context->instance->break_block)
 			context->instance->break_block = false;
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
 		scope_guard scope(context);
-		while (true) {
+		while (true)
+		{
+			// Re-fetch the 'next' method every iteration: the loop body or the
+			// method itself may grow the struct domain and invalidate the pointer.
+			var const *fptr = obj.val<structure>().get_domain().get_var_opt("next");
+			if (fptr == nullptr)
+				throw lang_error("The struct does not support iteration. Expect a 'next' method to be defined");
 			current_process->poll_event();
 			vector args;
 			// Patch for struct member function call, since the first argument of a struct member function is the struct itself
@@ -746,24 +834,31 @@ namespace cs {
 			if (tuple.const_val<array>()[1].const_val<boolean>())
 				break;
 			context->instance->storage.add_var_no_return(iterator, tuple.const_val<array>()[0]);
-			for (auto &ptr : body) {
-				try {
+			for (auto &ptr : body)
+			{
+				try
+				{
 					ptr->run();
 				}
-				catch (const cs::exception &) {
+				catch (const cs::exception &)
+				{
 					throw;
 				}
-				catch (const std::exception &e) {
+				catch (const std::exception &e)
+				{
 					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
-				if (context->instance->return_fcall) {
+				if (context->instance->return_fcall)
+				{
 					return;
 				}
-				if (context->instance->break_block) {
+				if (context->instance->break_block)
+				{
 					context->instance->break_block = false;
 					return;
 				}
-				if (context->instance->continue_block) {
+				if (context->instance->continue_block)
+				{
 					context->instance->continue_block = false;
 					break;
 				}
@@ -775,6 +870,9 @@ namespace cs {
 	void statement_foreach::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
+		// Iterate the container in place (no snapshot copy): a deep copy per
+		// foreach is too expensive on the hot path. Users who mutate the
+		// container from the loop body must clone it explicitly.
 		const var &obj = context->instance->parse_expr(this->mObj.root());
 		if (obj.is_type_of<string>())
 			foreach_helper<string, char>(context, this->mIt, obj, this->mBlock);
@@ -815,7 +913,8 @@ namespace cs {
 	void statement_struct::dump(std::ostream &o) const
 	{
 		o << "< BeginStruct: ID = \"" << mName << "\"";
-		if (mParent.root().usable()) {
+		if (mParent.root().usable())
+		{
 			o << ", Parent = ";
 			compiler_type::dump_expr(mParent.root(), o);
 		}
@@ -830,9 +929,10 @@ namespace cs {
 		CS_DEBUGGER_STEP(this);
 		if (this->mIsMemFn)
 			context->instance->storage.add_var_no_return(this->mName.data(),
-			        var::make_protect<callable>(function_ptr{&this->mFunc}, callable::types::member_fn),
-			        mOverride);
-		else {
+			                                             var::make_protect<callable>(function_ptr{&this->mFunc}, callable::types::member_fn),
+			                                             mOverride);
+		else
+		{
 			var func = var::make_protect<callable>(function_ptr{&this->mFunc});
 #ifdef CS_DEBUGGER
 			if (context->instance->storage.is_initial())
@@ -879,33 +979,42 @@ namespace cs {
 	{
 		CS_DEBUGGER_STEP(this);
 		scope_guard scope(context);
-		for (auto &ptr : mTryBody) {
-			try {
+		for (auto &ptr : mTryBody)
+		{
+			try
+			{
 				ptr->run();
 			}
-			catch (const lang_error &le) {
+			catch (const lang_error &le)
+			{
 				scope.reset();
 				context->instance->storage.add_var_no_return(mName.data(), le);
-				for (auto &ptr : mCatchBody) {
-					try {
+				for (auto &ptr : mCatchBody)
+				{
+					try
+					{
 						ptr->run();
 					}
-					catch (const cs::exception &) {
+					catch (const cs::exception &)
+					{
 						throw;
 					}
-					catch (const std::exception &e) {
+					catch (const std::exception &e)
+					{
 						throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 					}
 					if (context->instance->return_fcall || context->instance->break_block ||
-					        context->instance->continue_block)
+					    context->instance->continue_block)
 						break;
 				}
 				return;
 			}
-			catch (const cs::exception &) {
+			catch (const cs::exception &)
+			{
 				throw;
 			}
-			catch (const std::exception &e) {
+			catch (const std::exception &e)
+			{
 				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 			if (context->instance->return_fcall || context->instance->break_block || context->instance->continue_block)
@@ -930,7 +1039,8 @@ namespace cs {
 		var e = context->instance->parse_expr(this->mTree.root());
 		if (!e.is_type_of<lang_error>())
 			throw runtime_error("Only 'error' objects can be thrown, but got an object of a different type");
-		else {
+		else
+		{
 			lang_error le = e.const_val<lang_error>();
 			if (!le.has_location())
 				le.set_location(get_line_num(), get_file_path(), get_raw_code());

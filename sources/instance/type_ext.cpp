@@ -37,13 +37,16 @@
 #include <mutex>
 #include <limits>
 
-namespace cov {
-	class timer final {
+namespace cov
+{
+	class timer final
+	{
 		static std::chrono::time_point<std::chrono::high_resolution_clock> m_timer;
 
-	public:
+	   public:
 		typedef unsigned long timer_t;
-		enum class time_unit {
+		enum class time_unit
+		{
 			nano_sec,
 			micro_sec,
 			milli_sec,
@@ -58,49 +61,51 @@ namespace cov {
 
 		static timer_t time(time_unit unit)
 		{
-			switch (unit) {
-			case time_unit::nano_sec:
-				return std::chrono::duration_cast<std::chrono::nanoseconds>(
-				           std::chrono::high_resolution_clock::now() - m_timer)
-				       .count();
-			case time_unit::micro_sec:
-				return std::chrono::duration_cast<std::chrono::microseconds>(
-				           std::chrono::high_resolution_clock::now() - m_timer)
-				       .count();
-			case time_unit::milli_sec:
-				return std::chrono::duration_cast<std::chrono::milliseconds>(
-				           std::chrono::high_resolution_clock::now() - m_timer)
-				       .count();
-			case time_unit::second:
-				return std::chrono::duration_cast<std::chrono::seconds>(
-				           std::chrono::high_resolution_clock::now() - m_timer)
-				       .count();
-			case time_unit::minute:
-				return std::chrono::duration_cast<std::chrono::minutes>(
-				           std::chrono::high_resolution_clock::now() - m_timer)
-				       .count();
+			switch (unit)
+			{
+				case time_unit::nano_sec:
+					return std::chrono::duration_cast<std::chrono::nanoseconds>(
+					           std::chrono::high_resolution_clock::now() - m_timer)
+					    .count();
+				case time_unit::micro_sec:
+					return std::chrono::duration_cast<std::chrono::microseconds>(
+					           std::chrono::high_resolution_clock::now() - m_timer)
+					    .count();
+				case time_unit::milli_sec:
+					return std::chrono::duration_cast<std::chrono::milliseconds>(
+					           std::chrono::high_resolution_clock::now() - m_timer)
+					    .count();
+				case time_unit::second:
+					return std::chrono::duration_cast<std::chrono::seconds>(
+					           std::chrono::high_resolution_clock::now() - m_timer)
+					    .count();
+				case time_unit::minute:
+					return std::chrono::duration_cast<std::chrono::minutes>(
+					           std::chrono::high_resolution_clock::now() - m_timer)
+					    .count();
 			}
 			return 0;
 		}
 
 		static void delay(time_unit unit, timer_t time)
 		{
-			switch (unit) {
-			case time_unit::nano_sec:
-				std::this_thread::sleep_for(std::chrono::nanoseconds(time));
-				break;
-			case time_unit::micro_sec:
-				std::this_thread::sleep_for(std::chrono::microseconds(time));
-				break;
-			case time_unit::milli_sec:
-				std::this_thread::sleep_for(std::chrono::milliseconds(time));
-				break;
-			case time_unit::second:
-				std::this_thread::sleep_for(std::chrono::seconds(time));
-				break;
-			case time_unit::minute:
-				std::this_thread::sleep_for(std::chrono::minutes(time));
-				break;
+			switch (unit)
+			{
+				case time_unit::nano_sec:
+					std::this_thread::sleep_for(std::chrono::nanoseconds(time));
+					break;
+				case time_unit::micro_sec:
+					std::this_thread::sleep_for(std::chrono::microseconds(time));
+					break;
+				case time_unit::milli_sec:
+					std::this_thread::sleep_for(std::chrono::milliseconds(time));
+					break;
+				case time_unit::second:
+					std::this_thread::sleep_for(std::chrono::seconds(time));
+					break;
+				case time_unit::minute:
+					std::this_thread::sleep_for(std::chrono::minutes(time));
+					break;
 			}
 		}
 
@@ -116,13 +121,15 @@ namespace cov {
 
 	std::chrono::time_point<std::chrono::high_resolution_clock> timer::m_timer(std::chrono::high_resolution_clock::now());
 
-	namespace random {
-		static std::random_device random_engine;
+	namespace random
+	{
+		static thread_local std::random_device random_engine;
 		template <typename T, bool is_integral>
 		struct random_traits;
 
 		template <typename T>
-		struct random_traits<T, true> {
+		struct random_traits<T, true>
+		{
 			static T rand(T begin, T end)
 			{
 				return std::uniform_int_distribution<T>(begin, end)(random_engine);
@@ -130,7 +137,8 @@ namespace cov {
 		};
 
 		template <typename T>
-		struct random_traits<T, false> {
+		struct random_traits<T, false>
+		{
 			static T rand(T begin, T end)
 			{
 				return std::uniform_real_distribution<T>(begin, end)(random_engine);
@@ -174,15 +182,17 @@ cs_impl::file_type get_file_type(const std::filesystem::directory_entry &entry)
 #define cs_sys_stat stat
 #endif
 
-namespace cs_impl {
-	namespace member_visitor_cs_ext {
+namespace cs_impl
+{
+	namespace member_visitor_cs_ext
+	{
 		using namespace cs;
 
 		void init()
 		{
 			(*member_visitor_ext)
-			.add_var("get", make_cni(&member_visitor::get, true))
-			.add_var("set", make_cni(&member_visitor::set, true));
+			    .add_var("get", make_cni(&member_visitor::get, true))
+			    .add_var("set", make_cni(&member_visitor::set, true));
 		}
 	} // namespace member_visitor_cs_ext
 
@@ -195,8 +205,8 @@ namespace cs_impl {
 			it->second.swap(cs::copy(val), true);
 	}
 
-// Validate a script-level element index and convert it to a container offset.
-// Valid range is [0, size); throws cs::lang_error otherwise.
+	// Validate a script-level element index and convert it to a container offset.
+	// Valid range is [0, size); throws cs::lang_error otherwise.
 	inline std::size_t check_index(cs::numeric_integer idx, std::size_t size)
 	{
 		if (idx < 0 || static_cast<unsigned long long>(idx) >= static_cast<unsigned long long>(size))
@@ -204,8 +214,8 @@ namespace cs_impl {
 		return static_cast<std::size_t>(idx);
 	}
 
-// Validate a script-level position for insert/seek/substr operations.
-// Valid range is [0, size]; throws cs::lang_error otherwise.
+	// Validate a script-level position for insert/seek/substr operations.
+	// Valid range is [0, size]; throws cs::lang_error otherwise.
 	inline std::size_t check_position(cs::numeric_integer idx, std::size_t size)
 	{
 		if (idx < 0 || static_cast<unsigned long long>(idx) > static_cast<unsigned long long>(size))
@@ -213,10 +223,11 @@ namespace cs_impl {
 		return static_cast<std::size_t>(idx);
 	}
 
-	namespace array_cs_ext {
+	namespace array_cs_ext
+	{
 		using namespace cs;
 
-// Element access
+		// Element access
 		var at(const array &arr, const numeric &posit)
 		{
 			return arr.at(check_index(posit.as_integer(), arr.size()));
@@ -236,7 +247,7 @@ namespace cs_impl {
 			return arr.back();
 		}
 
-// Iterators
+		// Iterators
 		array::iterator begin(array &arr)
 		{
 			return arr.begin();
@@ -252,6 +263,8 @@ namespace cs_impl {
 			return it++;
 		}
 
+		// NOTE: next_n/prev_n advance a bare deque iterator without the owning
+		// container, so crossing begin() with a negative offset is UB here.
 		array::iterator next_n(array::iterator &it, const numeric &offset)
 		{
 			return it += offset.as_integer();
@@ -272,7 +285,7 @@ namespace cs_impl {
 			return *it;
 		}
 
-// Capacity
+		// Capacity
 		bool empty(const array &arr)
 		{
 			return arr.empty();
@@ -283,7 +296,7 @@ namespace cs_impl {
 			return arr.size();
 		}
 
-// Modifiers
+		// Modifiers
 		void clear(array &arr)
 		{
 			arr.clear();
@@ -323,7 +336,7 @@ namespace cs_impl {
 			return bval;
 		}
 
-// Operations
+		// Operations
 		void sort(array &arr, const var &func)
 		{
 			std::sort(arr.begin(), arr.end(), [&](const var &lhs, const var &rhs) -> bool
@@ -333,7 +346,8 @@ namespace cs_impl {
 		var to_hash_set(const array &arr)
 		{
 			hash_set set;
-			for (auto &it : arr) {
+			for (auto &it : arr)
+			{
 				if (set.count(it) == 0)
 					set.insert(copy(it));
 			}
@@ -343,8 +357,10 @@ namespace cs_impl {
 		var to_hash_map(const array &arr)
 		{
 			hash_map map;
-			for (auto &it : arr) {
-				if (it.is_type_of<pair>()) {
+			for (auto &it : arr)
+			{
+				if (it.is_type_of<pair>())
+				{
 					const auto &p = it.const_val<pair>();
 					insert_or_assign(map, p.first, p.second);
 				}
@@ -358,8 +374,10 @@ namespace cs_impl {
 		{
 			hash_map map;
 			std::size_t idx = 0;
-			for (auto &it : arr) {
-				if (it.is_type_of<pair>()) {
+			for (auto &it : arr)
+			{
+				if (it.is_type_of<pair>())
+				{
 					const auto &p = it.const_val<pair>();
 					insert_or_assign(map, p.first, p.second);
 				}
@@ -381,7 +399,8 @@ namespace cs_impl {
 		{
 			string str;
 			bool insert_sep = false;
-			for (auto &it : arr) {
+			for (auto &it : arr)
+			{
 				if (insert_sep)
 					str.append(sep);
 				else
@@ -397,37 +416,38 @@ namespace cs_impl {
 		void init()
 		{
 			(*array_iterator_ext)
-			.add_var("next", make_cni(next, true))
-			.add_var("next_n", make_cni(next_n, true))
-			.add_var("prev", make_cni(prev, true))
-			.add_var("prev_n", make_cni(prev_n, true))
-			.add_var("data", make_cni(data, callable::types::member_visitor));
+			    .add_var("next", make_cni(next, true))
+			    .add_var("next_n", make_cni(next_n, true))
+			    .add_var("prev", make_cni(prev, true))
+			    .add_var("prev_n", make_cni(prev_n, true))
+			    .add_var("data", make_cni(data, callable::types::member_visitor));
 			(*array_ext)
-			.add_var("iterator", make_namespace(array_iterator_ext))
-			.add_var("at", make_cni(at, true))
-			.add_var("front", make_cni(front, callable::types::member_visitor))
-			.add_var("back", make_cni(back, callable::types::member_visitor))
-			.add_var("begin", make_cni(begin, callable::types::member_visitor))
-			.add_var("end", make_cni(end, callable::types::member_visitor))
-			.add_var("empty", make_cni(empty, true))
-			.add_var("size", make_cni(size, callable::types::member_visitor))
-			.add_var("clear", make_cni(clear, true))
-			.add_var("insert", make_cni(insert, true))
-			.add_var("erase", make_cni(erase, true))
-			.add_var("push_front", make_cni(push_front, true))
-			.add_var("pop_front", make_cni(pop_front, true))
-			.add_var("push_back", make_cni(push_back, true))
-			.add_var("pop_back", make_cni(pop_back, true))
-			.add_var("sort", make_cni(sort, true))
-			.add_var("to_hash_set", make_cni(to_hash_set, true))
-			.add_var("to_hash_map", make_cni(to_hash_map, true))
-			.add_var("enumerate", make_cni(enumerate, true))
-			.add_var("to_list", make_cni(to_list, true))
-			.add_var("join", make_cni(join, true));
+			    .add_var("iterator", make_namespace(array_iterator_ext))
+			    .add_var("at", make_cni(at, true))
+			    .add_var("front", make_cni(front, callable::types::member_visitor))
+			    .add_var("back", make_cni(back, callable::types::member_visitor))
+			    .add_var("begin", make_cni(begin, callable::types::member_visitor))
+			    .add_var("end", make_cni(end, callable::types::member_visitor))
+			    .add_var("empty", make_cni(empty, true))
+			    .add_var("size", make_cni(size, callable::types::member_visitor))
+			    .add_var("clear", make_cni(clear, true))
+			    .add_var("insert", make_cni(insert, true))
+			    .add_var("erase", make_cni(erase, true))
+			    .add_var("push_front", make_cni(push_front, true))
+			    .add_var("pop_front", make_cni(pop_front, true))
+			    .add_var("push_back", make_cni(push_back, true))
+			    .add_var("pop_back", make_cni(pop_back, true))
+			    .add_var("sort", make_cni(sort, true))
+			    .add_var("to_hash_set", make_cni(to_hash_set, true))
+			    .add_var("to_hash_map", make_cni(to_hash_map, true))
+			    .add_var("enumerate", make_cni(enumerate, true))
+			    .add_var("to_list", make_cni(to_list, true))
+			    .add_var("join", make_cni(join, true));
 		}
 	} // namespace array_cs_ext
 
-	namespace number_cs_ext {
+	namespace number_cs_ext
+	{
 		using namespace cs;
 
 		bool is_integer(const numeric &n)
@@ -453,80 +473,81 @@ namespace cs_impl {
 		void init()
 		{
 			(*number_ext)
-			.add_var("is_integer", make_cni(is_integer))
-			.add_var("is_float", make_cni(is_float))
-			.add_var("ntoi", make_cni(ntoi))
-			.add_var("to_integer", make_cni(ntoi))
-			.add_var("ntof", make_cni(ntof))
-			.add_var("to_float", make_cni(ntof));
+			    .add_var("is_integer", make_cni(is_integer))
+			    .add_var("is_float", make_cni(is_float))
+			    .add_var("ntoi", make_cni(ntoi))
+			    .add_var("to_integer", make_cni(ntoi))
+			    .add_var("ntof", make_cni(ntof))
+			    .add_var("to_float", make_cni(ntof));
 		}
 	} // namespace number_cs_ext
-	namespace char_cs_ext {
+	namespace char_cs_ext
+	{
 		using namespace cs;
 
 		bool isalnum(char c)
 		{
-			return std::isalnum(c);
+			return std::isalnum(static_cast<unsigned char>(c));
 		}
 
 		bool isalpha(char c)
 		{
-			return std::isalpha(c);
+			return std::isalpha(static_cast<unsigned char>(c));
 		}
 
 		bool islower(char c)
 		{
-			return std::islower(c);
+			return std::islower(static_cast<unsigned char>(c));
 		}
 
 		bool isupper(char c)
 		{
-			return std::isupper(c);
+			return std::isupper(static_cast<unsigned char>(c));
 		}
 
 		bool isdigit(char c)
 		{
-			return std::isdigit(c);
+			return std::isdigit(static_cast<unsigned char>(c));
 		}
 
 		bool iscntrl(char c)
 		{
-			return std::iscntrl(c);
+			return std::iscntrl(static_cast<unsigned char>(c));
 		}
 
 		bool isgraph(char c)
 		{
-			return std::isgraph(c);
+			return std::isgraph(static_cast<unsigned char>(c));
 		}
 
 		bool isspace(char c)
 		{
-			return std::isspace(c);
+			return std::isspace(static_cast<unsigned char>(c));
 		}
 
 		bool isblank(char c)
 		{
-			return std::isblank(c);
+			return std::isblank(static_cast<unsigned char>(c));
 		}
 
 		bool isprint(char c)
 		{
-			return std::isprint(c);
+			return std::isprint(static_cast<unsigned char>(c));
 		}
 
 		bool ispunct(char c)
 		{
-			return std::ispunct(c);
+			return std::ispunct(static_cast<unsigned char>(c));
 		}
 
 		char tolower(char c)
 		{
-			return std::tolower(c);
+			return std::tolower(static_cast<unsigned char>(c));
 		}
 
 		char toupper(char c)
 		{
-			return std::toupper(c);
+			return std::toupper(static_cast<unsigned char>(c));
 		}
 
 		numeric to_ascii(char c)
@@ -544,24 +565,25 @@ namespace cs_impl {
 		void init()
 		{
 			(*char_ext)
-			.add_var("isalnum", make_cni(isalnum, true))
-			.add_var("isalpha", make_cni(isalpha, true))
-			.add_var("islower", make_cni(islower, true))
-			.add_var("isupper", make_cni(isupper, true))
-			.add_var("isdigit", make_cni(isdigit, true))
-			.add_var("iscntrl", make_cni(iscntrl, true))
-			.add_var("isgraph", make_cni(isgraph, true))
-			.add_var("isspace", make_cni(isspace, true))
-			.add_var("isblank", make_cni(isblank, true))
-			.add_var("isprint", make_cni(isprint, true))
-			.add_var("ispunct", make_cni(ispunct, true))
-			.add_var("tolower", make_cni(tolower, true))
-			.add_var("toupper", make_cni(toupper, true))
-			.add_var("to_ascii", make_cni(to_ascii, true))
-			.add_var("from_ascii", make_cni(from_ascii, true));
+			    .add_var("isalnum", make_cni(isalnum, true))
+			    .add_var("isalpha", make_cni(isalpha, true))
+			    .add_var("islower", make_cni(islower, true))
+			    .add_var("isupper", make_cni(isupper, true))
+			    .add_var("isdigit", make_cni(isdigit, true))
+			    .add_var("iscntrl", make_cni(iscntrl, true))
+			    .add_var("isgraph", make_cni(isgraph, true))
+			    .add_var("isspace", make_cni(isspace, true))
+			    .add_var("isblank", make_cni(isblank, true))
+			    .add_var("isprint", make_cni(isprint, true))
+			    .add_var("ispunct", make_cni(ispunct, true))
+			    .add_var("tolower", make_cni(tolower, true))
+			    .add_var("toupper", make_cni(toupper, true))
+			    .add_var("to_ascii", make_cni(to_ascii, true))
+			    .add_var("from_ascii", make_cni(from_ascii, true));
 		}
 	} // namespace char_cs_ext
-	namespace except_cs_ext {
+	namespace except_cs_ext
+	{
 		using namespace cs;
 
 		string what(const lang_error &le)
@@ -574,10 +596,11 @@ namespace cs_impl {
 			except_ext->add_var("what", make_cni(what, callable::types::member_visitor));
 		}
 	} // namespace except_cs_ext
-	namespace hash_set_cs_ext {
+	namespace hash_set_cs_ext
+	{
 		using namespace cs;
 
-// Capacity
+		// Capacity
 		bool empty(const hash_set &set)
 		{
 			return set.empty();
@@ -588,7 +611,7 @@ namespace cs_impl {
 			return set.size();
 		}
 
-// Modifiers
+		// Modifiers
 		void clear(hash_set &set)
 		{
 			set.clear();
@@ -604,18 +627,19 @@ namespace cs_impl {
 			set.erase(val);
 		}
 
-// Lookup
+		// Lookup
 		bool exist(const hash_set &set, const var &val)
 		{
 			return set.count(val) > 0;
 		}
 
-// Set Operations
+		// Set Operations
 		var intersect(const hash_set &lhs, const hash_set &rhs)
 		{
 			var ret = var::make<hash_set>();
 			hash_set &s = ret.val<hash_set>();
-			for (auto &it : lhs) {
+			for (auto &it : lhs)
+			{
 				if (rhs.count(it) > 0)
 					s.emplace(it);
 			}
@@ -626,7 +650,8 @@ namespace cs_impl {
 		{
 			var ret = var::make<hash_set>(lhs);
 			hash_set &s = ret.val<hash_set>();
-			for (auto &it : rhs) {
+			for (auto &it : rhs)
+			{
 				if (s.count(it) == 0)
 					s.emplace(it);
 			}
@@ -637,7 +662,8 @@ namespace cs_impl {
 		{
 			var ret = var::make<hash_set>(lhs);
 			hash_set &s = ret.val<hash_set>();
-			for (auto &it : rhs) {
+			for (auto &it : rhs)
+			{
 				if (s.count(it) > 0)
 					s.erase(it);
 			}
@@ -647,21 +673,22 @@ namespace cs_impl {
 		void init()
 		{
 			(*hash_set_ext)
-			.add_var("empty", make_cni(empty, true))
-			.add_var("size", make_cni(size, callable::types::member_visitor))
-			.add_var("clear", make_cni(empty, true))
-			.add_var("insert", make_cni(insert, true))
-			.add_var("erase", make_cni(erase, true))
-			.add_var("exist", make_cni(exist, true))
-			.add_var("intersect", make_cni(intersect, callable::types::force_regular))
-			.add_var("merge", make_cni(merge, callable::types::force_regular))
-			.add_var("subtract", make_cni(subtract, callable::types::force_regular));
+			    .add_var("empty", make_cni(empty, true))
+			    .add_var("size", make_cni(size, callable::types::member_visitor))
+			    .add_var("clear", make_cni(clear, true))
+			    .add_var("insert", make_cni(insert, true))
+			    .add_var("erase", make_cni(erase, true))
+			    .add_var("exist", make_cni(exist, true))
+			    .add_var("intersect", make_cni(intersect, callable::types::force_regular))
+			    .add_var("merge", make_cni(merge, callable::types::force_regular))
+			    .add_var("subtract", make_cni(subtract, callable::types::force_regular));
 		}
 	} // namespace hash_set_cs_ext
-	namespace hash_map_cs_ext {
+	namespace hash_map_cs_ext
+	{
 		using namespace cs;
 
-// Capacity
+		// Capacity
 		bool empty(const hash_map &map)
 		{
 			return map.empty();
@@ -672,7 +699,7 @@ namespace cs_impl {
 			return map.size();
 		}
 
-// Modifiers
+		// Modifiers
 		void clear(hash_map &map)
 		{
 			map.clear();
@@ -688,7 +715,7 @@ namespace cs_impl {
 			map.erase(key);
 		}
 
-// Lookup
+		// Lookup
 		var at(const hash_map &map, const var &key)
 		{
 			auto it = map.find(key);
@@ -723,19 +750,20 @@ namespace cs_impl {
 		void init()
 		{
 			(*hash_map_ext)
-			.add_var("empty", make_cni(empty, true))
-			.add_var("size", make_cni(size, callable::types::member_visitor))
-			.add_var("clear", make_cni(clear, true))
-			.add_var("insert", make_cni(insert, true))
-			.add_var("erase", make_cni(erase, true))
-			.add_var("at", make_cni(at, true))
-			.add_var("exist", make_cni(exist, true))
-			.add_var("keys", make_cni(keys, true))
-			.add_var("values", make_cni(values, true));
+			    .add_var("empty", make_cni(empty, true))
+			    .add_var("size", make_cni(size, callable::types::member_visitor))
+			    .add_var("clear", make_cni(clear, true))
+			    .add_var("insert", make_cni(insert, true))
+			    .add_var("erase", make_cni(erase, true))
+			    .add_var("at", make_cni(at, true))
+			    .add_var("exist", make_cni(exist, true))
+			    .add_var("keys", make_cni(keys, true))
+			    .add_var("values", make_cni(values, true));
 		}
 	} // namespace hash_map_cs_ext
 
-	namespace iostream_cs_ext {
+	namespace iostream_cs_ext
+	{
 		using namespace cs;
 
 		var fstream(const string &path, std::ios_base::openmode openmode)
@@ -756,54 +784,61 @@ namespace cs_impl {
 		void init()
 		{
 			(*iostream_ext)
-			.add_var("istream", make_namespace(istream_ext))
-			.add_var("ostream", make_namespace(ostream_ext))
-			.add_var("seekdir", make_namespace(seekdir_ext))
-			.add_var("openmode", make_namespace(openmode_ext));
+			    .add_var("istream", make_namespace(istream_ext))
+			    .add_var("ostream", make_namespace(ostream_ext))
+			    .add_var("seekdir", make_namespace(seekdir_ext))
+			    .add_var("openmode", make_namespace(openmode_ext));
 			(*seekdir_ext)
-			.add_var("start", var::make_constant<std::ios_base::seekdir>(std::ios_base::beg))
-			.add_var("finish", var::make_constant<std::ios_base::seekdir>(std::ios_base::end))
-			.add_var("present", var::make_constant<std::ios_base::seekdir>(std::ios_base::cur));
+			    .add_var("start", var::make_constant<std::ios_base::seekdir>(std::ios_base::beg))
+			    .add_var("finish", var::make_constant<std::ios_base::seekdir>(std::ios_base::end))
+			    .add_var("present", var::make_constant<std::ios_base::seekdir>(std::ios_base::cur));
 			(*openmode_ext)
-			.add_var("in", var::make_constant<std::ios_base::openmode>(std::ios_base::in))
-			.add_var("bin_in",
-			         var::make_constant<std::ios_base::openmode>(std::ios_base::in | std::ios_base::binary))
-			.add_var("out", var::make_constant<std::ios_base::openmode>(std::ios_base::out))
-			.add_var("bin_out",
-			         var::make_constant<std::ios_base::openmode>(std::ios_base::out | std::ios_base::binary))
-			.add_var("app", var::make_constant<std::ios_base::openmode>(std::ios_base::app))
-			.add_var("bin_app",
-			         var::make_constant<std::ios_base::openmode>(std::ios_base::app | std::ios_base::binary));
+			    .add_var("in", var::make_constant<std::ios_base::openmode>(std::ios_base::in))
+			    .add_var("bin_in",
+			             var::make_constant<std::ios_base::openmode>(std::ios_base::in | std::ios_base::binary))
+			    .add_var("out", var::make_constant<std::ios_base::openmode>(std::ios_base::out))
+			    .add_var("bin_out",
+			             var::make_constant<std::ios_base::openmode>(std::ios_base::out | std::ios_base::binary))
+			    .add_var("app", var::make_constant<std::ios_base::openmode>(std::ios_base::app))
+			    .add_var("bin_app",
+			             var::make_constant<std::ios_base::openmode>(std::ios_base::app | std::ios_base::binary));
 			(*iostream_ext)
-			.add_var("char_buff",
-			         var::make_protect<type_t>([]() -> var
+			    .add_var("char_buff",
+			             var::make_protect<type_t>([]() -> var
 			{ return std::make_shared<std::stringstream>(); },
-			type_id(typeid(char_buff)), charbuff_ext))
-			.add_var("fstream", make_cni(fstream))
-			.add_var("ifstream", make_cni([](const string &path) {
+			                                       type_id(typeid(char_buff)), charbuff_ext))
+			    .add_var("fstream", make_cni(fstream))
+			    .add_var("ifstream", make_cni([](const string &path)
+			{
 				return var::make<istream>(new std::ifstream(path, std::ios_base::in));
-			}))
-			.add_var("ofstream", make_cni([](const string &path) {
+			})).add_var("ofstream", make_cni([](const string &path)
+			{
 				return var::make<ostream>(new std::ofstream(path, std::ios_base::out));
-			}))
-			.add_var("setprecision", make_cni(setprecision));
+			})).add_var("setprecision", make_cni(setprecision));
 		}
 	} // namespace iostream_cs_ext
-	namespace charbuff_cs_ext {
+	namespace charbuff_cs_ext
+	{
 		using namespace cs;
 
 		void init()
 		{
 			(*charbuff_ext)
-			.add_var("get_istream", make_cni([](char_buff &buff) -> cs::istream
-			{ return std::shared_ptr<std::istream>(buff.get(), [](std::istream *) {}); }))
-			.add_var("get_ostream", make_cni([](char_buff &buff) -> cs::ostream
-			{ return std::shared_ptr<std::ostream>(buff.get(), [](std::ostream *) {}); }))
-			.add_var("get_string", make_cni([](char_buff &buff) -> string
+			    .add_var("get_istream", make_cni([](char_buff &buff) -> cs::istream
+			{
+				// Keep the host alive so the borrowed stream never dangles
+				auto keep = buff;
+				return std::shared_ptr<std::istream>(buff.get(), [keep](std::istream *) {}); }))
+			    .add_var("get_ostream", make_cni([](char_buff &buff) -> cs::ostream
+			{
+				auto keep = buff;
+				return std::shared_ptr<std::ostream>(buff.get(), [keep](std::ostream *) {}); }))
+			    .add_var("get_string", make_cni([](char_buff &buff) -> string
 			{ return std::move(buff->str()); }));
 		}
 	} // namespace charbuff_cs_ext
-	namespace istream_cs_ext {
+	namespace istream_cs_ext
+	{
 		using namespace cs;
 
 		var parse_value(const std::string &str)
@@ -812,16 +847,17 @@ namespace cs_impl {
 				return true;
 			if (str == "false")
 				return false;
-			try {
+			try
+			{
 				return parse_number(str);
 			}
-			catch (...) {
+			catch (...)
+			{
 				return str;
 			}
-			return str;
 		}
 
-// Input Stream
+		// Input Stream
 		char get(istream &in)
 		{
 			return in->get();
@@ -897,24 +933,25 @@ namespace cs_impl {
 		void init()
 		{
 			(*istream_ext)
-			.add_var("get", make_cni(get))
-			.add_var("peek", make_cni(peek))
-			.add_var("unget", make_cni(unget))
-			.add_var("getline", make_cni(getline))
-			.add_var("tell", make_cni(tell))
-			.add_var("seek", make_cni(seek))
-			.add_var("seek_from", make_cni(seek_from))
-			.add_var("good", make_cni(good))
-			.add_var("eof", make_cni(eof))
-			.add_var("input", make_cni(input))
-			.add_var("ignore", make_cni(ignore))
-			.add_var("read", make_cni(read));
+			    .add_var("get", make_cni(get))
+			    .add_var("peek", make_cni(peek))
+			    .add_var("unget", make_cni(unget))
+			    .add_var("getline", make_cni(getline))
+			    .add_var("tell", make_cni(tell))
+			    .add_var("seek", make_cni(seek))
+			    .add_var("seek_from", make_cni(seek_from))
+			    .add_var("good", make_cni(good))
+			    .add_var("eof", make_cni(eof))
+			    .add_var("input", make_cni(input))
+			    .add_var("ignore", make_cni(ignore))
+			    .add_var("read", make_cni(read));
 		}
 	} // namespace istream_cs_ext
-	namespace ostream_cs_ext {
+	namespace ostream_cs_ext
+	{
 		using namespace cs;
 
-// Output Stream
+		// Output Stream
 		void put(ostream &out, char c)
 		{
 			out->put(c);
@@ -963,21 +1000,22 @@ namespace cs_impl {
 		void init()
 		{
 			(*ostream_ext)
-			.add_var("put", make_cni(put))
-			.add_var("tell", make_cni(tell))
-			.add_var("seek", make_cni(seek))
-			.add_var("seek_from", make_cni(seek_from))
-			.add_var("flush", make_cni(flush))
-			.add_var("good", make_cni(good))
-			.add_var("print", make_cni(print))
-			.add_var("println", make_cni(println))
-			.add_var("write", make_cni(write));
+			    .add_var("put", make_cni(put))
+			    .add_var("tell", make_cni(tell))
+			    .add_var("seek", make_cni(seek))
+			    .add_var("seek_from", make_cni(seek_from))
+			    .add_var("flush", make_cni(flush))
+			    .add_var("good", make_cni(good))
+			    .add_var("print", make_cni(print))
+			    .add_var("println", make_cni(println))
+			    .add_var("write", make_cni(write));
 		}
 	} // namespace ostream_cs_ext
-	namespace list_cs_ext {
+	namespace list_cs_ext
+	{
 		using namespace cs;
 
-// Element access
+		// Element access
 		var front(const list &lst)
 		{
 			if (lst.empty())
@@ -992,7 +1030,7 @@ namespace cs_impl {
 			return lst.back();
 		}
 
-// Iterators
+		// Iterators
 		list::iterator begin(list &lst)
 		{
 			return lst.begin();
@@ -1018,7 +1056,7 @@ namespace cs_impl {
 			return *it;
 		}
 
-// Capacity
+		// Capacity
 		bool empty(const list &lst)
 		{
 			return lst.empty();
@@ -1029,7 +1067,7 @@ namespace cs_impl {
 			return lst.size();
 		}
 
-// Modifiers
+		// Modifiers
 		void clear(list &lst)
 		{
 			lst.clear();
@@ -1069,7 +1107,7 @@ namespace cs_impl {
 			return bval;
 		}
 
-// Operations
+		// Operations
 		void remove(list &lst, const var &val)
 		{
 			lst.remove(val);
@@ -1094,31 +1132,32 @@ namespace cs_impl {
 		void init()
 		{
 			(*list_iterator_ext)
-			.add_var("next", make_cni(next, true))
-			.add_var("prev", make_cni(prev, true))
-			.add_var("data", make_cni(data, callable::types::member_visitor));
+			    .add_var("next", make_cni(next, true))
+			    .add_var("prev", make_cni(prev, true))
+			    .add_var("data", make_cni(data, callable::types::member_visitor));
 			(*list_ext)
-			.add_var("iterator", make_namespace(list_iterator_ext))
-			.add_var("front", make_cni(front, callable::types::member_visitor))
-			.add_var("back", make_cni(back, callable::types::member_visitor))
-			.add_var("begin", make_cni(begin, callable::types::member_visitor))
-			.add_var("end", make_cni(end, callable::types::member_visitor))
-			.add_var("empty", make_cni(empty, true))
-			.add_var("size", make_cni(size, callable::types::member_visitor))
-			.add_var("clear", make_cni(clear, true))
-			.add_var("insert", make_cni(insert, true))
-			.add_var("erase", make_cni(erase, true))
-			.add_var("push_front", make_cni(push_front, true))
-			.add_var("pop_front", make_cni(pop_front, true))
-			.add_var("push_back", make_cni(push_back, true))
-			.add_var("pop_back", make_cni(pop_back, true))
-			.add_var("remove", make_cni(remove, true))
-			.add_var("reverse", make_cni(reverse, true))
-			.add_var("unique", make_cni(unique, true))
-			.add_var("sort", make_cni(sort, true));
+			    .add_var("iterator", make_namespace(list_iterator_ext))
+			    .add_var("front", make_cni(front, callable::types::member_visitor))
+			    .add_var("back", make_cni(back, callable::types::member_visitor))
+			    .add_var("begin", make_cni(begin, callable::types::member_visitor))
+			    .add_var("end", make_cni(end, callable::types::member_visitor))
+			    .add_var("empty", make_cni(empty, true))
+			    .add_var("size", make_cni(size, callable::types::member_visitor))
+			    .add_var("clear", make_cni(clear, true))
+			    .add_var("insert", make_cni(insert, true))
+			    .add_var("erase", make_cni(erase, true))
+			    .add_var("push_front", make_cni(push_front, true))
+			    .add_var("pop_front", make_cni(pop_front, true))
+			    .add_var("push_back", make_cni(push_back, true))
+			    .add_var("pop_back", make_cni(pop_back, true))
+			    .add_var("remove", make_cni(remove, true))
+			    .add_var("reverse", make_cni(reverse, true))
+			    .add_var("unique", make_cni(unique, true))
+			    .add_var("sort", make_cni(sort, true));
 		}
 	} // namespace list_cs_ext
-	namespace math_cs_ext {
+	namespace math_cs_ext
+	{
 		using namespace cs;
 
 		numeric abs(const numeric &n)
@@ -1189,17 +1228,17 @@ namespace cs_impl {
 		numeric _min(const numeric &a, const numeric &b)
 		{
 			if (a.is_integer() && b.is_integer())
-				return (std::min)(a.as_integer(), b.as_integer());
+				return (std::min) (a.as_integer(), b.as_integer());
 			else
-				return (std::min)(a.as_float(), b.as_float());
+				return (std::min) (a.as_float(), b.as_float());
 		}
 
 		numeric _max(const numeric &a, const numeric &b)
 		{
 			if (a.is_integer() && b.is_integer())
-				return (std::max)(a.as_integer(), b.as_integer());
+				return (std::max) (a.as_integer(), b.as_integer());
 			else
-				return (std::max)(a.as_float(), b.as_float());
+				return (std::max) (a.as_float(), b.as_float());
 		}
 
 		numeric rand(const numeric &b, const numeric &e)
@@ -1215,51 +1254,53 @@ namespace cs_impl {
 		void init()
 		{
 			(*math_const_ext)
-			.add_var("max", var::make_constant<numeric>((std::numeric_limits<numeric_float>::max)()))
-			.add_var("min", var::make_constant<numeric>((std::numeric_limits<numeric_float>::min)()))
-			.add_var("integer_max", var::make_constant<numeric>((std::numeric_limits<numeric_integer>::max)()))
-			.add_var("integer_min", var::make_constant<numeric>((std::numeric_limits<numeric_integer>::min)()))
-			.add_var("float_max", var::make_constant<numeric>((std::numeric_limits<numeric_float>::max)()))
-			.add_var("float_min", var::make_constant<numeric>((std::numeric_limits<numeric_float>::min)()))
-			.add_var("inf", var::make_constant<numeric>(std::numeric_limits<numeric_float>::infinity()))
-			.add_var("nan", var::make_constant<numeric>(std::numeric_limits<numeric_float>::quiet_NaN()))
-			.add_var("pi", var::make_constant<numeric>(std::asin(numeric_float(1)) * 2))
-			.add_var("e", var::make_constant<numeric>(std::exp(numeric_float(1))));
+			    .add_var("max", var::make_constant<numeric>((std::numeric_limits<numeric_float>::max)()))
+			    .add_var("min", var::make_constant<numeric>((std::numeric_limits<numeric_float>::min)()))
+			    .add_var("integer_max", var::make_constant<numeric>((std::numeric_limits<numeric_integer>::max)()))
+			    .add_var("integer_min", var::make_constant<numeric>((std::numeric_limits<numeric_integer>::min)()))
+			    .add_var("float_max", var::make_constant<numeric>((std::numeric_limits<numeric_float>::max)()))
+			    .add_var("float_min", var::make_constant<numeric>((std::numeric_limits<numeric_float>::min)()))
+			    .add_var("inf", var::make_constant<numeric>(std::numeric_limits<numeric_float>::infinity()))
+			    .add_var("nan", var::make_constant<numeric>(std::numeric_limits<numeric_float>::quiet_NaN()))
+			    .add_var("pi", var::make_constant<numeric>(std::asin(numeric_float(1)) * 2))
+			    .add_var("e", var::make_constant<numeric>(std::exp(numeric_float(1))));
 			(*math_ext)
-			.add_var("constants", make_namespace(math_const_ext))
-			.add_var("abs", make_cni(abs, true))
-			.add_var("ln", make_cni(ln, true))
-			.add_var("log10", make_cni(log10, true))
-			.add_var("log", make_cni(log, true))
-			.add_var("sin", make_cni(sin, true))
-			.add_var("cos", make_cni(cos, true))
-			.add_var("tan", make_cni(tan, true))
-			.add_var("asin", make_cni(asin, true))
-			.add_var("acos", make_cni(acos, true))
-			.add_var("atan", make_cni(atan, true))
-			.add_var("sqrt", make_cni(sqrt, true))
-			.add_var("root", make_cni(root, true))
-			.add_var("pow", make_cni(pow, true))
-			.add_var("min", make_cni(_min, true))
-			.add_var("max", make_cni(_max, true))
-			.add_var("rand", make_cni(rand))
-			.add_var("randint", make_cni(randint));
+			    .add_var("constants", make_namespace(math_const_ext))
+			    .add_var("abs", make_cni(abs, true))
+			    .add_var("ln", make_cni(ln, true))
+			    .add_var("log10", make_cni(log10, true))
+			    .add_var("log", make_cni(log, true))
+			    .add_var("sin", make_cni(sin, true))
+			    .add_var("cos", make_cni(cos, true))
+			    .add_var("tan", make_cni(tan, true))
+			    .add_var("asin", make_cni(asin, true))
+			    .add_var("acos", make_cni(acos, true))
+			    .add_var("atan", make_cni(atan, true))
+			    .add_var("sqrt", make_cni(sqrt, true))
+			    .add_var("root", make_cni(root, true))
+			    .add_var("pow", make_cni(pow, true))
+			    .add_var("min", make_cni(_min, true))
+			    .add_var("max", make_cni(_max, true))
+			    .add_var("rand", make_cni(rand))
+			    .add_var("randint", make_cni(randint));
 		}
 	} // namespace math_cs_ext
 
-	namespace pair_cs_ext {
+	namespace pair_cs_ext
+	{
 		void init()
 		{
 			using namespace cs;
 			(*pair_ext)
-			.add_var("first", make_member_visitor(&pair::first))
-			.add_var("key", make_member_visitor(&pair::first))
-			.add_var("second", make_member_visitor(&pair::second))
-			.add_var("value", make_member_visitor(&pair::second));
+			    .add_var("first", make_member_visitor(&pair::first))
+			    .add_var("key", make_member_visitor(&pair::first))
+			    .add_var("second", make_member_visitor(&pair::second))
+			    .add_var("value", make_member_visitor(&pair::second));
 		}
 	} // namespace pair_cs_ext
 
-	namespace time_cs_ext {
+	namespace time_cs_ext
+	{
 		using namespace cs;
 
 		numeric sec(const std::tm &t)
@@ -1315,20 +1356,21 @@ namespace cs_impl {
 		void init()
 		{
 			(*time_ext)
-			.add_var("sec", make_cni(sec, callable::types::member_visitor))
-			.add_var("min", make_cni(tm_min, callable::types::member_visitor))
-			.add_var("hour", make_cni(hour, callable::types::member_visitor))
-			.add_var("wday", make_cni(wday, callable::types::member_visitor))
-			.add_var("mday", make_cni(mday, callable::types::member_visitor))
-			.add_var("yday", make_cni(yday, callable::types::member_visitor))
-			.add_var("mon", make_cni(mon, callable::types::member_visitor))
-			.add_var("year", make_cni(year, callable::types::member_visitor))
-			.add_var("is_dst", make_cni(is_dst, callable::types::member_visitor))
-			.add_var("unixtime", make_cni(unixtime, callable::types::member_visitor));
+			    .add_var("sec", make_cni(sec, callable::types::member_visitor))
+			    .add_var("min", make_cni(tm_min, callable::types::member_visitor))
+			    .add_var("hour", make_cni(hour, callable::types::member_visitor))
+			    .add_var("wday", make_cni(wday, callable::types::member_visitor))
+			    .add_var("mday", make_cni(mday, callable::types::member_visitor))
+			    .add_var("yday", make_cni(yday, callable::types::member_visitor))
+			    .add_var("mon", make_cni(mon, callable::types::member_visitor))
+			    .add_var("year", make_cni(year, callable::types::member_visitor))
+			    .add_var("is_dst", make_cni(is_dst, callable::types::member_visitor))
+			    .add_var("unixtime", make_cni(unixtime, callable::types::member_visitor));
 		}
 	} // namespace time_cs_ext
 
-	namespace async_cs_ext {
+	namespace async_cs_ext
+	{
 		using namespace cs;
 
 		bool is_native_callable(const callable &func)
@@ -1336,14 +1378,17 @@ namespace cs_impl {
 			return func.get_raw_data().target_type() != typeid(function_ptr);
 		}
 
-		class async_callable final {
+		class async_callable final
+		{
 			callable func;
 			vector args;
 
 			void detach_args()
 			{
-				for (auto &val : args) {
-					if (!val.is_rvalue()) {
+				for (auto &val : args)
+				{
+					if (!val.is_rvalue())
+					{
 						val.clone();
 						val.detach();
 					}
@@ -1352,9 +1397,9 @@ namespace cs_impl {
 				}
 			}
 
-		public:
+		   public:
 			async_callable(const callable &fn, vector data)
-				: func(fn), args(std::move(data))
+			    : func(fn), args(std::move(data))
 			{
 				if (!is_native_callable(fn))
 					throw lang_error("Async operation requires a native function");
@@ -1369,10 +1414,11 @@ namespace cs_impl {
 
 		var await_impl(const callable &fn, vector args)
 		{
-			if (fiber::within()) {
+			if (fiber::within())
+			{
 				auto future = std::async(std::launch::async, async_callable(fn, std::move(args)));
 				while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
-					fiber::sleep_for(current_process->fiber_busy_wait_min);
+					fiber::sleep_for(current_process->fiber_cxt->busy_wait_min);
 				return future.get();
 			}
 			else if (is_native_callable(fn))
@@ -1386,10 +1432,12 @@ namespace cs_impl {
 			if (args.empty())
 				throw lang_error("Invalid call to 'runtime.await': expected 'runtime.await(function, arguments...)'");
 			const var &func = args.front();
-			if (func.is_type_of<callable>()) {
+			if (func.is_type_of<callable>())
+			{
 				return await_impl(func.const_val<callable>(), vector(args.begin() + 1, args.end()));
 			}
-			else if (func.is_type_of<object_method>()) {
+			else if (func.is_type_of<object_method>())
+			{
 				const auto &om = func.const_val<object_method>();
 				vector argument{om.object};
 				argument.insert(argument.end(), args.begin() + 1, args.end());
@@ -1399,29 +1447,32 @@ namespace cs_impl {
 				throw lang_error("The target value is not callable");
 		}
 
-		class async_future final : public future_type {
+		class async_future final : public future_type
+		{
 			std::shared_future<var> future;
 
-		public:
+		   public:
 			async_future(const callable &fn, vector args)
-				: future(std::async(std::launch::async, async_callable(fn, std::move(args))).share())
+			    : future(std::async(std::launch::async, async_callable(fn, std::move(args))).share())
 			{
 			}
 
 			bool wait_for(std::size_t ms) override
 			{
 				bool ready = false;
-				if (fiber::within()) {
+				if (fiber::within())
+				{
 					std::chrono::steady_clock::time_point end_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(ms);
-					while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout) {
+					while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
+					{
 						auto remain_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
 						                     end_time - std::chrono::steady_clock::now())
-						                 .count();
+						                     .count();
 						if (remain_ms <= 0)
 							break;
-						auto wait_time = static_cast<std::size_t>(remain_ms * current_process->fiber_busy_wait_coef);
-						if (wait_time < current_process->fiber_busy_wait_min)
-							wait_time = current_process->fiber_busy_wait_min;
+						auto wait_time = static_cast<std::size_t>(remain_ms * current_process->fiber_cxt->busy_wait_coef);
+						if (wait_time < current_process->fiber_cxt->busy_wait_min)
+							wait_time = current_process->fiber_cxt->busy_wait_min;
 						if (wait_time > static_cast<std::size_t>(remain_ms))
 							wait_time = static_cast<std::size_t>(remain_ms);
 						fiber::sleep_for(wait_time);
@@ -1435,11 +1486,13 @@ namespace cs_impl {
 
 			void wait() override
 			{
-				if (fiber::within()) {
+				if (fiber::within())
+				{
 					while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
-						fiber::sleep_for(current_process->fiber_busy_wait_min);
+						fiber::sleep_for(current_process->fiber_cxt->busy_wait_min);
 				}
-				else {
+				else
+				{
 					future.wait();
 				}
 			}
@@ -1456,18 +1509,21 @@ namespace cs_impl {
 			if (args.empty())
 				throw lang_error("Invalid call to 'future.create': expected 'future.create(function, arguments...)'");
 			const var &func = args.front();
-			if (func.is_type_of<fiber_t>()) {
+			if (func.is_type_of<fiber_t>())
+			{
 				if (args.size() > 1)
 					throw lang_error("Invalid call to 'future.create', extra arguments are not allowed when creating a future from a fiber");
 				return fiber::get_future(func.const_val<fiber_t>());
 			}
-			else if (func.is_type_of<callable>()) {
+			else if (func.is_type_of<callable>())
+			{
 				const callable &fn = func.const_val<callable>();
 				if (!is_native_callable(fn))
 					throw lang_error("Async future can only be created from native functions");
 				return static_cast<future_t>(std::make_shared<async_future>(fn, vector(args.begin() + 1, args.end())));
 			}
-			else if (func.is_type_of<object_method>()) {
+			else if (func.is_type_of<object_method>())
+			{
 				const auto &om = func.const_val<object_method>();
 				vector argument{om.object};
 				argument.insert(argument.end(), args.begin() + 1, args.end());
@@ -1482,7 +1538,8 @@ namespace cs_impl {
 
 		bool wait_for(const future_t &future, const numeric &ms)
 		{
-			if (ms.as_integer() < 0) {
+			if (ms.as_integer() < 0)
+			{
 				future->wait();
 				return true;
 			}
@@ -1503,59 +1560,72 @@ namespace cs_impl {
 		void init()
 		{
 			(*future_ext)
-			.add_var("create", var::make_protect<callable>(create))
-			.add_var("wait_for", make_cni(wait_for))
-			.add_var("wait", make_cni(wait))
-			.add_var("get", make_cni(get));
+			    .add_var("create", var::make_protect<callable>(create))
+			    .add_var("wait_for", make_cni(wait_for))
+			    .add_var("wait", make_cni(wait))
+			    .add_var("get", make_cni(get));
 		}
 	} // namespace async_cs_ext
 
-	namespace fiber_cs_ext {
+	namespace fiber_cs_ext
+	{
 		using namespace cs;
 
 		void set_schedule_policy(const string &policy)
 		{
-			if (policy == "balanced") {
-				current_process->fiber_busy_wait_coef = 0.01;
-				current_process->fiber_busy_wait_min = 10;
+			if (policy == "balanced")
+			{
+				current_process->fiber_cxt->busy_wait_coef = 0.01;
+				current_process->fiber_cxt->busy_wait_min = 10;
 			}
-			else if (policy == "responsive") {
-				current_process->fiber_busy_wait_coef = 0.003;
-				current_process->fiber_busy_wait_min = 3;
+			else if (policy == "responsive")
+			{
+				current_process->fiber_cxt->busy_wait_coef = 0.003;
+				current_process->fiber_cxt->busy_wait_min = 3;
 			}
-			else if (policy == "efficient") {
-				current_process->fiber_busy_wait_coef = 0.05;
-				current_process->fiber_busy_wait_min = 50;
+			else if (policy == "efficient")
+			{
+				current_process->fiber_cxt->busy_wait_coef = 0.05;
+				current_process->fiber_cxt->busy_wait_min = 50;
 			}
-			else if (policy == "throughput") {
-				current_process->fiber_busy_wait_coef = 0.02;
-				current_process->fiber_busy_wait_min = 20;
+			else if (policy == "throughput")
+			{
+				current_process->fiber_cxt->busy_wait_coef = 0.02;
+				current_process->fiber_cxt->busy_wait_min = 20;
 			}
 			else
 				throw lang_error("Unknown schedule policy: " + policy);
 		}
 
-		class fiber_function final {
-			const context_t &context;
-			function const *func;
+		class fiber_function final
+		{
+			callable owner;
+			function const *func = nullptr;
+			context_t context;
 			vector args;
 
-		public:
-			fiber_function(function const *fn, vector data)
-				: context(fn->get_context()), func(fn), args(std::move(data)) {}
+		   public:
+			fiber_function(const callable &fn, vector data)
+			    : owner(fn), args(std::move(data))
+			{
+				func = owner.get_raw_data().target<function_ptr>()->fptr;
+				context = func->get_context();
+			}
 
 			var operator()()
 			{
 				if (func == nullptr)
 					throw lang_error("Asynchronous functions are not reentrant");
-				try {
+				try
+				{
 					var ret = func->call(args);
 					func = nullptr;
 					args.clear();
 					context->instance->clear_context();
 					return std::move(ret);
 				}
-				catch (...) {
+				catch (...)
+				{
 					func = nullptr;
 					args.clear();
 					context->instance->clear_context();
@@ -1564,22 +1634,25 @@ namespace cs_impl {
 			}
 		};
 
-		class fiber_native_function final {
+		class fiber_native_function final
+		{
 			callable::function_type func;
 			vector args;
 
-		public:
+		   public:
 			fiber_native_function(callable::function_type fn, vector data)
-				: func(std::move(fn)), args(std::move(data)) {}
+			    : func(std::move(fn)), args(std::move(data)) {}
 
 			var operator()()
 			{
-				try {
+				try
+				{
 					var ret = func(args);
 					args.clear();
 					return std::move(ret);
 				}
-				catch (...) {
+				catch (...)
+				{
 					args.clear();
 					throw;
 				}
@@ -1591,26 +1664,22 @@ namespace cs_impl {
 			if (args.empty())
 				throw lang_error("Invalid call to 'fiber.create': expected 'fiber.create(function, arguments...)'");
 			const var &func = args.front();
-			if (func.is_type_of<callable>()) {
-				const callable::function_type &impl_f = func.const_val<callable>().get_raw_data();
-				if (impl_f.target_type() == typeid(function_ptr)) {
-					function const *fptr = impl_f.target<function_ptr>()->fptr;
-					return fiber::create(fptr->get_context(), fiber_function(fptr, vector(args.begin() + 1, args.end())));
-				}
-				else
-					return fiber::create_native(fiber_native_function(impl_f, vector(args.begin() + 1, args.end())));
-			}
-			else if (func.is_type_of<object_method>()) {
+			auto build = [&](const callable &fn, vector data) -> fiber_t
+			{
+				const callable::function_type &impl = fn.get_raw_data();
+				if (impl.target_type() != typeid(function_ptr))
+					return fiber::create_native(fiber_native_function(impl, std::move(data)));
+				function const *fptr = impl.target<function_ptr>()->fptr;
+				return fiber::create(fptr->get_context(), fiber_function(fn, std::move(data)));
+			};
+			if (func.is_type_of<callable>())
+				return build(func.const_val<callable>(), vector(args.begin() + 1, args.end()));
+			else if (func.is_type_of<object_method>())
+			{
 				const auto &om = func.const_val<object_method>();
-				const callable::function_type &impl_f = om.callable.const_val<callable>().get_raw_data();
 				vector argument{om.object};
 				argument.insert(argument.end(), args.begin() + 1, args.end());
-				if (impl_f.target_type() == typeid(function_ptr)) {
-					function const *fptr = impl_f.target<function_ptr>()->fptr;
-					return fiber::create(fptr->get_context(), fiber_function(fptr, std::move(argument)));
-				}
-				else
-					return fiber::create_native(fiber_native_function(impl_f, argument));
+				return build(om.callable.const_val<callable>(), std::move(argument));
 			}
 			else
 				throw lang_error("Invalid call to 'fiber.create', the first argument must be a callable object");
@@ -1647,9 +1716,9 @@ namespace cs_impl {
 
 		var fiber_current()
 		{
-			if (current_process->fiber_stack.empty())
+			if (current_process->fiber_cxt->stack.empty())
 				return null_pointer;
-			return current_process->fiber_stack.top();
+			return current_process->fiber_cxt->stack.top();
 		}
 
 		void fiber_resume(const fiber_t &fiber)
@@ -1660,22 +1729,23 @@ namespace cs_impl {
 		void init()
 		{
 			(*fiber_ext)
-			.add_var("create", var::make_protect<callable>(create))
-			.add_var("get_future", make_cni(fiber::get_future))
-			.add_var("return_value", make_cni(return_value))
-			.add_var("is_running", make_cni(is_running))
-			.add_var("is_suspended", make_cni(is_suspended))
-			.add_var("is_finished", make_cni(is_finished))
-			.add_var("sleep_for", make_cni(fiber_sleep_for))
-			.add_var("within", make_cni(fiber::within))
-			.add_var("set_schedule_policy", make_cni(set_schedule_policy))
-			.add_var("current", make_cni(fiber_current))
-			.add_var("resume", make_cni(fiber_resume))
-			.add_var("yield", make_cni(fiber::yield));
+			    .add_var("create", var::make_protect<callable>(create))
+			    .add_var("get_future", make_cni(fiber::get_future))
+			    .add_var("return_value", make_cni(return_value))
+			    .add_var("is_running", make_cni(is_running))
+			    .add_var("is_suspended", make_cni(is_suspended))
+			    .add_var("is_finished", make_cni(is_finished))
+			    .add_var("sleep_for", make_cni(fiber_sleep_for))
+			    .add_var("within", make_cni(fiber::within))
+			    .add_var("set_schedule_policy", make_cni(set_schedule_policy))
+			    .add_var("current", make_cni(fiber_current))
+			    .add_var("resume", make_cni(fiber_resume))
+			    .add_var("yield", make_cni(fiber::yield));
 		}
 	} // namespace fiber_cs_ext
 
-	namespace runtime_cs_ext {
+	namespace runtime_cs_ext
+	{
 		using namespace cs;
 
 		string get_import_path()
@@ -1698,39 +1768,50 @@ namespace cs_impl {
 		var local_time(vector &args)
 		{
 			std::time_t t;
-			switch (args.size()) {
-			case 0:
-				t = std::time(nullptr);
-				return var::make<std::tm>(*std::localtime(&t));
-			case 1:
-				t = args[0].const_val<numeric>().as_integer();
-				return var::make<std::tm>(*std::localtime(&t));
-			default:
-				throw runtime_error(
-				    "Wrong number of arguments: expected 0 or 1, got " + std::to_string(args.size()));
+			switch (args.size())
+			{
+				case 0:
+					t = std::time(nullptr);
+					break;
+				case 1:
+					t = args[0].const_val<numeric>().as_integer();
+					break;
+				default:
+					throw runtime_error(
+					    "Wrong number of arguments: expected 0 or 1, got " + std::to_string(args.size()));
 			}
+			std::tm *lt = std::localtime(&t);
+			if (lt == nullptr)
+				throw lang_error("localtime failed: timestamp is out of the supported range");
+			return var::make<std::tm>(*lt);
 		}
 
 		var utc_time(vector &args)
 		{
 			std::time_t t;
-			switch (args.size()) {
-			case 0:
-				t = std::time(nullptr);
-				return var::make<std::tm>(*std::gmtime(&t));
-			case 1:
-				t = args[0].const_val<numeric>().as_integer();
-				return var::make<std::tm>(*std::gmtime(&t));
-			default:
-				throw runtime_error(
-				    "Wrong number of arguments: expected 0 or 1, got " + std::to_string(args.size()));
+			switch (args.size())
+			{
+				case 0:
+					t = std::time(nullptr);
+					break;
+				case 1:
+					t = args[0].const_val<numeric>().as_integer();
+					break;
+				default:
+					throw runtime_error(
+					    "Wrong number of arguments: expected 0 or 1, got " + std::to_string(args.size()));
 			}
+			std::tm *gt = std::gmtime(&t);
+			if (gt == nullptr)
+				throw lang_error("gmtime failed: timestamp is out of the supported range");
+			return var::make<std::tm>(*gt);
 		}
 
 		void delay(const numeric &time)
 		{
 			cs::numeric_integer t = time.as_integer();
-			if (cs::fiber::within()) {
+			if (cs::fiber::within())
+			{
 				if (t > 0)
 					cs::fiber::sleep_for(t);
 				else
@@ -1778,27 +1859,32 @@ namespace cs_impl {
 
 		var import(const context_t &context, const string &dir, const string &name)
 		{
-			try {
+			try
+			{
 				return make_namespace(context->instance->import(dir, name));
 			}
-			catch (...) {
+			catch (...)
+			{
 				return null_pointer;
 			}
 		}
 
 		var source_import(const context_t &context, const string &path)
 		{
-			try {
+			try
+			{
 				return make_namespace(context->instance->source_import(path));
 			}
-			catch (...) {
+			catch (...)
+			{
 				return null_pointer;
 			}
 		}
 
 		numeric argument_count(const var &func)
 		{
-			if (func.is_type_of<object_method>()) {
+			if (func.is_type_of<object_method>())
+			{
 				const callable::function_type &target = func.const_val<object_method>().callable.const_val<callable>().get_raw_data();
 				std::size_t count = 0;
 				if (target.target_type() == typeid(function_ptr))
@@ -1807,7 +1893,8 @@ namespace cs_impl {
 					count = target.target<cni>()->argument_count();
 				return count > 0 ? count - 1 : 0;
 			}
-			else if (func.is_type_of<callable>()) {
+			else if (func.is_type_of<callable>())
+			{
 				const callable::function_type &target = func.const_val<callable>().get_raw_data();
 				if (target.target_type() == typeid(function_ptr))
 					return target.target<function_ptr>()->fptr->argument_count();
@@ -1837,40 +1924,41 @@ namespace cs_impl {
 		void init()
 		{
 			(*runtime_ext)
-			.add_var("time_type", make_namespace(time_ext))
-			.add_var("std_version", var::make_constant<numeric>(current_process->std_version))
-			.add_var("get_sdk_path", make_cni(get_sdk_path))
-			.add_var("get_import_path", make_cni(get_import_path, true))
-			.add_var("info", make_cni(info))
-			.add_var("time", make_cni(time))
-			.add_var("local_time", var::make_protect<callable>(local_time))
-			.add_var("utc_time", var::make_protect<callable>(utc_time))
-			.add_var("delay", make_cni(delay))
-			.add_var("sleep_for", make_cni(sleep_for))
-			.add_var("exception", make_cni(exception))
-			.add_var("hash", make_cni(hash, true))
-			.add_var("build", make_cni(build))
-			.add_var("solve", make_cni(solve))
-			.add_var("cmd_args", make_cni(cmd_args, true))
-			.add_var("import", make_cni(import, true))
-			.add_var("source_import", make_cni(source_import, true))
-			.add_var("argument_count", make_cni(argument_count, true))
-			.add_var("add_literal", make_cni(add_string_literal, true))
-			.add_var("get_current_dir", make_cni(file_system::get_current_dir))
-			.add_var("await", var::make_protect<callable>(async_cs_ext::await));
+			    .add_var("time_type", make_namespace(time_ext))
+			    .add_var("std_version", var::make_constant<numeric>(current_process->std_version))
+			    .add_var("get_sdk_path", make_cni(get_sdk_path))
+			    .add_var("get_import_path", make_cni(get_import_path, true))
+			    .add_var("info", make_cni(info))
+			    .add_var("time", make_cni(time))
+			    .add_var("local_time", var::make_protect<callable>(local_time))
+			    .add_var("utc_time", var::make_protect<callable>(utc_time))
+			    .add_var("delay", make_cni(delay))
+			    .add_var("sleep_for", make_cni(sleep_for))
+			    .add_var("exception", make_cni(exception))
+			    .add_var("hash", make_cni(hash, true))
+			    .add_var("build", make_cni(build))
+			    .add_var("solve", make_cni(solve))
+			    .add_var("cmd_args", make_cni(cmd_args, true))
+			    .add_var("import", make_cni(import, true))
+			    .add_var("source_import", make_cni(source_import, true))
+			    .add_var("argument_count", make_cni(argument_count, true))
+			    .add_var("add_literal", make_cni(add_string_literal, true))
+			    .add_var("get_current_dir", make_cni(file_system::get_current_dir))
+			    .add_var("await", var::make_protect<callable>(async_cs_ext::await));
 			(*context_ext)
-			.add_var("build", make_cni(build))
-			.add_var("solve", make_cni(solve))
-			.add_var("cmd_args", make_cni(cmd_args, callable::types::member_visitor))
-			.add_var("import", make_cni(import, true))
-			.add_var("source_import", make_cni(source_import, true))
-			.add_var("add_literal", make_cni(add_string_literal, true))
-			.add_var("link_var", make_cni(link_var))
-			.add_var("unlink_var", make_cni(unlink_var));
+			    .add_var("build", make_cni(build))
+			    .add_var("solve", make_cni(solve))
+			    .add_var("cmd_args", make_cni(cmd_args, callable::types::member_visitor))
+			    .add_var("import", make_cni(import, true))
+			    .add_var("source_import", make_cni(source_import, true))
+			    .add_var("add_literal", make_cni(add_string_literal, true))
+			    .add_var("link_var", make_cni(link_var))
+			    .add_var("unlink_var", make_cni(unlink_var));
 		}
 	} // namespace runtime_cs_ext
 
-	namespace string_cs_ext {
+	namespace string_cs_ext
+	{
 		using namespace cs;
 
 		string assign(string &str, const numeric &posit, char ch)
@@ -1981,7 +2069,7 @@ namespace cs_impl {
 		{
 			string s;
 			for (auto &ch : str)
-				s.push_back(std::tolower(ch));
+				s.push_back(std::tolower(static_cast<unsigned char>(ch)));
 			return std::move(s);
 		}
 
@@ -1989,7 +2077,7 @@ namespace cs_impl {
 		{
 			string s;
 			for (auto &ch : str)
-				s.push_back(std::toupper(ch));
+				s.push_back(std::toupper(static_cast<unsigned char>(ch)));
 			return std::move(s);
 		}
 
@@ -2005,9 +2093,12 @@ namespace cs_impl {
 				is_sep[static_cast<unsigned char>(sig.const_val<char>())] = true;
 			array arr;
 			string buf;
-			for (auto ch : str) {
-				if (is_sep[static_cast<unsigned char>(ch)]) {
-					if (!buf.empty()) {
+			for (auto ch : str)
+			{
+				if (is_sep[static_cast<unsigned char>(ch)])
+				{
+					if (!buf.empty())
+					{
 						arr.emplace_back(std::move(buf));
 						buf.clear();
 					}
@@ -2026,9 +2117,9 @@ namespace cs_impl {
 				return "";
 			std::size_t beg = 0;
 			std::size_t end = str.size() - 1;
-			while (beg <= end && (std::isspace(str[beg]) || std::iscntrl(str[beg])))
+			while (beg <= end && (std::isspace(static_cast<unsigned char>(str[beg])) || std::iscntrl(static_cast<unsigned char>(str[beg]))))
 				++beg;
-			while (end >= beg && (std::isspace(str[end]) || std::iscntrl(str[end])))
+			while (end >= beg && (std::isspace(static_cast<unsigned char>(str[end])) || std::iscntrl(static_cast<unsigned char>(str[end]))))
 				--end;
 			return str.substr(beg, end - beg + 1);
 		}
@@ -2036,29 +2127,30 @@ namespace cs_impl {
 		void init()
 		{
 			(*string_ext)
-			.add_var("assign", make_cni(assign, true))
-			.add_var("append", make_cni(append, true))
-			.add_var("insert", make_cni(insert, true))
-			.add_var("erase", make_cni(erase, true))
-			.add_var("replace", make_cni(replace, true))
-			.add_var("substr", make_cni(substr, true))
-			.add_var("find", make_cni(find, true))
-			.add_var("rfind", make_cni(rfind, true))
-			.add_var("cut", make_cni(cut, true))
-			.add_var("empty", make_cni(empty, true))
-			.add_var("clear", make_cni(clear, true))
-			.add_var("size", make_cni(size, callable::types::member_visitor))
-			.add_var("tolower", make_cni(tolower, true))
-			.add_var("to_lower", make_cni(tolower, true))
-			.add_var("toupper", make_cni(toupper, true))
-			.add_var("to_upper", make_cni(toupper, true))
-			.add_var("to_number", make_cni(to_number, true))
-			.add_var("split", make_cni(split, true))
-			.add_var("trim", make_cni(trim, true));
+			    .add_var("assign", make_cni(assign, true))
+			    .add_var("append", make_cni(append, true))
+			    .add_var("insert", make_cni(insert, true))
+			    .add_var("erase", make_cni(erase, true))
+			    .add_var("replace", make_cni(replace, true))
+			    .add_var("substr", make_cni(substr, true))
+			    .add_var("find", make_cni(find, true))
+			    .add_var("rfind", make_cni(rfind, true))
+			    .add_var("cut", make_cni(cut, true))
+			    .add_var("empty", make_cni(empty, true))
+			    .add_var("clear", make_cni(clear, true))
+			    .add_var("size", make_cni(size, callable::types::member_visitor))
+			    .add_var("tolower", make_cni(tolower, true))
+			    .add_var("to_lower", make_cni(tolower, true))
+			    .add_var("toupper", make_cni(toupper, true))
+			    .add_var("to_upper", make_cni(toupper, true))
+			    .add_var("to_number", make_cni(to_number, true))
+			    .add_var("split", make_cni(split, true))
+			    .add_var("trim", make_cni(trim, true));
 		}
 	} // namespace string_cs_ext
 
-	namespace console_cs_ext {
+	namespace console_cs_ext
+	{
 		using namespace cs;
 		using namespace cs_impl;
 
@@ -2105,18 +2197,19 @@ namespace cs_impl {
 		void init()
 		{
 			(*console_ext)
-			.add_var("terminal_width", make_cni(terminal_width))
-			.add_var("terminal_height", make_cni(terminal_height))
-			.add_var("gotoxy", make_cni(gotoxy))
-			.add_var("echo", make_cni(echo))
-			.add_var("cursor", make_cni(cursor))
-			.add_var("clrscr", make_cni(clrscr))
-			.add_var("getch", make_cni(getch))
-			.add_var("kbhit", make_cni(kbhit));
+			    .add_var("terminal_width", make_cni(terminal_width))
+			    .add_var("terminal_height", make_cni(terminal_height))
+			    .add_var("gotoxy", make_cni(gotoxy))
+			    .add_var("echo", make_cni(echo))
+			    .add_var("cursor", make_cni(cursor))
+			    .add_var("clrscr", make_cni(clrscr))
+			    .add_var("getch", make_cni(getch))
+			    .add_var("kbhit", make_cni(kbhit));
 		}
 	} // namespace console_cs_ext
 
-	namespace file_cs_ext {
+	namespace file_cs_ext
+	{
 		using namespace cs;
 		using namespace cs_impl;
 
@@ -2142,19 +2235,20 @@ namespace cs_impl {
 		{
 			using namespace cs_impl::file_system;
 			(*file_ext)
-			.add_var("copy", make_cni(copy))
-			.add_var("rename", make_cni(move))
-			.add_var("remove", make_cni(remove))
-			.add_var("exist", make_cni(exist))
-			.add_var("ctime", make_cni(ctime))
-			.add_var("mtime", make_cni(mtime))
-			.add_var("can_read", make_cni(can_read))
-			.add_var("can_write", make_cni(can_write))
-			.add_var("can_execute", make_cni(can_execute));
+			    .add_var("copy", make_cni(copy))
+			    .add_var("rename", make_cni(move))
+			    .add_var("remove", make_cni(remove))
+			    .add_var("exist", make_cni(exist))
+			    .add_var("ctime", make_cni(ctime))
+			    .add_var("mtime", make_cni(mtime))
+			    .add_var("can_read", make_cni(can_read))
+			    .add_var("can_write", make_cni(can_write))
+			    .add_var("can_execute", make_cni(can_execute));
 		}
 	} // namespace file_cs_ext
 
-	namespace path_cs_ext {
+	namespace path_cs_ext
+	{
 		using namespace cs;
 		using namespace cs_impl;
 
@@ -2184,36 +2278,37 @@ namespace cs_impl {
 		{
 			using namespace cs_impl::file_system;
 			(*path_type_ext)
-			.add_var("unknown", var::make_constant<file_type>(file_type::unknown))
-			.add_var("fifo", var::make_constant<file_type>(file_type::fifo))
-			.add_var("sock", var::make_constant<file_type>(file_type::socket))
-			.add_var("chr", var::make_constant<file_type>(file_type::character))
-			.add_var("dir", var::make_constant<file_type>(file_type::directory))
-			.add_var("blk", var::make_constant<file_type>(file_type::block))
-			.add_var("reg", var::make_constant<file_type>(file_type::regular))
-			.add_var("lnk", var::make_constant<file_type>(file_type::symlink));
+			    .add_var("unknown", var::make_constant<file_type>(file_type::unknown))
+			    .add_var("fifo", var::make_constant<file_type>(file_type::fifo))
+			    .add_var("sock", var::make_constant<file_type>(file_type::socket))
+			    .add_var("chr", var::make_constant<file_type>(file_type::character))
+			    .add_var("dir", var::make_constant<file_type>(file_type::directory))
+			    .add_var("blk", var::make_constant<file_type>(file_type::block))
+			    .add_var("reg", var::make_constant<file_type>(file_type::regular))
+			    .add_var("lnk", var::make_constant<file_type>(file_type::symlink));
 			(*path_info_ext)
-			.add_var("name", make_cni(name, callable::types::member_visitor))
-			.add_var("type", make_cni(type, callable::types::member_visitor));
+			    .add_var("name", make_cni(name, callable::types::member_visitor))
+			    .add_var("type", make_cni(type, callable::types::member_visitor));
 			(*path_ext)
-			.add_var("type", make_namespace(path_type_ext))
-			.add_var("info", make_namespace(path_info_ext))
-			.add_var("separator", var::make_constant<char>(path_separator))
-			.add_var("delimiter", var::make_constant<char>(path_delimiter))
-			.add_var("scan", make_cni(scan))
-			.add_var("copy", make_cni(copy))
-			.add_var("rename", make_cni(move))
-			.add_var("remove", make_cni(remove))
-			.add_var("exist", make_cni(is_dir))
-			.add_var("is_file", make_cni(is_file))
-			.add_var("is_directory", make_cni(is_dir))
-			.add_var("mkdir", make_cni(mkdir))
-			.add_var("mkdir_p", make_cni(mkdir_p))
-			.add_var("chmod", make_cni(chmod))
-			.add_var("chmod_r", make_cni(chmod_r));
+			    .add_var("type", make_namespace(path_type_ext))
+			    .add_var("info", make_namespace(path_info_ext))
+			    .add_var("separator", var::make_constant<char>(path_separator))
+			    .add_var("delimiter", var::make_constant<char>(path_delimiter))
+			    .add_var("scan", make_cni(scan))
+			    .add_var("copy", make_cni(copy))
+			    .add_var("rename", make_cni(move))
+			    .add_var("remove", make_cni(remove))
+			    .add_var("exist", make_cni(is_dir))
+			    .add_var("is_file", make_cni(is_file))
+			    .add_var("is_directory", make_cni(is_dir))
+			    .add_var("mkdir", make_cni(mkdir))
+			    .add_var("mkdir_p", make_cni(mkdir_p))
+			    .add_var("chmod", make_cni(chmod))
+			    .add_var("chmod_r", make_cni(chmod_r));
 		}
 	} // namespace path_cs_ext
-	namespace system_cs_ext {
+	namespace system_cs_ext
+	{
 		using namespace cs;
 
 		numeric run(const string &str)
@@ -2241,30 +2336,31 @@ namespace cs_impl {
 			file_cs_ext::init();
 			path_cs_ext::init();
 			(*system_ext)
-			.add_var("console", make_namespace(console_ext))
-			.add_var("file", make_namespace(file_ext))
-			.add_var("path", make_namespace(path_ext))
-			.add_var("in", var::make_protect<istream>(&std::cin, [](std::istream *) {}))
-			.add_var("out", var::make_protect<ostream>(&std::cout, [](std::ostream *) {}))
-			.add_var("err", var::make_protect<ostream>(&std::cerr, [](std::ostream *) {}))
-			.add_var("log", var::make_protect<ostream>(&std::clog, [](std::ostream *) {}))
-			.add_var("run", make_cni(run))
-			.add_var("getenv", make_cni(getenv))
-			.add_var("exit", make_cni(exit))
-			.add_var("os_name", var::make_constant<string>(COVSCRIPT_PLATFORM_NAME))
-			.add_var("arch_name", var::make_constant<string>(COVSCRIPT_ARCH_NAME))
-			.add_var("compiler_name", var::make_constant<string>(COVSCRIPT_COMPILER_NAME))
-			.add_var("is_platform_windows", make_cni(platform::is_platform_win32))
-			.add_var("is_platform_linux", make_cni(platform::is_platform_linux))
-			.add_var("is_platform_darwin", make_cni(platform::is_platform_darwin))
-			.add_var("is_platform_unix", make_cni(platform::is_platform_unix));
+			    .add_var("console", make_namespace(console_ext))
+			    .add_var("file", make_namespace(file_ext))
+			    .add_var("path", make_namespace(path_ext))
+			    .add_var("in", var::make_protect<istream>(&std::cin, [](std::istream *) {}))
+			    .add_var("out", var::make_protect<ostream>(&std::cout, [](std::ostream *) {}))
+			    .add_var("err", var::make_protect<ostream>(&std::cerr, [](std::ostream *) {}))
+			    .add_var("log", var::make_protect<ostream>(&std::clog, [](std::ostream *) {}))
+			    .add_var("run", make_cni(run))
+			    .add_var("getenv", make_cni(getenv))
+			    .add_var("exit", make_cni(exit))
+			    .add_var("os_name", var::make_constant<string>(COVSCRIPT_PLATFORM_NAME))
+			    .add_var("arch_name", var::make_constant<string>(COVSCRIPT_ARCH_NAME))
+			    .add_var("compiler_name", var::make_constant<string>(COVSCRIPT_COMPILER_NAME))
+			    .add_var("is_platform_windows", make_cni(platform::is_platform_win32))
+			    .add_var("is_platform_linux", make_cni(platform::is_platform_linux))
+			    .add_var("is_platform_darwin", make_cni(platform::is_platform_darwin))
+			    .add_var("is_platform_unix", make_cni(platform::is_platform_unix));
 		}
 	} // namespace system_cs_ext
 
 	void init_extensions()
 	{
 		static bool extensions_initiator = true;
-		if (extensions_initiator) {
+		if (extensions_initiator)
+		{
 			extensions_initiator = false;
 			member_visitor_cs_ext::init();
 			iostream_cs_ext::init();

@@ -32,23 +32,59 @@
 #include <chrono>
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
+
+// Non-interactive (piped/redirected) input must not busy-wait on kbhit().
+static bool stdin_is_tty()
+{
+#ifdef COVSCRIPT_PLATFORM_WIN32
+	return ::_isatty(::_fileno(stdin)) != 0;
+#else
+	return ::isatty(::fileno(stdin)) != 0;
+#endif
+}
+
+// Bare exception message (no file/line wrapper or prefix) for exact sentinel match.
+static std::string bare_error_message(const std::exception &e)
+{
+	if (const auto *ce = dynamic_cast<const cs::exception *>(&e))
+		return ce->message();
+	if (const auto *fe = dynamic_cast<const cs::fatal_error *>(&e))
+		return fe->message();
+	return e.what();
+}
+
+// collect_garbage() nulls the compiler context; re-bind before building
+// expressions, or trim_expr dereferences a null pointer.
+extern cs::context_t context;
+static void ensure_compiler_context()
+{
+	if (context.get() != nullptr)
+		context->compiler->swap_context(context);
+}
+
+#ifdef COVSCRIPT_PLATFORM_WIN32
 
 #include <windows.h>
 
 bool ctrlhandler(DWORD fdwctrltype)
 {
-	switch (fdwctrltype) {
-	case CTRL_C_EVENT:
-		std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
-		cs::current_process->raise_sigint();
-		return true;
-	case CTRL_BREAK_EVENT: {
-		int code = 0;
-		cs::process_context::on_process_exit_default_handler(&code);
-		return true;
-	}
-	default:
-		return false;
+	switch (fdwctrltype)
+	{
+		case CTRL_C_EVENT:
+			std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
+			cs::current_process->raise_sigint();
+			return true;
+		case CTRL_BREAK_EVENT:
+			// Cooperative exit via the main loop; never run cleanup on the
+			// console-control thread (mirrors interpreter.cpp).
+			cs::current_process->raise_exit();
+			return true;
+		default:
+			return false;
 	}
 }
 
@@ -64,14 +100,15 @@ void activate_sigint_handler()
 
 void signal_handler(int sig)
 {
-	std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
+	// Only async-signal-safe operations are allowed in a signal handler.
+	static const char msg[] = "Keyboard Interrupt (Ctrl+C Received)\n";
+	::write(STDERR_FILENO, msg, sizeof(msg) - 1);
 	cs::current_process->raise_sigint();
 }
 
 void activate_sigint_handler()
 {
-	struct sigaction sa_usr {
-	};
+	struct sigaction sa_usr{};
 	sa_usr.sa_handler = &signal_handler;
 	sigemptyset(&sa_usr.sa_mask);
 	// sa_usr.sa_flags = SA_RESTART | SA_NODEFER;
@@ -95,31 +132,39 @@ int covscript_args(int args_size, char *args[])
 	int expect_import_path = 0;
 	int expect_stack_resize = 0;
 	int index = 1;
-	for (; index < args_size; ++index) {
-		if (expect_csym == 1) {
+	for (; index < args_size; ++index)
+	{
+		if (expect_csym == 1)
+		{
 			csym_path = cs::process_path(args[index]);
 			expect_csym = 2;
 		}
-		else if (expect_log_path == 1) {
+		else if (expect_log_path == 1)
+		{
 			log_path = cs::process_path(args[index]);
 			expect_log_path = 2;
 		}
-		else if (expect_import_path == 1) {
+		else if (expect_import_path == 1)
+		{
 			cs::current_process->import_path += cs::path_delimiter + cs::process_path(args[index]);
 			expect_import_path = 2;
 		}
-		else if (expect_stack_resize == 1) {
-			try {
+		else if (expect_stack_resize == 1)
+		{
+			try
+			{
 				cs::current_process->resize_stack(std::stoul(args[index]));
 			}
-			catch (const std::exception &) {
+			catch (const std::exception &)
+			{
 				throw cs::fatal_error(std::string("invalid stack size argument: ") + args[index]);
 			}
 			expect_stack_resize = 2;
 		}
-		else if (args[index][0] == '-') {
+		else if (args[index][0] == '-')
+		{
 			if ((std::strcmp(args[index], "--help") == 0 || std::strcmp(args[index], "-h") == 0) &&
-			        !show_help_info)
+			    !show_help_info)
 				show_help_info = true;
 			else if ((std::strcmp(args[index], "--silent") == 0 || std::strcmp(args[index], "-s") == 0) && !silent)
 				silent = true;
@@ -147,19 +192,21 @@ int covscript_args(int args_size, char *args[])
 		else
 			break;
 	}
-	if (expect_csym == 1 || expect_log_path == 1 || expect_import_path == 1 || expect_import_path == 1)
+	if (expect_csym == 1 || expect_log_path == 1 || expect_import_path == 1 || expect_stack_resize == 1)
 		throw cs::fatal_error("argument syntax error.");
 	return index;
 }
 
-class breakpoint_recorder final {
-	struct breakpoint final {
+class breakpoint_recorder final
+{
+	struct breakpoint final
+	{
 		std::size_t id = 0;
 		std::variant<std::size_t, std::string, cs::var> data;
 
 		template <typename T>
 		breakpoint(std::size_t _id, T &&_data)
-			: id(_id), data(std::forward<T>(_data))
+		    : id(_id), data(std::forward<T>(_data))
 		{
 		}
 	};
@@ -168,7 +215,7 @@ class breakpoint_recorder final {
 	std::forward_list<breakpoint> m_breakpoints;
 	cs::map_t<std::string, std::pair<std::size_t, bool>> m_pending;
 
-public:
+   public:
 	breakpoint_recorder() = default;
 
 	std::size_t add_line(std::size_t line_num)
@@ -200,13 +247,20 @@ public:
 
 	void replace_pending(const std::string &name, const cs::var &function)
 	{
-		if (m_pending.count(name) > 0) {
+		if (m_pending.count(name) > 0)
+		{
 			const cs::callable::function_type &target = function.const_val<cs::callable>().get_raw_data();
+			if (target.target_type() != typeid(cs::function_ptr) || target.target<cs::function_ptr>() == nullptr ||
+			    target.target<cs::function_ptr>()->fptr == nullptr)
+				return; // Non-script/empty target: stay pending, no dangling dereference
 			target.target<cs::function_ptr>()->fptr->set_debugger_state(true);
 			auto key = m_pending.find(name);
-			if (key->second.second) {
-				for (auto &it : m_breakpoints) {
-					if (it.id == key->second.first) {
+			if (key->second.second)
+			{
+				for (auto &it : m_breakpoints)
+				{
+					if (it.id == key->second.first)
+					{
 						it.data.emplace<cs::var>(function);
 						key->second.second = false;
 						break;
@@ -218,7 +272,8 @@ public:
 
 	void remove(std::size_t id)
 	{
-		m_breakpoints.remove_if([this, id](const breakpoint &b) -> bool {
+		m_breakpoints.remove_if([this, id](const breakpoint &b) -> bool
+		{
 			if (b.id == id && b.data.index() == 2)
 				std::get<cs::var>(b.data).const_val<cs::callable>().get_raw_data().target<cs::function_ptr>()->fptr->set_debugger_state(
 				    false);
@@ -245,9 +300,11 @@ public:
 	{
 		std::cout << "ID\tBreakpoint\n"
 		          << std::endl;
-		for (auto &b : m_breakpoints) {
+		for (auto &b : m_breakpoints)
+		{
 			std::cout << b.id << "\t";
-			if (b.data.index() == 2) {
+			if (b.data.index() == 2)
+			{
 				auto func = std::get<cs::var>(b.data).const_val<cs::callable>().get_raw_data().target<cs::function_ptr>()->fptr;
 				std::cout << "line " << func->get_raw_statement()->get_line_num() << ", " << func->get_declaration()
 				          << std::endl;
@@ -261,10 +318,20 @@ public:
 
 	void reset()
 	{
-		for (auto &it : m_pending) {
+		for (auto &it : m_pending)
+		{
 			it.second.second = true;
-			for (auto &b : m_breakpoints) {
-				if (b.id == it.second.first) {
+			for (auto &b : m_breakpoints)
+			{
+				if (b.id == it.second.first)
+				{
+					// Clear the function's step state before reverting to pending
+					if (b.data.index() == 2)
+					{
+						auto *fptr = std::get<cs::var>(b.data).const_val<cs::callable>().get_raw_data().target<cs::function_ptr>();
+						if (fptr != nullptr && fptr->fptr != nullptr)
+							fptr->fptr->set_debugger_state(false);
+					}
 					b.data.emplace<std::string>(it.first);
 					break;
 				}
@@ -275,17 +342,20 @@ public:
 
 using callback_t = std::function<bool(const std::string &)>;
 
-class function_map_t final {
+class function_map_t final
+{
 	cs::map_t<std::string, callback_t> m_map;
 
-public:
+   public:
 	function_map_t() = default;
 
 	template <typename T>
 	void add_func(const std::string &name, const std::string &shortcut, T &&func)
 	{
-		m_map.emplace(name, std::forward<T>(func));
-		m_map.emplace(shortcut, std::forward<T>(func));
+		// Copy once for two keys: forwarding twice would move from a moved-from arg.
+		auto value = std::forward<T>(func);
+		m_map.emplace(name, value);
+		m_map.emplace(shortcut, value);
 	}
 
 	bool exist(const std::string &name)
@@ -304,7 +374,7 @@ std::size_t time()
 	static std::chrono::time_point<std::chrono::high_resolution_clock> timer(std::chrono::high_resolution_clock::now());
 	return std::chrono::duration_cast<std::chrono::milliseconds>(
 	           std::chrono::high_resolution_clock::now() - timer)
-	       .count();
+	    .count();
 }
 
 std::size_t breakpoint_recorder::m_id = 0;
@@ -335,14 +405,21 @@ bool covscript_debugger()
 #ifdef COVSCRIPT_PLATFORM_WIN32
 	std::cout << "> " << std::flush;
 	// Workaround: https://stackoverflow.com/a/26763490
-	while (true) {
+	while (true)
+	{
 		cs::current_process->poll_event();
 		std::getline(std::cin, cmd);
 		if (std::cin)
 			break;
+		if (std::cin.eof())
+		{
+			int code = 0;
+			cs::process_context::on_process_exit_default_handler(&code);
+		}
 	}
 #else
-	if (!std::cin) {
+	if (!std::cin)
+	{
 		int code = 0;
 		cs::process_context::on_process_exit_default_handler(&code);
 	}
@@ -352,28 +429,34 @@ bool covscript_debugger()
 #endif
 	std::size_t posit = 0;
 	for (; posit < cmd.size(); ++posit)
-		if (std::isspace(cmd[posit]))
+		if (std::isspace(static_cast<unsigned char>(cmd[posit])))
 			break;
 		else
 			func.push_back(cmd[posit]);
 	for (; posit < cmd.size(); ++posit)
-		if (!std::isspace(cmd[posit]))
+		if (!std::isspace(static_cast<unsigned char>(cmd[posit])))
 			break;
 	for (; posit < cmd.size(); ++posit)
 		args.push_back(cmd[posit]);
 	if (func.empty())
 		return true;
-	if (!func_map.exist(func)) {
+	if (!func_map.exist(func))
+	{
 		std::cout << "Undefined command: \"" << func << R"(". Try "help".)" << std::endl;
 		return true;
 	}
-	else {
-		try {
+	else
+	{
+		try
+		{
 			return func_map.call(func, args);
 		}
-		catch (const std::exception &e) {
-			if (context.get() == nullptr) {
-				if (!log_path.empty()) {
+		catch (const std::exception &e)
+		{
+			if (context.get() == nullptr)
+			{
+				if (!log_path.empty())
+				{
 					if (!log_stream.is_open())
 						log_stream.open(::log_path);
 					if (log_stream)
@@ -385,7 +468,16 @@ bool covscript_debugger()
 				return true;
 			}
 			else
-				throw;
+			{
+				// A command failed while an instance is running (e.g. a bad
+				// breakpoint expression): print and continue the session, but let
+				// the control-flow sentinels propagate to the outer loop.
+				const std::string msg = bare_error_message(e);
+				if (msg == "CS_SIGINT" || msg == "CS_DEBUGGER_EXIT")
+					throw;
+				std::cerr << e.what() << std::endl;
+				return true;
+			}
 		}
 	}
 }
@@ -394,36 +486,42 @@ void cs_debugger_step_callback(cs::statement_base *stmt)
 {
 	if (stmt->get_file_path() != path)
 		return;
-	if (context->compiler->csyms.count(path) > 0) {
+	if (context->compiler->csyms.count(path) > 0)
+	{
 		cs::csym_info &csym = context->compiler->csyms[path];
 		std::size_t current_line = stmt->get_line_num();
-		if (current_line >= csym.map.size())
+		if (current_line == 0 || current_line > csym.map.size())
 			return;
 		std::size_t actual_line = csym.map[current_line - 1];
 		if (actual_line >= csym.codes.size() || actual_line == 0)
 			return;
 		const std::string &code = csym.codes[actual_line - 1];
-		if (!exec_by_step && breakpoints.exist(actual_line)) {
+		if (!exec_by_step && breakpoints.exist(actual_line))
+		{
 			std::cout << "\nHit breakpoint, at \"" << csym.file << "\", line " << actual_line
 			          << std::endl;
 			current_level = cs::current_process->stack.size();
 			exec_by_step = true;
 		}
-		if (exec_by_step && (step_into_function || cs::current_process->stack.size() <= current_level)) {
+		if (exec_by_step && (step_into_function || cs::current_process->stack.size() <= current_level))
+		{
 			std::cout << actual_line << "\t" << code << std::endl;
 			current_level = cs::current_process->stack.size();
 			step_into_function = false;
 			while (covscript_debugger());
 		}
 	}
-	else {
-		if (!exec_by_step && breakpoints.exist(stmt->get_line_num())) {
+	else
+	{
+		if (!exec_by_step && breakpoints.exist(stmt->get_line_num()))
+		{
 			std::cout << "\nHit breakpoint, at \"" << stmt->get_file_path() << "\", line " << stmt->get_line_num()
 			          << std::endl;
 			current_level = cs::current_process->stack.size();
 			exec_by_step = true;
 		}
-		if (exec_by_step && (step_into_function || cs::current_process->stack.size() <= current_level)) {
+		if (exec_by_step && (step_into_function || cs::current_process->stack.size() <= current_level))
+		{
 			std::cout << stmt->get_line_num() << "\t" << stmt->get_raw_code() << std::endl;
 			current_level = cs::current_process->stack.size();
 			step_into_function = false;
@@ -439,10 +537,11 @@ void cs_debugger_func_breakpoint(const std::string &name, const cs::var &func)
 
 void cs_debugger_func_callback(const std::string &decl, cs::statement_base *stmt)
 {
-	if (context->compiler->csyms.count(stmt->get_file_path()) > 0) {
+	if (context->compiler->csyms.count(stmt->get_file_path()) > 0)
+	{
 		cs::csym_info &csym = context->compiler->csyms[stmt->get_file_path()];
 		std::size_t current_line = stmt->get_line_num();
-		if (current_line >= csym.map.size())
+		if (current_line == 0 || current_line > csym.map.size())
 			return;
 		std::size_t actual_line = csym.map[current_line - 1];
 		if (actual_line >= csym.codes.size() || actual_line == 0)
@@ -459,9 +558,12 @@ cs::array split(const std::string &str)
 {
 	cs::array arr{path};
 	std::string buf;
-	for (auto &ch : str) {
-		if (std::isspace(ch)) {
-			if (!buf.empty()) {
+	for (auto &ch : str)
+	{
+		if (std::isspace(static_cast<unsigned char>(ch)))
+		{
+			if (!buf.empty())
+			{
 				arr.emplace_back(buf);
 				buf.clear();
 			}
@@ -476,10 +578,12 @@ cs::array split(const std::string &str)
 
 void covscript_main(int args_size, char *args[])
 {
-	if (args_size > 1) {
+	if (args_size > 1)
+	{
 		int index = covscript_args(args_size, args);
 		cs::current_process->import_path += cs::path_delimiter + cs::get_import_path();
-		if (show_help_info) {
+		if (show_help_info)
+		{
 			std::cout << "Usage: cs_dbg [options...] <FILE>\n"
 			          << "Options:\n";
 			std::cout << "    Option                Mnemonic   Function\n";
@@ -494,7 +598,8 @@ void covscript_main(int args_size, char *args[])
 			std::cout << std::endl;
 			return;
 		}
-		else if (show_version_info) {
+		else if (show_version_info)
+		{
 			std::cout << "Covariant Script Programming Language Debugger\n";
 			std::cout << "Version: " << cs::current_process->version << std::endl;
 			std::cout << cs::copyright_info << std::endl;
@@ -514,44 +619,50 @@ void covscript_main(int args_size, char *args[])
 			throw cs::fatal_error("argument syntax error.");
 		path = cs::process_path(args[index]);
 		if (!cs_impl::file_system::exist(path) || cs_impl::file_system::is_dir(path) ||
-		        !cs_impl::file_system::can_read(path))
+		    !cs_impl::file_system::can_read(path))
 			throw cs::fatal_error("invalid input file.");
 		cs::prepend_import_path(path, cs::current_process);
-		if (!silent) {
+		if (!silent)
+		{
 			std::cout << "Covariant Script Programming Language Debugger\nVersion: "
 			          << cs::current_process->version << " [" << COVSCRIPT_COMPILER_NAME << " on " << COVSCRIPT_PLATFORM_NAME << "]\n"
-			          "Copyright (C) 2017-2026 Michael Lee. All rights reserved.\n"
-			          "Please visit <http://covscript.org.cn/> for more information."
+			                                                                                                                     "Copyright (C) 2017-2026 Michael Lee. All rights reserved.\n"
+			                                                                                                                     "Please visit <http://covscript.org.cn/> for more information."
 			          << std::endl;
 		}
-		cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
-			cs::current_process->exit_code = *static_cast<int *>(code);
+		cs::current_process->on_process_exit.add_listener([main_process = cs::current_process](void *code) -> bool
+		{
+			// Write to the process main() reads it from (a fiber's process would lose it).
+			main_process->exit_code = *static_cast<int *>(code);
 			throw cs::fatal_error("CS_DEBUGGER_EXIT"); });
 		cs::current_process->on_process_sigint.add_listener([](void *) -> bool
 		{ throw cs::fatal_error("CS_SIGINT"); });
-		cs::current_process->on_process_sigint.add_listener([](void *) -> bool {
+		cs::current_process->on_process_sigint.add_listener([](void *) -> bool
+		{
 			std::cin.clear();
 			return false; });
-		func_map.add_func("quit", "q", [](const std::string &cmd) -> bool {
+		func_map.add_func("quit", "q", [](const std::string &cmd) -> bool
+		{
 			if (context.get() != nullptr)
 			{
-				std::cout
-				        << "An interpreter instance is running, do you really want to quit?\nPress (y) to confirm or press any other key to cancel."
-				        << std::endl;
-				while (!cs_impl::conio::kbhit());
-				switch (std::tolower(cs_impl::conio::getch())) {
-				case 'y': {
-					quit_sig = true;
-					int code = 0;
-					cs::current_process->on_process_exit.touch(&code);
-					return false;
+				// Non-interactive input (pipe/redirection) cannot press a key;
+				// skip the confirmation.
+				if (stdin_is_tty()) {
+					std::cout
+					        << "An interpreter instance is running, do you really want to quit?\nPress (y) to confirm or press any other key to cancel."
+					        << std::endl;
+					while (!cs_impl::conio::kbhit());
+					if (std::tolower(static_cast<unsigned char>(cs_impl::conio::getch())) != 'y')
+						return true;
 				}
-				default:
-					return true;
-				}
+				quit_sig = true;
+				int code = 0;
+				cs::current_process->on_process_exit.touch(&code);
+				return false;
 			}
 			return false; });
-		func_map.add_func("help", "h", [](const std::string &cmd) -> bool {
+		func_map.add_func("help", "h", [](const std::string &cmd) -> bool
+		{
 			std::cout << "Command           Shortcut    Function\n\n";
 			std::cout << "quit                     q    Exit the debugger\n";
 			std::cout << "help                     h    Show help infomation\n";
@@ -567,32 +678,37 @@ void covscript_main(int args_size, char *args[])
 			std::cout << "run <...>                r    Run program with specific arguments\n";
 			std::cout << std::endl;
 			return true; });
-		func_map.add_func("next", "n", [](const std::string &cmd) -> bool {
+		func_map.add_func("next", "n", [](const std::string &cmd) -> bool
+		{
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
 			return false; });
-		func_map.add_func("step", "s", [](const std::string &cmd) -> bool {
+		func_map.add_func("step", "s", [](const std::string &cmd) -> bool
+		{
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
 			step_into_function = true;
 			return false; });
-		func_map.add_func("continue", "c", [](const std::string &cmd) -> bool {
+		func_map.add_func("continue", "c", [](const std::string &cmd) -> bool
+		{
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
 			exec_by_step = false;
 			return false; });
-		func_map.add_func("backtrace", "bt", [](const std::string &cmd) -> bool {
+		func_map.add_func("backtrace", "bt", [](const std::string &cmd) -> bool
+		{
 			if (context.get() == nullptr)
 				throw cs::runtime_error("Please launch a interpreter instance first.");
 			for (auto &func: cs::current_process->stack_backtrace)
 				std::cout << func << std::endl;
 			std::cout << "function main()" << std::endl;
 			return true; });
-		func_map.add_func("break", "b", [](const std::string &cmd) -> bool {
+		func_map.add_func("break", "b", [](const std::string &cmd) -> bool
+		{
 			bool is_line = true;
 			for (auto &ch: cmd)
 			{
-				if (!std::isspace(ch) && !std::isdigit(ch)) {
+				if (!std::isspace(static_cast<unsigned char>(ch)) && !std::isdigit(static_cast<unsigned char>(ch))) {
 					is_line = false;
 					break;
 				}
@@ -615,6 +731,7 @@ void covscript_main(int args_size, char *args[])
 					cs::expression_t tree;
 					for (auto &ch: cmd)
 						buff.push_back(ch);
+					ensure_compiler_context();
 					context->compiler->build_expr(buff, tree);
 					id = breakpoints.add_func(context->instance->parse_expr(tree.root()));
 				}
@@ -631,10 +748,12 @@ void covscript_main(int args_size, char *args[])
 			}
 			std::cout << "Breakpoint " << id << result << std::endl;
 			return true; });
-		func_map.add_func("lsbreak", "lb", [](const std::string &cmd) -> bool {
+		func_map.add_func("lsbreak", "lb", [](const std::string &cmd) -> bool
+		{
 			breakpoints.list();
 			return true; });
-		func_map.add_func("rmbreak", "rb", [](const std::string &cmd) -> bool {
+		func_map.add_func("rmbreak", "rb", [](const std::string &cmd) -> bool
+		{
 			try
 			{
 				breakpoints.remove(std::stoul(cmd));
@@ -644,7 +763,8 @@ void covscript_main(int args_size, char *args[])
 				std::cout << "Invalid option: \"" << cmd << "\"" << std::endl;
 			}
 			return true; });
-		func_map.add_func("optimizer", "o", [](const std::string &cmd) -> bool {
+		func_map.add_func("optimizer", "o", [](const std::string &cmd) -> bool
+		{
 			if (context.get() != nullptr)
 			{
 				std::cout << "Runtime Error: Cannot tune optimizer while the interpreter is running." << std::endl;
@@ -657,7 +777,8 @@ void covscript_main(int args_size, char *args[])
 			else
 				std::cout << "Invalid option: \"" << cmd << R"(". Use "on" or "off".)" << std::endl;
 			return true; });
-		func_map.add_func("run", "r", [](const std::string &cmd) -> bool {
+		func_map.add_func("run", "r", [](const std::string &cmd) -> bool
+		{
 			if (context.get() != nullptr)
 			{
 				std::cout << "Runtime Error: Cannot run two or more instances at the same time." << std::endl;
@@ -682,11 +803,12 @@ void covscript_main(int args_size, char *args[])
 			}
 			catch (const std::exception &e)
 			{
-				if (std::strstr(e.what(), "CS_SIGINT") != nullptr) {
+				const std::string msg = bare_error_message(e);
+				if (msg == "CS_SIGINT") {
 					cs::process_context::cleanup_context();
 					activate_sigint_handler();
 				}
-				else if (std::strstr(e.what(), "CS_DEBUGGER_EXIT") == nullptr) {
+				else if (msg != "CS_DEBUGGER_EXIT") {
 					cs::collect_garbage(context);
 					std::cerr
 					        << "\nFatal Error: An exception was detected, the interpreter instance will terminate immediately."
@@ -715,7 +837,8 @@ void covscript_main(int args_size, char *args[])
 			          << std::endl;
 			reset_status();
 			return !quit_sig; });
-		func_map.add_func("print", "p", [](const std::string &cmd) -> bool {
+		func_map.add_func("print", "p", [](const std::string &cmd) -> bool
+		{
 			if (context.get() == nullptr)
 			{
 				std::cout << "Runtime Error: Please launch a interpreter instance first." << std::endl;
@@ -727,24 +850,29 @@ void covscript_main(int args_size, char *args[])
 				cs::expression_t tree;
 				for (auto &ch: cmd)
 					buff.push_back(ch);
+				ensure_compiler_context();
 				context->compiler->build_expr(buff, tree);
 				std::cout << context->instance->parse_expr(tree.root()) << std::endl;
 			}
 			catch (std::exception &e)
 			{
-				if (std::strstr(e.what(), "CS_SIGINT") != nullptr ||
-				        std::strstr(e.what(), "CS_DEBUGGER_EXIT") != nullptr)
+				const std::string msg = bare_error_message(e);
+				if (msg == "CS_SIGINT" || msg == "CS_DEBUGGER_EXIT")
 					throw;
 				std::cout << "Evaluation Failed: " << e.what() << std::endl;
 			}
 			return true; });
 		activate_sigint_handler();
-		for (bool result = true; result;) {
-			try {
+		for (bool result = true; result;)
+		{
+			try
+			{
 				result = covscript_debugger();
 			}
-			catch (const std::exception &e) {
-				if (std::strstr(e.what(), "CS_SIGINT") != nullptr) {
+			catch (const std::exception &e)
+			{
+				if (bare_error_message(e) == "CS_SIGINT")
+				{
 					cs::process_context::cleanup_context();
 					cs::collect_garbage(context);
 					reset_status();
@@ -763,18 +891,22 @@ int main(int args_size, char *args[])
 {
 	std::ios::sync_with_stdio(false);
 	int errorcode = 0;
-	try {
+	try
+	{
 		covscript_main(args_size, args);
 	}
-	catch (const cs::lang_error &le) {
+	catch (const cs::lang_error &le)
+	{
 		std::string msg;
 		if (le.has_location())
 			msg = cs::exception(le.line(), le.file(), le.code(), std::string("Uncaught exception: ") + le.what()).what();
 		else
 			msg = std::string("Uncaught exception: ") + le.what();
-		if (!log_path.empty()) {
+		if (!log_path.empty())
+		{
 			std::ofstream out(::log_path);
-			if (out) {
+			if (out)
+			{
 				out << msg;
 				out.flush();
 			}
@@ -784,10 +916,13 @@ int main(int args_size, char *args[])
 		std::cerr << msg << std::endl;
 		errorcode = -1;
 	}
-	catch (const std::exception &e) {
-		if (!log_path.empty()) {
+	catch (const std::exception &e)
+	{
+		if (!log_path.empty())
+		{
 			std::ofstream out(::log_path);
-			if (out) {
+			if (out)
+			{
 				out << e.what();
 				out.flush();
 			}
@@ -797,10 +932,13 @@ int main(int args_size, char *args[])
 		std::cerr << e.what() << std::endl;
 		errorcode = -1;
 	}
-	catch (...) {
-		if (!log_path.empty()) {
+	catch (...)
+	{
+		if (!log_path.empty())
+		{
 			std::ofstream out(::log_path);
-			if (out) {
+			if (out)
+			{
 				out << "Uncaught exception: Unknown exception";
 				out.flush();
 			}
@@ -810,7 +948,8 @@ int main(int args_size, char *args[])
 		std::cerr << "Uncaught exception: Unknown exception" << std::endl;
 		errorcode = -1;
 	}
-	if (wait_before_exit) {
+	if (wait_before_exit && stdin_is_tty())
+	{
 		std::cerr << "\nProcess finished with exit code " << errorcode << std::endl;
 		std::cerr << "\nPress any key to exit..." << std::endl;
 		while (!cs_impl::conio::kbhit());

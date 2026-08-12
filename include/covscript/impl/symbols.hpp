@@ -26,8 +26,10 @@
  */
 #include <covscript/impl/type_ext.hpp>
 
-namespace cs {
-	enum class token_types {
+namespace cs
+{
+	enum class token_types
+	{
 		null,
 		endline,
 		action,
@@ -45,7 +47,8 @@ namespace cs {
 		array,
 		parallel
 	};
-	enum class action_types {
+	enum class action_types
+	{
 		import_,
 		as_,
 		package_,
@@ -79,7 +82,8 @@ namespace cs {
 		catch_,
 		throw_
 	};
-	enum class signal_types {
+	enum class signal_types
+	{
 		endline_,
 		add_,
 		addasi_,
@@ -136,7 +140,8 @@ namespace cs {
 		bind_,
 		error_
 	};
-	enum class constant_values {
+	enum class constant_values
+	{
 		local_namepace,
 		global_namespace
 	};
@@ -147,7 +152,8 @@ namespace cs {
 	 * Block: Statement with code block.
 	 * Jit Command: Statement whitch execute in compile time.
 	 */
-	enum class method_types {
+	enum class method_types
+	{
 		null,
 		single,
 		block,
@@ -155,12 +161,13 @@ namespace cs {
 	};
 
 	template <typename Key, typename T>
-	class mapping final {
+	class mapping final
+	{
 		std::map<Key, T> mDat;
 
-	public:
+	   public:
 		mapping(std::initializer_list<std::pair<const Key, T>> l)
-			: mDat(l) {}
+		    : mDat(l) {}
 
 		bool exist(const Key &k) const
 		{
@@ -184,13 +191,14 @@ namespace cs {
 		}
 	};
 
-	class token_base {
+	class token_base
+	{
 		friend class compiler_type;
 
-	protected:
+	   protected:
 		std::size_t line_num = 1;
 
-	public:
+	   public:
 		static garbage_collector<token_base> gc;
 
 		static void *operator new(std::size_t size)
@@ -211,7 +219,7 @@ namespace cs {
 		token_base(const token_base &) = default;
 
 		explicit token_base(std::size_t line)
-			: line_num(line) {}
+		    : line_num(line) {}
 
 		virtual ~token_base() = default;
 
@@ -229,12 +237,13 @@ namespace cs {
 		}
 	};
 
-	class token_endline final : public token_base {
-	public:
+	class token_endline final : public token_base
+	{
+	   public:
 		token_endline() = default;
 
 		explicit token_endline(std::size_t line)
-			: token_base(line) {}
+		    : token_base(line) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -248,14 +257,15 @@ namespace cs {
 		}
 	};
 
-	class token_action final : public token_base {
+	class token_action final : public token_base
+	{
 		action_types mType;
 
-	public:
+	   public:
 		token_action() = delete;
 
 		explicit token_action(action_types t)
-			: mType(t) {}
+		    : mType(t) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -274,21 +284,22 @@ namespace cs {
 		}
 	};
 
-	class token_signal final : public token_base {
+	class token_signal final : public token_base
+	{
 		signal_types mType;
 
-	public:
+	   public:
 		token_signal() = delete;
 
 		explicit token_signal(signal_types t)
-			: mType(t)
+		    : mType(t)
 		{
 			if (t == signal_types::error_)
 				throw compile_error("Unknown signal.");
 		}
 
 		token_signal(signal_types t, std::size_t line)
-			: token_base(line), mType(t) {}
+		    : token_base(line), mType(t) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -303,14 +314,15 @@ namespace cs {
 		bool dump(std::ostream &) const override;
 	};
 
-	class token_id final : public token_base {
+	class token_id final : public token_base
+	{
 		var_id mId;
 
-	public:
+	   public:
 		token_id() = delete;
 
 		explicit token_id(const std::string &id)
-			: mId(id) {}
+		    : mId(id) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -329,14 +341,15 @@ namespace cs {
 		}
 	};
 
-	class token_vargs final : public token_base {
+	class token_vargs final : public token_base
+	{
 		std::string mId;
 
-	public:
+	   public:
 		token_vargs() = delete;
 
 		explicit token_vargs(std::string id)
-			: mId(std::move(id)) {}
+		    : mId(std::move(id)) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -355,14 +368,15 @@ namespace cs {
 		}
 	};
 
-	class token_expand final : public token_base {
+	class token_expand final : public token_base
+	{
 		tree_type<token_base *> mTree;
 
-	public:
+	   public:
 		token_expand() = delete;
 
 		explicit token_expand(tree_type<token_base *> tree)
-			: mTree(std::move(tree)) {}
+		    : mTree(std::move(tree)) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -377,15 +391,16 @@ namespace cs {
 		bool dump(std::ostream &) const override;
 	};
 
-	class token_value final : public token_base {
+	class token_value final : public token_base
+	{
 		static const map_t<char, char> escape_char;
 		var mVal;
 
-	public:
+	   public:
 		token_value() = delete;
 
 		explicit token_value(var val)
-			: mVal(std::move(val)) {}
+		    : mVal(std::move(val)) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -400,16 +415,17 @@ namespace cs {
 		bool dump(std::ostream &) const override;
 	};
 
-	class token_literal final : public token_base {
+	class token_literal final : public token_base
+	{
 		friend class compiler_type;
 
 		std::string m_data, m_literal;
 
-	public:
+	   public:
 		token_literal() = delete;
 
 		token_literal(std::string data, std::string literal)
-			: m_data(std::move(data)), m_literal(std::move(literal)) {}
+		    : m_data(std::move(data)), m_literal(std::move(literal)) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -433,14 +449,15 @@ namespace cs {
 		}
 	};
 
-	class token_sblist final : public token_base {
+	class token_sblist final : public token_base
+	{
 		std::deque<std::deque<token_base *>> mList;
 
-	public:
+	   public:
 		token_sblist() = delete;
 
 		explicit token_sblist(std::deque<std::deque<token_base *>> list)
-			: mList(std::move(list)) {}
+		    : mList(std::move(list)) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -459,14 +476,15 @@ namespace cs {
 		}
 	};
 
-	class token_mblist final : public token_base {
+	class token_mblist final : public token_base
+	{
 		std::deque<std::deque<token_base *>> mList;
 
-	public:
+	   public:
 		token_mblist() = delete;
 
 		explicit token_mblist(std::deque<std::deque<token_base *>> list)
-			: mList(std::move(list)) {}
+		    : mList(std::move(list)) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -485,14 +503,15 @@ namespace cs {
 		}
 	};
 
-	class token_lblist final : public token_base {
+	class token_lblist final : public token_base
+	{
 		std::deque<std::deque<token_base *>> mList;
 
-	public:
+	   public:
 		token_lblist() = delete;
 
 		explicit token_lblist(std::deque<std::deque<token_base *>> list)
-			: mList(std::move(list)) {}
+		    : mList(std::move(list)) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -511,14 +530,15 @@ namespace cs {
 		}
 	};
 
-	class token_expr final : public token_base {
+	class token_expr final : public token_base
+	{
 		tree_type<token_base *> mTree;
 
-	public:
+	   public:
 		token_expr() = delete;
 
 		explicit token_expr(tree_type<token_base *> tree)
-			: mTree(std::move(tree)) {}
+		    : mTree(std::move(tree)) {}
 
 		token_types get_type() const noexcept override
 		{
@@ -533,18 +553,19 @@ namespace cs {
 		bool dump(std::ostream &) const override;
 	};
 
-	class token_arglist final : public token_base {
+	class token_arglist final : public token_base
+	{
 		std::deque<tree_type<token_base *>> mTreeList;
 
-	public:
+	   public:
 		token_arglist() = default;
 
 		explicit token_arglist(std::deque<tree_type<token_base *>>
 
-		                       tlist)
-			:
+		                           tlist)
+		    :
 
-			mTreeList(std::move(tlist))
+		      mTreeList(std::move(tlist))
 		{
 		}
 
@@ -561,18 +582,19 @@ namespace cs {
 		bool dump(std::ostream &) const override;
 	};
 
-	class token_array final : public token_base {
+	class token_array final : public token_base
+	{
 		std::deque<tree_type<token_base *>> mTreeList;
 
-	public:
+	   public:
 		token_array() = default;
 
 		explicit token_array(std::deque<tree_type<token_base *>>
 
-		                     tlist)
-			:
+		                         tlist)
+		    :
 
-			mTreeList(std::move(tlist))
+		      mTreeList(std::move(tlist))
 		{
 		}
 
@@ -589,18 +611,19 @@ namespace cs {
 		bool dump(std::ostream &) const override;
 	};
 
-	class token_parallel final : public token_base {
+	class token_parallel final : public token_base
+	{
 		std::deque<tree_type<token_base *>> mTreeList;
 
-	public:
+	   public:
 		token_parallel() = default;
 
 		explicit token_parallel(std::deque<tree_type<token_base *>>
 
-		                        tlist)
-			:
+		                            tlist)
+		    :
 
-			mTreeList(std::move(tlist))
+		      mTreeList(std::move(tlist))
 		{
 		}
 
@@ -617,7 +640,8 @@ namespace cs {
 		bool dump(std::ostream &) const override;
 	};
 
-	enum class statement_types {
+	enum class statement_types
+	{
 		null,
 		expression_,
 		import_,
@@ -649,12 +673,13 @@ namespace cs {
 		throw_
 	};
 
-	class statement_base {
-	protected:
+	class statement_base
+	{
+	   protected:
 		context_t context;
 		std::size_t line_num = 1;
 
-	public:
+	   public:
 		static garbage_collector<statement_base> gc;
 
 		static void *operator new(std::size_t size)
@@ -675,8 +700,8 @@ namespace cs {
 		statement_base(const statement_base &) = default;
 
 		statement_base(context_t c, token_base *eptr)
-			: context(std::move(c)),
-			  line_num(static_cast<token_endline *>(eptr)->get_line_num()) {}
+		    : context(std::move(c)),
+		      line_num(static_cast<token_endline *>(eptr)->get_line_num()) {}
 
 		virtual ~statement_base() = default;
 
@@ -698,10 +723,12 @@ namespace cs {
 		inline void run()
 		{
 			current_process->poll_event();
-			try {
+			try
+			{
 				this->run_impl();
 			}
-			catch (lang_error &le) {
+			catch (lang_error &le)
+			{
 				if (!le.has_location())
 					le.set_location(this->get_line_num(), this->get_file_path(), this->get_raw_code());
 				throw;
@@ -716,10 +743,12 @@ namespace cs {
 		inline void repl_run()
 		{
 			current_process->poll_event();
-			try {
+			try
+			{
 				this->repl_run_impl();
 			}
-			catch (lang_error &le) {
+			catch (lang_error &le)
+			{
 				if (!le.has_location())
 					le.set_location(this->get_line_num(), this->get_file_path(), this->get_raw_code());
 				throw;
@@ -732,8 +761,9 @@ namespace cs {
 		}
 	};
 
-	class method_base {
-	public:
+	class method_base
+	{
+	   public:
 		static garbage_collector<method_base> gc;
 
 		static void *operator new(std::size_t size)
@@ -766,8 +796,9 @@ namespace cs {
 		virtual void postprocess(const context_t &, const domain_type &) {}
 	};
 
-	class method_end : public method_base {
-	public:
+	class method_end : public method_base
+	{
+	   public:
 		using method_base::method_base;
 
 		method_types get_type() const noexcept override

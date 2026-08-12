@@ -28,23 +28,41 @@
 #include <iostream>
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
+
+// Non-interactive (piped/redirected) input must not busy-wait on kbhit().
+static bool stdin_is_tty()
+{
+#ifdef COVSCRIPT_PLATFORM_WIN32
+	return ::_isatty(::_fileno(stdin)) != 0;
+#else
+	return ::isatty(::fileno(stdin)) != 0;
+#endif
+}
+
+#ifdef COVSCRIPT_PLATFORM_WIN32
 
 #include <windows.h>
 
 bool ctrlhandler(DWORD fdwctrltype)
 {
-	switch (fdwctrltype) {
-	case CTRL_C_EVENT:
-		std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
-		cs::current_process->raise_sigint();
-		return true;
-	case CTRL_BREAK_EVENT: {
-		int code = 0;
-		cs::process_context::on_process_exit_default_handler(&code);
-		return true;
-	}
-	default:
-		return false;
+	switch (fdwctrltype)
+	{
+		case CTRL_C_EVENT:
+			std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
+			cs::current_process->raise_sigint();
+			return true;
+		case CTRL_BREAK_EVENT:
+			// Cooperative exit via the main loop; never run cleanup on the
+			// console-control thread. Distinct from Ctrl+C: this requests an exit
+			// (dispatched through on_process_exit), not a SIGINT reset.
+			cs::current_process->raise_exit();
+			return true;
+		default:
+			return false;
 	}
 }
 
@@ -60,14 +78,15 @@ void activate_sigint_handler()
 
 void signal_handler(int sig)
 {
-	std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
+	// Only async-signal-safe operations are allowed in a signal handler.
+	static const char msg[] = "Keyboard Interrupt (Ctrl+C Received)\n";
+	::write(STDERR_FILENO, msg, sizeof(msg) - 1);
 	cs::current_process->raise_sigint();
 }
 
 void activate_sigint_handler()
 {
-	struct sigaction sa_usr {
-	};
+	struct sigaction sa_usr{};
 	sa_usr.sa_handler = &signal_handler;
 	sigemptyset(&sa_usr.sa_mask);
 	// sa_usr.sa_flags = SA_RESTART | SA_NODEFER;
@@ -95,30 +114,39 @@ int covscript_args(int args_size, char *args[])
 	int expect_import_path = 0;
 	int expect_stack_resize = 0;
 	int index = 1;
-	for (; index < args_size; ++index) {
-		if (expect_csym == 1) {
+	for (; index < args_size; ++index)
+	{
+		if (expect_csym == 1)
+		{
 			csym_path = cs::process_path(args[index]);
 			expect_csym = 2;
 		}
-		else if (expect_log_path == 1) {
+		else if (expect_log_path == 1)
+		{
 			log_path = cs::process_path(args[index]);
 			expect_log_path = 2;
 		}
-		else if (expect_import_path == 1) {
+		else if (expect_import_path == 1)
+		{
 			cs::current_process->import_path += cs::path_delimiter + cs::process_path(args[index]);
 			expect_import_path = 2;
 		}
-		else if (expect_stack_resize == 1) {
-			try {
+		else if (expect_stack_resize == 1)
+		{
+			try
+			{
 				cs::current_process->resize_stack(std::stoul(args[index]));
 			}
-			catch (const std::exception &) {
+			catch (const std::exception &)
+			{
 				throw cs::fatal_error(std::string("invalid stack size argument: ") + args[index]);
 			}
 			expect_stack_resize = 2;
 		}
-		else if (args[index][0] == '-') {
-			if (std::strcmp(args[index], "--args") == 0 || std::strcmp(args[index], "-a") == 0) {
+		else if (args[index][0] == '-')
+		{
+			if (std::strcmp(args[index], "--args") == 0 || std::strcmp(args[index], "-a") == 0)
+			{
 				repl = true;
 				return ++index;
 			}
@@ -162,16 +190,32 @@ int covscript_args(int args_size, char *args[])
 		else
 			break;
 	}
-	if (expect_csym == 1 || expect_log_path == 1 || expect_import_path == 1 || expect_import_path == 1)
+	if (expect_csym == 1 || expect_log_path == 1 || expect_import_path == 1 || expect_stack_resize == 1)
 		throw cs::fatal_error("argument syntax error.");
 	return index;
+}
+
+// Extract the bare message from an exception (no "File ..., line ...:" wrapper
+// and no category prefix) so cooperative-exit/signal sentinels (CS_EXIT,
+// CS_SIGINT) can be recognized regardless of whether they were wrapped into a
+// cs::exception by the runtime or thrown directly.
+static std::string raw_error_message(const std::exception &e)
+{
+	if (const auto *ce = dynamic_cast<const cs::exception *>(&e))
+		return ce->message();
+	if (const auto *le = dynamic_cast<const cs::lang_error *>(&e))
+		return le->what();
+	if (const auto *fe = dynamic_cast<const cs::fatal_error *>(&e))
+		return fe->message();
+	return e.what();
 }
 
 void covscript_main(int args_size, char *args[])
 {
 	int index = covscript_args(args_size, args);
 	cs::current_process->import_path += cs::path_delimiter + cs::get_import_path();
-	if (show_help_info) {
+	if (show_help_info)
+	{
 		std::cout << "Usage:\n";
 		std::cout << "    cs [options...] <FILE|STDIN> [arguments...]\n";
 		std::cout << "    cs [options...]\n";
@@ -200,7 +244,8 @@ void covscript_main(int args_size, char *args[])
 		std::cout << std::endl;
 		return;
 	}
-	else if (show_version_info) {
+	else if (show_version_info)
+	{
 		std::cout << "Version: " << cs::current_process->version << std::endl;
 		std::cout << cs::copyright_info << std::endl;
 		std::cout << "\nMetadata:\n";
@@ -213,15 +258,17 @@ void covscript_main(int args_size, char *args[])
 		std::cout << std::endl;
 		return;
 	}
-	if (!repl && index != args_size) {
+	if (!repl && index != args_size)
+	{
 #ifdef CS_ENABLE_PROFILING
 		std::cout << "CovScript: Perf mode, may slow down interpret speed." << std::endl;
 		std::memset((void *) &cs_impl::op_perf, 0, sizeof(cs_impl::op_perf));
 #endif
 		std::string path = cs::process_path(args[index]);
-		if (path != "STDIN") {
+		if (path != "STDIN")
+		{
 			if (!cs_impl::file_system::exist(path) || cs_impl::file_system::is_dir(path) ||
-			        !cs_impl::file_system::can_read(path))
+			    !cs_impl::file_system::can_read(path))
 				throw cs::fatal_error("invalid input file.");
 			cs::prepend_import_path(path, cs::current_process);
 		}
@@ -230,36 +277,45 @@ void covscript_main(int args_size, char *args[])
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::context_t context = cs::create_context(arg);
 		cs::raii_collector context_gc(context);
-		cs::current_process->on_process_exit.add_listener([&context](void *code) -> bool {
-			cs::current_process->exit_code = *static_cast<int *>(code);
+		cs::current_process->on_process_exit.add_listener([&context, main_process = cs::current_process](void *code) -> bool
+		{
+			// Write to the process main() reads it from (a fiber's process would lose it).
+			main_process->exit_code = *static_cast<int *>(code);
 			throw cs::fatal_error("CS_EXIT");
 			return true; });
 		context->compiler->disable_optimizer = no_optimize;
 		// Reads cSYM
 		if (!csym_path.empty())
 			context->compiler->import_csym(path, csym_path);
-		try {
-			if (path == "STDIN") {
+		try
+		{
+			if (path == "STDIN")
+			{
 				context->file_path = "STDIN";
 				context->instance->compile(std::cin);
 			}
 			else
 				context->instance->compile(path);
-			if (dump_ast) {
-				if (!log_path.empty()) {
+			if (dump_ast)
+			{
+				if (!log_path.empty())
+				{
 					std::ofstream out(::log_path);
 					context->instance->dump_ast(out);
 				}
 				else
 					context->instance->dump_ast(std::cout);
 			}
-			if (dump_dependency) {
-				if (!log_path.empty()) {
+			if (dump_dependency)
+			{
+				if (!log_path.empty())
+				{
 					std::ofstream out(::log_path);
 					for (auto &it : context->compiler->modules)
 						out << it.first << std::endl;
 				}
-				else {
+				else
+				{
 					for (auto &it : context->compiler->modules)
 						std::cout << it.first << std::endl;
 				}
@@ -272,9 +328,12 @@ void covscript_main(int args_size, char *args[])
 				std::cout << "OP_" << i << "\t" << cs_impl::op_perf[i] << std::endl;
 #endif
 		}
-		catch (const cs::exception &ce) {
-			if (std::strstr(ce.what(), "CS_EXIT") == nullptr) {
-				if (context->compiler->csyms.count(ce.file()) > 0) {
+		catch (const cs::exception &ce)
+		{
+			if (raw_error_message(ce) != "CS_EXIT")
+			{
+				if (context->compiler->csyms.count(ce.file()) > 0)
+				{
 					cs::exception ne(ce);
 					ne.relocate_to_csym(context->compiler->csyms[ce.file()]);
 					throw ne;
@@ -283,30 +342,35 @@ void covscript_main(int args_size, char *args[])
 					throw;
 			}
 		}
-		catch (...) {
+		catch (...)
+		{
 			throw;
 		}
 	}
-	else {
+	else
+	{
 		if (!silent)
 			std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: "
 			          << cs::current_process->version << " [" << COVSCRIPT_COMPILER_NAME << " on " << COVSCRIPT_PLATFORM_NAME << "]\n"
-			          "Copyright (C) 2017-2026 Michael Lee. All rights reserved.\n"
-			          "Please visit <http://covscript.org.cn/> for more information."
+			                                                                                                                     "Copyright (C) 2017-2026 Michael Lee. All rights reserved.\n"
+			                                                                                                                     "Please visit <http://covscript.org.cn/> for more information."
 			          << std::endl;
 		cs::array
-		arg{cs::var::make_constant<cs::string>("<REPL_ENV>")};
+		    arg{cs::var::make_constant<cs::string>("<REPL_ENV>")};
 		for (; index < args_size; ++index)
 			arg.emplace_back(cs::var::make_constant<cs::string>(args[index]));
 		cs::context_t context = cs::create_context(arg);
 		cs::raii_collector context_gc(context);
 		activate_sigint_handler();
-		cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
-			cs::current_process->exit_code = *static_cast<int *>(code);
+		cs::current_process->on_process_exit.add_listener([main_process = cs::current_process](void *code) -> bool
+		{
+			// Write to the process main() reads it from (a fiber's process would lose it).
+			main_process->exit_code = *static_cast<int *>(code);
 			throw cs::fatal_error("CS_EXIT"); });
 		cs::current_process->on_process_sigint.add_listener([](void *) -> bool
 		{ throw cs::fatal_error("CS_SIGINT"); });
-		cs::current_process->on_process_sigint.add_listener([](void *) -> bool {
+		cs::current_process->on_process_sigint.add_listener([](void *) -> bool
+		{
 			std::cin.clear();
 			return false; });
 		context->compiler->disable_optimizer = no_optimize;
@@ -314,20 +378,29 @@ void covscript_main(int args_size, char *args[])
 		std::ofstream log_stream;
 		std::string line;
 		repl.echo = !silent;
-		while (true) {
-			try {
+		while (true)
+		{
+			try
+			{
 #ifdef COVSCRIPT_PLATFORM_WIN32
 				if (!silent)
 					std::cout << std::string(repl.get_level() * 2, '.') << "> " << std::flush;
 				// Workaround: https://stackoverflow.com/a/26763490
-				while (true) {
+				while (true)
+				{
 					cs::current_process->poll_event();
 					std::getline(std::cin, line);
 					if (std::cin)
 						break;
+					if (std::cin.eof())
+					{
+						int code = 0;
+						cs::process_context::on_process_exit_default_handler(&code);
+					}
 				}
 #else
-				if (!std::cin) {
+				if (!std::cin)
+				{
 					int code = 0;
 					cs::process_context::on_process_exit_default_handler(&code);
 				}
@@ -338,14 +411,19 @@ void covscript_main(int args_size, char *args[])
 #endif
 				repl.exec(line);
 			}
-			catch (const std::exception &e) {
-				if (std::strstr(e.what(), "CS_SIGINT") != nullptr) {
+			catch (const std::exception &e)
+			{
+				std::string raw = raw_error_message(e);
+				if (raw == "CS_SIGINT")
+				{
 					cs::process_context::cleanup_context();
 					repl.reset_status();
 					activate_sigint_handler();
 				}
-				else if (std::strstr(e.what(), "CS_EXIT") == nullptr) {
-					if (!log_path.empty()) {
+				else if (raw != "CS_EXIT")
+				{
+					if (!log_path.empty())
+					{
 						if (!log_stream.is_open())
 							log_stream.open(::log_path);
 						if (log_stream)
@@ -358,7 +436,8 @@ void covscript_main(int args_size, char *args[])
 				else
 					break;
 			}
-			catch (...) {
+			catch (...)
+			{
 				throw;
 			}
 		}
@@ -369,19 +448,23 @@ int main(int args_size, char *args[])
 {
 	std::ios::sync_with_stdio(false);
 	int errorcode = 0;
-	try {
+	try
+	{
 		covscript_main(args_size, args);
 		errorcode = cs::current_process->exit_code;
 	}
-	catch (const cs::lang_error &le) {
+	catch (const cs::lang_error &le)
+	{
 		std::string msg;
 		if (le.has_location())
 			msg = cs::exception(le.line(), le.file(), le.code(), std::string("Uncaught exception: ") + le.what()).what();
 		else
 			msg = std::string("Uncaught exception: ") + le.what();
-		if (!log_path.empty()) {
+		if (!log_path.empty())
+		{
 			std::ofstream out(::log_path);
-			if (out) {
+			if (out)
+			{
 				out << msg;
 				out.flush();
 			}
@@ -391,10 +474,13 @@ int main(int args_size, char *args[])
 		std::cerr << msg << std::endl;
 		errorcode = -1;
 	}
-	catch (const std::exception &e) {
-		if (!log_path.empty()) {
+	catch (const std::exception &e)
+	{
+		if (!log_path.empty())
+		{
 			std::ofstream out(::log_path);
-			if (out) {
+			if (out)
+			{
 				out << e.what();
 				out.flush();
 			}
@@ -404,10 +490,13 @@ int main(int args_size, char *args[])
 		std::cerr << e.what() << std::endl;
 		errorcode = -1;
 	}
-	catch (...) {
-		if (!log_path.empty()) {
+	catch (...)
+	{
+		if (!log_path.empty())
+		{
 			std::ofstream out(::log_path);
-			if (out) {
+			if (out)
+			{
 				out << "Uncaught exception: Unknown exception";
 				out.flush();
 			}
@@ -417,7 +506,8 @@ int main(int args_size, char *args[])
 		std::cerr << "Uncaught exception: Unknown exception" << std::endl;
 		errorcode = -1;
 	}
-	if (wait_before_exit) {
+	if (wait_before_exit && stdin_is_tty())
+	{
 		std::cerr << "\nProcess finished with exit code " << errorcode << std::endl;
 		std::cerr << "\nPress any key to exit..." << std::endl;
 		while (!cs_impl::conio::kbhit());

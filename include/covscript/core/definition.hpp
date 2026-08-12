@@ -140,12 +140,14 @@
 
 // Types
 
-namespace cs_impl {
+namespace cs_impl
+{
 	class any;
 
 	class cni;
 } // namespace cs_impl
-namespace cs {
+namespace cs
+{
 	class compiler_type;
 
 	class instance_type;
@@ -200,7 +202,7 @@ namespace cs {
 	using istream = std::shared_ptr<std::istream>;
 	using ostream = std::shared_ptr<std::ostream>;
 
-// Compatible declaration since 210503
+	// Compatible declaration since 210503
 	using number = numeric_float;
 
 	typedef void (*cs_exception_handler)(const lang_error &);

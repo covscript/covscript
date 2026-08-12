@@ -27,9 +27,11 @@
 #include <covscript/impl/impl.hpp>
 #include <initializer_list>
 
-namespace cs_function_invoker_impl {
+namespace cs_function_invoker_impl
+{
 	template <typename T>
-	struct convert_helper {
+	struct convert_helper
+	{
 		static inline const T &get_val(const cs::var &val)
 		{
 			return val.const_val<T>();
@@ -37,7 +39,8 @@ namespace cs_function_invoker_impl {
 	};
 
 	template <typename T>
-	struct convert_helper<const T &> {
+	struct convert_helper<const T &>
+	{
 		static inline const T &get_val(const cs::var &val)
 		{
 			return val.const_val<T>();
@@ -45,7 +48,8 @@ namespace cs_function_invoker_impl {
 	};
 
 	template <typename T>
-	struct convert_helper<T &> {
+	struct convert_helper<T &>
+	{
 		static inline T &get_val(const cs::var &val)
 		{
 			return val.val<T>();
@@ -53,7 +57,8 @@ namespace cs_function_invoker_impl {
 	};
 
 	template <>
-	struct convert_helper<void> {
+	struct convert_helper<void>
+	{
 		static inline void get_val(const cs::var &) {}
 	};
 
@@ -61,10 +66,11 @@ namespace cs_function_invoker_impl {
 	class function_invoker;
 
 	template <typename RetT, typename... ArgsT>
-	class function_invoker<RetT(ArgsT...)> {
+	class function_invoker<RetT(ArgsT...)>
+	{
 		cs::var m_func;
 
-	public:
+	   public:
 		function_invoker() = default;
 
 		function_invoker(const function_invoker &) = default;
@@ -72,7 +78,7 @@ namespace cs_function_invoker_impl {
 		function_invoker &operator=(const function_invoker &) = default;
 
 		explicit function_invoker(cs::var func)
-			: m_func(std::move(func)) {}
+		    : m_func(std::move(func)) {}
 
 		void assign(const cs::var &func)
 		{
@@ -88,12 +94,13 @@ namespace cs_function_invoker_impl {
 		RetT operator()(ElementT &&...args) const
 		{
 			return convert_helper<RetT>::get_val(cs::invoke(m_func, cs_impl::type_convertor<ElementT, ArgsT>::convert(
-			        std::forward<ElementT>(args))...));
+			                                                            std::forward<ElementT>(args))...));
 		}
 	};
 } // namespace cs_function_invoker_impl
 
-namespace cs {
+namespace cs
+{
 	std::string process_path(const std::string &);
 
 	std::string get_import_path();
@@ -106,10 +113,11 @@ namespace cs {
 
 	void collect_garbage(context_t &);
 
-	class raii_collector final {
+	class raii_collector final
+	{
 		context_t context;
 
-	public:
+	   public:
 		raii_collector() = delete;
 
 		raii_collector(const raii_collector &) = delete;
@@ -117,7 +125,7 @@ namespace cs {
 		raii_collector(raii_collector &&) noexcept = delete;
 
 		explicit raii_collector(context_t cxt)
-			: context(std::move(cxt)) {}
+		    : context(std::move(cxt)) {}
 
 		~raii_collector()
 		{
@@ -129,21 +137,22 @@ namespace cs {
 
 	using cs_function_invoker_impl::function_invoker;
 
-	class bootstrap final {
-	public:
+	class bootstrap final
+	{
+	   public:
 		context_t context;
 
 		// Bootstrap from string initializer list
 		bootstrap(std::initializer_list<std::string> l)
-			: context(create_context({l.begin(), l.end()})) {}
+		    : context(create_context({l.begin(), l.end()})) {}
 
 		// Classic bootstrap from command line
 		bootstrap(int argc, char *argv[])
-			: context(create_context(parse_cmd_args(argc, argv))) {}
+		    : context(create_context(parse_cmd_args(argc, argv))) {}
 
 		// Zero initialization bootstrap
 		bootstrap()
-			: context(create_context({"<BOOTSTRAP_ENV>"})) {}
+		    : context(create_context({"<BOOTSTRAP_ENV>"})) {}
 
 		~bootstrap()
 		{

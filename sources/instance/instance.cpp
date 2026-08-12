@@ -26,7 +26,8 @@
 #include <covscript/impl/system.hpp>
 #include <covscript/covscript.hpp>
 
-namespace cs {
+namespace cs
+{
 	const std::string &statement_base::get_file_path() const noexcept
 	{
 		return context->file_path;
@@ -44,30 +45,37 @@ namespace cs {
 
 	namespace_t instance_type::source_import(const std::string &path)
 	{
-		if (context->compiler->modules.count(path) > 0)
-			return context->compiler->modules[path];
-		if (cs_impl::file_system::is_exe(path)) {
+		const std::string &module_key = cs_impl::file_system::normalize_path(path);
+		if (context->compiler->modules.count(module_key) > 0)
+			return context->compiler->modules[module_key];
+		if (cs_impl::file_system::is_exe(path))
+		{
 			// is extension file
 			namespace_t module = std::make_shared<extension>(path);
-			context->compiler->modules.emplace(path, module);
+			context->compiler->modules.emplace(module_key, module);
 			return module;
 		}
-		else {
+		else
+		{
 			// is package file
 			context_t rt = create_subcontext(context);
-			rt->compiler->swap_context(rt);
-			try {
-				rt->instance->compile(path);
+			namespace_t module = std::make_shared<name_space>();
+			context->compiler->modules.emplace(module_key, module);
+			try
+			{
+				{
+					context_swap_guard guard(*rt->compiler, rt);
+					rt->instance->compile(path);
+					rt->instance->interpret();
+				}
+				*module = *rt->instance->storage.get_namespace();
+				return module;
 			}
-			catch (...) {
-				context->compiler->swap_context(context);
+			catch (...)
+			{
+				context->compiler->modules.erase(module_key);
 				throw;
 			}
-			context->compiler->swap_context(context);
-			rt->instance->interpret();
-			namespace_t module = std::make_shared<name_space>(*rt->instance->storage.get_namespace());
-			context->compiler->modules.emplace(path, module);
-			return module;
 		}
 	}
 
@@ -76,8 +84,10 @@ namespace cs {
 		std::vector<std::string> collection;
 		{
 			std::string tmp;
-			for (auto &ch : path) {
-				if (ch == cs::path_delimiter) {
+			for (auto &ch : path)
+			{
+				if (ch == cs::path_delimiter)
+				{
 					collection.push_back(tmp);
 					tmp.clear();
 				}
@@ -87,38 +97,48 @@ namespace cs {
 			collection.push_back(tmp);
 		}
 		std::exception_ptr eptr = nullptr;
-		for (auto &it : collection) {
+		for (auto &it : collection)
+		{
 			std::string package_path = it + path_separator + name;
-			if (context->compiler->modules.count(package_path) > 0)
-				return context->compiler->modules[package_path];
-			if (std::ifstream(package_path + ".csp")) {
+			const std::string &module_key = cs_impl::file_system::normalize_path(package_path);
+			if (context->compiler->modules.count(module_key) > 0)
+				return context->compiler->modules[module_key];
+			if (std::ifstream(package_path + ".csp"))
+			{
 				context_t rt = create_subcontext(context);
 				rt->compiler->import_csym(package_path + ".csp", package_path + ".csym");
-				rt->compiler->swap_context(rt);
-				try {
-					rt->instance->compile(package_path + ".csp");
-				}
-				catch (...) {
-					context->compiler->swap_context(context);
-					throw;
-				}
-				context->compiler->swap_context(context);
-				rt->instance->interpret();
-				if (rt->package_name.empty())
-					throw runtime_error("The imported file is not a package (it has no 'package' declaration)");
-				if (rt->package_name != name)
-					throw runtime_error("The package name declared in the file does not match the file name");
-				namespace_t module = std::make_shared<name_space>(*rt->instance->storage.get_namespace());
-				context->compiler->modules.emplace(package_path, module);
-				return module;
-			}
-			else if (std::ifstream(package_path + ".cse")) {
-				try {
-					namespace_t module = std::make_shared<extension>(package_path + ".cse");
-					context->compiler->modules.emplace(package_path, module);
+				namespace_t module = std::make_shared<name_space>();
+				context->compiler->modules.emplace(module_key, module);
+				try
+				{
+					{
+						context_swap_guard guard(*rt->compiler, rt);
+						rt->instance->compile(package_path + ".csp");
+						rt->instance->interpret();
+					}
+					if (rt->package_name.empty())
+						throw runtime_error("The imported file is not a package (it has no 'package' declaration)");
+					if (rt->package_name != name)
+						throw runtime_error("The package name declared in the file does not match the file name");
+					*module = *rt->instance->storage.get_namespace();
 					return module;
 				}
-				catch (...) {
+				catch (...)
+				{
+					context->compiler->modules.erase(module_key);
+					throw;
+				}
+			}
+			else if (std::ifstream(package_path + ".cse"))
+			{
+				try
+				{
+					namespace_t module = std::make_shared<extension>(package_path + ".cse");
+					context->compiler->modules.emplace(module_key, module);
+					return module;
+				}
+				catch (...)
+				{
 					eptr = std::current_exception();
 				}
 			}
@@ -145,29 +165,50 @@ namespace cs {
 		for (int ch = in.get(); in; ch = in.get())
 			buff.push_back(ch);
 		std::deque<std::deque<token_base *>> ast;
-		// Compile
-		context->compiler->clear_metadata();
-		context->compiler->build_ast(buff, ast);
-		context->compiler->code_gen(ast, statements);
-		context->compiler->utilize_metadata();
+		// Compile. The constant pool is scoped to this translation unit: a nested
+		// compile (module import during code generation) must not wipe the
+		// constants accumulated by the enclosing compilation.
+		std::size_t pool_base = context->compiler->save_pool();
+		value_guard<std::size_t> loop_guard(context->compiler->loop_depth, 0);
+		// Scope the import FIFO to this unit so nested compiles don't disturb it.
+		std::size_t import_base = context->compiler->import_results.size();
+		try
+		{
+			context->compiler->build_ast(buff, ast);
+			context->compiler->code_gen(ast, statements);
+			context->compiler->utilize_metadata();
+		}
+		catch (...)
+		{
+			context->compiler->restore_pool(pool_base);
+			context->compiler->import_results.resize(import_base);
+			throw;
+		}
+		context->compiler->restore_pool(pool_base);
+		context->compiler->import_results.resize(import_base);
 	}
 
 	void instance_type::interpret()
 	{
 		// Run the instruction
-		for (auto &ptr : statements) {
-			try {
+		for (auto &ptr : statements)
+		{
+			try
+			{
 				ptr->run();
 			}
-			catch (const lang_error &le) {
+			catch (const lang_error &le)
+			{
 				if (le.has_location())
 					throw exception(le.line(), le.file(), le.code(), std::string("Uncaught exception: ") + le.what());
 				throw fatal_error(std::string("Uncaught exception: ") + le.what());
 			}
-			catch (const cs::exception &) {
+			catch (const cs::exception &)
+			{
 				throw;
 			}
-			catch (const std::exception &e) {
+			catch (const std::exception &e)
+			{
 				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 		}
@@ -196,12 +237,14 @@ namespace cs {
 	{
 		if (it.data() == nullptr)
 			throw internal_error("Null pointer accessed.");
-		if (it.data()->get_type() == token_types::parallel) {
+		if (it.data()->get_type() == token_types::parallel)
+		{
 			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
 			for (auto &t : parallel_list)
 				check_declar_var(t.root(), regist);
 		}
-		else {
+		else
+		{
 			token_base *root = it.data();
 			if (root == nullptr || root->get_type() != token_types::id)
 				throw runtime_error("Invalid variable declaration: expected an identifier");
@@ -214,65 +257,75 @@ namespace cs {
 	{
 		if (it.data() == nullptr)
 			throw internal_error("Null pointer accessed.");
-		if (it.data()->get_type() == token_types::parallel) {
+		if (it.data()->get_type() == token_types::parallel)
+		{
 			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
 			for (auto &t : parallel_list)
 				check_define_var(t.root(), regist, constant);
 		}
-		else {
+		else
+		{
 			token_base *root = it.data();
 			if (root == nullptr)
 				throw internal_error("Null pointer accessed.");
 			if (root->get_type() != token_types::signal)
 				throw runtime_error("Invalid variable definition: expected '<id> = <value>' or a structured binding");
-			switch (static_cast<token_signal *>(root)->get_signal()) {
-			case signal_types::asi_: {
-				token_base *left = it.left().data();
-				token_base *right = it.right().data();
-				if (left == nullptr || right == nullptr || left->get_type() != token_types::id)
-					throw runtime_error("Invalid variable definition: the left-hand side must be an identifier");
-				if (constant && right->get_type() != token_types::value)
-					throw runtime_error("A constant must be initialized with a constant value");
-				if (regist)
-					storage.add_record(static_cast<token_id *>(left)->get_id().get_id());
-				break;
-			}
-			case signal_types::bind_: {
-				token_base *right = it.right().data();
-				if (constant && (right == nullptr || right->get_type() != token_types::value))
-					throw runtime_error("A constant structured binding must be initialized with a constant value");
-				check_define_structured_binding(it.left(), regist);
-				break;
-			}
-			default:
-				throw runtime_error("Invalid variable definition: expected '<id> = <value>' or a structured binding");
+			switch (static_cast<token_signal *>(root)->get_signal())
+			{
+				case signal_types::asi_:
+				{
+					token_base *left = it.left().data();
+					token_base *right = it.right().data();
+					if (left == nullptr || right == nullptr || left->get_type() != token_types::id)
+						throw runtime_error("Invalid variable definition: the left-hand side must be an identifier");
+					if (constant && right->get_type() != token_types::value)
+						throw runtime_error("A constant must be initialized with a constant value");
+					if (regist)
+						storage.add_record(static_cast<token_id *>(left)->get_id().get_id());
+					break;
+				}
+				case signal_types::bind_:
+				{
+					token_base *right = it.right().data();
+					if (constant && (right == nullptr || right->get_type() != token_types::value))
+						throw runtime_error("A constant structured binding must be initialized with a constant value");
+					check_define_structured_binding(it.left(), regist);
+					break;
+				}
+				default:
+					throw runtime_error("Invalid variable definition: expected '<id> = <value>' or a structured binding");
 			}
 		}
 	}
 
 	void instance_type::parse_define_var(tree_type<token_base *>::iterator it, bool constant, bool link)
 	{
-		if (it.data()->get_type() == token_types::parallel) {
+		if (it.data()->get_type() == token_types::parallel)
+		{
 			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
 			for (auto &t : parallel_list)
 				parse_define_var(t.root(), constant, link);
 		}
-		else {
+		else
+		{
 			token_base *root = it.data();
-			switch (static_cast<token_signal *>(root)->get_signal()) {
-			case signal_types::asi_: {
-				const var &val = constant ? static_cast<token_value *>(it.right().data())->get_value() : parse_expr(it.right());
-				storage.add_var_no_return(static_cast<token_id *>(it.left().data())->get_id(),
-				                          constant || link ? val : copy(val),
-				                          constant);
-				break;
-			}
-			case signal_types::bind_: {
-				parse_define_structured_binding(it, constant, link);
-				break;
-			}
-			default:
-				throw runtime_error("Invalid variable definition: expected '<id> = <value>' or a structured binding");
+			switch (static_cast<token_signal *>(root)->get_signal())
+			{
+				case signal_types::asi_:
+				{
+					const var &val = constant ? static_cast<token_value *>(it.right().data())->get_value() : parse_expr(it.right());
+					storage.add_var_no_return(static_cast<token_id *>(it.left().data())->get_id(),
+					                          constant || link ? val : copy(val),
+					                          constant);
+					break;
+				}
+				case signal_types::bind_:
+				{
+					parse_define_structured_binding(it, constant, link);
+					break;
+				}
+				default:
+					throw runtime_error("Invalid variable definition: expected '<id> = <value>' or a structured binding");
 			}
 		}
 	}
@@ -280,11 +333,13 @@ namespace cs {
 	void
 	instance_type::check_define_structured_binding(tree_type<token_base *>::iterator it, bool regist)
 	{
-		for (auto &p_it : static_cast<token_parallel *>(it.data())->get_parallel()) {
+		for (auto &p_it : static_cast<token_parallel *>(it.data())->get_parallel())
+		{
 			token_base *root = p_it.root().data();
 			if (root == nullptr)
 				throw runtime_error("Invalid structured binding: empty binding target");
-			if (root->get_type() != token_types::id) {
+			if (root->get_type() != token_types::id)
+			{
 				if (root->get_type() == token_types::parallel)
 					check_define_structured_binding(p_it.root(), regist);
 				else
@@ -299,14 +354,16 @@ namespace cs {
 	instance_type::parse_define_structured_binding(tree_type<token_base *>::iterator it, bool constant, bool link)
 	{
 		std::function<void(tree_type<token_base *>::iterator, const var &)> process;
-		process = [&process, this, constant, link](tree_type<token_base *>::iterator it, const var &val) {
+		process = [&process, this, constant, link](tree_type<token_base *>::iterator it, const var &val)
+		{
 			auto &pl = static_cast<token_parallel *>(it.data())->get_parallel();
 			if (!val.is_type_of<array>())
 				throw runtime_error("Structured binding requires an array on the right-hand side");
 			auto &arr = val.const_val<array>();
 			if (pl.size() != arr.size())
 				throw runtime_error("Structured binding mismatch: the number of variables does not match the number of array elements");
-			for (std::size_t i = 0; i < pl.size(); ++i) {
+			for (std::size_t i = 0; i < pl.size(); ++i)
+			{
 				if (pl[i].root().data()->get_type() == token_types::parallel)
 					process(pl[i].root(), arr[i]);
 				else
@@ -320,12 +377,14 @@ namespace cs {
 
 	void instance_type::parse_using(tree_type<token_base *>::iterator it, bool override)
 	{
-		if (it.data()->get_type() == token_types::parallel) {
+		if (it.data()->get_type() == token_types::parallel)
+		{
 			auto &parallel_list = static_cast<token_parallel *>(it.data())->get_parallel();
 			for (auto &t : parallel_list)
-				parse_using(t.root());
+				parse_using(t.root(), override);
 		}
-		else {
+		else
+		{
 			var ns = context->instance->parse_expr(it, true);
 			if (ns.is_type_of<namespace_t>())
 				context->instance->storage.involve_domain(ns.const_val<namespace_t>()->get_domain(), override);
@@ -335,11 +394,12 @@ namespace cs {
 	}
 
 	repl::repl(context_t c)
-		: context(std::move(c))
+	    : context(std::move(c))
 	{
 		context->file_path = "<REPL_ENV>";
 		context->compiler->fold_expr = false;
-		context->instance->storage.add_buildin_var("quit", cs::make_cni([]() {
+		context->instance->storage.add_buildin_var("quit", cs::make_cni([]()
+		{
 			int code = 0;
 			cs::current_process->on_process_exit.touch(&code);
 		}));
@@ -348,62 +408,90 @@ namespace cs {
 	void repl::interpret(const string &code, std::deque<token_base *> &line)
 	{
 		statement_base *sptr = nullptr;
-		try {
+		// Record the FIFO base at each new top-level statement so reset_status
+		// can drop stale results on failure.
+		if (methods.empty())
+			import_base = context->compiler->import_results.size();
+		try
+		{
 			method_base *m = context->compiler->match_method(line);
-			switch (m->get_type()) {
-			case method_types::null:
-				throw runtime_error("Unrecognized statement");
-				break;
-			case method_types::single: {
-				if (!methods.empty()) {
-					method_base *expected_method = nullptr;
-					if (m->get_target_type() == statement_types::end_) {
-						context->instance->storage.remove_set();
-						domain_type domain = std::move(context->instance->storage.get_domain());
-						context->instance->storage.remove_domain();
-						methods.top()->postprocess(context, domain);
-						expected_method = methods.top();
-						methods.pop();
-					}
-					if (methods.empty()) {
+			switch (m->get_type())
+			{
+				case method_types::null:
+					throw runtime_error("Unrecognized statement");
+					break;
+				case method_types::single:
+				{
+					if (!methods.empty())
+					{
+						method_base *expected_method = nullptr;
 						if (m->get_target_type() == statement_types::end_)
-							sptr = static_cast<method_end *>(m)->translate_end(expected_method, context, tmp,
-							        line);
+						{
+							context->instance->storage.remove_set();
+							domain_type domain = std::move(context->instance->storage.get_domain());
+							context->instance->storage.remove_domain();
+							// Pop before postprocess: if postprocess throws (e.g. a
+							// namespace-name conflict), the method must no longer count
+							// as owning a domain/set pair, or reset_status would pop the
+							// already-removed pair again and corrupt the storage stacks.
+							expected_method = methods.top();
+							methods.pop();
+							expected_method->postprocess(context, domain);
+						}
+						if (methods.empty())
+						{
+							if (m->get_target_type() == statement_types::end_)
+								sptr = static_cast<method_end *>(m)->translate_end(expected_method, context, tmp,
+								                                                   line);
+							else
+								sptr = expected_method->translate(context, tmp);
+							// Loop closed: release depth after translation (break/continue
+							// in the body still need loop_depth > 0 while it re-translates).
+							if (expected_method != nullptr && compiler_type::is_loop_block(expected_method))
+								--context->compiler->loop_depth;
+							tmp.clear();
+						}
 						else
-							sptr = expected_method->translate(context, tmp);
-						tmp.clear();
+						{
+							// Deferred block: release its depth now to keep the scan balanced.
+							if (m->get_target_type() == statement_types::end_ && compiler_type::is_loop_block(expected_method))
+								--context->compiler->loop_depth;
+							m->preprocess(context, {line});
+							tmp.push_back(line);
+						}
 					}
-					else {
-						m->preprocess(context, {line});
-						tmp.push_back(line);
+					else
+					{
+						if (m->get_target_type() == statement_types::end_)
+							throw runtime_error("Unexpected 'end': there is no open block to close");
+						else
+						{
+							m->preprocess(context, {line});
+							sptr = m->translate(context, {line});
+						}
 					}
 				}
-				else {
-					if (m->get_target_type() == statement_types::end_)
-						throw runtime_error("Unexpected 'end': there is no open block to close");
-					else {
-						m->preprocess(context, {line});
-						sptr = m->translate(context, {line});
-					}
-				}
-			}
-			break;
-			case method_types::block: {
-				methods.push(m);
-				context->instance->storage.add_domain();
-				context->instance->storage.add_set();
-				methods.top()->preprocess(context, {line});
-				tmp.push_back(line);
-			}
-			break;
-			case method_types::jit_command:
-				m->translate(context, {line});
 				break;
+				case method_types::block:
+				{
+					methods.push(m);
+					context->instance->storage.add_domain();
+					context->instance->storage.add_set();
+					if (compiler_type::is_loop_block(m))
+						++context->compiler->loop_depth;
+					methods.top()->preprocess(context, {line});
+					tmp.push_back(line);
+				}
+				break;
+				case method_types::jit_command:
+					m->translate(context, {line});
+					break;
 			}
 			if (sptr != nullptr)
 				echo ? sptr->repl_run() : sptr->run();
 		}
-		catch (const lang_error &le) {
+		catch (const lang_error &le)
+		{
 			reset_status();
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
@@ -411,13 +499,15 @@ namespace cs {
 				throw exception(le.line(), le.file(), le.code(), std::string("Uncaught exception: ") + le.what());
 			throw fatal_error(std::string("Uncaught exception: ") + le.what());
 		}
-		catch (const cs::exception &) {
+		catch (const cs::exception &)
+		{
 			reset_status();
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
 			throw;
 		}
-		catch (const std::exception &e) {
+		catch (const std::exception &e)
+		{
 			reset_status();
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
@@ -434,24 +524,28 @@ namespace cs {
 		std::deque<char> buff;
 		for (auto &ch : code)
 			buff.push_back(ch);
-		try {
+		try
+		{
 			std::deque<std::deque<token_base *>> ast;
 			context->compiler->clear_metadata();
-			context->compiler->build_line(buff, ast, 1, encoding);
+			context->compiler->build_line(buff, ast, line_num, encoding);
 			for (auto &line : ast)
 				interpret(code, line);
 		}
-		catch (const lang_error &le) {
+		catch (const lang_error &le)
+		{
 			reset_status();
 			if (le.has_location())
 				throw exception(le.line(), le.file(), le.code(), std::string("Uncaught exception: ") + le.what());
 			throw fatal_error(std::string("Uncaught exception: ") + le.what());
 		}
-		catch (const cs::exception &) {
+		catch (const cs::exception &)
+		{
 			reset_status();
 			throw;
 		}
-		catch (const std::exception &e) {
+		catch (const std::exception &e)
+		{
 			reset_status();
 			throw exception(line_num, context->file_path, code, exception_message(e));
 		}
@@ -462,87 +556,105 @@ namespace cs {
 		// Preprocess
 		++line_num;
 		int mode = 0;
-		for (auto &ch : code) {
-			if (mode == 0) {
-				if (!std::isspace(ch)) {
-					switch (ch) {
-					case '#':
-						context->file_buff.emplace_back();
-						return;
-					case '@':
-						mode = 1;
-						break;
-					default:
-						mode = -1;
+		for (auto &ch : code)
+		{
+			if (mode == 0)
+			{
+				if (!std::isspace(static_cast<unsigned char>(ch)))
+				{
+					switch (ch)
+					{
+						case '#':
+							context->file_buff.emplace_back();
+							return;
+						case '@':
+							mode = 1;
+							break;
+						default:
+							mode = -1;
 					}
 				}
 			}
-			else if (mode == 1) {
-				if (!std::isspace(ch))
+			else if (mode == 1)
+			{
+				if (!std::isspace(static_cast<unsigned char>(ch)))
 					cmd_buff.push_back(ch);
 			}
 			else
 				break;
 		}
-		switch (mode) {
-		default:
-			break;
-		case 0:
-			return;
-		case 1: {
-			std::string cmd;
-			std::swap(cmd_buff, cmd);
-			if (cmd == "begin" && !multi_line) {
-				multi_line = true;
-				context->file_buff.emplace_back();
-			}
-			else if (cmd == "end" && multi_line) {
-				multi_line = false;
-				std::string line;
-				std::swap(line_buff, line);
-				this->run(line);
-			}
-			else {
-				auto pos = cmd.find(':');
-				std::string arg;
-				if (pos != std::string::npos) {
-					arg = cmd.substr(pos + 1);
-					cmd = cmd.substr(0, pos);
+		switch (mode)
+		{
+			default:
+				break;
+			case 0:
+				return;
+			case 1:
+			{
+				std::string cmd;
+				std::swap(cmd_buff, cmd);
+				if (cmd == "begin" && !multi_line)
+				{
+					multi_line = true;
+					context->file_buff.emplace_back();
 				}
-				if (cmd == "exit") {
-					int code = 0;
-					current_process->on_process_exit.touch(&code);
-				}
-				else if (cmd == "charset") {
-					if (arg == "ascii")
-						encoding = charset::ascii;
-					else if (arg == "utf8")
-						encoding = charset::utf8;
-					else if (arg == "gbk")
-						encoding = charset::gbk;
-					else
-						throw exception(line_num, context->file_path, "@" + cmd + ": " + arg,
-						                "Unavailable encoding.");
-				}
-				else if (cmd == "require") {
-					std::string version_str = CS_GET_VERSION_STR(COVSCRIPT_STD_VERSION);
-					if (arg > version_str)
-						throw exception(line_num, context->file_path, "@" + cmd + ": " + arg,
-						                "Newer Language Standard required: " + arg + ", now on " + version_str);
+				else if (cmd == "end" && multi_line)
+				{
+					multi_line = false;
+					std::string line;
+					std::swap(line_buff, line);
+					this->run(line);
 				}
 				else
-					throw exception(line_num, context->file_path, "@" + cmd + (arg.empty() ? "" : ": " + arg),
-					                "Invalid preprocessor command");
-				context->file_buff.emplace_back();
+				{
+					auto pos = cmd.find(':');
+					std::string arg;
+					if (pos != std::string::npos)
+					{
+						arg = cmd.substr(pos + 1);
+						cmd = cmd.substr(0, pos);
+					}
+					if (cmd == "exit")
+					{
+						int code = 0;
+						current_process->on_process_exit.touch(&code);
+					}
+					else if (cmd == "charset")
+					{
+						if (arg == "ascii")
+							encoding = charset::ascii;
+						else if (arg == "utf8")
+							encoding = charset::utf8;
+						else if (arg == "gbk")
+							encoding = charset::gbk;
+						else
+							throw exception(line_num, context->file_path, "@" + cmd + ": " + arg,
+							                "Unavailable encoding.");
+					}
+					else if (cmd == "require")
+					{
+						std::string version_str = CS_GET_VERSION_STR(COVSCRIPT_STD_VERSION);
+						if (arg > version_str)
+							throw exception(line_num, context->file_path, "@" + cmd + ": " + arg,
+							                "Newer Language Standard required: " + arg + ", now on " + version_str);
+					}
+					else
+						throw exception(line_num, context->file_path, "@" + cmd + (arg.empty() ? "" : ": " + arg),
+						                "Invalid preprocessor command");
+					context->file_buff.emplace_back();
+				}
+				return;
 			}
-			return;
 		}
-		}
-		if (multi_line) {
+		if (multi_line)
+		{
 			context->file_buff.emplace_back();
+			if (!line_buff.empty())
+				line_buff.append("\n");
 			line_buff.append(code);
 		}
-		else {
+		else
+		{
 			context->file_buff.emplace_back(code);
 			this->run(code);
 		}
