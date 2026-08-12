@@ -2,6 +2,7 @@
 #include "test_helpers.hpp"
 #include <limits>
 #include <sstream>
+#include <fstream>
 #include <filesystem>
 
 // =============================================================================
@@ -26,6 +27,25 @@ std::string run_script(const std::string &src, const std::function<void(const cs
 	auto ctx = cs::create_context(args);
 	if (setup)
 		setup(ctx);
+	std::ostringstream captured;
+	auto *old = std::cout.rdbuf(captured.rdbuf());
+	try {
+		std::istringstream in(src);
+		ctx->instance->compile(in);
+		ctx->instance->interpret();
+	}
+	catch (...) {
+		std::cout.rdbuf(old);
+		throw;
+	}
+	std::cout.rdbuf(old);
+	return captured.str();
+}
+
+// Run a script on an existing context, capturing system.out output. Any
+// exception propagates to the caller.
+std::string run_script_on(const cs::context_t &ctx, const std::string &src)
+{
 	std::ostringstream captured;
 	auto *old = std::cout.rdbuf(captured.rdbuf());
 	try {
@@ -953,12 +973,108 @@ TEST(module_import_nests_on_same_process)
 	args.push_back(cs::var::make<cs::string>("<IMPORT_NEST>"));
 	auto ctx = cs::create_context(args);
 	cs::process_run_scope scope(ctx);
-	// Import a real module from the repo's tests dir (subcontext shares the
-	// parent's process, so the nested compile/interpret must be transparent).
-	// Unit tests run from the build dir; the repo's tests/ is two levels up.
-	std::filesystem::path tests_dir = std::filesystem::current_path() / ".." / ".." / "tests";
-	ctx->process->import_path += cs::path_delimiter + tests_dir.string();
-	std::istringstream in("using system\nimport constants\n");
+	// Write a small module into a temp dir and import it; the nested compile/
+	// interpret (subcontext shares the parent's process) must be transparent.
+	auto dir = std::filesystem::temp_directory_path() / "cs_import_nest";
+	std::filesystem::create_directories(dir);
+	{
+		std::ofstream f(dir / "nestmod.csp");
+		f << "package nestmod\n";
+	}
+	ctx->process->import_path += cs::path_delimiter + dir.string();
+	std::istringstream in("using system\nimport nestmod\n");
 	ctx->instance->compile(in);
 	ctx->instance->interpret();
+	std::filesystem::remove_all(dir);
+}
+
+// =============================================================================
+// Multiple independent contexts can coexist: each owns a distinct process and
+// its own storage; they run sequentially without interfering.
+// =============================================================================
+
+TEST(multiple_contexts_coexist)
+{
+	cs::array args_a, args_b, args_c;
+	args_a.push_back(cs::var::make<cs::string>("<COEXIST_A>"));
+	args_b.push_back(cs::var::make<cs::string>("<COEXIST_B>"));
+	args_c.push_back(cs::var::make<cs::string>("<COEXIST_C>"));
+	auto ctx_a = cs::create_context(args_a);
+	auto ctx_b = cs::create_context(args_b);
+	// Distinct processes per context.
+	EXPECT_TRUE(ctx_a->process != nullptr);
+	EXPECT_TRUE(ctx_b->process != nullptr);
+	EXPECT_TRUE(ctx_a->process != ctx_b->process);
+	// Both run sequentially, each on its own process.
+	EXPECT_TRUE(run_script_on(ctx_a, "using system\nvar shared = 100\nsystem.out.println(1)\n") == "1\n");
+	EXPECT_TRUE(run_script_on(ctx_b, "using system\nsystem.out.println(2)\n") == "2\n");
+	// Storage is per context: a fresh context must not see a variable defined in A.
+	auto ctx_c = cs::create_context(args_c);
+	bool c_sees_a = true;
+	try {
+		run_script_on(ctx_c, "using system\nsystem.out.println(shared)\n");
+	}
+	catch (const std::exception &) {
+		c_sees_a = false;
+	}
+	EXPECT_TRUE(!c_sees_a);
+}
+
+// =============================================================================
+// Destroying one context must not corrupt others that coexist with it.
+// =============================================================================
+
+TEST(context_cross_destruction_isolation)
+{
+	cs::array args_a, args_b, args_c, args_d;
+	args_a.push_back(cs::var::make<cs::string>("<DESTROY_A>"));
+	args_b.push_back(cs::var::make<cs::string>("<DESTROY_B>"));
+	args_c.push_back(cs::var::make<cs::string>("<DESTROY_C>"));
+	args_d.push_back(cs::var::make<cs::string>("<DESTROY_D>"));
+	auto ctx_a = cs::create_context(args_a);
+	auto ctx_b = cs::create_context(args_b);
+	// A defines a function and a variable; B stays untouched.
+	run_script_on(ctx_a, "using system\nfunction f()\n\treturn 42\nend\nvar a = 1\n");
+	// Destroy A: its process and program are freed.
+	ctx_a.reset();
+	// B is unaffected and still runs.
+	EXPECT_TRUE(run_script_on(ctx_b, "using system\nsystem.out.println(7)\n") == "7\n");
+	// A new context created after A's destruction also works.
+	auto ctx_c = cs::create_context(args_c);
+	EXPECT_TRUE(run_script_on(ctx_c, "using system\nsystem.out.println(9)\n") == "9\n");
+	// Destroy B as well; a fresh context is still fine.
+	ctx_b.reset();
+	auto ctx_d = cs::create_context(args_d);
+	EXPECT_TRUE(run_script_on(ctx_d, "using system\nsystem.out.println(5)\n") == "5\n");
+}
+
+// =============================================================================
+// An async future runs on a std::thread with no thread_local current_process;
+// it must carry the process active at future.create so script code there sees
+// the owning context's process (not a null dereference).
+// =============================================================================
+
+TEST(async_future_carries_the_owning_process)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<ASYNC_PROC>"));
+	auto ctx = cs::create_context(args);
+	// A distinctive marker on the context's own process; runtime.get_import_path
+	// reads it via current_process on the async thread.
+	ctx->process->import_path = "<ASYNC_PROC_MARK>";
+	std::ostringstream captured;
+	auto *old = std::cout.rdbuf(captured.rdbuf());
+	try {
+		std::istringstream in("using system\n"
+		                      "var p = future.create(runtime.get_import_path)\n"
+		                      "system.out.println(p.get())\n");
+		ctx->instance->compile(in);
+		ctx->instance->interpret();
+	}
+	catch (...) {
+		std::cout.rdbuf(old);
+		throw;
+	}
+	std::cout.rdbuf(old);
+	EXPECT_TRUE(captured.str() == "<ASYNC_PROC_MARK>\n");
 }

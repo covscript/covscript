@@ -507,6 +507,9 @@ namespace cs
 			{
 				echo ? sptr->repl_run() : sptr->run();
 				delete sptr;
+				// The catch handlers below also `delete sptr`; null it out so a
+				// throw after this point cannot double-free the statement.
+				sptr = nullptr;
 			}
 			// The top-level statement is complete: release its token arena (any
 			// escaped function keeps it alive via its own unit reference).

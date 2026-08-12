@@ -335,19 +335,21 @@ namespace cs
 		}
 	};
 
-	// Ensures current_process is non-null, activating the context's process only
-	// when idle; a fiber keeps its own process.
+	// Ensures current_process is non-null, activating the given process only when
+	// idle; a fiber keeps its own process.
 	class process_activation
 	{
 		bool m_activated = false;
 
 	   public:
-		explicit process_activation(const context_t &c)
+		explicit process_activation(const context_t &c) : process_activation(c ? c->process.get() : nullptr) {}
+
+		explicit process_activation(process_context *p)
 		{
-			if (current_process == nullptr)
+			if (current_process == nullptr && p != nullptr)
 			{
 				m_activated = true;
-				current_process = c->process.get();
+				current_process = p;
 			}
 		}
 

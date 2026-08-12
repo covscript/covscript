@@ -120,8 +120,8 @@ namespace cs
 			for (auto &ch : wide)
 			{
 				if (ch & codecvt_gbk::u32_blck_begin)
-					local.push_back(ch >> 8);
-				local.push_back(ch);
+					local.push_back(static_cast<char>(ch >> 8));
+				local.push_back(static_cast<char>(ch));
 			}
 			return std::move(local);
 		}

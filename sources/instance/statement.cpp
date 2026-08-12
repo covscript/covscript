@@ -35,7 +35,11 @@ namespace cs
 
 	struct_builder::~struct_builder()
 	{
-		statement_base::delete_children(*mMethod);
+		// Copies share mMethod (shared_ptr); only the sole surviving owner deletes
+		// the method statements, or a temporary copy would free them out from under
+		// the type_t's stored builder.
+		if (mMethod.use_count() == 1)
+			statement_base::delete_children(*mMethod);
 	}
 
 	var function::call_rr(const function *_this, vector &args)

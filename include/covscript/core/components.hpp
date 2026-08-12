@@ -1808,7 +1808,12 @@ namespace cs
 
 			std::string wide2local(const std::u32string &wide) override
 			{
-				return std::string(wide.begin(), wide.end());
+				// ASCII charset: truncate each code point to its low byte.
+				std::string local;
+				local.reserve(wide.size());
+				for (char32_t ch : wide)
+					local.push_back(static_cast<char>(ch));
+				return local;
 			}
 
 			bool is_identifier(char32_t ch) override
