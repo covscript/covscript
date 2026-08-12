@@ -408,12 +408,12 @@ namespace cs
 					cs_context->instance->swap_context(nullptr);
 			}
 
-			virtual fiber_state get_state() const
+			fiber_state get_state() const override
 			{
 				return state;
 			}
 
-			virtual var return_value() const
+			var return_value() const override
 			{
 				if (state == fiber_state::finished)
 					return ret_val;
