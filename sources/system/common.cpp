@@ -67,9 +67,9 @@ namespace cs::fiber
 				                     .count();
 				if (remain_ms <= 0)
 					break;
-				auto wait_time = static_cast<std::size_t>(remain_ms * current_process->fiber_cxt->busy_wait_coef);
-				if (wait_time < current_process->fiber_cxt->busy_wait_min)
-					wait_time = current_process->fiber_cxt->busy_wait_min;
+				auto wait_time = static_cast<std::size_t>(remain_ms * fiber_context::current()->busy_wait_coef);
+				if (wait_time < fiber_context::current()->busy_wait_min)
+					wait_time = fiber_context::current()->busy_wait_min;
 				if (wait_time > static_cast<std::size_t>(remain_ms))
 					wait_time = static_cast<std::size_t>(remain_ms);
 				if (within())
@@ -92,9 +92,9 @@ namespace cs::fiber
 				if (mFiber->get_state() == fiber_state::sleeping)
 				{
 					if (within())
-						fiber::sleep_for(current_process->fiber_cxt->busy_wait_min);
+						fiber::sleep_for(fiber_context::current()->busy_wait_min);
 					else
-						std::this_thread::sleep_for(std::chrono::milliseconds(current_process->fiber_cxt->busy_wait_min));
+						std::this_thread::sleep_for(std::chrono::milliseconds(fiber_context::current()->busy_wait_min));
 				}
 			}
 		}

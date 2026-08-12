@@ -2,6 +2,7 @@
 #include "test_helpers.hpp"
 #include <limits>
 #include <sstream>
+#include <filesystem>
 
 // =============================================================================
 // Branch regression tests (fix_import).
@@ -18,11 +19,13 @@ namespace {
 
 // Run a full script in a fresh context, capturing system.out output. Any
 // exception (compile_error, cs::exception, ...) propagates to the caller.
-std::string run_script(const std::string &src)
+std::string run_script(const std::string &src, const std::function<void(const cs::context_t &)> &setup = {})
 {
 	cs::array args;
 	args.push_back(cs::var::make<cs::string>("<UNIT_TEST>"));
 	auto ctx = cs::create_context(args);
+	if (setup)
+		setup(ctx);
 	std::ostringstream captured;
 	auto *old = std::cout.rdbuf(captured.rdbuf());
 	try {
@@ -273,12 +276,13 @@ TEST(constant_write_through_rejected)
 TEST(system_exit_dispatches_code)
 {
 	static int captured = -1;
-	cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
-		captured = *static_cast<int *>(code);
-		return true; // swallow: never actually exit the unit-test process
-	});
 	captured = -1;
-	run_script("using system\nsystem.exit(3)\n");
+	run_script("using system\nsystem.exit(3)\n", [](const cs::context_t &ctx) {
+		ctx->process->on_process_exit.add_listener([](void *code) -> bool {
+			captured = *static_cast<int *>(code);
+			return true; // swallow: never actually exit the unit-test process
+		});
+	});
 	EXPECT_TRUE(captured == 3);
 }
 
@@ -288,45 +292,50 @@ TEST(system_exit_dispatches_code)
 
 TEST(system_exit_from_fiber_dispatches_code)
 {
-	// Mirror the interpreter: record the code on the main process, throw CS_EXIT.
-	static cs::process_context *main_process = cs::current_process;
+	// Mirror the interpreter: record the code on the context's process, throw CS_EXIT.
+	static cs::process_context *main_process = nullptr;
 	static int captured = -1;
-	cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
-		main_process->exit_code = *static_cast<int *>(code);
-		captured = *static_cast<int *>(code);
-		throw cs::fatal_error("CS_EXIT");
-		return true;
-	});
-	main_process->exit_code = -1;
 	captured = -1;
 	try {
 		run_script("using system\n"
 		           "function f()\n"
 		           "\tsystem.exit(7)\n"
 		           "end\n"
-		           "fiber.create(f).resume()\n");
+		           "fiber.create(f).resume()\n",
+		           [](const cs::context_t &ctx) {
+			           main_process = ctx->process.get();
+			           main_process->exit_code = -1;
+			           ctx->process->on_process_exit.add_listener([](void *code) -> bool {
+				           main_process->exit_code = *static_cast<int *>(code);
+				           captured = *static_cast<int *>(code);
+				           throw cs::fatal_error("CS_EXIT");
+				           return true;
+			           });
+		           });
 	}
 	catch (const cs::exception &) {
 		// CS_EXIT sentinel escaped the fiber (checked by the next test).
 	}
 	EXPECT_TRUE(captured == 7);
-	EXPECT_TRUE(main_process->exit_code == 7);
+	EXPECT_TRUE(main_process != nullptr && main_process->exit_code == 7);
 }
 
 TEST(fiber_exit_sentinel_keeps_bare_message)
 {
 	// The CS_EXIT sentinel must escape the fiber as a located cs::exception
 	// whose bare message is exactly "CS_EXIT".
-	cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
-		throw cs::fatal_error("CS_EXIT");
-		return true;
-	});
 	try {
 		run_script("using system\n"
 		           "function f()\n"
 		           "\tsystem.exit(7)\n"
 		           "end\n"
-		           "fiber.create(f).resume()\n");
+		           "fiber.create(f).resume()\n",
+		           [](const cs::context_t &ctx) {
+			           ctx->process->on_process_exit.add_listener([](void *code) -> bool {
+				           throw cs::fatal_error("CS_EXIT");
+				           return true;
+			           });
+		           });
 	}
 	catch (const cs::exception &e) {
 		EXPECT_TRUE(e.message() == "CS_EXIT");
@@ -343,14 +352,17 @@ TEST(grandchild_fiber_exit_after_parent_destroyed)
 {
 	// B must still reach the root handler after A's fiber is destroyed.
 	static int captured = -1;
-	cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
-		captured = *static_cast<int *>(code);
-		return true;
-	});
 
 	cs::array args;
 	args.push_back(cs::var::make<cs::string>("<GRANDCHILD>"));
 	auto ctx = cs::create_context(args);
+	// Manipulating script fibers from native code requires an active session so
+	// current_process is restored (and never dangles after the context dies).
+	cs::process_run_scope scope(ctx);
+	ctx->process->on_process_exit.add_listener([](void *code) -> bool {
+		captured = *static_cast<int *>(code);
+		return true;
+	});
 	std::istringstream src(
 	    "using system\n"
 	    "function inner()\n"
@@ -382,14 +394,16 @@ TEST(fiber_exit_forwards_through_live_parent)
 	// A listener on the live parent's process must fire when the child exits.
 	static int captured = -1;
 	static bool parent_listener_fired = false;
-	cs::current_process->on_process_exit.add_listener([](void *code) -> bool {
-		captured = *static_cast<int *>(code);
-		return true; // swallow
-	});
 
 	cs::array args;
 	args.push_back(cs::var::make<cs::string>("<CHAIN>"));
 	auto ctx = cs::create_context(args);
+	// Session scope: see grandchild_fiber_exit_after_parent_destroyed.
+	cs::process_run_scope scope(ctx);
+	ctx->process->on_process_exit.add_listener([](void *code) -> bool {
+		captured = *static_cast<int *>(code);
+		return true; // swallow
+	});
 	std::istringstream src(
 	    "using system\n"
 	    "function inner()\n"
@@ -902,4 +916,49 @@ TEST(gc_escaped_function_survives_program_release)
 	cs::vector args2;
 	cs::var ret = escaped.val<cs::callable>().call(args2);
 	EXPECT_TRUE(ret.const_val<cs::numeric>() == 42);
+}
+
+// =============================================================================
+// Process ownership: every context owns its own process; a second independent
+// instance cannot start while one is active on the same thread.
+// =============================================================================
+
+TEST(second_independent_instance_rejected_while_one_active)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<EXCLUSIVE>"));
+	auto ctx = cs::create_context(args);
+	cs::process_run_scope scope(ctx);
+	bool threw = false;
+	try {
+		cs::array args2;
+		args2.push_back(cs::var::make<cs::string>("<EXCLUSIVE2>"));
+		auto ctx2 = cs::create_context(args2);
+		(void) ctx2;
+	}
+	catch (const cs::fatal_error &e) {
+		threw = std::string(e.what()).find("already running") != std::string::npos;
+	}
+	EXPECT_TRUE(threw);
+}
+
+// =============================================================================
+// Module import creates a subcontext that shares the parent's process, so the
+// nested compile/interpret must not trip the exclusivity check.
+// =============================================================================
+
+TEST(module_import_nests_on_same_process)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<IMPORT_NEST>"));
+	auto ctx = cs::create_context(args);
+	cs::process_run_scope scope(ctx);
+	// Import a real module from the repo's tests dir (subcontext shares the
+	// parent's process, so the nested compile/interpret must be transparent).
+	// Unit tests run from the build dir; the repo's tests/ is two levels up.
+	std::filesystem::path tests_dir = std::filesystem::current_path() / ".." / ".." / "tests";
+	ctx->process->import_path += cs::path_delimiter + tests_dir.string();
+	std::istringstream in("using system\nimport constants\n");
+	ctx->instance->compile(in);
+	ctx->instance->interpret();
 }

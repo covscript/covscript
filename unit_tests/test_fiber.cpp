@@ -285,6 +285,9 @@ TEST(native_fiber_resumes_script_fiber_restores_process)
 	cs::array args;
 	args.push_back(cs::var::make<cs::string>("<FIBER_TEST>"));
 	auto ctx = cs::create_context(args);
+	// Session scope: the fiber mechanism must restore current_process to the
+	// context's own process after resuming a script fiber from a native fiber.
+	cs::process_run_scope scope(ctx);
 	cs::process_context *main_proc = cs::current_process;
 
 	std::istringstream src(

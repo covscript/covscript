@@ -143,6 +143,8 @@ namespace cs
 
 	void process_context::cleanup_context()
 	{
+		if (current_process == nullptr)
+			return;
 		while (!current_process->stack.empty())
 			current_process->stack.pop_no_return();
 #ifdef CS_DEBUGGER
@@ -166,7 +168,7 @@ namespace cs
 	std::shared_ptr<process_context> process_context::current_owner()
 	{
 		// Nearest script fiber's process on the chain; null when the owner is the root.
-		for (auto &f : current_process->fiber_cxt->stack)
+		for (auto &f : fiber_context::current()->stack)
 			if (auto p = f->get_process())
 				return p;
 		return nullptr;
@@ -176,32 +178,41 @@ namespace cs
 	{
 		// Share the parent's fiber chain; a null parent means the parent is the root.
 		process_context *src = parent ? parent.get() : current_process;
+		if (src == nullptr)
+			throw fatal_error("cannot fork a fiber without an active process");
 		std::shared_ptr<process_context> new_process(
 		    std::make_shared<process_context>(src->child_stack_size(), src->fiber_cxt));
 		new_process->output_precision = src->output_precision;
 		new_process->import_path = src->import_path;
-		// Generation chain: keep the parent alive so the forwarders below can reach it.
+		// Keep the parent alive so the forwarders below can reach it.
 		new_process->m_parent = parent;
 		std::shared_ptr<process_context> parent_ref = new_process->m_parent;
-		new_process->on_process_exit.add_listener([parent_ref](void *data) -> bool
+		// Root for event forwarding when there is no parent fiber.
+		std::shared_ptr<process_context> root_ref = parent_ref ? nullptr : src->shared_from_this();
+		new_process->on_process_exit.add_listener([parent_ref, root_ref](void *data) -> bool
 		{
 			if (parent_ref)
 				return parent_ref->on_process_exit.touch(data);
-			return this_process.on_process_exit.touch(data);
+			if (root_ref)
+				return root_ref->on_process_exit.touch(data);
+			return false;
 		});
-		new_process->on_process_sigint.add_listener([parent_ref](void *data) -> bool
+		new_process->on_process_sigint.add_listener([parent_ref, root_ref](void *data) -> bool
 		{
 			if (parent_ref)
 				return parent_ref->on_process_sigint.touch(data);
-			return this_process.on_process_sigint.touch(data);
+			if (root_ref)
+				return root_ref->on_process_sigint.touch(data);
+			return false;
 		});
 		new_process->std_eh_callback = src->std_eh_callback;
 		new_process->cs_eh_callback = src->cs_eh_callback;
 		return new_process;
 	}
 
-	process_context this_process;
-	process_context *current_process = &this_process;
+	thread_local process_context *current_process = nullptr;
+
+	signal_control global_signals;
 
 	type_node *alloc_type_node()
 	{
@@ -446,12 +457,19 @@ namespace cs
 		return a.is_a(b);
 	}
 
-		context_t create_context(const array &args)
+	context_t create_context(const array &args)
 	{
-		cs_impl::init_extensions();
 		context_t context = std::make_shared<context_type>();
+		// Each context owns its own process, sized from the active one if any.
+		context->process = std::make_shared<process_context>(
+		    current_process ? current_process->stack_size : COVSCRIPT_STACK_PRESERVE, fiber_context::current());
+		{
+			// Extensions read current_process at load time.
+			process_run_scope scope(context);
+			cs_impl::init_extensions();
+		}
 		context->compiler = std::make_shared<compiler_type>(context);
-		context->instance = std::make_shared<instance_type>(context, current_process->stack_size);
+		context->instance = std::make_shared<instance_type>(context, context->process->stack_size);
 		context->cmd_args = cs::var::make_constant<cs::array>(args);
 		// Default token arena: tokens produced outside an explicit compile unit
 		// (one-off build_expr, tests) live for the context's lifetime. Compiles
@@ -626,9 +644,15 @@ namespace cs
 
 	context_t create_subcontext(const context_t &cxt)
 	{
-		cs_impl::init_extensions();
 		context_t context = std::make_shared<context_type>();
-		context->instance = std::make_shared<instance_type>(context, cxt->instance->fiber_stack, current_process->stack_size);
+		// A subcontext (module import) shares the parent's process.
+		context->process = cxt->process;
+		{
+			process_run_scope scope(context); // transparent: same process
+			cs_impl::init_extensions();
+		}
+		context->instance = std::make_shared<instance_type>(context, cxt->instance->fiber_stack,
+		                                                    context->process ? context->process->stack_size : COVSCRIPT_STACK_PRESERVE);
 		context->compiler = cxt->compiler;
 		context->cmd_args = cxt->cmd_args;
 		context->current_unit = std::make_shared<compile_unit>();
@@ -683,6 +707,7 @@ namespace cs
 
 	cs::var eval(const context_t &context, const std::string &expr)
 	{
+		process_run_scope scope(context);
 		tree_type<cs::token_base *> tree;
 		std::deque<char> buff;
 		for (auto &ch : expr)

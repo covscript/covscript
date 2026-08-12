@@ -265,9 +265,12 @@ namespace cs
 
 			void cs_swap_out()
 			{
-				// Restore the caller process after resume()'s SwitchToFiber returns.
+				// Restore the caller process; a script fiber resumed without a
+				// session falls back to its own context's process.
 				if (resumer_process != nullptr)
 					current_process = resumer_process;
+				else if (cs_context && cs_context->process)
+					current_process = cs_context->process.get();
 				if (cs_context)
 					cs_context->instance->swap_context(nullptr);
 			}
@@ -345,12 +348,12 @@ namespace cs
 					                     fi->wake_up_time - now)
 					                     .count();
 					auto wait_time = static_cast<std::size_t>(
-					    fi->busy_skip_count * remain_ms * current_process->fiber_cxt->busy_wait_coef);
+					    fi->busy_skip_count * remain_ms * fiber_context::current()->busy_wait_coef);
 					if (wait_time > static_cast<std::size_t>(remain_ms))
 						wait_time = static_cast<std::size_t>(remain_ms);
-					if (wait_time >= current_process->fiber_cxt->busy_wait_min)
+					if (wait_time >= fiber_context::current()->busy_wait_min)
 					{
-						if (!current_process->fiber_cxt->stack.empty())
+						if (!fiber_context::current()->stack.empty())
 							sleep_for(wait_time);
 						else
 							std::this_thread::sleep_for(std::chrono::milliseconds(wait_time));
@@ -358,7 +361,7 @@ namespace cs
 					}
 					else if (wait_time == static_cast<std::size_t>(remain_ms) && remain_ms > 0)
 					{
-						if (!current_process->fiber_cxt->stack.empty())
+						if (!fiber_context::current()->stack.empty())
 							sleep_for(static_cast<std::size_t>(remain_ms));
 						else
 							std::this_thread::sleep_for(std::chrono::milliseconds(remain_ms));
@@ -371,23 +374,23 @@ namespace cs
 			// Re-bind prev_ctx every resume: the caller may differ from the one that
 			// started the fiber, so binding once at creation could jump back to a
 			// stale (possibly destroyed) context.
-			if (!current_process->fiber_cxt->stack.empty())
-				fi->prev_ctx = static_cast<win32_fiber *>(current_process->fiber_cxt->stack.top().get())->ctx;
+			if (!fiber_context::current()->stack.empty())
+				fi->prev_ctx = static_cast<win32_fiber *>(fiber_context::current()->stack.top().get())->ctx;
 			else
 				fi->prev_ctx = global_ctx.ctx;
 			fi->resumer_process = current_process;
 			fi->state = fiber_state::running;
-			current_process->fiber_cxt->stack.push(fi_p);
+			fiber_context::current()->stack.push(fi_p);
 			fi->cs_swap_in();
 			SwitchToFiber(fi->ctx);
-			if (!current_process->fiber_cxt->stack.empty())
-				current_process->fiber_cxt->stack.pop();
+			if (!fiber_context::current()->stack.empty())
+				fiber_context::current()->stack.pop();
 			else
 				throw internal_error("Fiber stack corrupted.");
 			// Restore the caller process before rebinding the remaining caller fiber.
 			fi->cs_swap_out();
-			if (!current_process->fiber_cxt->stack.empty())
-				static_cast<win32_fiber *>(current_process->fiber_cxt->stack.top().get())->cs_swap_in();
+			if (!fiber_context::current()->stack.empty())
+				static_cast<win32_fiber *>(fiber_context::current()->stack.top().get())->cs_swap_in();
 			if (fi->eptr != nullptr)
 			{
 				std::exception_ptr e = nullptr;
@@ -398,18 +401,18 @@ namespace cs
 
 		void yield()
 		{
-			if (current_process->fiber_cxt->stack.empty())
+			if (fiber_context::current()->stack.empty())
 				throw lang_error("Cannot yield outside a fiber");
-			win32_fiber *fi = static_cast<win32_fiber *>(current_process->fiber_cxt->stack.top().get());
+			win32_fiber *fi = static_cast<win32_fiber *>(fiber_context::current()->stack.top().get());
 			fi->state = fiber_state::suspended;
 			SwitchToFiber(fi->prev_ctx);
 		}
 
 		void sleep_for(std::size_t ms)
 		{
-			if (current_process->fiber_cxt->stack.empty())
+			if (fiber_context::current()->stack.empty())
 				throw lang_error("Cannot yield outside a fiber");
-			win32_fiber *fi = static_cast<win32_fiber *>(current_process->fiber_cxt->stack.top().get());
+			win32_fiber *fi = static_cast<win32_fiber *>(fiber_context::current()->stack.top().get());
 			fi->wake_up_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(ms);
 			fi->busy_skip_count = 0;
 			fi->state = fiber_state::sleeping;

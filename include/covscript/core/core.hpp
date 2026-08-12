@@ -128,11 +128,40 @@ namespace cs
 		}
 	};
 
-	// Process Context
-	class process_context final
+	// Signal arrival is process-global (handlers may run on any thread); the
+	// running process's poll_event() takes these flags and dispatches them.
+	class signal_control
 	{
-		std::atomic<bool> is_sigint_raised{};
-		std::atomic<bool> is_exit_requested{};
+		std::atomic<bool> m_sigint_pending{false};
+		std::atomic<bool> m_exit_pending{false};
+
+	   public:
+		void raise_sigint() noexcept
+		{
+			m_sigint_pending.store(true, std::memory_order_relaxed);
+		}
+
+		void raise_exit() noexcept
+		{
+			m_exit_pending.store(true, std::memory_order_relaxed);
+		}
+
+		bool take_sigint() noexcept
+		{
+			return m_sigint_pending.exchange(false, std::memory_order_relaxed);
+		}
+
+		bool take_exit() noexcept
+		{
+			return m_exit_pending.exchange(false, std::memory_order_relaxed);
+		}
+	};
+
+	extern signal_control global_signals;
+
+	// Process Context
+	class process_context final : public std::enable_shared_from_this<process_context>
+	{
 		// Generation chain (keep-alive); null means the parent is the root.
 		std::shared_ptr<process_context> m_parent;
 
@@ -194,30 +223,17 @@ namespace cs
 		// DO NOT TOUCH THIS EVENT DIRECTLY!!
 		event_type on_process_sigint;
 
+		// Dispatch pending global signals to this process's own events.
 		inline void poll_event()
 		{
-			if (is_sigint_raised.exchange(false))
-			{
+			if (global_signals.take_sigint())
 				on_process_sigint.touch(nullptr);
-			}
-			// A cooperative exit request (e.g. Ctrl+Break) is dispatched through
-			// on_process_exit so it runs on the main thread, distinct from the
-			// SIGINT reset/continue handling.
-			if (is_exit_requested.exchange(false))
+			// Ctrl+Break is an exit request dispatched via on_process_exit, not a SIGINT reset.
+			if (global_signals.take_exit())
 			{
 				int code = 0;
 				on_process_exit.touch(&code);
 			}
-		}
-
-		inline void raise_sigint()
-		{
-			is_sigint_raised = true;
-		}
-
-		inline void raise_exit()
-		{
-			is_exit_requested = true;
 		}
 
 		// Exception Handling
@@ -240,14 +256,12 @@ namespace cs
 		process_context()
 		    : fiber_cxt(fiber_context::current()), fiber_stack(fiber_cxt->stack), fiber_busy_wait_coef(fiber_cxt->busy_wait_coef), fiber_busy_wait_min(fiber_cxt->busy_wait_min), on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
 		{
-			is_sigint_raised = false;
 		}
 
 		explicit process_context(std::size_t ss, fiber_context *cxt)
 		    : fiber_cxt(cxt), fiber_stack(fiber_cxt->stack), fiber_busy_wait_coef(fiber_cxt->busy_wait_coef), fiber_busy_wait_min(fiber_cxt->busy_wait_min), on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_exit_default_handler)
 		{
 			resize_stack(ss);
-			is_sigint_raised = false;
 		}
 
 		// Fork a child process; parent is current_owner(), null for the root.
@@ -257,10 +271,7 @@ namespace cs
 		static std::shared_ptr<process_context> current_owner();
 	};
 
-	extern process_context this_process;
-	extern process_context *current_process;
-
-	class compile_unit;
+	extern thread_local process_context *current_process;
 
 	// Context
 	class context_type final
@@ -272,6 +283,9 @@ namespace cs
 		string file_path = "<Unknown>";
 		string package_name;
 		var cmd_args;
+
+		// Process owned by this context (subcontexts share the parent's).
+		std::shared_ptr<process_context> process;
 
 		// The compile unit whose token arena is being filled by the current
 		// compilation. Set for the duration of a compile (instance compile, REPL
@@ -293,6 +307,54 @@ namespace cs
 			if (line_num == 0 || line_num > file_buff.size())
 				return empty_line;
 			return file_buff[line_num - 1];
+		}
+	};
+
+	// Installs a context's process as current_process for a run/session. Nested
+	// execution on the same process is transparent; a different active process is
+	// rejected so a thread never has two instances running.
+	class process_run_scope
+	{
+		process_context *m_prev_process = nullptr;
+
+	   public:
+		explicit process_run_scope(const context_t &c)
+		    : m_prev_process(current_process)
+		{
+			process_context *p = c->process.get();
+			if (p == nullptr)
+				throw fatal_error("the context has no process attached");
+			if (current_process != nullptr && current_process != p)
+				throw fatal_error("another Covscript instance is already running on this thread");
+			current_process = p;
+		}
+
+		~process_run_scope()
+		{
+			current_process = m_prev_process;
+		}
+	};
+
+	// Ensures current_process is non-null, activating the context's process only
+	// when idle; a fiber keeps its own process.
+	class process_activation
+	{
+		bool m_activated = false;
+
+	   public:
+		explicit process_activation(const context_t &c)
+		{
+			if (current_process == nullptr)
+			{
+				m_activated = true;
+				current_process = c->process.get();
+			}
+		}
+
+		~process_activation()
+		{
+			if (m_activated)
+				current_process = nullptr;
 		}
 	};
 
@@ -408,13 +470,13 @@ namespace cs
 
 		inline fiber_type const *current()
 		{
-			return cs::current_process->fiber_cxt->stack.empty() ? nullptr
-			                                                     : cs::current_process->fiber_cxt->stack.top().get();
+			return cs::fiber_context::current()->stack.empty() ? nullptr
+			                                                   : cs::fiber_context::current()->stack.top().get();
 		}
 
 		inline bool within()
 		{
-			return !cs::current_process->fiber_cxt->stack.empty();
+			return !cs::fiber_context::current()->stack.empty();
 		}
 
 		fiber_t create(const context_t &, std::function<var()>);
@@ -1447,7 +1509,8 @@ namespace cs
 			if (chunks.empty())
 				push_chunk();
 			std::size_t aligned = (chunks.back().used + align - 1) & ~(align - 1);
-			if (aligned + size > chunks.back().size) {
+			if (aligned + size > chunks.back().size)
+			{
 				push_chunk();
 				aligned = 0;
 			}
@@ -1469,7 +1532,8 @@ namespace cs
 		}
 	};
 
-	namespace dll {
+	namespace dll
+	{
 		constexpr char compatible_check[] = "__CS_ABI_COMPATIBLE__";
 		constexpr char main_entrance[] = "__CS_EXTENSION_MAIN__";
 

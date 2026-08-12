@@ -1421,7 +1421,7 @@ namespace cs_impl
 			{
 				auto future = std::async(std::launch::async, async_callable(fn, std::move(args)));
 				while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
-					fiber::sleep_for(current_process->fiber_cxt->busy_wait_min);
+					fiber::sleep_for(fiber_context::current()->busy_wait_min);
 				return future.get();
 			}
 			else if (is_native_callable(fn))
@@ -1473,9 +1473,9 @@ namespace cs_impl
 						                     .count();
 						if (remain_ms <= 0)
 							break;
-						auto wait_time = static_cast<std::size_t>(remain_ms * current_process->fiber_cxt->busy_wait_coef);
-						if (wait_time < current_process->fiber_cxt->busy_wait_min)
-							wait_time = current_process->fiber_cxt->busy_wait_min;
+						auto wait_time = static_cast<std::size_t>(remain_ms * fiber_context::current()->busy_wait_coef);
+						if (wait_time < fiber_context::current()->busy_wait_min)
+							wait_time = fiber_context::current()->busy_wait_min;
 						if (wait_time > static_cast<std::size_t>(remain_ms))
 							wait_time = static_cast<std::size_t>(remain_ms);
 						fiber::sleep_for(wait_time);
@@ -1492,7 +1492,7 @@ namespace cs_impl
 				if (fiber::within())
 				{
 					while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
-						fiber::sleep_for(current_process->fiber_cxt->busy_wait_min);
+						fiber::sleep_for(fiber_context::current()->busy_wait_min);
 				}
 				else
 				{
@@ -1578,23 +1578,23 @@ namespace cs_impl
 		{
 			if (policy == "balanced")
 			{
-				current_process->fiber_cxt->busy_wait_coef = 0.01;
-				current_process->fiber_cxt->busy_wait_min = 10;
+				fiber_context::current()->busy_wait_coef = 0.01;
+				fiber_context::current()->busy_wait_min = 10;
 			}
 			else if (policy == "responsive")
 			{
-				current_process->fiber_cxt->busy_wait_coef = 0.003;
-				current_process->fiber_cxt->busy_wait_min = 3;
+				fiber_context::current()->busy_wait_coef = 0.003;
+				fiber_context::current()->busy_wait_min = 3;
 			}
 			else if (policy == "efficient")
 			{
-				current_process->fiber_cxt->busy_wait_coef = 0.05;
-				current_process->fiber_cxt->busy_wait_min = 50;
+				fiber_context::current()->busy_wait_coef = 0.05;
+				fiber_context::current()->busy_wait_min = 50;
 			}
 			else if (policy == "throughput")
 			{
-				current_process->fiber_cxt->busy_wait_coef = 0.02;
-				current_process->fiber_cxt->busy_wait_min = 20;
+				fiber_context::current()->busy_wait_coef = 0.02;
+				fiber_context::current()->busy_wait_min = 20;
 			}
 			else
 				throw lang_error("Unknown schedule policy: " + policy);
@@ -1719,9 +1719,9 @@ namespace cs_impl
 
 		var fiber_current()
 		{
-			if (current_process->fiber_cxt->stack.empty())
+			if (fiber_context::current()->stack.empty())
 				return null_pointer;
-			return current_process->fiber_cxt->stack.top();
+			return fiber_context::current()->stack.top();
 		}
 
 		void fiber_resume(const fiber_t &fiber)

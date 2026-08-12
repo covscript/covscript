@@ -40,6 +40,8 @@ namespace cs
 
 	var function::call_rr(const function *_this, vector &args)
 	{
+		// Ensure an active process for a bare native call (a fiber keeps its own).
+		process_activation activation(_this->mContext);
 		current_process->poll_event();
 		if (args.size() != _this->mArgs.size())
 			throw runtime_error(

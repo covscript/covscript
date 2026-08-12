@@ -160,6 +160,8 @@ namespace cs
 
 	void instance_type::compile(std::istream &in)
 	{
+		// Install this context's process (module imports run code here).
+		process_run_scope scope(context);
 		// Replace the previous program: owning statements and their token arena
 		// are freed here.
 		release_statements();
@@ -200,9 +202,8 @@ namespace cs
 
 	void instance_type::interpret()
 	{
-		// Defensive reset: an interrupted previous run may have left the function
-		// value stack unbalanced (normally RAII keeps it balanced). Start each
-		// program execution with a clean stack.
+		process_run_scope scope(context);
+		// Start each run with a clean value stack.
 		while (!current_process->stack.empty())
 			current_process->stack.pop_no_return();
 #ifdef CS_DEBUGGER
@@ -549,19 +550,18 @@ namespace cs
 	{
 		if (code.empty())
 			return;
+		process_run_scope scope(context);
 		std::deque<char> buff;
 		for (auto &ch : code)
 			buff.push_back(ch);
 		// A new top-level statement starts when no block is open: record the
-		// import FIFO base and start a fresh token arena covering the whole
-		// statement (including multi-line blocks).
+		// import FIFO base and start a fresh token arena for the whole statement.
 		if (methods.empty())
 		{
 			import_base = context->compiler->import_results.size();
 			m_unit = std::make_shared<compile_unit>();
 			context->current_unit = m_unit;
-			// Defensive reset of the function value stack at each top-level
-			// statement (normally balanced by RAII).
+			// Start each top-level statement with a clean value stack.
 			while (!current_process->stack.empty())
 				current_process->stack.pop_no_return();
 		}
