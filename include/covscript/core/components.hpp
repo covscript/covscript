@@ -1033,7 +1033,7 @@ namespace cs
 		}
 	};
 
-// Buffer Pool
+	// Buffer Pool
 	template <typename T, std::size_t blck_size, template <typename> class allocator_t = std::allocator>
 	class allocator_type final
 	{
