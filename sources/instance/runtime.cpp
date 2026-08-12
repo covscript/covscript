@@ -413,8 +413,11 @@ namespace cs
 	{
 		vector args;
 		token_base *ptr = nullptr;
-		args.reserve(static_cast<token_arglist *>(b)->get_arglist().size() + 1);
 		a.prep_call(args);
+		// Only reserve after prep_call: the receiver may not be pushed (e.g. a
+		// plain function with no arguments), in which case reserving an extra
+		// slot would force a heap allocation on every call.
+		args.reserve(args.size() + static_cast<token_arglist *>(b)->get_arglist().size());
 		for (auto &tree : static_cast<token_arglist *>(b)->get_arglist())
 		{
 			ptr = tree.root().data();
