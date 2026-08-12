@@ -42,10 +42,10 @@
  *   the last two digits are different, it will be regarded as a compatible
  *   version.
  */
-#define COVSCRIPT_VERSION_NUM 3, 5, 2, 3
-#define COVSCRIPT_VERSION_STR "3.5.2 Falco peregrinus(Stable) Build 3"
+#define COVSCRIPT_VERSION_NUM 3, 5, 2, 4
+#define COVSCRIPT_VERSION_STR "3.5.2 Falco peregrinus(Stable) Build 4"
 #define COVSCRIPT_STD_VERSION 260702
 #define COVSCRIPT_API_VERSION 260801
-#define COVSCRIPT_ABI_VERSION 260802
+#define COVSCRIPT_ABI_VERSION 260804
 #define CS_VERSION_STR_MIXER(VER) #VER
 #define CS_GET_VERSION_STR(VER) CS_VERSION_STR_MIXER(VER)
