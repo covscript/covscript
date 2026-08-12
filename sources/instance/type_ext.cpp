@@ -1380,6 +1380,10 @@ namespace cs_impl
 
 		class async_callable final
 		{
+			// Keeps the worker-thread count elevated for the whole object
+			// lifetime (shared by copies; declared first so it dies last),
+			// covering the return value and the argument teardown.
+			std::shared_ptr<thread_guard> m_guard;
 			callable func;
 			vector args;
 
@@ -1404,6 +1408,7 @@ namespace cs_impl
 				if (!is_native_callable(fn))
 					throw lang_error("Async operation requires a native function");
 				detach_args();
+				m_guard = std::make_shared<thread_guard>();
 			}
 
 			var operator()()

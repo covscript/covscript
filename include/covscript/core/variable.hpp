@@ -907,55 +907,12 @@ namespace cs_impl
 			}
 		};
 
-		// Thread-safe proxy pool shared by all threads (including async worker
-		// threads). A single atomic counter guards the cached-block handoff with
-		// a CAS, avoiding the TLS indirection that a per-thread pool would cost
-		// on the hot path.
-		class proxy_pool final
+		using allocator_t = cs::allocator_type<proxy, CS_ALLOCATOR_BUFFER_MAX * CS_VAR_ALLOC_MULTIPLIER, default_allocator_provider>;
+
+		// Shared pool; guarded by the worker-thread count in allocator_type.
+		static inline allocator_t &get_allocator()
 		{
-			static constexpr std::size_t MAX_BLOCKS = CS_ALLOCATOR_BUFFER_MAX * CS_VAR_ALLOC_MULTIPLIER;
-			proxy *m_blocks[MAX_BLOCKS];
-			std::atomic<std::uint32_t> m_top{0};
-
-		   public:
-			template <typename... ArgsT>
-			proxy *alloc(ArgsT &&...args)
-			{
-				std::uint32_t t = m_top.load(std::memory_order_relaxed);
-				while (t > 0)
-				{
-					if (m_top.compare_exchange_weak(t, t - 1, std::memory_order_acquire, std::memory_order_relaxed))
-					{
-						proxy *p = m_blocks[t - 1];
-						::new (p) proxy(std::forward<ArgsT>(args)...);
-						return p;
-					}
-				}
-				return ::new (std::malloc(sizeof(proxy))) proxy(std::forward<ArgsT>(args)...);
-			}
-
-			void free(proxy *p)
-			{
-				p->~proxy();
-				while (true)
-				{
-					std::uint32_t t = m_top.load(std::memory_order_relaxed);
-					if (t >= MAX_BLOCKS)
-					{
-						std::free(p);
-						return;
-					}
-					// Publish the slot before the CAS makes it visible to alloc.
-					m_blocks[t] = p;
-					if (m_top.compare_exchange_weak(t, t + 1, std::memory_order_release, std::memory_order_relaxed))
-						return;
-				}
-			}
-		};
-
-		static inline proxy_pool &get_allocator()
-		{
-			static proxy_pool allocator;
+			static allocator_t allocator;
 			return allocator;
 		}
 

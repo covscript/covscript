@@ -985,7 +985,56 @@ namespace cs
 		}
 	};
 
-	// Buffer Pool
+	// Count of active worker threads. Pooled allocators only touch their shared
+	// cache while this is zero; otherwise they fall back to the system allocator.
+	class thread_count final
+	{
+		std::atomic<std::size_t> m_count{0};
+
+		thread_count() = default;
+		thread_count(const thread_count &) = delete;
+		thread_count &operator=(const thread_count &) = delete;
+
+	   public:
+		static thread_count &instance()
+		{
+			static thread_count counter;
+			return counter;
+		}
+
+		bool single_threaded() const noexcept
+		{
+			return m_count.load(std::memory_order_acquire) == 0;
+		}
+
+		void increment() noexcept
+		{
+			m_count.fetch_add(1, std::memory_order_relaxed);
+		}
+
+		void decrement() noexcept
+		{
+			m_count.fetch_sub(1, std::memory_order_relaxed);
+		}
+	};
+
+	// RAII guard: any thread that may create or destroy cs::var objects (e.g.
+	// an async worker) must hold one, or it races the single-threaded cache.
+	struct thread_guard final
+	{
+		thread_guard()
+		{
+			thread_count::instance().increment();
+		}
+		thread_guard(const thread_guard &) = delete;
+		thread_guard(thread_guard &&) noexcept = delete;
+		~thread_guard()
+		{
+			thread_count::instance().decrement();
+		}
+	};
+
+// Buffer Pool
 	template <typename T, std::size_t blck_size, template <typename> class allocator_t = std::allocator>
 	class allocator_type final
 	{
@@ -1012,7 +1061,7 @@ namespace cs
 		inline T *alloc(ArgsT &&...args)
 		{
 			T *ptr = nullptr;
-			if (mOffset > 0)
+			if (mOffset > 0 && thread_count::instance().single_threaded())
 				ptr = mPool[--mOffset];
 			else
 				ptr = mAlloc.allocate(1);
@@ -1023,7 +1072,7 @@ namespace cs
 		inline void free(T *ptr)
 		{
 			ptr->~T();
-			if (mOffset < blck_size)
+			if (mOffset < blck_size && thread_count::instance().single_threaded())
 				mPool[mOffset++] = ptr;
 			else
 				mAlloc.deallocate(ptr, 1);
