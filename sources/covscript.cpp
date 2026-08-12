@@ -171,11 +171,13 @@ namespace cs {
 
 	std::shared_ptr<process_context> process_context::fork(const std::shared_ptr<process_context> &parent)
 	{
-		// Inherit the parent's fiber_cxt: share the same fiber chain.
+		// Inherit the parent's fiber_cxt: share the same fiber chain. A null
+		// parent means the parent is the root process.
+		process_context *src = parent ? parent.get() : current_process;
 		std::shared_ptr<process_context> new_process(
-		    std::make_shared<process_context>(current_process->child_stack_size(), current_process->fiber_cxt));
-		new_process->output_precision = current_process->output_precision;
-		new_process->import_path = current_process->import_path;
+		    std::make_shared<process_context>(src->child_stack_size(), src->fiber_cxt));
+		new_process->output_precision = src->output_precision;
+		new_process->import_path = src->import_path;
 		// Generation chain: hold the parent strongly so the forwarders below can
 		// always reach it (keep-alive). A null parent means the parent is the root
 		// process, which lives for the whole program.
@@ -191,8 +193,8 @@ namespace cs {
 				return parent_ref->on_process_sigint.touch(data);
 			return this_process.on_process_sigint.touch(data);
 		});
-		new_process->std_eh_callback = current_process->std_eh_callback;
-		new_process->cs_eh_callback = current_process->cs_eh_callback;
+		new_process->std_eh_callback = src->std_eh_callback;
+		new_process->cs_eh_callback = src->cs_eh_callback;
 		return new_process;
 	}
 
