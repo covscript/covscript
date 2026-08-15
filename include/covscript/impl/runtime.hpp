@@ -30,10 +30,8 @@ namespace cs
 {
 	using stack_pointer = stack_type<domain_type> *;
 
-	// Owns every compiled lambda value; lambda tokens carry only an index into
-	// it, so no token owns a function and no arena <-> function cycle can form.
-	// Storing the full value keeps a self-referencing lambda's borrowed `self`
-	// proxy alive.
+	// Owns compiled lambdas (tokens carry an index), preventing arena<->function
+	// cycles and keeping a self-referencing lambda's borrowed `self` alive.
 	class function_store final
 	{
 		std::vector<var> m_lambdas;
@@ -43,6 +41,17 @@ namespace cs
 		{
 			m_lambdas.push_back(val);
 			return m_lambdas.size() - 1;
+		}
+
+		std::size_t size() const noexcept
+		{
+			return m_lambdas.size();
+		}
+
+		// Roll back lambdas registered by a failed compilation unit.
+		void resize(std::size_t count)
+		{
+			m_lambdas.resize(count);
 		}
 
 		var get(std::size_t index) const
@@ -109,9 +118,7 @@ namespace cs
 			return m_data.bottom();
 		}
 
-		// Release global variables (running their finalizers) while the runtime
-		// is still usable. Called after a program run so structures finalize
-		// before context teardown, when the process/instance are already dying.
+		// Release globals (running finalizers) while the runtime is usable.
 		void clear_global()
 		{
 			m_data.bottom().clear();

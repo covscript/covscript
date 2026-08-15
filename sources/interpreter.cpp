@@ -377,8 +377,8 @@ void covscript_main(int args_size, char *args[])
 		if (!silent)
 			std::cout << "Covariant Script Programming Language Interpreter REPL\nVersion: "
 			          << COVSCRIPT_VERSION_STR << " [" << COVSCRIPT_COMPILER_NAME << " on " << COVSCRIPT_PLATFORM_NAME << "]\n"
-			          << "Copyright (C) 2017-2026 Michael Lee. All rights reserved.\n"
-			          << "Please visit <http://covscript.org.cn/> for more information."
+			                                                                                                              "Copyright (C) 2017-2026 Michael Lee. All rights reserved.\n"
+			                                                                                                              "Please visit <http://covscript.org.cn/> for more information."
 			          << std::endl;
 		cs::array
 		    arg{cs::var::make_constant<cs::string>("<REPL_ENV>")};
@@ -422,6 +422,9 @@ void covscript_main(int args_size, char *args[])
 					if (std::cin.eof())
 						// Break out for a clean shutdown (run finalizers) rather
 						// than std::exit, which would skip the repl destructor.
+						throw cs::fatal_error("CS_EXIT");
+					if (std::cin.bad())
+						// A hard read failure has no exit; bail out.
 						throw cs::fatal_error("CS_EXIT");
 				}
 #else

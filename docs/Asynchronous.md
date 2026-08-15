@@ -121,6 +121,20 @@ fiber.set_schedule_policy("throughput")   # high-load balance
 
 When `resume()` is called on a sleeping fiber whose wake-up time has not arrived, the scheduler uses progressive backoff. Repeated premature attempts gradually increase the sleep duration, preventing CPU spin while remaining responsive to scheduled wake-ups.
 
+### Abandoned Fibers and COVSCRIPT_DEBUG
+
+Fibers are cleaned up cooperatively: they must run to completion (or be driven to `finished`) before their last handle is dropped. Destroying a fiber that is still `running`, `suspended` or `sleeping` cannot unwind its suspended stack frames, so any resources held by those frames are leaked. This is a cooperative contract, not a runtime error.
+
+The behaviour when an unfinished fiber is destroyed is controlled by the `COVSCRIPT_DEBUG` environment variable:
+
+| Value | Behaviour |
+| :-- | :-- |
+| `none` | Do nothing: the fiber's stack block is still released, the suspended frames are leaked silently, the program continues |
+| `warning` | Print `[fiber] warning: destroying an unfinished fiber ...` to stderr and continue (default) |
+| `strict` | Print the warning and abort immediately (fail-fast) |
+
+`COVSCRIPT_DEBUG` is case-insensitive; an unset or unknown value defaults to `warning`. The same switch governs other defensive runtime guards (for example a non-empty function value stack at program entry).
+
 ### C++ API
 
 #### Types
@@ -287,7 +301,7 @@ var fut = fiber_obj.get_future()
 
 **C++ functions only.** For thread safety, `future.create` with a callable argument requires a native (C++) function. CovScript functions cannot run on background threads because the interpreter state is not thread-safe. To run CovScript code asynchronously, use `fiber.create` + `future.create(fiber)`.
 
-Passing a non-native callable causes `future.create` to throw `"Async future can only be created from native functions"`. If the first argument is neither a fiber nor a callable, it throws `"The target value is not callable or fiber"`.
+Passing a non-native callable causes `future.create` to throw `"Async future can only be created from native functions"`. If the first argument is neither a fiber nor a callable, it throws `"Invalid call to 'future.create', the first argument must be a fiber or a callable object"`.
 
 ### Consuming Futures
 

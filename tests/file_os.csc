@@ -52,6 +52,10 @@ if !File.can_execute("./file_os/test/test.txt")
 	system.out.println("can_execute 2 succeed")
 end
 
+# chmod("0000") above made the file read-only; on Windows that prevents
+# deletion, so restore permissions before cleaning up.
+Path.chmod("./file_os/test/test.txt", "rwxr-xr-x")
+
 if File.remove("./file_os/test/test.txt")
 	system.out.println("remove succeed")
 end

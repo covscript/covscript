@@ -29,7 +29,6 @@
 #include <windows.h>
 #include <direct.h>
 #include <conio.h>
-#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -251,15 +250,14 @@ namespace cs
 			{
 				if (state == fiber_state::running || state == fiber_state::suspended || state == fiber_state::sleeping)
 				{
-					std::fprintf(stderr,
-					             "[fiber] warning: destroying an unfinished fiber (state=%d); "
-					             "its suspended stack frames are not unwound and resources will leak\n",
-					             static_cast<int>(state));
-					assert(false && "Destroying an unfinished fiber");
+					char msg[256];
+					std::snprintf(msg, sizeof(msg),
+					              "[fiber] warning: destroying an unfinished fiber (state=%d); "
+					              "its suspended stack frames are not unwound and resources will leak",
+					              static_cast<int>(state));
+					cs_impl::debug_guard(msg);
 				}
-				// Always release the fiber stack, even when the assertion above
-				// is compiled out: skipping DeleteFiber would leak the whole
-				// stack on every abandoned suspended fiber.
+				// Always release the fiber stack, regardless of the debug mode.
 				if (ctx != nullptr)
 					DeleteFiber(ctx);
 			}
@@ -274,9 +272,7 @@ namespace cs
 
 			void cs_swap_out()
 			{
-				// Restore the caller's process unconditionally (it may be null
-				// when the fiber was resumed outside a session); otherwise a
-				// null resumer leaves the fiber's own process installed.
+				// Restore the caller's process (may be null outside a session).
 				current_process = resumer_process;
 				if (auto c = cs_context.lock())
 					c->instance->swap_context(nullptr);
@@ -380,9 +376,7 @@ namespace cs
 				}
 				fi->busy_skip_count = 0;
 			}
-			// Re-bind prev_ctx every resume: the caller may differ from the one that
-			// started the fiber, so binding once at creation could jump back to a
-			// stale (possibly destroyed) context.
+			// Re-bind prev_ctx every resume (the caller may differ from creation).
 			if (!fiber_context::current()->stack.empty())
 				fi->prev_ctx = static_cast<win32_fiber *>(fiber_context::current()->stack.top().get())->ctx;
 			else

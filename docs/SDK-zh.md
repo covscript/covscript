@@ -74,7 +74,7 @@ Covariant Script 移除了历史遗留的全局垃圾回收器，改为显式、
 运行时返回的对象——脚本函数、lambda、`structure` 实例、模块命名空间——都**不拥有**它们的 context，而是持有指向它的非 owning 反向引用：
 
 + 脚本函数 / lambda 持有裸的 `context_type*`（`function::mContext`）；
-+ `structure` 的类型身份节点存放在进程的类型池中，其成员名存放在 token arena 中——两者都由 context 拥有。
++ `structure` 钉住其 owning process（因此类型身份节点与成员数据在 context 销毁后仍有效），但其*方法*是脚本函数，仍持有裸的 `function::mContext` 反向引用——调用它们要求 context 存活（否则抛 "the function's context has been destroyed"）。
 
 因此：
 
@@ -130,3 +130,15 @@ cs::var f = cs::eval(ctx, "[](x)->x+1");
 每次 `compile()` 都会生成一个程序，其 token 存放在每个实例独立的 arena 中。再次编译（或调用 `release_statements()`）会丢弃上一个程序及其 arena。
 
 从上一个程序逃逸的脚本函数/lambda 会通过 `function::m_unit` 保活该 arena，因此它在重编译后仍可调用——**前提是其 context 仍存活**（§1）。这是唯一保留下来的保活机制，因为它针对的是 arena，而非 context。
+
+### 6. 运行时诊断（`COVSCRIPT_DEBUG`）
+
+防御性运行时守卫（例如销毁未完成的 fiber，或程序入口处函数值栈非空）按照 `COVSCRIPT_DEBUG` 环境变量行事：
+
+| 取值 | 行为 |
+| :-- | :-- |
+| `none` | 静默忽略：程序继续运行，接受部分泄漏 |
+| `warning` | 向 stderr 打印警告并继续（默认） |
+| `strict` | 打印警告后立即中止（fail-fast） |
+
+取值大小写不敏感；未设置或非法值默认按 `warning` 处理。守卫仅用于诊断，不改变上述所有权契约。

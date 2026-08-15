@@ -27,6 +27,9 @@
 #include <covscript/impl/system.hpp>
 #include <filesystem>
 #include <fcntl.h>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 
 namespace cs::fiber
 {
@@ -217,6 +220,49 @@ constexpr char path_delimiter_reversed = ';';
 
 namespace cs_impl
 {
+	namespace
+	{
+		inline char lower(char c)
+		{
+			return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+		}
+	} // namespace
+
+	debug_mode get_debug_mode() noexcept
+	{
+		static const debug_mode mode = []() -> debug_mode
+		{
+			const char *env = std::getenv("COVSCRIPT_DEBUG");
+			if (env == nullptr)
+				return debug_mode::warning;
+			std::string value;
+			for (const char *p = env; *p != '\0'; ++p)
+				value.push_back(lower(*p));
+			if (value == "none")
+				return debug_mode::none;
+			if (value == "strict")
+				return debug_mode::strict;
+			return debug_mode::warning;
+		}();
+		return mode;
+	}
+
+	void debug_guard(const char *msg) noexcept
+	{
+		switch (get_debug_mode())
+		{
+			case debug_mode::none:
+				break;
+			case debug_mode::warning:
+				std::fprintf(stderr, "%s\n", msg);
+				break;
+			case debug_mode::strict:
+				std::fprintf(stderr, "%s\n", msg);
+				std::abort();
+				break;
+		}
+	}
+
 	namespace file_system
 	{
 		bool exist(const std::string &path)
@@ -250,7 +296,13 @@ namespace cs_impl
 					p = std::filesystem::path(path);
 				p = p.lexically_normal();
 			}
-			return p.generic_string();
+			std::string result = p.generic_string();
+#ifdef _WIN32
+			// Windows: fold case so `import Foo`/`foo` share one cache entry.
+			for (auto &ch : result)
+				ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+#endif
+			return result;
 		}
 
 		bool chmod_r(const std::string &path_input, const std::string &mode)

@@ -502,9 +502,10 @@ namespace cs_impl
 		{
 			std::stringstream ss;
 			std::string str;
-			ss << std::setprecision(cs::current_process->output_precision) << val.as_float();
+			int precision = cs::current_process != nullptr ? cs::current_process->output_precision : 8;
+			ss << std::setprecision(precision) << val.as_float();
 			ss >> str;
-			return std::move(str);
+			return str;
 		}
 		else
 			return std::to_string(val.as_integer());
@@ -1334,6 +1335,8 @@ namespace cs
 	var &operators::index_ref<cs::array>(cs::array &arr, const var &pos)
 	{
 		cs::numeric_integer idx = pos.const_val<cs::numeric>().as_integer();
+		// Cap auto-growth so a huge index can't spin.
+		constexpr cs::numeric_integer max_auto_extend = cs::numeric_integer{1} << 24;
 		if (idx < 0)
 		{
 			// Negative indices count from the end; if still before the start,
@@ -1342,12 +1345,19 @@ namespace cs
 			if (idx < 0)
 			{
 				std::size_t pad = static_cast<std::size_t>(-(idx + 1)) + 1; // idx < 0 so idx+1 <= 0: no overflow
+				if (pad > static_cast<std::size_t>(max_auto_extend))
+					throw cs::lang_error("Index out of range");
 				arr.insert(arr.begin(), pad, var::make<numeric>(0));
 				idx = 0;
 			}
 		}
-		while (idx >= static_cast<cs::numeric_integer>(arr.size()))
-			arr.emplace_back(var::make<numeric>(0));
+		if (idx >= static_cast<cs::numeric_integer>(arr.size()))
+		{
+			if (idx - static_cast<cs::numeric_integer>(arr.size()) > max_auto_extend)
+				throw cs::lang_error("Index out of range");
+			while (idx >= static_cast<cs::numeric_integer>(arr.size()))
+				arr.emplace_back(var::make<numeric>(0));
+		}
 		return arr[static_cast<std::size_t>(idx)];
 	}
 

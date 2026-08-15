@@ -156,11 +156,8 @@ namespace cs
 	bool process_context::on_process_exit_default_handler(void *code)
 	{
 		cleanup_context();
-		// The statement/token/method pools are intentionally NOT collected here:
-		// script functions (function_ptr) reference statement members, and a live
-		// context may still hold callables, so freeing them would be use-after-free
-		// (same rationale as the global-GC change in bootstrap). std::exit reclaims
-		// everything, and finalize/destructors are not run on this path anyway.
+		// Pools not collected here (live callables reference them); std::exit
+		// reclaims everything.
 		std::exit(*static_cast<int *>(code));
 		return true;
 	}
@@ -200,23 +197,18 @@ namespace cs
 		// Keep the parent (or the fork source without a fiber chain) alive so
 		// the forwarders below can reach it and is_related() can trace it back.
 		new_process->m_parent = parent ? parent : src->shared_from_this();
+		// The parent (or the fork source) receives forwarded exit/sigint events.
 		std::shared_ptr<process_context> parent_ref = new_process->m_parent;
-		// Root for event forwarding when there is no parent fiber.
-		std::shared_ptr<process_context> root_ref = parent_ref ? nullptr : src->shared_from_this();
-		new_process->on_process_exit.add_listener([parent_ref, root_ref](void *data) -> bool
+		new_process->on_process_exit.add_listener([parent_ref](void *data) -> bool
 		{
 			if (parent_ref)
 				return parent_ref->on_process_exit.touch(data);
-			if (root_ref)
-				return root_ref->on_process_exit.touch(data);
 			return false;
 		});
-		new_process->on_process_sigint.add_listener([parent_ref, root_ref](void *data) -> bool
+		new_process->on_process_sigint.add_listener([parent_ref](void *data) -> bool
 		{
 			if (parent_ref)
 				return parent_ref->on_process_sigint.touch(data);
-			if (root_ref)
-				return root_ref->on_process_sigint.touch(data);
 			return false;
 		});
 		new_process->std_eh_callback = src->std_eh_callback;
@@ -224,18 +216,39 @@ namespace cs
 		return new_process;
 	}
 
-	thread_local process_context *current_process = nullptr;
+	current_process_ref current_process;
+
+	// Host process accessor handed to extension DLLs.
+	process_context *current_process_host_accessor(void *)
+	{
+		return current_process;
+	}
+
+	context_type::~context_type()
+	{
+		// Run finalizers while the runtime is still usable.
+		if (process != nullptr)
+			process->teardown_ctx = this;
+		if (instance != nullptr)
+			instance->storage.clear_global();
+		if (process != nullptr)
+			process->teardown_ctx = nullptr;
+		// Drop module namespaces/subcontexts so their arenas release at teardown.
+		if (compiler != nullptr)
+		{
+			// Clear each module domain so circular cross-refs drop.
+			for (auto &kv : compiler->modules)
+				kv.second->get_domain().clear();
+			compiler->modules.clear();
+		}
+		subcontexts.clear();
+	}
 
 	signal_control global_signals;
 
 	type_node *alloc_type_node(process_context *p)
 	{
-		// The pool is per-process: std::deque keeps references to existing
-		// elements stable across push_back and nothing is ever removed, so every
-		// node address is a unique, never-reused identity for as long as the
-		// process lives; the whole pool is freed when the process dies. A null
-		// process (a context with no process attached, not expected in practice)
-		// falls back to a program-lifetime pool rather than crashing.
+		// Per-process pool: node addresses stay unique for the process lifetime.
 		if (p != nullptr)
 		{
 			p->type_nodes.emplace_back();
@@ -504,9 +517,7 @@ namespace cs
 		context->compiler = std::make_shared<compiler_type>(context.get());
 		context->instance = std::make_shared<instance_type>(context.get(), context->process->stack_size);
 		context->cmd_args = cs::var::make_constant<cs::array>(args);
-		// Default token arena: tokens produced outside an explicit compile unit
-		// (one-off build_expr, tests) live for the context's lifetime. Compiles
-		// and REPL statements replace it with their own per-unit arenas.
+		// Default arena for tokens outside an explicit compile unit.
 		context->current_unit = std::make_shared<compile_unit>();
 		// Init Grammars
 		(*context->compiler)
@@ -741,9 +752,7 @@ namespace cs
 	cs::var eval(const context_t &context, const std::string &expr)
 	{
 		process_run_scope scope(context);
-		// Build into a fresh arena so repeated eval() calls don't accumulate
-		// tokens for the context's whole lifetime (a returned lambda keeps the
-		// arena alive via its function in the runtime's store).
+		// Fresh arena so repeated eval() calls don't accumulate tokens.
 		compile_unit_guard guard(context.get());
 		tree_type<cs::token_base *> tree;
 		std::deque<char> buff;

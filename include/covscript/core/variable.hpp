@@ -455,9 +455,7 @@ namespace cs_impl
 				static_assert(std::is_move_constructible<T>::value, "CovScript requires type supports move constructor.");
 				T *src = static_cast<T *>(lhs);
 				::new (&static_cast<basic_var *>(rhs)->m_store.buffer) T(std::move(*src));
-				// End the moved-from source's lifetime: move_store nulls the
-				// source dispatcher, so without this its destructor would never
-				// run for SVO values.
+				// End the moved-from source's lifetime (dispatcher is nulled).
 				src->~T();
 				return operators::result();
 			}
@@ -569,9 +567,7 @@ namespace cs_impl
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_move(void *lhs, void *rhs) noexcept
 			{
 				static_assert(std::is_move_constructible<T>::value, "CovScript requires type supports move constructor.");
-				// Transfer the heap block to the destination; move_store
-				// nulls the source dispatcher, so the block has exactly one
-				// owner and no deep copy or leak occurs.
+				// Transfer the heap block; the nulled dispatcher leaves one owner.
 				static_cast<basic_var *>(rhs)->m_store.ptr = static_cast<T *>(lhs);
 				return operators::result();
 			}
@@ -704,9 +700,7 @@ namespace cs_impl
 		inline void construct_store(ArgsT &&...args)
 		{
 			destroy_store();
-			// Commit the dispatcher only after the value is successfully
-			// constructed, so a throwing constructor never leaves a var whose
-			// dispatcher points at uninitialized storage.
+			// Commit the dispatcher only after construction succeeds.
 			dispatcher_class<T>::construct(this, std::forward<ArgsT>(args)...);
 			m_dispatcher = &dispatcher_class<T>::dispatcher;
 		}
@@ -727,11 +721,7 @@ namespace cs_impl
 				destroy_store();
 				return;
 			}
-			// Build the copy in a scratch var first so a throwing copy
-			// leaves *this untouched (strong exception guarantee). The
-			// commit then moves the scratch value into *this, which for
-			// heap types transfers the block and for SVO types moves into
-			// the in-place buffer, so SSO containers stay valid.
+			// Strong exception guarantee: build in a scratch var, then commit.
 			basic_var tmp;
 			other.m_dispatcher(operators::type::copy, &other, &tmp);
 			tmp.m_dispatcher = other.m_dispatcher;
@@ -980,7 +970,18 @@ namespace cs_impl
 			{
 				if (mDat->protect_level > 2)
 					throw cs::runtime_error("Duplicate singleton objects are not allowed");
-				proxy *dat = get_allocator().alloc(1, mDat->data);
+				// Copy storage; on throw return the block to the pool.
+				proxy *dat = get_allocator().alloc();
+				dat->protect_level = 0;
+				try
+				{
+					dat->data = mDat->data;
+				}
+				catch (...)
+				{
+					get_allocator().free(dat);
+					throw;
+				}
 				recycle();
 				mDat = dat;
 			}
@@ -1522,9 +1523,7 @@ namespace cs_impl
 		}
 
 #ifdef CS_UNIT_TEST
-		// Test-only: number of owning references to the shared proxy (0 when
-		// the value is unset). Used to prove a self-referential value no longer
-		// keeps itself alive.
+		// Test-only: owning refcount of the shared proxy.
 		std::uint32_t debug_refcount() const noexcept
 		{
 			return mDat != nullptr ? mDat->refcount : 0;
@@ -1559,12 +1558,8 @@ namespace cs_impl
 		using type = std::type_index;
 	};
 
-	// A non-owning view of a var value (mirrors basic_string_borrower). A
-	// any_borrower either OWNS a proxy (counting toward its refcount) or merely
-	// BORROWS one (no refcount change). It is a friend of any so it can reach
-	// the proxy/refcount directly without bloating every var with a flag.
-	// Copies of a borrower stay borrowers; materializing to a var (operator any)
-	// transfers to an owning reference and requires the proxy to be alive.
+	// Owning or borrowing view of a var's proxy (friend of any); materializing
+	// to a var requires the proxy to be alive.
 	class any_borrower final
 	{
 		any::proxy *m_proxy = nullptr;

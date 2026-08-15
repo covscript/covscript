@@ -34,11 +34,10 @@ extern "C"
 	{
 		return COVSCRIPT_ABI_VERSION;
 	}
-	void __CS_EXTENSION_MAIN__(cs::name_space *ext, cs::process_context *context)
+	void __CS_EXTENSION_MAIN__(cs::name_space *ext, cs::process_context *(*host_access)(void *) )
 	{
-		// A static-linked extension DLL has its own current_process; bind it
-		// before init_extensions (which reads current_process).
-		cs::current_process = context;
+		// Route this DLL's current_process through the host's current-thread process.
+		cs::current_process.set_accessor(host_access);
 		cs_impl::init_extensions();
 		cs_extension_main(ext);
 	}

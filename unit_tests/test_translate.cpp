@@ -90,6 +90,8 @@ TEST(translate_rejects_line_without_endline)
 	// Missing: token_endline
 	lines.push_back(bad_line);
 	EXPECT_TRUE(translate_throws(ctx, lines));
+	for (auto *t : bad_line)
+		delete t;
 }
 
 TEST(translate_rejects_empty_line)
@@ -110,4 +112,6 @@ TEST(translate_rejects_null_endline)
 	bad_line.push_back(nullptr); // null instead of endline
 	lines.push_back(bad_line);
 	EXPECT_TRUE(translate_throws(ctx, lines));
+	for (auto *t : bad_line)
+		delete t;
 }

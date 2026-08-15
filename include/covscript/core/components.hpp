@@ -28,6 +28,7 @@
 #include <atomic>
 #include <cfenv>
 #include <string_view>
+#include <limits>
 
 namespace cs
 {
@@ -317,9 +318,7 @@ namespace cs
 		}
 	};
 
-	// Extracts the raw error message from a std::exception without category prefix.
-	// For known CovScript error types, avoids the allocate-then-strip-prefix round trip;
-	// for unknown types falls back to what() directly (no prefix to strip).
+	// Raw error message from a std::exception without the category prefix.
 	inline std::string exception_message(const std::exception &e)
 	{
 		if (const auto *p = dynamic_cast<const exception *>(&e)) return p->message();
@@ -882,8 +881,16 @@ namespace cs
 		{
 			if (type)
 				return data._int;
-			else
-				return data._num;
+			// Clamp out-of-range/NaN floats instead of a UB cast.
+			constexpr numeric_float fmax = static_cast<numeric_float>((std::numeric_limits<numeric_integer>::max)());
+			constexpr numeric_float fmin = static_cast<numeric_float>((std::numeric_limits<numeric_integer>::min)());
+			if (data._num != data._num)
+				return 0;
+			if (data._num >= fmax)
+				return (std::numeric_limits<numeric_integer>::max)();
+			if (data._num <= fmin)
+				return (std::numeric_limits<numeric_integer>::min)();
+			return static_cast<numeric_integer>(data._num);
 		}
 
 		numeric_float as_float() const noexcept
@@ -968,7 +975,7 @@ namespace cs
 		{
 			T data(m_impl.back());
 			m_impl.pop_back();
-			return std::move(data);
+			return data;
 		}
 
 		inline void pop_no_return()
@@ -1310,10 +1317,7 @@ namespace cs
 		}
 
 		tree_node *mRoot = nullptr;
-		// Optional token arena for trees whose tokens must outlive the compile
-		// scope (e.g. runtime.build() expressions). Shared on copy like the tokens
-		// themselves; null for trees owned by statements/functions (their unit is
-		// held by the instance or the function).
+		// Optional arena for trees whose tokens outlive the compile scope.
 		std::shared_ptr<compile_unit> m_arena;
 
 	   public:

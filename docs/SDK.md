@@ -89,8 +89,10 @@ instances, and module namespaces — do **not** own their context. They hold
 non-owning back-references into it:
 
 + a script function / lambda stores a raw `context_type*` (`function::mContext`);
-+ a `structure`'s type identity node lives in the process's type pool, and its
-  member names live in the token arena — both owned by the context.
++ a `structure` pins its owning process (so its type identity node and member
+  data stay valid), but its *methods* are script functions and still hold the
+  raw `function::mContext` back-reference — invoking them requires the context
+  to be alive (they throw "the function's context has been destroyed" otherwise).
 
 Therefore:
 
@@ -174,3 +176,18 @@ A script function/lambda escaped from the previous program keeps that arena
 alive via `function::m_unit`, so it remains callable after recompilation —
 *provided its context is still alive* (§1). This is the one pinning mechanism
 that survives, because it concerns the arena rather than the context.
+
+### 6. Runtime diagnostics (`COVSCRIPT_DEBUG`)
+
+Defensive runtime guards (for example destroying an unfinished fiber, or a
+non-empty function value stack at program entry) behave according to the
+`COVSCRIPT_DEBUG` environment variable:
+
+| Value | Behaviour |
+| :-- | :-- |
+| `none` | Ignore silently; the program keeps running (partial leaks accepted) |
+| `warning` | Print a warning to stderr and continue (default) |
+| `strict` | Print a warning and abort (fail-fast) |
+
+The value is case-insensitive; unset or unknown values default to `warning`.
+Guards are diagnostic only — they do not change the ownership contracts above.

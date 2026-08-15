@@ -1188,6 +1188,61 @@ TEST(fiber_resume_rejected_after_context_release)
 }
 
 // =============================================================================
+// Calling an escaped function after its defining context is destroyed must be a
+// clear error, not a dangling-context use-after-free.
+// =============================================================================
+
+TEST(escaped_function_call_rejected_after_context_release)
+{
+	std::exception_ptr eptr;
+	cs::var escaped;
+	{
+		cs::array args;
+		args.push_back(cs::var::make<cs::string>("<ESC_FN>"));
+		auto ctx = cs::create_context(args);
+		run_script_on(ctx, "var f = [](x)->x+1\n");
+		escaped = ctx->instance->storage.get_var("f");
+	}
+	try
+	{
+		cs::vector a;
+		a.push_back(cs::var::make<cs::numeric>(1));
+		escaped.const_val<cs::callable>().call(a);
+	}
+	catch (const cs::runtime_error &)
+	{
+		eptr = std::current_exception();
+	}
+	EXPECT_TRUE(eptr != nullptr);
+}
+
+TEST(escaped_function_fiber_create_rejected_after_context_release)
+{
+	std::exception_ptr eptr;
+	cs::var escaped;
+	{
+		cs::array args;
+		args.push_back(cs::var::make<cs::string>("<ESC_FIBER_FN>"));
+		auto ctx = cs::create_context(args);
+		run_script_on(ctx, "function f()\n\treturn 1\nend\n");
+		escaped = ctx->instance->storage.get_var("f");
+	}
+	try
+	{
+		cs::array args;
+		args.push_back(cs::var::make<cs::string>("<ESC_FIBER_CALL>"));
+		auto ctx = cs::create_context(args);
+		ctx->instance->storage.add_var("f", escaped);
+		run_script_on(ctx, "var fiber_obj = fiber.create(f)\n");
+	}
+	catch (...)
+	{
+		eptr = std::current_exception();
+	}
+	EXPECT_TRUE(eptr != nullptr);
+}
+
+// =============================================================================
 // Escaped objects require their defining context to stay alive (the type_node
 // lives in the process, member names live in the token arena). A structure
 // escaped from its scope is fully usable while the context is held.
@@ -1205,6 +1260,29 @@ TEST(escaped_structure_usable_while_context_alive)
 		escaped = ctx->instance->storage.get_var("a");
 	}
 	// The context is still held, so the type identity node and members are valid.
+	EXPECT_TRUE(escaped.val<cs::structure>().get_id().node != nullptr);
+	EXPECT_TRUE(escaped.val<cs::structure>().get_id().node->name == "foo");
+	EXPECT_TRUE(escaped.val<cs::structure>().get_var("x").const_val<cs::numeric>() == 42);
+}
+
+// =============================================================================
+// The structure pins its owning process, so its type identity node and member
+// data stay valid even after the defining context is destroyed. Only invoking
+// a method (a script function with a raw context back-ref) would throw.
+// =============================================================================
+
+TEST(escaped_structure_data_usable_after_context_death)
+{
+	cs::var escaped;
+	{
+		cs::array args;
+		args.push_back(cs::var::make<cs::string>("<UNIT_TEST>"));
+		auto ctx = cs::create_context(args);
+		run_script_on(ctx, "class foo\n    var x = 42\nend\nvar a = new foo\n");
+		escaped = ctx->instance->storage.get_var("a");
+	}
+	// The context is gone; the pinned process still owns the type node and the
+	// member domain is self-contained, so data access remains valid.
 	EXPECT_TRUE(escaped.val<cs::structure>().get_id().node != nullptr);
 	EXPECT_TRUE(escaped.val<cs::structure>().get_id().node->name == "foo");
 	EXPECT_TRUE(escaped.val<cs::structure>().get_var("x").const_val<cs::numeric>() == 42);

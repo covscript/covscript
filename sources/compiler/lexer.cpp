@@ -114,14 +114,26 @@ namespace cs
 			return codecvt_gbk::local2wide(local);
 		}
 
+		// GBK/1-5 double-byte ranges; GBK/1 holds the full-width punctuation.
+		static inline bool is_gbk_double_byte(char32_t ch)
+		{
+			return (ch >= 0xA1A1 && ch <= 0xA9FE) || (ch >= 0xB0A1 && ch <= 0xF7FE) ||
+			       (ch >= 0x8140 && ch <= 0xA0FE) || (ch >= 0xAA40 && ch <= 0xFEA0) ||
+			       ch == 0xA996;
+		}
+
 		std::string gbk::wide2local(const std::u32string &wide)
 		{
 			std::string local;
 			for (auto &ch : wide)
 			{
-				if (ch & codecvt_gbk::u32_blck_begin)
+				if (is_gbk_double_byte(ch))
+				{
 					local.push_back(static_cast<char>(ch >> 8));
-				local.push_back(static_cast<char>(ch));
+					local.push_back(static_cast<char>(ch & 0xFF));
+				}
+				else
+					local.push_back(static_cast<char>(ch & 0xFF));
 			}
 			return std::move(local);
 		}
@@ -247,6 +259,12 @@ namespace cs
 					if (*it == '\'')
 					{
 						inside_char = true;
+						++it;
+						continue;
+					}
+					// Skip a UTF-8 BOM at a token boundary.
+					if (*it == 0xFEFF)
+					{
 						++it;
 						continue;
 					}

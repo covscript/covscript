@@ -35,9 +35,7 @@ namespace cs
 
 	struct_builder::~struct_builder()
 	{
-		// Copies share mMethod (shared_ptr); only the sole surviving owner deletes
-		// the method statements, or a temporary copy would free them out from under
-		// the type_t's stored builder.
+		// Only the sole surviving copy deletes mMethod's statements.
 		if (mMethod.use_count() == 1)
 			statement_base::delete_children(*mMethod);
 	}
@@ -45,13 +43,19 @@ namespace cs
 	var function::call_rr(const function *_this, vector &args)
 	{
 		// Ensure an active process for a bare native call (a fiber keeps its own).
-		process_activation activation(_this->mContext);
+		auto ctx = _this->mContext.lock();
+		// Borrow the dying context so finalizers can run script code.
+		if (!ctx && current_process != nullptr && current_process->teardown_ctx != nullptr)
+			ctx = std::shared_ptr<context_type>(current_process->teardown_ctx, [](context_type *) {});
+		if (!ctx)
+			throw runtime_error("the function's context has been destroyed");
+		process_activation activation(ctx.get());
 		current_process->poll_event();
 		if (args.size() != _this->mArgs.size())
 			throw runtime_error(
 			    "Wrong number of arguments: expected " + std::to_string(_this->mArgs.size()) + ", got " +
 			    std::to_string(args.size()));
-		scope_guard scope(_this->mContext);
+		scope_guard scope(ctx.get());
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
 		if (_this->mMatch)
@@ -60,7 +64,7 @@ namespace cs
 		fcall_guard fcall;
 #endif
 		for (std::size_t i = 0; i < args.size(); ++i)
-			_this->mContext->instance->storage.add_var_no_return(_this->mArgs[i].data(), args[i]);
+			ctx->instance->storage.add_var_no_return(_this->mArgs[i].data(), args[i]);
 		for (auto &ptr : _this->mBody)
 		{
 			try
@@ -75,9 +79,9 @@ namespace cs
 			{
 				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
-			if (_this->mContext->instance->return_fcall)
+			if (ctx->instance->return_fcall)
 			{
-				_this->mContext->instance->return_fcall = false;
+				ctx->instance->return_fcall = false;
 				return scope.return_fcall();
 			}
 		}
@@ -87,9 +91,15 @@ namespace cs
 	var function::call_vv(const function *_this, vector &args)
 	{
 		// Ensure an active process for a bare native call (a fiber keeps its own).
-		process_activation activation(_this->mContext);
+		auto ctx = _this->mContext.lock();
+		// Borrow the dying context so finalizers can run script code.
+		if (!ctx && current_process != nullptr && current_process->teardown_ctx != nullptr)
+			ctx = std::shared_ptr<context_type>(current_process->teardown_ctx, [](context_type *) {});
+		if (!ctx)
+			throw runtime_error("the function's context has been destroyed");
+		process_activation activation(ctx.get());
 		current_process->poll_event();
-		scope_guard scope(_this->mContext);
+		scope_guard scope(ctx.get());
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
 		if (_this->mMatch)
@@ -105,17 +115,17 @@ namespace cs
 			{
 				if (args.empty())
 					throw runtime_error("Wrong number of arguments: expected at least 1 for member function, got 0");
-				_this->mContext->instance->storage.add_var_no_return("this", args[i++]);
+				ctx->instance->storage.add_var_no_return("this", args[i++]);
 			}
 			else if (_this->mIsLambda && _this->mArgs.size() > 1)
 			{
 				if (args.empty())
 					throw runtime_error("Wrong number of arguments: expected at least 1 for lambda with 'self', got 0");
-				_this->mContext->instance->storage.add_var_no_return("self", args[i++]);
+				ctx->instance->storage.add_var_no_return("self", args[i++]);
 			}
 			for (; i < args.size(); ++i)
 				arr.push_back(args[i]);
-			_this->mContext->instance->storage.add_var_no_return(_this->mArgs.back().data(), arg_list);
+			ctx->instance->storage.add_var_no_return(_this->mArgs.back().data(), arg_list);
 		}
 		for (auto &ptr : _this->mBody)
 		{
@@ -131,9 +141,9 @@ namespace cs
 			{
 				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
-			if (_this->mContext->instance->return_fcall)
+			if (ctx->instance->return_fcall)
 			{
-				_this->mContext->instance->return_fcall = false;
+				ctx->instance->return_fcall = false;
 				return scope.return_fcall();
 			}
 		}
@@ -143,23 +153,29 @@ namespace cs
 	var function::call_rl(const function *_this, vector &args)
 	{
 		// Ensure an active process for a bare native call (a fiber keeps its own).
-		process_activation activation(_this->mContext);
+		auto ctx = _this->mContext.lock();
+		// Borrow the dying context so finalizers can run script code.
+		if (!ctx && current_process != nullptr && current_process->teardown_ctx != nullptr)
+			ctx = std::shared_ptr<context_type>(current_process->teardown_ctx, [](context_type *) {});
+		if (!ctx)
+			throw runtime_error("the function's context has been destroyed");
+		process_activation activation(ctx.get());
 		current_process->poll_event();
 		if (args.size() != _this->mArgs.size())
 			throw runtime_error(
 			    "Wrong number of arguments: expected " + std::to_string(_this->mArgs.size()) + ", got " +
 			    std::to_string(args.size()));
-		scope_guard scope(_this->mContext);
+		scope_guard scope(ctx.get());
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
 		if (_this->mMatch)
 			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
 #endif
 		for (std::size_t i = 0; i < args.size(); ++i)
-			_this->mContext->instance->storage.add_var_no_return(_this->mArgs[i].data(), args[i]);
+			ctx->instance->storage.add_var_no_return(_this->mArgs[i].data(), args[i]);
 		try
 		{
-			return _this->mContext->instance->parse_expr(static_cast<const statement_return *>(_this->mBody.front())->get_tree().root());
+			return ctx->instance->parse_expr(static_cast<const statement_return *>(_this->mBody.front())->get_tree().root());
 		}
 		catch (const cs::exception &)
 		{
@@ -175,7 +191,13 @@ namespace cs
 	var function::call_el(const function *_this, vector &args)
 	{
 		// Ensure an active process for a bare native call (a fiber keeps its own).
-		process_activation activation(_this->mContext);
+		auto ctx = _this->mContext.lock();
+		// Borrow the dying context so finalizers can run script code.
+		if (!ctx && current_process != nullptr && current_process->teardown_ctx != nullptr)
+			ctx = std::shared_ptr<context_type>(current_process->teardown_ctx, [](context_type *) {});
+		if (!ctx)
+			throw runtime_error("the function's context has been destroyed");
+		process_activation activation(ctx.get());
 		current_process->poll_event();
 		if (!args.empty())
 			throw runtime_error("Wrong number of arguments: expected none, got " + std::to_string(args.size()));
@@ -186,7 +208,7 @@ namespace cs
 #endif
 		try
 		{
-			return _this->mContext->instance->parse_expr(static_cast<const statement_return *>(_this->mBody.front())->get_tree().root());
+			return ctx->instance->parse_expr(static_cast<const statement_return *>(_this->mBody.front())->get_tree().root());
 		}
 		catch (const cs::exception &)
 		{
@@ -203,7 +225,10 @@ namespace cs
 	{
 		if (mParent.root().usable())
 		{
-			var builder = mContext->instance->parse_expr(mParent.root());
+			auto ctx = mContext.lock();
+			if (!ctx)
+				throw runtime_error("the struct's context has been destroyed");
+			var builder = ctx->instance->parse_expr(mParent.root());
 			if (builder.is_type_of<type_t>())
 			{
 				const auto &t = builder.const_val<type_t>();
@@ -223,10 +248,13 @@ namespace cs
 
 	var struct_builder::operator()()
 	{
-		scope_guard scope(mContext);
+		auto ctx = mContext.lock();
+		if (!ctx)
+			throw runtime_error("the struct's context has been destroyed");
+		scope_guard scope(ctx.get());
 		if (mParent.root().usable())
 		{
-			var builder = mContext->instance->parse_expr(mParent.root());
+			var builder = ctx->instance->parse_expr(mParent.root());
 			if (builder.is_type_of<type_t>())
 			{
 				const auto &t = builder.const_val<type_t>();
@@ -236,8 +264,8 @@ namespace cs
 				if (parent.is_type_of<structure>())
 				{
 					parent.mark_protect();
-					mContext->instance->storage.involve_domain(parent.const_val<structure>().get_domain());
-					mContext->instance->storage.add_var_no_return("parent", parent, true);
+					ctx->instance->storage.involve_domain(parent.const_val<structure>().get_domain());
+					ctx->instance->storage.add_var_no_return("parent", parent, true);
 				}
 				else
 					throw runtime_error("The parent of a struct must itself be a struct");
@@ -892,9 +920,7 @@ namespace cs
 	void statement_foreach::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
-		// Iterate the container in place (no snapshot copy): a deep copy per
-		// foreach is too expensive on the hot path. Users who mutate the
-		// container from the loop body must clone it explicitly.
+		// Iterate in place (no snapshot); mutators must clone explicitly.
 		const var &obj = context->instance->parse_expr(this->mObj.root());
 		if (obj.is_type_of<string>())
 			foreach_helper<string, char>(context, this->mIt, obj, this->mBlock);

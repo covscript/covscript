@@ -55,13 +55,30 @@ namespace cs {
 // Helpers: construct manual trees and run private compiler methods
 // ---------------------------------------------------------------------------
 
+// These helpers allocate tokens with plain `new` for hand-built trees. The
+// trees do not own their token data, and trim_expr/opt_expr may swap nodes for
+// arena-owned tokens, so track the manual allocations here and free exactly
+// those (via flush_tokens) at the end of each test instead of walking the tree.
+static std::vector<cs::token_base *> g_manual_tokens;
+
 static cs::token_id *T_id(const std::string &name)
 {
-	return new cs::token_id(name);
+	auto *t = new cs::token_id(name);
+	g_manual_tokens.push_back(t);
+	return t;
 }
 static cs::token_signal *T_sig(cs::signal_types s)
 {
-	return new cs::token_signal(s);
+	auto *t = new cs::token_signal(s);
+	g_manual_tokens.push_back(t);
+	return t;
+}
+
+static void flush_tokens()
+{
+	for (auto *t : g_manual_tokens)
+		delete t;
+	g_manual_tokens.clear();
 }
 
 // Following the same pattern as compiler_type::build_tree:
@@ -208,6 +225,7 @@ TEST(low_unary_rejects_non_null_left)
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::typeid_, T_id("x"), T_id("y"))));
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::not_, T_id("x"), T_id("flag"))));
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::addr_, T_id("x"), T_id("var"))));
+	flush_tokens();
 }
 
 // --- Unary prefix: reject null right operand ---
@@ -217,6 +235,7 @@ TEST(low_unary_rejects_null_right)
 	EXPECT_TRUE(TRIM_THROWS(make_unary(cs::signal_types::new_, nullptr)));
 	EXPECT_TRUE(TRIM_THROWS(make_unary(cs::signal_types::not_, nullptr)));
 	EXPECT_TRUE(TRIM_THROWS(make_unary(cs::signal_types::typeid_, nullptr)));
+	flush_tokens();
 }
 
 // --- Ambiguous sub_/mul_: unary→minus_/escape_ conversion ---
@@ -226,6 +245,7 @@ TEST(low_sub_unary_becomes_minus)
 	auto tree = make_unary(cs::signal_types::sub_, T_id("x"));
 	EXPECT_FALSE(trim_throws(tree));
 	EXPECT_TRUE(is_signal(tree.root().data(), cs::signal_types::minus_));
+	flush_tokens();
 }
 
 TEST(low_mul_unary_becomes_escape)
@@ -233,18 +253,21 @@ TEST(low_mul_unary_becomes_escape)
 	auto tree = make_unary(cs::signal_types::mul_, T_id("p"));
 	EXPECT_FALSE(trim_throws(tree));
 	EXPECT_TRUE(is_signal(tree.root().data(), cs::signal_types::escape_));
+	flush_tokens();
 }
 
 TEST(low_ambiguous_unary_rejects_null)
 {
 	EXPECT_TRUE(TRIM_THROWS(make_unary(cs::signal_types::sub_, nullptr)));
 	EXPECT_TRUE(TRIM_THROWS(make_unary(cs::signal_types::mul_, nullptr)));
+	flush_tokens();
 }
 
 TEST(low_ambiguous_binary_rejects_null)
 {
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::sub_, T_id("a"), nullptr)));
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::mul_, T_id("a"), nullptr)));
+	flush_tokens();
 }
 
 // --- minus_/escape_ reject null operand ---
@@ -253,6 +276,7 @@ TEST(low_minus_escape_rejects_null)
 {
 	EXPECT_TRUE(TRIM_THROWS(make_unary(cs::signal_types::minus_, nullptr)));
 	EXPECT_TRUE(TRIM_THROWS(make_unary(cs::signal_types::escape_, nullptr)));
+	flush_tokens();
 }
 
 // --- inc_/dec_: exactly one non-null operand ---
@@ -265,6 +289,7 @@ TEST(low_inc_dec_validation)
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::dec_, T_id("a"), T_id("b"))));
 	EXPECT_FALSE(TRIM_THROWS(make_unary(cs::signal_types::inc_, T_id("a"))));
 	EXPECT_FALSE(TRIM_THROWS(make_unary(cs::signal_types::dec_, T_id("a"))));
+	flush_tokens();
 }
 
 // --- Binary operators: null operand rejection ---
@@ -281,6 +306,7 @@ TEST(low_binary_null_operand_throws)
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::abo_, nullptr, nullptr)));
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::and_, nullptr, T_id("b"))));
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::or_, nullptr, nullptr)));
+	flush_tokens();
 }
 
 // --- Compound assignment ---
@@ -294,6 +320,7 @@ TEST(low_compound_assign_null_throws)
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::modasi_, nullptr, T_id("b"))));
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::powasi_, T_id("a"), nullptr)));
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::lnkasi_, nullptr, nullptr)));
+	flush_tokens();
 }
 
 // --- Subscript and pair ---
@@ -303,6 +330,7 @@ TEST(low_subscript_pair_null_throws)
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::access_, nullptr, T_id("i"))));
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::access_, T_id("a"), nullptr)));
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::pair_, nullptr, nullptr)));
+	flush_tokens();
 }
 
 // --- dot_/arrow_ ---
@@ -312,12 +340,14 @@ TEST(low_dot_null_throws)
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::dot_, nullptr, T_id("m"))));
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::dot_, T_id("obj"), nullptr)));
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::dot_, T_id("obj"), T_sig(cs::signal_types::add_))));
+	flush_tokens();
 }
 
 TEST(low_arrow_null_throws)
 {
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::arrow_, nullptr, T_id("m"))));
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::arrow_, T_id("obj"), nullptr)));
+	flush_tokens();
 }
 
 // --- asi_ ---
@@ -326,6 +356,7 @@ TEST(low_assignment_null_throws)
 {
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::asi_, nullptr, T_id("v"))));
 	EXPECT_TRUE(TRIM_THROWS(make_binary(cs::signal_types::asi_, T_id("a"), nullptr)));
+	flush_tokens();
 }
 
 // --- choice_ null condition ---
@@ -345,6 +376,7 @@ TEST(low_ternary_null_condition_throws)
 	t.emplace_right_right(pair_node, T_id("b"));
 
 	EXPECT_TRUE(trim_throws(t));
+	flush_tokens();
 }
 
 // =============================================================================
@@ -357,6 +389,7 @@ TEST(opt_binary_null_throws)
 	EXPECT_TRUE(OPT_THROWS(make_binary(cs::signal_types::and_, nullptr, T_id("b"))));
 	EXPECT_TRUE(OPT_THROWS(make_binary(cs::signal_types::inc_, nullptr, nullptr)));
 	EXPECT_TRUE(OPT_THROWS(make_binary(cs::signal_types::dec_, T_id("a"), T_id("b"))));
+	flush_tokens();
 }
 
 TEST(opt_unary_null_throws)
@@ -364,10 +397,12 @@ TEST(opt_unary_null_throws)
 	EXPECT_TRUE(OPT_THROWS(make_unary(cs::signal_types::new_, nullptr)));
 	EXPECT_TRUE(OPT_THROWS(make_unary(cs::signal_types::minus_, nullptr)));
 	EXPECT_TRUE(OPT_THROWS(make_unary(cs::signal_types::escape_, nullptr)));
+	flush_tokens();
 }
 
 TEST(opt_member_null_throws)
 {
 	EXPECT_TRUE(OPT_THROWS(make_binary(cs::signal_types::dot_, nullptr, T_id("m"))));
 	EXPECT_TRUE(OPT_THROWS(make_binary(cs::signal_types::asi_, nullptr, T_id("v"))));
+	flush_tokens();
 }

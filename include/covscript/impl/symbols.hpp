@@ -198,19 +198,23 @@ namespace cs
 
 	   protected:
 		std::size_t line_num = 1;
+		token_types m_type;
 
 	   public:
 		// Tokens are owned by a compile unit's arena (or a grammar template).
-		token_base() = default;
+		// get_type() is a member read (no vtable); fixed at construction.
+		explicit token_base(token_types type)
+		    : m_type(type) {}
 
-		token_base(const token_base &) = default;
-
-		explicit token_base(std::size_t line)
-		    : line_num(line) {}
+		token_base(std::size_t line, token_types type)
+		    : line_num(line), m_type(type) {}
 
 		virtual ~token_base() = default;
 
-		virtual token_types get_type() const noexcept = 0;
+		token_types get_type() const noexcept
+		{
+			return m_type;
+		}
 
 		virtual std::size_t get_line_num() const noexcept final
 		{
@@ -224,10 +228,7 @@ namespace cs
 		}
 	};
 
-	// A single compilation's token arena. Tokens are shared across tree nodes
-	// (tree_type copies are shallow), so they can't be owned per-node; every
-	// token created while this unit is current is freed together when it dies.
-	// Functions hold a shared_ptr to the unit so the arena outlives the compile.
+	// Per-compilation token arena; functions hold it so it outlives the compile.
 	class compile_unit final
 	{
 		memory_arena arena;
@@ -267,9 +268,7 @@ namespace cs
 		}
 	};
 
-	// RAII: create a fresh token arena, make it the context's current unit for
-	// the scope, and restore the previous unit on exit. Used for one-off token
-	// production (build_expr) that runs within a single scope.
+	// RAII: fresh arena as the context's current unit for the scope.
 	class compile_unit_guard final
 	{
 		std::shared_ptr<compile_unit> m_unit;
@@ -303,15 +302,11 @@ namespace cs
 	class token_endline final : public token_base
 	{
 	   public:
-		token_endline() = default;
+		token_endline()
+		    : token_base(token_types::endline) {}
 
 		explicit token_endline(std::size_t line)
-		    : token_base(line) {}
-
-		token_types get_type() const noexcept override
-		{
-			return token_types::endline;
-		}
+		    : token_base(line, token_types::endline) {}
 
 		bool dump(std::ostream &o) const override
 		{
@@ -328,12 +323,7 @@ namespace cs
 		token_action() = delete;
 
 		explicit token_action(action_types t)
-		    : mType(t) {}
-
-		token_types get_type() const noexcept override
-		{
-			return token_types::action;
-		}
+		    : token_base(token_types::action), mType(t) {}
 
 		action_types get_action() const noexcept
 		{
@@ -355,19 +345,14 @@ namespace cs
 		token_signal() = delete;
 
 		explicit token_signal(signal_types t)
-		    : mType(t)
+		    : token_base(token_types::signal), mType(t)
 		{
 			if (t == signal_types::error_)
 				throw compile_error("Unknown signal.");
 		}
 
 		token_signal(signal_types t, std::size_t line)
-		    : token_base(line), mType(t) {}
-
-		token_types get_type() const noexcept override
-		{
-			return token_types::signal;
-		}
+		    : token_base(line, token_types::signal), mType(t) {}
 
 		signal_types get_signal() const noexcept
 		{
@@ -385,12 +370,7 @@ namespace cs
 		token_id() = delete;
 
 		explicit token_id(const std::string &id)
-		    : mId(id) {}
-
-		token_types get_type() const noexcept override
-		{
-			return token_types::id;
-		}
+		    : token_base(token_types::id), mId(id) {}
 
 		const var_id &get_id() const noexcept
 		{
@@ -412,12 +392,7 @@ namespace cs
 		token_vargs() = delete;
 
 		explicit token_vargs(std::string id)
-		    : mId(std::move(id)) {}
-
-		token_types get_type() const noexcept override
-		{
-			return token_types::vargs;
-		}
+		    : token_base(token_types::vargs), mId(std::move(id)) {}
 
 		const std::string &get_id() const noexcept
 		{
@@ -439,12 +414,7 @@ namespace cs
 		token_expand() = delete;
 
 		explicit token_expand(tree_type<token_base *> tree)
-		    : mTree(std::move(tree)) {}
-
-		token_types get_type() const noexcept override
-		{
-			return token_types::expand;
-		}
+		    : token_base(token_types::expand), mTree(std::move(tree)) {}
 
 		tree_type<token_base *> &get_tree() noexcept
 		{
@@ -463,12 +433,7 @@ namespace cs
 		token_value() = delete;
 
 		explicit token_value(var val)
-		    : mVal(std::move(val)) {}
-
-		token_types get_type() const noexcept override
-		{
-			return token_types::value;
-		}
+		    : token_base(token_types::value), mVal(std::move(val)) {}
 
 		var &get_value() noexcept
 		{
@@ -488,12 +453,7 @@ namespace cs
 		token_lambda() = delete;
 
 		explicit token_lambda(std::size_t index)
-		    : m_index(index) {}
-
-		token_types get_type() const noexcept override
-		{
-			return token_types::lambda;
-		}
+		    : token_base(token_types::lambda), m_index(index) {}
 
 		std::size_t get_index() const noexcept
 		{
@@ -517,12 +477,7 @@ namespace cs
 		token_literal() = delete;
 
 		token_literal(std::string data, std::string literal)
-		    : m_data(std::move(data)), m_literal(std::move(literal)) {}
-
-		token_types get_type() const noexcept override
-		{
-			return token_types::literal;
-		}
+		    : token_base(token_types::literal), m_data(std::move(data)), m_literal(std::move(literal)) {}
 
 		const std::string &get_data() const noexcept
 		{
@@ -549,12 +504,7 @@ namespace cs
 		token_sblist() = delete;
 
 		explicit token_sblist(std::deque<std::deque<token_base *>> list)
-		    : mList(std::move(list)) {}
-
-		token_types get_type() const noexcept override
-		{
-			return token_types::sblist;
-		}
+		    : token_base(token_types::sblist), mList(std::move(list)) {}
 
 		std::deque<std::deque<token_base *>> &get_list() noexcept
 		{
@@ -576,12 +526,7 @@ namespace cs
 		token_mblist() = delete;
 
 		explicit token_mblist(std::deque<std::deque<token_base *>> list)
-		    : mList(std::move(list)) {}
-
-		token_types get_type() const noexcept override
-		{
-			return token_types::mblist;
-		}
+		    : token_base(token_types::mblist), mList(std::move(list)) {}
 
 		std::deque<std::deque<token_base *>> &get_list() noexcept
 		{
@@ -603,12 +548,7 @@ namespace cs
 		token_lblist() = delete;
 
 		explicit token_lblist(std::deque<std::deque<token_base *>> list)
-		    : mList(std::move(list)) {}
-
-		token_types get_type() const noexcept override
-		{
-			return token_types::lblist;
-		}
+		    : token_base(token_types::lblist), mList(std::move(list)) {}
 
 		std::deque<std::deque<token_base *>> &get_list() noexcept
 		{
@@ -630,12 +570,7 @@ namespace cs
 		token_expr() = delete;
 
 		explicit token_expr(tree_type<token_base *> tree)
-		    : mTree(std::move(tree)) {}
-
-		token_types get_type() const noexcept override
-		{
-			return token_types::expr;
-		}
+		    : token_base(token_types::expr), mTree(std::move(tree)) {}
 
 		tree_type<token_base *> &get_tree() noexcept
 		{
@@ -650,20 +585,16 @@ namespace cs
 		std::deque<tree_type<token_base *>> mTreeList;
 
 	   public:
-		token_arglist() = default;
+		token_arglist()
+		    : token_base(token_types::arglist) {}
 
 		explicit token_arglist(std::deque<tree_type<token_base *>>
 
 		                           tlist)
-		    :
+		    : token_base(token_types::arglist),
 
 		      mTreeList(std::move(tlist))
 		{
-		}
-
-		token_types get_type() const noexcept override
-		{
-			return token_types::arglist;
 		}
 
 		std::deque<tree_type<token_base *>> &get_arglist() noexcept
@@ -679,20 +610,16 @@ namespace cs
 		std::deque<tree_type<token_base *>> mTreeList;
 
 	   public:
-		token_array() = default;
+		token_array()
+		    : token_base(token_types::array) {}
 
 		explicit token_array(std::deque<tree_type<token_base *>>
 
 		                         tlist)
-		    :
+		    : token_base(token_types::array),
 
 		      mTreeList(std::move(tlist))
 		{
-		}
-
-		token_types get_type() const noexcept override
-		{
-			return token_types::array;
 		}
 
 		std::deque<tree_type<token_base *>> &get_array() noexcept
@@ -708,20 +635,16 @@ namespace cs
 		std::deque<tree_type<token_base *>> mTreeList;
 
 	   public:
-		token_parallel() = default;
+		token_parallel()
+		    : token_base(token_types::parallel) {}
 
 		explicit token_parallel(std::deque<tree_type<token_base *>>
 
 		                            tlist)
-		    :
+		    : token_base(token_types::parallel),
 
 		      mTreeList(std::move(tlist))
 		{
-		}
-
-		token_types get_type() const noexcept override
-		{
-			return token_types::parallel;
 		}
 
 		std::deque<tree_type<token_base *>> &get_parallel() noexcept
@@ -768,9 +691,7 @@ namespace cs
 	class statement_base
 	{
 	   protected:
-		// Non-owning back-reference to the compiling context. Statements are owned
-		// by the instance (which is owned by the context), so the context outlives
-		// every statement.
+		// Non-owning back-ref to the context (it outlives statements).
 		context_type *context = nullptr;
 		std::size_t line_num = 1;
 

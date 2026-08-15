@@ -12,6 +12,7 @@
 #include <functional>
 #include <exception>
 #include <sstream>
+#include <cstdlib>
 
 namespace cs_test {
 
@@ -21,6 +22,13 @@ namespace cs_test {
 		int line;
 		std::function<void()> func;
 	};
+
+	inline bool should_skip(const std::string &name)
+	{
+		// CS_TEST_FILTER: skip any test whose name contains this substring.
+		const char *f = std::getenv("CS_TEST_FILTER");
+		return f != nullptr && name.find(f) != std::string::npos;
+	}
 
 	inline std::vector<test_case> &registry()
 	{
@@ -46,6 +54,10 @@ namespace cs_test {
 		int failed = 0;
 
 		for (auto &tc : registry()) {
+			if (should_skip(tc.name)) {
+				std::cout << "[  SKIP    ] " << tc.name << std::endl;
+				continue;
+			}
 			std::cout << "[ RUN      ] " << tc.name << std::endl;
 			try {
 				tc.func();

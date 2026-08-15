@@ -121,6 +121,20 @@ fiber.set_schedule_policy("throughput")   # 高负载均衡
 
 机制：当对尚未到达唤醒时间的 fiber 调用 `resume()` 时，调度器使用累进式退避。重复的过早唤醒会逐渐增加休眠时长，避免 CPU 空转的同时保持对定时唤醒的响应。
 
+### 弃用的 Fiber 与 COVSCRIPT_DEBUG
+
+Fiber 采用协作式清理：在最后一个句柄被释放前，它必须运行到完成（或被驱动到 `finished`）。销毁仍处于 `running`、`suspended` 或 `sleeping` 状态的 fiber 无法解开其挂起的栈帧，因此这些帧持有的资源会泄漏。这是协作式契约，而非运行时错误。
+
+销毁未完成 fiber 时的行为由 `COVSCRIPT_DEBUG` 环境变量控制：
+
+| 取值 | 行为 |
+| :-- | :-- |
+| `none` | 什么都不做：fiber 的栈块仍被释放，挂起帧静默泄漏，程序继续 |
+| `warning` | 向 stderr 打印 `[fiber] warning: destroying an unfinished fiber ...` 并继续（默认） |
+| `strict` | 打印警告后立即中止（fail-fast） |
+
+`COVSCRIPT_DEBUG` 大小写不敏感；未设置或非法值默认按 `warning` 处理。同一开关也控制其他防御性运行时守卫（例如程序入口处函数值栈非空）。
+
 ### C++ API
 
 #### 类型

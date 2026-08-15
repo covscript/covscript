@@ -275,7 +275,11 @@ class breakpoint_recorder final
 				std::get<cs::var>(b.data).const_val<cs::callable>().get_raw_data().target<cs::function_ptr>()->fptr->set_debugger_state(
 				    false);
 			else if (b.id == id && b.data.index() == 1)
-				m_pending.erase(m_pending.find(std::get<std::string>(b.data)));
+			{
+				auto pending_it = m_pending.find(std::get<std::string>(b.data));
+				if (pending_it != m_pending.end())
+					m_pending.erase(pending_it);
+			}
 			return b.id == id; });
 		auto it = m_pending.begin();
 		for (; it != m_pending.end(); ++it)
@@ -625,8 +629,8 @@ void covscript_main(int args_size, char *args[])
 		{
 			std::cout << "Covariant Script Programming Language Debugger\nVersion: "
 			          << COVSCRIPT_VERSION_STR << " [" << COVSCRIPT_COMPILER_NAME << " on " << COVSCRIPT_PLATFORM_NAME << "]\n"
-			          << "Copyright (C) 2017-2026 Michael Lee. All rights reserved.\n"
-			          << "Please visit <http://covscript.org.cn/> for more information."
+			                                                                                                              "Copyright (C) 2017-2026 Michael Lee. All rights reserved.\n"
+			                                                                                                              "Please visit <http://covscript.org.cn/> for more information."
 			          << std::endl;
 		}
 		func_map.add_func("quit", "q", [](const std::string &cmd) -> bool

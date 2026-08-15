@@ -174,14 +174,14 @@ namespace cs
 		m_unit = std::make_shared<compile_unit>();
 		std::shared_ptr<compile_unit> saved_unit = context->current_unit;
 		context->current_unit = m_unit;
+		// Roll back lambdas registered by a failed compilation.
+		std::size_t store_base = functions.size();
 		// Read from file
 		std::deque<char> buff;
 		for (int ch = in.get(); in; ch = in.get())
 			buff.push_back(ch);
 		std::deque<std::deque<token_base *>> ast;
-		// Compile. The constant pool is scoped to this translation unit: a nested
-		// compile (module import during code generation) must not wipe the
-		// constants accumulated by the enclosing compilation.
+		// Constant pool scoped to this unit: a nested compile must not wipe it.
 		std::size_t pool_base = context->compiler->save_pool();
 		value_guard<std::size_t> loop_guard(context->compiler->loop_depth, 0);
 		// Scope the import FIFO to this unit so nested compiles don't disturb it.
@@ -197,10 +197,9 @@ namespace cs
 			context->compiler->restore_pool(pool_base);
 			context->compiler->clear_import_results(import_base);
 			context->current_unit = saved_unit;
-			// The compilation failed partway through; free any statements that
-			// were already generated so a half-compiled program cannot linger or
-			// be run, and so the token arena can be released promptly.
+			// Free half-generated statements so a failed program can't linger.
 			statement_base::delete_children(statements);
+			functions.resize(store_base);
 			release_unit();
 			throw;
 		}
@@ -209,9 +208,7 @@ namespace cs
 		context->current_unit = saved_unit;
 	}
 
-	// Interpret nesting depth on this thread. Only the outermost run clears the
-	// value stack; a nested interpret (a subcontext import during expression
-	// evaluation) shares the parent's process and must keep its operands.
+	// Only the outermost interpret clears the value stack.
 	static thread_local std::size_t interpret_depth = 0;
 
 	void instance_type::interpret()
@@ -219,8 +216,17 @@ namespace cs
 		process_run_scope scope(context);
 		if (interpret_depth == 0)
 		{
-			while (!current_process->stack.empty())
-				current_process->stack.pop_no_return();
+			// Defensive: stale frames from an interrupted run (RAII balances the
+			// stack normally). none: leave, warning: clear, strict: fail.
+			if (!current_process->stack.empty())
+			{
+				cs_impl::debug_guard(
+				    "[interpret] function value stack is not empty at program entry; "
+				    "stale frames from an interrupted run");
+				if (cs_impl::get_debug_mode() == cs_impl::debug_mode::warning)
+					while (!current_process->stack.empty())
+						current_process->stack.pop_no_return();
+			}
 #ifdef CS_DEBUGGER
 			while (!current_process->stack_backtrace.empty())
 				current_process->stack_backtrace.pop_no_return();
@@ -459,6 +465,8 @@ namespace cs
 	void repl::interpret(const string &code, std::deque<token_base *> &line)
 	{
 		statement_base *sptr = nullptr;
+		// Roll back lambdas registered by a failed line.
+		std::size_t store_base = context->instance->functions.size();
 		try
 		{
 			method_base *m = context->compiler->match_method(line);
@@ -477,10 +485,7 @@ namespace cs
 							context->instance->storage.remove_set();
 							domain_type domain = std::move(context->instance->storage.get_domain());
 							context->instance->storage.remove_domain();
-							// Pop before postprocess: if postprocess throws (e.g. a
-							// namespace-name conflict), the method must no longer count
-							// as owning a domain/set pair, or reset_status would pop the
-							// already-removed pair again and corrupt the storage stacks.
+							// Pop before postprocess so a throw can't double-pop.
 							expected_method = methods.top();
 							methods.pop();
 							expected_method->postprocess(context.get(), domain);
@@ -554,6 +559,7 @@ namespace cs
 		{
 			delete sptr;
 			reset_status();
+			context->instance->functions.resize(store_base);
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
 			if (le.has_location())
@@ -564,6 +570,7 @@ namespace cs
 		{
 			delete sptr;
 			reset_status();
+			context->instance->functions.resize(store_base);
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
 			throw;
@@ -595,9 +602,6 @@ namespace cs
 			import_base = context->compiler->import_results.size();
 			m_unit = std::make_shared<compile_unit>();
 			context->current_unit = m_unit;
-			// Start each top-level statement with a clean value stack.
-			while (!current_process->stack.empty())
-				current_process->stack.pop_no_return();
 		}
 		try
 		{

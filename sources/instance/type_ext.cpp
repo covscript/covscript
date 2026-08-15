@@ -1619,7 +1619,8 @@ namespace cs_impl
 		{
 			callable owner;
 			function const *func = nullptr;
-			context_type *context;
+			// Retain the context so the fiber body has a valid instance while it runs.
+			context_t context;
 			vector args;
 
 		   public:
@@ -1640,6 +1641,9 @@ namespace cs_impl
 					func = nullptr;
 					args.clear();
 					context->instance->clear_context();
+					// Release the retained context so a finished fiber stored in
+					// the context's own storage can't keep it alive forever.
+					context.reset();
 					return std::move(ret);
 				}
 				catch (...)
@@ -1647,6 +1651,7 @@ namespace cs_impl
 					func = nullptr;
 					args.clear();
 					context->instance->clear_context();
+					context.reset();
 					throw;
 				}
 			}
@@ -1688,7 +1693,10 @@ namespace cs_impl
 				if (impl.target_type() != typeid(function_ptr))
 					return fiber::create_native(fiber_native_function(impl, std::move(data)));
 				function const *fptr = impl.target<function_ptr>()->fptr;
-				return fiber::create(fptr->get_context(), fiber_function(fn, std::move(data)));
+				auto ctx = fptr->get_context();
+				if (!ctx)
+					throw runtime_error("the function's context has been destroyed");
+				return fiber::create(ctx.get(), fiber_function(fn, std::move(data)));
 			};
 			if (func.is_type_of<callable>())
 				return build(func.const_val<callable>(), vector(args.begin() + 1, args.end()));
@@ -1911,8 +1919,10 @@ namespace cs_impl
 				std::size_t count = 0;
 				if (target.target_type() == typeid(function_ptr))
 					count = target.target<function_ptr>()->fptr->argument_count();
-				else
+				else if (target.target_type() == typeid(cni))
 					count = target.target<cni>()->argument_count();
+				else
+					throw lang_error("The target value is not a function");
 				return count > 0 ? count - 1 : 0;
 			}
 			else if (func.is_type_of<callable>())
@@ -1920,8 +1930,10 @@ namespace cs_impl
 				const callable::function_type &target = func.const_val<callable>().get_raw_data();
 				if (target.target_type() == typeid(function_ptr))
 					return target.target<function_ptr>()->fptr->argument_count();
-				else
+				else if (target.target_type() == typeid(cni))
 					return target.target<cni>()->argument_count();
+				else
+					throw lang_error("The target value is not a function");
 			}
 			else
 				throw lang_error("The target value is not a function");

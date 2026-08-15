@@ -67,6 +67,15 @@ CNI_ROOT_NAMESPACE {
 
 	CNI(test)
 
+	// 1 when the extension sees a current process (the host's current-thread
+	// process via the injected accessor), 0 otherwise.
+	int proc_state(int)
+	{
+		return cs::current_process != nullptr ? 1 : 0;
+	}
+
+	CNI(proc_state)
+
 	CNI_V(test_v, [](int a)
 	{
 		return a + 1;

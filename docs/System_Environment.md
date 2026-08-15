@@ -59,3 +59,17 @@ include($ENV{CS_DEV_PATH}/csbuild.cmake)
 ```
 
 **Note**: This variable is **not** consumed by the CovScript interpreter or runtime. It is read by external extension build systems only.
+
+## Debug Mode
+
+**Environment Variable**: `COVSCRIPT_DEBUG`
+
+Controls the behaviour of defensive runtime guards (for example destroying an unfinished fiber, or a non-empty function value stack at program entry). The value is case-insensitive; an unset or unknown value defaults to `warning`.
+
+| Value | Behaviour |
+| :-- | :-- |
+| `none` | Ignore silently: the program keeps running, partial leaks accepted |
+| `warning` | Print a warning to stderr and continue (default) |
+| `strict` | Print a warning and abort immediately (fail-fast) |
+
+Guards are diagnostic only and do not change runtime semantics in the normal case.
