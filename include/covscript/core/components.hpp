@@ -994,54 +994,6 @@ namespace cs
 		}
 	};
 
-	// Number of active worker threads. The pool cache is only used when no
-	// worker threads are active.
-	class thread_count final
-	{
-		std::atomic<std::size_t> m_count{0};
-
-		thread_count() = default;
-		thread_count(const thread_count &) = delete;
-		thread_count &operator=(const thread_count &) = delete;
-
-	   public:
-		static thread_count &instance()
-		{
-			static thread_count counter;
-			return counter;
-		}
-
-		bool single_threaded() const noexcept
-		{
-			return m_count.load(std::memory_order_acquire) == 0;
-		}
-
-		void increment() noexcept
-		{
-			m_count.fetch_add(1, std::memory_order_relaxed);
-		}
-
-		void decrement() noexcept
-		{
-			m_count.fetch_sub(1, std::memory_order_relaxed);
-		}
-	};
-
-	// RAII guard for worker threads; increments the worker count on construction.
-	struct thread_guard final
-	{
-		thread_guard()
-		{
-			thread_count::instance().increment();
-		}
-		thread_guard(const thread_guard &) = delete;
-		thread_guard(thread_guard &&) noexcept = delete;
-		~thread_guard()
-		{
-			thread_count::instance().decrement();
-		}
-	};
-
 	// Buffer Pool
 	template <typename T, std::size_t blck_size, template <typename> class allocator_t = std::allocator>
 	class allocator_type final
@@ -1051,11 +1003,9 @@ namespace cs
 		std::size_t mOffset = 0;
 
 	   public:
-		allocator_type()
-		{
-			while (mOffset < blck_size / 2)
-				mPool[mOffset++] = mAlloc.allocate(1);
-		}
+		// Starts empty and fills on demand, so a thread that does little var
+		// work pays no fixed pre-allocation cost.
+		allocator_type() = default;
 
 		allocator_type(const allocator_type &) = delete;
 
@@ -1069,7 +1019,7 @@ namespace cs
 		inline T *alloc(ArgsT &&...args)
 		{
 			T *ptr = nullptr;
-			if (mOffset > 0 && thread_count::instance().single_threaded())
+			if (mOffset > 0)
 				ptr = mPool[--mOffset];
 			else
 				ptr = mAlloc.allocate(1);
@@ -1080,7 +1030,7 @@ namespace cs
 		inline void free(T *ptr)
 		{
 			ptr->~T();
-			if (mOffset < blck_size && thread_count::instance().single_threaded())
+			if (mOffset < blck_size)
 				mPool[mOffset++] = ptr;
 			else
 				mAlloc.deallocate(ptr, 1);
@@ -1088,7 +1038,7 @@ namespace cs
 
 		inline T *allocate(std::size_t n)
 		{
-			if (n == 1 && mOffset > 0 && thread_count::instance().single_threaded())
+			if (n == 1 && mOffset > 0)
 				return mPool[--mOffset];
 			else
 				return mAlloc.allocate(n);
@@ -1096,7 +1046,7 @@ namespace cs
 
 		inline void deallocate(T *ptr, std::size_t n)
 		{
-			if (n == 1 && mOffset < blck_size && thread_count::instance().single_threaded())
+			if (n == 1 && mOffset < blck_size)
 				mPool[mOffset++] = ptr;
 			else
 				mAlloc.deallocate(ptr, n);

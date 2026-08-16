@@ -279,20 +279,41 @@ namespace cs
 		// 'break'/'continue' outside any loop at compile time.
 		std::size_t loop_depth = 0;
 
-		// FIFO of import/using preprocessing results (methods are shared singletons,
-		// so per-method storage would clobber on multiple imports per block).
-		std::deque<statement_base *> import_results;
+		// Import/using preprocessing results scoped per compilation/REPL statement.
+		// Nested compilation gets a separate FIFO and cannot consume the outer
+		// scope's pending result.
+		std::vector<std::deque<statement_base *>> import_result_scopes;
 
-		// Truncate the import FIFO back to `base`, deleting any preprocessing
-		// results produced but never consumed into a statement tree (a compile
-		// aborted between preprocess and translate).
-		void clear_import_results(std::size_t base)
+		void begin_import_scope()
 		{
-			while (import_results.size() > base)
+			import_result_scopes.emplace_back();
+		}
+
+		void push_import_result(statement_base *result)
+		{
+			if (import_result_scopes.empty())
+				begin_import_scope();
+			import_result_scopes.back().push_back(result);
+		}
+
+		statement_base *pop_import_result()
+		{
+			if (import_result_scopes.empty() || import_result_scopes.back().empty())
+				return nullptr;
+			statement_base *result = import_result_scopes.back().front();
+			import_result_scopes.back().pop_front();
+			return result;
+		}
+
+		void end_import_scope()
+		{
+			if (import_result_scopes.empty())
+				return;
+			for (statement_base *result : import_result_scopes.back())
 			{
-				delete import_results.back();
-				import_results.pop_back();
+				delete result;
 			}
+			import_result_scopes.pop_back();
 		}
 
 		// Whether a block opens a loop (break/continue only legal inside one).
@@ -418,14 +439,15 @@ namespace cs
 
 		void
 		build_line(const std::deque<char> &buff, std::deque<std::deque<token_base *>> &ast, std::size_t line_num = 1,
-		           charset encoding = charset::utf8)
+		           charset encoding = charset::utf8, bool process = true)
 		{
 			std::deque<token_base *> tokens;
 			process_char_buff(buff, tokens, encoding);
 			tokens.push_back(make_token<token_endline>(line_num));
 			process_token_buff(tokens, ast);
-			for (auto &line : ast)
-				process_line(line);
+			if (process)
+				for (auto &line : ast)
+					process_line(line);
 		}
 
 		void build_ast(const std::deque<char> &buff, std::deque<std::deque<token_base *>> &ast,

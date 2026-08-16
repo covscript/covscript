@@ -1387,8 +1387,6 @@ namespace cs_impl
 
 		class async_callable final
 		{
-			// Keep the worker count elevated for the whole object lifetime.
-			std::shared_ptr<thread_guard> guard;
 			callable func;
 			vector args;
 			// The process this task belongs to, captured at creation; installed on
@@ -1397,16 +1395,10 @@ namespace cs_impl
 
 			void detach_args()
 			{
+				// copy_no_return rebinds a self-referencing lambda's `self` borrow
+				// to the clone's own proxy (same deep-copy path as cs::copy).
 				for (auto &val : args)
-				{
-					if (!val.is_rvalue())
-					{
-						val.clone();
-						val.detach();
-					}
-					else
-						val.mark_trivial();
-				}
+					copy_no_return(val);
 			}
 
 		   public:
@@ -1416,7 +1408,6 @@ namespace cs_impl
 				if (!is_native_callable(fn))
 					throw lang_error("Async operation requires a native function");
 				detach_args();
-				guard = std::make_shared<thread_guard>();
 			}
 
 			var operator()()
@@ -1703,7 +1694,14 @@ namespace cs_impl
 			else if (func.is_type_of<object_method>())
 			{
 				const auto &om = func.const_val<object_method>();
-				vector argument{om.object};
+				vector argument;
+				// A recursive lambda borrows its own proxy as `self`; snapshot the
+				// wrapper so a later reassignment of the source variable can't
+				// break the fiber's `self` when it resumes.
+				if (om.object.points_to(func.proxy_address()))
+					argument.push_back(copy(func));
+				else
+					argument.emplace_back(om.object);
 				argument.insert(argument.end(), args.begin() + 1, args.end());
 				return build(om.callable.const_val<callable>(), std::move(argument));
 			}
@@ -2392,10 +2390,11 @@ namespace cs_impl
 
 	void init_extensions()
 	{
-		static bool extensions_initiator = true;
-		if (extensions_initiator)
+		// Extensions populate process-global namespaces; serialize first-time
+		// initialization so concurrent create_context calls cannot race.
+		static std::once_flag extensions_flag;
+		std::call_once(extensions_flag, []
 		{
-			extensions_initiator = false;
 			member_visitor_cs_ext::init();
 			iostream_cs_ext::init();
 			charbuff_cs_ext::init();
@@ -2416,6 +2415,6 @@ namespace cs_impl
 			pair_cs_ext::init();
 			hash_set_cs_ext::init();
 			hash_map_cs_ext::init();
-		}
+		});
 	}
 } // namespace cs_impl

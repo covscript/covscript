@@ -234,7 +234,10 @@ namespace cs
 		if (process != nullptr)
 			process->teardown_ctx = nullptr;
 		// Drop module namespaces/subcontexts so their arenas release at teardown.
-		if (compiler != nullptr)
+		// Only the compiler-owning context may clear the cache: subcontexts share
+		// the parent's compiler, so a failed module import must not wipe modules
+		// the parent already imported successfully.
+		if (owns_compiler && compiler != nullptr)
 		{
 			// Clear each module domain so circular cross-refs drop.
 			for (auto &kv : compiler->modules)
@@ -254,16 +257,32 @@ namespace cs
 			p->type_nodes.emplace_back();
 			return &p->type_nodes.back();
 		}
-		static std::deque<type_node> fallback_pool;
+		// A bare (process-less) thread's fallback: thread_local so concurrent
+		// process-less threads don't race on the pool.
+		static thread_local std::deque<type_node> fallback_pool;
 		fallback_pool.emplace_back();
 		return &fallback_pool.back();
+	}
+
+	// A deep clone must rebind a self-referencing lambda's `self` borrow to the
+	// clone's own proxy, or it would dangle once the original is released.
+	static void rebind_self_reference(var &val, const void *old_proxy)
+	{
+		if (val.is_type_of<object_method>())
+		{
+			auto &om = val.val<object_method>();
+			if (om.object.points_to(old_proxy))
+				om.object = var_borrower::borrow(val);
+		}
 	}
 
 	void copy_no_return(var &val)
 	{
 		if (!val.is_rvalue())
 		{
+			const void *old_proxy = val.proxy_address();
 			val.clone();
+			rebind_self_reference(val, old_proxy);
 			val.detach();
 		}
 		else
@@ -274,16 +293,9 @@ namespace cs
 	{
 		if (!val.is_rvalue())
 		{
-			// Deep clone: rebind a self-referencing lambda's `self` borrow to the
-			// clone's own proxy, or it would dangle once the original is released.
 			const void *old_proxy = val.proxy_address();
 			val.clone();
-			if (val.is_type_of<object_method>())
-			{
-				auto &om = val.val<object_method>();
-				if (om.object.points_to(old_proxy))
-					om.object = var_borrower::borrow(val);
-			}
+			rebind_self_reference(val, old_proxy);
 			val.detach();
 		}
 		else
@@ -515,6 +527,7 @@ namespace cs
 			cs_impl::init_extensions();
 		}
 		context->compiler = std::make_shared<compiler_type>(context.get());
+		context->owns_compiler = true;
 		context->instance = std::make_shared<instance_type>(context.get(), context->process->stack_size);
 		context->cmd_args = cs::var::make_constant<cs::array>(args);
 		// Default arena for tokens outside an explicit compile unit.

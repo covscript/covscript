@@ -174,20 +174,33 @@ namespace cs
 		m_unit = std::make_shared<compile_unit>();
 		std::shared_ptr<compile_unit> saved_unit = context->current_unit;
 		context->current_unit = m_unit;
-		// Roll back lambdas registered by a failed compilation.
-		std::size_t store_base = functions.size();
-		// Read from file
-		std::deque<char> buff;
-		for (int ch = in.get(); in; ch = in.get())
-			buff.push_back(ch);
-		std::deque<std::deque<token_base *>> ast;
-		// Constant pool scoped to this unit: a nested compile must not wipe it.
+		// Roll back only lambdas registered by this compilation. Stable store
+		// indices let successful nested compilations survive an outer failure.
+		functions.begin_transaction();
+		context->compiler->begin_import_scope();
 		std::size_t pool_base = context->compiler->save_pool();
 		value_guard<std::size_t> loop_guard(context->compiler->loop_depth, 0);
-		// Scope the import FIFO to this unit so nested compiles don't disturb it.
-		std::size_t import_base = context->compiler->import_results.size();
 		try
 		{
+			// Read from file
+			std::deque<char> buff;
+			while (true)
+			{
+				try
+				{
+					int ch = in.get();
+					if (!in)
+						break;
+					buff.push_back(ch);
+				}
+				catch (const std::ios_base::failure &)
+				{
+					if (in.eof() && !in.bad())
+						break;
+					throw;
+				}
+			}
+			std::deque<std::deque<token_base *>> ast;
 			context->compiler->build_ast(buff, ast);
 			context->compiler->code_gen(ast, statements);
 			context->compiler->utilize_metadata();
@@ -195,17 +208,18 @@ namespace cs
 		catch (...)
 		{
 			context->compiler->restore_pool(pool_base);
-			context->compiler->clear_import_results(import_base);
+			context->compiler->end_import_scope();
 			context->current_unit = saved_unit;
 			// Free half-generated statements so a failed program can't linger.
 			statement_base::delete_children(statements);
-			functions.resize(store_base);
+			functions.rollback_transaction();
 			release_unit();
 			throw;
 		}
 		context->compiler->restore_pool(pool_base);
-		context->compiler->clear_import_results(import_base);
+		context->compiler->end_import_scope();
 		context->current_unit = saved_unit;
+		functions.commit_transaction();
 	}
 
 	// Only the outermost interpret clears the value stack.
@@ -465,8 +479,6 @@ namespace cs
 	void repl::interpret(const string &code, std::deque<token_base *> &line)
 	{
 		statement_base *sptr = nullptr;
-		// Roll back lambdas registered by a failed line.
-		std::size_t store_base = context->instance->functions.size();
 		try
 		{
 			method_base *m = context->compiler->match_method(line);
@@ -547,19 +559,11 @@ namespace cs
 				// throw after this point cannot double-free the statement.
 				sptr = nullptr;
 			}
-			// The top-level statement is complete: release its token arena (a
-			// function retained in the store keeps it alive via its m_unit).
-			if (methods.empty())
-			{
-				context->current_unit = nullptr;
-				release_unit();
-			}
 		}
 		catch (const lang_error &le)
 		{
 			delete sptr;
 			reset_status();
-			context->instance->functions.resize(store_base);
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
 			if (le.has_location())
@@ -570,7 +574,6 @@ namespace cs
 		{
 			delete sptr;
 			reset_status();
-			context->instance->functions.resize(store_base);
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
 			throw;
@@ -590,26 +593,78 @@ namespace cs
 	void repl::run(const string &code)
 	{
 		if (code.empty())
-			return;
+			throw runtime_error("REPL input must contain exactly one top-level statement");
 		process_run_scope scope(context);
+		const bool reentrant = m_run_depth > 0;
+		if (reentrant && !methods.empty())
+			throw runtime_error("Re-entrant REPL execution cannot continue an open block");
+		value_guard<std::size_t> run_depth_guard(m_run_depth, m_run_depth + 1);
 		std::deque<char> buff;
 		for (auto &ch : code)
 			buff.push_back(ch);
 		// A new top-level statement starts when no block is open: record the
-		// import FIFO base and start a fresh token arena for the whole statement.
+		// import FIFO base, begin a function-store transaction and start a fresh
+		// token arena. The transaction begins before build_line because lambdas
+		// register during compilation; failures roll back only this statement's
+		// slots while keeping committed nested indices stable.
 		if (methods.empty())
 		{
-			import_base = context->compiler->import_results.size();
-			m_unit = std::make_shared<compile_unit>();
-			context->current_unit = m_unit;
+			context->compiler->begin_import_scope();
+			context->instance->functions.begin_transaction();
+			m_saved_units.push_back(context->current_unit);
+			m_units.push_back(std::make_shared<compile_unit>());
+			context->current_unit = m_units.back();
+		}
+		std::deque<std::deque<token_base *>> ast;
+		try
+		{
+			context->compiler->clear_metadata();
+			context->compiler->build_line(buff, ast, line_num, encoding, false);
+		}
+		catch (const lang_error &le)
+		{
+			// Build failed before interpret() ran, so this layer owns the
+			// rollback (interpret's catches reset failures after this point;
+			// resetting twice would pop an enclosing statement's frame).
+			reset_status();
+			if (le.has_location())
+				throw exception(le.line(), le.file(), le.code(), std::string("Uncaught exception: ") + le.what());
+			throw fatal_error(std::string("Uncaught exception: ") + le.what());
+		}
+		catch (const cs::exception &)
+		{
+			reset_status();
+			throw;
+		}
+		catch (const std::exception &e)
+		{
+			reset_status();
+			throw exception(line_num, context->file_path, code, exception_message(e));
+		}
+		if (ast.empty())
+		{
+			reset_status();
+			throw runtime_error("REPL input must contain exactly one top-level statement");
 		}
 		try
 		{
-			std::deque<std::deque<token_base *>> ast;
-			context->compiler->clear_metadata();
-			context->compiler->build_line(buff, ast, line_num, encoding);
 			for (auto &line : ast)
-				interpret(code, line);
+				context->compiler->process_line(line);
+			std::size_t depth = methods.size();
+			std::size_t statement_count = depth == 0 ? 0 : 1;
+			for (auto &line : ast)
+			{
+				method_base *method = context->compiler->match_method(line);
+				if (depth == 0 && ++statement_count > 1)
+					throw runtime_error("REPL input must contain exactly one top-level statement");
+				if (method->get_type() == method_types::block)
+					++depth;
+				else if (method->get_type() == method_types::single &&
+				         method->get_target_type() == statement_types::end_ && depth > 0)
+					--depth;
+				if (reentrant && method->get_type() == method_types::block)
+					throw runtime_error("Re-entrant REPL execution cannot open a block");
+			}
 		}
 		catch (const lang_error &le)
 		{
@@ -627,6 +682,14 @@ namespace cs
 		{
 			reset_status();
 			throw exception(line_num, context->file_path, code, exception_message(e));
+		}
+		for (auto &line : ast)
+			interpret(code, line);
+		if (methods.empty())
+		{
+			context->instance->functions.commit_transaction();
+			context->compiler->end_import_scope();
+			pop_unit();
 		}
 	}
 
@@ -670,6 +733,12 @@ namespace cs
 				return;
 			case 1:
 			{
+				if (m_run_depth > 0)
+				{
+					cmd_buff.clear();
+					context->file_buff.emplace_back();
+					throw runtime_error("Re-entrant REPL execution cannot use preprocessing commands");
+				}
 				std::string cmd;
 				std::swap(cmd_buff, cmd);
 				if (cmd == "begin" && !multi_line)

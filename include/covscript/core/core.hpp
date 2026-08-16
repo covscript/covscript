@@ -388,6 +388,10 @@ namespace cs
 		// Current compile's token arena; functions keep it alive via m_unit.
 		std::shared_ptr<compile_unit> current_unit;
 
+		// Only the context that created the compiler may clear its module cache;
+		// subcontexts (module imports) share it and must leave it intact.
+		bool owns_compiler = false;
+
 		context_type() = default;
 
 		context_type(const context_type &) = default;
@@ -968,15 +972,7 @@ namespace cs
 			m_ref->domain = nullptr;
 		}
 
-		void clear()
-		{
-			m_reflect.clear();
-			m_slot.clear();
-			optimize = false;
-			// Invalidate every cached var_id so the fast path re-resolves by name
-			// after the layout changes.
-			m_ref = std::make_shared<domain_ref>(this);
-		}
+		void clear();
 
 		inline void next() noexcept
 		{
@@ -1329,6 +1325,10 @@ namespace cs
 		// Pins its owning process so the type node and members outlive the
 		// context; only calling a method (function::mContext back-ref) needs it.
 		bool m_shadow = false;
+		// Set once finalize has run, so an explicit pre-clear finalization (the
+		// global domain runs finalizers before releasing its symbol table) does
+		// not run the finalizer a second time from the destructor.
+		mutable bool m_finalized = false;
 		std::string m_name;
 		domain_t m_data;
 		type_id m_id;
@@ -1356,6 +1356,7 @@ namespace cs
 			std::swap(m_data, s.m_data);
 			std::swap(m_id, s.m_id);
 			std::swap(m_process, s.m_process);
+			std::swap(m_finalized, s.m_finalized);
 		}
 
 		structure(const structure &s)
@@ -1388,10 +1389,14 @@ namespace cs
 		explicit structure(const structure *s)
 		    : m_shadow(true), m_id(s->m_id), m_name(s->m_name), m_data(s->m_data), m_process(s->m_process) {}
 
-		~structure()
+		// Runs the structure's `finalize` method (if any) exactly once, while
+		// the runtime is still usable. Swallows script errors: finalize runs
+		// inside implicitly noexcept destructor paths.
+		void run_finalize() const
 		{
-			if (!m_shadow && m_data->exist("finalize"))
+			if (!m_shadow && !m_finalized && m_data->exist("finalize"))
 			{
+				m_finalized = true;
 				try
 				{
 					process_activation activation(m_process.get());
@@ -1399,10 +1404,14 @@ namespace cs
 				}
 				catch (...)
 				{
-					// finalize runs inside an implicitly noexcept destructor;
 					// swallowing prevents std::terminate on script errors
 				}
 			}
+		}
+
+		~structure()
+		{
+			run_finalize();
 		}
 
 		structure &operator=(structure &&s) noexcept
@@ -1412,6 +1421,7 @@ namespace cs
 			std::swap(m_data, s.m_data);
 			std::swap(m_id, s.m_id);
 			std::swap(m_process, s.m_process);
+			std::swap(m_finalized, s.m_finalized);
 			return *this;
 		}
 
@@ -1457,6 +1467,23 @@ namespace cs
 				throw runtime_error("Struct \"" + m_name + "\" have no member called \"" + std::string(name) + "\".");
 		}
 	};
+
+	// Defined here (after `structure`) so finalizers run while the symbol table
+	// is still intact: a finalizer may reference other variables of this domain.
+	inline void domain_type::clear()
+	{
+		// Run structure finalizers first, while names still resolve; the flag on
+		// each structure suppresses the destructor's second invocation.
+		for (std::size_t i = 0; i < m_slot.size(); ++i)
+			if (m_slot[i].is_type_of<structure>())
+				m_slot[i].const_val<structure>().run_finalize();
+		m_reflect.clear();
+		m_slot.clear();
+		optimize = false;
+		// Invalidate every cached var_id so the fast path re-resolves by name
+		// after the layout changes.
+		m_ref = std::make_shared<domain_ref>(this);
+	}
 
 	class struct_builder final
 	{

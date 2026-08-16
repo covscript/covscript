@@ -107,7 +107,7 @@ cs::var f = cs::eval(ctx, "[](x)->x+1");
 推论：
 
 + 原生（CNI）回调与异步 future 可能观察到 `current_process == nullptr`；SDK 的错误路径已对此容错，但读取 `current_process` 的扩展必须做空判断。
-+ 两个 context 可在**不同线程**上并发运行。`var` 的分配器池仅在单线程时复用；异步工作线程会抬高线程计数（`cs::thread_guard`）以绕过该池。
++ 两个 context 可在**不同线程**上并发运行。`var` 的 proxy 分配器池是**每线程独立**的（`thread_local`）且按需增长，因此不同 context 永不共享池槽；值在其它线程释放时回退到直接分配路径（`std::allocator` 实例间可互换）。
 
 ### 3. 结构体终结器（finalize）
 

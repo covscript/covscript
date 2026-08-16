@@ -35,12 +35,16 @@ namespace cs
 	class function_store final
 	{
 		std::vector<var> m_lambdas;
+		std::vector<std::vector<std::size_t>> m_transactions;
 
 	   public:
 		std::size_t add(const var &val)
 		{
 			m_lambdas.push_back(val);
-			return m_lambdas.size() - 1;
+			std::size_t index = m_lambdas.size() - 1;
+			if (!m_transactions.empty())
+				m_transactions.back().push_back(index);
+			return index;
 		}
 
 		std::size_t size() const noexcept
@@ -52,6 +56,38 @@ namespace cs
 		void resize(std::size_t count)
 		{
 			m_lambdas.resize(count);
+		}
+
+		void begin_transaction()
+		{
+			m_transactions.emplace_back();
+		}
+
+		void commit_transaction()
+		{
+			if (!m_transactions.empty())
+				m_transactions.pop_back();
+		}
+
+		void rollback_transaction()
+		{
+			if (m_transactions.empty())
+				return;
+			for (std::size_t index : m_transactions.back())
+				if (index < m_lambdas.size())
+					m_lambdas[index] = var();
+			m_transactions.pop_back();
+			// Preserve stable indices for committed nested entries. Only empty
+			// slots at the physical end can be reclaimed safely.
+			while (!m_lambdas.empty() && !m_lambdas.back().usable())
+				m_lambdas.pop_back();
+		}
+
+		std::size_t active_size() const noexcept
+		{
+			return static_cast<std::size_t>(std::count_if(m_lambdas.begin(), m_lambdas.end(),
+			                                              [](const var &val)
+			{ return val.usable(); }));
 		}
 
 		var get(std::size_t index) const

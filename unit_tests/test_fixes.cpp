@@ -4,6 +4,9 @@
 #include <climits>
 #include <cstdio>
 #include <fstream>
+#include <filesystem>
+#include <thread>
+#include <atomic>
 
 // =============================================================================
 // Regression tests guarding the fixes from the full-project audit (2026-08).
@@ -475,7 +478,7 @@ TEST(truncate_int_min_no_ub)
 	EXPECT_TRUE(r < 0);       // sign preserved
 	EXPECT_TRUE(r > INT_MIN); // magnitude reduced, not the raw/garbage INT_MIN
 	// Normal (ABI-style) truncation is unaffected: keep the first 4 digits.
-	EXPECT_TRUE(cs::extension::truncate(260805, 4) == 2608);
+	EXPECT_TRUE(cs::extension::truncate(260901, 4) == 2609);
 }
 
 // =============================================================================
@@ -552,4 +555,522 @@ TEST(case_label_rejects_constant_containing_callable)
 	                "\t\tsystem.out.println(\"hit\")\n"
 	                "\tend\n"
 	                "end\n") != "");
+}
+
+// =============================================================================
+// F05b: a failed REPL line must roll back every lambda the statement
+// registered - including the ones its build_line compiled before the line was
+// matched/translated. The watermark is taken before build_line, not at
+// interpret() entry.
+// =============================================================================
+TEST(repl_failed_line_rolls_back_function_store)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	auto repl = std::make_shared<cs::repl>(ctx);
+	repl->exec("var f = []()->1\n");
+	const std::size_t before = ctx->instance->functions.size();
+	EXPECT_TRUE(before >= 1);
+	try {
+		// The lambda compiles (registered into the store) but the malformed
+		// parallel definition `x` fails translation.
+		repl->exec("var g = []()->2, x\n");
+	}
+	catch (...) {
+	}
+	EXPECT_TRUE(ctx->instance->functions.size() == before);
+	// The repl must stay usable and its committed lambda callable.
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(f())\n") == "1\n");
+}
+
+// =============================================================================
+// F05c: lambdas registered on earlier lines of a multi-line block must also be
+// rolled back when a later line fails (previously each line had its own local
+// snapshot, so a failed block leaked every earlier line's lambdas).
+// =============================================================================
+TEST(repl_multiline_block_failure_rolls_back_lambdas)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	auto repl = std::make_shared<cs::repl>(ctx);
+	repl->exec("var f = []()->1\n");
+	const std::size_t before = ctx->instance->functions.size();
+	repl->exec("function foo()\n");
+	// Registered while the function block is open.
+	repl->exec("var g = []()->2\n");
+	try {
+		// The malformed parallel definition `a` fails translation; every lambda
+		// registered since the block opened (g and h) must be rolled back.
+		repl->exec("var h = []()->3, a\n");
+	}
+	catch (...) {
+	}
+	EXPECT_TRUE(ctx->instance->functions.size() == before);
+	// The repl must stay usable afterwards.
+	repl->exec("var k = []()->4\n");
+	EXPECT_TRUE(ctx->instance->functions.size() == before + 1);
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(f() + k())\n") == "5\n");
+}
+
+// =============================================================================
+// F05d: a re-entrant exec() commits a nested statement's lambda; if the outer
+// statement fails afterwards, the nested statement's committed lambda survives
+// through the variable's own copy even though its store slot is rolled back
+// with the outer statement.
+// =============================================================================
+TEST(repl_reentrant_nested_lambda_survives_outer_failure)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	auto repl = std::make_shared<cs::repl>(ctx);
+	std::weak_ptr<cs::repl> weak_repl = repl;
+	ctx->instance->storage.add_var("run_repl",
+	    cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var {
+		    // The nested statement commits `inner`; then the outer statement
+		    // fails via this exception.
+		    weak_repl.lock()->exec("var inner = []()->([]()->42)\n");
+		    throw std::runtime_error("boom");
+	    })));
+	const std::size_t before = ctx->instance->functions.size();
+	try {
+		repl->exec("var outer_lambda = []()->1, outer = run_repl()\n");
+	}
+	catch (...) {
+	}
+	// The outer rollback removes only its own slots. The nested committed slot
+	// retains its stable index.
+	EXPECT_TRUE(ctx->instance->functions.active_size() == before + 2);
+	EXPECT_TRUE(run_script_on(ctx, "var nested = inner()\nsystem.out.println(nested())\n") == "42\n");
+}
+
+// =============================================================================
+// F05e: a re-entrant exec() during an outer REPL statement must not free the
+// outer statement's token arena. Previously the nested exec replaced the sole
+// arena, so resuming the outer expression (the `+ 1` after run_repl()) read
+// freed tokens.
+// =============================================================================
+TEST(repl_reentrant_nested_exec_preserves_outer_tokens)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	auto repl = std::make_shared<cs::repl>(ctx);
+	std::weak_ptr<cs::repl> weak_repl = repl;
+	ctx->instance->storage.add_var("run_repl",
+	    cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var {
+		    weak_repl.lock()->exec("var inner = []()->42\n");
+		    return cs::var::make<cs::numeric>(7);
+	    })));
+	repl->exec("var outer = run_repl() + 1\n");
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(outer)\n") == "8\n");
+}
+
+// =============================================================================
+// F05f: @begin accepts one logical multi-line statement, not multiple top-level
+// statements whose partial commit could leave storage and lambda indices out
+// of sync.
+// =============================================================================
+TEST(repl_buffer_failure_preserves_committed_lambda_indices)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	auto repl = std::make_shared<cs::repl>(ctx);
+	repl->exec("@begin");
+	repl->exec("function make_lambda()");
+	repl->exec("return []()->42");
+	repl->exec("end");
+	repl->exec("var bad = []()->1, x");
+	bool threw = false;
+	try {
+		repl->exec("@end");
+	}
+	catch (...) {
+		threw = true;
+	}
+	EXPECT_TRUE(threw);
+	EXPECT_TRUE(ctx->instance->functions.active_size() == 0);
+	repl->exec("var ok = 42");
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(ok)\n") == "42\n");
+}
+
+// =============================================================================
+// F05g: a re-entrant exec() may not leave a block open. Reject it before the
+// shared method/storage stacks are modified, then prove the outer statement
+// and subsequent REPL input remain usable.
+// =============================================================================
+TEST(repl_reentrant_open_block_rejected_cleanly)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	auto repl = std::make_shared<cs::repl>(ctx);
+	std::weak_ptr<cs::repl> weak_repl = repl;
+	ctx->instance->storage.add_var("run_repl",
+	    cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var {
+		    try {
+			    weak_repl.lock()->exec("function bad()");
+		    }
+		    catch (...) {
+		    }
+		    return cs::var::make<cs::numeric>(7);
+	    })));
+	repl->exec("var outer = run_repl() + 1");
+	EXPECT_TRUE(repl->get_level() == 0);
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(outer)\n") == "8\n");
+}
+
+TEST(repl_restores_external_compile_unit)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	auto repl = std::make_shared<cs::repl>(ctx);
+	cs::compile_unit_guard guard(ctx.get());
+	auto outer_unit = ctx->current_unit;
+	repl->exec("var nested = 1");
+	EXPECT_TRUE(ctx->current_unit == outer_unit);
+	cs::expression_t tree;
+	std::deque<char> buff{'1', '+', '1'};
+	ctx->compiler->build_expr(buff, tree);
+	EXPECT_TRUE(ctx->instance->parse_expr(tree.root()).const_val<cs::numeric>() == 2);
+}
+
+TEST(repl_empty_begin_buffer_rejected)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	auto repl = std::make_shared<cs::repl>(ctx);
+	repl->exec("@begin");
+	bool threw = false;
+	try {
+		repl->exec("@end");
+	}
+	catch (...) {
+		threw = true;
+	}
+	EXPECT_TRUE(threw);
+	repl->exec("var ok = 42");
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(ok)\n") == "42\n");
+}
+
+TEST(repl_reentrant_preprocessor_rejected_cleanly)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	auto repl = std::make_shared<cs::repl>(ctx);
+	std::weak_ptr<cs::repl> weak_repl = repl;
+	ctx->instance->storage.add_var("run_repl",
+	    cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var {
+		    try {
+			    weak_repl.lock()->exec("@begin");
+		    }
+		    catch (...) {
+		    }
+		    return cs::var::make<cs::numeric>(7);
+	    })));
+	repl->exec("var outer = run_repl() + 1");
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(outer)\n") == "8\n");
+}
+
+TEST(repl_destructor_cleans_open_block)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	const std::size_t before = ctx->instance->functions.active_size();
+	{
+		auto repl = std::make_shared<cs::repl>(ctx);
+		repl->exec("function abandoned()");
+		repl->exec("var leaked = []()->1");
+		EXPECT_TRUE(ctx->instance->functions.active_size() > before);
+	}
+	EXPECT_TRUE(ctx->instance->functions.active_size() == before);
+}
+
+TEST(compile_exception_enabled_stream_accepts_eof)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	std::istringstream in("var answer = 42\n");
+	in.exceptions(std::ios::failbit | std::ios::badbit);
+	ctx->instance->compile(in);
+	ctx->instance->interpret();
+	EXPECT_TRUE(ctx->instance->storage.get_var("answer").const_val<cs::numeric>() == 42);
+}
+
+TEST(repl_destructor_preserves_external_compile_unit)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	cs::compile_unit_guard guard(ctx.get());
+	auto outer_unit = ctx->current_unit;
+	{
+		auto repl = std::make_shared<cs::repl>(ctx);
+		repl->exec("var nested = 1");
+	}
+	EXPECT_TRUE(ctx->current_unit == outer_unit);
+	cs::expression_t tree;
+	std::deque<char> buff{'2', '+', '3'};
+	ctx->compiler->build_expr(buff, tree);
+	EXPECT_TRUE(ctx->instance->parse_expr(tree.root()).const_val<cs::numeric>() == 5);
+}
+
+TEST(repl_reentrant_preprocessor_clears_command_buffer)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	auto repl = std::make_shared<cs::repl>(ctx);
+	std::weak_ptr<cs::repl> weak_repl = repl;
+	ctx->instance->storage.add_var("run_repl",
+	    cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var {
+		    try {
+			    weak_repl.lock()->exec("@begin");
+		    }
+		    catch (...) {
+		    }
+		    return cs::var::make<cs::numeric>(7);
+	    })));
+	repl->exec("var outer = run_repl()");
+	EXPECT_NO_THROW(repl->exec("@charset:utf8"));
+	repl->exec("var ok = 42");
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(ok)\n") == "42\n");
+}
+
+// =============================================================================
+// F39: a switch body whose later statement fails to translate leaked the
+// already-translated case/default statements (no body_guard around the
+// recursive translate). The context must stay usable after repeated failures.
+// =============================================================================
+
+TEST(switch_body_translate_failure_is_cleaned_up)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	for (int i = 0; i < 20; ++i)
+	{
+		bool threw = false;
+		try
+		{
+			// "break" at switch-body level fails translation after the case
+			// statement has already been created.
+			std::istringstream in("switch 1\ncase 1\nvar a = 1\nend\nbreak\nend\n");
+			ctx->instance->compile(in);
+		}
+		catch (const std::exception &)
+		{
+			threw = true;
+		}
+		EXPECT_TRUE(threw);
+	}
+	// A valid switch program still compiles and runs afterwards.
+	EXPECT_TRUE(run_script_on(ctx, "using system\nswitch 1\ncase 1\n\tsystem.out.println(\"ok\")\nend\nend\n") == "ok\n");
+}
+
+// =============================================================================
+// F40: deep-copying a container that holds a recursive lambda must rebind the
+// clone's `self` borrow to its own proxy (the container detach path goes
+// through copy_no_return, which now shares the rebind logic of cs::copy).
+// =============================================================================
+
+TEST(clone_container_with_recursive_lambda_rebinds_self)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<CLONE_SELF_ARR>"));
+	auto ctx = cs::create_context(args);
+	run_script_on(ctx, "var arr = {[](n)->n>1?self(n-1)*n:1}\n");
+	cs::var arr = ctx->instance->storage.get_var("arr");
+	cs::var arr2 = cs::copy(arr);
+	// Drop the original: the clone's lambda must not borrow the freed proxy.
+	arr = cs::var();
+	cs::var fn = arr2.const_val<cs::array>().front();
+	cs::var r = cs::invoke(fn, cs::var::make<cs::numeric>(5));
+	EXPECT_TRUE(r.const_val<cs::numeric>() == 120);
+}
+
+// =============================================================================
+// F41: fiber.create on a recursive lambda used to hand the fiber a live alias
+// of `self`; reassigning the source variable before resume broke the fiber.
+// The self-referential wrapper is now snapshotted (deep copy + rebind).
+// =============================================================================
+
+TEST(fiber_snapshots_recursive_lambda_self)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<FIBER_SELF>"));
+	auto ctx = cs::create_context(args);
+	std::ostringstream captured;
+	auto *old = std::cout.rdbuf(captured.rdbuf());
+	try
+	{
+		std::istringstream in("using system\n"
+		                      "var f = [](n)->n>1?self(n-1)*n:1\n"
+		                      "var co = fiber.create(f, 5)\n"
+		                      "f = 0\n"
+		                      "co.resume()\n"
+		                      "system.out.println(co.return_value())\n");
+		ctx->instance->compile(in);
+		ctx->instance->interpret();
+	}
+	catch (...)
+	{
+		std::cout.rdbuf(old);
+		throw;
+	}
+	std::cout.rdbuf(old);
+	EXPECT_TRUE(captured.str() == "120\n");
+}
+
+// =============================================================================
+// F41b: async arguments are detached through the same copy_no_return path, so
+// a recursive lambda passed to future.create must have its `self` rebound to
+// the clone before the worker thread materializes it.
+// =============================================================================
+
+TEST(async_future_snapshots_recursive_lambda_argument)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<ASYNC_SELF>"));
+	auto ctx = cs::create_context(args);
+	ctx->instance->storage.add_var("invoke_it",
+	    cs::var::make<cs::callable>([](cs::vector &data) -> cs::var {
+		    return cs::invoke(data[0], cs::var::make<cs::numeric>(5));
+	    }));
+	std::ostringstream captured;
+	auto *old = std::cout.rdbuf(captured.rdbuf());
+	try
+	{
+		std::istringstream in("using system\n"
+		                      "var f = [](n)->n>1?self(n-1)*n:1\n"
+		                      "var fu = future.create(invoke_it, f)\n"
+		                      "f = 0\n"
+		                      "system.out.println(fu.get())\n");
+		ctx->instance->compile(in);
+		ctx->instance->interpret();
+	}
+	catch (...)
+	{
+		std::cout.rdbuf(old);
+		throw;
+	}
+	std::cout.rdbuf(old);
+	EXPECT_TRUE(captured.str() == "120\n");
+}
+
+// =============================================================================
+// F42: a failed module import used to wipe every module cached on the shared
+// compiler (the temporary subcontext's destructor cleared it). Only the
+// compiler-owning context may clear the cache.
+// =============================================================================
+
+TEST(failed_import_preserves_loaded_modules)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<MODULE_FAIL>"));
+	auto ctx = cs::create_context(args);
+	auto dir = std::filesystem::temp_directory_path() / "cs_module_fail";
+	std::filesystem::create_directories(dir);
+	{
+		std::ofstream f(dir / "goodmod.csp");
+		f << "package goodmod\nfunction triple(x)\n    return x * 3\nend\n";
+	}
+	ctx->process->import_path += cs::path_delimiter + dir.string();
+	// Import the good module, then trigger a failed import via context.import
+	// (which swallows the error and lets the script continue).
+	EXPECT_TRUE(run_script_on(ctx, "import goodmod\nvar bad = context.import(\".\", \"nosuchpkg\")\n") == "");
+	// The previously imported module must still be intact.
+	EXPECT_TRUE(run_script_on(ctx, "using system\nsystem.out.println(goodmod.triple(14))\n") == "42\n");
+	std::filesystem::remove_all(dir);
+}
+
+// =============================================================================
+// F43: clear_global released the symbol table before destroying the values, so
+// a structure finalizer referencing another global failed silently. Finalizers
+// now run first, while names still resolve (and exactly once).
+// =============================================================================
+
+TEST(global_finalizer_resolves_other_globals)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<FINALIZE_GLOBALS>"));
+	auto ctx = cs::create_context(args);
+	std::ostringstream captured;
+	auto *old = std::cout.rdbuf(captured.rdbuf());
+	try
+	{
+		std::istringstream in("using system\n"
+		                      "var marker = 21\n"
+		                      "struct watcher\n"
+		                      "    function finalize()\n"
+		                      "        system.out.println(marker * 2)\n"
+		                      "    end\n"
+		                      "end\n"
+		                      "var w = new watcher\n");
+		ctx->instance->compile(in);
+		ctx->instance->interpret();
+		// Releasing the globals runs the finalizer; `marker` must still resolve.
+		ctx->instance->storage.clear_global();
+	}
+	catch (...)
+	{
+		std::cout.rdbuf(old);
+		throw;
+	}
+	std::cout.rdbuf(old);
+	EXPECT_TRUE(captured.str() == "42\n");
+	// The destructor must not run the finalizer a second time.
+	ctx.reset();
+	EXPECT_TRUE(captured.str() == "42\n");
+}
+
+// =============================================================================
+// F44: two contexts running on separate threads concurrently. The var proxy
+// pool is per-thread and init_extensions is call_once, so this must not race.
+// =============================================================================
+
+TEST(concurrent_contexts_on_separate_threads)
+{
+	std::atomic<bool> failed{false};
+	auto worker = [&failed](int id)
+	{
+		try
+		{
+			for (int i = 0; i < 20; ++i)
+			{
+				cs::array args;
+				args.push_back(cs::var::make<cs::string>(id == 0 ? "<THREAD_A>" : "<THREAD_B>"));
+				auto ctx = cs::create_context(args);
+				// Heavy var churn exercises the proxy pool and heap stores.
+				std::istringstream in("var acc = 0\n"
+				                      "var i = 0\n"
+				                      "while i < 200\n"
+				                      "\tacc = acc + i\n"
+				                      "\ti = i + 1\n"
+				                      "end\n"
+				                      "var check = acc == 19900\n");
+				ctx->instance->compile(in);
+				ctx->instance->interpret();
+				if (!ctx->instance->storage.get_var("check").const_val<bool>())
+					throw cs_test::test_failure("bad accumulation");
+			}
+		}
+		catch (...)
+		{
+			failed.store(true);
+		}
+	};
+	std::thread t1(worker, 0);
+	std::thread t2(worker, 1);
+	t1.join();
+	t2.join();
+	EXPECT_TRUE(!failed.load());
 }

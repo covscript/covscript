@@ -900,10 +900,13 @@ namespace cs_impl
 
 		using allocator_t = cs::allocator_type<proxy, CS_ALLOCATOR_BUFFER_MAX * CS_VAR_ALLOC_MULTIPLIER, default_allocator_provider>;
 
-		// Shared pool; guarded by the worker-thread count in allocator_type.
+		// Per-thread pool, so two contexts running on different threads never
+		// race on pool slots; blocks freed on another thread fall back to the
+		// (interchangeable) std::allocator path. Starts empty and fills on
+		// demand, so threads that do little var work pay no fixed cost.
 		static inline allocator_t &get_allocator()
 		{
-			static allocator_t allocator;
+			static thread_local allocator_t allocator;
 			return allocator;
 		}
 

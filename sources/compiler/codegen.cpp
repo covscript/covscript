@@ -90,16 +90,15 @@ namespace cs
 		}
 		else
 			process(tree);
-		context->compiler->import_results.emplace_back(new statement_import(var_list, context, raw.front().back()));
+		context->compiler->push_import_result(new statement_import(var_list, context, raw.front().back()));
 	}
 
 	statement_base *
 	method_import::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		if (context->compiler->import_results.empty())
+		statement_base *ptr = context->compiler->pop_import_result();
+		if (ptr == nullptr)
 			throw compile_error("Invalid 'import' statement: missing preprocessing result");
-		statement_base *ptr = context->compiler->import_results.front();
-		context->compiler->import_results.pop_front();
 		return ptr;
 	}
 
@@ -144,16 +143,15 @@ namespace cs
 		var ext = get_namespace(context, tree_package.root());
 		context->compiler->add_constant(ext);
 		context->instance->storage.add_var_no_return(alias_name, ext);
-		context->compiler->import_results.emplace_back(new statement_import({{alias_name, ext}}, context, raw.front().back()));
+		context->compiler->push_import_result(new statement_import({{alias_name, ext}}, context, raw.front().back()));
 	}
 
 	statement_base *
 	method_import_as::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		if (context->compiler->import_results.empty())
+		statement_base *ptr = context->compiler->pop_import_result();
+		if (ptr == nullptr)
 			throw compile_error("Invalid 'import' statement: missing preprocessing result");
-		statement_base *ptr = context->compiler->import_results.front();
-		context->compiler->import_results.pop_front();
 		return ptr;
 	}
 
@@ -190,7 +188,7 @@ namespace cs
 			}
 			else
 				throw compile_error("Invalid 'using' statement: the target must be a namespace");
-			context->compiler->import_results.emplace_back(new statement_involve(tree, true, context, raw.front().back()));
+			context->compiler->push_import_result(new statement_involve(tree, true, context, raw.front().back()));
 		}
 		else if (tree.root().data() != nullptr && tree.root().data()->get_type() == token_types::id)
 		{
@@ -209,7 +207,7 @@ namespace cs
 							context->instance->storage.add_record(it.first);
 					}
 					context->instance->storage.involve_domain(domain);
-					context->compiler->import_results.emplace_back(new statement_involve(tree, true, context, raw.front().back()));
+					context->compiler->push_import_result(new statement_involve(tree, true, context, raw.front().back()));
 					return;
 				}
 			}
@@ -217,19 +215,18 @@ namespace cs
 			{
 				// Undefined or not a namespace: handled by the runtime path below.
 			}
-			context->compiler->import_results.emplace_back(new statement_involve(tree, false, context, raw.front().back()));
+			context->compiler->push_import_result(new statement_involve(tree, false, context, raw.front().back()));
 		}
 		else
-			context->compiler->import_results.emplace_back(new statement_involve(tree, false, context, raw.front().back()));
+			context->compiler->push_import_result(new statement_involve(tree, false, context, raw.front().back()));
 	}
 
 	statement_base *
 	method_involve::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		if (context->compiler->import_results.empty())
+		statement_base *ptr = context->compiler->pop_import_result();
+		if (ptr == nullptr)
 			throw compile_error("Invalid 'using' statement: missing preprocessing result");
-		statement_base *ptr = context->compiler->import_results.front();
-		context->compiler->import_results.pop_front();
 		return ptr;
 	}
 
@@ -413,6 +410,7 @@ namespace cs
 	method_switch::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
+		body_guard guard(body);
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		statement_block *dptr = nullptr;
 		map_t<var, statement_block *> cases;
@@ -470,8 +468,10 @@ namespace cs
 					delete static_cast<statement_default *>(ptr)->get_block();
 				delete ptr;
 			}
+			guard.release();
 			throw;
 		}
+		guard.release();
 		return new statement_switch(static_cast<token_expr *>(raw.front().at(1))->get_tree(), cases, dptr, context,
 		                            raw.front().back());
 	}

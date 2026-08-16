@@ -163,19 +163,28 @@ namespace cs
 		charset encoding = charset::utf8;
 		std::size_t line_num = 0;
 		bool multi_line = false;
+		std::size_t m_run_depth = 0;
 		string line_buff;
 		string cmd_buff;
-		// Import/using FIFO base at the start of the current top-level statement;
-		// reset_status truncates back to it so a failed line cannot leak results.
-		std::size_t import_base = 0;
-		// Token arena of the current top-level statement (spans multi-line blocks).
-		std::shared_ptr<compile_unit> m_unit;
+		// Token arenas, one per in-flight top-level statement (spans multi-line
+		// blocks). A stack rather than a single arena so a re-entrant exec()
+		// can restore the outer statement's arena after the nested one finishes;
+		// otherwise the outer statement resumes evaluating freed tokens.
+		std::vector<std::shared_ptr<compile_unit>> m_units;
+		std::vector<std::shared_ptr<compile_unit>> m_saved_units;
 
-		// Drop the current statement's arena (lambdas live in the runtime's
+		// Drop the current statement's arena and restore the enclosing one (if
+		// any) as the context's current unit (lambdas live in the runtime's
 		// store, so there is no arena <-> function cycle to break).
-		void release_unit()
+		void pop_unit()
 		{
-			m_unit.reset();
+			if (!m_units.empty())
+			{
+				m_units.pop_back();
+				std::shared_ptr<compile_unit> saved_unit = m_saved_units.back();
+				m_saved_units.pop_back();
+				context->current_unit = m_units.empty() ? saved_unit : m_units.back();
+			}
 		}
 
 		void interpret(const string &, std::deque<token_base *> &);
@@ -195,11 +204,13 @@ namespace cs
 
 		~repl()
 		{
+			if (!methods.empty() || !m_units.empty())
+				reset_status();
 			// Run global finalizers while the session (process) is still active,
 			// not during context teardown when the process is already dying.
 			context->instance->storage.clear_global();
-			m_unit.reset();
-			context->current_unit = nullptr;
+			m_units.clear();
+			m_saved_units.clear();
 		}
 
 		void exec(const string &);
@@ -217,16 +228,18 @@ namespace cs
 			cmd_buff.clear();
 			context->compiler->utilize_metadata();
 			context->compiler->loop_depth = 0;
-			context->compiler->clear_import_results(import_base);
-			// Drop the current statement's token arena.
-			context->current_unit = nullptr;
-			release_unit();
+			context->compiler->end_import_scope();
+			// Drop the aborted statement's token arena.
+			pop_unit();
 			while (depth-- > 0)
 			{
 				context->instance->storage.remove_set();
 				context->instance->storage.remove_domain();
 			}
 			context->instance->storage.clear_set();
+			// Roll back only this statement's slots. Nested committed statements
+			// keep their original indices.
+			context->instance->functions.rollback_transaction();
 		}
 
 		std::size_t get_level() const

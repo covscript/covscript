@@ -134,8 +134,10 @@ Consequences:
   nullptr`; the SDK's error paths tolerate this, but an extension that reads
   `current_process` must null-check.
 + Two contexts may run on **different threads** concurrently. The `var`
-  allocator pool is only reused while single-threaded; async workers raise the
-  thread count (`cs::thread_guard`) so the pool is bypassed.
+  proxy allocator pool is **per-thread** (`thread_local`) and fills on demand,
+  so separate contexts never share pool slots; values freed on a different
+  thread fall back to the direct allocator path (all `std::allocator`
+  instances are interchangeable).
 
 ### 3. Structure finalizers
 
