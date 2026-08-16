@@ -223,6 +223,13 @@ cs_impl::operators::result cs_impl::operators::handler<T>::detach(void *lhs, voi
 }
 
 template <typename T>
+cs_impl::operators::result cs_impl::operators::handler<T>::rebind(void *lhs, void *rhs)
+{
+	cs_impl::rebind<T>(*static_cast<T *>(lhs), rhs);
+	return result();
+}
+
+template <typename T>
 cs_impl::operators::result cs_impl::operators::handler<T>::ext_ns(void *lhs, void *rhs)
 {
 	return result::from_ptr((void *) &cs_impl::get_ext<T>());
@@ -494,6 +501,16 @@ namespace cs_impl
 			cs::copy_no_return(it.second);
 	}
 
+	// Rebind: a cloned object_method must point its non-owning `self` borrower
+	// at its own new proxy instead of the old one.
+	template <>
+	void rebind<cs::object_method>(cs::object_method &om, void *ctx)
+	{
+		auto *c = static_cast<cs_impl::rebind_ctx *>(ctx);
+		if (om.object.points_to(c->old_proxy))
+			om.object = cs::var_borrower::borrow_raw(c->new_proxy);
+	}
+
 	// To String
 	template <>
 	cs::string_borrower to_string<cs::numeric>(const cs::numeric &val)
@@ -568,7 +585,7 @@ namespace cs_impl
 		if (map.empty())
 			return "cs::hash_map => {}";
 		std::string str = "cs::hash_map => {";
-		for (const cs::pair &it : map)
+		for (const auto &it : map)
 			str += cs_impl::to_string(it).extract() + ", ";
 		str.resize(str.size() - 2);
 		str += "}";
@@ -599,7 +616,7 @@ namespace cs_impl
 		if (range.empty())
 			return "cs::range => {}";
 		std::string str = "cs::range => {";
-		for (cs::numeric it : range)
+		for (const auto &it : range)
 			str += to_string(it).extract() + ", ";
 		str.resize(str.size() - 2);
 		str += "}";

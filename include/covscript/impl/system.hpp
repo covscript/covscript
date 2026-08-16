@@ -120,7 +120,7 @@ namespace cs_impl
 		// Directories
 		bool mkdir_p(const std::string &);
 
-		bool mkdir(std::string);
+		bool mkdir(const std::string &);
 
 		std::string get_current_dir();
 	} // namespace file_system

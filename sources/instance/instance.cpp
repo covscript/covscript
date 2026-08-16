@@ -101,7 +101,9 @@ namespace cs
 		std::exception_ptr eptr = nullptr;
 		for (auto &it : collection)
 		{
-			std::string package_path = it + path_separator + name;
+			std::string package_path = it;
+			package_path += path_separator;
+			package_path += name;
 			const std::string &module_key = cs_impl::file_system::normalize_path(package_path);
 			if (context->compiler->modules.count(module_key) > 0)
 				return context->compiler->modules[module_key];
@@ -231,15 +233,15 @@ namespace cs
 		if (interpret_depth == 0)
 		{
 			// Defensive: stale frames from an interrupted run (RAII balances the
-			// stack normally). none: leave, warning: clear, strict: fail.
+			// stack normally). Always clear: leaving them lets the next run
+			// swap into a stale frame; the debug mode only controls the diagnostic.
 			if (!current_process->stack.empty())
 			{
 				cs_impl::debug_guard(
 				    "[interpret] function value stack is not empty at program entry; "
 				    "stale frames from an interrupted run");
-				if (cs_impl::get_debug_mode() == cs_impl::debug_mode::warning)
-					while (!current_process->stack.empty())
-						current_process->stack.pop_no_return();
+				while (!current_process->stack.empty())
+					current_process->stack.pop_no_return();
 			}
 #ifdef CS_DEBUGGER
 			while (!current_process->stack_backtrace.empty())

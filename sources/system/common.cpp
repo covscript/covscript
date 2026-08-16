@@ -363,7 +363,7 @@ namespace cs_impl
 			return !ec;
 		}
 
-		bool mkdir(std::string path)
+		bool mkdir(const std::string &path)
 		{
 			std::error_code ec;
 			std::filesystem::create_directory(path, ec);

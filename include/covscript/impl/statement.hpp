@@ -571,7 +571,7 @@ namespace cs
 
 		statement_foreach(const var_id &it, tree_type<token_base *> tree, std::deque<statement_base *> b, context_type *c,
 		                  token_base *ptr)
-		    : statement_base(c, ptr), mIt(std::move(it)), mObj(std::move(tree)), mBlock(std::move(b)) {}
+		    : statement_base(c, ptr), mIt(it), mObj(std::move(tree)), mBlock(std::move(b)) {}
 
 		~statement_foreach()
 		{

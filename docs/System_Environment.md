@@ -72,4 +72,4 @@ Controls the behaviour of defensive runtime guards (for example destroying an un
 | `warning` | Print a warning to stderr and continue (default) |
 | `strict` | Print a warning and abort immediately (fail-fast) |
 
-Guards are diagnostic only and do not change runtime semantics in the normal case.
+Guards are diagnostic only and do not change runtime semantics in the normal case. Recovery that must happen regardless of the mode (for example clearing a stale function value stack at program entry) runs unconditionally; the mode only controls the diagnostic.

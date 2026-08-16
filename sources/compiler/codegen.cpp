@@ -411,11 +411,14 @@ namespace cs
 	{
 		std::deque<statement_base *> body;
 		body_guard guard(body);
-		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		statement_block *dptr = nullptr;
 		map_t<var, statement_block *> cases;
 		try
 		{
+			// Translate inside the try so a failure reclaims the case/default
+			// wrappers already translated (their blocks are not owned by the
+			// wrappers' destructors).
+			context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 			for (auto &it : body)
 			{
 				try

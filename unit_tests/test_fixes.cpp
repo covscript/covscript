@@ -967,6 +967,32 @@ TEST(async_future_snapshots_recursive_lambda_argument)
 }
 
 // =============================================================================
+// Copilot review: any::clone() used to copy a recursive lambda's non-owning
+// `self` borrower verbatim; the rebind lived in the cs::copy wrappers, so a
+// bare clone() produced a clone that dangled (or recursed into the original)
+// once the source proxy was released. clone() now rebinds via the dispatched
+// rebind operator, so the raw primitive is self-contained.
+// =============================================================================
+
+TEST(clone_of_recursive_lambda_is_self_contained)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<CLONE_SELF>"));
+	auto ctx = cs::create_context(args);
+	std::istringstream in("var f = [](n) -> n > 1 ? self(n - 1) * n : 1\n");
+	ctx->instance->compile(in);
+	ctx->instance->interpret();
+	cs::var original = ctx->instance->storage.get_var("f");
+	// Bare clone without the cs::copy pipeline: the clone must rebind its own
+	// `self` borrower to its own proxy.
+	cs::var clone = original;
+	clone.clone();
+	// Drop the original; the clone must remain usable.
+	original = cs::var();
+	EXPECT_TRUE(cs::invoke(clone, cs::var::make<cs::numeric>(5)).const_val<cs::numeric>().as_integer() == 120);
+}
+
+// =============================================================================
 // F42: a failed module import used to wipe every module cached on the shared
 // compiler (the temporary subcontext's destructor cleared it). Only the
 // compiler-owning context may clear the cache.
@@ -1073,4 +1099,21 @@ TEST(concurrent_contexts_on_separate_threads)
 	t1.join();
 	t2.join();
 	EXPECT_TRUE(!failed.load());
+}
+
+// =============================================================================
+// B1: recompiling on the same instance used to leave record-name views into
+// the previous program's (freed) token arena, a heap-use-after-free under
+// ASan. The record set owns its keys, so a second compile stays clean and the
+// previously declared variables remain visible.
+// =============================================================================
+
+TEST(recompile_on_same_instance_is_clean)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<RECOMPILE>"));
+	auto ctx = cs::create_context(args);
+	EXPECT_TRUE(run_script_on(ctx, "var a = 1\nvar b = 2\n") == "");
+	EXPECT_TRUE(run_script_on(ctx, "var c = a + b\n") == "");
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(c * 2)\n") == "6\n");
 }

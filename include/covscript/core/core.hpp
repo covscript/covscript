@@ -515,6 +515,10 @@ namespace cs
 			return mFunc(args);
 		}
 
+		// Argument count of the underlying function (script function or CNI);
+		// defined in covscript.cpp where function_ptr/cni are complete.
+		std::size_t argument_count() const;
+
 		const function_type &get_raw_data() const
 		{
 			return mFunc;
@@ -795,23 +799,18 @@ namespace cs
 
 	var try_move(const var &);
 
-	// Invoke
+	// Invoke through the dispatched call pipeline (prep_call + fcall), so any
+	// callable type (callable, object_method, structure's op_call, ...) works.
+	// Mirrors runtime_type::parse_fcall: prep_call first so a receiver (e.g. an
+	// object_method's `self`) lands at the front of the argument list.
 	template <typename... ArgsT>
 	static var invoke(const var &func, ArgsT &&..._args)
 	{
-		if (func.is_type_of<callable>())
-		{
-			vector args{std::forward<ArgsT>(_args)...};
-			return func.const_val<callable>().call(args);
-		}
-		else if (func.is_type_of<object_method>())
-		{
-			const auto &om = func.const_val<object_method>();
-			vector args{om.object, std::forward<ArgsT>(_args)...};
-			return om.callable.const_val<callable>().call(args);
-		}
-		else
-			throw runtime_error("Invoke non-callable object.");
+		vector args;
+		func.prep_call(args);
+		args.reserve(args.size() + sizeof...(ArgsT));
+		(args.push_back(std::forward<ArgsT>(_args)), ...);
+		return func.fcall(args);
 	}
 
 	// Type and struct
@@ -1490,6 +1489,9 @@ namespace cs
 		// Weak back-ref to the defining context.
 		std::weak_ptr<context_type> mContext;
 		type_node *mNode;
+		// Pins the owning process so the type node pool outlives the builder
+		// (an escaped type descriptor must not dangle once the context dies).
+		std::shared_ptr<process_context> m_process;
 		type_id mTypeId;
 		std::string mName;
 		tree_type<token_base *> mParent;
@@ -1506,6 +1508,7 @@ namespace cs
 		               std::deque<statement_base *> method)
 		    : mContext(c->weak_from_this()),
 		      mNode(alloc_type_node(c->process.get())),
+		      m_process(c->process),
 		      mTypeId(typeid(structure), mNode),
 		      mName(std::move(name)),
 		      mParent(std::move(parent)),

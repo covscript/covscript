@@ -264,25 +264,23 @@ namespace cs
 		return &fallback_pool.back();
 	}
 
-	// A deep clone must rebind a self-referencing lambda's `self` borrow to the
-	// clone's own proxy, or it would dangle once the original is released.
-	static void rebind_self_reference(var &val, const void *old_proxy)
+	std::size_t callable::argument_count() const
 	{
-		if (val.is_type_of<object_method>())
-		{
-			auto &om = val.val<object_method>();
-			if (om.object.points_to(old_proxy))
-				om.object = var_borrower::borrow(val);
-		}
+		if (mFunc.target_type() == typeid(function_ptr))
+			return mFunc.target<function_ptr>()->fptr->argument_count();
+		else if (mFunc.target_type() == typeid(cs_impl::cni))
+			return mFunc.target<cs_impl::cni>()->argument_count();
+		else
+			throw lang_error("The target value is not a function");
 	}
 
 	void copy_no_return(var &val)
 	{
 		if (!val.is_rvalue())
 		{
-			const void *old_proxy = val.proxy_address();
+			// clone() itself rebinds a self-referencing lambda's `self` borrow
+			// to the clone's own proxy (see any::clone/rebind).
 			val.clone();
-			rebind_self_reference(val, old_proxy);
 			val.detach();
 		}
 		else
@@ -293,9 +291,7 @@ namespace cs
 	{
 		if (!val.is_rvalue())
 		{
-			const void *old_proxy = val.proxy_address();
 			val.clone();
-			rebind_self_reference(val, old_proxy);
 			val.detach();
 		}
 		else

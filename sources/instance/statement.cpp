@@ -820,10 +820,13 @@ namespace cs
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
 		scope_guard scope(context);
-		for (const X &it : obj.const_val<T>())
+		// Bind the iterator's real value_type directly: the template parameter
+		// X (e.g. cs::pair for hash_map) differs from the iterator's
+		// std::pair<const any, any>, and the implicit conversion would copy.
+		for (const auto &it : obj.const_val<T>())
 		{
 			current_process->poll_event();
-			context->instance->storage.add_var_no_return(iterator, it);
+			context->instance->storage.add_var_no_return(iterator, X(it));
 			for (auto &ptr : body)
 			{
 				try

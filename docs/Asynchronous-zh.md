@@ -303,6 +303,8 @@ var fut = fiber_obj.get_future()
 
 传入非原生可调用对象时，`future.create` 抛出 `"Async future can only be created from native functions"`。如果第一个参数既不是 fiber 也不是可调用对象，抛出 `"The target value is not callable or fiber"`。
 
+**原生守卫仅覆盖直接的调用对象。** 在 worker 线程上运行的原生函数不得以任何方式与 CovScript 运行时交互：不得直接或间接调用 CovScript 函数（包括通过参数传入的可调用对象，例如经 `invoke`/CNI 间接执行），也不得读写任何运行时状态（域、值栈、常量等）。将 CovScript 可调用对象作为参数传入并在 worker 线程上执行属于未支持用法，其行为未定义（包括对共享运行时状态的数据竞争）。如确实需要与运行时交互，请改为在独立的进程中执行该工作。
+
 ### 消费 Future
 
 ```covscript

@@ -1913,26 +1913,11 @@ namespace cs_impl
 		{
 			if (func.is_type_of<object_method>())
 			{
-				const callable::function_type &target = func.const_val<object_method>().callable.const_val<callable>().get_raw_data();
-				std::size_t count = 0;
-				if (target.target_type() == typeid(function_ptr))
-					count = target.target<function_ptr>()->fptr->argument_count();
-				else if (target.target_type() == typeid(cni))
-					count = target.target<cni>()->argument_count();
-				else
-					throw lang_error("The target value is not a function");
+				std::size_t count = func.const_val<object_method>().callable.const_val<callable>().argument_count();
 				return count > 0 ? count - 1 : 0;
 			}
 			else if (func.is_type_of<callable>())
-			{
-				const callable::function_type &target = func.const_val<callable>().get_raw_data();
-				if (target.target_type() == typeid(function_ptr))
-					return target.target<function_ptr>()->fptr->argument_count();
-				else if (target.target_type() == typeid(cni))
-					return target.target<cni>()->argument_count();
-				else
-					throw lang_error("The target value is not a function");
-			}
+				return func.const_val<callable>().argument_count();
 			else
 				throw lang_error("The target value is not a function");
 		}

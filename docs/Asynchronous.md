@@ -303,6 +303,8 @@ var fut = fiber_obj.get_future()
 
 Passing a non-native callable causes `future.create` to throw `"Async future can only be created from native functions"`. If the first argument is neither a fiber nor a callable, it throws `"Invalid call to 'future.create', the first argument must be a fiber or a callable object"`.
 
+**The native-only guard covers only the direct callable.** A native function running on a worker thread must not interact with the CovScript runtime in any way: it must not call CovScript functions — directly, or indirectly through callables passed in its arguments (for example by invoking them via `invoke`/CNI) — and must not read or modify any runtime state (domains, the value stack, constants, and so on). Passing a CovScript callable as an argument and executing it on the worker thread is an unsupported usage and results in undefined behaviour (including data races on shared runtime state). If runtime interaction is required, run the work in a separate process instead.
+
 ### Consuming Futures
 
 ```covscript

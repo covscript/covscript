@@ -241,6 +241,20 @@ namespace cs_impl
 		// Do something if you want when data is copying.
 	}
 
+	// Post-clone fixup context: the proxy before the clone (for identifying
+	// self-references) and the new proxy (for rebinding them).
+	struct rebind_ctx
+	{
+		const void *old_proxy;
+		const void *new_proxy;
+	};
+
+	template <typename T>
+	static void rebind(T &, void *)
+	{
+		// Do something if you want after data is copied.
+	}
+
 	template <typename T>
 	constexpr const char *get_name_of_type()
 	{
@@ -385,6 +399,7 @@ namespace cs_impl
 			access_ref = 32, // const_data.member
 			prep_call = 33,  // prepare before call
 			fcall = 34,      // func(args)
+			rebind = 35,     // fix self-references after clone
 		};
 		template <typename T>
 		struct handler
@@ -396,6 +411,7 @@ namespace cs_impl
 			static inline result to_string(void *lhs, void *rhs);
 			static inline result hash(void *lhs, void *rhs);
 			static inline result detach(void *lhs, void *rhs);
+			static inline result rebind(void *lhs, void *rhs);
 			static inline result ext_ns(void *lhs, void *rhs);
 			static inline result add(void *lhs, void *rhs);
 			static inline result sub(void *lhs, void *rhs);
@@ -514,6 +530,7 @@ namespace cs_impl
 				    op_handler::access_ref,
 				    op_handler::prep_call,
 				    op_handler::fcall,
+				    op_handler::rebind,
 				};
 #ifdef CS_ENABLE_PROFILING
 				++op_perf[static_cast<unsigned>(op)];
@@ -640,6 +657,7 @@ namespace cs_impl
 				    op_handler::access_ref,
 				    op_handler::prep_call,
 				    op_handler::fcall,
+				    op_handler::rebind,
 				};
 #ifdef CS_ENABLE_PROFILING
 				++op_perf[static_cast<unsigned>(op)];
@@ -844,6 +862,12 @@ namespace cs_impl
 			m_dispatcher(operators::type::detach, this, nullptr);
 		}
 
+		inline void rebind(void *ctx)
+		{
+			if (m_dispatcher != nullptr)
+				m_dispatcher(operators::type::rebind, this, ctx);
+		}
+
 		inline cs::namespace_t &get_ext() const
 		{
 			return *static_cast<cs::namespace_t *>(m_dispatcher(operators::type::ext_ns, this, nullptr)._ptr);
@@ -974,6 +998,7 @@ namespace cs_impl
 				if (mDat->protect_level > 2)
 					throw cs::runtime_error("Duplicate singleton objects are not allowed");
 				// Copy storage; on throw return the block to the pool.
+				const void *old_proxy = mDat;
 				proxy *dat = get_allocator().alloc();
 				dat->protect_level = 0;
 				try
@@ -987,7 +1012,18 @@ namespace cs_impl
 				}
 				recycle();
 				mDat = dat;
+				// The clone is a new object: rebind self-references (e.g. a
+				// recursive lambda's `self`) from the old proxy to this one.
+				rebind(old_proxy);
 			}
+		}
+
+		void rebind(const void *old_proxy)
+		{
+			if (mDat == nullptr)
+				return;
+			rebind_ctx ctx{old_proxy, mDat};
+			mDat->data.rebind(&ctx);
 		}
 
 		void try_move() const
@@ -1642,6 +1678,16 @@ namespace cs_impl
 		{
 			any_borrower b;
 			b.m_proxy = v.mDat;
+			b.m_own = false;
+			return b;
+		}
+
+		// Non-owning view of a raw proxy (post-clone rebinding); the proxy must
+		// outlive the borrower.
+		static any_borrower borrow_raw(const void *proxy) noexcept
+		{
+			any_borrower b;
+			b.m_proxy = static_cast<any::proxy *>(const_cast<void *>(proxy));
 			b.m_own = false;
 			return b;
 		}
