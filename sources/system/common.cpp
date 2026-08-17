@@ -116,6 +116,19 @@ namespace cs::fiber
 	{
 		return std::make_shared<fiber_future>(fiber);
 	}
+
+	schedule_parameters get_schedule_parameters()
+	{
+		auto *cxt = fiber_context::current();
+		return {cxt->busy_wait_coef, cxt->busy_wait_min};
+	}
+
+	void set_schedule_parameters(const schedule_parameters &params)
+	{
+		auto *cxt = fiber_context::current();
+		cxt->busy_wait_coef = params.busy_wait_coef;
+		cxt->busy_wait_min = params.busy_wait_min;
+	}
 } // namespace cs::fiber
 
 namespace cs_system_impl

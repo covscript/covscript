@@ -251,13 +251,13 @@ cs::var result = fut->get();  // 42, can be called multiple times
 
 #### Custom Backoff Parameters
 
-When the built-in policies are insufficient, the backoff coefficient and minimum sleep time can be set directly from C++:
+When the built-in policies are insufficient, the backoff coefficient and minimum sleep time can be tuned from C++:
 
 ```cpp
-// Backoff coefficient (progressive multiplier)
-cs::current_process->fiber_cxt->busy_wait_coef = 0.01;
-// Minimum sleep time (milliseconds)
-cs::current_process->fiber_cxt->busy_wait_min = 10;
+auto params = cs::fiber::get_schedule_parameters();
+params.busy_wait_coef = 0.01;   // progressive multiplier
+params.busy_wait_min = 10;      // minimum sleep time (milliseconds)
+cs::fiber::set_schedule_parameters(params);
 ```
 
 CovScript code should use `fiber.set_schedule_policy()` to pick a preset; C++ code can tune freely.

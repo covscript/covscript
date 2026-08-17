@@ -277,6 +277,20 @@ TEST(fiber_many_short_sleeps)
 }
 
 // =============================================================================
+// schedule_parameters: get/set roundtrip
+// =============================================================================
+TEST(fiber_schedule_parameters_roundtrip)
+{
+	auto original = cs::fiber::get_schedule_parameters();
+	cs::fiber::schedule_parameters custom = {0.05, 20};
+	cs::fiber::set_schedule_parameters(custom);
+	auto got = cs::fiber::get_schedule_parameters();
+	EXPECT_TRUE(got.busy_wait_coef == 0.05);
+	EXPECT_TRUE(got.busy_wait_min == 20);
+	cs::fiber::set_schedule_parameters(original);
+}
+
+// =============================================================================
 // A script fiber resumed from a native fiber must restore current_process
 // (the native caller has no private process to rebind).
 // =============================================================================

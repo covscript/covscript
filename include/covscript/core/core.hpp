@@ -620,6 +620,15 @@ namespace cs
 
 		future_t get_future(const fiber_t &);
 
+		struct schedule_parameters
+		{
+			double busy_wait_coef;
+			std::size_t busy_wait_min;
+		};
+
+		schedule_parameters get_schedule_parameters();
+		void set_schedule_parameters(const schedule_parameters &);
+
 		void resume(const fiber_t &, schedule_policy = schedule_policy::normal);
 
 		void sleep_for(std::size_t);

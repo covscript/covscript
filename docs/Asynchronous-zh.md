@@ -251,13 +251,13 @@ cs::var result = fut->get();  // 42，可多次调用
 
 #### 自定义退避参数
 
-当内置策略不满足需求时，可在 C++ 层直接设置退避系数和最小休眠时间：
+当内置策略不满足需求时，可在 C++ 层调整退避系数和最小休眠时间：
 
 ```cpp
-// 退避系数（渐进倍率）
-cs::current_process->fiber_cxt->busy_wait_coef = 0.01;
-// 最小休眠时间（毫秒）
-cs::current_process->fiber_cxt->busy_wait_min = 10;
+auto params = cs::fiber::get_schedule_parameters();
+params.busy_wait_coef = 0.01;   // 渐进倍率
+params.busy_wait_min = 10;      // 最小休眠时间（毫秒）
+cs::fiber::set_schedule_parameters(params);
 ```
 
 CovScript 层推荐使用 `fiber.set_schedule_policy()` 选择预设策略；C++ 层可自由调参。
