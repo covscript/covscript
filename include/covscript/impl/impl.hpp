@@ -32,6 +32,11 @@ namespace cs
 
 	context_t create_subcontext(context_type *);
 
+	inline context_t create_subcontext(const context_t &parent)
+	{
+		return create_subcontext(parent.get());
+	}
+
 	class instance_type final : public runtime_type
 	{
 		friend class repl;

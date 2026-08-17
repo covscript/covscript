@@ -12,6 +12,7 @@
   + [3. 结构体终结器（finalize）](#3-结构体终结器finalize)
   + [4. `var` 生命周期](#4-var-生命周期)
   + [5. Token arena 与重编译](#5-token-arena-与重编译)
++ [迁移指南（ABI 2608xx → ABI 2609xx）](#迁移指南abi-2608xx--abi-2609xx)
 
 ---
 
@@ -143,3 +144,26 @@ cs::var f = cs::eval(ctx, "[](x)->x+1");
 | `strict` | 打印警告后立即中止（fail-fast） |
 
 取值大小写不敏感；未设置或非法值默认按 `warning` 处理。守卫仅用于诊断，不改变上述所有权契约。
+
+## 迁移指南（ABI 2608xx → ABI 2609xx）
+
+所有扩展必须重新编译。
+
+- `cs::current_process` 类型改为 `current_process_ref`——用法不变
+  （`->`、`*`、`== nullptr` 均兼容）。
+- `process_context::raise_sigint()` / `raise_exit()` 已移除——改用
+  `cs::global_signals.raise_sigint()` / `raise_exit()`。
+- DLL 入口签名变更——使用新头文件重新编译即可。
+- `COVSCRIPT_DEBUG` 环境变量控制运行时诊断级别
+  （`none` / `warning` / `strict`）。
+
+### 新增 API
+
+- `cs::process_run_scope` / `cs::process_activation` —— `current_process`
+  管理的 RAII 守卫。
+- `cs::global_signals` —— 全局信号控制（替代已移除的
+  `process_context::raise_sigint/exit`）。
+- `cs::fiber::schedule_parameters` / `get_schedule_parameters()` /
+  `set_schedule_parameters()` —— 调整 fiber 退避参数。
+- `cs::callable::argument_count()` —— 查询函数参数数量。
+- `cs::create_context` 新增可选的 `stack_size` 参数。

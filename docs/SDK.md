@@ -15,6 +15,7 @@ garbage collector — so object lifetimes are precise but must be understood.
   + [3. Structure finalizers](#3-structure-finalizers)
   + [4. `var` lifetime](#4-var-lifetime)
   + [5. Token arena and recompilation](#5-token-arena-and-recompilation)
++ [Migration Guide (ABI 2608xx → ABI 2609xx)](#migration-guide-abi-2608xx--abi-2609xx)
 
 ---
 
@@ -196,3 +197,26 @@ non-empty function value stack at program entry) behave according to the
 
 The value is case-insensitive; unset or unknown values default to `warning`.
 Guards are diagnostic only — they do not change the ownership contracts above.
+
+## Migration Guide (ABI 2608xx → ABI 2609xx)
+
+All extensions must be recompiled.
+
+- `cs::current_process` type changed to `current_process_ref` — usage is
+  identical (`->`, `*`, `== nullptr` all work as before).
+- `process_context::raise_sigint()` / `raise_exit()` removed — use
+  `cs::global_signals.raise_sigint()` / `raise_exit()` instead.
+- DLL entry point signature changed — recompile against the new headers.
+- `COVSCRIPT_DEBUG` environment variable controls runtime diagnostic level
+  (`none` / `warning` / `strict`).
+
+### New APIs
+
+- `cs::process_run_scope` / `cs::process_activation` — RAII guards for
+  `current_process` management.
+- `cs::global_signals` — global signal control (replaces the removed
+  `process_context::raise_sigint/exit`).
+- `cs::fiber::schedule_parameters` / `get_schedule_parameters()` /
+  `set_schedule_parameters()` — tune fiber backoff.
+- `cs::callable::argument_count()` — query function arity.
+- `cs::create_context` accepts an optional `stack_size` parameter.
