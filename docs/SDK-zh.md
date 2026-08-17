@@ -75,6 +75,7 @@ Covariant Script 移除了历史遗留的全局垃圾回收器，改为显式、
 
 + 脚本函数 / lambda 持有裸的 `context_type*`（`function::mContext`）；
 + `structure` 钉住其 owning process（因此类型身份节点与成员数据在 context 销毁后仍有效），但其*方法*是脚本函数，仍持有裸的 `function::mContext` 反向引用——调用它们要求 context 存活（否则抛 "the function's context has been destroyed"）。
++ 逃逸的**类型**（`type_t`）携带同样的反向引用；在 context 销毁后调用其构造器（`type_t::constructor()`）会抛出 "the struct's context has been destroyed"。
 
 因此：
 
