@@ -1117,3 +1117,115 @@ TEST(recompile_on_same_instance_is_clean)
 	EXPECT_TRUE(run_script_on(ctx, "var c = a + b\n") == "");
 	EXPECT_TRUE(run_script_on(ctx, "system.out.println(c * 2)\n") == "6\n");
 }
+// =============================================================================
+// Constructing a struct from a teardown finalizer used to fail the weak
+// context lock and get silently swallowed; it now borrows the dying context.
+// =============================================================================
+
+TEST(struct_constructed_in_finalizer)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	std::string out;
+	{
+		std::ostringstream captured;
+		auto *old = std::cout.rdbuf(captured.rdbuf());
+		try {
+			auto ctx = cs::create_context(args);
+			{
+				std::istringstream in("using system\n"
+				                      "class B\n"
+				                      "    function initialize()\n"
+				                      "        system.out.println(\"init-b\")\n"
+				                      "    end\n"
+				                      "end\n"
+				                      "class A\n"
+				                      "    function finalize()\n"
+				                      "        var b = new B\n"
+				                      "        system.out.println(\"finalize-new-b\")\n"
+				                      "    end\n"
+				                      "end\n"
+				                      "var g = new A\n");
+				ctx->instance->compile(in);
+				ctx->instance->interpret();
+			}
+			ctx.reset();
+		}
+		catch (...) {
+			std::cout.rdbuf(old);
+			throw;
+		}
+		std::cout.rdbuf(old);
+		out = captured.str();
+	}
+	EXPECT_CONTAINS(out, "init-b");
+	EXPECT_CONTAINS(out, "finalize-new-b");
+}
+
+// =============================================================================
+// Constructing an escaped struct type with no active process must work; the
+// constructor activates the defining process like function::call_* does.
+// =============================================================================
+
+TEST(escaped_type_constructor_without_process)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	run_script_on(ctx, "class T\n"
+	                   "    function initialize()\n"
+	                   "        iostream.setprecision(6)\n"
+	                   "        system.out.println(\"init-t-no-process\")\n"
+	                   "    end\n"
+	                   "end\n");
+	cs::var type = ctx->instance->storage.get_var("T");
+	EXPECT_TRUE(type.is_type_of<cs::type_t>());
+	std::ostringstream captured;
+	auto *old = std::cout.rdbuf(captured.rdbuf());
+	cs::var obj;
+	try {
+		cs::process_context *saved = cs::current_process;
+		cs::current_process = nullptr;
+		EXPECT_TRUE(cs::current_process == nullptr);
+		try {
+			obj = type.const_val<cs::type_t>().constructor();
+		}
+		catch (...) {
+			cs::current_process = saved;
+			throw;
+		}
+		cs::current_process = saved;
+	}
+	catch (...) {
+		std::cout.rdbuf(old);
+		throw;
+	}
+	std::cout.rdbuf(old);
+	EXPECT_TRUE(obj.is_type_of<cs::structure>());
+	EXPECT_CONTAINS(captured.str(), "init-t-no-process");
+}
+
+// =============================================================================
+// Constructing an escaped struct type after its context dies must be rejected.
+// =============================================================================
+
+TEST(escaped_type_constructor_rejected_after_context_release)
+{
+	std::exception_ptr eptr;
+	cs::var escaped;
+	{
+		cs::array args;
+		args.push_back(cs::var::make<cs::string>("<ESC_TYPE>"));
+		auto ctx = cs::create_context(args);
+		run_script_on(ctx, "class T\nend\n");
+		escaped = ctx->instance->storage.get_var("T");
+	}
+	try {
+		escaped.const_val<cs::type_t>().constructor();
+	}
+	catch (const cs::runtime_error &) {
+		eptr = std::current_exception();
+	}
+	EXPECT_TRUE(eptr != nullptr);
+}
+

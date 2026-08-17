@@ -248,9 +248,14 @@ namespace cs
 
 	var struct_builder::operator()()
 	{
+		// Ensure an active process for a bare native call (a fiber keeps its own).
 		auto ctx = mContext.lock();
+		// Borrow the dying context so finalizers can run script code.
+		if (!ctx && current_process != nullptr && current_process->teardown_ctx != nullptr)
+			ctx = std::shared_ptr<context_type>(current_process->teardown_ctx, [](context_type *) {});
 		if (!ctx)
 			throw runtime_error("the struct's context has been destroyed");
+		process_activation activation(ctx.get());
 		scope_guard scope(ctx.get());
 		if (mParent.root().usable())
 		{
