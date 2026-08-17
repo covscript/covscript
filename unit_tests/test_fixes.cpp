@@ -16,68 +16,6 @@
 // audit/report.md for the full numbered list (F01-F38).
 // =============================================================================
 
-namespace {
-
-// Run a full script in a fresh context, capturing system.out output. Any
-// exception propagates to the caller.
-std::string run_script(const std::string &src)
-{
-	cs::array args;
-	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
-	auto ctx = cs::create_context(args);
-	std::ostringstream captured;
-	auto *old = std::cout.rdbuf(captured.rdbuf());
-	try {
-		std::istringstream in(src);
-		ctx->instance->compile(in);
-		ctx->instance->interpret();
-	}
-	catch (...) {
-		std::cout.rdbuf(old);
-		throw;
-	}
-	std::cout.rdbuf(old);
-	return captured.str();
-}
-
-// Run a script on an existing context, capturing system.out output.
-std::string run_script_on(const cs::context_t &ctx, const std::string &src)
-{
-	std::ostringstream captured;
-	auto *old = std::cout.rdbuf(captured.rdbuf());
-	try {
-		std::istringstream in(src);
-		ctx->instance->compile(in);
-		ctx->instance->interpret();
-	}
-	catch (...) {
-		std::cout.rdbuf(old);
-		throw;
-	}
-	std::cout.rdbuf(old);
-	return captured.str();
-}
-
-// Run a script that is expected to throw and return the thrown error message.
-std::string run_script_expect_throw(const std::string &src)
-{
-	try {
-		run_script(src);
-	}
-	catch (const cs::exception &e) {
-		return e.what();
-	}
-	catch (const cs::compile_error &e) {
-		return e.what();
-	}
-	catch (const std::exception &e) {
-		return e.what();
-	}
-	throw cs_test::test_failure("expected the script to throw");
-}
-
-} // namespace
-
 // =============================================================================
 // F01: runtime.argument_count crashed (0xC0000005) on callables whose target is
 // a plain function pointer (future.create, fiber.create, ...) because it

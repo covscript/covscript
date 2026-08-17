@@ -93,6 +93,9 @@ non-owning back-references into it:
   data stay valid), but its *methods* are script functions and still hold the
   raw `function::mContext` back-reference — invoking them requires the context
   to be alive (they throw "the function's context has been destroyed" otherwise).
++ an escaped **type** (`type_t`) carries the same back-reference; constructing
+  it (`type_t::constructor()`) after the context dies throws
+  "the struct's context has been destroyed".
 
 Therefore:
 

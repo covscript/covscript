@@ -27,6 +27,76 @@ inline cs::tree_type<cs::token_base *> build_expr_tree(const std::string &src)
 }
 
 // =============================================================================
+// Script helpers: run scripts in fresh or existing contexts, capturing
+// system.out output; any exception propagates to the caller.
+// =============================================================================
+inline std::string run_script(const std::string &src, const std::function<void(const cs::context_t &)> &setup = {})
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<UNIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	if (setup)
+		setup(ctx);
+	std::ostringstream captured;
+	auto *old = std::cout.rdbuf(captured.rdbuf());
+	try
+	{
+		std::istringstream in(src);
+		ctx->instance->compile(in);
+		ctx->instance->interpret();
+	}
+	catch (...)
+	{
+		std::cout.rdbuf(old);
+		throw;
+	}
+	std::cout.rdbuf(old);
+	return captured.str();
+}
+
+inline std::string run_script_on(const cs::context_t &ctx, const std::string &src)
+{
+	std::ostringstream captured;
+	auto *old = std::cout.rdbuf(captured.rdbuf());
+	try
+	{
+		std::istringstream in(src);
+		ctx->instance->compile(in);
+		ctx->instance->interpret();
+	}
+	catch (...)
+	{
+		std::cout.rdbuf(old);
+		throw;
+	}
+	std::cout.rdbuf(old);
+	return captured.str();
+}
+
+// Run a script expected to throw; returns the thrown error message. Fails the
+// test (test_failure) if the script completes without throwing.
+inline std::string run_script_expect_throw(const std::string &src)
+{
+	try
+	{
+		run_script(src);
+	}
+	catch (const cs::exception &e)
+	{
+		return e.what();
+	}
+	catch (const cs::compile_error &e)
+	{
+		return e.what();
+	}
+	catch (const std::exception &e)
+	{
+		return e.what();
+	}
+	throw cs_test::test_failure("expected the script to throw");
+}
+
+// =============================================================================
 // Helper: build a full AST (lines of tokens) from source string
 // =============================================================================
 inline std::deque<std::deque<cs::token_base *>> build_ast_lines(const std::string &src)

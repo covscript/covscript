@@ -28,6 +28,48 @@
 
 namespace cs
 {
+	namespace
+	{
+		// Resolve a defining context, borrowing the dying one during teardown so
+		// finalizers can run script code. Throws with the given message if dead.
+		std::shared_ptr<context_type> resolve_ctx(const std::weak_ptr<context_type> &weak, const char *error_msg)
+		{
+			auto ctx = weak.lock();
+			if (!ctx && current_process != nullptr && current_process->teardown_ctx != nullptr)
+				ctx = std::shared_ptr<context_type>(current_process->teardown_ctx, [](context_type *) {});
+			if (!ctx)
+				throw runtime_error(error_msg);
+			return ctx;
+		}
+
+		// Execute a function body, translating C++ exceptions and honoring
+		// early returns via the value stack.
+		var run_body(const std::deque<statement_base *> &body, context_type *ctx, scope_guard &scope)
+		{
+			for (auto &ptr : body)
+			{
+				try
+				{
+					ptr->run();
+				}
+				catch (const cs::exception &)
+				{
+					throw;
+				}
+				catch (const std::exception &e)
+				{
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
+				}
+				if (ctx->instance->return_fcall)
+				{
+					ctx->instance->return_fcall = false;
+					return scope.return_fcall();
+				}
+			}
+			return scope.return_fcall();
+		}
+	} // namespace
+
 	function::~function()
 	{
 		statement_base::delete_children(mBody);
@@ -43,12 +85,7 @@ namespace cs
 	var function::call_rr(const function *_this, vector &args)
 	{
 		// Ensure an active process for a bare native call (a fiber keeps its own).
-		auto ctx = _this->mContext.lock();
-		// Borrow the dying context so finalizers can run script code.
-		if (!ctx && current_process != nullptr && current_process->teardown_ctx != nullptr)
-			ctx = std::shared_ptr<context_type>(current_process->teardown_ctx, [](context_type *) {});
-		if (!ctx)
-			throw runtime_error("the function's context has been destroyed");
+		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
 		process_activation activation(ctx.get());
 		current_process->poll_event();
 		if (args.size() != _this->mArgs.size())
@@ -65,38 +102,13 @@ namespace cs
 #endif
 		for (std::size_t i = 0; i < args.size(); ++i)
 			ctx->instance->storage.add_var_no_return(_this->mArgs[i].data(), args[i]);
-		for (auto &ptr : _this->mBody)
-		{
-			try
-			{
-				ptr->run();
-			}
-			catch (const cs::exception &)
-			{
-				throw;
-			}
-			catch (const std::exception &e)
-			{
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
-			}
-			if (ctx->instance->return_fcall)
-			{
-				ctx->instance->return_fcall = false;
-				return scope.return_fcall();
-			}
-		}
-		return scope.return_fcall();
+		return run_body(_this->mBody, ctx.get(), scope);
 	}
 
 	var function::call_vv(const function *_this, vector &args)
 	{
 		// Ensure an active process for a bare native call (a fiber keeps its own).
-		auto ctx = _this->mContext.lock();
-		// Borrow the dying context so finalizers can run script code.
-		if (!ctx && current_process != nullptr && current_process->teardown_ctx != nullptr)
-			ctx = std::shared_ptr<context_type>(current_process->teardown_ctx, [](context_type *) {});
-		if (!ctx)
-			throw runtime_error("the function's context has been destroyed");
+		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
 		process_activation activation(ctx.get());
 		current_process->poll_event();
 		scope_guard scope(ctx.get());
@@ -127,38 +139,13 @@ namespace cs
 				arr.push_back(args[i]);
 			ctx->instance->storage.add_var_no_return(_this->mArgs.back().data(), arg_list);
 		}
-		for (auto &ptr : _this->mBody)
-		{
-			try
-			{
-				ptr->run();
-			}
-			catch (const cs::exception &)
-			{
-				throw;
-			}
-			catch (const std::exception &e)
-			{
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
-			}
-			if (ctx->instance->return_fcall)
-			{
-				ctx->instance->return_fcall = false;
-				return scope.return_fcall();
-			}
-		}
-		return scope.return_fcall();
+		return run_body(_this->mBody, ctx.get(), scope);
 	}
 
 	var function::call_rl(const function *_this, vector &args)
 	{
 		// Ensure an active process for a bare native call (a fiber keeps its own).
-		auto ctx = _this->mContext.lock();
-		// Borrow the dying context so finalizers can run script code.
-		if (!ctx && current_process != nullptr && current_process->teardown_ctx != nullptr)
-			ctx = std::shared_ptr<context_type>(current_process->teardown_ctx, [](context_type *) {});
-		if (!ctx)
-			throw runtime_error("the function's context has been destroyed");
+		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
 		process_activation activation(ctx.get());
 		current_process->poll_event();
 		if (args.size() != _this->mArgs.size())
@@ -191,12 +178,7 @@ namespace cs
 	var function::call_el(const function *_this, vector &args)
 	{
 		// Ensure an active process for a bare native call (a fiber keeps its own).
-		auto ctx = _this->mContext.lock();
-		// Borrow the dying context so finalizers can run script code.
-		if (!ctx && current_process != nullptr && current_process->teardown_ctx != nullptr)
-			ctx = std::shared_ptr<context_type>(current_process->teardown_ctx, [](context_type *) {});
-		if (!ctx)
-			throw runtime_error("the function's context has been destroyed");
+		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
 		process_activation activation(ctx.get());
 		current_process->poll_event();
 		if (!args.empty())
@@ -249,12 +231,7 @@ namespace cs
 	var struct_builder::operator()()
 	{
 		// Ensure an active process for a bare native call (a fiber keeps its own).
-		auto ctx = mContext.lock();
-		// Borrow the dying context so finalizers can run script code.
-		if (!ctx && current_process != nullptr && current_process->teardown_ctx != nullptr)
-			ctx = std::shared_ptr<context_type>(current_process->teardown_ctx, [](context_type *) {});
-		if (!ctx)
-			throw runtime_error("the struct's context has been destroyed");
+		auto ctx = resolve_ctx(mContext, "the struct's context has been destroyed");
 		process_activation activation(ctx.get());
 		scope_guard scope(ctx.get());
 		if (mParent.root().usable())
