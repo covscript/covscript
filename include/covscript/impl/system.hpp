@@ -124,18 +124,4 @@ namespace cs_impl
 
 		std::string get_current_dir();
 	} // namespace file_system
-
-	// COVSCRIPT_DEBUG levels (none / warning / strict); governs defensive guards.
-	enum class debug_mode : int
-	{
-		none = 0,    // Silently ignore the guard (allow partial leaks, keep the program stable)
-		warning = 1, // Print a warning and continue
-		strict = 2,  // Print a warning and abort immediately (fail-fast)
-	};
-
-	debug_mode get_debug_mode() noexcept;
-
-	// none: no-op; warning: print msg to stderr; strict: print msg to stderr
-	// then std::abort().
-	void debug_guard(const char *msg) noexcept;
 } // namespace cs_impl

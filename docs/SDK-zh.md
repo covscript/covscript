@@ -135,7 +135,7 @@ cs::var f = cs::eval(ctx, "[](x)->x+1");
 
 ### 6. 运行时诊断（`COVSCRIPT_DEBUG`）
 
-防御性运行时守卫（例如销毁未完成的 fiber，或程序入口处函数值栈非空）按照 `COVSCRIPT_DEBUG` 环境变量行事：
+防御性运行时守卫（例如销毁未完成的 fiber、程序入口处函数值栈非空，或结构体 finalize 方法在清理阶段抛出异常）按照 `COVSCRIPT_DEBUG` 环境变量行事：
 
 | 取值 | 行为 |
 | :-- | :-- |

@@ -185,8 +185,9 @@ that survives, because it concerns the arena rather than the context.
 
 ### 6. Runtime diagnostics (`COVSCRIPT_DEBUG`)
 
-Defensive runtime guards (for example destroying an unfinished fiber, or a
-non-empty function value stack at program entry) behave according to the
+Defensive runtime guards (for example destroying an unfinished fiber, a
+non-empty function value stack at program entry, or a structure finalizer
+that throws during teardown) behave according to the
 `COVSCRIPT_DEBUG` environment variable:
 
 | Value | Behaviour |

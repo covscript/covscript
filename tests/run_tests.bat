@@ -29,6 +29,7 @@ for %%f in (
 	choice.csc
 	cmtime.csc
 	compute_pi.csc
+	const_in_namespace.csc
 	const_in_struct.csc
 	coroutine.csc
 	escape.csc

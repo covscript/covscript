@@ -302,9 +302,10 @@ namespace cs
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		for (auto &ptr : body)
 			if (ptr->get_type() != statement_types::import_ && ptr->get_type() != statement_types::involve_ &&
-			    ptr->get_type() != statement_types::var_ && ptr->get_type() != statement_types::function_ &&
-			    ptr->get_type() != statement_types::namespace_ && ptr->get_type() != statement_types::struct_)
-				throw compile_error("Invalid 'namespace' body: only 'import', 'using', variable declarations, function definitions, 'namespace' definitions, and 'struct' definitions are allowed");
+			    ptr->get_type() != statement_types::var_ && ptr->get_type() != statement_types::constant_ &&
+			    ptr->get_type() != statement_types::function_ && ptr->get_type() != statement_types::namespace_ &&
+			    ptr->get_type() != statement_types::struct_)
+				throw compile_error("Invalid 'namespace' body: only 'import', 'using', variable declarations, constant declarations, function definitions, 'namespace' definitions, and 'struct' definitions are allowed");
 		auto *stmt = new statement_namespace(static_cast<token_expr *>(raw.front().at(1))->get_tree().root().data(),
 		                                     std::move(body), context, raw.front().back());
 		guard.release();
@@ -837,7 +838,7 @@ namespace cs
 					switch (ptr->get_type())
 					{
 						default:
-							throw compile_error("Invalid 'struct' body: only variable and function definitions are allowed");
+							throw compile_error("Invalid 'struct' body: only variable declarations, constant declarations, and function definitions are allowed");
 						case statement_types::var_:
 						case statement_types::constant_:
 							break;

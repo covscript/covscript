@@ -64,7 +64,7 @@ include($ENV{CS_DEV_PATH}/csbuild.cmake)
 
 **Environment Variable**: `COVSCRIPT_DEBUG`
 
-Controls the behaviour of defensive runtime guards (for example destroying an unfinished fiber, or a non-empty function value stack at program entry). The value is case-insensitive; an unset or unknown value defaults to `warning`.
+Controls the behaviour of defensive runtime guards (for example destroying an unfinished fiber, a non-empty function value stack at program entry, or a structure finalizer that throws during teardown). The value is case-insensitive; an unset or unknown value defaults to `warning`.
 
 | Value | Behaviour |
 | :-- | :-- |

@@ -94,6 +94,7 @@
 #include <ostream>
 #include <utility>
 #include <cstring>
+#include <cstdio>
 #include <atomic>
 #include <chrono>
 #include <thread>
@@ -1418,21 +1419,53 @@ namespace cs
 		    : m_shadow(true), m_id(s->m_id), m_name(s->m_name), m_data(s->m_data), m_process(s->m_process) {}
 
 		// Runs the structure's `finalize` method (if any) exactly once, while
-		// the runtime is still usable. Swallows script errors: finalize runs
-		// inside implicitly noexcept destructor paths.
+		// the runtime is still usable. Failures never propagate (finalize runs
+		// inside implicitly noexcept destructor paths); they are reported through
+		// cs_impl::debug_guard, i.e. governed by the COVSCRIPT_DEBUG level.
 		void run_finalize() const
 		{
 			if (!m_shadow && !m_finalized && m_data->exist("finalize"))
 			{
 				m_finalized = true;
+				// Stack buffer, not std::string: this runs on destructor paths
+				// (possibly mid-unwind), so the handlers must not allocate.
+				const auto report = [](const char *what)
+				{
+					char msg[512];
+					std::snprintf(msg, sizeof(msg), "[finalize] structure finalizer failed: %.400s", what);
+					cs_impl::debug_guard(msg);
+				};
+				// Cooperative exit/signal sentinels are control flow, not failures.
+				const auto sentinel = [](const std::string &msg)
+				{
+					return msg == "CS_EXIT" || msg == "CS_SIGINT" || msg == "CS_DEBUGGER_EXIT";
+				};
 				try
 				{
 					process_activation activation(m_process.get());
 					invoke(m_data->get_var("finalize"), var::make<structure>(this));
 				}
+				catch (const exception &e)
+				{
+					if (!sentinel(e.message()))
+						report(e.what());
+				}
+				catch (const fatal_error &e)
+				{
+					if (!sentinel(e.message()))
+						report(e.what());
+				}
+				catch (const lang_error &e)
+				{
+					report(e.what());
+				}
+				catch (const std::exception &e)
+				{
+					report(e.what());
+				}
 				catch (...)
 				{
-					// swallowing prevents std::terminate on script errors
+					report("unknown error");
 				}
 			}
 		}
