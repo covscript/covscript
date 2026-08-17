@@ -203,6 +203,11 @@ namespace cs
 		// inherit the pointer). Access via `fiber_context::current()->stack`.
 		fiber_context *const fiber_cxt;
 
+		// Transitional compatibility aliases into fiber_cxt; DEPRECATED, removed in 3.5.3.
+		stack_type<fiber_t> &fiber_stack;
+		double &fiber_busy_wait_coef;
+		std::size_t &fiber_busy_wait_min;
+
 		// Stack Resize must before any context instance start
 		void resize_stack(std::size_t size)
 		{
@@ -266,12 +271,22 @@ namespace cs
 		cs_exception_handler cs_eh_callback = &cs_defalt_exception_handler;
 
 		process_context()
-		    : fiber_cxt(fiber_context::current()), on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_sigint_default_handler)
+		    : fiber_cxt(fiber_context::current()),
+		      fiber_stack(fiber_cxt->stack),
+		      fiber_busy_wait_coef(fiber_cxt->busy_wait_coef),
+		      fiber_busy_wait_min(fiber_cxt->busy_wait_min),
+		      on_process_exit(&on_process_exit_default_handler),
+		      on_process_sigint(&on_process_sigint_default_handler)
 		{
 		}
 
 		explicit process_context(std::size_t ss, fiber_context *cxt)
-		    : fiber_cxt(cxt), on_process_exit(&on_process_exit_default_handler), on_process_sigint(&on_process_sigint_default_handler)
+		    : fiber_cxt(cxt),
+		      fiber_stack(fiber_cxt->stack),
+		      fiber_busy_wait_coef(fiber_cxt->busy_wait_coef),
+		      fiber_busy_wait_min(fiber_cxt->busy_wait_min),
+		      on_process_exit(&on_process_exit_default_handler),
+		      on_process_sigint(&on_process_sigint_default_handler)
 		{
 			resize_stack(ss);
 		}
@@ -595,6 +610,11 @@ namespace cs
 		}
 
 		fiber_t create(context_type *, std::function<var()>);
+
+		inline fiber_t create(const context_t &c, std::function<var()> fn)
+		{
+			return create(c.get(), std::move(fn));
+		}
 
 		fiber_t create_native(std::function<var()>);
 
