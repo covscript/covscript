@@ -71,13 +71,13 @@ Covariant Script 移除了历史遗留的全局垃圾回收器，改为显式、
 
 ### 1. Context 生命周期（逃逸对象）
 
-**需要执行脚本代码的逃逸对象要求其定义它的 context 保持存活。**
+**需要执行脚本代码的逃逸对象，要求创建它的 context 保持存活。**
 
 运行时返回的对象并不具有完全相同的生命周期行为：
 
-+ 脚本函数 / lambda 持有 `std::weak_ptr<context_type>`（`function::mContext`）；在 context 销毁后调用会抛出 `runtime_error`；
-+ `structure` 钉住其 owning process，因此类型身份与成员数据在 context 销毁后仍有效；其脚本方法仍要求定义它的 context 存活，销毁后调用会抛出异常。
-+ 逃逸的**类型**（`type_t`）携带同样的反向引用；在 context 销毁后调用其构造器（`type_t::constructor()`）会抛出 "the struct's context has been destroyed"。
++ 逃逸的脚本函数 / lambda 持有 `std::weak_ptr<context_type>`（`function::mContext`）；context 销毁后调用会抛出 `runtime_error`；
++ `structure` 会 pin 住其所属的 process，因此类型身份与成员数据在 context 销毁后仍有效；其脚本方法仍要求定义它的 context 存活，销毁后调用会抛出异常。
++ 逃逸的**类型**（`type_t`）携带同样的反向引用；context 销毁后调用其构造器（`type_t::constructor()`）会抛出 "the struct's context has been destroyed"。
 
 因此：
 

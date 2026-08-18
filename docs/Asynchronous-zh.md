@@ -33,7 +33,7 @@ sequenceDiagram
     Note over C: 执行 Caller 上下文<br/>fiber.is_suspended() == true
 
     C->>F: fiber.resume (在唤醒时间前)
-    Note over C: 立即返回 (调度器可能协调休眠)
+    Note over C: 立即返回（调度器可能执行退避休眠）
 
     C->>+F: fiber.resume (在唤醒时间后)
     Note over F: 执行 Fiber 上下文<br/>state -> running
@@ -121,7 +121,7 @@ fiber.set_schedule_policy("throughput")   # 高负载均衡
 
 机制：当对尚未到达唤醒时间的 fiber 调用 `resume()` 时，调度器使用累进式退避。重复的过早唤醒会逐渐增加休眠时长，避免 CPU 空转的同时保持对定时唤醒的响应。
 
-### 弃用的 Fiber 与 COVSCRIPT_DEBUG
+### 未清理的 Fiber 与 COVSCRIPT_DEBUG
 
 Fiber 采用协作式清理：在最后一个句柄被释放前，它必须运行到完成（或被驱动到 `finished`）。销毁仍处于 `running`、`suspended` 或 `sleeping` 状态的 fiber 无法解开其挂起的栈帧，因此这些帧持有的资源会泄漏。这是协作式契约，而非运行时错误。
 
@@ -199,10 +199,10 @@ void sleep_for(std::size_t ms);
 
 `resume()` 调用流程：
 
-1. 检查 fiber 是否为 `ready` -> 创建上下文
-2. 检查 fiber 是否为 `sleeping` 且未到唤醒时间 -> 根据 `schedule_policy` 决定是否退避休眠，然后返回
+1. 若 fiber 为 `ready` -> 创建执行上下文
+2. 若 fiber 为 `sleeping` 且未到唤醒时间 -> 根据 `schedule_policy` 执行退避或立即返回
 3. 切换到 fiber 上下文执行
-4. fiber yield/sleep/完成 -> 切回调用者上下文
+4. fiber yield / sleep / 完成 -> 切回调用者上下文
 
 从 CovScript 调用 `fiber.resume()` 时始终使用 `normal` 策略，确保脚本层有完整的平台退避。
 

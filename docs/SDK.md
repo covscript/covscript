@@ -59,7 +59,7 @@ Everything else hangs off it:
 
 ## Ownership Model
 
-Covariant Script removed the historical global garbage collector in favour of
+Covariant Script removed the historical global garbage collector in favor of
 explicit, deterministic ownership:
 
 + **Statements** form a tree; each parent deletes its children.
@@ -166,8 +166,8 @@ another unrelated process will remain active during destruction.
 
 `cs::var` is a pointer-sized handle (8 bytes on 64-bit platforms); copying it
 bumps a reference count, and the value is freed when the last reference drops.
-To detach a value from its original
-storage use `cs::copy(var)` (deep copy). Values that escape a context are safe
+To detach a value from its original storage, use `cs::copy(var)` (deep copy).
+Values that escape a context are safe
 as self-contained data. A script callable uses a weak context reference and
 throws if invoked after context destruction; structure data remains valid,
 while its script methods have the same rule.
@@ -190,7 +190,7 @@ non-empty function value stack at program entry, or a structure finalizer
 that throws during teardown) behave according to the
 `COVSCRIPT_DEBUG` environment variable:
 
-| Value | Behaviour |
+| Value | Behavior |
 | :-- | :-- |
 | `none` | Ignore silently; the program keeps running (partial leaks accepted) |
 | `warning` | Print a warning to stderr and continue (default) |

@@ -121,7 +121,7 @@ fiber.set_schedule_policy("throughput")   # high-load balance
 
 When `resume()` is called on a sleeping fiber whose wake-up time has not arrived, the scheduler uses progressive backoff. Repeated premature attempts gradually increase the sleep duration, preventing CPU spin while remaining responsive to scheduled wake-ups.
 
-### Abandoned Fibers and COVSCRIPT_DEBUG
+### Leaked Fibers and COVSCRIPT_DEBUG
 
 Fibers are cleaned up cooperatively: they must run to completion (or be driven to `finished`) before their last handle is dropped. Destroying a fiber that is still `running`, `suspended` or `sleeping` cannot unwind its suspended stack frames, so any resources held by those frames are leaked. This is a cooperative contract, not a runtime error.
 
