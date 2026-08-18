@@ -1583,25 +1583,13 @@ namespace cs_impl
 		void set_schedule_policy(const string &policy)
 		{
 			if (policy == "balanced")
-			{
-				fiber_context::current()->busy_wait_coef = 0.01;
-				fiber_context::current()->busy_wait_min = 10;
-			}
+				fiber::set_schedule_parameters({0.01, 10});
 			else if (policy == "responsive")
-			{
-				fiber_context::current()->busy_wait_coef = 0.003;
-				fiber_context::current()->busy_wait_min = 3;
-			}
+				fiber::set_schedule_parameters({0.003, 3});
 			else if (policy == "efficient")
-			{
-				fiber_context::current()->busy_wait_coef = 0.05;
-				fiber_context::current()->busy_wait_min = 50;
-			}
+				fiber::set_schedule_parameters({0.05, 50});
 			else if (policy == "throughput")
-			{
-				fiber_context::current()->busy_wait_coef = 0.02;
-				fiber_context::current()->busy_wait_min = 20;
-			}
+				fiber::set_schedule_parameters({0.02, 20});
 			else
 				throw lang_error("Unknown schedule policy: " + policy);
 		}
@@ -1610,8 +1598,10 @@ namespace cs_impl
 		{
 			callable owner;
 			function const *func = nullptr;
-			// Retain the context so the fiber body has a valid instance while it runs.
-			context_t context;
+			// Weak reference: the platform fiber already guards resume() with
+			// cs_context.expired(). A strong context_t here would create a
+			// context → storage → fiber → context cycle for global fibers.
+			std::weak_ptr<context_type> context;
 			vector args;
 
 		   public:
@@ -1626,23 +1616,22 @@ namespace cs_impl
 			{
 				if (func == nullptr)
 					throw lang_error("Asynchronous functions are not reentrant");
+				auto ctx = context.lock();
+				if (!ctx)
+					throw runtime_error("the fiber's context has been destroyed");
 				try
 				{
 					var ret = func->call(args);
 					func = nullptr;
 					args.clear();
-					context->instance->clear_context();
-					// Release the retained context so a finished fiber stored in
-					// the context's own storage can't keep it alive forever.
-					context.reset();
+					ctx->instance->clear_context();
 					return std::move(ret);
 				}
 				catch (...)
 				{
 					func = nullptr;
 					args.clear();
-					context->instance->clear_context();
-					context.reset();
+					ctx->instance->clear_context();
 					throw;
 				}
 			}

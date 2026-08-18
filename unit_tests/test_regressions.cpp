@@ -1273,6 +1273,25 @@ TEST(context_reclaimed_on_release)
 	EXPECT_TRUE(wcomp.expired());
 }
 
+// =============================================================================
+// A pending script fiber stored in the context's own storage must not prevent
+// the context from being reclaimed (the fiber holds a weak context reference).
+// =============================================================================
+
+TEST(global_pending_fiber_does_not_prevent_context_release)
+{
+	std::weak_ptr<cs::context_type> wctx;
+	{
+		cs::array args;
+		args.push_back(cs::var::make<cs::string>("<FIBER_CYCLE>"));
+		auto ctx = cs::create_context(args);
+		wctx = ctx;
+		cs::process_run_scope scope(ctx);
+		run_script_on(ctx, "function noop()\nend\nvar f = fiber.create(noop)\n");
+	}
+	EXPECT_TRUE(wctx.expired());
+}
+
 TEST(module_import_nests_on_same_process)
 {
 	cs::array args;

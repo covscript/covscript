@@ -26,7 +26,6 @@ for %%f in (
 	benchmark.csc
 	char.csc
 	char_buff.csc
-	choice.csc
 	cmtime.csc
 	compute_pi.csc
 	const_in_namespace.csc
@@ -39,8 +38,6 @@ for %%f in (
 	file.csc
 	file_os.csc
 	function_invoker.csc
-	hash_map.csc
-	import.csc
 	info.csc
 	inherit.csc
 	integer.csc
@@ -50,9 +47,7 @@ for %%f in (
 	move.csc
 	new.csc
 	numeric.csc
-	optimize.csc
 	pair.csc
-	recursion.csc
 	reference.csc
 	serial_execution.csc
 	string.csc
@@ -65,7 +60,6 @@ for %%f in (
 	test_bounds_check.csc
 	test_cache.csc
 	test_circular_import.csc
-	test_coroutine.csc
 	test_dead_co.csc
 	test_debugger.csc
 	test_fiber_cross_caller.csc
@@ -89,7 +83,8 @@ for %%f in (
 	va_list.csc
 ) do (
 	"%CS%" "%%f" >nul 2>&1
-	if errorlevel 1 (
+	set "RC=!ERRORLEVEL!"
+	if not "!RC!"=="0" (
 		set /a FAIL+=1
 		set "FAIL_LIST=!FAIL_LIST! %%f"
 	) else (

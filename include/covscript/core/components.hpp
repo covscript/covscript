@@ -1348,7 +1348,7 @@ namespace cs
 			}
 		};
 
-		void swap(tree_type &t)
+		void swap(tree_type &t) noexcept
 		{
 			tree_node *ptr = this->mRoot;
 			this->mRoot = t.mRoot;

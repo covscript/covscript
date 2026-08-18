@@ -414,6 +414,32 @@ cs_impl::operators::result cs_impl::operators::handler<T>::fcall(void *lhs, void
 
 namespace cs_impl
 {
+	// Context extension members are CNI functions taking a raw pointer. Also
+	// accept SDK-owned context_t values as their script-side representation.
+	template <>
+	struct type_conversion_cs<cs::context_type *>
+	{
+		using source_type = cs::context_t;
+	};
+
+	template <>
+	struct type_convertor<cs::context_t, cs::context_type *>
+	{
+		static cs::context_type *convert(const cs::context_t &context) noexcept
+		{
+			return context.get();
+		}
+	};
+
+	template <>
+	struct type_convertor<cs::context_type *, cs::context_t>
+	{
+		static cs::context_t convert(cs::context_type *context)
+		{
+			return context != nullptr ? context->shared_from_this() : cs::context_t();
+		}
+	};
+
 	enum class file_type
 	{
 		block,

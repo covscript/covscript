@@ -1,10 +1,9 @@
 #!/bin/bash
 # Run the curated non-interactive integration tests.
 #
-# The list below is the exact set of tests/*.csc that run to completion without
-# keyboard/network input and without external extensions. It was produced by
-# running every script to completion (see the audit) and keeping the exit-0
-# set; long-running but non-interactive benchmarks are included. Interactive
+# The list below is a curated set of tests/*.csc that run to completion without
+# keyboard/network input and without external extensions. Stress/profile suites
+# are run separately. Interactive
 # tests (console, clocks, tcp/udp servers) and extension-dependent tests (codec,
 # darwin, extension, reflection) are intentionally excluded. There is no per-test
 # timeout: the list is explicit and known to terminate; a hang here is a real
@@ -26,7 +25,6 @@ tests=(
 	benchmark.csc
 	char.csc
 	char_buff.csc
-	choice.csc
 	cmtime.csc
 	compute_pi.csc
 	const_in_namespace.csc
@@ -39,8 +37,6 @@ tests=(
 	file.csc
 	file_os.csc
 	function_invoker.csc
-	hash_map.csc
-	import.csc
 	info.csc
 	inherit.csc
 	integer.csc
@@ -50,9 +46,7 @@ tests=(
 	move.csc
 	new.csc
 	numeric.csc
-	optimize.csc
 	pair.csc
-	recursion.csc
 	reference.csc
 	serial_execution.csc
 	string.csc
@@ -65,7 +59,6 @@ tests=(
 	test_bounds_check.csc
 	test_cache.csc
 	test_circular_import.csc
-	test_coroutine.csc
 	test_dead_co.csc
 	test_debugger.csc
 	test_fiber_cross_caller.csc

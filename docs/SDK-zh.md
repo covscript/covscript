@@ -46,10 +46,10 @@ ctx->instance->interpret();
 | 对象 | 属主 | 生命周期 |
 |---|---|---|
 | `context_type` | 嵌入者的 `context_t` | 直到最后一个 `context_t` 被释放 |
-| `process_context` | context（`context->process`） | context 生命周期（fork 出的 fiber 会保活父进程） |
+| `process_context` | context 与逃逸的 structure | 直到最后一个属主释放 |
 | `instance_type` | context（`context->instance`） | context 生命周期 |
 | `compiler_type` | context（`context->compiler`） | context 生命周期（与子 context 共享） |
-| token arena（`compile_unit`） | instance | 直到重编译或 instance 析构 |
+| token arena（`compile_unit`） | instance 与逃逸的函数 | 直到最后一个属主释放 |
 | `var` 值 | 引用计数 | 直到最后一个 `var` 引用被释放 |
 | 模块子 context | context 的 `subcontexts` 池 | context 生命周期 |
 
@@ -60,22 +60,22 @@ Covariant Script 移除了历史遗留的全局垃圾回收器，改为显式、
 + **语句**构成一棵树；每个父节点删除其子节点。
 + **token** 存放在每个程序独立的 bump arena（`compile_unit`）中，整块释放。
 + **`var`** 是对堆上值的引用计数、写时复制句柄。拷贝一个 `var` 代价极低（引用计数 +1）；`cs::copy(var)` / `var::clone()` 执行深拷贝。
-+ **context 是唯一属主**，拥有 process、compiler、instance 及其子对象。这些子对象对 context 的反向引用都是裸（非 owning）指针，因此释放最后一个外部 `context_t` 即可无环地回收整棵树。
++ **context 是运行时根属主**，拥有 process、compiler、instance 及其子对象。大多数内部子对象使用受 context 生命周期约束的裸非 owning 反向引用；逃逸的脚本函数使用 `std::weak_ptr`。逃逸函数与 structure 可分别延长 token arena 或 process 的生命周期，但不会保活 context，也不会形成所有权环。
 
-结果是：**一切资源都在最后一个 owning 引用消失的那一刻被精确回收**——没有 `collect_garbage()`，没有延迟清扫。
+结果是：**每项资源都在其最后一个 owning 引用消失时被精确回收**——没有 `collect_garbage()`，没有延迟清扫。
 
 ## 资源规约
 
-以下是嵌入者必须遵守的规则。违反它们即未定义行为（通常是 use-after-free）。
+以下是嵌入者必须遵守的规则。由弱引用支持的 API 在 context 销毁后会抛出 `runtime_error`；裸非 owning SDK 引用不得比其属主活得更久。
 
 ### 1. Context 生命周期（逃逸对象）
 
-**逃逸对象要求其定义它的 context 保持存活。**
+**需要执行脚本代码的逃逸对象要求其定义它的 context 保持存活。**
 
-运行时返回的对象——脚本函数、lambda、`structure` 实例、模块命名空间——都**不拥有**它们的 context，而是持有指向它的非 owning 反向引用：
+运行时返回的对象并不具有完全相同的生命周期行为：
 
-+ 脚本函数 / lambda 持有裸的 `context_type*`（`function::mContext`）；
-+ `structure` 钉住其 owning process（因此类型身份节点与成员数据在 context 销毁后仍有效），但其*方法*是脚本函数，仍持有裸的 `function::mContext` 反向引用——调用它们要求 context 存活（否则抛 "the function's context has been destroyed"）。
++ 脚本函数 / lambda 持有 `std::weak_ptr<context_type>`（`function::mContext`）；在 context 销毁后调用会抛出 `runtime_error`；
++ `structure` 钉住其 owning process，因此类型身份与成员数据在 context 销毁后仍有效；其脚本方法仍要求定义它的 context 存活，销毁后调用会抛出异常。
 + 逃逸的**类型**（`type_t`）携带同样的反向引用；在 context 销毁后调用其构造器（`type_t::constructor()`）会抛出 "the struct's context has been destroyed"。
 
 因此：
@@ -86,7 +86,7 @@ cs::var f;
     auto ctx = cs::create_context({...});
     f = cs::eval(ctx, "[](x)->x+1");   // 逃逸一个 lambda
 }                                      // 此处 ctx 已析构
-f.const_val<cs::callable>().call(...); // 未定义行为
+f.const_val<cs::callable>().call(...); // 抛出 runtime_error
 ```
 
 在仍使用对象期间，务必保持 `context_t` 存活：
@@ -97,11 +97,11 @@ cs::var f = cs::eval(ctx, "[](x)->x+1");
 // ... 在 ctx 存活期间自由使用 f ...
 ```
 
-此规约对函数、lambda、结构体、模块命名空间一视同仁。（其他语言的运行时同样不保证逃逸值能比它的定义域活得更久；Covariant Script 只是把这一要求显式化。）
+逃逸对象需要执行脚本代码时，应保持 context 存活；如上所述，自包含的值数据可独立继续使用。
 
 ### 2. `current_process` 与线程
 
-`cs::current_process` 是一个 `thread_local process_context*`，除非当前线程上有运行中的实例，否则为 `nullptr`。它由两个 RAII 守卫安装：
+`cs::current_process` 是由线程局部存储支持的 `current_process_ref`；它可转换为 `process_context*`，当前线程无运行实例时为 `nullptr`。它由两个 RAII 守卫安装：
 
 + `cs::process_run_scope(ctx)` —— 在作用域内安装 `ctx` 的进程。同一进程上的嵌套作用域是透明的；**不同**的活动进程会抛出异常，因此一个线程不能并发运行两个实例。
 + `cs::process_activation(ctx)` —— 仅当无活动进程时才激活（用于裸原生调用与异步工作线程）。
@@ -121,11 +121,11 @@ cs::var f = cs::eval(ctx, "[](x)->x+1");
   `instance->storage.clear_global()`。
 + REPL 在退出时清空全局域。
 
-如果你手动驱动 `create_context` + `compile` + `interpret` 后直接丢弃 context 而不清空全局域，全局结构体将在 context 析构期间被释放——此时 process/instance 已开始消亡——其 `finalize` 将无法正确执行。请在 context 存活时（进程仍活动）调用 `ctx->instance->storage.clear_global()` 以确定性地执行终结器。
+如果你手动驱动 `create_context` + `compile` + `interpret`，且析构时同一线程上没有无关活动 process，终结器会在 context teardown 期间执行。为获得确定性行为，应在 context 自身 process 活动时调用 `ctx->instance->storage.clear_global()` 后再释放；若析构时另一个无关 process 仍活动，则必须显式清理。
 
 ### 4. `var` 生命周期
 
-`cs::var` 是一个 8 字节句柄；拷贝它只会让引用计数 +1，值在最后一个引用释放时被回收。要把值与其原始存储分离，请使用 `cs::copy(var)`（深拷贝）。逃逸出 context 的值作为“值”本身是安全的（它们自包含），但 `callable`/`structure` 值**同时**还携带着 §1 所述的裸反向引用，因此 context 规约依然适用于它们。
+`cs::var` 是一个指针大小的句柄（64 位平台上为 8 字节）；拷贝它只会让引用计数 +1，值在最后一个引用释放时被回收。要把值与其原始存储分离，请使用 `cs::copy(var)`（深拷贝）。逃逸出 context 的自包含值数据仍然安全；脚本 callable 使用弱 context 引用并在 context 销毁后调用时抛出异常，structure 数据仍有效，但其脚本方法遵循相同规则。
 
 ### 5. Token arena 与重编译
 

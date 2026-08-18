@@ -25,9 +25,9 @@ namespace cs_test {
 
 	inline bool should_skip(const std::string &name)
 	{
-		// CS_TEST_FILTER: skip any test whose name contains this substring.
+		// A non-empty filter excludes matching tests; empty or unset runs all.
 		const char *f = std::getenv("CS_TEST_FILTER");
-		return f != nullptr && name.find(f) != std::string::npos;
+		return f != nullptr && f[0] != '\0' && name.find(f) != std::string::npos;
 	}
 
 	inline std::vector<test_case> &registry()

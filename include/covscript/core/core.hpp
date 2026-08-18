@@ -642,10 +642,11 @@ namespace cs
 		// Weak back-ref to the defining context; calls lock it.
 		std::weak_ptr<context_type> mContext;
 #ifdef CS_DEBUGGER
-		// Debug Information
+		// Immutable source location survives statement-tree destruction.
 		mutable bool mMatch = false;
 		std::string mDecl;
-		statement_base *mStmt;
+		std::string mFile;
+		std::size_t mLine = 0;
 #endif
 		bool mIsMemFn = false;
 		bool mIsVargs = false;
@@ -686,8 +687,12 @@ namespace cs
 		function &operator=(const function &) = delete;
 
 #ifdef CS_DEBUGGER
-		function(context_type *c, std::string decl, statement_base *stmt, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
-		    : mContext(c->weak_from_this()), mDecl(std::move(decl)), mStmt(stmt), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)), m_unit(c->current_unit)
+		function(context_type *c, std::string decl, std::string file, std::size_t line,
+		         std::vector<std::string> args, std::deque<statement_base *> body,
+		         bool is_vargs = false, bool is_lambda = false)
+		    : mContext(c->weak_from_this()), mDecl(std::move(decl)), mFile(std::move(file)), mLine(line),
+		      mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)),
+		      m_unit(c->current_unit)
 		{
 			init_call_ptr();
 		}
@@ -773,9 +778,14 @@ namespace cs
 			return mDecl;
 		}
 
-		statement_base *get_raw_statement() const
+		const std::string &get_debug_file() const
 		{
-			return mStmt;
+			return mFile;
+		}
+
+		std::size_t get_debug_line() const noexcept
+		{
+			return mLine;
 		}
 
 		void set_debugger_state(bool match) const
@@ -1002,6 +1012,8 @@ namespace cs
 		}
 
 		void clear();
+
+		void safe_rewind();
 
 		inline void next() noexcept
 		{
@@ -1533,16 +1545,27 @@ namespace cs
 	// is still intact: a finalizer may reference other variables of this domain.
 	inline void domain_type::clear()
 	{
-		// Run structure finalizers first, while names still resolve; the flag on
-		// each structure suppresses the destructor's second invocation.
-		for (std::size_t i = 0; i < m_slot.size(); ++i)
-			if (m_slot[i].is_type_of<structure>())
-				m_slot[i].const_val<structure>().run_finalize();
 		m_reflect.clear();
 		m_slot.clear();
 		optimize = false;
-		// Invalidate every cached var_id so the fast path re-resolves by name
-		// after the layout changes.
+		m_ref = std::make_shared<domain_ref>(this);
+	}
+
+	// Destroy all variables in reverse order, removing each slot's reflect
+	// entry before the var's destructor runs. Structure finalizers thus see a
+	// consistent (shrinking) name table: they can resolve earlier globals but
+	// not later ones (which throw "Use of undefined variable" instead of
+	// accessing an out-of-bounds slot). Used by ~context_type() teardown.
+	inline void domain_type::safe_rewind()
+	{
+		while (!m_slot.empty())
+		{
+			std::size_t idx = m_slot.size() - 1;
+			for (auto it = m_reflect.begin(); it != m_reflect.end();)
+				it = (it->second == idx) ? m_reflect.erase(it) : std::next(it);
+			m_slot.pop_back();
+		}
+		optimize = false;
 		m_ref = std::make_shared<domain_ref>(this);
 	}
 
@@ -1557,9 +1580,17 @@ namespace cs
 		type_id mTypeId;
 		std::string mName;
 		tree_type<token_base *> mParent;
-		// Shared so type_t's std::function can copy the builder while the method
-		// statements are deleted exactly once (by the last surviving copy).
-		std::shared_ptr<std::deque<statement_base *>> mMethod;
+		// The method-tree statements are owned by the shared control block's
+		// deleter (method_storage). This avoids manual use_count checks and
+		// is thread-safe for concurrent copies.
+		struct method_storage
+		{
+			std::deque<statement_base *> methods;
+			explicit method_storage(std::deque<statement_base *> m)
+			    : methods(std::move(m)) {}
+			~method_storage();
+		};
+		std::shared_ptr<method_storage> mMethod;
 		// Keeps member-definition arenas alive across recompilation.
 		std::shared_ptr<compile_unit> m_unit;
 
@@ -1574,7 +1605,7 @@ namespace cs
 		      mTypeId(typeid(structure), mNode),
 		      mName(std::move(name)),
 		      mParent(std::move(parent)),
-		      mMethod(std::make_shared<std::deque<statement_base *>>(std::move(method))),
+		      mMethod(std::make_shared<method_storage>(std::move(method))),
 		      m_unit(c->current_unit)
 		{
 			mNode->name = mName;
@@ -1582,21 +1613,36 @@ namespace cs
 
 		struct_builder(const struct_builder &) = default;
 
-		struct_builder &operator=(const struct_builder &) = default;
+		struct_builder &operator=(const struct_builder &other)
+		{
+			if (this != &other)
+				struct_builder(other).swap(*this);
+			return *this;
+		}
 
-		// Owns the method bodies; deletes them when the last copy dies (defined
-		// in statement.cpp where statement_base is complete).
-		~struct_builder();
+		~struct_builder() = default;
 
 		// The method body statements, owned by this builder.
 		const std::deque<statement_base *> &get_methods() const
 		{
-			return *mMethod;
+			return mMethod->methods;
 		}
 
 		const type_id &get_id() const
 		{
 			return mTypeId;
+		}
+
+		void swap(struct_builder &other) noexcept
+		{
+			mContext.swap(other.mContext);
+			std::swap(mNode, other.mNode);
+			m_process.swap(other.m_process);
+			std::swap(mTypeId, other.mTypeId);
+			mName.swap(other.mName);
+			mParent.swap(other.mParent);
+			mMethod.swap(other.mMethod);
+			m_unit.swap(other.m_unit);
 		}
 
 		void do_inherit();

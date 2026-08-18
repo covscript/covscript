@@ -159,7 +159,7 @@ namespace cs
 		// Release globals (running finalizers) while the runtime is usable.
 		void clear_global()
 		{
-			m_data.bottom().clear();
+			m_data.bottom().safe_rewind();
 		}
 
 		namespace_t get_namespace() const

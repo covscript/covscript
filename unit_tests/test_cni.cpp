@@ -1,4 +1,5 @@
 #include <covscript/cni.hpp>
+#include <type_traits>
 #include "test_helpers.hpp"
 
 // =============================================================================
@@ -39,6 +40,11 @@ TEST(cni_const_ref_conversion)
 
 TEST(cni_rule_of_five_copy_move_swap)
 {
+	static_assert(std::is_nothrow_move_constructible<cs::cni>::value,
+	              "cni must remain nothrow-movable for CovScript's inline storage");
+	static_assert(std::is_nothrow_move_assignable<cs::cni>::value,
+	              "cni must remain nothrow-move-assignable for CovScript's inline storage");
+
 	cs::cni add1([](double x) -> double { return x + 1; });
 	cs::cni mul2([](double x) -> double { return x * 2; });
 
@@ -55,8 +61,12 @@ TEST(cni_rule_of_five_copy_move_swap)
 
 	// Move construction and move assignment.
 	cs::cni d(std::move(c));
+	EXPECT_TRUE(c.argument_count() == 0);
+	cs::vector moved_args{cs::var::make<cs::numeric>(10)};
+	EXPECT_THROW(c(moved_args), cs::runtime_error);
 	cs::cni e([](double x) -> double { return x - 1; });
 	e = std::move(d);
+	EXPECT_TRUE(d.argument_count() == 0);
 	EXPECT_TRUE(call(e, 10) == 20); // e: mul2 (moved through d)
 
 	// Swap exercises move construction + move assignment on the holders.

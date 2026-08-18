@@ -226,7 +226,10 @@ namespace cs
 
 	context_type::~context_type()
 	{
-		// Run finalizers while the runtime is still usable.
+		// Run finalizers while the runtime is still usable. clear_global()
+		// uses safe_rewind() to destroy globals in reverse order, removing
+		// each slot's name before its destructor runs, so finalizers see a
+		// consistent shrinking table.
 		if (process != nullptr)
 			process->teardown_ctx = this;
 		if (instance != nullptr)

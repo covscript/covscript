@@ -814,6 +814,49 @@ TEST(switch_body_translate_failure_is_cleaned_up)
 	EXPECT_TRUE(run_script_on(ctx, "using system\nswitch 1\ncase 1\n\tsystem.out.println(\"ok\")\nend\nend\n") == "ok\n");
 }
 
+TEST(struct_builder_copy_assignment_releases_old_methods)
+{
+	class counted_statement final : public cs::statement_base
+	{
+		int &destroyed;
+
+	   public:
+		counted_statement(cs::context_type *context, cs::token_base *endline, int &count)
+		    : statement_base(context, endline), destroyed(count) {}
+
+		~counted_statement() override
+		{
+			++destroyed;
+		}
+
+		cs::statement_types get_type() const noexcept override
+		{
+			return cs::statement_types::expression_;
+		}
+
+		void run_impl() override {}
+
+		void dump(std::ostream &) const override {}
+	};
+
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<STRUCT_BUILDER_ASSIGN>"));
+	auto ctx = cs::create_context(args);
+	cs::token_endline endline(1);
+	int destroyed = 0;
+	{
+		std::deque<cs::statement_base *> first_methods{
+		    new counted_statement(ctx.get(), &endline, destroyed)};
+		std::deque<cs::statement_base *> second_methods{
+		    new counted_statement(ctx.get(), &endline, destroyed)};
+		cs::struct_builder first(ctx.get(), "first", {}, std::move(first_methods));
+		cs::struct_builder second(ctx.get(), "second", {}, std::move(second_methods));
+		first = second;
+		EXPECT_TRUE(destroyed == 1);
+	}
+	EXPECT_TRUE(destroyed == 2);
+}
+
 // =============================================================================
 // F40: deep-copying a container that holds a recursive lambda must rebind the
 // clone's `self` borrow to its own proxy (the container detach path goes

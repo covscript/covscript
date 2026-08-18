@@ -75,11 +75,9 @@ namespace cs
 		statement_base::delete_children(mBody);
 	}
 
-	struct_builder::~struct_builder()
+	struct_builder::method_storage::~method_storage()
 	{
-		// Only the sole surviving copy deletes mMethod's statements.
-		if (mMethod.use_count() == 1)
-			statement_base::delete_children(*mMethod);
+		statement_base::delete_children(methods);
 	}
 
 	var function::call_rr(const function *_this, vector &args)
@@ -96,7 +94,7 @@ namespace cs
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
 		if (_this->mMatch)
-			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
+			cs_debugger_func_callback(_this->mDecl, _this->mFile, _this->mLine, ctx.get());
 #else
 		fcall_guard fcall;
 #endif
@@ -115,7 +113,7 @@ namespace cs
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
 		if (_this->mMatch)
-			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
+			cs_debugger_func_callback(_this->mDecl, _this->mFile, _this->mLine, ctx.get());
 #else
 		fcall_guard fcall;
 #endif
@@ -156,7 +154,7 @@ namespace cs
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
 		if (_this->mMatch)
-			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
+			cs_debugger_func_callback(_this->mDecl, _this->mFile, _this->mLine, ctx.get());
 #endif
 		for (std::size_t i = 0; i < args.size(); ++i)
 			ctx->instance->storage.add_var_no_return(_this->mArgs[i].data(), args[i]);
@@ -186,7 +184,7 @@ namespace cs
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
 		if (_this->mMatch)
-			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
+			cs_debugger_func_callback(_this->mDecl, _this->mFile, _this->mLine, ctx.get());
 #endif
 		try
 		{
@@ -255,7 +253,7 @@ namespace cs
 			else
 				throw runtime_error("The parent of a struct must be a type");
 		}
-		for (auto &ptr : *this->mMethod)
+		for (auto &ptr : this->mMethod->methods)
 		{
 			try
 			{

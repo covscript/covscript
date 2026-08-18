@@ -307,7 +307,7 @@ class breakpoint_recorder final
 			if (b.data.index() == 2)
 			{
 				auto func = std::get<cs::var>(b.data).const_val<cs::callable>().get_raw_data().target<cs::function_ptr>()->fptr;
-				std::cout << "line " << func->get_raw_statement()->get_line_num() << ", " << func->get_declaration()
+				std::cout << "line " << func->get_debug_line() << ", " << func->get_declaration()
 				          << std::endl;
 			}
 			else if (b.data.index() == 1)
@@ -539,12 +539,13 @@ void cs_debugger_func_breakpoint(const std::string &name, const cs::var &func)
 	breakpoints.replace_pending(name, func);
 }
 
-void cs_debugger_func_callback(const std::string &decl, cs::statement_base *stmt)
+void cs_debugger_func_callback(const std::string &decl, const std::string &file, std::size_t line,
+                               cs::context_type *call_context)
 {
-	if (context->compiler->csyms.count(stmt->get_file_path()) > 0)
+	if (call_context->compiler->csyms.count(file) > 0)
 	{
-		cs::csym_info &csym = context->compiler->csyms[stmt->get_file_path()];
-		std::size_t current_line = stmt->get_line_num();
+		cs::csym_info &csym = call_context->compiler->csyms[file];
+		std::size_t current_line = line;
 		if (current_line == 0 || current_line > csym.map.size())
 			return;
 		std::size_t actual_line = csym.map[current_line - 1];
@@ -553,7 +554,7 @@ void cs_debugger_func_callback(const std::string &decl, cs::statement_base *stmt
 		std::cout << "\nHit breakpoint, at \"" << csym.file << "\", line " << actual_line << ", " << decl << std::endl;
 	}
 	else
-		std::cout << "\nHit breakpoint, at \"" << stmt->get_file_path() << "\", line " << stmt->get_line_num() << ", " << decl << std::endl;
+		std::cout << "\nHit breakpoint, at \"" << file << "\", line " << line << ", " << decl << std::endl;
 	current_level = cs::current_process->stack.size();
 	exec_by_step = true;
 }

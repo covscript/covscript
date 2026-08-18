@@ -360,6 +360,11 @@ namespace cs
 		statement_case(const var &tag, const std::deque<statement_base *> &b, context_type *c, token_base *ptr)
 		    : statement_base(c, ptr), mTag(copy(tag)), mBlock(new statement_block(b, c, ptr)) {}
 
+		~statement_case()
+		{
+			delete mBlock;
+		}
+
 		statement_types get_type() const noexcept override
 		{
 			return statement_types::case_;
@@ -384,6 +389,13 @@ namespace cs
 		{
 			return this->mBlock;
 		}
+
+		statement_block *release_block() noexcept
+		{
+			statement_block *b = mBlock;
+			mBlock = nullptr;
+			return b;
+		}
 	};
 
 	class statement_default final : public statement_base
@@ -399,6 +411,11 @@ namespace cs
 		      mBlock(new statement_block(
 		          b, c,
 		          ptr)) {}
+
+		~statement_default()
+		{
+			delete mBlock;
+		}
 
 		statement_types get_type() const noexcept override
 		{
@@ -418,6 +435,13 @@ namespace cs
 		statement_block *get_block() const
 		{
 			return this->mBlock;
+		}
+
+		statement_block *release_block() noexcept
+		{
+			statement_block *b = mBlock;
+			mBlock = nullptr;
+			return b;
 		}
 	};
 
@@ -643,7 +667,9 @@ namespace cs
 		                   const std::deque<statement_base *> &body, bool is_override, bool is_vargs,
 		                   context_type *c,
 		                   token_base *ptr)
-		    : statement_base(c, ptr), mName(std::move(name)), mFunc(std::make_shared<function>(c, decl, this, args, body, is_vargs)), mOverride(is_override), mDecl(decl), mArgs(args) {}
+		    : statement_base(c, ptr), mName(std::move(name)),
+		      mFunc(std::make_shared<function>(c, decl, c->file_path, line_num, args, body, is_vargs)),
+		      mOverride(is_override), mDecl(decl), mArgs(args) {}
 
 #else
 

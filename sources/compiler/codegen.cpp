@@ -416,9 +416,6 @@ namespace cs
 		map_t<var, statement_block *> cases;
 		try
 		{
-			// Translate inside the try so a failure reclaims the case/default
-			// wrappers already translated (their blocks are not owned by the
-			// wrappers' destructors).
 			context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 			for (auto &it : body)
 			{
@@ -427,9 +424,10 @@ namespace cs
 					if (it->get_type() == statement_types::case_)
 					{
 						auto *scptr = static_cast<statement_case *>(it);
-						if (cases.count(scptr->get_tag()) > 0)
+						auto inserted = cases.emplace(scptr->get_tag(), scptr->get_block());
+						if (!inserted.second)
 							throw compile_error("Duplicate 'case' label in 'switch' statement");
-						cases.emplace(scptr->get_tag(), scptr->get_block());
+						scptr->release_block();
 						delete it; // wrapper consumed; its block is now owned by the switch
 						it = nullptr;
 					}
@@ -438,7 +436,7 @@ namespace cs
 						auto *sdptr = static_cast<statement_default *>(it);
 						if (dptr != nullptr)
 							throw compile_error("A 'switch' statement can only have one 'default' case");
-						dptr = sdptr->get_block();
+						dptr = sdptr->release_block();
 						delete it; // wrapper consumed; its block is now owned by the switch
 						it = nullptr;
 					}
@@ -454,10 +452,13 @@ namespace cs
 					throw exception(it->get_line_num(), it->get_file_path(), it->get_raw_code(), exception_message(e));
 				}
 			}
+			auto *stmt = new statement_switch(static_cast<token_expr *>(raw.front().at(1))->get_tree(), cases,
+			                                  dptr, context, raw.front().back());
+			guard.release();
+			return stmt;
 		}
 		catch (...)
 		{
-			// Reclaim blocks already transferred and unconsumed wrappers.
 			for (auto &kv : cases)
 				delete kv.second;
 			if (dptr != nullptr)
@@ -466,18 +467,11 @@ namespace cs
 			{
 				if (ptr == nullptr)
 					continue;
-				if (ptr->get_type() == statement_types::case_)
-					delete static_cast<statement_case *>(ptr)->get_block();
-				else if (ptr->get_type() == statement_types::default_)
-					delete static_cast<statement_default *>(ptr)->get_block();
 				delete ptr;
 			}
 			guard.release();
 			throw;
 		}
-		guard.release();
-		return new statement_switch(static_cast<token_expr *>(raw.front().at(1))->get_tree(), cases, dptr, context,
-		                            raw.front().back());
 	}
 
 	statement_base *method_case::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)

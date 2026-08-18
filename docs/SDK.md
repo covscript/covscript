@@ -50,10 +50,10 @@ Everything else hangs off it:
 | Object | Owned by | Lifetime |
 |---|---|---|
 | `context_type` | the embedder's `context_t` | until the last `context_t` is dropped |
-| `process_context` | the context (`context->process`) | context lifetime (forked fibers keep a parent alive) |
+| `process_context` | the context and escaped structures | until the last owner drops |
 | `instance_type` | the context (`context->instance`) | context lifetime |
 | `compiler_type` | the context (`context->compiler`) | context lifetime (shared with subcontexts) |
-| token arena (`compile_unit`) | the instance | until recompiled or the instance dies |
+| token arena (`compile_unit`) | the instance and escaped functions | until the last owner drops |
 | `var` values | reference counting | until the last `var` reference is dropped |
 | module subcontexts | the context's `subcontexts` pool | context lifetime |
 
@@ -68,32 +68,32 @@ explicit, deterministic ownership:
 + **`var`** is a reference-counted, copy-on-write handle to a heap value.
   Copying a `var` is cheap (a refcount bump); `cs::copy(var)` / `var::clone()`
   performs a deep copy.
-+ **The context is the single owner** of the process, compiler, instance and
-  their children. Back-references from those children to the context are raw
-  (non-owning) pointers, so releasing the last external `context_t` reclaims the
-  whole tree with no cycle.
++ **The context is the runtime root owner** of the process, compiler, instance
+  and their children. Most internal child-to-context links are raw non-owning
+  pointers constrained by the context's lifetime; escaped script functions use
+  `std::weak_ptr`. Escaped functions and structures may retain their token arena
+  or process respectively, but they do not retain the context or form an
+  ownership cycle.
 
-The consequence is that **everything is reclaimed exactly when the last owning
+The consequence is that **each resource is reclaimed when its last owning
 reference goes away** — no `collect_garbage()`, no deferred sweep.
 
 ## Resource Contracts
 
-These are the rules an embedder must follow. Violating them is undefined
-behaviour (typically use-after-free).
+These are the rules an embedder must follow. APIs backed by weak references fail
+with `runtime_error` after context destruction; raw non-owning SDK references
+must not outlive their owner.
 
 ### 1. Context lifetime (escaped objects)
 
-**An escaped object requires its defining context to stay alive.**
+**Escaped objects that execute script code require their defining context to stay alive.**
 
-Objects returned by the runtime — script functions, lambdas, `structure`
-instances, and module namespaces — do **not** own their context. They hold
-non-owning back-references into it:
+Objects returned by the runtime do not all have identical lifetime behavior:
 
-+ a script function / lambda stores a raw `context_type*` (`function::mContext`);
-+ a `structure` pins its owning process (so its type identity node and member
-  data stay valid), but its *methods* are script functions and still hold the
-  raw `function::mContext` back-reference — invoking them requires the context
-  to be alive (they throw "the function's context has been destroyed" otherwise).
++ a script function / lambda stores a `std::weak_ptr<context_type>` (`function::mContext`); invocation after context destruction throws `runtime_error`;
++ a `structure` pins its owning process, so its type identity and member data
+  remain valid after context destruction; its script methods still require the
+  defining context and throw if invoked after it dies.
 + an escaped **type** (`type_t`) carries the same back-reference; constructing
   it (`type_t::constructor()`) after the context dies throws
   "the struct's context has been destroyed".
@@ -106,7 +106,7 @@ cs::var f;
     auto ctx = cs::create_context({...});
     f = cs::eval(ctx, "[](x)->x+1");   // escape a lambda
 }                                      // ctx destroyed here
-f.const_val<cs::callable>().call(...); // UNDEFINED BEHAVIOUR
+f.const_val<cs::callable>().call(...); // throws runtime_error
 ```
 
 Keep the `context_t` alive for as long as you use the object:
@@ -117,14 +117,14 @@ cs::var f = cs::eval(ctx, "[](x)->x+1");
 // ... use f freely while ctx is alive ...
 ```
 
-This contract is uniform across functions, lambdas, structures and module
-namespaces. (No other language runtime guarantees an escaped value outlives its
-defining realm either; Covariant Script simply makes the requirement explicit.)
+Keep the context alive whenever an escaped object needs to execute script code.
+Self-contained value data can remain usable independently as described above.
 
 ### 2. `current_process` and threading
 
-`cs::current_process` is a `thread_local process_context*`, `nullptr` unless a
-run is active on this thread. It is installed by two RAII guards:
+`cs::current_process` is a `current_process_ref` backed by thread-local storage;
+it converts to `process_context*` and is `nullptr` unless a run is active on the
+thread. It is installed by two RAII guards:
 
 + `cs::process_run_scope(ctx)` — installs `ctx`'s process for the scope. Nested
   scopes on the **same** process are transparent; a **different** active process
@@ -156,21 +156,21 @@ For a script run to completion, the high-level entry points do this for you:
   `instance->storage.clear_global()` after interpreting.
 + The REPL clears the global domain on exit.
 
-If you drive `create_context` + `compile` + `interpret` manually and then drop
-the context without clearing the global domain, global structures are released
-during context teardown — after the process/instance have begun dying — and
-their `finalize` will not run correctly. Call
-`ctx->instance->storage.clear_global()` while the context is alive (the process
-must still be active) to run finalizers deterministically.
+If you drive `create_context` + `compile` + `interpret` manually, finalizers run
+during context teardown when no unrelated process is active on that thread.
+For deterministic behavior, call `ctx->instance->storage.clear_global()` while
+the context's own process is active before releasing it; this is required when
+another unrelated process will remain active during destruction.
 
 ### 4. `var` lifetime
 
-`cs::var` is a 8-byte handle; copying it bumps a reference count, and the value
-is freed when the last reference drops. To detach a value from its original
+`cs::var` is a pointer-sized handle (8 bytes on 64-bit platforms); copying it
+bumps a reference count, and the value is freed when the last reference drops.
+To detach a value from its original
 storage use `cs::copy(var)` (deep copy). Values that escape a context are safe
-*as values* (they are self-contained), but a `callable`/`structure` value
-*also* carries the raw back-references described in §1, so the context rule
-still applies to them.
+as self-contained data. A script callable uses a weak context reference and
+throws if invoked after context destruction; structure data remains valid,
+while its script methods have the same rule.
 
 ### 5. Token arena and recompilation
 

@@ -905,9 +905,9 @@ namespace cs
 						}
 						else
 							decl += ")";
-						std::shared_ptr<function> fn = std::make_shared<function>(context, decl, ret, args,
-						                                                          std::deque<statement_base *>{ret}, is_vargs,
-						                                                          true);
+						std::shared_ptr<function> fn = std::make_shared<function>(
+						    context, decl, context->file_path, token->get_line_num(), args,
+						    std::deque<statement_base *>{ret}, is_vargs, true);
 #else
 						std::shared_ptr<function> fn = std::make_shared<function>(context, args,
 						                                                          std::deque<statement_base *>{ret},
