@@ -1598,9 +1598,7 @@ namespace cs_impl
 		{
 			callable owner;
 			function const *func = nullptr;
-			// Weak reference: the platform fiber already guards resume() with
-			// cs_context.expired(). A strong context_t here would create a
-			// context → storage → fiber → context cycle for global fibers.
+			// Weak ref to avoid context → storage → fiber → context cycle.
 			std::weak_ptr<context_type> context;
 			vector args;
 

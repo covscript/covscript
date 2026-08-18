@@ -642,7 +642,7 @@ namespace cs
 		// Weak back-ref to the defining context; calls lock it.
 		std::weak_ptr<context_type> mContext;
 #ifdef CS_DEBUGGER
-		// Immutable source location survives statement-tree destruction.
+		// Source location for debugger breakpoints (immutable after construction).
 		mutable bool mMatch = false;
 		std::string mDecl;
 		std::string mFile;
@@ -690,9 +690,7 @@ namespace cs
 		function(context_type *c, std::string decl, std::string file, std::size_t line,
 		         std::vector<std::string> args, std::deque<statement_base *> body,
 		         bool is_vargs = false, bool is_lambda = false)
-		    : mContext(c->weak_from_this()), mDecl(std::move(decl)), mFile(std::move(file)), mLine(line),
-		      mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)),
-		      m_unit(c->current_unit)
+		    : mContext(c->weak_from_this()), mDecl(std::move(decl)), mFile(std::move(file)), mLine(line), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)), m_unit(c->current_unit)
 		{
 			init_call_ptr();
 		}
@@ -1541,23 +1539,21 @@ namespace cs
 		}
 	};
 
-	// Defined here (after `structure`) so finalizers run while the symbol table
-	// is still intact: a finalizer may reference other variables of this domain.
+	// Defined here (after `structure`) so finalizers can run during slot destruction.
 	inline void domain_type::clear()
 	{
 		m_reflect.clear();
+		// Invalidate cached var_ids before destroying vars.
+		m_ref = std::make_shared<domain_ref>(this);
 		m_slot.clear();
 		optimize = false;
-		m_ref = std::make_shared<domain_ref>(this);
 	}
 
-	// Destroy all variables in reverse order, removing each slot's reflect
-	// entry before the var's destructor runs. Structure finalizers thus see a
-	// consistent (shrinking) name table: they can resolve earlier globals but
-	// not later ones (which throw "Use of undefined variable" instead of
-	// accessing an out-of-bounds slot). Used by ~context_type() teardown.
+	// Reverse-order destruction: each slot's reflect entry is removed before
+	// its var is destroyed. Cached var_ids are invalidated up front.
 	inline void domain_type::safe_rewind()
 	{
+		m_ref = std::make_shared<domain_ref>(this);
 		while (!m_slot.empty())
 		{
 			std::size_t idx = m_slot.size() - 1;
@@ -1566,7 +1562,6 @@ namespace cs
 			m_slot.pop_back();
 		}
 		optimize = false;
-		m_ref = std::make_shared<domain_ref>(this);
 	}
 
 	class struct_builder final
@@ -1574,15 +1569,12 @@ namespace cs
 		// Weak back-ref to the defining context.
 		std::weak_ptr<context_type> mContext;
 		type_node *mNode;
-		// Pins the owning process so the type node pool outlives the builder
-		// (an escaped type descriptor must not dangle once the context dies).
+		// Pins the owning process so the type node pool outlives the builder.
 		std::shared_ptr<process_context> m_process;
 		type_id mTypeId;
 		std::string mName;
 		tree_type<token_base *> mParent;
-		// The method-tree statements are owned by the shared control block's
-		// deleter (method_storage). This avoids manual use_count checks and
-		// is thread-safe for concurrent copies.
+		// Statements owned by the shared control block's deleter.
 		struct method_storage
 		{
 			std::deque<statement_base *> methods;

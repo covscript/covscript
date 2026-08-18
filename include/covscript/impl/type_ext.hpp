@@ -414,8 +414,7 @@ cs_impl::operators::result cs_impl::operators::handler<T>::fcall(void *lhs, void
 
 namespace cs_impl
 {
-	// Context extension members are CNI functions taking a raw pointer. Also
-	// accept SDK-owned context_t values as their script-side representation.
+	// Allow context_t (shared_ptr) to convert to context_type* for CNI.
 	template <>
 	struct type_conversion_cs<cs::context_type *>
 	{

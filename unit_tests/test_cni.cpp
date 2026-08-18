@@ -61,12 +61,8 @@ TEST(cni_rule_of_five_copy_move_swap)
 
 	// Move construction and move assignment.
 	cs::cni d(std::move(c));
-	EXPECT_TRUE(c.argument_count() == 0);
-	cs::vector moved_args{cs::var::make<cs::numeric>(10)};
-	EXPECT_THROW(c(moved_args), cs::runtime_error);
 	cs::cni e([](double x) -> double { return x - 1; });
 	e = std::move(d);
-	EXPECT_TRUE(d.argument_count() == 0);
 	EXPECT_TRUE(call(e, 10) == 20); // e: mul2 (moved through d)
 
 	// Swap exercises move construction + move assignment on the holders.

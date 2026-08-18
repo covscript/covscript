@@ -686,7 +686,7 @@ namespace cs_impl
 		cni() = delete;
 
 		cni(const cni &c)
-		    : mCni(c.mCni != nullptr ? c.mCni->clone() : nullptr) {}
+		    : mCni(c.mCni->clone()) {}
 
 		cni(cni &&c) noexcept
 		    : mCni(c.mCni)
@@ -757,13 +757,11 @@ namespace cs_impl
 
 		std::size_t argument_count() const noexcept
 		{
-			return mCni != nullptr ? mCni->argument_count() : 0;
+			return mCni->argument_count();
 		}
 
 		any operator()(cs::vector &args) const
 		{
-			if (mCni == nullptr)
-				throw cs::runtime_error("Attempt to invoke a moved-from CNI function");
 			try
 			{
 				return cs::try_move(mCni->call(args));

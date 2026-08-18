@@ -226,10 +226,7 @@ namespace cs
 
 	context_type::~context_type()
 	{
-		// Run finalizers while the runtime is still usable. clear_global()
-		// uses safe_rewind() to destroy globals in reverse order, removing
-		// each slot's name before its destructor runs, so finalizers see a
-		// consistent shrinking table.
+		// Run finalizers while the runtime is still usable.
 		if (process != nullptr)
 			process->teardown_ctx = this;
 		if (instance != nullptr)
@@ -237,9 +234,6 @@ namespace cs
 		if (process != nullptr)
 			process->teardown_ctx = nullptr;
 		// Drop module namespaces/subcontexts so their arenas release at teardown.
-		// Only the compiler-owning context may clear the cache: subcontexts share
-		// the parent's compiler, so a failed module import must not wipe modules
-		// the parent already imported successfully.
 		if (owns_compiler && compiler != nullptr)
 		{
 			// Clear each module domain so circular cross-refs drop.
