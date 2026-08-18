@@ -12,6 +12,7 @@
   + [3. 结构体终结器（finalize）](#3-结构体终结器finalize)
   + [4. `var` 生命周期](#4-var-生命周期)
   + [5. Token arena 与重编译](#5-token-arena-与重编译)
+  + [6. 运行时诊断（`COVSCRIPT_DEBUG`）](#6-运行时诊断covscript_debug)
 + [迁移指南（ABI 2608xx → ABI 2609xx）](#迁移指南abi-2608xx--abi-2609xx)
 
 ---
