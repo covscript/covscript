@@ -1331,3 +1331,24 @@ TEST(main_thread_detection_on_worker_thread)
 	worker.join();
 	EXPECT_FALSE(is_main);
 }
+
+// =============================================================================
+// F47: expanding a constant array during compile-time folding used to bind a
+// reference into a temporary var (parse_expr(...).const_val<array>()); the
+// temporary died before the elements were read. Keep the var alive.
+// =============================================================================
+TEST(expand_folding_keeps_temporary_arrays_alive)
+{
+	const std::string out = run_script(
+	    "using system\n"
+	    "function add(a, b)\n"
+	    "    return a + b\n"
+	    "end\n"
+	    "var arr = {1, 2}\n"
+	    "var x = {arr...}\n"
+	    "var y = add(arr...)\n"
+	    "system.out.println(x)\n"
+	    "system.out.println(y)\n");
+	EXPECT_CONTAINS(out, "{1, 2}");
+	EXPECT_CONTAINS(out, "3");
+}

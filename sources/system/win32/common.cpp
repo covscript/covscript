@@ -99,11 +99,13 @@ namespace cs_system_impl
 		return main_id;
 	}
 
-	// Runs once at static-init time, independent of the triggering thread.
-	static const DWORD main_thread_id = find_main_thread_id();
-
 	bool is_main_thread() noexcept
 	{
+		// Lazy init (magic static, thread-safe): enumerate once on first call
+		// instead of during static initialization, so a worker thread loading
+		// this library pays no startup enumeration and no Win32 calls happen
+		// under the loader lock.
+		static const DWORD main_thread_id = find_main_thread_id();
 		if (main_thread_id != 0)
 			return GetCurrentThreadId() == main_thread_id;
 		// Snapshot failed (rare): pin to the first calling thread so at most
