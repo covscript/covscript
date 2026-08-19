@@ -2190,7 +2190,7 @@ namespace cs_impl
 
 		char getch()
 		{
-			return conio::getch();
+			return static_cast<char>(conio::getch());
 		}
 
 		bool kbhit()

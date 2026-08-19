@@ -1247,3 +1247,26 @@ TEST(native_invoke_without_process_raises_clean_error)
 	EXPECT_TRUE(eptr != nullptr);
 }
 
+// =============================================================================
+// F45: array auto-growth must reject a difference equal to max_auto_extend
+// (growing to index 16777216 from an empty array would insert 16777217
+// elements; previously only a greater difference was rejected).
+// =============================================================================
+TEST(array_auto_extend_boundary)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<EXTEND_BOUNDARY>"));
+	auto ctx = cs::create_context(args);
+	EXPECT_THROW(run_script_on(ctx, "var b = new array\nb[16777216] = 1\n"), cs::exception);
+}
+
+// =============================================================================
+// F46: main-thread detection must report true on the test (main) thread; the
+// old Windows implementation compared thread ID to process ID, which never
+// match, silently disabling the pooled allocator on Windows.
+// =============================================================================
+TEST(main_thread_detection_on_test_thread)
+{
+	EXPECT_TRUE(cs_system_impl::is_main_thread());
+}
+

@@ -1599,7 +1599,8 @@ namespace cs
 										break;
 								}
 							}
-							if (raw[i]->get_type() == token_types::id)
+							// The skip loop may exhaust raw without a match.
+							if (i < raw.size() && raw[i]->get_type() == token_types::id)
 							{
 								auto &id = static_cast<token_id *>(raw[i])->get_id();
 								auto action = context->compiler->action_map.find(id);

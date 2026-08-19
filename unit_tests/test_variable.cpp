@@ -42,7 +42,7 @@ static_assert(sizeof(ThrowOnCopy) <= CS_VAR_SVO_ALIGN - 16,
 
 // Large type stored on the heap (sizeof > CS_VAR_SVO_ALIGN - 16).
 struct BigThrowOnCopy {
-	char pad[64];
+	char pad[64]{};
 	int value = 0;
 	BigThrowOnCopy() = default;
 	explicit BigThrowOnCopy(int v) : value(v) {}
@@ -57,7 +57,7 @@ static_assert(sizeof(BigThrowOnCopy) > CS_VAR_SVO_ALIGN - 16,
 
 // Non-throwing heap type used to verify the success path still works.
 struct BigCopy {
-	char pad[64];
+	char pad[64]{};
 	std::string value;
 	BigCopy() = default;
 	explicit BigCopy(std::string v) : value(std::move(v)) {}
@@ -102,7 +102,7 @@ struct CountedSVO {
 // Heap-stored type whose construction throws: the block allocated before the
 // placement construction must be deallocated, not leaked.
 struct BigThrowOnConstruct {
-	char pad[64];
+	char pad[64]{};
 	BigThrowOnConstruct()
 	{
 		throw std::runtime_error("ctor boom");

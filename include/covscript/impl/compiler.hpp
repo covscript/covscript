@@ -76,7 +76,7 @@ namespace cs
 			if (a == nullptr)
 				return b == nullptr;
 			if (b == nullptr)
-				return a == nullptr;
+				return false;
 			if (a->get_type() != b->get_type())
 				return false;
 			return a->get_type() != token_types::action || static_cast<const token_action *>(a)->get_action() ==

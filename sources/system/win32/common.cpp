@@ -59,6 +59,15 @@ std::string wstring_to_utf8(std::wstring_view wide)
 
 namespace cs_system_impl
 {
+	// Thread IDs never equal process IDs on Windows; capture the initial
+	// thread's ID once (before any worker thread exists).
+	static const DWORD main_thread_id = GetCurrentThreadId();
+
+	bool is_main_thread() noexcept
+	{
+		return GetCurrentThreadId() == main_thread_id;
+	}
+
 	bool chmod_impl(const std::string &path, unsigned int mode)
 	{
 		static constexpr unsigned int MS_MODE_MASK = 0x0000ffff;

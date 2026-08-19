@@ -994,35 +994,80 @@ namespace cs
 		}
 	};
 
-	// Buffer Pool
+	// Block provider: pooled reuse.
 	template <typename T, std::size_t blck_size, template <typename> class allocator_t = std::allocator>
-	class allocator_type final
+	class pooled_block_provider
 	{
-		T *mPool[blck_size];
-		allocator_t<T> mAlloc;
+	   protected:
+		T *mPool[blck_size] = {};
 		std::size_t mOffset = 0;
+		allocator_t<T> mAlloc;
 
 	   public:
-		// Starts empty and fills on demand, so a thread that does little var
-		// work pays no fixed pre-allocation cost.
-		allocator_type() = default;
+		pooled_block_provider() = default;
 
-		allocator_type(const allocator_type &) = delete;
+		pooled_block_provider(const pooled_block_provider &) = delete;
 
-		~allocator_type()
+		~pooled_block_provider()
 		{
 			while (mOffset > 0)
 				mAlloc.deallocate(mPool[--mOffset], 1);
 		}
 
+		T *acquire_block(std::size_t n)
+		{
+			if (n == 1 && mOffset > 0)
+				return mPool[--mOffset];
+			return mAlloc.allocate(n);
+		}
+
+		void release_block(T *ptr, std::size_t n)
+		{
+			if (n == 1 && mOffset < blck_size)
+			{
+				mPool[mOffset++] = ptr;
+				return;
+			}
+			mAlloc.deallocate(ptr, n);
+		}
+	};
+
+	// Block provider: direct allocation (blocks interchangeable with the pool).
+	template <typename T>
+	class trivial_block_provider
+	{
+	   protected:
+		std::allocator<T> mAlloc;
+
+	   public:
+		trivial_block_provider() = default;
+
+		trivial_block_provider(const trivial_block_provider &) = delete;
+
+		T *acquire_block(std::size_t n)
+		{
+			return mAlloc.allocate(n);
+		}
+
+		void release_block(T *ptr, std::size_t n)
+		{
+			mAlloc.deallocate(ptr, n);
+		}
+	};
+
+	// Buffer Pool
+	template <typename T, template <typename> class provider_t>
+	class allocator_type final : public provider_t<T>
+	{
+	   public:
+		allocator_type() = default;
+
+		allocator_type(const allocator_type &) = delete;
+
 		template <typename... ArgsT>
 		inline T *alloc(ArgsT &&...args)
 		{
-			T *ptr = nullptr;
-			if (mOffset > 0)
-				ptr = mPool[--mOffset];
-			else
-				ptr = mAlloc.allocate(1);
+			T *ptr = this->acquire_block(1);
 			::new (ptr) T(std::forward<ArgsT>(args)...);
 			return ptr;
 		}
@@ -1030,29 +1075,28 @@ namespace cs
 		inline void free(T *ptr)
 		{
 			ptr->~T();
-			if (mOffset < blck_size)
-				mPool[mOffset++] = ptr;
-			else
-				mAlloc.deallocate(ptr, 1);
+			this->release_block(ptr, 1);
 		}
 
 		inline T *allocate(std::size_t n)
 		{
-			if (n == 1 && mOffset > 0)
-				return mPool[--mOffset];
-			else
-				return mAlloc.allocate(n);
+			return this->acquire_block(n);
 		}
 
 		inline void deallocate(T *ptr, std::size_t n)
 		{
-			if (n == 1 && mOffset < blck_size)
-				mPool[mOffset++] = ptr;
-			else
-				mAlloc.deallocate(ptr, n);
+			this->release_block(ptr, n);
 		}
 	};
 } // namespace cs
+
+namespace cs_system_impl
+{
+	// Per-platform: pthread_main_np (macOS) / gettid()==getpid() (Linux) /
+	// GetCurrentThreadId()==GetCurrentProcessId() (Windows). Implemented in
+	// sources/system/{win32,unix}/common.cpp.
+	bool is_main_thread() noexcept;
+}
 
 #ifndef CS_ALLOCATOR_BUFFER_MAX
 #define CS_ALLOCATOR_BUFFER_MAX 64
@@ -1063,7 +1107,55 @@ namespace cs_impl
 	template <typename T>
 	using default_allocator_provider = std::allocator<T>;
 	template <typename T>
-	using default_allocator = cs::allocator_type<T, CS_ALLOCATOR_BUFFER_MAX, default_allocator_provider>;
+	using default_pooled_provider = cs::pooled_block_provider<T, CS_ALLOCATOR_BUFFER_MAX, default_allocator_provider>;
+	template <typename T>
+	using default_allocator = cs::allocator_type<T, default_pooled_provider>;
+
+	// Main thread pools blocks; worker threads allocate directly. Chosen once
+	// per thread; instances are process-lifetime statics.
+	template <typename T, template <typename> class pooled_allocator_t>
+	class allocator_view final
+	{
+		pooled_allocator_t<T> *m_pool;
+		cs::allocator_type<T, cs::trivial_block_provider> *m_trivial;
+		bool m_force_trivial;
+
+		allocator_view(pooled_allocator_t<T> *p, cs::allocator_type<T, cs::trivial_block_provider> *t, bool force_trivial)
+		    : m_pool(p), m_trivial(t), m_force_trivial(force_trivial)
+		{
+		}
+
+	   public:
+		template <typename... ArgsT>
+		inline T *alloc(ArgsT &&...args)
+		{
+			return m_force_trivial ? m_trivial->alloc(std::forward<ArgsT>(args)...)
+			                       : m_pool->alloc(std::forward<ArgsT>(args)...);
+		}
+
+		inline void free(T *ptr)
+		{
+			m_force_trivial ? m_trivial->free(ptr) : m_pool->free(ptr);
+		}
+
+		inline T *allocate(std::size_t n)
+		{
+			return m_force_trivial ? m_trivial->allocate(n) : m_pool->allocate(n);
+		}
+
+		inline void deallocate(T *ptr, std::size_t n)
+		{
+			m_force_trivial ? m_trivial->deallocate(ptr, n) : m_pool->deallocate(ptr, n);
+		}
+
+		static allocator_view &get()
+		{
+			static pooled_allocator_t<T> pool;
+			static cs::allocator_type<T, cs::trivial_block_provider> trivial;
+			static thread_local allocator_view view(&pool, &trivial, !cs_system_impl::is_main_thread());
+			return view;
+		}
+	};
 
 	// COVSCRIPT_DEBUG levels (none / warning / strict); governs defensive guards.
 	enum class debug_mode : int
@@ -1085,12 +1177,10 @@ namespace cs_impl
 	class basic_string_borrower final
 	{
 		using stl_string = std::basic_string<CharT>;
-		using allocator_type = allocator_t<stl_string>;
 
-		static inline allocator_type &get_allocator()
+		static inline allocator_view<stl_string, allocator_t> &get_allocator()
 		{
-			static thread_local allocator_type allocator;
-			return allocator;
+			return allocator_view<stl_string, allocator_t>::get();
 		}
 
 		void *m_data = nullptr;
@@ -1242,8 +1332,6 @@ namespace cs
 			tree_node *left = nullptr;
 			tree_node *right = nullptr;
 			T data;
-
-			tree_node() = default;
 
 			tree_node(const tree_node &) = default;
 

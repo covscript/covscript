@@ -1349,6 +1349,8 @@ namespace cs
 			idx += static_cast<cs::numeric_integer>(arr.size());
 			if (idx < 0)
 			{
+				// Prepends exactly `pad` elements, so `pad == max_auto_extend`
+				// is within the cap (the positive path inserts one more).
 				std::size_t pad = static_cast<std::size_t>(-(idx + 1)) + 1; // idx < 0 so idx+1 <= 0: no overflow
 				if (pad > static_cast<std::size_t>(max_auto_extend))
 					throw cs::lang_error("Index out of range");
@@ -1358,7 +1360,7 @@ namespace cs
 		}
 		if (idx >= static_cast<cs::numeric_integer>(arr.size()))
 		{
-			if (idx - static_cast<cs::numeric_integer>(arr.size()) > max_auto_extend)
+			if (idx - static_cast<cs::numeric_integer>(arr.size()) >= max_auto_extend)
 				throw cs::lang_error("Index out of range");
 			while (idx >= static_cast<cs::numeric_integer>(arr.size()))
 				arr.emplace_back(var::make<numeric>(0));

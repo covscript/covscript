@@ -557,12 +557,9 @@ namespace cs_impl
 		template <typename T>
 		struct var_op_heap_dispatcher
 		{
-			static allocator_t<T> &get_allocator()
+			static allocator_view<T, allocator_t> &get_allocator()
 			{
-				// Thread-local like the proxy pool: async worker threads allocate
-				// and free heap-stored values independently of the main thread.
-				static thread_local allocator_t<T> allocator;
-				return allocator;
+				return allocator_view<T, allocator_t>::get();
 			}
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_copy(void *lhs, void *rhs)
 			{
@@ -922,16 +919,17 @@ namespace cs_impl
 			}
 		};
 
-		using allocator_t = cs::allocator_type<proxy, CS_ALLOCATOR_BUFFER_MAX * CS_VAR_ALLOC_MULTIPLIER, default_allocator_provider>;
+		template <typename T>
+		using proxy_pooled_provider =
+		    cs::pooled_block_provider<T, CS_ALLOCATOR_BUFFER_MAX * CS_VAR_ALLOC_MULTIPLIER, default_allocator_provider>;
+		template <typename T>
+		using proxy_allocator = cs::allocator_type<T, proxy_pooled_provider>;
 
-		// Per-thread pool, so two contexts running on different threads never
-		// race on pool slots; blocks freed on another thread fall back to the
-		// (interchangeable) std::allocator path. Starts empty and fills on
-		// demand, so threads that do little var work pay no fixed cost.
-		static inline allocator_t &get_allocator()
+		// Main thread pools blocks; other threads go straight to std::allocator
+		// (thread-safe, blocks interchangeable). Chosen once per thread.
+		static inline allocator_view<proxy, proxy_allocator> &get_allocator()
 		{
-			static thread_local allocator_t allocator;
-			return allocator;
+			return allocator_view<proxy, proxy_allocator>::get();
 		}
 
 		proxy *mDat = nullptr;

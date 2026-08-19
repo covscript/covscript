@@ -28,10 +28,12 @@
 #include <covscript/impl/system.hpp>
 #include <sys/select.h>
 #include <sys/ioctl.h>
+#include <sys/syscall.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <termios.h>
+#include <pthread.h>
 #include <unistd.h>
 #include <dlfcn.h>
 #include <sstream>
@@ -55,6 +57,16 @@
 
 namespace cs_system_impl
 {
+	bool is_main_thread() noexcept
+	{
+#ifdef __APPLE__
+		return pthread_main_np() != 0;
+#else
+		// The initial thread's TID equals the PID.
+		return static_cast<long>(syscall(SYS_gettid)) == static_cast<long>(getpid());
+#endif
+	}
+
 	bool chmod_impl(const std::string &path, unsigned int mode)
 	{
 		return ::chmod(path.c_str(), mode) == 0;
