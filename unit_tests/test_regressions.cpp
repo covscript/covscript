@@ -231,8 +231,10 @@ TEST(system_exit_dispatches_code)
 {
 	static int captured = -1;
 	captured = -1;
-	run_script("using system\nsystem.exit(3)\n", [](const cs::context_t &ctx) {
-		ctx->process->on_process_exit.add_listener([](void *code) -> bool {
+	run_script("using system\nsystem.exit(3)\n", [](const cs::context_t &ctx)
+	{
+		ctx->process->on_process_exit.add_listener([](void *code) -> bool
+		{
 			captured = *static_cast<int *>(code);
 			return true; // swallow: never actually exit the unit-test process
 		});
@@ -251,23 +253,28 @@ TEST(system_exit_from_fiber_dispatches_code)
 	static int main_exit_code = -1;
 	captured = -1;
 	main_exit_code = -1;
-	try {
-		run_script("using system\n"
-		           "function f()\n"
-		           "\tsystem.exit(7)\n"
-		           "end\n"
-		           "fiber.create(f).resume()\n",
-		           [](const cs::context_t &ctx) {
-			           ctx->process->exit_code = -1;
-			           ctx->process->on_process_exit.add_listener([](void *code) -> bool {
-				           main_exit_code = *static_cast<int *>(code);
-				           captured = *static_cast<int *>(code);
-				           throw cs::fatal_error("CS_EXIT");
-				           return true;
-			           });
-		           });
+	try
+	{
+		run_script(
+		    "using system\n"
+		    "function f()\n"
+		    "\tsystem.exit(7)\n"
+		    "end\n"
+		    "fiber.create(f).resume()\n",
+		    [](const cs::context_t &ctx)
+		{
+			ctx->process->exit_code = -1;
+			ctx->process->on_process_exit.add_listener([](void *code) -> bool
+			{
+				main_exit_code = *static_cast<int *>(code);
+				captured = *static_cast<int *>(code);
+				throw cs::fatal_error("CS_EXIT");
+				return true;
+			});
+		});
 	}
-	catch (const cs::exception &) {
+	catch (const cs::exception &)
+	{
 		// CS_EXIT sentinel escaped the fiber (checked by the next test).
 	}
 	EXPECT_TRUE(captured == 7);
@@ -278,24 +285,30 @@ TEST(fiber_exit_sentinel_keeps_bare_message)
 {
 	// The CS_EXIT sentinel must escape the fiber as a located cs::exception
 	// whose bare message is exactly "CS_EXIT".
-	try {
-		run_script("using system\n"
-		           "function f()\n"
-		           "\tsystem.exit(7)\n"
-		           "end\n"
-		           "fiber.create(f).resume()\n",
-		           [](const cs::context_t &ctx) {
-			           ctx->process->on_process_exit.add_listener([](void *code) -> bool {
-				           throw cs::fatal_error("CS_EXIT");
-				           return true;
-			           });
-		           });
+	try
+	{
+		run_script(
+		    "using system\n"
+		    "function f()\n"
+		    "\tsystem.exit(7)\n"
+		    "end\n"
+		    "fiber.create(f).resume()\n",
+		    [](const cs::context_t &ctx)
+		{
+			ctx->process->on_process_exit.add_listener([](void *code) -> bool
+			{
+				throw cs::fatal_error("CS_EXIT");
+				return true;
+			});
+		});
 	}
-	catch (const cs::exception &e) {
+	catch (const cs::exception &e)
+	{
 		EXPECT_TRUE(e.message() == "CS_EXIT");
 		return;
 	}
-	catch (const cs::fatal_error &e) {
+	catch (const cs::fatal_error &e)
+	{
 		EXPECT_TRUE(e.message() == "CS_EXIT");
 		return;
 	}
@@ -313,7 +326,8 @@ TEST(grandchild_fiber_exit_after_parent_destroyed)
 	// Manipulating script fibers from native code requires an active session so
 	// current_process is restored (and never dangles after the context dies).
 	cs::process_run_scope scope(ctx);
-	ctx->process->on_process_exit.add_listener([](void *code) -> bool {
+	ctx->process->on_process_exit.add_listener([](void *code) -> bool
+	{
 		captured = *static_cast<int *>(code);
 		return true;
 	});
@@ -335,7 +349,7 @@ TEST(grandchild_fiber_exit_after_parent_destroyed)
 	cs::fiber::resume(a, cs::fiber::schedule_policy::normal);
 	cs::fiber_t b = a->return_value().const_val<cs::fiber_t>();
 	ctx->instance->storage.get_var("a") = cs::null_pointer; // drop the script reference
-	a.reset(); // destroy A; its forked process is kept alive by B's generation chain
+	a.reset();                                              // destroy A; its forked process is kept alive by B's generation chain
 
 	captured = -1;
 	cs::fiber::resume(b, cs::fiber::schedule_policy::normal);
@@ -354,7 +368,8 @@ TEST(fiber_exit_forwards_through_live_parent)
 	auto ctx = cs::create_context(args);
 	// Session scope: see grandchild_fiber_exit_after_parent_destroyed.
 	cs::process_run_scope scope(ctx);
-	ctx->process->on_process_exit.add_listener([](void *code) -> bool {
+	ctx->process->on_process_exit.add_listener([](void *code) -> bool
+	{
 		captured = *static_cast<int *>(code);
 		return true; // swallow
 	});
@@ -375,7 +390,8 @@ TEST(fiber_exit_forwards_through_live_parent)
 
 	cs::fiber_t a = ctx->instance->storage.get_var("a").const_val<cs::fiber_t>();
 	EXPECT_TRUE(a->get_process() != nullptr);
-	a->get_process()->on_process_exit.add_listener([](void *) -> bool {
+	a->get_process()->on_process_exit.add_listener([](void *) -> bool
+	{
 		parent_listener_fired = true;
 		return false; // keep forwarding
 	});
@@ -1113,7 +1129,8 @@ TEST(fiber_resume_rejected_after_context_release)
 		args.push_back(cs::var::make<cs::string>("<FIBER_CTX>"));
 		auto ctx = cs::create_context(args);
 		cs::process_run_scope scope(ctx);
-		f = cs::fiber::create(ctx.get(), []() -> cs::var { return cs::var(); });
+		f = cs::fiber::create(ctx.get(), []() -> cs::var
+		{ return cs::var(); });
 	}
 	try
 	{
@@ -1244,13 +1261,15 @@ TEST(second_independent_instance_rejected_while_one_active)
 	auto ctx = cs::create_context(args);
 	cs::process_run_scope scope(ctx);
 	bool threw = false;
-	try {
+	try
+	{
 		cs::array args2;
 		args2.push_back(cs::var::make<cs::string>("<EXCLUSIVE2>"));
 		auto ctx2 = cs::create_context(args2);
 		(void) ctx2;
 	}
-	catch (const cs::fatal_error &e) {
+	catch (const cs::fatal_error &e)
+	{
 		threw = std::string(e.what()).find("already running") != std::string::npos;
 	}
 	EXPECT_TRUE(threw);
@@ -1376,10 +1395,12 @@ TEST(multiple_contexts_coexist)
 	// Storage is per context: a fresh context must not see a variable defined in A.
 	auto ctx_c = cs::create_context(args_c);
 	bool c_sees_a = true;
-	try {
+	try
+	{
 		run_script_on(ctx_c, "using system\nsystem.out.println(shared)\n");
 	}
-	catch (const std::exception &) {
+	catch (const std::exception &)
+	{
 		c_sees_a = false;
 	}
 	EXPECT_TRUE(!c_sees_a);
@@ -1429,14 +1450,17 @@ TEST(async_future_carries_the_owning_process)
 	ctx->process->import_path = "<ASYNC_PROC_MARK>";
 	std::ostringstream captured;
 	auto *old = std::cout.rdbuf(captured.rdbuf());
-	try {
-		std::istringstream in("using system\n"
-		                      "var p = future.create(runtime.get_import_path)\n"
-		                      "system.out.println(p.get())\n");
+	try
+	{
+		std::istringstream in(
+		    "using system\n"
+		    "var p = future.create(runtime.get_import_path)\n"
+		    "system.out.println(p.get())\n");
 		ctx->instance->compile(in);
 		ctx->instance->interpret();
 	}
-	catch (...) {
+	catch (...)
+	{
 		std::cout.rdbuf(old);
 		throw;
 	}
@@ -1469,14 +1493,26 @@ TEST(subcontext_isolation_from_extension)
 
 	// Host does NOT see subcontext's definitions.
 	bool host_has_ext_var = false;
-	try { host->instance->storage.get_var("ext_var"); }
-	catch (...) { host_has_ext_var = true; }
+	try
+	{
+		host->instance->storage.get_var("ext_var");
+	}
+	catch (...)
+	{
+		host_has_ext_var = true;
+	}
 	EXPECT_TRUE(host_has_ext_var);
 
 	// Subcontext does NOT see host's definitions.
 	bool ext_has_host_var = false;
-	try { ext->instance->storage.get_var("host_var"); }
-	catch (...) { ext_has_host_var = true; }
+	try
+	{
+		ext->instance->storage.get_var("host_var");
+	}
+	catch (...)
+	{
+		ext_has_host_var = true;
+	}
 	EXPECT_TRUE(ext_has_host_var);
 
 	// Call a function defined in the subcontext.

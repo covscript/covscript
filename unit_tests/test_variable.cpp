@@ -24,93 +24,100 @@ TEST(context_pointer_var_accesses_context_extension)
 // path that reuses the proxy storage).
 // =============================================================================
 
-namespace {
+namespace
+{
 
-// Small type stored via the SVO path (sizeof <= CS_VAR_SVO_ALIGN - 16).
-struct ThrowOnCopy {
-	int value = 0;
-	ThrowOnCopy() = default;
-	explicit ThrowOnCopy(int v) : value(v) {}
-	ThrowOnCopy(const ThrowOnCopy &) { throw std::runtime_error("copy boom"); }
-	ThrowOnCopy(ThrowOnCopy &&) noexcept = default;
-	ThrowOnCopy &operator=(const ThrowOnCopy &) = default;
-	ThrowOnCopy &operator=(ThrowOnCopy &&) noexcept = default;
-};
-
-static_assert(sizeof(ThrowOnCopy) <= CS_VAR_SVO_ALIGN - 16,
-              "ThrowOnCopy must fit in the SVO buffer");
-
-// Large type stored on the heap (sizeof > CS_VAR_SVO_ALIGN - 16).
-struct BigThrowOnCopy {
-	char pad[64]{};
-	int value = 0;
-	BigThrowOnCopy() = default;
-	explicit BigThrowOnCopy(int v) : value(v) {}
-	BigThrowOnCopy(const BigThrowOnCopy &) { throw std::runtime_error("copy boom"); }
-	BigThrowOnCopy(BigThrowOnCopy &&) noexcept = default;
-	BigThrowOnCopy &operator=(const BigThrowOnCopy &) = default;
-	BigThrowOnCopy &operator=(BigThrowOnCopy &&) noexcept = default;
-};
-
-static_assert(sizeof(BigThrowOnCopy) > CS_VAR_SVO_ALIGN - 16,
-              "BigThrowOnCopy must use the heap storage path");
-
-// Non-throwing heap type used to verify the success path still works.
-struct BigCopy {
-	char pad[64]{};
-	std::string value;
-	BigCopy() = default;
-	explicit BigCopy(std::string v) : value(std::move(v)) {}
-};
-
-static_assert(sizeof(BigCopy) > CS_VAR_SVO_ALIGN - 16,
-              "BigCopy must use the heap storage path");
-
-// A type whose construction throws: make/make_protect must release the
-// allocated proxy instead of leaking it when construct_store throws.
-struct ThrowOnConstruct {
-	ThrowOnConstruct()
+	// Small type stored via the SVO path (sizeof <= CS_VAR_SVO_ALIGN - 16).
+	struct ThrowOnCopy
 	{
-		throw std::runtime_error("ctor boom");
-	}
-};
+		int value = 0;
+		ThrowOnCopy() = default;
+		explicit ThrowOnCopy(int v) : value(v) {}
+		ThrowOnCopy(const ThrowOnCopy &) { throw std::runtime_error("copy boom"); }
+		ThrowOnCopy(ThrowOnCopy &&) noexcept = default;
+		ThrowOnCopy &operator=(const ThrowOnCopy &) = default;
+		ThrowOnCopy &operator=(ThrowOnCopy &&) noexcept = default;
+	};
 
-// SVO type that counts live instances, to verify the moved-from object of a
-// move (whose source dispatcher is nulled by move_store) is still destroyed.
-struct CountedSVO {
-	static inline int live = 0;
-	CountedSVO()
-	{
-		++live;
-	}
-	CountedSVO(const CountedSVO &)
-	{
-		++live;
-	}
-	CountedSVO(CountedSVO &&) noexcept
-	{
-		++live;
-	}
-	CountedSVO &operator=(const CountedSVO &) = default;
-	CountedSVO &operator=(CountedSVO &&) noexcept = default;
-	~CountedSVO()
-	{
-		--live;
-	}
-};
+	static_assert(sizeof(ThrowOnCopy) <= CS_VAR_SVO_ALIGN - 16,
+	              "ThrowOnCopy must fit in the SVO buffer");
 
-// Heap-stored type whose construction throws: the block allocated before the
-// placement construction must be deallocated, not leaked.
-struct BigThrowOnConstruct {
-	char pad[64]{};
-	BigThrowOnConstruct()
+	// Large type stored on the heap (sizeof > CS_VAR_SVO_ALIGN - 16).
+	struct BigThrowOnCopy
 	{
-		throw std::runtime_error("ctor boom");
-	}
-};
+		char pad[64]{};
+		int value = 0;
+		BigThrowOnCopy() = default;
+		explicit BigThrowOnCopy(int v) : value(v) {}
+		BigThrowOnCopy(const BigThrowOnCopy &) { throw std::runtime_error("copy boom"); }
+		BigThrowOnCopy(BigThrowOnCopy &&) noexcept = default;
+		BigThrowOnCopy &operator=(const BigThrowOnCopy &) = default;
+		BigThrowOnCopy &operator=(BigThrowOnCopy &&) noexcept = default;
+	};
 
-static_assert(sizeof(BigThrowOnConstruct) > CS_VAR_SVO_ALIGN - 16,
-              "BigThrowOnConstruct must use the heap storage path");
+	static_assert(sizeof(BigThrowOnCopy) > CS_VAR_SVO_ALIGN - 16,
+	              "BigThrowOnCopy must use the heap storage path");
+
+	// Non-throwing heap type used to verify the success path still works.
+	struct BigCopy
+	{
+		char pad[64]{};
+		std::string value;
+		BigCopy() = default;
+		explicit BigCopy(std::string v) : value(std::move(v)) {}
+	};
+
+	static_assert(sizeof(BigCopy) > CS_VAR_SVO_ALIGN - 16,
+	              "BigCopy must use the heap storage path");
+
+	// A type whose construction throws: make/make_protect must release the
+	// allocated proxy instead of leaking it when construct_store throws.
+	struct ThrowOnConstruct
+	{
+		ThrowOnConstruct()
+		{
+			throw std::runtime_error("ctor boom");
+		}
+	};
+
+	// SVO type that counts live instances, to verify the moved-from object of a
+	// move (whose source dispatcher is nulled by move_store) is still destroyed.
+	struct CountedSVO
+	{
+		static inline int live = 0;
+		CountedSVO()
+		{
+			++live;
+		}
+		CountedSVO(const CountedSVO &)
+		{
+			++live;
+		}
+		CountedSVO(CountedSVO &&) noexcept
+		{
+			++live;
+		}
+		CountedSVO &operator=(const CountedSVO &) = default;
+		CountedSVO &operator=(CountedSVO &&) noexcept = default;
+		~CountedSVO()
+		{
+			--live;
+		}
+	};
+
+	// Heap-stored type whose construction throws: the block allocated before the
+	// placement construction must be deallocated, not leaked.
+	struct BigThrowOnConstruct
+	{
+		char pad[64]{};
+		BigThrowOnConstruct()
+		{
+			throw std::runtime_error("ctor boom");
+		}
+	};
+
+	static_assert(sizeof(BigThrowOnConstruct) > CS_VAR_SVO_ALIGN - 16,
+	              "BigThrowOnConstruct must use the heap storage path");
 
 } // namespace
 

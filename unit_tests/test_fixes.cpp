@@ -117,22 +117,25 @@ TEST(finalize_runs_on_context_release)
 	{
 		std::ostringstream captured;
 		auto *old = std::cout.rdbuf(captured.rdbuf());
-		try {
+		try
+		{
 			auto ctx = cs::create_context(args);
 			{
-				std::istringstream in("using system\n"
-				                      "class foo\n"
-				                      "    function finalize()\n"
-				                      "        system.out.println(\"bye-on-release\")\n"
-				                      "    end\n"
-				                      "end\n"
-				                      "var g = new foo\n");
+				std::istringstream in(
+				    "using system\n"
+				    "class foo\n"
+				    "    function finalize()\n"
+				    "        system.out.println(\"bye-on-release\")\n"
+				    "    end\n"
+				    "end\n"
+				    "var g = new foo\n");
 				ctx->instance->compile(in);
 				ctx->instance->interpret();
 			}
 			ctx.reset();
 		}
-		catch (...) {
+		catch (...)
+		{
 			std::cout.rdbuf(old);
 			throw;
 		}
@@ -154,11 +157,13 @@ TEST(nested_block_compile_failure_then_recover)
 	auto ctx = cs::create_context(args);
 	// function body: a valid var statement then an invalid break -> compile fails
 	// partway through the block translate.
-	try {
+	try
+	{
 		std::istringstream in("using system\nfunction f()\n\tvar x = 1\n\tbreak\nend\n");
 		ctx->instance->compile(in);
 	}
-	catch (...) {
+	catch (...)
+	{
 	}
 	// The same context must still compile and run cleanly afterwards.
 	run_script_on(ctx, "var z = 6 * 7\n");
@@ -181,11 +186,13 @@ TEST(compile_failure_rolls_back_function_store)
 	}
 	const std::size_t after_ok = ctx->instance->functions.size();
 	EXPECT_TRUE(after_ok >= 1);
-	try {
+	try
+	{
 		std::istringstream in("var g = []()->2\nbreak\n");
 		ctx->instance->compile(in);
 	}
-	catch (...) {
+	catch (...)
+	{
 	}
 	EXPECT_TRUE(ctx->instance->functions.size() == after_ok);
 }
@@ -223,10 +230,12 @@ TEST(numeric_to_string_without_process)
 	cs::numeric n(3.14);
 	cs::var v = cs::var::make<cs::numeric>(n);
 	std::string s;
-	try {
+	try
+	{
 		s = v.to_string().extract();
 	}
-	catch (...) {
+	catch (...)
+	{
 	}
 	cs::current_process = saved;
 	EXPECT_TRUE(!s.empty());
@@ -248,17 +257,18 @@ TEST(reentrant_repl_preserves_outer_frames)
 	// ctx -> callable -> repl -> ctx cycle that never tears down.
 	std::weak_ptr<cs::repl> weak_repl = repl;
 	ctx->instance->storage.add_var("run_repl",
-	    cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var {
-		    weak_repl.lock()->exec("var nested = 1\n");
-		    return cs::var::make<cs::numeric>(7);
-	    })));
+	                               cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var
+	{
+		weak_repl.lock()->exec("var nested = 1\n");
+		return cs::var::make<cs::numeric>(7);
+	})));
 	EXPECT_CONTAINS(run_script_on(ctx,
-	                    "using system\n"
-	                    "function outer()\n"
-	                    "\tvar before = run_repl()\n"
-	                    "\treturn before + 1\n"
-	                    "end\n"
-	                    "system.out.println(outer())\n"),
+	                              "using system\n"
+	                              "function outer()\n"
+	                              "\tvar before = run_repl()\n"
+	                              "\treturn before + 1\n"
+	                              "end\n"
+	                              "system.out.println(outer())\n"),
 	                "8");
 }
 
@@ -290,18 +300,22 @@ TEST(extension_load_call_and_error)
 	// (the DLL's current_process is null after init, so its exception handling
 	// falls back to the default handler instead of dereferencing a dangling one).
 	bool threw = false;
-	try {
+	try
+	{
 		cs::vector b;
 		b.push_back(cs::var::make<cs::string>("0xZZ"));
 		ext.get_var("hex_literal").val<cs::callable>().call(b);
 	}
-	catch (const cs::exception &) {
+	catch (const cs::exception &)
+	{
 		threw = true;
 	}
-	catch (const cs::lang_error &) {
+	catch (const cs::lang_error &)
+	{
 		threw = true;
 	}
-	catch (const std::exception &) {
+	catch (const std::exception &)
+	{
 		threw = true;
 	}
 	EXPECT_TRUE(threw);
@@ -399,7 +413,7 @@ TEST(gbk_wide2local_symbol_roundtrip)
 	local.push_back(static_cast<char>(0xA3));
 	local.push_back(static_cast<char>(0xB0)); // first GBK/2 hanzi
 	local.push_back(static_cast<char>(0xA1));
-	local.push_back('A');                     // ASCII passthrough
+	local.push_back('A'); // ASCII passthrough
 	auto wide = cvt.local2wide(std::string_view(local));
 	EXPECT_TRUE(cvt.wide2local(wide) == local);
 }
@@ -448,7 +462,8 @@ TEST(case_label_folds_imported_constant_array_from_module_with_function)
 	        "function f()\n"
 	        "end\n";
 	modf.close();
-	try {
+	try
+	{
 		EXPECT_CONTAINS(run_script(
 		                    "import _audit_fold_mod\n"
 		                    "using _audit_fold_mod\n"
@@ -459,7 +474,8 @@ TEST(case_label_folds_imported_constant_array_from_module_with_function)
 		                    "end\n"),
 		                "hit");
 	}
-	catch (...) {
+	catch (...)
+	{
 		std::remove(module_path.c_str());
 		throw;
 	}
@@ -521,12 +537,14 @@ TEST(repl_failed_line_rolls_back_function_store)
 	repl->exec("var f = []()->1\n");
 	const std::size_t before = ctx->instance->functions.size();
 	EXPECT_TRUE(before >= 1);
-	try {
+	try
+	{
 		// The lambda compiles (registered into the store) but the malformed
 		// parallel definition `x` fails translation.
 		repl->exec("var g = []()->2, x\n");
 	}
-	catch (...) {
+	catch (...)
+	{
 	}
 	EXPECT_TRUE(ctx->instance->functions.size() == before);
 	// The repl must stay usable and its committed lambda callable.
@@ -549,12 +567,14 @@ TEST(repl_multiline_block_failure_rolls_back_lambdas)
 	repl->exec("function foo()\n");
 	// Registered while the function block is open.
 	repl->exec("var g = []()->2\n");
-	try {
+	try
+	{
 		// The malformed parallel definition `a` fails translation; every lambda
 		// registered since the block opened (g and h) must be rolled back.
 		repl->exec("var h = []()->3, a\n");
 	}
-	catch (...) {
+	catch (...)
+	{
 	}
 	EXPECT_TRUE(ctx->instance->functions.size() == before);
 	// The repl must stay usable afterwards.
@@ -577,17 +597,20 @@ TEST(repl_reentrant_nested_lambda_survives_outer_failure)
 	auto repl = std::make_shared<cs::repl>(ctx);
 	std::weak_ptr<cs::repl> weak_repl = repl;
 	ctx->instance->storage.add_var("run_repl",
-	    cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var {
-		    // The nested statement commits `inner`; then the outer statement
-		    // fails via this exception.
-		    weak_repl.lock()->exec("var inner = []()->([]()->42)\n");
-		    throw std::runtime_error("boom");
-	    })));
+	                               cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var
+	{
+		// The nested statement commits `inner`; then the outer statement
+		// fails via this exception.
+		weak_repl.lock()->exec("var inner = []()->([]()->42)\n");
+		throw std::runtime_error("boom");
+	})));
 	const std::size_t before = ctx->instance->functions.size();
-	try {
+	try
+	{
 		repl->exec("var outer_lambda = []()->1, outer = run_repl()\n");
 	}
-	catch (...) {
+	catch (...)
+	{
 	}
 	// The outer rollback removes only its own slots. The nested committed slot
 	// retains its stable index.
@@ -609,10 +632,11 @@ TEST(repl_reentrant_nested_exec_preserves_outer_tokens)
 	auto repl = std::make_shared<cs::repl>(ctx);
 	std::weak_ptr<cs::repl> weak_repl = repl;
 	ctx->instance->storage.add_var("run_repl",
-	    cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var {
-		    weak_repl.lock()->exec("var inner = []()->42\n");
-		    return cs::var::make<cs::numeric>(7);
-	    })));
+	                               cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var
+	{
+		weak_repl.lock()->exec("var inner = []()->42\n");
+		return cs::var::make<cs::numeric>(7);
+	})));
 	repl->exec("var outer = run_repl() + 1\n");
 	EXPECT_TRUE(run_script_on(ctx, "system.out.println(outer)\n") == "8\n");
 }
@@ -634,10 +658,12 @@ TEST(repl_buffer_failure_preserves_committed_lambda_indices)
 	repl->exec("end");
 	repl->exec("var bad = []()->1, x");
 	bool threw = false;
-	try {
+	try
+	{
 		repl->exec("@end");
 	}
-	catch (...) {
+	catch (...)
+	{
 		threw = true;
 	}
 	EXPECT_TRUE(threw);
@@ -659,14 +685,17 @@ TEST(repl_reentrant_open_block_rejected_cleanly)
 	auto repl = std::make_shared<cs::repl>(ctx);
 	std::weak_ptr<cs::repl> weak_repl = repl;
 	ctx->instance->storage.add_var("run_repl",
-	    cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var {
-		    try {
-			    weak_repl.lock()->exec("function bad()");
-		    }
-		    catch (...) {
-		    }
-		    return cs::var::make<cs::numeric>(7);
-	    })));
+	                               cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var
+	{
+		try
+		{
+			weak_repl.lock()->exec("function bad()");
+		}
+		catch (...)
+		{
+		}
+		return cs::var::make<cs::numeric>(7);
+	})));
 	repl->exec("var outer = run_repl() + 1");
 	EXPECT_TRUE(repl->get_level() == 0);
 	EXPECT_TRUE(run_script_on(ctx, "system.out.println(outer)\n") == "8\n");
@@ -696,10 +725,12 @@ TEST(repl_empty_begin_buffer_rejected)
 	auto repl = std::make_shared<cs::repl>(ctx);
 	repl->exec("@begin");
 	bool threw = false;
-	try {
+	try
+	{
 		repl->exec("@end");
 	}
-	catch (...) {
+	catch (...)
+	{
 		threw = true;
 	}
 	EXPECT_TRUE(threw);
@@ -715,14 +746,17 @@ TEST(repl_reentrant_preprocessor_rejected_cleanly)
 	auto repl = std::make_shared<cs::repl>(ctx);
 	std::weak_ptr<cs::repl> weak_repl = repl;
 	ctx->instance->storage.add_var("run_repl",
-	    cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var {
-		    try {
-			    weak_repl.lock()->exec("@begin");
-		    }
-		    catch (...) {
-		    }
-		    return cs::var::make<cs::numeric>(7);
-	    })));
+	                               cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var
+	{
+		try
+		{
+			weak_repl.lock()->exec("@begin");
+		}
+		catch (...)
+		{
+		}
+		return cs::var::make<cs::numeric>(7);
+	})));
 	repl->exec("var outer = run_repl() + 1");
 	EXPECT_TRUE(run_script_on(ctx, "system.out.println(outer)\n") == "8\n");
 }
@@ -780,14 +814,17 @@ TEST(repl_reentrant_preprocessor_clears_command_buffer)
 	auto repl = std::make_shared<cs::repl>(ctx);
 	std::weak_ptr<cs::repl> weak_repl = repl;
 	ctx->instance->storage.add_var("run_repl",
-	    cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var {
-		    try {
-			    weak_repl.lock()->exec("@begin");
-		    }
-		    catch (...) {
-		    }
-		    return cs::var::make<cs::numeric>(7);
-	    })));
+	                               cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var
+	{
+		try
+		{
+			weak_repl.lock()->exec("@begin");
+		}
+		catch (...)
+		{
+		}
+		return cs::var::make<cs::numeric>(7);
+	})));
 	repl->exec("var outer = run_repl()");
 	EXPECT_NO_THROW(repl->exec("@charset:utf8"));
 	repl->exec("var ok = 42");
@@ -905,12 +942,13 @@ TEST(fiber_snapshots_recursive_lambda_self)
 	auto *old = std::cout.rdbuf(captured.rdbuf());
 	try
 	{
-		std::istringstream in("using system\n"
-		                      "var f = [](n)->n>1?self(n-1)*n:1\n"
-		                      "var co = fiber.create(f, 5)\n"
-		                      "f = 0\n"
-		                      "co.resume()\n"
-		                      "system.out.println(co.return_value())\n");
+		std::istringstream in(
+		    "using system\n"
+		    "var f = [](n)->n>1?self(n-1)*n:1\n"
+		    "var co = fiber.create(f, 5)\n"
+		    "f = 0\n"
+		    "co.resume()\n"
+		    "system.out.println(co.return_value())\n");
 		ctx->instance->compile(in);
 		ctx->instance->interpret();
 	}
@@ -935,18 +973,20 @@ TEST(async_future_snapshots_recursive_lambda_argument)
 	args.push_back(cs::var::make<cs::string>("<ASYNC_SELF>"));
 	auto ctx = cs::create_context(args);
 	ctx->instance->storage.add_var("invoke_it",
-	    cs::var::make<cs::callable>([](cs::vector &data) -> cs::var {
-		    return cs::invoke(data[0], cs::var::make<cs::numeric>(5));
-	    }));
+	                               cs::var::make<cs::callable>([](cs::vector &data) -> cs::var
+	{
+		return cs::invoke(data[0], cs::var::make<cs::numeric>(5));
+	}));
 	std::ostringstream captured;
 	auto *old = std::cout.rdbuf(captured.rdbuf());
 	try
 	{
-		std::istringstream in("using system\n"
-		                      "var f = [](n)->n>1?self(n-1)*n:1\n"
-		                      "var fu = future.create(invoke_it, f)\n"
-		                      "f = 0\n"
-		                      "system.out.println(fu.get())\n");
+		std::istringstream in(
+		    "using system\n"
+		    "var f = [](n)->n>1?self(n-1)*n:1\n"
+		    "var fu = future.create(invoke_it, f)\n"
+		    "f = 0\n"
+		    "system.out.println(fu.get())\n");
 		ctx->instance->compile(in);
 		ctx->instance->interpret();
 	}
@@ -1027,14 +1067,15 @@ TEST(global_finalizer_resolves_other_globals)
 	auto *old = std::cout.rdbuf(captured.rdbuf());
 	try
 	{
-		std::istringstream in("using system\n"
-		                      "var marker = 21\n"
-		                      "struct watcher\n"
-		                      "    function finalize()\n"
-		                      "        system.out.println(marker * 2)\n"
-		                      "    end\n"
-		                      "end\n"
-		                      "var w = new watcher\n");
+		std::istringstream in(
+		    "using system\n"
+		    "var marker = 21\n"
+		    "struct watcher\n"
+		    "    function finalize()\n"
+		    "        system.out.println(marker * 2)\n"
+		    "    end\n"
+		    "end\n"
+		    "var w = new watcher\n");
 		ctx->instance->compile(in);
 		ctx->instance->interpret();
 		// Releasing the globals runs the finalizer; `marker` must still resolve.
@@ -1070,13 +1111,14 @@ TEST(concurrent_contexts_on_separate_threads)
 				args.push_back(cs::var::make<cs::string>(id == 0 ? "<THREAD_A>" : "<THREAD_B>"));
 				auto ctx = cs::create_context(args);
 				// Heavy var churn exercises the proxy pool and heap stores.
-				std::istringstream in("var acc = 0\n"
-				                      "var i = 0\n"
-				                      "while i < 200\n"
-				                      "\tacc = acc + i\n"
-				                      "\ti = i + 1\n"
-				                      "end\n"
-				                      "var check = acc == 19900\n");
+				std::istringstream in(
+				    "var acc = 0\n"
+				    "var i = 0\n"
+				    "while i < 200\n"
+				    "\tacc = acc + i\n"
+				    "\ti = i + 1\n"
+				    "end\n"
+				    "var check = acc == 19900\n");
 				ctx->instance->compile(in);
 				ctx->instance->interpret();
 				if (!ctx->instance->storage.get_var("check").const_val<bool>())
@@ -1124,28 +1166,31 @@ TEST(struct_constructed_in_finalizer)
 	{
 		std::ostringstream captured;
 		auto *old = std::cout.rdbuf(captured.rdbuf());
-		try {
+		try
+		{
 			auto ctx = cs::create_context(args);
 			{
-				std::istringstream in("using system\n"
-				                      "class B\n"
-				                      "    function initialize()\n"
-				                      "        system.out.println(\"init-b\")\n"
-				                      "    end\n"
-				                      "end\n"
-				                      "class A\n"
-				                      "    function finalize()\n"
-				                      "        var b = new B\n"
-				                      "        system.out.println(\"finalize-new-b\")\n"
-				                      "    end\n"
-				                      "end\n"
-				                      "var g = new A\n");
+				std::istringstream in(
+				    "using system\n"
+				    "class B\n"
+				    "    function initialize()\n"
+				    "        system.out.println(\"init-b\")\n"
+				    "    end\n"
+				    "end\n"
+				    "class A\n"
+				    "    function finalize()\n"
+				    "        var b = new B\n"
+				    "        system.out.println(\"finalize-new-b\")\n"
+				    "    end\n"
+				    "end\n"
+				    "var g = new A\n");
 				ctx->instance->compile(in);
 				ctx->instance->interpret();
 			}
 			ctx.reset();
 		}
-		catch (...) {
+		catch (...)
+		{
 			std::cout.rdbuf(old);
 			throw;
 		}
@@ -1166,22 +1211,25 @@ TEST(escaped_type_constructor_via_native_call)
 	cs::array args;
 	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
 	auto ctx = cs::create_context(args);
-	run_script_on(ctx, "class T\n"
-	                   "    function initialize()\n"
-	                   "        iostream.setprecision(6)\n"
-	                   "        system.out.println(\"init-t-no-process\")\n"
-	                   "    end\n"
-	                   "end\n");
+	run_script_on(ctx,
+	              "class T\n"
+	              "    function initialize()\n"
+	              "        iostream.setprecision(6)\n"
+	              "        system.out.println(\"init-t-no-process\")\n"
+	              "    end\n"
+	              "end\n");
 	cs::var type = ctx->instance->storage.get_var("T");
 	EXPECT_TRUE(type.is_type_of<cs::type_t>());
 	cs::process_run_scope scope(ctx);
 	std::ostringstream captured;
 	auto *old = std::cout.rdbuf(captured.rdbuf());
 	cs::var obj;
-	try {
+	try
+	{
 		obj = type.const_val<cs::type_t>().constructor();
 	}
-	catch (...) {
+	catch (...)
+	{
 		std::cout.rdbuf(old);
 		throw;
 	}
@@ -1210,10 +1258,12 @@ TEST(escaped_type_constructor_rejected_after_context_release)
 	}
 	// ctx destroyed here; process stays alive via struct_builder's m_process.
 	cs::process_run_scope scope(proc.get());
-	try {
+	try
+	{
 		escaped.const_val<cs::type_t>().constructor();
 	}
-	catch (const cs::runtime_error &) {
+	catch (const cs::runtime_error &)
+	{
 		eptr = std::current_exception();
 	}
 	EXPECT_TRUE(eptr != nullptr);
@@ -1237,11 +1287,13 @@ TEST(native_invoke_without_process_raises_clean_error)
 	}
 	// Scope exited: invoking without one must throw, not crash.
 	std::exception_ptr eptr;
-	try {
+	try
+	{
 		cs::var r = cs::invoke(fn);
 		EXPECT_TRUE(r.const_val<cs::numeric>() == 1);
 	}
-	catch (const cs::runtime_error &) {
+	catch (const cs::runtime_error &)
+	{
 		eptr = std::current_exception();
 	}
 	EXPECT_TRUE(eptr != nullptr);
@@ -1274,8 +1326,8 @@ TEST(main_thread_detection_on_test_thread)
 TEST(main_thread_detection_on_worker_thread)
 {
 	std::atomic<bool> is_main{true};
-	std::thread worker([&is_main] { is_main = cs_system_impl::is_main_thread(); });
+	std::thread worker([&is_main]
+	{ is_main = cs_system_impl::is_main_thread(); });
 	worker.join();
 	EXPECT_FALSE(is_main);
 }
-

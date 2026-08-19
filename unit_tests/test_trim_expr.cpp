@@ -5,8 +5,10 @@
 // Friend accessor for testing private compiler methods
 // Must be in namespace cs to match the friend declaration in compiler.hpp
 // =============================================================================
-namespace cs {
-	struct compiler_test_accessor {
+namespace cs
+{
+	struct compiler_test_accessor
+	{
 		static void trim_expr(compiler_type &compiler,
 		                      tree_type<token_base *> &tree,
 		                      tree_type<token_base *>::iterator it,
@@ -24,11 +26,13 @@ namespace cs {
 		// Convenience: run trim_expr on tree root with normal trim type
 		static bool trim_throws(compiler_type &compiler, tree_type<token_base *> &tree)
 		{
-			try {
+			try
+			{
 				trim_expr(compiler, tree, tree.root(), compiler_type::trim_type::normal);
 				return false;
 			}
-			catch (const compile_error &) {
+			catch (const compile_error &)
+			{
 				return true;
 			}
 		}
@@ -36,16 +40,18 @@ namespace cs {
 		// Convenience: run optimize_expression and return whether it threw
 		static bool opt_throws(compiler_type &compiler, tree_type<token_base *> &tree)
 		{
-			try {
+			try
+			{
 				optimize_expression(compiler, tree);
 				return false;
 			}
-			catch (const compile_error &) {
+			catch (const compile_error &)
+			{
 				return true;
 			}
 		}
 	};
-}
+} // namespace cs
 
 // =============================================================================
 // trim_expr / opt_expr Validation Tests
@@ -88,8 +94,8 @@ static void flush_tokens()
 // This ensures tree iterators are always "usable" even when the operand is null.
 
 static cs::tree_type<cs::token_base *> make_binary(cs::signal_types op,
-        cs::token_base *left,
-        cs::token_base *right)
+                                                   cs::token_base *left,
+                                                   cs::token_base *right)
 {
 	cs::tree_type<cs::token_base *> tree;
 	tree.emplace_root_left(tree.root(), T_sig(op));
@@ -99,11 +105,11 @@ static cs::tree_type<cs::token_base *> make_binary(cs::signal_types op,
 }
 
 static cs::tree_type<cs::token_base *> make_unary(cs::signal_types op,
-        cs::token_base *operand)
+                                                  cs::token_base *operand)
 {
 	cs::tree_type<cs::token_base *> tree;
 	tree.emplace_root_left(tree.root(), T_sig(op));
-	tree.emplace_left_left(tree.root(), nullptr);  // left is always null for unary prefix
+	tree.emplace_left_left(tree.root(), nullptr); // left is always null for unary prefix
 	tree.emplace_right_right(tree.root(), operand);
 	return tree;
 }
@@ -121,8 +127,8 @@ static bool opt_throws(cs::tree_type<cs::token_base *> &tree)
 }
 
 // Helper to avoid rvalue binding issue: evaluate on a local lvalue
-#define TRIM_THROWS(expr) ([&]{ auto _t = (expr); return trim_throws(_t); }())
-#define OPT_THROWS(expr)  ([&]{ auto _t = (expr); return opt_throws(_t); }())
+#define TRIM_THROWS(expr) ([&] { auto _t = (expr); return trim_throws(_t); }())
+#define OPT_THROWS(expr) ([&] { auto _t = (expr); return opt_throws(_t); }())
 
 // =============================================================================
 // SECTION 1: Integration tests — full pipeline via build_expr
@@ -367,7 +373,7 @@ TEST(low_ternary_null_condition_throws)
 	// Follow build_tree pattern: create root, then left child (null), then right child
 	cs::tree_type<cs::token_base *> t;
 	t.emplace_root_left(t.root(), T_sig(cs::signal_types::choice_));
-	t.emplace_left_left(t.root(), nullptr);  // null condition
+	t.emplace_left_left(t.root(), nullptr); // null condition
 	t.emplace_right_right(t.root(), T_sig(cs::signal_types::pair_));
 
 	// Fill in the pair_ node's children

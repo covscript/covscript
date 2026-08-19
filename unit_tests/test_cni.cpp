@@ -17,7 +17,8 @@ TEST(cni_nonconst_ref_conversion)
 	init.push_back(cs::var::make<cs::string>("<CNI>"));
 	auto ctx = cs::create_context(init);
 	cs::process_run_scope scope(ctx);
-	cs::var fn = cs::make_cni([](double &d) { d = d * 2.0; });
+	cs::var fn = cs::make_cni([](double &d)
+	{ d = d * 2.0; });
 	cs::vector args;
 	args.push_back(cs::var::make<cs::numeric>(21));
 	EXPECT_NO_THROW(fn.const_val<cs::callable>().call(args));
@@ -32,7 +33,8 @@ TEST(cni_const_ref_conversion)
 	auto ctx = cs::create_context(init);
 	cs::process_run_scope scope(ctx);
 	double seen = 0;
-	cs::var fn = cs::make_cni([&](const double &d) { seen = d; });
+	cs::var fn = cs::make_cni([&](const double &d)
+	{ seen = d; });
 	cs::vector args;
 	args.push_back(cs::var::make<cs::numeric>(7));
 	EXPECT_NO_THROW(fn.const_val<cs::callable>().call(args));
@@ -53,8 +55,10 @@ TEST(cni_rule_of_five_copy_move_swap)
 	static_assert(std::is_nothrow_move_assignable<cs::cni>::value,
 	              "cni must remain nothrow-move-assignable for CovScript's inline storage");
 
-	cs::cni add1([](double x) -> double { return x + 1; });
-	cs::cni mul2([](double x) -> double { return x * 2; });
+	cs::cni add1([](double x) -> double
+	{ return x + 1; });
+	cs::cni mul2([](double x) -> double
+	{ return x * 2; });
 
 	auto call = [](const cs::cni &fn, double x) -> cs::numeric
 	{
@@ -69,7 +73,8 @@ TEST(cni_rule_of_five_copy_move_swap)
 
 	// Move construction and move assignment.
 	cs::cni d(std::move(c));
-	cs::cni e([](double x) -> double { return x - 1; });
+	cs::cni e([](double x) -> double
+	{ return x - 1; });
 	e = std::move(d);
 	EXPECT_TRUE(call(e, 10) == 20); // e: mul2 (moved through d)
 
