@@ -1261,12 +1261,21 @@ TEST(array_auto_extend_boundary)
 }
 
 // =============================================================================
-// F46: main-thread detection must report true on the test (main) thread; the
-// old Windows implementation compared thread ID to process ID, which never
-// match, silently disabling the pooled allocator on Windows.
+// F46: main-thread detection must report true on the test (main) thread and
+// false on worker threads; the old Windows implementation compared thread ID
+// to process ID, which never match, silently disabling the pooled allocator
+// on Windows.
 // =============================================================================
 TEST(main_thread_detection_on_test_thread)
 {
 	EXPECT_TRUE(cs_system_impl::is_main_thread());
+}
+
+TEST(main_thread_detection_on_worker_thread)
+{
+	std::atomic<bool> is_main{true};
+	std::thread worker([&is_main] { is_main = cs_system_impl::is_main_thread(); });
+	worker.join();
+	EXPECT_FALSE(is_main);
 }
 

@@ -27,6 +27,7 @@
 #include <covscript/impl/impl.hpp>
 #include <covscript/impl/system.hpp>
 #include <windows.h>
+#include <tlhelp32.h>
 #include <direct.h>
 #include <conio.h>
 #include <cstdio>
@@ -59,13 +60,63 @@ std::string wstring_to_utf8(std::wstring_view wide)
 
 namespace cs_system_impl
 {
-	// Thread IDs never equal process IDs on Windows; capture the initial
-	// thread's ID once (before any worker thread exists).
-	static const DWORD main_thread_id = GetCurrentThreadId();
+	// The primary (main) thread is the thread the process starts with, so it
+	// is the thread with the earliest creation time among the threads of this
+	// process. There is no Windows API that reports it directly, so enumerate
+	// the process's threads with CreateToolhelp32Snapshot and query each
+	// creation time with GetThreadTimes; client IDs are allocated from a
+	// shared, monotonically increasing counter, so an equal timestamp is
+	// broken by the smaller thread ID. This runs once at static-init time, so
+	// the result no longer depends on which thread first touches the
+	// allocator.
+	static DWORD find_main_thread_id() noexcept
+	{
+		DWORD pid = GetCurrentProcessId();
+		DWORD main_id = 0;
+		ULONGLONG main_time = 0;
+		HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+		if (snap == INVALID_HANDLE_VALUE)
+			return 0;
+		THREADENTRY32 te{};
+		te.dwSize = sizeof(te);
+		if (Thread32First(snap, &te))
+		{
+			do
+			{
+				if (te.th32OwnerProcessID != pid)
+					continue;
+				HANDLE thread = OpenThread(THREAD_QUERY_LIMITED_INFORMATION, FALSE, te.th32ThreadID);
+				if (thread == nullptr)
+					continue;
+				FILETIME creation, exit, kernel, user;
+				if (GetThreadTimes(thread, &creation, &exit, &kernel, &user))
+				{
+					ULONGLONG time = (static_cast<ULONGLONG>(creation.dwHighDateTime) << 32) | creation.dwLowDateTime;
+					if (main_time == 0 || time < main_time || (time == main_time && te.th32ThreadID < main_id))
+					{
+						main_time = time;
+						main_id = te.th32ThreadID;
+					}
+				}
+				CloseHandle(thread);
+			} while (Thread32Next(snap, &te));
+		}
+		CloseHandle(snap);
+		return main_id;
+	}
+
+	// Runs at static-init time, before any script runs; the result does not
+	// depend on the thread that happens to trigger the initializer.
+	static const DWORD main_thread_id = find_main_thread_id();
 
 	bool is_main_thread() noexcept
 	{
-		return GetCurrentThreadId() == main_thread_id;
+		if (main_thread_id != 0)
+			return GetCurrentThreadId() == main_thread_id;
+		// Snapshot failed (rare): pin to the first calling thread so that at
+		// most one thread is ever treated as the main thread.
+		static const DWORD first_caller = GetCurrentThreadId();
+		return GetCurrentThreadId() == first_caller;
 	}
 
 	bool chmod_impl(const std::string &path, unsigned int mode)
