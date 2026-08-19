@@ -479,20 +479,31 @@ TEST(case_label_rejects_runtime_array_index)
 	                "end\n") != "");
 }
 
-TEST(case_label_rejects_constant_containing_callable)
+TEST(constant_containing_callable_rejected)
 {
-	// Folding a constant that holds a script function would recreate the
-	// arena<->function cycle, so it must still be rejected.
-	EXPECT_TRUE(run_script_expect_throw(
-	                "using system\n"
-	                "function f()\n"
-	                "end\n"
-	                "constant arr = {f}\n"
-	                "switch 1\n"
-	                "\tcase arr[0]\n"
-	                "\t\tsystem.out.println(\"hit\")\n"
-	                "\tend\n"
-	                "end\n") != "");
+	// Constants holding script functions can't live in the token arena
+	// (arena<->function cycle); the declaration itself is rejected.
+	EXPECT_CONTAINS(run_script_expect_throw(
+	                    "function f()\n"
+	                    "end\n"
+	                    "constant arr = {f}\n"),
+	                "must be initialized with a constant value");
+}
+
+TEST(case_label_containing_callable_rejected)
+{
+	// A case label folding to a value containing a script function is rejected,
+	// independent of any constant declaration.
+	EXPECT_CONTAINS(run_script_expect_throw(
+	                    "using system\n"
+	                    "function f()\n"
+	                    "end\n"
+	                    "switch 1\n"
+	                    "\tcase {f}[0]\n"
+	                    "\t\tsystem.out.println(\"hit\")\n"
+	                    "\tend\n"
+	                    "end\n"),
+	                "must be a constant value");
 }
 
 // =============================================================================
@@ -1144,11 +1155,11 @@ TEST(struct_constructed_in_finalizer)
 }
 
 // =============================================================================
-// Constructing an escaped struct type with no active process must work; the
-// constructor activates the defining process like function::call_* does.
+// Constructing an escaped struct type from native code requires the caller to
+// hold a process scope; the constructor runs the initializer under it.
 // =============================================================================
 
-TEST(escaped_type_constructor_without_process)
+TEST(escaped_type_constructor_via_native_call)
 {
 	cs::array args;
 	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
@@ -1161,21 +1172,12 @@ TEST(escaped_type_constructor_without_process)
 	                   "end\n");
 	cs::var type = ctx->instance->storage.get_var("T");
 	EXPECT_TRUE(type.is_type_of<cs::type_t>());
+	cs::process_run_scope scope(ctx);
 	std::ostringstream captured;
 	auto *old = std::cout.rdbuf(captured.rdbuf());
 	cs::var obj;
 	try {
-		cs::process_context *saved = cs::current_process;
-		cs::current_process = nullptr;
-		EXPECT_TRUE(cs::current_process == nullptr);
-		try {
-			obj = type.const_val<cs::type_t>().constructor();
-		}
-		catch (...) {
-			cs::current_process = saved;
-			throw;
-		}
-		cs::current_process = saved;
+		obj = type.const_val<cs::type_t>().constructor();
 	}
 	catch (...) {
 		std::cout.rdbuf(old);
@@ -1194,13 +1196,18 @@ TEST(escaped_type_constructor_rejected_after_context_release)
 {
 	std::exception_ptr eptr;
 	cs::var escaped;
+	std::shared_ptr<cs::process_context> proc;
 	{
 		cs::array args;
 		args.push_back(cs::var::make<cs::string>("<ESC_TYPE>"));
 		auto ctx = cs::create_context(args);
+		proc = ctx->process;
+		cs::process_run_scope scope(ctx);
 		run_script_on(ctx, "class T\nend\n");
 		escaped = ctx->instance->storage.get_var("T");
 	}
+	// ctx destroyed here; process stays alive via struct_builder's m_process.
+	cs::process_run_scope scope(proc.get());
 	try {
 		escaped.const_val<cs::type_t>().constructor();
 	}

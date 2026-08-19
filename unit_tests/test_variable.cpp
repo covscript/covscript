@@ -3,11 +3,12 @@
 #include <string>
 #include "test_helpers.hpp"
 
-TEST(context_shared_pointer_keeps_context_extension)
+TEST(context_pointer_var_accesses_context_extension)
 {
 	auto ctx = make_context();
+	cs::process_run_scope scope(ctx);
 	ctx->cmd_args = cs::var::make<cs::array>();
-	cs::var value = cs::var::make<cs::context_t>(ctx);
+	cs::var value = cs::var::make<cs::context_type *>(ctx.get());
 	EXPECT_TRUE(&value.get_ext() == &cs_impl::context_ext);
 	cs::vector args{value};
 	cs::var result = value.get_ext()->get_var("cmd_args").const_val<cs::callable>().call(args);

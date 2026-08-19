@@ -102,15 +102,24 @@ cs::var f = cs::eval(ctx, "[](x)->x+1");
 
 ### 2. `current_process` 与线程
 
-`cs::current_process` 是由线程局部存储支持的 `current_process_ref`；它可转换为 `process_context*`，当前线程无运行实例时为 `nullptr`。它由两个 RAII 守卫安装：
-
-+ `cs::process_run_scope(ctx)` —— 在作用域内安装 `ctx` 的进程。同一进程上的嵌套作用域是透明的；**不同**的活动进程会抛出异常，因此一个线程不能并发运行两个实例。
-+ `cs::process_activation(ctx)` —— 仅当无活动进程时才激活（用于裸原生调用与异步工作线程）。
+`cs::current_process` 是由线程局部存储支持的 `process_context_ref`；它可转换为 `process_context*`，当前线程无运行实例时为 `nullptr`。`cs::process_run_scope(ctx)` 在作用域内安装 `ctx` 的进程。同一进程上的嵌套作用域是透明的；**不同**的活动进程会抛出异常，因此一个线程不能并发运行两个实例。原生代码调用 `callable::call()` 时需自行持有 `process_run_scope`。
 
 推论：
 
 + 原生（CNI）回调与异步 future 可能观察到 `current_process == nullptr`；SDK 的错误路径已对此容错，但读取 `current_process` 的扩展必须做空判断。
 + 两个 context 可在**不同线程**上并发运行。`var` 的 proxy 分配器池是**每线程独立**的（`thread_local`）且按需增长，因此不同 context 永不共享池槽；值在其它线程释放时回退到直接分配路径（`std::allocator` 实例间可互换）。
+
+需要独立编译环境（独立存储、命名空间或编译产物）的扩展 DLL 应使用**子上下文**而非独立上下文：
+
+```cpp
+// 扩展函数内——宿主进程活跃时
+auto ctx = cs::create_subcontext(host_ctx); // 共享进程，独立存储
+ctx->instance->compile(in);
+ctx->instance->interpret();
+// ctx 离开作用域：子上下文销毁，宿主不受影响
+```
+
+子上下文共享父进程（`process_run_scope` 透明）和父上下文的编译器（编译期间绑定到子上下文），但拥有独立的存储和 token arena。这与模块导入使用的机制相同。
 
 ### 3. 结构体终结器（finalize）
 
@@ -150,18 +159,30 @@ cs::var f = cs::eval(ctx, "[](x)->x+1");
 
 所有扩展必须重新编译。
 
-- `cs::current_process` 类型改为 `current_process_ref`——用法不变
+- `cs::current_process` 类型改为 `process_context_ref`——用法不变
   （`->`、`*`、`== nullptr` 均兼容）。
 - `process_context::raise_sigint()` / `raise_exit()` 已移除——改用
   `cs::global_signals.raise_sigint()` / `raise_exit()`。
 - DLL 入口签名变更——使用新头文件重新编译即可。
 - `COVSCRIPT_DEBUG` 环境变量控制运行时诊断级别
   （`none` / `warning` / `strict`）。
+- `process_context::on_process_sigint` 默认处理器从"退出"改为"忽略"。
+  嵌入方如需 Ctrl+C 终止，应添加监听器：
+  `ctx->on_process_sigint.add_listener([](void*) -> bool { /* 关闭逻辑 */ return true; })`。
+- 信号标志为 OS 进程级（`cs::global_signals`）。多嵌入进程并发时，
+  先 poll 的进程消费挂起信号；无进程 poll 时信号保留至下次 poll。
+- `cs::invoke` 对非 callable 对象改抛 `cs::lang_error`（原为
+  `cs::runtime_error`），与脚本层行为一致。注意 `cs::lang_error`
+  不继承 `std::exception`。
+- `constant` 声明和 `case` 标签中，值包含脚本函数或方法的现在编译期
+  拒绝（此前值会被静默折叠进 token 树，形成 arena↔function 环）。
+- `process_activation` 已移除。原生代码调用 `callable::call()` 时需
+  自行持有 `process_run_scope`。扩展 DLL 通过访问器共享宿主的线程
+  局部槽——读写统一，无需手动管理访问器。
 
 ### 新增 API
 
-- `cs::process_run_scope` / `cs::process_activation` —— `current_process`
-  管理的 RAII 守卫。
+- `cs::process_run_scope` —— `current_process` 管理的 RAII 守卫。
 - `cs::global_signals` —— 全局信号控制（替代已移除的
   `process_context::raise_sigint/exit`）。
 - `cs::fiber::schedule_parameters` / `get_schedule_parameters()` /

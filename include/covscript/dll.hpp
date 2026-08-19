@@ -34,7 +34,7 @@ extern "C"
 	{
 		return COVSCRIPT_ABI_VERSION;
 	}
-	void __CS_EXTENSION_MAIN__(cs::name_space *ext, cs::process_context *(*host_access)(void *) )
+	void __CS_EXTENSION_MAIN__(cs::name_space *ext, cs::process_context **(*host_access)())
 	{
 		// Route this DLL's current_process through the host's current-thread process.
 		cs::current_process.set_accessor(host_access);

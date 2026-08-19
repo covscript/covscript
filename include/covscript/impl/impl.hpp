@@ -343,7 +343,7 @@ namespace cs
 		}
 	};
 
-	// Temporarily swap the shared compiler's context and restore it on scope exit
+	// RAII: bind the shared compiler's context for the scope, restore on exit.
 	class context_swap_guard final
 	{
 		compiler_type *compiler;

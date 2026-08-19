@@ -856,6 +856,7 @@ TEST(gc_escaped_function_survives_program_release)
 	cs::array args;
 	args.push_back(cs::var::make<cs::string>("<UNIT_TEST>"));
 	auto ctx = cs::create_context(args);
+	cs::process_run_scope scope(ctx);
 	{
 		std::istringstream in("function f()\n    return 42\nend\n");
 		ctx->instance->compile(in);
@@ -943,6 +944,7 @@ TEST(nested_lambda_survives_program_release)
 	cs::array args;
 	args.push_back(cs::var::make<cs::string>("<NESTED_LAMBDA_ESCAPE>"));
 	auto ctx = cs::create_context(args);
+	cs::process_run_scope scope(ctx);
 	{
 		std::istringstream in("function make()\n    return [](x)->x+1\nend\nvar f = make\n");
 		ctx->instance->compile(in);
@@ -1048,6 +1050,7 @@ TEST(lambda_function_owned_by_store)
 	cs::array args;
 	args.push_back(cs::var::make<cs::string>("<STORE>"));
 	auto ctx = cs::create_context(args);
+	cs::process_run_scope scope(ctx);
 	run_script_on(ctx, "var f = [](x)->x+1\n");
 	cs::var f = ctx->instance->storage.get_var("f");
 	cs::vector a;
@@ -1069,6 +1072,7 @@ TEST(eval_lambda_returns_callable)
 	cs::array args;
 	args.push_back(cs::var::make<cs::string>("<EVAL_NESTED>"));
 	auto ctx = cs::create_context(args);
+	cs::process_run_scope scope(ctx);
 	cs::var f = cs::eval(ctx, "[](x)->x+1");
 	cs::vector a;
 	a.push_back(cs::var::make<cs::numeric>(41));
@@ -1086,6 +1090,7 @@ TEST(clone_recursive_lambda_rebinds_self)
 	cs::array args;
 	args.push_back(cs::var::make<cs::string>("<CLONE_SELF>"));
 	auto ctx = cs::create_context(args);
+	cs::process_run_scope scope(ctx);
 	run_script_on(ctx, "var f = [](n)->n>1?self(n-1)*n:1\n");
 	cs::var f = ctx->instance->storage.get_var("f");
 	cs::var f2 = cs::copy(f);
@@ -1130,13 +1135,18 @@ TEST(escaped_function_call_rejected_after_context_release)
 {
 	std::exception_ptr eptr;
 	cs::var escaped;
+	std::shared_ptr<cs::process_context> proc;
 	{
 		cs::array args;
 		args.push_back(cs::var::make<cs::string>("<ESC_FN>"));
 		auto ctx = cs::create_context(args);
+		proc = ctx->process;
+		cs::process_run_scope scope(ctx);
 		run_script_on(ctx, "var f = [](x)->x+1\n");
 		escaped = ctx->instance->storage.get_var("f");
 	}
+	// ctx destroyed here; process stays alive via callable's captured context ref.
+	cs::process_run_scope scope(proc.get());
 	try
 	{
 		cs::vector a;
@@ -1432,4 +1442,51 @@ TEST(async_future_carries_the_owning_process)
 	}
 	std::cout.rdbuf(old);
 	EXPECT_TRUE(captured.str() == "<ASYNC_PROC_MARK>\n");
+}
+
+// =============================================================================
+// A subcontext shares the parent's process but owns its own storage — the
+// pattern extension DLLs use to run independent script code while the host
+// is active.
+// =============================================================================
+TEST(subcontext_isolation_from_extension)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<HOST>"));
+	auto host = cs::create_context(args);
+	cs::process_run_scope scope(host);
+
+	// Host defines a variable.
+	run_script_on(host, "var host_var = 100\n");
+
+	// Extension-like code: create subcontext, compile and run independent code.
+	auto ext = cs::create_subcontext(host.get());
+	run_script_on(ext, "var ext_var = 42\nfunction ext_fn()\n    return ext_var\nend\n");
+
+	// Subcontext sees its own definitions.
+	cs::var ext_val = ext->instance->storage.get_var("ext_var");
+	EXPECT_TRUE(ext_val.const_val<cs::numeric>() == 42);
+
+	// Host does NOT see subcontext's definitions.
+	bool host_has_ext_var = false;
+	try { host->instance->storage.get_var("ext_var"); }
+	catch (...) { host_has_ext_var = true; }
+	EXPECT_TRUE(host_has_ext_var);
+
+	// Subcontext does NOT see host's definitions.
+	bool ext_has_host_var = false;
+	try { ext->instance->storage.get_var("host_var"); }
+	catch (...) { ext_has_host_var = true; }
+	EXPECT_TRUE(ext_has_host_var);
+
+	// Call a function defined in the subcontext.
+	cs::vector fn_args;
+	cs::var ret = ext->instance->storage.get_var("ext_fn").const_val<cs::callable>().call(fn_args);
+	EXPECT_TRUE(ret.const_val<cs::numeric>() == 42);
+
+	// Destroy subcontext; host remains functional.
+	ext.reset();
+	run_script_on(host, "host_var = host_var + 1\n");
+	cs::var updated = host->instance->storage.get_var("host_var");
+	EXPECT_TRUE(updated.const_val<cs::numeric>() == 101);
 }

@@ -216,12 +216,12 @@ namespace cs
 		return new_process;
 	}
 
-	current_process_ref current_process;
+	process_context_ref current_process;
 
 	// Host process accessor handed to extension DLLs.
-	process_context *current_process_host_accessor(void *)
+	process_context **current_process_host_accessor()
 	{
-		return current_process;
+		return process_context_ref::thread_slot();
 	}
 
 	context_type::~context_type()
@@ -760,6 +760,8 @@ namespace cs
 		process_run_scope scope(context);
 		// Fresh arena so repeated eval() calls don't accumulate tokens.
 		compile_unit_guard guard(context.get());
+		// The compiler may be shared (subcontexts); bind it to this context.
+		context_swap_guard ctx_guard(*context->compiler, context.get());
 		tree_type<cs::token_base *> tree;
 		std::deque<char> buff;
 		for (auto &ch : expr)

@@ -25,7 +25,6 @@
  */
 #include <covscript/impl/codegen.hpp>
 #include <limits>
-#include <set>
 
 namespace cs
 {
@@ -44,7 +43,7 @@ namespace cs
 
 	// Whether a value contains a script function; the optimizer must not fold it
 	// into a token_value (which would recreate the arena <-> function cycle).
-	static bool contains_callable(const var &v, std::set<const void *> &visited);
+	static bool contains_callable(const var &v, set_t<const void *> &visited);
 
 	static bool owns_function(const callable &c)
 	{
@@ -52,7 +51,7 @@ namespace cs
 	}
 
 	template <typename Container>
-	bool contains_callable_in(const Container &c, std::set<const void *> &visited)
+	bool contains_callable_in(const Container &c, set_t<const void *> &visited)
 	{
 		for (const auto &e : c)
 			if (contains_callable(e, visited))
@@ -60,7 +59,7 @@ namespace cs
 		return false;
 	}
 
-	static bool contains_callable(const var &v, std::set<const void *> &visited)
+	static bool contains_callable(const var &v, set_t<const void *> &visited)
 	{
 		if (!v.usable())
 			return false;
@@ -117,7 +116,7 @@ namespace cs
 
 	static bool contains_callable(const var &v)
 	{
-		std::set<const void *> visited;
+		set_t<const void *> visited;
 		return contains_callable(v, visited);
 	}
 

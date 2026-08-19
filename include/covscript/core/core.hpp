@@ -106,7 +106,6 @@
 #include <cmath>
 #include <deque>
 #include <list>
-#include <map>
 // CovScript Headers
 #include <covscript/core/components.hpp>
 #include <covscript/core/definition.hpp>
@@ -162,9 +161,11 @@ namespace cs
 
 	extern signal_control global_signals;
 
-	// Per-struct type identity: a process-pool node gives a stable unique
-	// address (cross-process refs stay valid); carries the materialized
-	// ancestor set so is_a stays O(1).
+	// Per-struct type identity: nodes live in the defining context's process
+	// pool (fibers/imports share or never allocate there, so both are safe);
+	// addresses are unique for the process lifetime. Only native bridging of
+	// types across unrelated processes can outlive the base process and
+	// falsify is_a.
 	struct type_node final
 	{
 		std::string name;
@@ -304,86 +305,76 @@ namespace cs
 	};
 
 	// Per-thread process indirection; extensions route through the host accessor.
-	class current_process_ref
+	class process_context_ref
 	{
-		void *m_ptr = nullptr;
-		process_context *(*m_access)(void *) = &current_process_ref::local_access;
+	   public:
+		using accessor_t = process_context **(*) ();
 
-		static process_context *&thread_slot() noexcept
+		static process_context **thread_slot() noexcept
 		{
 			static thread_local process_context *slot = nullptr;
-			return slot;
+			return &slot;
 		}
 
-		static process_context *local_access(void *) noexcept
-		{
-			return thread_slot();
-		}
-
-		// Fast path when no host accessor is installed.
-		process_context *access() const noexcept
-		{
-			if (m_access == &current_process_ref::local_access)
-				return thread_slot();
-			return m_access(m_ptr);
-		}
+	   private:
+		accessor_t m_access = process_context_ref::thread_slot;
 
 	   public:
-		current_process_ref() = default;
+		process_context_ref() = default;
 
-		current_process_ref(const current_process_ref &) = default;
+		process_context_ref(const process_context_ref &) = default;
 
-		current_process_ref &operator=(const current_process_ref &) = default;
+		process_context_ref &operator=(const process_context_ref &) = default;
 
-		current_process_ref &operator=(process_context *p) noexcept
+		process_context_ref &operator=(process_context *p) noexcept
 		{
-			thread_slot() = p;
+			*thread_slot() = p;
 			return *this;
 		}
 
 		process_context *operator->() const noexcept
 		{
-			return access();
+			return *m_access();
 		}
 
 		process_context &operator*() const noexcept
 		{
-			return *access();
+			return **m_access();
 		}
 
 		operator process_context *() const noexcept
 		{
-			return access();
+			return *m_access();
 		}
 
 		explicit operator bool() const noexcept
 		{
-			return access() != nullptr;
+			return *m_access() != nullptr;
 		}
 
 		bool operator==(std::nullptr_t) const noexcept
 		{
-			return access() == nullptr;
+			return *m_access() == nullptr;
 		}
 
 		bool operator!=(std::nullptr_t) const noexcept
 		{
-			return access() != nullptr;
+			return *m_access() != nullptr;
 		}
 
-		// Comparisons with a process_context* use the implicit conversion.
-
-		// Route accesses to the host's process (extension DLLs).
-		void set_accessor(process_context *(*access)(void *) ) noexcept
+		// Swap the accessor, returning the previous one for later restore.
+		accessor_t set_accessor(accessor_t access) noexcept
 		{
+			accessor_t old = m_access;
 			m_access = access;
+			return old;
 		}
 	};
 
-	extern current_process_ref current_process;
+	extern process_context_ref current_process;
 
 	// Host process accessor handed to extension DLLs.
-	process_context *current_process_host_accessor(void *);
+	process_context **current_process_host_accessor();
 
 	// Context
 	class context_type final : public std::enable_shared_from_this<context_type>
@@ -437,7 +428,6 @@ namespace cs
 		    : process_run_scope(c.get()) {}
 
 		explicit process_run_scope(context_type *c)
-		    : m_prev_process(current_process)
 		{
 			if (c == nullptr)
 				throw fatal_error("the context is null");
@@ -446,42 +436,23 @@ namespace cs
 				throw fatal_error("the context has no process attached");
 			if (current_process != nullptr && current_process != p && !current_process->is_related(p))
 				throw fatal_error("another Covscript instance is already running on this thread");
+			m_prev_process = current_process;
+			current_process = p;
+		}
+
+		explicit process_run_scope(process_context *p)
+		{
+			if (p == nullptr)
+				throw fatal_error("the process is null");
+			if (current_process != nullptr && current_process != p && !current_process->is_related(p))
+				throw fatal_error("another Covscript instance is already running on this thread");
+			m_prev_process = current_process;
 			current_process = p;
 		}
 
 		~process_run_scope()
 		{
 			current_process = m_prev_process;
-		}
-	};
-
-	// Ensures current_process is non-null, activating the given process only when
-	// idle; a fiber keeps its own process. Rejects an unrelated active process.
-	class process_activation
-	{
-		bool m_activated = false;
-
-	   public:
-		explicit process_activation(const context_t &c) : process_activation(c ? c->process.get() : nullptr) {}
-
-		explicit process_activation(context_type *c) : process_activation(c ? c->process.get() : nullptr) {}
-
-		explicit process_activation(process_context *p)
-		{
-			if (current_process == nullptr && p != nullptr)
-			{
-				m_activated = true;
-				current_process = p;
-			}
-			else if (p != nullptr && current_process != nullptr && current_process != p &&
-			         !current_process->is_related(p))
-				throw fatal_error("another Covscript instance is already running on this thread");
-		}
-
-		~process_activation()
-		{
-			if (m_activated)
-				current_process = nullptr;
 		}
 	};
 
@@ -1452,7 +1423,7 @@ namespace cs
 				};
 				try
 				{
-					process_activation activation(m_process.get());
+					process_run_scope scope(m_process.get());
 					invoke(m_data->get_var("finalize"), var::make<structure>(this));
 				}
 				catch (const exception &e)
@@ -1802,7 +1773,7 @@ namespace cs
 		typedef int (*compatible_check_t)();
 
 		// Extension entry gets an accessor to the host's current_process.
-		typedef process_context *(*current_process_accessor_t)(void *);
+		typedef process_context **(*current_process_accessor_t)();
 
 		typedef void (*main_entrance_t)(name_space *, current_process_accessor_t);
 

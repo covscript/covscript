@@ -1380,7 +1380,7 @@ namespace cs_impl
 
 		// The process active at creation; an async task carries it so script code
 		// on its worker thread has a valid current_process.
-		static std::shared_ptr<process_context> current_process_ref()
+		static std::shared_ptr<process_context> capture_process()
 		{
 			return current_process ? current_process->shared_from_this() : nullptr;
 		}
@@ -1413,7 +1413,7 @@ namespace cs_impl
 			var operator()()
 			{
 				// thread_local current_process is null on this (async) thread.
-				process_activation activation(process.get());
+				process_run_scope scope(process.get());
 				return func.call(args);
 			}
 		};
@@ -1422,7 +1422,7 @@ namespace cs_impl
 		{
 			if (fiber::within())
 			{
-				auto proc = current_process_ref();
+				auto proc = capture_process();
 				auto future = std::async(std::launch::async, async_callable(fn, std::move(args), std::move(proc)));
 				while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
 					fiber::sleep_for(fiber_context::current()->busy_wait_min);
@@ -1527,7 +1527,7 @@ namespace cs_impl
 				const callable &fn = func.const_val<callable>();
 				if (!is_native_callable(fn))
 					throw lang_error("Async future can only be created from native functions");
-				auto proc = current_process_ref();
+				auto proc = capture_process();
 				return static_cast<future_t>(std::make_shared<async_future>(fn, vector(args.begin() + 1, args.end()), std::move(proc)));
 			}
 			else if (func.is_type_of<object_method>())
@@ -1538,7 +1538,7 @@ namespace cs_impl
 				const callable &fn = om.callable.const_val<callable>();
 				if (!is_native_callable(fn))
 					throw lang_error("Async future can only be created from native functions");
-				auto proc = current_process_ref();
+				auto proc = capture_process();
 				return static_cast<future_t>(std::make_shared<async_future>(fn, std::move(argument), std::move(proc)));
 			}
 			else

@@ -63,11 +63,8 @@ namespace cs
 			context->compiler->modules.emplace(module_key, module);
 			try
 			{
-				{
-					context_swap_guard guard(*rt->compiler, rt.get());
-					rt->instance->compile(path);
-					rt->instance->interpret();
-				}
+				rt->instance->compile(path);
+				rt->instance->interpret();
 				*module = *rt->instance->storage.get_namespace();
 				// The context now owns the subcontext (breaking the module cycle).
 				context->subcontexts.push_back(rt);
@@ -115,11 +112,8 @@ namespace cs
 				context->compiler->modules.emplace(module_key, module);
 				try
 				{
-					{
-						context_swap_guard guard(*rt->compiler, rt.get());
-						rt->instance->compile(package_path + ".csp");
-						rt->instance->interpret();
-					}
+					rt->instance->compile(package_path + ".csp");
+					rt->instance->interpret();
 					if (rt->package_name.empty())
 						throw runtime_error("The imported file is not a package (it has no 'package' declaration)");
 					if (rt->package_name != name)
@@ -182,6 +176,9 @@ namespace cs
 		context->compiler->begin_import_scope();
 		std::size_t pool_base = context->compiler->save_pool();
 		value_guard<std::size_t> loop_guard(context->compiler->loop_depth, 0);
+		// The compiler may be shared (subcontexts); bind it to this instance so
+		// tokens and statements land in this context.
+		context_swap_guard ctx_guard(*context->compiler, context);
 		try
 		{
 			// Read from file
@@ -344,7 +341,7 @@ namespace cs
 					if (left == nullptr || right == nullptr || left->get_type() != token_types::id)
 						throw runtime_error("Invalid variable definition: the left-hand side must be an identifier");
 					if (constant && !is_constant_rhs(right))
-						throw runtime_error("A constant must be initialized with a constant value");
+						throw runtime_error("A constant must be initialized with a constant value; runtime calls and values containing functions or methods are not permitted");
 					if (regist)
 						storage.add_record(static_cast<token_id *>(left)->get_id().get_id());
 					break;
@@ -353,7 +350,7 @@ namespace cs
 				{
 					token_base *right = it.right().data();
 					if (constant && !is_constant_rhs(right))
-						throw runtime_error("A constant structured binding must be initialized with a constant value");
+						throw runtime_error("A constant structured binding must be initialized with a constant value; runtime calls and values containing functions or methods are not permitted");
 					check_define_structured_binding(it.left(), regist);
 					break;
 				}
@@ -597,6 +594,8 @@ namespace cs
 		if (code.empty())
 			throw runtime_error("REPL input must contain exactly one top-level statement");
 		process_run_scope scope(context);
+		// The compiler may be shared (subcontexts); bind it to this context.
+		context_swap_guard ctx_guard(*context->compiler, context.get());
 		const bool reentrant = m_run_depth > 0;
 		if (reentrant && !methods.empty())
 			throw runtime_error("Re-entrant REPL execution cannot continue an open block");

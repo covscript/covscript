@@ -125,6 +125,8 @@ namespace cs::fiber
 
 	void set_schedule_parameters(const schedule_parameters &params)
 	{
+		if (!(params.busy_wait_coef >= 0.0 && params.busy_wait_coef <= 1.0))
+			throw lang_error("Fiber busy-wait coefficient must be between 0 and 1");
 		auto *cxt = fiber_context::current();
 		cxt->busy_wait_coef = params.busy_wait_coef;
 		cxt->busy_wait_min = params.busy_wait_min;

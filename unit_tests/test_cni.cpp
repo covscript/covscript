@@ -13,6 +13,10 @@
 
 TEST(cni_nonconst_ref_conversion)
 {
+	cs::array init;
+	init.push_back(cs::var::make<cs::string>("<CNI>"));
+	auto ctx = cs::create_context(init);
+	cs::process_run_scope scope(ctx);
 	cs::var fn = cs::make_cni([](double &d) { d = d * 2.0; });
 	cs::vector args;
 	args.push_back(cs::var::make<cs::numeric>(21));
@@ -23,6 +27,10 @@ TEST(cni_nonconst_ref_conversion)
 
 TEST(cni_const_ref_conversion)
 {
+	cs::array init;
+	init.push_back(cs::var::make<cs::string>("<CNI>"));
+	auto ctx = cs::create_context(init);
+	cs::process_run_scope scope(ctx);
 	double seen = 0;
 	cs::var fn = cs::make_cni([&](const double &d) { seen = d; });
 	cs::vector args;

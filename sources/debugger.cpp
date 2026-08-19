@@ -95,7 +95,8 @@ void signal_handler(int sig)
 {
 	// Only async-signal-safe operations are allowed in a signal handler.
 	static const char msg[] = "Keyboard Interrupt (Ctrl+C Received)\n";
-	::write(STDERR_FILENO, msg, sizeof(msg) - 1);
+	ssize_t ret = ::write(STDERR_FILENO, msg, sizeof(msg) - 1);
+	(void) ret;
 	cs::global_signals.raise_sigint();
 }
 

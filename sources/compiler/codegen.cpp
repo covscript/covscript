@@ -482,7 +482,7 @@ namespace cs
 		if (root == nullptr || root->get_type() != token_types::value)
 		{
 			std::size_t line_num = static_cast<token_endline *>(raw.front().back())->get_line_num();
-			const char *what = "A 'case' label must be a constant value";
+			const char *what = "A 'case' label must be a constant value; runtime calls and values containing functions or methods are not permitted";
 			throw exception(line_num, context->file_path, context->get_file_line(line_num), what);
 		}
 		std::deque<statement_base *> body;

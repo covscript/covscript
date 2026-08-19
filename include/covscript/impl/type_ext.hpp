@@ -414,31 +414,6 @@ cs_impl::operators::result cs_impl::operators::handler<T>::fcall(void *lhs, void
 
 namespace cs_impl
 {
-	// Allow context_t (shared_ptr) to convert to context_type* for CNI.
-	template <>
-	struct type_conversion_cs<cs::context_type *>
-	{
-		using source_type = cs::context_t;
-	};
-
-	template <>
-	struct type_convertor<cs::context_t, cs::context_type *>
-	{
-		static cs::context_type *convert(const cs::context_t &context) noexcept
-		{
-			return context.get();
-		}
-	};
-
-	template <>
-	struct type_convertor<cs::context_type *, cs::context_t>
-	{
-		static cs::context_t convert(cs::context_type *context)
-		{
-			return context != nullptr ? context->shared_from_this() : cs::context_t();
-		}
-	};
-
 	enum class file_type
 	{
 		block,
@@ -725,12 +700,6 @@ namespace cs_impl
 
 	// Type name
 	template <>
-	constexpr const char *get_name_of_type<cs::context_t>()
-	{
-		return "cs::context";
-	}
-
-	template <>
 	constexpr const char *get_name_of_type<cs::context_type *>()
 	{
 		return "cs::context";
@@ -1016,12 +985,6 @@ namespace cs_impl
 	cs::namespace_t &get_ext<cs::fiber_t>()
 	{
 		return fiber_ext;
-	}
-
-	template <>
-	cs::namespace_t &get_ext<cs::context_t>()
-	{
-		return context_ext;
 	}
 
 	template <>

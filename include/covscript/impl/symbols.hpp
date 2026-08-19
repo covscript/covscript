@@ -164,7 +164,7 @@ namespace cs
 	template <typename Key, typename T>
 	class mapping final
 	{
-		std::map<Key, T> mDat;
+		map_t<Key, T> mDat;
 
 	   public:
 		mapping(std::initializer_list<std::pair<const Key, T>> l)

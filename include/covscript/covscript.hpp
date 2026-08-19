@@ -142,7 +142,7 @@ namespace cs
 			// context teardown when the process/instance are already dying.
 			// Activate the process so finalizers that read current_process see a
 			// valid value.
-			process_activation activation(context);
+			process_run_scope scope(context);
 			context->instance->storage.clear_global();
 		}
 	};

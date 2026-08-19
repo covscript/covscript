@@ -122,15 +122,12 @@ Self-contained value data can remain usable independently as described above.
 
 ### 2. `current_process` and threading
 
-`cs::current_process` is a `current_process_ref` backed by thread-local storage;
+`cs::current_process` is a `process_context_ref` backed by thread-local storage;
 it converts to `process_context*` and is `nullptr` unless a run is active on the
-thread. It is installed by two RAII guards:
-
-+ `cs::process_run_scope(ctx)` — installs `ctx`'s process for the scope. Nested
-  scopes on the **same** process are transparent; a **different** active process
-  throws, so a thread cannot run two instances concurrently.
-+ `cs::process_activation(ctx)` — activates the process only if none is active
-  (used for bare native calls and async worker threads).
+thread. `cs::process_run_scope(ctx)` installs `ctx`'s process for the scope.
+Nested scopes on the **same** process are transparent; a **different** active
+process throws, so a thread cannot run two instances concurrently. Native code
+that calls `callable::call()` must hold its own `process_run_scope`.
 
 Consequences:
 
@@ -142,6 +139,23 @@ Consequences:
   so separate contexts never share pool slots; values freed on a different
   thread fall back to the direct allocator path (all `std::allocator`
   instances are interchangeable).
+
+An extension DLL that needs its own compilation environment (independent
+storage, namespace, or compiled program) should create a **subcontext**
+rather than a separate context:
+
+```cpp
+// Inside an extension function — host process is active.
+auto ctx = cs::create_subcontext(host_ctx); // shares process, owns storage
+ctx->instance->compile(in);
+ctx->instance->interpret();
+// ctx goes out of scope: subcontext destroyed, host unaffected.
+```
+
+A subcontext shares its parent's process (so `process_run_scope` is
+transparent) and its compiler (bound to the subcontext during compilation),
+but owns its own storage and token arena. This is the same mechanism used
+for module imports.
 
 ### 3. Structure finalizers
 
@@ -203,18 +217,34 @@ Guards are diagnostic only — they do not change the ownership contracts above.
 
 All extensions must be recompiled.
 
-- `cs::current_process` type changed to `current_process_ref` — usage is
+- `cs::current_process` type changed to `process_context_ref` — usage is
   identical (`->`, `*`, `== nullptr` all work as before).
 - `process_context::raise_sigint()` / `raise_exit()` removed — use
   `cs::global_signals.raise_sigint()` / `raise_exit()` instead.
 - DLL entry point signature changed — recompile against the new headers.
 - `COVSCRIPT_DEBUG` environment variable controls runtime diagnostic level
   (`none` / `warning` / `strict`).
+- `process_context::on_process_sigint` default handler changed from exit to
+  ignore (no-op). Embedders who want Ctrl+C to terminate should add a
+  listener: `ctx->on_process_sigint.add_listener([](void*) -> bool { /* shutdown */ return true; })`.
+- Signal flags are OS-process-global (`cs::global_signals`). With multiple
+  embedded processes running concurrently, the first process to poll consumes
+  the pending signal; a signal raised while nothing is polling stays pending
+  until the next poll.
+- `cs::invoke` on a non-callable now throws `cs::lang_error` (previously
+  `cs::runtime_error`) to match script-level semantics. Note that
+  `cs::lang_error` does not derive from `std::exception`.
+- `constant` declarations and `case` labels whose value contains a script
+  function or method are now rejected at compile time (previously the value
+  was silently folded into the token arena, creating an arena↔function cycle).
+- `process_activation` removed. Callers of `callable::call()` from native
+  code must now hold their own `process_run_scope`. Extension DLLs share
+  the host's thread-local slot via the accessor — reads and writes are
+  unified, no manual accessor management needed.
 
 ### New APIs
 
-- `cs::process_run_scope` / `cs::process_activation` — RAII guards for
-  `current_process` management.
+- `cs::process_run_scope` — RAII guard for `current_process` management.
 - `cs::global_signals` — global signal control (replaces the removed
   `process_context::raise_sigint/exit`).
 - `cs::fiber::schedule_parameters` / `get_schedule_parameters()` /

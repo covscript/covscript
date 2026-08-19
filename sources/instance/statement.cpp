@@ -82,9 +82,7 @@ namespace cs
 
 	var function::call_rr(const function *_this, vector &args)
 	{
-		// Ensure an active process for a bare native call (a fiber keeps its own).
 		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
-		process_activation activation(ctx.get());
 		current_process->poll_event();
 		if (args.size() != _this->mArgs.size())
 			throw runtime_error(
@@ -105,9 +103,7 @@ namespace cs
 
 	var function::call_vv(const function *_this, vector &args)
 	{
-		// Ensure an active process for a bare native call (a fiber keeps its own).
 		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
-		process_activation activation(ctx.get());
 		current_process->poll_event();
 		scope_guard scope(ctx.get());
 #ifdef CS_DEBUGGER
@@ -142,9 +138,7 @@ namespace cs
 
 	var function::call_rl(const function *_this, vector &args)
 	{
-		// Ensure an active process for a bare native call (a fiber keeps its own).
 		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
-		process_activation activation(ctx.get());
 		current_process->poll_event();
 		if (args.size() != _this->mArgs.size())
 			throw runtime_error(
@@ -175,9 +169,7 @@ namespace cs
 
 	var function::call_el(const function *_this, vector &args)
 	{
-		// Ensure an active process for a bare native call (a fiber keeps its own).
 		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
-		process_activation activation(ctx.get());
 		current_process->poll_event();
 		if (!args.empty())
 			throw runtime_error("Wrong number of arguments: expected none, got " + std::to_string(args.size()));
@@ -228,9 +220,7 @@ namespace cs
 
 	var struct_builder::operator()()
 	{
-		// Ensure an active process for a bare native call (a fiber keeps its own).
 		auto ctx = resolve_ctx(mContext, "the struct's context has been destroyed");
-		process_activation activation(ctx.get());
 		scope_guard scope(ctx.get());
 		if (mParent.root().usable())
 		{
