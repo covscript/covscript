@@ -60,15 +60,9 @@ std::string wstring_to_utf8(std::wstring_view wide)
 
 namespace cs_system_impl
 {
-	// The primary (main) thread is the thread the process starts with, so it
-	// is the thread with the earliest creation time among the threads of this
-	// process. There is no Windows API that reports it directly, so enumerate
-	// the process's threads with CreateToolhelp32Snapshot and query each
-	// creation time with GetThreadTimes; client IDs are allocated from a
-	// shared, monotonically increasing counter, so an equal timestamp is
-	// broken by the smaller thread ID. This runs once at static-init time, so
-	// the result no longer depends on which thread first touches the
-	// allocator.
+	// The primary thread is the first thread of the process, so it has the
+	// earliest creation time; enumerate the process's threads and pick the
+	// oldest. No Windows API reports it directly.
 	static DWORD find_main_thread_id() noexcept
 	{
 		DWORD pid = GetCurrentProcessId();
@@ -105,16 +99,15 @@ namespace cs_system_impl
 		return main_id;
 	}
 
-	// Runs at static-init time, before any script runs; the result does not
-	// depend on the thread that happens to trigger the initializer.
+	// Runs once at static-init time, independent of the triggering thread.
 	static const DWORD main_thread_id = find_main_thread_id();
 
 	bool is_main_thread() noexcept
 	{
 		if (main_thread_id != 0)
 			return GetCurrentThreadId() == main_thread_id;
-		// Snapshot failed (rare): pin to the first calling thread so that at
-		// most one thread is ever treated as the main thread.
+		// Snapshot failed (rare): pin to the first calling thread so at most
+		// one thread is ever treated as the main thread.
 		static const DWORD first_caller = GetCurrentThreadId();
 		return GetCurrentThreadId() == first_caller;
 	}
