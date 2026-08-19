@@ -1096,7 +1096,7 @@ namespace cs_system_impl
 	// GetCurrentThreadId()==GetCurrentProcessId() (Windows). Implemented in
 	// sources/system/{win32,unix}/common.cpp.
 	bool is_main_thread() noexcept;
-}
+} // namespace cs_system_impl
 
 #ifndef CS_ALLOCATOR_BUFFER_MAX
 #define CS_ALLOCATOR_BUFFER_MAX 64

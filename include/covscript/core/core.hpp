@@ -968,8 +968,7 @@ namespace cs
 		    : m_ref(std::make_shared<domain_ref>(this)) {}
 
 		domain_type(const domain_type &domain)
-		    : m_reflect(domain.m_reflect), m_ref(std::make_shared<domain_ref>(this)), m_slot(domain.m_slot),
-		      optimize(domain.optimize) {}
+		    : m_reflect(domain.m_reflect), m_ref(std::make_shared<domain_ref>(this)), m_slot(domain.m_slot), optimize(domain.optimize) {}
 
 		domain_type(domain_type &&domain) noexcept
 		    : m_ref(std::make_shared<domain_ref>(this))
