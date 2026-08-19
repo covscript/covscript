@@ -832,6 +832,123 @@ TEST(repl_reentrant_preprocessor_clears_command_buffer)
 }
 
 // =============================================================================
+// F05h: a failing re-entrant exec() must restore the outer statement's token
+// arena so the outer expression keeps evaluating correctly.
+// =============================================================================
+TEST(repl_reentrant_inner_failure_preserves_outer_tokens)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	cs::compile_unit_guard guard(ctx.get());
+	auto outer_unit = ctx->current_unit;
+	auto repl = std::make_shared<cs::repl>(ctx);
+	std::weak_ptr<cs::repl> weak_repl = repl;
+	ctx->instance->storage.add_var("run_repl",
+	                               cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var
+	{
+		try
+		{
+			// Malformed parallel definition: translation fails, popping the
+			// inner unit.
+			weak_repl.lock()->exec("var inner = []()->1, x\n");
+		}
+		catch (...)
+		{
+		}
+		return cs::var::make<cs::numeric>(7);
+	})));
+	repl->exec("var outer = run_repl() + 1\n");
+	EXPECT_TRUE(ctx->current_unit == outer_unit);
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(outer)\n") == "8\n");
+}
+
+// =============================================================================
+// F05i: an inner failing exec() plus a later outer failure must pop the unit
+// stack twice and restore the pre-statement arena with no store slots left.
+// =============================================================================
+TEST(repl_reentrant_double_failure_balances_unit_stack)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	cs::compile_unit_guard guard(ctx.get());
+	auto outer_unit = ctx->current_unit;
+	auto repl = std::make_shared<cs::repl>(ctx);
+	std::weak_ptr<cs::repl> weak_repl = repl;
+	ctx->instance->storage.add_var("run_repl",
+	                               cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var
+	{
+		try
+		{
+			weak_repl.lock()->exec("var inner = []()->1, x\n");
+		}
+		catch (...)
+		{
+		}
+		return cs::var::make<cs::numeric>(7);
+	})));
+	// Fails at run time after run_repl() already ran, so the outer statement
+	// gets its own pop after the inner one.
+	ctx->instance->storage.add_var("boom",
+	                               cs::var::make<cs::callable>(cs::callable([](cs::vector &) -> cs::var
+	{
+		throw cs::runtime_error("boom");
+	})));
+	const std::size_t before = ctx->instance->functions.size();
+	bool threw = false;
+	try
+	{
+		repl->exec("var outer = run_repl() + boom()\n");
+	}
+	catch (...)
+	{
+		threw = true;
+	}
+	EXPECT_TRUE(threw);
+	EXPECT_TRUE(ctx->current_unit == outer_unit);
+	EXPECT_TRUE(ctx->instance->functions.size() == before);
+	repl->exec("var ok = []()->42\n");
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(ok())\n") == "42\n");
+}
+
+// =============================================================================
+// F05j: three nesting levels (inner fails, middle succeeds, outer succeeds)
+// must restore each level's enclosing unit.
+// =============================================================================
+TEST(repl_reentrant_three_level_units_balanced)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	cs::compile_unit_guard guard(ctx.get());
+	auto outer_unit = ctx->current_unit;
+	auto repl = std::make_shared<cs::repl>(ctx);
+	std::weak_ptr<cs::repl> weak_repl = repl;
+	ctx->instance->storage.add_var("run_inner",
+	                               cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var
+	{
+		try
+		{
+			weak_repl.lock()->exec("var x = []()->1, boom\n");
+		}
+		catch (...)
+		{
+		}
+		return cs::var::make<cs::numeric>(7);
+	})));
+	ctx->instance->storage.add_var("run_mid",
+	                               cs::var::make<cs::callable>(cs::callable([weak_repl](cs::vector &) -> cs::var
+	{
+		weak_repl.lock()->exec("var mid = run_inner() + 1\n");
+		return cs::var::make<cs::numeric>(7);
+	})));
+	repl->exec("var outer = run_mid() + 1\n");
+	EXPECT_TRUE(ctx->current_unit == outer_unit);
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(mid)\nsystem.out.println(outer)\n") == "8\n8\n");
+}
+
+// =============================================================================
 // F39: a switch body whose later statement fails to translate leaked the
 // already-translated case/default statements (no body_guard around the
 // recursive translate). The context must stay usable after repeated failures.
