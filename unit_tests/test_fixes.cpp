@@ -885,6 +885,7 @@ TEST(clone_container_with_recursive_lambda_rebinds_self)
 	// Drop the original: the clone's lambda must not borrow the freed proxy.
 	arr = cs::var();
 	cs::var fn = arr2.const_val<cs::array>().front();
+	cs::process_run_scope scope(ctx);
 	cs::var r = cs::invoke(fn, cs::var::make<cs::numeric>(5));
 	EXPECT_TRUE(r.const_val<cs::numeric>() == 120);
 }
@@ -981,6 +982,7 @@ TEST(clone_of_recursive_lambda_is_self_contained)
 	clone.clone();
 	// Drop the original; the clone must remain usable.
 	original = cs::var();
+	cs::process_run_scope scope(ctx);
 	EXPECT_TRUE(cs::invoke(clone, cs::var::make<cs::numeric>(5)).const_val<cs::numeric>().as_integer() == 120);
 }
 
@@ -1210,6 +1212,34 @@ TEST(escaped_type_constructor_rejected_after_context_release)
 	cs::process_run_scope scope(proc.get());
 	try {
 		escaped.const_val<cs::type_t>().constructor();
+	}
+	catch (const cs::runtime_error &) {
+		eptr = std::current_exception();
+	}
+	EXPECT_TRUE(eptr != nullptr);
+}
+
+// =============================================================================
+// F44: invoking a script callable without an active process (native callers
+// must hold process_run_scope) must raise a clean error, not dereference null.
+// =============================================================================
+
+TEST(native_invoke_without_process_raises_clean_error)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<NO_PROCESS>"));
+	auto ctx = cs::create_context(args);
+	cs::var fn;
+	{
+		cs::process_run_scope scope(ctx);
+		run_script_on(ctx, "var f = []() -> 1\n");
+		fn = ctx->instance->storage.get_var("f");
+	}
+	// Scope exited: invoking without one must throw, not crash.
+	std::exception_ptr eptr;
+	try {
+		cs::var r = cs::invoke(fn);
+		EXPECT_TRUE(r.const_val<cs::numeric>() == 1);
 	}
 	catch (const cs::runtime_error &) {
 		eptr = std::current_exception();

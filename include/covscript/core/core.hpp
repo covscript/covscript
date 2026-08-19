@@ -328,7 +328,9 @@ namespace cs
 
 		process_context_ref &operator=(process_context *p) noexcept
 		{
-			*thread_slot() = p;
+			// Write through the accessor too: extensions route it to the host's
+			// slot, so assignments (e.g. process_run_scope) are not dropped.
+			*m_access() = p;
 			return *this;
 		}
 
@@ -1525,11 +1527,15 @@ namespace cs
 	inline void domain_type::safe_rewind()
 	{
 		m_ref = std::make_shared<domain_ref>(this);
+		// Reverse index: slot_index -> reflect iterator, built once (O(n))
+		// instead of scanning the whole map for every popped slot.
+		std::vector<map_t<std::string, std::size_t>::iterator> rev(m_slot.size());
+		for (auto it = m_reflect.begin(); it != m_reflect.end(); ++it)
+			rev[it->second] = it;
 		while (!m_slot.empty())
 		{
 			std::size_t idx = m_slot.size() - 1;
-			for (auto it = m_reflect.begin(); it != m_reflect.end();)
-				it = (it->second == idx) ? m_reflect.erase(it) : std::next(it);
+			m_reflect.erase(rev[idx]);
 			m_slot.pop_back();
 		}
 		optimize = false;

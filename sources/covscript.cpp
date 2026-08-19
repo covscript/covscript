@@ -201,15 +201,11 @@ namespace cs
 		std::shared_ptr<process_context> parent_ref = new_process->m_parent;
 		new_process->on_process_exit.add_listener([parent_ref](void *data) -> bool
 		{
-			if (parent_ref)
-				return parent_ref->on_process_exit.touch(data);
-			return false;
+			return parent_ref->on_process_exit.touch(data);
 		});
 		new_process->on_process_sigint.add_listener([parent_ref](void *data) -> bool
 		{
-			if (parent_ref)
-				return parent_ref->on_process_sigint.touch(data);
-			return false;
+			return parent_ref->on_process_sigint.touch(data);
 		});
 		new_process->std_eh_callback = src->std_eh_callback;
 		new_process->cs_eh_callback = src->cs_eh_callback;

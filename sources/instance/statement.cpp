@@ -42,6 +42,15 @@ namespace cs
 			return ctx;
 		}
 
+		// Poll events, requiring an active process: native callers must hold a
+		// process_run_scope when invoking script functions directly.
+		void poll_current_process()
+		{
+			if (current_process == nullptr)
+				throw runtime_error("no active process on this thread (native callers must hold process_run_scope)");
+			current_process->poll_event();
+		}
+
 		// Execute a function body, translating C++ exceptions and honoring
 		// early returns via the value stack.
 		var run_body(const std::deque<statement_base *> &body, context_type *ctx, scope_guard &scope)
@@ -83,7 +92,7 @@ namespace cs
 	var function::call_rr(const function *_this, vector &args)
 	{
 		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
-		current_process->poll_event();
+		poll_current_process();
 		if (args.size() != _this->mArgs.size())
 			throw runtime_error(
 			    "Wrong number of arguments: expected " + std::to_string(_this->mArgs.size()) + ", got " +
@@ -104,7 +113,7 @@ namespace cs
 	var function::call_vv(const function *_this, vector &args)
 	{
 		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
-		current_process->poll_event();
+		poll_current_process();
 		scope_guard scope(ctx.get());
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
@@ -139,7 +148,7 @@ namespace cs
 	var function::call_rl(const function *_this, vector &args)
 	{
 		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
-		current_process->poll_event();
+		poll_current_process();
 		if (args.size() != _this->mArgs.size())
 			throw runtime_error(
 			    "Wrong number of arguments: expected " + std::to_string(_this->mArgs.size()) + ", got " +
@@ -170,7 +179,7 @@ namespace cs
 	var function::call_el(const function *_this, vector &args)
 	{
 		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
-		current_process->poll_event();
+		poll_current_process();
 		if (!args.empty())
 			throw runtime_error("Wrong number of arguments: expected none, got " + std::to_string(args.size()));
 #ifdef CS_DEBUGGER
@@ -564,7 +573,7 @@ namespace cs
 		scope_guard scope(context);
 		while (context->instance->parse_expr(mTree.root()).const_val<boolean>())
 		{
-			current_process->poll_event();
+			poll_current_process();
 			for (auto &ptr : mBlock)
 			{
 				try
@@ -618,7 +627,7 @@ namespace cs
 		scope_guard scope(context);
 		while (true)
 		{
-			current_process->poll_event();
+			poll_current_process();
 			for (auto &ptr : mBlock)
 			{
 				try
@@ -670,7 +679,7 @@ namespace cs
 		scope_guard scope(context);
 		do
 		{
-			current_process->poll_event();
+			poll_current_process();
 			for (auto &ptr : mBlock)
 			{
 				try
@@ -727,7 +736,7 @@ namespace cs
 		scope_guard scope(context);
 		while (true)
 		{
-			current_process->poll_event();
+			poll_current_process();
 			if (!context->instance->parse_expr(mParallel[1].root()).const_val<boolean>())
 				break;
 			for (auto &ptr : mBlock)
@@ -795,7 +804,7 @@ namespace cs
 		// std::pair<const any, any>, and the implicit conversion would copy.
 		for (const auto &it : obj.const_val<T>())
 		{
-			current_process->poll_event();
+			poll_current_process();
 			context->instance->storage.add_var_no_return(iterator, X(it));
 			for (auto &ptr : body)
 			{
@@ -845,7 +854,7 @@ namespace cs
 			var const *fptr = obj.val<structure>().get_domain().get_var_opt("next");
 			if (fptr == nullptr)
 				throw lang_error("The struct does not support iteration. Expect a 'next' method to be defined");
-			current_process->poll_event();
+			poll_current_process();
 			vector args;
 			// Patch for struct member function call, since the first argument of a struct member function is the struct itself
 			if (fptr->is_type_of<callable>() && fptr->const_val<callable>().is_member_fn())
