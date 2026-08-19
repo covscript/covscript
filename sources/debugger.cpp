@@ -57,14 +57,7 @@ static std::string bare_error_message(const std::exception &e)
 	return e.what();
 }
 
-// collect_garbage() nulls the compiler context; re-bind before building
-// expressions, or trim_expr dereferences a null pointer.
 extern cs::context_t context;
-static void ensure_compiler_context()
-{
-	if (context.get() != nullptr)
-		context->compiler->swap_context(context);
-}
 
 #ifdef COVSCRIPT_PLATFORM_WIN32
 
@@ -76,12 +69,12 @@ bool ctrlhandler(DWORD fdwctrltype)
 	{
 		case CTRL_C_EVENT:
 			std::cout << "Keyboard Interrupt (Ctrl+C Received)" << std::endl;
-			cs::current_process->raise_sigint();
+			cs::global_signals.raise_sigint();
 			return true;
 		case CTRL_BREAK_EVENT:
 			// Cooperative exit via the main loop; never run cleanup on the
 			// console-control thread (mirrors interpreter.cpp).
-			cs::current_process->raise_exit();
+			cs::global_signals.raise_exit();
 			return true;
 		default:
 			return false;
@@ -102,8 +95,9 @@ void signal_handler(int sig)
 {
 	// Only async-signal-safe operations are allowed in a signal handler.
 	static const char msg[] = "Keyboard Interrupt (Ctrl+C Received)\n";
-	::write(STDERR_FILENO, msg, sizeof(msg) - 1);
-	cs::current_process->raise_sigint();
+	ssize_t ret = ::write(STDERR_FILENO, msg, sizeof(msg) - 1);
+	(void) ret;
+	cs::global_signals.raise_sigint();
 }
 
 void activate_sigint_handler()
@@ -119,6 +113,9 @@ void activate_sigint_handler()
 
 std::string log_path;
 std::string csym_path;
+std::string import_path = ".";
+bool stack_resized = false;
+std::size_t stack_size = 0;
 bool silent = false;
 bool no_optimize = false;
 bool show_help_info = false;
@@ -146,14 +143,15 @@ int covscript_args(int args_size, char *args[])
 		}
 		else if (expect_import_path == 1)
 		{
-			cs::current_process->import_path += cs::path_delimiter + cs::process_path(args[index]);
+			import_path += cs::path_delimiter + cs::process_path(args[index]);
 			expect_import_path = 2;
 		}
 		else if (expect_stack_resize == 1)
 		{
 			try
 			{
-				cs::current_process->resize_stack(std::stoul(args[index]));
+				stack_size = std::stoul(args[index]);
+				stack_resized = true;
 			}
 			catch (const std::exception &)
 			{
@@ -278,7 +276,11 @@ class breakpoint_recorder final
 				std::get<cs::var>(b.data).const_val<cs::callable>().get_raw_data().target<cs::function_ptr>()->fptr->set_debugger_state(
 				    false);
 			else if (b.id == id && b.data.index() == 1)
-				m_pending.erase(m_pending.find(std::get<std::string>(b.data)));
+			{
+				auto pending_it = m_pending.find(std::get<std::string>(b.data));
+				if (pending_it != m_pending.end())
+					m_pending.erase(pending_it);
+			}
 			return b.id == id; });
 		auto it = m_pending.begin();
 		for (; it != m_pending.end(); ++it)
@@ -306,7 +308,7 @@ class breakpoint_recorder final
 			if (b.data.index() == 2)
 			{
 				auto func = std::get<cs::var>(b.data).const_val<cs::callable>().get_raw_data().target<cs::function_ptr>()->fptr;
-				std::cout << "line " << func->get_raw_statement()->get_line_num() << ", " << func->get_declaration()
+				std::cout << "line " << func->get_debug_line() << ", " << func->get_declaration()
 				          << std::endl;
 			}
 			else if (b.data.index() == 1)
@@ -381,6 +383,7 @@ std::size_t breakpoint_recorder::m_id = 0;
 
 std::string path;
 cs::context_t context;
+std::unique_ptr<cs::process_run_scope> session_scope;
 std::ofstream log_stream;
 
 bool quit_sig = false;
@@ -407,7 +410,8 @@ bool covscript_debugger()
 	// Workaround: https://stackoverflow.com/a/26763490
 	while (true)
 	{
-		cs::current_process->poll_event();
+		if (cs::current_process != nullptr)
+			cs::current_process->poll_event();
 		std::getline(std::cin, cmd);
 		if (std::cin)
 			break;
@@ -425,7 +429,8 @@ bool covscript_debugger()
 	}
 	std::cout << "> " << std::flush;
 	std::getline(std::cin, cmd);
-	cs::current_process->poll_event();
+	if (cs::current_process != nullptr)
+		cs::current_process->poll_event();
 #endif
 	std::size_t posit = 0;
 	for (; posit < cmd.size(); ++posit)
@@ -535,12 +540,13 @@ void cs_debugger_func_breakpoint(const std::string &name, const cs::var &func)
 	breakpoints.replace_pending(name, func);
 }
 
-void cs_debugger_func_callback(const std::string &decl, cs::statement_base *stmt)
+void cs_debugger_func_callback(const std::string &decl, const std::string &file, std::size_t line,
+                               cs::context_type *call_context)
 {
-	if (context->compiler->csyms.count(stmt->get_file_path()) > 0)
+	if (call_context->compiler->csyms.count(file) > 0)
 	{
-		cs::csym_info &csym = context->compiler->csyms[stmt->get_file_path()];
-		std::size_t current_line = stmt->get_line_num();
+		cs::csym_info &csym = call_context->compiler->csyms[file];
+		std::size_t current_line = line;
 		if (current_line == 0 || current_line > csym.map.size())
 			return;
 		std::size_t actual_line = csym.map[current_line - 1];
@@ -549,7 +555,7 @@ void cs_debugger_func_callback(const std::string &decl, cs::statement_base *stmt
 		std::cout << "\nHit breakpoint, at \"" << csym.file << "\", line " << actual_line << ", " << decl << std::endl;
 	}
 	else
-		std::cout << "\nHit breakpoint, at \"" << stmt->get_file_path() << "\", line " << stmt->get_line_num() << ", " << decl << std::endl;
+		std::cout << "\nHit breakpoint, at \"" << file << "\", line " << line << ", " << decl << std::endl;
 	current_level = cs::current_process->stack.size();
 	exec_by_step = true;
 }
@@ -581,7 +587,7 @@ void covscript_main(int args_size, char *args[])
 	if (args_size > 1)
 	{
 		int index = covscript_args(args_size, args);
-		cs::current_process->import_path += cs::path_delimiter + cs::get_import_path();
+		import_path += cs::path_delimiter + cs::get_import_path();
 		if (show_help_info)
 		{
 			std::cout << "Usage: cs_dbg [options...] <FILE>\n"
@@ -601,11 +607,11 @@ void covscript_main(int args_size, char *args[])
 		else if (show_version_info)
 		{
 			std::cout << "Covariant Script Programming Language Debugger\n";
-			std::cout << "Version: " << cs::current_process->version << std::endl;
+			std::cout << "Version: " << COVSCRIPT_VERSION_STR << std::endl;
 			std::cout << cs::copyright_info << std::endl;
 			std::cout << "\nMetadata:\n";
-			std::cout << "  Import Path: " << cs::current_process->import_path << "\n";
-			std::cout << "  STD Version: " << cs::current_process->std_version << "\n";
+			std::cout << "  Import Path: " << import_path << "\n";
+			std::cout << "  STD Version: " << COVSCRIPT_STD_VERSION << "\n";
 			std::cout << "  API Version: " << CS_GET_VERSION_STR(COVSCRIPT_API_VERSION) << "\n";
 			std::cout << "  ABI Version: " << CS_GET_VERSION_STR(COVSCRIPT_ABI_VERSION) << "\n";
 			std::cout << "  Runtime Env: " << COVSCRIPT_PLATFORM_NAME << "-" << COVSCRIPT_ARCH_NAME "\n";
@@ -621,26 +627,14 @@ void covscript_main(int args_size, char *args[])
 		if (!cs_impl::file_system::exist(path) || cs_impl::file_system::is_dir(path) ||
 		    !cs_impl::file_system::can_read(path))
 			throw cs::fatal_error("invalid input file.");
-		cs::prepend_import_path(path, cs::current_process);
 		if (!silent)
 		{
 			std::cout << "Covariant Script Programming Language Debugger\nVersion: "
-			          << cs::current_process->version << " [" << COVSCRIPT_COMPILER_NAME << " on " << COVSCRIPT_PLATFORM_NAME << "]\n"
-			                                                                                                                     "Copyright (C) 2017-2026 Michael Lee. All rights reserved.\n"
-			                                                                                                                     "Please visit <http://covscript.org.cn/> for more information."
+			          << COVSCRIPT_VERSION_STR << " [" << COVSCRIPT_COMPILER_NAME << " on " << COVSCRIPT_PLATFORM_NAME << "]\n"
+			                                                                                                              "Copyright (C) 2017-2026 Michael Lee. All rights reserved.\n"
+			                                                                                                              "Please visit <http://covscript.org.cn/> for more information."
 			          << std::endl;
 		}
-		cs::current_process->on_process_exit.add_listener([main_process = cs::current_process](void *code) -> bool
-		{
-			// Write to the process main() reads it from (a fiber's process would lose it).
-			main_process->exit_code = *static_cast<int *>(code);
-			throw cs::fatal_error("CS_DEBUGGER_EXIT"); });
-		cs::current_process->on_process_sigint.add_listener([](void *) -> bool
-		{ throw cs::fatal_error("CS_SIGINT"); });
-		cs::current_process->on_process_sigint.add_listener([](void *) -> bool
-		{
-			std::cin.clear();
-			return false; });
 		func_map.add_func("quit", "q", [](const std::string &cmd) -> bool
 		{
 			if (context.get() != nullptr)
@@ -731,7 +725,7 @@ void covscript_main(int args_size, char *args[])
 					cs::expression_t tree;
 					for (auto &ch: cmd)
 						buff.push_back(ch);
-					ensure_compiler_context();
+					cs::compile_unit_guard guard(context.get());
 					context->compiler->build_expr(buff, tree);
 					id = breakpoints.add_func(context->instance->parse_expr(tree.root()));
 				}
@@ -787,8 +781,23 @@ void covscript_main(int args_size, char *args[])
 			std::size_t start_time = 0;
 			try
 			{
+				context = cs::create_context(split(cmd), stack_resized ? stack_size : 0);
+				// current_process stays bound while the context is alive (commands between runs use it).
+				session_scope = std::make_unique<cs::process_run_scope>(context);
+				context->process->import_path = import_path;
+				cs::prepend_import_path(path, context->process.get());
 				cs::current_process->exit_code = 0;
-				context = cs::create_context(split(cmd));
+				context->process->on_process_exit.add_listener([main_process = context->process.get()](void *code) -> bool
+				{
+					// Write to the process main() reads it from (a fiber's process would lose it).
+					main_process->exit_code = *static_cast<int *>(code);
+					throw cs::fatal_error("CS_DEBUGGER_EXIT"); });
+				context->process->on_process_sigint.add_listener([](void *) -> bool
+				{ throw cs::fatal_error("CS_SIGINT"); });
+				context->process->on_process_sigint.add_listener([](void *) -> bool
+				{
+					std::cin.clear();
+					return false; });
 				context->compiler->disable_optimizer = no_optimize;
 				// Reads cSYM
 				if (!csym_path.empty())
@@ -799,7 +808,16 @@ void covscript_main(int args_size, char *args[])
 				std::cout << "The compiler has exited normally, up to " << time() - start_time << "ms." << std::endl;
 				std::cout << "Launching new interpreter instance..." << std::endl;
 				start_time = time();
-				context->instance->interpret();
+				try
+				{
+					context->instance->interpret();
+				}
+				catch (...)
+				{
+					context->instance->storage.clear_global();
+					throw;
+				}
+				context->instance->storage.clear_global();
 			}
 			catch (const std::exception &e)
 			{
@@ -809,7 +827,6 @@ void covscript_main(int args_size, char *args[])
 					activate_sigint_handler();
 				}
 				else if (msg != "CS_DEBUGGER_EXIT") {
-					cs::collect_garbage(context);
 					std::cerr
 					        << "\nFatal Error: An exception was detected, the interpreter instance will terminate immediately."
 					        << std::endl;
@@ -822,7 +839,6 @@ void covscript_main(int args_size, char *args[])
 			}
 			catch (...)
 			{
-				cs::collect_garbage(context);
 				std::cerr
 				        << "\nFatal Error: An exception was detected, the interpreter instance will terminate immediately."
 				        << std::endl;
@@ -831,7 +847,6 @@ void covscript_main(int args_size, char *args[])
 				reset_status();
 				throw;
 			}
-			cs::collect_garbage(context);
 			std::cout << "\nThe interpreter instance has exited normally with exit code "
 			          << cs::current_process->exit_code << ", up to " << time() - start_time << "ms."
 			          << std::endl;
@@ -850,7 +865,7 @@ void covscript_main(int args_size, char *args[])
 				cs::expression_t tree;
 				for (auto &ch: cmd)
 					buff.push_back(ch);
-				ensure_compiler_context();
+				cs::compile_unit_guard guard(context.get());
 				context->compiler->build_expr(buff, tree);
 				std::cout << context->instance->parse_expr(tree.root()) << std::endl;
 			}
@@ -874,7 +889,6 @@ void covscript_main(int args_size, char *args[])
 				if (bare_error_message(e) == "CS_SIGINT")
 				{
 					cs::process_context::cleanup_context();
-					cs::collect_garbage(context);
 					reset_status();
 					activate_sigint_handler();
 				}

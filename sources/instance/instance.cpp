@@ -63,12 +63,11 @@ namespace cs
 			context->compiler->modules.emplace(module_key, module);
 			try
 			{
-				{
-					context_swap_guard guard(*rt->compiler, rt);
-					rt->instance->compile(path);
-					rt->instance->interpret();
-				}
+				rt->instance->compile(path);
+				rt->instance->interpret();
 				*module = *rt->instance->storage.get_namespace();
+				// The context now owns the subcontext (breaking the module cycle).
+				context->subcontexts.push_back(rt);
 				return module;
 			}
 			catch (...)
@@ -99,7 +98,9 @@ namespace cs
 		std::exception_ptr eptr = nullptr;
 		for (auto &it : collection)
 		{
-			std::string package_path = it + path_separator + name;
+			std::string package_path = it;
+			package_path += path_separator;
+			package_path += name;
 			const std::string &module_key = cs_impl::file_system::normalize_path(package_path);
 			if (context->compiler->modules.count(module_key) > 0)
 				return context->compiler->modules[module_key];
@@ -111,16 +112,15 @@ namespace cs
 				context->compiler->modules.emplace(module_key, module);
 				try
 				{
-					{
-						context_swap_guard guard(*rt->compiler, rt);
-						rt->instance->compile(package_path + ".csp");
-						rt->instance->interpret();
-					}
+					rt->instance->compile(package_path + ".csp");
+					rt->instance->interpret();
 					if (rt->package_name.empty())
 						throw runtime_error("The imported file is not a package (it has no 'package' declaration)");
 					if (rt->package_name != name)
 						throw runtime_error("The package name declared in the file does not match the file name");
 					*module = *rt->instance->storage.get_namespace();
+					// The context now owns the subcontext (breaking the module cycle).
+					context->subcontexts.push_back(rt);
 					return module;
 				}
 				catch (...)
@@ -160,20 +160,46 @@ namespace cs
 
 	void instance_type::compile(std::istream &in)
 	{
-		// Read from file
-		std::deque<char> buff;
-		for (int ch = in.get(); in; ch = in.get())
-			buff.push_back(ch);
-		std::deque<std::deque<token_base *>> ast;
-		// Compile. The constant pool is scoped to this translation unit: a nested
-		// compile (module import during code generation) must not wipe the
-		// constants accumulated by the enclosing compilation.
+		// Install this context's process (module imports run code here).
+		process_run_scope scope(context);
+		// Replace the previous program: owning statements and their token arena
+		// are freed here.
+		release_statements();
+		// Create the token arena for this compilation; all tokens produced by the
+		// lexer/parser/codegen are allocated into it.
+		m_unit = std::make_shared<compile_unit>();
+		std::shared_ptr<compile_unit> saved_unit = context->current_unit;
+		context->current_unit = m_unit;
+		// Roll back only lambdas registered by this compilation. Stable store
+		// indices let successful nested compilations survive an outer failure.
+		functions.begin_transaction();
+		context->compiler->begin_import_scope();
 		std::size_t pool_base = context->compiler->save_pool();
 		value_guard<std::size_t> loop_guard(context->compiler->loop_depth, 0);
-		// Scope the import FIFO to this unit so nested compiles don't disturb it.
-		std::size_t import_base = context->compiler->import_results.size();
+		// The compiler may be shared (subcontexts); bind it to this instance so
+		// tokens and statements land in this context.
+		context_swap_guard ctx_guard(*context->compiler, context);
 		try
 		{
+			// Read from file
+			std::deque<char> buff;
+			while (true)
+			{
+				try
+				{
+					int ch = in.get();
+					if (!in)
+						break;
+					buff.push_back(ch);
+				}
+				catch (const std::ios_base::failure &)
+				{
+					if (in.eof() && !in.bad())
+						break;
+					throw;
+				}
+			}
+			std::deque<std::deque<token_base *>> ast;
 			context->compiler->build_ast(buff, ast);
 			context->compiler->code_gen(ast, statements);
 			context->compiler->utilize_metadata();
@@ -181,15 +207,45 @@ namespace cs
 		catch (...)
 		{
 			context->compiler->restore_pool(pool_base);
-			context->compiler->import_results.resize(import_base);
+			context->compiler->end_import_scope();
+			context->current_unit = saved_unit;
+			// Free half-generated statements so a failed program can't linger.
+			statement_base::delete_children(statements);
+			functions.rollback_transaction();
+			release_unit();
 			throw;
 		}
 		context->compiler->restore_pool(pool_base);
-		context->compiler->import_results.resize(import_base);
+		context->compiler->end_import_scope();
+		context->current_unit = saved_unit;
+		functions.commit_transaction();
 	}
+
+	// Only the outermost interpret clears the value stack.
+	static thread_local std::size_t interpret_depth = 0;
 
 	void instance_type::interpret()
 	{
+		process_run_scope scope(context);
+		if (interpret_depth == 0)
+		{
+			// Defensive: stale frames from an interrupted run (RAII balances the
+			// stack normally). Always clear: leaving them lets the next run
+			// swap into a stale frame; the debug mode only controls the diagnostic.
+			if (!current_process->stack.empty())
+			{
+				cs_impl::debug_guard(
+				    "[interpret] function value stack is not empty at program entry; "
+				    "stale frames from an interrupted run");
+				while (!current_process->stack.empty())
+					current_process->stack.pop_no_return();
+			}
+#ifdef CS_DEBUGGER
+			while (!current_process->stack_backtrace.empty())
+				current_process->stack_backtrace.pop_no_return();
+#endif
+		}
+		value_guard<std::size_t> depth_guard(interpret_depth, interpret_depth + 1);
 		// Run the instruction
 		for (auto &ptr : statements)
 		{
@@ -253,6 +309,12 @@ namespace cs
 		}
 	}
 
+	// A constant's RHS must be a folded token_value or a lambda (token_lambda).
+	static bool is_constant_rhs(token_base *rhs)
+	{
+		return rhs != nullptr && (rhs->get_type() == token_types::value || rhs->get_type() == token_types::lambda);
+	}
+
 	void instance_type::check_define_var(tree_type<token_base *>::iterator it, bool regist, bool constant)
 	{
 		if (it.data() == nullptr)
@@ -278,8 +340,8 @@ namespace cs
 					token_base *right = it.right().data();
 					if (left == nullptr || right == nullptr || left->get_type() != token_types::id)
 						throw runtime_error("Invalid variable definition: the left-hand side must be an identifier");
-					if (constant && right->get_type() != token_types::value)
-						throw runtime_error("A constant must be initialized with a constant value");
+					if (constant && !is_constant_rhs(right))
+						throw runtime_error("A constant must be initialized with a constant value; runtime calls and values containing functions or methods are not permitted");
 					if (regist)
 						storage.add_record(static_cast<token_id *>(left)->get_id().get_id());
 					break;
@@ -287,8 +349,8 @@ namespace cs
 				case signal_types::bind_:
 				{
 					token_base *right = it.right().data();
-					if (constant && (right == nullptr || right->get_type() != token_types::value))
-						throw runtime_error("A constant structured binding must be initialized with a constant value");
+					if (constant && !is_constant_rhs(right))
+						throw runtime_error("A constant structured binding must be initialized with a constant value; runtime calls and values containing functions or methods are not permitted");
 					check_define_structured_binding(it.left(), regist);
 					break;
 				}
@@ -296,6 +358,14 @@ namespace cs
 					throw runtime_error("Invalid variable definition: expected '<id> = <value>' or a structured binding");
 			}
 		}
+	}
+
+	var instance_type::fold_constant(tree_type<token_base *>::iterator rhs, bool constant)
+	{
+		token_base *ptr = rhs.data();
+		return constant && ptr != nullptr && ptr->get_type() == token_types::value
+		           ? static_cast<token_value *>(ptr)->get_value()
+		           : parse_expr(rhs);
 	}
 
 	void instance_type::parse_define_var(tree_type<token_base *>::iterator it, bool constant, bool link)
@@ -313,7 +383,7 @@ namespace cs
 			{
 				case signal_types::asi_:
 				{
-					const var &val = constant ? static_cast<token_value *>(it.right().data())->get_value() : parse_expr(it.right());
+					var val = fold_constant(it.right(), constant);
 					storage.add_var_no_return(static_cast<token_id *>(it.left().data())->get_id(),
 					                          constant || link ? val : copy(val),
 					                          constant);
@@ -371,7 +441,7 @@ namespace cs
 					                          constant || link ? arr[i] : copy(arr[i]), constant);
 			}
 		};
-		const var &val = constant ? static_cast<token_value *>(it.right().data())->get_value() : parse_expr(it.right());
+		var val = fold_constant(it.right(), constant);
 		process(it.left(), val);
 	}
 
@@ -408,10 +478,6 @@ namespace cs
 	void repl::interpret(const string &code, std::deque<token_base *> &line)
 	{
 		statement_base *sptr = nullptr;
-		// Record the FIFO base at each new top-level statement so reset_status
-		// can drop stale results on failure.
-		if (methods.empty())
-			import_base = context->compiler->import_results.size();
 		try
 		{
 			method_base *m = context->compiler->match_method(line);
@@ -430,21 +496,18 @@ namespace cs
 							context->instance->storage.remove_set();
 							domain_type domain = std::move(context->instance->storage.get_domain());
 							context->instance->storage.remove_domain();
-							// Pop before postprocess: if postprocess throws (e.g. a
-							// namespace-name conflict), the method must no longer count
-							// as owning a domain/set pair, or reset_status would pop the
-							// already-removed pair again and corrupt the storage stacks.
+							// Pop before postprocess so a throw can't double-pop.
 							expected_method = methods.top();
 							methods.pop();
-							expected_method->postprocess(context, domain);
+							expected_method->postprocess(context.get(), domain);
 						}
 						if (methods.empty())
 						{
 							if (m->get_target_type() == statement_types::end_)
-								sptr = static_cast<method_end *>(m)->translate_end(expected_method, context, tmp,
+								sptr = static_cast<method_end *>(m)->translate_end(expected_method, context.get(), tmp,
 								                                                   line);
 							else
-								sptr = expected_method->translate(context, tmp);
+								sptr = expected_method->translate(context.get(), tmp);
 							// Loop closed: release depth after translation (break/continue
 							// in the body still need loop_depth > 0 while it re-translates).
 							if (expected_method != nullptr && compiler_type::is_loop_block(expected_method))
@@ -456,7 +519,7 @@ namespace cs
 							// Deferred block: release its depth now to keep the scan balanced.
 							if (m->get_target_type() == statement_types::end_ && compiler_type::is_loop_block(expected_method))
 								--context->compiler->loop_depth;
-							m->preprocess(context, {line});
+							m->preprocess(context.get(), {line});
 							tmp.push_back(line);
 						}
 					}
@@ -466,8 +529,8 @@ namespace cs
 							throw runtime_error("Unexpected 'end': there is no open block to close");
 						else
 						{
-							m->preprocess(context, {line});
-							sptr = m->translate(context, {line});
+							m->preprocess(context.get(), {line});
+							sptr = m->translate(context.get(), {line});
 						}
 					}
 				}
@@ -479,19 +542,26 @@ namespace cs
 					context->instance->storage.add_set();
 					if (compiler_type::is_loop_block(m))
 						++context->compiler->loop_depth;
-					methods.top()->preprocess(context, {line});
+					methods.top()->preprocess(context.get(), {line});
 					tmp.push_back(line);
 				}
 				break;
 				case method_types::jit_command:
-					m->translate(context, {line});
+					m->translate(context.get(), {line});
 					break;
 			}
 			if (sptr != nullptr)
+			{
 				echo ? sptr->repl_run() : sptr->run();
+				delete sptr;
+				// The catch handlers below also `delete sptr`; null it out so a
+				// throw after this point cannot double-free the statement.
+				sptr = nullptr;
+			}
 		}
 		catch (const lang_error &le)
 		{
+			delete sptr;
 			reset_status();
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
@@ -501,6 +571,7 @@ namespace cs
 		}
 		catch (const cs::exception &)
 		{
+			delete sptr;
 			reset_status();
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
@@ -508,6 +579,7 @@ namespace cs
 		}
 		catch (const std::exception &e)
 		{
+			delete sptr;
 			reset_status();
 			context->compiler->utilize_metadata();
 			context->instance->storage.clear_set();
@@ -520,17 +592,80 @@ namespace cs
 	void repl::run(const string &code)
 	{
 		if (code.empty())
-			return;
+			throw runtime_error("REPL input must contain exactly one top-level statement");
+		process_run_scope scope(context);
+		// The compiler may be shared (subcontexts); bind it to this context.
+		context_swap_guard ctx_guard(*context->compiler, context.get());
+		const bool reentrant = m_run_depth > 0;
+		if (reentrant && !methods.empty())
+			throw runtime_error("Re-entrant REPL execution cannot continue an open block");
+		value_guard<std::size_t> run_depth_guard(m_run_depth, m_run_depth + 1);
 		std::deque<char> buff;
 		for (auto &ch : code)
 			buff.push_back(ch);
+		// A new top-level statement starts when no block is open: record the
+		// import FIFO base, begin a function-store transaction and start a fresh
+		// token arena. The transaction begins before build_line because lambdas
+		// register during compilation; failures roll back only this statement's
+		// slots while keeping committed nested indices stable.
+		if (methods.empty())
+		{
+			context->compiler->begin_import_scope();
+			context->instance->functions.begin_transaction();
+			m_saved_units.push_back(context->current_unit);
+			m_units.push_back(std::make_shared<compile_unit>());
+			context->current_unit = m_units.back();
+		}
+		std::deque<std::deque<token_base *>> ast;
 		try
 		{
-			std::deque<std::deque<token_base *>> ast;
 			context->compiler->clear_metadata();
-			context->compiler->build_line(buff, ast, line_num, encoding);
+			context->compiler->build_line(buff, ast, line_num, encoding, false);
+		}
+		catch (const lang_error &le)
+		{
+			// Build failed before interpret() ran, so this layer owns the
+			// rollback (interpret's catches reset failures after this point;
+			// resetting twice would pop an enclosing statement's frame).
+			reset_status();
+			if (le.has_location())
+				throw exception(le.line(), le.file(), le.code(), std::string("Uncaught exception: ") + le.what());
+			throw fatal_error(std::string("Uncaught exception: ") + le.what());
+		}
+		catch (const cs::exception &)
+		{
+			reset_status();
+			throw;
+		}
+		catch (const std::exception &e)
+		{
+			reset_status();
+			throw exception(line_num, context->file_path, code, exception_message(e));
+		}
+		if (ast.empty())
+		{
+			reset_status();
+			throw runtime_error("REPL input must contain exactly one top-level statement");
+		}
+		try
+		{
 			for (auto &line : ast)
-				interpret(code, line);
+				context->compiler->process_line(line);
+			std::size_t depth = methods.size();
+			std::size_t statement_count = depth == 0 ? 0 : 1;
+			for (auto &line : ast)
+			{
+				method_base *method = context->compiler->match_method(line);
+				if (depth == 0 && ++statement_count > 1)
+					throw runtime_error("REPL input must contain exactly one top-level statement");
+				if (method->get_type() == method_types::block)
+					++depth;
+				else if (method->get_type() == method_types::single &&
+				         method->get_target_type() == statement_types::end_ && depth > 0)
+					--depth;
+				if (reentrant && method->get_type() == method_types::block)
+					throw runtime_error("Re-entrant REPL execution cannot open a block");
+			}
 		}
 		catch (const lang_error &le)
 		{
@@ -548,6 +683,14 @@ namespace cs
 		{
 			reset_status();
 			throw exception(line_num, context->file_path, code, exception_message(e));
+		}
+		for (auto &line : ast)
+			interpret(code, line);
+		if (methods.empty())
+		{
+			context->instance->functions.commit_transaction();
+			context->compiler->end_import_scope();
+			pop_unit();
 		}
 	}
 
@@ -591,6 +734,12 @@ namespace cs
 				return;
 			case 1:
 			{
+				if (m_run_depth > 0)
+				{
+					cmd_buff.clear();
+					context->file_buff.emplace_back();
+					throw runtime_error("Re-entrant REPL execution cannot use preprocessing commands");
+				}
 				std::string cmd;
 				std::swap(cmd_buff, cmd);
 				if (cmd == "begin" && !multi_line)

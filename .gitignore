@@ -61,3 +61,4 @@ tests/gen/
 
 # ClangD Files
 *.idx
+audit/tmp/

@@ -27,6 +27,9 @@
 #include <covscript/impl/system.hpp>
 #include <filesystem>
 #include <fcntl.h>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 
 namespace cs::fiber
 {
@@ -67,9 +70,9 @@ namespace cs::fiber
 				                     .count();
 				if (remain_ms <= 0)
 					break;
-				auto wait_time = static_cast<std::size_t>(remain_ms * current_process->fiber_cxt->busy_wait_coef);
-				if (wait_time < current_process->fiber_cxt->busy_wait_min)
-					wait_time = current_process->fiber_cxt->busy_wait_min;
+				auto wait_time = static_cast<std::size_t>(remain_ms * fiber_context::current()->busy_wait_coef);
+				if (wait_time < fiber_context::current()->busy_wait_min)
+					wait_time = fiber_context::current()->busy_wait_min;
 				if (wait_time > static_cast<std::size_t>(remain_ms))
 					wait_time = static_cast<std::size_t>(remain_ms);
 				if (within())
@@ -92,9 +95,9 @@ namespace cs::fiber
 				if (mFiber->get_state() == fiber_state::sleeping)
 				{
 					if (within())
-						fiber::sleep_for(current_process->fiber_cxt->busy_wait_min);
+						fiber::sleep_for(fiber_context::current()->busy_wait_min);
 					else
-						std::this_thread::sleep_for(std::chrono::milliseconds(current_process->fiber_cxt->busy_wait_min));
+						std::this_thread::sleep_for(std::chrono::milliseconds(fiber_context::current()->busy_wait_min));
 				}
 			}
 		}
@@ -112,6 +115,21 @@ namespace cs::fiber
 	future_t get_future(const fiber_t &fiber)
 	{
 		return std::make_shared<fiber_future>(fiber);
+	}
+
+	schedule_parameters get_schedule_parameters()
+	{
+		auto *cxt = fiber_context::current();
+		return {cxt->busy_wait_coef, cxt->busy_wait_min};
+	}
+
+	void set_schedule_parameters(const schedule_parameters &params)
+	{
+		if (!(params.busy_wait_coef >= 0.0 && params.busy_wait_coef <= 1.0))
+			throw lang_error("Fiber busy-wait coefficient must be between 0 and 1");
+		auto *cxt = fiber_context::current();
+		cxt->busy_wait_coef = params.busy_wait_coef;
+		cxt->busy_wait_min = params.busy_wait_min;
 	}
 } // namespace cs::fiber
 
@@ -217,6 +235,49 @@ constexpr char path_delimiter_reversed = ';';
 
 namespace cs_impl
 {
+	namespace
+	{
+		inline char lower(char c)
+		{
+			return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+		}
+	} // namespace
+
+	debug_mode get_debug_mode() noexcept
+	{
+		static const debug_mode mode = []() -> debug_mode
+		{
+			const char *env = std::getenv("COVSCRIPT_DEBUG");
+			if (env == nullptr)
+				return debug_mode::warning;
+			std::string value;
+			for (const char *p = env; *p != '\0'; ++p)
+				value.push_back(lower(*p));
+			if (value == "none")
+				return debug_mode::none;
+			if (value == "strict")
+				return debug_mode::strict;
+			return debug_mode::warning;
+		}();
+		return mode;
+	}
+
+	void debug_guard(const char *msg) noexcept
+	{
+		switch (get_debug_mode())
+		{
+			case debug_mode::none:
+				break;
+			case debug_mode::warning:
+				std::fprintf(stderr, "%s\n", msg);
+				break;
+			case debug_mode::strict:
+				std::fprintf(stderr, "%s\n", msg);
+				std::abort();
+				break;
+		}
+	}
+
 	namespace file_system
 	{
 		bool exist(const std::string &path)
@@ -250,7 +311,13 @@ namespace cs_impl
 					p = std::filesystem::path(path);
 				p = p.lexically_normal();
 			}
-			return p.generic_string();
+			std::string result = p.generic_string();
+#ifdef _WIN32
+			// Windows: fold case so `import Foo`/`foo` share one cache entry.
+			for (auto &ch : result)
+				ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+#endif
+			return result;
 		}
 
 		bool chmod_r(const std::string &path_input, const std::string &mode)
@@ -311,7 +378,7 @@ namespace cs_impl
 			return !ec;
 		}
 
-		bool mkdir(std::string path)
+		bool mkdir(const std::string &path)
 		{
 			std::error_code ec;
 			std::filesystem::create_directory(path, ec);

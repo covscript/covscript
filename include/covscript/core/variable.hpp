@@ -241,6 +241,20 @@ namespace cs_impl
 		// Do something if you want when data is copying.
 	}
 
+	// Post-clone fixup context: the proxy before the clone (for identifying
+	// self-references) and the new proxy (for rebinding them).
+	struct rebind_ctx
+	{
+		const void *old_proxy;
+		const void *new_proxy;
+	};
+
+	template <typename T>
+	static void rebind(T &, void *)
+	{
+		// Do something if you want after data is copied.
+	}
+
 	template <typename T>
 	constexpr const char *get_name_of_type()
 	{
@@ -385,6 +399,7 @@ namespace cs_impl
 			access_ref = 32, // const_data.member
 			prep_call = 33,  // prepare before call
 			fcall = 34,      // func(args)
+			rebind = 35,     // fix self-references after clone
 		};
 		template <typename T>
 		struct handler
@@ -396,6 +411,7 @@ namespace cs_impl
 			static inline result to_string(void *lhs, void *rhs);
 			static inline result hash(void *lhs, void *rhs);
 			static inline result detach(void *lhs, void *rhs);
+			static inline result rebind(void *lhs, void *rhs);
 			static inline result ext_ns(void *lhs, void *rhs);
 			static inline result add(void *lhs, void *rhs);
 			static inline result sub(void *lhs, void *rhs);
@@ -455,9 +471,7 @@ namespace cs_impl
 				static_assert(std::is_move_constructible<T>::value, "CovScript requires type supports move constructor.");
 				T *src = static_cast<T *>(lhs);
 				::new (&static_cast<basic_var *>(rhs)->m_store.buffer) T(std::move(*src));
-				// End the moved-from source's lifetime: move_store nulls the
-				// source dispatcher, so without this its destructor would never
-				// run for SVO values.
+				// End the moved-from source's lifetime (dispatcher is nulled).
 				src->~T();
 				return operators::result();
 			}
@@ -516,6 +530,7 @@ namespace cs_impl
 				    op_handler::access_ref,
 				    op_handler::prep_call,
 				    op_handler::fcall,
+				    op_handler::rebind,
 				};
 #ifdef CS_ENABLE_PROFILING
 				++op_perf[static_cast<unsigned>(op)];
@@ -542,12 +557,9 @@ namespace cs_impl
 		template <typename T>
 		struct var_op_heap_dispatcher
 		{
-			static allocator_t<T> &get_allocator()
+			static allocator_view<T, allocator_t> &get_allocator()
 			{
-				// Thread-local like the proxy pool: async worker threads allocate
-				// and free heap-stored values independently of the main thread.
-				static thread_local allocator_t<T> allocator;
-				return allocator;
+				return allocator_view<T, allocator_t>::get();
 			}
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_copy(void *lhs, void *rhs)
 			{
@@ -569,9 +581,7 @@ namespace cs_impl
 			static COVSCRIPT_ALWAYS_INLINE operators::result op_move(void *lhs, void *rhs) noexcept
 			{
 				static_assert(std::is_move_constructible<T>::value, "CovScript requires type supports move constructor.");
-				// Transfer the heap block to the destination; move_store
-				// nulls the source dispatcher, so the block has exactly one
-				// owner and no deep copy or leak occurs.
+				// Transfer the heap block; the nulled dispatcher leaves one owner.
 				static_cast<basic_var *>(rhs)->m_store.ptr = static_cast<T *>(lhs);
 				return operators::result();
 			}
@@ -644,6 +654,7 @@ namespace cs_impl
 				    op_handler::access_ref,
 				    op_handler::prep_call,
 				    op_handler::fcall,
+				    op_handler::rebind,
 				};
 #ifdef CS_ENABLE_PROFILING
 				++op_perf[static_cast<unsigned>(op)];
@@ -704,9 +715,7 @@ namespace cs_impl
 		inline void construct_store(ArgsT &&...args)
 		{
 			destroy_store();
-			// Commit the dispatcher only after the value is successfully
-			// constructed, so a throwing constructor never leaves a var whose
-			// dispatcher points at uninitialized storage.
+			// Commit the dispatcher only after construction succeeds.
 			dispatcher_class<T>::construct(this, std::forward<ArgsT>(args)...);
 			m_dispatcher = &dispatcher_class<T>::dispatcher;
 		}
@@ -727,11 +736,7 @@ namespace cs_impl
 				destroy_store();
 				return;
 			}
-			// Build the copy in a scratch var first so a throwing copy
-			// leaves *this untouched (strong exception guarantee). The
-			// commit then moves the scratch value into *this, which for
-			// heap types transfers the block and for SVO types moves into
-			// the in-place buffer, so SSO containers stay valid.
+			// Strong exception guarantee: build in a scratch var, then commit.
 			basic_var tmp;
 			other.m_dispatcher(operators::type::copy, &other, &tmp);
 			tmp.m_dispatcher = other.m_dispatcher;
@@ -854,6 +859,12 @@ namespace cs_impl
 			m_dispatcher(operators::type::detach, this, nullptr);
 		}
 
+		inline void rebind(void *ctx)
+		{
+			if (m_dispatcher != nullptr)
+				m_dispatcher(operators::type::rebind, this, ctx);
+		}
+
 		inline cs::namespace_t &get_ext() const
 		{
 			return *static_cast<cs::namespace_t *>(m_dispatcher(operators::type::ext_ns, this, nullptr)._ptr);
@@ -877,12 +888,15 @@ namespace cs_impl
 #endif
 #endif
 
+	class any_borrower;
+
 	class any final
 	{
 		template <typename T>
 		friend class operators::handler;
 		template <std::size_t align_size, template <typename> class allocator_t>
 		friend class basic_var;
+		friend class any_borrower;
 
 		struct proxy
 		{
@@ -905,13 +919,17 @@ namespace cs_impl
 			}
 		};
 
-		using allocator_t = cs::allocator_type<proxy, CS_ALLOCATOR_BUFFER_MAX * CS_VAR_ALLOC_MULTIPLIER, default_allocator_provider>;
+		template <typename T>
+		using proxy_pooled_provider =
+		    cs::pooled_block_provider<T, CS_ALLOCATOR_BUFFER_MAX * CS_VAR_ALLOC_MULTIPLIER, default_allocator_provider>;
+		template <typename T>
+		using proxy_allocator = cs::allocator_type<T, proxy_pooled_provider>;
 
-		// Shared pool; guarded by the worker-thread count in allocator_type.
-		static inline allocator_t &get_allocator()
+		// Main thread pools blocks; other threads go straight to std::allocator
+		// (thread-safe, blocks interchangeable). Chosen once per thread.
+		static inline allocator_view<proxy, proxy_allocator> &get_allocator()
 		{
-			static allocator_t allocator;
-			return allocator;
+			return allocator_view<proxy, proxy_allocator>::get();
 		}
 
 		proxy *mDat = nullptr;
@@ -977,10 +995,33 @@ namespace cs_impl
 			{
 				if (mDat->protect_level > 2)
 					throw cs::runtime_error("Duplicate singleton objects are not allowed");
-				proxy *dat = get_allocator().alloc(1, mDat->data);
+				// Copy storage; on throw return the block to the pool.
+				const void *old_proxy = mDat;
+				proxy *dat = get_allocator().alloc();
+				dat->protect_level = 0;
+				try
+				{
+					dat->data = mDat->data;
+				}
+				catch (...)
+				{
+					get_allocator().free(dat);
+					throw;
+				}
 				recycle();
 				mDat = dat;
+				// The clone is a new object: rebind self-references (e.g. a
+				// recursive lambda's `self`) from the old proxy to this one.
+				rebind(old_proxy);
 			}
+		}
+
+		void rebind(const void *old_proxy)
+		{
+			if (mDat == nullptr)
+				return;
+			rebind_ctx ctx{old_proxy, mDat};
+			mDat->data.rebind(&ctx);
 		}
 
 		void try_move() const
@@ -992,6 +1033,12 @@ namespace cs_impl
 		bool usable() const noexcept
 		{
 			return mDat != nullptr;
+		}
+
+		// Raw proxy address, for detecting a self-referencing object_method in cs::copy.
+		const void *proxy_address() const noexcept
+		{
+			return mDat;
 		}
 
 		template <typename T, typename... ArgsT>
@@ -1511,6 +1558,14 @@ namespace cs_impl
 			else
 				return static_cast<proxy *>(mDat->data.m_dispatcher(operators::type::fcall, &mDat->data, &args)._ptr);
 		}
+
+#ifdef CS_UNIT_TEST
+		// Test-only: owning refcount of the shared proxy.
+		std::uint32_t debug_refcount() const noexcept
+		{
+			return mDat != nullptr ? mDat->refcount : 0;
+		}
+#endif
 	};
 
 	template <>
@@ -1538,6 +1593,122 @@ namespace cs_impl
 	struct var_storage<std::type_info>
 	{
 		using type = std::type_index;
+	};
+
+	// Owning or borrowing view of a var's proxy (friend of any); materializing
+	// to a var requires the proxy to be alive.
+	class any_borrower final
+	{
+		any::proxy *m_proxy = nullptr;
+		bool m_own = false;
+
+		void release() noexcept
+		{
+			if (m_own && m_proxy != nullptr)
+			{
+				if (--m_proxy->refcount == 0)
+				{
+					any::get_allocator().free(m_proxy);
+					m_proxy = nullptr;
+				}
+			}
+			m_proxy = nullptr;
+			m_own = false;
+		}
+
+	   public:
+		any_borrower() noexcept = default;
+
+		any_borrower(const any &v) noexcept
+		    : m_proxy(v.mDat), m_own(v.mDat != nullptr)
+		{
+			if (m_own)
+				++m_proxy->refcount;
+		}
+
+		any_borrower(const any_borrower &other) noexcept
+		    : m_proxy(other.m_proxy), m_own(other.m_own)
+		{
+			if (m_own && m_proxy != nullptr)
+				++m_proxy->refcount;
+		}
+
+		any_borrower(any_borrower &&other) noexcept
+		    : m_proxy(other.m_proxy), m_own(other.m_own)
+		{
+			other.m_proxy = nullptr;
+			other.m_own = false;
+		}
+
+		any_borrower &operator=(const any_borrower &other) noexcept
+		{
+			if (this != &other)
+			{
+				release();
+				m_proxy = other.m_proxy;
+				m_own = other.m_own;
+				if (m_own && m_proxy != nullptr)
+					++m_proxy->refcount;
+			}
+			return *this;
+		}
+
+		any_borrower &operator=(any_borrower &&other) noexcept
+		{
+			if (this != &other)
+			{
+				release();
+				m_proxy = other.m_proxy;
+				m_own = other.m_own;
+				other.m_proxy = nullptr;
+				other.m_own = false;
+			}
+			return *this;
+		}
+
+		~any_borrower()
+		{
+			release();
+		}
+
+		// Non-owning view of a var; the var must outlive the borrower.
+		static any_borrower borrow(const any &v) noexcept
+		{
+			any_borrower b;
+			b.m_proxy = v.mDat;
+			b.m_own = false;
+			return b;
+		}
+
+		// Non-owning view of a raw proxy (post-clone rebinding); the proxy must
+		// outlive the borrower.
+		static any_borrower borrow_raw(const void *proxy) noexcept
+		{
+			any_borrower b;
+			b.m_proxy = static_cast<any::proxy *>(const_cast<void *>(proxy));
+			b.m_own = false;
+			return b;
+		}
+
+		bool usable() const noexcept
+		{
+			return m_proxy != nullptr;
+		}
+
+		// Whether this borrower points at a specific proxy (self-referencing lambda's `self`).
+		bool points_to(const void *proxy) const noexcept
+		{
+			return m_proxy == proxy;
+		}
+
+		// Materialize to an owning var. The borrowed proxy must still be alive.
+		operator any() const
+		{
+			if (m_proxy == nullptr)
+				return any();
+			++m_proxy->refcount;
+			return any(m_proxy);
+		}
 	};
 } // namespace cs_impl
 

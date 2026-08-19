@@ -17,11 +17,13 @@ static bool translate_throws(cs::context_t ctx,
                              std::deque<std::deque<cs::token_base *>> &lines)
 {
 	std::deque<cs::statement_base *> statements;
-	try {
+	try
+	{
 		ctx->compiler->translate(lines, statements);
 		return false;
 	}
-	catch (const cs::compile_error &) {
+	catch (const cs::compile_error &)
+	{
 		return true;
 	}
 }
@@ -34,7 +36,8 @@ TEST(translate_valid_simple_expression)
 {
 	auto ast = build_line("a + b");
 	EXPECT_TRUE(ast.size() > 0);
-	for (auto &line : ast) {
+	for (auto &line : ast)
+	{
 		EXPECT_FALSE(line.empty());
 		auto *tail = line.back();
 		EXPECT_TRUE(tail != nullptr);
@@ -46,7 +49,8 @@ TEST(translate_valid_assignment)
 {
 	auto ast = build_line("x = 42");
 	EXPECT_TRUE(ast.size() > 0);
-	for (auto &line : ast) {
+	for (auto &line : ast)
+	{
 		EXPECT_FALSE(line.empty());
 		auto *tail = line.back();
 		EXPECT_TRUE(tail != nullptr);
@@ -57,7 +61,8 @@ TEST(translate_valid_assignment)
 TEST(translate_multiple_lines_have_endline)
 {
 	auto ast = build_ast_lines("var x = 1\nvar y = 2\nx + y");
-	for (auto &line : ast) {
+	for (auto &line : ast)
+	{
 		EXPECT_FALSE(line.empty());
 		auto *tail = line.back();
 		EXPECT_TRUE(tail != nullptr);
@@ -90,6 +95,8 @@ TEST(translate_rejects_line_without_endline)
 	// Missing: token_endline
 	lines.push_back(bad_line);
 	EXPECT_TRUE(translate_throws(ctx, lines));
+	for (auto *t : bad_line)
+		delete t;
 }
 
 TEST(translate_rejects_empty_line)
@@ -110,4 +117,6 @@ TEST(translate_rejects_null_endline)
 	bad_line.push_back(nullptr); // null instead of endline
 	lines.push_back(bad_line);
 	EXPECT_TRUE(translate_throws(ctx, lines));
+	for (auto *t : bad_line)
+		delete t;
 }

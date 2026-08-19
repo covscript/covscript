@@ -109,30 +109,6 @@ namespace cs
 
 	array parse_cmd_args(int, char *[]);
 
-	void collect_garbage();
-
-	void collect_garbage(context_t &);
-
-	class raii_collector final
-	{
-		context_t context;
-
-	   public:
-		raii_collector() = delete;
-
-		raii_collector(const raii_collector &) = delete;
-
-		raii_collector(raii_collector &&) noexcept = delete;
-
-		explicit raii_collector(context_t cxt)
-		    : context(std::move(cxt)) {}
-
-		~raii_collector()
-		{
-			collect_garbage(context);
-		}
-	};
-
 	cs::var eval(const context_t &, const std::string &);
 
 	using cs_function_invoker_impl::function_invoker;
@@ -154,15 +130,20 @@ namespace cs
 		bootstrap()
 		    : context(create_context({"<BOOTSTRAP_ENV>"})) {}
 
-		~bootstrap()
-		{
-			collect_garbage(context);
-		}
-
 		void run(const std::string &path)
 		{
 			context->instance->compile(path);
 			context->instance->interpret();
+		}
+
+		~bootstrap()
+		{
+			// Run struct finalizers while the runtime is alive, not during
+			// context teardown when the process/instance are already dying.
+			// Activate the process so finalizers that read current_process see a
+			// valid value.
+			process_run_scope scope(context);
+			context->instance->storage.clear_global();
 		}
 	};
 } // namespace cs

@@ -31,7 +31,8 @@ TEST(fiber_within_main_context)
 TEST(fiber_within_inside_fiber)
 {
 	bool inside = false;
-	auto f = cs::fiber::create_native([&]() -> cs::var {
+	auto f = cs::fiber::create_native([&]() -> cs::var
+	{
 		inside = cs::fiber::within();
 		return {};
 	});
@@ -50,7 +51,8 @@ TEST(fiber_current_main_context)
 TEST(fiber_current_inside_fiber)
 {
 	cs::fiber_type const *self = nullptr;
-	auto f = cs::fiber::create_native([&]() -> cs::var {
+	auto f = cs::fiber::create_native([&]() -> cs::var
+	{
 		self = cs::fiber::current();
 		return {};
 	});
@@ -70,19 +72,22 @@ TEST(fiber_sleep_for_throws_outside_fiber)
 TEST(fiber_sleep_for_basic_timing)
 {
 	auto start = std::chrono::steady_clock::now();
-	auto f = cs::fiber::create_native([&]() -> cs::var {
+	auto f = cs::fiber::create_native([&]() -> cs::var
+	{
 		cs::fiber::sleep_for(50);
 		return {};
 	});
 	run_fiber(f);
 	auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-	                   std::chrono::steady_clock::now() - start).count();
+	                   std::chrono::steady_clock::now() - start)
+	                   .count();
 	EXPECT_TRUE(elapsed >= 40);
 }
 
 TEST(fiber_sleep_for_zero)
 {
-	auto f = cs::fiber::create_native([&]() -> cs::var {
+	auto f = cs::fiber::create_native([&]() -> cs::var
+	{
 		cs::fiber::sleep_for(0);
 		return {};
 	});
@@ -99,7 +104,8 @@ TEST(fiber_sleep_for_zero)
 // =============================================================================
 TEST(fiber_sleeping_is_suspended)
 {
-	auto f = cs::fiber::create_native([&]() -> cs::var {
+	auto f = cs::fiber::create_native([&]() -> cs::var
+	{
 		cs::fiber::sleep_for(5000);
 		return {};
 	});
@@ -114,7 +120,8 @@ TEST(create_native_basic)
 {
 	static int call_count = 0;
 	call_count = 0;
-	auto f = cs::fiber::create_native([]() -> cs::var {
+	auto f = cs::fiber::create_native([]() -> cs::var
+	{
 		call_count++;
 		return cs::var(42);
 	});
@@ -127,7 +134,8 @@ TEST(create_native_void_function)
 {
 	static int void_count = 0;
 	void_count = 0;
-	auto f = cs::fiber::create_native([]() -> cs::var {
+	auto f = cs::fiber::create_native([]() -> cs::var
+	{
 		void_count++;
 		return {};
 	});
@@ -145,7 +153,8 @@ static int test_add(int a, int b)
 
 TEST(create_native_with_bound_args)
 {
-	auto f = cs::fiber::create_native([]() -> cs::var {
+	auto f = cs::fiber::create_native([]() -> cs::var
+	{
 		return cs::var(test_add(3, 4));
 	});
 	run_fiber(f);
@@ -156,7 +165,8 @@ TEST(create_native_void_lambda)
 {
 	static bool called = false;
 	called = false;
-	auto f = cs::fiber::create_native([&]() -> cs::var {
+	auto f = cs::fiber::create_native([&]() -> cs::var
+	{
 		called = true;
 		return {};
 	});
@@ -170,7 +180,8 @@ TEST(create_native_void_lambda)
 TEST(fiber_yield_after_sleep)
 {
 	int step = 0;
-	auto f = cs::fiber::create_native([&]() -> cs::var {
+	auto f = cs::fiber::create_native([&]() -> cs::var
+	{
 		cs::fiber::sleep_for(1);
 		step = 1;
 		cs::fiber::yield();
@@ -195,18 +206,22 @@ TEST(fiber_yield_after_sleep)
 // =============================================================================
 TEST(fiber_exception_through_sleep)
 {
-	auto f = cs::fiber::create_native([]() -> cs::var {
+	auto f = cs::fiber::create_native([]() -> cs::var
+	{
 		cs::fiber::sleep_for(10);
 		throw std::runtime_error("test error");
 		return {};
 	});
 	cs::fiber::resume(f);
 	bool caught = false;
-	while (!caught) {
-		try {
+	while (!caught)
+	{
+		try
+		{
 			cs::fiber::resume(f);
 		}
-		catch (const std::runtime_error &) {
+		catch (const std::runtime_error &)
+		{
 			caught = true;
 		}
 	}
@@ -222,10 +237,12 @@ TEST(fiber_nested_sleep)
 	int outer_step = 0;
 	int inner_step = 0;
 
-	auto f_outer = cs::fiber::create_native([&]() -> cs::var {
+	auto f_outer = cs::fiber::create_native([&]() -> cs::var
+	{
 		outer_step = 1;
 
-		auto f_inner = cs::fiber::create_native([&]() -> cs::var {
+		auto f_inner = cs::fiber::create_native([&]() -> cs::var
+		{
 			inner_step = 1;
 			cs::fiber::sleep_for(10);
 			inner_step = 2;
@@ -250,7 +267,8 @@ TEST(fiber_nested_sleep)
 // =============================================================================
 TEST(fiber_state_ready_to_finished)
 {
-	auto f = cs::fiber::create_native([]() -> cs::var { return cs::var(1); });
+	auto f = cs::fiber::create_native([]() -> cs::var
+	{ return cs::var(1); });
 	EXPECT_TRUE(f->get_state() == cs::fiber_state::ready);
 	run_fiber(f);
 	EXPECT_TRUE(f->get_state() == cs::fiber_state::finished);
@@ -264,8 +282,10 @@ TEST(fiber_many_short_sleeps)
 	constexpr int N = 20;
 	int completed = 0;
 
-	for (int i = 0; i < N; i++) {
-		auto f = cs::fiber::create_native([&]() -> cs::var {
+	for (int i = 0; i < N; i++)
+	{
+		auto f = cs::fiber::create_native([&]() -> cs::var
+		{
 			cs::fiber::sleep_for(1);
 			return {};
 		});
@@ -277,6 +297,20 @@ TEST(fiber_many_short_sleeps)
 }
 
 // =============================================================================
+// schedule_parameters: get/set roundtrip
+// =============================================================================
+TEST(fiber_schedule_parameters_roundtrip)
+{
+	auto original = cs::fiber::get_schedule_parameters();
+	cs::fiber::schedule_parameters custom = {0.05, 20};
+	cs::fiber::set_schedule_parameters(custom);
+	auto got = cs::fiber::get_schedule_parameters();
+	EXPECT_TRUE(got.busy_wait_coef == 0.05);
+	EXPECT_TRUE(got.busy_wait_min == 20);
+	cs::fiber::set_schedule_parameters(original);
+}
+
+// =============================================================================
 // A script fiber resumed from a native fiber must restore current_process
 // (the native caller has no private process to rebind).
 // =============================================================================
@@ -285,6 +319,9 @@ TEST(native_fiber_resumes_script_fiber_restores_process)
 	cs::array args;
 	args.push_back(cs::var::make<cs::string>("<FIBER_TEST>"));
 	auto ctx = cs::create_context(args);
+	// Session scope: the fiber mechanism must restore current_process to the
+	// context's own process after resuming a script fiber from a native fiber.
+	cs::process_run_scope scope(ctx);
 	cs::process_context *main_proc = cs::current_process;
 
 	std::istringstream src(
@@ -299,7 +336,8 @@ TEST(native_fiber_resumes_script_fiber_restores_process)
 	cs::fiber_t sf = ctx->instance->storage.get_var("sf").const_val<cs::fiber_t>();
 
 	cs::process_context *after = nullptr;
-	auto nf = cs::fiber::create_native([&]() -> cs::var {
+	auto nf = cs::fiber::create_native([&]() -> cs::var
+	{
 		cs::fiber::resume(sf, cs::fiber::schedule_policy::normal);
 		after = cs::current_process;
 		return {};
@@ -309,4 +347,3 @@ TEST(native_fiber_resumes_script_fiber_restores_process)
 	cs::fiber::resume(sf, cs::fiber::schedule_policy::normal);
 	EXPECT_TRUE(sf->get_state() == cs::fiber_state::finished);
 }
-

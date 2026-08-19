@@ -28,54 +28,97 @@
 
 namespace cs
 {
+	namespace
+	{
+		// Resolve a defining context, borrowing the dying one during teardown so
+		// finalizers can run script code. Throws with the given message if dead.
+		std::shared_ptr<context_type> resolve_ctx(const std::weak_ptr<context_type> &weak, const char *error_msg)
+		{
+			auto ctx = weak.lock();
+			if (!ctx && current_process != nullptr && current_process->teardown_ctx != nullptr)
+				ctx = std::shared_ptr<context_type>(current_process->teardown_ctx, [](context_type *) {});
+			if (!ctx)
+				throw runtime_error(error_msg);
+			return ctx;
+		}
+
+		// Poll events, requiring an active process: native callers must hold a
+		// process_run_scope when invoking script functions directly.
+		void poll_current_process()
+		{
+			if (current_process == nullptr)
+				throw runtime_error("no active process on this thread (native callers must hold process_run_scope)");
+			current_process->poll_event();
+		}
+
+		// Execute a function body, translating C++ exceptions and honoring
+		// early returns via the value stack.
+		var run_body(const std::deque<statement_base *> &body, context_type *ctx, scope_guard &scope)
+		{
+			for (auto &ptr : body)
+			{
+				try
+				{
+					ptr->run();
+				}
+				catch (const cs::exception &)
+				{
+					throw;
+				}
+				catch (const std::exception &e)
+				{
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
+				}
+				if (ctx->instance->return_fcall)
+				{
+					ctx->instance->return_fcall = false;
+					return scope.return_fcall();
+				}
+			}
+			return scope.return_fcall();
+		}
+	} // namespace
+
+	function::~function()
+	{
+		statement_base::delete_children(mBody);
+	}
+
+	struct_builder::method_storage::~method_storage()
+	{
+		statement_base::delete_children(methods);
+	}
+
 	var function::call_rr(const function *_this, vector &args)
 	{
-		current_process->poll_event();
+		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
+		poll_current_process();
 		if (args.size() != _this->mArgs.size())
 			throw runtime_error(
 			    "Wrong number of arguments: expected " + std::to_string(_this->mArgs.size()) + ", got " +
 			    std::to_string(args.size()));
-		scope_guard scope(_this->mContext);
+		scope_guard scope(ctx.get());
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
 		if (_this->mMatch)
-			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
+			cs_debugger_func_callback(_this->mDecl, _this->mFile, _this->mLine, ctx.get());
 #else
 		fcall_guard fcall;
 #endif
 		for (std::size_t i = 0; i < args.size(); ++i)
-			_this->mContext->instance->storage.add_var_no_return(_this->mArgs[i].data(), args[i]);
-		for (auto &ptr : _this->mBody)
-		{
-			try
-			{
-				ptr->run();
-			}
-			catch (const cs::exception &)
-			{
-				throw;
-			}
-			catch (const std::exception &e)
-			{
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
-			}
-			if (_this->mContext->instance->return_fcall)
-			{
-				_this->mContext->instance->return_fcall = false;
-				return scope.return_fcall();
-			}
-		}
-		return scope.return_fcall();
+			ctx->instance->storage.add_var_no_return(_this->mArgs[i].data(), args[i]);
+		return run_body(_this->mBody, ctx.get(), scope);
 	}
 
 	var function::call_vv(const function *_this, vector &args)
 	{
-		current_process->poll_event();
-		scope_guard scope(_this->mContext);
+		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
+		poll_current_process();
+		scope_guard scope(ctx.get());
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
 		if (_this->mMatch)
-			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
+			cs_debugger_func_callback(_this->mDecl, _this->mFile, _this->mLine, ctx.get());
 #else
 		fcall_guard fcall;
 #endif
@@ -87,59 +130,40 @@ namespace cs
 			{
 				if (args.empty())
 					throw runtime_error("Wrong number of arguments: expected at least 1 for member function, got 0");
-				_this->mContext->instance->storage.add_var_no_return("this", args[i++]);
+				ctx->instance->storage.add_var_no_return("this", args[i++]);
 			}
 			else if (_this->mIsLambda && _this->mArgs.size() > 1)
 			{
 				if (args.empty())
 					throw runtime_error("Wrong number of arguments: expected at least 1 for lambda with 'self', got 0");
-				_this->mContext->instance->storage.add_var_no_return("self", args[i++]);
+				ctx->instance->storage.add_var_no_return("self", args[i++]);
 			}
 			for (; i < args.size(); ++i)
 				arr.push_back(args[i]);
-			_this->mContext->instance->storage.add_var_no_return(_this->mArgs.back().data(), arg_list);
+			ctx->instance->storage.add_var_no_return(_this->mArgs.back().data(), arg_list);
 		}
-		for (auto &ptr : _this->mBody)
-		{
-			try
-			{
-				ptr->run();
-			}
-			catch (const cs::exception &)
-			{
-				throw;
-			}
-			catch (const std::exception &e)
-			{
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
-			}
-			if (_this->mContext->instance->return_fcall)
-			{
-				_this->mContext->instance->return_fcall = false;
-				return scope.return_fcall();
-			}
-		}
-		return scope.return_fcall();
+		return run_body(_this->mBody, ctx.get(), scope);
 	}
 
 	var function::call_rl(const function *_this, vector &args)
 	{
-		current_process->poll_event();
+		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
+		poll_current_process();
 		if (args.size() != _this->mArgs.size())
 			throw runtime_error(
 			    "Wrong number of arguments: expected " + std::to_string(_this->mArgs.size()) + ", got " +
 			    std::to_string(args.size()));
-		scope_guard scope(_this->mContext);
+		scope_guard scope(ctx.get());
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
 		if (_this->mMatch)
-			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
+			cs_debugger_func_callback(_this->mDecl, _this->mFile, _this->mLine, ctx.get());
 #endif
 		for (std::size_t i = 0; i < args.size(); ++i)
-			_this->mContext->instance->storage.add_var_no_return(_this->mArgs[i].data(), args[i]);
+			ctx->instance->storage.add_var_no_return(_this->mArgs[i].data(), args[i]);
 		try
 		{
-			return _this->mContext->instance->parse_expr(static_cast<const statement_return *>(_this->mBody.front())->get_tree().root());
+			return ctx->instance->parse_expr(static_cast<const statement_return *>(_this->mBody.front())->get_tree().root());
 		}
 		catch (const cs::exception &)
 		{
@@ -154,17 +178,18 @@ namespace cs
 
 	var function::call_el(const function *_this, vector &args)
 	{
-		current_process->poll_event();
+		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
+		poll_current_process();
 		if (!args.empty())
 			throw runtime_error("Wrong number of arguments: expected none, got " + std::to_string(args.size()));
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
 		if (_this->mMatch)
-			cs_debugger_func_callback(_this->mDecl, _this->mStmt);
+			cs_debugger_func_callback(_this->mDecl, _this->mFile, _this->mLine, ctx.get());
 #endif
 		try
 		{
-			return _this->mContext->instance->parse_expr(static_cast<const statement_return *>(_this->mBody.front())->get_tree().root());
+			return ctx->instance->parse_expr(static_cast<const statement_return *>(_this->mBody.front())->get_tree().root());
 		}
 		catch (const cs::exception &)
 		{
@@ -181,7 +206,10 @@ namespace cs
 	{
 		if (mParent.root().usable())
 		{
-			var builder = mContext->instance->parse_expr(mParent.root());
+			auto ctx = mContext.lock();
+			if (!ctx)
+				throw runtime_error("the struct's context has been destroyed");
+			var builder = ctx->instance->parse_expr(mParent.root());
 			if (builder.is_type_of<type_t>())
 			{
 				const auto &t = builder.const_val<type_t>();
@@ -201,10 +229,11 @@ namespace cs
 
 	var struct_builder::operator()()
 	{
-		scope_guard scope(mContext);
+		auto ctx = resolve_ctx(mContext, "the struct's context has been destroyed");
+		scope_guard scope(ctx.get());
 		if (mParent.root().usable())
 		{
-			var builder = mContext->instance->parse_expr(mParent.root());
+			var builder = ctx->instance->parse_expr(mParent.root());
 			if (builder.is_type_of<type_t>())
 			{
 				const auto &t = builder.const_val<type_t>();
@@ -214,8 +243,8 @@ namespace cs
 				if (parent.is_type_of<structure>())
 				{
 					parent.mark_protect();
-					mContext->instance->storage.involve_domain(parent.const_val<structure>().get_domain());
-					mContext->instance->storage.add_var_no_return("parent", parent, true);
+					ctx->instance->storage.involve_domain(parent.const_val<structure>().get_domain());
+					ctx->instance->storage.add_var_no_return("parent", parent, true);
 				}
 				else
 					throw runtime_error("The parent of a struct must itself be a struct");
@@ -223,7 +252,7 @@ namespace cs
 			else
 				throw runtime_error("The parent of a struct must be a type");
 		}
-		for (auto &ptr : this->mMethod)
+		for (auto &ptr : this->mMethod->methods)
 		{
 			try
 			{
@@ -544,7 +573,7 @@ namespace cs
 		scope_guard scope(context);
 		while (context->instance->parse_expr(mTree.root()).const_val<boolean>())
 		{
-			current_process->poll_event();
+			poll_current_process();
 			for (auto &ptr : mBlock)
 			{
 				try
@@ -598,7 +627,7 @@ namespace cs
 		scope_guard scope(context);
 		while (true)
 		{
-			current_process->poll_event();
+			poll_current_process();
 			for (auto &ptr : mBlock)
 			{
 				try
@@ -650,7 +679,7 @@ namespace cs
 		scope_guard scope(context);
 		do
 		{
-			current_process->poll_event();
+			poll_current_process();
 			for (auto &ptr : mBlock)
 			{
 				try
@@ -707,7 +736,7 @@ namespace cs
 		scope_guard scope(context);
 		while (true)
 		{
-			current_process->poll_event();
+			poll_current_process();
 			if (!context->instance->parse_expr(mParallel[1].root()).const_val<boolean>())
 				break;
 			for (auto &ptr : mBlock)
@@ -760,7 +789,7 @@ namespace cs
 	}
 
 	template <typename T, typename X>
-	void foreach_helper(const context_t &context, const var_id &iterator, const var &obj,
+	void foreach_helper(context_type *context, const var_id &iterator, const var &obj,
 	                    std::deque<statement_base *> &body)
 	{
 		if (obj.const_val<T>().empty())
@@ -770,10 +799,13 @@ namespace cs
 		if (context->instance->continue_block)
 			context->instance->continue_block = false;
 		scope_guard scope(context);
-		for (const X &it : obj.const_val<T>())
+		// Bind the iterator's real value_type directly: the template parameter
+		// X (e.g. cs::pair for hash_map) differs from the iterator's
+		// std::pair<const any, any>, and the implicit conversion would copy.
+		for (const auto &it : obj.const_val<T>())
 		{
-			current_process->poll_event();
-			context->instance->storage.add_var_no_return(iterator, it);
+			poll_current_process();
+			context->instance->storage.add_var_no_return(iterator, X(it));
 			for (auto &ptr : body)
 			{
 				try
@@ -807,7 +839,7 @@ namespace cs
 		}
 	}
 
-	void struct_foreach_helper(const context_t &context, const var_id &iterator, const var &obj,
+	void struct_foreach_helper(context_type *context, const var_id &iterator, const var &obj,
 	                           std::deque<statement_base *> &body)
 	{
 		if (context->instance->break_block)
@@ -822,7 +854,7 @@ namespace cs
 			var const *fptr = obj.val<structure>().get_domain().get_var_opt("next");
 			if (fptr == nullptr)
 				throw lang_error("The struct does not support iteration. Expect a 'next' method to be defined");
-			current_process->poll_event();
+			poll_current_process();
 			vector args;
 			// Patch for struct member function call, since the first argument of a struct member function is the struct itself
 			if (fptr->is_type_of<callable>() && fptr->const_val<callable>().is_member_fn())
@@ -870,9 +902,7 @@ namespace cs
 	void statement_foreach::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
-		// Iterate the container in place (no snapshot copy): a deep copy per
-		// foreach is too expensive on the hot path. Users who mutate the
-		// container from the loop body must clone it explicitly.
+		// Iterate in place (no snapshot); mutators must clone explicitly.
 		const var &obj = context->instance->parse_expr(this->mObj.root());
 		if (obj.is_type_of<string>())
 			foreach_helper<string, char>(context, this->mIt, obj, this->mBlock);
@@ -919,7 +949,7 @@ namespace cs
 			compiler_type::dump_expr(mParent.root(), o);
 		}
 		o << " >\n";
-		for (auto &ptr : mBlock)
+		for (auto &ptr : this->get_methods())
 			ptr->dump(o);
 		o << "< EndStruct >\n";
 	}
@@ -929,11 +959,11 @@ namespace cs
 		CS_DEBUGGER_STEP(this);
 		if (this->mIsMemFn)
 			context->instance->storage.add_var_no_return(this->mName.data(),
-			                                             var::make_protect<callable>(function_ptr{&this->mFunc}, callable::types::member_fn),
+			                                             var::make_protect<callable>(function_ptr{this->mFunc.get(), this->mFunc}, callable::types::member_fn),
 			                                             mOverride);
 		else
 		{
-			var func = var::make_protect<callable>(function_ptr{&this->mFunc});
+			var func = var::make_protect<callable>(function_ptr{this->mFunc.get(), this->mFunc});
 #ifdef CS_DEBUGGER
 			if (context->instance->storage.is_initial())
 				cs_debugger_func_breakpoint(this->mName, func);
@@ -953,7 +983,7 @@ namespace cs
 		for (auto &name : mArgs)
 			o << "< ID = \"" << name << "\" >";
 		o << "} >\n< Body >\n";
-		for (auto &ptr : mBlock)
+		for (auto &ptr : this->get_body())
 			ptr->dump(o);
 		o << "< EndFunction >\n";
 	}

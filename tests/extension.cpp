@@ -2,18 +2,21 @@
 #include <covscript/dll.hpp>
 #include <iostream>
 
-struct wrapper {
+struct wrapper
+{
 	int val = 0;
 	wrapper(int v) : val(v) {}
 };
 
 template <>
-struct cs_impl::type_conversion_cs<wrapper> {
+struct cs_impl::type_conversion_cs<wrapper>
+{
 	using source_type = cs::numeric;
 };
 
 template <>
-struct cs_impl::type_convertor<cs::numeric, wrapper> {
+struct cs_impl::type_convertor<cs::numeric, wrapper>
+{
 	static inline wrapper convert(const cs::numeric &num)
 	{
 		return wrapper(num.as_integer());
@@ -30,7 +33,8 @@ int test_func_ref(wrapper &v)
 	return v.val;
 }
 
-CNI_ROOT_NAMESPACE {
+CNI_ROOT_NAMESPACE
+{
 	CNI_V(get_wrapper, [](const wrapper &v)
 	{
 		return v;
@@ -45,12 +49,9 @@ CNI_ROOT_NAMESPACE {
 		auto current = data.c_str() + 2;
 		auto end = data.c_str() + data.length();
 
-		while (current < end && ((*current >= '0' && *current <= '9')
-		                         || (*current >= 'a' && *current <= 'f')
-		                         || (*current >= 'A' && *current <= 'F'))) {
-			hex = hex * 16
-			+ (*current & 15U)
-			+ (*current >= 'A' ? 9 : 0);
+		while (current < end && ((*current >= '0' && *current <= '9') || (*current >= 'a' && *current <= 'f') || (*current >= 'A' && *current <= 'F')))
+		{
+			hex = hex * 16 + (*current & 15U) + (*current >= 'A' ? 9 : 0);
 			++current;
 		}
 
@@ -67,6 +68,15 @@ CNI_ROOT_NAMESPACE {
 
 	CNI(test)
 
+	// 1 when the extension sees a current process (the host's current-thread
+	// process via the injected accessor), 0 otherwise.
+	int proc_state(int)
+	{
+		return cs::current_process != nullptr ? 1 : 0;
+	}
+
+	CNI(proc_state)
+
 	CNI_V(test_v, [](int a)
 	{
 		return a + 1;
@@ -78,7 +88,7 @@ CNI_ROOT_NAMESPACE {
 
 	class foo_t
 	{
-	public:
+	   public:
 		float test(float c)
 		{
 			std::cout << c << std::endl;
@@ -86,21 +96,21 @@ CNI_ROOT_NAMESPACE {
 		}
 	};
 
-	CNI_TYPE_EXT(foo, foo_t, foo_t())
-	{
-		CNI_V(test, &foo_t::test)
-	}
+	CNI_TYPE_EXT(foo, foo_t, foo_t()){
+	    CNI_V(test, &foo_t::test)}
 
 	CNI_NAMESPACE(child)
 	{
-		double test(double b) {
+		double test(double b)
+		{
 			std::cout << "This should output before everything: " << b << std::endl;
 			return b - 0.1;
 		}
 
 		CNI_CONST(test)
 
-		CNI_CONST_V(test_v, [](double b) {
+		CNI_CONST_V(test_v, [](double b)
+		{
 			return b - 0.1;
 		})
 
@@ -108,8 +118,9 @@ CNI_ROOT_NAMESPACE {
 
 		CNI_VALUE_CONST_V(val_v, double, 30)
 
-		class foo {
-		public:
+		class foo
+		{
+		   public:
 			int val = 10;
 
 			const char *test(const char *str)
@@ -119,7 +130,8 @@ CNI_ROOT_NAMESPACE {
 			}
 		};
 
-		CNI_TYPE_EXT_V(foo_ext, foo, foo, foo()) {
+		CNI_TYPE_EXT_V(foo_ext, foo, foo, foo())
+		{
 			CNI_CLASS_MEMBER(foo, val)
 			CNI_V(test, &foo::test)
 		}

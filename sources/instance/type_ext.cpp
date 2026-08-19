@@ -1378,39 +1378,42 @@ namespace cs_impl
 			return func.get_raw_data().target_type() != typeid(function_ptr);
 		}
 
+		// The process active at creation; an async task carries it so script code
+		// on its worker thread has a valid current_process.
+		static std::shared_ptr<process_context> capture_process()
+		{
+			return current_process ? current_process->shared_from_this() : nullptr;
+		}
+
 		class async_callable final
 		{
-			// Keep the worker count elevated for the whole object lifetime.
-			std::shared_ptr<thread_guard> m_guard;
 			callable func;
 			vector args;
+			// The process this task belongs to, captured at creation; installed on
+			// the async thread so script code there has a valid current_process.
+			std::shared_ptr<process_context> process;
 
 			void detach_args()
 			{
+				// copy_no_return rebinds a self-referencing lambda's `self` borrow
+				// to the clone's own proxy (same deep-copy path as cs::copy).
 				for (auto &val : args)
-				{
-					if (!val.is_rvalue())
-					{
-						val.clone();
-						val.detach();
-					}
-					else
-						val.mark_trivial();
-				}
+					copy_no_return(val);
 			}
 
 		   public:
-			async_callable(const callable &fn, vector data)
-			    : func(fn), args(std::move(data))
+			async_callable(const callable &fn, vector data, std::shared_ptr<process_context> proc)
+			    : func(fn), args(std::move(data)), process(std::move(proc))
 			{
 				if (!is_native_callable(fn))
 					throw lang_error("Async operation requires a native function");
 				detach_args();
-				m_guard = std::make_shared<thread_guard>();
 			}
 
 			var operator()()
 			{
+				// thread_local current_process is null on this (async) thread.
+				process_run_scope scope(process.get());
 				return func.call(args);
 			}
 		};
@@ -1419,9 +1422,10 @@ namespace cs_impl
 		{
 			if (fiber::within())
 			{
-				auto future = std::async(std::launch::async, async_callable(fn, std::move(args)));
+				auto proc = capture_process();
+				auto future = std::async(std::launch::async, async_callable(fn, std::move(args), std::move(proc)));
 				while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
-					fiber::sleep_for(current_process->fiber_cxt->busy_wait_min);
+					fiber::sleep_for(fiber_context::current()->busy_wait_min);
 				return future.get();
 			}
 			else if (is_native_callable(fn))
@@ -1455,8 +1459,8 @@ namespace cs_impl
 			std::shared_future<var> future;
 
 		   public:
-			async_future(const callable &fn, vector args)
-			    : future(std::async(std::launch::async, async_callable(fn, std::move(args))).share())
+			async_future(const callable &fn, vector args, std::shared_ptr<process_context> proc)
+			    : future(std::async(std::launch::async, async_callable(fn, std::move(args), std::move(proc))).share())
 			{
 			}
 
@@ -1473,9 +1477,9 @@ namespace cs_impl
 						                     .count();
 						if (remain_ms <= 0)
 							break;
-						auto wait_time = static_cast<std::size_t>(remain_ms * current_process->fiber_cxt->busy_wait_coef);
-						if (wait_time < current_process->fiber_cxt->busy_wait_min)
-							wait_time = current_process->fiber_cxt->busy_wait_min;
+						auto wait_time = static_cast<std::size_t>(remain_ms * fiber_context::current()->busy_wait_coef);
+						if (wait_time < fiber_context::current()->busy_wait_min)
+							wait_time = fiber_context::current()->busy_wait_min;
 						if (wait_time > static_cast<std::size_t>(remain_ms))
 							wait_time = static_cast<std::size_t>(remain_ms);
 						fiber::sleep_for(wait_time);
@@ -1492,7 +1496,7 @@ namespace cs_impl
 				if (fiber::within())
 				{
 					while (future.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
-						fiber::sleep_for(current_process->fiber_cxt->busy_wait_min);
+						fiber::sleep_for(fiber_context::current()->busy_wait_min);
 				}
 				else
 				{
@@ -1523,7 +1527,8 @@ namespace cs_impl
 				const callable &fn = func.const_val<callable>();
 				if (!is_native_callable(fn))
 					throw lang_error("Async future can only be created from native functions");
-				return static_cast<future_t>(std::make_shared<async_future>(fn, vector(args.begin() + 1, args.end())));
+				auto proc = capture_process();
+				return static_cast<future_t>(std::make_shared<async_future>(fn, vector(args.begin() + 1, args.end()), std::move(proc)));
 			}
 			else if (func.is_type_of<object_method>())
 			{
@@ -1533,7 +1538,8 @@ namespace cs_impl
 				const callable &fn = om.callable.const_val<callable>();
 				if (!is_native_callable(fn))
 					throw lang_error("Async future can only be created from native functions");
-				return static_cast<future_t>(std::make_shared<async_future>(fn, std::move(argument)));
+				auto proc = capture_process();
+				return static_cast<future_t>(std::make_shared<async_future>(fn, std::move(argument), std::move(proc)));
 			}
 			else
 				throw lang_error("Invalid call to 'future.create', the first argument must be a fiber or a callable object");
@@ -1577,25 +1583,13 @@ namespace cs_impl
 		void set_schedule_policy(const string &policy)
 		{
 			if (policy == "balanced")
-			{
-				current_process->fiber_cxt->busy_wait_coef = 0.01;
-				current_process->fiber_cxt->busy_wait_min = 10;
-			}
+				fiber::set_schedule_parameters({0.01, 10});
 			else if (policy == "responsive")
-			{
-				current_process->fiber_cxt->busy_wait_coef = 0.003;
-				current_process->fiber_cxt->busy_wait_min = 3;
-			}
+				fiber::set_schedule_parameters({0.003, 3});
 			else if (policy == "efficient")
-			{
-				current_process->fiber_cxt->busy_wait_coef = 0.05;
-				current_process->fiber_cxt->busy_wait_min = 50;
-			}
+				fiber::set_schedule_parameters({0.05, 50});
 			else if (policy == "throughput")
-			{
-				current_process->fiber_cxt->busy_wait_coef = 0.02;
-				current_process->fiber_cxt->busy_wait_min = 20;
-			}
+				fiber::set_schedule_parameters({0.02, 20});
 			else
 				throw lang_error("Unknown schedule policy: " + policy);
 		}
@@ -1604,7 +1598,8 @@ namespace cs_impl
 		{
 			callable owner;
 			function const *func = nullptr;
-			context_t context;
+			// Weak ref to avoid context → storage → fiber → context cycle.
+			std::weak_ptr<context_type> context;
 			vector args;
 
 		   public:
@@ -1619,19 +1614,22 @@ namespace cs_impl
 			{
 				if (func == nullptr)
 					throw lang_error("Asynchronous functions are not reentrant");
+				auto ctx = context.lock();
+				if (!ctx)
+					throw runtime_error("the fiber's context has been destroyed");
 				try
 				{
 					var ret = func->call(args);
 					func = nullptr;
 					args.clear();
-					context->instance->clear_context();
+					ctx->instance->clear_context();
 					return std::move(ret);
 				}
 				catch (...)
 				{
 					func = nullptr;
 					args.clear();
-					context->instance->clear_context();
+					ctx->instance->clear_context();
 					throw;
 				}
 			}
@@ -1673,14 +1671,24 @@ namespace cs_impl
 				if (impl.target_type() != typeid(function_ptr))
 					return fiber::create_native(fiber_native_function(impl, std::move(data)));
 				function const *fptr = impl.target<function_ptr>()->fptr;
-				return fiber::create(fptr->get_context(), fiber_function(fn, std::move(data)));
+				auto ctx = fptr->get_context();
+				if (!ctx)
+					throw runtime_error("the function's context has been destroyed");
+				return fiber::create(ctx.get(), fiber_function(fn, std::move(data)));
 			};
 			if (func.is_type_of<callable>())
 				return build(func.const_val<callable>(), vector(args.begin() + 1, args.end()));
 			else if (func.is_type_of<object_method>())
 			{
 				const auto &om = func.const_val<object_method>();
-				vector argument{om.object};
+				vector argument;
+				// A recursive lambda borrows its own proxy as `self`; snapshot the
+				// wrapper so a later reassignment of the source variable can't
+				// break the fiber's `self` when it resumes.
+				if (om.object.points_to(func.proxy_address()))
+					argument.push_back(copy(func));
+				else
+					argument.emplace_back(om.object);
 				argument.insert(argument.end(), args.begin() + 1, args.end());
 				return build(om.callable.const_val<callable>(), std::move(argument));
 			}
@@ -1719,9 +1727,9 @@ namespace cs_impl
 
 		var fiber_current()
 		{
-			if (current_process->fiber_cxt->stack.empty())
+			if (fiber_context::current()->stack.empty())
 				return null_pointer;
-			return current_process->fiber_cxt->stack.top();
+			return fiber_context::current()->stack.top();
 		}
 
 		void fiber_resume(const fiber_t &fiber)
@@ -1840,27 +1848,31 @@ namespace cs_impl
 			return val.hash();
 		}
 
-		var build(const context_t &context, const string &expr)
+		var build(context_type *context, const string &expr)
 		{
 			std::deque<char> buff;
 			expression_t tree;
 			for (auto &ch : expr)
 				buff.push_back(ch);
+			// Build into a fresh token arena; the returned expression keeps it
+			// alive so the tree's tokens stay valid for as long as the var exists.
+			compile_unit_guard guard(context);
 			context->compiler->build_expr(buff, tree);
-			return var::make<expression_t>(tree);
+			tree.attach_arena(guard.unit());
+			return var::make<expression_t>(std::move(tree));
 		}
 
-		var solve(const context_t &context, expression_t &tree)
+		var solve(context_type *context, expression_t &tree)
 		{
 			return context->instance->parse_expr(tree.root());
 		}
 
-		var cmd_args(const context_t &context)
+		var cmd_args(context_type *context)
 		{
 			return context->cmd_args;
 		}
 
-		var import(const context_t &context, const string &dir, const string &name)
+		var import(context_type *context, const string &dir, const string &name)
 		{
 			try
 			{
@@ -1872,7 +1884,7 @@ namespace cs_impl
 			}
 		}
 
-		var source_import(const context_t &context, const string &path)
+		var source_import(context_type *context, const string &path)
 		{
 			try
 			{
@@ -1888,37 +1900,26 @@ namespace cs_impl
 		{
 			if (func.is_type_of<object_method>())
 			{
-				const callable::function_type &target = func.const_val<object_method>().callable.const_val<callable>().get_raw_data();
-				std::size_t count = 0;
-				if (target.target_type() == typeid(function_ptr))
-					count = target.target<function_ptr>()->fptr->argument_count();
-				else
-					count = target.target<cni>()->argument_count();
+				std::size_t count = func.const_val<object_method>().callable.const_val<callable>().argument_count();
 				return count > 0 ? count - 1 : 0;
 			}
 			else if (func.is_type_of<callable>())
-			{
-				const callable::function_type &target = func.const_val<callable>().get_raw_data();
-				if (target.target_type() == typeid(function_ptr))
-					return target.target<function_ptr>()->fptr->argument_count();
-				else
-					return target.target<cni>()->argument_count();
-			}
+				return func.const_val<callable>().argument_count();
 			else
 				throw lang_error("The target value is not a function");
 		}
 
-		void add_string_literal(const context_t &context, const std::string &literal, const callable &func)
+		void add_string_literal(context_type *context, const std::string &literal, const callable &func)
 		{
 			context->instance->add_string_literal(literal, func);
 		}
 
-		void link_var(const context_t &context, const string &a, const var &b)
+		void link_var(context_type *context, const string &a, const var &b)
 		{
 			context->instance->storage.get_var(a) = b;
 		}
 
-		void unlink_var(const context_t &context, const string &a)
+		void unlink_var(context_type *context, const string &a)
 		{
 			var &_a = context->instance->storage.get_var(a);
 			_a = copy(_a);
@@ -2189,7 +2190,7 @@ namespace cs_impl
 
 		char getch()
 		{
-			return conio::getch();
+			return static_cast<char>(conio::getch());
 		}
 
 		bool kbhit()
@@ -2361,10 +2362,11 @@ namespace cs_impl
 
 	void init_extensions()
 	{
-		static bool extensions_initiator = true;
-		if (extensions_initiator)
+		// Extensions populate process-global namespaces; serialize first-time
+		// initialization so concurrent create_context calls cannot race.
+		static std::once_flag extensions_flag;
+		std::call_once(extensions_flag, []
 		{
-			extensions_initiator = false;
 			member_visitor_cs_ext::init();
 			iostream_cs_ext::init();
 			charbuff_cs_ext::init();
@@ -2385,6 +2387,6 @@ namespace cs_impl
 			pair_cs_ext::init();
 			hash_set_cs_ext::init();
 			hash_map_cs_ext::init();
-		}
+		});
 	}
 } // namespace cs_impl

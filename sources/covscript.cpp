@@ -143,6 +143,8 @@ namespace cs
 
 	void process_context::cleanup_context()
 	{
+		if (current_process == nullptr)
+			return;
 		while (!current_process->stack.empty())
 			current_process->stack.pop_no_return();
 #ifdef CS_DEBUGGER
@@ -154,11 +156,8 @@ namespace cs
 	bool process_context::on_process_exit_default_handler(void *code)
 	{
 		cleanup_context();
-		// The statement/token/method pools are intentionally NOT collected here:
-		// script functions (function_ptr) reference statement members, and a live
-		// context may still hold callables, so freeing them would be use-after-free
-		// (same rationale as the global-GC change in bootstrap). std::exit reclaims
-		// everything, and finalize/destructors are not run on this path anyway.
+		// Pools not collected here (live callables reference them); std::exit
+		// reclaims everything.
 		std::exit(*static_cast<int *>(code));
 		return true;
 	}
@@ -166,57 +165,114 @@ namespace cs
 	std::shared_ptr<process_context> process_context::current_owner()
 	{
 		// Nearest script fiber's process on the chain; null when the owner is the root.
-		for (auto &f : current_process->fiber_cxt->stack)
+		for (auto &f : fiber_context::current()->stack)
 			if (auto p = f->get_process())
 				return p;
 		return nullptr;
+	}
+
+	bool process_context::is_related(const process_context *other) const noexcept
+	{
+		if (other == nullptr)
+			return false;
+		for (const process_context *p = this; p != nullptr; p = p->m_parent.get())
+			if (p == other)
+				return true;
+		for (const process_context *p = other; p != nullptr; p = p->m_parent.get())
+			if (p == this)
+				return true;
+		return false;
 	}
 
 	std::shared_ptr<process_context> process_context::fork(const std::shared_ptr<process_context> &parent)
 	{
 		// Share the parent's fiber chain; a null parent means the parent is the root.
 		process_context *src = parent ? parent.get() : current_process;
+		if (src == nullptr)
+			throw fatal_error("cannot fork a fiber without an active process");
 		std::shared_ptr<process_context> new_process(
 		    std::make_shared<process_context>(src->child_stack_size(), src->fiber_cxt));
 		new_process->output_precision = src->output_precision;
 		new_process->import_path = src->import_path;
-		// Generation chain: keep the parent alive so the forwarders below can reach it.
-		new_process->m_parent = parent;
+		// Keep the parent (or the fork source without a fiber chain) alive so
+		// the forwarders below can reach it and is_related() can trace it back.
+		new_process->m_parent = parent ? parent : src->shared_from_this();
+		// The parent (or the fork source) receives forwarded exit/sigint events.
 		std::shared_ptr<process_context> parent_ref = new_process->m_parent;
 		new_process->on_process_exit.add_listener([parent_ref](void *data) -> bool
 		{
-			if (parent_ref)
-				return parent_ref->on_process_exit.touch(data);
-			return this_process.on_process_exit.touch(data);
+			return parent_ref->on_process_exit.touch(data);
 		});
 		new_process->on_process_sigint.add_listener([parent_ref](void *data) -> bool
 		{
-			if (parent_ref)
-				return parent_ref->on_process_sigint.touch(data);
-			return this_process.on_process_sigint.touch(data);
+			return parent_ref->on_process_sigint.touch(data);
 		});
 		new_process->std_eh_callback = src->std_eh_callback;
 		new_process->cs_eh_callback = src->cs_eh_callback;
 		return new_process;
 	}
 
-	process_context this_process;
-	process_context *current_process = &this_process;
+	process_context_ref current_process;
 
-	type_node *alloc_type_node()
+	// Host process accessor handed to extension DLLs.
+	process_context **current_process_host_accessor()
 	{
-		// A process-lifetime pool: std::deque keeps references to existing
-		// elements stable across push_back and nothing is ever removed, so every
-		// node address is unique and never reused.
-		static std::deque<type_node> pool;
-		pool.emplace_back();
-		return &pool.back();
+		return process_context_ref::thread_slot();
+	}
+
+	context_type::~context_type()
+	{
+		// Run finalizers while the runtime is still usable.
+		if (process != nullptr)
+			process->teardown_ctx = this;
+		if (instance != nullptr)
+			instance->storage.clear_global();
+		if (process != nullptr)
+			process->teardown_ctx = nullptr;
+		// Drop module namespaces/subcontexts so their arenas release at teardown.
+		if (owns_compiler && compiler != nullptr)
+		{
+			// Clear each module domain so circular cross-refs drop.
+			for (auto &kv : compiler->modules)
+				kv.second->get_domain().clear();
+			compiler->modules.clear();
+		}
+		subcontexts.clear();
+	}
+
+	signal_control global_signals;
+
+	type_node *alloc_type_node(process_context *p)
+	{
+		// Per-process pool: node addresses stay unique for the process lifetime.
+		if (p != nullptr)
+		{
+			p->type_nodes.emplace_back();
+			return &p->type_nodes.back();
+		}
+		// A bare (process-less) thread's fallback: thread_local so concurrent
+		// process-less threads don't race on the pool.
+		static thread_local std::deque<type_node> fallback_pool;
+		fallback_pool.emplace_back();
+		return &fallback_pool.back();
+	}
+
+	std::size_t callable::argument_count() const
+	{
+		if (mFunc.target_type() == typeid(function_ptr))
+			return mFunc.target<function_ptr>()->fptr->argument_count();
+		else if (mFunc.target_type() == typeid(cs_impl::cni))
+			return mFunc.target<cs_impl::cni>()->argument_count();
+		else
+			throw lang_error("The target value is not a function");
 	}
 
 	void copy_no_return(var &val)
 	{
 		if (!val.is_rvalue())
 		{
+			// clone() itself rebinds a self-referencing lambda's `self` borrow
+			// to the clone's own proxy (see any::clone/rebind).
 			val.clone();
 			val.detach();
 		}
@@ -289,12 +345,6 @@ namespace cs
 			throw lang_error("Invalid numeric literal: cannot parse the given string as a number");
 		}
 	}
-
-	garbage_collector<token_base> token_base::gc;
-
-	garbage_collector<statement_base> statement_base::gc;
-
-	garbage_collector<method_base> method_base::gc;
 
 	std::string process_path(const std::string &raw)
 	{
@@ -452,13 +502,25 @@ namespace cs
 		return a.is_a(b);
 	}
 
-	context_t create_context(const array &args)
+	context_t create_context(const array &args, std::size_t stack_size)
 	{
-		cs_impl::init_extensions();
 		context_t context = std::make_shared<context_type>();
-		context->compiler = std::make_shared<compiler_type>(context);
-		context->instance = std::make_shared<instance_type>(context, current_process->stack_size);
+		// Each context owns its own process, sized from the requested size, the
+		// active process, or the default.
+		std::size_t ss = stack_size ? stack_size
+		                            : (current_process ? current_process->stack_size : COVSCRIPT_STACK_PRESERVE);
+		context->process = std::make_shared<process_context>(ss, fiber_context::current());
+		{
+			// Extensions read current_process at load time.
+			process_run_scope scope(context);
+			cs_impl::init_extensions();
+		}
+		context->compiler = std::make_shared<compiler_type>(context.get());
+		context->owns_compiler = true;
+		context->instance = std::make_shared<instance_type>(context.get(), context->process->stack_size);
 		context->cmd_args = cs::var::make_constant<cs::array>(args);
+		// Default arena for tokens outside an explicit compile unit.
+		context->current_unit = std::make_shared<compile_unit>();
 		// Init Grammars
 		(*context->compiler)
 		    // Expression Grammar
@@ -605,7 +667,7 @@ namespace cs
 		    .add_buildin_type("hash_map", []() -> var
 		{ return var::make<hash_map>(); }, typeid(hash_map), cs_impl::hash_map_ext)
 		    // Context
-		    .add_buildin_var("context", var::make_constant<context_t>(context))
+		    .add_buildin_var("context", var::make_constant<context_type *>(context.get()))
 		    // Add Internal Functions to storage
 		    .add_buildin_var("range", var::make_protect<callable>(range, callable::types::request_fold))
 		    .add_buildin_var("to_integer", make_cni(to_integer, true))
@@ -626,13 +688,20 @@ namespace cs
 		return context;
 	}
 
-	context_t create_subcontext(const context_t &cxt)
+	context_t create_subcontext(context_type *cxt)
 	{
-		cs_impl::init_extensions();
 		context_t context = std::make_shared<context_type>();
-		context->instance = std::make_shared<instance_type>(context, cxt->instance->fiber_stack, current_process->stack_size);
+		// A subcontext (module import) shares the parent's process.
+		context->process = cxt->process;
+		{
+			process_run_scope scope(context); // transparent: same process
+			cs_impl::init_extensions();
+		}
+		context->instance = std::make_shared<instance_type>(context.get(), cxt->instance->fiber_stack,
+		                                                    context->process ? context->process->stack_size : COVSCRIPT_STACK_PRESERVE);
 		context->compiler = cxt->compiler;
 		context->cmd_args = cxt->cmd_args;
+		context->current_unit = std::make_shared<compile_unit>();
 		// Init Runtime
 		context->instance->storage
 		    // Internal Types
@@ -661,7 +730,7 @@ namespace cs
 		    .add_buildin_type("hash_map", []() -> var
 		{ return var::make<hash_map>(); }, typeid(hash_map), cs_impl::hash_map_ext)
 		    // Context
-		    .add_buildin_var("context", var::make_constant<context_t>(context))
+		    .add_buildin_var("context", var::make_constant<context_type *>(context.get()))
 		    // Add Internal Functions to storage
 		    .add_buildin_var("range", var::make_protect<callable>(range, callable::types::request_fold))
 		    .add_buildin_var("to_integer", make_cni(to_integer, true))
@@ -682,38 +751,13 @@ namespace cs
 		return context;
 	}
 
-	void collect_garbage()
-	{
-		statement_base::gc.collect();
-		method_base::gc.collect();
-		token_base::gc.collect();
-	}
-
-	void collect_garbage(context_t &context)
-	{
-		while (!current_process->stack.empty())
-			current_process->stack.pop_no_return();
-#ifdef CS_DEBUGGER
-		while (!current_process->stack_backtrace.empty())
-			current_process->stack_backtrace.pop_no_return();
-#endif
-		if (context)
-		{
-			context->instance->storage.clear_all_data();
-			context->compiler->modules.clear();
-			context->compiler->csyms.clear();
-			context->compiler->swap_context(nullptr);
-		}
-		// The statement/token/method pools are intentionally NOT collected here:
-		// script functions (function_ptr) reference statement members, so freeing
-		// them while another live context or an external caller still holds a
-		// callable would be use-after-free. The context's instance and compiler
-		// are also kept so that retained functions remain callable; the context,
-		// instance and pools are released at process exit.
-	}
-
 	cs::var eval(const context_t &context, const std::string &expr)
 	{
+		process_run_scope scope(context);
+		// Fresh arena so repeated eval() calls don't accumulate tokens.
+		compile_unit_guard guard(context.get());
+		// The compiler may be shared (subcontexts); bind it to this context.
+		context_swap_guard ctx_guard(*context->compiler, context.get());
 		tree_type<cs::token_base *> tree;
 		std::deque<char> buff;
 		for (auto &ch : expr)

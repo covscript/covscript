@@ -28,24 +28,39 @@
 
 namespace cs
 {
-	context_t create_context(const array &);
+	context_t create_context(const array &, std::size_t stack_size = 0);
 
-	context_t create_subcontext(const context_t &);
+	context_t create_subcontext(context_type *);
+
+	inline context_t create_subcontext(const context_t &parent)
+	{
+		return create_subcontext(parent.get());
+	}
 
 	class instance_type final : public runtime_type
 	{
 		friend class repl;
 
-		friend context_t cs::create_context(const array &);
+		friend context_t cs::create_context(const array &, std::size_t stack_size);
 
-		friend context_t cs::create_subcontext(const context_t &);
+		friend context_t cs::create_subcontext(context_type *);
 
 		// Statements
 		std::deque<statement_base *> statements;
 
+		// Token arena for the current program; freed when the program is released.
+		std::shared_ptr<compile_unit> m_unit;
+
 		// Fiber Stack Pointer
 		stack_pointer fiber_sp = nullptr;
 		stack_pointer &fiber_stack;
+
+		// Drop the arena reference (lambdas live in the runtime's store, not in
+		// tokens, so there is no arena <-> function cycle to break).
+		void release_unit()
+		{
+			m_unit.reset();
+		}
 
 	   public:
 		// Status
@@ -53,26 +68,49 @@ namespace cs
 		bool break_block = false;
 		bool continue_block = false;
 		// Context
-		context_t context;
+		context_type *context;
 
 		// Constructor and destructor
 		instance_type() = delete;
 
-		explicit instance_type(context_t c)
-		    : context(std::move(c)), runtime_type(fiber_sp), fiber_stack(fiber_sp) {}
+		explicit instance_type(context_type *c)
+		    : context(c), runtime_type(fiber_sp), fiber_stack(fiber_sp) {}
 
-		instance_type(context_t c, stack_pointer &fsp)
-		    : context(std::move(c)), runtime_type(fsp), fiber_stack(fsp) {}
+		instance_type(context_type *c, stack_pointer &fsp)
+		    : context(c), runtime_type(fsp), fiber_stack(fsp) {}
 
-		instance_type(context_t c, std::size_t stack_size)
-		    : context(std::move(c)), runtime_type(fiber_sp, stack_size), fiber_stack(fiber_sp) {}
+		instance_type(context_type *c, std::size_t stack_size)
+		    : context(c), runtime_type(fiber_sp, stack_size), fiber_stack(fiber_sp) {}
 
-		instance_type(context_t c, stack_pointer &fsp, std::size_t stack_size)
-		    : context(std::move(c)), runtime_type(fsp, stack_size), fiber_stack(fsp) {}
+		instance_type(context_type *c, stack_pointer &fsp, std::size_t stack_size)
+		    : context(c), runtime_type(fsp, stack_size), fiber_stack(fsp) {}
 
 		instance_type(const instance_type &) = delete;
 
-		~instance_type() = default;
+		// The compiled program is owned by this instance: statements are freed
+		// when the instance dies or the next compile replaces them.
+		~instance_type()
+		{
+			statement_base::delete_children(statements);
+			// current_unit is already destroyed here (it dies before the instance
+			// during teardown); release_statements() handles the recompile path.
+			m_unit.reset();
+		}
+
+		// Release the current program (used by compile() and instance teardown).
+		void release_statements()
+		{
+			statement_base::delete_children(statements);
+			if (context && context->current_unit == m_unit)
+				context->current_unit = nullptr;
+			release_unit();
+		}
+
+		// The token arena of the current program (tests / embedders).
+		const std::shared_ptr<compile_unit> &get_current_unit() const
+		{
+			return m_unit;
+		}
 
 		// Wrapped Method
 		namespace_t import(const std::string &, const std::string &);
@@ -91,6 +129,10 @@ namespace cs
 		void check_declar_var(tree_type<token_base *>::iterator, bool = false);
 
 		void check_define_var(tree_type<token_base *>::iterator, bool = false, bool = false);
+
+		// A constant's RHS is usually folded to a token_value; a lambda or a
+		// callable-containing value is left un-folded and evaluated at runtime.
+		var fold_constant(tree_type<token_base *>::iterator, bool constant);
 
 		void parse_define_var(tree_type<token_base *>::iterator, bool = false, bool = false);
 
@@ -126,11 +168,29 @@ namespace cs
 		charset encoding = charset::utf8;
 		std::size_t line_num = 0;
 		bool multi_line = false;
+		std::size_t m_run_depth = 0;
 		string line_buff;
 		string cmd_buff;
-		// Import/using FIFO base at the start of the current top-level statement;
-		// reset_status truncates back to it so a failed line cannot leak results.
-		std::size_t import_base = 0;
+		// Token arenas, one per in-flight top-level statement (spans multi-line
+		// blocks). A stack rather than a single arena so a re-entrant exec()
+		// can restore the outer statement's arena after the nested one finishes;
+		// otherwise the outer statement resumes evaluating freed tokens.
+		std::vector<std::shared_ptr<compile_unit>> m_units;
+		std::vector<std::shared_ptr<compile_unit>> m_saved_units;
+
+		// Drop the current statement's arena and restore the enclosing one (if
+		// any) as the context's current unit (lambdas live in the runtime's
+		// store, so there is no arena <-> function cycle to break).
+		void pop_unit()
+		{
+			if (!m_units.empty())
+			{
+				m_units.pop_back();
+				std::shared_ptr<compile_unit> saved_unit = m_saved_units.back();
+				m_saved_units.pop_back();
+				context->current_unit = m_units.empty() ? saved_unit : m_units.back();
+			}
+		}
 
 		void interpret(const string &, std::deque<token_base *> &);
 
@@ -147,6 +207,17 @@ namespace cs
 
 		repl(const repl &) = delete;
 
+		~repl()
+		{
+			if (!methods.empty() || !m_units.empty())
+				reset_status();
+			// Run global finalizers while the session (process) is still active,
+			// not during context teardown when the process is already dying.
+			context->instance->storage.clear_global();
+			m_units.clear();
+			m_saved_units.clear();
+		}
+
 		void exec(const string &);
 
 		void reset_status()
@@ -162,13 +233,18 @@ namespace cs
 			cmd_buff.clear();
 			context->compiler->utilize_metadata();
 			context->compiler->loop_depth = 0;
-			context->compiler->import_results.resize(import_base);
+			context->compiler->end_import_scope();
+			// Drop the aborted statement's token arena.
+			pop_unit();
 			while (depth-- > 0)
 			{
 				context->instance->storage.remove_set();
 				context->instance->storage.remove_domain();
 			}
 			context->instance->storage.clear_set();
+			// Roll back only this statement's slots. Nested committed statements
+			// keep their original indices.
+			context->instance->functions.rollback_transaction();
 		}
 
 		std::size_t get_level() const
@@ -187,6 +263,12 @@ namespace cs
 
 		explicit scope_guard(const context_t &c)
 		    : context(c.get())
+		{
+			context->instance->storage.add_domain();
+		}
+
+		explicit scope_guard(context_type *c)
+		    : context(c)
 		{
 			context->instance->storage.add_domain();
 		}
@@ -261,17 +343,17 @@ namespace cs
 		}
 	};
 
-	// Temporarily swap the shared compiler's context and restore it on scope exit
+	// RAII: bind the shared compiler's context for the scope, restore on exit.
 	class context_swap_guard final
 	{
 		compiler_type *compiler;
-		context_t restore;
+		context_type *restore;
 
 	   public:
 		context_swap_guard() = delete;
 
-		context_swap_guard(compiler_type &comp, context_t target)
-		    : compiler(&comp), restore(comp.swap_context(std::move(target))) {}
+		context_swap_guard(compiler_type &comp, context_type *target)
+		    : compiler(&comp), restore(comp.swap_context(target)) {}
 
 		~context_swap_guard()
 		{

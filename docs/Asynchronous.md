@@ -121,6 +121,20 @@ fiber.set_schedule_policy("throughput")   # high-load balance
 
 When `resume()` is called on a sleeping fiber whose wake-up time has not arrived, the scheduler uses progressive backoff. Repeated premature attempts gradually increase the sleep duration, preventing CPU spin while remaining responsive to scheduled wake-ups.
 
+### Leaked Fibers and COVSCRIPT_DEBUG
+
+Fibers are cleaned up cooperatively: they must run to completion (or be driven to `finished`) before their last handle is dropped. Destroying a fiber that is still `running`, `suspended` or `sleeping` cannot unwind its suspended stack frames, so any resources held by those frames are leaked. This is a cooperative contract, not a runtime error.
+
+The behaviour when an unfinished fiber is destroyed is controlled by the `COVSCRIPT_DEBUG` environment variable:
+
+| Value | Behaviour |
+| :-- | :-- |
+| `none` | Do nothing: the fiber's stack block is still released, the suspended frames are leaked silently, the program continues |
+| `warning` | Print `[fiber] warning: destroying an unfinished fiber ...` to stderr and continue (default) |
+| `strict` | Print the warning and abort immediately (fail-fast) |
+
+`COVSCRIPT_DEBUG` is case-insensitive; an unset or unknown value defaults to `warning`. The same switch governs other defensive runtime guards (for example a non-empty function value stack at program entry).
+
 ### C++ API
 
 #### Types
@@ -237,13 +251,13 @@ cs::var result = fut->get();  // 42, can be called multiple times
 
 #### Custom Backoff Parameters
 
-When the built-in policies are insufficient, the backoff coefficient and minimum sleep time can be set directly from C++:
+When the built-in policies are insufficient, the backoff coefficient and minimum sleep time can be tuned from C++:
 
 ```cpp
-// Backoff coefficient (progressive multiplier)
-cs::current_process->fiber_cxt->busy_wait_coef = 0.01;
-// Minimum sleep time (milliseconds)
-cs::current_process->fiber_cxt->busy_wait_min = 10;
+auto params = cs::fiber::get_schedule_parameters();
+params.busy_wait_coef = 0.01;   // progressive multiplier
+params.busy_wait_min = 10;      // minimum sleep time (milliseconds)
+cs::fiber::set_schedule_parameters(params);
 ```
 
 CovScript code should use `fiber.set_schedule_policy()` to pick a preset; C++ code can tune freely.
@@ -287,7 +301,9 @@ var fut = fiber_obj.get_future()
 
 **C++ functions only.** For thread safety, `future.create` with a callable argument requires a native (C++) function. CovScript functions cannot run on background threads because the interpreter state is not thread-safe. To run CovScript code asynchronously, use `fiber.create` + `future.create(fiber)`.
 
-Passing a non-native callable causes `future.create` to throw `"Async future can only be created from native functions"`. If the first argument is neither a fiber nor a callable, it throws `"The target value is not callable or fiber"`.
+Passing a non-native callable causes `future.create` to throw `"Async future can only be created from native functions"`. If the first argument is neither a fiber nor a callable, it throws `"Invalid call to 'future.create', the first argument must be a fiber or a callable object"`.
+
+**The native-only guard covers only the direct callable.** A native function running on a worker thread must not interact with the CovScript runtime in any way: it must not call CovScript functions — directly, or indirectly through callables passed in its arguments (for example by invoking them via `invoke`/CNI) — and must not read or modify any runtime state (domains, the value stack, constants, and so on). Passing a CovScript callable as an argument and executing it on the worker thread is an unsupported usage and results in undefined behaviour (including data races on shared runtime state). If runtime interaction is required, run the work in a separate process instead.
 
 ### Consuming Futures
 

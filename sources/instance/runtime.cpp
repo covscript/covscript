@@ -470,6 +470,8 @@ namespace cs
 			case token_types::value:
 				return static_cast<token_value *>(token)->get_value();
 				break;
+			case token_types::lambda:
+				return functions.get(static_cast<token_lambda *>(token)->get_index());
 			case token_types::expr:
 				return parse_expr(static_cast<token_expr *>(token)->get_tree().root());
 				break;

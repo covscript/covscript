@@ -223,6 +223,13 @@ cs_impl::operators::result cs_impl::operators::handler<T>::detach(void *lhs, voi
 }
 
 template <typename T>
+cs_impl::operators::result cs_impl::operators::handler<T>::rebind(void *lhs, void *rhs)
+{
+	cs_impl::rebind<T>(*static_cast<T *>(lhs), rhs);
+	return result();
+}
+
+template <typename T>
 cs_impl::operators::result cs_impl::operators::handler<T>::ext_ns(void *lhs, void *rhs)
 {
 	return result::from_ptr((void *) &cs_impl::get_ext<T>());
@@ -494,6 +501,16 @@ namespace cs_impl
 			cs::copy_no_return(it.second);
 	}
 
+	// Rebind: a cloned object_method must point its non-owning `self` borrower
+	// at its own new proxy instead of the old one.
+	template <>
+	void rebind<cs::object_method>(cs::object_method &om, void *ctx)
+	{
+		auto *c = static_cast<cs_impl::rebind_ctx *>(ctx);
+		if (om.object.points_to(c->old_proxy))
+			om.object = cs::var_borrower::borrow_raw(c->new_proxy);
+	}
+
 	// To String
 	template <>
 	cs::string_borrower to_string<cs::numeric>(const cs::numeric &val)
@@ -502,9 +519,10 @@ namespace cs_impl
 		{
 			std::stringstream ss;
 			std::string str;
-			ss << std::setprecision(cs::current_process->output_precision) << val.as_float();
+			int precision = cs::current_process != nullptr ? cs::current_process->output_precision : 8;
+			ss << std::setprecision(precision) << val.as_float();
 			ss >> str;
-			return std::move(str);
+			return str;
 		}
 		else
 			return std::to_string(val.as_integer());
@@ -567,7 +585,7 @@ namespace cs_impl
 		if (map.empty())
 			return "cs::hash_map => {}";
 		std::string str = "cs::hash_map => {";
-		for (const cs::pair &it : map)
+		for (const auto &it : map)
 			str += cs_impl::to_string(it).extract() + ", ";
 		str.resize(str.size() - 2);
 		str += "}";
@@ -598,7 +616,7 @@ namespace cs_impl
 		if (range.empty())
 			return "cs::range => {}";
 		std::string str = "cs::range => {";
-		for (cs::numeric it : range)
+		for (const auto &it : range)
 			str += to_string(it).extract() + ", ";
 		str.resize(str.size() - 2);
 		str += "}";
@@ -682,7 +700,7 @@ namespace cs_impl
 
 	// Type name
 	template <>
-	constexpr const char *get_name_of_type<cs::context_t>()
+	constexpr const char *get_name_of_type<cs::context_type *>()
 	{
 		return "cs::context";
 	}
@@ -970,7 +988,7 @@ namespace cs_impl
 	}
 
 	template <>
-	cs::namespace_t &get_ext<cs::context_t>()
+	cs::namespace_t &get_ext<cs::context_type *>()
 	{
 		return context_ext;
 	}
@@ -1322,6 +1340,8 @@ namespace cs
 	var &operators::index_ref<cs::array>(cs::array &arr, const var &pos)
 	{
 		cs::numeric_integer idx = pos.const_val<cs::numeric>().as_integer();
+		// Cap auto-growth so a huge index can't spin.
+		constexpr cs::numeric_integer max_auto_extend = cs::numeric_integer{1} << 24;
 		if (idx < 0)
 		{
 			// Negative indices count from the end; if still before the start,
@@ -1329,13 +1349,22 @@ namespace cs
 			idx += static_cast<cs::numeric_integer>(arr.size());
 			if (idx < 0)
 			{
+				// Prepends exactly `pad` elements, so `pad == max_auto_extend`
+				// is within the cap (the positive path inserts one more).
 				std::size_t pad = static_cast<std::size_t>(-(idx + 1)) + 1; // idx < 0 so idx+1 <= 0: no overflow
+				if (pad > static_cast<std::size_t>(max_auto_extend))
+					throw cs::lang_error("Index out of range");
 				arr.insert(arr.begin(), pad, var::make<numeric>(0));
 				idx = 0;
 			}
 		}
-		while (idx >= static_cast<cs::numeric_integer>(arr.size()))
-			arr.emplace_back(var::make<numeric>(0));
+		if (idx >= static_cast<cs::numeric_integer>(arr.size()))
+		{
+			if (idx - static_cast<cs::numeric_integer>(arr.size()) >= max_auto_extend)
+				throw cs::lang_error("Index out of range");
+			while (idx >= static_cast<cs::numeric_integer>(arr.size()))
+				arr.emplace_back(var::make<numeric>(0));
+		}
 		return arr[static_cast<std::size_t>(idx)];
 	}
 

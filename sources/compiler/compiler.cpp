@@ -28,14 +28,6 @@
 
 namespace cs
 {
-	// Process-lifetime pool for lambda `function` objects so lambdas outlive the
-	// compiler that created them (never shrinks, matching the global-GC trade-off).
-	static std::vector<std::unique_ptr<function>> &lambda_pool()
-	{
-		static std::vector<std::unique_ptr<function>> pool;
-		return pool;
-	}
-
 	const map_t<char, char> token_value::escape_char = {
 	    {'\'', '\''},
 	    {'\"', '\"'},
@@ -48,6 +40,85 @@ namespace cs
 	    {'\r', 'r'},
 	    {'\t', 't'},
 	    {'\v', 'v'}};
+
+	// Whether a value contains a script function; the optimizer must not fold it
+	// into a token_value (which would recreate the arena <-> function cycle).
+	static bool contains_callable(const var &v, set_t<const void *> &visited);
+
+	static bool owns_function(const callable &c)
+	{
+		return c.get_raw_data().target<function_ptr>() != nullptr;
+	}
+
+	template <typename Container>
+	bool contains_callable_in(const Container &c, set_t<const void *> &visited)
+	{
+		for (const auto &e : c)
+			if (contains_callable(e, visited))
+				return true;
+		return false;
+	}
+
+	static bool contains_callable(const var &v, set_t<const void *> &visited)
+	{
+		if (!v.usable())
+			return false;
+		if (v.is_type_of<callable>())
+			return owns_function(v.const_val<callable>());
+		if (v.is_type_of<object_method>())
+		{
+			const auto &om = v.const_val<object_method>();
+			if (!visited.insert(static_cast<const void *>(&om)).second)
+				return false;
+			if (contains_callable(om.callable, visited))
+				return true;
+			return contains_callable(static_cast<var>(om.object), visited);
+		}
+		if (v.is_type_of<array>())
+			return contains_callable_in(v.const_val<array>(), visited);
+		if (v.is_type_of<list>())
+			return contains_callable_in(v.const_val<list>(), visited);
+		if (v.is_type_of<pair>())
+		{
+			const auto &p = v.const_val<pair>();
+			return contains_callable(p.first, visited) || contains_callable(p.second, visited);
+		}
+		if (v.is_type_of<hash_set>())
+			return contains_callable_in(v.const_val<hash_set>(), visited);
+		if (v.is_type_of<hash_map>())
+		{
+			for (const auto &kv : v.const_val<hash_map>())
+				if (contains_callable(kv.first, visited) || contains_callable(kv.second, visited))
+					return true;
+		}
+		if (v.is_type_of<structure>())
+		{
+			const auto &s = v.const_val<structure>();
+			if (!visited.insert(static_cast<const void *>(&s)).second)
+				return false;
+			const auto &domain = s.get_domain();
+			for (const auto &it : domain)
+				if (contains_callable(domain.get_var_by_id(it.second), visited))
+					return true;
+		}
+		if (v.is_type_of<namespace_t>())
+		{
+			const auto &ns = v.const_val<namespace_t>();
+			if (!visited.insert(static_cast<const void *>(ns.get())).second)
+				return false;
+			const auto &domain = ns->get_domain();
+			for (const auto &it : domain)
+				if (contains_callable(domain.get_var_by_id(it.second), visited))
+					return true;
+		}
+		return false;
+	}
+
+	static bool contains_callable(const var &v)
+	{
+		set_t<const void *> visited;
+		return contains_callable(v, visited);
+	}
 
 	bool token_value::dump(std::ostream &o) const
 	{
@@ -394,33 +465,33 @@ namespace cs
 	    {"catch", action_types::catch_},
 	    {"throw", action_types::throw_}};
 
-	const mapping<std::string, std::function<token_base *()>> compiler_type::reserved_map = {
-	    {"and", []() -> token_base *
-	{ return new token_signal(signal_types::and_); }},
-	    {"or", []() -> token_base *
-	{ return new token_signal(signal_types::or_); }},
-	    {"not", []() -> token_base *
-	{ return new token_signal(signal_types::not_); }},
-	    {"typeid", []() -> token_base *
-	{ return new token_signal(signal_types::typeid_); }},
-	    {"new", []() -> token_base *
-	{ return new token_signal(signal_types::new_); }},
-	    {"gcnew", []() -> token_base *
-	{ return new token_signal(signal_types::gcnew_); }},
-	    {"local", []() -> token_base *
+	const mapping<std::string, std::function<token_base *(compiler_type *)>> compiler_type::reserved_map = {
+	    {"and", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_signal>(signal_types::and_); }},
+	    {"or", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_signal>(signal_types::or_); }},
+	    {"not", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_signal>(signal_types::not_); }},
+	    {"typeid", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_signal>(signal_types::typeid_); }},
+	    {"new", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_signal>(signal_types::new_); }},
+	    {"gcnew", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_signal>(signal_types::gcnew_); }},
+	    {"local", [](compiler_type *self) -> token_base *
 	{
-		return new token_value(var::make_constant<constant_values>(constant_values::local_namepace));
+		return self->make_token<token_value>(var::make_constant<constant_values>(constant_values::local_namepace));
 	}},
-	    {"global", []() -> token_base *
+	    {"global", [](compiler_type *self) -> token_base *
 	{
-		return new token_value(var::make_constant<constant_values>(constant_values::global_namespace));
+		return self->make_token<token_value>(var::make_constant<constant_values>(constant_values::global_namespace));
 	}},
-	    {"null", []() -> token_base *
-	{ return new token_value(null_pointer); }},
-	    {"true", []() -> token_base *
-	{ return new token_value(var::make_constant<bool>(true)); }},
-	    {"false", []() -> token_base *
-	{ return new token_value(var::make_constant<bool>(false)); }}};
+	    {"null", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_value>(null_pointer); }},
+	    {"true", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_value>(var::make_constant<bool>(true)); }},
+	    {"false", [](compiler_type *self) -> token_base *
+	{ return self->make_token<token_value>(var::make_constant<bool>(false)); }}};
 
 	const mapping<char32_t, char32_t> compiler_type::escape_map = {
 	    {'a', '\a'},
@@ -539,9 +610,9 @@ namespace cs
 					if (!context->instance->storage.exist_record(id) &&
 					    context->instance->storage.exist_record_in_struct(id))
 					{
-						it.data() = new token_signal(signal_types::dot_);
+						it.data() = make_token<token_signal>(signal_types::dot_);
 						tree.emplace_left_left(it, token);
-						tree.emplace_left_left(it, new token_id("this"));
+						tree.emplace_left_left(it, make_token<token_id>("this"));
 						tree.emplace_right_right(it, token);
 					}
 				}
@@ -594,7 +665,7 @@ namespace cs
 						{
 							if (it.right().data() == nullptr)
 								throw compile_error("Invalid unary '-' expression. Operand must be non-empty.");
-							it.data() = new token_signal(signal_types::minus_);
+							it.data() = make_token<token_signal>(signal_types::minus_);
 						}
 						else
 						{
@@ -607,7 +678,7 @@ namespace cs
 						{
 							if (it.right().data() == nullptr)
 								throw compile_error("Invalid unary '*' (dereference) expression. Operand must be non-empty.");
-							it.data() = new token_signal(signal_types::escape_);
+							it.data() = make_token<token_signal>(signal_types::escape_);
 						}
 						else
 						{
@@ -634,7 +705,7 @@ namespace cs
 						if (it.left().data() == nullptr)
 							throw compile_error("Invalid '=' expression. Left-hand side must be non-empty after expression trimming.");
 						if (it.left().data()->get_type() == token_types::parallel)
-							it.data() = new token_signal(signal_types::bind_);
+							it.data() = make_token<token_signal>(signal_types::bind_);
 						trim_expr(tree, it.right(), do_trim);
 						return;
 					case signal_types::com_:
@@ -651,9 +722,9 @@ namespace cs
 							if (lptr != nullptr && lptr->get_type() == token_types::parallel)
 								parallel_list = static_cast<token_parallel *>(lptr);
 							else if (lptr != nullptr)
-								parallel_list = new token_parallel({tree_type<token_base *>(it.left())});
+								parallel_list = make_token<token_parallel>(std::deque<tree_type<token_base *>>{tree_type<token_base *>(it.left())});
 							else
-								parallel_list = new token_parallel();
+								parallel_list = make_token<token_parallel>();
 							if (rptr != nullptr && rptr->get_type() == token_types::parallel)
 								for (auto &tree : static_cast<token_parallel *>(rptr)->get_parallel())
 									parallel_list->get_parallel().push_back(tree);
@@ -745,14 +816,14 @@ namespace cs
 							token_base *rptr = it.right().data();
 							if (rptr == nullptr || rptr->get_type() != token_types::id)
 								throw compile_error("Invalid variadic argument declaration. Right-hand side of '...' must be an identifier.");
-							it.data() = new token_vargs(static_cast<token_id *>(rptr)->get_id());
+							it.data() = make_token<token_vargs>(static_cast<token_id *>(rptr)->get_id());
 						}
 						else
 						{
 							if (it.right().data() != nullptr)
 								throw compile_error("Invalid variadic argument expansion. Right-hand side of '...' must be empty.");
 							trim_expr(tree, it.left(), do_trim);
-							it.data() = new token_expand(tree_type<token_base *>(it.left()));
+							it.data() = make_token<token_expand>(tree_type<token_base *>(it.left()));
 						}
 						return;
 					}
@@ -821,7 +892,7 @@ namespace cs
 							std::swap(new_args, args);
 						}
 						statement_base *ret = new statement_return(tree_type<token_base *>(it.right()), context,
-						                                           new token_endline(token->get_line_num()));
+						                                           make_token<token_endline>(token->get_line_num()));
 #ifdef CS_DEBUGGER
 						std::string decl = "function [lambda](";
 						if (args.size() != 0)
@@ -833,21 +904,27 @@ namespace cs
 						}
 						else
 							decl += ")";
-						function *fn = new function(context, decl, ret, args, std::deque<statement_base *>{ret}, is_vargs,
-						                            true);
+						std::shared_ptr<function> fn = std::make_shared<function>(
+						    context, decl, context->file_path, token->get_line_num(), args,
+						    std::deque<statement_base *>{ret}, is_vargs, true);
 #else
-						function *fn = new function(context, args, std::deque<statement_base *>{ret}, is_vargs, true);
+						std::shared_ptr<function> fn = std::make_shared<function>(context, args,
+						                                                          std::deque<statement_base *>{ret},
+						                                                          is_vargs, true);
 #endif
-						lambda_pool().emplace_back(fn);
+						// The lambda value lives in the runtime's function store; the
+						// token only carries an index (no token -> function cycle).
+						std::size_t index;
 						if (find_self_ref)
 						{
-							var lambda = var::make<object_method>(var(), var::make_protect<callable>(function_ptr{fn}));
-							lambda.val<object_method>().object = lambda;
+							var lambda = var::make<object_method>(var(), var::make_protect<callable>(function_ptr{fn.get(), fn}));
+							lambda.val<object_method>().object = var_borrower::borrow(lambda);
 							lambda.mark_protect();
-							it.data() = new_value(lambda);
+							index = context->instance->functions.add(lambda);
 						}
 						else
-							it.data() = new_value(var::make_protect<callable>(function_ptr{fn}));
+							index = context->instance->functions.add(var::make_protect<callable>(function_ptr{fn.get(), fn}));
+						it.data() = make_token<token_lambda>(index);
 						return;
 					}
 
@@ -908,7 +985,10 @@ namespace cs
 				{
 					if (do_optm == optm_type::enable_namespace_optm || !value.is_type_of<namespace_t>() ||
 					    !value.const_val<namespace_t>()->get_domain().exist("__PRAGMA_CS_NAMESPACE_DEFINITION__"))
-						it.data() = new_value(value);
+					{
+						if (!contains_callable(value))
+							it.data() = new_value(value);
+					}
 				}
 				return;
 			}
@@ -918,7 +998,9 @@ namespace cs
 				token_base *oldt = it.data();
 				try
 				{
-					it.data() = new_value(context->instance->get_string_literal(ptr->get_data(), ptr->get_literal()));
+					var val = context->instance->get_string_literal(ptr->get_data(), ptr->get_literal());
+					if (!contains_callable(val))
+						it.data() = new_value(val);
 				}
 				catch (...)
 				{
@@ -961,10 +1043,9 @@ namespace cs
 						ptr = tree.root().data();
 						if (ptr != nullptr && ptr->get_type() == token_types::expand)
 						{
-							const auto &child_arr = context->instance->parse_expr(
-							                                             static_cast<token_expand *>(ptr)->get_tree().root())
-							                            .const_val<array>();
-							for (auto &it : child_arr)
+							var child_arr = context->instance->parse_expr(
+							    static_cast<token_expand *>(ptr)->get_tree().root());
+							for (auto &it : child_arr.const_val<array>())
 								arr.push_back(copy(it));
 						}
 						else
@@ -972,7 +1053,9 @@ namespace cs
 					}
 					for (auto &it : arr)
 						add_constant(it);
-					it.data() = new_value(var::make<array>(std::move(arr)));
+					var folded = var::make<array>(std::move(arr));
+					if (!contains_callable(folded))
+						it.data() = new_value(folded);
 				}
 				catch (...)
 				{
@@ -1066,7 +1149,7 @@ namespace cs
 							try
 							{
 								const var &v = context->instance->parse_dot(a, rptr);
-								if (v.is_protect())
+								if (v.is_protect() && !contains_callable(v))
 									it.data() = new_value(v);
 							}
 							catch (...)
@@ -1115,16 +1198,17 @@ namespace cs
 										ptr = tree.root().data();
 										if (ptr != nullptr && ptr->get_type() == token_types::expand)
 										{
-											const auto &arr = context->instance->parse_expr(
-											                                       static_cast<token_expand *>(ptr)->get_tree().root())
-											                      .const_val<array>();
-											for (auto &it : arr)
+											var arg_arr = context->instance->parse_expr(
+											    static_cast<token_expand *>(ptr)->get_tree().root());
+											for (auto &it : arg_arr.const_val<array>())
 												args.push_back(lvalue(it));
 										}
 										else
 											args.push_back(lvalue(context->instance->parse_expr(tree.root())));
 									}
-									it.data() = new_value(a.const_val<callable>().call(args));
+									var call_result = a.const_val<callable>().call(args);
+									if (!contains_callable(call_result))
+										it.data() = new_value(call_result);
 								}
 								catch (...)
 								{
@@ -1161,16 +1245,17 @@ namespace cs
 										ptr = tree.root().data();
 										if (ptr != nullptr && ptr->get_type() == token_types::expand)
 										{
-											const auto &arr = context->instance->parse_expr(
-											                                       static_cast<token_expand *>(ptr)->get_tree().root())
-											                      .const_val<array>();
-											for (auto &it : arr)
+											var arg_arr = context->instance->parse_expr(
+											    static_cast<token_expand *>(ptr)->get_tree().root());
+											for (auto &it : arg_arr.const_val<array>())
 												args.push_back(lvalue(it));
 										}
 										else
 											args.push_back(lvalue(context->instance->parse_expr(tree.root())));
 									}
-									it.data() = new_value(om.callable.const_val<callable>().call(args));
+									var call_result = om.callable.const_val<callable>().call(args);
+									if (!contains_callable(call_result))
+										it.data() = new_value(call_result);
 								}
 								catch (...)
 								{
@@ -1252,10 +1337,18 @@ namespace cs
 			token_base *oldt = it.data();
 			try
 			{
-				token_value *token = new_value(context->instance->parse_expr(it));
-				tree.erase_left(it);
-				tree.erase_right(it);
-				it.data() = token;
+				var folded = context->instance->parse_expr(it);
+				if (contains_callable(folded))
+				{
+					it.data() = oldt;
+				}
+				else
+				{
+					token_value *token = new_value(folded);
+					tree.erase_left(it);
+					tree.erase_right(it);
+					it.data() = token;
+				}
 			}
 			catch (...)
 			{
@@ -1406,7 +1499,7 @@ namespace cs
 		stream << " >";
 	}
 
-	void translator_type::match_grammar(const context_t &context, std::deque<token_base *> &raw)
+	void translator_type::match_grammar(context_type *context, std::deque<token_base *> &raw)
 	{
 		for (auto &dat : m_data)
 		{
@@ -1414,7 +1507,7 @@ namespace cs
 			{
 				bool failed = false, skip_useless = false;
 				std::size_t i = 0;
-				for (auto &it : dat->first)
+				for (auto &it : dat->grammar)
 				{
 					switch (it->get_type())
 					{
@@ -1479,7 +1572,7 @@ namespace cs
 			{
 				bool skip_useless = false;
 				std::size_t i = 0;
-				for (auto &it : dat->first)
+				for (auto &it : dat->grammar)
 				{
 					switch (it->get_type())
 					{
@@ -1503,7 +1596,8 @@ namespace cs
 										break;
 								}
 							}
-							if (raw[i]->get_type() == token_types::id)
+							// The skip loop may exhaust raw without a match.
+							if (i < raw.size() && raw[i]->get_type() == token_types::id)
 							{
 								auto &id = static_cast<token_id *>(raw[i])->get_id();
 								auto action = context->compiler->action_map.find(id);
@@ -1524,7 +1618,7 @@ namespace cs
 		}
 	}
 
-	void translator_type::translate(const context_t &context, const std::deque<std::deque<token_base *>> &lines,
+	void translator_type::translate(context_type *context, const std::deque<std::deque<token_base *>> &lines,
 	                                std::deque<statement_base *> &statements, bool raw)
 	{
 		std::size_t method_line_num = 0, line_num = 0;

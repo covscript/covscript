@@ -688,6 +688,12 @@ namespace cs_impl
 		cni(const cni &c)
 		    : mCni(c.mCni->clone()) {}
 
+		cni(cni &&c) noexcept
+		    : mCni(c.mCni)
+		{
+			c.mCni = nullptr;
+		}
+
 		template <typename T>
 		explicit cni(T &&val)
 		    : mCni(
@@ -723,6 +729,32 @@ namespace cs_impl
 			delete mCni;
 		}
 
+		void swap(cni &other) noexcept
+		{
+			std::swap(mCni, other.mCni);
+		}
+
+		cni &operator=(const cni &c)
+		{
+			if (this != &c)
+			{
+				cni tmp(c);
+				swap(tmp);
+			}
+			return *this;
+		}
+
+		cni &operator=(cni &&c) noexcept
+		{
+			if (this != &c)
+			{
+				delete mCni;
+				mCni = c.mCni;
+				c.mCni = nullptr;
+			}
+			return *this;
+		}
+
 		std::size_t argument_count() const noexcept
 		{
 			return mCni->argument_count();
@@ -736,7 +768,12 @@ namespace cs_impl
 			}
 			catch (const cs::lang_error &e)
 			{
-				cs::current_process->cs_eh_callback(e);
+				// No active process on this thread (e.g. an async future task):
+				// fall back to the default handler instead of dereferencing null.
+				if (cs::current_process)
+					cs::current_process->cs_eh_callback(e);
+				else
+					cs::process_context::cs_defalt_exception_handler(e);
 			}
 			catch (const cs::exception &)
 			{
@@ -745,11 +782,17 @@ namespace cs_impl
 			}
 			catch (const std::exception &e)
 			{
-				cs::current_process->std_eh_callback(e);
+				if (cs::current_process)
+					cs::current_process->std_eh_callback(e);
+				else
+					cs::process_context::std_defalt_exception_handler(e);
 			}
 			catch (...)
 			{
-				cs::current_process->std_eh_callback(cs::fatal_error("CNI:Unrecognized exception."));
+				if (cs::current_process)
+					cs::current_process->std_eh_callback(cs::fatal_error("CNI:Unrecognized exception."));
+				else
+					cs::process_context::std_defalt_exception_handler(cs::fatal_error("CNI:Unrecognized exception."));
 			}
 			return cs::null_pointer;
 		}

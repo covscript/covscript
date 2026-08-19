@@ -30,10 +30,78 @@ namespace cs
 {
 	using stack_pointer = stack_type<domain_type> *;
 
+	// Owns compiled lambdas (tokens carry an index), preventing arena<->function
+	// cycles and keeping a self-referencing lambda's borrowed `self` alive.
+	class function_store final
+	{
+		std::vector<var> m_lambdas;
+		std::vector<std::vector<std::size_t>> m_transactions;
+
+	   public:
+		std::size_t add(const var &val)
+		{
+			m_lambdas.push_back(val);
+			std::size_t index = m_lambdas.size() - 1;
+			if (!m_transactions.empty())
+				m_transactions.back().push_back(index);
+			return index;
+		}
+
+		std::size_t size() const noexcept
+		{
+			return m_lambdas.size();
+		}
+
+		// Roll back lambdas registered by a failed compilation unit.
+		void resize(std::size_t count)
+		{
+			m_lambdas.resize(count);
+		}
+
+		void begin_transaction()
+		{
+			m_transactions.emplace_back();
+		}
+
+		void commit_transaction()
+		{
+			if (!m_transactions.empty())
+				m_transactions.pop_back();
+		}
+
+		void rollback_transaction()
+		{
+			if (m_transactions.empty())
+				return;
+			for (std::size_t index : m_transactions.back())
+				if (index < m_lambdas.size())
+					m_lambdas[index] = var();
+			m_transactions.pop_back();
+			// Preserve stable indices for committed nested entries. Only empty
+			// slots at the physical end can be reclaimed safely.
+			while (!m_lambdas.empty() && !m_lambdas.back().usable())
+				m_lambdas.pop_back();
+		}
+
+		std::size_t active_size() const noexcept
+		{
+			return static_cast<std::size_t>(std::count_if(m_lambdas.begin(), m_lambdas.end(),
+			                                              [](const var &val)
+			{ return val.usable(); }));
+		}
+
+		var get(std::size_t index) const
+		{
+			return m_lambdas.at(index);
+		}
+	};
+
 	class domain_manager
 	{
 		const stack_pointer &fiber_stack;
-		stack_type<set_t<std::string_view>> m_set;
+		// Owned keys: record names may point into a token arena that dies on
+		// recompile, so the set must not hold views into it.
+		stack_type<set_t<std::string>> m_set;
 		stack_type<domain_type> m_data;
 		set_t<std::string_view> buildin_symbols;
 
@@ -56,17 +124,6 @@ namespace cs
 		domain_manager(const domain_manager &) = delete;
 
 		~domain_manager() = default;
-
-		void clear_all_data()
-		{
-			while (!m_set.empty())
-				m_set.pop_no_return();
-			while (!m_data.empty())
-			{
-				m_data.top().clear();
-				m_data.pop_no_return();
-			}
-		}
 
 		bool is_initial() const
 		{
@@ -97,6 +154,12 @@ namespace cs
 		domain_type &get_global() const
 		{
 			return m_data.bottom();
+		}
+
+		// Release globals (running finalizers) while the runtime is usable.
+		void clear_global()
+		{
+			m_data.bottom().safe_rewind();
 		}
 
 		namespace_t get_namespace() const
@@ -157,14 +220,15 @@ namespace cs
 			// script finished); no records exist then.
 			if (m_set.empty())
 				return false;
-			return m_set.top().count(name) > 0;
+			return m_set.top().count(std::string(name)) > 0;
 		}
 
 		bool exist_record_in_struct(std::string_view name)
 		{
+			const std::string owned_name(name);
 			for (auto &set : m_set)
 			{
-				if (set.count(name) > 0)
+				if (set.count(owned_name) > 0)
 					return set.count("__PRAGMA_CS_STRUCT_DEFINITION__") > 0;
 			}
 			return false;
@@ -249,7 +313,7 @@ namespace cs
 			if (exist_record(name))
 				throw runtime_error("Redefinition of variable \"" + std::string(name) + "\".");
 			else
-				m_set.top().emplace(name);
+				m_set.top().emplace(std::string(name));
 			return *this;
 		}
 
@@ -354,7 +418,7 @@ namespace cs
 
 		template <typename T>
 		domain_manager &
-		add_type(T &&name, const std::function<var()> &func, const std::type_index &id, namespace_t ext)
+		add_type(T &&name, const std::function<var()> &func, const std::type_index &id, const namespace_t &ext)
 		{
 			return add_var(name, var::make_protect<type_t>(func, id, ext));
 		}
@@ -369,7 +433,7 @@ namespace cs
 
 		template <typename T>
 		domain_manager &
-		add_buildin_type(T &&name, const std::function<var()> &func, const std::type_index &id, namespace_t ext)
+		add_buildin_type(T &&name, const std::function<var()> &func, const std::type_index &id, const namespace_t &ext)
 		{
 			add_record(name);
 			buildin_symbols.emplace(name);
@@ -389,6 +453,8 @@ namespace cs
 
 	   public:
 		domain_manager storage;
+
+		function_store functions;
 
 		explicit runtime_type(const stack_pointer &fiber_sp)
 		    : storage(fiber_sp) {}

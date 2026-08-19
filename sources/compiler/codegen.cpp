@@ -27,8 +27,33 @@
 
 namespace cs
 {
+	// Frees body statements if translate() throws; release() after transfer.
+	class body_guard
+	{
+		std::deque<statement_base *> &m_body;
+		bool m_released = false;
+
+	   public:
+		explicit body_guard(std::deque<statement_base *> &body) : m_body(body) {}
+
+		body_guard(const body_guard &) = delete;
+
+		body_guard &operator=(const body_guard &) = delete;
+
+		void release() noexcept
+		{
+			m_released = true;
+		}
+
+		~body_guard()
+		{
+			if (!m_released && !m_body.empty())
+				statement_base::delete_children(m_body);
+		}
+	};
+
 	statement_base *
-	method_expression::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	method_expression::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().front())->get_tree();
 		token_base *root = tree.root().usable() ? tree.root().data() : nullptr;
@@ -40,7 +65,7 @@ namespace cs
 			return new statement_expression(tree, context, raw.front().back());
 	}
 
-	void method_import::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	void method_import::preprocess(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
@@ -65,20 +90,19 @@ namespace cs
 		}
 		else
 			process(tree);
-		context->compiler->import_results.emplace_back(new statement_import(var_list, context, raw.front().back()));
+		context->compiler->push_import_result(new statement_import(var_list, context, raw.front().back()));
 	}
 
 	statement_base *
-	method_import::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	method_import::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		if (context->compiler->import_results.empty())
+		statement_base *ptr = context->compiler->pop_import_result();
+		if (ptr == nullptr)
 			throw compile_error("Invalid 'import' statement: missing preprocessing result");
-		statement_base *ptr = context->compiler->import_results.front();
-		context->compiler->import_results.pop_front();
 		return ptr;
 	}
 
-	var method_import_as::get_namespace(const context_t &context, tree_type<token_base *>::iterator it)
+	var method_import_as::get_namespace(context_type *context, tree_type<token_base *>::iterator it)
 	{
 		token_base *token = it.data();
 		if (token == nullptr)
@@ -106,7 +130,7 @@ namespace cs
 			    "Invalid 'import' statement: expected '<package name>' or '<package name>.<namespace id>...'");
 	}
 
-	void method_import_as::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	void method_import_as::preprocess(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &tree_package = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		tree_type<token_base *> &tree_alias = static_cast<token_expr *>(raw.front().at(3))->get_tree();
@@ -119,21 +143,20 @@ namespace cs
 		var ext = get_namespace(context, tree_package.root());
 		context->compiler->add_constant(ext);
 		context->instance->storage.add_var_no_return(alias_name, ext);
-		context->compiler->import_results.emplace_back(new statement_import({{alias_name, ext}}, context, raw.front().back()));
+		context->compiler->push_import_result(new statement_import({{alias_name, ext}}, context, raw.front().back()));
 	}
 
 	statement_base *
-	method_import_as::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	method_import_as::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		if (context->compiler->import_results.empty())
+		statement_base *ptr = context->compiler->pop_import_result();
+		if (ptr == nullptr)
 			throw compile_error("Invalid 'import' statement: missing preprocessing result");
-		statement_base *ptr = context->compiler->import_results.front();
-		context->compiler->import_results.pop_front();
 		return ptr;
 	}
 
 	statement_base *
-	method_package::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	method_package::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		if (!context->package_name.empty())
 			throw compile_error("Invalid 'package' declaration: this file already declared its package name as '" + context->package_name + "'");
@@ -146,7 +169,7 @@ namespace cs
 		return nullptr;
 	}
 
-	void method_involve::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	void method_involve::preprocess(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_value *vptr = dynamic_cast<token_value *>(tree.root().data());
@@ -165,45 +188,71 @@ namespace cs
 			}
 			else
 				throw compile_error("Invalid 'using' statement: the target must be a namespace");
-			context->compiler->import_results.emplace_back(new statement_involve(tree, true, context, raw.front().back()));
+			context->compiler->push_import_result(new statement_involve(tree, true, context, raw.front().back()));
+		}
+		else if (tree.root().data() != nullptr && tree.root().data()->get_type() == token_types::id)
+		{
+			// 'using <id>': resolve from storage so a namespace's constants reach
+			// compile-time folding even when it holds a script function.
+			const std::string &name = static_cast<token_id *>(tree.root().data())->get_id();
+			try
+			{
+				const var &ns = context->instance->storage.get_var(name);
+				if (ns.is_type_of<namespace_t>())
+				{
+					auto &domain = ns.const_val<namespace_t>()->get_domain();
+					for (auto &it : domain)
+					{
+						if (domain.get_var_by_id(it.second).is_protect())
+							context->instance->storage.add_record(it.first);
+					}
+					context->instance->storage.involve_domain(domain);
+					context->compiler->push_import_result(new statement_involve(tree, true, context, raw.front().back()));
+					return;
+				}
+			}
+			catch (...)
+			{
+				// Undefined or not a namespace: handled by the runtime path below.
+			}
+			context->compiler->push_import_result(new statement_involve(tree, false, context, raw.front().back()));
 		}
 		else
-			context->compiler->import_results.emplace_back(new statement_involve(tree, false, context, raw.front().back()));
+			context->compiler->push_import_result(new statement_involve(tree, false, context, raw.front().back()));
 	}
 
 	statement_base *
-	method_involve::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	method_involve::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
-		if (context->compiler->import_results.empty())
+		statement_base *ptr = context->compiler->pop_import_result();
+		if (ptr == nullptr)
 			throw compile_error("Invalid 'using' statement: missing preprocessing result");
-		statement_base *ptr = context->compiler->import_results.front();
-		context->compiler->import_results.pop_front();
 		return ptr;
 	}
 
-	void method_var::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	void method_var::preprocess(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		context->instance->check_define_var(static_cast<token_expr *>(raw.front().at(1))->get_tree().root());
 	}
 
-	statement_base *method_var::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_var::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_var(static_cast<token_expr *>(raw.front().at(1))->get_tree(), context, false,
 		                         raw.front().back());
 	}
 
-	void method_link::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	void method_link::preprocess(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		context->instance->check_define_var(static_cast<token_expr *>(raw.front().at(1))->get_tree().root());
 	}
 
-	statement_base *method_link::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_link::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_var(static_cast<token_expr *>(raw.front().at(1))->get_tree(), context, true,
 		                         raw.front().back());
 	}
 
-	void method_constant::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	void method_constant::preprocess(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		context->compiler->force_fold(tree);
@@ -212,20 +261,23 @@ namespace cs
 	}
 
 	statement_base *
-	method_constant::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	method_constant::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		return new statement_constant(tree, context, raw.front().back());
 	}
 
-	statement_base *method_block::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_block::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
+		body_guard guard(body);
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		return new statement_block(body, context, raw.front().back());
+		auto *stmt = new statement_block(std::move(body), context, raw.front().back());
+		guard.release();
+		return stmt;
 	}
 
-	void method_namespace::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	void method_namespace::preprocess(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_base *root = tree.root().usable() ? tree.root().data() : nullptr;
@@ -243,29 +295,34 @@ namespace cs
 	}
 
 	statement_base *
-	method_namespace::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	method_namespace::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
+		body_guard guard(body);
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		for (auto &ptr : body)
 			if (ptr->get_type() != statement_types::import_ && ptr->get_type() != statement_types::involve_ &&
-			    ptr->get_type() != statement_types::var_ && ptr->get_type() != statement_types::function_ &&
-			    ptr->get_type() != statement_types::namespace_ && ptr->get_type() != statement_types::struct_)
-				throw compile_error("Invalid 'namespace' body: only 'import', 'using', variable declarations, function definitions, 'namespace' definitions, and 'struct' definitions are allowed");
-		return new statement_namespace(static_cast<token_expr *>(raw.front().at(1))->get_tree().root().data(), body,
-		                               context, raw.front().back());
+			    ptr->get_type() != statement_types::var_ && ptr->get_type() != statement_types::constant_ &&
+			    ptr->get_type() != statement_types::function_ && ptr->get_type() != statement_types::namespace_ &&
+			    ptr->get_type() != statement_types::struct_)
+				throw compile_error("Invalid 'namespace' body: only 'import', 'using', variable declarations, constant declarations, function definitions, 'namespace' definitions, and 'struct' definitions are allowed");
+		auto *stmt = new statement_namespace(static_cast<token_expr *>(raw.front().at(1))->get_tree().root().data(),
+		                                     std::move(body), context, raw.front().back());
+		guard.release();
+		return stmt;
 	}
 
-	void method_namespace::postprocess(const context_t &context, const domain_type &domain)
+	void method_namespace::postprocess(context_type *context, const domain_type &domain)
 	{
 		context->instance->storage.add_var_no_return(*domain.get_var("__PRAGMA_CS_NAMESPACE_DEFINITION__").const_val<const var_id *>(),
 		                                             make_namespace(make_shared_namespace<name_space>(domain)));
 	}
 
-	statement_base *method_if::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_if::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		bool have_else = false;
 		std::deque<statement_base *> body;
+		body_guard guard(body);
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		for (auto &ptr : body)
 		{
@@ -289,6 +346,8 @@ namespace cs
 				if (ptr->get_type() == statement_types::else_)
 				{
 					now_place = false;
+					// The marker is consumed here and is not part of either branch.
+					delete ptr;
 					continue;
 				}
 				if (now_place)
@@ -296,80 +355,126 @@ namespace cs
 				else
 					body_false.push_back(ptr);
 			}
+			// Ownership moved into the branch deques; the guard must not see them.
+			body.clear();
 			if (ptr != nullptr && ptr->get_type() == token_types::value)
 			{
 				if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
-					return new statement_block(body_true, context, raw.front().back());
+				{
+					statement_base::delete_children(body_false);
+					return new statement_block(std::move(body_true), context, raw.front().back());
+				}
 				else
-					return new statement_block(body_false, context, raw.front().back());
+				{
+					statement_base::delete_children(body_true);
+					return new statement_block(std::move(body_false), context, raw.front().back());
+				}
 			}
 			else
-				return new statement_ifelse(tree, body_true, body_false, context, raw.front().back());
+				return new statement_ifelse(tree, std::move(body_true), std::move(body_false), context,
+				                            raw.front().back());
 		}
 		else if (ptr != nullptr && ptr->get_type() == token_types::value)
 		{
 			if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
-				return new statement_block(body, context, raw.front().back());
+			{
+				auto *stmt = new statement_block(std::move(body), context, raw.front().back());
+				guard.release();
+				return stmt;
+			}
 			else
+			{
+				statement_base::delete_children(body);
 				return nullptr;
+			}
 		}
 		else
-			return new statement_if(tree, body, context, raw.front().back());
+		{
+			auto *stmt = new statement_if(tree, std::move(body), context, raw.front().back());
+			guard.release();
+			return stmt;
+		}
 	}
 
-	void method_else::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &)
+	void method_else::preprocess(context_type *context, const std::deque<std::deque<token_base *>> &)
 	{
 		context->instance->storage.clear_domain();
 		context->instance->storage.clear_set();
 	}
 
-	statement_base *method_else::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_else::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_else;
 	}
 
 	statement_base *
-	method_switch::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	method_switch::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
-		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
+		body_guard guard(body);
 		statement_block *dptr = nullptr;
 		map_t<var, statement_block *> cases;
-		for (auto &it : body)
+		try
 		{
-			try
+			context->compiler->translate({raw.begin() + 1, raw.end()}, body);
+			for (auto &it : body)
 			{
-				if (it->get_type() == statement_types::case_)
+				try
 				{
-					auto *scptr = static_cast<statement_case *>(it);
-					if (cases.count(scptr->get_tag()) > 0)
-						throw compile_error("Duplicate 'case' label in 'switch' statement");
-					cases.emplace(scptr->get_tag(), scptr->get_block());
+					if (it->get_type() == statement_types::case_)
+					{
+						auto *scptr = static_cast<statement_case *>(it);
+						auto inserted = cases.emplace(scptr->get_tag(), scptr->get_block());
+						if (!inserted.second)
+							throw compile_error("Duplicate 'case' label in 'switch' statement");
+						scptr->release_block();
+						delete it; // wrapper consumed; its block is now owned by the switch
+						it = nullptr;
+					}
+					else if (it->get_type() == statement_types::default_)
+					{
+						auto *sdptr = static_cast<statement_default *>(it);
+						if (dptr != nullptr)
+							throw compile_error("A 'switch' statement can only have one 'default' case");
+						dptr = sdptr->release_block();
+						delete it; // wrapper consumed; its block is now owned by the switch
+						it = nullptr;
+					}
+					else
+						throw compile_error("Only 'case' and 'default' clauses are allowed inside a 'switch' statement");
 				}
-				else if (it->get_type() == statement_types::default_)
+				catch (const cs::exception &)
 				{
-					auto *sdptr = static_cast<statement_default *>(it);
-					if (dptr != nullptr)
-						throw compile_error("A 'switch' statement can only have one 'default' case");
-					dptr = sdptr->get_block();
+					throw;
 				}
-				else
-					throw compile_error("Only 'case' and 'default' clauses are allowed inside a 'switch' statement");
+				catch (const std::exception &e)
+				{
+					throw exception(it->get_line_num(), it->get_file_path(), it->get_raw_code(), exception_message(e));
+				}
 			}
-			catch (const cs::exception &)
-			{
-				throw;
-			}
-			catch (const std::exception &e)
-			{
-				throw exception(it->get_line_num(), it->get_file_path(), it->get_raw_code(), exception_message(e));
-			}
+			auto *stmt = new statement_switch(static_cast<token_expr *>(raw.front().at(1))->get_tree(), cases,
+			                                  dptr, context, raw.front().back());
+			guard.release();
+			return stmt;
 		}
-		return new statement_switch(static_cast<token_expr *>(raw.front().at(1))->get_tree(), cases, dptr, context,
-		                            raw.front().back());
+		catch (...)
+		{
+			for (auto &kv : cases)
+				delete kv.second;
+			if (dptr != nullptr)
+				delete dptr;
+			for (auto *ptr : body)
+			{
+				if (ptr == nullptr)
+					continue;
+				delete ptr;
+			}
+			guard.release();
+			throw;
+		}
 	}
 
-	statement_base *method_case::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_case::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		context->compiler->force_fold(tree);
@@ -377,42 +482,72 @@ namespace cs
 		if (root == nullptr || root->get_type() != token_types::value)
 		{
 			std::size_t line_num = static_cast<token_endline *>(raw.front().back())->get_line_num();
-			const char *what = "A 'case' label must be a constant value";
+			const char *what = "A 'case' label must be a constant value; runtime calls and values containing functions or methods are not permitted";
 			throw exception(line_num, context->file_path, context->get_file_line(line_num), what);
 		}
 		std::deque<statement_base *> body;
-		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		return new statement_case(static_cast<token_value *>(root)->get_value(), body, context,
-		                          raw.front().back());
+		// statement_case copies its body; clean up only on failure.
+		try
+		{
+			context->compiler->translate({raw.begin() + 1, raw.end()}, body);
+			return new statement_case(static_cast<token_value *>(root)->get_value(), body, context,
+			                          raw.front().back());
+		}
+		catch (...)
+		{
+			statement_base::delete_children(body);
+			throw;
+		}
 	}
 
 	statement_base *
-	method_default::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	method_default::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
-		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		return new statement_default(body, context, raw.front().back());
+		// statement_default copies its body; clean up only on failure.
+		try
+		{
+			context->compiler->translate({raw.begin() + 1, raw.end()}, body);
+			return new statement_default(body, context, raw.front().back());
+		}
+		catch (...)
+		{
+			statement_base::delete_children(body);
+			throw;
+		}
 	}
 
-	statement_base *method_while::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_while::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
+		body_guard guard(body);
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		token_base *ptr = tree.root().data();
 		if (ptr != nullptr && ptr->get_type() == token_types::value)
 		{
 			if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
-				return new statement_loop(body, context, raw.front().back());
+			{
+				auto *stmt = new statement_loop(std::move(body), context, raw.front().back());
+				guard.release();
+				return stmt;
+			}
 			else
+			{
+				statement_base::delete_children(body);
 				return nullptr;
+			}
 		}
 		else
-			return new statement_while(static_cast<token_expr *>(raw.front().at(1))->get_tree(), body, context,
-			                           raw.front().back());
+		{
+			auto *stmt = new statement_while(static_cast<token_expr *>(raw.front().at(1))->get_tree(), std::move(body),
+			                                 context, raw.front().back());
+			guard.release();
+			return stmt;
+		}
 	}
 
-	statement_base *method_until::translate_end(method_base *method, const context_t &context,
+	statement_base *method_until::translate_end(method_base *method, context_type *context,
 	                                            std::deque<std::deque<token_base *>> &raw,
 	                                            std::deque<token_base *> &code)
 	{
@@ -423,31 +558,47 @@ namespace cs
 			throw compile_error("The 'until' clause can only be used to close a 'loop' block");
 	}
 
-	statement_base *method_loop::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_loop::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
+		body_guard guard(body);
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		return new statement_loop(body, context, raw.front().back());
+		auto *stmt = new statement_loop(std::move(body), context, raw.front().back());
+		guard.release();
+		return stmt;
 	}
 
-	statement_base *method_loop::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw,
+	statement_base *method_loop::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw,
 	                                       const tree_type<token_base *> &cond)
 	{
 		std::deque<statement_base *> body;
+		body_guard guard(body);
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		token_base *ptr = cond.root().data();
 		if (ptr != nullptr && ptr->get_type() == token_types::value)
 		{
 			if (static_cast<token_value *>(ptr)->get_value().const_val<bool>())
-				return new statement_block(body, context, raw.front().back());
+			{
+				auto *stmt = new statement_block(std::move(body), context, raw.front().back());
+				guard.release();
+				return stmt;
+			}
 			else
-				return new statement_loop(body, context, raw.front().back());
+			{
+				auto *stmt = new statement_loop(std::move(body), context, raw.front().back());
+				guard.release();
+				return stmt;
+			}
 		}
 		else
-			return new statement_loop_until(cond, body, context, raw.front().back());
+		{
+			auto *stmt = new statement_loop_until(cond, std::move(body), context, raw.front().back());
+			guard.release();
+			return stmt;
+		}
 	}
 
-	void method_for::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	void method_for::preprocess(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
@@ -460,17 +611,20 @@ namespace cs
 		context->instance->check_define_var(parallel_list[0].root(), true);
 	}
 
-	statement_base *method_for::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_for::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
+		body_guard guard(body);
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		auto &parallel_list = static_cast<token_parallel *>(tree.root().data())->get_parallel();
-		return new statement_for(parallel_list, body, context, raw.front().back());
+		auto *stmt = new statement_for(parallel_list, std::move(body), context, raw.front().back());
+		guard.release();
+		return stmt;
 	}
 
 	statement_base *
-	method_for_do::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	method_for_do::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &tree = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (tree.root().data() == nullptr)
@@ -484,7 +638,7 @@ namespace cs
 		return new statement_for(parallel_list, {new statement_expression(static_cast<token_expr *>(raw.front().at(3))->get_tree(), context, raw.front().back())}, context, raw.front().back());
 	}
 
-	void method_foreach::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	void method_foreach::preprocess(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
@@ -495,18 +649,21 @@ namespace cs
 	}
 
 	statement_base *
-	method_foreach::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	method_foreach::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		const var_id &it = static_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
+		body_guard guard(body);
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		return new statement_foreach(it, static_cast<token_expr *>(raw.front().at(3))->get_tree(), body, context,
-		                             raw.front().back());
+		auto *stmt = new statement_foreach(it, static_cast<token_expr *>(raw.front().at(3))->get_tree(), std::move(body),
+		                                   context, raw.front().back());
+		guard.release();
+		return stmt;
 	}
 
 	statement_base *
-	method_foreach_do::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	method_foreach_do::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
@@ -515,12 +672,17 @@ namespace cs
 			throw compile_error("Invalid 'foreach' statement: expected an identifier as the iterator");
 		const var_id &it = static_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
+		body_guard guard(body);
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		return new statement_foreach(it, static_cast<token_expr *>(raw.front().at(3))->get_tree(), {new statement_expression(static_cast<token_expr *>(raw.front().at(5))->get_tree(), context, raw.front().back())}, context,
-		                             raw.front().back());
+		body.push_back(new statement_expression(static_cast<token_expr *>(raw.front().at(5))->get_tree(), context,
+		                                        raw.front().back()));
+		auto *stmt = new statement_foreach(it, static_cast<token_expr *>(raw.front().at(3))->get_tree(), std::move(body),
+		                                   context, raw.front().back());
+		guard.release();
+		return stmt;
 	}
 
-	statement_base *method_break::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_break::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		if (context->compiler->loop_depth == 0)
 			throw compile_error("Invalid 'break' statement: not inside any loop");
@@ -528,14 +690,14 @@ namespace cs
 	}
 
 	statement_base *
-	method_continue::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	method_continue::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		if (context->compiler->loop_depth == 0)
 			throw compile_error("Invalid 'continue' statement: not inside any loop");
 		return new statement_continue(context, raw.front().back());
 	}
 
-	void method_function::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	void method_function::preprocess(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
@@ -580,7 +742,7 @@ namespace cs
 	}
 
 	statement_base *
-	method_function::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	method_function::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		std::string name = static_cast<token_id *>(t.root().left().data())->get_id();
@@ -597,51 +759,60 @@ namespace cs
 			}
 		}
 		std::deque<statement_base *> body;
+		// statement_function copies its body; clean up only on failure.
+		try
 		{
-			value_guard<std::size_t> fn_guard(context->compiler->loop_depth, 0);
-			context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		}
+			{
+				value_guard<std::size_t> fn_guard(context->compiler->loop_depth, 0);
+				context->compiler->translate({raw.begin() + 1, raw.end()}, body);
+			}
 #ifdef CS_DEBUGGER
-		std::string decl = "function " + name + "(";
-		if (args.size() != 0)
-		{
-			for (auto &it : args)
-				decl += it + ", ";
-			decl.pop_back();
-			decl[decl.size() - 1] = ')';
-		}
-		else
-			decl += ")";
-		if (raw.front().size() == 4)
-			decl += " override";
-		return new statement_function(name, decl, args, body, raw.front().size() == 4, is_vargs, context, raw.front().back());
+			std::string decl = "function " + name + "(";
+			if (args.size() != 0)
+			{
+				for (auto &it : args)
+					decl += it + ", ";
+				decl.pop_back();
+				decl[decl.size() - 1] = ')';
+			}
+			else
+				decl += ")";
+			if (raw.front().size() == 4)
+				decl += " override";
+			return new statement_function(name, decl, args, body, raw.front().size() == 4, is_vargs, context, raw.front().back());
 #else
-		return new statement_function(name, args, body, raw.front().size() == 4, is_vargs, context, raw.front().back());
+			return new statement_function(name, args, body, raw.front().size() == 4, is_vargs, context, raw.front().back());
 #endif
+		}
+		catch (...)
+		{
+			statement_base::delete_children(body);
+			throw;
+		}
 	}
 
 	statement_base *
-	method_return::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	method_return::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_return(static_cast<token_expr *>(raw.front().at(1))->get_tree(), context,
 		                            raw.front().back());
 	}
 
 	statement_base *
-	method_return_no_value::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	method_return_no_value::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> tree;
-		tree.emplace_root_left(tree.root(), new token_value(null_pointer));
+		tree.emplace_root_left(tree.root(), context->compiler->make_token<token_value>(null_pointer));
 		return new statement_return(tree, context, raw.front().back());
 	}
 
-	void method_struct::preprocess(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	void method_struct::preprocess(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		context->instance->storage.mark_set_as_struct(raw.front().size() == 5);
 	}
 
 	statement_base *
-	method_struct::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	method_struct::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
@@ -650,44 +821,57 @@ namespace cs
 			throw compile_error("Invalid 'struct' definition: expected a struct name");
 		std::string name = static_cast<token_id *>(t.root().data())->get_id();
 		std::deque<statement_base *> body;
-		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
-		for (auto &ptr : body)
+		// statement_struct copies its method deque; clean up only on failure.
+		try
 		{
-			try
+			context->compiler->translate({raw.begin() + 1, raw.end()}, body);
+			for (auto &ptr : body)
 			{
-				switch (ptr->get_type())
+				try
 				{
-					default:
-						throw compile_error("Invalid 'struct' body: only variable and function definitions are allowed");
-					case statement_types::var_:
-						break;
-					case statement_types::function_:
-						static_cast<statement_function *>(ptr)->set_mem_fn();
-						break;
+					switch (ptr->get_type())
+					{
+						default:
+							throw compile_error("Invalid 'struct' body: only variable declarations, constant declarations, and function definitions are allowed");
+						case statement_types::var_:
+						case statement_types::constant_:
+							break;
+						case statement_types::function_:
+							static_cast<statement_function *>(ptr)->set_mem_fn();
+							break;
+					}
+				}
+				catch (const cs::exception &)
+				{
+					throw;
+				}
+				catch (const std::exception &e)
+				{
+					throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 				}
 			}
-			catch (const cs::exception &)
-			{
-				throw;
-			}
-			catch (const std::exception &e)
-			{
-				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
-			}
+			if (raw.front().size() == 5)
+				return new statement_struct(name, static_cast<token_expr *>(raw.front().at(3))->get_tree(), body, context,
+				                            raw.front().back());
+			else
+				return new statement_struct(name, tree_type<token_base *>(), body, context, raw.front().back());
 		}
-		if (raw.front().size() == 5)
-			return new statement_struct(name, static_cast<token_expr *>(raw.front().at(3))->get_tree(), body, context,
-			                            raw.front().back());
-		else
-			return new statement_struct(name, tree_type<token_base *>(), body, context, raw.front().back());
+		catch (...)
+		{
+			statement_base::delete_children(body);
+			throw;
+		}
 	}
 
-	statement_base *method_try::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_try::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		std::deque<statement_base *> body;
+		body_guard guard(body);
 		context->compiler->translate({raw.begin() + 1, raw.end()}, body);
 		std::string name;
 		std::deque<statement_base *> tbody, cbody;
+		body_guard guard_t(tbody);
+		body_guard guard_c(cbody);
 		bool founded = false;
 		for (auto &ptr : body)
 		{
@@ -695,6 +879,7 @@ namespace cs
 			{
 				name = static_cast<statement_catch *>(ptr)->get_name();
 				founded = true;
+				delete ptr; // marker consumed; not part of either body
 				continue;
 			}
 			if (founded)
@@ -702,12 +887,17 @@ namespace cs
 			else
 				tbody.push_back(ptr);
 		}
+		// Ownership moved into the try/catch deques; the guard must not see them.
+		body.clear();
 		if (!founded)
 			throw compile_error("Invalid 'try' statement: a matching 'catch' clause is required");
-		return new statement_try(name, tbody, cbody, context, raw.front().back());
+		auto *stmt = new statement_try(name, std::move(tbody), std::move(cbody), context, raw.front().back());
+		guard_t.release();
+		guard_c.release();
+		return stmt;
 	}
 
-	statement_base *method_catch::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_catch::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		tree_type<token_base *> &t = static_cast<token_expr *>(raw.front().at(1))->get_tree();
 		if (t.root().data() == nullptr)
@@ -717,7 +907,7 @@ namespace cs
 		return new statement_catch(static_cast<token_id *>(t.root().data())->get_id(), context, raw.front().back());
 	}
 
-	statement_base *method_throw::translate(const context_t &context, const std::deque<std::deque<token_base *>> &raw)
+	statement_base *method_throw::translate(context_type *context, const std::deque<std::deque<token_base *>> &raw)
 	{
 		return new statement_throw(static_cast<token_expr *>(raw.front().at(1))->get_tree(), context,
 		                           raw.front().back());

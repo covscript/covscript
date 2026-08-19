@@ -33,7 +33,7 @@ sequenceDiagram
     Note over C: 执行 Caller 上下文<br/>fiber.is_suspended() == true
 
     C->>F: fiber.resume (在唤醒时间前)
-    Note over C: 立即返回 (调度器可能协调休眠)
+    Note over C: 立即返回（调度器可能执行退避休眠）
 
     C->>+F: fiber.resume (在唤醒时间后)
     Note over F: 执行 Fiber 上下文<br/>state -> running
@@ -121,6 +121,20 @@ fiber.set_schedule_policy("throughput")   # 高负载均衡
 
 机制：当对尚未到达唤醒时间的 fiber 调用 `resume()` 时，调度器使用累进式退避。重复的过早唤醒会逐渐增加休眠时长，避免 CPU 空转的同时保持对定时唤醒的响应。
 
+### 未清理的 Fiber 与 COVSCRIPT_DEBUG
+
+Fiber 采用协作式清理：在最后一个句柄被释放前，它必须运行到完成（或被驱动到 `finished`）。销毁仍处于 `running`、`suspended` 或 `sleeping` 状态的 fiber 无法解开其挂起的栈帧，因此这些帧持有的资源会泄漏。这是协作式契约，而非运行时错误。
+
+销毁未完成 fiber 时的行为由 `COVSCRIPT_DEBUG` 环境变量控制：
+
+| 取值 | 行为 |
+| :-- | :-- |
+| `none` | 什么都不做：fiber 的栈块仍被释放，挂起帧静默泄漏，程序继续 |
+| `warning` | 向 stderr 打印 `[fiber] warning: destroying an unfinished fiber ...` 并继续（默认） |
+| `strict` | 打印警告后立即中止（fail-fast） |
+
+`COVSCRIPT_DEBUG` 大小写不敏感；未设置或非法值默认按 `warning` 处理。同一开关也控制其他防御性运行时守卫（例如程序入口处函数值栈非空）。
+
 ### C++ API
 
 #### 类型
@@ -185,10 +199,10 @@ void sleep_for(std::size_t ms);
 
 `resume()` 调用流程：
 
-1. 检查 fiber 是否为 `ready` -> 创建上下文
-2. 检查 fiber 是否为 `sleeping` 且未到唤醒时间 -> 根据 `schedule_policy` 决定是否退避休眠，然后返回
+1. 若 fiber 为 `ready` -> 创建执行上下文
+2. 若 fiber 为 `sleeping` 且未到唤醒时间 -> 根据 `schedule_policy` 执行退避或立即返回
 3. 切换到 fiber 上下文执行
-4. fiber yield/sleep/完成 -> 切回调用者上下文
+4. fiber yield / sleep / 完成 -> 切回调用者上下文
 
 从 CovScript 调用 `fiber.resume()` 时始终使用 `normal` 策略，确保脚本层有完整的平台退避。
 
@@ -237,13 +251,13 @@ cs::var result = fut->get();  // 42，可多次调用
 
 #### 自定义退避参数
 
-当内置策略不满足需求时，可在 C++ 层直接设置退避系数和最小休眠时间：
+当内置策略不满足需求时，可在 C++ 层调整退避系数和最小休眠时间：
 
 ```cpp
-// 退避系数（渐进倍率）
-cs::current_process->fiber_cxt->busy_wait_coef = 0.01;
-// 最小休眠时间（毫秒）
-cs::current_process->fiber_cxt->busy_wait_min = 10;
+auto params = cs::fiber::get_schedule_parameters();
+params.busy_wait_coef = 0.01;   // 渐进倍率
+params.busy_wait_min = 10;      // 最小休眠时间（毫秒）
+cs::fiber::set_schedule_parameters(params);
 ```
 
 CovScript 层推荐使用 `fiber.set_schedule_policy()` 选择预设策略；C++ 层可自由调参。
@@ -287,7 +301,9 @@ var fut = fiber_obj.get_future()
 
 **仅限 C++ 函数。** 出于线程安全考虑，以可调用对象为参数的 `future.create` 要求原生（C++）函数。CovScript 函数不能在后台线程上运行，因为解释器状态不是线程安全的。如需异步执行 CovScript 代码，请使用 `fiber.create` + `future.create(fiber)`。
 
-传入非原生可调用对象时，`future.create` 抛出 `"Async future can only be created from native functions"`。如果第一个参数既不是 fiber 也不是可调用对象，抛出 `"The target value is not callable or fiber"`。
+传入非原生可调用对象时，`future.create` 抛出 `"Async future can only be created from native functions"`。如果第一个参数既不是 fiber 也不是可调用对象，抛出 `"Invalid call to 'future.create', the first argument must be a fiber or a callable object"`。
+
+**原生守卫仅覆盖直接的调用对象。** 在 worker 线程上运行的原生函数不得以任何方式与 CovScript 运行时交互：不得直接或间接调用 CovScript 函数（包括通过参数传入的可调用对象，例如经 `invoke`/CNI 间接执行），也不得读写任何运行时状态（域、值栈、常量等）。将 CovScript 可调用对象作为参数传入并在 worker 线程上执行属于未支持用法，其行为未定义（包括对共享运行时状态的数据竞争）。如确实需要与运行时交互，请改为在独立的进程中执行该工作。
 
 ### 消费 Future
 

@@ -28,10 +28,13 @@
 #include <atomic>
 #include <cfenv>
 #include <string_view>
+#include <limits>
 
 namespace cs
 {
 	struct csym_info;
+
+	class compile_unit;
 
 	// Exceptions
 	class exception final : public std::exception
@@ -315,9 +318,7 @@ namespace cs
 		}
 	};
 
-	// Extracts the raw error message from a std::exception without category prefix.
-	// For known CovScript error types, avoids the allocate-then-strip-prefix round trip;
-	// for unknown types falls back to what() directly (no prefix to strip).
+	// Raw error message from a std::exception without the category prefix.
 	inline std::string exception_message(const std::exception &e)
 	{
 		if (const auto *p = dynamic_cast<const exception *>(&e)) return p->message();
@@ -880,8 +881,16 @@ namespace cs
 		{
 			if (type)
 				return data._int;
-			else
-				return data._num;
+			// Clamp out-of-range/NaN floats instead of a UB cast.
+			constexpr numeric_float fmax = static_cast<numeric_float>((std::numeric_limits<numeric_integer>::max)());
+			constexpr numeric_float fmin = static_cast<numeric_float>((std::numeric_limits<numeric_integer>::min)());
+			if (data._num != data._num)
+				return 0;
+			if (data._num >= fmax)
+				return (std::numeric_limits<numeric_integer>::max)();
+			if (data._num <= fmin)
+				return (std::numeric_limits<numeric_integer>::min)();
+			return static_cast<numeric_integer>(data._num);
 		}
 
 		numeric_float as_float() const noexcept
@@ -966,7 +975,7 @@ namespace cs
 		{
 			T data(m_impl.back());
 			m_impl.pop_back();
-			return std::move(data);
+			return data;
 		}
 
 		inline void pop_no_return()
@@ -985,85 +994,80 @@ namespace cs
 		}
 	};
 
-	// Number of active worker threads. The pool cache is only used when no
-	// worker threads are active.
-	class thread_count final
-	{
-		std::atomic<std::size_t> m_count{0};
-
-		thread_count() = default;
-		thread_count(const thread_count &) = delete;
-		thread_count &operator=(const thread_count &) = delete;
-
-	   public:
-		static thread_count &instance()
-		{
-			static thread_count counter;
-			return counter;
-		}
-
-		bool single_threaded() const noexcept
-		{
-			return m_count.load(std::memory_order_acquire) == 0;
-		}
-
-		void increment() noexcept
-		{
-			m_count.fetch_add(1, std::memory_order_relaxed);
-		}
-
-		void decrement() noexcept
-		{
-			m_count.fetch_sub(1, std::memory_order_relaxed);
-		}
-	};
-
-	// RAII guard for worker threads; increments the worker count on construction.
-	struct thread_guard final
-	{
-		thread_guard()
-		{
-			thread_count::instance().increment();
-		}
-		thread_guard(const thread_guard &) = delete;
-		thread_guard(thread_guard &&) noexcept = delete;
-		~thread_guard()
-		{
-			thread_count::instance().decrement();
-		}
-	};
-
-	// Buffer Pool
+	// Block provider: pooled reuse.
 	template <typename T, std::size_t blck_size, template <typename> class allocator_t = std::allocator>
-	class allocator_type final
+	class pooled_block_provider
 	{
-		T *mPool[blck_size];
-		allocator_t<T> mAlloc;
+	   protected:
+		T *mPool[blck_size] = {};
 		std::size_t mOffset = 0;
+		allocator_t<T> mAlloc;
 
 	   public:
-		allocator_type()
-		{
-			while (mOffset < blck_size / 2)
-				mPool[mOffset++] = mAlloc.allocate(1);
-		}
+		pooled_block_provider() = default;
 
-		allocator_type(const allocator_type &) = delete;
+		pooled_block_provider(const pooled_block_provider &) = delete;
 
-		~allocator_type()
+		~pooled_block_provider()
 		{
 			while (mOffset > 0)
 				mAlloc.deallocate(mPool[--mOffset], 1);
 		}
 
+		T *acquire_block(std::size_t n)
+		{
+			if (n == 1 && mOffset > 0)
+				return mPool[--mOffset];
+			return mAlloc.allocate(n);
+		}
+
+		void release_block(T *ptr, std::size_t n)
+		{
+			if (n == 1 && mOffset < blck_size)
+			{
+				mPool[mOffset++] = ptr;
+				return;
+			}
+			mAlloc.deallocate(ptr, n);
+		}
+	};
+
+	// Block provider: direct allocation (blocks interchangeable with the pool).
+	template <typename T>
+	class trivial_block_provider
+	{
+	   protected:
+		std::allocator<T> mAlloc;
+
+	   public:
+		trivial_block_provider() = default;
+
+		trivial_block_provider(const trivial_block_provider &) = delete;
+
+		T *acquire_block(std::size_t n)
+		{
+			return mAlloc.allocate(n);
+		}
+
+		void release_block(T *ptr, std::size_t n)
+		{
+			mAlloc.deallocate(ptr, n);
+		}
+	};
+
+	// Buffer Pool
+	template <typename T, template <typename> class provider_t>
+	class allocator_type final : public provider_t<T>
+	{
+	   public:
+		allocator_type() = default;
+
+		allocator_type(const allocator_type &) = delete;
+
 		template <typename... ArgsT>
 		inline T *alloc(ArgsT &&...args)
 		{
-			T *ptr = nullptr;
-			if (mOffset > 0 && thread_count::instance().single_threaded())
-				ptr = mPool[--mOffset];
-			else
-				ptr = mAlloc.allocate(1);
+			T *ptr = this->acquire_block(1);
 			::new (ptr) T(std::forward<ArgsT>(args)...);
 			return ptr;
 		}
@@ -1071,29 +1075,28 @@ namespace cs
 		inline void free(T *ptr)
 		{
 			ptr->~T();
-			if (mOffset < blck_size && thread_count::instance().single_threaded())
-				mPool[mOffset++] = ptr;
-			else
-				mAlloc.deallocate(ptr, 1);
+			this->release_block(ptr, 1);
 		}
 
 		inline T *allocate(std::size_t n)
 		{
-			if (n == 1 && mOffset > 0 && thread_count::instance().single_threaded())
-				return mPool[--mOffset];
-			else
-				return mAlloc.allocate(n);
+			return this->acquire_block(n);
 		}
 
 		inline void deallocate(T *ptr, std::size_t n)
 		{
-			if (n == 1 && mOffset < blck_size && thread_count::instance().single_threaded())
-				mPool[mOffset++] = ptr;
-			else
-				mAlloc.deallocate(ptr, n);
+			this->release_block(ptr, n);
 		}
 	};
 } // namespace cs
+
+namespace cs_system_impl
+{
+	// Per-platform: pthread_main_np (macOS) / gettid()==getpid() (Linux) /
+	// GetCurrentThreadId()==GetCurrentProcessId() (Windows). Implemented in
+	// sources/system/{win32,unix}/common.cpp.
+	bool is_main_thread() noexcept;
+} // namespace cs_system_impl
 
 #ifndef CS_ALLOCATOR_BUFFER_MAX
 #define CS_ALLOCATOR_BUFFER_MAX 64
@@ -1104,7 +1107,69 @@ namespace cs_impl
 	template <typename T>
 	using default_allocator_provider = std::allocator<T>;
 	template <typename T>
-	using default_allocator = cs::allocator_type<T, CS_ALLOCATOR_BUFFER_MAX, default_allocator_provider>;
+	using default_pooled_provider = cs::pooled_block_provider<T, CS_ALLOCATOR_BUFFER_MAX, default_allocator_provider>;
+	template <typename T>
+	using default_allocator = cs::allocator_type<T, default_pooled_provider>;
+
+	// Main thread pools blocks; worker threads allocate directly. Chosen once
+	// per thread; instances are process-lifetime statics.
+	template <typename T, template <typename> class pooled_allocator_t>
+	class allocator_view final
+	{
+		pooled_allocator_t<T> *m_pool;
+		cs::allocator_type<T, cs::trivial_block_provider> *m_trivial;
+		bool m_force_trivial;
+
+		allocator_view(pooled_allocator_t<T> *p, cs::allocator_type<T, cs::trivial_block_provider> *t, bool force_trivial)
+		    : m_pool(p), m_trivial(t), m_force_trivial(force_trivial)
+		{
+		}
+
+	   public:
+		template <typename... ArgsT>
+		inline T *alloc(ArgsT &&...args)
+		{
+			return m_force_trivial ? m_trivial->alloc(std::forward<ArgsT>(args)...)
+			                       : m_pool->alloc(std::forward<ArgsT>(args)...);
+		}
+
+		inline void free(T *ptr)
+		{
+			m_force_trivial ? m_trivial->free(ptr) : m_pool->free(ptr);
+		}
+
+		inline T *allocate(std::size_t n)
+		{
+			return m_force_trivial ? m_trivial->allocate(n) : m_pool->allocate(n);
+		}
+
+		inline void deallocate(T *ptr, std::size_t n)
+		{
+			m_force_trivial ? m_trivial->deallocate(ptr, n) : m_pool->deallocate(ptr, n);
+		}
+
+		static allocator_view &get()
+		{
+			static pooled_allocator_t<T> pool;
+			static cs::allocator_type<T, cs::trivial_block_provider> trivial;
+			static thread_local allocator_view view(&pool, &trivial, !cs_system_impl::is_main_thread());
+			return view;
+		}
+	};
+
+	// COVSCRIPT_DEBUG levels (none / warning / strict); governs defensive guards.
+	enum class debug_mode : int
+	{
+		none = 0,    // Silently ignore the guard (allow partial leaks, keep the program stable)
+		warning = 1, // Print a warning and continue
+		strict = 2,  // Print a warning and abort immediately (fail-fast)
+	};
+
+	debug_mode get_debug_mode() noexcept;
+
+	// none: no-op; warning: print msg to stderr; strict: print msg to stderr
+	// then std::abort().
+	void debug_guard(const char *msg) noexcept;
 
 	// String borrower
 	template <typename CharT,
@@ -1112,12 +1177,10 @@ namespace cs_impl
 	class basic_string_borrower final
 	{
 		using stl_string = std::basic_string<CharT>;
-		using allocator_type = allocator_t<stl_string>;
 
-		static inline allocator_type &get_allocator()
+		static inline allocator_view<stl_string, allocator_t> &get_allocator()
 		{
-			static thread_local allocator_type allocator;
-			return allocator;
+			return allocator_view<stl_string, allocator_t>::get();
 		}
 
 		void *m_data = nullptr;
@@ -1270,8 +1333,6 @@ namespace cs
 			tree_node *right = nullptr;
 			T data;
 
-			tree_node() = default;
-
 			tree_node(const tree_node &) = default;
 
 			tree_node(tree_node &&) noexcept = default;
@@ -1308,6 +1369,8 @@ namespace cs
 		}
 
 		tree_node *mRoot = nullptr;
+		// Optional arena for trees whose tokens outlive the compile scope.
+		std::shared_ptr<compile_unit> m_arena;
 
 	   public:
 		class iterator final
@@ -1373,11 +1436,12 @@ namespace cs
 			}
 		};
 
-		void swap(tree_type &t)
+		void swap(tree_type &t) noexcept
 		{
 			tree_node *ptr = this->mRoot;
 			this->mRoot = t.mRoot;
 			t.mRoot = ptr;
+			this->m_arena.swap(t.m_arena);
 		}
 
 		void swap(tree_type &&t) noexcept
@@ -1385,6 +1449,7 @@ namespace cs
 			tree_node *ptr = this->mRoot;
 			this->mRoot = t.mRoot;
 			t.mRoot = ptr;
+			this->m_arena.swap(t.m_arena);
 		}
 
 		tree_type() = default;
@@ -1393,7 +1458,7 @@ namespace cs
 		    : mRoot(copy(it.mData)) {}
 
 		tree_type(const tree_type &t)
-		    : mRoot(copy(t.mRoot)) {}
+		    : mRoot(copy(t.mRoot)), m_arena(t.m_arena) {}
 
 		tree_type(tree_type &&t) noexcept
 		    : mRoot(nullptr)
@@ -1412,6 +1477,7 @@ namespace cs
 			{
 				destroy(this->mRoot);
 				this->mRoot = copy(t.mRoot);
+				this->m_arena = t.m_arena;
 			}
 			return *this;
 		}
@@ -1428,7 +1494,14 @@ namespace cs
 			{
 				destroy(this->mRoot);
 				this->mRoot = copy(t.mRoot);
+				this->m_arena = t.m_arena;
 			}
+		}
+
+		// Attach the token arena that owns this tree's tokens.
+		void attach_arena(std::shared_ptr<compile_unit> arena)
+		{
+			m_arena = std::move(arena);
 		}
 
 		bool empty() const noexcept
@@ -1791,7 +1864,12 @@ namespace cs
 
 			std::string wide2local(const std::u32string &wide) override
 			{
-				return std::string(wide.begin(), wide.end());
+				// ASCII charset: truncate each code point to its low byte.
+				std::string local;
+				local.reserve(wide.size());
+				for (char32_t ch : wide)
+					local.push_back(static_cast<char>(ch));
+				return local;
 			}
 
 			bool is_identifier(char32_t ch) override

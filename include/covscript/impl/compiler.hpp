@@ -52,14 +52,31 @@ namespace cs
 
 	class translator_type final
 	{
-		using data_type = std::pair<std::deque<token_base *>, method_base *>;
+		struct data_type
+		{
+			// Grammar template tokens and the method, both owned by this entry;
+			// deleted when the compiler dies.
+			std::deque<token_base *> grammar;
+			std::unique_ptr<method_base> method;
+
+			data_type(std::deque<token_base *> g, method_base *m)
+			    : grammar(std::move(g)), method(m)
+			{
+			}
+
+			~data_type()
+			{
+				for (auto *t : grammar)
+					delete t;
+			}
+		};
 
 		static bool compare(const token_base *a, const token_base *b)
 		{
 			if (a == nullptr)
 				return b == nullptr;
 			if (b == nullptr)
-				return a == nullptr;
+				return false;
 			if (a->get_type() != b->get_type())
 				return false;
 			return a->get_type() != token_types::action || static_cast<const token_action *>(a)->get_action() ==
@@ -75,9 +92,9 @@ namespace cs
 
 		~translator_type() = default;
 
-		translator_type &add_method(const std::deque<token_base *> &grammar, method_base *method)
+		translator_type &add_method(std::deque<token_base *> grammar, method_base *method)
 		{
-			m_data.emplace_back(std::make_shared<data_type>(grammar, method));
+			m_data.emplace_back(std::make_shared<data_type>(std::move(grammar), method));
 			return *this;
 		}
 
@@ -87,17 +104,17 @@ namespace cs
 				throw compile_error("Empty input when matching grammar.");
 			std::list<std::shared_ptr<data_type>> stack;
 			for (auto &it : m_data)
-				if (cs::translator_type::compare(it->first.front(), raw.front()))
+				if (cs::translator_type::compare(it->grammar.front(), raw.front()))
 					stack.push_back(it);
 			stack.remove_if([&](const std::shared_ptr<data_type> &dat)
 			{
-				return dat->first.size() != raw.size();
+				return dat->grammar.size() != raw.size();
 			});
 			stack.remove_if([&](const std::shared_ptr<data_type> &dat)
 			{
 				for (std::size_t i = 1; i < raw.size() - 1; ++i)
 				{
-					if (!compare(raw.at(i), dat->first.at(i)))
+					if (!compare(raw.at(i), dat->grammar.at(i)))
 						return true;
 				}
 				return false;
@@ -106,12 +123,12 @@ namespace cs
 				throw compile_error("Unknown grammar.");
 			if (stack.size() > 1)
 				throw compile_error("Ambiguous grammar.");
-			return stack.front()->second;
+			return stack.front()->method.get();
 		}
 
-		void match_grammar(const context_t &, std::deque<token_base *> &);
+		void match_grammar(context_type *, std::deque<token_base *> &);
 
-		void translate(const context_t &, const std::deque<std::deque<token_base *>> &, std::deque<statement_base *> &,
+		void translate(context_type *, const std::deque<std::deque<token_base *>> &, std::deque<statement_base *> &,
 		               bool);
 	};
 
@@ -139,7 +156,7 @@ namespace cs
 		// Symbol Table
 		static const mapping<std::string, signal_types> signal_map;
 		static const mapping<std::string, action_types> action_map;
-		static const mapping<std::string, std::function<token_base *()>> reserved_map;
+		static const mapping<std::string, std::function<token_base *(compiler_type *)>> reserved_map;
 		static const mapping<char32_t, char32_t> escape_map;
 		static const set_t<char32_t> signals;
 		static const mapping<signal_types, int> signal_level_map;
@@ -158,7 +175,7 @@ namespace cs
 		bool inside_lambda = false;
 		bool no_optimize = false;
 		// Context
-		context_t context;
+		context_type *context;
 		// Translator
 		translator_type translator;
 
@@ -262,9 +279,42 @@ namespace cs
 		// 'break'/'continue' outside any loop at compile time.
 		std::size_t loop_depth = 0;
 
-		// FIFO of import/using preprocessing results (methods are shared singletons,
-		// so per-method storage would clobber on multiple imports per block).
-		std::deque<statement_base *> import_results;
+		// Import/using preprocessing results scoped per compilation/REPL statement.
+		// Nested compilation gets a separate FIFO and cannot consume the outer
+		// scope's pending result.
+		std::vector<std::deque<statement_base *>> import_result_scopes;
+
+		void begin_import_scope()
+		{
+			import_result_scopes.emplace_back();
+		}
+
+		void push_import_result(statement_base *result)
+		{
+			if (import_result_scopes.empty())
+				begin_import_scope();
+			import_result_scopes.back().push_back(result);
+		}
+
+		statement_base *pop_import_result()
+		{
+			if (import_result_scopes.empty() || import_result_scopes.back().empty())
+				return nullptr;
+			statement_base *result = import_result_scopes.back().front();
+			import_result_scopes.back().pop_front();
+			return result;
+		}
+
+		void end_import_scope()
+		{
+			if (import_result_scopes.empty())
+				return;
+			for (statement_base *result : import_result_scopes.back())
+			{
+				delete result;
+			}
+			import_result_scopes.pop_back();
+		}
 
 		// Whether a block opens a loop (break/continue only legal inside one).
 		static bool is_loop_block(const method_base *m)
@@ -294,15 +344,15 @@ namespace cs
 
 		compiler_type() = delete;
 
-		explicit compiler_type(context_t c)
-		    : context(std::move(c))
+		explicit compiler_type(context_type *c)
+		    : context(c)
 		{
 			// The type-hash counter and the inheritance map are intentionally NOT
-			// reset here. Script functions and structs are retained for the whole
-			// process (global GC), so a new compiler in the same process must keep
-			// assigning monotonically increasing type hashes and preserve the
-			// is-a relationships, or retained structs would collide with fresh
-			// ones and lose their inheritance.
+			// reset here. Retained functions and structs in a live process keep
+			// referencing these, so a new compiler must keep assigning
+			// monotonically increasing type hashes and preserve the is-a
+			// relationships, or retained structs would collide with fresh ones
+			// and lose their inheritance.
 		}
 
 		compiler_type(const compiler_type &) = delete;
@@ -314,7 +364,7 @@ namespace cs
 		bool fold_expr = true;
 
 		// Context
-		context_t swap_context(context_t cxt)
+		context_type *swap_context(context_type *cxt)
 		{
 			std::swap(context, cxt);
 			return cxt;
@@ -356,7 +406,18 @@ namespace cs
 		token_value *new_value(const var &val)
 		{
 			add_constant(val);
-			return new token_value(val);
+			return make_token<token_value>(val);
+		}
+
+		// Allocate a token into the current compile unit's arena. Throws if no
+		// compile is in progress: every token must be owned by a unit so the
+		// arena can reclaim it.
+		template <typename T, typename... A>
+		T *make_token(A &&...a)
+		{
+			if (context == nullptr || context->current_unit == nullptr)
+				throw internal_error("make_token called outside a compile unit");
+			return context->current_unit->make_token<T>(std::forward<A>(a)...);
 		}
 
 		// Wrapped Method
@@ -378,14 +439,15 @@ namespace cs
 
 		void
 		build_line(const std::deque<char> &buff, std::deque<std::deque<token_base *>> &ast, std::size_t line_num = 1,
-		           charset encoding = charset::utf8)
+		           charset encoding = charset::utf8, bool process = true)
 		{
 			std::deque<token_base *> tokens;
 			process_char_buff(buff, tokens, encoding);
-			tokens.push_back(new token_endline(line_num));
+			tokens.push_back(make_token<token_endline>(line_num));
 			process_token_buff(tokens, ast);
-			for (auto &line : ast)
-				process_line(line);
+			if (process)
+				for (auto &line : ast)
+					process_line(line);
 		}
 
 		void build_ast(const std::deque<char> &buff, std::deque<std::deque<token_base *>> &ast,
@@ -396,9 +458,9 @@ namespace cs
 			process_token_buff(tokens, ast);
 		}
 
-		compiler_type &add_method(const std::deque<token_base *> &grammar, method_base *method)
+		compiler_type &add_method(std::deque<token_base *> grammar, method_base *method)
 		{
-			translator.add_method(grammar, method);
+			translator.add_method(std::move(grammar), method);
 			return *this;
 		}
 

@@ -10,6 +10,7 @@ Thank you for your interest in contributing to Covariant Script! We welcome cont
   - [Reporting Bugs](#reporting-bugs)
   - [Suggesting Enhancements](#suggesting-enhancements)
   - [Code Contributions](#code-contributions)
+  - [Help Promote](#help-promote)
 - [Development Setup](#development-setup)
 - [Pull Request Process](#pull-request-process)
 - [Coding Standards](#coding-standards)
@@ -64,6 +65,15 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 Unsure where to begin? You can start by looking through issues labeled as:
 - `good first issue` - issues suitable for newcomers
 - `help wanted` - issues that need assistance
+
+### Help Promote
+
+You can also help spread the word about CovScript:
+- Star us on GitHub
+- Recommend it to friends
+- Write articles or tutorials about CovScript
+- Share your experience at community events or conferences
+- Create video tutorials or demos
 
 ## Development Setup
 
