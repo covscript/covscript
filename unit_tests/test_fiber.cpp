@@ -6,7 +6,7 @@
  */
 
 #include <covscript/covscript.hpp>
-#include "test_harness.hpp"
+#include "covariant_test.hpp"
 #include <chrono>
 #include <sstream>
 #include <thread>

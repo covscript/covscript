@@ -1,20 +1,19 @@
 #!/bin/bash
 # Run the curated non-interactive integration tests.
 #
-# The list below is a curated set of tests/*.csc that run to completion without
-# keyboard/network input and without external extensions. Stress/profile suites
-# are run separately. Interactive
-# tests (console, clocks, tcp/udp servers) and extension-dependent tests (codec,
-# darwin, extension, reflection) are intentionally excluded. There is no per-test
-# timeout: the list is explicit and known to terminate; a hang here is a real
-# regression.
-#
 # Usage:
 #   ./run_tests.sh                 # uses `cs` on PATH
 #   CS=/path/to/cs ./run_tests.sh  # use a specific interpreter
+#   ./run_tests.sh --generate      # generate expected output files
 
 cd "$(dirname "$0")"
 CS="${CS:-cs}"
+GENERATE=0
+
+if [ "$1" = "--generate" ]; then
+	GENERATE=1
+	mkdir -p expected
+fi
 
 tests=(
 	access.csc
@@ -25,6 +24,7 @@ tests=(
 	benchmark.csc
 	char.csc
 	char_buff.csc
+	choice.csc
 	cmtime.csc
 	compute_pi.csc
 	const_in_namespace.csc
@@ -37,6 +37,8 @@ tests=(
 	file.csc
 	file_os.csc
 	function_invoker.csc
+	hash_map.csc
+	import.csc
 	info.csc
 	inherit.csc
 	integer.csc
@@ -46,7 +48,9 @@ tests=(
 	move.csc
 	new.csc
 	numeric.csc
+	optimize.csc
 	pair.csc
+	recursion.csc
 	reference.csc
 	serial_execution.csc
 	string.csc
@@ -59,6 +63,7 @@ tests=(
 	test_bounds_check.csc
 	test_cache.csc
 	test_circular_import.csc
+	test_coroutine.csc
 	test_dead_co.csc
 	test_debugger.csc
 	test_fiber_cross_caller.csc
@@ -82,19 +87,59 @@ tests=(
 	va_list.csc
 )
 
+# Scripts that are non-deterministic (skip output comparison).
+skip_output=(
+	benchmark.csc
+)
+
+is_skipped() {
+	local name="$1"
+	for s in "${skip_output[@]}"; do
+		[ "$s" = "$name" ] && return 0
+	done
+	return 1
+}
+
 pass=0
 fail=0
+output_fail=0
 fail_list=""
 for f in "${tests[@]}"; do
-	if "$CS" "$f" > /dev/null 2>&1; then
-		pass=$((pass + 1))
-	else
+	if [ "$GENERATE" -eq 1 ]; then
+		"$CS" "$f" > "expected/${f%.csc}.expected" 2>/dev/null || true
+		echo "Generated expected/${f%.csc}.expected"
+		continue
+	fi
+
+	actual=$("$CS" "$f" 2>/dev/null)
+	rc=$?
+	expected_file="expected/${f%.csc}.expected"
+
+	if [ $rc -ne 0 ]; then
 		fail=$((fail + 1))
 		fail_list="$fail_list $f"
+	elif [ -f "$expected_file" ] && ! is_skipped "$f"; then
+		expected=$(cat "$expected_file")
+		if [ "$actual" != "$expected" ]; then
+			output_fail=$((output_fail + 1))
+			fail_list="$fail_list $f"
+			echo "OUTPUT MISMATCH: $f"
+			diff <(echo "$expected") <(echo "$actual") || true
+		else
+			pass=$((pass + 1))
+		fi
+	else
+		pass=$((pass + 1))
 	fi
 done
 
-echo "pass=$pass fail=$fail"
+if [ "$GENERATE" -eq 1 ]; then
+	echo "Generated ${#tests[@]} expected output files in tests/expected/"
+	exit 0
+fi
+
+total_fail=$((fail + output_fail))
+echo "pass=$pass exit_fail=$fail output_mismatch=$output_fail"
 if [ -n "$fail_list" ]; then
 	echo "FAILED:$fail_list"
 	exit 1

@@ -1,21 +1,32 @@
 #pragma once
 #include <covscript/covscript.hpp>
-#include "test_harness.hpp"
+#include "covariant_test.hpp"
 
 // =============================================================================
 // Helpers: create a shared compiler context for all tests.
 // Uses static bootstrap to prevent premature garbage collection.
+//
+// IMPORTANT: This returns a SHARED context backed by a static bootstrap.
+//   - Safe for read-only compiler operations (build_expr, build_ast, etc.)
+//   - Do NOT define variables or modify global state; they persist across tests.
+//   - For tests that need isolation, use cs::create_context() instead.
 // =============================================================================
-inline cs::context_t make_context()
+inline cs::context_t shared_compiler_context()
 {
 	static cs::bootstrap env;
 	return env.context;
 }
 
+// Backward-compatible alias.
+inline cs::context_t make_context()
+{
+	return shared_compiler_context();
+}
+
 // =============================================================================
 // Helper: build an expression tree from source string.
 // Uses context->compiler->build_expr() which runs the full pipeline:
-//   lexer → parser → gen_tree → optimize_expression (trim_expr + opt_expr)
+//   lexer -> parser -> gen_tree -> optimize_expression (trim_expr + opt_expr)
 // =============================================================================
 inline cs::tree_type<cs::token_base *> build_expr_tree(const std::string &src)
 {

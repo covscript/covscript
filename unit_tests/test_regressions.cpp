@@ -837,7 +837,10 @@ TEST(tree_type_root_reparenting)
 
 TEST(gc_program_arena_reclaimed_on_release)
 {
-	auto ctx = make_context();
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<UNIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	cs::process_run_scope scope(ctx);
 	// First compile allocates tokens into the instance's arena.
 	{
 		std::istringstream in("var a = 1\nvar b = 2\na + b\n");
