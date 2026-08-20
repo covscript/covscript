@@ -53,7 +53,7 @@ Everything else hangs off it:
 | `process_context` | the context and escaped structures | until the last owner drops |
 | `instance_type` | the context (`context->instance`) | context lifetime |
 | `compiler_type` | the context (`context->compiler`) | context lifetime (shared with subcontexts) |
-| token arena (`compile_unit`) | the instance and escaped functions | until the last owner drops |
+| token arena (`compile_unit`) | the instance's function store | until the last owner drops |
 | `var` values | reference counting | until the last `var` reference is dropped |
 | module subcontexts | the context's `subcontexts` pool | context lifetime |
 
@@ -69,11 +69,11 @@ explicit, deterministic ownership:
   Copying a `var` is cheap (a refcount bump); `cs::copy(var)` / `var::clone()`
   performs a deep copy.
 + **The context is the runtime root owner** of the process, compiler, instance
-  and their children. Most internal child-to-context links are raw non-owning
-  pointers constrained by the context's lifetime; escaped script functions use
-  `std::weak_ptr`. Escaped functions and structures may retain their token arena
-  or process respectively, but they do not retain the context or form an
-  ownership cycle.
+  and their children. All internal back-references to the defining context are
+  raw non-owning pointers constrained by the context's lifetime; functions,
+  structure methods, type constructors, and fibers all assume the defining
+  context is alive when invoked. Escaping an object and invoking it after
+  context destruction is undefined behavior.
 
 The consequence is that **each resource is reclaimed when its last owning
 reference goes away** — no `collect_garbage()`, no deferred sweep.
@@ -86,17 +86,17 @@ must not outlive their owner.
 
 ### 1. Context lifetime (escaped objects)
 
-**Escaped objects that execute script code require their defining context to stay alive.**
+**All script objects assume their defining context is alive when used.**
 
-Objects returned by the runtime do not all have identical lifetime behavior:
+Invoking a script function, lambda, structure method, or type constructor after
+its defining context has been destroyed is **undefined behavior** — no check is
+performed and no exception is guaranteed. The context owns the function store
+that backs every script callable; when the context dies, the store and all its
+functions are freed.
 
-+ a script function / lambda stores a `std::weak_ptr<context_type>` (`function::mContext`); invocation after context destruction throws `runtime_error`;
-+ a `structure` pins its owning process, so its type identity and member data
-  remain valid after context destruction; its script methods still require the
-  defining context and throw if invoked after it dies.
-+ an escaped **type** (`type_t`) carries the same back-reference; constructing
-  it (`type_t::constructor()`) after the context dies throws
-  "the struct's context has been destroyed".
+A `structure` pins its owning process, so its type identity and member data
+remain valid after context destruction. But invoking its script methods or
+constructing an escaped `type_t` after context death is undefined behavior.
 
 Therefore:
 
@@ -106,7 +106,7 @@ cs::var f;
     auto ctx = cs::create_context({...});
     f = cs::eval(ctx, "[](x)->x+1");   // escape a lambda
 }                                      // ctx destroyed here
-f.const_val<cs::callable>().call(...); // throws runtime_error
+f.const_val<cs::callable>().call(...); // undefined behavior — do not do this
 ```
 
 Keep the `context_t` alive for as long as you use the object:
@@ -118,7 +118,8 @@ cs::var f = cs::eval(ctx, "[](x)->x+1");
 ```
 
 Keep the context alive whenever an escaped object needs to execute script code.
-Self-contained value data can remain usable independently as described above.
+Self-contained value data (structure member fields, type identity nodes) can
+remain usable independently as described above.
 
 ### 2. `current_process` and threading
 
@@ -182,9 +183,10 @@ another unrelated process will remain active during destruction.
 bumps a reference count, and the value is freed when the last reference drops.
 To detach a value from its original storage, use `cs::copy(var)` (deep copy).
 Values that escape a context are safe
-as self-contained data. A script callable uses a weak context reference and
-throws if invoked after context destruction; structure data remains valid,
-while its script methods have the same rule.
+as self-contained data. A script callable holds a non-owning function pointer;
+invoking it after context destruction is undefined behavior. Structure data
+remains valid (the structure pins the process), while its script methods are
+subject to the same undefined behavior.
 
 ### 5. Token arena and recompilation
 
@@ -192,7 +194,7 @@ Each `compile()` produces a program whose tokens live in a per-instance arena.
 Compiling again (or calling `release_statements()`) drops the previous program
 and its arena.
 
-A script function/lambda escaped from the previous program keeps that arena
+A script function/lambda registered in the function store keeps that arena
 alive via `function::m_unit`, so it remains callable after recompilation —
 *provided its context is still alive* (§1). This is the one pinning mechanism
 that survives, because it concerns the arena rather than the context.
@@ -235,8 +237,8 @@ All extensions must be recompiled.
   `cs::runtime_error`) to match script-level semantics. Note that
   `cs::lang_error` does not derive from `std::exception`.
 - `constant` declarations and `case` labels whose value contains a script
-  function or method are now rejected at compile time (previously the value
-  was silently folded into the token arena, creating an arena↔function cycle).
+  function or method are rejected at compile time (the RHS must be a folded
+  value or lambda token).
 - `process_activation` removed. Callers of `callable::call()` from native
   code must now hold their own `process_run_scope`. Extension DLLs share
   the host's thread-local slot via the accessor — reads and writes are

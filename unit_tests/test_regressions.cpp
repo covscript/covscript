@@ -1119,94 +1119,6 @@ TEST(clone_recursive_lambda_rebinds_self)
 }
 
 // =============================================================================
-// Resuming an escaped script fiber after its context is destroyed is rejected
-// (weak context handle) instead of dereferencing a dangling pointer.
-// =============================================================================
-
-TEST(fiber_resume_rejected_after_context_release)
-{
-	std::exception_ptr eptr;
-	cs::fiber_t f;
-	{
-		cs::array args;
-		args.push_back(cs::var::make<cs::string>("<FIBER_CTX>"));
-		auto ctx = cs::create_context(args);
-		cs::process_run_scope scope(ctx);
-		f = cs::fiber::create(ctx.get(), []() -> cs::var
-		{ return cs::var(); });
-	}
-	try
-	{
-		cs::fiber::resume(f);
-	}
-	catch (const cs::lang_error &)
-	{
-		eptr = std::current_exception();
-	}
-	EXPECT_TRUE(eptr != nullptr);
-}
-
-// =============================================================================
-// Calling an escaped function after its defining context is destroyed must be a
-// clear error, not a dangling-context use-after-free.
-// =============================================================================
-
-TEST(escaped_function_call_rejected_after_context_release)
-{
-	std::exception_ptr eptr;
-	cs::var escaped;
-	std::shared_ptr<cs::process_context> proc;
-	{
-		cs::array args;
-		args.push_back(cs::var::make<cs::string>("<ESC_FN>"));
-		auto ctx = cs::create_context(args);
-		proc = ctx->process;
-		cs::process_run_scope scope(ctx);
-		run_script_on(ctx, "var f = [](x)->x+1\n");
-		escaped = ctx->instance->storage.get_var("f");
-	}
-	// ctx destroyed here; process stays alive via callable's captured context ref.
-	cs::process_run_scope scope(proc.get());
-	try
-	{
-		cs::vector a;
-		a.push_back(cs::var::make<cs::numeric>(1));
-		escaped.const_val<cs::callable>().call(a);
-	}
-	catch (const cs::runtime_error &)
-	{
-		eptr = std::current_exception();
-	}
-	EXPECT_TRUE(eptr != nullptr);
-}
-
-TEST(escaped_function_fiber_create_rejected_after_context_release)
-{
-	std::exception_ptr eptr;
-	cs::var escaped;
-	{
-		cs::array args;
-		args.push_back(cs::var::make<cs::string>("<ESC_FIBER_FN>"));
-		auto ctx = cs::create_context(args);
-		run_script_on(ctx, "function f()\n\treturn 1\nend\n");
-		escaped = ctx->instance->storage.get_var("f");
-	}
-	try
-	{
-		cs::array args;
-		args.push_back(cs::var::make<cs::string>("<ESC_FIBER_CALL>"));
-		auto ctx = cs::create_context(args);
-		ctx->instance->storage.add_var("f", escaped);
-		run_script_on(ctx, "var fiber_obj = fiber.create(f)\n");
-	}
-	catch (...)
-	{
-		eptr = std::current_exception();
-	}
-	EXPECT_TRUE(eptr != nullptr);
-}
-
-// =============================================================================
 // Escaped objects require their defining context to stay alive (the type_node
 // lives in the process, member names live in the token arena). A structure
 // escaped from its scope is fully usable while the context is held.
@@ -1231,8 +1143,8 @@ TEST(escaped_structure_usable_while_context_alive)
 
 // =============================================================================
 // The structure pins its owning process, so its type identity node and member
-// data stay valid even after the defining context is destroyed. Only invoking
-// a method (a script function with a raw context back-ref) would throw.
+// data stay valid even after the defining context is destroyed. Invoking a
+// method after context death is undefined behavior (context-alive precondition).
 // =============================================================================
 
 TEST(escaped_structure_data_usable_after_context_death)

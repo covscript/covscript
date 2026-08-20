@@ -188,8 +188,6 @@ namespace cs
 		int exit_code = 0;
 		// Import Path
 		std::string import_path = ".";
-		// Context being destroyed; finalizers borrow it while its members are intact.
-		context_type *teardown_ctx = nullptr;
 		// Type identity nodes of structs defined while this process is active.
 		// Only ever appended; freed when the process dies.
 		std::deque<type_node> type_nodes;
@@ -612,8 +610,9 @@ namespace cs
 
 	class function final
 	{
-		// Weak back-ref to the defining context; calls lock it.
-		std::weak_ptr<context_type> mContext;
+		// Raw back-ref to the defining context; callers must respect the
+		// context-alive precondition — no lock, no null check.
+		context_type *mContext = nullptr;
 #ifdef CS_DEBUGGER
 		// Source location for debugger breakpoints (immutable after construction).
 		mutable bool mMatch = false;
@@ -663,14 +662,14 @@ namespace cs
 		function(context_type *c, std::string decl, std::string file, std::size_t line,
 		         std::vector<std::string> args, std::deque<statement_base *> body,
 		         bool is_vargs = false, bool is_lambda = false)
-		    : mContext(c->weak_from_this()), mDecl(std::move(decl)), mFile(std::move(file)), mLine(line), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)), m_unit(c->current_unit)
+		    : mContext(c), mDecl(std::move(decl)), mFile(std::move(file)), mLine(line), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)), m_unit(c->current_unit)
 		{
 			init_call_ptr();
 		}
 #else
 
 		function(context_type *c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
-		    : mContext(c->weak_from_this()), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)), m_unit(c->current_unit)
+		    : mContext(c), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)), m_unit(c->current_unit)
 		{
 			init_call_ptr();
 		}
@@ -697,10 +696,10 @@ namespace cs
 			return call_ptr(this, args);
 		}
 
-		// Locks the defining context (caller must keep it alive).
-		std::shared_ptr<context_type> get_context() const
+		// Non-owning back-ref to the defining context; the caller must keep it alive.
+		context_type *get_context() const
 		{
-			return mContext.lock();
+			return mContext;
 		}
 
 		bool is_el_func() const
@@ -1541,8 +1540,8 @@ namespace cs
 
 	class struct_builder final
 	{
-		// Weak back-ref to the defining context.
-		std::weak_ptr<context_type> mContext;
+		// Raw back-ref to the defining context.
+		context_type *mContext = nullptr;
 		type_node *mNode;
 		// Pins the owning process so the type node pool outlives the builder.
 		std::shared_ptr<process_context> m_process;
@@ -1566,7 +1565,7 @@ namespace cs
 
 		struct_builder(context_type *c, std::string name, tree_type<token_base *> parent,
 		               std::deque<statement_base *> method)
-		    : mContext(c->weak_from_this()),
+		    : mContext(c),
 		      mNode(alloc_type_node(c->process.get())),
 		      m_process(c->process),
 		      mTypeId(typeid(structure), mNode),
@@ -1602,7 +1601,7 @@ namespace cs
 
 		void swap(struct_builder &other) noexcept
 		{
-			mContext.swap(other.mContext);
+			std::swap(mContext, other.mContext);
 			std::swap(mNode, other.mNode);
 			m_process.swap(other.m_process);
 			std::swap(mTypeId, other.mTypeId);

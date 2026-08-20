@@ -50,7 +50,7 @@ ctx->instance->interpret();
 | `process_context` | context 与逃逸的 structure | 直到最后一个属主释放 |
 | `instance_type` | context（`context->instance`） | context 生命周期 |
 | `compiler_type` | context（`context->compiler`） | context 生命周期（与子 context 共享） |
-| token arena（`compile_unit`） | instance 与逃逸的函数 | 直到最后一个属主释放 |
+| token arena（`compile_unit`） | instance 的函数存储 | 直到最后一个属主释放 |
 | `var` 值 | 引用计数 | 直到最后一个 `var` 引用被释放 |
 | 模块子 context | context 的 `subcontexts` 池 | context 生命周期 |
 
@@ -61,7 +61,7 @@ Covariant Script 移除了历史遗留的全局垃圾回收器，改为显式、
 + **语句**构成一棵树；每个父节点删除其子节点。
 + **token** 存放在每个程序独立的 bump arena（`compile_unit`）中，整块释放。
 + **`var`** 是对堆上值的引用计数、写时复制句柄。拷贝一个 `var` 代价极低（引用计数 +1）；`cs::copy(var)` / `var::clone()` 执行深拷贝。
-+ **context 是运行时根属主**，拥有 process、compiler、instance 及其子对象。大多数内部子对象使用受 context 生命周期约束的裸非 owning 反向引用；逃逸的脚本函数使用 `std::weak_ptr`。逃逸函数与 structure 可分别延长 token arena 或 process 的生命周期，但不会保活 context，也不会形成所有权环。
++ **context 是运行时根属主**，拥有 process、compiler、instance 及其子对象。所有内部反向引用均为裸非拥有指针，受 context 生命周期约束；函数、结构体方法、类型构造器、fiber 均假定定义它的 context 存活。将对象逃逸出 context 后再使用是未定义行为。
 
 结果是：**每项资源都在其最后一个 owning 引用消失时被精确回收**——没有 `collect_garbage()`，没有延迟清扫。
 
@@ -71,13 +71,11 @@ Covariant Script 移除了历史遗留的全局垃圾回收器，改为显式、
 
 ### 1. Context 生命周期（逃逸对象）
 
-**需要执行脚本代码的逃逸对象，要求创建它的 context 保持存活。**
+**所有脚本对象均假定定义它的 context 存活。**
 
-运行时返回的对象并不具有完全相同的生命周期行为：
+在 context 销毁后调用脚本函数、lambda、结构体方法或类型构造器是**未定义行为**——不执行检查，不保证抛出异常。context 拥有支撑所有脚本 callable 的函数存储；context 销毁时，存储及其中所有函数一同释放。
 
-+ 逃逸的脚本函数 / lambda 持有 `std::weak_ptr<context_type>`（`function::mContext`）；context 销毁后调用会抛出 `runtime_error`；
-+ `structure` 会 pin 住其所属的 process，因此类型身份与成员数据在 context 销毁后仍有效；其脚本方法仍要求定义它的 context 存活，销毁后调用会抛出异常。
-+ 逃逸的**类型**（`type_t`）携带同样的反向引用；context 销毁后调用其构造器（`type_t::constructor()`）会抛出 "the struct's context has been destroyed"。
+`structure` 会 pin 住其所属的 process，因此类型身份与成员数据在 context 销毁后仍有效。但调用其脚本方法或构造逃逸的 `type_t` 后调用是未定义行为。
 
 因此：
 
@@ -87,7 +85,7 @@ cs::var f;
     auto ctx = cs::create_context({...});
     f = cs::eval(ctx, "[](x)->x+1");   // 逃逸一个 lambda
 }                                      // 此处 ctx 已析构
-f.const_val<cs::callable>().call(...); // 抛出 runtime_error
+f.const_val<cs::callable>().call(...); // 未定义行为——切勿如此
 ```
 
 在仍使用对象期间，务必保持 `context_t` 存活：
@@ -98,7 +96,7 @@ cs::var f = cs::eval(ctx, "[](x)->x+1");
 // ... 在 ctx 存活期间自由使用 f ...
 ```
 
-逃逸对象需要执行脚本代码时，应保持 context 存活；如上所述，自包含的值数据可独立继续使用。
+逃逸对象需要执行脚本代码时，应保持 context 存活。自包含的值数据（结构体成员字段、类型身份节点）可独立继续使用。
 
 ### 2. `current_process` 与线程
 
@@ -135,13 +133,13 @@ ctx->instance->interpret();
 
 ### 4. `var` 生命周期
 
-`cs::var` 是一个指针大小的句柄（64 位平台上为 8 字节）；拷贝它只会让引用计数 +1，值在最后一个引用释放时被回收。要把值与其原始存储分离，请使用 `cs::copy(var)`（深拷贝）。逃逸出 context 的自包含值数据仍然安全；脚本 callable 使用弱 context 引用并在 context 销毁后调用时抛出异常，structure 数据仍有效，但其脚本方法遵循相同规则。
+`cs::var` 是一个指针大小的句柄（64 位平台上为 8 字节）；拷贝它只会让引用计数 +1，值在最后一个引用释放时被回收。要把值与其原始存储分离，请使用 `cs::copy(var)`（深拷贝）。逃逸出 context 的自包含值数据仍然安全；脚本 callable 持有非拥有函数指针，context 销毁后调用是未定义行为；structure 数据仍有效（pin 住 process），但其脚本方法同样受未定义行为约束。
 
 ### 5. Token arena 与重编译
 
 每次 `compile()` 都会生成一个程序，其 token 存放在每个实例独立的 arena 中。再次编译（或调用 `release_statements()`）会丢弃上一个程序及其 arena。
 
-从上一个程序逃逸的脚本函数/lambda 会通过 `function::m_unit` 保活该 arena，因此它在重编译后仍可调用——**前提是其 context 仍存活**（§1）。这是唯一保留下来的保活机制，因为它针对的是 arena，而非 context。
+从上一个程序注册到函数存储的脚本函数/lambda 会通过 `function::m_unit` 保活该 arena，因此它在重编译后仍可调用——**前提是其 context 仍存活**（§1）。这是唯一保留下来的保活机制，因为它针对的是 arena，而非 context。
 
 ### 6. 运行时诊断（`COVSCRIPT_DEBUG`）
 
@@ -174,8 +172,7 @@ ctx->instance->interpret();
 - `cs::invoke` 对非 callable 对象改抛 `cs::lang_error`（原为
   `cs::runtime_error`），与脚本层行为一致。注意 `cs::lang_error`
   不继承 `std::exception`。
-- `constant` 声明和 `case` 标签中，值包含脚本函数或方法的现在编译期
-  拒绝（此前值会被静默折叠进 token 树，形成 arena↔function 环）。
+- `constant` 声明和 `case` 标签中，值包含脚本函数或方法的在编译期拒绝（RHS 必须是已折叠的值或 lambda token）。
 - `process_activation` 已移除。原生代码调用 `callable::call()` 时需
   自行持有 `process_run_scope`。扩展 DLL 通过访问器共享宿主的线程
   局部槽——读写统一，无需手动管理访问器。

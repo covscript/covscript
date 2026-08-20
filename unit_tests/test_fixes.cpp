@@ -1385,37 +1385,6 @@ TEST(escaped_type_constructor_via_native_call)
 }
 
 // =============================================================================
-// Constructing an escaped struct type after its context dies must be rejected.
-// =============================================================================
-
-TEST(escaped_type_constructor_rejected_after_context_release)
-{
-	std::exception_ptr eptr;
-	cs::var escaped;
-	std::shared_ptr<cs::process_context> proc;
-	{
-		cs::array args;
-		args.push_back(cs::var::make<cs::string>("<ESC_TYPE>"));
-		auto ctx = cs::create_context(args);
-		proc = ctx->process;
-		cs::process_run_scope scope(ctx);
-		run_script_on(ctx, "class T\nend\n");
-		escaped = ctx->instance->storage.get_var("T");
-	}
-	// ctx destroyed here; process stays alive via struct_builder's m_process.
-	cs::process_run_scope scope(proc.get());
-	try
-	{
-		escaped.const_val<cs::type_t>().constructor();
-	}
-	catch (const cs::runtime_error &)
-	{
-		eptr = std::current_exception();
-	}
-	EXPECT_TRUE(eptr != nullptr);
-}
-
-// =============================================================================
 // F44: invoking a script callable without an active process (native callers
 // must hold process_run_scope) must raise a clean error, not dereference null.
 // =============================================================================

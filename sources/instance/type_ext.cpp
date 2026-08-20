@@ -1598,8 +1598,8 @@ namespace cs_impl
 		{
 			callable owner;
 			function const *func = nullptr;
-			// Weak ref to avoid context → storage → fiber → context cycle.
-			std::weak_ptr<context_type> context;
+			// Non-owning back-ref to the defining context.
+			context_type *context = nullptr;
 			vector args;
 
 		   public:
@@ -1614,22 +1614,19 @@ namespace cs_impl
 			{
 				if (func == nullptr)
 					throw lang_error("Asynchronous functions are not reentrant");
-				auto ctx = context.lock();
-				if (!ctx)
-					throw runtime_error("the fiber's context has been destroyed");
 				try
 				{
 					var ret = func->call(args);
 					func = nullptr;
 					args.clear();
-					ctx->instance->clear_context();
+					context->instance->clear_context();
 					return std::move(ret);
 				}
 				catch (...)
 				{
 					func = nullptr;
 					args.clear();
-					ctx->instance->clear_context();
+					context->instance->clear_context();
 					throw;
 				}
 			}
@@ -1671,10 +1668,7 @@ namespace cs_impl
 				if (impl.target_type() != typeid(function_ptr))
 					return fiber::create_native(fiber_native_function(impl, std::move(data)));
 				function const *fptr = impl.target<function_ptr>()->fptr;
-				auto ctx = fptr->get_context();
-				if (!ctx)
-					throw runtime_error("the function's context has been destroyed");
-				return fiber::create(ctx.get(), fiber_function(fn, std::move(data)));
+				return fiber::create(fptr->get_context(), fiber_function(fn, std::move(data)));
 			};
 			if (func.is_type_of<callable>())
 				return build(func.const_val<callable>(), vector(args.begin() + 1, args.end()));
