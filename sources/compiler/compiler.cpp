@@ -41,85 +41,6 @@ namespace cs
 	    {'\t', 't'},
 	    {'\v', 'v'}};
 
-	// Whether a value contains a script function; the optimizer must not fold it
-	// into a token_value (which would recreate the arena <-> function cycle).
-	static bool contains_callable(const var &v, set_t<const void *> &visited);
-
-	static bool owns_function(const callable &c)
-	{
-		return c.get_raw_data().target<function_ptr>() != nullptr;
-	}
-
-	template <typename Container>
-	bool contains_callable_in(const Container &c, set_t<const void *> &visited)
-	{
-		for (const auto &e : c)
-			if (contains_callable(e, visited))
-				return true;
-		return false;
-	}
-
-	static bool contains_callable(const var &v, set_t<const void *> &visited)
-	{
-		if (!v.usable())
-			return false;
-		if (v.is_type_of<callable>())
-			return owns_function(v.const_val<callable>());
-		if (v.is_type_of<object_method>())
-		{
-			const auto &om = v.const_val<object_method>();
-			if (!visited.insert(static_cast<const void *>(&om)).second)
-				return false;
-			if (contains_callable(om.callable, visited))
-				return true;
-			return contains_callable(static_cast<var>(om.object), visited);
-		}
-		if (v.is_type_of<array>())
-			return contains_callable_in(v.const_val<array>(), visited);
-		if (v.is_type_of<list>())
-			return contains_callable_in(v.const_val<list>(), visited);
-		if (v.is_type_of<pair>())
-		{
-			const auto &p = v.const_val<pair>();
-			return contains_callable(p.first, visited) || contains_callable(p.second, visited);
-		}
-		if (v.is_type_of<hash_set>())
-			return contains_callable_in(v.const_val<hash_set>(), visited);
-		if (v.is_type_of<hash_map>())
-		{
-			for (const auto &kv : v.const_val<hash_map>())
-				if (contains_callable(kv.first, visited) || contains_callable(kv.second, visited))
-					return true;
-		}
-		if (v.is_type_of<structure>())
-		{
-			const auto &s = v.const_val<structure>();
-			if (!visited.insert(static_cast<const void *>(&s)).second)
-				return false;
-			const auto &domain = s.get_domain();
-			for (const auto &it : domain)
-				if (contains_callable(domain.get_var_by_id(it.second), visited))
-					return true;
-		}
-		if (v.is_type_of<namespace_t>())
-		{
-			const auto &ns = v.const_val<namespace_t>();
-			if (!visited.insert(static_cast<const void *>(ns.get())).second)
-				return false;
-			const auto &domain = ns->get_domain();
-			for (const auto &it : domain)
-				if (contains_callable(domain.get_var_by_id(it.second), visited))
-					return true;
-		}
-		return false;
-	}
-
-	static bool contains_callable(const var &v)
-	{
-		set_t<const void *> visited;
-		return contains_callable(v, visited);
-	}
-
 	bool token_value::dump(std::ostream &o) const
 	{
 		o << "< Value = ";
@@ -904,26 +825,26 @@ namespace cs
 						}
 						else
 							decl += ")";
-						std::shared_ptr<function> fn = std::make_shared<function>(
+						auto fn = std::make_unique<function>(
 						    context, decl, context->file_path, token->get_line_num(), args,
 						    std::deque<statement_base *>{ret}, is_vargs, true);
 #else
-						std::shared_ptr<function> fn = std::make_shared<function>(context, args,
-						                                                          std::deque<statement_base *>{ret},
-						                                                          is_vargs, true);
+						auto fn = std::make_unique<function>(context, args,
+						                                     std::deque<statement_base *>{ret},
+						                                     is_vargs, true);
 #endif
-						// The lambda value lives in the runtime's function store; the
-						// token only carries an index (no token -> function cycle).
+						function *fptr = fn.get();
 						std::size_t index;
 						if (find_self_ref)
 						{
-							var lambda = var::make<object_method>(var(), var::make_protect<callable>(function_ptr{fn.get(), fn}));
+							var lambda = var::make<object_method>(var(), var::make_protect<callable>(function_ptr{fptr}));
 							lambda.val<object_method>().object = var_borrower::borrow(lambda);
 							lambda.mark_protect();
-							index = context->instance->functions.add(lambda);
+							index = context->instance->functions.add_lambda(std::move(fn), lambda);
 						}
 						else
-							index = context->instance->functions.add(var::make_protect<callable>(function_ptr{fn.get(), fn}));
+							index = context->instance->functions.add_lambda(std::move(fn),
+							                                                var::make_protect<callable>(function_ptr{fptr}));
 						it.data() = make_token<token_lambda>(index);
 						return;
 					}
@@ -986,8 +907,7 @@ namespace cs
 					if (do_optm == optm_type::enable_namespace_optm || !value.is_type_of<namespace_t>() ||
 					    !value.const_val<namespace_t>()->get_domain().exist("__PRAGMA_CS_NAMESPACE_DEFINITION__"))
 					{
-						if (!contains_callable(value))
-							it.data() = new_value(value);
+						it.data() = new_value(value);
 					}
 				}
 				return;
@@ -999,8 +919,7 @@ namespace cs
 				try
 				{
 					var val = context->instance->get_string_literal(ptr->get_data(), ptr->get_literal());
-					if (!contains_callable(val))
-						it.data() = new_value(val);
+					it.data() = new_value(val);
 				}
 				catch (...)
 				{
@@ -1054,8 +973,7 @@ namespace cs
 					for (auto &it : arr)
 						add_constant(it);
 					var folded = var::make<array>(std::move(arr));
-					if (!contains_callable(folded))
-						it.data() = new_value(folded);
+					it.data() = new_value(folded);
 				}
 				catch (...)
 				{
@@ -1149,7 +1067,7 @@ namespace cs
 							try
 							{
 								const var &v = context->instance->parse_dot(a, rptr);
-								if (v.is_protect() && !contains_callable(v))
+								if (v.is_protect())
 									it.data() = new_value(v);
 							}
 							catch (...)
@@ -1207,8 +1125,7 @@ namespace cs
 											args.push_back(lvalue(context->instance->parse_expr(tree.root())));
 									}
 									var call_result = a.const_val<callable>().call(args);
-									if (!contains_callable(call_result))
-										it.data() = new_value(call_result);
+									it.data() = new_value(call_result);
 								}
 								catch (...)
 								{
@@ -1254,8 +1171,7 @@ namespace cs
 											args.push_back(lvalue(context->instance->parse_expr(tree.root())));
 									}
 									var call_result = om.callable.const_val<callable>().call(args);
-									if (!contains_callable(call_result))
-										it.data() = new_value(call_result);
+									it.data() = new_value(call_result);
 								}
 								catch (...)
 								{
@@ -1338,17 +1254,10 @@ namespace cs
 			try
 			{
 				var folded = context->instance->parse_expr(it);
-				if (contains_callable(folded))
-				{
-					it.data() = oldt;
-				}
-				else
-				{
-					token_value *token = new_value(folded);
-					tree.erase_left(it);
-					tree.erase_right(it);
-					it.data() = token;
-				}
+				token_value *token = new_value(folded);
+				tree.erase_left(it);
+				tree.erase_right(it);
+				it.data() = token;
 			}
 			catch (...)
 			{

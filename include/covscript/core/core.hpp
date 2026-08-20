@@ -769,13 +769,11 @@ namespace cs
 	struct function_ptr final
 	{
 		function *fptr = nullptr;
-		// Keeps the function alive while any callable references it.
-		std::shared_ptr<function> owner;
 
 		function_ptr() = default;
 
-		function_ptr(function *f, std::shared_ptr<function> owner_ref)
-		    : fptr(f), owner(std::move(owner_ref)) {}
+		explicit function_ptr(function *f)
+		    : fptr(f) {}
 
 		var operator()(vector &args) const
 		{

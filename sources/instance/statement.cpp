@@ -957,13 +957,14 @@ namespace cs
 	void statement_function::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
+		function *fptr = context->instance->functions.add_function(std::move(this->mFunc));
 		if (this->mIsMemFn)
 			context->instance->storage.add_var_no_return(this->mName.data(),
-			                                             var::make_protect<callable>(function_ptr{this->mFunc.get(), this->mFunc}, callable::types::member_fn),
+			                                             var::make_protect<callable>(function_ptr{fptr}, callable::types::member_fn),
 			                                             mOverride);
 		else
 		{
-			var func = var::make_protect<callable>(function_ptr{this->mFunc.get(), this->mFunc});
+			var func = var::make_protect<callable>(function_ptr{fptr});
 #ifdef CS_DEBUGGER
 			if (context->instance->storage.is_initial())
 				cs_debugger_func_breakpoint(this->mName, func);

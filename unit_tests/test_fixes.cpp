@@ -482,6 +482,35 @@ TEST(case_label_folds_imported_constant_array_from_module_with_function)
 	std::remove(module_path.c_str());
 }
 
+TEST(case_label_folds_imported_namespace_constant_without_using)
+{
+	const std::string module_path = "_audit_ns_const.csp";
+	std::ofstream modf(module_path);
+	modf << "package _audit_ns_const\n"
+	        "namespace ns\n"
+	        "    constant val = 1\n"
+	        "end\n";
+	modf.close();
+	try
+	{
+		EXPECT_CONTAINS(run_script(
+		                    "import _audit_ns_const\n"
+		                    "var x = 1\n"
+		                    "switch x\n"
+		                    "\tcase _audit_ns_const.ns.val\n"
+		                    "\t\tsystem.out.println(\"matched\")\n"
+		                    "\tend\n"
+		                    "end\n"),
+		                "matched");
+	}
+	catch (...)
+	{
+		std::remove(module_path.c_str());
+		throw;
+	}
+	std::remove(module_path.c_str());
+}
+
 TEST(case_label_rejects_runtime_array_index)
 {
 	// A runtime variable must not be folded into a case label constant.

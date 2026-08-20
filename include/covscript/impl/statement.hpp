@@ -649,7 +649,7 @@ namespace cs
 	class statement_function final : public statement_base
 	{
 		std::string mName;
-		std::shared_ptr<function> mFunc;
+		std::unique_ptr<function> mFunc;
 		bool mOverride = false;
 		bool mIsMemFn = false;
 		// Debug Information
@@ -667,7 +667,7 @@ namespace cs
 		                   const std::deque<statement_base *> &body, bool is_override, bool is_vargs,
 		                   context_type *c,
 		                   token_base *ptr)
-		    : statement_base(c, ptr), mName(std::move(name)), mFunc(std::make_shared<function>(c, decl, c->file_path, line_num, args, body, is_vargs)), mOverride(is_override), mDecl(decl), mArgs(args) {}
+		    : statement_base(c, ptr), mName(std::move(name)), mFunc(std::make_unique<function>(c, decl, c->file_path, line_num, args, body, is_vargs)), mOverride(is_override), mDecl(decl), mArgs(args) {}
 
 #else
 
@@ -675,7 +675,7 @@ namespace cs
 		                   const std::deque<statement_base *> &body, bool is_override, bool is_vargs,
 		                   context_type *c,
 		                   token_base *ptr)
-		    : statement_base(c, ptr), mName(std::move(name)), mFunc(std::make_shared<function>(c, args, body, is_vargs)), mOverride(is_override), mArgs(args) {}
+		    : statement_base(c, ptr), mName(std::move(name)), mFunc(std::make_unique<function>(c, args, body, is_vargs)), mOverride(is_override), mArgs(args) {}
 
 #endif
 

@@ -34,14 +34,33 @@ namespace cs
 	// cycles and keeping a self-referencing lambda's borrowed `self` alive.
 	class function_store final
 	{
-		std::vector<var> m_lambdas;
+		struct entry
+		{
+			std::unique_ptr<function> func;
+			var callable;
+		};
+
+		std::vector<entry> m_entries;
 		std::vector<std::vector<std::size_t>> m_transactions;
 
 	   public:
-		std::size_t add(const var &val)
+		// Register a function (named or lambda).  Returns a stable function pointer
+		// that outlives the entry (heap-allocated via unique_ptr).
+		function *add_function(std::unique_ptr<function> func)
 		{
-			m_lambdas.push_back(val);
-			std::size_t index = m_lambdas.size() - 1;
+			function *raw = func.get();
+			m_entries.push_back(entry{std::move(func), var()});
+			if (!m_transactions.empty())
+				m_transactions.back().push_back(m_entries.size() - 1);
+			return raw;
+		}
+
+		// Register a lambda: owns the function and stores the callable for
+		// token_lambda retrieval.  Returns the lambda index.
+		std::size_t add_lambda(std::unique_ptr<function> func, var callable)
+		{
+			m_entries.push_back(entry{std::move(func), std::move(callable)});
+			std::size_t index = m_entries.size() - 1;
 			if (!m_transactions.empty())
 				m_transactions.back().push_back(index);
 			return index;
@@ -49,13 +68,7 @@ namespace cs
 
 		std::size_t size() const noexcept
 		{
-			return m_lambdas.size();
-		}
-
-		// Roll back lambdas registered by a failed compilation unit.
-		void resize(std::size_t count)
-		{
-			m_lambdas.resize(count);
+			return m_entries.size();
 		}
 
 		void begin_transaction()
@@ -74,25 +87,28 @@ namespace cs
 			if (m_transactions.empty())
 				return;
 			for (std::size_t index : m_transactions.back())
-				if (index < m_lambdas.size())
-					m_lambdas[index] = var();
+				if (index < m_entries.size())
+				{
+					m_entries[index].func.reset();
+					m_entries[index].callable = var();
+				}
 			m_transactions.pop_back();
 			// Preserve stable indices for committed nested entries. Only empty
 			// slots at the physical end can be reclaimed safely.
-			while (!m_lambdas.empty() && !m_lambdas.back().usable())
-				m_lambdas.pop_back();
+			while (!m_entries.empty() && !m_entries.back().func && !m_entries.back().callable.usable())
+				m_entries.pop_back();
 		}
 
 		std::size_t active_size() const noexcept
 		{
-			return static_cast<std::size_t>(std::count_if(m_lambdas.begin(), m_lambdas.end(),
-			                                              [](const var &val)
-			{ return val.usable(); }));
+			return static_cast<std::size_t>(std::count_if(m_entries.begin(), m_entries.end(),
+			                                              [](const entry &e)
+			{ return e.func != nullptr; }));
 		}
 
 		var get(std::size_t index) const
 		{
-			return m_lambdas.at(index);
+			return m_entries.at(index).callable;
 		}
 	};
 
