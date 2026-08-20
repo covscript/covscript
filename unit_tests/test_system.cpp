@@ -98,15 +98,14 @@ TEST(path_is_file)
 
 TEST(path_separator)
 {
-	EXPECT_EQ(run_script(R"(
+	std::string sep = run_script(R"(
 		system.out.println(system.path.separator)
-	)"),
-#ifdef _WIN32
-	          "\\\n"
+	)");
+#ifdef COVSCRIPT_PLATFORM_WIN32
+	EXPECT_EQ(sep, "\\\n");
 #else
-	          "/\n"
+	EXPECT_EQ(sep, "/\n");
 #endif
-	);
 }
 
 // =============================================================================

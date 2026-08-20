@@ -312,7 +312,7 @@ namespace cs_impl
 				p = p.lexically_normal();
 			}
 			std::string result = p.generic_string();
-#ifdef _WIN32
+#ifdef COVSCRIPT_PLATFORM_WIN32
 			// Windows: fold case so `import Foo`/`foo` share one cache entry.
 			for (auto &ch : result)
 				ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));

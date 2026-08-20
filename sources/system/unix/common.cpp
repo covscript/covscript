@@ -59,7 +59,7 @@ namespace cs_system_impl
 {
 	bool is_main_thread() noexcept
 	{
-#if defined(__APPLE__) || defined(__FreeBSD__)
+#if defined(COVSCRIPT_PLATFORM_DARWIN) || defined(COVSCRIPT_PLATFORM_FREEBSD)
 		return pthread_main_np() != 0;
 #else
 		// The initial thread's TID equals the PID.
