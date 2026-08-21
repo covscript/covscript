@@ -16,6 +16,7 @@ lifetimes are precise but must be understood.
   + [4. `var` lifetime](#4-var-lifetime)
   + [5. Token arena and recompilation](#5-token-arena-and-recompilation)
 + [Migration Guide (ABI 2608xx → ABI 2609xx)](#migration-guide-abi-2608xx--abi-2609xx)
++ [Migration Guide (ABI 2609xx → ABI 2610xx)](#migration-guide-abi-2609xx--abi-2610xx)
 
 ---
 
@@ -242,3 +243,33 @@ All extensions must be recompiled.
   `set_schedule_parameters()` — tune fiber backoff.
 - `cs::callable::argument_count()` — query function arity.
 - `cs::create_context` accepts an optional `stack_size` parameter.
+
+## Migration Guide (ABI 2609xx → ABI 2610xx)
+
+All extensions must be recompiled.
+
+### Breaking changes
+
+- **`function_ptr` no longer holds an `owner`**. It was
+  `{function*, shared_ptr<function>}`, now just `{function*}`. Code that
+  constructed `function_ptr(f, owner)` or accessed `.owner` must be updated.
+- **`contains_callable` family removed**. `callable_contains_function`,
+  `callable_is_member_function`, and similar helpers that probed whether a
+  callable was backed by a script function are deleted.
+- **Escape behavior: UB instead of throwing**. Using an escaped script object
+  (function, structure method, type constructor, fiber, etc.) after its context
+  is destroyed no longer throws `runtime_error` — it is undefined behavior.
+  Code that catches such exceptions will no longer trigger.
+- **`function::get_context()` returns a raw pointer**. Previously returned
+  `shared_ptr<context_type>`, now returns `context_type*`.
+- **`process_context::teardown_ctx()` removed**.
+- **`structure::m_process` changed to a raw pointer**. Previously
+  `shared_ptr<process_context>`, now `process_context*`.
+- **Named functions registered at compile time**. `statement_function::mFunc`
+  changed from `unique_ptr<function>` to `function*` (owned by the
+  `function_store`).
+
+### New APIs
+
+- `cs::invoke(func, args...)` — unified callable invocation, replacing
+  `func.val<cs::callable>().call(args)`.

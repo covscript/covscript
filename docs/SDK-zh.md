@@ -14,6 +14,7 @@
   + [5. Token arena 与重编译](#5-token-arena-与重编译)
   + [6. 运行时诊断（`COVSCRIPT_DEBUG`）](#6-运行时诊断covscript_debug)
 + [迁移指南（ABI 2608xx → ABI 2609xx）](#迁移指南abi-2608xx--abi-2609xx)
++ [迁移指南（ABI 2609xx → ABI 2610xx）](#迁移指南abi-2609xx--abi-2610xx)
 
 ---
 
@@ -181,3 +182,31 @@ ctx->instance->interpret();
   `set_schedule_parameters()` —— 调整 fiber 退避参数。
 - `cs::callable::argument_count()` —— 查询函数参数数量。
 - `cs::create_context` 新增可选的 `stack_size` 参数。
+
+## 迁移指南（ABI 2609xx → ABI 2610xx）
+
+所有扩展必须重新编译。
+
+### 破坏性变更
+
+- **`function_ptr` 不再持有 `owner`**。`function_ptr` 从
+  `{function*, shared_ptr<function>}` 精简为裸指针 `{function*}`。
+  直接构造 `function_ptr(f, owner)` 或访问 `.owner` 的代码必须改掉。
+- **`contains_callable` 全家移除**。`callable_contains_function`、
+  `callable_is_member_function` 等检测 callable 是否由脚本函数支撑的
+  函数已删除。
+- **逃逸行为变更：UB 替代抛异常**。逃逸的脚本对象（函数、结构体方法、
+  类型构造器、fiber 等）在 context 销毁后使用，不再抛
+  `runtime_error`，而是未定义行为。`catch` 这类异常的代码不再生效。
+- **`function::get_context()` 返回裸指针**。原返回
+  `shared_ptr<context_type>`，现返回 `context_type*`。
+- **`process_context::teardown_ctx()` 已移除**。
+- **`structure::m_process` 改为裸指针**。原为
+  `shared_ptr<process_context>`，现为 `process_context*`。
+- **命名函数改为编译时注册**。`statement_function::mFunc` 从
+  `unique_ptr<function>` 改为 `function*`（由 `function_store` 持有）。
+
+### 新增 API
+
+- `cs::invoke(func, args...)` —— 统一的 callable 调用入口，替代
+  `func.val<cs::callable>().call(args)`。
