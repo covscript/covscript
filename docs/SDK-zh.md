@@ -172,7 +172,6 @@ ctx->instance->interpret();
 - `cs::invoke` 对非 callable 对象改抛 `cs::lang_error`（原为
   `cs::runtime_error`），与脚本层行为一致。注意 `cs::lang_error`
   不继承 `std::exception`。
-- `constant` 声明和 `case` 标签中，值包含脚本函数或方法的在编译期拒绝（RHS 必须是已折叠的值或 lambda token）。
 - `process_activation` 已移除。原生代码调用 `callable::call()` 时需
   自行持有 `process_run_scope`。扩展 DLL 通过访问器共享宿主的线程
   局部槽——读写统一，无需手动管理访问器。

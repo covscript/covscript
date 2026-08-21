@@ -236,9 +236,6 @@ All extensions must be recompiled.
 - `cs::invoke` on a non-callable now throws `cs::lang_error` (previously
   `cs::runtime_error`) to match script-level semantics. Note that
   `cs::lang_error` does not derive from `std::exception`.
-- `constant` declarations and `case` labels whose value contains a script
-  function or method are rejected at compile time (the RHS must be a folded
-  value or lambda token).
 - `process_activation` removed. Callers of `callable::call()` from native
   code must now hold their own `process_run_scope`. Extension DLLs share
   the host's thread-local slot via the accessor — reads and writes are
