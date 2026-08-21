@@ -552,6 +552,11 @@ namespace cs
 			}
 			if (sptr != nullptr)
 			{
+				// The statement finished translating; its function registrations
+				// are valid and must survive runtime failures. Commit here so a
+				// throw below (reset_status -> rollback) cannot destroy functions
+				// that already escaped into bound variables.
+				context->instance->functions.commit_transaction();
 				echo ? sptr->repl_run() : sptr->run();
 				delete sptr;
 				// The catch handlers below also `delete sptr`; null it out so a

@@ -641,9 +641,11 @@ TEST(repl_reentrant_nested_lambda_survives_outer_failure)
 	catch (...)
 	{
 	}
-	// The outer rollback removes only its own slots. The nested committed slot
-	// retains its stable index.
-	EXPECT_TRUE(ctx->instance->functions.active_size() == before + 2);
+	// The outer statement failed at runtime, after its transaction already
+	// committed at translation — so nothing rolls back. The outer lambda and
+	// the nested committed lambdas all survive.
+	EXPECT_TRUE(ctx->instance->functions.active_size() == before + 3);
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(outer_lambda())\n") == "1\n");
 	EXPECT_TRUE(run_script_on(ctx, "var nested = inner()\nsystem.out.println(nested())\n") == "42\n");
 }
 
@@ -699,6 +701,34 @@ TEST(repl_buffer_failure_preserves_committed_lambda_indices)
 	EXPECT_TRUE(ctx->instance->functions.active_size() == 0);
 	repl->exec("var ok = 42");
 	EXPECT_TRUE(run_script_on(ctx, "system.out.println(ok)\n") == "42\n");
+}
+
+// =============================================================================
+// F05g: a runtime failure inside one statement must not roll back that
+// statement's function registrations. `g` is bound before `h` throws; the
+// transaction committed at translation, so the escaped lambda stays callable.
+// Previously the runtime failure rolled back and destroyed the function while
+// the bound callable still referenced it — a use-after-free on the next call.
+// =============================================================================
+TEST(repl_runtime_failure_keeps_same_statement_lambda)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	auto repl = std::make_shared<cs::repl>(ctx);
+	bool threw = false;
+	try
+	{
+		repl->exec("var g = []()->2, h = (1/0)\n");
+	}
+	catch (...)
+	{
+		threw = true;
+	}
+	EXPECT_TRUE(threw);
+	// Context is alive; the statement compiled, so the lambda bound to `g`
+	// must still be callable after the runtime failure.
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(g())\n") == "2\n");
 }
 
 // =============================================================================

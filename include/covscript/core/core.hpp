@@ -1341,8 +1341,8 @@ namespace cs
 		std::string m_name;
 		domain_t m_data;
 		type_id m_id;
-		// Owning process (non-owning; context-alive precondition).
-		process_context *m_process = nullptr;
+		// Owning process (non-owning; liveness probe only — does not pin it).
+		std::weak_ptr<process_context> m_process;
 
 	   public:
 		structure() = delete;
@@ -1351,7 +1351,7 @@ namespace cs
 		    : m_id(id),
 		      m_name(std::move(name)),
 		      m_data(std::make_shared<domain_type>(data)),
-		      m_process(current_process)
+		      m_process(current_process ? current_process->weak_from_this() : std::weak_ptr<process_context>())
 		{
 			if (m_data->exist("initialize"))
 				invoke(m_data->get_var("initialize"), var::make<structure>(this));
@@ -1422,7 +1422,17 @@ namespace cs
 				};
 				try
 				{
-					process_run_scope scope(m_process);
+					// The process must be alive to run script finalizers (they
+					// need ctx->instance). An escaped structure destroyed after
+					// its process died cannot finalize; report and skip instead
+					// of dereferencing a dangling pointer.
+					std::shared_ptr<process_context> process = m_process.lock();
+					if (!process)
+					{
+						report("the process is no longer alive");
+						return;
+					}
+					process_run_scope scope(process.get());
 					invoke(m_data->get_var("finalize"), var::make<structure>(this));
 				}
 				catch (const exception &e)

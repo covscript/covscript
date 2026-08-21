@@ -1142,6 +1142,70 @@ TEST(escaped_structure_usable_while_context_alive)
 }
 
 // =============================================================================
+// A structure that escapes its context and is destroyed after the process died
+// must not dereference the dead process from run_finalize: the finalizer is
+// skipped and reported through debug_guard instead of crashing.
+// =============================================================================
+
+TEST(escaped_structure_finalize_skipped_after_context_death)
+{
+	cs::var escaped;
+	{
+		cs::array args;
+		args.push_back(cs::var::make<cs::string>("<UNIT_TEST>"));
+		auto ctx = cs::create_context(args);
+		run_script_on(ctx,
+		              "class foo\n"
+		              "    function finalize()\n"
+		              "        system.out.println(\"FINALIZED\")\n"
+		              "    end\n"
+		              "end\n"
+		              "var a = new foo\n");
+		escaped = ctx->instance->storage.get_var("a");
+	}
+	// The context (and its process) is gone; destroying the structure must
+	// skip the finalizer safely instead of dereferencing the dead process.
+	escaped = cs::var();
+	EXPECT_TRUE(true);
+}
+
+// =============================================================================
+// A script fiber suspended with a structure in its stack is destroyed after
+// its context died: the fiber's forked process dies before the stack, so the
+// structure's finalizer must be skipped safely (same run_finalize guard).
+// =============================================================================
+
+TEST(dangling_script_fiber_structure_finalize_skipped)
+{
+	cs::fiber_t f;
+	{
+		cs::array args;
+		args.push_back(cs::var::make<cs::string>("<FIBER_CTX>"));
+		auto ctx = cs::create_context(args);
+		std::istringstream src(
+		    "class foo\n"
+		    "\tfunction finalize()\n"
+		    "\t\tsystem.out.println(\"FINALIZED\")\n"
+		    "\tend\n"
+		    "end\n"
+		    "function f()\n"
+		    "\tvar s = new foo\n"
+		    "\tfiber.yield()\n"
+		    "end\n"
+		    "var sf = fiber.create(f)\n");
+		ctx->instance->compile(src);
+		ctx->instance->interpret();
+		f = ctx->instance->storage.get_var("sf").const_val<cs::fiber_t>();
+		// Suspend the fiber with `s` living in its stack.
+		cs::fiber::resume(f, cs::fiber::schedule_policy::normal);
+	}
+	// Context gone: the fiber's forked process is dead. Destroying the fiber
+	// destroys the suspended stack; `s`'s finalizer must be skipped safely.
+	f = cs::fiber_t();
+	EXPECT_TRUE(true);
+}
+
+// =============================================================================
 // Process ownership: every context owns its own process; a second independent
 // instance cannot start while one is active on the same thread.
 // =============================================================================
