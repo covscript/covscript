@@ -187,6 +187,7 @@ namespace cs_test
 	struct run_options
 	{
 		std::string filter;
+		std::string exclude;
 		int repeat = 1;
 		bool shuffle = false;
 		std::string xml_path;
@@ -327,7 +328,7 @@ namespace cs_test
 		if (opts.list_only)
 		{
 			for (const auto &tc : tests)
-				if (matches_filter(tc.name, filter))
+				if (matches_filter(tc.name, filter) && !matches_filter(tc.name, opts.exclude))
 					std::cout << tc.name << std::endl;
 			std::cout << tests.size() << " tests registered." << std::endl;
 			return 0;
@@ -364,7 +365,7 @@ namespace cs_test
 				res.file = tc.file;
 				res.line = tc.line;
 
-				if (!matches_filter(tc.name, filter))
+				if (!matches_filter(tc.name, filter) || matches_filter(tc.name, opts.exclude))
 				{
 					res.skipped = true;
 					++total_skipped;

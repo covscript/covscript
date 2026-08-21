@@ -6,6 +6,7 @@ static void print_usage(const char *prog)
 	std::cout << "Usage: " << prog << " [options]\n"
 	          << "Options:\n"
 	          << "  --filter=<pattern>  Run only tests whose name contains <pattern>\n"
+	          << "  --exclude=<pattern> Skip tests whose name contains <pattern>\n"
 	          << "  --repeat=N          Repeat all tests N times\n"
 	          << "  --shuffle           Randomize test execution order\n"
 	          << "  --timeout=N         Warn if a test exceeds N milliseconds\n"
@@ -22,6 +23,8 @@ int main(int argc, char *argv[])
 		const char *arg = argv[i];
 		if (std::strncmp(arg, "--filter=", 9) == 0)
 			opts.filter = arg + 9;
+		else if (std::strncmp(arg, "--exclude=", 10) == 0)
+			opts.exclude = arg + 10;
 		else if (std::strncmp(arg, "--repeat=", 9) == 0)
 			opts.repeat = std::atoi(arg + 9);
 		else if (std::strcmp(arg, "--shuffle") == 0)

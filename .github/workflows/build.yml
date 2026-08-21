@@ -86,8 +86,10 @@ jobs:
 
       - name: Run unit tests under ASan
         run: |
+          # dlopen with RTLD_DEEPBIND terminates the process under ASan
+          # (google/sanitizers#611), so exclude the extension-loading tests.
           ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 \
-            cmake-build/asan/unit_tests/cs_unit_tests --repeat=2 --shuffle
+            cmake-build/asan/unit_tests/cs_unit_tests --repeat=2 --shuffle --exclude=extension_load
 
       - name: Integration Tests under ASan
         run: |
