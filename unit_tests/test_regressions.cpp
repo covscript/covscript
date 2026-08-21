@@ -885,7 +885,7 @@ TEST(gc_escaped_function_survives_program_release)
 	cs::var escaped = ctx->instance->storage.get_var("f");
 	EXPECT_TRUE(escaped.usable());
 	// Release the compiled program: the statement_function node is freed, but
-	// the function (and its body/arena) survive via the callable's owner.
+	// the function (and its body/arena) survive via the function store.
 	ctx->instance->release_statements();
 	cs::vector args2;
 	cs::var ret = escaped.val<cs::callable>().call(args2);
@@ -1138,28 +1138,6 @@ TEST(escaped_structure_usable_while_context_alive)
 	// The context is still held, so the type identity node and members are valid.
 	EXPECT_TRUE(escaped.val<cs::structure>().get_id().node != nullptr);
 	EXPECT_TRUE(escaped.val<cs::structure>().get_id().node->name == "foo");
-	EXPECT_TRUE(escaped.val<cs::structure>().get_var("x").const_val<cs::numeric>() == 42);
-}
-
-// =============================================================================
-// The structure's member data (domain) is self-contained and remains valid
-// after context destruction. Type identity (type_node) is undefined behavior
-// after context death (context-alive precondition).
-// =============================================================================
-
-TEST(escaped_structure_member_data_usable_after_context_death)
-{
-	cs::var escaped;
-	{
-		cs::array args;
-		args.push_back(cs::var::make<cs::string>("<UNIT_TEST>"));
-		auto ctx = cs::create_context(args);
-		run_script_on(ctx, "class foo\n    var x = 42\nend\nvar a = new foo\n");
-		escaped = ctx->instance->storage.get_var("a");
-	}
-	// The context is gone; the member domain is self-contained (shared_ptr),
-	// so data access remains valid. Type identity (type_node) is UB after
-	// context death — not tested here.
 	EXPECT_TRUE(escaped.val<cs::structure>().get_var("x").const_val<cs::numeric>() == 42);
 }
 

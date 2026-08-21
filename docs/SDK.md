@@ -95,9 +95,8 @@ performed and no exception is guaranteed. The context owns the function store
 that backs every script callable; when the context dies, the store and all its
 functions are freed.
 
-A `structure`'s member data (domain) is self-contained and remains valid after
-context destruction. But its type identity (type node) and script methods are
-subject to the same undefined behavior as any other script object.
+No escaped object is guaranteed to remain usable after context destruction —
+this includes a `structure`'s member data, type identity, and script methods.
 
 Therefore:
 
@@ -118,9 +117,9 @@ cs::var f = cs::eval(ctx, "[](x)->x+1");
 // ... use f freely while ctx is alive ...
 ```
 
-Keep the context alive whenever an escaped object needs to execute script code.
-Self-contained value data (structure member fields) can
-remain usable independently as described above.
+Keep the context alive whenever an escaped object needs to be used. No escaped
+value (including structure member data) is guaranteed to remain usable after
+the context is destroyed.
 
 ### 2. `current_process` and threading
 
@@ -183,11 +182,10 @@ another unrelated process will remain active during destruction.
 `cs::var` is a pointer-sized handle (8 bytes on 64-bit platforms); copying it
 bumps a reference count, and the value is freed when the last reference drops.
 To detach a value from its original storage, use `cs::copy(var)` (deep copy).
-Values that escape a context are safe
-as self-contained data. A script callable holds a non-owning function pointer;
-invoking it after context destruction is undefined behavior. Structure member
-data (domain) remains valid, while its type identity and script methods are
-subject to the same undefined behavior.
+Values that escape a context are not guaranteed to remain usable after the
+context is destroyed. A script callable holds a non-owning function pointer;
+invoking it after context destruction is undefined behavior, and the same
+applies to a structure's member data and type identity.
 
 ### 5. Token arena and recompilation
 
