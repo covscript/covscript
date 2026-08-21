@@ -47,7 +47,7 @@ ctx->instance->interpret();
 | 对象 | 属主 | 生命周期 |
 |---|---|---|
 | `context_type` | 嵌入者的 `context_t` | 直到最后一个 `context_t` 被释放 |
-| `process_context` | context 与逃逸的 structure | 直到最后一个属主释放 |
+| `process_context` | context | context 生命周期 |
 | `instance_type` | context（`context->instance`） | context 生命周期 |
 | `compiler_type` | context（`context->compiler`） | context 生命周期（与子 context 共享） |
 | token arena（`compile_unit`） | instance 的函数存储 | 直到最后一个属主释放 |

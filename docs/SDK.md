@@ -50,7 +50,7 @@ Everything else hangs off it:
 | Object | Owned by | Lifetime |
 |---|---|---|
 | `context_type` | the embedder's `context_t` | until the last `context_t` is dropped |
-| `process_context` | the context and escaped structures | until the last owner drops |
+| `process_context` | the context | context lifetime |
 | `instance_type` | the context (`context->instance`) | context lifetime |
 | `compiler_type` | the context (`context->compiler`) | context lifetime (shared with subcontexts) |
 | token arena (`compile_unit`) | the instance's function store | until the last owner drops |
