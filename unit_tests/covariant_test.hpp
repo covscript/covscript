@@ -328,7 +328,8 @@ namespace cs_test
 		if (opts.list_only)
 		{
 			for (const auto &tc : tests)
-				if (matches_filter(tc.name, filter) && !matches_filter(tc.name, opts.exclude))
+				if (matches_filter(tc.name, filter) &&
+				    (opts.exclude.empty() || !matches_filter(tc.name, opts.exclude)))
 					std::cout << tc.name << std::endl;
 			std::cout << tests.size() << " tests registered." << std::endl;
 			return 0;
@@ -365,7 +366,8 @@ namespace cs_test
 				res.file = tc.file;
 				res.line = tc.line;
 
-				if (!matches_filter(tc.name, filter) || matches_filter(tc.name, opts.exclude))
+				if (!matches_filter(tc.name, filter) ||
+				    (!opts.exclude.empty() && matches_filter(tc.name, opts.exclude)))
 				{
 					res.skipped = true;
 					++total_skipped;
