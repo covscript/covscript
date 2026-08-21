@@ -68,7 +68,7 @@ jobs:
           path: unit_test_report.xml
 
   sanitizers:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
@@ -88,6 +88,9 @@ jobs:
         run: |
           # dlopen with RTLD_DEEPBIND terminates the process under ASan
           # (google/sanitizers#611), so exclude the extension-loading tests.
+          # ubuntu-24.04 (GCC 13) is used: GCC 12's libasan misreports
+          # stack-buffer-overflow in sigaltstack when no-return paths run on
+          # fiber (ucontext) stacks.
           ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 \
             cmake-build/asan/unit_tests/cs_unit_tests --repeat=2 --shuffle --exclude=extension_load
 
