@@ -94,9 +94,9 @@ performed and no exception is guaranteed. The context owns the function store
 that backs every script callable; when the context dies, the store and all its
 functions are freed.
 
-A `structure` pins its owning process, so its type identity and member data
-remain valid after context destruction. But invoking its script methods or
-constructing an escaped `type_t` after context death is undefined behavior.
+A `structure`'s member data (domain) is self-contained and remains valid after
+context destruction. But its type identity (type node) and script methods are
+subject to the same undefined behavior as any other script object.
 
 Therefore:
 
@@ -184,8 +184,8 @@ bumps a reference count, and the value is freed when the last reference drops.
 To detach a value from its original storage, use `cs::copy(var)` (deep copy).
 Values that escape a context are safe
 as self-contained data. A script callable holds a non-owning function pointer;
-invoking it after context destruction is undefined behavior. Structure data
-remains valid (the structure pins the process), while its script methods are
+invoking it after context destruction is undefined behavior. Structure member
+data (domain) remains valid, while its type identity and script methods are
 subject to the same undefined behavior.
 
 ### 5. Token arena and recompilation

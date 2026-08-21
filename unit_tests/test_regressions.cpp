@@ -1142,12 +1142,12 @@ TEST(escaped_structure_usable_while_context_alive)
 }
 
 // =============================================================================
-// The structure pins its owning process, so its type identity node and member
-// data stay valid even after the defining context is destroyed. Invoking a
-// method after context death is undefined behavior (context-alive precondition).
+// The structure's member data (domain) is self-contained and remains valid
+// after context destruction. Type identity (type_node) is undefined behavior
+// after context death (context-alive precondition).
 // =============================================================================
 
-TEST(escaped_structure_data_usable_after_context_death)
+TEST(escaped_structure_member_data_usable_after_context_death)
 {
 	cs::var escaped;
 	{
@@ -1157,10 +1157,9 @@ TEST(escaped_structure_data_usable_after_context_death)
 		run_script_on(ctx, "class foo\n    var x = 42\nend\nvar a = new foo\n");
 		escaped = ctx->instance->storage.get_var("a");
 	}
-	// The context is gone; the pinned process still owns the type node and the
-	// member domain is self-contained, so data access remains valid.
-	EXPECT_TRUE(escaped.val<cs::structure>().get_id().node != nullptr);
-	EXPECT_TRUE(escaped.val<cs::structure>().get_id().node->name == "foo");
+	// The context is gone; the member domain is self-contained (shared_ptr),
+	// so data access remains valid. Type identity (type_node) is UB after
+	// context death — not tested here.
 	EXPECT_TRUE(escaped.val<cs::structure>().get_var("x").const_val<cs::numeric>() == 42);
 }
 

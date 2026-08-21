@@ -1341,8 +1341,8 @@ namespace cs
 		std::string m_name;
 		domain_t m_data;
 		type_id m_id;
-		// Owning process; finalizers run with it activated.
-		std::shared_ptr<process_context> m_process;
+		// Owning process (non-owning; context-alive precondition).
+		process_context *m_process = nullptr;
 
 	   public:
 		structure() = delete;
@@ -1351,7 +1351,7 @@ namespace cs
 		    : m_id(id),
 		      m_name(std::move(name)),
 		      m_data(std::make_shared<domain_type>(data)),
-		      m_process(current_process ? current_process->shared_from_this() : nullptr)
+		      m_process(current_process)
 		{
 			if (m_data->exist("initialize"))
 				invoke(m_data->get_var("initialize"), var::make<structure>(this));
@@ -1422,7 +1422,7 @@ namespace cs
 				};
 				try
 				{
-					process_run_scope scope(m_process.get());
+					process_run_scope scope(m_process);
 					invoke(m_data->get_var("finalize"), var::make<structure>(this));
 				}
 				catch (const exception &e)
@@ -1543,8 +1543,6 @@ namespace cs
 		// Raw back-ref to the defining context.
 		context_type *mContext = nullptr;
 		type_node *mNode;
-		// Pins the owning process so the type node pool outlives the builder.
-		std::shared_ptr<process_context> m_process;
 		type_id mTypeId;
 		std::string mName;
 		tree_type<token_base *> mParent;
@@ -1567,7 +1565,6 @@ namespace cs
 		               std::deque<statement_base *> method)
 		    : mContext(c),
 		      mNode(alloc_type_node(c->process.get())),
-		      m_process(c->process),
 		      mTypeId(typeid(structure), mNode),
 		      mName(std::move(name)),
 		      mParent(std::move(parent)),
@@ -1603,7 +1600,6 @@ namespace cs
 		{
 			std::swap(mContext, other.mContext);
 			std::swap(mNode, other.mNode);
-			m_process.swap(other.m_process);
 			std::swap(mTypeId, other.mTypeId);
 			mName.swap(other.mName);
 			mParent.swap(other.mParent);
