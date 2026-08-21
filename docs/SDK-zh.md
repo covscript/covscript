@@ -75,7 +75,7 @@ Covariant Script 移除了历史遗留的全局垃圾回收器，改为显式、
 
 在 context 销毁后调用脚本函数、lambda、结构体方法或类型构造器是**未定义行为**——不执行检查，不保证抛出异常。context 拥有支撑所有脚本 callable 的函数存储；context 销毁时，存储及其中所有函数一同释放。
 
-`structure` 会 pin 住其所属的 process，因此类型身份与成员数据在 context 销毁后仍有效。但调用其脚本方法或构造逃逸的 `type_t` 后调用是未定义行为。
+`structure` 的成员数据（域）是自包含的，context 销毁后仍有效。但其类型身份（type node）和脚本方法与其他脚本对象一样，受未定义行为约束。
 
 因此：
 
