@@ -943,7 +943,7 @@ namespace cs
 	void statement_function::run_impl()
 	{
 		CS_DEBUGGER_STEP(this);
-		function *fptr = context->instance->functions.add_function(std::move(this->mFunc));
+		function *fptr = this->mFunc;
 		if (this->mIsMemFn)
 			context->instance->storage.add_var_no_return(this->mName.data(),
 			                                             var::make_protect<callable>(function_ptr{fptr}, callable::types::member_fn),
