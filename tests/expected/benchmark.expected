@@ -1,0 +1,15 @@
+Covariant Script Performance Benchmark
+Measure Unit: Operations Per Second (OPS)
+
+Sequential Simple Execution: 7539994
+Sequential Function Calling: 3191922
+Recursive Function Calling:  172013
+Fiber Context Switching:     715044
+Complex Math Operations:     1308900
+String Concatenation:        771621
+Random Array Access:         1587301
+Random Hash Access:          1272264
+Array Quicksort:             174216
+
+Benchmark Finished
+

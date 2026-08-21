@@ -1,0 +1,44 @@
+
+=== Test 0: free function return move(b) ===
+[free] trivial_move called
+[B] Call initializer: 1
+[free] returning move(b)
+PASS: Test 0: duplicate_count should be 0, got 0
+=== End Test 0 ===
+
+=== Test 0b: free function return b (no move) ===
+[free] trivial_no_move called
+[B] Call initializer: 2
+[free] returning b (no move)
+PASS: Test 0b: duplicate_count should be 0, got 0
+=== End Test 0b ===
+
+=== Test 1: return move(b) ===
+[B] Call initializer: 4
+[A] Call initializer: 3
+[A] make_b called
+[B] Call initializer: 5
+[A] returning move(b)
+PASS: Test 1: duplicate_count should be 0, got 0
+=== End Test 1 ===
+
+=== Test 2: return b (no move) ===
+[A] make_b_no_move called
+[B] Call initializer: 6
+[A] returning b (no move)
+PASS: Test 2: duplicate_count should be 0, got 0
+=== End Test 2 ===
+
+=== Test 3: return member variable ===
+[A] get_b called
+[A] returning member_b
+[B] Call duplicator: 4 -> 7
+PASS: Test 3: duplicate_count should be 1, got 1
+=== End Test 3 ===
+[B] Call destroyer: 7
+[B] Call destroyer: 6
+[B] Call destroyer: 5
+[A] Call destroyer: 3
+[B] Call destroyer: 4
+[B] Call destroyer: 2
+[B] Call destroyer: 1

@@ -144,9 +144,9 @@ cd tests
 ```
 
 #### Windows
-```cmd
+```powershell
 cd tests
-run_tests.bat
+powershell -NoProfile -ExecutionPolicy Bypass -File run_tests.ps1
 ```
 
 To generate expected output files for output verification:
@@ -166,12 +166,12 @@ cmake-build/unit_tests/cs_unit_tests
 ```
 
 **CLI Options:**
-- `--filter=<pattern>` 鈥?Run only tests whose name contains `<pattern>`
-- `--repeat=N` 鈥?Repeat all tests N times (useful for isolation checks)
-- `--shuffle` 鈥?Randomize test execution order
-- `--timeout=N` 鈥?Warn if a test exceeds N milliseconds
-- `--xml=<path>` 鈥?Write JUnit XML report
-- `--list` 鈥?List all registered tests
+- `--filter=<pattern>` —Run only tests whose name contains `<pattern>`
+- `--repeat=N` —Repeat all tests N times (useful for isolation checks)
+- `--shuffle` —Randomize test execution order
+- `--timeout=N` —Warn if a test exceeds N milliseconds
+- `--xml=<path>` —Write JUnit XML report
+- `--list` —List all registered tests
 
 ### Writing Unit Tests
 
@@ -187,16 +187,16 @@ TEST(my_test_name)
 ```
 
 **Test Helpers:**
-- `make_context()` / `shared_compiler_context()` 鈥?Shared read-only compiler context (do not define variables)
-- `run_script(src)` 鈥?Run a CovScript snippet, capture stdout
-- `run_script_expect_throw(src)` 鈥?Run a script expected to throw
+- `make_context()` / `shared_compiler_context()` —Shared read-only compiler context (do not define variables)
+- `run_script(src)` —Run a CovScript snippet, capture stdout
+- `run_script_expect_throw(src)` —Run a script expected to throw
 
 **Assertions:**
-- `EXPECT_EQ(a, b)` / `ASSERT_EQ(a, b)` 鈥?Equality (fatal = abort on failure)
-- `EXPECT_TRUE(v)` / `ASSERT_TRUE(v)` 鈥?Boolean truth
-- `EXPECT_THROW(expr, type)` / `EXPECT_THROW_MSG(expr, type, "msg")` 鈥?Exception checks
-- `EXPECT_CONTAINS(text, substring)` 鈥?String containment
-- `TRACE(msg)` 鈥?Record trace message, printed on failure
+- `EXPECT_EQ(a, b)` / `ASSERT_EQ(a, b)` —Equality (fatal = abort on failure)
+- `EXPECT_TRUE(v)` / `ASSERT_TRUE(v)` —Boolean truth
+- `EXPECT_THROW(expr, type)` / `EXPECT_THROW_MSG(expr, type, "msg")` —Exception checks
+- `EXPECT_CONTAINS(text, substring)` —String containment
+- `TRACE(msg)` —Record trace message, printed on failure
 
 ## Pull Request Process
 

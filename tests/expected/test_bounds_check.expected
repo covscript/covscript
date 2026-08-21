@@ -1,0 +1,10 @@
+arr.at(1) = 20
+str.substr(1, 3) = ell
+str.cut(2) = Hel
+map.at(key) = 123
+array.at out of range: OK (Index out of range)
+array.at negative: OK (Index out of range)
+string.substr bad position: OK (Position out of range)
+string.cut too large: OK (Cut count is out of range)
+hash_map.at missing key: OK (The key does not exist in the hash map)
+bounds check test done

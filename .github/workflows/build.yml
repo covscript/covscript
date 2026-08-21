@@ -50,11 +50,10 @@ jobs:
 
       - name: Integration Tests (Windows)
         if: matrix.os == 'windows-2022'
-        shell: cmd
         run: |
           build\bin\cs.exe -v
-          set "CS=%CD%\build\bin\cs.exe"
-          tests\run_tests.bat
+          $env:CS = "$env:GITHUB_WORKSPACE\build\bin\cs.exe"
+          powershell -NoProfile -ExecutionPolicy Bypass -File tests\run_tests.ps1
 
       - uses: actions/upload-artifact@v4
         with:
@@ -67,3 +66,30 @@ jobs:
         with:
           name: unit-test-report-${{ matrix.os }}
           path: unit_test_report.xml
+
+  sanitizers:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build with ASan/UBSan
+        run: |
+          cmake -DCS_BUILD_TESTS=ON \
+            -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" \
+            -S . -B cmake-build/asan
+          cmake --build cmake-build/asan --target cs_unit_tests cs -- -j$(nproc)
+
+      - name: Run unit tests under ASan
+        run: |
+          ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 \
+            cmake-build/asan/unit_tests/cs_unit_tests --repeat=2 --shuffle
+
+      - name: Integration Tests under ASan
+        run: |
+          ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 \
+            CS="$GITHUB_WORKSPACE/cmake-build/asan/cs" bash tests/run_tests.sh

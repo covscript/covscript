@@ -1,0 +1,28 @@
+=== balanced ===
+Samples: 9328
+Average: 1.0665738ms
+Max:     20ms
+P50:     0ms
+P90:     0ms
+P99:     16ms
+=== responsive ===
+Samples: 28379
+Average: 0.35103422ms
+Max:     12ms
+P50:     0ms
+P90:     3ms
+P99:     5ms
+=== efficient ===
+Samples: 6255
+Average: 1.567546ms
+Max:     100ms
+P50:     0ms
+P90:     0ms
+P99:     61ms
+=== throughput ===
+Samples: 7285
+Average: 1.3607412ms
+Max:     39ms
+P50:     0ms
+P90:     0ms
+P99:     30ms

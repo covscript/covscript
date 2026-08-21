@@ -1,0 +1,9 @@
+starter: begin
+worker: step 1
+starter: end
+main: starter finished = true
+worker: step 2
+main: after first resume from main
+worker: step 3
+main: worker finished = true
+main: worker return = 42

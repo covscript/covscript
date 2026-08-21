@@ -169,9 +169,13 @@ TEST(runtime_local_time)
 // =============================================================================
 TEST(system_run)
 {
-	// system.run returns exit code; echo output goes to real stdout (not captured)
-	std::string out = run_script(R"(
-		system.out.println(system.run("echo hello"))
-	)");
+	// system.run returns exit code; redirect the command's output so it does
+	// not leak into the real stdout.
+#ifdef COVSCRIPT_PLATFORM_WIN32
+	const char *cmd = "echo hello >nul";
+#else
+	const char *cmd = "echo hello >/dev/null";
+#endif
+	std::string out = run_script("system.out.println(system.run(\"" + std::string(cmd) + "\"))\n");
 	EXPECT_EQ(out, "0\n");
 }

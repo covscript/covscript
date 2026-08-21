@@ -1,0 +1,18 @@
+Value = 0, Type = Integer
+Value = 0, Type = Integer
+Value = 0, Type = Float
+Value = 0, Type = Integer
+Value = 1, Type = Integer
+Value = 1.1, Type = Float
+Value = 2.1, Type = Float
+Value = 2, Type = Integer
+Value = 2, Type = Float
+Value = 0.01, Type = Float
+Value = 10, Type = Integer
+Value = 33.333333, Type = Float
+Max  = 1.1897315e+4932
+Min  = 3.3621031e-4932
+IMax = 9223372036854775807
+IMin = -9223372036854775808
+FMax = 1.1897315e+4932
+FMin = 3.3621031e-4932

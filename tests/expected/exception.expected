@@ -1,0 +1,4 @@
+caught: kaboom
+propagated: deep
+inner caught: inner
+after inner

@@ -327,7 +327,8 @@ namespace cs_test
 		if (opts.list_only)
 		{
 			for (const auto &tc : tests)
-				std::cout << tc.name << std::endl;
+				if (matches_filter(tc.name, filter))
+					std::cout << tc.name << std::endl;
 			std::cout << tests.size() << " tests registered." << std::endl;
 			return 0;
 		}
@@ -356,7 +357,10 @@ namespace cs_test
 			{
 				auto &tc = tests[idx];
 				test_result res;
-				res.name = tc.name;
+				// With --repeat, XML must contain unique testcase names.
+				res.name = (opts.repeat > 1)
+				               ? tc.name + " [round " + std::to_string(round + 1) + "]"
+				               : tc.name;
 				res.file = tc.file;
 				res.line = tc.line;
 
@@ -464,7 +468,15 @@ namespace cs_test
 	static ::cs_test::test_registrar reg_##fixture##_##name( \
 	    #fixture "." #name, __FILE__, __LINE__, []() {       \
 		fixture##_##name instance;                           \
-		instance.SetUp();                                    \
+		try                                                  \
+		{                                                    \
+			instance.SetUp();                                \
+		}                                                    \
+		catch (...)                                          \
+		{                                                    \
+			instance.TearDown();                             \
+			throw;                                           \
+		}                                                    \
 		try                                                  \
 		{                                                    \
 			instance.test_body();                            \

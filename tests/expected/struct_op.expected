@@ -1,0 +1,34 @@
+Call initializer: 1
+Call initializer: 2
+Swap<>Swap
+Call duplicator: 1
+Call destroyer: 2
+Call duplicator: 3
+Call destroyer: 1
+Call comparator: 3 == 4
+Call comparator: 3 > 4
+Call comparator: 3 < 4
+Call comparator: 3 >= 4
+Call comparator: 3 <= 4
+Call operator: 3 + 4
+Call operator: 3 - 4
+Call operator: 3 * 4
+Call operator: 3 / 4
+Call operator: 3 % 4
+Call operator: 3 ^ 4
+Call operator: ++3
+Call duplicator: 4
+Call operator: ++4
+Call destroyer: 5
+Call operator: --3
+Call duplicator: 4
+Call operator: --4
+Call destroyer: 6
+Call operator: 3[2333]
+Call operator: 4({1, 2, 3, 4})
+Call to_string: 3
+String value = Hello3
+Call hash: 4
+Hash value = 4
+Call destroyer: 4
+Call destroyer: 3

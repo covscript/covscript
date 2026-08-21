@@ -1,0 +1,3 @@
+{{}, null, 3, 14 : A, std::shared_ptr<std::ostream>, test, cs::range => {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}, Hello, list => {cs::pointer => Hello, 3, 14, A}}
+cs::hash_map => {[std::pair<cs_impl::any const, cs_impl::any>], [std::pair<cs_impl::any const, cs_impl::any>]}
+cs::hash_set => {ghi, abc, def}
