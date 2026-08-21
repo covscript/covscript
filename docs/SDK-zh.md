@@ -50,7 +50,7 @@ ctx->instance->interpret();
 | `process_context` | context | context 生命周期 |
 | `instance_type` | context（`context->instance`） | context 生命周期 |
 | `compiler_type` | context（`context->compiler`） | context 生命周期（与子 context 共享） |
-| token arena（`compile_unit`） | instance 的函数存储 | 直到最后一个属主释放 |
+| token arena（`compile_unit`） | instance、函数与 struct_builder | 直到最后一个属主释放 |
 | `var` 值 | 引用计数 | 直到最后一个 `var` 引用被释放 |
 | 模块子 context | context 的 `subcontexts` 池 | context 生命周期 |
 
@@ -67,7 +67,7 @@ Covariant Script 移除了历史遗留的全局垃圾回收器，改为显式、
 
 ## 资源规约
 
-以下是嵌入者必须遵守的规则。由弱引用支持的 API 在 context 销毁后会抛出 `runtime_error`；裸非 owning SDK 引用不得比其属主活得更久。
+以下是嵌入者必须遵守的规则。脚本对象持有的反向引用均为裸非拥有指针，不得比其属主活得更久；在 context 销毁后使用任何逃逸的脚本对象都是未定义行为。
 
 ### 1. Context 生命周期（逃逸对象）
 

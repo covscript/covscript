@@ -53,7 +53,7 @@ Everything else hangs off it:
 | `process_context` | the context | context lifetime |
 | `instance_type` | the context (`context->instance`) | context lifetime |
 | `compiler_type` | the context (`context->compiler`) | context lifetime (shared with subcontexts) |
-| token arena (`compile_unit`) | the instance's function store | until the last owner drops |
+| token arena (`compile_unit`) | the instance, functions, and struct builders | until the last owner drops |
 | `var` values | reference counting | until the last `var` reference is dropped |
 | module subcontexts | the context's `subcontexts` pool | context lifetime |
 
@@ -80,9 +80,10 @@ reference goes away** — no `collect_garbage()`, no deferred sweep.
 
 ## Resource Contracts
 
-These are the rules an embedder must follow. APIs backed by weak references fail
-with `runtime_error` after context destruction; raw non-owning SDK references
-must not outlive their owner.
+These are the rules an embedder must follow. All internal back-references held
+by script objects are raw non-owning pointers that must not outlive their owner;
+using any escaped script object after its context is destroyed is undefined
+behavior.
 
 ### 1. Context lifetime (escaped objects)
 
@@ -118,7 +119,7 @@ cs::var f = cs::eval(ctx, "[](x)->x+1");
 ```
 
 Keep the context alive whenever an escaped object needs to execute script code.
-Self-contained value data (structure member fields, type identity nodes) can
+Self-contained value data (structure member fields) can
 remain usable independently as described above.
 
 ### 2. `current_process` and threading
