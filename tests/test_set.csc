@@ -1,6 +1,9 @@
 function show_set(s)
+    var items = {}
+    foreach it in s do items.push_back(it)
+    items.sort([](lhs, rhs)-> lhs < rhs)
     var str = "{"
-    foreach it in s do str += to_string(it) + ","
+    foreach it in items do str += to_string(it) + ","
     str.cut(1)
     str += "}"
     system.out.println(str)

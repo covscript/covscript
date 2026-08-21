@@ -102,6 +102,8 @@ skip_output=(
 	fiber_busy_wait.csc  # latency measurements
 	file_os.csc          # chmod/permission semantics differ on Windows
 	info.csc             # runtime.info() is platform-dependent
+	limit.csc            # long double extremes depend on the architecture
+	numeric.csc          # long double extremes depend on the architecture
 	serial_execution.csc # performance timings
 	test_future.csc      # round-trip counts and timings
 	time.csc             # absolute timestamps

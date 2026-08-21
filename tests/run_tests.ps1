@@ -96,6 +96,8 @@ $skipOutput = @(
 	'fiber_busy_wait.csc',
 	'file_os.csc',
 	'info.csc',
+	'limit.csc',
+	'numeric.csc',
 	'serial_execution.csc',
 	'test_future.csc',
 	'time.csc',
