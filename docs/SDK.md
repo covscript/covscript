@@ -2,15 +2,15 @@
 
 This document describes the embedding (C++) API of Covariant Script and, most
 importantly, the **resource ownership contracts** every embedder must respect.
-Covariant Script manages all of its memory with deterministic RAII — there is no
-garbage collector — so object lifetimes are precise but must be understood.
+Covariant Script manages all of its memory with deterministic RAII, so object
+lifetimes are precise but must be understood.
 
 ## Table of Contents
 
 + [Quick Start](#quick-start)
 + [Ownership Model](#ownership-model)
 + [Resource Contracts](#resource-contracts)
-  + [1. Context lifetime (escaped objects)](#1-context-lifetime-escaped-objects)
+  + [1. Context lifetime](#1-context-lifetime)
   + [2. `current_process` and threading](#2-current_process-and-threading)
   + [3. Structure finalizers](#3-structure-finalizers)
   + [4. `var` lifetime](#4-var-lifetime)
@@ -69,34 +69,27 @@ explicit, deterministic ownership:
   Copying a `var` is cheap (a refcount bump); `cs::copy(var)` / `var::clone()`
   performs a deep copy.
 + **The context is the runtime root owner** of the process, compiler, instance
-  and their children. All internal back-references to the defining context are
-  raw non-owning pointers constrained by the context's lifetime; functions,
-  structure methods, type constructors, and fibers all assume the defining
-  context is alive when invoked. Escaping an object and invoking it after
-  context destruction is undefined behavior.
+  and their children. Script objects hold raw pointers back to their defining
+  context; once the context is destroyed, those pointers are all invalidated, and
+  using them is undefined behavior.
 
 The consequence is that **each resource is reclaimed when its last owning
 reference goes away** — no `collect_garbage()`, no deferred sweep.
 
 ## Resource Contracts
 
-These are the rules an embedder must follow. All internal back-references held
-by script objects are raw non-owning pointers that must not outlive their owner;
-using any escaped script object after its context is destroyed is undefined
-behavior.
+These are the rules an embedder must follow. Script objects hold raw pointers
+back to their context; once the context is destroyed, those pointers are
+invalidated. Using any escaped script object after its context is destroyed is
+undefined behavior.
 
-### 1. Context lifetime (escaped objects)
+### 1. Context lifetime
 
 **All script objects assume their defining context is alive when used.**
 
-Invoking a script function, lambda, structure method, or type constructor after
-its defining context has been destroyed is **undefined behavior** — no check is
-performed and no exception is guaranteed. The context owns the function store
-that backs every script callable; when the context dies, the store and all its
-functions are freed.
-
-No escaped object is guaranteed to remain usable after context destruction —
-this includes a `structure`'s member data, type identity, and script methods.
+Invoking a script function, structure method, etc. after its defining context
+has been destroyed is **undefined behavior** — no check is performed and no
+exception is guaranteed.
 
 Therefore:
 
@@ -117,9 +110,9 @@ cs::var f = cs::eval(ctx, "[](x)->x+1");
 // ... use f freely while ctx is alive ...
 ```
 
-Keep the context alive whenever an escaped object needs to be used. No escaped
-value (including structure member data) is guaranteed to remain usable after
-the context is destroyed.
+Keep the context alive for as long as you use any escaped object; once the
+context is destroyed, escaped objects (including structure member data) are no
+longer usable.
 
 ### 2. `current_process` and threading
 
@@ -182,10 +175,10 @@ another unrelated process will remain active during destruction.
 `cs::var` is a pointer-sized handle (8 bytes on 64-bit platforms); copying it
 bumps a reference count, and the value is freed when the last reference drops.
 To detach a value from its original storage, use `cs::copy(var)` (deep copy).
-Values that escape a context are not guaranteed to remain usable after the
-context is destroyed. A script callable holds a non-owning function pointer;
-invoking it after context destruction is undefined behavior, and the same
-applies to a structure's member data and type identity.
+Once a value escapes its context, it is no longer usable after the context is
+destroyed. A script callable holds a raw function pointer; invoking it after
+context destruction is undefined behavior, and the same applies to a
+structure's member data and type identity.
 
 ### 5. Token arena and recompilation
 
@@ -195,8 +188,8 @@ and its arena.
 
 A script function/lambda registered in the function store keeps that arena
 alive via `function::m_unit`, so it remains callable after recompilation —
-*provided its context is still alive* (§1). This is the one pinning mechanism
-that survives, because it concerns the arena rather than the context.
+*provided its context is still alive* (§1). This is the one surviving keep-alive
+mechanism, because it concerns the arena rather than the context.
 
 ### 6. Runtime diagnostics (`COVSCRIPT_DEBUG`)
 

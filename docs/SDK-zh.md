@@ -1,13 +1,13 @@
 # Covariant Script SDK
 
-本文档描述 Covariant Script 的嵌入（C++）API，以及每位嵌入者都必须遵守的**资源所有权规约**。Covariant Script 使用确定性的 RAII 管理全部内存——没有垃圾回收器——因此对象的生命周期是精确的，但必须被正确理解。
+本文档描述 Covariant Script 的嵌入（C++）API，以及每位嵌入者都必须遵守的**资源所有权规约**。Covariant Script 使用确定性的 RAII 管理全部内存，因此对象的生命周期是精确的，但必须被正确理解。
 
 ## 目录
 
 + [快速开始](#快速开始)
 + [所有权模型](#所有权模型)
 + [资源规约](#资源规约)
-  + [1. Context 生命周期（逃逸对象）](#1-context-生命周期逃逸对象)
+  + [1. Context 生命周期](#1-context-生命周期)
   + [2. `current_process` 与线程](#2-current_process-与线程)
   + [3. 结构体终结器（finalize）](#3-结构体终结器finalize)
   + [4. `var` 生命周期](#4-var-生命周期)
@@ -61,21 +61,17 @@ Covariant Script 移除了历史遗留的全局垃圾回收器，改为显式、
 + **语句**构成一棵树；每个父节点删除其子节点。
 + **token** 存放在每个程序独立的 bump arena（`compile_unit`）中，整块释放。
 + **`var`** 是对堆上值的引用计数、写时复制句柄。拷贝一个 `var` 代价极低（引用计数 +1）；`cs::copy(var)` / `var::clone()` 执行深拷贝。
-+ **context 是运行时根属主**，拥有 process、compiler、instance 及其子对象。所有内部反向引用均为裸非拥有指针，受 context 生命周期约束；函数、结构体方法、类型构造器、fiber 均假定定义它的 context 存活。将对象逃逸出 context 后再使用是未定义行为。
-
-结果是：**每项资源都在其最后一个 owning 引用消失时被精确回收**——没有 `collect_garbage()`，没有延迟清扫。
++ **context 是运行时根属主**，拥有 process、compiler、instance 及其子对象。脚本对象内部都只是指向其所属 context 的裸指针；一旦 context 销毁，这些指针全部失效，再使用属于未定义行为。
 
 ## 资源规约
 
-以下是嵌入者必须遵守的规则。脚本对象持有的反向引用均为裸非拥有指针，不得比其属主活得更久；在 context 销毁后使用任何逃逸的脚本对象都是未定义行为。
+以下是嵌入者必须遵守的规则。脚本对象内部持有的是指向所属 context 的裸指针，一旦 context 销毁即全部失效；context 销毁后再使用任何逃逸出来的脚本对象，都是未定义行为。
 
-### 1. Context 生命周期（逃逸对象）
+### 1. Context 生命周期
 
 **所有脚本对象均假定定义它的 context 存活。**
 
-在 context 销毁后调用脚本函数、lambda、结构体方法或类型构造器是**未定义行为**——不执行检查，不保证抛出异常。context 拥有支撑所有脚本 callable 的函数存储；context 销毁时，存储及其中所有函数一同释放。
-
-没有任何例外：任何逃逸对象在 context 销毁后都不保证仍可用——包括 `structure` 的成员数据、类型身份与脚本方法。
+在 context 销毁后调用脚本函数、结构体方法等均是**未定义行为**——不执行检查，不保证抛出异常。
 
 因此：
 
@@ -85,7 +81,7 @@ cs::var f;
     auto ctx = cs::create_context({...});
     f = cs::eval(ctx, "[](x)->x+1");   // 逃逸一个 lambda
 }                                      // 此处 ctx 已析构
-f.const_val<cs::callable>().call(...); // 未定义行为——切勿如此
+cs::invoke(f, 1); // 未定义行为——切勿如此
 ```
 
 在仍使用对象期间，务必保持 `context_t` 存活：
@@ -96,16 +92,16 @@ cs::var f = cs::eval(ctx, "[](x)->x+1");
 // ... 在 ctx 存活期间自由使用 f ...
 ```
 
-逃逸对象需要使用时，应保持 context 存活。任何逃逸值（包括结构体成员数据）在 context 销毁后都不保证仍可用。
+只要还用着逃逸出来的对象，就必须保持 context 存活；context 销毁后，逃逸出来的对象（含结构体成员数据）一律不可再用。
 
 ### 2. `current_process` 与线程
 
-`cs::current_process` 是由线程局部存储支持的 `process_context_ref`；它可转换为 `process_context*`，当前线程无运行实例时为 `nullptr`。`cs::process_run_scope(ctx)` 在作用域内安装 `ctx` 的进程。同一进程上的嵌套作用域是透明的；**不同**的活动进程会抛出异常，因此一个线程不能并发运行两个实例。原生代码调用 `callable::call()` 时需自行持有 `process_run_scope`。
+`cs::current_process` 是由线程局部存储支持的 `process_context_ref`；它可转换为 `process_context*`，当前线程无运行实例时为 `nullptr`。`cs::process_run_scope(ctx)` 可以在作用域内注册 Context 所持有的进程，并在离开作用域时自动注销。同一进程上的嵌套作用域是透明的；**不同**的活动进程会抛出异常，因此一个线程不能并发运行两个实例。原生代码调用 `callable::call()` 时需自行持有 `process_run_scope`。
 
 推论：
 
 + 原生（CNI）回调与异步 future 可能观察到 `current_process == nullptr`；SDK 的错误路径已对此容错，但读取 `current_process` 的扩展必须做空判断。
-+ 两个 context 可在**不同线程**上并发运行。`var` 的 proxy 分配器池是**每线程独立**的（`thread_local`）且按需增长，因此不同 context 永不共享池槽；值在其它线程释放时回退到直接分配路径（`std::allocator` 实例间可互换）。
++ 两个 context 可在**不同线程**上并发运行。`var` 的 proxy 分配器池是**每线程独立**的（`thread_local`）且按需增长，因此不同 context 永不共享池槽；值在其它线程释放时回退到直接分配路径（`std::allocator` 实例间可互换）。但 context 之间共享状态是危险的，因为 `var` 的引用计数是非原子的。
 
 需要独立编译环境（独立存储、命名空间或编译产物）的扩展 DLL 应使用**子上下文**而非独立上下文：
 
@@ -117,7 +113,7 @@ ctx->instance->interpret();
 // ctx 离开作用域：子上下文销毁，宿主不受影响
 ```
 
-子上下文共享父进程（`process_run_scope` 透明）和父上下文的编译器（编译期间绑定到子上下文），但拥有独立的存储和 token arena。这与模块导入使用的机制相同。
+子上下文共享父进程（`process_run_scope` 透明）和父上下文的编译器（编译期间绑定到子上下文），但拥有独立的存储。这与模块导入使用的机制相同。
 
 ### 3. 结构体终结器（finalize）
 
@@ -133,13 +129,13 @@ ctx->instance->interpret();
 
 ### 4. `var` 生命周期
 
-`cs::var` 是一个指针大小的句柄（64 位平台上为 8 字节）；拷贝它只会让引用计数 +1，值在最后一个引用释放时被回收。要把值与其原始存储分离，请使用 `cs::copy(var)`（深拷贝）。逃逸出 context 的值在 context 销毁后不保证仍可用。脚本 callable 持有非拥有函数指针，context 销毁后调用是未定义行为；结构体成员数据与类型身份同样如此。
+`cs::var` 是一个指针大小的句柄（64 位平台上为 8 字节）；拷贝它只会让引用计数 +1，值在最后一个引用释放时被回收。要把值与其原始存储分离，请使用 `cs::copy(var)`（深拷贝）。值一旦逃逸出 context，context 销毁后即不可再用。脚本 callable 内部只是指向函数的裸指针，context 销毁后再调用是未定义行为；结构体的成员数据与类型身份同理。
 
 ### 5. Token arena 与重编译
 
 每次 `compile()` 都会生成一个程序，其 token 存放在每个实例独立的 arena 中。再次编译（或调用 `release_statements()`）会丢弃上一个程序及其 arena。
 
-从上一个程序注册到函数存储的脚本函数/lambda 会通过 `function::m_unit` 保活该 arena，因此它在重编译后仍可调用——**前提是其 context 仍存活**（§1）。这是唯一保留下来的保活机制，因为它针对的是 arena，而非 context。
+从上一个程序注册到函数存储的脚本函数/lambda 会通过 `function::m_unit` 保持该 arena 存活，因此它在重编译后仍可调用——**前提是其 context 仍存活**（§1）。这是唯一保留的保持存活机制，它只关乎 arena，与 context 无关。
 
 ### 6. 运行时诊断（`COVSCRIPT_DEBUG`）
 
