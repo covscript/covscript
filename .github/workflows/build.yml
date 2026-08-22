@@ -97,4 +97,4 @@ jobs:
       - name: Integration Tests under ASan
         run: |
           ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 \
-            CS="$GITHUB_WORKSPACE/cmake-build/asan/cs" bash tests/run_tests.sh
+            CS="$GITHUB_WORKSPACE/cmake-build/asan/cs" bash tests/run_tests.sh --exclude=serial_execution

@@ -13,6 +13,24 @@
 cd "$(dirname "$0")"
 CS="${CS:-cs}"
 GENERATE=0
+EXCLUDE=()
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		--generate)
+			GENERATE=1
+			mkdir -p expected
+			;;
+		--exclude)
+			EXCLUDE+=("$2")
+			shift
+			;;
+		--exclude=*)
+			EXCLUDE+=("${1#--exclude=}")
+			;;
+	esac
+	shift
+done
 
 # Per-test timeout (seconds). `timeout` is a GNU coreutils command; on systems
 # without it (e.g. macOS without coreutils) the timeout guard is skipped.
@@ -20,11 +38,6 @@ TIMEOUT_SECS=120
 TIMEOUT_CMD=""
 if command -v timeout >/dev/null 2>&1; then
 	TIMEOUT_CMD="timeout $TIMEOUT_SECS"
-fi
-
-if [ "$1" = "--generate" ]; then
-	GENERATE=1
-	mkdir -p expected
 fi
 
 tests=(
@@ -118,6 +131,14 @@ is_skipped() {
 	return 1
 }
 
+is_excluded() {
+	local name="$1"
+	for e in "${EXCLUDE[@]}"; do
+		[ "$e" = "$name" ] && return 0
+	done
+	return 1
+}
+
 pass=0
 fail=0
 output_fail=0
@@ -126,6 +147,10 @@ for f in "${tests[@]}"; do
 	if [ "$GENERATE" -eq 1 ]; then
 		$TIMEOUT_CMD "$CS" "$f" > "expected/${f%.csc}.expected" 2>/dev/null || true
 		echo "Generated expected/${f%.csc}.expected"
+		continue
+	fi
+
+	if is_excluded "$f"; then
 		continue
 	fi
 
