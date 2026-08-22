@@ -253,7 +253,7 @@ namespace cs
 				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 		}
-		return var::make<structure>(this->mTypeId, this->mName, scope.get());
+		return var::make<structure>(this->mTypeId, this->mName, scope.get(), this->mContext);
 	}
 
 	void statement_expression::run_impl()

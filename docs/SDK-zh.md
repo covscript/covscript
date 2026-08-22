@@ -201,11 +201,13 @@ ctx->instance->interpret();
 - **`function::get_context()` 返回裸指针**。原返回
   `shared_ptr<context_type>`，现返回 `context_type*`。
 - **`process_context::teardown_ctx()` 已移除**。
-- **`structure::m_process` 改为 `std::weak_ptr<process_context>`**。原为
-  `shared_ptr<process_context>`；weak 引用仅作存活探测（不钉住 process）。
-  `run_finalize` 在 process 已死时跳过并通过 `debug_guard` 报告。
+- **`structure::m_process` 已移除；structure 现持有非拥有的裸指针
+  `context_type *m_ctx`**——与 `function::mContext` 相同的 context 存活前提。
+  脚本 finalize 通过定义 context 的 instance 执行（context 自身析构函数体
+  期间仍安全）；context 销毁后析构逃逸 structure 属于未定义行为，与其他
+  逃逸对象一致。原生 finalize 不需要 context，始终执行。
 - **命名函数改为编译时注册**。`statement_function::mFunc` 从
-  `unique_ptr<function>` 改为 `function*`（由 `function_store` 持有）。
+  `std::shared_ptr<function>` 改为 `function*`（由 `function_store` 持有）。
 
 ### 新增 API
 

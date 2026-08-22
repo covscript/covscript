@@ -147,3 +147,26 @@ inline bool is_id(const cs::token_base *t, const std::string &name)
 		return false;
 	return static_cast<const cs::token_id *>(t)->get_id().get_id() == name;
 }
+
+// Run a script on an existing context expected to throw; returns the thrown
+// error message. Fails the test if the script completes without throwing.
+inline std::string run_script_on_expect_throw(const cs::context_t &ctx, const std::string &src)
+{
+	try
+	{
+		run_script_on(ctx, src);
+	}
+	catch (const cs::exception &e)
+	{
+		return e.what();
+	}
+	catch (const cs::compile_error &e)
+	{
+		return e.what();
+	}
+	catch (const std::exception &e)
+	{
+		return e.what();
+	}
+	throw cs_test::test_failure("expected the script to throw");
+}

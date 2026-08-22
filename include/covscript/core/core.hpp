@@ -974,6 +974,16 @@ namespace cs
 			std::swap(m_slot, domain.m_slot);
 		}
 
+		domain_type &operator=(domain_type &&domain) noexcept
+		{
+			if (this != &domain)
+			{
+				std::swap(m_reflect, domain.m_reflect);
+				std::swap(m_slot, domain.m_slot);
+			}
+			return *this;
+		}
+
 		~domain_type()
 		{
 			m_ref->domain = nullptr;
@@ -1331,8 +1341,6 @@ namespace cs
 
 	class structure final
 	{
-		// Pins its owning process so the type node and members outlive the
-		// context; only calling a method (function::mContext back-ref) needs it.
 		bool m_shadow = false;
 		// Set once finalize has run, so an explicit pre-clear finalization (the
 		// global domain runs finalizers before releasing its symbol table) does
@@ -1341,17 +1349,17 @@ namespace cs
 		std::string m_name;
 		domain_t m_data;
 		type_id m_id;
-		// Owning process (non-owning; liveness probe only — does not pin it).
-		std::weak_ptr<process_context> m_process;
+		// Same context-alive precondition as function::mContext.
+		context_type *m_ctx = nullptr;
 
 	   public:
 		structure() = delete;
 
-		structure(const type_id &id, std::string name, const domain_type &data)
+		structure(const type_id &id, std::string name, const domain_type &data, context_type *c = nullptr)
 		    : m_id(id),
 		      m_name(std::move(name)),
 		      m_data(std::make_shared<domain_type>(data)),
-		      m_process(current_process ? current_process->weak_from_this() : std::weak_ptr<process_context>())
+		      m_ctx(c)
 		{
 			if (m_data->exist("initialize"))
 				invoke(m_data->get_var("initialize"), var::make<structure>(this));
@@ -1364,12 +1372,12 @@ namespace cs
 			std::swap(m_name, s.m_name);
 			std::swap(m_data, s.m_data);
 			std::swap(m_id, s.m_id);
-			std::swap(m_process, s.m_process);
+			std::swap(m_ctx, s.m_ctx);
 			std::swap(m_finalized, s.m_finalized);
 		}
 
 		structure(const structure &s)
-		    : m_id(s.m_id), m_name(s.m_name), m_data(std::make_shared<domain_type>()), m_process(s.m_process)
+		    : m_id(s.m_id), m_name(s.m_name), m_data(std::make_shared<domain_type>()), m_ctx(s.m_ctx)
 		{
 			if (s.m_data->exist("parent"))
 			{
@@ -1396,7 +1404,7 @@ namespace cs
 		}
 
 		explicit structure(const structure *s)
-		    : m_shadow(true), m_id(s->m_id), m_name(s->m_name), m_data(s->m_data), m_process(s->m_process) {}
+		    : m_shadow(true), m_id(s->m_id), m_name(s->m_name), m_data(s->m_data), m_ctx(s->m_ctx) {}
 
 		// Runs the structure's `finalize` method (if any) exactly once, while
 		// the runtime is still usable. Failures never propagate (finalize runs
@@ -1422,18 +1430,28 @@ namespace cs
 				};
 				try
 				{
-					// The process must be alive to run script finalizers (they
-					// need ctx->instance). An escaped structure destroyed after
-					// its process died cannot finalize; report and skip instead
-					// of dereferencing a dangling pointer.
-					std::shared_ptr<process_context> process = m_process.lock();
-					if (!process)
+					const var &finalizer = m_data->get_var("finalize");
+					const auto is_script_callable = [](const var &fn)
 					{
-						report("the process is no longer alive");
-						return;
+						return fn.is_type_of<callable>() &&
+						       fn.const_val<callable>().get_raw_data().target_type() == typeid(function_ptr);
+					};
+					const bool script =
+					    is_script_callable(finalizer) ||
+					    (finalizer.is_type_of<object_method>() &&
+					     is_script_callable(finalizer.const_val<object_method>().callable));
+					if (script)
+					{
+						if (m_ctx == nullptr)
+						{
+							report("script finalizer on a structure with no defining context");
+							return;
+						}
+						process_run_scope scope(m_ctx->process.get());
+						invoke(finalizer, var::make<structure>(this));
 					}
-					process_run_scope scope(process.get());
-					invoke(m_data->get_var("finalize"), var::make<structure>(this));
+					else
+						invoke(finalizer, var::make<structure>(this));
 				}
 				catch (const exception &e)
 				{
@@ -1471,7 +1489,7 @@ namespace cs
 			std::swap(m_name, s.m_name);
 			std::swap(m_data, s.m_data);
 			std::swap(m_id, s.m_id);
-			std::swap(m_process, s.m_process);
+			std::swap(m_ctx, s.m_ctx);
 			std::swap(m_finalized, s.m_finalized);
 			return *this;
 		}

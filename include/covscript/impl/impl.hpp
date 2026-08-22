@@ -25,6 +25,7 @@
  * Website: http://covscript.org.cn
  */
 #include <covscript/impl/runtime.hpp>
+#include <optional>
 
 namespace cs
 {
@@ -177,6 +178,10 @@ namespace cs
 		// otherwise the outer statement resumes evaluating freed tokens.
 		std::vector<std::shared_ptr<compile_unit>> m_units;
 		std::vector<std::shared_ptr<compile_unit>> m_saved_units;
+		// Compile-time storage snapshot; restored on failure, discarded on success.
+		std::optional<domain_manager::domain_snapshot> m_snap;
+		// True after interpret() commits; guards snapshot from runtime failure restore (B1).
+		bool m_committed = false;
 
 		// Drop the current statement's arena and restore the enclosing one (if
 		// any) as the context's current unit (lambdas live in the runtime's

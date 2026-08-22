@@ -461,6 +461,39 @@ namespace cs
 			for (auto &it : domain)
 				add_var(it.first.data(), domain.get_var_by_id(it.second), is_override);
 		}
+
+		// Compile-time snapshot for storage rollback. Zero runtime cost.
+		struct domain_snapshot
+		{
+			std::vector<domain_type> data;       // bottom → top
+			std::vector<set_t<std::string>> set; // bottom → top
+		};
+
+		domain_snapshot create_snapshot() const
+		{
+			domain_snapshot s;
+			s.data.reserve(m_data.size());
+			for (auto &d : m_data)
+				s.data.push_back(d); // top → bottom (reverse iterator)
+			std::reverse(s.data.begin(), s.data.end());
+			s.set.reserve(m_set.size());
+			for (auto &st : m_set)
+				s.set.push_back(st);
+			std::reverse(s.set.begin(), s.set.end());
+			return s;
+		}
+
+		void restore_snapshot(const domain_snapshot &snap)
+		{
+			while (!m_data.empty())
+				m_data.pop_no_return();
+			while (!m_set.empty())
+				m_set.pop_no_return();
+			for (auto &d : snap.data)
+				m_data.push(d);
+			for (auto &st : snap.set)
+				m_set.push(st);
+		}
 	};
 
 	class runtime_type
