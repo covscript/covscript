@@ -17,6 +17,4 @@ cs::istream
 cs::ostream
 cs::array::iterator
 cs::list::iterator
-cs::iostream::seekdir
-cs::iostream::openmode
 cs::expression
