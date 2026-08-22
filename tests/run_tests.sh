@@ -15,6 +15,11 @@ CS="${CS:-cs}"
 GENERATE=0
 EXCLUDE=()
 
+# Under ASan, skip CPU-bound performance benchmarks that exceed the timeout.
+if [ -n "${ASAN_OPTIONS:-}" ]; then
+	EXCLUDE+=(serial_execution.csc)
+fi
+
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--generate)
