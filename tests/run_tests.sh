@@ -129,8 +129,10 @@ for f in "${tests[@]}"; do
 		continue
 	fi
 
-	actual=$($TIMEOUT_CMD "$CS" "$f" 2>/dev/null | tr -d '\r')
-	rc=${PIPESTATUS[0]}
+	# Capture the pipeline's first command (timeout/cs) exit status: PIPESTATUS
+	# is not visible after command substitution, so propagate it inside it.
+	actual=$($TIMEOUT_CMD "$CS" "$f" 2>/dev/null | tr -d '\r'; exit ${PIPESTATUS[0]})
+	rc=$?
 	expected_file="expected/${f%.csc}.expected"
 
 	if [ $rc -eq 124 ]; then

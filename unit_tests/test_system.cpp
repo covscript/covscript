@@ -53,8 +53,13 @@ TEST(file_exist_true)
 		const char *p;
 		~Guard() { std::remove(p); }
 	} guard{path};
+	// Remove a stale file first so a leftover from a previous crashed run
+	// cannot make this test pass without creating the file (and so we never
+	// delete a pre-existing user file).
+	std::remove(path);
 	FILE *f = std::fopen(path, "w");
-	if (f) std::fclose(f);
+	ASSERT_TRUE(f != nullptr);
+	std::fclose(f);
 	EXPECT_EQ(run_script(R"(
 		system.out.println(system.file.exist("cs_unit_test_exist.txt"))
 	)"),

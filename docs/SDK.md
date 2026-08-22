@@ -263,8 +263,10 @@ All extensions must be recompiled.
 - **`function::get_context()` returns a raw pointer**. Previously returned
   `shared_ptr<context_type>`, now returns `context_type*`.
 - **`process_context::teardown_ctx()` removed**.
-- **`structure::m_process` changed to a raw pointer**. Previously
-  `shared_ptr<process_context>`, now `process_context*`.
+- **`structure::m_process` changed to `std::weak_ptr<process_context>`**.
+  Previously `shared_ptr<process_context>`; the weak ref only probes liveness
+  (it does not pin the process). `run_finalize` skips and reports through
+  `debug_guard` when the process is already dead.
 - **Named functions registered at compile time**. `statement_function::mFunc`
   changed from `unique_ptr<function>` to `function*` (owned by the
   `function_store`).
