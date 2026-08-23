@@ -133,7 +133,8 @@ Consequences:
   proxy allocator pool is **per-thread** (`thread_local`) and fills on demand,
   so separate contexts never share pool slots; values freed on a different
   thread fall back to the direct allocator path (all `std::allocator`
-  instances are interchangeable).
+  instances are interchangeable). Sharing state between contexts is dangerous
+  because `var`'s reference count is non-atomic.
 
 An extension DLL that needs its own compilation environment (independent
 storage, namespace, or compiled program) should create a **subcontext**
@@ -253,9 +254,6 @@ All extensions must be recompiled.
 - **`function_ptr` no longer holds an `owner`**. It was
   `{function*, shared_ptr<function>}`, now just `{function*}`. Code that
   constructed `function_ptr(f, owner)` or accessed `.owner` must be updated.
-- **`contains_callable` family removed**. `callable_contains_function`,
-  `callable_is_member_function`, and similar helpers that probed whether a
-  callable was backed by a script function are deleted.
 - **Escape behavior: UB instead of throwing**. Using an escaped script object
   (function, structure method, type constructor, fiber, etc.) after its context
   is destroyed no longer throws `runtime_error` — it is undefined behavior.
@@ -266,9 +264,11 @@ All extensions must be recompiled.
 - **`structure::m_process` removed; `structure` now holds a non-owning raw
   `context_type *m_ctx`** — the same context-alive precondition as
   `function::mContext`. Script finalizers run through the defining context's
-  instance (still safe during the context's own destructor body); destroying
-  an escaped structure after its context is gone is undefined behavior, like
-  any other escaped object. Native finalizers need no context and always run.
+  process (still safe during the context's own destructor body); if the
+  defining context was created without a process (`m_ctx == nullptr`), the
+  script finalizer is skipped with a diagnostic. Destroying an escaped
+  structure after its context is gone is undefined behavior, like any other
+  escaped object. Native finalizers need no context and always run.
 - **Named functions registered at compile time**. `statement_function::mFunc`
   changed from `std::shared_ptr<function>` to `function*` (owned by the
   `function_store`).

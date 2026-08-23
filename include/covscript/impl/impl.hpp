@@ -131,8 +131,8 @@ namespace cs
 
 		void check_define_var(tree_type<token_base *>::iterator, bool = false, bool = false);
 
-		// A constant's RHS is usually folded to a token_value; a lambda or a
-		// callable-containing value is left un-folded and evaluated at runtime.
+		// A constant's RHS is folded to a token_value; callable-containing
+		// values are also folded (tokens hold non-owning function references).
 		var fold_constant(tree_type<token_base *>::iterator, bool constant);
 
 		void parse_define_var(tree_type<token_base *>::iterator, bool = false, bool = false);

@@ -192,9 +192,6 @@ ctx->instance->interpret();
 - **`function_ptr` 不再持有 `owner`**。`function_ptr` 从
   `{function*, shared_ptr<function>}` 精简为裸指针 `{function*}`。
   直接构造 `function_ptr(f, owner)` 或访问 `.owner` 的代码必须改掉。
-- **`contains_callable` 全家移除**。`callable_contains_function`、
-  `callable_is_member_function` 等检测 callable 是否由脚本函数支撑的
-  函数已删除。
 - **逃逸行为变更：UB 替代抛异常**。逃逸的脚本对象（函数、结构体方法、
   类型构造器、fiber 等）在 context 销毁后使用，不再抛
   `runtime_error`，而是未定义行为。`catch` 这类异常的代码不再生效。
@@ -203,9 +200,10 @@ ctx->instance->interpret();
 - **`process_context::teardown_ctx()` 已移除**。
 - **`structure::m_process` 已移除；structure 现持有非拥有的裸指针
   `context_type *m_ctx`**——与 `function::mContext` 相同的 context 存活前提。
-  脚本 finalize 通过定义 context 的 instance 执行（context 自身析构函数体
-  期间仍安全）；context 销毁后析构逃逸 structure 属于未定义行为，与其他
-  逃逸对象一致。原生 finalize 不需要 context，始终执行。
+  脚本 finalize 通过定义 context 的 process 执行（context 自身析构函数体
+  期间仍安全）；若定义 context 未持有 process（`m_ctx == nullptr`），
+  脚本终结器将跳过并输出诊断信息。context 销毁后析构逃逸 structure 属于
+  未定义行为，与其他逃逸对象一致。原生 finalize 不需要 context，始终执行。
 - **命名函数改为编译时注册**。`statement_function::mFunc` 从
   `std::shared_ptr<function>` 改为 `function*`（由 `function_store` 持有）。
 

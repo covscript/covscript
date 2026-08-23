@@ -66,6 +66,7 @@ jobs:
         with:
           name: unit-test-report-${{ matrix.os }}
           path: unit_test_report.xml
+          if-no-files-found: ignore
 
   sanitizers:
     runs-on: ubuntu-24.04
@@ -97,4 +98,4 @@ jobs:
       - name: Integration Tests under ASan
         run: |
           ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 \
-            CS="$GITHUB_WORKSPACE/cmake-build/asan/cs" bash tests/run_tests.sh --exclude=serial_execution
+            CS="$GITHUB_WORKSPACE/cmake-build/asan/cs" bash tests/run_tests.sh

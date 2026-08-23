@@ -434,11 +434,10 @@ TEST(truncate_int_min_no_ub)
 }
 
 // =============================================================================
-// Constant folding: `case a[0]` where a is a constant array must fold. The
-// optimizer refuses to fold a value holding a script function into a token_value
-// (it would recreate an arena<->function cycle), so a module namespace that
-// defines a function stays an id at 'using' time; method_involve must still
-// involve it from the storage so its constants reach compile-time folding.
+// Constant folding: `case a[0]` where a is a constant array must fold.
+// Callable-containing values fold into token_value (tokens hold non-owning
+// function references, so no arena<->function ownership cycle). Bare local
+// function names are not resolvable at compile time and are still rejected.
 // =============================================================================
 TEST(case_label_folds_local_constant_array_index)
 {
@@ -526,8 +525,8 @@ TEST(case_label_rejects_runtime_array_index)
 
 TEST(constant_containing_callable_rejected)
 {
-	// Constants holding script functions can't live in the token arena
-	// (arena<->function cycle); the declaration itself is rejected.
+	// Bare local function names cannot be resolved at compile time, so the
+	// constant declaration is rejected as non-constant.
 	EXPECT_CONTAINS(run_script_expect_throw(
 	                    "function f()\n"
 	                    "end\n"
@@ -537,8 +536,8 @@ TEST(constant_containing_callable_rejected)
 
 TEST(case_label_containing_callable_rejected)
 {
-	// A case label folding to a value containing a script function is rejected,
-	// independent of any constant declaration.
+	// A case label containing a bare local function name cannot be resolved
+	// at compile time, so folding fails regardless of any constant declaration.
 	EXPECT_CONTAINS(run_script_expect_throw(
 	                    "using system\n"
 	                    "function f()\n"
