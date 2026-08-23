@@ -24,6 +24,7 @@
  * Github:  https://github.com/mikecovlee
  * Website: http://covscript.org.cn
  */
+#include <optional>
 #include <covscript/impl/compiler.hpp>
 
 namespace cs
@@ -34,14 +35,33 @@ namespace cs
 	// cycles and keeping a self-referencing lambda's borrowed `self` alive.
 	class function_store final
 	{
-		std::vector<var> m_lambdas;
+		struct entry
+		{
+			std::unique_ptr<function> func;
+			var callable;
+		};
+
+		std::vector<entry> m_entries;
 		std::vector<std::vector<std::size_t>> m_transactions;
 
 	   public:
-		std::size_t add(const var &val)
+		// Register a function (named or lambda).  Returns a stable function pointer
+		// that outlives the entry (heap-allocated via unique_ptr).
+		function *add_function(std::unique_ptr<function> func)
 		{
-			m_lambdas.push_back(val);
-			std::size_t index = m_lambdas.size() - 1;
+			function *raw = func.get();
+			m_entries.push_back(entry{std::move(func), var()});
+			if (!m_transactions.empty())
+				m_transactions.back().push_back(m_entries.size() - 1);
+			return raw;
+		}
+
+		// Register a lambda: owns the function and stores the callable for
+		// token_lambda retrieval.  Returns the lambda index.
+		std::size_t add_lambda(std::unique_ptr<function> func, var callable)
+		{
+			m_entries.push_back(entry{std::move(func), std::move(callable)});
+			std::size_t index = m_entries.size() - 1;
 			if (!m_transactions.empty())
 				m_transactions.back().push_back(index);
 			return index;
@@ -49,13 +69,7 @@ namespace cs
 
 		std::size_t size() const noexcept
 		{
-			return m_lambdas.size();
-		}
-
-		// Roll back lambdas registered by a failed compilation unit.
-		void resize(std::size_t count)
-		{
-			m_lambdas.resize(count);
+			return m_entries.size();
 		}
 
 		void begin_transaction()
@@ -74,25 +88,28 @@ namespace cs
 			if (m_transactions.empty())
 				return;
 			for (std::size_t index : m_transactions.back())
-				if (index < m_lambdas.size())
-					m_lambdas[index] = var();
+				if (index < m_entries.size())
+				{
+					m_entries[index].func.reset();
+					m_entries[index].callable = var();
+				}
 			m_transactions.pop_back();
 			// Preserve stable indices for committed nested entries. Only empty
 			// slots at the physical end can be reclaimed safely.
-			while (!m_lambdas.empty() && !m_lambdas.back().usable())
-				m_lambdas.pop_back();
+			while (!m_entries.empty() && !m_entries.back().func && !m_entries.back().callable.usable())
+				m_entries.pop_back();
 		}
 
 		std::size_t active_size() const noexcept
 		{
-			return static_cast<std::size_t>(std::count_if(m_lambdas.begin(), m_lambdas.end(),
-			                                              [](const var &val)
-			{ return val.usable(); }));
+			return static_cast<std::size_t>(std::count_if(m_entries.begin(), m_entries.end(),
+			                                              [](const entry &e)
+			{ return e.func != nullptr; }));
 		}
 
 		var get(std::size_t index) const
 		{
-			return m_lambdas.at(index);
+			return m_entries.at(index).callable;
 		}
 	};
 
@@ -444,6 +461,97 @@ namespace cs
 		{
 			for (auto &it : domain)
 				add_var(it.first.data(), domain.get_var_by_id(it.second), is_override);
+		}
+
+		// Compile-time snapshot for storage rollback. Zero runtime cost.
+		struct domain_snapshot
+		{
+			std::vector<domain_type> data;       // bottom → top
+			std::vector<set_t<std::string>> set; // bottom → top
+		};
+
+		domain_snapshot create_snapshot() const
+		{
+			domain_snapshot s;
+			s.data.reserve(m_data.size());
+			for (auto &d : m_data)
+				s.data.push_back(d); // top → bottom (reverse iterator)
+			std::reverse(s.data.begin(), s.data.end());
+			s.set.reserve(m_set.size());
+			for (auto &st : m_set)
+				s.set.push_back(st);
+			std::reverse(s.set.begin(), s.set.end());
+			return s;
+		}
+
+		void restore_snapshot(const domain_snapshot &snap)
+		{
+			while (!m_data.empty())
+				m_data.pop_no_return();
+			while (!m_set.empty())
+				m_set.pop_no_return();
+			for (auto &d : snap.data)
+				m_data.push(d);
+			for (auto &st : snap.set)
+				m_set.push(st);
+		}
+	};
+
+	// RAII storage snapshot; rollback on destruction unless committed or discarded.
+	class storage_transaction final
+	{
+		domain_manager *m_storage = nullptr;
+		std::optional<domain_manager::domain_snapshot> m_snap;
+		bool m_committed = false;
+
+	   public:
+		explicit storage_transaction(domain_manager &s)
+		    : m_storage(&s), m_snap(s.create_snapshot()) {}
+
+		storage_transaction(storage_transaction &&o) noexcept
+		    : m_storage(o.m_storage), m_snap(std::move(o.m_snap)), m_committed(o.m_committed)
+		{
+			o.m_storage = nullptr;
+		}
+
+		storage_transaction &operator=(storage_transaction &&o) noexcept
+		{
+			if (this != &o)
+			{
+				m_storage = o.m_storage;
+				m_snap = std::move(o.m_snap);
+				m_committed = o.m_committed;
+				o.m_storage = nullptr;
+			}
+			return *this;
+		}
+
+		storage_transaction(const storage_transaction &) = delete;
+		storage_transaction &operator=(const storage_transaction &) = delete;
+
+		void commit() noexcept
+		{
+			m_committed = true;
+			m_snap.reset();
+		}
+
+		void rollback()
+		{
+			if (m_storage != nullptr && m_snap.has_value())
+			{
+				m_storage->restore_snapshot(*m_snap);
+				m_snap.reset();
+			}
+		}
+
+		void discard() noexcept
+		{
+			m_snap.reset();
+		}
+
+		~storage_transaction()
+		{
+			rollback();
 		}
 	};
 

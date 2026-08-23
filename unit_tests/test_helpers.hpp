@@ -1,21 +1,32 @@
 #pragma once
 #include <covscript/covscript.hpp>
-#include "test_harness.hpp"
+#include "covariant_test.hpp"
 
 // =============================================================================
 // Helpers: create a shared compiler context for all tests.
 // Uses static bootstrap to prevent premature garbage collection.
+//
+// IMPORTANT: This returns a SHARED context backed by a static bootstrap.
+//   - Safe for read-only compiler operations (build_expr, build_ast, etc.)
+//   - Do NOT define variables or modify global state; they persist across tests.
+//   - For tests that need isolation, use cs::create_context() instead.
 // =============================================================================
-inline cs::context_t make_context()
+inline cs::context_t shared_compiler_context()
 {
 	static cs::bootstrap env;
 	return env.context;
 }
 
+// Backward-compatible alias.
+inline cs::context_t make_context()
+{
+	return shared_compiler_context();
+}
+
 // =============================================================================
 // Helper: build an expression tree from source string.
 // Uses context->compiler->build_expr() which runs the full pipeline:
-//   lexer → parser → gen_tree → optimize_expression (trim_expr + opt_expr)
+//   lexer -> parser -> gen_tree -> optimize_expression (trim_expr + opt_expr)
 // =============================================================================
 inline cs::tree_type<cs::token_base *> build_expr_tree(const std::string &src)
 {
@@ -135,4 +146,27 @@ inline bool is_id(const cs::token_base *t, const std::string &name)
 	if (!t || t->get_type() != cs::token_types::id)
 		return false;
 	return static_cast<const cs::token_id *>(t)->get_id().get_id() == name;
+}
+
+// Run a script on an existing context expected to throw; returns the thrown
+// error message. Fails the test if the script completes without throwing.
+inline std::string run_script_on_expect_throw(const cs::context_t &ctx, const std::string &src)
+{
+	try
+	{
+		run_script_on(ctx, src);
+	}
+	catch (const cs::exception &e)
+	{
+		return e.what();
+	}
+	catch (const cs::compile_error &e)
+	{
+		return e.what();
+	}
+	catch (const std::exception &e)
+	{
+		return e.what();
+	}
+	throw cs_test::test_failure("expected the script to throw");
 }

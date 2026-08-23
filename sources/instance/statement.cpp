@@ -30,18 +30,6 @@ namespace cs
 {
 	namespace
 	{
-		// Resolve a defining context, borrowing the dying one during teardown so
-		// finalizers can run script code. Throws with the given message if dead.
-		std::shared_ptr<context_type> resolve_ctx(const std::weak_ptr<context_type> &weak, const char *error_msg)
-		{
-			auto ctx = weak.lock();
-			if (!ctx && current_process != nullptr && current_process->teardown_ctx != nullptr)
-				ctx = std::shared_ptr<context_type>(current_process->teardown_ctx, [](context_type *) {});
-			if (!ctx)
-				throw runtime_error(error_msg);
-			return ctx;
-		}
-
 		// Poll events, requiring an active process: native callers must hold a
 		// process_run_scope when invoking script functions directly.
 		void poll_current_process()
@@ -91,34 +79,34 @@ namespace cs
 
 	var function::call_rr(const function *_this, vector &args)
 	{
-		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
+		context_type *ctx = _this->mContext;
 		poll_current_process();
 		if (args.size() != _this->mArgs.size())
 			throw runtime_error(
 			    "Wrong number of arguments: expected " + std::to_string(_this->mArgs.size()) + ", got " +
 			    std::to_string(args.size()));
-		scope_guard scope(ctx.get());
+		scope_guard scope(ctx);
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
 		if (_this->mMatch)
-			cs_debugger_func_callback(_this->mDecl, _this->mFile, _this->mLine, ctx.get());
+			cs_debugger_func_callback(_this->mDecl, _this->mFile, _this->mLine, ctx);
 #else
 		fcall_guard fcall;
 #endif
 		for (std::size_t i = 0; i < args.size(); ++i)
 			ctx->instance->storage.add_var_no_return(_this->mArgs[i].data(), args[i]);
-		return run_body(_this->mBody, ctx.get(), scope);
+		return run_body(_this->mBody, ctx, scope);
 	}
 
 	var function::call_vv(const function *_this, vector &args)
 	{
-		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
+		context_type *ctx = _this->mContext;
 		poll_current_process();
-		scope_guard scope(ctx.get());
+		scope_guard scope(ctx);
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
 		if (_this->mMatch)
-			cs_debugger_func_callback(_this->mDecl, _this->mFile, _this->mLine, ctx.get());
+			cs_debugger_func_callback(_this->mDecl, _this->mFile, _this->mLine, ctx);
 #else
 		fcall_guard fcall;
 #endif
@@ -142,22 +130,22 @@ namespace cs
 				arr.push_back(args[i]);
 			ctx->instance->storage.add_var_no_return(_this->mArgs.back().data(), arg_list);
 		}
-		return run_body(_this->mBody, ctx.get(), scope);
+		return run_body(_this->mBody, ctx, scope);
 	}
 
 	var function::call_rl(const function *_this, vector &args)
 	{
-		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
+		context_type *ctx = _this->mContext;
 		poll_current_process();
 		if (args.size() != _this->mArgs.size())
 			throw runtime_error(
 			    "Wrong number of arguments: expected " + std::to_string(_this->mArgs.size()) + ", got " +
 			    std::to_string(args.size()));
-		scope_guard scope(ctx.get());
+		scope_guard scope(ctx);
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
 		if (_this->mMatch)
-			cs_debugger_func_callback(_this->mDecl, _this->mFile, _this->mLine, ctx.get());
+			cs_debugger_func_callback(_this->mDecl, _this->mFile, _this->mLine, ctx);
 #endif
 		for (std::size_t i = 0; i < args.size(); ++i)
 			ctx->instance->storage.add_var_no_return(_this->mArgs[i].data(), args[i]);
@@ -178,14 +166,14 @@ namespace cs
 
 	var function::call_el(const function *_this, vector &args)
 	{
-		auto ctx = resolve_ctx(_this->mContext, "the function's context has been destroyed");
+		context_type *ctx = _this->mContext;
 		poll_current_process();
 		if (!args.empty())
 			throw runtime_error("Wrong number of arguments: expected none, got " + std::to_string(args.size()));
 #ifdef CS_DEBUGGER
 		fcall_guard fcall(_this->mDecl);
 		if (_this->mMatch)
-			cs_debugger_func_callback(_this->mDecl, _this->mFile, _this->mLine, ctx.get());
+			cs_debugger_func_callback(_this->mDecl, _this->mFile, _this->mLine, ctx);
 #endif
 		try
 		{
@@ -206,9 +194,7 @@ namespace cs
 	{
 		if (mParent.root().usable())
 		{
-			auto ctx = mContext.lock();
-			if (!ctx)
-				throw runtime_error("the struct's context has been destroyed");
+			context_type *ctx = mContext;
 			var builder = ctx->instance->parse_expr(mParent.root());
 			if (builder.is_type_of<type_t>())
 			{
@@ -229,8 +215,8 @@ namespace cs
 
 	var struct_builder::operator()()
 	{
-		auto ctx = resolve_ctx(mContext, "the struct's context has been destroyed");
-		scope_guard scope(ctx.get());
+		context_type *ctx = mContext;
+		scope_guard scope(ctx);
 		if (mParent.root().usable())
 		{
 			var builder = ctx->instance->parse_expr(mParent.root());
@@ -267,7 +253,7 @@ namespace cs
 				throw exception(ptr->get_line_num(), ptr->get_file_path(), ptr->get_raw_code(), exception_message(e));
 			}
 		}
-		return var::make<structure>(this->mTypeId, this->mName, scope.get());
+		return var::make<structure>(this->mTypeId, this->mName, scope.get(), this->mContext);
 	}
 
 	void statement_expression::run_impl()
@@ -959,11 +945,11 @@ namespace cs
 		CS_DEBUGGER_STEP(this);
 		if (this->mIsMemFn)
 			context->instance->storage.add_var_no_return(this->mName.data(),
-			                                             var::make_protect<callable>(function_ptr{this->mFunc.get(), this->mFunc}, callable::types::member_fn),
+			                                             var::make_protect<callable>(function_ptr{this->mFunc}, callable::types::member_fn),
 			                                             mOverride);
 		else
 		{
-			var func = var::make_protect<callable>(function_ptr{this->mFunc.get(), this->mFunc});
+			var func = var::make_protect<callable>(function_ptr{this->mFunc});
 #ifdef CS_DEBUGGER
 			if (context->instance->storage.is_initial())
 				cs_debugger_func_breakpoint(this->mName, func);

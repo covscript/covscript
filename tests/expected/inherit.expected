@@ -1,0 +1,17 @@
+Init base1
+Init child1
+called from child: base1
+child1
+Copy base1
+Copy child1
+called from child: base2
+child2
+Copy base2
+base3
+Compare child 1 to 2
+Compare base 2 to 3
+Destroy base3
+Destroy child2
+Destroy base2
+Destroy child1
+Destroy base1

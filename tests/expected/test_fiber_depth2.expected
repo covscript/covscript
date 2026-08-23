@@ -1,0 +1,9 @@
+test_fd_c loaded
+test_fd_b loaded
+test_fd_a loaded
+from_a
+from_b
+from_c, local=c-local
+main resumed
+from_c resumed
+done

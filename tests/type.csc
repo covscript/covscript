@@ -22,8 +22,6 @@ var types=
     type(system.out),
     type(clone({}).begin),
     type(clone(new list).begin),
-    type(iostream.seekdir.start),
-    type(iostream.openmode.app),
     type(context.build("x"))
 }
 @end

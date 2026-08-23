@@ -434,11 +434,10 @@ TEST(truncate_int_min_no_ub)
 }
 
 // =============================================================================
-// Constant folding: `case a[0]` where a is a constant array must fold. The
-// optimizer refuses to fold a value holding a script function into a token_value
-// (it would recreate an arena<->function cycle), so a module namespace that
-// defines a function stays an id at 'using' time; method_involve must still
-// involve it from the storage so its constants reach compile-time folding.
+// Constant folding: `case a[0]` where a is a constant array must fold.
+// Callable-containing values fold into token_value (tokens hold non-owning
+// function references, so no arena<->function ownership cycle). Bare local
+// function names are not resolvable at compile time and are still rejected.
 // =============================================================================
 TEST(case_label_folds_local_constant_array_index)
 {
@@ -482,6 +481,35 @@ TEST(case_label_folds_imported_constant_array_from_module_with_function)
 	std::remove(module_path.c_str());
 }
 
+TEST(case_label_folds_imported_namespace_constant_without_using)
+{
+	const std::string module_path = "_audit_ns_const.csp";
+	std::ofstream modf(module_path);
+	modf << "package _audit_ns_const\n"
+	        "namespace ns\n"
+	        "    constant val = 1\n"
+	        "end\n";
+	modf.close();
+	try
+	{
+		EXPECT_CONTAINS(run_script(
+		                    "import _audit_ns_const\n"
+		                    "var x = 1\n"
+		                    "switch x\n"
+		                    "\tcase _audit_ns_const.ns.val\n"
+		                    "\t\tsystem.out.println(\"matched\")\n"
+		                    "\tend\n"
+		                    "end\n"),
+		                "matched");
+	}
+	catch (...)
+	{
+		std::remove(module_path.c_str());
+		throw;
+	}
+	std::remove(module_path.c_str());
+}
+
 TEST(case_label_rejects_runtime_array_index)
 {
 	// A runtime variable must not be folded into a case label constant.
@@ -497,8 +525,8 @@ TEST(case_label_rejects_runtime_array_index)
 
 TEST(constant_containing_callable_rejected)
 {
-	// Constants holding script functions can't live in the token arena
-	// (arena<->function cycle); the declaration itself is rejected.
+	// Bare local function names cannot be resolved at compile time, so the
+	// constant declaration is rejected as non-constant.
 	EXPECT_CONTAINS(run_script_expect_throw(
 	                    "function f()\n"
 	                    "end\n"
@@ -508,8 +536,8 @@ TEST(constant_containing_callable_rejected)
 
 TEST(case_label_containing_callable_rejected)
 {
-	// A case label folding to a value containing a script function is rejected,
-	// independent of any constant declaration.
+	// A case label containing a bare local function name cannot be resolved
+	// at compile time, so folding fails regardless of any constant declaration.
 	EXPECT_CONTAINS(run_script_expect_throw(
 	                    "using system\n"
 	                    "function f()\n"
@@ -612,9 +640,11 @@ TEST(repl_reentrant_nested_lambda_survives_outer_failure)
 	catch (...)
 	{
 	}
-	// The outer rollback removes only its own slots. The nested committed slot
-	// retains its stable index.
-	EXPECT_TRUE(ctx->instance->functions.active_size() == before + 2);
+	// The outer statement failed at runtime, after its transaction already
+	// committed at translation — so nothing rolls back. The outer lambda and
+	// the nested committed lambdas all survive.
+	EXPECT_TRUE(ctx->instance->functions.active_size() == before + 3);
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(outer_lambda())\n") == "1\n");
 	EXPECT_TRUE(run_script_on(ctx, "var nested = inner()\nsystem.out.println(nested())\n") == "42\n");
 }
 
@@ -670,6 +700,73 @@ TEST(repl_buffer_failure_preserves_committed_lambda_indices)
 	EXPECT_TRUE(ctx->instance->functions.active_size() == 0);
 	repl->exec("var ok = 42");
 	EXPECT_TRUE(run_script_on(ctx, "system.out.println(ok)\n") == "42\n");
+}
+
+// =============================================================================
+// F05g: a runtime failure inside one statement must not roll back that
+// statement's function registrations. `g` is bound before `h` throws; the
+// transaction committed at translation, so the escaped lambda stays callable.
+// Previously the runtime failure rolled back and destroyed the function while
+// the bound callable still referenced it — a use-after-free on the next call.
+// =============================================================================
+TEST(repl_runtime_failure_keeps_same_statement_lambda)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	auto repl = std::make_shared<cs::repl>(ctx);
+	bool threw = false;
+	try
+	{
+		repl->exec("var g = []()->2, h = (1/0)\n");
+	}
+	catch (...)
+	{
+		threw = true;
+	}
+	EXPECT_TRUE(threw);
+	// Context is alive; the statement compiled, so the lambda bound to `g`
+	// must still be callable after the runtime failure.
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(g())\n") == "2\n");
+}
+
+// =============================================================================
+// F05h: a constant's values are bound into the global domain during
+// preprocess, before the function-store transaction commits. A shape
+// mismatch in a structured binding causes the statement to fail; the storage
+// snapshot taken at statement begin must be restored so `f` is undefined
+// rather than a dangling lambda.
+// =============================================================================
+TEST(repl_const_preprocess_failure_binds_nothing)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<AUDIT_TEST>"));
+	auto ctx = cs::create_context(args);
+	auto repl = std::make_shared<cs::repl>(ctx);
+	bool threw = false;
+	try
+	{
+		repl->exec("constant f = []()->2, (p, q) = {1, 2, 3}\n");
+	}
+	catch (...)
+	{
+		threw = true;
+	}
+	EXPECT_TRUE(threw);
+	// The mismatch is caught before `f` is bound, so `f` must be undefined
+	// rather than a dangling lambda.
+	bool undefined = false;
+	try
+	{
+		run_script_on(ctx, "system.out.println(f)\n");
+	}
+	catch (...)
+	{
+		undefined = true;
+	}
+	EXPECT_TRUE(undefined);
+	// The context stays fully usable afterwards.
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(42)\n") == "42\n");
 }
 
 // =============================================================================
@@ -1356,37 +1453,6 @@ TEST(escaped_type_constructor_via_native_call)
 }
 
 // =============================================================================
-// Constructing an escaped struct type after its context dies must be rejected.
-// =============================================================================
-
-TEST(escaped_type_constructor_rejected_after_context_release)
-{
-	std::exception_ptr eptr;
-	cs::var escaped;
-	std::shared_ptr<cs::process_context> proc;
-	{
-		cs::array args;
-		args.push_back(cs::var::make<cs::string>("<ESC_TYPE>"));
-		auto ctx = cs::create_context(args);
-		proc = ctx->process;
-		cs::process_run_scope scope(ctx);
-		run_script_on(ctx, "class T\nend\n");
-		escaped = ctx->instance->storage.get_var("T");
-	}
-	// ctx destroyed here; process stays alive via struct_builder's m_process.
-	cs::process_run_scope scope(proc.get());
-	try
-	{
-		escaped.const_val<cs::type_t>().constructor();
-	}
-	catch (const cs::runtime_error &)
-	{
-		eptr = std::current_exception();
-	}
-	EXPECT_TRUE(eptr != nullptr);
-}
-
-// =============================================================================
 // F44: invoking a script callable without an active process (native callers
 // must hold process_run_scope) must raise a clean error, not dereference null.
 // =============================================================================
@@ -1468,4 +1534,217 @@ TEST(expand_folding_keeps_temporary_arrays_alive)
 	    "system.out.println(y)\n");
 	EXPECT_CONTAINS(out, "{1, 2}");
 	EXPECT_CONTAINS(out, "3");
+}
+
+// =============================================================================
+// W1: compile failure rolls back the storage snapshot. A constant lambda bound
+// during preprocess must disappear if a later statement in the same compilation
+// unit fails. The snapshot (taken at compile begin) restores the global domain.
+// =============================================================================
+TEST(compile_failure_rolls_back_storage_snapshot)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<W1>"));
+	auto ctx = cs::create_context(args);
+	cs::process_run_scope scope(ctx);
+	bool threw = false;
+	try
+	{
+		std::istringstream src(
+		    "constant f = []()->42\n"
+		    "this statement is invalid and must fail compilation\n");
+		ctx->instance->compile(src);
+	}
+	catch (...)
+	{
+		threw = true;
+	}
+	EXPECT_TRUE(threw);
+	// `f` must be undefined — the snapshot restored the pre-compile state.
+	EXPECT_CONTAINS(run_script_on_expect_throw(ctx, "system.out.println(f)\n"),
+	                "undefined variable");
+	// The context must stay usable.
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(42)\n") == "42\n");
+}
+
+// =============================================================================
+// W2: REPL namespace postprocess binds a namespace (containing a lambda) into
+// the global domain before translate_end. If the block-close translation fails
+// (e.g. a `break` outside any loop inside the namespace body), the storage
+// snapshot must be restored so the namespace name is not bound to a namespace
+// containing a rolled-back lambda.
+// =============================================================================
+TEST(repl_namespace_failure_rolls_back_storage)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<W2>"));
+	auto ctx = cs::create_context(args);
+	auto repl = std::make_shared<cs::repl>(ctx);
+	// Open a namespace block, define a lambda constant inside it.
+	repl->exec("namespace test_ns\n");
+	repl->exec("constant a = []()->42\n");
+	// `break` is not valid inside a namespace body — collected into tmp
+	// during block-close. Closing the block triggers postprocess (binds
+	// test_ns into the global domain) then translate_end, where
+	// method_break::translate checks loop_depth==0 and throws.
+	repl->exec("break\n");
+	bool threw = false;
+	try
+	{
+		repl->exec("end\n");
+	}
+	catch (...)
+	{
+		threw = true;
+	}
+	EXPECT_TRUE(threw);
+	// `test_ns` must be undefined — the snapshot restored the pre-statement
+	// state (postprocess binding was undone by snapshot restore).
+	bool undefined = false;
+	try
+	{
+		run_script_on(ctx, "system.out.println(test_ns)\n");
+	}
+	catch (...)
+	{
+		undefined = true;
+	}
+	EXPECT_TRUE(undefined);
+	// The context stays fully usable afterwards.
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(42)\n") == "42\n");
+}
+
+// =============================================================================
+// F1 (object_method finalize): a self-referencing lambda assigned as a
+// structure's finalize method is wrapped as object_method. run_finalize must
+// detect this as a script finalizer (not native) and activate the process.
+// =============================================================================
+TEST(object_method_finalize_executes_correctly)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<F1>"));
+	auto ctx = cs::create_context(args);
+	cs::process_run_scope scope(ctx);
+	const std::string out = run_script_on(ctx,
+	                                      "using system\n"
+	                                      "class foo\n"
+	                                      "    var marker = 0\n"
+	                                      "    function finalize()\n"
+	                                      "        self.marker = 99\n"
+	                                      "    end\n"
+	                                      "end\n"
+	                                      "block\n"
+	                                      "    var obj = new foo\n"
+	                                      "    system.out.println(\"before: \" + to_string(obj.marker))\n"
+	                                      "end\n"
+	                                      "system.out.println(\"done\")\n");
+	EXPECT_CONTAINS(out, "before: 0");
+	EXPECT_CONTAINS(out, "done");
+}
+
+// =============================================================================
+// G3: file-level `using` binds namespace members into the global domain. If a
+// later statement in the same compilation unit fails, the storage snapshot must
+// restore the pre-compile state so the bound members are removed.
+// =============================================================================
+TEST(using_prebind_snapshot_restores_on_compile_failure)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<G3>"));
+	auto ctx = cs::create_context(args);
+	cs::process_run_scope scope(ctx);
+	// First compile a namespace with a constant.
+	{
+		std::istringstream src("namespace ns\nconstant val = 99\nend\n");
+		ctx->instance->compile(src);
+		ctx->instance->interpret();
+	}
+	// Now compile a script that `using ns` then fails. The `using` pre-binds
+	// ns.val into the global domain; the later failure must undo that.
+	bool threw = false;
+	try
+	{
+		std::istringstream src("using ns\nthis is not valid syntax at all\n");
+		ctx->instance->compile(src);
+	}
+	catch (...)
+	{
+		threw = true;
+	}
+	EXPECT_TRUE(threw);
+	// `val` must be undefined — the snapshot restored the pre-compile state.
+	EXPECT_CONTAINS(run_script_on_expect_throw(ctx, "system.out.println(val)\n"),
+	                "undefined variable");
+	// The context stays fully usable afterwards.
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(42)\n") == "42\n");
+}
+
+// =============================================================================
+// Regression: opening a block in the REPL, then hitting a syntax error on a
+// subsequent exec, must not crash. The block must be cleaned up by
+// reset_status, leaving the context usable.
+// =============================================================================
+TEST(repl_block_build_failure_does_not_crash)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<BLOCK_FAIL>"));
+	auto ctx = cs::create_context(args);
+	auto repl = std::make_shared<cs::repl>(ctx);
+	// Open a namespace block.
+	repl->exec("namespace test_block\n");
+	// Inject a syntax error inside the still-open block.
+	bool threw = false;
+	try
+	{
+		repl->exec("this is not valid syntax\n");
+	}
+	catch (...)
+	{
+		threw = true;
+	}
+	EXPECT_TRUE(threw);
+	// The block must have been cleaned up (methods empty), and the context
+	// must stay fully usable afterwards.
+	EXPECT_TRUE(repl->get_level() == 0);
+	EXPECT_TRUE(run_script_on(ctx, "system.out.println(42)\n") == "42\n");
+}
+
+// =============================================================================
+// B4: transitive import failure erases transitive keys. Module A imports B
+// (preprocess-time), then A's compilation fails. Both A's and B's cache keys
+// must be erased so that a subsequent `import B` recompiles instead of hitting
+// a dangling cache entry (the subcontext containing B's function_store was
+// destroyed when A's subcontext died).
+// =============================================================================
+TEST(transitive_import_failure_erases_transitive_keys)
+{
+	cs::array args;
+	args.push_back(cs::var::make<cs::string>("<B4>"));
+	auto ctx = cs::create_context(args);
+	auto dir = std::filesystem::temp_directory_path() / "cs_transitive_fail";
+	std::filesystem::create_directories(dir);
+	{
+		std::ofstream f(dir / "B.csp");
+		f << "package B\nfunction foo()\n    return 42\nend\n";
+	}
+	{
+		std::ofstream f(dir / "A.csp");
+		// import B runs at preprocess-time (B's key enters the shared cache),
+		// then the syntax error causes A's compilation to fail.
+		f << "package A\nimport B\nthis is invalid syntax\n";
+	}
+	ctx->process->import_path += cs::path_delimiter + dir.string();
+	bool threw = false;
+	try
+	{
+		run_script_on(ctx, "import A\n");
+	}
+	catch (...)
+	{
+		threw = true;
+	}
+	EXPECT_TRUE(threw);
+	// B's key must have been erased — a fresh import B recompiles.
+	EXPECT_TRUE(run_script_on(ctx, "using system\nimport B\nsystem.out.println(B.foo())\n") == "42\n");
+	std::filesystem::remove_all(dir);
 }

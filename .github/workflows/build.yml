@@ -32,7 +32,7 @@ jobs:
           cmake -DCS_BUILD_TESTS=ON -S . -B cmake-build/unix
           cmake --build cmake-build/unix --target cs_unit_tests -- -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
           cp cmake-build/unix/unit_tests/cs_unit_tests build/bin/
-          build/bin/cs_unit_tests
+          build/bin/cs_unit_tests --repeat=2 --shuffle --xml=unit_test_report.xml
 
       - name: Build and run unit tests (Windows MSVC)
         if: matrix.os == 'windows-2022'
@@ -40,19 +40,62 @@ jobs:
           cmake -DCS_BUILD_TESTS=ON -S . -B cmake-build/msvc_win64
           cmake --build cmake-build/msvc_win64 --config MinSizeRel --target cs_unit_tests
           copy cmake-build\msvc_win64\unit_tests\MinSizeRel\cs_unit_tests.exe build\bin\
-          build\bin\cs_unit_tests.exe
+          build\bin\cs_unit_tests.exe --repeat=2 --shuffle --xml=unit_test_report.xml
 
-      - name: Integration Tests
+      - name: Integration Tests (Linux/macOS)
+        if: matrix.os != 'windows-2022'
         run: |
           build/bin/cs -v
-          build/bin/cs tests/benchmark.csc
-          build/bin/cs tests/test_reentrant_co.csc
-          build/bin/cs tests/test_future_regression.csc
-          build/bin/cs tests/test_dead_co.csc
-          build/bin/cs tests/struct_op.csc
-          build/bin/cs tests/inherit.csc
+          CS="$GITHUB_WORKSPACE/build/bin/cs" bash tests/run_tests.sh
+
+      - name: Integration Tests (Windows)
+        if: matrix.os == 'windows-2022'
+        run: |
+          build\bin\cs.exe -v
+          $env:CS = "$env:GITHUB_WORKSPACE\build\bin\cs.exe"
+          powershell -NoProfile -ExecutionPolicy Bypass -File tests\run_tests.ps1
 
       - uses: actions/upload-artifact@v4
         with:
           name: covscript-${{ matrix.os }}
           path: build
+
+      - name: Upload unit test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report-${{ matrix.os }}
+          path: unit_test_report.xml
+          if-no-files-found: ignore
+
+  sanitizers:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build with ASan/UBSan
+        run: |
+          cmake -DCS_BUILD_TESTS=ON \
+            -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" \
+            -S . -B cmake-build/asan
+          cmake --build cmake-build/asan --target cs_unit_tests cs -- -j$(nproc)
+
+      - name: Run unit tests under ASan
+        run: |
+          # dlopen with RTLD_DEEPBIND terminates the process under ASan
+          # (google/sanitizers#611), so exclude the extension-loading tests.
+          # ubuntu-24.04 (GCC 13) is used: GCC 12's libasan misreports
+          # stack-buffer-overflow in sigaltstack when no-return paths run on
+          # fiber (ucontext) stacks.
+          ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 \
+            cmake-build/asan/unit_tests/cs_unit_tests --repeat=2 --shuffle --exclude=extension_load
+
+      - name: Integration Tests under ASan
+        run: |
+          ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1 \
+            CS="$GITHUB_WORKSPACE/cmake-build/asan/cs" bash tests/run_tests.sh

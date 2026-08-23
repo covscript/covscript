@@ -1,20 +1,49 @@
 #!/bin/bash
 # Run the curated non-interactive integration tests.
 #
-# The list below is a curated set of tests/*.csc that run to completion without
-# keyboard/network input and without external extensions. Stress/profile suites
-# are run separately. Interactive
-# tests (console, clocks, tcp/udp servers) and extension-dependent tests (codec,
-# darwin, extension, reflection) are intentionally excluded. There is no per-test
-# timeout: the list is explicit and known to terminate; a hang here is a real
-# regression.
-#
 # Usage:
 #   ./run_tests.sh                 # uses `cs` on PATH
 #   CS=/path/to/cs ./run_tests.sh  # use a specific interpreter
+#   ./run_tests.sh --generate      # generate expected output files
+#
+# Note: tests/*.csc that require interactive input (choice, hash_map, import,
+# optimize, recursion, test_coroutine) are deliberately NOT part of the
+# automatic list — they would block on stdin.
 
 cd "$(dirname "$0")"
 CS="${CS:-cs}"
+GENERATE=0
+EXCLUDE=()
+
+# Under ASan, skip CPU-bound performance benchmarks that exceed the timeout.
+if [ -n "${ASAN_OPTIONS:-}" ]; then
+	EXCLUDE+=(serial_execution.csc)
+fi
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		--generate)
+			GENERATE=1
+			mkdir -p expected
+			;;
+		--exclude)
+			EXCLUDE+=("$2")
+			shift
+			;;
+		--exclude=*)
+			EXCLUDE+=("${1#--exclude=}")
+			;;
+	esac
+	shift
+done
+
+# Per-test timeout (seconds). `timeout` is a GNU coreutils command; on systems
+# without it (e.g. macOS without coreutils) the timeout guard is skipped.
+TIMEOUT_SECS=120
+TIMEOUT_CMD=""
+if command -v timeout >/dev/null 2>&1; then
+	TIMEOUT_CMD="timeout $TIMEOUT_SECS"
+fi
 
 tests=(
 	access.csc
@@ -82,19 +111,90 @@ tests=(
 	va_list.csc
 )
 
+# Scripts with non-deterministic or platform-dependent output (skip output
+# comparison, exit code is still checked).
+skip_output=(
+	benchmark.csc        # performance timings
+	cmtime.csc           # absolute file timestamps
+	coroutine.csc        # busy-loop iteration counts
+	fiber_busy_wait.csc  # latency measurements
+	file_os.csc          # chmod/permission semantics differ on Windows
+	info.csc             # runtime.info() is platform-dependent
+	limit.csc            # long double extremes depend on the architecture
+	numeric.csc          # long double extremes depend on the architecture
+	serial_execution.csc # performance timings
+	test_future.csc      # round-trip counts and timings
+	time.csc             # absolute timestamps
+	using.csc            # console.clrscr output differs on Windows
+)
+
+is_skipped() {
+	local name="$1"
+	for s in "${skip_output[@]}"; do
+		[ "$s" = "$name" ] && return 0
+	done
+	return 1
+}
+
+is_excluded() {
+	local name="$1"
+	for e in "${EXCLUDE[@]}"; do
+		[ "$e" = "$name" ] && return 0
+	done
+	return 1
+}
+
 pass=0
 fail=0
+output_fail=0
 fail_list=""
 for f in "${tests[@]}"; do
-	if "$CS" "$f" > /dev/null 2>&1; then
-		pass=$((pass + 1))
-	else
+	if [ "$GENERATE" -eq 1 ]; then
+		$TIMEOUT_CMD "$CS" "$f" > "expected/${f%.csc}.expected" 2>/dev/null || true
+		echo "Generated expected/${f%.csc}.expected"
+		continue
+	fi
+
+	if is_excluded "$f"; then
+		continue
+	fi
+
+	# Capture the pipeline's first command (timeout/cs) exit status: PIPESTATUS
+	# is not visible after command substitution, so propagate it inside it.
+	actual=$($TIMEOUT_CMD "$CS" "$f" 2>/dev/null | tr -d '\r'; exit ${PIPESTATUS[0]})
+	rc=$?
+	expected_file="expected/${f%.csc}.expected"
+
+	if [ $rc -eq 124 ]; then
 		fail=$((fail + 1))
 		fail_list="$fail_list $f"
+		echo "TIMEOUT: $f (exceeded ${TIMEOUT_SECS}s)"
+	elif [ $rc -ne 0 ]; then
+		fail=$((fail + 1))
+		fail_list="$fail_list $f"
+	elif [ -f "$expected_file" ] && ! is_skipped "$f"; then
+		# Normalize line endings so expected files (LF) match Windows CRLF output.
+		expected=$(tr -d '\r' < "$expected_file")
+		if [ "$actual" != "$expected" ]; then
+			output_fail=$((output_fail + 1))
+			fail_list="$fail_list $f"
+			echo "OUTPUT MISMATCH: $f"
+			diff <(printf '%s' "$expected") <(printf '%s' "$actual") || true
+		else
+			pass=$((pass + 1))
+		fi
+	else
+		pass=$((pass + 1))
 	fi
 done
 
-echo "pass=$pass fail=$fail"
+if [ "$GENERATE" -eq 1 ]; then
+	echo "Generated ${#tests[@]} expected output files in tests/expected/"
+	exit 0
+fi
+
+total_fail=$((fail + output_fail))
+echo "pass=$pass exit_fail=$fail output_mismatch=$output_fail"
 if [ -n "$fail_list" ]; then
 	echo "FAILED:$fail_list"
 	exit 1

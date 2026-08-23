@@ -130,8 +130,8 @@ namespace cs
 
 		void check_define_var(tree_type<token_base *>::iterator, bool = false, bool = false);
 
-		// A constant's RHS is usually folded to a token_value; a lambda or a
-		// callable-containing value is left un-folded and evaluated at runtime.
+		// A constant's RHS is folded to a token_value; callable-containing
+		// values are also folded (tokens hold non-owning function references).
 		var fold_constant(tree_type<token_base *>::iterator, bool constant);
 
 		void parse_define_var(tree_type<token_base *>::iterator, bool = false, bool = false);
@@ -177,6 +177,8 @@ namespace cs
 		// otherwise the outer statement resumes evaluating freed tokens.
 		std::vector<std::shared_ptr<compile_unit>> m_units;
 		std::vector<std::shared_ptr<compile_unit>> m_saved_units;
+		// Storage snapshot stack (parallel to m_units); rollback on compile failure, discard on runtime failure.
+		std::vector<storage_transaction> m_tx;
 
 		// Drop the current statement's arena and restore the enclosing one (if
 		// any) as the context's current unit (lambdas live in the runtime's
@@ -211,6 +213,10 @@ namespace cs
 		{
 			if (!methods.empty() || !m_units.empty())
 				reset_status();
+			// Discard in-flight snapshots without restoring.
+			for (auto &t : m_tx)
+				t.discard();
+			m_tx.clear();
 			// Run global finalizers while the session (process) is still active,
 			// not during context teardown when the process is already dying.
 			context->instance->storage.clear_global();

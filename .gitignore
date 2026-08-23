@@ -62,3 +62,12 @@ tests/gen/
 # ClangD Files
 *.idx
 audit/tmp/
+
+# Unit test artifacts
+_audit_*
+cs_unit_test_*
+unit_test_report.xml
+goodmod.csp
+nestmod.csp
+poolmod.csp
+test.csp

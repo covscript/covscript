@@ -1,0 +1,4 @@
+test_circular_b loaded
+test_circular_a loaded
+func_a, calling test_circular_b.func_b
+func_b done

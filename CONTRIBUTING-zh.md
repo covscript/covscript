@@ -140,13 +140,13 @@ cmake --build . --config Release
 #### Linux / macOS / Unix
 ```bash
 cd tests
-./auto_test.sh
+./run_tests.sh
 ```
 
 #### Windows
-```cmd
+```powershell
 cd tests
-auto_test.bat
+powershell -NoProfile -ExecutionPolicy Bypass -File run_tests.ps1
 ```
 
 ## Pull Request 流程

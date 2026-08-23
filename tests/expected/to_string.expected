@@ -1,0 +1,4 @@
+{{}, null, 3, 14 : A, cs::ostream, test, cs::range => {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}, Hello, list => {cs::pointer => Hello, 3, 14, A}}
+abc = def
+ghi = null
+{abc, def, ghi}

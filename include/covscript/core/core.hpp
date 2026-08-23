@@ -188,8 +188,6 @@ namespace cs
 		int exit_code = 0;
 		// Import Path
 		std::string import_path = ".";
-		// Context being destroyed; finalizers borrow it while its members are intact.
-		context_type *teardown_ctx = nullptr;
 		// Type identity nodes of structs defined while this process is active.
 		// Only ever appended; freed when the process dies.
 		std::deque<type_node> type_nodes;
@@ -612,8 +610,9 @@ namespace cs
 
 	class function final
 	{
-		// Weak back-ref to the defining context; calls lock it.
-		std::weak_ptr<context_type> mContext;
+		// Raw back-ref to the defining context; callers must respect the
+		// context-alive precondition — no lock, no null check.
+		context_type *mContext = nullptr;
 #ifdef CS_DEBUGGER
 		// Source location for debugger breakpoints (immutable after construction).
 		mutable bool mMatch = false;
@@ -663,14 +662,14 @@ namespace cs
 		function(context_type *c, std::string decl, std::string file, std::size_t line,
 		         std::vector<std::string> args, std::deque<statement_base *> body,
 		         bool is_vargs = false, bool is_lambda = false)
-		    : mContext(c->weak_from_this()), mDecl(std::move(decl)), mFile(std::move(file)), mLine(line), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)), m_unit(c->current_unit)
+		    : mContext(c), mDecl(std::move(decl)), mFile(std::move(file)), mLine(line), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)), m_unit(c->current_unit)
 		{
 			init_call_ptr();
 		}
 #else
 
 		function(context_type *c, std::vector<std::string> args, std::deque<statement_base *> body, bool is_vargs = false, bool is_lambda = false)
-		    : mContext(c->weak_from_this()), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)), m_unit(c->current_unit)
+		    : mContext(c), mIsVargs(is_vargs), mIsLambda(is_lambda), mArgs(std::move(args)), mBody(std::move(body)), m_unit(c->current_unit)
 		{
 			init_call_ptr();
 		}
@@ -697,10 +696,10 @@ namespace cs
 			return call_ptr(this, args);
 		}
 
-		// Locks the defining context (caller must keep it alive).
-		std::shared_ptr<context_type> get_context() const
+		// Non-owning back-ref to the defining context; the caller must keep it alive.
+		context_type *get_context() const
 		{
-			return mContext.lock();
+			return mContext;
 		}
 
 		bool is_el_func() const
@@ -769,13 +768,11 @@ namespace cs
 	struct function_ptr final
 	{
 		function *fptr = nullptr;
-		// Keeps the function alive while any callable references it.
-		std::shared_ptr<function> owner;
 
 		function_ptr() = default;
 
-		function_ptr(function *f, std::shared_ptr<function> owner_ref)
-		    : fptr(f), owner(std::move(owner_ref)) {}
+		explicit function_ptr(function *f)
+		    : fptr(f) {}
 
 		var operator()(vector &args) const
 		{
@@ -975,6 +972,16 @@ namespace cs
 		{
 			std::swap(m_reflect, domain.m_reflect);
 			std::swap(m_slot, domain.m_slot);
+		}
+
+		domain_type &operator=(domain_type &&domain) noexcept
+		{
+			if (this != &domain)
+			{
+				std::swap(m_reflect, domain.m_reflect);
+				std::swap(m_slot, domain.m_slot);
+			}
+			return *this;
 		}
 
 		~domain_type()
@@ -1334,8 +1341,6 @@ namespace cs
 
 	class structure final
 	{
-		// Pins its owning process so the type node and members outlive the
-		// context; only calling a method (function::mContext back-ref) needs it.
 		bool m_shadow = false;
 		// Set once finalize has run, so an explicit pre-clear finalization (the
 		// global domain runs finalizers before releasing its symbol table) does
@@ -1344,17 +1349,17 @@ namespace cs
 		std::string m_name;
 		domain_t m_data;
 		type_id m_id;
-		// Owning process; finalizers run with it activated.
-		std::shared_ptr<process_context> m_process;
+		// Same context-alive precondition as function::mContext.
+		context_type *m_ctx = nullptr;
 
 	   public:
 		structure() = delete;
 
-		structure(const type_id &id, std::string name, const domain_type &data)
+		structure(const type_id &id, std::string name, const domain_type &data, context_type *c = nullptr)
 		    : m_id(id),
 		      m_name(std::move(name)),
 		      m_data(std::make_shared<domain_type>(data)),
-		      m_process(current_process ? current_process->shared_from_this() : nullptr)
+		      m_ctx(c)
 		{
 			if (m_data->exist("initialize"))
 				invoke(m_data->get_var("initialize"), var::make<structure>(this));
@@ -1367,12 +1372,12 @@ namespace cs
 			std::swap(m_name, s.m_name);
 			std::swap(m_data, s.m_data);
 			std::swap(m_id, s.m_id);
-			std::swap(m_process, s.m_process);
+			std::swap(m_ctx, s.m_ctx);
 			std::swap(m_finalized, s.m_finalized);
 		}
 
 		structure(const structure &s)
-		    : m_id(s.m_id), m_name(s.m_name), m_data(std::make_shared<domain_type>()), m_process(s.m_process)
+		    : m_id(s.m_id), m_name(s.m_name), m_data(std::make_shared<domain_type>()), m_ctx(s.m_ctx)
 		{
 			if (s.m_data->exist("parent"))
 			{
@@ -1399,7 +1404,7 @@ namespace cs
 		}
 
 		explicit structure(const structure *s)
-		    : m_shadow(true), m_id(s->m_id), m_name(s->m_name), m_data(s->m_data), m_process(s->m_process) {}
+		    : m_shadow(true), m_id(s->m_id), m_name(s->m_name), m_data(s->m_data), m_ctx(s->m_ctx) {}
 
 		// Runs the structure's `finalize` method (if any) exactly once, while
 		// the runtime is still usable. Failures never propagate (finalize runs
@@ -1425,8 +1430,14 @@ namespace cs
 				};
 				try
 				{
-					process_run_scope scope(m_process.get());
-					invoke(m_data->get_var("finalize"), var::make<structure>(this));
+					const var &finalizer = m_data->get_var("finalize");
+					if (m_ctx != nullptr)
+					{
+						process_run_scope scope(m_ctx->process.get());
+						invoke(finalizer, var::make<structure>(this));
+					}
+					else
+						invoke(finalizer, var::make<structure>(this));
 				}
 				catch (const exception &e)
 				{
@@ -1464,7 +1475,7 @@ namespace cs
 			std::swap(m_name, s.m_name);
 			std::swap(m_data, s.m_data);
 			std::swap(m_id, s.m_id);
-			std::swap(m_process, s.m_process);
+			std::swap(m_ctx, s.m_ctx);
 			std::swap(m_finalized, s.m_finalized);
 			return *this;
 		}
@@ -1543,11 +1554,9 @@ namespace cs
 
 	class struct_builder final
 	{
-		// Weak back-ref to the defining context.
-		std::weak_ptr<context_type> mContext;
+		// Raw back-ref to the defining context.
+		context_type *mContext = nullptr;
 		type_node *mNode;
-		// Pins the owning process so the type node pool outlives the builder.
-		std::shared_ptr<process_context> m_process;
 		type_id mTypeId;
 		std::string mName;
 		tree_type<token_base *> mParent;
@@ -1568,9 +1577,8 @@ namespace cs
 
 		struct_builder(context_type *c, std::string name, tree_type<token_base *> parent,
 		               std::deque<statement_base *> method)
-		    : mContext(c->weak_from_this()),
+		    : mContext(c),
 		      mNode(alloc_type_node(c->process.get())),
-		      m_process(c->process),
 		      mTypeId(typeid(structure), mNode),
 		      mName(std::move(name)),
 		      mParent(std::move(parent)),
@@ -1604,9 +1612,8 @@ namespace cs
 
 		void swap(struct_builder &other) noexcept
 		{
-			mContext.swap(other.mContext);
+			std::swap(mContext, other.mContext);
 			std::swap(mNode, other.mNode);
-			m_process.swap(other.m_process);
 			std::swap(mTypeId, other.mTypeId);
 			mName.swap(other.mName);
 			mParent.swap(other.mParent);

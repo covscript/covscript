@@ -246,8 +246,8 @@ namespace cs
 			friend void cs::fiber::yield();
 
 			stack_type<domain_type> cs_stack;
-			// Weak so an escaped fiber can't dangle its context after teardown.
-			std::weak_ptr<context_type> cs_context;
+			// Non-owning back-ref to the defining context.
+			context_type *cs_context = nullptr;
 
 			// Non-native fibers fork their own process_context (own value stack);
 			// native fibers keep null and reuse the current execution path.
@@ -293,7 +293,7 @@ namespace cs
 			// CovScript Function
 			win32_fiber(context_type *cxt, std::function<var()> f)
 			    : cs_stack(script_stack_size()),
-			      cs_context(cxt->weak_from_this()),
+			      cs_context(cxt),
 			      process(process_context::fork(process_context::current_owner())),
 			      func(std::move(f)),
 			      eptr(nullptr),
@@ -321,16 +321,16 @@ namespace cs
 			{
 				if (process)
 					current_process = process.get();
-				if (auto c = cs_context.lock())
-					c->instance->swap_context(&cs_stack);
+				if (cs_context) // script fiber only (native fibers have null)
+					cs_context->instance->swap_context(&cs_stack);
 			}
 
 			void cs_swap_out()
 			{
 				// Restore the caller's process (may be null outside a session).
 				current_process = resumer_process;
-				if (auto c = cs_context.lock())
-					c->instance->swap_context(nullptr);
+				if (cs_context) // script fiber only (native fibers have null)
+					cs_context->instance->swap_context(nullptr);
 			}
 
 			fiber_state get_state() const override
@@ -388,8 +388,6 @@ namespace cs
 				throw internal_error("Resuming a corrupted fiber.");
 			if (fi->state == fiber_state::running || fi->state == fiber_state::finished)
 				throw lang_error("A fiber cannot be resumed while it is already running or after it has finished");
-			if (fi->process != nullptr && fi->cs_context.expired())
-				throw lang_error("The fiber's defining context has been destroyed");
 			if (fi->state == fiber_state::ready)
 			{
 				fi->ctx = CreateFiber(fi->stack_size, win32_fiber::entry, fi);

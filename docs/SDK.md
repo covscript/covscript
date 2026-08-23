@@ -2,20 +2,21 @@
 
 This document describes the embedding (C++) API of Covariant Script and, most
 importantly, the **resource ownership contracts** every embedder must respect.
-Covariant Script manages all of its memory with deterministic RAII — there is no
-garbage collector — so object lifetimes are precise but must be understood.
+Covariant Script manages all of its memory with deterministic RAII, so object
+lifetimes are precise but must be understood.
 
 ## Table of Contents
 
 + [Quick Start](#quick-start)
 + [Ownership Model](#ownership-model)
 + [Resource Contracts](#resource-contracts)
-  + [1. Context lifetime (escaped objects)](#1-context-lifetime-escaped-objects)
+  + [1. Context lifetime](#1-context-lifetime)
   + [2. `current_process` and threading](#2-current_process-and-threading)
   + [3. Structure finalizers](#3-structure-finalizers)
   + [4. `var` lifetime](#4-var-lifetime)
   + [5. Token arena and recompilation](#5-token-arena-and-recompilation)
 + [Migration Guide (ABI 2608xx → ABI 2609xx)](#migration-guide-abi-2608xx--abi-2609xx)
++ [Migration Guide (ABI 2609xx → ABI 2610xx)](#migration-guide-abi-2609xx--abi-2610xx)
 
 ---
 
@@ -50,10 +51,10 @@ Everything else hangs off it:
 | Object | Owned by | Lifetime |
 |---|---|---|
 | `context_type` | the embedder's `context_t` | until the last `context_t` is dropped |
-| `process_context` | the context and escaped structures | until the last owner drops |
+| `process_context` | the context | context lifetime |
 | `instance_type` | the context (`context->instance`) | context lifetime |
 | `compiler_type` | the context (`context->compiler`) | context lifetime (shared with subcontexts) |
-| token arena (`compile_unit`) | the instance and escaped functions | until the last owner drops |
+| token arena (`compile_unit`) | the instance, functions, and struct builders | until the last owner drops |
 | `var` values | reference counting | until the last `var` reference is dropped |
 | module subcontexts | the context's `subcontexts` pool | context lifetime |
 
@@ -69,34 +70,27 @@ explicit, deterministic ownership:
   Copying a `var` is cheap (a refcount bump); `cs::copy(var)` / `var::clone()`
   performs a deep copy.
 + **The context is the runtime root owner** of the process, compiler, instance
-  and their children. Most internal child-to-context links are raw non-owning
-  pointers constrained by the context's lifetime; escaped script functions use
-  `std::weak_ptr`. Escaped functions and structures may retain their token arena
-  or process respectively, but they do not retain the context or form an
-  ownership cycle.
+  and their children. Script objects hold raw pointers back to their defining
+  context; once the context is destroyed, those pointers are all invalidated, and
+  using them is undefined behavior.
 
 The consequence is that **each resource is reclaimed when its last owning
 reference goes away** — no `collect_garbage()`, no deferred sweep.
 
 ## Resource Contracts
 
-These are the rules an embedder must follow. APIs backed by weak references fail
-with `runtime_error` after context destruction; raw non-owning SDK references
-must not outlive their owner.
+These are the rules an embedder must follow. Script objects hold raw pointers
+back to their context; once the context is destroyed, those pointers are
+invalidated. Using any escaped script object after its context is destroyed is
+undefined behavior.
 
-### 1. Context lifetime (escaped objects)
+### 1. Context lifetime
 
-**Escaped objects that execute script code require their defining context to stay alive.**
+**All script objects assume their defining context is alive when used.**
 
-Objects returned by the runtime do not all have identical lifetime behavior:
-
-+ a script function / lambda stores a `std::weak_ptr<context_type>` (`function::mContext`); invocation after context destruction throws `runtime_error`;
-+ a `structure` pins its owning process, so its type identity and member data
-  remain valid after context destruction; its script methods still require the
-  defining context and throw if invoked after it dies.
-+ an escaped **type** (`type_t`) carries the same back-reference; constructing
-  it (`type_t::constructor()`) after the context dies throws
-  "the struct's context has been destroyed".
+Invoking a script function, structure method, etc. after its defining context
+has been destroyed is **undefined behavior** — no check is performed and no
+exception is guaranteed.
 
 Therefore:
 
@@ -106,7 +100,7 @@ cs::var f;
     auto ctx = cs::create_context({...});
     f = cs::eval(ctx, "[](x)->x+1");   // escape a lambda
 }                                      // ctx destroyed here
-f.const_val<cs::callable>().call(...); // throws runtime_error
+f.const_val<cs::callable>().call(...); // undefined behavior — do not do this
 ```
 
 Keep the `context_t` alive for as long as you use the object:
@@ -117,8 +111,9 @@ cs::var f = cs::eval(ctx, "[](x)->x+1");
 // ... use f freely while ctx is alive ...
 ```
 
-Keep the context alive whenever an escaped object needs to execute script code.
-Self-contained value data can remain usable independently as described above.
+Keep the context alive for as long as you use any escaped object; once the
+context is destroyed, escaped objects (including structure member data) are no
+longer usable.
 
 ### 2. `current_process` and threading
 
@@ -138,7 +133,8 @@ Consequences:
   proxy allocator pool is **per-thread** (`thread_local`) and fills on demand,
   so separate contexts never share pool slots; values freed on a different
   thread fall back to the direct allocator path (all `std::allocator`
-  instances are interchangeable).
+  instances are interchangeable). Sharing state between contexts is dangerous
+  because `var`'s reference count is non-atomic.
 
 An extension DLL that needs its own compilation environment (independent
 storage, namespace, or compiled program) should create a **subcontext**
@@ -181,10 +177,10 @@ another unrelated process will remain active during destruction.
 `cs::var` is a pointer-sized handle (8 bytes on 64-bit platforms); copying it
 bumps a reference count, and the value is freed when the last reference drops.
 To detach a value from its original storage, use `cs::copy(var)` (deep copy).
-Values that escape a context are safe
-as self-contained data. A script callable uses a weak context reference and
-throws if invoked after context destruction; structure data remains valid,
-while its script methods have the same rule.
+Once a value escapes its context, it is no longer usable after the context is
+destroyed. A script callable holds a raw function pointer; invoking it after
+context destruction is undefined behavior, and the same applies to a
+structure's member data and type identity.
 
 ### 5. Token arena and recompilation
 
@@ -192,10 +188,10 @@ Each `compile()` produces a program whose tokens live in a per-instance arena.
 Compiling again (or calling `release_statements()`) drops the previous program
 and its arena.
 
-A script function/lambda escaped from the previous program keeps that arena
+A script function/lambda registered in the function store keeps that arena
 alive via `function::m_unit`, so it remains callable after recompilation —
-*provided its context is still alive* (§1). This is the one pinning mechanism
-that survives, because it concerns the arena rather than the context.
+*provided its context is still alive* (§1). This is the one surviving keep-alive
+mechanism, because it concerns the arena rather than the context.
 
 ### 6. Runtime diagnostics (`COVSCRIPT_DEBUG`)
 
@@ -234,9 +230,6 @@ All extensions must be recompiled.
 - `cs::invoke` on a non-callable now throws `cs::lang_error` (previously
   `cs::runtime_error`) to match script-level semantics. Note that
   `cs::lang_error` does not derive from `std::exception`.
-- `constant` declarations and `case` labels whose value contains a script
-  function or method are now rejected at compile time (previously the value
-  was silently folded into the token arena, creating an arena↔function cycle).
 - `process_activation` removed. Callers of `callable::call()` from native
   code must now hold their own `process_run_scope`. Extension DLLs share
   the host's thread-local slot via the accessor — reads and writes are
@@ -251,3 +244,37 @@ All extensions must be recompiled.
   `set_schedule_parameters()` — tune fiber backoff.
 - `cs::callable::argument_count()` — query function arity.
 - `cs::create_context` accepts an optional `stack_size` parameter.
+
+## Migration Guide (ABI 2609xx → ABI 2610xx)
+
+All extensions must be recompiled.
+
+### Breaking changes
+
+- **`function_ptr` no longer holds an `owner`**. It was
+  `{function*, shared_ptr<function>}`, now just `{function*}`. Code that
+  constructed `function_ptr(f, owner)` or accessed `.owner` must be updated.
+- **Escape behavior: UB instead of throwing**. Using an escaped script object
+  (function, structure method, type constructor, fiber, etc.) after its context
+  is destroyed no longer throws `runtime_error` — it is undefined behavior.
+  Code that catches such exceptions will no longer trigger.
+- **`function::get_context()` returns a raw pointer**. Previously returned
+  `shared_ptr<context_type>`, now returns `context_type*`.
+- **`process_context::teardown_ctx()` removed**.
+- **`structure::m_process` removed; `structure` now holds a non-owning raw
+  `context_type *m_ctx`** — the same context-alive precondition as
+  `function::mContext`. Finalizers run through the defining context's
+  process (still safe during the context's own destructor body); if the
+  structure has no defining context (`m_ctx == nullptr`) or the defining
+  context's process cannot be activated (another unrelated process is
+  active on the thread), the finalizer is skipped with a diagnostic.
+  Destroying an escaped structure after its context is gone is undefined
+  behavior, like any other escaped object.
+- **Named functions registered at compile time**. `statement_function::mFunc`
+  changed from `std::shared_ptr<function>` to `function*` (owned by the
+  `function_store`).
+
+### New APIs
+
+- `cs::invoke(func, args...)` — unified callable invocation, replacing
+  `func.val<cs::callable>().call(args)`.

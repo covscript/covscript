@@ -223,12 +223,8 @@ namespace cs
 	context_type::~context_type()
 	{
 		// Run finalizers while the runtime is still usable.
-		if (process != nullptr)
-			process->teardown_ctx = this;
 		if (instance != nullptr)
 			instance->storage.clear_global();
-		if (process != nullptr)
-			process->teardown_ctx = nullptr;
 		// Drop module namespaces/subcontexts so their arenas release at teardown.
 		if (owns_compiler && compiler != nullptr)
 		{

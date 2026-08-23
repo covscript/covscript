@@ -1,0 +1,26 @@
+Test without Exception
+Main start
+Body 1 start
+Body 1 yield
+Main resume
+Body 1 resume 0
+Body 0 start
+Body 0 yield
+Body 1 resume 1
+Body 0 exit
+Body 0 destroy
+Body 1 exit
+Body 1 destroy
+Main exit
+Test with Exception
+Main start
+Body 1 start
+Body 1 yield
+Main resume
+Body 1 resume 0
+Body 0 start
+Body 0 throw
+Body 0 destroy
+Body 1 destroy
+What: Test Exception
+Main exit

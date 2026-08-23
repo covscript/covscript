@@ -135,19 +135,68 @@ cmake --build . --config Release
 
 ### Running Tests
 
-After building, run the test suite:
+After building, run the integration test suite:
 
 #### Linux / macOS / Unix
 ```bash
 cd tests
-./auto_test.sh
+./run_tests.sh
 ```
 
 #### Windows
-```cmd
+```powershell
 cd tests
-auto_test.bat
+powershell -NoProfile -ExecutionPolicy Bypass -File run_tests.ps1
 ```
+
+To generate expected output files for output verification:
+```bash
+cd tests
+./run_tests.sh --generate
+```
+
+### Unit Tests
+
+Unit tests are built with CMake by enabling `CS_BUILD_TESTS`:
+
+```bash
+cmake -DCS_BUILD_TESTS=ON -S . -B cmake-build
+cmake --build cmake-build --target cs_unit_tests
+cmake-build/unit_tests/cs_unit_tests
+```
+
+**CLI Options:**
+- `--filter=<pattern>` —Run only tests whose name contains `<pattern>`
+- `--repeat=N` —Repeat all tests N times (useful for isolation checks)
+- `--shuffle` —Randomize test execution order
+- `--timeout=N` —Warn if a test exceeds N milliseconds
+- `--xml=<path>` —Write JUnit XML report
+- `--list` —List all registered tests
+
+### Writing Unit Tests
+
+Add new test files in `unit_tests/` and register them in `unit_tests/CMakeLists.txt`.
+
+```cpp
+#include "test_helpers.hpp"
+
+TEST(my_test_name)
+{
+    EXPECT_EQ(run_script("system.out.println(1 + 2)"), "3\n");
+}
+```
+
+**Test Helpers:**
+- `make_context()` / `shared_compiler_context()` —Shared read-only compiler context (do not define variables)
+- `run_script(src)` —Run a CovScript snippet, capture stdout
+- `run_script_expect_throw(src)` —Run a script expected to throw
+
+**Assertions:**
+- `EXPECT_EQ(a, b)` / `ASSERT_EQ(a, b)` —Equality (fatal = abort on failure)
+- `EXPECT_TRUE(v)` / `ASSERT_TRUE(v)` —Boolean truth
+- `EXPECT_THROW(expr, type)` / `EXPECT_THROW_MSG(expr, type, "msg")` —Exception checks
+- `EXPECT_CONTAINS(text, substring)` —String containment
+- `TRACE(msg)` —Record trace message, printed on failure
 
 ## Pull Request Process
 

@@ -12,6 +12,9 @@ set(UNIT_TEST_SOURCES
     test_cni.cpp
     test_regressions.cpp
     test_fixes.cpp
+    test_type_ext.cpp
+    test_codegen.cpp
+    test_system.cpp
 )
 
 add_executable(cs_unit_tests ${UNIT_TEST_SOURCES})
