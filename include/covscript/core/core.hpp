@@ -1431,22 +1431,8 @@ namespace cs
 				try
 				{
 					const var &finalizer = m_data->get_var("finalize");
-					const auto is_script_callable = [](const var &fn)
+					if (m_ctx != nullptr)
 					{
-						return fn.is_type_of<callable>() &&
-						       fn.const_val<callable>().get_raw_data().target_type() == typeid(function_ptr);
-					};
-					const bool script =
-					    is_script_callable(finalizer) ||
-					    (finalizer.is_type_of<object_method>() &&
-					     is_script_callable(finalizer.const_val<object_method>().callable));
-					if (script)
-					{
-						if (m_ctx == nullptr)
-						{
-							report("script finalizer on a structure with no defining context");
-							return;
-						}
 						process_run_scope scope(m_ctx->process.get());
 						invoke(finalizer, var::make<structure>(this));
 					}

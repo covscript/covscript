@@ -200,10 +200,10 @@ ctx->instance->interpret();
 - **`process_context::teardown_ctx()` 已移除**。
 - **`structure::m_process` 已移除；structure 现持有非拥有的裸指针
   `context_type *m_ctx`**——与 `function::mContext` 相同的 context 存活前提。
-  脚本 finalize 通过定义 context 的 process 执行（context 自身析构函数体
-  期间仍安全）；若定义 context 未持有 process（`m_ctx == nullptr`），
-  脚本终结器将跳过并输出诊断信息。context 销毁后析构逃逸 structure 属于
-  未定义行为，与其他逃逸对象一致。原生 finalize 不需要 context，始终执行。
+  终结器通过定义 context 的 process 执行（context 自身析构函数体期间仍安全）；
+  若 structure 无定义 context（`m_ctx == nullptr`）或定义 context 的 process
+  无法激活（同一线程上有无关 process 活跃），终结器将跳过并输出诊断信息。
+  context 销毁后析构逃逸 structure 属于未定义行为，与其他逃逸对象一致。
 - **命名函数改为编译时注册**。`statement_function::mFunc` 从
   `std::shared_ptr<function>` 改为 `function*`（由 `function_store` 持有）。
 

@@ -196,7 +196,7 @@ namespace cs
 		// Roll back only lambdas registered by this compilation. Stable store
 		// indices let successful nested compilations survive an outer failure.
 		functions.begin_transaction();
-		auto storage_snap = storage.create_snapshot();
+		storage_transaction stx(storage);
 		context->compiler->begin_import_scope();
 		std::size_t pool_base = context->compiler->save_pool();
 		value_guard<std::size_t> loop_guard(context->compiler->loop_depth, 0);
@@ -234,7 +234,7 @@ namespace cs
 			context->compiler->end_import_scope();
 			context->current_unit = saved_unit;
 			statement_base::delete_children(statements);
-			storage.restore_snapshot(storage_snap);
+			stx.rollback();
 			functions.rollback_transaction();
 			release_unit();
 			throw;
@@ -581,7 +581,7 @@ namespace cs
 				// throw below (reset_status -> rollback) cannot destroy functions
 				// that already escaped into bound variables.
 				context->instance->functions.commit_transaction();
-				m_committed = true;
+				m_tx.back().commit();
 				echo ? sptr->repl_run() : sptr->run();
 				delete sptr;
 				// The catch handlers below also `delete sptr`; null it out so a
@@ -642,8 +642,7 @@ namespace cs
 		{
 			context->compiler->begin_import_scope();
 			context->instance->functions.begin_transaction();
-			m_snap = context->instance->storage.create_snapshot();
-			m_committed = false;
+			m_tx.emplace_back(context->instance->storage);
 			m_saved_units.push_back(context->current_unit);
 			m_units.push_back(std::make_shared<compile_unit>());
 			context->current_unit = m_units.back();
@@ -657,7 +656,11 @@ namespace cs
 		catch (const lang_error &le)
 		{
 			reset_status();
-			m_snap.reset();
+			if (!m_tx.empty())
+			{
+				m_tx.back().discard();
+				m_tx.pop_back();
+			}
 			if (le.has_location())
 				throw exception(le.line(), le.file(), le.code(), std::string("Uncaught exception: ") + le.what());
 			throw fatal_error(std::string("Uncaught exception: ") + le.what());
@@ -665,19 +668,31 @@ namespace cs
 		catch (const cs::exception &)
 		{
 			reset_status();
-			m_snap.reset();
+			if (!m_tx.empty())
+			{
+				m_tx.back().discard();
+				m_tx.pop_back();
+			}
 			throw;
 		}
 		catch (const std::exception &e)
 		{
 			reset_status();
-			m_snap.reset();
+			if (!m_tx.empty())
+			{
+				m_tx.back().discard();
+				m_tx.pop_back();
+			}
 			throw exception(line_num, context->file_path, code, exception_message(e));
 		}
 		if (ast.empty())
 		{
 			reset_status();
-			m_snap.reset();
+			if (!m_tx.empty())
+			{
+				m_tx.back().discard();
+				m_tx.pop_back();
+			}
 			throw runtime_error("REPL input must contain exactly one top-level statement");
 		}
 		try
@@ -703,7 +718,11 @@ namespace cs
 		catch (const lang_error &le)
 		{
 			reset_status();
-			m_snap.reset();
+			if (!m_tx.empty())
+			{
+				m_tx.back().discard();
+				m_tx.pop_back();
+			}
 			if (le.has_location())
 				throw exception(le.line(), le.file(), le.code(), std::string("Uncaught exception: ") + le.what());
 			throw fatal_error(std::string("Uncaught exception: ") + le.what());
@@ -711,13 +730,21 @@ namespace cs
 		catch (const cs::exception &)
 		{
 			reset_status();
-			m_snap.reset();
+			if (!m_tx.empty())
+			{
+				m_tx.back().discard();
+				m_tx.pop_back();
+			}
 			throw;
 		}
 		catch (const std::exception &e)
 		{
 			reset_status();
-			m_snap.reset();
+			if (!m_tx.empty())
+			{
+				m_tx.back().discard();
+				m_tx.pop_back();
+			}
 			throw exception(line_num, context->file_path, code, exception_message(e));
 		}
 		for (auto &line : ast)
@@ -729,17 +756,14 @@ namespace cs
 			catch (...)
 			{
 				// Restore snapshot only on compile-time failure (B1).
-				if (m_snap.has_value() && !m_committed)
-				{
-					context->instance->storage.restore_snapshot(*m_snap);
-					m_snap.reset();
-				}
+				if (!m_tx.empty())
+					m_tx.back().rollback();
 				throw;
 			}
 		}
 		if (methods.empty())
 		{
-			m_snap.reset();
+			m_tx.pop_back();
 			context->instance->functions.commit_transaction();
 			context->compiler->end_import_scope();
 			pop_unit();

@@ -263,12 +263,13 @@ All extensions must be recompiled.
 - **`process_context::teardown_ctx()` removed**.
 - **`structure::m_process` removed; `structure` now holds a non-owning raw
   `context_type *m_ctx`** — the same context-alive precondition as
-  `function::mContext`. Script finalizers run through the defining context's
+  `function::mContext`. Finalizers run through the defining context's
   process (still safe during the context's own destructor body); if the
-  defining context was created without a process (`m_ctx == nullptr`), the
-  script finalizer is skipped with a diagnostic. Destroying an escaped
-  structure after its context is gone is undefined behavior, like any other
-  escaped object. Native finalizers need no context and always run.
+  structure has no defining context (`m_ctx == nullptr`) or the defining
+  context's process cannot be activated (another unrelated process is
+  active on the thread), the finalizer is skipped with a diagnostic.
+  Destroying an escaped structure after its context is gone is undefined
+  behavior, like any other escaped object.
 - **Named functions registered at compile time**. `statement_function::mFunc`
   changed from `std::shared_ptr<function>` to `function*` (owned by the
   `function_store`).

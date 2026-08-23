@@ -24,6 +24,7 @@
  * Github:  https://github.com/mikecovlee
  * Website: http://covscript.org.cn
  */
+#include <optional>
 #include <covscript/impl/compiler.hpp>
 
 namespace cs
@@ -493,6 +494,64 @@ namespace cs
 				m_data.push(d);
 			for (auto &st : snap.set)
 				m_set.push(st);
+		}
+	};
+
+	// RAII storage snapshot; rollback on destruction unless committed or discarded.
+	class storage_transaction final
+	{
+		domain_manager *m_storage = nullptr;
+		std::optional<domain_manager::domain_snapshot> m_snap;
+		bool m_committed = false;
+
+	   public:
+		explicit storage_transaction(domain_manager &s)
+		    : m_storage(&s), m_snap(s.create_snapshot()) {}
+
+		storage_transaction(storage_transaction &&o) noexcept
+		    : m_storage(o.m_storage), m_snap(std::move(o.m_snap)), m_committed(o.m_committed)
+		{
+			o.m_storage = nullptr;
+		}
+
+		storage_transaction &operator=(storage_transaction &&o) noexcept
+		{
+			if (this != &o)
+			{
+				m_storage = o.m_storage;
+				m_snap = std::move(o.m_snap);
+				m_committed = o.m_committed;
+				o.m_storage = nullptr;
+			}
+			return *this;
+		}
+
+		storage_transaction(const storage_transaction &) = delete;
+		storage_transaction &operator=(const storage_transaction &) = delete;
+
+		void commit() noexcept
+		{
+			m_committed = true;
+			m_snap.reset();
+		}
+
+		void rollback()
+		{
+			if (m_storage != nullptr && m_snap.has_value())
+			{
+				m_storage->restore_snapshot(*m_snap);
+				m_snap.reset();
+			}
+		}
+
+		void discard() noexcept
+		{
+			m_snap.reset();
+		}
+
+		~storage_transaction()
+		{
+			rollback();
 		}
 	};
 
