@@ -138,6 +138,10 @@ foreach ($f in $tests) {
 	$psi.RedirectStandardError = $true
 	$psi.StandardOutputEncoding = [System.Text.Encoding]::UTF8
 	$p = [System.Diagnostics.Process]::Start($psi)
+	# Drain stdout/stderr asynchronously before waiting: a full pipe would
+	# deadlock (child blocks writing, parent blocks in WaitForExit).
+	$stdoutTask = $p.StandardOutput.ReadToEndAsync()
+	$null = $p.StandardError.ReadToEndAsync()
 	if (-not $p.WaitForExit($TimeoutSec * 1000)) {
 		$p.Kill()
 		$p.WaitForExit(5000) | Out-Null
@@ -148,7 +152,7 @@ foreach ($f in $tests) {
 	}
 	$rc = $p.ExitCode
 	# Normalize line endings so expected files (LF) match CRLF output.
-	$actual = $p.StandardOutput.ReadToEnd() -replace "`r", ""
+	$actual = $stdoutTask.Result -replace "`r", ""
 	$expectedFile = Get-ExpectedPath $f
 	if ($rc -ne 0) {
 		$fail += 1
